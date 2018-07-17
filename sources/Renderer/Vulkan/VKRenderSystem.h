@@ -10,8 +10,7 @@
 
 
 #include <LLGL/RenderSystem.h>
-#include "Vulkan.h"
-#include "VKPtr.h"
+#include "VKDevice.h"
 #include "../ContainerTypes.h"
 #include "Memory/VKDeviceMemoryManager.h"
 
@@ -167,8 +166,10 @@ class VKRenderSystem final : public RenderSystem
         void QueryDeviceProperties();
         void CreateLogicalDevice();
 
+        #if 0
         void CreateStagingCommandResources();
         void ReleaseStagingCommandResources();
+        #endif
 
         void CreateDefaultPipelineLayout();
 
@@ -182,20 +183,42 @@ class VKRenderSystem final : public RenderSystem
         VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
 
         std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> CreateStagingBuffer(
-            const VkBufferCreateInfo& stagingCreateInfo, const void* initialData = nullptr, std::size_t initialDataSize = 0
+            const VkBufferCreateInfo&   stagingCreateInfo,
+            const void*                 initialData = nullptr,
+            std::size_t                 initialDataSize = 0
         );
+
+        #if 0
+        VkCommandBuffer AllocCommandBuffer(bool begin = true);
+        void FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release = true);
 
         void BeginStagingCommands();
         void EndStagingCommands();
 
         void TransitionImageLayout(
-            VkImage image, VkFormat format,
-            VkImageLayout oldLayout, VkImageLayout newLayout,
-            std::uint32_t numMipLevels, std::uint32_t numArrayLayers
+            VkImage         image,
+            VkFormat        format,
+            VkImageLayout   oldLayout,
+            VkImageLayout   newLayout,
+            std::uint32_t   numMipLevels,
+            std::uint32_t   numArrayLayers
         );
 
-        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset = 0, VkDeviceSize dstOffset = 0);
-        void CopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, const VkExtent3D& extent, std::uint32_t numLayers);
+        void CopyBuffer(
+            VkBuffer        srcBuffer,
+            VkBuffer        dstBuffer,
+            VkDeviceSize    size,
+            VkDeviceSize    srcOffset = 0,
+            VkDeviceSize    dstOffset = 0
+        );
+
+        void CopyBufferToImage(
+            VkBuffer            srcBuffer,
+            VkImage             dstImage,
+            const VkExtent3D&   extent,
+            std::uint32_t       numLayers
+        );
+        #endif
 
         void AssertBufferCPUAccess(const VKBuffer& bufferVK);
 
@@ -211,17 +234,20 @@ class VKRenderSystem final : public RenderSystem
 
         VKPtr<VkInstance>                       instance_;
         VkPhysicalDevice                        physicalDevice_         = VK_NULL_HANDLE;
-        VKPtr<VkDevice>                         device_;
+
+        VKDevice                                device_;
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
 
+        #if 0
         QueueFamilyIndices                      queueFamilyIndices_;
+        #endif
         VkPhysicalDeviceMemoryProperties        memoryProperties_;
         VkPhysicalDeviceFeatures                features_;
 
-        VkQueue                                 graphicsQueue_          = VK_NULL_HANDLE;
-
+        #if 0
         VKPtr<VkCommandPool>                    stagingCommandPool_;
         VkCommandBuffer                         stagingCommandBuffer_   = VK_NULL_HANDLE;
+        #endif
 
         VKPtr<VkPipelineLayout>                 defaultPipelineLayout_;
 

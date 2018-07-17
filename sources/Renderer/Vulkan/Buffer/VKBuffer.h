@@ -52,6 +52,7 @@ class VKBuffer : public Buffer
 
         // Updates the staging buffer (if it was created).
         void UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSize dataSize, VkDeviceSize offset = 0);
+        void FlushStagingBuffer(VkDevice device, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
         // Returns the hardware buffer object.
         inline VkBuffer GetVkBuffer() const

@@ -100,7 +100,7 @@ void VKCommandQueue::Submit(Fence& fence)
 {
     auto& fenceVK = LLGL_CAST(VKFence&, fence);
     fenceVK.Reset(device_);
-    vkQueueSubmit(graphicsQueue_, 0, nullptr, fenceVK.GetHardwareFence());
+    vkQueueSubmit(graphicsQueue_, 0, nullptr, fenceVK.GetVkFence());
 }
 
 bool VKCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)

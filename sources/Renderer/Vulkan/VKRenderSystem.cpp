@@ -19,11 +19,6 @@
 #include "VKTypes.h"
 #include <LLGL/Log.h>
 
-//#define TEST_VULKAN_MEMORY_MNGR
-#ifdef TEST_VULKAN_MEMORY_MNGR
-#   include <iostream>
-#endif
-
 
 namespace LLGL
 {
@@ -75,53 +70,6 @@ static void FillBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize si
     createInfo.pQueueFamilyIndices      = nullptr;
 }
 
-#ifdef TEST_VULKAN_MEMORY_MNGR
-
-static void TestVulkanMemoryMngr(VKDeviceMemoryManager& mngr)
-{
-    std::uint32_t typeBits = 1665;
-    VkDeviceSize alignment = 1;
-
-    auto reg0 = mngr.Allocate(6, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    auto reg1 = mngr.Allocate(7, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    auto reg2 = mngr.Allocate(12, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    auto reg3 = mngr.Allocate(5, 16, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    auto reg4 = mngr.Allocate(5, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout, "Allocate: 6, 7, 12, 5 (alignment 16), 5");
-    std::cout << std::endl;
-
-    mngr.Release(reg1);
-    mngr.PrintBlocks(std::cout, "Release second allocation (7)");
-    std::cout << std::endl;
-
-    reg1 = mngr.Allocate(3, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout, "Allocate: 3");
-    std::cout << std::endl;
-
-    auto reg5 = mngr.Allocate(4, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout, "Allocate: 4");
-    std::cout << std::endl;
-
-    mngr.Release(reg1);
-    mngr.PrintBlocks(std::cout, "Release previous 3");
-    std::cout << std::endl;
-
-    mngr.Release(reg2);
-    mngr.PrintBlocks(std::cout, "Release previous 12");
-    std::cout << std::endl;
-
-    mngr.Release(reg5);
-    mngr.Release(reg4);
-    mngr.PrintBlocks(std::cout, "Release previous 4, 5");
-    std::cout << std::endl;
-
-    reg5 = mngr.Allocate(9, 8, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout, "Allocate: 9 with alignment 8");
-    std::cout << std::endl;
-}
-
-#endif
-
 
 /* ----- Common ----- */
 
@@ -133,7 +81,6 @@ static const std::vector<const char*> g_deviceExtensions
 
 VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     instance_            { vkDestroyInstance                        },
-    device_              { vkDestroyDevice                          },
     debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
 {
     /* Extract optional renderer configuartion */
@@ -160,7 +107,9 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
 
     QueryDeviceProperties();
     CreateLogicalDevice();
+    #if 0
     CreateStagingCommandResources();
+    #endif
     CreateDefaultPipelineLayout();
 
     /* Create device memory manager */
@@ -170,17 +119,11 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
         (rendererConfigVK != nullptr ? rendererConfigVK->minDeviceMemoryAllocationSize : 1024*1024),
         (rendererConfigVK != nullptr ? rendererConfigVK->reduceDeviceMemoryFragmentation : false)
     );
-
-    #ifdef TEST_VULKAN_MEMORY_MNGR
-    TestVulkanMemoryMngr(*deviceMemoryMngr_);
-    #endif
 }
 
 VKRenderSystem::~VKRenderSystem()
 {
-    /* Release resource and wait until device becomes idle */
-    ReleaseStagingCommandResources();
-    vkDeviceWaitIdle(device_);
+    device_.WaitIdle();
 }
 
 /* ----- Render Context ----- */
@@ -211,7 +154,7 @@ CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
 {
     return TakeOwnership(
         commandBuffers_,
-        MakeUnique<VKCommandBuffer>(device_, graphicsQueue_, queueFamilyIndices_, desc)
+        MakeUnique<VKCommandBuffer>(device_, device_.GetVkQueue(), device_.GetQueueFamilyIndices(), desc)
     );
 }
 
@@ -263,7 +206,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     buffer->BindToMemory(device_, memoryRegion);
 
     /* Copy staging buffer into hardware buffer */
-    CopyBuffer(stagingBuffer.buffer, buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
+    device_.CopyBuffer(stagingBuffer.buffer, buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
 
     if ((desc.flags & g_stagingBufferRelatedFlags) != 0)
     {
@@ -313,9 +256,10 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 
         /* Copy data to staging buffer memory */
         bufferVK.UpdateStagingBuffer(device_, data, memorySize, memoryOffset);
+        bufferVK.FlushStagingBuffer(device_);
 
         /* Copy staging buffer into hardware buffer */
-        CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);
+        device_.CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);
 
         #else // TEST
 
@@ -377,7 +321,7 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
         std::tie(stagingBuffer, memoryRegionStaging) = CreateStagingBuffer(stagingCreateInfo, data, dataSize);
 
         /* Copy staging buffer into hardware buffer */
-        CopyBuffer(stagingBuffer.buffer, bufferVK.GetVkBuffer(), memorySize, 0, memoryOffset);
+        device_.CopyBuffer(stagingBuffer.buffer, bufferVK.GetVkBuffer(), memorySize, 0, memoryOffset);
 
         /* Release device memory region */
         deviceMemoryMngr_->Release(memoryRegionStaging);
@@ -391,7 +335,7 @@ void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 
     /* Copy GPU local buffer into staging buffer for read accces */
     if (access != CPUAccess::WriteOnly)
-        CopyBuffer(bufferVK.GetVkBuffer(), bufferVK.GetStagingVkBuffer(), bufferVK.GetSize());
+        device_.CopyBuffer(bufferVK.GetVkBuffer(), bufferVK.GetStagingVkBuffer(), bufferVK.GetSize());
 
     /* Map staging buffer */
     return bufferVK.Map(device_, access);
@@ -407,7 +351,7 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 
     /* Copy staging buffer into GPU local buffer for write access */
     if (bufferVK.GetMappingCPUAccess() != CPUAccess::ReadOnly)
-        CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), bufferVK.GetSize());
+        device_.CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), bufferVK.GetSize());
 }
 
 /* ----- Textures ----- */
@@ -525,16 +469,16 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     auto formatVK = VKTypes::Map(textureDesc.format);
-    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, arrayLayers);
+    device_.TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, arrayLayers);
     {
-        CopyBufferToImage(
+        device_.CopyBufferToImage(
             stagingBuffer.buffer,
             image,
             GetTextureVkExtent(textureDesc),
             GetTextureLayertCount(textureDesc)
         );
     }
-    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels, arrayLayers);
+    device_.TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels, arrayLayers);
 
     /* Release staging buffer */
     deviceMemoryMngr_->Release(memoryRegionStaging);
@@ -969,6 +913,7 @@ void VKRenderSystem::QueryDeviceProperties()
 // see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#extended-functionality-device-layer-deprecation
 void VKRenderSystem::CreateLogicalDevice()
 {
+    #if 0
     /* Initialize queue create description */
     queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice_, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
 
@@ -1009,11 +954,15 @@ void VKRenderSystem::CreateLogicalDevice()
 
     /* Query device graphics queue */
     vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
+    #else
+    device_.CreateLogicalDevice(physicalDevice_, &features_);
+    #endif
 
     /* Create command queue interface */
-    commandQueue_ = MakeUnique<VKCommandQueue>(device_, graphicsQueue_);
+    commandQueue_ = MakeUnique<VKCommandQueue>(device_, device_.GetVkQueue());
 }
 
+#if 0
 void VKRenderSystem::CreateStagingCommandResources()
 {
     /* Create staging command pool */
@@ -1046,6 +995,7 @@ void VKRenderSystem::ReleaseStagingCommandResources()
     vkFreeCommandBuffers(device_, stagingCommandPool_, 1, &stagingCommandBuffer_);
     stagingCommandBuffer_ = VK_NULL_HANDLE;
 }
+#endif
 
 void VKRenderSystem::CreateDefaultPipelineLayout()
 {
@@ -1157,7 +1107,10 @@ VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkB
     return nullptr;
 }
 
-std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> VKRenderSystem::CreateStagingBuffer(const VkBufferCreateInfo& stagingCreateInfo, const void* initialData, std::size_t initialDataSize)
+std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> VKRenderSystem::CreateStagingBuffer(
+    const VkBufferCreateInfo&   stagingCreateInfo,
+    const void*                 initialData,
+    std::size_t                 initialDataSize)
 {
     VKBufferWithRequirements stagingBuffer { device_ };
     stagingBuffer.Create(device_, stagingCreateInfo);
@@ -1185,6 +1138,68 @@ std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> VKRenderSystem::Crea
     }
 
     return std::make_tuple(std::move(stagingBuffer), memoryRegionStaging);
+}
+
+#if 0
+VkCommandBuffer VKRenderSystem::AllocCommandBuffer(bool begin)
+{
+    VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;
+
+    /* Allocate new primary level command buffer via staging command pool */
+    VkCommandBufferAllocateInfo allocInfo;
+    {
+        allocInfo.sType                = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.pNext                = nullptr;
+        allocInfo.commandPool          = stagingCommandPool_;
+        allocInfo.level                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount   = 1;
+    }
+    auto result = vkAllocateCommandBuffers(device_, &allocInfo, &cmdBuffer);
+    VKThrowIfFailed(result, "failed to allocate Vulkan command buffer");
+
+    /* Begin command buffer recording (if enabled) */
+    if (begin)
+    {
+        VkCommandBufferBeginInfo beginInfo;
+        {
+            beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.pNext             = nullptr;
+            beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            beginInfo.pInheritanceInfo  = nullptr;
+        }
+        result = vkBeginCommandBuffer(cmdBuffer, &beginInfo);
+        VKThrowIfFailed(result, "failed to begin recording Vulkan command buffer");
+    }
+
+    return cmdBuffer;
+}
+
+void VKRenderSystem::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
+{
+    /* End command buffer record */
+    auto result = vkEndCommandBuffer(cmdBuffer);
+    VKThrowIfFailed(result, "failed to end recording Vulkan command buffer");
+
+    /* Create fence to ensure the command buffer has finished execution */
+    {
+        VKFence fence { device_ };
+
+        /* Submit command buffer to queue */
+        VkSubmitInfo submitInfo = {};
+        {
+            submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo.commandBufferCount   = 1;
+            submitInfo.pCommandBuffers      = (&cmdBuffer);
+        }
+        vkQueueSubmit(graphicsQueue_, 1, &submitInfo, fence.GetVkFence());
+
+        /* Wait for fence to be signaled */
+        fence.Wait(device_, std::numeric_limits<std::uint64_t>::max());
+    }
+
+    /* Release command buffer (if enabled) */
+    if (release)
+        vkFreeCommandBuffers(device_, stagingCommandPool_, 1, &cmdBuffer);
 }
 
 void VKRenderSystem::BeginStagingCommands()
@@ -1218,7 +1233,12 @@ void VKRenderSystem::EndStagingCommands()
 }
 
 void VKRenderSystem::TransitionImageLayout(
-    VkImage image, VkFormat /*format*/, VkImageLayout oldLayout, VkImageLayout newLayout, std::uint32_t numMipLevels, std::uint32_t numArrayLayers)
+    VkImage         image,
+    VkFormat        /*format*/,
+    VkImageLayout   oldLayout,
+    VkImageLayout   newLayout,
+    std::uint32_t   numMipLevels,
+    std::uint32_t   numArrayLayers)
 {
     BeginStagingCommands();
 
@@ -1266,9 +1286,15 @@ void VKRenderSystem::TransitionImageLayout(
     EndStagingCommands();
 }
 
-void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset)
+void VKRenderSystem::CopyBuffer(
+    VkBuffer        srcBuffer,
+    VkBuffer        dstBuffer,
+    VkDeviceSize    size,
+    VkDeviceSize    srcOffset,
+    VkDeviceSize    dstOffset)
 {
-    BeginStagingCommands();
+    //BeginStagingCommands();
+    auto cmdBuffer = AllocCommandBuffer(true);
 
     /* Record copy command */
     VkBufferCopy region;
@@ -1277,12 +1303,17 @@ void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDevice
         region.dstOffset    = dstOffset;
         region.size         = size;
     }
-    vkCmdCopyBuffer(stagingCommandBuffer_, srcBuffer, dstBuffer, 1, &region);
+    vkCmdCopyBuffer(/*stagingCommandBuffer_*/cmdBuffer, srcBuffer, dstBuffer, 1, &region);
 
-    EndStagingCommands();
+    FlushCommandBuffer(cmdBuffer);
+    //EndStagingCommands();
 }
 
-void VKRenderSystem::CopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, const VkExtent3D& extent, std::uint32_t numLayers)
+void VKRenderSystem::CopyBufferToImage(
+    VkBuffer            srcBuffer,
+    VkImage             dstImage,
+    const VkExtent3D&   extent,
+    std::uint32_t       numLayers)
 {
     BeginStagingCommands();
 
@@ -1303,6 +1334,7 @@ void VKRenderSystem::CopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, con
 
     EndStagingCommands();
 }
+#endif
 
 void VKRenderSystem::AssertBufferCPUAccess(const VKBuffer& bufferVK)
 {
@@ -1322,9 +1354,16 @@ void VKRenderSystem::GenerateMipsPrimary(
     auto image  = textureVK.GetVkImage();
     auto extent = textureVK.GetVkExtent();
 
-    TransitionImageLayout(image, VK_FORMAT_UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, numMipLevels, numArrayLayers);
+    device_.TransitionImageLayout(
+        image,
+        VK_FORMAT_UNDEFINED,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        numMipLevels,
+        numArrayLayers
+    );
 
-    BeginStagingCommands();
+    auto cmdBuffer = device_.AllocCommandBuffer();
 
     /* Initialize image memory barrier */
     VkImageMemoryBarrier barrier;
@@ -1367,7 +1406,7 @@ void VKRenderSystem::GenerateMipsPrimary(
             barrier.subresourceRange.baseArrayLayer = arrayLayer;
 
             vkCmdPipelineBarrier(
-                stagingCommandBuffer_,
+                cmdBuffer,
                 VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
                 0, nullptr,
                 0, nullptr,
@@ -1395,7 +1434,7 @@ void VKRenderSystem::GenerateMipsPrimary(
             blit.dstOffsets[1].z                = static_cast<std::int32_t>(nextExtent.depth);
 
             vkCmdBlitImage(
-                stagingCommandBuffer_,
+                cmdBuffer,
                 image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                 image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 1, &blit,
@@ -1409,7 +1448,7 @@ void VKRenderSystem::GenerateMipsPrimary(
             barrier.newLayout       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
             vkCmdPipelineBarrier(
-                stagingCommandBuffer_,
+                cmdBuffer,
                 VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
                 0, nullptr,
                 0, nullptr,
@@ -1428,7 +1467,7 @@ void VKRenderSystem::GenerateMipsPrimary(
         barrier.subresourceRange.baseMipLevel   = numMipLevels - 1;
 
         vkCmdPipelineBarrier(
-            stagingCommandBuffer_,
+            cmdBuffer,
             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
             0, nullptr,
             0, nullptr,
@@ -1436,7 +1475,7 @@ void VKRenderSystem::GenerateMipsPrimary(
         );
     }
 
-    EndStagingCommands();
+    device_.FlushCommandBuffer(cmdBuffer);
 }
 
 

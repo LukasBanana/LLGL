@@ -65,7 +65,7 @@ enum class PrimitiveTopology
 
     //! Line list, where each pair of two vertices represetns a single line primitive.
     LineList,
-    
+
     //! Line strip, where each vertex generates a new line primitive while the previous vertex is used as line start.
     LineStrip,
 
@@ -80,7 +80,7 @@ enum class PrimitiveTopology
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
     */
     LineListAdjacency,
-    
+
     /**
     \brief Adjacency line strip, which is similar to LineStrip but each end point has a corresponding adjacent vertex that is accessible in a geometry shader.
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
@@ -89,7 +89,7 @@ enum class PrimitiveTopology
 
     //! Triangle list, where each set of three vertices represent a single triangle primitive.
     TriangleList,
-    
+
     //! Triangle strip, where each vertex generates a new triangle primitive with an alternative triangle winding.
     TriangleStrip,
 
@@ -104,7 +104,7 @@ enum class PrimitiveTopology
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
     */
     TriangleListAdjacency,
-    
+
     /**
     \brief Adjacency triangle strips which is similar to TriangleStrip but each triangle edge has a corresponding adjacent vertex that is accessible in a geometry shader.
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.

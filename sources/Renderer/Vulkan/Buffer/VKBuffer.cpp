@@ -119,11 +119,28 @@ void VKBuffer::UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSi
         auto deviceMemory = memoryRegionStaging_->GetParentChunk();
         if (auto memory = deviceMemory->Map(device, memoryRegionStaging_->GetOffset() + offset, dataSize))
         {
-            /* Copy data to staging buffer */
+            /* Copy data to staging buffer and unmap */
             ::memcpy(memory, data, static_cast<std::size_t>(dataSize));
-
             deviceMemory->Unmap(device);
         }
+    }
+}
+
+void VKBuffer::FlushStagingBuffer(VkDevice device, VkDeviceSize size, VkDeviceSize offset)
+{
+    if (memoryRegionStaging_)
+    {
+        /* Flush mapped memory to make it visible on the device */
+        VkMappedMemoryRange memoryRange;
+        {
+            memoryRange.sType   = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+            memoryRange.pNext   = nullptr;
+            memoryRange.memory  = memoryRegionStaging_->GetParentChunk()->GetVkDeviceMemory();
+            memoryRange.offset  = memoryRegionStaging_->GetOffset() + offset;
+            memoryRange.size    = size;
+        }
+        auto result = vkFlushMappedMemoryRanges(device, 1, &memoryRange);
+        VKThrowIfFailed(result, "failed to flush mapped memory range");
     }
 }
 
