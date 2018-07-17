@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderSystem.h>
+#include "VKPhysicalDevice.h"
 #include "VKDevice.h"
 #include "../ContainerTypes.h"
 #include "Memory/VKDeviceMemoryManager.h"
@@ -162,15 +163,12 @@ class VKRenderSystem final : public RenderSystem
         void CreateInstance(const ApplicationDescriptor* applicationDesc);
         void CreateDebugReportCallback();
         void LoadExtensions();
-        bool PickPhysicalDevice();
-        void QueryDeviceProperties();
+        void PickPhysicalDevice();
         void CreateLogicalDevice();
         void CreateDefaultPipelineLayout();
 
         bool IsLayerRequired(const std::string& name) const;
         bool IsExtensionRequired(const std::string& name) const;
-        bool IsPhysicalDeviceSuitable(VkPhysicalDevice device) const;
-        bool CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& extensionNames) const;
 
         std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
 
@@ -187,14 +185,11 @@ class VKRenderSystem final : public RenderSystem
         /* ----- Common objects ----- */
 
         VKPtr<VkInstance>                       instance_;
-        VkPhysicalDevice                        physicalDevice_         = VK_NULL_HANDLE;
 
+        VKPhysicalDevice                        physicalDevice_;
         VKDevice                                device_;
+
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
-
-        VkPhysicalDeviceMemoryProperties        memoryProperties_;
-        VkPhysicalDeviceFeatures                features_;
-
         VKPtr<VkPipelineLayout>                 defaultPipelineLayout_;
 
         bool                                    debugLayerEnabled_      = false;

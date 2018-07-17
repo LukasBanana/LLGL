@@ -73,12 +73,6 @@ static void FillBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize si
 
 /* ----- Common ----- */
 
-static const std::vector<const char*> g_deviceExtensions
-{
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-};
-
 VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     instance_            { vkDestroyInstance                        },
     debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
@@ -101,18 +95,16 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     /* Create Vulkan instance and device objects */
     CreateInstance(rendererConfigVK != nullptr ? &(rendererConfigVK->application) : nullptr);
     LoadExtensions();
-
-    if (!PickPhysicalDevice())
-        throw std::runtime_error("failed to find physical device with Vulkan support");
-
-    QueryDeviceProperties();
+    PickPhysicalDevice();
     CreateLogicalDevice();
+
+    /* Create default resources */
     CreateDefaultPipelineLayout();
 
     /* Create device memory manager */
     deviceMemoryMngr_ = MakeUnique<VKDeviceMemoryManager>(
         device_,
-        memoryProperties_,
+        physicalDevice_.GetMemoryProperties(),
         (rendererConfigVK != nullptr ? rendererConfigVK->minDeviceMemoryAllocationSize : 1024*1024),
         (rendererConfigVK != nullptr ? rendererConfigVK->reduceDeviceMemoryFragmentation : false)
     );
@@ -808,110 +800,26 @@ void VKRenderSystem::LoadExtensions()
     LoadAllExtensions(instance_);
 }
 
-bool VKRenderSystem::PickPhysicalDevice()
+void VKRenderSystem::PickPhysicalDevice()
 {
-    /* Query all physical devices and pick suitable */
-    auto devices = VKQueryPhysicalDevices(instance_);
+    /* Pick physical device with Vulkan support */
+    if (!physicalDevice_.PickPhysicalDevice(instance_))
+        throw std::runtime_error("failed to find physical device with Vulkan support");
 
-    for (const auto& dev : devices)
-    {
-        if (IsPhysicalDeviceSuitable(dev))
-        {
-            physicalDevice_ = dev;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void VKRenderSystem::QueryDeviceProperties()
-{
-    /* Query physical device features and memory propertiers */
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
-    vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
-
-    /* Query properties of selected physical device */
-    VkPhysicalDeviceProperties properties;
-    vkGetPhysicalDeviceProperties(physicalDevice_, &properties);
-
-    /* Map properties to output renderer info */
+    /* Query and store rendering capabilities */
     RendererInfo info;
+    RenderingCapabilities caps;
 
-    info.rendererName           = "Vulkan " + VKApiVersionToString(properties.apiVersion);
-    info.deviceName             = std::string(properties.deviceName);
-    info.vendorName             = GetVendorByID(properties.vendorID);
-    info.shadingLanguageName    = "SPIR-V";
+    physicalDevice_.QueryDeviceProperties(info, caps, gfxPipelineLimits_);
 
     SetRendererInfo(info);
-
-    /* Map limits to output rendering capabilites */
-    const auto& limits = properties.limits;
-
-    RenderingCapabilities caps;
-    {
-        /* Query common attributes */
-        caps.screenOrigin                               = ScreenOrigin::UpperLeft;
-        caps.clippingRange                              = ClippingRange::ZeroToOne;
-        caps.shadingLanguages                           = { ShadingLanguage::SPIRV, ShadingLanguage::SPIRV_100 };
-        //caps.textureFormats                             = ; //???
-
-        /* Query features */
-        caps.features.hasRenderTargets                  = true;
-        caps.features.has3DTextures                     = true;
-        caps.features.hasCubeTextures                   = true;
-        caps.features.hasArrayTextures                  = true;
-        caps.features.hasCubeArrayTextures              = (features_.imageCubeArray != VK_FALSE);
-        caps.features.hasMultiSampleTextures            = true;
-        caps.features.hasSamplers                       = true;
-        caps.features.hasConstantBuffers                = true;
-        caps.features.hasStorageBuffers                 = true;
-        caps.features.hasUniforms                       = true;
-        caps.features.hasGeometryShaders                = (features_.geometryShader != VK_FALSE);
-        caps.features.hasTessellationShaders            = (features_.tessellationShader != VK_FALSE);
-        caps.features.hasComputeShaders                 = true;
-        caps.features.hasInstancing                     = true;
-        caps.features.hasOffsetInstancing               = true;
-        caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
-        caps.features.hasConservativeRasterization      = false;
-        caps.features.hasStreamOutputs                  = false;
-        caps.features.hasLogicOp                        = true;
-
-        /* Query limits */
-        caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
-        caps.limits.lineWidthRange[1]                   = limits.lineWidthRange[1];
-        caps.limits.maxNumTextureArrayLayers            = limits.maxImageArrayLayers;
-        caps.limits.maxNumRenderTargetAttachments       = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
-        caps.limits.maxPatchVertices                    = limits.maxTessellationPatchSize;
-        caps.limits.max1DTextureSize                    = limits.maxImageDimension1D;
-        caps.limits.max2DTextureSize                    = limits.maxImageDimension2D;
-        caps.limits.max3DTextureSize                    = limits.maxImageDimension3D;
-        caps.limits.maxCubeTextureSize                  = limits.maxImageDimensionCube;
-        caps.limits.maxAnisotropy                       = static_cast<std::uint32_t>(limits.maxSamplerAnisotropy);
-        caps.limits.maxNumComputeShaderWorkGroups[0]    = limits.maxComputeWorkGroupCount[0];
-        caps.limits.maxNumComputeShaderWorkGroups[1]    = limits.maxComputeWorkGroupCount[1];
-        caps.limits.maxNumComputeShaderWorkGroups[2]    = limits.maxComputeWorkGroupCount[2];
-        caps.limits.maxComputeShaderWorkGroupSize[0]    = limits.maxComputeWorkGroupSize[0];
-        caps.limits.maxComputeShaderWorkGroupSize[1]    = limits.maxComputeWorkGroupSize[1];
-        caps.limits.maxComputeShaderWorkGroupSize[2]    = limits.maxComputeWorkGroupSize[2];
-        caps.limits.maxNumViewports                     = limits.maxViewports;
-        caps.limits.maxViewportSize[0]                  = limits.maxViewportDimensions[0];
-        caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
-        caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
-        caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;
-    }
     SetRenderingCaps(caps);
-
-    /* Store graphics pipeline spcific limitations */
-    gfxPipelineLimits_.lineWidthRange[0]    = limits.lineWidthRange[0];
-    gfxPipelineLimits_.lineWidthRange[1]    = limits.lineWidthRange[1];
-    gfxPipelineLimits_.lineWidthGranularity = limits.lineWidthGranularity;
 }
 
 void VKRenderSystem::CreateLogicalDevice()
 {
     /* Create logical device with all supported physical device feature */
-    device_.CreateLogicalDevice(physicalDevice_, &features_);
+    device_ = physicalDevice_.CreateLogicalDevice();
 
     /* Create command queue interface */
     commandQueue_ = MakeUnique<VKCommandQueue>(device_, device_.GetVkQueue());
@@ -952,32 +860,9 @@ bool VKRenderSystem::IsExtensionRequired(const std::string& name) const
     );
 }
 
-bool VKRenderSystem::IsPhysicalDeviceSuitable(VkPhysicalDevice device) const
-{
-    if (CheckDeviceExtensionSupport(device, g_deviceExtensions))
-    {
-        //TODO...
-        return true;
-    }
-    return false;
-}
-
-bool VKRenderSystem::CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& extensionNames) const
-{
-    /* Check if device supports all required extensions */
-    auto availableExtensions = VKQueryDeviceExtensionProperties(device);
-
-    std::set<std::string> requiredExtensions(extensionNames.begin(), extensionNames.end());
-
-    for (const auto& ext : availableExtensions)
-        requiredExtensions.erase(ext.extensionName);
-
-    return requiredExtensions.empty();
-}
-
 std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const
 {
-    return VKFindMemoryType(memoryProperties_, memoryTypeBits, properties);
+    return VKFindMemoryType(physicalDevice_.GetMemoryProperties(), memoryTypeBits, properties);
 }
 
 VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage)

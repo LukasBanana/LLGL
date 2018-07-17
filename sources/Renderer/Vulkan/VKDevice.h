@@ -26,6 +26,9 @@ class VKDevice
         /* ----- Common ----- */
 
         VKDevice();
+        VKDevice(VKDevice&& device);
+
+        VKDevice& operator = (VKDevice&& device);
 
         void CreateLogicalDevice(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceFeatures* features);
 

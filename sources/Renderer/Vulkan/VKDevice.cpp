@@ -6,7 +6,6 @@
  */
 
 #include "VKDevice.h"
-#include "VKCore.h"
 #include "RenderState/VKFence.h"
 #include <set>
 #include <algorithm>
@@ -21,6 +20,23 @@ namespace LLGL
 VKDevice::VKDevice() :
     device_ { vkDestroyDevice }
 {
+}
+
+VKDevice::VKDevice(VKDevice&& device) :
+    device_             { std::move(device.device_)      },
+    queueFamilyIndices_ { device.queueFamilyIndices_     },
+    graphicsQueue_      { device.graphicsQueue_          },
+    commandPool_        { std::move(device.commandPool_) }
+{
+}
+
+VKDevice& VKDevice::operator = (VKDevice&& device)
+{
+    device_             = std::move(device.device_);
+    queueFamilyIndices_ = device.queueFamilyIndices_;
+    graphicsQueue_      = device.graphicsQueue_;
+    commandPool_        = std::move(device.commandPool_);
+    return *this;
 }
 
 void VKDevice::WaitIdle()
