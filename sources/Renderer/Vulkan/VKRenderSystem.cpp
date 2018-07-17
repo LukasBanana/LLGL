@@ -107,9 +107,6 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
 
     QueryDeviceProperties();
     CreateLogicalDevice();
-    #if 0
-    CreateStagingCommandResources();
-    #endif
     CreateDefaultPipelineLayout();
 
     /* Create device memory manager */
@@ -510,8 +507,9 @@ void VKRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
 void VKRenderSystem::GenerateMips(Texture& texture)
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
-    GenerateMipsPrimary(
-        textureVK,
+    device_.GenerateMips(
+        textureVK.GetVkImage(),
+        textureVK.GetVkExtent(),
         0,
         textureVK.GetNumMipLevels(),
         0,
@@ -528,8 +526,9 @@ void VKRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
 
     if (baseMipLevel < maxNumMipLevels && baseArrayLayer < maxNumArrayLayers && numMipLevels > 0 && numArrayLayers > 0)
     {
-        GenerateMipsPrimary(
-            textureVK,
+        device_.GenerateMips(
+            textureVK.GetVkImage(),
+            textureVK.GetVkExtent(),
             baseMipLevel,
             std::min(numMipLevels, maxNumMipLevels - baseMipLevel),
             baseArrayLayer,
@@ -909,93 +908,14 @@ void VKRenderSystem::QueryDeviceProperties()
     gfxPipelineLimits_.lineWidthGranularity = limits.lineWidthGranularity;
 }
 
-// Device-only layers are deprecated -> set 'enabledLayerCount' and 'ppEnabledLayerNames' members to zero during device creation.
-// see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#extended-functionality-device-layer-deprecation
 void VKRenderSystem::CreateLogicalDevice()
 {
-    #if 0
-    /* Initialize queue create description */
-    queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice_, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
-
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<std::uint32_t> uniqueQueueFamilies = { queueFamilyIndices_.graphicsFamily, queueFamilyIndices_.presentFamily };
-
-    float queuePriority = 1.0f;
-    for (auto family : uniqueQueueFamilies)
-    {
-        VkDeviceQueueCreateInfo info;
-        {
-            info.sType              = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            info.pNext              = nullptr;
-            info.flags              = 0;
-            info.queueFamilyIndex   = family;
-            info.queueCount         = 1;
-            info.pQueuePriorities   = &queuePriority;
-        }
-        queueCreateInfos.push_back(info);
-    }
-
-    /* Create logical device */
-    VkDeviceCreateInfo createInfo;
-    {
-        createInfo.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        createInfo.pNext                    = nullptr;
-        createInfo.flags                    = 0;
-        createInfo.queueCreateInfoCount     = static_cast<std::uint32_t>(queueCreateInfos.size());
-        createInfo.pQueueCreateInfos        = queueCreateInfos.data();
-        createInfo.enabledLayerCount        = 0;
-        createInfo.ppEnabledLayerNames      = nullptr;
-        createInfo.enabledExtensionCount    = static_cast<std::uint32_t>(g_deviceExtensions.size());
-        createInfo.ppEnabledExtensionNames  = g_deviceExtensions.data();
-        createInfo.pEnabledFeatures         = &features_;
-    }
-    VkResult result = vkCreateDevice(physicalDevice_, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan logical device");
-
-    /* Query device graphics queue */
-    vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
-    #else
+    /* Create logical device with all supported physical device feature */
     device_.CreateLogicalDevice(physicalDevice_, &features_);
-    #endif
 
     /* Create command queue interface */
     commandQueue_ = MakeUnique<VKCommandQueue>(device_, device_.GetVkQueue());
 }
-
-#if 0
-void VKRenderSystem::CreateStagingCommandResources()
-{
-    /* Create staging command pool */
-    VkCommandPoolCreateInfo createInfo;
-    {
-        createInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        createInfo.pNext            = nullptr;
-        createInfo.flags            = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        createInfo.queueFamilyIndex = queueFamilyIndices_.graphicsFamily;
-    }
-    auto result = vkCreateCommandPool(device_, &createInfo, nullptr, stagingCommandPool_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan command pool for staging buffers");
-
-    /* Allocate staging command buffer */
-    VkCommandBufferAllocateInfo allocInfo;
-    {
-        allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.pNext                 = nullptr;
-        allocInfo.commandPool           = stagingCommandPool_;
-        allocInfo.level                 = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount    = 1;
-    }
-    result = vkAllocateCommandBuffers(device_, &allocInfo, &stagingCommandBuffer_);
-    VKThrowIfFailed(result, "failed to create Vulkan command buffer for staging buffers");
-}
-
-void VKRenderSystem::ReleaseStagingCommandResources()
-{
-    /* Release staging command buffer */
-    vkFreeCommandBuffers(device_, stagingCommandPool_, 1, &stagingCommandBuffer_);
-    stagingCommandBuffer_ = VK_NULL_HANDLE;
-}
-#endif
 
 void VKRenderSystem::CreateDefaultPipelineLayout()
 {
@@ -1140,342 +1060,10 @@ std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> VKRenderSystem::Crea
     return std::make_tuple(std::move(stagingBuffer), memoryRegionStaging);
 }
 
-#if 0
-VkCommandBuffer VKRenderSystem::AllocCommandBuffer(bool begin)
-{
-    VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;
-
-    /* Allocate new primary level command buffer via staging command pool */
-    VkCommandBufferAllocateInfo allocInfo;
-    {
-        allocInfo.sType                = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.pNext                = nullptr;
-        allocInfo.commandPool          = stagingCommandPool_;
-        allocInfo.level                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount   = 1;
-    }
-    auto result = vkAllocateCommandBuffers(device_, &allocInfo, &cmdBuffer);
-    VKThrowIfFailed(result, "failed to allocate Vulkan command buffer");
-
-    /* Begin command buffer recording (if enabled) */
-    if (begin)
-    {
-        VkCommandBufferBeginInfo beginInfo;
-        {
-            beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            beginInfo.pNext             = nullptr;
-            beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-            beginInfo.pInheritanceInfo  = nullptr;
-        }
-        result = vkBeginCommandBuffer(cmdBuffer, &beginInfo);
-        VKThrowIfFailed(result, "failed to begin recording Vulkan command buffer");
-    }
-
-    return cmdBuffer;
-}
-
-void VKRenderSystem::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
-{
-    /* End command buffer record */
-    auto result = vkEndCommandBuffer(cmdBuffer);
-    VKThrowIfFailed(result, "failed to end recording Vulkan command buffer");
-
-    /* Create fence to ensure the command buffer has finished execution */
-    {
-        VKFence fence { device_ };
-
-        /* Submit command buffer to queue */
-        VkSubmitInfo submitInfo = {};
-        {
-            submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-            submitInfo.commandBufferCount   = 1;
-            submitInfo.pCommandBuffers      = (&cmdBuffer);
-        }
-        vkQueueSubmit(graphicsQueue_, 1, &submitInfo, fence.GetVkFence());
-
-        /* Wait for fence to be signaled */
-        fence.Wait(device_, std::numeric_limits<std::uint64_t>::max());
-    }
-
-    /* Release command buffer (if enabled) */
-    if (release)
-        vkFreeCommandBuffers(device_, stagingCommandPool_, 1, &cmdBuffer);
-}
-
-void VKRenderSystem::BeginStagingCommands()
-{
-    /* Begin command buffer record */
-    VkCommandBufferBeginInfo beginInfo;
-    {
-        beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.pNext             = nullptr;
-        beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        beginInfo.pInheritanceInfo  = nullptr;
-    }
-    auto result = vkBeginCommandBuffer(stagingCommandBuffer_, &beginInfo);
-    VKThrowIfFailed(result, "failed to begin recording Vulkan command buffer");
-}
-
-void VKRenderSystem::EndStagingCommands()
-{
-    /* End command buffer record */
-    vkEndCommandBuffer(stagingCommandBuffer_);
-
-    /* Submit command buffer to queue */
-    VkSubmitInfo submitInfo = {};
-    {
-        submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount   = 1;
-        submitInfo.pCommandBuffers      = (&stagingCommandBuffer_);
-    }
-    vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(graphicsQueue_);
-}
-
-void VKRenderSystem::TransitionImageLayout(
-    VkImage         image,
-    VkFormat        /*format*/,
-    VkImageLayout   oldLayout,
-    VkImageLayout   newLayout,
-    std::uint32_t   numMipLevels,
-    std::uint32_t   numArrayLayers)
-{
-    BeginStagingCommands();
-
-    /* Initialize image memory barrier descriptor */
-    VkImageMemoryBarrier barrier;
-    {
-        barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.pNext                           = nullptr;
-        barrier.srcAccessMask                   = 0;
-        barrier.dstAccessMask                   = 0;
-        barrier.oldLayout                       = oldLayout;
-        barrier.newLayout                       = newLayout;
-        barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image                           = image;
-        barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel   = 0;
-        barrier.subresourceRange.levelCount     = numMipLevels;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount     = numArrayLayers;
-    }
-
-    /* Initialize pipeline state flags */
-    VkPipelineStageFlags srcStageMask = 0;
-    VkPipelineStageFlags dstStageMask = 0;
-
-    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-    {
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    }
-    else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-    {
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    }
-
-    /* Record image barrier command */
-    vkCmdPipelineBarrier(stagingCommandBuffer_, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-    EndStagingCommands();
-}
-
-void VKRenderSystem::CopyBuffer(
-    VkBuffer        srcBuffer,
-    VkBuffer        dstBuffer,
-    VkDeviceSize    size,
-    VkDeviceSize    srcOffset,
-    VkDeviceSize    dstOffset)
-{
-    //BeginStagingCommands();
-    auto cmdBuffer = AllocCommandBuffer(true);
-
-    /* Record copy command */
-    VkBufferCopy region;
-    {
-        region.srcOffset    = srcOffset;
-        region.dstOffset    = dstOffset;
-        region.size         = size;
-    }
-    vkCmdCopyBuffer(/*stagingCommandBuffer_*/cmdBuffer, srcBuffer, dstBuffer, 1, &region);
-
-    FlushCommandBuffer(cmdBuffer);
-    //EndStagingCommands();
-}
-
-void VKRenderSystem::CopyBufferToImage(
-    VkBuffer            srcBuffer,
-    VkImage             dstImage,
-    const VkExtent3D&   extent,
-    std::uint32_t       numLayers)
-{
-    BeginStagingCommands();
-
-    /* Record copy command */
-    VkBufferImageCopy region;
-    {
-        region.bufferOffset                     = 0;
-        region.bufferRowLength                  = 0;
-        region.bufferImageHeight                = 0;
-        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel        = 0;
-        region.imageSubresource.baseArrayLayer  = 0;
-        region.imageSubresource.layerCount      = numLayers;
-        region.imageOffset                      = { 0, 0, 0 };
-        region.imageExtent                      = extent;
-    }
-    vkCmdCopyBufferToImage(stagingCommandBuffer_, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-    EndStagingCommands();
-}
-#endif
-
 void VKRenderSystem::AssertBufferCPUAccess(const VKBuffer& bufferVK)
 {
     if (bufferVK.GetStagingVkBuffer() == VK_NULL_HANDLE)
         throw std::runtime_error("hardware buffer was not created with CPU access (missing staging VkBuffer)");
-}
-
-//TODO: add parameters
-void VKRenderSystem::GenerateMipsPrimary(
-    VKTexture&      textureVK,
-    std::uint32_t   baseMipLevel,
-    std::uint32_t   numMipLevels,
-    std::uint32_t   baseArrayLayer,
-    std::uint32_t   numArrayLayers)
-{
-    /* Get Vulkan image object */
-    auto image  = textureVK.GetVkImage();
-    auto extent = textureVK.GetVkExtent();
-
-    device_.TransitionImageLayout(
-        image,
-        VK_FORMAT_UNDEFINED,
-        VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        numMipLevels,
-        numArrayLayers
-    );
-
-    auto cmdBuffer = device_.AllocCommandBuffer();
-
-    /* Initialize image memory barrier */
-    VkImageMemoryBarrier barrier;
-
-    barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.pNext                           = nullptr;
-    barrier.srcAccessMask                   = 0;
-    barrier.dstAccessMask                   = 0;
-    barrier.oldLayout                       = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.newLayout                       = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image                           = image;
-    barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel   = 0;
-    barrier.subresourceRange.levelCount     = 1;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount     = 1;
-
-    /* Blit each MIP-map from previous (lower) MIP level */
-    for (std::uint32_t arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
-    {
-        auto currExtent = extent;
-
-        for (std::uint32_t mipLevel = 1; mipLevel < numMipLevels; ++mipLevel)
-        {
-            /* Determine extent of next MIP level */
-            auto nextExtent = currExtent;
-
-            nextExtent.width    = std::max(1u, currExtent.width  / 2);
-            nextExtent.height   = std::max(1u, currExtent.height / 2);
-            nextExtent.depth    = std::max(1u, currExtent.depth  / 2);
-
-            /* Transition previous MIP level to VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL */
-            barrier.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
-            barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
-            barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-            barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            barrier.subresourceRange.baseMipLevel   = mipLevel - 1;
-            barrier.subresourceRange.baseArrayLayer = arrayLayer;
-
-            vkCmdPipelineBarrier(
-                cmdBuffer,
-                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-                0, nullptr,
-                0, nullptr,
-                1, &barrier
-            );
-
-            /* Blit previous MIP level into next higher MIP level (with smaller extent) */
-            VkImageBlit blit;
-
-            blit.srcSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-            blit.srcSubresource.mipLevel        = mipLevel - 1;
-            blit.srcSubresource.baseArrayLayer  = arrayLayer;
-            blit.srcSubresource.layerCount      = 1;
-            blit.srcOffsets[0]                  = { 0, 0, 0 };
-            blit.srcOffsets[1].x                = static_cast<std::int32_t>(currExtent.width);
-            blit.srcOffsets[1].y                = static_cast<std::int32_t>(currExtent.height);
-            blit.srcOffsets[1].z                = static_cast<std::int32_t>(currExtent.depth);
-            blit.dstSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-            blit.dstSubresource.mipLevel        = mipLevel;
-            blit.dstSubresource.baseArrayLayer  = arrayLayer;
-            blit.dstSubresource.layerCount      = 1;
-            blit.dstOffsets[0]                  = { 0, 0, 0 };
-            blit.dstOffsets[1].x                = static_cast<std::int32_t>(nextExtent.width);
-            blit.dstOffsets[1].y                = static_cast<std::int32_t>(nextExtent.height);
-            blit.dstOffsets[1].z                = static_cast<std::int32_t>(nextExtent.depth);
-
-            vkCmdBlitImage(
-                cmdBuffer,
-                image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                1, &blit,
-                VK_FILTER_LINEAR
-            );
-
-            /* Transition previous MIP level back to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL */
-            barrier.srcAccessMask   = VK_ACCESS_TRANSFER_READ_BIT;
-            barrier.dstAccessMask   = VK_ACCESS_SHADER_READ_BIT;
-            barrier.oldLayout       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            barrier.newLayout       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-            vkCmdPipelineBarrier(
-                cmdBuffer,
-                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-                0, nullptr,
-                0, nullptr,
-                1, &barrier
-            );
-
-            /* Reduce image extent to next MIP level */
-            currExtent = nextExtent;
-        }
-
-        /* Transition last MIP level back to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL */
-        barrier.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT;
-        barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout                       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.subresourceRange.baseMipLevel   = numMipLevels - 1;
-
-        vkCmdPipelineBarrier(
-            cmdBuffer,
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-    }
-
-    device_.FlushCommandBuffer(cmdBuffer);
 }
 
 

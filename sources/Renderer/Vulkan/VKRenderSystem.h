@@ -165,12 +165,6 @@ class VKRenderSystem final : public RenderSystem
         bool PickPhysicalDevice();
         void QueryDeviceProperties();
         void CreateLogicalDevice();
-
-        #if 0
-        void CreateStagingCommandResources();
-        void ReleaseStagingCommandResources();
-        #endif
-
         void CreateDefaultPipelineLayout();
 
         bool IsLayerRequired(const std::string& name) const;
@@ -188,47 +182,7 @@ class VKRenderSystem final : public RenderSystem
             std::size_t                 initialDataSize = 0
         );
 
-        #if 0
-        VkCommandBuffer AllocCommandBuffer(bool begin = true);
-        void FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release = true);
-
-        void BeginStagingCommands();
-        void EndStagingCommands();
-
-        void TransitionImageLayout(
-            VkImage         image,
-            VkFormat        format,
-            VkImageLayout   oldLayout,
-            VkImageLayout   newLayout,
-            std::uint32_t   numMipLevels,
-            std::uint32_t   numArrayLayers
-        );
-
-        void CopyBuffer(
-            VkBuffer        srcBuffer,
-            VkBuffer        dstBuffer,
-            VkDeviceSize    size,
-            VkDeviceSize    srcOffset = 0,
-            VkDeviceSize    dstOffset = 0
-        );
-
-        void CopyBufferToImage(
-            VkBuffer            srcBuffer,
-            VkImage             dstImage,
-            const VkExtent3D&   extent,
-            std::uint32_t       numLayers
-        );
-        #endif
-
         void AssertBufferCPUAccess(const VKBuffer& bufferVK);
-
-        void GenerateMipsPrimary(
-            VKTexture&      textureVK,
-            std::uint32_t   baseMipLevel,
-            std::uint32_t   numMipLevels,
-            std::uint32_t   baseArrayLayer,
-            std::uint32_t   numArrayLayers
-        );
 
         /* ----- Common objects ----- */
 
@@ -238,16 +192,8 @@ class VKRenderSystem final : public RenderSystem
         VKDevice                                device_;
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
 
-        #if 0
-        QueueFamilyIndices                      queueFamilyIndices_;
-        #endif
         VkPhysicalDeviceMemoryProperties        memoryProperties_;
         VkPhysicalDeviceFeatures                features_;
-
-        #if 0
-        VKPtr<VkCommandPool>                    stagingCommandPool_;
-        VkCommandBuffer                         stagingCommandBuffer_   = VK_NULL_HANDLE;
-        #endif
 
         VKPtr<VkPipelineLayout>                 defaultPipelineLayout_;
 

@@ -66,6 +66,27 @@ class VKDevice
             std::uint32_t       numLayers
         );
 
+        void GenerateMips(
+            VkCommandBuffer     commandBuffer,
+            VkImage             image,
+            const VkExtent3D&   imageExtent,
+            std::uint32_t       baseMipLevel,
+            std::uint32_t       numMipLevels,
+            std::uint32_t       baseArrayLayer,
+            std::uint32_t       numArrayLayers
+        );
+
+        void GenerateMips(
+            VkImage             image,
+            const VkExtent3D&   imageExtent,
+            std::uint32_t       baseMipLevel,
+            std::uint32_t       numMipLevels,
+            std::uint32_t       baseArrayLayer,
+            std::uint32_t       numArrayLayers
+        );
+
+        /* ----- Handles ----- */
+
         // Returns the native VkDevice handle.
         inline const VKPtr<VkDevice>& GetVkDevice() const
         {
