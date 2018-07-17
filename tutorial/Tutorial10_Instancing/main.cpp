@@ -273,7 +273,7 @@ private:
         {
             plDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage,   /*0*/3 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage,   0/*3*/ },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage, 1 },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage, 2 },
             };
@@ -385,7 +385,7 @@ private:
                 // Set graphics pipeline state
                 commands->SetGraphicsPipeline(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
-                if (0)//pipelineLayout)
+                if (pipelineLayout)
                 {
                     // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
                     commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
