@@ -422,7 +422,7 @@ myCmdBuffer->ClearAttachments(3, myClearCmds);
 
 ## Viewport and scissor arrays
 
-Functions to set viewport and scissor arrays have been renamed for a persistent nomenclature. A `Set...Array` function in the `CommandBuffer` interface is only used for `...Array` objects (such as `BufferArray`). For basic C/C++ arrays functions like `SetViewports`, `SetScissors`, or `ClearAttachments` are used.
+Functions to set viewport and scissor arrays have been renamed for a persistent nomenclature. A `Set...Array` function in the `CommandBuffer` interface is only used for `...Array` objects (such as `BufferArray`). For basic C/C++ arrays, functions like `SetViewports`, `SetScissors`, or `ClearAttachments` are used.
 
 Before:
 ```cpp
@@ -629,7 +629,7 @@ After:
 ```cpp
 // Usage:
 LLGL::TextureDescriptor myTextureDesc;
-myTextureDesc.format = LLGL::TextureFormat::RGBA8UNorm; // 8-bit normalized unsigned byte format
+myTextureDesc.format = LLGL::Format::RGBA8UNorm; // 8-bit normalized unsigned byte format
 
 LLGL::VertexAttribute myVertexPositionAttrib { "myPosition", LLGL::Format::RGB32Float }; // 32-bit floating-point format
 LLGL::VertexAttribute myVertexColorAttrib    { "myColor",    LLGL::Format::RGBA8UNorm }; // 8-bit normalized unsigned byte format
