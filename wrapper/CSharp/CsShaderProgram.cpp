@@ -33,7 +33,8 @@ bool ShaderProgram::HasErrors::get()
 
 String^ ShaderProgram::QueryInfoLog()
 {
-    return gcnew String(ToManagedString(native_->QueryInfoLog()));
+    auto info = native_->QueryInfoLog();
+    return gcnew String(ToManagedString(info));
 }
 
 #if 0

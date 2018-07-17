@@ -65,6 +65,12 @@ public ref class ShaderDescriptor
     public:
 
         ShaderDescriptor();
+        ShaderDescriptor(ShaderType type, String^ source);
+        ShaderDescriptor(ShaderType type, String^ source, String^ entryPoint, String^ profile);
+        ShaderDescriptor(ShaderType type, String^ source, String^ entryPoint, String^ profile, int flags);
+        ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source);
+        ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source, String^ entryPoint, String^ profile);
+        ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source, String^ entryPoint, String^ profile, int flags);
 
         property ShaderType         Type;
         property String^            Source;

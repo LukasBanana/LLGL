@@ -11,6 +11,7 @@
 #include <LLGL/CommandBuffer.h>
 #include "CsTypes.h"
 #include "CsRenderSystemChilds.h"
+#include "CsGraphicsPipelineFlags.h"
 #include "CsRenderTarget.h"
 
 #using <System.dll>

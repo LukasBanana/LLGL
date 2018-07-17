@@ -51,7 +51,7 @@ void CommandBuffer::SetViewports(array<Viewport^>^ viewports)
 {
     ::LLGL::Viewport viewportsNative[g_maxNumViewports];
 
-    auto numViewports = static_cast<std::uint32_t>(std::min(viewports->Length::get(), g_maxNumViewports));
+    auto numViewports = static_cast<std::uint32_t>(std::min(viewports->Length, g_maxNumViewports));
     for (std::uint32_t i = 0; i < numViewports; ++i)
         Convert(viewportsNative[i], viewports[i]);
 
@@ -77,7 +77,7 @@ void CommandBuffer::SetScissors(array<Scissor^>^ scissors)
 {
     ::LLGL::Scissor scissorsNative[g_maxNumViewports];
 
-    auto numScissors = static_cast<std::uint32_t>(std::min(scissors->Length::get(), g_maxNumViewports));
+    auto numScissors = static_cast<std::uint32_t>(std::min(scissors->Length, g_maxNumViewports));
     for (std::uint32_t i = 0; i < numScissors; ++i)
         Convert(scissorsNative[i], scissors[i]);
 
@@ -114,7 +114,7 @@ void CommandBuffer::ClearAttachments(array<AttachmentClear^>^ attachments);
 
 static ::LLGL::Buffer* GetNative(Buffer^ buffer)
 {
-    return static_cast<::LLGL::Buffer*>(buffer->Native::get());
+    return static_cast<::LLGL::Buffer*>(buffer->Native);
 }
 
 void CommandBuffer::SetVertexBuffer(Buffer^ buffer)
@@ -124,7 +124,7 @@ void CommandBuffer::SetVertexBuffer(Buffer^ buffer)
 
 void CommandBuffer::SetVertexBufferArray(BufferArray^ bufferArray)
 {
-    native_->SetVertexBufferArray(*bufferArray->Native::get());
+    native_->SetVertexBufferArray(*bufferArray->Native);
 }
 
 void CommandBuffer::SetIndexBuffer(Buffer^ buffer)
@@ -156,34 +156,34 @@ void CommandBuffer::EndStreamOutput()
 
 void CommandBuffer::SetGraphicsResourceHeap(ResourceHeap^ resourceHeap)
 {
-    native_->SetGraphicsResourceHeap(*resourceHeap->Native::get());
+    native_->SetGraphicsResourceHeap(*resourceHeap->Native);
 }
 
 void CommandBuffer::SetGraphicsResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet)
 {
-    native_->SetGraphicsResourceHeap(*resourceHeap->Native::get(), firstSet);
+    native_->SetGraphicsResourceHeap(*resourceHeap->Native, firstSet);
 }
 
 void CommandBuffer::SetComputeResourceHeap(ResourceHeap^ resourceHeap)
 {
-    native_->SetComputeResourceHeap(*resourceHeap->Native::get());
+    native_->SetComputeResourceHeap(*resourceHeap->Native);
 }
 
 void CommandBuffer::SetComputeResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet)
 {
-    native_->SetComputeResourceHeap(*resourceHeap->Native::get(), firstSet);
+    native_->SetComputeResourceHeap(*resourceHeap->Native, firstSet);
 }
 
 /* ----- Render Passes ----- */
 
 void CommandBuffer::BeginRenderPass(RenderTarget^ renderTarget)
 {
-    native_->BeginRenderPass(*renderTarget->Native::get());
+    native_->BeginRenderPass(*renderTarget->Native);
 }
 
 void CommandBuffer::BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ renderPass)
 {
-    native_->BeginRenderPass(*renderTarget->Native::get(), renderPass->Native::get());
+    native_->BeginRenderPass(*renderTarget->Native, renderPass->Native);
 }
 
 #if 0
@@ -201,12 +201,12 @@ void CommandBuffer::EndRenderPass()
 
 void CommandBuffer::SetGraphicsPipeline(GraphicsPipeline^ graphicsPipeline)
 {
-    native_->SetGraphicsPipeline(*graphicsPipeline->Native::get());
+    native_->SetGraphicsPipeline(*graphicsPipeline->Native);
 }
 
 void CommandBuffer::SetComputePipeline(ComputePipeline^ computePipeline)
 {
-    native_->SetComputePipeline(*computePipeline->Native::get());
+    native_->SetComputePipeline(*computePipeline->Native);
 }
 
 /* ----- Drawing ----- */

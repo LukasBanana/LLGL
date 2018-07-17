@@ -9,10 +9,7 @@
 #include "CsHelper.h"
 #include <algorithm>
 
-#if 1//TEST
-#include <LLGL/Window.h>
-#endif
-
+#include <iostream>
 
 namespace LHermanns
 {
@@ -244,18 +241,18 @@ void RenderSystem::Release(RenderTarget^ renderTarget);
 
 /* ----- Shader ----- */
 
-static void Convert(::LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src)
+static void Convert(::LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src, std::string (&tempStr)[3])
 {
-    auto sourceStr      = ToStdString(src->Source);
-    auto entryPointStr  = ToStdString(src->EntryPoint);
-    auto profileStr     = ToStdString(src->Profile);
+    tempStr[0] = ToStdString(src->Source);
+    tempStr[1] = ToStdString(src->EntryPoint);
+    tempStr[2] = ToStdString(src->Profile);
 
     dst.type            = static_cast<::LLGL::ShaderType>(src->Type);
-    dst.source          = sourceStr.c_str();
-    dst.sourceSize      = sourceStr.size();
+    dst.source          = tempStr[0].c_str();
+    dst.sourceSize      = tempStr[0].size();
     dst.sourceType      = static_cast<::LLGL::ShaderSourceType>(src->SourceType);
-    dst.entryPoint      = entryPointStr.c_str();
-    dst.profile         = profileStr.c_str();
+    dst.entryPoint      = tempStr[1].c_str();
+    dst.profile         = tempStr[2].c_str();
     dst.flags           = src->Flags;
     #if 0
     dst.streamOutput    = ;
@@ -264,8 +261,9 @@ static void Convert(::LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src)
 
 Shader^ RenderSystem::CreateShader(ShaderDescriptor^ desc)
 {
+    std::string tempStr[3];
     ::LLGL::ShaderDescriptor nativeDesc;
-    Convert(nativeDesc, desc);
+    Convert(nativeDesc, desc, tempStr);
     return gcnew Shader(native_->CreateShader(nativeDesc));
 }
 
@@ -329,17 +327,142 @@ void RenderSystem::Release(ShaderProgram^ shaderProgram)
 PipelineLayout^ RenderSystem::CreatePipelineLayout(PipelineLayoutDescriptor^ desc);
 
 void RenderSystem::Release(PipelineLayout^ pipelineLayout);
+#endif
 
 /* ----- Pipeline States ----- */
 
-GraphicsPipeline^ RenderSystem::CreateGraphicsPipeline(GraphicsPipelineDescriptor^ desc);
+static void Convert(::LLGL::Viewport& dst, Viewport^ src)
+{
+    dst.x           = src->X;
+    dst.y           = src->Y;
+    dst.width       = src->Width;
+    dst.height      = src->Height;
+    dst.minDepth    = src->MinDepth;
+    dst.maxDepth    = src->MaxDepth;
+}
 
+static void Convert(::LLGL::Scissor& dst, Scissor^ src)
+{
+    dst.x       = src->X;
+    dst.y       = src->Y;
+    dst.width   = src->Width;
+    dst.height  = src->Height;
+}
+
+static void Convert(::LLGL::MultiSamplingDescriptor& dst, MultiSamplingDescriptor^ src)
+{
+    dst.enabled = src->Enabled;
+    dst.samples = src->Samples;
+}
+
+static void Convert(::LLGL::DepthDescriptor& dst, DepthDescriptor^ src)
+{
+    dst.testEnabled     = src->TestEnabled;
+    dst.writeEnabled    = src->WriteEnabled;
+    dst.compareOp       = static_cast<::LLGL::CompareOp>(src->CompareOp);
+}
+
+static void Convert(::LLGL::StencilFaceDescriptor& dst, StencilFaceDescriptor^ src)
+{
+    dst.stencilFailOp   = static_cast<::LLGL::StencilOp>(src->StencilFailOp);
+    dst.depthFailOp     = static_cast<::LLGL::StencilOp>(src->DepthFailOp);
+    dst.depthPassOp     = static_cast<::LLGL::StencilOp>(src->DepthPassOp);
+    dst.compareOp       = static_cast<::LLGL::CompareOp>(src->CompareOp);
+    dst.readMask        = src->ReadMask;
+    dst.writeMask       = src->WriteMask;
+    dst.reference       = src->Reference;
+}
+
+static void Convert(::LLGL::StencilDescriptor& dst, StencilDescriptor^ src)
+{
+    dst.testEnabled = src->TestEnabled;
+    Convert(dst.front, src->Front);
+    Convert(dst.back, src->Back);
+}
+
+static void Convert(::LLGL::DepthBiasDescriptor& dst, DepthBiasDescriptor^ src)
+{
+    dst.constantFactor  = src->ConstantFactor;
+    dst.slopeFactor     = src->SlopeFactor;
+    dst.clamp           = src->Clamp;
+}
+
+static void Convert(::LLGL::RasterizerDescriptor& dst, RasterizerDescriptor^ src)
+{
+    dst.polygonMode                 = static_cast<::LLGL::PolygonMode>(src->PolygonMode);
+    dst.cullMode                    = static_cast<::LLGL::CullMode>(src->CullMode);
+    Convert(dst.depthBias, src->DepthBias);
+    Convert(dst.multiSampling, src->MultiSampling);
+    dst.frontCCW                    = src->FrontCCW;
+    dst.depthClampEnabled           = src->DepthClampEnabled;
+    dst.scissorTestEnabled          = src->ScissorTestEnabled;
+    dst.antiAliasedLineEnabled      = src->AntiAliasedLineEnabled;
+    dst.conservativeRasterization   = src->ConservativeRasterization;
+    dst.lineWidth                   = src->LineWidth;
+}
+
+static void Convert(::LLGL::BlendTargetDescriptor& dst, BlendTargetDescriptor^ src)
+{
+    dst.srcColor        = static_cast<::LLGL::BlendOp>(src->SrcColor);
+    dst.dstColor        = static_cast<::LLGL::BlendOp>(src->DstColor);
+    dst.colorArithmetic = static_cast<::LLGL::BlendArithmetic>(src->ColorArithmetic);
+    dst.srcAlpha        = static_cast<::LLGL::BlendOp>(src->SrcAlpha);
+    dst.dstAlpha        = static_cast<::LLGL::BlendOp>(src->DstAlpha);
+    dst.alphaArithmetic = static_cast<::LLGL::BlendArithmetic>(src->AlphaArithmetic);
+    for (int i = 0; i < 4; ++i)
+        dst.colorMask[i] = (src->ColorMask->Length > i ? src->ColorMask[i] : true);
+}
+
+static void Convert(::LLGL::BlendDescriptor& dst, BlendDescriptor^ src)
+{
+    dst.blendEnabled            = src->BlendEnabled;
+    for (int i = 0; i < 4; ++i)
+        dst.blendFactor[i] = (src->BlendFactor->Length > i ? src->BlendFactor[i] : 0.0f);
+    dst.alphaToCoverageEnabled  = src->AlphaToCoverageEnabled;
+    dst.logicOp                 = static_cast<::LLGL::LogicOp>(src->LogicOp);
+    dst.targets.resize(src->Targets->Count);
+    for (std::size_t i = 0; i < dst.targets.size(); ++i)
+        Convert(dst.targets[i], src->Targets[i]);
+}
+
+static void Convert(::LLGL::GraphicsPipelineDescriptor& dst, GraphicsPipelineDescriptor^ src)
+{
+    dst.shaderProgram       = (src->ShaderProgram != nullptr ? src->ShaderProgram->Native : nullptr);
+    dst.renderPass          = (src->RenderPass != nullptr ? src->RenderPass->Native : nullptr);
+    dst.pipelineLayout      = (src->PipelineLayout != nullptr ? src->PipelineLayout->Native : nullptr);
+    dst.primitiveTopology   = static_cast<::LLGL::PrimitiveTopology>(src->PrimitiveTopology);
+
+    dst.viewports.resize(src->Viewports->Count);
+    for (std::size_t i = 0; i < dst.viewports.size(); ++i)
+        Convert(dst.viewports[i], src->Viewports[i]);
+
+    dst.scissors.resize(src->Scissors->Count);
+    for (std::size_t i = 0; i < dst.scissors.size(); ++i)
+        Convert(dst.scissors[i], src->Scissors[i]);
+
+    Convert(dst.depth, src->Depth);
+    Convert(dst.stencil, src->Stencil);
+    Convert(dst.rasterizer, src->Rasterizer);
+    Convert(dst.blend, src->Blend);
+}
+
+GraphicsPipeline^ RenderSystem::CreateGraphicsPipeline(GraphicsPipelineDescriptor^ desc)
+{
+    ::LLGL::GraphicsPipelineDescriptor nativeDesc;
+    Convert(nativeDesc, desc);
+    return gcnew GraphicsPipeline(native_->CreateGraphicsPipeline(nativeDesc));
+}
+
+#if 0
 ComputePipeline^ RenderSystem::CreateComputePipeline(ComputePipelineDescriptor^ desc);
+#endif
 
-void RenderSystem::Release(GraphicsPipeline^ graphicsPipeline);
+void RenderSystem::Release(GraphicsPipeline^ graphicsPipeline)
+{
+}
 
+#if 0
 void RenderSystem::Release(ComputePipeline^ computePipeline);
-
 #endif
 
 /* ----- Fences ----- */

@@ -72,42 +72,6 @@ public ref class Offset3D
 
 };
 
-public ref class Viewport
-{
-
-    public:
-
-        Viewport();
-        Viewport(float x, float y, float width, float height);
-        Viewport(float x, float y, float width, float height, float minDepth, float maxDepth);
-        Viewport(Offset2D^ offset, Extent2D^ extent);
-        Viewport(Offset2D^ offset, Extent2D^ extent, float minDepth, float maxDepth);
-
-        property float X;
-        property float Y;
-        property float Width;
-        property float Height;
-        property float MinDepth;
-        property float MaxDepth;
-
-};
-
-public ref class Scissor
-{
-
-    public:
-
-        Scissor();
-        Scissor(int x, int y, int width, int height);
-        Scissor(Offset2D^ offset, Extent2D^ extent);
-
-        property int X;
-        property int Y;
-        property int Width;
-        property int Height;
-
-};
-
 
 } // /namespace LLGL
 
