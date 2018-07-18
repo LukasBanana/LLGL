@@ -428,6 +428,7 @@ void VKDevice::GenerateMips(
 
 void VKDevice::WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSize size, VkDeviceSize offset)
 {
+    #if 1
     if (auto region = buffer.GetMemoryRegion())
     {
         /* Map buffer memory to host memory */
@@ -439,6 +440,13 @@ void VKDevice::WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSiz
             deviceMemory->Unmap(device_);
         }
     }
+    #else
+    auto cmdBuffer = AllocCommandBuffer();
+    {
+        vkCmdUpdateBuffer(cmdBuffer, buffer.GetVkBuffer(), offset, size, data);
+    }
+    FlushCommandBuffer(cmdBuffer);
+    #endif
 }
 
 void VKDevice::FlushMappedBuffer(VKDeviceBuffer& buffer, VkDeviceSize size, VkDeviceSize offset)

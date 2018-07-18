@@ -41,6 +41,7 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
         This can be a bitwise OR combination of the RecordingFlags enumeration.
         \see End(CommandBuffer&)
         \see RecordingFlags
+        \todo Should be part of \c CommandBuffer interface, since this is independent of the command queue.
         */
         virtual void Begin(CommandBuffer& commandBuffer, long flags = 0) = 0;
 
@@ -49,6 +50,8 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
         \remarks If this is not a pre-recorded command buffer, this will automatically submit the recording to the queue.
         \see Begin(CommandBuffer&, long)
         \see Submit(CommandBuffer&)
+        \todo Should be part of \c CommandBuffer interface, since this is independent of the command queue;
+        except for \c Submit, so maybe this function should remain as alternative.
         */
         virtual void End(CommandBuffer& commandBuffer) = 0;
 

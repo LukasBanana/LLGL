@@ -73,7 +73,7 @@ class Tutorial11 : public Tutorial
 public:
 
     Tutorial11() :
-        Tutorial { L"LLGL Tutorial 11: PostProcessing", { 800, 600 }, 0 }
+        Tutorial { L"LLGL Tutorial 11: PostProcessing", { 800, 600 }, 0, false }
     {
         // Create all graphics objects
         CreateBuffers();
@@ -504,6 +504,7 @@ private:
             commands->SetVertexBuffer(*vertexBufferScene);
 
             // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
+            SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
             commands->BeginRenderPass(*renderTargetScene);
             {
                 // Set viewport to full size
@@ -523,11 +524,14 @@ private:
                 commands->SetGraphicsResourceHeap(*resourceHeapScene);
 
                 // Draw outer scene model
-                SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
                 commands->Draw(numSceneVertices, 0);
+            }
+            commands->EndRenderPass();
 
+            SetSceneSettingsInnerModel(innerModelRotation);
+            commands->BeginRenderPass(*renderTargetScene);
+            {
                 // Draw inner scene model
-                SetSceneSettingsInnerModel(innerModelRotation);
                 commands->Draw(numSceneVertices, 0);
             }
             commands->EndRenderPass();
@@ -536,6 +540,7 @@ private:
             commands->SetVertexBuffer(*vertexBufferNull);
 
             // Draw horizontal blur pass
+            SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
             commands->BeginRenderPass(*renderTargetBlurX);
             {
                 // Draw blur passes in quarter resolution
@@ -544,12 +549,12 @@ private:
                 commands->SetGraphicsResourceHeap(*resourceHeapBlurX);
 
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-                SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();
 
             // Draw vertical blur pass
+            SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
             commands->BeginRenderPass(*renderTargetBlurY);
             {
                 //commands->SetViewport(viewportQuarter);
@@ -557,7 +562,6 @@ private:
                 commands->SetGraphicsResourceHeap(*resourceHeapBlurY);
 
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-                SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();

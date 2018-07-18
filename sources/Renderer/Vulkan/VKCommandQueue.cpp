@@ -15,6 +15,9 @@ namespace LLGL
 {
 
 
+//TEST
+VkCommandBuffer g_currentCmdBuffer = VK_NULL_HANDLE;
+
 VKCommandQueue::VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue graphicsQueue) :
     device_        { device        },
     graphicsQueue_ { graphicsQueue }
@@ -57,6 +60,10 @@ void VKCommandQueue::Begin(CommandBuffer& commandBuffer, long flags)
     }
     auto result = vkBeginCommandBuffer(commandBufferVK.GetVkCommandBuffer(), &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
+
+    #if 1//TEST
+    g_currentCmdBuffer = commandBufferVK.GetVkCommandBuffer();
+    #endif
 }
 
 void VKCommandQueue::End(CommandBuffer& commandBuffer)

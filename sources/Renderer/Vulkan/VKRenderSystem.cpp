@@ -45,18 +45,26 @@ static void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCall
 
 static VkBufferUsageFlags GetVkBufferUsageFlags(long bufferFlags)
 {
+    #if 0
     if ((bufferFlags & BufferFlags::MapReadAccess) != 0)
         return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     else
         return VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    #else
+    return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    #endif
 }
 
 static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long bufferFlags)
 {
+    #if 0
     if ((bufferFlags & BufferFlags::MapWriteAccess) != 0)
         return VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     else
         return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    #else
+    return VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    #endif
 }
 
 
@@ -228,7 +236,7 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 
     if (bufferVK.GetStagingVkBuffer() != VK_NULL_HANDLE)
     {
-        #if 1
+        #if 0
 
         /* Copy data to staging buffer memory */
         device_.WriteBuffer(bufferVK.GetStagingDeviceBuffer(), data, memorySize, memoryOffset);
@@ -236,6 +244,22 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 
         /* Copy staging buffer into hardware buffer */
         device_.CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);
+
+        #elif 1
+
+        if (g_currentCmdBuffer != VK_NULL_HANDLE)
+        {
+            vkCmdUpdateBuffer(g_currentCmdBuffer, bufferVK.GetVkBuffer(), memoryOffset, memorySize, data);
+        }
+        else
+        {
+            /* Copy data to staging buffer memory */
+            device_.WriteBuffer(bufferVK.GetStagingDeviceBuffer(), data, memorySize, memoryOffset);
+            device_.FlushMappedBuffer(bufferVK.GetStagingDeviceBuffer());
+
+            /* Copy staging buffer into hardware buffer */
+            device_.CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);
+        }
 
         #else // TEST
 
@@ -749,9 +773,14 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
-    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-    uint64_t object, size_t location, int32_t messageCode,
-    const char* layerPrefix, const char* message, void* userData)
+    VkDebugReportFlagsEXT       flags,
+    VkDebugReportObjectTypeEXT  objectType,
+    uint64_t                    object,
+    size_t                      location,
+    int32_t                     messageCode,
+    const char*                 layerPrefix,
+    const char*                 message,
+    void*                       userData)
 {
     //auto renderSystemVK = reinterpret_cast<VKRenderSystem*>(userData);
     Log::StdErr() << message << std::endl;

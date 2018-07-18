@@ -20,6 +20,9 @@ namespace LLGL
 {
 
 
+//TEST
+extern VkCommandBuffer g_currentCmdBuffer;
+
 class VKCommandQueue final : public CommandQueue
 {
 

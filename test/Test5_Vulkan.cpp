@@ -14,7 +14,6 @@
 
 
 //#define TEST_QUERY
-//#define TEST_RENDER_TARGET
 
 
 int main()
@@ -129,7 +128,7 @@ int main()
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
             shaderProgramDesc.vertexFormats     = { vertexFormat };
-            shaderProgramDesc.vertexShader      = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex, "Triangle.vert.spv"));
+            shaderProgramDesc.vertexShader      = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Triangle.vert.spv"));
             shaderProgramDesc.fragmentShader    = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Triangle.frag.spv"));
         }
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
@@ -228,29 +227,6 @@ int main()
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
-        #ifdef TEST_RENDER_TARGET
-
-        // Create texture for render target attachment
-        const std::uint32_t renderTargetSize = 512;
-        auto renderTargetTex = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, renderTargetSize, renderTargetSize));
-
-        // Create render target
-        LLGL::RenderTargetDescriptor rtDesc;
-        {
-            rtDesc.resolution   = { renderTargetSize, renderTargetSize };
-            rtDesc.attachments  =
-            {
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
-            };
-        }
-        auto renderTarget = renderer->CreateRenderTarget(rtDesc);
-
-        // Create render target graphics pipeline
-        pipelineDesc.renderTarget = renderTarget;
-        auto renderTargetPipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
-
-        #endif
-
         // Create query
         #ifdef TEST_QUERY
         auto query = renderer->CreateQuery(LLGL::QueryType::PipelineStatistics);
@@ -271,21 +247,6 @@ int main()
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
-            #if 0
-            // Show frame time
-            frameTimer->MeasureTime();
-
-            auto currentTime = std::chrono::system_clock::now();
-            auto elapsedTime = (currentTime - printTime);
-            auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
-
-            if (elapsedMs > 250)
-            {
-                printf("Elapsed Time = %fms (FPS = %f)\n", static_cast<float>(frameTimer->GetDeltaTime()*1000.0f), static_cast<float>(1.0 / frameTimer->GetDeltaTime()));
-                printTime = currentTime;
-            }
-            #endif
-
             // Update user input
             if (input->KeyDown(LLGL::Key::F1))
             {
@@ -293,85 +254,55 @@ int main()
                 context->SetVsync(contextDesc.vsync);
             }
 
-            #if 1
-
             // Render scene
             queue->Begin(*commands);
-            commands->BeginRenderPass(*context);
             {
-                commands->Clear(LLGL::ClearFlags::ColorDepth);
-
-                if (auto data = renderer->MapBuffer(*constBufferMatrices, LLGL::CPUAccess::ReadWrite))
-                {
-                    auto ptr = reinterpret_cast<Matrices*>(data);
-                    Gs::RotateFree(ptr->modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.002f);
-                    renderer->UnmapBuffer(*constBufferMatrices);
-                }
-
-                commands->SetGraphicsPipeline(*pipeline);
-
                 commands->SetVertexBuffer(*vertexBuffer);
-                commands->SetGraphicsResourceHeap(*resourceViewHeap, 0);
+                commands->SetGraphicsPipeline(*pipeline);
+                commands->SetGraphicsResourceHeap(*resourceViewHeap);
 
-                //commands->UpdatePipelineLayout(*pipelineLayout);
+                // Update constant buffer
+                Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.002f);
+                renderer->WriteBuffer(*constBufferMatrices, &matrices, sizeof(matrices), 0);
 
-                #ifdef TEST_QUERY
-                commands->BeginQuery(*query);
+                commands->BeginRenderPass(*context);
                 {
+                    commands->Clear(LLGL::ClearFlags::ColorDepth);
+
+                    // Draw scene
+                    #ifdef TEST_QUERY
+                    commands->BeginQuery(*query);
+                    commands->Draw(4, 0);
+                    commands->EndQuery(*query);
+
+                    queue->WaitIdle();
+                    LLGL::QueryPipelineStatistics stats;
+                    if (commands->QueryPipelineStatisticsResult(*query, stats))
+                    {
+                        __debugbreak();
+                    }
+                    #else
+                    commands->Draw(4, 0);
+                    #endif
+                }
+                commands->EndRenderPass();
+
+                // Update constant buffer
+                Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.05f);
+                renderer->WriteBuffer(*constBufferMatrices, &matrices, sizeof(matrices), 0);
+                Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.05f);
+
+                commands->BeginRenderPass(*context);
+                {
+                    // Draw scene again
                     commands->Draw(4, 0);
                 }
-                commands->EndQuery(*query);
-                #else
-                commands->Draw(4, 0);
-                #endif
-
-                #ifdef TEST_RENDER_TARGET
-                // Render scene into render target
-                commands->SetRenderTarget(*renderTarget);
-                commands->Clear(LLGL::ClearFlags::Color);
-                commands->SetGraphicsPipeline(*renderTargetPipeline);
-                commands->SetVertexBuffer(*vertexBuffer);
-                commands->SetGraphicsResourceHeap(*resourceViewHeap, 0);
-                commands->Draw(4, 0);
-                #endif
+                commands->EndRenderPass();
             }
-            commands->EndRenderPass();
             queue->End(*commands);
 
             // Present result on screen
             context->Present();
-
-            #if 0
-            // Wait for command buffer to complete
-            queue->WaitIdle();
-            #endif
-
-            // Evaluate query
-            #ifdef TEST_QUERY
-            LLGL::QueryPipelineStatistics statistics;
-            while (!commands->QueryPipelineStatisticsResult(*query, statistics)) { /* wait */ }
-            #ifdef _DEBUG
-            __debugbreak();
-            #endif
-            #endif
-
-            #else
-
-            commands->BeginRenderPass(*contextRenderPass);
-            {
-                commands->Clear();
-
-                commands->SetGraphicsPipeline(*pipeline);
-
-                commands->SetVertexBuffer(*vertexBuffer);
-
-                commands->Draw(3, 0);
-            }
-            commands->EndRenderPass(*contextRenderPass);
-
-            context->Present();
-
-            #endif
         }
     }
     catch (const std::exception& e)
