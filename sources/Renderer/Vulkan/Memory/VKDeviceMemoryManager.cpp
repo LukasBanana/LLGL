@@ -23,7 +23,11 @@ VKDeviceMemoryManager::VKDeviceMemoryManager(
 {
 }
 
-VKDeviceMemoryRegion* VKDeviceMemoryManager::Allocate(VkDeviceSize size, VkDeviceSize alignment, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
+VKDeviceMemoryRegion* VKDeviceMemoryManager::Allocate(
+    VkDeviceSize            size,
+    VkDeviceSize            alignment,
+    std::uint32_t           memoryTypeBits,
+    VkMemoryPropertyFlags   properties)
 {
     const auto alignedSize      = GetAlignedSize(size, alignment);
     const auto memoryTypeIndex  = FindMemoryType(memoryTypeBits, properties);
@@ -33,6 +37,18 @@ VKDeviceMemoryRegion* VKDeviceMemoryManager::Allocate(VkDeviceSize size, VkDevic
         return chunk->Allocate(size, alignment);
     else
         return nullptr;
+}
+
+VKDeviceMemoryRegion* VKDeviceMemoryManager::Allocate(
+    const VkMemoryRequirements& requirements,
+    VkMemoryPropertyFlags       properties)
+{
+    return Allocate(
+        requirements.size,
+        requirements.alignment,
+        requirements.memoryTypeBits,
+        properties
+    );
 }
 
 void VKDeviceMemoryManager::Release(VKDeviceMemoryRegion* region)

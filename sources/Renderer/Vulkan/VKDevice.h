@@ -12,6 +12,7 @@
 #include "Vulkan.h"
 #include "VKPtr.h"
 #include "VKCore.h"
+#include "Buffer/VKDeviceBuffer.h"
 
 
 namespace LLGL
@@ -87,6 +88,9 @@ class VKDevice
             std::uint32_t       baseArrayLayer,
             std::uint32_t       numArrayLayers
         );
+
+        void WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
+        void FlushMappedBuffer(VKDeviceBuffer& buffer, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
         /* ----- Handles ----- */
 

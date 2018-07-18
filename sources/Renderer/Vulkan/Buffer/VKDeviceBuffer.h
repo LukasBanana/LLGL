@@ -28,7 +28,15 @@ class VKDeviceBuffer
         /* ----- Common ----- */
 
         VKDeviceBuffer(const VKPtr<VkDevice>& device);
+
         VKDeviceBuffer(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
+
+        VKDeviceBuffer(
+            const VKPtr<VkDevice>&      device,
+            const VkBufferCreateInfo&   createInfo,
+            VKDeviceMemoryManager&      deviceMemoryMngr,
+            VkMemoryPropertyFlags       memoryProperties
+        );
 
         VKDeviceBuffer(const VKDeviceBuffer&) = delete;
         VKDeviceBuffer& operator = (const VKDeviceBuffer&) = delete;
@@ -38,11 +46,22 @@ class VKDeviceBuffer
 
         /* ----- Native buffer ----- */
 
-        void CreateVkBuffer(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
+        void CreateVkBuffer(
+            const VKPtr<VkDevice>&      device,
+            const VkBufferCreateInfo&   createInfo
+        );
+
+        void CreateVkBufferAndMemoryRegion(
+            const VKPtr<VkDevice>&      device,
+            const VkBufferCreateInfo&   createInfo,
+            VKDeviceMemoryManager&      deviceMemoryMngr,
+            VkMemoryPropertyFlags       memoryProperties
+        );
+
         void ReleaseVkBuffer();
 
         //TODO: remove this and bind the buffer to device memory in "CreateVkBuffer".
-        void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
+        void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
 
         void ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
 

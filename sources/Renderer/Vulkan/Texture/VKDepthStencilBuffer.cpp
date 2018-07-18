@@ -14,7 +14,7 @@ namespace LLGL
 
 
 VKDepthStencilBuffer::VKDepthStencilBuffer(const VKPtr<VkDevice>& device) :
-    VKImageWrapper { device                     },
+    VKDeviceImage { device                     },
     imageView_     { device, vkDestroyImageView }
 {
 }

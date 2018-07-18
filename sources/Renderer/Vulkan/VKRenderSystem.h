@@ -174,7 +174,7 @@ class VKRenderSystem final : public RenderSystem
 
         VKDeviceBuffer CreateStagingBuffer(
             const VkBufferCreateInfo&   createInfo,
-            const void*                 initialData = nullptr,
+            const void*                 initialData     = nullptr,
             std::size_t                 initialDataSize = 0
         );
 

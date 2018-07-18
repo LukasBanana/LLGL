@@ -1,5 +1,5 @@
 /*
- * VKImageWrapper.h
+ * VKDeviceImage.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -22,13 +22,14 @@ namespace LLGL
 class VKDeviceMemoryRegion;
 class VKDeviceMemoryManager;
 
-class VKImageWrapper
+// Wrapper class for VkImage handle.
+class VKDeviceImage
 {
 
     public:
 
-        VKImageWrapper(const VKPtr<VkDevice>& device);
-        virtual ~VKImageWrapper();
+        VKDeviceImage(const VKPtr<VkDevice>& device);
+        virtual ~VKDeviceImage();
 
         void AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
         void ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
@@ -61,7 +62,7 @@ class VKImageWrapper
             VkImageView*        imageViewRef
         );
 
-        // Returns the Vulkan image object.
+        // Returns the native VkImage handle.
         inline VkImage GetVkImage() const
         {
             return image_;

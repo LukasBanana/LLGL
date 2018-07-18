@@ -23,9 +23,9 @@ VKBuffer::VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const V
     bufferObj_.CreateVkBuffer(device, createInfo);
 }
 
-void VKBuffer::BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
+void VKBuffer::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
 {
-    bufferObj_.BindToMemory(device, memoryRegion);
+    bufferObj_.BindMemoryRegion(device, memoryRegion);
 }
 
 void VKBuffer::TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer)
@@ -35,7 +35,7 @@ void VKBuffer::TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer)
 
 void* VKBuffer::Map(VkDevice device, const CPUAccess access)
 {
-    if (auto region = GetMemoryRegionStaging())
+    if (auto region = bufferObjStaging_.GetMemoryRegion())
     {
         mappingCPUAccess_ = access;
         return region->GetParentChunk()->Map(device, region->GetOffset(), region->GetSize());
@@ -45,13 +45,13 @@ void* VKBuffer::Map(VkDevice device, const CPUAccess access)
 
 void VKBuffer::Unmap(VkDevice device)
 {
-    if (auto region = GetMemoryRegionStaging())
+    if (auto region = bufferObjStaging_.GetMemoryRegion())
         region->GetParentChunk()->Unmap(device);
 }
 
 void* VKBuffer::MapStaging(VkDevice device, VkDeviceSize dataSize, VkDeviceSize offset)
 {
-    if (auto region = GetMemoryRegionStaging())
+    if (auto region = bufferObjStaging_.GetMemoryRegion())
         return region->GetParentChunk()->Map(device, region->GetOffset() + offset, dataSize);
     else
         return nullptr;
@@ -59,40 +59,8 @@ void* VKBuffer::MapStaging(VkDevice device, VkDeviceSize dataSize, VkDeviceSize 
 
 void VKBuffer::UnmapStaging(VkDevice device)
 {
-    if (auto region = GetMemoryRegionStaging())
+    if (auto region = bufferObjStaging_.GetMemoryRegion())
         region->GetParentChunk()->Unmap(device);
-}
-
-void VKBuffer::UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSize dataSize, VkDeviceSize offset)
-{
-    if (auto region = GetMemoryRegionStaging())
-    {
-        auto deviceMemory = region->GetParentChunk();
-        if (auto memory = deviceMemory->Map(device, region->GetOffset() + offset, dataSize))
-        {
-            /* Copy data to staging buffer and unmap */
-            ::memcpy(memory, data, static_cast<std::size_t>(dataSize));
-            deviceMemory->Unmap(device);
-        }
-    }
-}
-
-void VKBuffer::FlushStagingBuffer(VkDevice device, VkDeviceSize size, VkDeviceSize offset)
-{
-    if (auto region = GetMemoryRegionStaging())
-    {
-        /* Flush mapped memory to make it visible on the device */
-        VkMappedMemoryRange memoryRange;
-        {
-            memoryRange.sType   = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-            memoryRange.pNext   = nullptr;
-            memoryRange.memory  = region->GetParentChunk()->GetVkDeviceMemory();
-            memoryRange.offset  = region->GetOffset() + offset;
-            memoryRange.size    = size;
-        }
-        auto result = vkFlushMappedMemoryRanges(device, 1, &memoryRange);
-        VKThrowIfFailed(result, "failed to flush mapped memory range");
-    }
 }
 
 

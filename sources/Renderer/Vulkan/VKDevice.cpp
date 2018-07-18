@@ -7,6 +7,8 @@
 
 #include "VKDevice.h"
 #include "RenderState/VKFence.h"
+#include "Memory/VKDeviceMemoryRegion.h"
+#include "Memory/VKDeviceMemory.h"
 #include <set>
 #include <algorithm>
 
@@ -422,6 +424,39 @@ void VKDevice::GenerateMips(
         GenerateMips(cmdBuffer, image, imageExtent, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
     }
     FlushCommandBuffer(cmdBuffer);
+}
+
+void VKDevice::WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSize size, VkDeviceSize offset)
+{
+    if (auto region = buffer.GetMemoryRegion())
+    {
+        /* Map buffer memory to host memory */
+        auto deviceMemory = region->GetParentChunk();
+        if (auto memory = deviceMemory->Map(device_, region->GetOffset() + offset, size))
+        {
+            /* Copy data to buffer object */
+            ::memcpy(memory, data, static_cast<std::size_t>(size));
+            deviceMemory->Unmap(device_);
+        }
+    }
+}
+
+void VKDevice::FlushMappedBuffer(VKDeviceBuffer& buffer, VkDeviceSize size, VkDeviceSize offset)
+{
+    if (auto region = buffer.GetMemoryRegion())
+    {
+        /* Flush mapped memory to make it visible on the device */
+        VkMappedMemoryRange memoryRange;
+        {
+            memoryRange.sType   = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+            memoryRange.pNext   = nullptr;
+            memoryRange.memory  = region->GetParentChunk()->GetVkDeviceMemory();
+            memoryRange.offset  = region->GetOffset() + offset;
+            memoryRange.size    = size;
+        }
+        auto result = vkFlushMappedMemoryRanges(device_, 1, &memoryRange);
+        VKThrowIfFailed(result, "failed to flush mapped memory range");
+    }
 }
 
 

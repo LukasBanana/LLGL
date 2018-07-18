@@ -9,7 +9,8 @@
 #define LLGL_VK_DEVICE_MEMORY_MANAGER_H
 
 
-#include "../Vulkan.h"
+//#include "../Vulkan.h"
+#include <vulkan/vulkan.h>
 #include "../VKPtr.h"
 #include "VKDeviceMemory.h"
 #include "VKDeviceMemoryRegion.h"
@@ -43,7 +44,18 @@ class VKDeviceMemoryManager
         VKDeviceMemoryManager& operator = (const VKDeviceMemoryManager&) = delete;
 
         // Allocates a new device memory block of the specified size and with the specified attributes.
-        VKDeviceMemoryRegion* Allocate(VkDeviceSize size, VkDeviceSize alignment, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties);
+        VKDeviceMemoryRegion* Allocate(
+            VkDeviceSize            size,
+            VkDeviceSize            alignment,
+            std::uint32_t           memoryTypeBits,
+            VkMemoryPropertyFlags   properties
+        );
+
+        // Allocates a new device memory block with the specified memory requirements.
+        VKDeviceMemoryRegion* Allocate(
+            const VkMemoryRequirements& requirements,
+            VkMemoryPropertyFlags       properties
+        );
 
         // Releases the specified device memory block.
         void Release(VKDeviceMemoryRegion* region);

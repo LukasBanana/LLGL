@@ -27,6 +27,16 @@ VKDeviceBuffer::VKDeviceBuffer(const VKPtr<VkDevice>& device, const VkBufferCrea
     CreateVkBuffer(device, createInfo);
 }
 
+VKDeviceBuffer::VKDeviceBuffer(
+    const VKPtr<VkDevice>&      device,
+    const VkBufferCreateInfo&   createInfo,
+    VKDeviceMemoryManager&      deviceMemoryMngr,
+    VkMemoryPropertyFlags       memoryProperties) :
+        VKDeviceBuffer { device }
+{
+    CreateVkBufferAndMemoryRegion(device, createInfo, deviceMemoryMngr, memoryProperties);
+}
+
 VKDeviceBuffer::VKDeviceBuffer(VKDeviceBuffer&& rhs) :
     buffer_       { std::move(rhs.buffer_) },
     requirements_ { rhs.requirements_      },
@@ -48,12 +58,34 @@ VKDeviceBuffer& VKDeviceBuffer::operator = (VKDeviceBuffer&& rhs)
 
 void VKDeviceBuffer::CreateVkBuffer(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo)
 {
-    /* Create buffer object */
+    /* Create Vulkan buffer object and query memory requirements */
     auto result = vkCreateBuffer(device, &createInfo, nullptr, buffer_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan buffer");
-
-    /* Query memory requirements */
     vkGetBufferMemoryRequirements(device, buffer_, &requirements_);
+}
+
+void VKDeviceBuffer::CreateVkBufferAndMemoryRegion(
+    const VKPtr<VkDevice>&      device,
+    const VkBufferCreateInfo&   createInfo,
+    VKDeviceMemoryManager&      deviceMemoryMngr,
+    VkMemoryPropertyFlags       memoryProperties)
+{
+    /* Create Vulkan bnuffer object */
+    CreateVkBuffer(device, createInfo);
+
+    if (auto memoryRegion = deviceMemoryMngr.Allocate(requirements_, memoryProperties))
+    {
+        /* Bind allocated memory region to buffer */
+        BindMemoryRegion(device, memoryRegion);
+    }
+    else
+    {
+        /* Failed to allocate device memory */
+        throw std::runtime_error(
+            "failed to allocate " + std::to_string(requirements_.size) +
+            " byte(s) of device memory for Vulkan buffer"
+        );
+    }
 }
 
 void VKDeviceBuffer::ReleaseVkBuffer()
@@ -61,7 +93,7 @@ void VKDeviceBuffer::ReleaseVkBuffer()
     buffer_.Release();
 }
 
-void VKDeviceBuffer::BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
+void VKDeviceBuffer::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
 {
     if (memoryRegion)
     {

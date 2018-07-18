@@ -25,7 +25,7 @@ class VKBuffer : public Buffer
 
         VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
 
-        void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
+        void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
         void TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer);
 
         void* Map(VkDevice device, const CPUAccess access);
@@ -34,9 +34,17 @@ class VKBuffer : public Buffer
         void* MapStaging(VkDevice device, VkDeviceSize dataSize, VkDeviceSize offset = 0);
         void UnmapStaging(VkDevice device);
 
-        // Updates the staging buffer (if it was created).
-        void UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSize dataSize, VkDeviceSize offset = 0);
-        void FlushStagingBuffer(VkDevice device, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        // Returns the device buffer object.
+        inline VKDeviceBuffer& GetDeviceBuffer()
+        {
+            return bufferObj_;
+        }
+
+        // Returns the staging device buffer object.
+        inline VKDeviceBuffer& GetStagingDeviceBuffer()
+        {
+            return bufferObjStaging_;
+        }
 
         // Returns the hardware buffer object.
         inline VkBuffer GetVkBuffer() const
@@ -50,12 +58,6 @@ class VKBuffer : public Buffer
             return bufferObjStaging_.GetVkBuffer();
         }
 
-        // Returns the memory requirements of the hardware buffer.
-        inline const VkMemoryRequirements& GetRequirements() const
-        {
-            return bufferObj_.GetRequirements();
-        }
-
         // Returns the size originally specified in the descriptor.
         inline VkDeviceSize GetSize() const
         {
@@ -66,18 +68,6 @@ class VKBuffer : public Buffer
         inline CPUAccess GetMappingCPUAccess() const
         {
             return mappingCPUAccess_;
-        }
-
-        // Returns the region of the hardware device memory.
-        inline VKDeviceMemoryRegion* GetMemoryRegion() const
-        {
-            return bufferObj_.GetMemoryRegion();
-        }
-
-        // Returns the region of the hardware device memory for the internal staging buffer.
-        inline VKDeviceMemoryRegion* GetMemoryRegionStaging() const
-        {
-            return bufferObjStaging_.GetMemoryRegion();
         }
 
     private:
