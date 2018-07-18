@@ -170,10 +170,10 @@ class VKRenderSystem final : public RenderSystem
         bool IsLayerRequired(const std::string& name) const;
         bool IsExtensionRequired(const std::string& name) const;
 
-        VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
+        VKBuffer* CreateGpuBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
 
-        std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> CreateStagingBuffer(
-            const VkBufferCreateInfo&   stagingCreateInfo,
+        VKDeviceBuffer CreateStagingBuffer(
+            const VkBufferCreateInfo&   createInfo,
             const void*                 initialData = nullptr,
             std::size_t                 initialDataSize = 0
         );
