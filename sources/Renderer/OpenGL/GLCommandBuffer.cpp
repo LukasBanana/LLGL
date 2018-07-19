@@ -44,6 +44,18 @@ GLCommandBuffer::GLCommandBuffer(const std::shared_ptr<GLStateManager>& stateMng
 {
 }
 
+/* ----- Encoding ----- */
+
+void GLCommandBuffer::Begin()
+{
+    // dummy
+}
+
+void GLCommandBuffer::End()
+{
+    // dummy
+}
+
 /* ----- Configuration ----- */
 
 void GLCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

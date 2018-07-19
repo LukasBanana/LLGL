@@ -21,6 +21,9 @@ namespace LLGL
 {
 
 
+//TEST
+extern VkCommandBuffer g_currentCmdBuffer;
+
 class VKResourceHeap;
 
 class VKCommandBuffer final : public CommandBuffer
@@ -37,6 +40,11 @@ class VKCommandBuffer final : public CommandBuffer
             const CommandBufferDescriptor&  desc
         );
         ~VKCommandBuffer();
+
+        /* ----- Encoding ----- */
+
+        void Begin() override;
+        void End() override;
 
         /* ----- Configuration ----- */
 
@@ -170,6 +178,7 @@ class VKCommandBuffer final : public CommandBuffer
         std::vector<VKPtr<VkFence>>     recordingFenceList_;
         VkFence                         recordingFence_;
 
+        VkCommandBufferUsageFlags       usageFlags_                 = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
 

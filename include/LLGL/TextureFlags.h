@@ -53,6 +53,9 @@ enum class TextureSwizzle
 };
 #endif
 
+
+/* ----- Flags ----- */
+
 /**
 \brief Texture creation flags enumeration.
 \see TextureDescriptor::flags

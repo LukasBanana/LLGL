@@ -10,7 +10,6 @@
 
 
 #include "RenderSystemChild.h"
-#include "CommandQueueFlags.h"
 #include <cstdint>
 
 
@@ -36,33 +35,27 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
         /* ----- Command Buffers ----- */
 
         /**
-        \brief Begins recording of the specified command buffer.
-        \param[in] flags Optional flags with hints about how is to be recorded. By default 0.
-        This can be a bitwise OR combination of the RecordingFlags enumeration.
-        \see End(CommandBuffer&)
-        \see RecordingFlags
-        \todo Should be part of \c CommandBuffer interface, since this is independent of the command queue.
-        */
-        virtual void Begin(CommandBuffer& commandBuffer, long flags = 0) = 0;
-
-        /**
-        \brief Ends recording of the specified command buffer.
-        \remarks If this is not a pre-recorded command buffer, this will automatically submit the recording to the queue.
-        \see Begin(CommandBuffer&, long)
-        \see Submit(CommandBuffer&)
-        \todo Should be part of \c CommandBuffer interface, since this is independent of the command queue;
-        except for \c Submit, so maybe this function should remain as alternative.
-        */
-        virtual void End(CommandBuffer& commandBuffer) = 0;
-
-        /**
-        \brief Submits the specified command buffer (also called command list) to the command queue.
-        \remarks This is only required for pre-recorded command buffers.
-        A standard command buffer is automatically submitted when its recording has completed.
-        \note Only supported with: Vulkan, Direct3D 12.
-        \see End(CommandBuffer&)
+        \brief Submits the specified command buffer to the command queue.
+        \remarks This must only be called with a command buffer that has already been encoded via the \c Begin and \c End functions:
+        \code
+        myCmdBuffer->Begin();
+        // Encode/record command buffer ...
+        myCmdBuffer->End();
+        myCmdQueue->Submit(*myCmdBuffer);
+        \endcode
+        \see CommandBuffer::Begin
+        \see CommandBuffer::End
+        \see Submit(std::uint32_t, CommandBuffer* const *)
         */
         virtual void Submit(CommandBuffer& commandBuffer) = 0;
+
+        #if 0
+        /**
+        \briefs Submits all command buffers in the specified array to the command queue at once.
+        \see Submit(CommandBuffer&)
+        */
+        virtual void Submit(std::uint32_t numCommandBuffers, CommandBuffer* const * commandBuffers);
+        #endif
 
         /* ----- Fences ----- */
 

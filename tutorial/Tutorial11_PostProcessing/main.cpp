@@ -6,6 +6,7 @@
  */
 
 #include <tutorial.h>
+#include <chrono>//!!!
 
 
 class Tutorial11 : public Tutorial
@@ -461,6 +462,26 @@ private:
 
     void OnDrawFrame() override
     {
+        #if 1
+        // Show frame time
+        static std::unique_ptr<LLGL::Timer> frameTimer;
+        static std::chrono::time_point<std::chrono::system_clock> printTime;
+        if (!frameTimer)
+            frameTimer = LLGL::Timer::Create();
+
+        frameTimer->MeasureTime();
+
+        auto currentTime = std::chrono::system_clock::now();
+        auto elapsedTime = (currentTime - printTime);
+        auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
+
+        if (elapsedMs > 250)
+        {
+            printf("Elapsed Time = %fms (FPS = %f)\n", static_cast<float>(frameTimer->GetDeltaTime()*1000.0f), static_cast<float>(1.0 / frameTimer->GetDeltaTime()));
+            printTime = currentTime;
+        }
+        #endif
+
         // Update rotation of inner model
         static float innerModelRotation;
         innerModelRotation += 0.01f;
@@ -498,7 +519,7 @@ private:
         const LLGL::Viewport viewportFull{ { 0, 0 }, screenSize };
         const LLGL::Viewport viewportQuarter{ { 0, 0 }, { screenSize.width / 4, screenSize.height/ 4 } };
 
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Set graphics pipeline and vertex buffer for scene rendering
             commands->SetVertexBuffer(*vertexBufferScene);
@@ -579,7 +600,8 @@ private:
             }
             commands->EndRenderPass();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

@@ -35,6 +35,11 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         D3D12CommandBuffer(D3D12RenderSystem& renderSystem);
 
+        /* ----- Encoding ----- */
+
+        void Begin() override;
+        void End() override;
+
         /* ----- Configuration ----- */
 
         void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
@@ -129,14 +134,13 @@ class D3D12CommandBuffer final : public CommandBuffer
             return commandList_.Get();
         }
 
-        // Closes the command list and resets internal states.
-        void CloseCommandList();
-
     private:
 
         static const UINT maxNumBuffers = 3;
 
         void CreateDevices(D3D12RenderSystem& renderSystem);
+
+        void NextCommandAllocator();
 
         // Sets the current back buffer as render target view.
         void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
@@ -165,7 +169,16 @@ class D3D12CommandBuffer final : public CommandBuffer
             std::uint32_t&      idx
         );
 
-        ComPtr<ID3D12CommandAllocator>      commandAlloc_;
+        inline ID3D12CommandAllocator* GetCommandAllocator() const
+        {
+            return cmdAllocators_[currentCmdAllocator_].Get();
+        }
+
+        static const std::size_t g_numCmdAllocators = 3;
+
+        ComPtr<ID3D12CommandAllocator>      cmdAllocators_[g_numCmdAllocators];
+        std::size_t                         currentCmdAllocator_                = 0;
+
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
 
         D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_          = {};

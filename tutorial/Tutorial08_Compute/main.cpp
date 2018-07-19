@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
         // Create compute pipeline
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram, pipelineLayout });
 
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Set compute pipeline
             commands->SetComputePipeline(*pipeline);
@@ -126,7 +126,8 @@ int main(int argc, char* argv[])
             // Dispatch compute shader
             commands->Dispatch(static_cast<std::uint32_t>(inputData.size()), 1, 1);
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Read result
         commandQueue->WaitIdle();

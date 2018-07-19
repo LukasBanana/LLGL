@@ -117,7 +117,7 @@ private:
 
     void OnDrawFrame() override
     {
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Set buffer array
             commands->SetVertexBufferArray(*vertexBufferArray);
@@ -139,7 +139,8 @@ private:
             }
             commands->EndRenderPass();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

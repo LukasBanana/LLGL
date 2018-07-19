@@ -377,7 +377,7 @@ int main()
             if (profiler)
                 profiler->ResetCounters();
 
-            commandQueue->Begin(*commands);
+            commands->Begin();
             {
                 //#ifndef __linux__
                 commands->SetSampler(sampler, 0);
@@ -497,7 +497,8 @@ int main()
                 }
                 commands->EndRenderPass();
             }
-            commandQueue->End(*commands);
+            commands->End();
+            commandQueue->Submit(*commands);
 
             context->Present();
         }

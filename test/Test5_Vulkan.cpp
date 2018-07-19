@@ -255,7 +255,7 @@ int main()
             }
 
             // Render scene
-            queue->Begin(*commands);
+            commands->Begin();
             {
                 commands->SetVertexBuffer(*vertexBuffer);
                 commands->SetGraphicsPipeline(*pipeline);
@@ -299,7 +299,8 @@ int main()
                 }
                 commands->EndRenderPass();
             }
-            queue->End(*commands);
+            commands->End();
+            queue->Submit(*commands);
 
             // Present result on screen
             context->Present();

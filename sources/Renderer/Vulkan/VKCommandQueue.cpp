@@ -15,9 +15,6 @@ namespace LLGL
 {
 
 
-//TEST
-VkCommandBuffer g_currentCmdBuffer = VK_NULL_HANDLE;
-
 VKCommandQueue::VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue graphicsQueue) :
     device_        { device        },
     graphicsQueue_ { graphicsQueue }
@@ -25,58 +22,6 @@ VKCommandQueue::VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue graphicsQu
 }
 
 /* ----- Command Buffers ----- */
-
-static VkCommandBufferUsageFlags GetVkCommandBufferUsageFlags(long flags)
-{
-    VkCommandBufferUsageFlags usageFlags = 0;
-
-    if ((flags & RecordingFlags::OneTimeSubmit) != 0)
-        usageFlags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    else
-        usageFlags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-    return usageFlags;
-}
-
-void VKCommandQueue::Begin(CommandBuffer& commandBuffer, long flags)
-{
-    auto& commandBufferVK = LLGL_CAST(VKCommandBuffer&, commandBuffer);
-
-    /* Use next internal VkCommandBuffer object to reduce latency */
-    commandBufferVK.AcquireNextBuffer();
-
-    /* Wait for fence before recording */
-    VkFence fence = commandBufferVK.GetQueueSubmitFence();
-    vkWaitForFences(device_, 1, &fence, VK_TRUE, UINT64_MAX);
-    vkResetFences(device_, 1, &fence);
-
-    /* Begin recording of current command buffer */
-    VkCommandBufferBeginInfo beginInfo;
-    {
-        beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.pNext             = nullptr;
-        beginInfo.flags             = GetVkCommandBufferUsageFlags(flags);
-        beginInfo.pInheritanceInfo  = nullptr;
-    }
-    auto result = vkBeginCommandBuffer(commandBufferVK.GetVkCommandBuffer(), &beginInfo);
-    VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
-
-    #if 1//TEST
-    g_currentCmdBuffer = commandBufferVK.GetVkCommandBuffer();
-    #endif
-}
-
-void VKCommandQueue::End(CommandBuffer& commandBuffer)
-{
-    auto& commandBufferVK = LLGL_CAST(VKCommandBuffer&, commandBuffer);
-
-    /* End recording of current command buffer */
-    auto result = vkEndCommandBuffer(commandBufferVK.GetVkCommandBuffer());
-    VKThrowIfFailed(result, "failed to end Vulkan command buffer");
-
-    /* Immediately submit command buffer */
-    Submit(commandBuffer);
-}
 
 void VKCommandQueue::Submit(CommandBuffer& commandBuffer)
 {

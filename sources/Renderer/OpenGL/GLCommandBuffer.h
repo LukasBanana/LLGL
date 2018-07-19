@@ -32,6 +32,11 @@ class GLCommandBuffer final : public CommandBufferExt
 
         GLCommandBuffer(const std::shared_ptr<GLStateManager>& stateManager);
 
+        /* ----- Encoding ----- */
+
+        void Begin() override;
+        void End() override;
+
         /* ----- Configuration ----- */
 
         void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;

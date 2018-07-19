@@ -26,26 +26,6 @@ DbgCommandQueue::DbgCommandQueue(CommandQueue& instance, RenderingProfiler* prof
 
 /* ----- Command Buffers ----- */
 
-void DbgCommandQueue::Begin(CommandBuffer& commandBuffer, long flags)
-{
-    auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, commandBuffer);
-
-    if (debugger_)
-        commandBufferDbg.EnableRecording(true);
-
-    instance.Begin(commandBufferDbg.instance);
-}
-
-void DbgCommandQueue::End(CommandBuffer& commandBuffer)
-{
-    auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, commandBuffer);
-
-    if (debugger_)
-        commandBufferDbg.EnableRecording(false);
-
-    instance.End(commandBufferDbg.instance);
-}
-
 void DbgCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
     auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, commandBuffer);

@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
             }
 
             // Start recording commands
-            commandQueue->Begin(*commands);
+            commands->Begin();
             {
                 // Set vertex buffer
                 commands->SetVertexBuffer(*vertexBuffer);
@@ -235,7 +235,8 @@ int main(int argc, char* argv[])
                 }
                 commands->EndRenderPass();
             }
-            commandQueue->End(*commands);
+            commands->End();
+            commandQueue->Submit(*commands);
 
             // Present the results on the screen
             context1->Present();

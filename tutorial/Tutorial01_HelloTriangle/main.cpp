@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
             #endif
 
             // Begin recording commands
-            queue->Begin(*commands);
+            commands->Begin();
             {
                 // Set viewport and scissor rectangle
                 commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
@@ -205,7 +205,8 @@ int main(int argc, char* argv[])
                 }
                 commands->EndRenderPass();
             }
-            queue->End(*commands);
+            commands->End();
+            queue->Submit(*commands);
 
             // Present the result on the screen
             context->Present();

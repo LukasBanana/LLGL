@@ -282,7 +282,7 @@ private:
 
     void DrawScene()
     {
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Update constant buffer
             UpdateBuffer(constantBuffer, settings);
@@ -328,7 +328,8 @@ private:
             }
             commands->EndRenderPass();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

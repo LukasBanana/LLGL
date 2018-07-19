@@ -488,13 +488,14 @@ private:
         // Update scene by user input
         UpdateScene();
 
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Draw scene into texture, then draw scene onto screen
             DrawSceneIntoTexture();
             DrawSceneOntoScreen();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

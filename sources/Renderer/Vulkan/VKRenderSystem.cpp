@@ -227,6 +227,7 @@ void VKRenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
+//TODO: ~~~~~~~~~~~~~~~~~~~~~ REFACTORING ~~~~~~~~~~~~~~~~~~~~~
 void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
@@ -249,7 +250,18 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 
         if (g_currentCmdBuffer != VK_NULL_HANDLE)
         {
+            #if 0
             vkCmdUpdateBuffer(g_currentCmdBuffer, bufferVK.GetVkBuffer(), memoryOffset, memorySize, data);
+            #else
+            vkCmdUpdateBuffer(g_currentCmdBuffer, bufferVK.GetStagingVkBuffer(), memoryOffset, memorySize, data);
+            VkBufferCopy region;
+            {
+                region.srcOffset    = 0;
+                region.dstOffset    = 0;
+                region.size         = memorySize;
+            }
+            vkCmdCopyBuffer(g_currentCmdBuffer, bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), 1, &region);
+            #endif
         }
         else
         {
@@ -328,6 +340,7 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
         stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
     }
 }
+//TODO: ~~~~~~~~~~~~~~~~~~~~~ /REFACTORING ~~~~~~~~~~~~~~~~~~~~~
 
 void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {

@@ -50,6 +50,18 @@ D3D11CommandBuffer::D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPt
 {
 }
 
+/* ----- Encoding ----- */
+
+void D3D11CommandBuffer::Begin()
+{
+    // dummy
+}
+
+void D3D11CommandBuffer::End()
+{
+    // dummy
+}
+
 /* ----- Configuration ----- */
 
 void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

@@ -94,7 +94,7 @@ int main()
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram });
 
         // Set resources
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             commands->SetStorageBuffer(*storageBuffer, 0);
             commands->SetComputePipeline(*pipeline);
@@ -114,7 +114,8 @@ int main()
             }
             std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Wait until the GPU has completed all work, to be sure we can evaluate the storage buffer
         renderer->GetCommandQueue()->WaitIdle();

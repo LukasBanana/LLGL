@@ -126,7 +126,7 @@ private:
         UpdateBuffer(constantBuffer, settings);
 
         // Start command recording
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Set vertex and index buffers
             commands->SetVertexBuffer(*vertexBuffer);
@@ -169,7 +169,8 @@ private:
             }
             commands->EndRenderPass();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

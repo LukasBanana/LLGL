@@ -39,6 +39,11 @@ class DbgCommandBuffer : public CommandBufferExt
             const RenderingCapabilities& caps
         );
 
+        /* ----- Encoding ----- */
+
+        void Begin() override;
+        void End() override;
+
         /* ----- Configuration ----- */
 
         void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;

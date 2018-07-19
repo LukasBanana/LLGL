@@ -37,21 +37,36 @@ class RenderContext;
 
 /**
 \brief Command buffer interface.
-\remarks This is the main interface to record graphics and compute commands to be submitted to the GPU.
-For older graphics APIs (such as OpenGL and Direct3D 11) it makes not much sense to create multiple command buffers,
-but for recent graphics APIs (such as Vulkan, Direct3D 12, and Metal) it might be sensible to have more than one command buffer,
-to maximize CPU utilization with several worker threads and one command buffer for each thread.
-However, multi-threading for command buffers is currently not supported by LLGL!
-Assume that all states that can be changed with a setter function are not persistent except the opposite is mentioned.
-Before any command can be recorded, the command buffer must be set into record mode, which is done by the CommandQueue::Begin function.
-There are only a few exceptions of functions that can be used outside of recording,
+\remarks This is the main interface to encode graphics and compute commands to be submitted to the GPU.
+You can assume that all states that can be changed with a setter function are not persistent across several encoding sections, unless the opposite is mentioned.
+Before any command can be encoded, the command buffer must be set into encode mode, which is done by the CommandBuffer::Begin function.
+There are only a few exceptions of functions that can be used outside of encoding,
 which are CommandBuffer::SetClearColor, CommandBuffer::SetClearDepth, and CommandBuffer::SetClearStencil.
-\see CommandQueue::Begin(CommandBuffer&, long)
 */
 class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 {
 
     public:
+
+        /* ----- Encoding ----- */
+
+        /**
+        \brief Begins with the encoding (also referred to as "recording") of this command buffer.
+        \remarks All functions of the CommandBuffer interface must be used between a call to \c Begin and \c End, except for the following:
+        - CommandBuffer::SetClearColor
+        - CommandBuffer::SetClearDepth
+        - CommandBuffer::SetClearStencil
+        \see End
+        \see RecordingFlags
+        */
+        virtual void Begin() = 0;
+
+        /**
+        \brief Ends the encoding (also referred to as "recording") of this command buffer.
+        \see Begin
+        \see CommandQueue::Submit(CommandBuffer&)
+        */
+        virtual void End() = 0;
 
         /* ----- Configuration ----- */
 
@@ -120,14 +135,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
-        \note This state is guaranteed to be persistent and can be used outside of command buffer recording.
+        \note This state is guaranteed to be persistent and can be used outside of command buffer encoding.
         \see Clear
         */
         virtual void SetClearColor(const ColorRGBAf& color) = 0;
 
         /**
         \brief Sets the new value to clear the depth buffer with. By default 1.0.
-        \note This state is guaranteed to be persistent and can be used outside of command buffer recording.
+        \note This state is guaranteed to be persistent and can be used outside of command buffer encoding.
         \see Clear
         */
         virtual void SetClearDepth(float depth) = 0;
@@ -136,7 +151,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Sets the new value to clear the stencil buffer. By default 0.
         \param[in] stencil Specifies the value to clear the stencil buffer.
         This value is masked with <code>2^m-1</code>, where \c m is the number of bits in the stencil buffer (e.g. <code>stencil & 0xFF</code> for an 8-bit stencil buffer).
-        \note This state is guaranteed to be persistent and can be used outside of command buffer recording.
+        \note This state is guaranteed to be persistent and can be used outside of command buffer encoding.
         \see Clear
         */
         virtual void SetClearStencil(std::uint32_t stencil) = 0;

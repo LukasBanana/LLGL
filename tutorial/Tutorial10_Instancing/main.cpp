@@ -368,7 +368,7 @@ private:
                 std::cout << "Alpha-To-Coverage Disabled" << std::endl;
         }
 
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Set buffer array, texture, and sampler
             commands->SetVertexBufferArray(*vertexBufferArray);
@@ -413,7 +413,8 @@ private:
             }
             commands->EndRenderPass();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

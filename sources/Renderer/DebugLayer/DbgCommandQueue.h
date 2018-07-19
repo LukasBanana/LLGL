@@ -34,9 +34,6 @@ class DbgCommandQueue : public CommandQueue
 
         /* ----- Command Buffers ----- */
 
-        void Begin(CommandBuffer& commandBuffer, long flags = 0) override;
-        void End(CommandBuffer& commandBuffer) override;
-
         void Submit(CommandBuffer& commandBuffer) override;
 
         /* ----- Fences ----- */

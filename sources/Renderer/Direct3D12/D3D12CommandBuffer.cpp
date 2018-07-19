@@ -35,6 +35,26 @@ D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem)
     CreateDevices(renderSystem);
 }
 
+/* ----- Encoding ----- */
+
+void D3D12CommandBuffer::Begin()
+{
+    /* Reset command list using the next command allocator */
+    NextCommandAllocator();
+    auto hr = commandList_->Reset(GetCommandAllocator(), nullptr);
+    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
+}
+
+void D3D12CommandBuffer::End()
+{
+    /* Close native command list */
+    auto hr = commandList_->Close();
+    DXThrowIfFailed(hr, "failed to close D3D12 command list");
+
+    /* Reset intermediate states */
+    numBoundScissorRects_ = 0;
+}
+
 /* ----- Configuration ----- */
 
 void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
@@ -397,18 +417,6 @@ void D3D12CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupS
     commandList_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 }
 
-/* ----- Extended functions ----- */
-
-void D3D12CommandBuffer::CloseCommandList()
-{
-    /* Close native command list */
-    auto hr = commandList_->Close();
-    DXThrowIfFailed(hr, "failed to close D3D12 command list");
-
-    /* Reset intermediate states */
-    numBoundScissorRects_ = 0;
-}
-
 
 /*
  * ======= Private: =======
@@ -416,9 +424,23 @@ void D3D12CommandBuffer::CloseCommandList()
 
 void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 {
-    /* Create command allocator and graphics command list */
-    commandAlloc_   = renderSystem.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
-    commandList_    = renderSystem.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc_.Get());
+    /* Create command allocators */
+    for (auto& cmdAllocator : cmdAllocators_)
+        cmdAllocator = renderSystem.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+    /* Create graphics command list */
+    commandList_ = renderSystem.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocators_[0].Get());
+    commandList_->Close();
+}
+
+void D3D12CommandBuffer::NextCommandAllocator()
+{
+    /* Get next command allocator */
+    currentCmdAllocator_ = ((currentCmdAllocator_ + 1) % D3D12CommandBuffer::g_numCmdAllocators);
+
+    /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
+    auto hr = GetCommandAllocator()->Reset();
+    DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 }
 
 void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)

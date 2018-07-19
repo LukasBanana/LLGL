@@ -37,6 +37,22 @@ DbgCommandBuffer::DbgCommandBuffer(
 {
 }
 
+/* ----- Encoding ----- */
+
+void DbgCommandBuffer::Begin()
+{
+    if (debugger_)
+        EnableRecording(true);
+    instance.Begin();
+}
+
+void DbgCommandBuffer::End()
+{
+    if (debugger_)
+        EnableRecording(false);
+    instance.End();
+}
+
 /* ----- Configuration ----- */
 
 void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

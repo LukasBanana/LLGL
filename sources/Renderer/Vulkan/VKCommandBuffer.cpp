@@ -27,6 +27,9 @@ namespace LLGL
 {
 
 
+//TEST
+VkCommandBuffer g_currentCmdBuffer = VK_NULL_HANDLE;
+
 static const std::uint32_t g_maxNumViewportsPerBatch = 16;
 
 VKCommandBuffer::VKCommandBuffer(
@@ -39,6 +42,10 @@ VKCommandBuffer::VKCommandBuffer(
         queuePresentFamily_ { queueFamilyIndices.presentFamily }
 {
     std::size_t bufferCount = std::max(1u, desc.numNativeBuffers);
+
+    /* Translate creation flags */
+    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+        usageFlags_ = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
     /* Create native command buffer objects */
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
@@ -57,6 +64,40 @@ VKCommandBuffer::~VKCommandBuffer()
         static_cast<std::uint32_t>(commandBufferList_.size()),
         commandBufferList_.data()
     );
+}
+
+/* ----- Encoding ----- */
+
+void VKCommandBuffer::Begin()
+{
+    /* Use next internal VkCommandBuffer object to reduce latency */
+    AcquireNextBuffer();
+
+    /* Wait for fence before recording */
+    vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
+    vkResetFences(device_, 1, &recordingFence_);
+
+    /* Begin recording of current command buffer */
+    VkCommandBufferBeginInfo beginInfo;
+    {
+        beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.pNext             = nullptr;
+        beginInfo.flags             = usageFlags_;
+        beginInfo.pInheritanceInfo  = nullptr;
+    }
+    auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
+    VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
+
+    #if 1//TEST
+    g_currentCmdBuffer = commandBuffer_;
+    #endif
+}
+
+void VKCommandBuffer::End()
+{
+    /* End encoding of current command buffer */
+    auto result = vkEndCommandBuffer(commandBuffer_);
+    VKThrowIfFailed(result, "failed to end Vulkan command buffer");
 }
 
 /* ----- Configuration ----- */
