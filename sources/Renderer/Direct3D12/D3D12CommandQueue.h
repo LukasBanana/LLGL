@@ -28,7 +28,7 @@ class D3D12CommandQueue final : public CommandQueue
 
     public:
 
-        D3D12CommandQueue(D3D12RenderSystem& renderSystem);
+        D3D12CommandQueue(ID3D12Device* device, ID3D12CommandQueue* queue);
 
         /* ----- Command Buffers ----- */
 
@@ -46,14 +46,13 @@ class D3D12CommandQueue final : public CommandQueue
         // Returns the native ID3D12CommandQueue object.
         inline ID3D12CommandQueue* GetNative() const
         {
-            return queue_.Get();
+            return queue_;
         }
 
     private:
 
-        ComPtr<ID3D12CommandQueue>  queue_;
-
-        D3D12Fence                  intermediateFence_;
+        ID3D12CommandQueue* queue_              = nullptr;
+        D3D12Fence          intermediateFence_;
 
 };
 

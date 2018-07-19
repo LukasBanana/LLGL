@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 #include <LLGL/VideoAdapter.h>
 
+#include "D3D12Device.h"
 #include "D3D12CommandQueue.h"
 #include "D3D12CommandBuffer.h"
 #include "D3D12RenderContext.h"
@@ -152,12 +153,7 @@ class D3D12RenderSystem final : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
-        ComPtr<IDXGISwapChain1>             CreateDXSwapChain       (const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
-        ComPtr<ID3D12CommandQueue>          CreateDXCommandQueue    ();
-        ComPtr<ID3D12CommandAllocator>      CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
-        ComPtr<ID3D12GraphicsCommandList>   CreateDXCommandList     (D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* cmdAllocator);
-        ComPtr<ID3D12PipelineState>         CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
-        ComPtr<ID3D12DescriptorHeap>        CreateDXDescriptorHeap  (const D3D12_DESCRIPTOR_HEAP_DESC& desc);
+        ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
 
         // Internal fence
         void SignalFenceValue(UINT64 fenceValue);
@@ -169,18 +165,25 @@ class D3D12RenderSystem final : public RenderSystem
 
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const
         {
-            return featureLevel_;
+            return device_.GetFeatureLevel();
         }
 
-        inline ID3D12Device* GetDevice() const
+        // Returns the native ID3D12Device object.
+        inline ID3D12Device* GetDXDevice() const
         {
-            return device_.Get();
+            return device_.GetNative();
         }
 
-        /*inline ID3D12CommandQueue* GetHardwareQueue() const
+        // Returns the device object.
+        inline D3D12Device& GetDevice()
         {
-            return queue_.Get();
-        }*/
+            return device_;
+        }
+
+        inline const D3D12Device& GetDevice() const
+        {
+            return device_;
+        }
 
     private:
 
@@ -191,7 +194,6 @@ class D3D12RenderSystem final : public RenderSystem
         void CreateFactory();
         void QueryVideoAdapters();
         void CreateDevice();
-        bool CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels);
         void CreateGPUSynchObjects();
 
         void QueryRendererInfo();
@@ -205,10 +207,8 @@ class D3D12RenderSystem final : public RenderSystem
         /* ----- Common objects ----- */
 
         ComPtr<IDXGIFactory4>                       factory_;
-        ComPtr<ID3D12Device>                        device_;
-        D3D_FEATURE_LEVEL                           featureLevel_           = D3D_FEATURE_LEVEL_9_1;
+        D3D12Device                                 device_;
 
-        ComPtr<ID3D12CommandQueue>                  queue_;
         ComPtr<ID3D12CommandAllocator>              graphicsCmdAlloc_;
         ComPtr<ID3D12GraphicsCommandList>           graphicsCmdList_;   // graphics command list to upload data to the GPU
         ComPtr<ID3D12CommandAllocator>              computeCmdAlloc_;

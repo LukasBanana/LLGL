@@ -426,10 +426,10 @@ void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 {
     /* Create command allocators */
     for (auto& cmdAllocator : cmdAllocators_)
-        cmdAllocator = renderSystem.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+        cmdAllocator = renderSystem.GetDevice().CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     /* Create graphics command list */
-    commandList_ = renderSystem.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocators_[0].Get());
+    commandList_ = renderSystem.GetDevice().CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocators_[0].Get());
     commandList_->Close();
 }
 

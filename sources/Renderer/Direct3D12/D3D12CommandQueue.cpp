@@ -17,9 +17,9 @@ namespace LLGL
 {
 
 
-D3D12CommandQueue::D3D12CommandQueue(D3D12RenderSystem& renderSystem) :
-    queue_             { renderSystem.CreateDXCommandQueue() },
-    intermediateFence_ { renderSystem.GetDevice(), 0         }
+D3D12CommandQueue::D3D12CommandQueue(ID3D12Device* device, ID3D12CommandQueue* queue) :
+    queue_             { queue     },
+    intermediateFence_ { device, 0 }
 {
 }
 

@@ -43,7 +43,7 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12RenderSystem& renderSystem, co
     else
     {
         /* Create pipeline state with default root signature */
-        CreateDefaultRootSignature(renderSystem.GetDevice());
+        CreateDefaultRootSignature(renderSystem.GetDXDevice());
         CreatePipelineState(renderSystem, *shaderProgramD3D, defaultRootSignature_.Get(), desc);
     }
 }
@@ -316,7 +316,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     #endif
 
     /* Create graphics pipeline state and graphics command list */
-    pipelineState_ = renderSystem.CreateDXGfxPipelineState(stateDesc);
+    pipelineState_ = renderSystem.GetDevice().CreateDXPipelineState(stateDesc);
 }
 
 

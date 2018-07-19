@@ -277,7 +277,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
 
 void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoModeDesc)
 {
-    auto device = renderSystem_.GetDevice();
+    auto device = renderSystem_.GetDXDevice();
 
     /* Create RTV descriptor heap */
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
@@ -287,7 +287,7 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         descHeapDesc.NodeMask       = 0;
     }
-    rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
+    rtvDescHeap_ = renderSystem_.GetDevice().CreateDXDescriptorHeap(descHeapDesc);
 
     LLGL_D3D12_SET_NAME(rtvDescHeap_, L"rtvDescHeap");
 
@@ -358,7 +358,7 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
 
 void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoModeDesc)
 {
-    auto device = renderSystem_.GetDevice();
+    auto device = renderSystem_.GetDXDevice();
 
     /* Pick-depth stencil format */
     depthStencilFormat_ = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
@@ -371,7 +371,7 @@ void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoMode
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         descHeapDesc.NodeMask       = 0;
     }
-    dsvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
+    dsvDescHeap_ = renderSystem_.GetDevice().CreateDXDescriptorHeap(descHeapDesc);
 
     LLGL_D3D12_SET_NAME(dsvDescHeap_, L"dsvDescHeap");
 
@@ -411,7 +411,7 @@ void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoMode
 void D3D12RenderContext::CreateDeviceResources()
 {
     /* Store size of RTV descriptor */
-    rtvDescSize_ = renderSystem_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    rtvDescSize_ = renderSystem_.GetDXDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 }
 
 void D3D12RenderContext::MoveToNextFrame()

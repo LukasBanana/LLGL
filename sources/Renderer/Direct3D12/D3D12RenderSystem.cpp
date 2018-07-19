@@ -40,14 +40,14 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateGPUSynchObjects();
 
     /* Create command queue interface */
-    commandQueue_ = MakeUnique<D3D12CommandQueue>(*this);
+    commandQueue_ = MakeUnique<D3D12CommandQueue>(device_.GetNative(), device_.GetQueue());
 
     /* Create command queue, command allocator, and graphics command list */
-    graphicsCmdAlloc_   = CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
-    graphicsCmdList_    = CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, graphicsCmdAlloc_.Get());
+    graphicsCmdAlloc_   = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    graphicsCmdList_    = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, graphicsCmdAlloc_.Get());
 
-    computeCmdAlloc_    = CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE);
-    computeCmdList_     = CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCmdAlloc_.Get());
+    computeCmdAlloc_    = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE);
+    computeCmdList_     = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCmdAlloc_.Get());
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -184,7 +184,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
     /* Create buffer and upload data to GPU */
     ComPtr<ID3D12Resource> uploadBuffer;
 
-    auto buffer = MakeD3D12Buffer(device_.Get(), graphicsCmdList_.Get(), uploadBuffer, desc, initialData);
+    auto buffer = MakeD3D12Buffer(device_.GetNative(), graphicsCmdList_.Get(), uploadBuffer, desc, initialData);
 
     /* Execute upload commands and wait for GPU to finish execution */
     ExecuteCommandList();
@@ -248,7 +248,7 @@ void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
-    auto textureD3D = MakeUnique<D3D12Texture>(device_.Get(), textureDesc);
+    auto textureD3D = MakeUnique<D3D12Texture>(device_.GetNative(), textureDesc);
 
     /* Upload image data */
     ComPtr<ID3D12Resource> uploadBuffer;
@@ -282,7 +282,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
             subresourceData.RowPitch    = ImageFormatSize(dstTexFormat.format) * DataTypeSize(dstTexFormat.dataType) * texWidth;
             subresourceData.SlicePitch  = subresourceData.RowPitch * texHeight;
         }
-        textureD3D->UpdateSubresource(device_.Get(), graphicsCmdList_.Get(), uploadBuffer, subresourceData);
+        textureD3D->UpdateSubresource(device_.GetNative(), graphicsCmdList_.Get(), uploadBuffer, subresourceData);
     }
 
     /* Execute upload commands and wait for GPU to finish execution */
@@ -333,7 +333,7 @@ void D3D12RenderSystem::Release(Sampler& sampler)
 
 ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<D3D12ResourceHeap>(device_.Get(), desc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<D3D12ResourceHeap>(device_.GetNative(), desc));
 }
 
 void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
@@ -393,7 +393,7 @@ void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
 
 PipelineLayout* D3D12RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D12PipelineLayout>(device_.Get(), desc));
+    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D12PipelineLayout>(device_.GetNative(), desc));
 }
 
 void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -439,7 +439,7 @@ void D3D12RenderSystem::Release(Query& query)
 
 Fence* D3D12RenderSystem::CreateFence()
 {
-    return TakeOwnership(fences_, MakeUnique<D3D12Fence>(device_.Get(), 0));
+    return TakeOwnership(fences_, MakeUnique<D3D12Fence>(device_.GetNative(), 0));
 }
 
 void D3D12RenderSystem::Release(Fence& fence)
@@ -457,61 +457,6 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;
-}
-
-ComPtr<ID3D12CommandQueue> D3D12RenderSystem::CreateDXCommandQueue()
-{
-    ComPtr<ID3D12CommandQueue> cmdQueue;
-
-    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-    {
-        queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-        queueDesc.Type  = D3D12_COMMAND_LIST_TYPE_DIRECT;
-    }
-    auto hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(cmdQueue.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 command queue");
-
-    return cmdQueue;
-}
-
-ComPtr<ID3D12CommandAllocator> D3D12RenderSystem::CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type)
-{
-    ComPtr<ID3D12CommandAllocator> commandAlloc;
-
-    auto hr = device_->CreateCommandAllocator(type, IID_PPV_ARGS(commandAlloc.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 command allocator");
-
-    return commandAlloc;
-}
-
-ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXCommandList(D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* cmdAllocator)
-{
-    ComPtr<ID3D12GraphicsCommandList> commandList;
-
-    auto hr = device_->CreateCommandList(0, type, cmdAllocator, nullptr, IID_PPV_ARGS(commandList.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 command list");
-
-    return commandList;
-}
-
-ComPtr<ID3D12PipelineState> D3D12RenderSystem::CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc)
-{
-    ComPtr<ID3D12PipelineState> pipelineState;
-
-    auto hr = device_->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 graphics pipeline state");
-
-    return pipelineState;
-}
-
-ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc)
-{
-    ComPtr<ID3D12DescriptorHeap> descHeap;
-
-    auto hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(descHeap.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap");
-
-    return descHeap;
 }
 
 void D3D12RenderSystem::SignalFenceValue(UINT64 fenceValue)
@@ -607,36 +552,20 @@ void D3D12RenderSystem::CreateDevice()
 
     /* Try to create a feature level with an hardware adapter */
     HRESULT hr = 0;
-    if (!CreateDevice(hr, adapter.Get(), featureLevels))
+    if (!device_.CreateDXDevice(hr, adapter.Get(), featureLevels))
     {
         /* Use software adapter as fallback */
         factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
-        if (!CreateDevice(hr, adapter.Get(), featureLevels))
+        if (!device_.CreateDXDevice(hr, adapter.Get(), featureLevels))
             DXThrowIfFailed(hr, "failed to create D3D12 device");
     }
-}
-
-bool D3D12RenderSystem::CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels)
-{
-    for (auto level : featureLevels)
-    {
-        /* Try to create D3D12 device with current feature level */
-        hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(device_.ReleaseAndGetAddressOf()));
-        if (SUCCEEDED(hr))
-        {
-            /* Store final feature level */
-            featureLevel_ = level;
-            return true;
-        }
-    }
-    return false;
 }
 
 void D3D12RenderSystem::CreateGPUSynchObjects()
 {
     /* Create D3D12 fence */
     UINT64 initialFenceValue = 0;
-    auto hr = device_->CreateFence(initialFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
+    auto hr = device_.GetNative()->CreateFence(initialFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 fence");
 
     /* Create Win32 event */
@@ -689,16 +618,10 @@ void D3D12RenderSystem::QueryRenderingCaps()
 
 void D3D12RenderSystem::ExecuteCommandList()
 {
-    /* Close graphics command list */
-    auto hr = graphicsCmdList_->Close();
-    DXThrowIfFailed(hr, "failed to close D3D12 command list");
-
-    /* Execute command list */
-    ID3D12CommandList* cmdLists[] = { graphicsCmdList_.Get() };
-    commandQueue_->GetNative()->ExecuteCommandLists(1, cmdLists);
+    device_.CloseAndExecuteCommandList(graphicsCmdList_.Get());
 
     /* Reset command list */
-    hr = graphicsCmdList_->Reset(graphicsCmdAlloc_.Get(), nullptr);
+    auto hr = graphicsCmdList_->Reset(graphicsCmdAlloc_.Get(), nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 }
 
