@@ -23,7 +23,7 @@
 - [`TextureDescriptor` struct](#texturedescriptor-struct)
 - [Removal of `TextureArray` and `SamplerArray` interfaces](#removal-of-texturearray-and-samplerarray-interfaces)
 - [Array layers for cube textures](#array-layers-for-cube-textures)
-- [Introduction of command recording](#introduction-of-command-recording)
+- [Introduction of command encoding](#introduction-of-command-encoding)
 - [Introduction of render passes](#introduction-of-render-passes)
 
 
@@ -749,9 +749,9 @@ LLGL::Texture* myTex = myRenderer->CreateTexture(myTexDesc);
 ```
 
 
-## Introduction of command recording
+## Introduction of command encoding
 
-From now on, the recording of command buffers must be started and ended explicitly:
+From now on, the encoding of command buffers must be started and ended explicitly. Moreover, the encoded command buffer must be submitted to the command queue explicitly, too.
 
 Before:
 ```cpp
@@ -763,9 +763,10 @@ myContext->Present();
 After:
 ```cpp
 // Render frame
-myCmdQueue->Begin(*myCmdBuffer);
+myCmdBuffer->Begin();
 /* ... */
-myCmdQueue->End(*myCmdBuffer);
+myCmdBuffer->End();
+myCmdQueue->Submit(*myCmdBuffer);
 myContext->Present();
 ```
 
