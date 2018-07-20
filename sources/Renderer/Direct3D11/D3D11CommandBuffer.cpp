@@ -62,6 +62,12 @@ void D3D11CommandBuffer::End()
     // dummy
 }
 
+void D3D11CommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
+{
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    bufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
+}
+
 /* ----- Configuration ----- */
 
 void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

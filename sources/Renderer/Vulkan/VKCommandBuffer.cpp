@@ -27,9 +27,6 @@ namespace LLGL
 {
 
 
-//TEST
-VkCommandBuffer g_currentCmdBuffer = VK_NULL_HANDLE;
-
 static const std::uint32_t g_maxNumViewportsPerBatch = 16;
 
 VKCommandBuffer::VKCommandBuffer(
@@ -87,10 +84,6 @@ void VKCommandBuffer::Begin()
     }
     auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
-
-    #if 1//TEST
-    g_currentCmdBuffer = commandBuffer_;
-    #endif
 }
 
 void VKCommandBuffer::End()
@@ -98,6 +91,16 @@ void VKCommandBuffer::End()
     /* End encoding of current command buffer */
     auto result = vkEndCommandBuffer(commandBuffer_);
     VKThrowIfFailed(result, "failed to end Vulkan command buffer");
+}
+
+void VKCommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+
+    auto size   = static_cast<VkDeviceSize>(dataSize);
+    auto offset = static_cast<VkDeviceSize>(dstOffset);
+
+    vkCmdUpdateBuffer(commandBuffer_, bufferVK.GetVkBuffer(), offset, size, data);
 }
 
 /* ----- Configuration ----- */

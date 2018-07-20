@@ -37,6 +37,8 @@ class GLCommandBuffer final : public CommandBufferExt
         void Begin() override;
         void End() override;
 
+        void UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset) override;
+
         /* ----- Configuration ----- */
 
         void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;

@@ -55,6 +55,12 @@ void D3D12CommandBuffer::End()
     numBoundScissorRects_ = 0;
 }
 
+void D3D12CommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
+{
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    bufferD3D.UpdateDynamicSubresource(data, static_cast<UINT64>(dataSize), dstOffset);
+}
+
 /* ----- Configuration ----- */
 
 void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

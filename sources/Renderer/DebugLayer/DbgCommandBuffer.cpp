@@ -53,6 +53,19 @@ void DbgCommandBuffer::End()
     instance.End();
 }
 
+void DbgCommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+    }
+
+    instance.UpdateBuffer(bufferDbg.instance, data, dataSize, dstOffset);
+}
+
 /* ----- Configuration ----- */
 
 void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

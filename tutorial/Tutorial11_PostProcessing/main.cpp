@@ -426,7 +426,7 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
-        UpdateBuffer(constantBufferScene, sceneSettings);
+        commands->UpdateBuffer(*constantBufferScene, &sceneSettings, sizeof(sceneSettings), 0);
     }
 
     void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
@@ -450,14 +450,14 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
-        UpdateBuffer(constantBufferScene, sceneSettings);
+        commands->UpdateBuffer(*constantBufferScene, &sceneSettings, sizeof(sceneSettings), 0);
     }
 
     void SetBlurSettings(const Gs::Vector2f& blurShift)
     {
         // Update constant buffer for blur pass
         blurSettings.blurShift = blurShift;
-        UpdateBuffer(constantBufferBlur, blurSettings);
+        commands->UpdateBuffer(*constantBufferBlur, &blurSettings, sizeof(blurSettings), 0);
     }
 
     void OnDrawFrame() override

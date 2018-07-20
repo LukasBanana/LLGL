@@ -13,7 +13,6 @@
 #include "../../Core/Helper.h"
 #include "../../Core/Assertion.h"
 #include "D3DX12/d3dx12.h"
-//#include "RenderState/D3D12StateManager.h"
 #include <limits>
 
 #include "Buffer/D3D12VertexBuffer.h"

@@ -215,7 +215,6 @@ void VKRenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
-//TODO: ~~~~~~~~~~~~~~~~~~~~~ REFACTORING ~~~~~~~~~~~~~~~~~~~~~
 void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
@@ -223,13 +222,13 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
     auto memorySize     = static_cast<VkDeviceSize>(dataSize);
     auto memoryOffset   = static_cast<VkDeviceSize>(offset);
 
-    #if 0
-
     if (bufferVK.GetStagingVkBuffer() != VK_NULL_HANDLE)
     {
         /* Copy data to staging buffer memory */
         device_.WriteBuffer(bufferVK.GetStagingDeviceBuffer(), data, memorySize, memoryOffset);
-        //device_.FlushMappedBuffer(bufferVK.GetStagingDeviceBuffer());
+        #if 0//TODO: not required???
+        device_.FlushMappedBuffer(bufferVK.GetStagingDeviceBuffer());
+        #endif
 
         /* Copy staging buffer into hardware buffer */
         device_.CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);
@@ -250,17 +249,7 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
         /* Release device memory region of staging buffer */
         stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
     }
-
-    #else
-
-    if (g_currentCmdBuffer != VK_NULL_HANDLE)
-    {
-        vkCmdUpdateBuffer(g_currentCmdBuffer, bufferVK.GetVkBuffer(), memoryOffset, memorySize, data);
-    }
-
-    #endif
 }
-//TODO: ~~~~~~~~~~~~~~~~~~~~~ /REFACTORING ~~~~~~~~~~~~~~~~~~~~~
 
 void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
