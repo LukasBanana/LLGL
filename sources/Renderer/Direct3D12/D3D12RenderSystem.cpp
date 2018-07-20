@@ -616,6 +616,7 @@ void D3D12RenderSystem::QueryRenderingCaps()
     SetRenderingCaps(caps);
 }
 
+//TODO: also reset allocator!
 void D3D12RenderSystem::ExecuteCommandList()
 {
     device_.CloseAndExecuteCommandList(graphicsCmdList_.Get());

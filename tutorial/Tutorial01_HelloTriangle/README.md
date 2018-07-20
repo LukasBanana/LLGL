@@ -171,15 +171,15 @@ while (myWindow.ProcessEvents()) {
 ```
 The `ProcessEvents` function will return false when the user clicks on the window close button.
 
-The render code inside the loop statement comes next. We first start recording graphics commands for our command buffer using our command queue:
+The render code inside the loop statement comes next. We first start encoding graphics commands for our command buffer:
 ```cpp
-myCmdQueue->Begin(*myCmdBuffer);
+myCmdBuffer->Begin();
 ```
 Now we can bind resources that are independent of a render pass, such as the vertex buffer:
 ```cpp
 myCmdBuffer->SetVertexBuffer(*myVertexBuffer);
 ```
-Before we can start recording drawing commands and other operations that are dependent on render passes, we need to start such a render pass:
+Before we can start encoding drawing commands and other operations that are dependent on render passes, we need to start such a render pass:
 ```cpp
 myCmdBuffer->BeginRenderPass(*myContext);
 ```
@@ -205,13 +205,14 @@ myCmdBuffer->Draw(3, 0);
 ```
 This call generates three vertices and starts with the vertex ID zero. This is analogous to the drawing commands of all modern rendering APIs (i.e. Direct3D 12, Vulkan, Metal) as well as the legacy rendering APIs (i.e. Direct3D 11, OpenGL). The same holds true for the other `DrawInstanced`, `DrawIndexed`, and `DrawIndexedInstanced` functions. The nomenclature for these functions is derived from Direct3D.
 
-Before we can present the result, we need to end the render pass as well as recording the command buffer:
+Before we can present the result, we need to end the render pass as well as encoding the command buffer:
 ```cpp
 myCmdBuffer->EndRenderPass();
-myCmdQueue->End(*myCmdBuffer);
+myCmdBuffer->End();
 ```
-The last thing we have to do is to present the result on the screen:
+The last thing we have to do is to submit the encoded command buffer to the command queue and present the result on the screen:
 ```cpp
+myCmdQueue->Submit(*myCmdBuffer);
 myContext->Present();
 ```
 
