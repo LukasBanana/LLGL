@@ -410,6 +410,8 @@ public:
 
 private:
 
+#define TEST_UPDATE_BUFFER
+
     void SetSceneSettingsInnerModel(float rotation)
     {
         // Transform scene mesh
@@ -426,7 +428,11 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
+        #ifdef TEST_UPDATE_BUFFER
         commands->UpdateBuffer(*constantBufferScene, &sceneSettings, sizeof(sceneSettings), 0);
+        #else
+        UpdateBuffer(constantBufferScene, sceneSettings);
+        #endif
     }
 
     void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
@@ -450,14 +456,22 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
+        #ifdef TEST_UPDATE_BUFFER
         commands->UpdateBuffer(*constantBufferScene, &sceneSettings, sizeof(sceneSettings), 0);
+        #else
+        UpdateBuffer(constantBufferScene, sceneSettings);
+        #endif
     }
 
     void SetBlurSettings(const Gs::Vector2f& blurShift)
     {
         // Update constant buffer for blur pass
         blurSettings.blurShift = blurShift;
+        #ifdef TEST_UPDATE_BUFFER
         commands->UpdateBuffer(*constantBufferBlur, &blurSettings, sizeof(blurSettings), 0);
+        #else
+        UpdateBuffer(constantBufferBlur, blurSettings);
+        #endif
     }
 
     void OnDrawFrame() override

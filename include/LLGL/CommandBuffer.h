@@ -68,6 +68,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void End() = 0;
 
+        /* ----- Encoding ----- */
+
         /**
         \brief Updates the data of the specified buffer during encoding the command buffer.
         \param[in] buffer Specifies the destination buffer whose data is to be updated.
@@ -80,6 +82,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \note This must not be called during a render pass.
         */
         virtual void UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset) = 0;
+
+        #if 0
+        virtual void FillBuffer(Buffer& buffer, [...]) = 0;
+        virtual void CopyBuffer(Buffer& dstBuffer, Buffer& srcBuffer, [...]) = 0;
+        virtual void ClearTexture(Texture& texture, [...]) = 0;
+        virtual void CopyTexture(Texture& dstTexture, Texture& srcTexture, [...]) = 0;
+        virtual void BlitTexture(Texture& dstTexture, Texture& srcTexture, [...], Filter filter) = 0;
+        #endif
 
         #if 0 // TODO: enable this
         /**
