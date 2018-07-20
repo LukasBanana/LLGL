@@ -33,6 +33,7 @@ class VKDevice
 
         void CreateLogicalDevice(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceFeatures* features);
 
+        // Blocks until the VkDevice becomes idle.
         void WaitIdle();
 
         /* ----- Allocation ----- */
@@ -47,12 +48,22 @@ class VKDevice
         /* ----- Buffer/Image operatons ----- */
 
         void TransitionImageLayout(
+            VkCommandBuffer commandBuffer,
             VkImage         image,
             VkFormat        format,
             VkImageLayout   oldLayout,
             VkImageLayout   newLayout,
             std::uint32_t   numMipLevels,
             std::uint32_t   numArrayLayers
+        );
+
+        void CopyBuffer(
+            VkCommandBuffer commandBuffer,
+            VkBuffer        srcBuffer,
+            VkBuffer        dstBuffer,
+            VkDeviceSize    size,
+            VkDeviceSize    srcOffset = 0,
+            VkDeviceSize    dstOffset = 0
         );
 
         void CopyBuffer(
@@ -64,6 +75,7 @@ class VKDevice
         );
 
         void CopyBufferToImage(
+            VkCommandBuffer     commandBuffer,
             VkBuffer            srcBuffer,
             VkImage             dstImage,
             const VkExtent3D&   extent,
@@ -72,15 +84,6 @@ class VKDevice
 
         void GenerateMips(
             VkCommandBuffer     commandBuffer,
-            VkImage             image,
-            const VkExtent3D&   imageExtent,
-            std::uint32_t       baseMipLevel,
-            std::uint32_t       numMipLevels,
-            std::uint32_t       baseArrayLayer,
-            std::uint32_t       numArrayLayers
-        );
-
-        void GenerateMips(
             VkImage             image,
             const VkExtent3D&   imageExtent,
             std::uint32_t       baseMipLevel,

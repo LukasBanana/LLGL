@@ -108,6 +108,20 @@ void VKDeviceBuffer::ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr
     memoryRegion_ = nullptr;
 }
 
+void* VKDeviceBuffer::Map(VkDevice device)
+{
+    if (memoryRegion_)
+        return memoryRegion_->GetParentChunk()->Map(device, memoryRegion_->GetOffset(), memoryRegion_->GetSize());
+    else
+        return nullptr;
+}
+
+void VKDeviceBuffer::Unmap(VkDevice device)
+{
+    if (memoryRegion_)
+        memoryRegion_->GetParentChunk()->Unmap(device);
+}
+
 
 } // /namespace LLGL
 

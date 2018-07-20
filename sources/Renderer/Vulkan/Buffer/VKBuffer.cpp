@@ -35,32 +35,13 @@ void VKBuffer::TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer)
 
 void* VKBuffer::Map(VkDevice device, const CPUAccess access)
 {
-    if (auto region = bufferObjStaging_.GetMemoryRegion())
-    {
-        mappingCPUAccess_ = access;
-        return region->GetParentChunk()->Map(device, region->GetOffset(), region->GetSize());
-    }
-    return nullptr;
+    mappingCPUAccess_ = access;
+    return bufferObjStaging_.Map(device);
 }
 
 void VKBuffer::Unmap(VkDevice device)
 {
-    if (auto region = bufferObjStaging_.GetMemoryRegion())
-        region->GetParentChunk()->Unmap(device);
-}
-
-void* VKBuffer::MapStaging(VkDevice device, VkDeviceSize dataSize, VkDeviceSize offset)
-{
-    if (auto region = bufferObjStaging_.GetMemoryRegion())
-        return region->GetParentChunk()->Map(device, region->GetOffset() + offset, dataSize);
-    else
-        return nullptr;
-}
-
-void VKBuffer::UnmapStaging(VkDevice device)
-{
-    if (auto region = bufferObjStaging_.GetMemoryRegion())
-        region->GetParentChunk()->Unmap(device);
+    bufferObjStaging_.Unmap(device);
 }
 
 

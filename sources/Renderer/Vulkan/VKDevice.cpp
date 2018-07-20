@@ -181,6 +181,7 @@ void VKDevice::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
 }
 
 void VKDevice::TransitionImageLayout(
+    VkCommandBuffer commandBuffer,
     VkImage         image,
     VkFormat        /*format*/,
     VkImageLayout   oldLayout,
@@ -188,8 +189,6 @@ void VKDevice::TransitionImageLayout(
     std::uint32_t   numMipLevels,
     std::uint32_t   numArrayLayers)
 {
-    auto cmdBuffer = AllocCommandBuffer();
-
     /* Initialize image memory barrier descriptor */
     VkImageMemoryBarrier barrier;
     {
@@ -229,9 +228,24 @@ void VKDevice::TransitionImageLayout(
     }
 
     /* Record image barrier command */
-    vkCmdPipelineBarrier(cmdBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+    vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+}
 
-    FlushCommandBuffer(cmdBuffer);
+void VKDevice::CopyBuffer(
+    VkCommandBuffer commandBuffer,
+    VkBuffer        srcBuffer,
+    VkBuffer        dstBuffer,
+    VkDeviceSize    size,
+    VkDeviceSize    srcOffset,
+    VkDeviceSize    dstOffset)
+{
+    VkBufferCopy region;
+    {
+        region.srcOffset    = srcOffset;
+        region.dstOffset    = dstOffset;
+        region.size         = size;
+    }
+    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &region);
 }
 
 void VKDevice::CopyBuffer(
@@ -241,30 +255,20 @@ void VKDevice::CopyBuffer(
     VkDeviceSize    srcOffset,
     VkDeviceSize    dstOffset)
 {
-    //BeginStagingCommands();
     auto cmdBuffer = AllocCommandBuffer();
-
-    /* Record copy command */
-    VkBufferCopy region;
     {
-        region.srcOffset    = srcOffset;
-        region.dstOffset    = dstOffset;
-        region.size         = size;
+        CopyBuffer(cmdBuffer, srcBuffer, dstBuffer, size, srcOffset, dstOffset);
     }
-    vkCmdCopyBuffer(cmdBuffer, srcBuffer, dstBuffer, 1, &region);
-
     FlushCommandBuffer(cmdBuffer);
 }
 
 void VKDevice::CopyBufferToImage(
+    VkCommandBuffer     commandBuffer,
     VkBuffer            srcBuffer,
     VkImage             dstImage,
     const VkExtent3D&   extent,
     std::uint32_t       numLayers)
 {
-    auto cmdBuffer = AllocCommandBuffer();
-
-    /* Record copy command */
     VkBufferImageCopy region;
     {
         region.bufferOffset                     = 0;
@@ -277,9 +281,7 @@ void VKDevice::CopyBufferToImage(
         region.imageOffset                      = { 0, 0, 0 };
         region.imageExtent                      = extent;
     }
-    vkCmdCopyBufferToImage(cmdBuffer, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-    FlushCommandBuffer(cmdBuffer);
+    vkCmdCopyBufferToImage(commandBuffer, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
 void VKDevice::GenerateMips(
@@ -292,6 +294,7 @@ void VKDevice::GenerateMips(
     std::uint32_t       numArrayLayers)
 {
     TransitionImageLayout(
+        commandBuffer,
         image,
         VK_FORMAT_UNDEFINED,
         VK_IMAGE_LAYOUT_UNDEFINED,
@@ -411,24 +414,8 @@ void VKDevice::GenerateMips(
     }
 }
 
-void VKDevice::GenerateMips(
-    VkImage             image,
-    const VkExtent3D&   imageExtent,
-    std::uint32_t       baseMipLevel,
-    std::uint32_t       numMipLevels,
-    std::uint32_t       baseArrayLayer,
-    std::uint32_t       numArrayLayers)
-{
-    auto cmdBuffer = AllocCommandBuffer();
-    {
-        GenerateMips(cmdBuffer, image, imageExtent, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
-    }
-    FlushCommandBuffer(cmdBuffer);
-}
-
 void VKDevice::WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSize size, VkDeviceSize offset)
 {
-    #if 1
     if (auto region = buffer.GetMemoryRegion())
     {
         /* Map buffer memory to host memory */
@@ -440,13 +427,6 @@ void VKDevice::WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSiz
             deviceMemory->Unmap(device_);
         }
     }
-    #else
-    auto cmdBuffer = AllocCommandBuffer();
-    {
-        vkCmdUpdateBuffer(cmdBuffer, buffer.GetVkBuffer(), offset, size, data);
-    }
-    FlushCommandBuffer(cmdBuffer);
-    #endif
 }
 
 void VKDevice::FlushMappedBuffer(VKDeviceBuffer& buffer, VkDeviceSize size, VkDeviceSize offset)

@@ -65,6 +65,9 @@ class VKDeviceBuffer
 
         void ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
 
+        void* Map(VkDevice device);
+        void Unmap(VkDevice device);
+
         /* ----- Getter ----- */
 
         // Returns the native VkBuffer handle.

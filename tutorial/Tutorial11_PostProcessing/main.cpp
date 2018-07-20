@@ -74,7 +74,7 @@ class Tutorial11 : public Tutorial
 public:
 
     Tutorial11() :
-        Tutorial { L"LLGL Tutorial 11: PostProcessing", { 800, 600 }, 0, false }
+        Tutorial { L"LLGL Tutorial 11: PostProcessing", { 800, 600 }, 0 }//, false }
     {
         // Create all graphics objects
         CreateBuffers();
@@ -462,7 +462,7 @@ private:
 
     void OnDrawFrame() override
     {
-        #if 1
+        #if 0
         // Show frame time
         static std::unique_ptr<LLGL::Timer> frameTimer;
         static std::chrono::time_point<std::chrono::system_clock> printTime;

@@ -172,10 +172,12 @@ class VKRenderSystem final : public RenderSystem
 
         VKBuffer* CreateGpuBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
 
+        VKDeviceBuffer CreateStagingBuffer(const VkBufferCreateInfo& createInfo);
+
         VKDeviceBuffer CreateStagingBuffer(
             const VkBufferCreateInfo&   createInfo,
-            const void*                 initialData     = nullptr,
-            std::size_t                 initialDataSize = 0
+            const void*                 initialData,
+            std::size_t                 initialDataSize
         );
 
         /* ----- Common objects ----- */

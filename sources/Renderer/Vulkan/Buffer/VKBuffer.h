@@ -31,9 +31,6 @@ class VKBuffer : public Buffer
         void* Map(VkDevice device, const CPUAccess access);
         void Unmap(VkDevice device);
 
-        void* MapStaging(VkDevice device, VkDeviceSize dataSize, VkDeviceSize offset = 0);
-        void UnmapStaging(VkDevice device);
-
         // Returns the device buffer object.
         inline VKDeviceBuffer& GetDeviceBuffer()
         {
