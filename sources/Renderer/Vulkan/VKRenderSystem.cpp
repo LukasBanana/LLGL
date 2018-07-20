@@ -226,9 +226,6 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
     {
         /* Copy data to staging buffer memory */
         device_.WriteBuffer(bufferVK.GetStagingDeviceBuffer(), data, memorySize, memoryOffset);
-        #if 0//TODO: not required???
-        device_.FlushMappedBuffer(bufferVK.GetStagingDeviceBuffer());
-        #endif
 
         /* Copy staging buffer into hardware buffer */
         device_.CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);

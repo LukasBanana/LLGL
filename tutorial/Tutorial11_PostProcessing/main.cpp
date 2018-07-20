@@ -563,10 +563,10 @@ private:
             }
             commands->EndRenderPass();
 
+            // Draw inner scene model
             SetSceneSettingsInnerModel(innerModelRotation);
             commands->BeginRenderPass(*renderTargetScene);
             {
-                // Draw inner scene model
                 commands->Draw(numSceneVertices, 0);
             }
             commands->EndRenderPass();
@@ -580,10 +580,10 @@ private:
             {
                 // Draw blur passes in quarter resolution
                 commands->SetViewport(viewportQuarter);
-                commands->SetGraphicsPipeline(*pipelineBlur);
-                commands->SetGraphicsResourceHeap(*resourceHeapBlurX);
 
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                commands->SetGraphicsPipeline(*pipelineBlur);
+                commands->SetGraphicsResourceHeap(*resourceHeapBlurX);
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();
@@ -592,11 +592,8 @@ private:
             SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
             commands->BeginRenderPass(*renderTargetBlurY);
             {
-                //commands->SetViewport(viewportQuarter);
-                //commands->SetGraphicsPipeline(*pipelineBlur); //???
-                commands->SetGraphicsResourceHeap(*resourceHeapBlurY);
-
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                commands->SetGraphicsResourceHeap(*resourceHeapBlurY);
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();
