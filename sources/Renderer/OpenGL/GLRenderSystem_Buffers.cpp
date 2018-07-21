@@ -66,7 +66,7 @@ static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& desc, co
 
 Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<GLsizeiptr>::max()));
+    AssertCreateBuffer(desc, static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max()));
 
     /* Create either base of sub-class GLBuffer object */
     switch (desc.type)

@@ -160,6 +160,7 @@ DECL_GLPROC(void, glBindVertexBuffers, (GLuint, GLsizei, const GLuint*, const GL
 DECL_GLPROC(void, glGenBuffers, (GLsizei, GLuint*));
 DECL_GLPROC(void, glDeleteBuffers, (GLsizei, const GLuint*));
 DECL_GLPROC(void, glBindBuffer, (GLenum, GLuint));
+DECL_GLPROC(GLboolean, glIsBuffer, (GLuint));
 DECL_GLPROC(void, glBufferData, (GLenum, GLsizeiptr, const void*, GLenum));
 DECL_GLPROC(void, glBufferSubData, (GLenum, GLintptr, GLsizeiptr, const void*));
 DECL_GLPROC(void, glGetBufferSubData, (GLenum, GLintptr, GLsizeiptr, void*));
@@ -190,6 +191,7 @@ DECL_GLPROC(void, glVertexAttribDivisor, (GLuint, GLuint));
 DECL_GLPROC(void, glGenVertexArrays, (GLsizei, GLuint*));
 DECL_GLPROC(void, glDeleteVertexArrays, (GLsizei, const GLuint*));
 DECL_GLPROC(void, glBindVertexArray, (GLuint));
+DECL_GLPROC(GLboolean, glIsVertexArray, (GLuint));
 
 /* GL_ARB_framebuffer_object */
 

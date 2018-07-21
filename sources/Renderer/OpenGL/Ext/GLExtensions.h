@@ -133,6 +133,7 @@ extern PFNGLBINDVERTEXBUFFERSPROC                           glBindVertexBuffers;
 extern PFNGLGENBUFFERSPROC                                  glGenBuffers;
 extern PFNGLDELETEBUFFERSPROC                               glDeleteBuffers;
 extern PFNGLBINDBUFFERPROC                                  glBindBuffer;
+extern PFNGLISBUFFERPROC                                    glIsBuffer;
 extern PFNGLBUFFERDATAPROC                                  glBufferData;
 extern PFNGLBUFFERSUBDATAPROC                               glBufferSubData;
 extern PFNGLGETBUFFERSUBDATAPROC                            glGetBufferSubData;
@@ -163,6 +164,7 @@ extern PFNGLVERTEXATTRIBDIVISORPROC                         glVertexAttribDiviso
 extern PFNGLGENVERTEXARRAYSPROC                             glGenVertexArrays;
 extern PFNGLDELETEVERTEXARRAYSPROC                          glDeleteVertexArrays;
 extern PFNGLBINDVERTEXARRAYPROC                             glBindVertexArray;
+extern PFNGLISVERTEXARRAYPROC                               glIsVertexArray;
 
 /* GL_ARB_framebuffer_object */
 
@@ -185,7 +187,7 @@ extern PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC         glGetFramebufferAtta
 extern PFNGLBLITFRAMEBUFFERPROC                             glBlitFramebuffer;
 extern PFNGLGENERATEMIPMAPPROC                              glGenerateMipmap;
 
-#if 1 //WHICH EXTENSION???
+#if 1 //WHICH EXTENSION??? (introduced GL 3.0)
 extern PFNGLCLEARBUFFERIVPROC                               glClearBufferiv;
 extern PFNGLCLEARBUFFERUIVPROC                              glClearBufferuiv;
 extern PFNGLCLEARBUFFERFVPROC                               glClearBufferfv;

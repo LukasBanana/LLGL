@@ -72,20 +72,33 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Updates the data of the specified buffer during encoding the command buffer.
-        \param[in] buffer Specifies the destination buffer whose data is to be updated.
+        \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
+        \param[in] dstOffset Specifies the destination offset (in bytes) at which the buffer is to be updated.
+        This offset plus the data block size (i.e. <code>dstOffset + dataSize</code>) must be less than or equal to the size of the buffer.
         \param[in] data Raw pointer to the data with which the buffer is to be updated. This must not be null!
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This is limited to 2^16 = 65536 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
-        \param[in] dstOffset Specifies the destination offset (in bytes) at which the buffer is to be updated.
-        This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the buffer.
         \remarks To update buffers larger than 65536 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
         \note This must not be called during a render pass.
         */
-        virtual void UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset) = 0;
+        virtual void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) = 0;
+
+        #if 0
+        /**
+        \brief Encodes a buffer copy command for the specified buffer region.
+        \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
+        \param[in] dstOffset Specifies the destination offset (in bytes) at which the destination buffer is to be updated.
+        This offset plus the size (i.e. <code>dstOffset + size</code>) must be less than or equal to the size of the destination buffer.
+        \param[in] srcBuffer Specifies the source buffer whose data is to be read from.
+        \param[in] srcOffset Specifies teh source offset (in bytes) at which the source buffer is to be read from.
+        This offset plus the size (i.e. <code>srcOffset + size</code>) must be less than or equal to the size of the source buffer.
+        \param[in] size Specifies the size of the buffer region to copy.
+        */
+        virtual void CopyBuffer(Buffer& dstBuffer, std::uint64_t srcOffset, Buffer& srcBuffer, std::uint64_t dstOffset, std::uint64_t size) = 0;
+        #endif
 
         #if 0
         virtual void FillBuffer(Buffer& buffer, [...]) = 0;
-        virtual void CopyBuffer(Buffer& dstBuffer, Buffer& srcBuffer, [...]) = 0;
         virtual void ClearTexture(Texture& texture, [...]) = 0;
         virtual void CopyTexture(Texture& dstTexture, Texture& srcTexture, [...]) = 0;
         virtual void BlitTexture(Texture& dstTexture, Texture& srcTexture, [...], Filter filter) = 0;
@@ -506,7 +519,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void Draw(std::uint32_t numVertices, std::uint32_t firstVertex) = 0;
 
         //! \see DrawIndexed(std::uint32_t, std::uint32_t, std::int32_t)
-        virtual void DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex) = 0;
+        virtual void DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) = 0;
 
         /**
         \brief Draws the specified amount of primitives from the currently set vertex- and index buffers.
@@ -517,7 +530,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset) = 0;
 
         //! \see DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
-        virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t firstInstance) = 0;
+        virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances) = 0;
 
         /**
         \brief Draws the specified amount of instances of primitives from the currently set vertex buffer.

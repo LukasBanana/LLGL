@@ -53,9 +53,9 @@ void DbgCommandBuffer::End()
     instance.End();
 }
 
-void DbgCommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
+void DbgCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
 {
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    auto& dstBufferDbg = LLGL_CAST(DbgBuffer&, dstBuffer);
 
     if (debugger_)
     {
@@ -63,7 +63,7 @@ void DbgCommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint1
         AssertRecording();
     }
 
-    instance.UpdateBuffer(bufferDbg.instance, data, dataSize, dstOffset);
+    instance.UpdateBuffer(dstBufferDbg.instance, dstOffset, data, dataSize);
 }
 
 /* ----- Configuration ----- */

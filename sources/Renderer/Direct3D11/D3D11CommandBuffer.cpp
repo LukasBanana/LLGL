@@ -62,10 +62,10 @@ void D3D11CommandBuffer::End()
     // dummy
 }
 
-void D3D11CommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
+void D3D11CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
 {
-    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    bufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
+    auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
+    dstBufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
 }
 
 /* ----- Configuration ----- */

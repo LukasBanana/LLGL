@@ -247,7 +247,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \todo Maybe replace std::size_t with std::uint64_t here.
         */
         #if 0//TODO: use version with <std::uint64_t> types
-        virtual void WriteBuffer(Buffer& buffer, const void* data, std::uint64_t dataSize, std::uint64_t dstOffset) = 0;
+        virtual void WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize) = 0;
         #else
         virtual void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
         #endif

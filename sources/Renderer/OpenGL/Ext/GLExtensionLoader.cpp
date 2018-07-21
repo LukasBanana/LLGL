@@ -118,6 +118,7 @@ static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceholder)
     LOAD_GLPROC( glGenBuffers           );
     LOAD_GLPROC( glDeleteBuffers        );
     LOAD_GLPROC( glBindBuffer           );
+    LOAD_GLPROC( glIsBuffer             );
     LOAD_GLPROC( glBufferData           );
     LOAD_GLPROC( glBufferSubData        );
     LOAD_GLPROC( glGetBufferSubData     );
@@ -140,6 +141,7 @@ static bool Load_GL_ARB_vertex_array_object(bool usePlaceholder)
     LOAD_GLPROC( glGenVertexArrays    );
     LOAD_GLPROC( glDeleteVertexArrays );
     LOAD_GLPROC( glBindVertexArray    );
+    LOAD_GLPROC( glIsVertexArray      );
     return true;
 }
 

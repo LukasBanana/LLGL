@@ -130,6 +130,7 @@ PFNGLBINDVERTEXBUFFERSPROC                              glBindVertexBuffers     
 PFNGLGENBUFFERSPROC                                     glGenBuffers                                    = nullptr;
 PFNGLDELETEBUFFERSPROC                                  glDeleteBuffers                                 = nullptr;
 PFNGLBINDBUFFERPROC                                     glBindBuffer                                    = nullptr;
+PFNGLISBUFFERPROC                                       glIsBuffer                                      = nullptr;
 PFNGLBUFFERDATAPROC                                     glBufferData                                    = nullptr;
 PFNGLBUFFERSUBDATAPROC                                  glBufferSubData                                 = nullptr;
 PFNGLGETBUFFERSUBDATAPROC                               glGetBufferSubData                              = nullptr;
@@ -160,6 +161,7 @@ PFNGLVERTEXATTRIBDIVISORPROC                            glVertexAttribDivisor   
 PFNGLGENVERTEXARRAYSPROC                                glGenVertexArrays                               = nullptr;
 PFNGLDELETEVERTEXARRAYSPROC                             glDeleteVertexArrays                            = nullptr;
 PFNGLBINDVERTEXARRAYPROC                                glBindVertexArray                               = nullptr;
+PFNGLISVERTEXARRAYPROC                                  glIsVertexArray                                 = nullptr;
 
 /* GL_ARB_framebuffer_object */
 

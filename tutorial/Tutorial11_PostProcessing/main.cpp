@@ -429,7 +429,7 @@ private:
 
         // Update constant buffer for scene settings
         #ifdef TEST_UPDATE_BUFFER
-        commands->UpdateBuffer(*constantBufferScene, &sceneSettings, sizeof(sceneSettings), 0);
+        commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
         #else
         UpdateBuffer(constantBufferScene, sceneSettings);
         #endif
@@ -457,7 +457,7 @@ private:
 
         // Update constant buffer for scene settings
         #ifdef TEST_UPDATE_BUFFER
-        commands->UpdateBuffer(*constantBufferScene, &sceneSettings, sizeof(sceneSettings), 0);
+        commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
         #else
         UpdateBuffer(constantBufferScene, sceneSettings);
         #endif
@@ -468,7 +468,7 @@ private:
         // Update constant buffer for blur pass
         blurSettings.blurShift = blurShift;
         #ifdef TEST_UPDATE_BUFFER
-        commands->UpdateBuffer(*constantBufferBlur, &blurSettings, sizeof(blurSettings), 0);
+        commands->UpdateBuffer(*constantBufferBlur, 0, &blurSettings, sizeof(blurSettings));
         #else
         UpdateBuffer(constantBufferBlur, blurSettings);
         #endif

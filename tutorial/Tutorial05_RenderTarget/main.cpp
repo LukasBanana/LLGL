@@ -361,7 +361,7 @@ private:
         #endif
 
         // Update constant buffer with current settings
-        commands->UpdateBuffer(*constantBuffer, &settings, sizeof(settings), 0);
+        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
         // Begin render pass for render target
         commands->BeginRenderPass(*renderTarget);
@@ -430,7 +430,7 @@ private:
 
         // Update model transformation with standard projection
         UpdateModelTransform(projection, rotation.x);
-        commands->UpdateBuffer(*constantBuffer, &settings, sizeof(settings), 0);
+        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
         // Begin render pass for render context
         commands->BeginRenderPass(*context);

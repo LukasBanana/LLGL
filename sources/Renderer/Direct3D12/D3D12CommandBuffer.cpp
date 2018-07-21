@@ -55,10 +55,10 @@ void D3D12CommandBuffer::End()
     numBoundScissorRects_ = 0;
 }
 
-void D3D12CommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
+void D3D12CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
 {
-    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    bufferD3D.UpdateDynamicSubresource(data, static_cast<UINT64>(dataSize), dstOffset);
+    auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
+    dstBufferD3D.UpdateDynamicSubresource(data, static_cast<UINT64>(dataSize), dstOffset);
 }
 
 /* ----- Configuration ----- */

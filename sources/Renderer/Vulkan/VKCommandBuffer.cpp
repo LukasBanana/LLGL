@@ -93,14 +93,14 @@ void VKCommandBuffer::End()
     VKThrowIfFailed(result, "failed to end Vulkan command buffer");
 }
 
-void VKCommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
+void VKCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
 {
-    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    auto& dstBufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
 
     auto size   = static_cast<VkDeviceSize>(dataSize);
     auto offset = static_cast<VkDeviceSize>(dstOffset);
 
-    vkCmdUpdateBuffer(commandBuffer_, bufferVK.GetVkBuffer(), offset, size, data);
+    vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
 }
 
 /* ----- Configuration ----- */

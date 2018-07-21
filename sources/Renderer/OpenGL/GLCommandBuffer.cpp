@@ -56,10 +56,10 @@ void GLCommandBuffer::End()
     // dummy
 }
 
-void GLCommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
+void GLCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
 {
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    bufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data);
+    auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
+    dstBufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data);
 }
 
 /* ----- Configuration ----- */
