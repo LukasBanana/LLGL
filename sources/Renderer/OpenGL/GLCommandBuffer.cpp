@@ -59,28 +59,7 @@ void GLCommandBuffer::End()
 void GLCommandBuffer::UpdateBuffer(Buffer& buffer, const void* data, std::uint16_t dataSize, std::uint64_t dstOffset)
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
-    if (HasExtension(GLExt::ARB_direct_state_access))
-    {
-        glNamedBufferSubData(
-            bufferGL.GetID(),
-            static_cast<GLintptr>(dstOffset),
-            static_cast<GLsizeiptr>(dataSize),
-            data
-        );
-    }
-    else
-    #endif
-    {
-        GLStateManager::active->BindBuffer(bufferGL);
-        glBufferSubData(
-            GLTypes::Map(bufferGL.GetType()),
-            static_cast<GLintptr>(dstOffset),
-            static_cast<GLsizeiptr>(dataSize),
-            data
-        );
-    }
+    bufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data);
 }
 
 /* ----- Configuration ----- */

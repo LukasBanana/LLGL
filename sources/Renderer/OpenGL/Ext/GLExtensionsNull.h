@@ -162,8 +162,11 @@ DECL_GLPROC(void, glDeleteBuffers, (GLsizei, const GLuint*));
 DECL_GLPROC(void, glBindBuffer, (GLenum, GLuint));
 DECL_GLPROC(void, glBufferData, (GLenum, GLsizeiptr, const void*, GLenum));
 DECL_GLPROC(void, glBufferSubData, (GLenum, GLintptr, GLsizeiptr, const void*));
+DECL_GLPROC(void, glGetBufferSubData, (GLenum, GLintptr, GLsizeiptr, void*));
 DECL_GLPROC(void*, glMapBuffer, (GLenum, GLenum));
 DECL_GLPROC(GLboolean, glUnmapBuffer, (GLenum));
+DECL_GLPROC(void, glGetBufferParameteriv, (GLenum, GLenum, GLint*));
+DECL_GLPROC(void, glGetBufferPointerv, (GLenum, GLenum, void**));
 
 /* GL_ARB_vertex_buffer_object ??? */
 
@@ -414,6 +417,10 @@ DECL_GLPROC(void, glTexStorage3DMultisample, (GLenum, GLsizei, GLenum, GLsizei, 
 /* GL_ARB_buffer_storage */
 
 DECL_GLPROC(void, glBufferStorage, (GLenum, GLsizeiptr, const void*, GLbitfield));
+
+/* ARB_copy_buffer */
+
+DECL_GLPROC(void, glCopyBufferSubData, (GLenum, GLenum, GLintptr, GLintptr, GLsizeiptr));
 
 /* GL_ARB_polygon_offset_clamp */
 

@@ -161,7 +161,7 @@ private:
             {
                 LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },//1 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 1 },//2 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 2 },//2 },
                 //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                               3 },//3 },
             };
         }
@@ -361,7 +361,7 @@ private:
         #endif
 
         // Update constant buffer with current settings
-        UpdateBuffer(constantBuffer, settings);
+        commands->UpdateBuffer(*constantBuffer, &settings, sizeof(settings), 0);
 
         // Begin render pass for render target
         commands->BeginRenderPass(*renderTarget);
@@ -430,7 +430,7 @@ private:
 
         // Update model transformation with standard projection
         UpdateModelTransform(projection, rotation.x);
-        UpdateBuffer(constantBuffer, settings);
+        commands->UpdateBuffer(*constantBuffer, &settings, sizeof(settings), 0);
 
         // Begin render pass for render context
         commands->BeginRenderPass(*context);

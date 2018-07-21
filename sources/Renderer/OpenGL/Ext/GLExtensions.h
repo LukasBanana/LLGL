@@ -135,8 +135,11 @@ extern PFNGLDELETEBUFFERSPROC                               glDeleteBuffers;
 extern PFNGLBINDBUFFERPROC                                  glBindBuffer;
 extern PFNGLBUFFERDATAPROC                                  glBufferData;
 extern PFNGLBUFFERSUBDATAPROC                               glBufferSubData;
+extern PFNGLGETBUFFERSUBDATAPROC                            glGetBufferSubData;
 extern PFNGLMAPBUFFERPROC                                   glMapBuffer;
 extern PFNGLUNMAPBUFFERPROC                                 glUnmapBuffer;
+extern PFNGLGETBUFFERPARAMETERIVPROC                        glGetBufferParameteriv;
+extern PFNGLGETBUFFERPOINTERVPROC                           glGetBufferPointerv;
 
 /* GL_ARB_vertex_buffer_object ??? */
 
@@ -387,6 +390,10 @@ extern PFNGLTEXSTORAGE3DMULTISAMPLEPROC                     glTexStorage3DMultis
 /* GL_ARB_buffer_storage */
 
 extern PFNGLBUFFERSTORAGEPROC                               glBufferStorage;
+
+/* ARB_copy_buffer */
+
+extern PFNGLCOPYBUFFERSUBDATAPROC                           glCopyBufferSubData;
 
 /* GL_ARB_polygon_offset_clamp */
 

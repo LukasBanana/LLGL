@@ -132,8 +132,11 @@ PFNGLDELETEBUFFERSPROC                                  glDeleteBuffers         
 PFNGLBINDBUFFERPROC                                     glBindBuffer                                    = nullptr;
 PFNGLBUFFERDATAPROC                                     glBufferData                                    = nullptr;
 PFNGLBUFFERSUBDATAPROC                                  glBufferSubData                                 = nullptr;
+PFNGLGETBUFFERSUBDATAPROC                               glGetBufferSubData                              = nullptr;
 PFNGLMAPBUFFERPROC                                      glMapBuffer                                     = nullptr;
 PFNGLUNMAPBUFFERPROC                                    glUnmapBuffer                                   = nullptr;
+PFNGLGETBUFFERPARAMETERIVPROC                           glGetBufferParameteriv                          = nullptr;
+PFNGLGETBUFFERPOINTERVPROC                              glGetBufferPointerv                             = nullptr;
 
 /* GL_ARB_vertex_buffer_object ??? */
 
@@ -384,6 +387,10 @@ PFNGLTEXSTORAGE3DMULTISAMPLEPROC                        glTexStorage3DMultisampl
 /* GL_ARB_buffer_storage */
 
 PFNGLBUFFERSTORAGEPROC                                  glBufferStorage                                 = nullptr;
+
+/* ARB_copy_buffer */
+
+PFNGLCOPYBUFFERSUBDATAPROC                              glCopyBufferSubData                             = nullptr;
 
 /* GL_ARB_polygon_offset_clamp */
 

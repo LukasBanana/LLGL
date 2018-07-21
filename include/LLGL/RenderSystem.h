@@ -243,10 +243,14 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         This must be less then or equal to the size of the buffer.
         \param[in] offset Specifies the offset (in bytes) at which the buffer is to be updated.
         This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the buffer.
-        \todo Maybe replace std::size_t with std::uint64_t here.
         \remarks To update a small buffer (maximum of 65536 bytes) during encoding a command buffer, use CommandBuffer::UpdateBuffer.
+        \todo Maybe replace std::size_t with std::uint64_t here.
         */
+        #if 0//TODO: use version with <std::uint64_t> types
+        virtual void WriteBuffer(Buffer& buffer, const void* data, std::uint64_t dataSize, std::uint64_t dstOffset) = 0;
+        #else
         virtual void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        #endif
 
         /**
         \brief Maps the specified buffer from GPU to CPU memory space.

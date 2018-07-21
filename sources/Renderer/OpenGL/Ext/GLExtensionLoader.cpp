@@ -115,13 +115,16 @@ bool LoadCreateContextProcs()
 
 static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceholder)
 {
-    LOAD_GLPROC( glGenBuffers    );
-    LOAD_GLPROC( glDeleteBuffers );
-    LOAD_GLPROC( glBindBuffer    );
-    LOAD_GLPROC( glBufferData    );
-    LOAD_GLPROC( glBufferSubData );
-    LOAD_GLPROC( glMapBuffer     );
-    LOAD_GLPROC( glUnmapBuffer   );
+    LOAD_GLPROC( glGenBuffers           );
+    LOAD_GLPROC( glDeleteBuffers        );
+    LOAD_GLPROC( glBindBuffer           );
+    LOAD_GLPROC( glBufferData           );
+    LOAD_GLPROC( glBufferSubData        );
+    LOAD_GLPROC( glGetBufferSubData     );
+    LOAD_GLPROC( glMapBuffer            );
+    LOAD_GLPROC( glUnmapBuffer          );
+    LOAD_GLPROC( glGetBufferParameteriv );
+    LOAD_GLPROC( glGetBufferPointerv    );
 
     #if 1//TODO: which extension???
     LOAD_GLPROC( glEnableVertexAttribArray  );
@@ -559,6 +562,12 @@ static bool Load_GL_ARB_buffer_storage(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_copy_buffer(bool usePlaceholder)
+{
+    LOAD_GLPROC( glCopyBufferSubData );
+    return true;
+}
+
 static bool Load_GL_ARB_polygon_offset_clamp(bool usePlaceholder)
 {
     LOAD_GLPROC( glPolygonOffsetClamp );
@@ -807,6 +816,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( EXT_transform_feedback           );
     ENABLE_GLEXT( ARB_sync                         );
     ENABLE_GLEXT( ARB_polygon_offset_clamp         );
+    ENABLE_GLEXT( ARB_copy_buffer                  );
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );
@@ -923,6 +933,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_texture_storage              );
     LOAD_GLEXT( ARB_texture_storage_multisample  );
     LOAD_GLEXT( ARB_buffer_storage               );
+    LOAD_GLEXT( ARB_copy_buffer                  );
     LOAD_GLEXT( ARB_polygon_offset_clamp         );
     LOAD_GLEXT( ARB_texture_view                 );
     LOAD_GLEXT( ARB_shader_image_load_store      );
