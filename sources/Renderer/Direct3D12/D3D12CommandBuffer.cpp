@@ -61,6 +61,13 @@ void D3D12CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset
     dstBufferD3D.UpdateDynamicSubresource(data, static_cast<UINT64>(dataSize), dstOffset);
 }
 
+void D3D12CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
+    auto& srcBufferD3D = LLGL_CAST(D3D12Buffer&, srcBuffer);
+    commandList_->CopyBufferRegion(dstBufferD3D.GetNative(), dstOffset, srcBufferD3D.GetNative(), srcOffset, size);
+}
+
 /* ----- Configuration ----- */
 
 void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

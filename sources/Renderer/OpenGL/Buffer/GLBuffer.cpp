@@ -88,7 +88,7 @@ void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Copy buffer directly (GL 4.5+) */
-        glCopyNamedBufferSubData(GetID(), readBuffer.GetID(), readOffset, writeOffset, size);
+        glCopyNamedBufferSubData(readBuffer.GetID(), GetID(), readOffset, writeOffset, size);
     }
     else
     #endif // /GL_ARB_direct_state_access
@@ -96,8 +96,8 @@ void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset
     if (HasExtension(GLExt::ARB_copy_buffer))
     {
         /* Bind source and destination buffer for copy operation (GL 3.1+) */
-        GLStateManager::active->BindBuffer(GLBufferTarget::COPY_WRITE_BUFFER, GetID());
         GLStateManager::active->BindBuffer(GLBufferTarget::COPY_READ_BUFFER, readBuffer.GetID());
+        GLStateManager::active->BindBuffer(GLBufferTarget::COPY_WRITE_BUFFER, GetID());
         glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, readOffset, writeOffset, size);
     }
     else

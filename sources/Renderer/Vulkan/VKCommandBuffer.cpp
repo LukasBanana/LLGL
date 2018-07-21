@@ -103,6 +103,20 @@ void VKCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, c
     vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
 }
 
+void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    auto& dstBufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
+    auto& srcBufferVK = LLGL_CAST(VKBuffer&, srcBuffer);
+
+    VkBufferCopy region;
+    {
+        region.srcOffset    = static_cast<VkDeviceSize>(srcOffset);
+        region.dstOffset    = static_cast<VkDeviceSize>(dstOffset);
+        region.size         = static_cast<VkDeviceSize>(size);
+    }
+    vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
+}
+
 /* ----- Configuration ----- */
 
 void VKCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

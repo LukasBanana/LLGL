@@ -68,6 +68,23 @@ void D3D11CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset
     dstBufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
 }
 
+void D3D11CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
+    auto& srcBufferD3D = LLGL_CAST(D3D11Buffer&, srcBuffer);
+
+    context_->CopySubresourceRegion(
+        dstBufferD3D.GetNative(),                               // pDstResource
+        0,                                                      // DstSubresource
+        static_cast<UINT>(dstOffset),                           // DstX
+        0,                                                      // DstY
+        0,                                                      // DstZ
+        srcBufferD3D.GetNative(),                               // pSrcResource
+        0,                                                      // SrcSubresource
+        &CD3D11_BOX(srcOffset, 0, 0, srcOffset + size, 1, 1)    // pSrcBox
+    );
+}
+
 /* ----- Configuration ----- */
 
 void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

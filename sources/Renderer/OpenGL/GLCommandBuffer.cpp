@@ -62,6 +62,18 @@ void GLCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, c
     dstBufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data);
 }
 
+void GLCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
+    auto& srcBufferGL = LLGL_CAST(GLBuffer&, srcBuffer);
+    dstBufferGL.CopyBufferSubData(
+        srcBufferGL,
+        static_cast<GLintptr>(srcOffset),
+        static_cast<GLintptr>(dstOffset),
+        static_cast<GLsizeiptr>(size)
+    );
+}
+
 /* ----- Configuration ----- */
 
 void GLCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

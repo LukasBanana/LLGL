@@ -45,6 +45,7 @@ class DbgCommandBuffer : public CommandBufferExt
         void End() override;
 
         void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) override;
+        void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) override;
 
         /* ----- Configuration ----- */
 

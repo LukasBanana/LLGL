@@ -83,7 +83,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) = 0;
 
-        #if 0
         /**
         \brief Encodes a buffer copy command for the specified buffer region.
         \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
@@ -94,8 +93,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         This offset plus the size (i.e. <code>srcOffset + size</code>) must be less than or equal to the size of the source buffer.
         \param[in] size Specifies the size of the buffer region to copy.
         */
-        virtual void CopyBuffer(Buffer& dstBuffer, std::uint64_t srcOffset, Buffer& srcBuffer, std::uint64_t dstOffset, std::uint64_t size) = 0;
-        #endif
+        virtual void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) = 0;
 
         #if 0
         virtual void FillBuffer(Buffer& buffer, [...]) = 0;
