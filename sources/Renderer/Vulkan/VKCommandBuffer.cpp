@@ -584,8 +584,13 @@ bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
 
     /* Store result directly into output parameter */
     auto stateResult = vkGetQueryPoolResults(
-        device_, queryVK.GetVkQueryPool(), 0, 1,
-        sizeof(result), &result, sizeof(std::uint64_t),
+        device_,
+        queryVK.GetVkQueryPool(),
+        0,
+        1,
+        sizeof(result),
+        &result,
+        sizeof(std::uint64_t),
         VK_QUERY_RESULT_64_BIT
     );
 
@@ -606,8 +611,13 @@ bool VKCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
     std::uint64_t intermediateResults[11];
 
     auto stateResult = vkGetQueryPoolResults(
-        device_, queryVK.GetVkQueryPool(), 0, 1,
-        sizeof(intermediateResults), intermediateResults, sizeof(std::uint64_t),
+        device_,
+        queryVK.GetVkQueryPool(),
+        0,
+        1,
+        sizeof(intermediateResults),
+        intermediateResults,
+        sizeof(std::uint64_t),
         VK_QUERY_RESULT_64_BIT
     );
 

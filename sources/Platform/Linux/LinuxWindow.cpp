@@ -55,9 +55,9 @@ void LinuxWindow::GetNativeHandle(void* nativeHandle) const
     handle.visual   = visual_;
 }
 
-void LinuxWindow::Recreate()
+void LinuxWindow::ResetPixelFormat()
 {
-    //todo...
+    // dummy
 }
 
 Extent2D LinuxWindow::GetContentSize() const

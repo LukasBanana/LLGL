@@ -562,6 +562,7 @@ LLGL::ImageDescriptor;
 LLGL::BufferCPUAccess;
 LLGL::TextureFilter;
 LLGL::TextureWrap;
+LLGL::Surface::Recreate;
 ```
 
 After:
@@ -577,6 +578,7 @@ LLGL::SrcImageDescriptor;
 LLGL::CPUAccess;
 LLGL::SamplerFilter;
 LLGL::SamplerAddressMode;
+LLGL::Surface::ResetPixelFormat;
 ```
 
 

@@ -39,8 +39,7 @@ class LLGL_EXPORT Surface : public NonCopyable
         // Example for a custom Win32 window class
         #include <LLGL/Platform/NativeHandle.h>
         //...
-        void YourWindowClass::GetNativeHandle(void* nativeHandle)
-        {
+        void MyWindowClass::GetNativeHandle(void* nativeHandle) {
             auto handle = reinterpret_cast<LLGL::NativeHandle*>(nativeHandle);
             //handle->window = 'some HWND window handle';
         }
@@ -64,13 +63,12 @@ class LLGL_EXPORT Surface : public NonCopyable
         virtual bool AdaptForVideoMode(VideoModeDescriptor& videoModeDesc) = 0;
 
         /**
-        \brief Recreates the internal surface object with the current descriptor settings.
-        This may invalidate the native handle previously returned by <code>GetNativeHandle</code>.
+        \brief Resets the internal pixel format of the surface.
         \remarks This function is mainly used by the OpenGL renderer on Win32 when a multi-sampled framebuffer is created.
+        \note This may invalidate the native handle previously returned by \c GetNativeHandle.
         \see GetNativeHandle
-        \todo Rename to "AdaptForPixelFormat" or similar.
         */
-        virtual void Recreate() = 0;
+        virtual void ResetPixelFormat() = 0;
 
 };
 

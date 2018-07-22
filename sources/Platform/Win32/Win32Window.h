@@ -27,7 +27,7 @@ class Win32Window : public Window
 
         void GetNativeHandle(void* nativeHandle) const override;
 
-        void Recreate() override;
+        void ResetPixelFormat() override;
 
         Extent2D GetContentSize() const override;
 

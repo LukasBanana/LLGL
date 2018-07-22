@@ -37,7 +37,6 @@ class Display;
 /**
 \brief Render context interface.
 \remarks Each render context has its own surface and back buffer (or rather swap-chain) to draw into.
-\todo Make this a sub class of RenderTarget as soon as all "Attach..." and "Detach..." functions have been removed.
 \see RenderSystem::CreateRenderContext
 \see CommandBuffer::SetRenderTarget(RenderContext&)
 */
