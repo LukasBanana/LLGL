@@ -200,14 +200,14 @@ VkCompareOp Map(const CompareOp compareOp)
 {
     switch (compareOp)
     {
-        case CompareOp::Never:          return VK_COMPARE_OP_NEVER;
+        case CompareOp::NeverPass:      return VK_COMPARE_OP_NEVER;
         case CompareOp::Less:           return VK_COMPARE_OP_LESS;
         case CompareOp::Equal:          return VK_COMPARE_OP_EQUAL;
         case CompareOp::LessEqual:      return VK_COMPARE_OP_LESS_OR_EQUAL;
         case CompareOp::Greater:        return VK_COMPARE_OP_GREATER;
         case CompareOp::NotEqual:       return VK_COMPARE_OP_NOT_EQUAL;
         case CompareOp::GreaterEqual:   return VK_COMPARE_OP_GREATER_OR_EQUAL;
-        case CompareOp::Ever:           return VK_COMPARE_OP_ALWAYS;
+        case CompareOp::AlwaysPass:     return VK_COMPARE_OP_ALWAYS;
     }
     MapFailed("CompareOp", "VkCompareOp");
 }

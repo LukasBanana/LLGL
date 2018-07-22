@@ -564,6 +564,8 @@ TextureFilter                    --> SamplerFilter
 TextureWrap                      --> SamplerAddressMode
 Surface::Recreate                --> Surface::ResetPixelFormat
 SubTextureDescriptor             --> TextureRegion
+CompareOp::Never                 --> CompareOp::NeverPass
+CompareOp::Ever                  --> CompareOp::AlwaysPass
 ```
 
 

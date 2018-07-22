@@ -154,14 +154,14 @@ enum class PrimitiveTopology
 */
 enum class CompareOp
 {
-    Never,          //!< Comparison never passes.
+    NeverPass,      //!< Comparison never passes.
     Less,           //!< Comparison passes if the source data is less than the destination data.
     Equal,          //!< Comparison passes if the source data is euqal to the right-hand-side.
     LessEqual,      //!< Comparison passes if the source data is less than or equal to the right-hand-side.
     Greater,        //!< Comparison passes if the source data is greater than the right-hand-side.
     NotEqual,       //!< Comparison passes if the source data is not equal to the right-hand-side.
     GreaterEqual,   //!< Comparison passes if the source data is greater than or equal to the right-hand-side.
-    Ever,           //!< Comparison always passes. (Cannot be called "Always" due to conflict with X11 lib on Linux).
+    AlwaysPass,     //!< Comparison always passes.
 };
 
 /**

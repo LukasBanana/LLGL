@@ -98,14 +98,14 @@ D3D12_COMPARISON_FUNC Map(const CompareOp compareOp)
 {
     switch (compareOp)
     {
-        case CompareOp::Never:          return D3D12_COMPARISON_FUNC_NEVER;
+        case CompareOp::NeverPass:      return D3D12_COMPARISON_FUNC_NEVER;
         case CompareOp::Less:           return D3D12_COMPARISON_FUNC_LESS;
         case CompareOp::Equal:          return D3D12_COMPARISON_FUNC_EQUAL;
         case CompareOp::LessEqual:      return D3D12_COMPARISON_FUNC_LESS_EQUAL;
         case CompareOp::Greater:        return D3D12_COMPARISON_FUNC_GREATER;
         case CompareOp::NotEqual:       return D3D12_COMPARISON_FUNC_NOT_EQUAL;
         case CompareOp::GreaterEqual:   return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
-        case CompareOp::Ever:           return D3D12_COMPARISON_FUNC_ALWAYS;
+        case CompareOp::AlwaysPass:     return D3D12_COMPARISON_FUNC_ALWAYS;
     }
     DXTypes::MapFailed("CompareOp", "D3D12_COMPARISON_FUNC");
 }

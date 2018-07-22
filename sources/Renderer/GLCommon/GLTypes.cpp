@@ -314,14 +314,14 @@ GLenum Map(const CompareOp compareOp)
 {
     switch (compareOp)
     {
-        case CompareOp::Never:          return GL_NEVER;
+        case CompareOp::NeverPass:      return GL_NEVER;
         case CompareOp::Less:           return GL_LESS;
         case CompareOp::Equal:          return GL_EQUAL;
         case CompareOp::LessEqual:      return GL_LEQUAL;
         case CompareOp::Greater:        return GL_GREATER;
         case CompareOp::NotEqual:       return GL_NOTEQUAL;
         case CompareOp::GreaterEqual:   return GL_GEQUAL;
-        case CompareOp::Ever:           return GL_ALWAYS;
+        case CompareOp::AlwaysPass:     return GL_ALWAYS;
     }
     MapFailed("CompareOp");
 }

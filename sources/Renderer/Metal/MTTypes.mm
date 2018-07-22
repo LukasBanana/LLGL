@@ -274,14 +274,14 @@ MTLCompareFunction ToMTLCompareFunction(const CompareOp compareOp)
 {
     switch (compareOp)
     {
-        case CompareOp::Never:          return MTLCompareFunctionNever;
+        case CompareOp::NeverPass:      return MTLCompareFunctionNever;
         case CompareOp::Less:           return MTLCompareFunctionLess;
         case CompareOp::Equal:          return MTLCompareFunctionEqual;
         case CompareOp::LessEqual:      return MTLCompareFunctionLessEqual;
         case CompareOp::Greater:        return MTLCompareFunctionGreater;
         case CompareOp::NotEqual:       return MTLCompareFunctionNotEqual;
         case CompareOp::GreaterEqual:   return MTLCompareFunctionGreaterEqual;
-        case CompareOp::Ever:           return MTLCompareFunctionAlways;
+        case CompareOp::AlwaysPass:     return MTLCompareFunctionAlways;
     }
     MapFailed("CompareOp", "MTLCompareFunction");
 }
