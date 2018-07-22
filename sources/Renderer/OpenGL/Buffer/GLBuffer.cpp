@@ -104,7 +104,7 @@ void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset
     #endif // /GL_ARB_copy_buffer
     {
         /* Emulate buffer copy operation */
-        auto intermediateBuffer = std::unique_ptr<char[]>(new char[size]);
+        auto intermediateBuffer = MakeUniqueArray<char>(size);
 
         /* Read source buffer data */
         GLStateManager::active->BindBuffer(readBuffer);

@@ -32,11 +32,18 @@ namespace LLGL
 
 /* ----- Templates ----- */
 
-// Alternative to std::make_unique for strict C++11 support.
+// Alternative to std::make_unique<T> for strict C++11 support.
 template <typename T, typename... Args>
 std::unique_ptr<T> MakeUnique(Args&&... args)
 {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+// Alternative to std::make_unique<T[]> for strict C++11 support.
+template <typename T>
+std::unique_ptr<T[]> MakeUniqueArray(std::size_t size)
+{
+    return std::unique_ptr<T[]>(new T[size]);
 }
 
 // Initializes the specified data of basic type of POD structure type with zeros (using ::memset).

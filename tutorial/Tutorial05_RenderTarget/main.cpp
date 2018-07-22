@@ -189,6 +189,7 @@ private:
         // Create graphics pipeline for render target
         {
             pipelineDesc.renderPass = renderTarget->GetRenderPass();
+            pipelineDesc.viewports  = { LLGL::Viewport{ { 0, 0 }, renderTarget->GetResolution() } };
 
             if (IsOpenGL())
             {
@@ -382,9 +383,6 @@ private:
                 commandsExt->SetSampler(*samplerState, 0, shaderStages);
             }
 
-            // Set viewport for render target
-            commands->SetViewport({ { 0, 0 }, renderTarget->GetResolution() });
-
             // Draw scene
             commands->DrawIndexed(36, 0);
         }
@@ -411,11 +409,13 @@ private:
             commands->SetClearColor(defaultClearColor);
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
-            // Reset viewport for the screen
-            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
-
             // Binds graphics pipeline for render context
             commands->SetGraphicsPipeline(*pipelines[1]);
+
+            // Set viewport to fullscreen.
+            // Note: this must be done AFTER the respective graphics pipeline has been set,
+            //       since the previous pipeline has no dynamic viewport!
+            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
 
             // Generate MIP-maps again after texture has been written by the render-target
             renderer->GenerateMips(*renderTargetTex);

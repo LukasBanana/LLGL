@@ -14,7 +14,7 @@
 #include "../Shader/GLShaderProgram.h"
 #include <LLGL/GraphicsPipeline.h>
 #include <LLGL/RenderSystemFlags.h>
-#include <vector>
+#include <memory>
 
 
 namespace LLGL
@@ -22,6 +22,7 @@ namespace LLGL
 
 
 struct GraphicsPipelineDescriptor;
+class RawBufferIterator;
 
 class GLGraphicsPipeline final : public GraphicsPipeline
 {
@@ -40,6 +41,13 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         }
 
     private:
+
+        void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
+        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter);
+        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter);
+
+        void SetStaticViewports(GLStateManager& stateMngr, RawBufferIterator& rawBufferIter);
+        void SetStaticScissors(GLStateManager& stateMngr, RawBufferIterator& rawBufferIter);
 
         // shader state
         const GLShaderProgram*  shaderProgram_          = nullptr;
@@ -88,6 +96,11 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         // color logic operation state
         bool                    logicOpEnabled_         = false;
         GLenum                  logicOp_                = GL_COPY;
+
+        // packed byte buffer for static viewports and scissors
+        std::unique_ptr<char[]> staticStateBuffer_;
+        GLsizei                 numStaticViewports_     = 0;
+        GLsizei                 numStaticScissors_      = 0;
 
 };
 

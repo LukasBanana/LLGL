@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <thread>
 #include <cstring>
+#include "../Core/Helper.h"
 #include "../Core/Assertion.h"
 #include "Float16Compressor.h"
 
@@ -159,11 +160,6 @@ static void WriteNormalizedTypedVariant(DataType dstDataType, VariantBuffer& dst
             dstBuffer.real64[idx] = value;
             break;
     }
-}
-
-static ByteBuffer AllocByteArray(std::size_t size)
-{
-    return ByteBuffer { new char[size] };
 }
 
 // Worker thread procedure for the "ConvertImageBufferDataType" function
@@ -695,7 +691,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
     {
         /* Convert image data type with intermediate buffer */
         auto intermediateBufferSize = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstImageDesc.dataType);
-        auto intermediateBuffer     = AllocByteArray(intermediateBufferSize);
+        auto intermediateBuffer     = MakeUniqueArray<char>(intermediateBufferSize);
 
         ConvertImageBufferDataType(
             srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
@@ -762,11 +758,11 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
 
     if (srcImageDesc.dataType != dstDataType && srcImageDesc.format != dstFormat)
     {
-        auto dstImage = AllocByteArray(dstImageDesc.dataSize);
+        auto dstImage = MakeUniqueArray<char>(dstImageDesc.dataSize);
         {
             /* Convert image data type with intermediate buffer */
             auto intermediateBufferSize = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstDataType);
-            auto intermediateBuffer     = AllocByteArray(intermediateBufferSize);
+            auto intermediateBuffer     = MakeUniqueArray<char>(intermediateBufferSize);
 
             ConvertImageBufferDataType(
                 srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
@@ -792,7 +788,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     else if (srcImageDesc.dataType != dstDataType)
     {
         /* Convert image data type */
-        auto dstImage = AllocByteArray(dstImageDesc.dataSize);
+        auto dstImage = MakeUniqueArray<char>(dstImageDesc.dataSize);
         {
             dstImageDesc.data = dstImage.get();
             ConvertImageBufferDataType(
@@ -806,7 +802,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     else if (srcImageDesc.format != dstFormat)
     {
         /* Convert image format */
-        auto dstImage = AllocByteArray(dstImageDesc.dataSize);
+        auto dstImage = MakeUniqueArray<char>(dstImageDesc.dataSize);
         {
             dstImageDesc.data = dstImage.get();
             ConvertImageBufferFormat(srcImageDesc, dstImageDesc, threadCount);
@@ -842,7 +838,7 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 
     /* Allocate image buffer */
     const auto bytesPerPixel = DataTypeSize(dataType) * ImageFormatSize(format);
-    auto imageBuffer = AllocByteArray(bytesPerPixel * imageSize);
+    auto imageBuffer = MakeUniqueArray<char>(bytesPerPixel * imageSize);
 
     /* Initialize image buffer with fill color */
     for (std::size_t i = 0; i < imageSize; ++i)
@@ -853,7 +849,7 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 
 LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize, bool initialize)
 {
-    auto buffer = AllocByteArray(bufferSize);
+    auto buffer = MakeUniqueArray<char>(bufferSize);
 
     if (initialize)
         std::fill(buffer.get(), buffer.get() + bufferSize, 0);
