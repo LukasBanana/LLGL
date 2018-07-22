@@ -65,6 +65,7 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         bool                    scissorTestEnabled_     = false;    // glEnable(GL_SCISSOR_TEST)
         bool                    depthClampEnabled_      = false;    // glEnable(GL_DEPTH_CLAMP)
         bool                    multiSampleEnabled_     = false;    // glEnable(GL_MULTISAMPLE)
+        GLbitfield              sampleMask_             = ~0;
         bool                    lineSmoothEnabled_      = false;    // glEnable(GL_LINE_SMOOTH)
         GLfloat                 lineWidth_              = 1.0f;
         bool                    polygonOffsetEnabled_   = false;

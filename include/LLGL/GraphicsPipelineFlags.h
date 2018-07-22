@@ -397,21 +397,27 @@ struct Scissor
 
 /**
 \brief Multi-sampling descriptor structure.
-\todo Maybe remove this and only use a single unsigned integral value "samples".
+\see RasterizerDescriptor::multiSampling
 */
 struct MultiSamplingDescriptor
 {
     MultiSamplingDescriptor() = default;
 
-    inline MultiSamplingDescriptor(std::uint32_t samples) :
-        enabled { samples > 1 },
-        samples { samples     }
+    /**
+    \brief Constructor to initialize the sample.
+    \param[in] samples Specifies the number of samples used for multi-sampling. If this is greater than 1, multi-sampling is enabled.
+    \param[in] sampleMask Specifies the bitmask for sample coverage.
+    */
+    inline MultiSamplingDescriptor(std::uint32_t samples, std::uint32_t sampleMask = ~0) :
+        enabled    { (samples > 1) },
+        samples    { samples       },
+        sampleMask { sampleMask    }
     {
     }
 
     /**
     \brief Returns the sample count for the state of this multi-sampling descriptor.
-    \return max{ 1, samples } if multi-sampling is enabled, otherwise 1.
+    \return <code>max{ 1, samples }</code> if multi-sampling is enabled, otherwise 1.
     */
     inline std::uint32_t SampleCount() const
     {
@@ -419,10 +425,17 @@ struct MultiSamplingDescriptor
     }
 
     //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    bool            enabled = false;
+    bool            enabled     = false;
 
-    //! Number of samples used for multi-sampling. By default 1.
-    std::uint32_t   samples = 1;
+    /**
+    \brief Number of samples used for multi-sampling. By default 1.
+    \remarks The equivalent member for multi-sampled textures is TextureDescriptor::samples.
+    \see TextureDescriptor::samples
+    */
+    std::uint32_t   samples     = 1;
+
+    //! Specifies the bitmask for sample coverage. By default \c 0xFFFFFFFF.
+    std::uint32_t   sampleMask  = ~0;
 };
 
 //! Depth state descriptor structure.

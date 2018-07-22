@@ -55,10 +55,7 @@ D3D11GraphicsPipelineBase::D3D11GraphicsPipelineBase(const GraphicsPipelineDescr
     blendFactor_[1]     = desc.blend.blendFactor.g;
     blendFactor_[2]     = desc.blend.blendFactor.b;
     blendFactor_[3]     = desc.blend.blendFactor.a;
-
-    #if 0//TODO
-    sampleMask_ = ???
-    #endif
+    sampleMask_         = desc.rasterizer.multiSampling.sampleMask;
 }
 
 

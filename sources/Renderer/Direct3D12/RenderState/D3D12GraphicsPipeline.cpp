@@ -170,12 +170,6 @@ static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopo
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
 }
 
-static UINT GetSampleMask(const RasterizerDescriptor& desc)
-{
-    //TODO
-    return UINT_MAX;
-}
-
 void D3D12GraphicsPipeline::CreatePipelineState(
     D3D12Device&                        device,
     const D3D12ShaderProgram&           shaderProgram,
@@ -295,7 +289,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
     stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
-    stateDesc.SampleMask            = GetSampleMask(desc.rasterizer);
+    stateDesc.SampleMask            = desc.rasterizer.multiSampling.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;
     #if 1//TODO: currently not supported
     stateDesc.SampleDesc.Count      = 1; //!!!

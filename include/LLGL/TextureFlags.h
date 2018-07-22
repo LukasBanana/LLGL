@@ -147,6 +147,7 @@ struct TextureSwizzleRGBA
 /**
 \brief Texture descriptor structure.
 \remarks This is used to specifiy the dimensions of a texture which is to be created.
+\see RenderSystem::CreateTexture
 */
 struct TextureDescriptor
 {
@@ -207,6 +208,7 @@ struct TextureDescriptor
     /**
     \brief Number of samples per texel. By default 1.
     \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
+    The equivalent member for graphics pipeline states is MultiSamplingDescriptor::samples.
     \see IsMultiSampleTexture
     */
     std::uint32_t   samples     = 1;

@@ -195,7 +195,7 @@ static void CreateMultisampleState(
     createInfo.rasterizationSamples     = GetSampleCountBitmask(multiSampleDesc);
     createInfo.sampleShadingEnable      = VK_FALSE;
     createInfo.minSampleShading         = 0.0f;
-    createInfo.pSampleMask              = nullptr;
+    createInfo.pSampleMask              = &(multiSampleDesc.sampleMask);
     createInfo.alphaToCoverageEnable    = VKBoolean(blendDesc.alphaToCoverageEnabled);
     createInfo.alphaToOneEnable         = VK_FALSE;
 }

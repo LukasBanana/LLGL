@@ -141,6 +141,7 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     scissorTestEnabled_     = desc.rasterizer.scissorTestEnabled;
     depthClampEnabled_      = desc.rasterizer.depthClampEnabled;
     multiSampleEnabled_     = desc.rasterizer.multiSampling.enabled;
+    sampleMask_             = desc.rasterizer.multiSampling.sampleMask;
     lineSmoothEnabled_      = desc.rasterizer.antiAliasedLineEnabled;
     lineWidth_              = desc.rasterizer.lineWidth;
     polygonOffsetEnabled_   = IsPolygonOffsetEnabled(desc.rasterizer.depthBias);
@@ -237,7 +238,12 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
         stateMngr.SetBlendColor(blendColor_);
 
     if (multiSampleEnabled_)
+    {
+        #if 0//TODO
+        stateMngr.SetSampleMask(sampleMask_);
+        #endif
         stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);
+    }
 
     /* Setup color logic operation */
     if (logicOpEnabled_)
