@@ -244,17 +244,17 @@ void DbgRenderSystem::Release(Texture& texture)
     ReleaseDbg(textures_, texture);
 }
 
-void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
+void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateMipLevelLimit(subTextureDesc.mipLevel, textureDbg.mipLevels);
+        ValidateMipLevelLimit(textureRegion.mipLevel, textureDbg.mipLevels);
     }
 
-    instance_->WriteTexture(textureDbg.instance, subTextureDesc, imageDesc);
+    instance_->WriteTexture(textureDbg.instance, textureRegion, imageDesc);
 }
 
 void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)

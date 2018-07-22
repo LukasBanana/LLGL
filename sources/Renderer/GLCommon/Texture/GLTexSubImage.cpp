@@ -230,99 +230,99 @@ static void GLTexSubImageCubeArray(
     GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, firstLayer, width, height, numLayers, imageDesc);
 }
 
-void GLTexSubImage1D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc)
+void GLTexSubImage1D(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage1D(
-        desc.mipLevel,
-        desc.offset.x,
-        desc.extent.width,
+        region.mipLevel,
+        region.offset.x,
+        region.extent.width,
         imageDesc
     );
 }
 
 #endif
 
-void GLTexSubImage2D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc)
+void GLTexSubImage2D(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage2D(
-        desc.mipLevel,
-        desc.offset.x,
-        desc.offset.y,
-        desc.extent.width,
-        desc.extent.height,
+        region.mipLevel,
+        region.offset.x,
+        region.offset.y,
+        region.extent.width,
+        region.extent.height,
         imageDesc
     );
 }
 
-void GLTexSubImage3D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc)
+void GLTexSubImage3D(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage3D(
-        desc.mipLevel,
-        desc.offset.x,
-        desc.offset.y,
-        desc.offset.z,
-        desc.extent.width,
-        desc.extent.height,
-        desc.extent.depth,
+        region.mipLevel,
+        region.offset.x,
+        region.offset.y,
+        region.offset.z,
+        region.extent.width,
+        region.extent.height,
+        region.extent.depth,
         imageDesc
     );
 }
 
-void GLTexSubImageCube(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc)
+void GLTexSubImageCube(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImageCube(
-        desc.mipLevel,
-        desc.offset.x,
-        desc.offset.y,
-        desc.extent.width,
-        desc.extent.height,
-        static_cast<std::uint32_t>(desc.offset.z),
+        region.mipLevel,
+        region.offset.x,
+        region.offset.y,
+        region.extent.width,
+        region.extent.height,
+        static_cast<std::uint32_t>(region.offset.z),
         imageDesc
     );
 }
 
 #ifdef LLGL_OPENGL
 
-void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc)
+void GLTexSubImage1DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage1DArray(
-        desc.mipLevel,
-        desc.offset.x,
-        desc.offset.y,
-        desc.extent.width,
-        desc.extent.height,
+        region.mipLevel,
+        region.offset.x,
+        region.offset.y,
+        region.extent.width,
+        region.extent.height,
         imageDesc
     );
 }
 
 #endif
 
-void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc)
+void GLTexSubImage2DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage2DArray(
-        desc.mipLevel,
-        desc.offset.x,
-        desc.offset.y,
-        desc.offset.z,
-        desc.extent.width,
-        desc.extent.height,
-        desc.extent.depth,
+        region.mipLevel,
+        region.offset.x,
+        region.offset.y,
+        region.offset.z,
+        region.extent.width,
+        region.extent.height,
+        region.extent.depth,
         imageDesc
     );
 }
 
 #ifdef LLGL_OPENGL
 
-void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc)
+void GLTexSubImageCubeArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImageCubeArray(
-        desc.mipLevel,
-        desc.offset.x,
-        desc.offset.y,
-        desc.offset.z,
-        desc.extent.width,
-        desc.extent.height,
-        desc.extent.depth,
+        region.mipLevel,
+        region.offset.x,
+        region.offset.y,
+        region.offset.z,
+        region.extent.width,
+        region.extent.height,
+        region.extent.depth,
         imageDesc
     );
 }

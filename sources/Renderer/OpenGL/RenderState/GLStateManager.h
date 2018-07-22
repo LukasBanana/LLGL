@@ -94,6 +94,9 @@ class GLStateManager
         void SetBlendColor(const ColorRGBAf& color);
         void SetLogicOp(GLenum opcode);
         void SetLineWidth(GLfloat width);
+        #if 0//TODO
+        void SetSampleMask(GLuint maskNumber, GLbitfield mask);
+        #endif
 
         /* ----- Depth-stencil states ----- */
 

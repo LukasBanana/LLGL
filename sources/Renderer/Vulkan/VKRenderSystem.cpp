@@ -428,7 +428,7 @@ void VKRenderSystem::Release(Texture& texture)
     RemoveFromUniqueSet(textures_, &texture);
 }
 
-void VKRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
+void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     //todo
 }

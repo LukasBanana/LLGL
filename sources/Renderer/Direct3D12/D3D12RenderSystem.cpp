@@ -299,7 +299,7 @@ void D3D12RenderSystem::Release(Texture& texture)
     //RemoveFromUniqueSet(textures_, &texture);
 }
 
-void D3D12RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
+void D3D12RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     //todo...
 }

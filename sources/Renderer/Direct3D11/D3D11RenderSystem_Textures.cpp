@@ -57,10 +57,10 @@ void D3D11RenderSystem::Release(Texture& texture)
     RemoveFromUniqueSet(textures_, &texture);
 }
 
-void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
+void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     /* Update generic texture at determined region */
-    UpdateGenericTexture(texture, subTextureDesc.mipLevel, 0, subTextureDesc.offset, subTextureDesc.extent, imageDesc);
+    UpdateGenericTexture(texture, textureRegion.mipLevel, 0, textureRegion.offset, textureRegion.extent, imageDesc);
 }
 
 static void ValidateImageDataSize(std::size_t dataSize, std::size_t requiredDataSize)

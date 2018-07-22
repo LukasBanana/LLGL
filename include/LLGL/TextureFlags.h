@@ -215,10 +215,11 @@ struct TextureDescriptor
 };
 
 /**
-\brief Sub-texture descriptor structure.
+\brief Texture region structure.
 \remarks This is used to write (or partially write) the image data of a texture MIP-map level.
+\see RenderSystem::WriteTexture
 */
-struct SubTextureDescriptor
+struct TextureRegion
 {
     //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
     std::uint32_t   mipLevel    = 0;
@@ -227,9 +228,8 @@ struct SubTextureDescriptor
     \brief Sub-texture offset. By default (0, 0, 0).
     \remarks For array textures, the Z component specifies the array layer.
     For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
-    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayer member.
+    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayers member.
     Negative values of this member are not allowed and result in undefined behavior.
-    \see TextureDescriptor::arrayLayer
     */
     Offset3D        offset      = { 0, 0, 0 };
 

@@ -549,36 +549,21 @@ if (myColorA == myColorB) {
 
 Various structures, enumerations, and fields have been renamed to either fit LLGL's nomenclature or to simplify their identifiers when they are frequently used.
 
-Before:
+Before/After:
 ```cpp
-LLGL::ShaderStageFlags;
-LLGL::BlendTargetDescriptor::destColor;
-LLGL::BlendTargetDescriptor::destAlpha;
-LLGL::BlendOp::DestColor;
-LLGL::BlendOp::InvDestColor;
-LLGL::BlendOp::DestAlpha;
-LLGL::BlendOp::InvDestAlpha;
-LLGL::ImageDescriptor;
-LLGL::BufferCPUAccess;
-LLGL::TextureFilter;
-LLGL::TextureWrap;
-LLGL::Surface::Recreate;
-```
-
-After:
-```cpp
-LLGL::StageFlags;
-LLGL::BlendTargetDescriptor::dstColor;
-LLGL::BlendTargetDescriptor::dstAlpha;
-LLGL::BlendOp::DstColor;
-LLGL::BlendOp::InvDstColor;
-LLGL::BlendOp::DstAlpha;
-LLGL::BlendOp::InvDstAlpha;
-LLGL::SrcImageDescriptor;
-LLGL::CPUAccess;
-LLGL::SamplerFilter;
-LLGL::SamplerAddressMode;
-LLGL::Surface::ResetPixelFormat;
+ShaderStageFlags                 --> StageFlags
+BlendTargetDescriptor::destColor --> BlendTargetDescriptor::dstColor
+BlendTargetDescriptor::destAlpha --> BlendTargetDescriptor::dstAlpha
+BlendOp::DestColor               --> BlendOp::DstColor
+BlendOp::InvDestColor            --> BlendOp::InvDstColor
+BlendOp::DestAlpha               --> BlendOp::DstAlpha
+BlendOp::InvDestAlpha            --> BlendOp::InvDstAlpha
+ImageDescriptor                  --> SrcImageDescriptor
+BufferCPUAccess                  --> CPUAccess
+TextureFilter                    --> SamplerFilter
+TextureWrap                      --> SamplerAddressMode
+Surface::Recreate                --> Surface::ResetPixelFormat
+SubTextureDescriptor             --> TextureRegion
 ```
 
 

@@ -280,7 +280,7 @@ int main()
         renderer->GenerateMips(texture);
         #endif
 
-        LLGL::SubTextureDescriptor subTexDesc;
+        LLGL::TextureRegion subTexDesc;
         {
             subTexDesc.mipLevel         = 0;
             subTexDesc.offset.x         = 0;
