@@ -132,10 +132,10 @@ void GLRenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
-void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    bufferGL.BufferSubData(static_cast<GLintptr>(offset), static_cast<GLsizeiptr>(dataSize), data);
+    auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
+    dstBufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data);
 }
 
 void* GLRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)

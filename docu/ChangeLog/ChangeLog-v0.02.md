@@ -25,6 +25,7 @@
 - [Array layers for cube textures](#array-layers-for-cube-textures)
 - [Introduction of command encoding](#introduction-of-command-encoding)
 - [Introduction of render passes](#introduction-of-render-passes)
+- [Buffer updates](#buffer-updates)
 
 
 ## `Shader` interface
@@ -805,6 +806,41 @@ myCmdQueue->Begin(*myCmdBuffer);
 myCmdQueue->End(*myCmdBuffer);
 
 myContext->Present();
+```
+
+
+## Buffer updates
+
+Buffers can no longer be updated at an arbitrary time. The function `RenderSystem::WriteBuffer` has been refactored and can be used for large buffers outside of command encoding. The new function `CommandBuffer::UpdateBuffer` can be used during command encoding, but outside of a render pass, for small buffers (maximum of 2^16 = 65536 bytes).
+
+Before:
+```cpp
+// Interface:
+void RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset);
+
+// Usage:
+for (auto myModel : myModelList) {
+    myTransform.worldMatrix = myModel.worldMatrix;
+    myRenderer->WriteBuffer(*myConstantBuffer, &myTransform, sizeof(myTransform), 0);
+    myCmdBuffer->Draw(...);
+}
+```
+
+After:
+```cpp
+// Interface:
+void RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize);
+void CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize);
+
+// Usage:
+for (auto myModel : myModelList) {
+    myTransform.worldMatrix = myModel.worldMatrix;
+    myCmdBuffer->UpdateBuffer(*myConstantBuffer, 0, &myTransform, sizeof(myTransform));
+    myCmdBuffer->BeginRenderPass(...);
+    myCmdBuffer->Draw(...);
+    myCmdBuffer->EndRenderPass();
+}
+
 ```
 
 

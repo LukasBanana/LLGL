@@ -237,20 +237,15 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         /**
         \brief Updates the data of the specified buffer.
-        \param[in] buffer Specifies the buffer whose data is to be updated.
+        \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
+        \param[in] dstOffset Specifies the offset (in bytes) at which the buffer is to be updated.
+        This offset plus the data block size (i.e. <code>offset + dataSize</code>) must be less than or equal to the size of the buffer.
         \param[in] data Raw pointer to the data with which the buffer is to be updated. This must not be null!
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This must be less then or equal to the size of the buffer.
-        \param[in] offset Specifies the offset (in bytes) at which the buffer is to be updated.
-        This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the buffer.
         \remarks To update a small buffer (maximum of 65536 bytes) during encoding a command buffer, use CommandBuffer::UpdateBuffer.
-        \todo Maybe replace std::size_t with std::uint64_t here.
         */
-        #if 0//TODO: use version with <std::uint64_t> types
         virtual void WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize) = 0;
-        #else
-        virtual void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
-        #endif
 
         /**
         \brief Maps the specified buffer from GPU to CPU memory space.

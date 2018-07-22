@@ -27,7 +27,7 @@ static void RecordCommandBuffer(
     const Gs::Matrix4f&     wvpMatrix)
 {
     // Update constant buffer
-    renderer->WriteBuffer(*constantBuffer, &wvpMatrix, sizeof(wvpMatrix), 0);
+    renderer->WriteBuffer(*constantBuffer, 0, &wvpMatrix, sizeof(wvpMatrix));
 
     cmdBuffer->Begin();
     {

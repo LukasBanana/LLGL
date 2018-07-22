@@ -127,10 +127,10 @@ void D3D11RenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
-void D3D11RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+void D3D11RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
-    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    bufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(offset));
+    auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
+    dstBufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
 }
 
 void* D3D11RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)

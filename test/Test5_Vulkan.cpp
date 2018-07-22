@@ -263,7 +263,7 @@ int main()
 
                 // Update constant buffer
                 Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.002f);
-                renderer->WriteBuffer(*constBufferMatrices, &matrices, sizeof(matrices), 0);
+                commands->UpdateBuffer(*constBufferMatrices, 0, &matrices, sizeof(matrices));
 
                 commands->BeginRenderPass(*context);
                 {
@@ -289,7 +289,7 @@ int main()
 
                 // Update constant buffer
                 Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.05f);
-                renderer->WriteBuffer(*constBufferMatrices, &matrices, sizeof(matrices), 0);
+                commands->UpdateBuffer(*constBufferMatrices, 0, &matrices, sizeof(matrices));
                 Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.05f);
 
                 commands->BeginRenderPass(*context);

@@ -166,28 +166,28 @@ void DbgRenderSystem::Release(BufferArray& bufferArray)
     ReleaseDbg(bufferArrays_, bufferArray);
 }
 
-void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+void DbgRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    auto& dstBufferDbg = LLGL_CAST(DbgBuffer&, dstBuffer);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
 
         /* Make a rough approximation if the buffer is now being initialized */
-        if (!bufferDbg.initialized)
+        if (!dstBufferDbg.initialized)
         {
-            if (offset == 0)
-                bufferDbg.initialized = true;
+            if (dstOffset == 0)
+                dstBufferDbg.initialized = true;
         }
 
-        ValidateBufferBoundary(bufferDbg.desc.size, dataSize, offset);
+        ValidateBufferBoundary(dstBufferDbg.desc.size, dstOffset, dataSize);
 
         if (!data)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "illegal null pointer argument for 'data' parameter");
     }
 
-    instance_->WriteBuffer(bufferDbg.instance, data, dataSize, offset);
+    instance_->WriteBuffer(dstBufferDbg.instance, dstOffset, data, dataSize);
 
     LLGL_DBG_PROFILER_DO(writeBuffer.Inc());
 }
@@ -616,9 +616,9 @@ void DbgRenderSystem::ValidateConstantBufferSize(std::uint64_t size)
     }
 }
 
-void DbgRenderSystem::ValidateBufferBoundary(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset)
+void DbgRenderSystem::ValidateBufferBoundary(std::uint64_t bufferSize, std::uint64_t dstOffset, std::uint64_t dataSize)
 {
-    if (static_cast<std::uint64_t>(dataSize) + static_cast<std::uint64_t>(dataOffset) > bufferSize)
+    if (dataSize + dstOffset > bufferSize)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds");
 }
 

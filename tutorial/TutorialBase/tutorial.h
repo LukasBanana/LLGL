@@ -206,10 +206,13 @@ protected:
     }
 
     template <typename T>
-    void UpdateBuffer(LLGL::Buffer* buffer, const T& data)
+    void UpdateBuffer(LLGL::Buffer* buffer, const T& data, bool insideCmdEncoding = false)
     {
         GS_ASSERT(buffer != nullptr);
-        renderer->WriteBuffer(*buffer, &data, sizeof(data), 0);
+        if (insideCmdEncoding)
+            commands->UpdateBuffer(*buffer, 0, &data, sizeof(data));
+        else
+            renderer->WriteBuffer(*buffer, 0, &data, sizeof(data));
     }
 
     // Returns the aspect ratio of the render context resolution (X:Y).
