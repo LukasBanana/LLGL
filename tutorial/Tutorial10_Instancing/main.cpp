@@ -49,7 +49,7 @@ class Tutorial10 : public Tutorial
 public:
 
     Tutorial10() :
-        Tutorial { L"LLGL Tutorial 10: Instancing", { 800, 600 }, 0 }
+        Tutorial { L"LLGL Tutorial 10: Instancing", { 800, 600 } }
     {
         UpdateAnimation();
 
@@ -304,7 +304,7 @@ private:
 
         // Create graphics pipeline with multi-sampling and alpha-to-coverage enabled
         {
-            //pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
             pipelineDesc.blend.alphaToCoverageEnabled   = true;
         }
         pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);

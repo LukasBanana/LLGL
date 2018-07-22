@@ -218,6 +218,15 @@ protected:
     // Returns ture if OpenGL is used as rendering API.
     bool IsOpenGL() const;
 
+    // Returns ture if Vulkan is used as rendering API.
+    bool IsVulkan() const;
+
+    // Returns ture if Direct3D is used as rendering API.
+    bool IsDirect3D() const;
+
+    // Returns ture if Metal is used as rendering API.
+    bool IsMetal() const;
+
     // Used by the window resize handler
     bool IsLoadingDone() const;
 

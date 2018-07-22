@@ -154,15 +154,17 @@ private:
 
     void CreatePipelines()
     {
+        bool combinedSampler = IsOpenGL();
+
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
             layoutDesc.bindings =
             {
                 LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },//1 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 2 },//2 },
-                //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                               3 },//3 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u) },
+                //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                               3 },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

@@ -32,10 +32,10 @@ OutputVS VS(InputVS inp)
 
 // PIXEL SHADER
 
-Texture2D colorMap : register(t0);
-Texture2DMS<float4, 8> colorMapMS : register(t1);
+Texture2D colorMap : register(t2);
+Texture2DMS<float4, 8> colorMapMS : register(t3);
 
-SamplerState samplerState : register(s0);
+SamplerState samplerState : register(s1);
 
 float4 PS(OutputVS inp) : SV_Target
 {

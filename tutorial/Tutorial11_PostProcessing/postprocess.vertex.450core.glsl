@@ -43,5 +43,5 @@ void main()
 	
 	// Get texture-coordinate from vertex position
 	// -> Don't flip U-tex-coord here (like in HLSL), due to different coordinate system
-	vTexCoord = gl_Position.xy * vec2(0.5, 0.5) + 0.5;
+	vTexCoord = gl_Position.xy * vec2(0.5, -0.5) + 0.5;
 }
