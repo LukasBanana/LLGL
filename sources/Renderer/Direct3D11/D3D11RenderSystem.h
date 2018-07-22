@@ -193,8 +193,7 @@ class D3D11RenderSystem final : public RenderSystem
             Texture&                    texture,
             std::uint32_t               mipLevel,
             std::uint32_t               arrayLayer,
-            const Offset3D&             offset,
-            const Extent3D&             extent,
+            const D3D11_BOX&            region,
             const SrcImageDescriptor&   imageDesc
         );
 

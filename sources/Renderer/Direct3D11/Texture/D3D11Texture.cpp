@@ -224,7 +224,7 @@ void D3D11Texture::UpdateSubresource(
     ID3D11DeviceContext*        context,
     UINT                        mipLevel,
     UINT                        arrayLayer,
-    const D3D11_BOX&            dstBox,
+    const D3D11_BOX&            region,
     const SrcImageDescriptor&   imageDesc,
     std::size_t                 threadCount)
 {
@@ -238,9 +238,9 @@ void D3D11Texture::UpdateSubresource(
     if (dstTexFormat.format != imageDesc.format || dstTexFormat.dataType != imageDesc.dataType)
     {
         /* Get source data stride */
-        auto srcRowPitch        = (dstBox.right - dstBox.left)*srcPitch;
-        auto srcDepthPitch      = (dstBox.bottom - dstBox.top)*srcRowPitch;
-        auto requiredImageSize  = (dstBox.back - dstBox.front)*srcDepthPitch;
+        auto srcRowPitch        = (region.right  - region.left ) * srcPitch;
+        auto srcDepthPitch      = (region.bottom - region.top  ) * srcRowPitch;
+        auto requiredImageSize  = (region.back   - region.front) * srcDepthPitch;
 
         if (imageDesc.dataSize < requiredImageSize)
         {
@@ -255,25 +255,33 @@ void D3D11Texture::UpdateSubresource(
 
         /* Get new source data stride */
         srcPitch        = DataTypeSize(dstTexFormat.dataType) * ImageFormatSize(dstTexFormat.format);
-        srcRowPitch     = (dstBox.right - dstBox.left)*srcPitch;
-        srcDepthPitch   = (dstBox.bottom - dstBox.top)*srcRowPitch;
+        srcRowPitch     = (region.right  - region.left) * srcPitch;
+        srcDepthPitch   = (region.bottom - region.top ) * srcRowPitch;
 
         /* Update subresource with specified image data */
         context->UpdateSubresource(
-            native_.resource.Get(), dstSubresource,
-            &dstBox, tempData.get(), srcRowPitch, srcDepthPitch
+            native_.resource.Get(),
+            dstSubresource,
+            &region,
+            tempData.get(),
+            srcRowPitch,
+            srcDepthPitch
         );
     }
     else
     {
         /* Get source data stride */
-        auto srcRowPitch    = (dstBox.right - dstBox.left)*srcPitch;
-        auto srcDepthPitch  = (dstBox.bottom - dstBox.top)*srcRowPitch;
+        auto srcRowPitch    = (region.right  - region.left) * srcPitch;
+        auto srcDepthPitch  = (region.bottom - region.top ) * srcRowPitch;
 
         /* Update subresource with specified image data */
         context->UpdateSubresource(
-            native_.resource.Get(), dstSubresource,
-            &dstBox, imageDesc.data, srcRowPitch, srcDepthPitch
+            native_.resource.Get(),
+            dstSubresource,
+            &region,
+            imageDesc.data,
+            srcRowPitch,
+            srcDepthPitch
         );
     }
 }

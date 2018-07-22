@@ -59,8 +59,40 @@ void D3D11RenderSystem::Release(Texture& texture)
 
 void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
-    /* Update generic texture at determined region */
-    UpdateGenericTexture(texture, textureRegion.mipLevel, 0, textureRegion.offset, textureRegion.extent, imageDesc);
+    if (texture.GetType() == TextureType::Texture3D)
+    {
+        UpdateGenericTexture(
+            texture,
+            textureRegion.mipLevel,
+            0,
+            CD3D11_BOX(
+                textureRegion.offset.x,
+                textureRegion.offset.y,
+                textureRegion.offset.z,
+                textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
+                textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
+                textureRegion.offset.z + static_cast<LONG>(textureRegion.extent.depth)
+            ),
+            imageDesc
+        );
+    }
+    else
+    {
+        UpdateGenericTexture(
+            texture,
+            textureRegion.mipLevel,
+            static_cast<std::uint32_t>(textureRegion.offset.z),
+            CD3D11_BOX(
+                textureRegion.offset.x,
+                textureRegion.offset.y,
+                0,
+                textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
+                textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
+                1
+            ),
+            imageDesc
+        );
+    }
 }
 
 static void ValidateImageDataSize(std::size_t dataSize, std::size_t requiredDataSize)
@@ -276,24 +308,16 @@ void D3D11RenderSystem::UpdateGenericTexture(
     Texture&                    texture,
     std::uint32_t               mipLevel,
     std::uint32_t               arrayLayer,
-    const Offset3D&             position,
-    const Extent3D&             extent,
+    const D3D11_BOX&            region,
     const SrcImageDescriptor&   imageDesc)
 {
     /* Get D3D texture and update subresource */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     textureD3D.UpdateSubresource(
         context_.Get(),
-        static_cast<UINT>(mipLevel),
+        mipLevel,
         arrayLayer,
-        CD3D11_BOX(
-            position.x,
-            position.y,
-            position.z,
-            position.x + static_cast<LONG>(extent.width),
-            position.y + static_cast<LONG>(extent.height),
-            position.z + static_cast<LONG>(extent.depth)
-        ),
+        region,
         imageDesc,
         GetConfiguration().threadCount
     );

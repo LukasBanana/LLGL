@@ -77,7 +77,7 @@ class D3D11Texture final : public Texture
             ID3D11DeviceContext*        context,
             UINT                        mipLevel,
             UINT                        arrayLayer,
-            const D3D11_BOX&            dstBox,
+            const D3D11_BOX&            region,
             const SrcImageDescriptor&   imageDesc,
             std::size_t                 threadCount
         );
