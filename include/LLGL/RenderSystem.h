@@ -225,7 +225,6 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \throws std::invalid_argument If 'numBuffers' is 0, if 'bufferArray' is null,
         if any of the pointers in the array are null, if not all buffers have the same type, or if the buffer array type is
         not one of these: BufferType::Vertex, BufferType::Constant, BufferType::Storage, or BufferType::StreamOutput.
-        \todo Rename to "CreateVertexArray".
         */
         virtual BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) = 0;
 

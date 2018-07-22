@@ -472,7 +472,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[out] result Specifies the output result in form of the QueryPipelineStatistics structure.
         \remarks For a query of type other than QueryType::PipelineStatistics, the function CommandBuffer::QueryResult must be used.
         \see QueryResult
-        \todo Combine this to one function <code>bool QueryResult(Query& query, void* result, std::size_t resultSize)</code>.
         */
         virtual bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) = 0;
 

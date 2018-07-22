@@ -39,26 +39,31 @@ class D3D11Query final : public Query
 
         D3D11Query(ID3D11Device* device, const QueryDescriptor& desc);
 
-        inline D3D11_QUERY GetQueryObjectType() const
+        // Returns the D3D11_QUERY type.
+        inline D3D11_QUERY GetD3DQueryType() const
         {
             return queryObjectType_;
         }
 
-        inline ID3D11Query* GetQueryObject() const
+        // Returns the native ID3D11Query object.
+        inline ID3D11Query* GetNative() const
         {
             return hwQuery_.query.Get();
         }
 
-        inline ID3D11Predicate* GetPredicateObject() const
+        // Returns the native ID3D11Predicate object.
+        inline ID3D11Predicate* GetPredicate() const
         {
             return hwQuery_.predicate.Get();
         }
 
+        // Returns the query object for a time-stamp begin.
         inline ID3D11Query* GetTimeStampQueryBegin() const
         {
             return timeStampQueryBegin_.Get();
         }
 
+        // Returns the query object for a time-stamp end.
         inline ID3D11Query* GetTimeStampQueryEnd() const
         {
             return timeStampQueryEnd_.Get();
@@ -66,7 +71,7 @@ class D3D11Query final : public Query
 
     private:
 
-        D3D11_QUERY         queryObjectType_ = D3D11_QUERY_EVENT;
+        D3D11_QUERY         queryObjectType_    = D3D11_QUERY_EVENT;
 
         D3D11HardwareQuery  hwQuery_;
 

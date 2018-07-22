@@ -58,7 +58,6 @@ enum class QueryType
 \remarks If the renderer does not support individual members of this structure, they will be set to QueryPipelineStatistics::invalidNum.
 \see QueryType::PipelineStatistics
 \see CommandBuffer::Query
-\todo Rename to "PipelineStatistics"
 */
 struct QueryPipelineStatistics
 {
