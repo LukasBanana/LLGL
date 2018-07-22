@@ -20,7 +20,6 @@ namespace LLGL
 /**
 \brief Index buffer format class.
 \see BufferDescriptor::IndexBuffer
-\todo Remove this class. Should be handled by individual DataType members and then class 'DataTypeSize' when necessary.
 */
 class LLGL_EXPORT IndexFormat
 {

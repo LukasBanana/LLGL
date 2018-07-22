@@ -32,12 +32,12 @@ struct LLGL_EXPORT VertexFormat
     \brief Appends the specified vertex attribute to this vertex format.
     \param[in] attrib Specifies the new attribute which is appended to this vertex format.
     \param[in] offset Specifies the optional offset (in bytes) for this attribute.
-    If this is 'Constants::ignoreOffset', the offset is determined by the previous vertex attribute offset plus its size.
+    If this is <code>Constants::ignoreOffset</code>, the offset is determined by the previous vertex attribute offset plus its size.
     If there is no previous vertex attribute, the determined offset is 0. By default Constants::ignoreOffset.
-    \remarks This function will always overwrite the 'offset' and 'inputSlot' members before the attribute is appended to this vertex format.
-    The 'inputSlot' member will be set to the input slot value of the previous vertex attribute and is increased by one,
+    \remarks This function will always overwrite the \c offset and \c inputSlot members before the attribute is appended to this vertex format.
+    The \c inputSlot member will be set to the input slot value of the previous vertex attribute and is increased by one,
     if the new offset of the new vertex attribute is less than the offset plus size of the previous vertex attribute.
-    \throws std::invalid_argument If 'attrib.components' is neither 1, 2, 3, nor 4.
+    \throws std::invalid_argument If <code>attrib.components</code> is neither 1, 2, 3, nor 4.
     \see VertexAttribute::offset
     \see VertexAttribute::inputSlot
     \see Constants::ignoreOffset
@@ -52,8 +52,9 @@ struct LLGL_EXPORT VertexFormat
 
     /**
     \brief Specifies the vertex data stride (or format size) which describes the byte offset between consecutive vertices.
-    \remarks This is updated automatically everytime "AppendAttribute" or "AppendAttributes" is called,
+    \remarks This is updated automatically everytime \c AppendAttribute is called,
     but it can also be modified manually. It is commonly the size of all vertex attributes.
+    \see AppendAttribute
     */
     std::uint32_t                   stride      = 0;
 
