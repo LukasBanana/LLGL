@@ -45,6 +45,12 @@ class D3D11StateManager
         void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState, UINT stencilRef);
         void SetBlendState(ID3D11BlendState* blendState, const FLOAT* blendFactor, UINT sampleMask);
 
+        // Returns the ID3D11DeviceContext that this state manager is associated with.
+        inline ID3D11DeviceContext* GetContext() const
+        {
+            return context_.Get();
+        }
+
     private:
 
         /* ----- Structures ----- */
