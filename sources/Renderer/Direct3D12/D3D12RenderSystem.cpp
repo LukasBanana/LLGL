@@ -48,6 +48,9 @@ D3D12RenderSystem::D3D12RenderSystem()
     computeCmdAlloc_    = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     computeCmdList_     = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCmdAlloc_.Get());
 
+    /* Create default pipeline layout */
+    defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
+
     /* Initialize renderer information */
     QueryRendererInfo();
     QueryRenderingCaps();
@@ -404,7 +407,10 @@ void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
 
 GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(*this, desc));
+    return TakeOwnership(
+        graphicsPipelines_,
+        MakeUnique<D3D12GraphicsPipeline>(device_, defaultPipelineLayout_.GetRootSignature(), desc)
+    );
 }
 
 ComputePipeline* D3D12RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)

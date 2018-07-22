@@ -20,7 +20,7 @@ namespace LLGL
 
 
 struct GraphicsPipelineDescriptor;
-class D3D12RenderSystem;
+class D3D12Device;
 class D3D12ShaderProgram;
 
 class D3D12GraphicsPipeline final : public GraphicsPipeline
@@ -29,28 +29,12 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
     public:
 
         D3D12GraphicsPipeline(
-            D3D12RenderSystem& renderSystem,
-            //ID3D12RootSignature* rootSignature,
-            const GraphicsPipelineDescriptor& desc
+            D3D12Device&                        device,
+            ID3D12RootSignature*                defaultRootSignature,
+            const GraphicsPipelineDescriptor&   desc
         );
 
-        // Returns the internal ID3D12RootSignature object.
-        inline ID3D12RootSignature* GetRootSignature() const
-        {
-            return rootSignature_;
-        }
-
-        // Returns the internal ID3D12PipelineState object.
-        inline ID3D12PipelineState* GetPipelineState() const
-        {
-            return pipelineState_.Get();
-        }
-
-        // Returns the primitive topology.
-        inline D3D12_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const
-        {
-            return primitiveTopology_;
-        }
+        void Bind(ID3D12GraphicsCommandList* commandList);
 
         // Returns true if scissors are enabled.
         inline bool IsScissorEnabled() const
@@ -60,10 +44,8 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
 
     private:
 
-        void CreateDefaultRootSignature(ID3D12Device* device);
-
         void CreatePipelineState(
-            D3D12RenderSystem&                  renderSystem,
+            D3D12Device&                        device,
             const D3D12ShaderProgram&           shaderProgram,
             ID3D12RootSignature*                rootSignature,
             const GraphicsPipelineDescriptor&   desc
@@ -73,12 +55,10 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
         ID3D12RootSignature*        rootSignature_      = nullptr;
 
         D3D12_PRIMITIVE_TOPOLOGY    primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+        FLOAT                       blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
+        UINT                        stencilRef_         = 0;
 
         bool                        scissorEnabled_     = false;
-
-        #if 1//TODO: replace this by D3D12PipelineLayout
-        ComPtr<ID3D12RootSignature> defaultRootSignature_;
-        #endif
 
 };
 

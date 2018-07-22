@@ -46,22 +46,19 @@ D3D11GraphicsPipelineBase::D3D11GraphicsPipelineBase(const GraphicsPipelineDescr
     auto shaderProgramD3D = LLGL_CAST(const D3D11ShaderProgram*, desc.shaderProgram);
     StoreShaderObjects(*shaderProgramD3D);
 
-    //if (!shaderProgramD3D->GetInputLayout())
-    //    throw std::runtime_error("cannot create graphics pipeline while shader program has no D3D11 input layout");
-
     inputLayout_ = shaderProgramD3D->GetInputLayout();
 
-    /* Store D3D primitive topology */
-    primitiveTopology_ = D3D11Types::Map(desc.primitiveTopology);
+    /* Store dynamic pipeline states */
+    primitiveTopology_  = D3D11Types::Map(desc.primitiveTopology);
+    stencilRef_         = desc.stencil.front.reference;
+    blendFactor_[0]     = desc.blend.blendFactor.r;
+    blendFactor_[1]     = desc.blend.blendFactor.g;
+    blendFactor_[2]     = desc.blend.blendFactor.b;
+    blendFactor_[3]     = desc.blend.blendFactor.a;
 
-    /* Store D3D stencil reference value */
-    stencilRef_ = desc.stencil.front.reference;
-
-    /* Store blend factor */
-    blendFactor_[0] = desc.blend.blendFactor.r;
-    blendFactor_[1] = desc.blend.blendFactor.g;
-    blendFactor_[2] = desc.blend.blendFactor.b;
-    blendFactor_[3] = desc.blend.blendFactor.a;
+    #if 0//TODO
+    sampleMask_ = ???
+    #endif
 }
 
 

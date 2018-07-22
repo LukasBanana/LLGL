@@ -218,6 +218,8 @@ class D3D12RenderSystem final : public RenderSystem
         HANDLE                                      fenceEvent_             = 0;
         UINT64                                      fenceValue_             = 0;
 
+        D3D12PipelineLayout                         defaultPipelineLayout_;
+
         #ifdef LLGL_DEBUG
         //ComPtr<ID3D12Debug>                         debugDevice_;
         //ComPtr<ID3D12InfoQueue>                     debugInfoQueue_;

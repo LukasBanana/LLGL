@@ -25,9 +25,10 @@ namespace LLGL
 
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dn770370(v=vs.85).aspx
-D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12RenderSystem& renderSystem, const GraphicsPipelineDescriptor& desc) :
-    primitiveTopology_ { D3D12Types::Map(desc.primitiveTopology) },
-    scissorEnabled_    { desc.rasterizer.scissorTestEnabled      }
+D3D12GraphicsPipeline::D3D12GraphicsPipeline(
+    D3D12Device&                        device,
+    ID3D12RootSignature*                defaultRootSignature,
+    const GraphicsPipelineDescriptor&   desc)
 {
     /* Validate pointers and get D3D shader program */
     LLGL_ASSERT_PTR(desc.shaderProgram);
@@ -38,53 +39,34 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12RenderSystem& renderSystem, co
     {
         /* Create pipeline state with root signature from pipeline layout */
         auto pipelineLayoutD3D = LLGL_CAST(const D3D12PipelineLayout*, pipelineLayout);
-        CreatePipelineState(renderSystem, *shaderProgramD3D, pipelineLayoutD3D->GetRootSignature(), desc);
+        CreatePipelineState(device, *shaderProgramD3D, pipelineLayoutD3D->GetRootSignature(), desc);
     }
     else
     {
         /* Create pipeline state with default root signature */
-        CreateDefaultRootSignature(renderSystem.GetDXDevice());
-        CreatePipelineState(renderSystem, *shaderProgramD3D, defaultRootSignature_.Get(), desc);
+        CreatePipelineState(device, *shaderProgramD3D, defaultRootSignature, desc);
     }
+
+    /* Store dynamic pipeline states */
+    primitiveTopology_  = D3D12Types::Map(desc.primitiveTopology);
+    stencilRef_         = desc.stencil.front.reference;
+    blendFactor_[0]     = desc.blend.blendFactor.r;
+    blendFactor_[1]     = desc.blend.blendFactor.g;
+    blendFactor_[2]     = desc.blend.blendFactor.b;
+    blendFactor_[3]     = desc.blend.blendFactor.a;
+    scissorEnabled_     = desc.rasterizer.scissorTestEnabled;
 }
 
-void D3D12GraphicsPipeline::CreateDefaultRootSignature(ID3D12Device* device)
+void D3D12GraphicsPipeline::Bind(ID3D12GraphicsCommandList* commandList)
 {
-    /* Setup root signature flags */
-    D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    /* Set root signature and pipeline state */
+    commandList->SetGraphicsRootSignature(rootSignature_);
+    commandList->SetPipelineState(pipelineState_.Get());
 
-    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
-    signatureDesc.Init(0, nullptr, 0, nullptr, signatureFlags);
-
-    /* Create serialized root signature */
-    HRESULT             hr          = 0;
-    ComPtr<ID3DBlob>    signature;
-    ComPtr<ID3DBlob>    error;
-
-    hr = D3D12SerializeRootSignature(
-        &signatureDesc,
-        D3D_ROOT_SIGNATURE_VERSION_1,
-        signature.ReleaseAndGetAddressOf(),
-        error.ReleaseAndGetAddressOf()
-    );
-
-    if (FAILED(hr) && error)
-    {
-        auto errorStr = DXGetBlobString(error.Get());
-        throw std::runtime_error("failed to serialize D3D12 root signature: " + errorStr);
-    }
-
-    DXThrowIfFailed(hr, "failed to serialize D3D12 root signature");
-
-    /* Create actual root signature */
-    hr = device->CreateRootSignature(
-        0,
-        signature->GetBufferPointer(),
-        signature->GetBufferSize(),
-        IID_PPV_ARGS(defaultRootSignature_.ReleaseAndGetAddressOf())
-    );
-
-    DXThrowIfFailed(hr, "failed to create D3D12 root signature");
+    /* Set dynamic pipeline states */
+    commandList->IASetPrimitiveTopology(primitiveTopology_);
+    commandList->OMSetBlendFactor(blendFactor_);
+    commandList->OMSetStencilRef(stencilRef_);
 }
 
 static D3D12_CONSERVATIVE_RASTERIZATION_MODE GetConservativeRaster(bool enabled)
@@ -188,8 +170,14 @@ static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopo
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
 }
 
+static UINT GetSampleMask(const RasterizerDescriptor& desc)
+{
+    //TODO
+    return UINT_MAX;
+}
+
 void D3D12GraphicsPipeline::CreatePipelineState(
-    D3D12RenderSystem&                  renderSystem,
+    D3D12Device&                        device,
     const D3D12ShaderProgram&           shaderProgram,
     ID3D12RootSignature*                rootSignature,
     const GraphicsPipelineDescriptor&   desc)
@@ -198,7 +186,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     rootSignature_ = rootSignature;
 
     /* Get number of render-target attachments */
-    UINT numAttachments = 1u; //TODO
+    UINT numAttachments = 1u; //TODO: get information from <RenderPass> interface
 
     /* Setup D3D12 graphics pipeline descriptor */
     D3D12_GRAPHICS_PIPELINE_STATE_DESC stateDesc = {};
@@ -307,7 +295,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
     stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
-    stateDesc.SampleMask            = UINT_MAX;
+    stateDesc.SampleMask            = GetSampleMask(desc.rasterizer);
     stateDesc.NumRenderTargets      = numAttachments;
     #if 1//TODO: currently not supported
     stateDesc.SampleDesc.Count      = 1; //!!!
@@ -316,7 +304,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     #endif
 
     /* Create graphics pipeline state and graphics command list */
-    pipelineState_ = renderSystem.GetDevice().CreateDXPipelineState(stateDesc);
+    pipelineState_ = device.CreateDXPipelineState(stateDesc);
 }
 
 

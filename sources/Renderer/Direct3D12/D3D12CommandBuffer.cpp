@@ -330,10 +330,7 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     /* Set graphics root signature, graphics pipeline state, and primitive topology */
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
-
-    commandList_->SetGraphicsRootSignature(graphicsPipelineD3D.GetRootSignature());
-    commandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
-    commandList_->IASetPrimitiveTopology(graphicsPipelineD3D.GetPrimitiveTopology());
+    graphicsPipelineD3D.Bind(commandList_.Get());
 
     /* Scissor rectangle must be updated (if scissor test is disabled) */
     scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();

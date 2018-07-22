@@ -27,7 +27,11 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     public:
 
+        D3D12PipelineLayout() = default;
         D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
+
+        void CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
+        void ReleaseRootSignature();
 
         // Returns the native ID3D12RootSignature object.
         inline ID3D12RootSignature* GetRootSignature() const
