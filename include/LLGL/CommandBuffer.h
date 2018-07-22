@@ -97,7 +97,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         #if 0
         virtual void FillBuffer(Buffer& buffer, [...]) = 0;
-        virtual void ClearTexture(Texture& texture, [...]) = 0;
+        virtual void FillTexture(Texture& texture, [...]) = 0;
         virtual void CopyTexture(Texture& dstTexture, Texture& srcTexture, [...]) = 0;
         virtual void BlitTexture(Texture& dstTexture, Texture& srcTexture, [...], Filter filter) = 0;
         #endif

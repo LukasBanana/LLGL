@@ -457,15 +457,15 @@ struct StencilFaceDescriptor
     CompareOp       compareOp       = CompareOp::Less;
 
     /**
-    \brief Specifies the portion of the depth-stencil buffer for reading stencil data. By default 0xffffffff.
-    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (readMask & 0xff) of the read mask value of the front face will be used.
+    \brief Specifies the portion of the depth-stencil buffer for reading stencil data. By default \c 0xFFFFFFFF.
+    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (i.e. <code>readMask & 0xFF</code>) of the read mask value of the front face will be used.
     \see StencilDescriptor::front
     */
     std::uint32_t   readMask        = ~0;
 
     /**
-    \brief Specifies the portion of the depth-stencil buffer for writing stencil data. By default 0xffffffff.
-    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (writeMask & 0xff) of the write mask value of the front face will be used.
+    \brief Specifies the portion of the depth-stencil buffer for writing stencil data. By default \c 0xFFFFFFFF.
+    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (i.e. <code>writeMask & 0xFF</code>) of the write mask value of the front face will be used.
     \see StencilDescriptor::front
     */
     std::uint32_t   writeMask       = ~0;
@@ -490,7 +490,7 @@ struct StencilDescriptor
 
     /**
     \brief Specifies the front face settings for the stencil test.
-    \note For Direct3D 11 and Direct3D 12, the read mask, write mask, and stencil reference are only supported for the front face.
+    \note For Direct3D 11 and Direct3D 12, the members \c readMask, \c writeMask, and \c reference are only supported for the front face.
     \see StencilFaceDescriptor::readMask
     \see StencilFaceDescriptor::writeMask
     \see StencilFaceDescriptor::reference
@@ -516,7 +516,8 @@ struct DepthBiasDescriptor
 
     /**
     \brief Specifies the maximum (or minimum) depth bias of a fragment. By default 0.0.
-    \note For OpenGL, this is only supported if the extension "GL_ARB_polygon_offset_clamp" is available.
+    \note For OpenGL, this is only supported if the extension \c GL_ARB_polygon_offset_clamp is available
+    (see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_polygon_offset_clamp.txt).
     */
     float clamp             = 0.0f;
 };
@@ -554,7 +555,7 @@ struct RasterizerDescriptor
 
     /**
     \brief If true, conservative rasterization is enabled. By default disabled.
-    \note Only supported with: Direct3D 12, Direct3D 11.3, OpenGL (if the extension "GL_NV_conservative_raster" or "GL_INTEL_conservative_rasterization" is supported).
+    \note Only supported with: Direct3D 12, Direct3D 11.3, OpenGL (if the extension \c GL_NV_conservative_raster or \c GL_INTEL_conservative_rasterization is supported).
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
     \see RenderingFeatures::hasConservativeRasterization
@@ -563,7 +564,7 @@ struct RasterizerDescriptor
 
     /**
     \brief Specifies the width of all generated line primitives. By default 1.0.
-    \remarks The minimum and maximum supported line width can be determined by the 'lineWidthRange' member in the 'RenderingCapabilities' structure.
+    \remarks The minimum and maximum supported line width can be determined by the \c lineWidthRange member in the RenderingCapabilities structure.
     If this line width is out of range, it will be clamped silently during graphics pipeline creation.
     \note Only supported with: OpenGL, Vulkan.
     \see RenderingLimits::lineWidthRange
@@ -638,14 +639,14 @@ struct BlendDescriptor
 /**
 \brief Graphics pipeline descriptor structure.
 \remarks This structure describes the entire graphics pipeline:
-viewports, depth-/ stencil-/ rasterizer-/ blend states, shader stages etc.
+shader stages, depth-/ stencil-/ rasterizer-/ blend states etc.
+\see RenderSystem::CreateGraphicsPipeline
 */
 struct GraphicsPipelineDescriptor
 {
     /**
     \brief Pointer to the shader program for the graphics pipeline. By default null.
     \remarks This must never be null when RenderSystem::CreateGraphicsPipeline is called with this structure.
-    \see RenderSystem::CreateGraphicsPipeline
     \see RenderSystem::CreateShaderProgram
     */
     const ShaderProgram*    shaderProgram       = nullptr;
@@ -683,7 +684,7 @@ struct GraphicsPipelineDescriptor
 
     /**
     \brief Specifies the scissor list. If empty, the scissors must be set dynamically with the command buffer.
-    \remarks This list must have the same number of entries as 'viewports', unless one of the lists is empty.
+    \remarks This list must have the same number of entries as \c viewports, unless one of the lists is empty.
     \see CommandBuffer::SetScissor
     \see CommandBuffer::SetScissors
     \note Only supported with: Vulkan
