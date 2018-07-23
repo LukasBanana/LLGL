@@ -36,16 +36,16 @@ MTBuffer::~MTBuffer()
     [native_ release];
 }
 
-void MTBuffer::Write(const void* data, std::size_t dataSize, std::size_t offset)
+void MTBuffer::Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize)
 {
     /* Set buffer region to update */
     NSRange range;
-    range.location  = static_cast<NSUInteger>(offset);
-    range.length    = static_cast<NSUInteger>(dataSize);
+    range.location  = dstOffset;
+    range.length    = dataSize;
     
     /* Copy data to CPU buffer region */
     auto byteAlignedBuffer = reinterpret_cast<std::int8_t*>([native_ contents]);
-    ::memcpy(byteAlignedBuffer + offset, data, dataSize);
+    ::memcpy(byteAlignedBuffer + dstOffset, data, dataSize);
     
     /* Notify Metal API about update */
     [native_ didModifyRange:range];

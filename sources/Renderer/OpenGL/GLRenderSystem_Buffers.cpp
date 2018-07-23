@@ -49,11 +49,6 @@ static GLenum GetGLBufferUsage(long flags)
     return ((flags & BufferFlags::DynamicUsage) != 0 ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 }
 
-static GLenum GetGLBufferTarget(const GLBuffer& bufferGL)
-{
-    return GLTypes::Map(bufferGL.GetType());
-}
-
 static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& desc, const void* initialData)
 {
     bufferGL.BufferStorage(

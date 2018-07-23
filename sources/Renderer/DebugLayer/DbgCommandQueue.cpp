@@ -18,9 +18,9 @@ namespace LLGL
 
 
 DbgCommandQueue::DbgCommandQueue(CommandQueue& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
-    instance  { instance },
+    instance  { instance }
     //profiler_ { profiler },
-    debugger_ { debugger }
+    //debugger_ { debugger }
 {
 }
 

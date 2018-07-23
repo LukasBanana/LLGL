@@ -22,12 +22,51 @@ namespace LLGL
 {
 
 
-const std::uint32_t MTCommandBuffer::g_maxNumViewportsAndScissors;
 const std::uint32_t MTCommandBuffer::g_maxNumVertexBuffers;
+
+MTCommandBuffer::MTCommandBuffer(id<MTLCommandQueue> cmdQueue) :
+    cmdQueue_ { cmdQueue }
+{
+}
 
 MTCommandBuffer::~MTCommandBuffer()
 {
     [cmdBuffer_ release];
+}
+
+/* ----- Encoding ----- */
+
+void MTCommandBuffer::Begin()
+{
+    cmdBuffer_ = [cmdQueue_ commandBuffer];
+    ResetRenderEncoderState();
+}
+
+void MTCommandBuffer::End()
+{
+    // dummy
+}
+
+void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+{
+    auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
+    dstBufferMT.Write(dstOffset, data, dataSize);
+}
+
+void MTCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
+    auto& srcBufferMT = LLGL_CAST(MTBuffer&, srcBuffer);
+
+    id<MTLBlitCommandEncoder> blitEncoder = [cmdBuffer_ blitCommandEncoder];
+    [blitEncoder
+        copyFromBuffer:     srcBufferMT.GetNative()
+        sourceOffset:       static_cast<NSUInteger>(srcOffset)
+        toBuffer:           dstBufferMT.GetNative()
+        destinationOffset:  static_cast<NSUInteger>(dstOffset)
+        size:               static_cast<NSUInteger>(size)
+    ];
+    [blitEncoder endEncoding];
 }
 
 /* ----- Configuration ----- */
@@ -68,9 +107,9 @@ void MTCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* v
 {
     if (renderEncoder_ != nil)
     {
-        MTLViewport viewportsML[MTCommandBuffer::g_maxNumViewportsAndScissors];
+        MTLViewport viewportsML[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
         
-        numViewports = std::min(numViewports, MTCommandBuffer::g_maxNumViewportsAndScissors);
+        numViewports = std::min(numViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
         for (std::uint32_t i = 0; i < numViewports; ++i)
             Convert(viewportsML[i], viewports[i]);
         
@@ -78,7 +117,7 @@ void MTCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* v
     }
     else
     {
-        renderEncoderState_.viewportCount = std::min(numViewports, MTCommandBuffer::g_maxNumViewportsAndScissors);
+        renderEncoderState_.viewportCount = std::min(numViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
         for (std::uint32_t i = 0; i < renderEncoderState_.viewportCount; ++i)
             Convert(renderEncoderState_.viewports[i], viewports[i]);
     }
@@ -111,9 +150,9 @@ void MTCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 {
     if (renderEncoder_ != nil)
     {
-        MTLScissorRect rects[MTCommandBuffer::g_maxNumViewportsAndScissors];
+        MTLScissorRect rects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
         
-        numScissors = std::min(numScissors, MTCommandBuffer::g_maxNumViewportsAndScissors);
+        numScissors = std::min(numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
         for (std::uint32_t i = 0; i < numScissors; ++i)
             Convert(rects[i], scissors[i]);
         
@@ -121,7 +160,7 @@ void MTCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
     }
     else
     {
-        renderEncoderState_.scissorRectCount = std::min(numScissors, MTCommandBuffer::g_maxNumViewportsAndScissors);
+        renderEncoderState_.scissorRectCount = std::min(numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
         for (std::uint32_t i = 0; i < renderEncoderState_.scissorRectCount; ++i)
             Convert(renderEncoderState_.scissorRects[i], scissors[i]);
     }
@@ -710,14 +749,6 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 void MTCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     //todo
-}
-
-/* ----- Extended functions ----- */
-
-void MTCommandBuffer::NextCommandBuffer(id<MTLCommandQueue> cmdQueue)
-{
-    cmdBuffer_ = [cmdQueue commandBuffer];
-    ResetRenderEncoderState();
 }
 
 

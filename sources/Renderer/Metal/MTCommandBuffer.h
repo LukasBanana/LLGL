@@ -12,6 +12,7 @@
 #import <MetalKit/MetalKit.h>
 
 #include <LLGL/CommandBufferExt.h>
+#include "../StaticLimits.h"
 
 
 namespace LLGL
@@ -25,7 +26,16 @@ class MTCommandBuffer : public CommandBufferExt
 
         /* ----- Common ----- */
 
+        MTCommandBuffer(id<MTLCommandQueue> cmdQueue);
         ~MTCommandBuffer();
+    
+        /* ----- Encoding ----- */
+    
+        void Begin() override;
+        void End() override;
+    
+        void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) override;
+        void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) override;
 
         /* ----- Configuration ----- */
 
@@ -128,29 +138,24 @@ class MTCommandBuffer : public CommandBufferExt
         /* ----- Compute ----- */
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
-    
-        /* ----- Extended functions ----- */
-    
-        void NextCommandBuffer(id<MTLCommandQueue> cmdQueue);
 
     private:
     
-        static const std::uint32_t g_maxNumViewportsAndScissors = 32;
-        static const std::uint32_t g_maxNumVertexBuffers        = 16;
+        static const std::uint32_t g_maxNumVertexBuffers = 16;
     
         struct MTRenderEncoderState
         {
-            MTLViewport                 viewports[g_maxNumViewportsAndScissors]     = {};
-            NSUInteger                  viewportCount                               = 0;
-            MTLScissorRect              scissorRects[g_maxNumViewportsAndScissors]  = {};
-            NSUInteger                  scissorRectCount                            = 0;
-            id<MTLBuffer>               vertexBuffer0                               = nil;
-            const id<MTLBuffer>*        vertexBuffers                               = nullptr;
-            NSUInteger                  vertexBufferOffset0                         = 0;
-            const NSUInteger*           vertexBufferOffsets                         = nullptr;
-            NSRange                     vertexBufferRange                           = { 0, 0 };
-            id<MTLRenderPipelineState>  renderPipelineState                         = nil;
-            id<MTLDepthStencilState>    depthStencilState                           = nil;
+            MTLViewport                 viewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]      = {};
+            NSUInteger                  viewportCount                                       = 0;
+            MTLScissorRect              scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]   = {};
+            NSUInteger                  scissorRectCount                                    = 0;
+            id<MTLBuffer>               vertexBuffer0                                       = nil;
+            const id<MTLBuffer>*        vertexBuffers                                       = nullptr;
+            NSUInteger                  vertexBufferOffset0                                 = 0;
+            const NSUInteger*           vertexBufferOffsets                                 = nullptr;
+            NSRange                     vertexBufferRange                                   = { 0, 0 };
+            id<MTLRenderPipelineState>  renderPipelineState                                 = nil;
+            id<MTLDepthStencilState>    depthStencilState                                   = nil;
         };
     
         struct MTClearValue
@@ -164,6 +169,7 @@ class MTCommandBuffer : public CommandBufferExt
         void SubmitRenderEncoderState();
         void ResetRenderEncoderState();
 
+        id<MTLCommandQueue>             cmdQueue_               = nil;
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
 
         id<MTLRenderCommandEncoder>     renderEncoder_          = nil;

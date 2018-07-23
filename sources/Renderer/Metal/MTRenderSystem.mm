@@ -52,12 +52,12 @@ CommandQueue* MTRenderSystem::GetCommandQueue()
 
 CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>());
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(commandQueue_->GetNative()));
 }
 
 CommandBufferExt* MTRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>());
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(commandQueue_->GetNative()));
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)
@@ -88,10 +88,10 @@ void MTRenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
-void MTRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+void MTRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
-    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    bufferMT.Write(data, dataSize, offset);
+    auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
+    dstBufferMT.Write(static_cast<NSUInteger>(dstOffset), data, static_cast<NSUInteger>(dataSize));
 }
 
 void* MTRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
@@ -121,7 +121,7 @@ void MTRenderSystem::Release(Texture& texture)
     RemoveFromUniqueSet(textures_, &texture);
 }
 
-void MTRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
+void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     //todo
 }

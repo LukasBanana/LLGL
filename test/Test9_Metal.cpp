@@ -146,7 +146,7 @@ int main()
         
         while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
-            commandQueue->Begin(*commands);
+            commands->Begin();
             {
                 commands->BeginRenderPass(*context);
                 {
@@ -164,7 +164,8 @@ int main()
                 }
                 commands->EndRenderPass();
             }
-            commandQueue->End(*commands);
+            commands->End();
+            commandQueue->Submit(*commands);
             
             context->Present();
         }

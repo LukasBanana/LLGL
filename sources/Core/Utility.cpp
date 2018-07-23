@@ -317,7 +317,7 @@ static std::string GetASCIIName(char c)
             "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US",  // 0x10 - 0x1F
             "SP",                                                                                                       // 0x20
         };
-        return ('<' + std::string(g_names[c]) + '>');
+        return ('<' + std::string(g_names[static_cast<std::size_t>(c)]) + '>');
     }
     else if (c == 127)
         return "<DEL>";
