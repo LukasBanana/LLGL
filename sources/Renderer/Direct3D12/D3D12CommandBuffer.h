@@ -192,8 +192,10 @@ class D3D12CommandBuffer final : public CommandBuffer
         bool                                scissorEnabled_         = false;
         UINT                                numBoundScissorRects_   = 0;
 
+        #if 0//unused
         LONG                                framebufferWidth_       = 0;
         LONG                                framebufferHeight_      = 0;
+        #endif
 
         ID3D12Resource*                     boundBackBuffer_        = nullptr;  // Currently bound color buffer from D3D12RenderContext
 

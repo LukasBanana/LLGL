@@ -109,7 +109,7 @@ void D3D11GraphicsPipelineBase::BuildStaticStateBuffer(const GraphicsPipelineDes
     const std::size_t bufferSize =
     (
         desc.viewports.size() * sizeof(D3D11_VIEWPORT) +
-        desc.scissors.size()  * sizeof(D3D11_RECT)
+        desc.scissors.size()  * sizeof(D3D11_RECT    )
     );
     staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
 

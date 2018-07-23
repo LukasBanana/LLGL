@@ -131,25 +131,22 @@ void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
 
 void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    if (scissorEnabled_)
+    numScissors = std::min(numScissors, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+
+    D3D12_RECT scissorsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+
+    for (std::uint32_t i = 0; i < numScissors; ++i)
     {
-        numScissors = std::min(numScissors, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+        const auto& src = scissors[i];
+        auto& dest = scissorsD3D[i];
 
-        D3D12_RECT scissorsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
-
-        for (std::uint32_t i = 0; i < numScissors; ++i)
-        {
-            const auto& src = scissors[i];
-            auto& dest = scissorsD3D[i];
-
-            dest.left   = src.x;
-            dest.top    = src.y;
-            dest.right  = src.x + src.width;
-            dest.bottom = src.y + src.height;
-        }
-
-        commandList_->RSSetScissorRects(numScissors, scissorsD3D);
+        dest.left   = src.x;
+        dest.top    = src.y;
+        dest.right  = src.x + src.width;
+        dest.bottom = src.y + src.height;
     }
+
+    commandList_->RSSetScissorRects(numScissors, scissorsD3D);
 }
 
 /* ----- Clear ----- */
@@ -518,10 +515,12 @@ void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
     /* Set back-buffer RTVs */
     SetBackBufferRTV(renderContextD3D);
 
+    #if 0//unused
     /* Store framebuffer extent */
     const auto& framebufferExtent = renderContextD3D.GetVideoMode().resolution;
     framebufferWidth_   = static_cast<LONG>(framebufferExtent.width);
     framebufferHeight_  = static_cast<LONG>(framebufferExtent.height);
+    #endif
 }
 
 void D3D12CommandBuffer::TransitionRenderTarget(

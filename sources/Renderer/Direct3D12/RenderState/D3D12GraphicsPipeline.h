@@ -10,18 +10,19 @@
 
 
 #include <LLGL/GraphicsPipeline.h>
+#include <LLGL/ForwardDecls.h>
 #include "../../DXCommon/ComPtr.h"
-#include <vector>
 #include <d3d12.h>
+#include <memory>
 
 
 namespace LLGL
 {
 
 
-struct GraphicsPipelineDescriptor;
 class D3D12Device;
 class D3D12ShaderProgram;
+class RawBufferIterator;
 
 class D3D12GraphicsPipeline final : public GraphicsPipeline
 {
@@ -51,6 +52,11 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
             const GraphicsPipelineDescriptor&   desc
         );
 
+        void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
+        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter);
+        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter);
+        void SetStaticViewportsAndScissors(ID3D12GraphicsCommandList* commandList);
+
         ComPtr<ID3D12PipelineState> pipelineState_;
         ID3D12RootSignature*        rootSignature_      = nullptr;
 
@@ -59,6 +65,10 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
         UINT                        stencilRef_         = 0;
 
         bool                        scissorEnabled_     = false;
+
+        std::unique_ptr<char[]>     staticStateBuffer_;
+        UINT                        numStaticViewports_ = 0;
+        UINT                        numStaticScissors_  = 0;
 
 };
 

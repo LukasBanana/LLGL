@@ -16,8 +16,10 @@
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/RawBufferIterator.h"
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <algorithm>
+#include <limits>
 
 
 namespace LLGL
@@ -55,6 +57,10 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     blendFactor_[2]     = desc.blend.blendFactor.b;
     blendFactor_[3]     = desc.blend.blendFactor.a;
     scissorEnabled_     = desc.rasterizer.scissorTestEnabled;
+
+    /* Build static state buffer for viewports and scissors */
+    if (!desc.viewports.empty() || !desc.scissors.empty())
+        BuildStaticStateBuffer(desc);
 }
 
 void D3D12GraphicsPipeline::Bind(ID3D12GraphicsCommandList* commandList)
@@ -67,6 +73,9 @@ void D3D12GraphicsPipeline::Bind(ID3D12GraphicsCommandList* commandList)
     commandList->IASetPrimitiveTopology(primitiveTopology_);
     commandList->OMSetBlendFactor(blendFactor_);
     commandList->OMSetStencilRef(stencilRef_);
+
+    /* Set static viewports and scissors */
+    SetStaticViewportsAndScissors(commandList);
 }
 
 static D3D12_CONSERVATIVE_RASTERIZATION_MODE GetConservativeRaster(bool enabled)
@@ -299,6 +308,104 @@ void D3D12GraphicsPipeline::CreatePipelineState(
 
     /* Create graphics pipeline state and graphics command list */
     pipelineState_ = device.CreateDXPipelineState(stateDesc);
+}
+
+void D3D12GraphicsPipeline::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc)
+{
+    /* Allocate packed raw buffer */
+    const std::size_t bufferSize =
+    (
+        desc.viewports.size() * sizeof(D3D12_VIEWPORT) +
+        desc.scissors.size()  * sizeof(D3D12_RECT    )
+    );
+
+    staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
+
+    RawBufferIterator rawBufferIter { staticStateBuffer_.get() };
+
+    /* Build static viewports in raw buffer */
+    if (!desc.viewports.empty())
+        BuildStaticViewports(desc.viewports.size(), desc.viewports.data(), rawBufferIter);
+
+    /* Build static scissors in raw buffer */
+    if (!desc.scissors.empty())
+        BuildStaticScissors(desc.scissors.size(), desc.scissors.data(), rawBufferIter);
+}
+
+void D3D12GraphicsPipeline::BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter)
+{
+    /* Store number of viewports and validate limit */
+    numStaticViewports_ = static_cast<UINT>(numViewports);
+
+    if (numStaticViewports_ > D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE)
+    {
+        throw std::invalid_argument(
+            "too many viewports in graphics pipeline state (" + std::to_string(numStaticViewports_) +
+            " specified, but limit is " + std::to_string(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE) + ")"
+        );
+    }
+
+    /* Build <D3D12_VIEWPORT> entries */
+    for (std::size_t i = 0; i < numViewports; ++i)
+    {
+        auto dst = rawBufferIter.Next<D3D12_VIEWPORT>();
+        {
+            dst->TopLeftX   = viewports[i].x;
+            dst->TopLeftY   = viewports[i].y;
+            dst->Width      = viewports[i].width;
+            dst->Height     = viewports[i].height;
+            dst->MinDepth   = viewports[i].minDepth;
+            dst->MaxDepth   = viewports[i].maxDepth;
+        }
+    }
+}
+
+void D3D12GraphicsPipeline::BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter)
+{
+    /* Store number of scissors and validate limit */
+    numStaticScissors_ = static_cast<UINT>(numScissors);
+
+    if (numStaticScissors_ > D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE)
+    {
+        throw std::invalid_argument(
+            "too many viewports in graphics pipeline state (" + std::to_string(numStaticScissors_) +
+            " specified, but limit is " + std::to_string(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE) + ")"
+        );
+    }
+
+    /* Build <D3D12_RECT> entries */
+    for (std::size_t i = 0; i < numScissors; ++i)
+    {
+        auto dst = rawBufferIter.Next<D3D12_RECT>();
+        {
+            dst->left   = static_cast<LONG>(scissors[i].x);
+            dst->top    = static_cast<LONG>(scissors[i].y);
+            dst->right  = static_cast<LONG>(scissors[i].x + scissors[i].width);
+            dst->bottom = static_cast<LONG>(scissors[i].y + scissors[i].height);
+        }
+    }
+}
+
+void D3D12GraphicsPipeline::SetStaticViewportsAndScissors(ID3D12GraphicsCommandList* commandList)
+{
+    if (staticStateBuffer_)
+    {
+        RawBufferIterator rawBufferIter { staticStateBuffer_.get() };
+        if (numStaticViewports_ > 0)
+        {
+            commandList->RSSetViewports(
+                numStaticViewports_,
+                rawBufferIter.Next<D3D12_VIEWPORT>(numStaticViewports_)
+            );
+        }
+        if (numStaticScissors_ > 0)
+        {
+            commandList->RSSetScissorRects(
+                numStaticScissors_,
+                rawBufferIter.Next<D3D12_RECT>(numStaticScissors_)
+            );
+        }
+    }
 }
 
 
