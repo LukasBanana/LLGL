@@ -225,7 +225,6 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \throws std::invalid_argument If 'numBuffers' is 0, if 'bufferArray' is null,
         if any of the pointers in the array are null, if not all buffers have the same type, or if the buffer array type is
         not one of these: BufferType::Vertex, BufferType::Constant, BufferType::Storage, or BufferType::StreamOutput.
-        \todo Rename to "CreateVertexArray".
         */
         virtual BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) = 0;
 
@@ -237,15 +236,15 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         /**
         \brief Updates the data of the specified buffer.
-        \param[in] buffer Specifies the buffer whose data is to be updated.
+        \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
+        \param[in] dstOffset Specifies the offset (in bytes) at which the buffer is to be updated.
+        This offset plus the data block size (i.e. <code>offset + dataSize</code>) must be less than or equal to the size of the buffer.
         \param[in] data Raw pointer to the data with which the buffer is to be updated. This must not be null!
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This must be less then or equal to the size of the buffer.
-        \param[in] offset Specifies the offset (in bytes) at which the buffer is to be updated.
-        This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the buffer.
-        \todo Maybe replace std::size_t with std::uint64_t here.
+        \remarks To update a small buffer (maximum of 65536 bytes) during encoding a command buffer, use CommandBuffer::UpdateBuffer.
         */
-        virtual void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        virtual void WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize) = 0;
 
         /**
         \brief Maps the specified buffer from GPU to CPU memory space.
@@ -282,11 +281,11 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         /**
         \brief Updates the image data of the specified texture.
         \param[in] texture Specifies the texture whose data is to be updated.
-        \param[in] subTextureDesc Specifies the sub-texture descriptor.
-        \param[in] imageDesc Specifies the image data descriptor. Its "data" member must not be null!
+        \param[in] textureRegion Specifies the texture region where the texture is to be updated.
+        \param[in] imageDesc Specifies the image data descriptor. Its \c data member must not be null!
         \remarks This function can only be used for non-multi-sample textures, i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray.
         */
-        virtual void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) = 0;
+        virtual void WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc) = 0;
 
         /**
         \brief Reads the image data from the specified texture.
@@ -325,14 +324,14 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         /**
         \brief Generates all MIP-maps for the specified texture.
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
-        \remarks To generate only a small amout of MIP levels, use the secondary 'GenerateMips' function.
+        \remarks To generate only a small amout of MIP levels, use the secondary \c GenerateMips function.
+        To update the MIP levels during encoding a command buffer, use CommandBuffer::GenerateMips.
         \see GenerateMips(Texture&, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
-        \todo Maybe move this to "CommandBuffer" and no longer use the staging command buffer for this in Vulkan renderer.
         */
         virtual void GenerateMips(Texture& texture) = 0;
 
         /**
-        \brief Generates at least the specified range of MIP-maps for the specified texture.
+        \brief Generates the specified range of MIP-maps for the specified texture.
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
         \param[in] baseMipLevel Specifies the zero-based index of the first MIP-map level.
         \param[in] numMipLevels Specifies the number of MIP-maps to generate. This also includes the base MIP-map level, so a number of less than 2 has no effect.
@@ -340,13 +339,19 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \param[in] numArrayLayers Specifies the number of array layers. For both array textures and non-array textures this must be at least 1. By default 1.
         \remarks This function only guarantees to generate at least the specified amount of MIP-maps.
         It may also update all other MIP-maps if the respective rendering API does not support hardware accelerated generation of a sub-range of MIP-maps.
+        To update the MIP levels during encoding a command buffer, use CommandBuffer::GenerateMips.
         \note Only use this function if the range of MIP-maps is significantly smaller than the entire MIP chain,
-        e.g. only a single slice of a large 2D array texture, and use the primary 'GenerateMips' function otherwise.
+        e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
         \see GenerateMips(Texture&)
         \see NumMipLevels
-        \todo Maybe move this to "CommandBuffer" and no longer use the staging command buffer for this in Vulkan renderer.
         */
-        virtual void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer = 0, std::uint32_t numArrayLayers = 1) = 0;
+        virtual void GenerateMips(
+            Texture&        texture,
+            std::uint32_t   baseMipLevel,
+            std::uint32_t   numMipLevels,
+            std::uint32_t   baseArrayLayer  = 0,
+            std::uint32_t   numArrayLayers  = 1
+        ) = 0;
 
         /* ----- Samplers ---- */
 

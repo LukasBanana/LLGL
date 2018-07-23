@@ -50,6 +50,44 @@ D3D11CommandBuffer::D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPt
 {
 }
 
+/* ----- Encoding ----- */
+
+void D3D11CommandBuffer::Begin()
+{
+    // dummy
+}
+
+void D3D11CommandBuffer::End()
+{
+    // dummy
+}
+
+void D3D11CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+{
+    auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
+    dstBufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
+}
+
+void D3D11CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
+    auto& srcBufferD3D = LLGL_CAST(D3D11Buffer&, srcBuffer);
+
+    context_->CopySubresourceRegion(
+        dstBufferD3D.GetNative(),                               // pDstResource
+        0,                                                      // DstSubresource
+        static_cast<UINT>(dstOffset),                           // DstX
+        0,                                                      // DstY
+        0,                                                      // DstZ
+        srcBufferD3D.GetNative(),                               // pSrcResource
+        0,                                                      // SrcSubresource
+        &CD3D11_BOX(                                            // pSrcBox
+            static_cast<LONG>(srcOffset), 0, 0,
+            static_cast<LONG>(srcOffset + size), 1, 1
+        )
+    );
+}
+
 /* ----- Configuration ----- */
 
 void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
@@ -336,16 +374,16 @@ void D3D11CommandBuffer::BeginQuery(Query& query)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
 
-    if (queryD3D.GetQueryObjectType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    if (queryD3D.GetD3DQueryType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Begin disjoint query first, and insert the beginning timestamp query */
-        context_->Begin(queryD3D.GetQueryObject());
+        context_->Begin(queryD3D.GetNative());
         context_->End(queryD3D.GetTimeStampQueryBegin());
     }
     else
     {
         /* Begin standard query */
-        context_->Begin(queryD3D.GetQueryObject());
+        context_->Begin(queryD3D.GetNative());
     }
 }
 
@@ -353,16 +391,16 @@ void D3D11CommandBuffer::EndQuery(Query& query)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
 
-    if (queryD3D.GetQueryObjectType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    if (queryD3D.GetD3DQueryType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Insert the ending timestamp query, and end the disjoint query */
         context_->End(queryD3D.GetTimeStampQueryEnd());
-        context_->End(queryD3D.GetQueryObject());
+        context_->End(queryD3D.GetNative());
     }
     else
     {
         /* End standard query */
-        context_->End(queryD3D.GetQueryObject());
+        context_->End(queryD3D.GetNative());
     }
 }
 
@@ -370,13 +408,13 @@ bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
 
-    switch (queryD3D.GetQueryObjectType())
+    switch (queryD3D.GetD3DQueryType())
     {
         /* Query result from data of type: UINT64 */
         case D3D11_QUERY_OCCLUSION:
         {
             UINT64 data = 0;
-            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
+            if (context_->GetData(queryD3D.GetNative(), &data, sizeof(data), 0) == S_OK)
             {
                 result = data;
                 return true;
@@ -394,7 +432,7 @@ bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
                 if (context_->GetData(queryD3D.GetTimeStampQueryEnd(), &endTime, sizeof(endTime), 0) == S_OK)
                 {
                     D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjointData;
-                    if (context_->GetData(queryD3D.GetQueryObject(), &disjointData, sizeof(disjointData), 0) == S_OK)
+                    if (context_->GetData(queryD3D.GetNative(), &disjointData, sizeof(disjointData), 0) == S_OK)
                     {
                         if (disjointData.Disjoint == FALSE)
                         {
@@ -421,7 +459,7 @@ bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
         case D3D11_QUERY_SO_OVERFLOW_PREDICATE:
         {
             BOOL data = 0;
-            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
+            if (context_->GetData(queryD3D.GetNative(), &data, sizeof(data), 0) == S_OK)
             {
                 result = data;
                 return true;
@@ -433,7 +471,7 @@ bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
         case D3D11_QUERY_SO_STATISTICS:
         {
             D3D11_QUERY_DATA_SO_STATISTICS data;
-            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
+            if (context_->GetData(queryD3D.GetNative(), &data, sizeof(data), 0) == S_OK)
             {
                 result = data.NumPrimitivesWritten;
                 return true;
@@ -453,10 +491,10 @@ bool D3D11CommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipeli
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
 
     /* Query result from data of type: D3D11_QUERY_DATA_PIPELINE_STATISTICS */
-    if (queryD3D.GetQueryObjectType() == D3D11_QUERY_PIPELINE_STATISTICS)
+    if (queryD3D.GetD3DQueryType() == D3D11_QUERY_PIPELINE_STATISTICS)
     {
         D3D11_QUERY_DATA_PIPELINE_STATISTICS data;
-        if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
+        if (context_->GetData(queryD3D.GetNative(), &data, sizeof(data), 0) == S_OK)
         {
             result.numPrimitivesGenerated               = data.CInvocations;
             result.numVerticesSubmitted                 = data.IAVertices;
@@ -480,7 +518,7 @@ bool D3D11CommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipeli
 void D3D11CommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-    context_->SetPredication(queryD3D.GetPredicateObject(), (mode >= RenderConditionMode::WaitInverted));
+    context_->SetPredication(queryD3D.GetPredicate(), (mode >= RenderConditionMode::WaitInverted));
 }
 
 void D3D11CommandBuffer::EndRenderCondition()

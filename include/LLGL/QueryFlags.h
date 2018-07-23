@@ -106,6 +106,7 @@ struct QueryDescriptor
 {
     QueryDescriptor() = default;
 
+    //! Constructor to initialize the query type and optionally the render condition.
     inline QueryDescriptor(QueryType type, bool renderCondition = false) :
         type            { type            },
         renderCondition { renderCondition }

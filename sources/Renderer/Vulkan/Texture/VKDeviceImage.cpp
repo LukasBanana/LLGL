@@ -1,11 +1,11 @@
 /*
- * VKImageWrapper.cpp
+ * VKDeviceImage.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "VKImageWrapper.h"
+#include "VKDeviceImage.h"
 #include "../Memory/VKDeviceMemory.h"
 #include "../Memory/VKDeviceMemoryManager.h"
 #include "../VKCore.h"
@@ -15,16 +15,16 @@ namespace LLGL
 {
 
 
-VKImageWrapper::VKImageWrapper(const VKPtr<VkDevice>& device) :
+VKDeviceImage::VKDeviceImage(const VKPtr<VkDevice>& device) :
     image_ { device, vkDestroyImage }
 {
 }
 
-VKImageWrapper::~VKImageWrapper()
+VKDeviceImage::~VKDeviceImage()
 {
 }
 
-void VKImageWrapper::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
+void VKDeviceImage::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
 {
     auto device = deviceMemoryMngr.GetVkDevice();
 
@@ -47,13 +47,13 @@ void VKImageWrapper::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMng
         throw std::runtime_error("failed to allocate device memory for Vulkan image");
 }
 
-void VKImageWrapper::ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
+void VKDeviceImage::ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
 {
     deviceMemoryMngr.Release(memoryRegion_);
     memoryRegion_ = nullptr;
 }
 
-void VKImageWrapper::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
+void VKDeviceImage::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
 {
     if (memoryRegion)
     {
@@ -62,7 +62,7 @@ void VKImageWrapper::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* mem
     }
 }
 
-void VKImageWrapper::CreateVkImage(
+void VKDeviceImage::CreateVkImage(
     VkDevice                device,
     VkImageType             imageType,
     VkFormat                format,
@@ -96,12 +96,12 @@ void VKImageWrapper::CreateVkImage(
     VKThrowIfFailed(result, "failed to create Vulkan image");
 }
 
-void VKImageWrapper::ReleaseVkImage()
+void VKDeviceImage::ReleaseVkImage()
 {
     image_.Release();
 }
 
-void VKImageWrapper::CreateVkImageView(
+void VKDeviceImage::CreateVkImageView(
     VkDevice            device,
     VkImageViewType     viewType,
     VkFormat            format,

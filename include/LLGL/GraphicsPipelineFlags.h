@@ -65,7 +65,7 @@ enum class PrimitiveTopology
 
     //! Line list, where each pair of two vertices represetns a single line primitive.
     LineList,
-    
+
     //! Line strip, where each vertex generates a new line primitive while the previous vertex is used as line start.
     LineStrip,
 
@@ -80,7 +80,7 @@ enum class PrimitiveTopology
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
     */
     LineListAdjacency,
-    
+
     /**
     \brief Adjacency line strip, which is similar to LineStrip but each end point has a corresponding adjacent vertex that is accessible in a geometry shader.
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
@@ -89,7 +89,7 @@ enum class PrimitiveTopology
 
     //! Triangle list, where each set of three vertices represent a single triangle primitive.
     TriangleList,
-    
+
     //! Triangle strip, where each vertex generates a new triangle primitive with an alternative triangle winding.
     TriangleStrip,
 
@@ -104,7 +104,7 @@ enum class PrimitiveTopology
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
     */
     TriangleListAdjacency,
-    
+
     /**
     \brief Adjacency triangle strips which is similar to TriangleStrip but each triangle edge has a corresponding adjacent vertex that is accessible in a geometry shader.
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
@@ -154,14 +154,14 @@ enum class PrimitiveTopology
 */
 enum class CompareOp
 {
-    Never,          //!< Comparison never passes.
+    NeverPass,      //!< Comparison never passes.
     Less,           //!< Comparison passes if the source data is less than the destination data.
     Equal,          //!< Comparison passes if the source data is euqal to the right-hand-side.
     LessEqual,      //!< Comparison passes if the source data is less than or equal to the right-hand-side.
     Greater,        //!< Comparison passes if the source data is greater than the right-hand-side.
     NotEqual,       //!< Comparison passes if the source data is not equal to the right-hand-side.
     GreaterEqual,   //!< Comparison passes if the source data is greater than or equal to the right-hand-side.
-    Ever,           //!< Comparison always passes. (Cannot be called "Always" due to conflict with X11 lib on Linux).
+    AlwaysPass,     //!< Comparison always passes.
 };
 
 /**
@@ -397,21 +397,27 @@ struct Scissor
 
 /**
 \brief Multi-sampling descriptor structure.
-\todo Maybe remove this and only use a single unsigned integral value "samples".
+\see RasterizerDescriptor::multiSampling
 */
 struct MultiSamplingDescriptor
 {
     MultiSamplingDescriptor() = default;
 
-    inline MultiSamplingDescriptor(std::uint32_t samples) :
-        enabled { samples > 1 },
-        samples { samples     }
+    /**
+    \brief Constructor to initialize the sample.
+    \param[in] samples Specifies the number of samples used for multi-sampling. If this is greater than 1, multi-sampling is enabled.
+    \param[in] sampleMask Specifies the bitmask for sample coverage.
+    */
+    inline MultiSamplingDescriptor(std::uint32_t samples, std::uint32_t sampleMask = ~0) :
+        enabled    { (samples > 1) },
+        samples    { samples       },
+        sampleMask { sampleMask    }
     {
     }
 
     /**
     \brief Returns the sample count for the state of this multi-sampling descriptor.
-    \return max{ 1, samples } if multi-sampling is enabled, otherwise 1.
+    \return <code>max{ 1, samples }</code> if multi-sampling is enabled, otherwise 1.
     */
     inline std::uint32_t SampleCount() const
     {
@@ -419,10 +425,17 @@ struct MultiSamplingDescriptor
     }
 
     //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    bool            enabled = false;
+    bool            enabled     = false;
 
-    //! Number of samples used for multi-sampling. By default 1.
-    std::uint32_t   samples = 1;
+    /**
+    \brief Number of samples used for multi-sampling. By default 1.
+    \remarks The equivalent member for multi-sampled textures is TextureDescriptor::samples.
+    \see TextureDescriptor::samples
+    */
+    std::uint32_t   samples     = 1;
+
+    //! Specifies the bitmask for sample coverage. By default \c 0xFFFFFFFF.
+    std::uint32_t   sampleMask  = ~0;
 };
 
 //! Depth state descriptor structure.
@@ -457,15 +470,15 @@ struct StencilFaceDescriptor
     CompareOp       compareOp       = CompareOp::Less;
 
     /**
-    \brief Specifies the portion of the depth-stencil buffer for reading stencil data. By default 0xffffffff.
-    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (readMask & 0xff) of the read mask value of the front face will be used.
+    \brief Specifies the portion of the depth-stencil buffer for reading stencil data. By default \c 0xFFFFFFFF.
+    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (i.e. <code>readMask & 0xFF</code>) of the read mask value of the front face will be used.
     \see StencilDescriptor::front
     */
     std::uint32_t   readMask        = ~0;
 
     /**
-    \brief Specifies the portion of the depth-stencil buffer for writing stencil data. By default 0xffffffff.
-    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (writeMask & 0xff) of the write mask value of the front face will be used.
+    \brief Specifies the portion of the depth-stencil buffer for writing stencil data. By default \c 0xFFFFFFFF.
+    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (i.e. <code>writeMask & 0xFF</code>) of the write mask value of the front face will be used.
     \see StencilDescriptor::front
     */
     std::uint32_t   writeMask       = ~0;
@@ -490,7 +503,7 @@ struct StencilDescriptor
 
     /**
     \brief Specifies the front face settings for the stencil test.
-    \note For Direct3D 11 and Direct3D 12, the read mask, write mask, and stencil reference are only supported for the front face.
+    \note For Direct3D 11 and Direct3D 12, the members \c readMask, \c writeMask, and \c reference are only supported for the front face.
     \see StencilFaceDescriptor::readMask
     \see StencilFaceDescriptor::writeMask
     \see StencilFaceDescriptor::reference
@@ -516,7 +529,8 @@ struct DepthBiasDescriptor
 
     /**
     \brief Specifies the maximum (or minimum) depth bias of a fragment. By default 0.0.
-    \note For OpenGL, this is only supported if the extension "GL_ARB_polygon_offset_clamp" is available.
+    \note For OpenGL, this is only supported if the extension \c GL_ARB_polygon_offset_clamp is available
+    (see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_polygon_offset_clamp.txt).
     */
     float clamp             = 0.0f;
 };
@@ -554,7 +568,7 @@ struct RasterizerDescriptor
 
     /**
     \brief If true, conservative rasterization is enabled. By default disabled.
-    \note Only supported with: Direct3D 12, Direct3D 11.3, OpenGL (if the extension "GL_NV_conservative_raster" or "GL_INTEL_conservative_rasterization" is supported).
+    \note Only supported with: Direct3D 12, Direct3D 11.3, OpenGL (if the extension \c GL_NV_conservative_raster or \c GL_INTEL_conservative_rasterization is supported).
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
     \see RenderingFeatures::hasConservativeRasterization
@@ -563,7 +577,7 @@ struct RasterizerDescriptor
 
     /**
     \brief Specifies the width of all generated line primitives. By default 1.0.
-    \remarks The minimum and maximum supported line width can be determined by the 'lineWidthRange' member in the 'RenderingCapabilities' structure.
+    \remarks The minimum and maximum supported line width can be determined by the \c lineWidthRange member in the RenderingCapabilities structure.
     If this line width is out of range, it will be clamped silently during graphics pipeline creation.
     \note Only supported with: OpenGL, Vulkan.
     \see RenderingLimits::lineWidthRange
@@ -638,14 +652,14 @@ struct BlendDescriptor
 /**
 \brief Graphics pipeline descriptor structure.
 \remarks This structure describes the entire graphics pipeline:
-viewports, depth-/ stencil-/ rasterizer-/ blend states, shader stages etc.
+shader stages, depth-/ stencil-/ rasterizer-/ blend states etc.
+\see RenderSystem::CreateGraphicsPipeline
 */
 struct GraphicsPipelineDescriptor
 {
     /**
     \brief Pointer to the shader program for the graphics pipeline. By default null.
     \remarks This must never be null when RenderSystem::CreateGraphicsPipeline is called with this structure.
-    \see RenderSystem::CreateGraphicsPipeline
     \see RenderSystem::CreateShaderProgram
     */
     const ShaderProgram*    shaderProgram       = nullptr;
@@ -671,26 +685,21 @@ struct GraphicsPipelineDescriptor
     */
     PrimitiveTopology       primitiveTopology   = PrimitiveTopology::TriangleList;
 
-    #if 1 // TODO: either remove this or implement it in the other renderers
     /**
-    \brief Specifies the viewport list. If empty, the viewports must be set dynamically with the command buffer.
+    \brief Specifies an optional list of viewports. If empty, the viewports must be set dynamically with the command buffer.
+    \remarks This list must have the same number of entries as \c scissors, unless one of the lists is empty.
     \see CommandBuffer::SetViewport
     \see CommandBuffer::SetViewports
-    \note Only supported with: Vulkan
-    \todo Either implemented this for remaining renderers or remove it.
     */
     std::vector<Viewport>   viewports;
 
     /**
-    \brief Specifies the scissor list. If empty, the scissors must be set dynamically with the command buffer.
-    \remarks This list must have the same number of entries as 'viewports', unless one of the lists is empty.
+    \brief Specifies an optional list of scissor rectangles. If empty, the scissors must be set dynamically with the command buffer.
+    \remarks This list must have the same number of entries as \c viewports, unless one of the lists is empty.
     \see CommandBuffer::SetScissor
     \see CommandBuffer::SetScissors
-    \note Only supported with: Vulkan
-    \todo Either implemented this for remaining renderers or remove it.
     */
     std::vector<Scissor>    scissors;
-    #endif // /TODO
 
     //! Specifies the depth state descriptor.
     DepthDescriptor         depth;

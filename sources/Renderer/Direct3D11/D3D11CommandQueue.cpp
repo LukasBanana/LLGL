@@ -20,16 +20,6 @@ D3D11CommandQueue::D3D11CommandQueue(ComPtr<ID3D11DeviceContext>& context) :
 
 /* ----- Command Buffers ----- */
 
-void D3D11CommandQueue::Begin(CommandBuffer& /*commandBuffer*/, long /*flags*/)
-{
-    // dummy
-}
-
-void D3D11CommandQueue::End(CommandBuffer& /*commandBuffer*/)
-{
-    // dummy
-}
-
 void D3D11CommandQueue::Submit(CommandBuffer& /*commandBuffer*/)
 {
     // dummy

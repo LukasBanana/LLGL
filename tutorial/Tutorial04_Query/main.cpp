@@ -159,7 +159,7 @@ private:
         Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
         Gs::RotateFree(settings.wvpMatrix, Gs::Vector3f(1).Normalized(), anim*3);
 
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Set buffers
             commands->SetVertexBuffer(*vertexBuffer);
@@ -212,7 +212,8 @@ private:
             }
             commands->EndRenderPass();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

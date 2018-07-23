@@ -49,7 +49,7 @@ class Tutorial10 : public Tutorial
 public:
 
     Tutorial10() :
-        Tutorial { L"LLGL Tutorial 10: Instancing", { 800, 600 }, 0 }
+        Tutorial { L"LLGL Tutorial 10: Instancing", { 800, 600 } }
     {
         UpdateAnimation();
 
@@ -273,7 +273,7 @@ private:
         {
             plDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage,   /*0*/3 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage,   0/*3*/ },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage, 1 },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage, 2 },
             };
@@ -304,7 +304,7 @@ private:
 
         // Create graphics pipeline with multi-sampling and alpha-to-coverage enabled
         {
-            //pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
             pipelineDesc.blend.alphaToCoverageEnabled   = true;
         }
         pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
@@ -368,7 +368,7 @@ private:
                 std::cout << "Alpha-To-Coverage Disabled" << std::endl;
         }
 
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Set buffer array, texture, and sampler
             commands->SetVertexBufferArray(*vertexBufferArray);
@@ -385,7 +385,7 @@ private:
                 // Set graphics pipeline state
                 commands->SetGraphicsPipeline(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
-                if (0)//pipelineLayout)
+                if (pipelineLayout)
                 {
                     // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
                     commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
@@ -413,7 +413,8 @@ private:
             }
             commands->EndRenderPass();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

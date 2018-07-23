@@ -17,12 +17,8 @@
 #include "../GLCommon/GLTypes.h"
 #include "VKCore.h"
 #include "VKTypes.h"
+#include "VKInitializers.h"
 #include <LLGL/Log.h>
-
-//#define TEST_VULKAN_MEMORY_MNGR
-#ifdef TEST_VULKAN_MEMORY_MNGR
-#   include <iostream>
-#endif
 
 
 namespace LLGL
@@ -63,77 +59,11 @@ static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long bufferFlags)
         return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 }
 
-static void FillBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize size, VkBufferUsageFlags usage)
-{
-    createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    createInfo.pNext                    = nullptr;
-    createInfo.flags                    = 0;
-    createInfo.size                     = size;
-    createInfo.usage                    = usage;
-    createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
-    createInfo.queueFamilyIndexCount    = 0;
-    createInfo.pQueueFamilyIndices      = nullptr;
-}
-
-#ifdef TEST_VULKAN_MEMORY_MNGR
-
-static void TestVulkanMemoryMngr(VKDeviceMemoryManager& mngr)
-{
-    std::uint32_t typeBits = 1665;
-    VkDeviceSize alignment = 1;
-
-    auto reg0 = mngr.Allocate(6, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    auto reg1 = mngr.Allocate(7, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    auto reg2 = mngr.Allocate(12, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    auto reg3 = mngr.Allocate(5, 16, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    auto reg4 = mngr.Allocate(5, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout, "Allocate: 6, 7, 12, 5 (alignment 16), 5");
-    std::cout << std::endl;
-
-    mngr.Release(reg1);
-    mngr.PrintBlocks(std::cout, "Release second allocation (7)");
-    std::cout << std::endl;
-
-    reg1 = mngr.Allocate(3, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout, "Allocate: 3");
-    std::cout << std::endl;
-
-    auto reg5 = mngr.Allocate(4, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout, "Allocate: 4");
-    std::cout << std::endl;
-
-    mngr.Release(reg1);
-    mngr.PrintBlocks(std::cout, "Release previous 3");
-    std::cout << std::endl;
-
-    mngr.Release(reg2);
-    mngr.PrintBlocks(std::cout, "Release previous 12");
-    std::cout << std::endl;
-
-    mngr.Release(reg5);
-    mngr.Release(reg4);
-    mngr.PrintBlocks(std::cout, "Release previous 4, 5");
-    std::cout << std::endl;
-
-    reg5 = mngr.Allocate(9, 8, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout, "Allocate: 9 with alignment 8");
-    std::cout << std::endl;
-}
-
-#endif
-
 
 /* ----- Common ----- */
 
-static const std::vector<const char*> g_deviceExtensions
-{
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-};
-
 VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     instance_            { vkDestroyInstance                        },
-    device_              { vkDestroyDevice                          },
     debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
 {
     /* Extract optional renderer configuartion */
@@ -154,33 +84,24 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     /* Create Vulkan instance and device objects */
     CreateInstance(rendererConfigVK != nullptr ? &(rendererConfigVK->application) : nullptr);
     LoadExtensions();
-
-    if (!PickPhysicalDevice())
-        throw std::runtime_error("failed to find physical device with Vulkan support");
-
-    QueryDeviceProperties();
+    PickPhysicalDevice();
     CreateLogicalDevice();
-    CreateStagingCommandResources();
+
+    /* Create default resources */
     CreateDefaultPipelineLayout();
 
     /* Create device memory manager */
     deviceMemoryMngr_ = MakeUnique<VKDeviceMemoryManager>(
         device_,
-        memoryProperties_,
+        physicalDevice_.GetMemoryProperties(),
         (rendererConfigVK != nullptr ? rendererConfigVK->minDeviceMemoryAllocationSize : 1024*1024),
         (rendererConfigVK != nullptr ? rendererConfigVK->reduceDeviceMemoryFragmentation : false)
     );
-
-    #ifdef TEST_VULKAN_MEMORY_MNGR
-    TestVulkanMemoryMngr(*deviceMemoryMngr_);
-    #endif
 }
 
 VKRenderSystem::~VKRenderSystem()
 {
-    /* Release resource and wait until device becomes idle */
-    ReleaseStagingCommandResources();
-    vkDeviceWaitIdle(device_);
+    device_.WaitIdle();
 }
 
 /* ----- Render Context ----- */
@@ -211,7 +132,7 @@ CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
 {
     return TakeOwnership(
         commandBuffers_,
-        MakeUnique<VKCommandBuffer>(device_, graphicsQueue_, queueFamilyIndices_, desc)
+        MakeUnique<VKCommandBuffer>(device_, device_.GetVkQueue(), device_.GetQueueFamilyIndices(), desc)
     );
 }
 
@@ -235,45 +156,35 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
 
     /* Create staging buffer */
-    VkBufferCreateInfo stagingCreateInfo;
-    FillBufferCreateInfo(
-        stagingCreateInfo,
+    auto stagingCreateInfo = MakeVkBufferCreateInfo(
         static_cast<VkDeviceSize>(desc.size),
         GetStagingVkBufferUsageFlags(desc.flags)
     );
 
-    VKBufferWithRequirements stagingBuffer { device_ };
-    VKDeviceMemoryRegion* memoryRegionStaging = nullptr;
-
-    std::tie(stagingBuffer, memoryRegionStaging) = CreateStagingBuffer(stagingCreateInfo, initialData, static_cast<std::size_t>(desc.size));
+    auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, initialData, desc.size);
 
     /* Create device buffer */
-    auto buffer = CreateHardwareBuffer(desc, GetVkBufferUsageFlags(desc.flags));
+    auto buffer = CreateGpuBuffer(desc, GetVkBufferUsageFlags(desc.flags));
 
     /* Allocate device memory */
-    const auto& requirements = buffer->GetRequirements();
-
     auto memoryRegion = deviceMemoryMngr_->Allocate(
-        requirements.size,
-        requirements.alignment,
-        requirements.memoryTypeBits,
+        buffer->GetDeviceBuffer().GetRequirements(),
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
-
-    buffer->BindToMemory(device_, memoryRegion);
+    buffer->BindMemoryRegion(device_, memoryRegion);
 
     /* Copy staging buffer into hardware buffer */
-    CopyBuffer(stagingBuffer.buffer, buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
+    device_.CopyBuffer(stagingBuffer.GetVkBuffer(), buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
 
     if ((desc.flags & g_stagingBufferRelatedFlags) != 0)
     {
         /* Store ownership of staging buffer */
-        buffer->TakeStagingBuffer(std::move(stagingBuffer), memoryRegionStaging);
+        buffer->TakeStagingBuffer(std::move(stagingBuffer));
     }
     else
     {
         /* Release staging buffer */
-        deviceMemoryMngr_->Release(memoryRegionStaging);
+        stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
     }
 
     return buffer;
@@ -290,8 +201,8 @@ void VKRenderSystem::Release(Buffer& buffer)
 {
     /* Release device memory regions for primary buffer and internal staging buffer, then release buffer object */
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-    deviceMemoryMngr_->Release(bufferVK.GetMemoryRegion());
-    deviceMemoryMngr_->Release(bufferVK.GetMemoryRegionStaging());
+    bufferVK.GetDeviceBuffer().ReleaseMemoryRegion(*deviceMemoryMngr_);
+    bufferVK.GetStagingDeviceBuffer().ReleaseMemoryRegion(*deviceMemoryMngr_);
     RemoveFromUniqueSet(buffers_, &buffer);
 }
 
@@ -300,114 +211,65 @@ void VKRenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
-void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+void VKRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
-    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-
-    auto memorySize     = static_cast<VkDeviceSize>(dataSize);
-    auto memoryOffset   = static_cast<VkDeviceSize>(offset);
+    auto& bufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
 
     if (bufferVK.GetStagingVkBuffer() != VK_NULL_HANDLE)
     {
-        #if 1
-
         /* Copy data to staging buffer memory */
-        bufferVK.UpdateStagingBuffer(device_, data, memorySize, memoryOffset);
+        device_.WriteBuffer(bufferVK.GetStagingDeviceBuffer(), data, dataSize, dstOffset);
 
         /* Copy staging buffer into hardware buffer */
-        CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);
-
-        #else // TEST
-
-        BeginStagingCommands();
-
-        if (auto mappedData = bufferVK.MapStaging(device_, memorySize, memoryOffset))
-        {
-            ::memcpy(mappedData, data, static_cast<std::size_t>(dataSize));
-            bufferVK.UnmapStaging(device_);
-        }
-
-        VkBufferMemoryBarrier barrier;
-        {
-            barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-            barrier.pNext               = nullptr;
-            barrier.srcAccessMask       = 0;//VK_ACCESS_HOST_WRITE_BIT;
-            barrier.dstAccessMask       = 0;//VK_ACCESS_TRANSFER_READ_BIT;
-            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            barrier.buffer              = bufferVK.GetStagingVkBuffer();
-            barrier.offset              = 0;
-            barrier.size                = VK_WHOLE_SIZE;
-        }
-        vkCmdPipelineBarrier(
-            stagingCommandBuffer_,
-            VK_PIPELINE_STAGE_HOST_BIT,
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0, 0, nullptr,
-            1, &barrier,
-            0, nullptr
-        );
-
-        /* Copy staging buffer into hardware buffer */
-        VkBufferCopy region;
-        {
-            region.srcOffset    = memoryOffset;
-            region.dstOffset    = memoryOffset;
-            region.size         = memorySize;
-        }
-        vkCmdCopyBuffer(stagingCommandBuffer_, bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), 1, &region);
-
-        EndStagingCommands();
-
-        #endif // /TEST
+        device_.CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), dataSize, dstOffset, dstOffset);
     }
     else
     {
         /* Create staging buffer */
-        VkBufferCreateInfo stagingCreateInfo;
-        FillBufferCreateInfo(
-            stagingCreateInfo,
-            static_cast<VkDeviceSize>(dataSize),
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+        auto stagingCreateInfo = MakeVkBufferCreateInfo(
+            dataSize, (VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
         );
 
-        VKBufferWithRequirements stagingBuffer { device_ };
-        VKDeviceMemoryRegion* memoryRegionStaging = nullptr;
-
-        std::tie(stagingBuffer, memoryRegionStaging) = CreateStagingBuffer(stagingCreateInfo, data, dataSize);
+        auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, data, dataSize);
 
         /* Copy staging buffer into hardware buffer */
-        CopyBuffer(stagingBuffer.buffer, bufferVK.GetVkBuffer(), memorySize, 0, memoryOffset);
+        device_.CopyBuffer(stagingBuffer.GetVkBuffer(), bufferVK.GetVkBuffer(), dataSize, 0, dstOffset);
 
-        /* Release device memory region */
-        deviceMemoryMngr_->Release(memoryRegionStaging);
+        /* Release device memory region of staging buffer */
+        stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
     }
 }
 
 void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-    AssertBufferCPUAccess(bufferVK);
 
-    /* Copy GPU local buffer into staging buffer for read accces */
-    if (access != CPUAccess::WriteOnly)
-        CopyBuffer(bufferVK.GetVkBuffer(), bufferVK.GetStagingVkBuffer(), bufferVK.GetSize());
+    if (auto stagingBuffer = bufferVK.GetStagingVkBuffer())
+    {
+        /* Copy GPU local buffer into staging buffer for read accces */
+        if (access != CPUAccess::WriteOnly)
+            device_.CopyBuffer(bufferVK.GetVkBuffer(), stagingBuffer, bufferVK.GetSize());
 
-    /* Map staging buffer */
-    return bufferVK.Map(device_, access);
+        /* Map staging buffer */
+        return bufferVK.Map(device_, access);
+    }
+
+    return nullptr;
 }
 
 void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-    AssertBufferCPUAccess(bufferVK);
 
-    /* Unmap staging buffer */
-    bufferVK.Unmap(device_);
+    if (auto stagingBuffer = bufferVK.GetStagingVkBuffer())
+    {
+        /* Unmap staging buffer */
+        bufferVK.Unmap(device_);
 
-    /* Copy staging buffer into GPU local buffer for write access */
-    if (bufferVK.GetMappingCPUAccess() != CPUAccess::ReadOnly)
-        CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), bufferVK.GetSize());
+        /* Copy staging buffer into GPU local buffer for write access */
+        if (bufferVK.GetMappingCPUAccess() != CPUAccess::ReadOnly)
+            device_.CopyBuffer(stagingBuffer, bufferVK.GetVkBuffer(), bufferVK.GetSize());
+    }
 }
 
 /* ----- Textures ----- */
@@ -432,14 +294,10 @@ static VkExtent3D GetTextureVkExtent(const TextureDescriptor& desc)
 
 static std::uint32_t GetTextureLayertCount(const TextureDescriptor& desc)
 {
-    switch (desc.type)
-    {
-        case TextureType::Texture1DArray:   return desc.arrayLayers;
-        case TextureType::Texture2DArray:   return desc.arrayLayers;
-        case TextureType::TextureCubeArray: return desc.arrayLayers * 6;
-        case TextureType::Texture2DMSArray: return desc.arrayLayers;
-        default:                            return 1;
-    }
+    if (IsArrayTexture(desc.type))
+        return desc.arrayLayers;
+    else
+        return 1;
 }
 
 Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
@@ -504,17 +362,12 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     }
 
     /* Create staging buffer */
-    VkBufferCreateInfo stagingCreateInfo;
-    FillBufferCreateInfo(stagingCreateInfo, initialDataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT); // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.flags)
-
-    VKBufferWithRequirements stagingBuffer { device_ };
-    VKDeviceMemoryRegion* memoryRegionStaging = nullptr;
-
-    std::tie(stagingBuffer, memoryRegionStaging) = CreateStagingBuffer(
-        stagingCreateInfo,
-        initialData,
-        static_cast<std::size_t>(initialDataSize)
+    auto stagingCreateInfo = MakeVkBufferCreateInfo(
+        initialDataSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.flags)
     );
+
+    auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, initialData, initialDataSize);
 
     /* Create device texture */
     auto textureVK      = MakeUnique<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
@@ -525,19 +378,41 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     auto formatVK = VKTypes::Map(textureDesc.format);
-    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, arrayLayers);
+
+    auto cmdBuffer = device_.AllocCommandBuffer();
     {
-        CopyBufferToImage(
-            stagingBuffer.buffer,
+        device_.TransitionImageLayout(
+            cmdBuffer,
+            image,
+            formatVK,
+            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            mipLevels,
+            arrayLayers
+        );
+
+        device_.CopyBufferToImage(
+            cmdBuffer,
+            stagingBuffer.GetVkBuffer(),
             image,
             GetTextureVkExtent(textureDesc),
             GetTextureLayertCount(textureDesc)
         );
+
+        device_.TransitionImageLayout(
+            cmdBuffer,
+            image,
+            formatVK,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            mipLevels,
+            arrayLayers
+        );
     }
-    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels, arrayLayers);
+    device_.FlushCommandBuffer(cmdBuffer);
 
     /* Release staging buffer */
-    deviceMemoryMngr_->Release(memoryRegionStaging);
+    stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
 
     /* Create image view for texture */
     textureVK->CreateInternalImageView(device_);
@@ -553,7 +428,7 @@ void VKRenderSystem::Release(Texture& texture)
     RemoveFromUniqueSet(textures_, &texture);
 }
 
-void VKRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
+void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     //todo
 }
@@ -566,13 +441,19 @@ void VKRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
 void VKRenderSystem::GenerateMips(Texture& texture)
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
-    GenerateMipsPrimary(
-        textureVK,
-        0,
-        textureVK.GetNumMipLevels(),
-        0,
-        textureVK.GetNumArrayLayers()
-    );
+    auto cmdBuffer = device_.AllocCommandBuffer();
+    {
+        device_.GenerateMips(
+            cmdBuffer,
+            textureVK.GetVkImage(),
+            textureVK.GetVkExtent(),
+            0,
+            textureVK.GetNumMipLevels(),
+            0,
+            textureVK.GetNumArrayLayers()
+        );
+    }
+    device_.FlushCommandBuffer(cmdBuffer);
 }
 
 void VKRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
@@ -584,13 +465,19 @@ void VKRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
 
     if (baseMipLevel < maxNumMipLevels && baseArrayLayer < maxNumArrayLayers && numMipLevels > 0 && numArrayLayers > 0)
     {
-        GenerateMipsPrimary(
-            textureVK,
-            baseMipLevel,
-            std::min(numMipLevels, maxNumMipLevels - baseMipLevel),
-            baseArrayLayer,
-            std::min(numArrayLayers, maxNumArrayLayers - baseArrayLayer)
-        );
+        auto cmdBuffer = device_.AllocCommandBuffer();
+        {
+            device_.GenerateMips(
+                cmdBuffer,
+                textureVK.GetVkImage(),
+                textureVK.GetVkExtent(),
+                baseMipLevel,
+                std::min(numMipLevels, maxNumMipLevels - baseMipLevel),
+                baseArrayLayer,
+                std::min(numArrayLayers, maxNumArrayLayers - baseArrayLayer)
+            );
+        }
+        device_.FlushCommandBuffer(cmdBuffer);
     }
 }
 
@@ -827,9 +714,14 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
-    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-    uint64_t object, size_t location, int32_t messageCode,
-    const char* layerPrefix, const char* message, void* userData)
+    VkDebugReportFlagsEXT       flags,
+    VkDebugReportObjectTypeEXT  objectType,
+    uint64_t                    object,
+    size_t                      location,
+    int32_t                     messageCode,
+    const char*                 layerPrefix,
+    const char*                 message,
+    void*                       userData)
 {
     //auto renderSystemVK = reinterpret_cast<VKRenderSystem*>(userData);
     Log::StdErr() << message << std::endl;
@@ -865,186 +757,29 @@ void VKRenderSystem::LoadExtensions()
     LoadAllExtensions(instance_);
 }
 
-bool VKRenderSystem::PickPhysicalDevice()
+void VKRenderSystem::PickPhysicalDevice()
 {
-    /* Query all physical devices and pick suitable */
-    auto devices = VKQueryPhysicalDevices(instance_);
+    /* Pick physical device with Vulkan support */
+    if (!physicalDevice_.PickPhysicalDevice(instance_))
+        throw std::runtime_error("failed to find physical device with Vulkan support");
 
-    for (const auto& dev : devices)
-    {
-        if (IsPhysicalDeviceSuitable(dev))
-        {
-            physicalDevice_ = dev;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void VKRenderSystem::QueryDeviceProperties()
-{
-    /* Query physical device features and memory propertiers */
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
-    vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
-
-    /* Query properties of selected physical device */
-    VkPhysicalDeviceProperties properties;
-    vkGetPhysicalDeviceProperties(physicalDevice_, &properties);
-
-    /* Map properties to output renderer info */
+    /* Query and store rendering capabilities */
     RendererInfo info;
+    RenderingCapabilities caps;
 
-    info.rendererName           = "Vulkan " + VKApiVersionToString(properties.apiVersion);
-    info.deviceName             = std::string(properties.deviceName);
-    info.vendorName             = GetVendorByID(properties.vendorID);
-    info.shadingLanguageName    = "SPIR-V";
+    physicalDevice_.QueryDeviceProperties(info, caps, gfxPipelineLimits_);
 
     SetRendererInfo(info);
-
-    /* Map limits to output rendering capabilites */
-    const auto& limits = properties.limits;
-
-    RenderingCapabilities caps;
-    {
-        /* Query common attributes */
-        caps.screenOrigin                               = ScreenOrigin::UpperLeft;
-        caps.clippingRange                              = ClippingRange::ZeroToOne;
-        caps.shadingLanguages                           = { ShadingLanguage::SPIRV, ShadingLanguage::SPIRV_100 };
-        //caps.textureFormats                             = ; //???
-
-        /* Query features */
-        caps.features.hasRenderTargets                  = true;
-        caps.features.has3DTextures                     = true;
-        caps.features.hasCubeTextures                   = true;
-        caps.features.hasArrayTextures                  = true;
-        caps.features.hasCubeArrayTextures              = (features_.imageCubeArray != VK_FALSE);
-        caps.features.hasMultiSampleTextures            = true;
-        caps.features.hasSamplers                       = true;
-        caps.features.hasConstantBuffers                = true;
-        caps.features.hasStorageBuffers                 = true;
-        caps.features.hasUniforms                       = true;
-        caps.features.hasGeometryShaders                = (features_.geometryShader != VK_FALSE);
-        caps.features.hasTessellationShaders            = (features_.tessellationShader != VK_FALSE);
-        caps.features.hasComputeShaders                 = true;
-        caps.features.hasInstancing                     = true;
-        caps.features.hasOffsetInstancing               = true;
-        caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
-        caps.features.hasConservativeRasterization      = false;
-        caps.features.hasStreamOutputs                  = false;
-        caps.features.hasLogicOp                        = true;
-
-        /* Query limits */
-        caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
-        caps.limits.lineWidthRange[1]                   = limits.lineWidthRange[1];
-        caps.limits.maxNumTextureArrayLayers            = limits.maxImageArrayLayers;
-        caps.limits.maxNumRenderTargetAttachments       = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
-        caps.limits.maxPatchVertices                    = limits.maxTessellationPatchSize;
-        caps.limits.max1DTextureSize                    = limits.maxImageDimension1D;
-        caps.limits.max2DTextureSize                    = limits.maxImageDimension2D;
-        caps.limits.max3DTextureSize                    = limits.maxImageDimension3D;
-        caps.limits.maxCubeTextureSize                  = limits.maxImageDimensionCube;
-        caps.limits.maxAnisotropy                       = static_cast<std::uint32_t>(limits.maxSamplerAnisotropy);
-        caps.limits.maxNumComputeShaderWorkGroups[0]    = limits.maxComputeWorkGroupCount[0];
-        caps.limits.maxNumComputeShaderWorkGroups[1]    = limits.maxComputeWorkGroupCount[1];
-        caps.limits.maxNumComputeShaderWorkGroups[2]    = limits.maxComputeWorkGroupCount[2];
-        caps.limits.maxComputeShaderWorkGroupSize[0]    = limits.maxComputeWorkGroupSize[0];
-        caps.limits.maxComputeShaderWorkGroupSize[1]    = limits.maxComputeWorkGroupSize[1];
-        caps.limits.maxComputeShaderWorkGroupSize[2]    = limits.maxComputeWorkGroupSize[2];
-        caps.limits.maxNumViewports                     = limits.maxViewports;
-        caps.limits.maxViewportSize[0]                  = limits.maxViewportDimensions[0];
-        caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
-        caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
-        caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;
-    }
     SetRenderingCaps(caps);
-
-    /* Store graphics pipeline spcific limitations */
-    gfxPipelineLimits_.lineWidthRange[0]    = limits.lineWidthRange[0];
-    gfxPipelineLimits_.lineWidthRange[1]    = limits.lineWidthRange[1];
-    gfxPipelineLimits_.lineWidthGranularity = limits.lineWidthGranularity;
 }
 
-// Device-only layers are deprecated -> set 'enabledLayerCount' and 'ppEnabledLayerNames' members to zero during device creation.
-// see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#extended-functionality-device-layer-deprecation
 void VKRenderSystem::CreateLogicalDevice()
 {
-    /* Initialize queue create description */
-    queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice_, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
-
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<std::uint32_t> uniqueQueueFamilies = { queueFamilyIndices_.graphicsFamily, queueFamilyIndices_.presentFamily };
-
-    float queuePriority = 1.0f;
-    for (auto family : uniqueQueueFamilies)
-    {
-        VkDeviceQueueCreateInfo info;
-        {
-            info.sType              = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            info.pNext              = nullptr;
-            info.flags              = 0;
-            info.queueFamilyIndex   = family;
-            info.queueCount         = 1;
-            info.pQueuePriorities   = &queuePriority;
-        }
-        queueCreateInfos.push_back(info);
-    }
-
-    /* Create logical device */
-    VkDeviceCreateInfo createInfo;
-    {
-        createInfo.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        createInfo.pNext                    = nullptr;
-        createInfo.flags                    = 0;
-        createInfo.queueCreateInfoCount     = static_cast<std::uint32_t>(queueCreateInfos.size());
-        createInfo.pQueueCreateInfos        = queueCreateInfos.data();
-        createInfo.enabledLayerCount        = 0;
-        createInfo.ppEnabledLayerNames      = nullptr;
-        createInfo.enabledExtensionCount    = static_cast<std::uint32_t>(g_deviceExtensions.size());
-        createInfo.ppEnabledExtensionNames  = g_deviceExtensions.data();
-        createInfo.pEnabledFeatures         = &features_;
-    }
-    VkResult result = vkCreateDevice(physicalDevice_, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan logical device");
-
-    /* Query device graphics queue */
-    vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
+    /* Create logical device with all supported physical device feature */
+    device_ = physicalDevice_.CreateLogicalDevice();
 
     /* Create command queue interface */
-    commandQueue_ = MakeUnique<VKCommandQueue>(device_, graphicsQueue_);
-}
-
-void VKRenderSystem::CreateStagingCommandResources()
-{
-    /* Create staging command pool */
-    VkCommandPoolCreateInfo createInfo;
-    {
-        createInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        createInfo.pNext            = nullptr;
-        createInfo.flags            = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        createInfo.queueFamilyIndex = queueFamilyIndices_.graphicsFamily;
-    }
-    auto result = vkCreateCommandPool(device_, &createInfo, nullptr, stagingCommandPool_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan command pool for staging buffers");
-
-    /* Allocate staging command buffer */
-    VkCommandBufferAllocateInfo allocInfo;
-    {
-        allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.pNext                 = nullptr;
-        allocInfo.commandPool           = stagingCommandPool_;
-        allocInfo.level                 = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount    = 1;
-    }
-    result = vkAllocateCommandBuffers(device_, &allocInfo, &stagingCommandBuffer_);
-    VKThrowIfFailed(result, "failed to create Vulkan command buffer for staging buffers");
-}
-
-void VKRenderSystem::ReleaseStagingCommandResources()
-{
-    /* Release staging command buffer */
-    vkFreeCommandBuffers(device_, stagingCommandPool_, 1, &stagingCommandBuffer_);
-    stagingCommandBuffer_ = VK_NULL_HANDLE;
+    commandQueue_ = MakeUnique<VKCommandQueue>(device_, device_.GetVkQueue());
 }
 
 void VKRenderSystem::CreateDefaultPipelineLayout()
@@ -1082,35 +817,7 @@ bool VKRenderSystem::IsExtensionRequired(const std::string& name) const
     );
 }
 
-bool VKRenderSystem::IsPhysicalDeviceSuitable(VkPhysicalDevice device) const
-{
-    if (CheckDeviceExtensionSupport(device, g_deviceExtensions))
-    {
-        //TODO...
-        return true;
-    }
-    return false;
-}
-
-bool VKRenderSystem::CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& extensionNames) const
-{
-    /* Check if device supports all required extensions */
-    auto availableExtensions = VKQueryDeviceExtensionProperties(device);
-
-    std::set<std::string> requiredExtensions(extensionNames.begin(), extensionNames.end());
-
-    for (const auto& ext : availableExtensions)
-        requiredExtensions.erase(ext.extensionName);
-
-    return requiredExtensions.empty();
-}
-
-std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const
-{
-    return VKFindMemoryType(memoryProperties_, memoryTypeBits, properties);
-}
-
-VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage)
+VKBuffer* VKRenderSystem::CreateGpuBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage)
 {
     /* Create hardware buffer */
     VkBufferCreateInfo createInfo;
@@ -1119,28 +826,28 @@ VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkB
     {
         case BufferType::Vertex:
         {
-            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
+            InitVkBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Vertex, device_, createInfo));
         }
         break;
 
         case BufferType::Index:
         {
-            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_INDEX_BUFFER_BIT));
+            InitVkBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_INDEX_BUFFER_BIT));
             return TakeOwnership(buffers_, MakeUnique<VKIndexBuffer>(device_, createInfo, desc.indexBuffer.format));
         }
         break;
 
         case BufferType::Constant:
         {
-            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT));
+            InitVkBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT));
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Constant, device_, createInfo));
         }
         break;
 
         case BufferType::Storage:
         {
-            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+            InitVkBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Storage, device_, createInfo));
         }
         break;
@@ -1157,286 +864,30 @@ VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkB
     return nullptr;
 }
 
-std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> VKRenderSystem::CreateStagingBuffer(const VkBufferCreateInfo& stagingCreateInfo, const void* initialData, std::size_t initialDataSize)
+VKDeviceBuffer VKRenderSystem::CreateStagingBuffer(const VkBufferCreateInfo& createInfo)
 {
-    VKBufferWithRequirements stagingBuffer { device_ };
-    stagingBuffer.Create(device_, stagingCreateInfo);
+    return VKDeviceBuffer
+    {
+        device_,
+        createInfo,
+        *deviceMemoryMngr_,
+        (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+    };
+}
 
-    /* Allocate statging device memory */
-    auto memoryRegionStaging = deviceMemoryMngr_->Allocate(
-        stagingBuffer.requirements.size,
-        stagingBuffer.requirements.alignment,
-        stagingBuffer.requirements.memoryTypeBits,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    );
-
-    memoryRegionStaging->BindBuffer(device_, stagingBuffer.buffer);
+VKDeviceBuffer VKRenderSystem::CreateStagingBuffer(
+    const VkBufferCreateInfo&   createInfo,
+    const void*                 initialData,
+    VkDeviceSize                initialDataSize)
+{
+    /* Allocate staging buffer */
+    auto stagingBuffer = CreateStagingBuffer(createInfo);
 
     /* Copy initial data to buffer memory */
-    if (initialData != nullptr)
-    {
-        auto stagingDeviceMemory = memoryRegionStaging->GetParentChunk();
+    if (initialData != nullptr && initialDataSize > 0)
+        device_.WriteBuffer(stagingBuffer, initialData, initialDataSize);
 
-        if (auto memory = stagingDeviceMemory->Map(device_, memoryRegionStaging->GetOffset(), static_cast<VkDeviceSize>(initialDataSize)))
-        {
-            ::memcpy(memory, initialData, initialDataSize);
-            stagingDeviceMemory->Unmap(device_);
-        }
-    }
-
-    return std::make_tuple(std::move(stagingBuffer), memoryRegionStaging);
-}
-
-void VKRenderSystem::BeginStagingCommands()
-{
-    /* Begin command buffer record */
-    VkCommandBufferBeginInfo beginInfo;
-    {
-        beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.pNext             = nullptr;
-        beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        beginInfo.pInheritanceInfo  = nullptr;
-    }
-    auto result = vkBeginCommandBuffer(stagingCommandBuffer_, &beginInfo);
-    VKThrowIfFailed(result, "failed to begin recording Vulkan command buffer");
-}
-
-void VKRenderSystem::EndStagingCommands()
-{
-    /* End command buffer record */
-    vkEndCommandBuffer(stagingCommandBuffer_);
-
-    /* Submit command buffer to queue */
-    VkSubmitInfo submitInfo = {};
-    {
-        submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount   = 1;
-        submitInfo.pCommandBuffers      = (&stagingCommandBuffer_);
-    }
-    vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(graphicsQueue_);
-}
-
-void VKRenderSystem::TransitionImageLayout(
-    VkImage image, VkFormat /*format*/, VkImageLayout oldLayout, VkImageLayout newLayout, std::uint32_t numMipLevels, std::uint32_t numArrayLayers)
-{
-    BeginStagingCommands();
-
-    /* Initialize image memory barrier descriptor */
-    VkImageMemoryBarrier barrier;
-    {
-        barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.pNext                           = nullptr;
-        barrier.srcAccessMask                   = 0;
-        barrier.dstAccessMask                   = 0;
-        barrier.oldLayout                       = oldLayout;
-        barrier.newLayout                       = newLayout;
-        barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image                           = image;
-        barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel   = 0;
-        barrier.subresourceRange.levelCount     = numMipLevels;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount     = numArrayLayers;
-    }
-
-    /* Initialize pipeline state flags */
-    VkPipelineStageFlags srcStageMask = 0;
-    VkPipelineStageFlags dstStageMask = 0;
-
-    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-    {
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    }
-    else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-    {
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    }
-
-    /* Record image barrier command */
-    vkCmdPipelineBarrier(stagingCommandBuffer_, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-    EndStagingCommands();
-}
-
-void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset)
-{
-    BeginStagingCommands();
-
-    /* Record copy command */
-    VkBufferCopy region;
-    {
-        region.srcOffset    = srcOffset;
-        region.dstOffset    = dstOffset;
-        region.size         = size;
-    }
-    vkCmdCopyBuffer(stagingCommandBuffer_, srcBuffer, dstBuffer, 1, &region);
-
-    EndStagingCommands();
-}
-
-void VKRenderSystem::CopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, const VkExtent3D& extent, std::uint32_t numLayers)
-{
-    BeginStagingCommands();
-
-    /* Record copy command */
-    VkBufferImageCopy region;
-    {
-        region.bufferOffset                     = 0;
-        region.bufferRowLength                  = 0;
-        region.bufferImageHeight                = 0;
-        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel        = 0;
-        region.imageSubresource.baseArrayLayer  = 0;
-        region.imageSubresource.layerCount      = numLayers;
-        region.imageOffset                      = { 0, 0, 0 };
-        region.imageExtent                      = extent;
-    }
-    vkCmdCopyBufferToImage(stagingCommandBuffer_, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-    EndStagingCommands();
-}
-
-void VKRenderSystem::AssertBufferCPUAccess(const VKBuffer& bufferVK)
-{
-    if (bufferVK.GetStagingVkBuffer() == VK_NULL_HANDLE)
-        throw std::runtime_error("hardware buffer was not created with CPU access (missing staging VkBuffer)");
-}
-
-//TODO: add parameters
-void VKRenderSystem::GenerateMipsPrimary(
-    VKTexture&      textureVK,
-    std::uint32_t   baseMipLevel,
-    std::uint32_t   numMipLevels,
-    std::uint32_t   baseArrayLayer,
-    std::uint32_t   numArrayLayers)
-{
-    /* Get Vulkan image object */
-    auto image  = textureVK.GetVkImage();
-    auto extent = textureVK.GetVkExtent();
-
-    TransitionImageLayout(image, VK_FORMAT_UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, numMipLevels, numArrayLayers);
-
-    BeginStagingCommands();
-
-    /* Initialize image memory barrier */
-    VkImageMemoryBarrier barrier;
-
-    barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.pNext                           = nullptr;
-    barrier.srcAccessMask                   = 0;
-    barrier.dstAccessMask                   = 0;
-    barrier.oldLayout                       = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.newLayout                       = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image                           = image;
-    barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel   = 0;
-    barrier.subresourceRange.levelCount     = 1;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount     = 1;
-
-    /* Blit each MIP-map from previous (lower) MIP level */
-    for (std::uint32_t arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
-    {
-        auto currExtent = extent;
-
-        for (std::uint32_t mipLevel = 1; mipLevel < numMipLevels; ++mipLevel)
-        {
-            /* Determine extent of next MIP level */
-            auto nextExtent = currExtent;
-
-            nextExtent.width    = std::max(1u, currExtent.width  / 2);
-            nextExtent.height   = std::max(1u, currExtent.height / 2);
-            nextExtent.depth    = std::max(1u, currExtent.depth  / 2);
-
-            /* Transition previous MIP level to VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL */
-            barrier.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
-            barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
-            barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-            barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            barrier.subresourceRange.baseMipLevel   = mipLevel - 1;
-            barrier.subresourceRange.baseArrayLayer = arrayLayer;
-
-            vkCmdPipelineBarrier(
-                stagingCommandBuffer_,
-                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-                0, nullptr,
-                0, nullptr,
-                1, &barrier
-            );
-
-            /* Blit previous MIP level into next higher MIP level (with smaller extent) */
-            VkImageBlit blit;
-
-            blit.srcSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-            blit.srcSubresource.mipLevel        = mipLevel - 1;
-            blit.srcSubresource.baseArrayLayer  = arrayLayer;
-            blit.srcSubresource.layerCount      = 1;
-            blit.srcOffsets[0]                  = { 0, 0, 0 };
-            blit.srcOffsets[1].x                = static_cast<std::int32_t>(currExtent.width);
-            blit.srcOffsets[1].y                = static_cast<std::int32_t>(currExtent.height);
-            blit.srcOffsets[1].z                = static_cast<std::int32_t>(currExtent.depth);
-            blit.dstSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-            blit.dstSubresource.mipLevel        = mipLevel;
-            blit.dstSubresource.baseArrayLayer  = arrayLayer;
-            blit.dstSubresource.layerCount      = 1;
-            blit.dstOffsets[0]                  = { 0, 0, 0 };
-            blit.dstOffsets[1].x                = static_cast<std::int32_t>(nextExtent.width);
-            blit.dstOffsets[1].y                = static_cast<std::int32_t>(nextExtent.height);
-            blit.dstOffsets[1].z                = static_cast<std::int32_t>(nextExtent.depth);
-
-            vkCmdBlitImage(
-                stagingCommandBuffer_,
-                image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                1, &blit,
-                VK_FILTER_LINEAR
-            );
-
-            /* Transition previous MIP level back to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL */
-            barrier.srcAccessMask   = VK_ACCESS_TRANSFER_READ_BIT;
-            barrier.dstAccessMask   = VK_ACCESS_SHADER_READ_BIT;
-            barrier.oldLayout       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            barrier.newLayout       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-            vkCmdPipelineBarrier(
-                stagingCommandBuffer_,
-                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-                0, nullptr,
-                0, nullptr,
-                1, &barrier
-            );
-
-            /* Reduce image extent to next MIP level */
-            currExtent = nextExtent;
-        }
-
-        /* Transition last MIP level back to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL */
-        barrier.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT;
-        barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout                       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.subresourceRange.baseMipLevel   = numMipLevels - 1;
-
-        vkCmdPipelineBarrier(
-            stagingCommandBuffer_,
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-    }
-
-    EndStagingCommands();
+    return stagingBuffer;
 }
 
 

@@ -19,20 +19,20 @@ namespace LLGL
 
 #ifdef LLGL_OPENGL
 
-void GLTexSubImage1D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
-void GLTexSubImage2D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
-void GLTexSubImage3D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
-void GLTexSubImageCube(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
-void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
-void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
-void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage1D(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage2D(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage3D(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
+void GLTexSubImageCube(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage1DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage2DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
+void GLTexSubImageCubeArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
 
 #else
 
-void GLTexSubImage2D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
-void GLTexSubImage3D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
-void GLTexSubImageCube(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
-void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage2D(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage3D(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
+void GLTexSubImageCube(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage2DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc);
 
 #endif
 

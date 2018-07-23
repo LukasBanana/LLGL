@@ -230,7 +230,7 @@ struct VulkanRendererConfiguration
     \brief Application descriptor used when a Vulkan debug or validation layer is enabled.
     \see ApplicationDescriptor
     */
-    ApplicationDescriptor   application;
+    ApplicationDescriptor       application;
 
     /**
     \brief Minimal allocation size for a device memory chunk. By default 1024*1024, i.e. 1 MB of VRAM.
@@ -238,7 +238,7 @@ struct VulkanRendererConfiguration
     This member specifies the minimum size used for hardware memory allocation of such a memory chunk.
     The Vulkan render system automatically manages sub-region allocation and defragmentation.
     */
-    std::uint64_t           minDeviceMemoryAllocationSize   = 1024*1024;
+    std::uint64_t               minDeviceMemoryAllocationSize   = 1024*1024;
 
     /**
     \brief Specifies whether fragmentation of the device memory blocks shall be kept low. By default false.
@@ -246,7 +246,21 @@ struct VulkanRendererConfiguration
     within a single VkDeviceMemory chunk (which might be potentially slower).
     Whenever a VkDeviceMemory chunk is full, the memory manager tries to reduce fragmentation anyways.
     */
-    bool                    reduceDeviceMemoryFragmentation = false;
+    bool                        reduceDeviceMemoryFragmentation = false;
+
+    #if 0//TODO: integrate them into the Vulkan renderer
+    /**
+    \brief List of enabled Vulkan extensions.
+    \remarks For example, the extension "VK_EXT_debug_report" can be used to enable debug output from the Vulkan API.
+    */
+    std::vector<std::string>    enabledExtensions;// = { "VK_EXT_debug_report" };
+
+    /**
+    \brief List of enabled Vulkan layers.
+    \remarks For example, the layer "VK_LAYER_LUNARG_core_validation" can be used for a robust validation.
+    */
+    std::vector<std::string>    enabledLayers;// = { "VK_LAYER_LUNARG_core_validation" };
+    #endif
 };
 
 /**

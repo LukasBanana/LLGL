@@ -21,6 +21,7 @@ struct ComputePipelineDescriptor
 {
     ComputePipelineDescriptor() = default;
 
+    //! Constructor to initialize the entire descriptor.
     inline ComputePipelineDescriptor(ShaderProgram* shaderProgram, PipelineLayout* pipelineLayout = nullptr) :
         shaderProgram  { shaderProgram  },
         pipelineLayout { pipelineLayout }

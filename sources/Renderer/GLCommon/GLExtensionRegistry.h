@@ -64,6 +64,7 @@ enum class GLExt
     ARB_texture_storage,
     ARB_texture_storage_multisample,
     ARB_buffer_storage,
+    ARB_copy_buffer,
     ARB_direct_state_access,
     ARB_polygon_offset_clamp,
     ARB_texture_view,

@@ -24,10 +24,10 @@ class LinuxWindow : public Window
 
         LinuxWindow(const WindowDescriptor& desc);
         ~LinuxWindow();
-        
+
         void GetNativeHandle(void* nativeHandle) const override;
-        
-        void Recreate() override;
+
+        void ResetPixelFormat() override;
 
         Extent2D GetContentSize() const override;
 
@@ -45,7 +45,7 @@ class LinuxWindow : public Window
 
         void SetDesc(const WindowDescriptor& desc) override;
         WindowDescriptor GetDesc() const override;
-        
+
     private:
 
         void OnProcessEvents() override;

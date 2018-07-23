@@ -53,6 +53,9 @@ enum class TextureSwizzle
 };
 #endif
 
+
+/* ----- Flags ----- */
+
 /**
 \brief Texture creation flags enumeration.
 \see TextureDescriptor::flags
@@ -144,6 +147,7 @@ struct TextureSwizzleRGBA
 /**
 \brief Texture descriptor structure.
 \remarks This is used to specifiy the dimensions of a texture which is to be created.
+\see RenderSystem::CreateTexture
 */
 struct TextureDescriptor
 {
@@ -204,16 +208,18 @@ struct TextureDescriptor
     /**
     \brief Number of samples per texel. By default 1.
     \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
+    The equivalent member for graphics pipeline states is MultiSamplingDescriptor::samples.
     \see IsMultiSampleTexture
     */
     std::uint32_t   samples     = 1;
 };
 
 /**
-\brief Sub-texture descriptor structure.
+\brief Texture region structure.
 \remarks This is used to write (or partially write) the image data of a texture MIP-map level.
+\see RenderSystem::WriteTexture
 */
-struct SubTextureDescriptor
+struct TextureRegion
 {
     //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
     std::uint32_t   mipLevel    = 0;
@@ -222,9 +228,8 @@ struct SubTextureDescriptor
     \brief Sub-texture offset. By default (0, 0, 0).
     \remarks For array textures, the Z component specifies the array layer.
     For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
-    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayer member.
+    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayers member.
     Negative values of this member are not allowed and result in undefined behavior.
-    \see TextureDescriptor::arrayLayer
     */
     Offset3D        offset      = { 0, 0, 0 };
 

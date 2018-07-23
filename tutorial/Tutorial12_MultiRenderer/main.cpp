@@ -27,9 +27,9 @@ static void RecordCommandBuffer(
     const Gs::Matrix4f&     wvpMatrix)
 {
     // Update constant buffer
-    renderer->WriteBuffer(*constantBuffer, &wvpMatrix, sizeof(wvpMatrix), 0);
+    renderer->WriteBuffer(*constantBuffer, 0, &wvpMatrix, sizeof(wvpMatrix));
 
-    cmdQueue->Begin(*cmdBuffer);
+    cmdBuffer->Begin();
     {
         cmdBuffer->SetVertexBuffer(*vertexBuffer);
         cmdBuffer->SetIndexBuffer(*indexBuffer);
@@ -55,7 +55,8 @@ static void RecordCommandBuffer(
         }
         cmdBuffer->EndRenderPass();
     }
-    cmdQueue->End(*cmdBuffer);
+    cmdBuffer->End();
+    cmdQueue->Submit(*cmdBuffer);
 
     // Present the result on the screen
     context->Present();

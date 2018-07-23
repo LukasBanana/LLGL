@@ -14,117 +14,34 @@ namespace LLGL
 {
 
 
-/*
- * VKBufferWithRequirements structure
- */
-
-VKBufferWithRequirements::VKBufferWithRequirements(const VKPtr<VkDevice>& device) :
-    buffer { device, vkDestroyBuffer }
-{
-}
-
-VKBufferWithRequirements::VKBufferWithRequirements(VKBufferWithRequirements&& rhs) :
-    buffer       { std::move(rhs.buffer) },
-    requirements { rhs.requirements      }
-{
-}
-
-VKBufferWithRequirements& VKBufferWithRequirements::operator = (VKBufferWithRequirements&& rhs)
-{
-    buffer = std::move(rhs.buffer);
-    requirements = rhs.requirements;
-    return *this;
-}
-
-void VKBufferWithRequirements::Create(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo)
-{
-    /* Create buffer object */
-    auto result = vkCreateBuffer(device, &createInfo, nullptr, buffer.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan buffer");
-
-    /* Query memory requirements */
-    vkGetBufferMemoryRequirements(device, buffer, &requirements);
-}
-
-void VKBufferWithRequirements::Release()
-{
-    buffer.Release();
-}
-
-
-/*
- * VKBuffer class
- */
-
 VKBuffer::VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo) :
     Buffer            { type            },
     bufferObj_        { device          },
     bufferObjStaging_ { device          },
     size_             { createInfo.size }
 {
-    bufferObj_.Create(device, createInfo);
+    bufferObj_.CreateVkBuffer(device, createInfo);
 }
 
-void VKBuffer::BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
+void VKBuffer::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
 {
-    if (memoryRegion)
-    {
-        memoryRegion_ = memoryRegion;
-        memoryRegion_->BindBuffer(device, GetVkBuffer());
-    }
+    bufferObj_.BindMemoryRegion(device, memoryRegion);
 }
 
-void VKBuffer::TakeStagingBuffer(VKBufferWithRequirements&& buffer, VKDeviceMemoryRegion* memoryRegionStaging)
+void VKBuffer::TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer)
 {
-    bufferObjStaging_ = std::move(buffer);
-    memoryRegionStaging_ = memoryRegionStaging;
+    bufferObjStaging_ = std::move(deviceBuffer);
 }
 
 void* VKBuffer::Map(VkDevice device, const CPUAccess access)
 {
-    if (memoryRegionStaging_)
-    {
-        mappingCPUAccess_ = access;
-        return memoryRegionStaging_->GetParentChunk()->Map(
-            device, memoryRegionStaging_->GetOffset(), memoryRegionStaging_->GetSize()
-        );
-    }
-    return nullptr;
+    mappingCPUAccess_ = access;
+    return bufferObjStaging_.Map(device);
 }
 
 void VKBuffer::Unmap(VkDevice device)
 {
-    if (memoryRegionStaging_)
-        memoryRegionStaging_->GetParentChunk()->Unmap(device);
-}
-
-void* VKBuffer::MapStaging(VkDevice device, VkDeviceSize dataSize, VkDeviceSize offset)
-{
-    if (memoryRegionStaging_)
-        return memoryRegionStaging_->GetParentChunk()->Map(device, memoryRegionStaging_->GetOffset() + offset, dataSize);
-    else
-        return nullptr;
-}
-
-void VKBuffer::UnmapStaging(VkDevice device)
-{
-    if (memoryRegionStaging_)
-        memoryRegionStaging_->GetParentChunk()->Unmap(device);
-}
-
-void VKBuffer::UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSize dataSize, VkDeviceSize offset)
-{
-    if (memoryRegionStaging_)
-    {
-        auto deviceMemory = memoryRegionStaging_->GetParentChunk();
-        if (auto memory = deviceMemory->Map(device, memoryRegionStaging_->GetOffset() + offset, dataSize))
-        {
-            /* Copy data to staging buffer */
-            ::memcpy(memory, data, static_cast<std::size_t>(dataSize));
-
-            deviceMemory->Unmap(device);
-        }
-    }
+    bufferObjStaging_.Unmap(device);
 }
 
 

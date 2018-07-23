@@ -198,44 +198,30 @@ int main(int argc, char* argv[])
                     std::cout << "Logic Fragment Operation Not Supported" << std::endl;
             }
 
-            // Start recording commands
-            commandQueue->Begin(*commands);
+            // Start encoding commands
+            commands->Begin();
             {
-                // Set vertex buffer
-                commands->SetVertexBuffer(*vertexBuffer);
-
-                // Set viewports
+                // Set global render states: viewports, vertex buffer, and graphics pipeline
                 commands->SetViewports(2, viewports);
+                commands->SetVertexBuffer(*vertexBuffer);
+                commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
 
-                // Draw content in 1st render context
+                // Draw triangle with 3 vertices in 1st render context
                 commands->BeginRenderPass(*context1);
                 {
-                    // Clear color buffer
-                    commands->Clear(LLGL::ClearFlags::Color);
-
-                    // Set graphics pipeline
-                    commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
-
-                    // Draw triangle with 3 vertices
                     commands->Draw(3, 0);
                 }
                 commands->EndRenderPass();
 
-                // Draw content in 2nd render context
+                // Draw quad with 4 vertices in 2nd render context
                 commands->BeginRenderPass(*context2);
                 {
-                    // Clear color buffer
-                    commands->Clear(LLGL::ClearFlags::Color);
-
-                    // Set graphics pipeline
-                    commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
-
-                    // Draw quad with 4 vertices
                     commands->Draw(4, 3);
                 }
                 commands->EndRenderPass();
             }
-            commandQueue->End(*commands);
+            commands->End();
+            commandQueue->Submit(*commands);
 
             // Present the results on the screen
             context1->Present();

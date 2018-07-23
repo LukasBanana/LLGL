@@ -9,14 +9,14 @@
 #define LLGL_VK_DEPTH_STENCIL_BUFFER_H
 
 
-#include "VKImageWrapper.h"
+#include "VKDeviceImage.h"
 
 
 namespace LLGL
 {
 
 
-class VKDepthStencilBuffer final : private VKImageWrapper
+class VKDepthStencilBuffer final : private VKDeviceImage
 {
 
     public:
@@ -29,13 +29,13 @@ class VKDepthStencilBuffer final : private VKImageWrapper
         // Returns the Vulkan image object.
         inline VkImage GetVkImage() const
         {
-            return VKImageWrapper::GetVkImage();
+            return VKDeviceImage::GetVkImage();
         }
 
         // Returns the region of the hardware device memory.
         inline VKDeviceMemoryRegion* GetMemoryRegion() const
         {
-            return VKImageWrapper::GetMemoryRegion();
+            return VKDeviceImage::GetMemoryRegion();
         }
 
         // Returns the Vulkan image object.

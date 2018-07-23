@@ -35,6 +35,39 @@ D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem)
     CreateDevices(renderSystem);
 }
 
+/* ----- Encoding ----- */
+
+void D3D12CommandBuffer::Begin()
+{
+    /* Reset command list using the next command allocator */
+    NextCommandAllocator();
+    auto hr = commandList_->Reset(GetCommandAllocator(), nullptr);
+    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
+}
+
+void D3D12CommandBuffer::End()
+{
+    /* Close native command list */
+    auto hr = commandList_->Close();
+    DXThrowIfFailed(hr, "failed to close D3D12 command list");
+
+    /* Reset intermediate states */
+    numBoundScissorRects_ = 0;
+}
+
+void D3D12CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+{
+    auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
+    dstBufferD3D.UpdateDynamicSubresource(data, static_cast<UINT64>(dataSize), dstOffset);
+}
+
+void D3D12CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
+    auto& srcBufferD3D = LLGL_CAST(D3D12Buffer&, srcBuffer);
+    commandList_->CopyBufferRegion(dstBufferD3D.GetNative(), dstOffset, srcBufferD3D.GetNative(), srcOffset, size);
+}
+
 /* ----- Configuration ----- */
 
 void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
@@ -98,25 +131,22 @@ void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
 
 void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    if (scissorEnabled_)
+    numScissors = std::min(numScissors, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+
+    D3D12_RECT scissorsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+
+    for (std::uint32_t i = 0; i < numScissors; ++i)
     {
-        numScissors = std::min(numScissors, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+        const auto& src = scissors[i];
+        auto& dest = scissorsD3D[i];
 
-        D3D12_RECT scissorsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
-
-        for (std::uint32_t i = 0; i < numScissors; ++i)
-        {
-            const auto& src = scissors[i];
-            auto& dest = scissorsD3D[i];
-
-            dest.left   = src.x;
-            dest.top    = src.y;
-            dest.right  = src.x + src.width;
-            dest.bottom = src.y + src.height;
-        }
-
-        commandList_->RSSetScissorRects(numScissors, scissorsD3D);
+        dest.left   = src.x;
+        dest.top    = src.y;
+        dest.right  = src.x + src.width;
+        dest.bottom = src.y + src.height;
     }
+
+    commandList_->RSSetScissorRects(numScissors, scissorsD3D);
 }
 
 /* ----- Clear ----- */
@@ -297,10 +327,7 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     /* Set graphics root signature, graphics pipeline state, and primitive topology */
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
-
-    commandList_->SetGraphicsRootSignature(graphicsPipelineD3D.GetRootSignature());
-    commandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
-    commandList_->IASetPrimitiveTopology(graphicsPipelineD3D.GetPrimitiveTopology());
+    graphicsPipelineD3D.Bind(commandList_.Get());
 
     /* Scissor rectangle must be updated (if scissor test is disabled) */
     scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();
@@ -397,18 +424,6 @@ void D3D12CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupS
     commandList_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 }
 
-/* ----- Extended functions ----- */
-
-void D3D12CommandBuffer::CloseCommandList()
-{
-    /* Close native command list */
-    auto hr = commandList_->Close();
-    DXThrowIfFailed(hr, "failed to close D3D12 command list");
-
-    /* Reset intermediate states */
-    numBoundScissorRects_ = 0;
-}
-
 
 /*
  * ======= Private: =======
@@ -416,9 +431,23 @@ void D3D12CommandBuffer::CloseCommandList()
 
 void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 {
-    /* Create command allocator and graphics command list */
-    commandAlloc_   = renderSystem.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
-    commandList_    = renderSystem.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc_.Get());
+    /* Create command allocators */
+    for (auto& cmdAllocator : cmdAllocators_)
+        cmdAllocator = renderSystem.GetDevice().CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+    /* Create graphics command list */
+    commandList_ = renderSystem.GetDevice().CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocators_[0].Get());
+    commandList_->Close();
+}
+
+void D3D12CommandBuffer::NextCommandAllocator()
+{
+    /* Get next command allocator */
+    currentCmdAllocator_ = ((currentCmdAllocator_ + 1) % D3D12CommandBuffer::g_numCmdAllocators);
+
+    /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
+    auto hr = GetCommandAllocator()->Reset();
+    DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 }
 
 void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
@@ -486,10 +515,12 @@ void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
     /* Set back-buffer RTVs */
     SetBackBufferRTV(renderContextD3D);
 
+    #if 0//unused
     /* Store framebuffer extent */
     const auto& framebufferExtent = renderContextD3D.GetVideoMode().resolution;
     framebufferWidth_   = static_cast<LONG>(framebufferExtent.width);
     framebufferHeight_  = static_cast<LONG>(framebufferExtent.height);
+    #endif
 }
 
 void D3D12CommandBuffer::TransitionRenderTarget(

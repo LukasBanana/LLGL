@@ -45,7 +45,7 @@ class D3D12RootParameter
 
     private:
 
-        D3D12_ROOT_PARAMETER*               managedRootParam_;
+        D3D12_ROOT_PARAMETER*               managedRootParam_   = nullptr;
         std::vector<D3D12_DESCRIPTOR_RANGE> descRanges_;
 
 };

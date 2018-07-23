@@ -37,6 +37,49 @@ DbgCommandBuffer::DbgCommandBuffer(
 {
 }
 
+/* ----- Encoding ----- */
+
+void DbgCommandBuffer::Begin()
+{
+    if (debugger_)
+        EnableRecording(true);
+    instance.Begin();
+}
+
+void DbgCommandBuffer::End()
+{
+    if (debugger_)
+        EnableRecording(false);
+    instance.End();
+}
+
+void DbgCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+{
+    auto& dstBufferDbg = LLGL_CAST(DbgBuffer&, dstBuffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+    }
+
+    instance.UpdateBuffer(dstBufferDbg.instance, dstOffset, data, dataSize);
+}
+
+void DbgCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    auto& dstBufferDbg = LLGL_CAST(DbgBuffer&, dstBuffer);
+    auto& srcBufferDbg = LLGL_CAST(DbgBuffer&, srcBuffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+    }
+
+    instance.CopyBuffer(dstBufferDbg.instance, dstOffset, srcBufferDbg.instance, srcOffset, size);
+}
+
 /* ----- Configuration ----- */
 
 void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

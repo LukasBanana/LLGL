@@ -206,10 +206,13 @@ protected:
     }
 
     template <typename T>
-    void UpdateBuffer(LLGL::Buffer* buffer, const T& data)
+    void UpdateBuffer(LLGL::Buffer* buffer, const T& data, bool insideCmdEncoding = false)
     {
         GS_ASSERT(buffer != nullptr);
-        renderer->WriteBuffer(*buffer, &data, sizeof(data), 0);
+        if (insideCmdEncoding)
+            commands->UpdateBuffer(*buffer, 0, &data, sizeof(data));
+        else
+            renderer->WriteBuffer(*buffer, 0, &data, sizeof(data));
     }
 
     // Returns the aspect ratio of the render context resolution (X:Y).
@@ -217,6 +220,15 @@ protected:
 
     // Returns ture if OpenGL is used as rendering API.
     bool IsOpenGL() const;
+
+    // Returns ture if Vulkan is used as rendering API.
+    bool IsVulkan() const;
+
+    // Returns ture if Direct3D is used as rendering API.
+    bool IsDirect3D() const;
+
+    // Returns ture if Metal is used as rendering API.
+    bool IsMetal() const;
 
     // Used by the window resize handler
     bool IsLoadingDone() const;

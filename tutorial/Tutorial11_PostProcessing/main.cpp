@@ -6,6 +6,7 @@
  */
 
 #include <tutorial.h>
+#include <chrono>//!!!
 
 
 class Tutorial11 : public Tutorial
@@ -73,7 +74,7 @@ class Tutorial11 : public Tutorial
 public:
 
     Tutorial11() :
-        Tutorial { L"LLGL Tutorial 11: PostProcessing", { 800, 600 }, 0 }
+        Tutorial { L"LLGL Tutorial 11: PostProcessing", { 800, 600 }, 0 }//, false }
     {
         // Create all graphics objects
         CreateBuffers();
@@ -409,6 +410,8 @@ public:
 
 private:
 
+#define TEST_UPDATE_BUFFER
+
     void SetSceneSettingsInnerModel(float rotation)
     {
         // Transform scene mesh
@@ -425,7 +428,11 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
+        #ifdef TEST_UPDATE_BUFFER
+        commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
+        #else
         UpdateBuffer(constantBufferScene, sceneSettings);
+        #endif
     }
 
     void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
@@ -449,18 +456,46 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
+        #ifdef TEST_UPDATE_BUFFER
+        commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
+        #else
         UpdateBuffer(constantBufferScene, sceneSettings);
+        #endif
     }
 
     void SetBlurSettings(const Gs::Vector2f& blurShift)
     {
         // Update constant buffer for blur pass
         blurSettings.blurShift = blurShift;
+        #ifdef TEST_UPDATE_BUFFER
+        commands->UpdateBuffer(*constantBufferBlur, 0, &blurSettings, sizeof(blurSettings));
+        #else
         UpdateBuffer(constantBufferBlur, blurSettings);
+        #endif
     }
 
     void OnDrawFrame() override
     {
+        #if 0
+        // Show frame time
+        static std::unique_ptr<LLGL::Timer> frameTimer;
+        static std::chrono::time_point<std::chrono::system_clock> printTime;
+        if (!frameTimer)
+            frameTimer = LLGL::Timer::Create();
+
+        frameTimer->MeasureTime();
+
+        auto currentTime = std::chrono::system_clock::now();
+        auto elapsedTime = (currentTime - printTime);
+        auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
+
+        if (elapsedMs > 250)
+        {
+            printf("Elapsed Time = %fms (FPS = %f)\n", static_cast<float>(frameTimer->GetDeltaTime()*1000.0f), static_cast<float>(1.0 / frameTimer->GetDeltaTime()));
+            printTime = currentTime;
+        }
+        #endif
+
         // Update rotation of inner model
         static float innerModelRotation;
         innerModelRotation += 0.01f;
@@ -498,12 +533,13 @@ private:
         const LLGL::Viewport viewportFull{ { 0, 0 }, screenSize };
         const LLGL::Viewport viewportQuarter{ { 0, 0 }, { screenSize.width / 4, screenSize.height/ 4 } };
 
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Set graphics pipeline and vertex buffer for scene rendering
             commands->SetVertexBuffer(*vertexBufferScene);
 
             // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
+            SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
             commands->BeginRenderPass(*renderTargetScene);
             {
                 // Set viewport to full size
@@ -523,11 +559,14 @@ private:
                 commands->SetGraphicsResourceHeap(*resourceHeapScene);
 
                 // Draw outer scene model
-                SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
                 commands->Draw(numSceneVertices, 0);
+            }
+            commands->EndRenderPass();
 
-                // Draw inner scene model
-                SetSceneSettingsInnerModel(innerModelRotation);
+            // Draw inner scene model
+            SetSceneSettingsInnerModel(innerModelRotation);
+            commands->BeginRenderPass(*renderTargetScene);
+            {
                 commands->Draw(numSceneVertices, 0);
             }
             commands->EndRenderPass();
@@ -536,28 +575,25 @@ private:
             commands->SetVertexBuffer(*vertexBufferNull);
 
             // Draw horizontal blur pass
+            SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
             commands->BeginRenderPass(*renderTargetBlurX);
             {
                 // Draw blur passes in quarter resolution
                 commands->SetViewport(viewportQuarter);
-                commands->SetGraphicsPipeline(*pipelineBlur);
-                commands->SetGraphicsResourceHeap(*resourceHeapBlurX);
 
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-                SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
+                commands->SetGraphicsPipeline(*pipelineBlur);
+                commands->SetGraphicsResourceHeap(*resourceHeapBlurX);
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();
 
             // Draw vertical blur pass
+            SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
             commands->BeginRenderPass(*renderTargetBlurY);
             {
-                //commands->SetViewport(viewportQuarter);
-                //commands->SetGraphicsPipeline(*pipelineBlur); //???
-                commands->SetGraphicsResourceHeap(*resourceHeapBlurY);
-
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-                SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
+                commands->SetGraphicsResourceHeap(*resourceHeapBlurY);
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();
@@ -575,7 +611,8 @@ private:
             }
             commands->EndRenderPass();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

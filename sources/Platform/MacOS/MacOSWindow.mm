@@ -93,12 +93,12 @@ static const auto g_EventTypeScrollWheel    = NSScrollWheel;
 - (instancetype)initWithWindow:(LLGL::MacOSWindow*)window isResizable:(BOOL)resizable
 {
     self = [super init];
-    
+
     window_         = window;
     resizable_      = resizable;
     resizeSignaled_ = NO;
     fullscreenMode_ = NO;
-    
+
     return self;
 }
 
@@ -142,7 +142,7 @@ static const auto g_EventTypeScrollWheel    = NSScrollWheel;
     /* Get size of the NSWindow's content view */
     NSWindow* sender = [notification object];
     NSRect frame = [[sender contentView] frame];
-    
+
     auto w = static_cast<std::uint32_t>(frame.size.width);
     auto h = static_cast<std::uint32_t>(frame.size.height);
 
@@ -215,7 +215,7 @@ static NSString* ToNSString(const wchar_t* s)
 static std::wstring ToStdWString(NSString* s)
 {
     std::wstring out;
-    
+
     if (s != nil)
     {
         const char* utf8Str = [s cStringUsingEncoding:NSUTF8StringEncoding];
@@ -231,7 +231,7 @@ static std::wstring ToStdWString(NSString* s)
 static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
 {
     NSUInteger mask = 0;
-    
+
     if (desc.borderless)
         mask |= g_WinStyleBorderless;
     else
@@ -240,7 +240,7 @@ static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
         if (desc.resizable)
             mask |= g_WinStyleResizable;
     }
-    
+
     return mask;
 }
 
@@ -266,9 +266,9 @@ void MacOSWindow::GetNativeHandle(void* nativeHandle) const
     handle.window = wnd_;
 }
 
-void MacOSWindow::Recreate()
+void MacOSWindow::ResetPixelFormat()
 {
-    //todo...
+    // dummy
 }
 
 Extent2D MacOSWindow::GetContentSize() const

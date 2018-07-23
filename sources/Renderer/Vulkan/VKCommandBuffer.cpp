@@ -40,6 +40,10 @@ VKCommandBuffer::VKCommandBuffer(
 {
     std::size_t bufferCount = std::max(1u, desc.numNativeBuffers);
 
+    /* Translate creation flags */
+    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+        usageFlags_ = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
     /* Create native command buffer objects */
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
     CreateCommandBuffers(bufferCount);
@@ -57,6 +61,60 @@ VKCommandBuffer::~VKCommandBuffer()
         static_cast<std::uint32_t>(commandBufferList_.size()),
         commandBufferList_.data()
     );
+}
+
+/* ----- Encoding ----- */
+
+void VKCommandBuffer::Begin()
+{
+    /* Use next internal VkCommandBuffer object to reduce latency */
+    AcquireNextBuffer();
+
+    /* Wait for fence before recording */
+    vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
+    vkResetFences(device_, 1, &recordingFence_);
+
+    /* Begin recording of current command buffer */
+    VkCommandBufferBeginInfo beginInfo;
+    {
+        beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.pNext             = nullptr;
+        beginInfo.flags             = usageFlags_;
+        beginInfo.pInheritanceInfo  = nullptr;
+    }
+    auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
+    VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
+}
+
+void VKCommandBuffer::End()
+{
+    /* End encoding of current command buffer */
+    auto result = vkEndCommandBuffer(commandBuffer_);
+    VKThrowIfFailed(result, "failed to end Vulkan command buffer");
+}
+
+void VKCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+{
+    auto& dstBufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
+
+    auto size   = static_cast<VkDeviceSize>(dataSize);
+    auto offset = static_cast<VkDeviceSize>(dstOffset);
+
+    vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+}
+
+void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    auto& dstBufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
+    auto& srcBufferVK = LLGL_CAST(VKBuffer&, srcBuffer);
+
+    VkBufferCopy region;
+    {
+        region.srcOffset    = static_cast<VkDeviceSize>(srcOffset);
+        region.dstOffset    = static_cast<VkDeviceSize>(dstOffset);
+        region.size         = static_cast<VkDeviceSize>(size);
+    }
+    vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
 }
 
 /* ----- Configuration ----- */
@@ -526,8 +584,13 @@ bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
 
     /* Store result directly into output parameter */
     auto stateResult = vkGetQueryPoolResults(
-        device_, queryVK.GetVkQueryPool(), 0, 1,
-        sizeof(result), &result, sizeof(std::uint64_t),
+        device_,
+        queryVK.GetVkQueryPool(),
+        0,
+        1,
+        sizeof(result),
+        &result,
+        sizeof(std::uint64_t),
         VK_QUERY_RESULT_64_BIT
     );
 
@@ -548,8 +611,13 @@ bool VKCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
     std::uint64_t intermediateResults[11];
 
     auto stateResult = vkGetQueryPoolResults(
-        device_, queryVK.GetVkQueryPool(), 0, 1,
-        sizeof(intermediateResults), intermediateResults, sizeof(std::uint64_t),
+        device_,
+        queryVK.GetVkQueryPool(),
+        0,
+        1,
+        sizeof(intermediateResults),
+        intermediateResults,
+        sizeof(std::uint64_t),
         VK_QUERY_RESULT_64_BIT
     );
 

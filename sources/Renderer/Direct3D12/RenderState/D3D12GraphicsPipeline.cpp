@@ -16,8 +16,10 @@
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/RawBufferIterator.h"
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <algorithm>
+#include <limits>
 
 
 namespace LLGL
@@ -25,9 +27,10 @@ namespace LLGL
 
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dn770370(v=vs.85).aspx
-D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12RenderSystem& renderSystem, const GraphicsPipelineDescriptor& desc) :
-    primitiveTopology_ { D3D12Types::Map(desc.primitiveTopology) },
-    scissorEnabled_    { desc.rasterizer.scissorTestEnabled      }
+D3D12GraphicsPipeline::D3D12GraphicsPipeline(
+    D3D12Device&                        device,
+    ID3D12RootSignature*                defaultRootSignature,
+    const GraphicsPipelineDescriptor&   desc)
 {
     /* Validate pointers and get D3D shader program */
     LLGL_ASSERT_PTR(desc.shaderProgram);
@@ -38,53 +41,41 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12RenderSystem& renderSystem, co
     {
         /* Create pipeline state with root signature from pipeline layout */
         auto pipelineLayoutD3D = LLGL_CAST(const D3D12PipelineLayout*, pipelineLayout);
-        CreatePipelineState(renderSystem, *shaderProgramD3D, pipelineLayoutD3D->GetRootSignature(), desc);
+        CreatePipelineState(device, *shaderProgramD3D, pipelineLayoutD3D->GetRootSignature(), desc);
     }
     else
     {
         /* Create pipeline state with default root signature */
-        CreateDefaultRootSignature(renderSystem.GetDevice());
-        CreatePipelineState(renderSystem, *shaderProgramD3D, defaultRootSignature_.Get(), desc);
+        CreatePipelineState(device, *shaderProgramD3D, defaultRootSignature, desc);
     }
+
+    /* Store dynamic pipeline states */
+    primitiveTopology_  = D3D12Types::Map(desc.primitiveTopology);
+    stencilRef_         = desc.stencil.front.reference;
+    blendFactor_[0]     = desc.blend.blendFactor.r;
+    blendFactor_[1]     = desc.blend.blendFactor.g;
+    blendFactor_[2]     = desc.blend.blendFactor.b;
+    blendFactor_[3]     = desc.blend.blendFactor.a;
+    scissorEnabled_     = desc.rasterizer.scissorTestEnabled;
+
+    /* Build static state buffer for viewports and scissors */
+    if (!desc.viewports.empty() || !desc.scissors.empty())
+        BuildStaticStateBuffer(desc);
 }
 
-void D3D12GraphicsPipeline::CreateDefaultRootSignature(ID3D12Device* device)
+void D3D12GraphicsPipeline::Bind(ID3D12GraphicsCommandList* commandList)
 {
-    /* Setup root signature flags */
-    D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    /* Set root signature and pipeline state */
+    commandList->SetGraphicsRootSignature(rootSignature_);
+    commandList->SetPipelineState(pipelineState_.Get());
 
-    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
-    signatureDesc.Init(0, nullptr, 0, nullptr, signatureFlags);
+    /* Set dynamic pipeline states */
+    commandList->IASetPrimitiveTopology(primitiveTopology_);
+    commandList->OMSetBlendFactor(blendFactor_);
+    commandList->OMSetStencilRef(stencilRef_);
 
-    /* Create serialized root signature */
-    HRESULT             hr          = 0;
-    ComPtr<ID3DBlob>    signature;
-    ComPtr<ID3DBlob>    error;
-
-    hr = D3D12SerializeRootSignature(
-        &signatureDesc,
-        D3D_ROOT_SIGNATURE_VERSION_1,
-        signature.ReleaseAndGetAddressOf(),
-        error.ReleaseAndGetAddressOf()
-    );
-
-    if (FAILED(hr) && error)
-    {
-        auto errorStr = DXGetBlobString(error.Get());
-        throw std::runtime_error("failed to serialize D3D12 root signature: " + errorStr);
-    }
-
-    DXThrowIfFailed(hr, "failed to serialize D3D12 root signature");
-
-    /* Create actual root signature */
-    hr = device->CreateRootSignature(
-        0,
-        signature->GetBufferPointer(),
-        signature->GetBufferSize(),
-        IID_PPV_ARGS(defaultRootSignature_.ReleaseAndGetAddressOf())
-    );
-
-    DXThrowIfFailed(hr, "failed to create D3D12 root signature");
+    /* Set static viewports and scissors */
+    SetStaticViewportsAndScissors(commandList);
 }
 
 static D3D12_CONSERVATIVE_RASTERIZATION_MODE GetConservativeRaster(bool enabled)
@@ -189,7 +180,7 @@ static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopo
 }
 
 void D3D12GraphicsPipeline::CreatePipelineState(
-    D3D12RenderSystem&                  renderSystem,
+    D3D12Device&                        device,
     const D3D12ShaderProgram&           shaderProgram,
     ID3D12RootSignature*                rootSignature,
     const GraphicsPipelineDescriptor&   desc)
@@ -198,7 +189,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     rootSignature_ = rootSignature;
 
     /* Get number of render-target attachments */
-    UINT numAttachments = 1u; //TODO
+    UINT numAttachments = 1u; //TODO: get information from <RenderPass> interface
 
     /* Setup D3D12 graphics pipeline descriptor */
     D3D12_GRAPHICS_PIPELINE_STATE_DESC stateDesc = {};
@@ -307,7 +298,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
     stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
-    stateDesc.SampleMask            = UINT_MAX;
+    stateDesc.SampleMask            = desc.rasterizer.multiSampling.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;
     #if 1//TODO: currently not supported
     stateDesc.SampleDesc.Count      = 1; //!!!
@@ -316,7 +307,105 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     #endif
 
     /* Create graphics pipeline state and graphics command list */
-    pipelineState_ = renderSystem.CreateDXGfxPipelineState(stateDesc);
+    pipelineState_ = device.CreateDXPipelineState(stateDesc);
+}
+
+void D3D12GraphicsPipeline::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc)
+{
+    /* Allocate packed raw buffer */
+    const std::size_t bufferSize =
+    (
+        desc.viewports.size() * sizeof(D3D12_VIEWPORT) +
+        desc.scissors.size()  * sizeof(D3D12_RECT    )
+    );
+
+    staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
+
+    RawBufferIterator rawBufferIter { staticStateBuffer_.get() };
+
+    /* Build static viewports in raw buffer */
+    if (!desc.viewports.empty())
+        BuildStaticViewports(desc.viewports.size(), desc.viewports.data(), rawBufferIter);
+
+    /* Build static scissors in raw buffer */
+    if (!desc.scissors.empty())
+        BuildStaticScissors(desc.scissors.size(), desc.scissors.data(), rawBufferIter);
+}
+
+void D3D12GraphicsPipeline::BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter)
+{
+    /* Store number of viewports and validate limit */
+    numStaticViewports_ = static_cast<UINT>(numViewports);
+
+    if (numStaticViewports_ > D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE)
+    {
+        throw std::invalid_argument(
+            "too many viewports in graphics pipeline state (" + std::to_string(numStaticViewports_) +
+            " specified, but limit is " + std::to_string(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE) + ")"
+        );
+    }
+
+    /* Build <D3D12_VIEWPORT> entries */
+    for (std::size_t i = 0; i < numViewports; ++i)
+    {
+        auto dst = rawBufferIter.Next<D3D12_VIEWPORT>();
+        {
+            dst->TopLeftX   = viewports[i].x;
+            dst->TopLeftY   = viewports[i].y;
+            dst->Width      = viewports[i].width;
+            dst->Height     = viewports[i].height;
+            dst->MinDepth   = viewports[i].minDepth;
+            dst->MaxDepth   = viewports[i].maxDepth;
+        }
+    }
+}
+
+void D3D12GraphicsPipeline::BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter)
+{
+    /* Store number of scissors and validate limit */
+    numStaticScissors_ = static_cast<UINT>(numScissors);
+
+    if (numStaticScissors_ > D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE)
+    {
+        throw std::invalid_argument(
+            "too many viewports in graphics pipeline state (" + std::to_string(numStaticScissors_) +
+            " specified, but limit is " + std::to_string(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE) + ")"
+        );
+    }
+
+    /* Build <D3D12_RECT> entries */
+    for (std::size_t i = 0; i < numScissors; ++i)
+    {
+        auto dst = rawBufferIter.Next<D3D12_RECT>();
+        {
+            dst->left   = static_cast<LONG>(scissors[i].x);
+            dst->top    = static_cast<LONG>(scissors[i].y);
+            dst->right  = static_cast<LONG>(scissors[i].x + scissors[i].width);
+            dst->bottom = static_cast<LONG>(scissors[i].y + scissors[i].height);
+        }
+    }
+}
+
+void D3D12GraphicsPipeline::SetStaticViewportsAndScissors(ID3D12GraphicsCommandList* commandList)
+{
+    if (staticStateBuffer_)
+    {
+        RawBufferIterator rawBufferIter { staticStateBuffer_.get() };
+        if (numStaticViewports_ > 0)
+        {
+            commandList->RSSetViewports(
+                numStaticViewports_,
+                rawBufferIter.Next<D3D12_VIEWPORT>(numStaticViewports_)
+            );
+        }
+        if (numStaticScissors_ > 0)
+        {
+            commandList->RSSetScissorRects(
+                numStaticScissors_,
+                rawBufferIter.Next<D3D12_RECT>(numStaticScissors_)
+            );
+        }
+    }
 }
 
 

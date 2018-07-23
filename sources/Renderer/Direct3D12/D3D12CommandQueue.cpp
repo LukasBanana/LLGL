@@ -17,46 +17,20 @@ namespace LLGL
 {
 
 
-D3D12CommandQueue::D3D12CommandQueue(D3D12RenderSystem& renderSystem) :
-    intermediateFence_ { renderSystem.GetDevice(), 0 }
+D3D12CommandQueue::D3D12CommandQueue(ID3D12Device* device, ID3D12CommandQueue* queue) :
+    queue_             { queue     },
+    intermediateFence_ { device, 0 }
 {
-    cmdQueue_ = renderSystem.CreateDXCommandQueue();
-    for (auto& cmdAllocator : cmdAllocators_)
-        cmdAllocator = renderSystem.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
 }
 
 /* ----- Command Buffers ----- */
 
-void D3D12CommandQueue::Begin(CommandBuffer& /*commandBuffer*/, long /*flags*/)
-{
-    NextCmdAllocator();
-}
-
-void D3D12CommandQueue::End(CommandBuffer& commandBuffer)
-{
-    /* Get native command list */
-    auto& commandBufferD3D = LLGL_CAST(D3D12CommandBuffer&, commandBuffer);
-    commandBufferD3D.CloseCommandList();
-
-    /* Submit command list if this is not a pre-recorded command buffer */
-    //if (TODO)
-    {
-        Submit(commandBuffer);
-    }
-}
-
 void D3D12CommandQueue::Submit(CommandBuffer& commandBuffer)
 {
-    /* Get native command list */
-    auto& commandBufferD3D = LLGL_CAST(D3D12CommandBuffer&, commandBuffer);
-    auto commandList = commandBufferD3D.GetNative();
-
     /* Execute command list */
-    ID3D12CommandList* cmdLists[] = { commandList };
-    cmdQueue_->ExecuteCommandLists(1, cmdLists);
-
-    /* Reset command list */
-    ResetCommandList(commandList);
+    auto& commandBufferD3D = LLGL_CAST(D3D12CommandBuffer&, commandBuffer);
+    ID3D12CommandList* cmdLists[] = { commandBufferD3D.GetNative() };
+    queue_->ExecuteCommandLists(1, cmdLists);
 }
 
 /* ----- Fences ----- */
@@ -65,7 +39,7 @@ void D3D12CommandQueue::Submit(Fence& fence)
 {
     /* Schedule signal command into the queue */
     auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence);
-    auto hr = cmdQueue_->Signal(fenceD3D.GetNative(), fenceD3D.NextValue());
+    auto hr = queue_->Signal(fenceD3D.GetNative(), fenceD3D.NextValue());
     DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
 }
 
@@ -80,27 +54,6 @@ void D3D12CommandQueue::WaitIdle()
     /* Submit intermediate fence and wait for it to be signaled */
     Submit(intermediateFence_);
     WaitFence(intermediateFence_, ~0ull);
-}
-
-
-/*
- * ======= Private: =======
- */
-
-void D3D12CommandQueue::NextCmdAllocator()
-{
-    currentCmdAllocator_ = ((currentCmdAllocator_ + 1) % D3D12CommandQueue::g_numCmdAllocators);
-}
-
-void D3D12CommandQueue::ResetCommandList(ID3D12GraphicsCommandList* commandList)
-{
-    auto cmdAllocator = GetCmdAllocator();
-
-    auto hr = cmdAllocator->Reset();
-    DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
-
-    hr = commandList->Reset(cmdAllocator, nullptr);
-    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 }
 
 

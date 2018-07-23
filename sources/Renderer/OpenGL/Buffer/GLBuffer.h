@@ -25,6 +25,12 @@ class GLBuffer : public Buffer
         GLBuffer(const BufferType type);
         ~GLBuffer();
 
+        void BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags, GLenum usage);
+        void BufferSubData(GLintptr offset, GLsizeiptr size, const void* data);
+        void CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
+        void* MapBuffer(GLenum access);
+        void UnmapBuffer();
+
         // Returns the hardware buffer ID.
         inline GLuint GetID() const
         {

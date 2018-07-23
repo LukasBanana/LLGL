@@ -18,33 +18,13 @@ namespace LLGL
 
 
 DbgCommandQueue::DbgCommandQueue(CommandQueue& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
-    instance  { instance },
+    instance  { instance }
     //profiler_ { profiler },
-    debugger_ { debugger }
+    //debugger_ { debugger }
 {
 }
 
 /* ----- Command Buffers ----- */
-
-void DbgCommandQueue::Begin(CommandBuffer& commandBuffer, long flags)
-{
-    auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, commandBuffer);
-
-    if (debugger_)
-        commandBufferDbg.EnableRecording(true);
-
-    instance.Begin(commandBufferDbg.instance);
-}
-
-void DbgCommandQueue::End(CommandBuffer& commandBuffer)
-{
-    auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, commandBuffer);
-
-    if (debugger_)
-        commandBufferDbg.EnableRecording(false);
-
-    instance.End(commandBufferDbg.instance);
-}
 
 void DbgCommandQueue::Submit(CommandBuffer& commandBuffer)
 {

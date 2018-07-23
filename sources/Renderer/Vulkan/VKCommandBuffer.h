@@ -38,6 +38,14 @@ class VKCommandBuffer final : public CommandBuffer
         );
         ~VKCommandBuffer();
 
+        /* ----- Encoding ----- */
+
+        void Begin() override;
+        void End() override;
+
+        void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) override;
+        void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) override;
+
         /* ----- Configuration ----- */
 
         void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
@@ -170,6 +178,7 @@ class VKCommandBuffer final : public CommandBuffer
         std::vector<VKPtr<VkFence>>     recordingFenceList_;
         VkFence                         recordingFence_;
 
+        VkCommandBufferUsageFlags       usageFlags_                 = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
 

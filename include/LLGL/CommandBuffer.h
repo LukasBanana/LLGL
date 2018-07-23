@@ -37,21 +37,106 @@ class RenderContext;
 
 /**
 \brief Command buffer interface.
-\remarks This is the main interface to record graphics and compute commands to be submitted to the GPU.
-For older graphics APIs (such as OpenGL and Direct3D 11) it makes not much sense to create multiple command buffers,
-but for recent graphics APIs (such as Vulkan, Direct3D 12, and Metal) it might be sensible to have more than one command buffer,
-to maximize CPU utilization with several worker threads and one command buffer for each thread.
-However, multi-threading for command buffers is currently not supported by LLGL!
-Assume that all states that can be changed with a setter function are not persistent except the opposite is mentioned.
-Before any command can be recorded, the command buffer must be set into record mode, which is done by the CommandQueue::Begin function.
-There are only a few exceptions of functions that can be used outside of recording,
+\remarks This is the main interface to encode graphics and compute commands to be submitted to the GPU.
+You can assume that all states that can be changed with a setter function are not persistent across several encoding sections, unless the opposite is mentioned.
+Before any command can be encoded, the command buffer must be set into encode mode, which is done by the CommandBuffer::Begin function.
+There are only a few exceptions of functions that can be used outside of encoding,
 which are CommandBuffer::SetClearColor, CommandBuffer::SetClearDepth, and CommandBuffer::SetClearStencil.
-\see CommandQueue::Begin(CommandBuffer&, long)
 */
 class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 {
 
     public:
+
+        /* ----- Encoding ----- */
+
+        /**
+        \brief Begins with the encoding (also referred to as "recording") of this command buffer.
+        \remarks All functions of the CommandBuffer interface must be used between a call to \c Begin and \c End, except for the following:
+        - CommandBuffer::SetClearColor
+        - CommandBuffer::SetClearDepth
+        - CommandBuffer::SetClearStencil
+        \see End
+        \see RecordingFlags
+        */
+        virtual void Begin() = 0;
+
+        /**
+        \brief Ends the encoding (also referred to as "recording") of this command buffer.
+        \see Begin
+        \see CommandQueue::Submit(CommandBuffer&)
+        */
+        virtual void End() = 0;
+
+        /* ----- Encoding ----- */
+
+        /**
+        \brief Updates the data of the specified buffer during encoding the command buffer.
+        \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
+        \param[in] dstOffset Specifies the destination offset (in bytes) at which the buffer is to be updated.
+        This offset plus the data block size (i.e. <code>dstOffset + dataSize</code>) must be less than or equal to the size of the buffer.
+        \param[in] data Raw pointer to the data with which the buffer is to be updated. This must not be null!
+        \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
+        This is limited to 2^16 = 65536 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
+        \remarks To update buffers larger than 65536 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
+        \note This must not be called during a render pass.
+        */
+        virtual void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) = 0;
+
+        /**
+        \brief Encodes a buffer copy command for the specified buffer region.
+        \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
+        \param[in] dstOffset Specifies the destination offset (in bytes) at which the destination buffer is to be updated.
+        This offset plus the size (i.e. <code>dstOffset + size</code>) must be less than or equal to the size of the destination buffer.
+        \param[in] srcBuffer Specifies the source buffer whose data is to be read from.
+        \param[in] srcOffset Specifies teh source offset (in bytes) at which the source buffer is to be read from.
+        This offset plus the size (i.e. <code>srcOffset + size</code>) must be less than or equal to the size of the source buffer.
+        \param[in] size Specifies the size of the buffer region to copy.
+        */
+        virtual void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) = 0;
+
+        #if 0
+        virtual void FillBuffer(Buffer& buffer, [...]) = 0;
+        virtual void FillTexture(Texture& texture, [...]) = 0;
+        virtual void CopyTexture(Texture& dstTexture, Texture& srcTexture, [...]) = 0;
+        virtual void BlitTexture(Texture& dstTexture, Texture& srcTexture, [...], Filter filter) = 0;
+        #endif
+
+        #if 0 // TODO: enable this
+        /**
+        \brief Generates all MIP-maps for the specified texture.
+        \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
+        \remarks To generate only a small amout of MIP levels, use the secondary \c GenerateMips function.
+        To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
+        \see GenerateMips(Texture&, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
+        \note This must not be called during a render pass.
+        */
+        virtual void GenerateMips(Texture& texture) = 0;
+
+        /**
+        \brief Generates the specified range of MIP-maps for the specified texture.
+        \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
+        \param[in] baseMipLevel Specifies the zero-based index of the first MIP-map level.
+        \param[in] numMipLevels Specifies the number of MIP-maps to generate. This also includes the base MIP-map level, so a number of less than 2 has no effect.
+        \param[in] baseArrayLayer Specifies the zero-based index of the first array layer (if an array texture is used). By default 0.
+        \param[in] numArrayLayers Specifies the number of array layers. For both array textures and non-array textures this must be at least 1. By default 1.
+        \remarks This function only guarantees to generate at least the specified amount of MIP-maps.
+        It may also update all other MIP-maps if the respective rendering API does not support hardware accelerated generation of a sub-range of MIP-maps.
+        To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
+        \note Only use this function if the range of MIP-maps is significantly smaller than the entire MIP chain,
+        e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
+        \note This must not be called during a render pass.
+        \see GenerateMips(Texture&)
+        \see NumMipLevels
+        */
+        virtual void GenerateMips(
+            Texture&        texture,
+            std::uint32_t   baseMipLevel,
+            std::uint32_t   numMipLevels,
+            std::uint32_t   baseArrayLayer  = 0,
+            std::uint32_t   numArrayLayers  = 1
+        ) = 0;
+        #endif // /TODO
 
         /* ----- Configuration ----- */
 
@@ -120,14 +205,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
-        \note This state is guaranteed to be persistent and can be used outside of command buffer recording.
+        \note This state is guaranteed to be persistent and can be used outside of command buffer encoding.
         \see Clear
         */
         virtual void SetClearColor(const ColorRGBAf& color) = 0;
 
         /**
         \brief Sets the new value to clear the depth buffer with. By default 1.0.
-        \note This state is guaranteed to be persistent and can be used outside of command buffer recording.
+        \note This state is guaranteed to be persistent and can be used outside of command buffer encoding.
         \see Clear
         */
         virtual void SetClearDepth(float depth) = 0;
@@ -136,7 +221,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Sets the new value to clear the stencil buffer. By default 0.
         \param[in] stencil Specifies the value to clear the stencil buffer.
         This value is masked with <code>2^m-1</code>, where \c m is the number of bits in the stencil buffer (e.g. <code>stencil & 0xFF</code> for an 8-bit stencil buffer).
-        \note This state is guaranteed to be persistent and can be used outside of command buffer recording.
+        \note This state is guaranteed to be persistent and can be used outside of command buffer encoding.
         \see Clear
         */
         virtual void SetClearStencil(std::uint32_t stencil) = 0;
@@ -431,7 +516,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void Draw(std::uint32_t numVertices, std::uint32_t firstVertex) = 0;
 
         //! \see DrawIndexed(std::uint32_t, std::uint32_t, std::int32_t)
-        virtual void DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex) = 0;
+        virtual void DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) = 0;
 
         /**
         \brief Draws the specified amount of primitives from the currently set vertex- and index buffers.
@@ -442,7 +527,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset) = 0;
 
         //! \see DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
-        virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t firstInstance) = 0;
+        virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances) = 0;
 
         /**
         \brief Draws the specified amount of instances of primitives from the currently set vertex buffer.

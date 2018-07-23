@@ -103,7 +103,7 @@ void GLRenderSystem::Release(Texture& texture)
 
 /* ----- "WriteTexture..." functions ----- */
 
-void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -113,36 +113,36 @@ void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& 
     switch (texture.GetType())
     {
         case TextureType::Texture1D:
-            GLTexSubImage1D(subTextureDesc, imageDesc);
+            GLTexSubImage1D(textureRegion, imageDesc);
             break;
 
         case TextureType::Texture2D:
-            GLTexSubImage2D(subTextureDesc, imageDesc);
+            GLTexSubImage2D(textureRegion, imageDesc);
             break;
 
         case TextureType::Texture3D:
             LLGL_ASSERT_FEATURE_SUPPORT(has3DTextures);
-            GLTexSubImage3D(subTextureDesc, imageDesc);
+            GLTexSubImage3D(textureRegion, imageDesc);
             break;
 
         case TextureType::TextureCube:
             LLGL_ASSERT_FEATURE_SUPPORT(hasCubeTextures);
-            GLTexSubImageCube(subTextureDesc, imageDesc);
+            GLTexSubImageCube(textureRegion, imageDesc);
             break;
 
         case TextureType::Texture1DArray:
             LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexSubImage1DArray(subTextureDesc, imageDesc);
+            GLTexSubImage1DArray(textureRegion, imageDesc);
             break;
 
         case TextureType::Texture2DArray:
             LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexSubImage2DArray(subTextureDesc, imageDesc);
+            GLTexSubImage2DArray(textureRegion, imageDesc);
             break;
 
         case TextureType::TextureCubeArray:
             LLGL_ASSERT_FEATURE_SUPPORT(hasCubeArrayTextures);
-            GLTexSubImageCubeArray(subTextureDesc, imageDesc);
+            GLTexSubImageCubeArray(textureRegion, imageDesc);
             break;
 
         default:

@@ -17,9 +17,6 @@
 // Enable depth texture instead of depth buffer for render target
 //#define ENABLE_DEPTH_TEXTURE
 
-// Enable to emulate the clip-control functionality for OpenGL renderer (since 'GL_ARB_clip_control' is not integrated in LLGL yet)
-//#define ENABLE_OPENGL_INVERT_FRONTFACE
-
 
 #ifndef ENABLE_MULTISAMPLING
 #undef ENABLE_CUSTOM_MULTISAMPLING
@@ -154,15 +151,17 @@ private:
 
     void CreatePipelines()
     {
+        bool combinedSampler = IsOpenGL();
+
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
             layoutDesc.bindings =
             {
                 LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },//1 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 1 },//2 },
-                //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                               3 },//3 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u) },
+                //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                               3 },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -181,10 +180,6 @@ private:
             // Enable culling of back-facing polygons
             pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
 
-            #if 0
-            pipelineDesc.rasterizer.frontCCW = true;
-            #endif
-
             #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
             #endif
@@ -194,8 +189,8 @@ private:
         // Create graphics pipeline for render target
         {
             pipelineDesc.renderPass = renderTarget->GetRenderPass();
+            pipelineDesc.viewports  = { LLGL::Viewport{ { 0, 0 }, renderTarget->GetResolution() } };
 
-            #ifndef ENABLE_OPENGL_INVERT_FRONTFACE
             if (IsOpenGL())
             {
                 /*
@@ -210,7 +205,6 @@ private:
                 */
                 pipelineDesc.rasterizer.frontCCW = true;
             }
-            #endif
         }
         pipelines[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
@@ -361,7 +355,7 @@ private:
         #endif
 
         // Update constant buffer with current settings
-        UpdateBuffer(constantBuffer, settings);
+        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
         // Begin render pass for render target
         commands->BeginRenderPass(*renderTarget);
@@ -389,30 +383,6 @@ private:
                 commandsExt->SetSampler(*samplerState, 0, shaderStages);
             }
 
-            #ifdef ENABLE_OPENGL_INVERT_FRONTFACE
-            if (IsOpenGL())
-            {
-                /*
-                Set graphics API dependent state to be uniform between OpenGL and Direct3D:
-                A huge difference between OpenGL and Direct3D is,
-                that OpenGL stores image data from the lower-left to the upper-right in a texture,
-                but Direct3D stores image data from the upper-left to the lower-right in a texture.
-                The default screen-space origin of LLGL is the upper-left, so when rendering into a texture,
-                we need to render vertically flipped when OpenGL is used.
-                To do this we flip the Y-axis of the world-view-projection matrix and invert the front-facing,
-                so that the face-culling works as excepted.
-                */
-                LLGL::OpenGLDependentStateDescriptor apiStateDesc;
-                {
-                    apiStateDesc.invertFrontFace = true;
-                }
-                commands->SetGraphicsAPIDependentState(&apiStateDesc, sizeof(apiStateDesc));
-            }
-            #endif
-
-            // Set viewport for render target
-            commands->SetViewport({ { 0, 0 }, renderTarget->GetResolution() });
-
             // Draw scene
             commands->DrawIndexed(36, 0);
         }
@@ -430,7 +400,7 @@ private:
 
         // Update model transformation with standard projection
         UpdateModelTransform(projection, rotation.x);
-        UpdateBuffer(constantBuffer, settings);
+        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
         // Begin render pass for render context
         commands->BeginRenderPass(*context);
@@ -439,23 +409,16 @@ private:
             commands->SetClearColor(defaultClearColor);
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
-            // Reset viewport for the screen
-            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
-
             // Binds graphics pipeline for render context
             commands->SetGraphicsPipeline(*pipelines[1]);
 
+            // Set viewport to fullscreen.
+            // Note: this must be done AFTER the respective graphics pipeline has been set,
+            //       since the previous pipeline has no dynamic viewport!
+            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
+
             // Generate MIP-maps again after texture has been written by the render-target
             renderer->GenerateMips(*renderTargetTex);
-
-            #ifdef ENABLE_OPENGL_INVERT_FRONTFACE
-            if (IsOpenGL())
-            {
-                // Reset graphics API dependent state
-                LLGL::OpenGLDependentStateDescriptor apiStateDesc;
-                commands->SetGraphicsAPIDependentState(&apiStateDesc, sizeof(apiStateDesc));
-            }
-            #endif
 
             if (resourceHeaps[1])
             {
@@ -488,13 +451,14 @@ private:
         // Update scene by user input
         UpdateScene();
 
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Draw scene into texture, then draw scene onto screen
             DrawSceneIntoTexture();
             DrawSceneOntoScreen();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

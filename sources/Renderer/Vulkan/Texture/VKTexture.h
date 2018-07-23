@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Texture.h>
-#include "VKImageWrapper.h"
+#include "VKDeviceImage.h"
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
 #include <cstdint>
@@ -94,7 +94,7 @@ class VKTexture final : public Texture
 
         void CreateImage(VkDevice device, const TextureDescriptor& desc);
 
-        VKImageWrapper          imageWrapper_;
+        VKDeviceImage          imageWrapper_;
         VKPtr<VkImageView>      imageView_;
 
         VkFormat                format_         = VK_FORMAT_UNDEFINED;

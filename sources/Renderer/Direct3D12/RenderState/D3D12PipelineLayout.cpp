@@ -17,6 +17,11 @@ namespace LLGL
 
 D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
+    CreateRootSignature(device, desc);
+}
+
+void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
+{
     D3D12RootSignature rootSignature;
     rootSignature.Reset(desc.bindings.size(), 0);
 
@@ -32,6 +37,11 @@ D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLay
 
     /* Build final root signature descriptor */
     rootSignature_ = rootSignature.Finalize(device, signatureFlags);
+}
+
+void D3D12PipelineLayout::ReleaseRootSignature()
+{
+    rootSignature_.Reset();
 }
 
 

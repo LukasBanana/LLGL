@@ -27,7 +27,7 @@ class MacOSWindow : public Window
 
         void GetNativeHandle(void* nativeHandle) const override;
 
-        void Recreate() override;
+        void ResetPixelFormat() override;
 
         Extent2D GetContentSize() const override;
 
@@ -45,7 +45,7 @@ class MacOSWindow : public Window
 
         void SetDesc(const WindowDescriptor& desc) override;
         WindowDescriptor GetDesc() const override;
-    
+
         // Returns the native NSWindow* object.
         inline NSWindow* GetNSWindow() const
         {
@@ -53,7 +53,7 @@ class MacOSWindow : public Window
         }
 
     private:
-        
+
         void OnProcessEvents() override;
 
         void ProcessKeyEvent(NSEvent* event, bool down);

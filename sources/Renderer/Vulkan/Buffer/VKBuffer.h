@@ -10,28 +10,12 @@
 
 
 #include <LLGL/Buffer.h>
+#include "VKDeviceBuffer.h"
 #include "../Memory/VKDeviceMemory.h"
-#include "../Vulkan.h"
-#include "../VKPtr.h"
-#include <memory>
 
 
 namespace LLGL
 {
-
-
-struct VKBufferWithRequirements
-{
-    VKBufferWithRequirements(const VKPtr<VkDevice>& device);
-    VKBufferWithRequirements(VKBufferWithRequirements&& rhs);
-    VKBufferWithRequirements& operator = (VKBufferWithRequirements&& rhs);
-
-    void Create(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
-    void Release();
-
-    VKPtr<VkBuffer>         buffer;
-    VkMemoryRequirements    requirements;
-};
 
 
 class VKBuffer : public Buffer
@@ -41,34 +25,34 @@ class VKBuffer : public Buffer
 
         VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
 
-        void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
-        void TakeStagingBuffer(VKBufferWithRequirements&& buffer, VKDeviceMemoryRegion* memoryRegionStaging);
+        void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
+        void TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer);
 
         void* Map(VkDevice device, const CPUAccess access);
         void Unmap(VkDevice device);
 
-        void* MapStaging(VkDevice device, VkDeviceSize dataSize, VkDeviceSize offset = 0);
-        void UnmapStaging(VkDevice device);
+        // Returns the device buffer object.
+        inline VKDeviceBuffer& GetDeviceBuffer()
+        {
+            return bufferObj_;
+        }
 
-        // Updates the staging buffer (if it was created).
-        void UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSize dataSize, VkDeviceSize offset = 0);
+        // Returns the staging device buffer object.
+        inline VKDeviceBuffer& GetStagingDeviceBuffer()
+        {
+            return bufferObjStaging_;
+        }
 
         // Returns the hardware buffer object.
         inline VkBuffer GetVkBuffer() const
         {
-            return bufferObj_.buffer.Get();
+            return bufferObj_.GetVkBuffer();
         }
 
         // Returns the hardware staging buffer object.
         inline VkBuffer GetStagingVkBuffer() const
         {
-            return bufferObjStaging_.buffer.Get();
-        }
-
-        // Returns the memory requirements of the hardware buffer.
-        inline const VkMemoryRequirements& GetRequirements() const
-        {
-            return bufferObj_.requirements;
+            return bufferObjStaging_.GetVkBuffer();
         }
 
         // Returns the size originally specified in the descriptor.
@@ -83,28 +67,13 @@ class VKBuffer : public Buffer
             return mappingCPUAccess_;
         }
 
-        // Returns the region of the hardware device memory.
-        inline VKDeviceMemoryRegion* GetMemoryRegion() const
-        {
-            return memoryRegion_;
-        }
-
-        // Returns the region of the hardware device memory for the internal staging buffer.
-        inline VKDeviceMemoryRegion* GetMemoryRegionStaging() const
-        {
-            return memoryRegionStaging_;
-        }
-
     private:
 
-        VKBufferWithRequirements    bufferObj_;
-        VKDeviceMemoryRegion*       memoryRegion_           = nullptr;
+        VKDeviceBuffer  bufferObj_;
+        VKDeviceBuffer  bufferObjStaging_;
 
-        VKBufferWithRequirements    bufferObjStaging_;
-        VKDeviceMemoryRegion*       memoryRegionStaging_    = nullptr;
-
-        VkDeviceSize                size_                   = 0;
-        CPUAccess                   mappingCPUAccess_       = CPUAccess::ReadOnly;
+        VkDeviceSize    size_               = 0;
+        CPUAccess       mappingCPUAccess_   = CPUAccess::ReadOnly;
 
 };
 

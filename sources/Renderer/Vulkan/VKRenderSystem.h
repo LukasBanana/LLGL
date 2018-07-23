@@ -10,8 +10,8 @@
 
 
 #include <LLGL/RenderSystem.h>
-#include "Vulkan.h"
-#include "VKPtr.h"
+#include "VKPhysicalDevice.h"
+#include "VKDevice.h"
 #include "../ContainerTypes.h"
 #include "Memory/VKDeviceMemoryManager.h"
 
@@ -83,7 +83,7 @@ class VKRenderSystem final : public RenderSystem
         void Release(Buffer& buffer) override;
         void Release(BufferArray& bufferArray) override;
 
-        void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+        void WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize) override;
 
         void* MapBuffer(Buffer& buffer, const CPUAccess access) override;
         void UnmapBuffer(Buffer& buffer) override;
@@ -94,7 +94,7 @@ class VKRenderSystem final : public RenderSystem
 
         void Release(Texture& texture) override;
 
-        void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
+        void WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc) override;
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) override;
 
         void GenerateMips(Texture& texture) override;
@@ -163,66 +163,31 @@ class VKRenderSystem final : public RenderSystem
         void CreateInstance(const ApplicationDescriptor* applicationDesc);
         void CreateDebugReportCallback();
         void LoadExtensions();
-        bool PickPhysicalDevice();
-        void QueryDeviceProperties();
+        void PickPhysicalDevice();
         void CreateLogicalDevice();
-
-        void CreateStagingCommandResources();
-        void ReleaseStagingCommandResources();
-
         void CreateDefaultPipelineLayout();
 
         bool IsLayerRequired(const std::string& name) const;
         bool IsExtensionRequired(const std::string& name) const;
-        bool IsPhysicalDeviceSuitable(VkPhysicalDevice device) const;
-        bool CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& extensionNames) const;
 
-        std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
+        VKBuffer* CreateGpuBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
 
-        VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
+        VKDeviceBuffer CreateStagingBuffer(const VkBufferCreateInfo& createInfo);
 
-        std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> CreateStagingBuffer(
-            const VkBufferCreateInfo& stagingCreateInfo, const void* initialData = nullptr, std::size_t initialDataSize = 0
-        );
-
-        void BeginStagingCommands();
-        void EndStagingCommands();
-
-        void TransitionImageLayout(
-            VkImage image, VkFormat format,
-            VkImageLayout oldLayout, VkImageLayout newLayout,
-            std::uint32_t numMipLevels, std::uint32_t numArrayLayers
-        );
-
-        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset = 0, VkDeviceSize dstOffset = 0);
-        void CopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, const VkExtent3D& extent, std::uint32_t numLayers);
-
-        void AssertBufferCPUAccess(const VKBuffer& bufferVK);
-
-        void GenerateMipsPrimary(
-            VKTexture&      textureVK,
-            std::uint32_t   baseMipLevel,
-            std::uint32_t   numMipLevels,
-            std::uint32_t   baseArrayLayer,
-            std::uint32_t   numArrayLayers
+        VKDeviceBuffer CreateStagingBuffer(
+            const VkBufferCreateInfo&   createInfo,
+            const void*                 initialData,
+            VkDeviceSize                initialDataSize
         );
 
         /* ----- Common objects ----- */
 
         VKPtr<VkInstance>                       instance_;
-        VkPhysicalDevice                        physicalDevice_         = VK_NULL_HANDLE;
-        VKPtr<VkDevice>                         device_;
+
+        VKPhysicalDevice                        physicalDevice_;
+        VKDevice                                device_;
+
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
-
-        QueueFamilyIndices                      queueFamilyIndices_;
-        VkPhysicalDeviceMemoryProperties        memoryProperties_;
-        VkPhysicalDeviceFeatures                features_;
-
-        VkQueue                                 graphicsQueue_          = VK_NULL_HANDLE;
-
-        VKPtr<VkCommandPool>                    stagingCommandPool_;
-        VkCommandBuffer                         stagingCommandBuffer_   = VK_NULL_HANDLE;
-
         VKPtr<VkPipelineLayout>                 defaultPipelineLayout_;
 
         bool                                    debugLayerEnabled_      = false;

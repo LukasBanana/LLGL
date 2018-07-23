@@ -23,6 +23,7 @@ class VKIndexBuffer final : public VKBuffer
 
         VKIndexBuffer(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo, const IndexFormat& indexFormat);
 
+        // Returns the VkIndexType specified at creation time.
         inline VkIndexType GetIndexType() const
         {
             return indexType_;

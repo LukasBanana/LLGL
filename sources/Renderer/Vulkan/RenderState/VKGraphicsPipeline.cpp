@@ -152,7 +152,7 @@ static void CreateRasterizerState(
     createInfo.rasterizerDiscardEnable  = VKBoolean(!shaderProgramVK->HasFragmentShader());
     createInfo.polygonMode              = VKTypes::Map(desc.rasterizer.polygonMode);
     createInfo.cullMode                 = VKTypes::Map(desc.rasterizer.cullMode);
-    #if 1//TODO: make this optional for the user (for now: flip front face to overcome flipped viewport)
+    #if 0//TODO: make this optional for the user (for now: flip front face to overcome flipped viewport)
     createInfo.frontFace                = (desc.rasterizer.frontCCW ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE);
     #else
     createInfo.frontFace                = (desc.rasterizer.frontCCW ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE);
@@ -195,7 +195,7 @@ static void CreateMultisampleState(
     createInfo.rasterizationSamples     = GetSampleCountBitmask(multiSampleDesc);
     createInfo.sampleShadingEnable      = VK_FALSE;
     createInfo.minSampleShading         = 0.0f;
-    createInfo.pSampleMask              = nullptr;
+    createInfo.pSampleMask              = &(multiSampleDesc.sampleMask);
     createInfo.alphaToCoverageEnable    = VKBoolean(blendDesc.alphaToCoverageEnabled);
     createInfo.alphaToOneEnable         = VK_FALSE;
 }

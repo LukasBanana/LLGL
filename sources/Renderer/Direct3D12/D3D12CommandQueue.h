@@ -28,12 +28,9 @@ class D3D12CommandQueue final : public CommandQueue
 
     public:
 
-        D3D12CommandQueue(D3D12RenderSystem& renderSystem);
+        D3D12CommandQueue(ID3D12Device* device, ID3D12CommandQueue* queue);
 
         /* ----- Command Buffers ----- */
-
-        void Begin(CommandBuffer& commandBuffer, long flags = 0) override;
-        void End(CommandBuffer& commandBuffer) override;
 
         void Submit(CommandBuffer& commandBuffer) override;
 
@@ -49,26 +46,13 @@ class D3D12CommandQueue final : public CommandQueue
         // Returns the native ID3D12CommandQueue object.
         inline ID3D12CommandQueue* GetNative() const
         {
-            return cmdQueue_.Get();
+            return queue_;
         }
 
     private:
 
-        void NextCmdAllocator();
-        void ResetCommandList(ID3D12GraphicsCommandList* commandList);
-
-        inline ID3D12CommandAllocator* GetCmdAllocator() const
-        {
-            return cmdAllocators_[currentCmdAllocator_].Get();
-        }
-
-        static const std::size_t g_numCmdAllocators = 3;
-
-        ComPtr<ID3D12CommandQueue>      cmdQueue_;
-        ComPtr<ID3D12CommandAllocator>  cmdAllocators_[g_numCmdAllocators];
-        std::size_t                     currentCmdAllocator_                = 0;
-
-        D3D12Fence                      intermediateFence_;
+        ID3D12CommandQueue* queue_              = nullptr;
+        D3D12Fence          intermediateFence_;
 
 };
 

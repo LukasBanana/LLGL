@@ -23,8 +23,9 @@
 - [`TextureDescriptor` struct](#texturedescriptor-struct)
 - [Removal of `TextureArray` and `SamplerArray` interfaces](#removal-of-texturearray-and-samplerarray-interfaces)
 - [Array layers for cube textures](#array-layers-for-cube-textures)
-- [Introduction of command recording](#introduction-of-command-recording)
+- [Introduction of command encoding](#introduction-of-command-encoding)
 - [Introduction of render passes](#introduction-of-render-passes)
+- [Buffer updates](#buffer-updates)
 
 
 ## `Shader` interface
@@ -422,7 +423,7 @@ myCmdBuffer->ClearAttachments(3, myClearCmds);
 
 ## Viewport and scissor arrays
 
-Functions to set viewport and scissor arrays have been renamed for a persistent nomenclature. A `Set...Array` function in the `CommandBuffer` interface is only used for `...Array` objects (such as `BufferArray`). For basic C/C++ arrays functions like `SetViewports`, `SetScissors`, or `ClearAttachments` are used.
+Functions to set viewport and scissor arrays have been renamed for a persistent nomenclature. A `Set...Array` function in the `CommandBuffer` interface is only used for `...Array` objects (such as `BufferArray`). For basic C/C++ arrays, functions like `SetViewports`, `SetScissors`, or `ClearAttachments` are used.
 
 Before:
 ```cpp
@@ -548,34 +549,23 @@ if (myColorA == myColorB) {
 
 Various structures, enumerations, and fields have been renamed to either fit LLGL's nomenclature or to simplify their identifiers when they are frequently used.
 
-Before:
+Before/After:
 ```cpp
-LLGL::ShaderStageFlags;
-LLGL::BlendTargetDescriptor::destColor;
-LLGL::BlendTargetDescriptor::destAlpha;
-LLGL::BlendOp::DestColor;
-LLGL::BlendOp::InvDestColor;
-LLGL::BlendOp::DestAlpha;
-LLGL::BlendOp::InvDestAlpha;
-LLGL::ImageDescriptor;
-LLGL::BufferCPUAccess;
-LLGL::TextureFilter;
-LLGL::TextureWrap;
-```
-
-After:
-```cpp
-LLGL::StageFlags;
-LLGL::BlendTargetDescriptor::dstColor;
-LLGL::BlendTargetDescriptor::dstAlpha;
-LLGL::BlendOp::DstColor;
-LLGL::BlendOp::InvDstColor;
-LLGL::BlendOp::DstAlpha;
-LLGL::BlendOp::InvDstAlpha;
-LLGL::SrcImageDescriptor;
-LLGL::CPUAccess;
-LLGL::SamplerFilter;
-LLGL::SamplerAddressMode;
+ShaderStageFlags                 --> StageFlags
+BlendTargetDescriptor::destColor --> BlendTargetDescriptor::dstColor
+BlendTargetDescriptor::destAlpha --> BlendTargetDescriptor::dstAlpha
+BlendOp::DestColor               --> BlendOp::DstColor
+BlendOp::InvDestColor            --> BlendOp::InvDstColor
+BlendOp::DestAlpha               --> BlendOp::DstAlpha
+BlendOp::InvDestAlpha            --> BlendOp::InvDstAlpha
+ImageDescriptor                  --> SrcImageDescriptor
+BufferCPUAccess                  --> CPUAccess
+TextureFilter                    --> SamplerFilter
+TextureWrap                      --> SamplerAddressMode
+Surface::Recreate                --> Surface::ResetPixelFormat
+SubTextureDescriptor             --> TextureRegion
+CompareOp::Never                 --> CompareOp::NeverPass
+CompareOp::Ever                  --> CompareOp::AlwaysPass
 ```
 
 
@@ -629,7 +619,7 @@ After:
 ```cpp
 // Usage:
 LLGL::TextureDescriptor myTextureDesc;
-myTextureDesc.format = LLGL::TextureFormat::RGBA8UNorm; // 8-bit normalized unsigned byte format
+myTextureDesc.format = LLGL::Format::RGBA8UNorm; // 8-bit normalized unsigned byte format
 
 LLGL::VertexAttribute myVertexPositionAttrib { "myPosition", LLGL::Format::RGB32Float }; // 32-bit floating-point format
 LLGL::VertexAttribute myVertexColorAttrib    { "myColor",    LLGL::Format::RGBA8UNorm }; // 8-bit normalized unsigned byte format
@@ -749,9 +739,9 @@ LLGL::Texture* myTex = myRenderer->CreateTexture(myTexDesc);
 ```
 
 
-## Introduction of command recording
+## Introduction of command encoding
 
-From now on, the recording of command buffers must be started and ended explicitly:
+From now on, the encoding of command buffers must be started and ended explicitly. Moreover, the encoded command buffer must be submitted to the command queue explicitly, too.
 
 Before:
 ```cpp
@@ -763,9 +753,10 @@ myContext->Present();
 After:
 ```cpp
 // Render frame
-myCmdQueue->Begin(*myCmdBuffer);
+myCmdBuffer->Begin();
 /* ... */
-myCmdQueue->End(*myCmdBuffer);
+myCmdBuffer->End();
+myCmdQueue->Submit(*myCmdBuffer);
 myContext->Present();
 ```
 
@@ -804,6 +795,41 @@ myCmdQueue->Begin(*myCmdBuffer);
 myCmdQueue->End(*myCmdBuffer);
 
 myContext->Present();
+```
+
+
+## Buffer updates
+
+Buffers can no longer be updated at an arbitrary time. The function `RenderSystem::WriteBuffer` has been refactored and can be used for large buffers outside of command encoding. The new function `CommandBuffer::UpdateBuffer` can be used during command encoding, but outside of a render pass, for small buffers (maximum of 2^16 = 65536 bytes).
+
+Before:
+```cpp
+// Interface:
+void RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset);
+
+// Usage:
+for (auto myModel : myModelList) {
+    myTransform.worldMatrix = myModel.worldMatrix;
+    myRenderer->WriteBuffer(*myConstantBuffer, &myTransform, sizeof(myTransform), 0);
+    myCmdBuffer->Draw(...);
+}
+```
+
+After:
+```cpp
+// Interface:
+void RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize);
+void CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize);
+
+// Usage:
+for (auto myModel : myModelList) {
+    myTransform.worldMatrix = myModel.worldMatrix;
+    myCmdBuffer->UpdateBuffer(*myConstantBuffer, 0, &myTransform, sizeof(myTransform));
+    myCmdBuffer->BeginRenderPass(...);
+    myCmdBuffer->Draw(...);
+    myCmdBuffer->EndRenderPass();
+}
+
 ```
 
 

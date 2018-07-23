@@ -571,6 +571,27 @@ bool Tutorial::IsOpenGL() const
     return (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
 }
 
+bool Tutorial::IsVulkan() const
+{
+    return (renderer->GetRendererID() == LLGL::RendererID::Vulkan);
+}
+
+bool Tutorial::IsDirect3D() const
+{
+    return
+    (
+        renderer->GetRendererID() == LLGL::RendererID::Direct3D9  ||
+        renderer->GetRendererID() == LLGL::RendererID::Direct3D10 ||
+        renderer->GetRendererID() == LLGL::RendererID::Direct3D11 ||
+        renderer->GetRendererID() == LLGL::RendererID::Direct3D12
+    );
+}
+
+bool Tutorial::IsMetal() const
+{
+    return (renderer->GetRendererID() == LLGL::RendererID::Metal);
+}
+
 bool Tutorial::IsLoadingDone() const
 {
     return loadingDone_;
@@ -578,7 +599,7 @@ bool Tutorial::IsLoadingDone() const
 
 Gs::Matrix4f Tutorial::PerspectiveProjection(float aspectRatio, float near, float far, float fov)
 {
-    int flags = (IsOpenGL() ? Gs::ProjectionFlags::UnitCube : 0);
+    int flags = (IsOpenGL() || IsVulkan() ? Gs::ProjectionFlags::UnitCube : 0);
     return Gs::ProjectionMatrix4f::Perspective(aspectRatio, near, far, fov, flags).ToMatrix4();
 }
 

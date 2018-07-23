@@ -136,7 +136,7 @@ void Win32Window::GetNativeHandle(void* nativeHandle) const
     handle->window = wnd_;
 }
 
-void Win32Window::Recreate()
+void Win32Window::ResetPixelFormat()
 {
     /* Destroy previous window handle and create a new one with current descriptor settings */
     auto desc = GetDesc();

@@ -39,6 +39,22 @@ enum class RenderConditionMode
 /* ----- Flags ----- */
 
 /**
+\brief Command buffer creation flags.
+\see CommandBufferDescriptor::flags
+*/
+struct CommandBufferFlags
+{
+    enum
+    {
+        /**
+        \brief Specifies that the encoded command buffer can be submitted multiple times.
+        \remarks If this is not specified, the command buffer must be encoded again after it has been submitted to the command queue.
+        */
+        DeferredSubmit = (1 << 0),
+    };
+};
+
+/**
 \brief Command buffer clear flags.
 \see CommandBuffer::Clear
 */
@@ -165,15 +181,23 @@ struct OpenGLDependentStateDescriptor
 struct CommandBufferDescriptor
 {
     /**
+    \brief Specifies the creation flags for the command buffer. By default 0.
+    \remarks If no flags are specified (i.e. the default value),
+    the command buffer must be encoded again after it has been submitted to the command queue.
+    \see CommandBufferFlags
+    */
+    long            flags               = 0;
+
+    /**
     \brief Specifies the number of internal native command buffers. By default 2.
-    \remarks This is only a hint to the framework, since not all rendering APIs support command buffers.
+    \remarks This is only a hint to the framework, since not all rendering APIs support command buffers natively.
     For those that do, however, this member specifies how many native command buffers are to be allocated internally.
-    These native command buffers are then switched everytime recording begins with the CommandQueue::Begin function.
+    These native command buffers are then switched everytime encoding begins with the CommandBuffer::Begin function.
     The benefit of having multiple native command buffers is that it reduces the time the GPU is idle
     because it waits for a command buffer to be completed before it can be reused.
-    \see CommandQueue::Begin(CommandBuffer&, long)
+    \see CommandBuffer::Begin
     */
-    std::uint32_t numNativeBuffers = 2;
+    std::uint32_t   numNativeBuffers    = 2;
 };
 
 

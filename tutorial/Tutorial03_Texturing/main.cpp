@@ -217,7 +217,7 @@ private:
             samplerIndex = (samplerIndex + 1) % 5;
 
         // Set render target
-        commandQueue->Begin(*commands);
+        commands->Begin();
         {
             // Set vertex buffer
             commands->SetVertexBuffer(*vertexBuffer);
@@ -241,7 +241,8 @@ private:
             }
             commands->EndRenderPass();
         }
-        commandQueue->End(*commands);
+        commands->End();
+        commandQueue->Submit(*commands);
 
         // Present result on the screen
         context->Present();

@@ -13,6 +13,7 @@
 #include <LLGL/ForwardDecls.h>
 #include "../../DXCommon/ComPtr.h"
 #include <d3d11.h>
+#include <memory>
 
 
 namespace LLGL
@@ -21,6 +22,7 @@ namespace LLGL
 
 class D3D11ShaderProgram;
 class D3D11StateManager;
+class RawBufferIterator;
 
 class D3D11GraphicsPipelineBase : public GraphicsPipeline
 {
@@ -33,6 +35,8 @@ class D3D11GraphicsPipelineBase : public GraphicsPipeline
     protected:
 
         D3D11GraphicsPipelineBase(const GraphicsPipelineDescriptor& desc);
+
+        void SetStaticViewportsAndScissors(D3D11StateManager& stateMngr);
 
         // Returns the primitive toplogy for the 'IASetPrimitiveTopology' function.
         inline D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const
@@ -62,6 +66,10 @@ class D3D11GraphicsPipelineBase : public GraphicsPipeline
 
         void StoreShaderObjects(const D3D11ShaderProgram& shaderProgramD3D);
 
+        void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
+        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter);
+        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter);
+
         ComPtr<ID3D11InputLayout>       inputLayout_;
 
         ComPtr<ID3D11VertexShader>      vs_;
@@ -74,6 +82,10 @@ class D3D11GraphicsPipelineBase : public GraphicsPipeline
         UINT                            stencilRef_         = 0;
         FLOAT                           blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
         UINT                            sampleMask_         = ~0;
+
+        std::unique_ptr<char[]>         staticStateBuffer_;
+        UINT                            numStaticViewports_ = 0;
+        UINT                            numStaticScissors_  = 0;
 
 };
 
