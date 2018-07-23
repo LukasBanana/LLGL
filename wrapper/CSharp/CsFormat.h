@@ -16,7 +16,7 @@ namespace LLGL
 
 
 /// <summary>Hardware vector and pixel format enumeration.</summary>
-enum class Format
+public enum class Format
 {
     Undefined,
 

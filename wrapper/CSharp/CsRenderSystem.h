@@ -13,6 +13,7 @@
 #include "CsRenderSystemFlags.h"
 #include "CsRenderContext.h"
 #include "CsRenderContextFlags.h"
+#include "CsBufferFlags.h"
 #include "CsCommandQueue.h"
 #include "CsShader.h"
 #include "CsShaderProgram.h"
@@ -104,11 +105,10 @@ public ref class RenderSystem
 
         void Release(CommandBuffer^ commandBuffer);
 
-        #if 0
-
         /* ----- Buffers ------ */
 
         Buffer^ CreateBuffer(BufferDescriptor^ desc);
+
         Buffer^ CreateBuffer(BufferDescriptor^ desc, array<System::Byte>^ initialData);
 
         BufferArray^ CreateBufferArray(array<Buffer^>^ bufferArray);
@@ -117,11 +117,13 @@ public ref class RenderSystem
 
         void Release(BufferArray^ bufferArray);
 
-        void WriteBuffer(Buffer^ buffer, array<System::Byte>^ data, System::UIntPtr dataSize, System::UIntPtr offset);
+        void WriteBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, System::IntPtr data, System::UInt64 dataSize);
 
-        //void* MapBuffer(Buffer^ buffer, CPUAccess access);
+        System::IntPtr MapBuffer(Buffer^ buffer, CPUAccess access);
 
-        //void UnmapBuffer(Buffer^ buffer);
+        void UnmapBuffer(Buffer^ buffer);
+
+        #if 0
 
         /* ----- Textures ----- */
 

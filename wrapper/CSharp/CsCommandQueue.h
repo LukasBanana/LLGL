@@ -44,11 +44,6 @@ public ref class CommandQueue
 
         /* ----- Command Buffers ----- */
 
-        void Begin(CommandBuffer^ commandBuffer);
-        void Begin(CommandBuffer^ commandBuffer, int flags);
-
-        void End(CommandBuffer^ commandBuffer);
-
         void Submit(CommandBuffer^ commandBuffer);
 
         /* ----- Fences ----- */

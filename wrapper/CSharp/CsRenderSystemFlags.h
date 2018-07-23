@@ -10,6 +10,9 @@
 #include <vcclr.h>
 
 
+using namespace System;
+
+
 namespace LHermanns
 {
 
@@ -17,22 +20,36 @@ namespace LLGL
 {
 
 
+/* ----- Enumerations ----- */
+
+public enum class CPUAccess
+{
+    ReadOnly,
+    WriteOnly,
+    ReadWrite,
+};
+
+
+/* ----- Structures ----- */
+
 public ref class RendererInfo
 {
 
     public:
 
+        RendererInfo();
+
         /// <summary>Rendering API name and version (e.g. "OpenGL 4.6").</summary>
-        property System::String^ RendererName;
+        property String^ RendererName;
 
         /// <summary>Renderer device name (e.g. "GeForce GTX 1070/PCIe/SSE2").</summary>
-        property System::String^ DeviceName;
+        property String^ DeviceName;
 
         /// <summary>Vendor name of the renderer device (e.g. "NVIDIA Corporation").</summary>
-        property System::String^ VendorName;
+        property String^ VendorName;
 
         /// <summary>Shading language version (e.g. "GLSL 4.50").</summary>
-        property System::String^ ShadingLanguageName;
+        property String^ ShadingLanguageName;
 
 };
 

@@ -27,21 +27,6 @@ CommandQueue::CommandQueue(::LLGL::CommandQueue* native) :
 
 /* ----- Command Buffers ----- */
 
-void CommandQueue::Begin(CommandBuffer^ commandBuffer)
-{
-    native_->Begin(*commandBuffer->Native::get());
-}
-
-void CommandQueue::Begin(CommandBuffer^ commandBuffer, int flags)
-{
-    native_->Begin(*commandBuffer->Native::get(), static_cast<long>(flags));
-}
-
-void CommandQueue::End(CommandBuffer^ commandBuffer)
-{
-    native_->End(*commandBuffer->Native::get());
-}
-
 void CommandQueue::Submit(CommandBuffer^ commandBuffer)
 {
     native_->Submit(*commandBuffer->Native::get());

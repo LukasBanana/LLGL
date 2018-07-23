@@ -188,24 +188,108 @@ void RenderSystem::Release(CommandBuffer^ commandBuffer)
     native_->Release(*commandBuffer->Native);
 }
 
-#if 0
-
 /* ----- Buffers ------ */
 
-Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc);
-Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc, array<System::Byte>^ initialData);
+static void Convert(::LLGL::VertexAttribute& dst, VertexAttribute^ src)
+{
+    dst.name            = ToStdString(src->Name);
+    dst.format          = static_cast<::LLGL::Format>(src->Format);
+    dst.instanceDivisor = src->InstanceDivisor;
+    dst.offset          = src->Offset;
+    dst.semanticIndex   = src->SemanticIndex;
+}
 
-BufferArray^ RenderSystem::CreateBufferArray(array<Buffer^>^ bufferArray);
+static void Convert(::LLGL::VertexFormat& dst, VertexFormat^ src)
+{
+    dst.attributes.resize(static_cast<std::size_t>(src->Attributes->Count));
+    for (std::size_t i = 0; i < dst.attributes.size(); ++i)
+        Convert(dst.attributes[i], src->Attributes[i]);
+    dst.stride      = src->Stride;
+    dst.inputSlot   = src->InputSlot;
+}
 
-void RenderSystem::Release(Buffer^ buffer);
+static void Convert(::LLGL::BufferDescriptor::VertexBuffer& dst, BufferDescriptor::VertexBufferDescriptor^ src)
+{
+    if (src->Format)
+        Convert(dst.format, src->Format);
+}
 
-void RenderSystem::Release(BufferArray^ bufferArray);
+static void Convert(::LLGL::BufferDescriptor::IndexBuffer& dst, BufferDescriptor::IndexBufferDescriptor^ src)
+{
+    //TODO...
+}
 
-void RenderSystem::WriteBuffer(Buffer^ buffer, array<System::Byte>^ data, System::UIntPtr dataSize, System::UIntPtr offset);
+static void Convert(::LLGL::BufferDescriptor::StorageBuffer& dst, BufferDescriptor::StorageBufferDescriptor^ src)
+{
+    //TODO...
+}
 
-//void* RenderSystem::MapBuffer(Buffer^ buffer, CPUAccess access);
+static void Convert(::LLGL::BufferDescriptor& dst, BufferDescriptor^ src)
+{
+    dst.type    = static_cast<::LLGL::BufferType>(src->Type);
+    dst.size    = src->Size;
+    dst.flags   = static_cast<long>(src->Flags);
+    if (src->VertexBuffer)
+        Convert(dst.vertexBuffer, src->VertexBuffer);
+    if (src->IndexBuffer)
+        Convert(dst.indexBuffer, src->IndexBuffer);
+    if (src->StorageBuffer)
+        Convert(dst.storageBuffer, src->StorageBuffer);
+}
 
-//void RenderSystem::UnmapBuffer(Buffer^ buffer);
+Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc)
+{
+    ::LLGL::BufferDescriptor nativeDesc;
+    Convert(nativeDesc, desc);
+    return gcnew Buffer(native_->CreateBuffer(nativeDesc));
+}
+
+Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc, array<System::Byte>^ initialData)
+{
+    ::LLGL::BufferDescriptor nativeDesc;
+    Convert(nativeDesc, desc);
+    pin_ptr<System::Byte> initialDataPtr = &initialData[0];
+    return gcnew Buffer(native_->CreateBuffer(nativeDesc, initialDataPtr));
+}
+
+BufferArray^ RenderSystem::CreateBufferArray(array<Buffer^>^ bufferArray)
+{
+    if (bufferArray->Length > 0)
+    {
+        std::vector<::LLGL::Buffer*> nativeBufferArray(static_cast<std::size_t>(bufferArray->Length));
+        for (std::size_t i = 0; i < nativeBufferArray.size(); ++i)
+            nativeBufferArray[i] = bufferArray[i]->NativeSub;
+        return gcnew BufferArray(native_->CreateBufferArray(static_cast<std::uint32_t>(nativeBufferArray.size()), nativeBufferArray.data()));
+    }
+    return nullptr;
+}
+
+void RenderSystem::Release(Buffer^ buffer)
+{
+    native_->Release(*buffer->NativeSub);
+}
+
+void RenderSystem::Release(BufferArray^ bufferArray)
+{
+    native_->Release(*bufferArray->Native);
+}
+
+void RenderSystem::WriteBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, System::IntPtr data, System::UInt64 dataSize)
+{
+    native_->WriteBuffer(*(dstBuffer->NativeSub), dstOffset, data.ToPointer(), dataSize);
+}
+
+System::IntPtr RenderSystem::MapBuffer(Buffer^ buffer, CPUAccess access)
+{
+    return System::IntPtr(native_->MapBuffer(*(buffer->NativeSub), static_cast<::LLGL::CPUAccess>(access)));
+}
+
+void RenderSystem::UnmapBuffer(Buffer^ buffer)
+{
+    native_->UnmapBuffer(*(buffer->NativeSub));
+}
+
+#if 0
 
 /* ----- Textures ----- */
 
@@ -265,24 +349,6 @@ Shader^ RenderSystem::CreateShader(ShaderDescriptor^ desc)
     ::LLGL::ShaderDescriptor nativeDesc;
     Convert(nativeDesc, desc, tempStr);
     return gcnew Shader(native_->CreateShader(nativeDesc));
-}
-
-static void Convert(::LLGL::VertexAttribute& dst, VertexAttribute^ src)
-{
-    dst.name            = ToStdString(src->Name);
-    dst.format          = static_cast<::LLGL::Format>(src->Format);
-    dst.instanceDivisor = src->InstanceDivisor;
-    dst.offset          = src->Offset;
-    dst.semanticIndex   = src->SemanticIndex;
-}
-
-static void Convert(::LLGL::VertexFormat& dst, VertexFormat^ src)
-{
-    dst.attributes.resize(static_cast<std::size_t>(src->Attributes->Count));
-    for (std::size_t i = 0; i < dst.attributes.size(); ++i)
-        Convert(dst.attributes[i], src->Attributes[i]);
-    dst.stride      = src->Stride;
-    dst.inputSlot   = src->InputSlot;
 }
 
 static void Convert(::LLGL::ShaderProgramDescriptor& dst, ShaderProgramDescriptor^ src)

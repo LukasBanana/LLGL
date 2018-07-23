@@ -101,6 +101,11 @@ public ref class Buffer : public Resource
 
         Buffer(::LLGL::Buffer* native);
 
+        property ::LLGL::Buffer* NativeSub
+        {
+            ::LLGL::Buffer* get();
+        };
+
 };
 
 public ref class Texture : public Resource
@@ -109,6 +114,11 @@ public ref class Texture : public Resource
     public:
 
         Texture(::LLGL::Texture* native);
+
+        property ::LLGL::Texture* NativeSub
+        {
+            ::LLGL::Texture* get();
+        };
 
         property TextureType Type
         {
@@ -123,6 +133,11 @@ public ref class Sampler : public Resource
     public:
 
         Sampler(::LLGL::Sampler* native);
+
+        property ::LLGL::Sampler* NativeSub
+        {
+            ::LLGL::Sampler* get();
+        };
 
 };
 

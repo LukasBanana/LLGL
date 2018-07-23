@@ -44,6 +44,11 @@ Buffer::Buffer(::LLGL::Buffer* native) :
 {
 }
 
+::LLGL::Buffer* Buffer::NativeSub::get()
+{
+    return static_cast<::LLGL::Buffer*>(Native);
+}
+
 
 /*
  * Texture class
@@ -52,6 +57,11 @@ Buffer::Buffer(::LLGL::Buffer* native) :
 Texture::Texture(::LLGL::Texture* native) :
     Resource { native }
 {
+}
+
+::LLGL::Texture* Texture::NativeSub::get()
+{
+    return static_cast<::LLGL::Texture*>(Native);
 }
 
 TextureType Texture::Type::get()
@@ -67,6 +77,11 @@ TextureType Texture::Type::get()
 Sampler::Sampler(::LLGL::Sampler* native) :
     Resource { native }
 {
+}
+
+::LLGL::Sampler* Sampler::NativeSub::get()
+{
+    return static_cast<::LLGL::Sampler*>(Native);
 }
 
 

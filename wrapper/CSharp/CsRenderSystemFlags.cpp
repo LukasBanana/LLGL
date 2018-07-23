@@ -15,6 +15,18 @@ namespace LLGL
 {
 
 
+/*
+ * RendererInfo class
+ */
+
+RendererInfo::RendererInfo()
+{
+    RendererName        = "";
+    DeviceName          = "";
+    VendorName          = "";
+    ShadingLanguageName = "";
+}
+
 
 } // /namespace LLGL
 

@@ -26,6 +26,28 @@ CommandBuffer::CommandBuffer(::LLGL::CommandBuffer* native) :
     return native_;
 }
 
+/* ----- Encoding ----- */
+
+void CommandBuffer::Begin()
+{
+    native_->Begin();
+}
+
+void CommandBuffer::End()
+{
+    native_->End();
+}
+
+void CommandBuffer::UpdateBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, System::IntPtr data, System::UInt16 dataSize)
+{
+    native_->UpdateBuffer(*(dstBuffer->NativeSub), dstOffset, data.ToPointer(), dataSize);
+}
+
+void CommandBuffer::CopyBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, Buffer^ srcBuffer, System::UInt64 srcOffset, System::UInt64 size)
+{
+    native_->CopyBuffer(*(dstBuffer->NativeSub), dstOffset, *(srcBuffer->NativeSub), srcOffset, size);
+}
+
 /* ----- Viewport and Scissor ----- */
 
 static const int g_maxNumViewports = 32;

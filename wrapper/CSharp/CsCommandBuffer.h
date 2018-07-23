@@ -44,6 +44,14 @@ public ref class CommandBuffer
             ::LLGL::CommandBuffer* get();
         }
 
+        /* ----- Encoding ----- */
+
+        void Begin();
+        void End();
+
+        void UpdateBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, System::IntPtr data, System::UInt16 dataSize);
+        void CopyBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, Buffer^ srcBuffer, System::UInt64 srcOffset, System::UInt64 size);
+
         /* ----- Configuration ----- */
 
         #if 0
@@ -73,9 +81,7 @@ public ref class CommandBuffer
         /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer^ buffer);
-
         void SetVertexBufferArray(BufferArray^ bufferArray);
-
         void SetIndexBuffer(Buffer^ buffer);
 
         #if 0
