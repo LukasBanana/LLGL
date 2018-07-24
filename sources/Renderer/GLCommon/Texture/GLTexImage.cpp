@@ -273,7 +273,7 @@ static void GLTexImage2DMultisampleBase(
     else
     #endif
     {
-        /* Allocate mutable texture storage and initialize highest MIP level */
+        /* Allocate mutable texture storage */
         glTexImage2DMultisample(target, sampleCount, internalFormat, sx, sy, fixedSampleLocations);
     }
 }
@@ -281,21 +281,31 @@ static void GLTexImage2DMultisampleBase(
 static void GLTexImage3DMultisampleBase(
     GLenum          target,
     std::uint32_t   samples,
-    const Format    internalFormat,
+    const Format    textureFormat,
     std::uint32_t   width,
     std::uint32_t   height,
     std::uint32_t   depth,
     bool            fixedSamples)
 {
-    glTexImage3DMultisample(
-        target,
-        static_cast<GLsizei>(samples),
-        GLTypes::Map(internalFormat),
-        static_cast<GLsizei>(width),
-        static_cast<GLsizei>(height),
-        static_cast<GLsizei>(depth),
-        (fixedSamples ? GL_TRUE : GL_FALSE)
-    );
+    auto internalFormat         = GLTypes::Map(textureFormat);
+    auto sampleCount            = static_cast<GLsizei>(samples);
+    auto sx                     = static_cast<GLsizei>(width);
+    auto sy                     = static_cast<GLsizei>(height);
+    auto sz                     = static_cast<GLsizei>(depth);
+    auto fixedSampleLocations   = static_cast<GLboolean>(fixedSamples ? GL_TRUE : GL_FALSE);
+
+    #ifdef GL_ARB_texture_storage_multisample
+    if (HasExtension(GLExt::ARB_texture_storage_multisample))
+    {
+        /* Allocate immutable texture storage */
+        glTexStorage3DMultisample(target, sampleCount, internalFormat, sx, sy, sz, fixedSampleLocations);
+    }
+    else
+    #endif
+    {
+        /* Allocate mutable texture storage */
+        glTexImage3DMultisample(target, sampleCount, internalFormat, sx, sy, sz, fixedSampleLocations);
+    }
 }
 
 #endif
@@ -645,8 +655,31 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
     }
     else if (IsDepthStencilFormat(desc.format))
     {
-        /* Throw runtime error for illegal use of depth-stencil format */
-        ErrIllegalUseOfDepthFormat();
+        //TODO: add support for default initialization of stencil values
+        std::vector<float> image;
+        const void* initialData = nullptr;
+
+        if (g_imageInitialization.enabled)
+        {
+            /* Initialize depth texture image with default depth */
+            image       = GenImageDataRf(desc.extent.width * desc.extent.height, g_imageInitialization.clearValue.depth);
+            initialData = image.data();
+        }
+
+        /* Allocate depth texture image without initial data */
+        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
+        {
+            GLTexImageCube(
+                numMipLevels,
+                desc.format,
+                desc.extent.width,
+                desc.extent.height,
+                arrayLayer,
+                GL_DEPTH_COMPONENT,
+                GL_FLOAT,
+                initialData
+            );
+        }
     }
     else if (IsCompressedFormat(desc.format) || !g_imageInitialization.enabled)
     {

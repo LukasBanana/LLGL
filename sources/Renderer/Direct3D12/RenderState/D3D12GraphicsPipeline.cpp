@@ -78,6 +78,11 @@ void D3D12GraphicsPipeline::Bind(ID3D12GraphicsCommandList* commandList)
     SetStaticViewportsAndScissors(commandList);
 }
 
+UINT D3D12GraphicsPipeline::NumDefaultScissorRects() const
+{
+    return std::max(numStaticViewports_, 1u);
+}
+
 static D3D12_CONSERVATIVE_RASTERIZATION_MODE GetConservativeRaster(bool enabled)
 {
     return (enabled ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF);

@@ -332,7 +332,7 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     /* Scissor rectangle must be updated (if scissor test is disabled) */
     scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();
     if (!scissorEnabled_)
-        SetScissorRectsToDefault(1);
+        SetScissorRectsToDefault(graphicsPipelineD3D.NumDefaultScissorRects());
 }
 
 void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)

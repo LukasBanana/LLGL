@@ -52,7 +52,7 @@ public:
         Tutorial { L"LLGL Tutorial 10: Instancing", { 800, 600 } }
     {
         UpdateAnimation();
-        LLGL::RenderSystem::FindModules();
+
         // Create all graphics objects
         auto vertexFormats = CreateBuffers();
         shaderProgram = LoadStandardShaderProgram(vertexFormats);
