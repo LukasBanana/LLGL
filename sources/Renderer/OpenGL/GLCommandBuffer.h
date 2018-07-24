@@ -115,13 +115,13 @@ class GLCommandBuffer final : public CommandBufferExt
 
         /* ----- Queries ----- */
 
-        void BeginQuery(Query& query) override;
-        void EndQuery(Query& query) override;
+        void BeginQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
+        void EndQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
 
-        bool QueryResult(Query& query, std::uint64_t& result) override;
-        bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) override;
+        bool QueryResult(QueryHeap& queryHeap, std::uint64_t& result) override;
+        bool QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result) override;
 
-        void BeginRenderCondition(Query& query, const RenderConditionMode mode) override;
+        void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) override;
         void EndRenderCondition() override;
 
         /* ----- Drawing ----- */

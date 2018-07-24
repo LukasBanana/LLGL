@@ -215,14 +215,14 @@ void GLRenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* GLRenderSystem::CreateQuery(const QueryDescriptor& desc)
+QueryHeap* GLRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
-    return TakeOwnership(queries_, MakeUnique<GLQuery>(desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<GLQueryHeap>(desc));
 }
 
-void GLRenderSystem::Release(Query& query)
+void GLRenderSystem::Release(QueryHeap& query)
 {
-    RemoveFromUniqueSet(queries_, &query);
+    RemoveFromUniqueSet(queryHeaps_, &query);
 }
 
 /* ----- Fences ----- */

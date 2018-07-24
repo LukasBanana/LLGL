@@ -16,7 +16,7 @@
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
 #include "DbgShaderProgram.h"
-#include "DbgQuery.h"
+#include "DbgQueryHeap.h"
 
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
@@ -535,72 +535,78 @@ void DbgCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void DbgCommandBuffer::BeginQuery(Query& query)
+void DbgCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        if (queryDbg.state == DbgQuery::State::Busy)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "query is already busy");
-        queryDbg.state = DbgQuery::State::Busy;
+        if (auto state = GetAndValidateQueryState(queryHeapDbg, query))
+        {
+            if (*state == DbgQueryHeap::State::Busy)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "query is already busy");
+            *state = DbgQueryHeap::State::Busy;
+        }
     }
 
-    instance.BeginQuery(queryDbg.instance);
+    instance.BeginQuery(queryHeapDbg.instance, query);
 }
 
-void DbgCommandBuffer::EndQuery(Query& query)
+void DbgCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        if (queryDbg.state != DbgQuery::State::Busy)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "query has not started");
-        queryDbg.state = DbgQuery::State::Ready;
+        if (auto state = GetAndValidateQueryState(queryHeapDbg, query))
+        {
+            if (*state != DbgQueryHeap::State::Busy)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "query has not started");
+            *state = DbgQueryHeap::State::Ready;
+        }
     }
 
-    instance.EndQuery(queryDbg.instance);
+    instance.EndQuery(queryHeapDbg.instance, query);
 }
 
-bool DbgCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
+bool DbgCommandBuffer::QueryResult(QueryHeap& queryHeap, std::uint64_t& result)
 {
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateQueryResult(queryDbg);
+        ValidateQueryResult(queryHeapDbg, 0);
     }
 
-    return instance.QueryResult(queryDbg.instance, result);
+    return instance.QueryResult(queryHeapDbg.instance, result);
 }
 
-bool DbgCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+bool DbgCommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result)
 {
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateQueryResult(queryDbg);
+        ValidateQueryResult(queryHeapDbg, 0);
     }
 
-    return instance.QueryPipelineStatisticsResult(queryDbg.instance, result);
+    return instance.QueryPipelineStatisticsResult(queryHeapDbg.instance, result);
 }
 
-void DbgCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+void DbgCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
     LLGL_DBG_SOURCE;
     AssertRecording();
 
-    instance.BeginRenderCondition(queryDbg.instance, mode);
+    instance.BeginRenderCondition(queryHeapDbg.instance, query, mode);
 }
 
 void DbgCommandBuffer::EndRenderCondition()
@@ -1026,12 +1032,37 @@ void DbgCommandBuffer::ValidateBufferType(const BufferType bufferType, const Buf
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type");
 }
 
-void DbgCommandBuffer::ValidateQueryResult(DbgQuery& query)
+bool DbgCommandBuffer::ValidateQueryIndex(DbgQueryHeap& queryHeap, std::uint32_t query)
 {
-    if (query.state != DbgQuery::State::Ready)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
-    if (query.IsRenderCondition())
+    if (query >= queryHeap.states.size())
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "query index out of bounds (" + std::to_string(query) +
+            " specified but upper bound is " + std::to_string(queryHeap.states.size()) + ")"
+        );
+        return false;
+    }
+    return true;
+}
+
+void DbgCommandBuffer::ValidateQueryResult(DbgQueryHeap& queryHeap, std::uint32_t query)
+{
+    if (queryHeap.desc.renderCondition)
         LLGL_DBG_ERROR(ErrorType::UndefinedBehavior, "cannot retrieve result from query that was created as render condition");
+    if (ValidateQueryIndex(queryHeap, query))
+    {
+        if (queryHeap.states[query] != DbgQueryHeap::State::Ready)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
+    }
+}
+
+DbgQueryHeap::State* DbgCommandBuffer::GetAndValidateQueryState(DbgQueryHeap& queryHeap, std::uint32_t query)
+{
+    if (ValidateQueryIndex(queryHeap, query))
+        return &(queryHeap.states[query]);
+    else
+        return nullptr;
 }
 
 void DbgCommandBuffer::AssertRecording()

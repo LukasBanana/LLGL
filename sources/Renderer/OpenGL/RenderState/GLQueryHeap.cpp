@@ -1,11 +1,11 @@
 /*
- * GLQuery.cpp
+ * GLQueryHeap.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLQuery.h"
+#include "GLQueryHeap.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
@@ -59,8 +59,8 @@ static GLenum MapQueryType(const QueryType queryType, std::size_t idx)
     }
 }
 
-GLQuery::GLQuery(const QueryDescriptor& desc) :
-    Query { desc.type }
+GLQueryHeap::GLQueryHeap(const QueryHeapDescriptor& desc) :
+    QueryHeap { desc.type }
 {
     #if defined LLGL_OPENGL && defined GL_ARB_pipeline_statistics_query
     if (desc.type == QueryType::PipelineStatistics)
@@ -68,42 +68,43 @@ GLQuery::GLQuery(const QueryDescriptor& desc) :
         if (HasExtension(GLExt::ARB_pipeline_statistics_query))
         {
             /* Allocate IDs for all pipeline statistics queries */
-            ids_.resize(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
+            groupSize_ = (sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
         }
         else
         {
             /* Allocate single ID for GL_PRIMITIVES_GENERATED */
-            ids_.resize(1);
+            groupSize_ = 1;
         }
     }
     else
     #endif
     {
         /* Allocate single ID */
-        ids_.resize(1);
+        groupSize_ = 1;
     }
 
     /* Generate all GL query objects */
+    ids_.resize(groupSize_ * desc.numQueries);
     glGenQueries(static_cast<GLsizei>(ids_.size()), ids_.data());
 }
 
-GLQuery::~GLQuery()
+GLQueryHeap::~GLQueryHeap()
 {
     glDeleteQueries(static_cast<GLsizei>(ids_.size()), ids_.data());
 }
 
-void GLQuery::Begin()
+void GLQueryHeap::Begin(std::uint32_t query)
 {
     /* Begin all queries in forward order: [0, n) */
-    for (std::size_t i = 0, n = ids_.size(); i < n; ++i)
-        glBeginQuery(MapQueryType(GetType(), i), ids_[i]);
+    for (std::size_t i = 0; i < groupSize_; ++i)
+        glBeginQuery(MapQueryType(GetType(), i), ids_[i + groupSize_ * query]);
 }
 
-void GLQuery::End()
+void GLQueryHeap::End(std::uint32_t query)
 {
     /* End all queries in reverse order: (n, 0] */
-    for (std::size_t i = 1, n = ids_.size(); i <= n; ++i)
-        glEndQuery(MapQueryType(GetType(), n - i));
+    for (std::size_t i = 1; i <= groupSize_; ++i)
+        glEndQuery(MapQueryType(GetType(), groupSize_ - i));
 }
 
 

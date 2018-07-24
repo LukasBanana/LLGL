@@ -23,8 +23,8 @@ class Tutorial04 : public Tutorial
     LLGL::Buffer*           indexBuffer             = nullptr;
     LLGL::Buffer*           constantBuffer          = nullptr;
 
-    LLGL::Query*            occlusionQuery          = nullptr;
-    LLGL::Query*            geometryQuery           = nullptr;
+    LLGL::QueryHeap*            occlusionQuery          = nullptr;
+    LLGL::QueryHeap*            geometryQuery           = nullptr;
 
     struct Settings
     {
@@ -94,19 +94,19 @@ public:
     void CreateQueries()
     {
         // Create query to determine if any samples passed the depth test (occlusion query)
-        LLGL::QueryDescriptor queryDesc;
+        LLGL::QueryHeapDescriptor queryDesc;
         {
             queryDesc.type              = LLGL::QueryType::AnySamplesPassed;
             queryDesc.renderCondition   = true;
         }
-        occlusionQuery = renderer->CreateQuery(queryDesc);
+        occlusionQuery = renderer->CreateQueryHeap(queryDesc);
 
         // Create query to determine number of primitives that are sent to the rasterizer
         {
             queryDesc.type              = LLGL::QueryType::PipelineStatistics;
             queryDesc.renderCondition   = false;
         }
-        geometryQuery = renderer->CreateQuery(queryDesc);
+        geometryQuery = renderer->CreateQueryHeap(queryDesc);
     }
 
     void CreateResourceHeaps()
@@ -120,7 +120,7 @@ public:
         resourceHeap = renderer->CreateResourceHeap(heapDesc);
     }
 
-    std::uint64_t GetAndSyncQueryResult(LLGL::Query* query)
+    std::uint64_t GetAndSyncQueryResult(LLGL::QueryHeap* query)
     {
         // Wait until query result is available and return result
         std::uint64_t result = 0;
@@ -200,7 +200,7 @@ private:
                     // Draw scene
                     commands->SetGraphicsPipeline(*scenePipeline);
 
-                    commands->BeginRenderCondition(*occlusionQuery, LLGL::RenderConditionMode::Wait);
+                    commands->BeginRenderCondition(*occlusionQuery);
                     {
                         commands->DrawIndexed(36, 0);
                     }

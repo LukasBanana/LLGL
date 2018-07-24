@@ -30,7 +30,7 @@
 #include "RenderState/GLComputePipeline.h"
 #include "RenderState/GLResourceHeap.h"
 #include "RenderState/GLRenderPass.h"
-#include "RenderState/GLQuery.h"
+#include "RenderState/GLQueryHeap.h"
 
 
 namespace LLGL
@@ -431,40 +431,42 @@ void GLCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void GLCommandBuffer::BeginQuery(Query& query)
+void GLCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     /* Begin query with internal target */
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
-    queryGL.Begin();
+    auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
+    queryHeapGL.Begin(query);
 }
 
-void GLCommandBuffer::EndQuery(Query& query)
+void GLCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     /* Begin query with internal target */
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
-    queryGL.End();
+    auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
+    queryHeapGL.End(query);
 }
 
-bool GLCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
+bool GLCommandBuffer::QueryResult(QueryHeap& queryHeap, std::uint64_t& result)
 {
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
+    auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
 
     /* Check if query result is available */
+    auto queryID = queryHeapGL.GetFirstID(0);
+
     GLint available = 0;
-    glGetQueryObjectiv(queryGL.GetFirstID(), GL_QUERY_RESULT_AVAILABLE, &available);
+    glGetQueryObjectiv(queryID, GL_QUERY_RESULT_AVAILABLE, &available);
 
     if (available != GL_FALSE)
     {
         if (HasExtension(GLExt::ARB_timer_query))
         {
             /* Get query result with 64-bit version */
-            glGetQueryObjectui64v(queryGL.GetFirstID(), GL_QUERY_RESULT, &result);
+            glGetQueryObjectui64v(queryID, GL_QUERY_RESULT, &result);
         }
         else
         {
             /* Get query result with 32-bit version and convert to 64-bit */
             GLuint result32 = 0;
-            glGetQueryObjectuiv(queryGL.GetFirstID(), GL_QUERY_RESULT, &result32);
+            glGetQueryObjectuiv(queryID, GL_QUERY_RESULT, &result32);
             result = result32;
         }
         return true;
@@ -473,23 +475,28 @@ bool GLCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
     return false;
 }
 
-bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+bool GLCommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result)
 {
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
+    std::uint32_t query = 0;//TODO
+
+    auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
 
     if (HasExtension(GLExt::ARB_pipeline_statistics_query))
     {
+        const auto& idList = queryHeapGL.GetIDs();
+        query *= queryHeapGL.GetGroupSize();
+
         /* Check if query result is available for all query objects */
         GLint available = 0;
-        for (auto id : queryGL.GetIDs())
+        for (std::size_t i = 0; i < queryHeapGL.GetGroupSize(); ++i)
         {
-            glGetQueryObjectiv(id, GL_QUERY_RESULT_AVAILABLE, &available);
+            glGetQueryObjectiv(idList[query + i], GL_QUERY_RESULT_AVAILABLE, &available);
             if (available == GL_FALSE)
                 return false;
         }
 
         /* Parameter setup for 32-bit and 64-bit version of query function */
-        static const std::size_t memberCount = sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t);
+        static const std::size_t memberCount = (sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
 
         union
         {
@@ -498,7 +505,7 @@ bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
         }
         params[memberCount];
 
-        const auto numResults = std::min(queryGL.GetIDs().size(), memberCount);
+        const auto numResults = std::min(queryHeapGL.GetGroupSize(), memberCount);
 
         if (HasExtension(GLExt::ARB_timer_query))
         {
@@ -506,7 +513,7 @@ bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
             for (std::size_t i = 0; i < numResults; ++i)
             {
                 params[i].ui64 = 0;
-                glGetQueryObjectui64v(queryGL.GetIDs()[i], GL_QUERY_RESULT, &(params[i].ui64));
+                glGetQueryObjectui64v(idList[query + i], GL_QUERY_RESULT, &(params[i].ui64));
             }
         }
         else
@@ -515,7 +522,7 @@ bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
             for (std::size_t i = 0; i < numResults; ++i)
             {
                 params[i].ui64 = 0;
-                glGetQueryObjectuiv(queryGL.GetIDs()[i], GL_QUERY_RESULT, &(params[i].ui32));
+                glGetQueryObjectuiv(idList[query + i], GL_QUERY_RESULT, &(params[i].ui32));
             }
         }
 
@@ -540,16 +547,16 @@ bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
     else
     {
         /* Return only result of first query object (of type GL_PRIMITIVES_GENERATED) */
-        return QueryResult(query, result.numPrimitivesGenerated);
+        return QueryResult(queryHeap, result.numPrimitivesGenerated);
     }
 
     return true;
 }
 
-void GLCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+void GLCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
-    glBeginConditionalRender(queryGL.GetFirstID(), GLTypes::Map(mode));
+    auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
+    glBeginConditionalRender(queryHeapGL.GetFirstID(query), GLTypes::Map(mode));
 }
 
 void GLCommandBuffer::EndRenderCondition()

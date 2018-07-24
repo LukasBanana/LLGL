@@ -342,27 +342,27 @@ void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void D3D12CommandBuffer::BeginQuery(Query& query)
+void D3D12CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     //todo
 }
 
-void D3D12CommandBuffer::EndQuery(Query& query)
+void D3D12CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     //todo
 }
 
-bool D3D12CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
+bool D3D12CommandBuffer::QueryResult(QueryHeap& queryHeap, std::uint64_t& result)
 {
     return false; //todo
 }
 
-bool D3D12CommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+bool D3D12CommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result)
 {
     return false; //todo
 }
 
-void D3D12CommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+void D3D12CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     //auto predicateOp = (mode >= RenderConditionMode::WaitInverted ? D3D12_PREDICATION_OP_EQUAL_NOT_ZERO : D3D12_PREDICATION_OP_EQUAL_ZERO);
     //commandList_->SetPredication(nullptr, offset, predicateOp);

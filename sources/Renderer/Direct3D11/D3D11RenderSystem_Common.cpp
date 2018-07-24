@@ -283,14 +283,14 @@ void D3D11RenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* D3D11RenderSystem::CreateQuery(const QueryDescriptor& desc)
+QueryHeap* D3D11RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
-    return TakeOwnership(queries_, MakeUnique<D3D11Query>(device_.Get(), desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<D3D11QueryHeap>(device_.Get(), desc));
 }
 
-void D3D11RenderSystem::Release(Query& query)
+void D3D11RenderSystem::Release(QueryHeap& query)
 {
-    RemoveFromUniqueSet(queries_, &query);
+    RemoveFromUniqueSet(queryHeaps_, &query);
 }
 
 /* ----- Fences ----- */

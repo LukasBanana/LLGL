@@ -63,7 +63,7 @@ class PerformanceTest
         LLGL::RenderContext*                context     = nullptr;
         LLGL::CommandBuffer*                commands    = nullptr;
 
-        LLGL::Query*                        timerQuery  = nullptr;
+        LLGL::QueryHeap*                    timerQuery  = nullptr;
         std::vector<LLGL::Texture*>         textures;
 
         TestConfig                          config;
@@ -111,11 +111,11 @@ class PerformanceTest
         void MeasureTime(const std::string& title, const std::function<void()>& callback)
         {
             // Measure time with query
-            commands->BeginQuery(*timerQuery);
+            commands->BeginQuery(*timerQuery, 0);
             {
                 callback();
             }
-            commands->EndQuery(*timerQuery);
+            commands->EndQuery(*timerQuery, 0);
 
             // Print result
             std::uint64_t result = 0;
@@ -167,7 +167,11 @@ class PerformanceTest
             commands = renderer->CreateCommandBuffer();
 
             // Create timer query
-            timerQuery = renderer->CreateQuery(LLGL::QueryType::TimeElapsed);
+            LLGL::QueryHeapDescriptor queryDesc;
+            {
+                queryDesc.type = LLGL::QueryType::TimeElapsed;
+            }
+            timerQuery = renderer->CreateQueryHeap(queryDesc);
 
             // Create resources
             CreateTextures(config.numTextures * 2);

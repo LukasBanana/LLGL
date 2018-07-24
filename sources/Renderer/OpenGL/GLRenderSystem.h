@@ -27,7 +27,7 @@
 #include "Texture/GLSampler.h"
 #include "Texture/GLRenderTarget.h"
 
-#include "RenderState/GLQuery.h"
+#include "RenderState/GLQueryHeap.h"
 #include "RenderState/GLFence.h"
 #include "RenderState/GLRenderPass.h"
 #include "RenderState/GLPipelineLayout.h"
@@ -147,9 +147,9 @@ class GLRenderSystem final : public RenderSystem
 
         /* ----- Queries ----- */
 
-        Query* CreateQuery(const QueryDescriptor& desc) override;
+        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) override;
 
-        void Release(Query& query) override;
+        void Release(QueryHeap& query) override;
 
         /* ----- Fences ----- */
 
@@ -204,7 +204,7 @@ class GLRenderSystem final : public RenderSystem
         HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<GLComputePipeline>    computePipelines_;
         HWObjectContainer<GLResourceHeap>       resourceHeaps_;
-        HWObjectContainer<GLQuery>              queries_;
+        HWObjectContainer<GLQueryHeap>          queryHeaps_;
         HWObjectContainer<GLFence>              fences_;
 
         DebugCallback                           debugCallback_;

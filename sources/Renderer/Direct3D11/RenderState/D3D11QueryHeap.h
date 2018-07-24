@@ -1,15 +1,15 @@
 /*
- * D3D11Query.h
+ * D3D11QueryHeap.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_D3D11_QUERY_H
-#define LLGL_D3D11_QUERY_H
+#ifndef LLGL_D3D11_QUERY_HEAP_H
+#define LLGL_D3D11_QUERY_HEAP_H
 
 
-#include <LLGL/Query.h>
+#include <LLGL/QueryHeap.h>
 #include "../../DXCommon/ComPtr.h"
 #include <d3d11.h>
 
@@ -32,12 +32,12 @@ union D3D11NativeQuery
     ComPtr<ID3D11Predicate> predicate;
 };
 
-class D3D11Query final : public Query
+class D3D11QueryHeap final : public QueryHeap
 {
 
     public:
 
-        D3D11Query(ID3D11Device* device, const QueryDescriptor& desc);
+        D3D11QueryHeap(ID3D11Device* device, const QueryHeapDescriptor& desc);
 
         // Returns the D3D11_QUERY type.
         inline D3D11_QUERY GetD3DQueryType() const

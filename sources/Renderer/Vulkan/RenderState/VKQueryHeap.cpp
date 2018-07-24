@@ -1,11 +1,11 @@
 /*
- * VKQuery.cpp
+ * VKQueryHeap.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "VKQuery.h"
+#include "VKQueryHeap.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
 
@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-static VkQueryPipelineStatisticFlags GetPipelineStatisticsFlags(const QueryDescriptor& desc)
+static VkQueryPipelineStatisticFlags GetPipelineStatisticsFlags(const QueryHeapDescriptor& desc)
 {
     if (desc.type == QueryType::PipelineStatistics)
     {
@@ -36,8 +36,8 @@ static VkQueryPipelineStatisticFlags GetPipelineStatisticsFlags(const QueryDescr
     return 0;
 }
 
-VKQuery::VKQuery(const VKPtr<VkDevice>& device, const QueryDescriptor& desc) :
-    Query      { desc.type                  },
+VKQueryHeap::VKQueryHeap(const VKPtr<VkDevice>& device, const QueryHeapDescriptor& desc) :
+    QueryHeap      { desc.type                  },
     queryPool_ { device, vkDestroyQueryPool }
 {
     /* Create query pool object */
@@ -47,7 +47,7 @@ VKQuery::VKQuery(const VKPtr<VkDevice>& device, const QueryDescriptor& desc) :
         createInfo.pNext                = nullptr;
         createInfo.flags                = 0;
         createInfo.queryType            = VKTypes::Map(desc.type);
-        createInfo.queryCount           = 1;
+        createInfo.queryCount           = desc.numQueries;
         createInfo.pipelineStatistics   = GetPipelineStatisticsFlags(desc);
     }
     auto result = vkCreateQueryPool(device, &createInfo, nullptr, queryPool_.ReleaseAndGetAddressOf());

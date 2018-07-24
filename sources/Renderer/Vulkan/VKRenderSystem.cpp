@@ -603,14 +603,14 @@ void VKRenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* VKRenderSystem::CreateQuery(const QueryDescriptor& desc)
+QueryHeap* VKRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
-    return TakeOwnership(queries_, MakeUnique<VKQuery>(device_, desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<VKQueryHeap>(device_, desc));
 }
 
-void VKRenderSystem::Release(Query& query)
+void VKRenderSystem::Release(QueryHeap& query)
 {
-    RemoveFromUniqueSet(queries_, &query);
+    RemoveFromUniqueSet(queryHeaps_, &query);
 }
 
 /* ----- Fences ----- */

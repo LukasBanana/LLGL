@@ -24,7 +24,7 @@
 #include "ShaderProgram.h"
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
-#include "Query.h"
+#include "QueryHeap.h"
 
 #include <cstdint>
 
@@ -439,24 +439,24 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /* ----- Queries ----- */
 
         /**
-        \brief Begins the specified query.
-        \param[in] query Specifies the query to begin with.
-        This must be same query object as in the subsequent "EndQuery" function call, to end the query operation.
-        \remarks The "BeginQuery" and "EndQuery" functions can be wrapped around any drawing and/or compute operation.
-        This can an occlusion query for instance, which determines how many fragments have passed the depth test.
-        \see RenderSystem::CreateQuery
+        \brief Begins a query of the specified query heap.
+        \param[in] queryHeap Specifies the query heap.
+        \param[in] query Specifies the zero-based index of the query within the heap to begin with. By default 0.
+        This must be in the half-open range [0, QueryHeapDescriptor::numQueries).
+        \remarks The \c BeginQuery and \c EndQuery functions can be wrapped around any drawing and/or compute operation.
+        This can be an occlusion query for instance, which determines how many fragments have passed the depth test.
+        The result of a query can be retrieved by the command queue after this command buffer has been submitted.
         \see EndQuery
-        \see QueryResult
+        \see RenderSystem::CreateQueryHeap
+        \see CommandQueue::QueryResult
         */
-        virtual void BeginQuery(Query& query) = 0;
+        virtual void BeginQuery(QueryHeap& queryHeap, std::uint32_t query = 0) = 0;
 
         /**
         \brief Ends the specified query.
-        \see RenderSystem::CreateQuery
         \see BeginQuery
-        \see QueryResult
         */
-        virtual void EndQuery(Query& query) = 0;
+        virtual void EndQuery(QueryHeap& queryHeap, std::uint32_t query = 0) = 0;
 
         /**
         \brief Queries the result of the specified query object.
@@ -466,7 +466,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks For a query of type QueryType::PipelineStatistics, the function CommandBuffer::QueryPipelineStatisticsResult must be used.
         \see QueryPipelineStatisticsResult
         */
-        virtual bool QueryResult(Query& query, std::uint64_t& result) = 0;
+        virtual bool QueryResult(QueryHeap& queryHeap, std::uint64_t& result) = 0;
 
         /**
         \brief Queries the result of the specified query object for pipeline statistics.
@@ -475,12 +475,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks For a query of type other than QueryType::PipelineStatistics, the function CommandBuffer::QueryResult must be used.
         \see QueryResult
         */
-        virtual bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) = 0;
+        virtual bool QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result) = 0;
 
         /**
         \brief Begins conditional rendering with the specified query object.
-        \param[in] query Specifies the query object which is to be used as render condition.
-        This query must have been created with the \c renderCondition member set to \c true.
+        \param[in] queryHeap Specifies the query heap.
+        This query heap must have been created with the \c renderCondition member set to \c true.
+        \param[in] query Specifies the zero-based index of the query within the heap which is to be used as render condition. By default 0.
+        This must be in the half-open range <code>[0, QueryHeapDescriptor::numQueries)</code>.
         \param[in] mode Specifies the mode of the render condition.
         \remarks Here is a usage example:
         \code
@@ -491,10 +493,10 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         // draw actual object ...
         myCmdBuffer->EndRenderCondition();
         \endcode
-        \see RenderSystem::CreateQuery
-        \see QueryDescriptor::renderCondition
+        \see RenderSystem::CreateQueryHeap
+        \see QueryHeapDescriptor::renderCondition
         */
-        virtual void BeginRenderCondition(Query& query, const RenderConditionMode mode) = 0;
+        virtual void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) = 0;
 
         /**
         \brief Ends the current render condition.

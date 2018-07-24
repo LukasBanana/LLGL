@@ -518,14 +518,14 @@ void DbgRenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* DbgRenderSystem::CreateQuery(const QueryDescriptor& desc)
+QueryHeap* DbgRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
-    return TakeOwnership(queries_, MakeUnique<DbgQuery>(*instance_->CreateQuery(desc), desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<DbgQueryHeap>(*instance_->CreateQueryHeap(desc), desc));
 }
 
-void DbgRenderSystem::Release(Query& query)
+void DbgRenderSystem::Release(QueryHeap& query)
 {
-    ReleaseDbg(queries_, query);
+    ReleaseDbg(queryHeaps_, query);
 }
 
 /* ----- Fences ----- */

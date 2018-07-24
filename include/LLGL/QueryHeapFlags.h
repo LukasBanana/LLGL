@@ -1,12 +1,12 @@
 /*
- * QueryFlags.h
+ * QueryHeapFlags.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_QUERY_FLAGS_H
-#define LLGL_QUERY_FLAGS_H
+#ifndef LLGL_QUERY_HEAP_FLAGS_H
+#define LLGL_QUERY_HEAP_FLAGS_H
 
 
 #include "Constants.h"
@@ -21,7 +21,7 @@ namespace LLGL
 
 /**
 \brief Query type enumeration.
-\see QueryDescriptor::type
+\see QueryHeapDescriptor::type
 */
 enum class QueryType
 {
@@ -57,7 +57,7 @@ enum class QueryType
 \brief Query data structure for pipeline statistics.
 \remarks If the renderer does not support individual members of this structure, they will be set to QueryPipelineStatistics::invalidNum.
 \see QueryType::PipelineStatistics
-\see CommandBuffer::Query
+\see CommandQueue::QueryPipelineStatisticsResult
 */
 struct QueryPipelineStatistics
 {
@@ -99,26 +99,20 @@ struct QueryPipelineStatistics
 };
 
 /**
-\brief Query descriptor structure.
-\see RenderSystem::CreateQuery
+\brief Query heap descriptor structure.
+\see RenderSystem::CreateQueryHeap
 */
-struct QueryDescriptor
+struct QueryHeapDescriptor
 {
-    QueryDescriptor() = default;
+    //! Specifies the type of queries in the heap. By default QueryType::SamplesPassed.
+    QueryType       type            = QueryType::SamplesPassed;
 
-    //! Constructor to initialize the query type and optionally the render condition.
-    inline QueryDescriptor(QueryType type, bool renderCondition = false) :
-        type            { type            },
-        renderCondition { renderCondition }
-    {
-    }
-
-    //! Specifies the type of the query. By default QueryType::SamplesPassed (occlusion query).
-    QueryType   type            = QueryType::SamplesPassed;
+    //! Specifies the number of queries in the heap. This must be greater than zero. By default 1.
+    std::uint32_t   numQueries      = 1;
 
     /**
-    \brief Specifies whether the query is to be used as a render condition. By default false.
-    \remarks If this is true, the query result cannot be retrieved by CommandBuffer::QueryResult and the member \c type can only have one of the following values:
+    \brief Specifies whether the queries are to be used as render conditions. By default false.
+    \remarks If this is true, the results of the queries cannot be retrieved by CommandBuffer::QueryResult and the member \c type can only have one of the following values:
     - QueryType::SamplesPassed
     - QueryType::AnySamplesPassed
     - QueryType::AnySamplesPassedConservative
@@ -127,8 +121,9 @@ struct QueryDescriptor
     a previous (commonly significantly smaller) geometry has passed the depth and stencil tests.
     \see CommandBuffer::BeginRenderCondition
     \see CommandBuffer::EndRenderCondition
+    \note Only supported with: OpenGL, Direct3D 11, Direct3D 12.
     */
-    bool        renderCondition = false;
+    bool            renderCondition = false;
 };
 
 

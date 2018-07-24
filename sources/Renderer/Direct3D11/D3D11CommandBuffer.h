@@ -119,13 +119,13 @@ class D3D11CommandBuffer final : public CommandBufferExt
 
         /* ----- Queries ----- */
 
-        void BeginQuery(Query& query) override;
-        void EndQuery(Query& query) override;
+        void BeginQuery(QueryHeap& queryHeap, std::uint32_t query) override;
+        void EndQuery(QueryHeap& queryHeap, std::uint32_t query) override;
 
-        bool QueryResult(Query& query, std::uint64_t& result) override;
-        bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) override;
+        bool QueryResult(QueryHeap& queryHeap, std::uint64_t& result) override;
+        bool QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result) override;
 
-        void BeginRenderCondition(Query& query, const RenderConditionMode mode) override;
+        void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode) override;
         void EndRenderCondition() override;
 
         /* ----- Drawing ----- */

@@ -229,7 +229,7 @@ int main()
 
         // Create query
         #ifdef TEST_QUERY
-        auto query = renderer->CreateQuery(LLGL::QueryType::PipelineStatistics);
+        auto query = renderer->CreateQueryHeap(LLGL::QueryType::PipelineStatistics);
         #endif
 
         // Add input event listener

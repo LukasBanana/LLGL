@@ -12,7 +12,7 @@
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"
 #include "RenderState/VKResourceHeap.h"
-#include "RenderState/VKQuery.h"
+#include "RenderState/VKQueryHeap.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKRenderTarget.h"
 #include "Buffer/VKBuffer.h"
@@ -564,34 +564,34 @@ void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void VKCommandBuffer::BeginQuery(Query& query)
+void VKCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryVK = LLGL_CAST(VKQuery&, query);
+    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
     /* Begin query and determine control flags (for either 'SamplesPassed' or 'AnySamplesPassed') */
     VkQueryControlFlags flags = 0;
 
-    if (query.GetType() == QueryType::SamplesPassed)
+    if (queryHeapVK.GetType() == QueryType::SamplesPassed)
         flags |= VK_QUERY_CONTROL_PRECISE_BIT;
 
-    vkCmdBeginQuery(commandBuffer_, queryVK.GetVkQueryPool(), 0, flags);
+    vkCmdBeginQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query, flags);
 }
 
-void VKCommandBuffer::EndQuery(Query& query)
+void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryVK = LLGL_CAST(VKQuery&, query);
-    vkCmdEndQuery(commandBuffer_, queryVK.GetVkQueryPool(), 0);
-    AppendQueryPoolInFlight(queryVK.GetVkQueryPool());
+    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
+    vkCmdEndQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query);
+    AppendQueryPoolInFlight(queryHeapVK.GetVkQueryPool());
 }
 
-bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
+bool VKCommandBuffer::QueryResult(QueryHeap& queryHeap, std::uint64_t& result)
 {
-    auto& queryVK = LLGL_CAST(VKQuery&, query);
+    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
     /* Store result directly into output parameter */
     auto stateResult = vkGetQueryPoolResults(
         device_,
-        queryVK.GetVkQueryPool(),
+        queryHeapVK.GetVkQueryPool(),
         0,
         1,
         sizeof(result),
@@ -609,16 +609,16 @@ bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
     return true;
 }
 
-bool VKCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+bool VKCommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result)
 {
-    auto& queryVK = LLGL_CAST(VKQuery&, query);
+    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
     /* Store results in intermediate memory */
     std::uint64_t intermediateResults[11];
 
     auto stateResult = vkGetQueryPoolResults(
         device_,
-        queryVK.GetVkQueryPool(),
+        queryHeapVK.GetVkQueryPool(),
         0,
         1,
         sizeof(intermediateResults),
@@ -650,14 +650,14 @@ bool VKCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
     return true;
 }
 
-void VKCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    //todo
+    // not supported
 }
 
 void VKCommandBuffer::EndRenderCondition()
 {
-    //todo
+    // not supported
 }
 
 /* ----- Drawing ----- */

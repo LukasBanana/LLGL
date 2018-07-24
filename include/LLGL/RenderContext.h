@@ -22,7 +22,7 @@
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
 #include "Sampler.h"
-#include "Query.h"
+#include "QueryHeap.h"
 
 #include <string>
 #include <map>

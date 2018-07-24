@@ -430,12 +430,12 @@ void D3D12RenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* D3D12RenderSystem::CreateQuery(const QueryDescriptor& desc)
+QueryHeap* D3D12RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
     return nullptr;//todo...
 }
 
-void D3D12RenderSystem::Release(Query& query)
+void D3D12RenderSystem::Release(QueryHeap& query)
 {
     //todo...
 }

@@ -349,7 +349,7 @@ int main()
         auto& sampler = *renderer->CreateSampler(samplerDesc);
 
         #ifdef TEST_QUERY
-        auto query = renderer->CreateQuery(LLGL::QueryType::SamplesPassed);
+        auto query = renderer->CreateQueryHeap(LLGL::QueryType::SamplesPassed);
         bool hasQueryResult = false;
         #endif
 

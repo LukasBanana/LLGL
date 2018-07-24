@@ -1,11 +1,11 @@
 /*
- * D3D11Query.cpp
+ * D3D11QueryHeap.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D11Query.h"
+#include "D3D11QueryHeap.h"
 #include "../D3D11Types.h"
 #include "../../DXCommon/DXCore.h"
 
@@ -35,8 +35,8 @@ static bool IsPredicateQuery(D3D11_QUERY queryType)
     );
 }
 
-D3D11Query::D3D11Query(ID3D11Device* device, const QueryDescriptor& desc) :
-    Query            { desc.type                  },
+D3D11QueryHeap::D3D11QueryHeap(ID3D11Device* device, const QueryHeapDescriptor& desc) :
+    QueryHeap        { desc.type                  },
     queryObjectType_ { D3D11Types::Map(desc.type) }
 {
     /* Create D3D query object */

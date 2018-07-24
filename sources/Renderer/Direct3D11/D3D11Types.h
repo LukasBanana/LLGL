@@ -15,7 +15,7 @@
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/BufferFlags.h>
-#include <LLGL/Query.h>
+#include <LLGL/QueryHeapFlags.h>
 #include "Direct3D11.h"
 
 

@@ -20,7 +20,7 @@ namespace LLGL
 
 /**
 \brief Render condition mode enumeration.
-\remarks The condition is determined by the type of the Query object.
+\remarks The condition is determined by the type of the QueryHeap object.
 \see RenderContext::BeginRenderCondition
 */
 enum class RenderConditionMode

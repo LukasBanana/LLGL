@@ -84,11 +84,11 @@ int main()
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
 
         // Create timer query
-        LLGL::QueryDescriptor queryDesc;
+        LLGL::QueryHeapDescriptor queryDesc;
         {
             queryDesc.type = LLGL::QueryType::TimeElapsed;
         }
-        auto timerQuery = renderer->CreateQuery(queryDesc);
+        auto timerQuery = renderer->CreateQueryHeap(queryDesc);
 
         // Create graphics pipeline
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram });
