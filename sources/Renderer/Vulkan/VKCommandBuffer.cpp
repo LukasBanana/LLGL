@@ -563,7 +563,7 @@ void VKCommandBuffer::BeginQuery(Query& query)
 {
     auto& queryVK = LLGL_CAST(VKQuery&, query);
 
-    /* Determine control flags (for either 'SamplesPassed' or 'AnySamplesPassed') */
+    /* Begin query and determine control flags (for either 'SamplesPassed' or 'AnySamplesPassed') */
     VkQueryControlFlags flags = 0;
 
     if (query.GetType() == QueryType::SamplesPassed)

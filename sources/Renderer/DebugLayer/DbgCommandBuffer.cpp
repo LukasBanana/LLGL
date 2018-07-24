@@ -574,9 +574,7 @@ bool DbgCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        AssertRecording();
-        if (queryDbg.state != DbgQuery::State::Ready)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
+        ValidateQueryResult(queryDbg);
     }
 
     return instance.QueryResult(queryDbg.instance, result);
@@ -589,9 +587,7 @@ bool DbgCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipeline
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        AssertRecording();
-        if (queryDbg.state != DbgQuery::State::Ready)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
+        ValidateQueryResult(queryDbg);
     }
 
     return instance.QueryPipelineStatisticsResult(queryDbg.instance, result);
@@ -1028,6 +1024,14 @@ void DbgCommandBuffer::ValidateBufferType(const BufferType bufferType, const Buf
 {
     if (bufferType != compareType)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type");
+}
+
+void DbgCommandBuffer::ValidateQueryResult(DbgQuery& query)
+{
+    if (query.state != DbgQuery::State::Ready)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
+    if (query.IsRenderCondition())
+        LLGL_DBG_ERROR(ErrorType::UndefinedBehavior, "cannot retrieve result from query that was created as render condition");
 }
 
 void DbgCommandBuffer::AssertRecording()

@@ -416,8 +416,6 @@ private:
         commands->End();
         commandQueue->Submit(*commands);
 
-        commandQueue->WaitIdle();
-
         // Present result on the screen
         context->Present();
     }

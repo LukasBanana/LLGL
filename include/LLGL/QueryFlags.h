@@ -119,7 +119,14 @@ struct QueryDescriptor
     /**
     \brief Specifies whether the query is to be used as a render condition. By default false.
     \remarks If this is true, the query result cannot be retrieved by CommandBuffer::QueryResult and the member \c type can only have one of the following values:
-    QueryType::SamplesPassed, QueryType::AnySamplesPassed, QueryType::AnySamplesPassedConservative, or QueryType::StreamOutOverflow.
+    - QueryType::SamplesPassed
+    - QueryType::AnySamplesPassed
+    - QueryType::AnySamplesPassedConservative
+    - QueryType::StreamOutOverflow
+    \remarks Render conditions can be used to render complex geometry under the condition that
+    a previous (commonly significantly smaller) geometry has passed the depth and stencil tests.
+    \see CommandBuffer::BeginRenderCondition
+    \see CommandBuffer::EndRenderCondition
     */
     bool        renderCondition = false;
 };

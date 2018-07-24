@@ -26,40 +26,41 @@ static void DXCreatePredicate(ID3D11Device* device, const D3D11_QUERY_DESC& desc
     DXThrowIfFailed(hr, "failed to create D3D11 predicate");
 }
 
+static bool IsPredicateQuery(D3D11_QUERY queryType)
+{
+    return
+    (
+        queryType == D3D11_QUERY_OCCLUSION_PREDICATE     ||
+        queryType == D3D11_QUERY_SO_OVERFLOW_PREDICATE
+    );
+}
+
 D3D11Query::D3D11Query(ID3D11Device* device, const QueryDescriptor& desc) :
-    Query            { desc.type             },
-    queryObjectType_ { D3D11Types::Map(desc) }
+    Query            { desc.type                  },
+    queryObjectType_ { D3D11Types::Map(desc.type) }
 {
     /* Create D3D query object */
-    if (desc.renderCondition)
+    D3D11_QUERY_DESC queryDesc;
     {
-        D3D11_QUERY_DESC queryDesc;
-        {
-            queryDesc.Query     = queryObjectType_;
-            queryDesc.MiscFlags = D3D11_QUERY_MISC_PREDICATEHINT;
-        }
+        queryDesc.Query     = queryObjectType_;
+        queryDesc.MiscFlags = (desc.renderCondition ? D3D11_QUERY_MISC_PREDICATEHINT : 0);
+    }
+
+    if (IsPredicateQuery(queryObjectType_))
         DXCreatePredicate(device, queryDesc, native_.predicate);
-    }
     else
-    {
-        D3D11_QUERY_DESC queryDesc;
-        {
-            queryDesc.Query     = queryObjectType_;
-            queryDesc.MiscFlags = 0;
-        }
         DXCreateQuery(device, queryDesc, native_.query);
-    }
 
     /* Create secondary D3D query objects */
     if (queryObjectType_ == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
-        D3D11_QUERY_DESC queryDesc;
+        D3D11_QUERY_DESC timerQueryDesc;
         {
-            queryDesc.Query     = D3D11_QUERY_TIMESTAMP;
-            queryDesc.MiscFlags = 0;
+            timerQueryDesc.Query        = D3D11_QUERY_TIMESTAMP;
+            timerQueryDesc.MiscFlags    = 0;
         }
-        DXCreateQuery(device, queryDesc, timeStampQueryBegin_);
-        DXCreateQuery(device, queryDesc, timeStampQueryEnd_);
+        DXCreateQuery(device, timerQueryDesc, timeStampQueryBegin_);
+        DXCreateQuery(device, timerQueryDesc, timeStampQueryEnd_);
     }
 }
 

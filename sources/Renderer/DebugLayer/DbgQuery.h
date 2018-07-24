@@ -29,13 +29,23 @@ class DbgQuery : public Query
         };
 
         DbgQuery(Query& instance, const QueryDescriptor& desc) :
-            Query    { desc.type },
-            instance { instance  }
+            Query            { desc.type            },
+            instance         { instance             },
+            renderCondition_ { desc.renderCondition }
         {
         }
 
+        inline bool IsRenderCondition() const
+        {
+            return renderCondition_;
+        }
+
         Query&  instance;
-        State   state   = State::Uninitialized;
+        State   state               = State::Uninitialized;
+
+    private:
+
+        bool    renderCondition_    = false;
 
 };
 

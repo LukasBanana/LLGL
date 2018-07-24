@@ -480,20 +480,19 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Begins conditional rendering with the specified query object.
         \param[in] query Specifies the query object which is to be used as render condition.
-        This must be an occlusion query, i.e. it's type must be either
-        QueryType::SamplesPassed, QueryType::AnySamplesPassed, or QueryType::AnySamplesPassedConservative.
+        This query must have been created with the \c renderCondition member set to \c true.
         \param[in] mode Specifies the mode of the render condition.
         \remarks Here is a usage example:
         \code
-        context->BeginQuery(*occlusionQuery);
+        myCmdBuffer->BeginQuery(*myOcclusionQuery);
         // draw bounding box ...
-        context->EndQuery(*occlusionQuery);
-        context->BeginRenderConidtion(*occlusionQuery, LLGL::RenderConditionMode::Wait);
+        myCmdBuffer->EndQuery(*myOcclusionQuery);
+        myCmdBuffer->BeginRenderCondition(*myOcclusionQuery, LLGL::RenderConditionMode::Wait);
         // draw actual object ...
-        context->EndRenderConidtion();
+        myCmdBuffer->EndRenderCondition();
         \endcode
-        \see QueryType
-        \see RenderConditionMode
+        \see RenderSystem::CreateQuery
+        \see QueryDescriptor::renderCondition
         */
         virtual void BeginRenderCondition(Query& query, const RenderConditionMode mode) = 0;
 

@@ -458,8 +458,8 @@ bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
         case D3D11_QUERY_OCCLUSION_PREDICATE:
         case D3D11_QUERY_SO_OVERFLOW_PREDICATE:
         {
-            BOOL data = 0;
-            if (context_->GetData(queryD3D.GetNative(), &data, sizeof(data), 0) == S_OK)
+            BOOL data = FALSE;
+            if (context_->GetData(queryD3D.GetPredicate(), &data, sizeof(data), 0) == S_OK)
             {
                 result = data;
                 return true;

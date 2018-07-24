@@ -209,31 +209,17 @@ D3D11_TEXTURE_ADDRESS_MODE Map(const SamplerAddressMode addressMode)
     DXTypes::MapFailed("SamplerAddressMode", "D3D11_TEXTURE_ADDRESS_MODE");
 }
 
-D3D11_QUERY Map(const QueryDescriptor& queryDesc)
+D3D11_QUERY Map(const QueryType queryType)
 {
-    if (queryDesc.renderCondition)
+    switch (queryType)
     {
-        switch (queryDesc.type)
-        {
-            case QueryType::SamplesPassed:                      /* pass */
-            case QueryType::AnySamplesPassed:                   /* pass */
-            case QueryType::AnySamplesPassedConservative:       return D3D11_QUERY_OCCLUSION_PREDICATE;
-            case QueryType::StreamOutOverflow:                  return D3D11_QUERY_SO_OVERFLOW_PREDICATE;
-            default:                                            break;
-        }
-    }
-    else
-    {
-        switch (queryDesc.type)
-        {
-            case QueryType::SamplesPassed:                      /* pass */
-            case QueryType::AnySamplesPassed:                   /* pass */
-            case QueryType::AnySamplesPassedConservative:       return D3D11_QUERY_OCCLUSION;
-            case QueryType::TimeElapsed:                        return D3D11_QUERY_TIMESTAMP_DISJOINT;
-            case QueryType::StreamOutOverflow:                  break;
-            case QueryType::StreamOutPrimitivesWritten:         return D3D11_QUERY_SO_STATISTICS;
-            case QueryType::PipelineStatistics:                 return D3D11_QUERY_PIPELINE_STATISTICS;
-        }
+        case QueryType::SamplesPassed:                      return D3D11_QUERY_OCCLUSION;
+        case QueryType::AnySamplesPassed:                   return D3D11_QUERY_OCCLUSION_PREDICATE;
+        case QueryType::AnySamplesPassedConservative:       break;
+        case QueryType::TimeElapsed:                        return D3D11_QUERY_TIMESTAMP_DISJOINT;
+        case QueryType::StreamOutOverflow:                  return D3D11_QUERY_SO_OVERFLOW_PREDICATE;
+        case QueryType::StreamOutPrimitivesWritten:         return D3D11_QUERY_SO_STATISTICS;
+        case QueryType::PipelineStatistics:                 return D3D11_QUERY_PIPELINE_STATISTICS;
     }
     DXTypes::MapFailed("QueryType", "D3D11_QUERY");
 }

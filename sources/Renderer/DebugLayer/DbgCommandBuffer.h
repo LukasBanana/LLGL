@@ -21,6 +21,7 @@ namespace LLGL
 class DbgBuffer;
 class DbgRenderContext;
 class DbgRenderTarget;
+class DbgQuery;
 class RenderingProfiler;
 class RenderingDebugger;
 
@@ -180,6 +181,8 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void ValidateStageFlags(long stageFlags, long validFlags);
         void ValidateBufferType(const BufferType bufferType, const BufferType compareType);
+
+        void ValidateQueryResult(DbgQuery& query);
 
         void AssertRecording();
         void AssertInsideRenderPass();
