@@ -14,20 +14,16 @@ namespace LLGL
 {
 
 
-static ComPtr<ID3D11Query> DXCreateQuery(ID3D11Device* device, const D3D11_QUERY_DESC& desc)
+static void DXCreateQuery(ID3D11Device* device, const D3D11_QUERY_DESC& desc, ComPtr<ID3D11Query>& query)
 {
-    ComPtr<ID3D11Query> query;
-    auto hr = device->CreateQuery(&desc, &query);
+    auto hr = device->CreateQuery(&desc, query.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 query");
-    return query;
 }
 
-static ComPtr<ID3D11Predicate> DXCreatePredicate(ID3D11Device* device, const D3D11_QUERY_DESC& desc)
+static void DXCreatePredicate(ID3D11Device* device, const D3D11_QUERY_DESC& desc, ComPtr<ID3D11Predicate>& predicate)
 {
-    ComPtr<ID3D11Predicate> predicate;
-    auto hr = device->CreatePredicate(&desc, &predicate);
+    auto hr = device->CreatePredicate(&desc, predicate.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 predicate");
-    return predicate;
 }
 
 D3D11Query::D3D11Query(ID3D11Device* device, const QueryDescriptor& desc) :
@@ -35,22 +31,35 @@ D3D11Query::D3D11Query(ID3D11Device* device, const QueryDescriptor& desc) :
     queryObjectType_ { D3D11Types::Map(desc) }
 {
     /* Create D3D query object */
-    D3D11_QUERY_DESC queryDesc;
-    {
-        queryDesc.Query     = queryObjectType_;
-        queryDesc.MiscFlags = 0;
-    }
     if (desc.renderCondition)
-        hwQuery_.predicate = DXCreatePredicate(device, queryDesc);
+    {
+        D3D11_QUERY_DESC queryDesc;
+        {
+            queryDesc.Query     = queryObjectType_;
+            queryDesc.MiscFlags = D3D11_QUERY_MISC_PREDICATEHINT;
+        }
+        DXCreatePredicate(device, queryDesc, native_.predicate);
+    }
     else
-        hwQuery_.query = DXCreateQuery(device, queryDesc);
+    {
+        D3D11_QUERY_DESC queryDesc;
+        {
+            queryDesc.Query     = queryObjectType_;
+            queryDesc.MiscFlags = 0;
+        }
+        DXCreateQuery(device, queryDesc, native_.query);
+    }
 
     /* Create secondary D3D query objects */
     if (queryObjectType_ == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
-        queryDesc.Query         = D3D11_QUERY_TIMESTAMP;
-        timeStampQueryBegin_    = DXCreateQuery(device, queryDesc);
-        timeStampQueryEnd_      = DXCreateQuery(device, queryDesc);
+        D3D11_QUERY_DESC queryDesc;
+        {
+            queryDesc.Query     = D3D11_QUERY_TIMESTAMP;
+            queryDesc.MiscFlags = 0;
+        }
+        DXCreateQuery(device, queryDesc, timeStampQueryBegin_);
+        DXCreateQuery(device, queryDesc, timeStampQueryEnd_);
     }
 }
 

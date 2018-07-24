@@ -7,14 +7,16 @@
 
 #include "D3D11CommandQueue.h"
 #include "RenderState/D3D11Fence.h"
+#include "../CheckedCast.h"
 
 
 namespace LLGL
 {
 
 
-D3D11CommandQueue::D3D11CommandQueue(ComPtr<ID3D11DeviceContext>& context) :
-    context_ { context }
+D3D11CommandQueue::D3D11CommandQueue(ID3D11Device* device, ComPtr<ID3D11DeviceContext>& context) :
+    context_           { context },
+    intermediateFence_ { device  }
 {
 }
 
@@ -29,19 +31,22 @@ void D3D11CommandQueue::Submit(CommandBuffer& /*commandBuffer*/)
 
 void D3D11CommandQueue::Submit(Fence& fence)
 {
-    //TODO: use D3D11Fence
+    auto& fenceD3D = LLGL_CAST(D3D11Fence&, fence);
+    fenceD3D.Submit(context_.Get());
 }
 
-bool D3D11CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
+bool D3D11CommandQueue::WaitFence(Fence& fence, std::uint64_t /*timeout*/)
 {
-    //TODO: use D3D11Fence
-    context_->Flush();
+    auto& fenceD3D = LLGL_CAST(D3D11Fence&, fence);
+    fenceD3D.Wait(context_.Get());
     return true;
 }
 
 void D3D11CommandQueue::WaitIdle()
 {
-    context_->Flush();
+    /* Submit intermediate fence and wait for it to be signaled */
+    Submit(intermediateFence_);
+    WaitFence(intermediateFence_, ~0ull);
 }
 
 

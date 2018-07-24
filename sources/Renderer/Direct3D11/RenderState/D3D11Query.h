@@ -18,13 +18,13 @@ namespace LLGL
 {
 
 
-union D3D11HardwareQuery
+union D3D11NativeQuery
 {
-    D3D11HardwareQuery() :
+    inline D3D11NativeQuery() :
         query { nullptr }
     {
     }
-    ~D3D11HardwareQuery()
+    inline ~D3D11NativeQuery()
     {
     }
 
@@ -48,13 +48,13 @@ class D3D11Query final : public Query
         // Returns the native ID3D11Query object.
         inline ID3D11Query* GetNative() const
         {
-            return hwQuery_.query.Get();
+            return native_.query.Get();
         }
 
         // Returns the native ID3D11Predicate object.
         inline ID3D11Predicate* GetPredicate() const
         {
-            return hwQuery_.predicate.Get();
+            return native_.predicate.Get();
         }
 
         // Returns the query object for a time-stamp begin.
@@ -73,7 +73,7 @@ class D3D11Query final : public Query
 
         D3D11_QUERY         queryObjectType_    = D3D11_QUERY_EVENT;
 
-        D3D11HardwareQuery  hwQuery_;
+        D3D11NativeQuery    native_;
 
         // Query objects for the special query type: TimeElapsed
         ComPtr<ID3D11Query> timeStampQueryBegin_;

@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandQueue.h>
+#include "RenderState/D3D11Fence.h"
 #include "../DXCommon/ComPtr.h"
 #include <d3d11.h>
 
@@ -23,7 +24,7 @@ class D3D11CommandQueue final : public CommandQueue
 
     public:
 
-        D3D11CommandQueue(ComPtr<ID3D11DeviceContext>& context);
+        D3D11CommandQueue(ID3D11Device* device, ComPtr<ID3D11DeviceContext>& context);
 
         /* ----- Command Buffers ----- */
 
@@ -39,6 +40,7 @@ class D3D11CommandQueue final : public CommandQueue
     private:
 
         ComPtr<ID3D11DeviceContext> context_;
+        D3D11Fence                  intermediateFence_;
 
 };
 

@@ -297,7 +297,7 @@ void D3D11RenderSystem::Release(Query& query)
 
 Fence* D3D11RenderSystem::CreateFence()
 {
-    return TakeOwnership(fences_, MakeUnique<D3D11Fence>(/*device_.Get(), 0*/));
+    return TakeOwnership(fences_, MakeUnique<D3D11Fence>(device_.Get()));
 }
 
 void D3D11RenderSystem::Release(Fence& fence)
@@ -396,7 +396,7 @@ bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::
 void D3D11RenderSystem::CreateStateManagerAndCommandQueue()
 {
     stateMngr_ = MakeUnique<D3D11StateManager>(context_);
-    commandQueue_ = MakeUnique<D3D11CommandQueue>(context_);
+    commandQueue_ = MakeUnique<D3D11CommandQueue>(device_.Get(), context_);
 }
 
 void D3D11RenderSystem::QueryRendererInfo()

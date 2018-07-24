@@ -118,7 +118,7 @@ struct QueryDescriptor
 
     /**
     \brief Specifies whether the query is to be used as a render condition. By default false.
-    \remarks If this is true, 'type' can only have one of the following values:
+    \remarks If this is true, the query result cannot be retrieved by CommandBuffer::QueryResult and the member \c type can only have one of the following values:
     QueryType::SamplesPassed, QueryType::AnySamplesPassed, QueryType::AnySamplesPassedConservative, or QueryType::StreamOutOverflow.
     */
     bool        renderCondition = false;
