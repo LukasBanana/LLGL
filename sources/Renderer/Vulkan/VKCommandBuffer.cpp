@@ -84,6 +84,11 @@ void VKCommandBuffer::Begin()
     }
     auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
+
+    #if 1//TODO: optimize
+    /* Reset all query pools that were in flight during last encoding */
+    ResetQueryPoolsInFlight();
+    #endif
 }
 
 void VKCommandBuffer::End()
@@ -576,6 +581,7 @@ void VKCommandBuffer::EndQuery(Query& query)
 {
     auto& queryVK = LLGL_CAST(VKQuery&, query);
     vkCmdEndQuery(commandBuffer_, queryVK.GetVkQueryPool(), 0);
+    AppendQueryPoolInFlight(queryVK.GetVkQueryPool());
 }
 
 bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
@@ -628,7 +634,7 @@ bool VKCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
     VKThrowIfFailed(stateResult, "failed to retrieve results from Vulkan query pool");
 
     /* Copy result to output parameter */
-    result.numPrimitivesGenerated               = 0;
+    result.numPrimitivesGenerated               = intermediateResults[ 1]; // ???
     result.numVerticesSubmitted                 = intermediateResults[ 0]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT
     result.numPrimitivesSubmitted               = intermediateResults[ 1]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT
     result.numVertexShaderInvocations           = intermediateResults[ 2]; // VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT
@@ -868,6 +874,22 @@ void VKCommandBuffer::EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier)
 }
 
 #endif
+
+void VKCommandBuffer::ResetQueryPoolsInFlight()
+{
+    for (std::size_t i = 0; i < numQueryPoolsInFlight_; ++i)
+        vkCmdResetQueryPool(commandBuffer_, queryPoolsInFlight_[i], 0, 1);
+    numQueryPoolsInFlight_ = 0;
+}
+
+void VKCommandBuffer::AppendQueryPoolInFlight(VkQueryPool queryPool)
+{
+    if (numQueryPoolsInFlight_ >= queryPoolsInFlight_.size())
+        queryPoolsInFlight_.push_back(queryPool);
+    else
+        queryPoolsInFlight_[numQueryPoolsInFlight_] = queryPool;
+    ++numQueryPoolsInFlight_;
+}
 
 
 } // /namespace LLGL

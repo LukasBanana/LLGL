@@ -168,6 +168,11 @@ class VKCommandBuffer final : public CommandBuffer
 
         void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
 
+        #if 1//TODO: optimize
+        void ResetQueryPoolsInFlight();
+        void AppendQueryPoolInFlight(VkQueryPool queryPool);
+        #endif
+
         const VKPtr<VkDevice>&          device_;
         VKPtr<VkCommandPool>            commandPool_;
 
@@ -189,15 +194,15 @@ class VKCommandBuffer final : public CommandBuffer
         std::uint32_t                   numColorAttachments_        = 0;
         bool                            hasDSVAttachment_           = false;
 
-        #if 1//TODO: remove (use numColorAttachments_ instead)
-        VkImage                         imageColor_                 = VK_NULL_HANDLE;
-        VkImage                         imageDepthStencil_          = VK_NULL_HANDLE;
-        #endif
-
         std::uint32_t                   queuePresentFamily_         = 0;
 
         bool                            scissorEnabled_             = false;
         bool                            scissorRectInvalidated_     = true;
+
+        #if 1//TODO: optimize usage of query pools
+        std::vector<VkQueryPool>        queryPoolsInFlight_;
+        std::size_t                     numQueryPoolsInFlight_      = 0;
+        #endif
 
 };
 
