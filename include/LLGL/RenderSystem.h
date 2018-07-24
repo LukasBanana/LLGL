@@ -91,9 +91,9 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \see RenderSystemDescriptor::moduleName
         */
         static std::unique_ptr<RenderSystem> Load(
-            const RenderSystemDescriptor& renderSystemDesc,
-            RenderingProfiler* profiler = nullptr,
-            RenderingDebugger* debugger = nullptr
+            const RenderSystemDescriptor&   renderSystemDesc,
+            RenderingProfiler*              profiler            = nullptr,
+            RenderingDebugger*              debugger            = nullptr
         );
 
         /**

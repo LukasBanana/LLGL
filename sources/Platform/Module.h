@@ -25,22 +25,22 @@ namespace LLGL
 #endif
 
 
-//! Module class (to load procedures for shared libraries)
+// Module class (to load procedures for shared libraries)
 class Module : public NonCopyable
 {
 
     public:
 
-        //! Converts the module name into a specific filename (e.g. "OpenGL" to "LLGL_OpenGL.dll" on Windows).
+        // Converts the module name into a specific filename (e.g. "OpenGL" to "LLGL_OpenGL.dll" on Windows).
         static std::string GetModuleFilename(std::string moduleName);
 
-        //! Returns true if the specified module is available.
+        // Returns true if the specified module is available.
         static bool IsAvailable(const std::string& moduleFilename);
 
-        //! Returns the specified module or null if it is not available.
+        // Returns the specified module or null if it is not available.
         static std::unique_ptr<Module> Load(const std::string& moduleFilename);
 
-        //! Returns a raw pointer to the specified procedure loaded from this module.
+        // Returns a raw pointer to the specified procedure loaded from this module.
         virtual void* LoadProcedure(const std::string& procedureName) = 0;
 
 };

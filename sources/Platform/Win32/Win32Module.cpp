@@ -6,6 +6,7 @@
  */
 
 #include "Win32Module.h"
+#include "../../Core/Helper.h"
 
 
 namespace LLGL
@@ -18,7 +19,7 @@ std::string Module::GetModuleFilename(std::string moduleName)
     #ifdef LLGL_DEBUG
     moduleName += "D";
     #endif
-    return "LLGL_" + moduleName + ".dll";
+    return ("LLGL_" + moduleName + ".dll");
 }
 
 // Call Win32 function 'LoadLibrary' but with dialog error messages disabled
@@ -50,7 +51,7 @@ bool Module::IsAvailable(const std::string& moduleFilename)
 
 std::unique_ptr<Module> Module::Load(const std::string& moduleFilename)
 {
-    return std::unique_ptr<Module>(new Win32Module(moduleFilename));
+    return MakeUnique<Win32Module>(moduleFilename);
 }
 
 Win32Module::Win32Module(const std::string& moduleFilename)
@@ -60,7 +61,7 @@ Win32Module::Win32Module(const std::string& moduleFilename)
 
     /* Check if loading has failed */
     if (!handle_)
-        throw std::runtime_error("failed to load dynamic link library (DLL) \"" + moduleFilename + "\"");
+        throw std::runtime_error("failed to load dynamic link library (DLL): \"" + moduleFilename + "\"");
 }
 
 Win32Module::~Win32Module()
