@@ -459,25 +459,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void EndQuery(QueryHeap& queryHeap, std::uint32_t query = 0) = 0;
 
         /**
-        \brief Queries the result of the specified query object.
-        \param[in] query Specifies the query object whose result is to be queried. This query object must not have been created with the QueryType::PipelineStatistics type.
-        \param[out] result Specifies the output result in form of a 64-bit unsigned integer.
-        \return True if the result is available, otherwise false in which case 'result' is not modified.
-        \remarks For a query of type QueryType::PipelineStatistics, the function CommandBuffer::QueryPipelineStatisticsResult must be used.
-        \see QueryPipelineStatisticsResult
-        */
-        virtual bool QueryResult(QueryHeap& queryHeap, std::uint64_t& result) = 0;
-
-        /**
-        \brief Queries the result of the specified query object for pipeline statistics.
-        \param[in] query Specifies the query object whose result is to be queried. This query object must have been created with the QueryType::PipelineStatistics type.
-        \param[out] result Specifies the output result in form of the QueryPipelineStatistics structure.
-        \remarks For a query of type other than QueryType::PipelineStatistics, the function CommandBuffer::QueryResult must be used.
-        \see QueryResult
-        */
-        virtual bool QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result) = 0;
-
-        /**
         \brief Begins conditional rendering with the specified query object.
         \param[in] queryHeap Specifies the query heap.
         This query heap must have been created with the \c renderCondition member set to \c true.

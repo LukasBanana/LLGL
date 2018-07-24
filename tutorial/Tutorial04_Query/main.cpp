@@ -128,12 +128,12 @@ public:
         if (query->GetType() == LLGL::QueryType::PipelineStatistics)
         {
             LLGL::QueryPipelineStatistics statistics;
-            while (!commands->QueryPipelineStatisticsResult(*query, statistics)) { /* wait */ }
+            while (!commandQueue->QueryResult(*query, 0, 1, &statistics, sizeof(statistics))) { /* wait */ }
             result = statistics.numPrimitivesGenerated;
         }
         else
         {
-            while (!commands->QueryResult(*query, result)) { /* wait */ }
+            while (!commandQueue->QueryResult(*query, 0, 1, &result, sizeof(result))) { /* wait */ }
         }
 
         return result;

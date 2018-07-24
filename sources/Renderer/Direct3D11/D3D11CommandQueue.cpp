@@ -7,6 +7,7 @@
 
 #include "D3D11CommandQueue.h"
 #include "RenderState/D3D11Fence.h"
+#include "RenderState/D3D11QueryHeap.h"
 #include "../CheckedCast.h"
 
 
@@ -25,6 +26,20 @@ D3D11CommandQueue::D3D11CommandQueue(ID3D11Device* device, ComPtr<ID3D11DeviceCo
 void D3D11CommandQueue::Submit(CommandBuffer& /*commandBuffer*/)
 {
     // dummy
+}
+
+/* ----- Queries ----- */
+
+bool D3D11CommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize)
+{
+    auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
+    if (dataSize == numQueries * sizeof(std::uint32_t))
+        return QueryResultUInt32(queryHeapD3D, firstQuery, numQueries, reinterpret_cast<std::uint32_t*>(data));
+    if (dataSize == numQueries * sizeof(std::uint64_t))
+        return QueryResultUInt64(queryHeapD3D, firstQuery, numQueries, reinterpret_cast<std::uint64_t*>(data));
+    if (dataSize == numQueries * sizeof(QueryPipelineStatistics))
+        return QueryResultPipelineStatistics(queryHeapD3D, firstQuery, numQueries, reinterpret_cast<QueryPipelineStatistics*>(data));
+    return false;
 }
 
 /* ----- Fences ----- */
@@ -47,6 +62,146 @@ void D3D11CommandQueue::WaitIdle()
     /* Submit intermediate fence and wait for it to be signaled */
     Submit(intermediateFence_);
     WaitFence(intermediateFence_, ~0ull);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool D3D11CommandQueue::QueryResultSingleUInt64(D3D11QueryHeap& queryHeapD3D, std::uint32_t query, std::uint64_t& data)
+{
+    switch (queryHeapD3D.GetD3DQueryType())
+    {
+        /* Query result from data of type: UINT64 */
+        case D3D11_QUERY_OCCLUSION:
+        {
+            UINT64 tempData = 0;
+            if (context_->GetData(queryHeapD3D.GetNative(), &tempData, sizeof(tempData), 0) == S_OK)
+            {
+                data = tempData;
+                return true;
+            }
+        }
+        break;
+
+        /* Query result from special case query type: TimeElapsed */
+        case D3D11_QUERY_TIMESTAMP_DISJOINT:
+        {
+            UINT64 startTime = 0;
+            if (context_->GetData(queryHeapD3D.GetTimeStampQueryBegin(), &startTime, sizeof(startTime), 0) == S_OK)
+            {
+                UINT64 endTime = 0;
+                if (context_->GetData(queryHeapD3D.GetTimeStampQueryEnd(), &endTime, sizeof(endTime), 0) == S_OK)
+                {
+                    D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjointData;
+                    if (context_->GetData(queryHeapD3D.GetNative(), &disjointData, sizeof(disjointData), 0) == S_OK)
+                    {
+                        if (disjointData.Disjoint == FALSE)
+                        {
+                            /* Normalize elapsed time to nanoseconds */
+                            static const double nanoseconds = 1000000000.0;
+
+                            auto deltaTime      = (endTime - startTime);
+                            auto scale          = (nanoseconds / static_cast<double>(disjointData.Frequency));
+                            auto elapsedTime    = (static_cast<double>(deltaTime) * scale);
+
+                            data = static_cast<std::uint64_t>(elapsedTime + 0.5);
+                        }
+                        else
+                            data = 0;
+                        return true;
+                    }
+                }
+            }
+        }
+        break;
+
+        /* Query result from data of type: BOOL */
+        case D3D11_QUERY_OCCLUSION_PREDICATE:
+        case D3D11_QUERY_SO_OVERFLOW_PREDICATE:
+        {
+            BOOL tempData = FALSE;
+            if (context_->GetData(queryHeapD3D.GetPredicate(), &tempData, sizeof(tempData), 0) == S_OK)
+            {
+                data = tempData;
+                return true;
+            }
+        }
+        break;
+
+        /* Query result from data of type: D3D11_QUERY_DATA_SO_STATISTICS */
+        case D3D11_QUERY_SO_STATISTICS:
+        {
+            D3D11_QUERY_DATA_SO_STATISTICS tempData;
+            if (context_->GetData(queryHeapD3D.GetNative(), &tempData, sizeof(tempData), 0) == S_OK)
+            {
+                data = tempData.NumPrimitivesWritten;
+                return true;
+            }
+        }
+        break;
+
+        default:
+        break;
+    }
+
+    return false;
+}
+
+bool D3D11CommandQueue::QueryResultUInt32(D3D11QueryHeap& queryHeapD3D, std::uint32_t firstQuery, std::uint32_t numQueries, std::uint32_t* data)
+{
+    for (std::uint32_t i = 0; i < numQueries; ++i)
+    {
+        std::uint64_t tempData = 0;
+        if (QueryResultSingleUInt64(queryHeapD3D, firstQuery + i, tempData))
+            data[i] = static_cast<std::uint32_t>(tempData);
+        else
+            return false;
+    }
+    return true;
+}
+
+bool D3D11CommandQueue::QueryResultUInt64(D3D11QueryHeap& queryHeapD3D, std::uint32_t firstQuery, std::uint32_t numQueries, std::uint64_t* data)
+{
+    for (std::uint32_t i = 0; i < numQueries; ++i)
+    {
+        if (!QueryResultSingleUInt64(queryHeapD3D, firstQuery + i, data[i]))
+            return false;
+    }
+    return true;
+}
+
+bool D3D11CommandQueue::QueryResultPipelineStatistics(D3D11QueryHeap& queryHeapD3D, std::uint32_t firstQuery, std::uint32_t numQueries, QueryPipelineStatistics* data)
+{
+    /* Query result from data of type: D3D11_QUERY_DATA_PIPELINE_STATISTICS */
+    if (queryHeapD3D.GetD3DQueryType() == D3D11_QUERY_PIPELINE_STATISTICS)
+    {
+        D3D11_QUERY_DATA_PIPELINE_STATISTICS tempData;
+        for (std::uint32_t query = firstQuery; query < firstQuery + numQueries; ++query)
+        {
+            //TODO: use <query> index
+            if (context_->GetData(queryHeapD3D.GetNative(), &tempData, sizeof(tempData), 0) == S_OK)
+            {
+                data->numPrimitivesGenerated               = tempData.CInvocations; // TODO: remove <numPrimitivesGenerated> from pipeline statistics
+                data->numVerticesSubmitted                 = tempData.IAVertices;
+                data->numPrimitivesSubmitted               = tempData.IAPrimitives;
+                data->numVertexShaderInvocations           = tempData.VSInvocations;
+                data->numTessControlShaderInvocations      = tempData.HSInvocations;
+                data->numTessEvaluationShaderInvocations   = tempData.DSInvocations;
+                data->numGeometryShaderInvocations         = tempData.GSInvocations;
+                data->numFragmentShaderInvocations         = tempData.PSInvocations;
+                data->numComputeShaderInvocations          = tempData.CSInvocations;
+                data->numGeometryPrimitivesGenerated       = tempData.GSPrimitives;
+                data->numClippingInputPrimitives           = tempData.CInvocations;
+                data->numClippingOutputPrimitives          = tempData.CPrimitives;
+            }
+            else
+                return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 

@@ -18,6 +18,7 @@ namespace LLGL
 
 class RenderingProfiler;
 class RenderingDebugger;
+class DbgQueryHeap;
 
 class DbgCommandQueue : public CommandQueue
 {
@@ -36,6 +37,10 @@ class DbgCommandQueue : public CommandQueue
 
         void Submit(CommandBuffer& commandBuffer) override;
 
+        /* ----- Queries ----- */
+
+        bool QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize) override;
+
         /* ----- Fences ----- */
 
         void Submit(Fence& fence) override;
@@ -49,8 +54,10 @@ class DbgCommandQueue : public CommandQueue
 
     private:
 
+        void ValidateQueryResult(DbgQueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize);
+
         //RenderingProfiler* profiler_ = nullptr;
-        //RenderingDebugger* debugger_ = nullptr;
+        RenderingDebugger* debugger_ = nullptr;
 
 };
 

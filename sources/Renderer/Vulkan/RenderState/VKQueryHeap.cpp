@@ -37,7 +37,7 @@ static VkQueryPipelineStatisticFlags GetPipelineStatisticsFlags(const QueryHeapD
 }
 
 VKQueryHeap::VKQueryHeap(const VKPtr<VkDevice>& device, const QueryHeapDescriptor& desc) :
-    QueryHeap      { desc.type                  },
+    QueryHeap  { desc.type                  },
     queryPool_ { device, vkDestroyQueryPool }
 {
     /* Create query pool object */

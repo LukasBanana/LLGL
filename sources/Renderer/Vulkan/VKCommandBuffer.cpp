@@ -584,31 +584,7 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
     AppendQueryPoolInFlight(queryHeapVK.GetVkQueryPool());
 }
 
-bool VKCommandBuffer::QueryResult(QueryHeap& queryHeap, std::uint64_t& result)
-{
-    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
-
-    /* Store result directly into output parameter */
-    auto stateResult = vkGetQueryPoolResults(
-        device_,
-        queryHeapVK.GetVkQueryPool(),
-        0,
-        1,
-        sizeof(result),
-        &result,
-        sizeof(std::uint64_t),
-        VK_QUERY_RESULT_64_BIT
-    );
-
-    /* Check if result is not ready yet */
-    if (stateResult == VK_NOT_READY)
-        return false;
-
-    VKThrowIfFailed(stateResult, "failed to retrieve results from Vulkan query pool");
-
-    return true;
-}
-
+#if 0
 bool VKCommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result)
 {
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
@@ -649,6 +625,7 @@ bool VKCommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryP
 
     return true;
 }
+#endif
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {

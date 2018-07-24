@@ -573,32 +573,6 @@ void DbgCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
     instance.EndQuery(queryHeapDbg.instance, query);
 }
 
-bool DbgCommandBuffer::QueryResult(QueryHeap& queryHeap, std::uint64_t& result)
-{
-    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        ValidateQueryResult(queryHeapDbg, 0);
-    }
-
-    return instance.QueryResult(queryHeapDbg.instance, result);
-}
-
-bool DbgCommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result)
-{
-    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        ValidateQueryResult(queryHeapDbg, 0);
-    }
-
-    return instance.QueryPipelineStatisticsResult(queryHeapDbg.instance, result);
-}
-
 void DbgCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
@@ -1044,17 +1018,6 @@ bool DbgCommandBuffer::ValidateQueryIndex(DbgQueryHeap& queryHeap, std::uint32_t
         return false;
     }
     return true;
-}
-
-void DbgCommandBuffer::ValidateQueryResult(DbgQueryHeap& queryHeap, std::uint32_t query)
-{
-    if (queryHeap.desc.renderCondition)
-        LLGL_DBG_ERROR(ErrorType::UndefinedBehavior, "cannot retrieve result from query that was created as render condition");
-    if (ValidateQueryIndex(queryHeap, query))
-    {
-        if (queryHeap.states[query] != DbgQueryHeap::State::Ready)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
-    }
 }
 
 DbgQueryHeap::State* DbgCommandBuffer::GetAndValidateQueryState(DbgQueryHeap& queryHeap, std::uint32_t query)

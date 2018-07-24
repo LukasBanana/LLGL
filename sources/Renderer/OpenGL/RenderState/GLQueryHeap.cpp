@@ -18,7 +18,7 @@ namespace LLGL
 static const GLenum g_queryGLTypes[] =
 {
     #if defined LLGL_OPENGL && defined GL_ARB_pipeline_statistics_query
-    GL_PRIMITIVES_GENERATED,
+    GL_PRIMITIVES_GENERATED, //TODO: this does not belong to the pipeline statistics
     GL_VERTICES_SUBMITTED_ARB,
     GL_PRIMITIVES_SUBMITTED_ARB,
     GL_VERTEX_SHADER_INVOCATIONS_ARB,
@@ -68,7 +68,7 @@ GLQueryHeap::GLQueryHeap(const QueryHeapDescriptor& desc) :
         if (HasExtension(GLExt::ARB_pipeline_statistics_query))
         {
             /* Allocate IDs for all pipeline statistics queries */
-            groupSize_ = (sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
+            groupSize_ = static_cast<std::uint32_t>(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
         }
         else
         {

@@ -34,6 +34,10 @@ class D3D12CommandQueue final : public CommandQueue
 
         void Submit(CommandBuffer& commandBuffer) override;
 
+        /* ----- Queries ----- */
+
+        bool QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize) override;
+
         /* ----- Fences ----- */
 
         void Submit(Fence& fence) override;

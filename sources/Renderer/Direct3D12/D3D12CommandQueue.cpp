@@ -33,6 +33,14 @@ void D3D12CommandQueue::Submit(CommandBuffer& commandBuffer)
     queue_->ExecuteCommandLists(1, cmdLists);
 }
 
+/* ----- Queries ----- */
+
+bool D3D12CommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize)
+{
+    //TODO...
+    return false;
+}
+
 /* ----- Fences ----- */
 
 void D3D12CommandQueue::Submit(Fence& fence)

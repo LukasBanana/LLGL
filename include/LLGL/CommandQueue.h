@@ -10,15 +10,14 @@
 
 
 #include "RenderSystemChild.h"
+#include "ForwardDecls.h"
 #include <cstdint>
+#include <cstddef>
 
 
 namespace LLGL
 {
 
-
-class CommandBuffer;
-class Fence;
 
 /**
 \brief Command queue interface.
@@ -56,6 +55,36 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
         */
         virtual void Submit(std::uint32_t numCommandBuffers, CommandBuffer* const * commandBuffers);
         #endif
+
+        /* ----- Queries ----- */
+
+        /**
+        \brief Retrieves the result of the specified query objects.
+        \param[in] queryHeap Specifies the query heap.
+        \param[in] firstQuery Specifies the zero-based index of the first query within the heap.
+        This must be in the half-open range [0, QueryHeapDescriptor::numQueries).
+        \param[in] numQueries Specifies the number of queries to retrieve the result from.
+        This must be less than or equal to (QueryHeapDescriptor::numQueries - firstQuery) and it must not be zero.
+        \param[out] data Specifies the pointer to the output data. This must be a valid pointer to an array of \c numQueries entries.
+        The array entries must have one of the following types:
+        - std::uint32_t
+        - std::uint64_t
+        - QueryPipelineStatistics
+        If the function return false, the content of this array is undefined.
+        \param[in] dataSize Specifies the size (in bytes) of the output data. This must not be zero.
+        \return True, if all results are available. Otherwise, the results are (partially) unavailable and the content of the output data is undefined.
+        \remarks Here is a usage example:
+        \code
+        // Get results of 10 occlusion queries
+        std::uint64_t occlusionQueryResults[10] = {};
+        myCmdQueue->QueryResult(*myOcclusionQuery, 0, 10, occlusionQueryResults, sizeof(occlusionQueryResults));
+
+        // Get result of a pipeline statistics query
+        LLGL::QueryPipelineStatistics stats;
+        myCmdQueue->QueryResult(*myPipelineStatsQuery, 0, 1, &stats, sizeof(stats));
+        \endcode
+        */
+        virtual bool QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize) = 0;
 
         /* ----- Fences ----- */
 

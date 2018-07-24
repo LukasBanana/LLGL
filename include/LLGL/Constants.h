@@ -41,12 +41,6 @@ static const std::uint32_t  ignoreOffset        = ~0;
 */
 static const std::uint32_t  invalidSlot         = ~0;
 
-/**
-\brief Value for a query result that was not successfully determined.
-\see QueryPipelineStatistics
-*/
-static const std::uint64_t  invalidQueryResult  = ~0;
-
 
 } // /namespace Constants
 

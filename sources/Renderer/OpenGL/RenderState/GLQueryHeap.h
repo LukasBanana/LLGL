@@ -42,7 +42,7 @@ class GLQueryHeap final : public QueryHeap
         }
 
         // Returns the number of IDs for each group of queries.
-        inline std::size_t GetGroupSize() const
+        inline std::uint32_t GetGroupSize() const
         {
             return groupSize_;
         }
@@ -50,7 +50,7 @@ class GLQueryHeap final : public QueryHeap
     private:
 
         std::vector<GLuint> ids_;
-        std::size_t         groupSize_  = 1;
+        std::uint32_t       groupSize_  = 1;
 
 };
 

@@ -108,9 +108,6 @@ class VKCommandBuffer final : public CommandBuffer
         void BeginQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
         void EndQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
 
-        bool QueryResult(QueryHeap& queryHeap, std::uint64_t& result) override;
-        bool QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result) override;
-
         void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) override;
         void EndRenderCondition() override;
 
