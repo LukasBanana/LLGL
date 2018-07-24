@@ -36,7 +36,7 @@ static std::map<RenderSystem*, std::unique_ptr<Module>> g_renderSystemModules;
 std::vector<std::string> RenderSystem::FindModules()
 {
     /* Iterate over all known modules and return those that are available on the current platform */
-    const std::vector<std::string> knownModules
+    static const char* knownModules[] =
     {
         #if defined(LLGL_OS_IOS) || defined(LLGL_OS_ANDROID)
         "OpenGLES3",
@@ -58,9 +58,10 @@ std::vector<std::string> RenderSystem::FindModules()
 
     std::vector<std::string> modules;
 
-    for (const auto& m : knownModules)
+    for (auto m : knownModules)
     {
-        if (Module::IsAvailable(Module::GetModuleFilename(m)))
+        auto moduleName = Module::GetModuleFilename(m);
+        if (Module::IsAvailable(moduleName.c_str()))
             modules.push_back(m);
     }
 
@@ -76,7 +77,7 @@ static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFil
 
     auto RenderSystem_BuildID = reinterpret_cast<PFN_RENDERSYSTEM_BUILDID>(module.LoadProcedure("LLGL_RenderSystem_BuildID"));
     if (!RenderSystem_BuildID)
-        throw std::runtime_error("failed to load \"LLGL_RenderSystem_BuildID\" procedure from module \"" + moduleFilename + "\"");
+        throw std::runtime_error("failed to load <LLGL_RenderSystem_BuildID> procedure from module: \"" + moduleFilename + "\"");
 
     return (RenderSystem_BuildID() == LLGL_BUILD_ID);
 }
@@ -156,8 +157,8 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     #else
 
     /* Load render system module */
-    auto moduleFilename = Module::GetModuleFilename(renderSystemDesc.moduleName) + " FOO";
-    auto module         = Module::Load(moduleFilename);
+    auto moduleFilename = Module::GetModuleFilename(renderSystemDesc.moduleName.c_str());
+    auto module         = Module::Load(moduleFilename.c_str());
 
     /*
     Verify build ID from render system module to detect a module,

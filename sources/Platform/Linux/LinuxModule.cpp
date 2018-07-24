@@ -6,6 +6,7 @@
  */
 
 #include "LinuxModule.h"
+#include "../../Core/Helper.h"
 #include <dlfcn.h>
 #include <unistd.h>
 
@@ -14,38 +15,41 @@ namespace LLGL
 {
 
 
+// Returns absolute path of program instance
 static std::string GetProgramPath()
 {
     /* Get filename of running program */
     static const std::size_t bufLen = 1024;
     char buf[bufLen] = { 0 };
     readlink("/proc/self/exe", buf, bufLen);
-    
+
     /* Get path from program */
     std::string path = buf;
-    
+
     auto pathEnd = path.find_last_of('/');
     if (pathEnd != std::string::npos)
         path.resize(pathEnd + 1);
-    
+
     return path;
 }
 
-std::string Module::GetModuleFilename(std::string moduleName)
+std::string Module::GetModuleFilename(const char* moduleName)
 {
     /* Extend module name to Linux shared library name (SO) */
+    std::string s = GetProgramPath();
+    s += "libLLGL_";
+    s += moduleName;
     #ifdef AC_DEBUG
-    moduleName += "D";
+    s += "D";
     #endif
-    
-    /* Return module filename with absolute path */
-    return GetProgramPath() + "libLLGL_" + moduleName + ".so";
+    s += ".so";
+    return s;
 }
 
-bool Module::IsAvailable(const std::string& moduleFilename)
+bool Module::IsAvailable(const char* moduleFilename)
 {
     /* Check if Linux shared library can be loaded properly */
-    if (auto handle = dlopen(moduleFilename.c_str(), RTLD_LAZY))
+    if (auto handle = dlopen(moduleFilename, RTLD_LAZY))
     {
         dlclose(handle);
         return true;
@@ -53,19 +57,19 @@ bool Module::IsAvailable(const std::string& moduleFilename)
     return false;
 }
 
-std::unique_ptr<Module> Module::Load(const std::string& moduleFilename)
+std::unique_ptr<Module> Module::Load(const char* moduleFilename)
 {
-    return std::unique_ptr<Module>(new LinuxModule(moduleFilename));
+    return MakeUnique<LinuxModule>(moduleFilename));
 }
 
-LinuxModule::LinuxModule(const std::string& moduleFilename)
+LinuxModule::LinuxModule(const char* moduleFilename)
 {
     /* Open Linux shared library */
-    handle_ = dlopen(moduleFilename.c_str(), RTLD_LAZY);
+    handle_ = dlopen(moduleFilename, RTLD_LAZY);
 
     /* Check if loading has failed */
     if (!handle_)
-        throw std::runtime_error("failed to load shared library (SO) \"" + moduleFilename + "\"");
+        throw std::runtime_error("failed to load shared library (SO): \"" + std::string(moduleFilename) + "\"");
 }
 
 LinuxModule::~LinuxModule()
@@ -73,10 +77,10 @@ LinuxModule::~LinuxModule()
     dlclose(handle_);
 }
 
-void* LinuxModule::LoadProcedure(const std::string& procedureName)
+void* LinuxModule::LoadProcedure(const char* procedureName)
 {
     /* Get procedure address from library module and return it as raw-pointer */
-    auto procAddr = dlsym(handle_, procedureName.c_str());
+    auto procAddr = dlsym(handle_, procedureName);
     return reinterpret_cast<void*>(procAddr);
 }
 

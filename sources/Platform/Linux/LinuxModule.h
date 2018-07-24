@@ -21,13 +21,10 @@ class LinuxModule : public Module
 
     public:
 
-        LinuxModule(const std::string& moduleFilename);
+        LinuxModule(const char* moduleFilename);
         ~LinuxModule();
 
-        LinuxModule(const LinuxModule&) = delete;
-        LinuxModule& operator = (const LinuxModule&) = delete;
-
-        void* LoadProcedure(const std::string& procedureName) override;
+        void* LoadProcedure(const char* procedureName) override;
 
     private:
 

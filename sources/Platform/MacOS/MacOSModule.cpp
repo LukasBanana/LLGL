@@ -6,6 +6,7 @@
  */
 
 #include "MacOSModule.h"
+#include "../../Core/Helper.h"
 #include <dlfcn.h>
 
 
@@ -13,16 +14,19 @@ namespace LLGL
 {
 
 
-std::string Module::GetModuleFilename(std::string moduleName)
+std::string Module::GetModuleFilename(const char* moduleName)
 {
     /* Extend module name to MacOS dynamic library name (DYLIB) */
+    std::string s = "libLLGL_";
+    s += moduleName;
     #ifdef LLGL_DEBUG
-    moduleName += "D";
+    s += "D";
     #endif
-    return "libLLGL_" + moduleName + ".dylib";
+    s += ".dylib";
+    return s;
 }
 
-bool Module::IsAvailable(const std::string& moduleFilename)
+bool Module::IsAvailable(const char* moduleFilename)
 {
     /* Check if MacOS dynamic library can be loaded properly */
     auto handle = dlopen(moduleFilename.c_str(), RTLD_LAZY);
@@ -34,19 +38,19 @@ bool Module::IsAvailable(const std::string& moduleFilename)
     return false;
 }
 
-std::unique_ptr<Module> Module::Load(const std::string& moduleFilename)
+std::unique_ptr<Module> Module::Load(const char* moduleFilename)
 {
-    return std::unique_ptr<Module>(new MacOSModule(moduleFilename));
+    return MakeUnique<MacOSModule>(moduleFilename));
 }
 
-MacOSModule::MacOSModule(const std::string& moduleFilename)
+MacOSModule::MacOSModule(const char* moduleFilename)
 {
     /* Open MacOS dynamic library */
-    handle_ = dlopen(moduleFilename.c_str(), RTLD_LAZY);
+    handle_ = dlopen(moduleFilename, RTLD_LAZY);
 
     /* Check if loading has failed */
     if (!handle_)
-        throw std::runtime_error("failed to load dynamic library (DYLIB) \"" + moduleFilename + "\"");
+        throw std::runtime_error("failed to load dynamic library (DYLIB): \"" + std::string(moduleFilename) + "\"");
 }
 
 MacOSModule::~MacOSModule()
@@ -54,10 +58,10 @@ MacOSModule::~MacOSModule()
     dlclose(handle_);
 }
 
-void* MacOSModule::LoadProcedure(const std::string& procedureName)
+void* MacOSModule::LoadProcedure(const char* procedureName)
 {
     /* Get procedure address from library module and return it as raw-pointer */
-    auto procAddr = dlsym(handle_, procedureName.c_str());
+    auto procAddr = dlsym(handle_, procedureName);
     return reinterpret_cast<void*>(procAddr);
 }
 

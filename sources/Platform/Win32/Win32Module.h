@@ -23,13 +23,10 @@ class Win32Module : public Module
 
     public:
 
-        Win32Module(const std::string& moduleFileanme);
+        Win32Module(const char* moduleFileanme);
         ~Win32Module();
 
-        Win32Module(const Win32Module&) = delete;
-        Win32Module& operator = (const Win32Module&) = delete;
-
-        void* LoadProcedure(const std::string& procedureName) override;
+        void* LoadProcedure(const char* procedureName) override;
 
     private:
 

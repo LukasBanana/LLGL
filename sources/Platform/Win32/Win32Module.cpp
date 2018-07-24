@@ -13,13 +13,16 @@ namespace LLGL
 {
 
 
-std::string Module::GetModuleFilename(std::string moduleName)
+std::string Module::GetModuleFilename(const char* moduleName)
 {
     /* Extend module name to Win32 dynamic link library name (DLL) */
+    std::string s = "LLGL_";
+    s += moduleName;
     #ifdef LLGL_DEBUG
-    moduleName += "D";
+    s += "D";
     #endif
-    return ("LLGL_" + moduleName + ".dll");
+    s += ".dll";
+    return s;
 }
 
 // Call Win32 function 'LoadLibrary' but with dialog error messages disabled
@@ -38,10 +41,10 @@ static HMODULE LoadLibrarySafe(LPCSTR filename)
     return module;
 }
 
-bool Module::IsAvailable(const std::string& moduleFilename)
+bool Module::IsAvailable(const char* moduleFilename)
 {
     /* Check if Win32 dynamic link library can be loaded properly */
-    if (auto handle = LoadLibrarySafe(moduleFilename.c_str()))
+    if (auto handle = LoadLibrarySafe(moduleFilename))
     {
         FreeLibrary(handle);
         return true;
@@ -49,19 +52,19 @@ bool Module::IsAvailable(const std::string& moduleFilename)
     return false;
 }
 
-std::unique_ptr<Module> Module::Load(const std::string& moduleFilename)
+std::unique_ptr<Module> Module::Load(const char* moduleFilename)
 {
     return MakeUnique<Win32Module>(moduleFilename);
 }
 
-Win32Module::Win32Module(const std::string& moduleFilename)
+Win32Module::Win32Module(const char* moduleFilename)
 {
     /* Open Win32 dynamic link library (DLL) */
-    handle_ = LoadLibrarySafe(moduleFilename.c_str());
+    handle_ = LoadLibrarySafe(moduleFilename);
 
     /* Check if loading has failed */
     if (!handle_)
-        throw std::runtime_error("failed to load dynamic link library (DLL): \"" + moduleFilename + "\"");
+        throw std::runtime_error("failed to load dynamic link library (DLL): \"" + std::string(moduleFilename) + "\"");
 }
 
 Win32Module::~Win32Module()
@@ -69,10 +72,10 @@ Win32Module::~Win32Module()
     FreeLibrary(handle_);
 }
 
-void* Win32Module::LoadProcedure(const std::string& procedureName)
+void* Win32Module::LoadProcedure(const char* procedureName)
 {
     /* Get procedure address from library module and return it as raw-pointer */
-    auto procAddr = GetProcAddress(handle_, procedureName.c_str());
+    auto procAddr = GetProcAddress(handle_, procedureName);
     return reinterpret_cast<void*>(procAddr);
 }
 

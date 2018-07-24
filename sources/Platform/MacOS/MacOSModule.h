@@ -21,13 +21,10 @@ class MacOSModule : public Module
 
     public:
 
-        MacOSModule(const std::string& moduleFilename);
+        MacOSModule(const char* moduleFilename);
         ~MacOSModule();
 
-        MacOSModule(const MacOSModule&) = delete;
-        MacOSModule& operator = (const MacOSModule&) = delete;
-
-        void* LoadProcedure(const std::string& procedureName) override;
+        void* LoadProcedure(const char* procedureName) override;
 
     private:
 
