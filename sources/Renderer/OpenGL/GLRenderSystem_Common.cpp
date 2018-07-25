@@ -220,9 +220,9 @@ QueryHeap* GLRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
     return TakeOwnership(queryHeaps_, MakeUnique<GLQueryHeap>(desc));
 }
 
-void GLRenderSystem::Release(QueryHeap& query)
+void GLRenderSystem::Release(QueryHeap& queryHeap)
 {
-    RemoveFromUniqueSet(queryHeaps_, &query);
+    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
 }
 
 /* ----- Fences ----- */

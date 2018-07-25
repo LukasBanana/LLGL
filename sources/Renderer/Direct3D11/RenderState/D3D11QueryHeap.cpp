@@ -36,23 +36,23 @@ static bool IsPredicateQuery(D3D11_QUERY queryType)
 }
 
 D3D11QueryHeap::D3D11QueryHeap(ID3D11Device* device, const QueryHeapDescriptor& desc) :
-    QueryHeap        { desc.type                  },
-    queryObjectType_ { D3D11Types::Map(desc.type) }
+    QueryHeap   { desc.type                  },
+    nativeType_ { D3D11Types::Map(desc.type) }
 {
     /* Create D3D query object */
     D3D11_QUERY_DESC queryDesc;
     {
-        queryDesc.Query     = queryObjectType_;
+        queryDesc.Query     = nativeType_;
         queryDesc.MiscFlags = (desc.renderCondition ? D3D11_QUERY_MISC_PREDICATEHINT : 0);
     }
 
-    if (IsPredicateQuery(queryObjectType_))
+    if (IsPredicateQuery(nativeType_))
         DXCreatePredicate(device, queryDesc, native_.predicate);
     else
         DXCreateQuery(device, queryDesc, native_.query);
 
     /* Create secondary D3D query objects */
-    if (queryObjectType_ == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    if (nativeType_ == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         D3D11_QUERY_DESC timerQueryDesc;
         {

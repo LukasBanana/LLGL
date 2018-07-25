@@ -523,9 +523,9 @@ QueryHeap* DbgRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
     return TakeOwnership(queryHeaps_, MakeUnique<DbgQueryHeap>(*instance_->CreateQueryHeap(desc), desc));
 }
 
-void DbgRenderSystem::Release(QueryHeap& query)
+void DbgRenderSystem::Release(QueryHeap& queryHeap)
 {
-    ReleaseDbg(queryHeaps_, query);
+    ReleaseDbg(queryHeaps_, queryHeap);
 }
 
 /* ----- Fences ----- */

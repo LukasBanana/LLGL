@@ -76,6 +76,7 @@ static void QueryResultPipelineStatistics(GLQueryHeap& queryHeapGL, std::uint32_
 {
     const auto& idList = queryHeapGL.GetIDs();
 
+    #ifdef GL_ARB_pipeline_statistics_query
     if (HasExtension(GLExt::ARB_pipeline_statistics_query))
     {
         /* Parameter setup for 32-bit and 64-bit version of query function */
@@ -116,47 +117,28 @@ static void QueryResultPipelineStatistics(GLQueryHeap& queryHeapGL, std::uint32_
                 params[i].ui64 = 0;
 
             /* Copy result to output parameter */
-            data->numPrimitivesGenerated                = params[0].ui64;
-            data->numVerticesSubmitted                  = params[1].ui64;
-            data->numPrimitivesSubmitted                = params[2].ui64;
-            data->numVertexShaderInvocations            = params[3].ui64;
-            data->numTessControlShaderInvocations       = params[4].ui64;
-            data->numTessEvaluationShaderInvocations    = params[5].ui64;
-            data->numGeometryShaderInvocations          = params[6].ui64;
-            data->numFragmentShaderInvocations          = params[7].ui64;
-            data->numComputeShaderInvocations           = params[8].ui64;
-            data->numGeometryPrimitivesGenerated        = params[9].ui64;
-            data->numClippingInputPrimitives            = params[10].ui64;
-            data->numClippingOutputPrimitives           = params[11].ui64;
+            data->inputAssemblyVertices             = params[ 0].ui64;
+            data->inputAssemblyPrimitives           = params[ 1].ui64;
+            data->vertexShaderInvocations           = params[ 2].ui64;
+            data->geometryShaderInvocations         = params[ 3].ui64;
+            data->geometryShaderPrimitives          = params[ 4].ui64;
+            data->clippingInvocations               = params[ 5].ui64;
+            data->clippingPrimitives                = params[ 6].ui64;
+            data->fragmentShaderInvocations         = params[ 7].ui64;
+            data->tessControlShaderInvocations      = params[ 8].ui64;
+            data->tessEvaluationShaderInvocations   = params[ 9].ui64;
+            data->computeShaderInvocations          = params[10].ui64;
         }
     }
-    else if (HasExtension(GLExt::ARB_timer_query))
-    {
-        for (std::uint32_t i = 0; i < numQueries; i += queryHeapGL.GetGroupSize())
-        {
-            /* Initialize structure for unsupported members */
-            ::memset(&data[i], 0, sizeof(QueryPipelineStatistics));
-
-            /* Return only result of first query object (of type GL_PRIMITIVES_GENERATED) with 64-bit version */
-            glGetQueryObjectui64v(idList[firstQuery + i], GL_QUERY_RESULT, &(data[i].numPrimitivesGenerated));
-        }
-    }
-    else
-    {
-        for (std::uint32_t i = 0; i < numQueries; i += queryHeapGL.GetGroupSize())
-        {
-            /* Initialize structure for unsupported members */
-            ::memset(&data[i], 0, sizeof(QueryPipelineStatistics));
-
-            /* Return only result of first query object (of type GL_PRIMITIVES_GENERATED) with 32-bit version */
-            GLuint result32 = 0;
-            glGetQueryObjectuiv(idList[firstQuery + i], GL_QUERY_RESULT, &result32);
-            data[i].numPrimitivesGenerated = result32;
-        }
-    }
+    #endif
 }
 
-bool GLCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize)
+bool GLCommandQueue::QueryResult(
+    QueryHeap&      queryHeap,
+    std::uint32_t   firstQuery,
+    std::uint32_t   numQueries,
+    void*           data,
+    std::size_t     dataSize)
 {
     auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
 

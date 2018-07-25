@@ -129,7 +129,7 @@ public:
         {
             LLGL::QueryPipelineStatistics statistics;
             while (!commandQueue->QueryResult(*query, 0, 1, &statistics, sizeof(statistics))) { /* wait */ }
-            result = statistics.numPrimitivesGenerated;
+            result = statistics.inputAssemblyPrimitives;
         }
         else
         {

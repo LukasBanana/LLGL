@@ -71,7 +71,8 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
         - std::uint64_t
         - QueryPipelineStatistics
         If the function return false, the content of this array is undefined.
-        \param[in] dataSize Specifies the size (in bytes) of the output data. This must not be zero.
+        \param[in] dataSize Specifies the size (in bytes) of the output data.
+        This must be equal to <code>numQueries * sizeof(T)</code> where \c T is the type of the query entries described above.
         \return True, if all results are available. Otherwise, the results are (partially) unavailable and the content of the output data is undefined.
         \remarks Here is a usage example:
         \code
@@ -84,7 +85,13 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
         myCmdQueue->QueryResult(*myPipelineStatsQuery, 0, 1, &stats, sizeof(stats));
         \endcode
         */
-        virtual bool QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize) = 0;
+        virtual bool QueryResult(
+            QueryHeap&      queryHeap,
+            std::uint32_t   firstQuery,
+            std::uint32_t   numQueries,
+            void*           data,
+            std::size_t     dataSize
+        ) = 0;
 
         /* ----- Fences ----- */
 

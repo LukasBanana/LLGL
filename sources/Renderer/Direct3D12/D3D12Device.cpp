@@ -42,7 +42,7 @@ ComPtr<ID3D12CommandQueue> D3D12Device::CreateDXCommandQueue()
         queueDesc.Type  = D3D12_COMMAND_LIST_TYPE_DIRECT;
     }
     auto hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(cmdQueue.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 command queue");
+    DXThrowIfCreateFailed(hr, "ID3D12CommandQueue");
 
     return cmdQueue;
 }
@@ -52,7 +52,7 @@ ComPtr<ID3D12CommandAllocator> D3D12Device::CreateDXCommandAllocator(D3D12_COMMA
     ComPtr<ID3D12CommandAllocator> commandAlloc;
 
     auto hr = device_->CreateCommandAllocator(type, IID_PPV_ARGS(commandAlloc.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 command allocator");
+    DXThrowIfCreateFailed(hr, "ID3D12CommandAllocator");
 
     return commandAlloc;
 }
@@ -62,7 +62,7 @@ ComPtr<ID3D12GraphicsCommandList> D3D12Device::CreateDXCommandList(D3D12_COMMAND
     ComPtr<ID3D12GraphicsCommandList> commandList;
 
     auto hr = device_->CreateCommandList(0, type, cmdAllocator, nullptr, IID_PPV_ARGS(commandList.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 command list");
+    DXThrowIfCreateFailed(hr, "ID3D12GraphicsCommandList");
 
     return commandList;
 }
@@ -72,7 +72,7 @@ ComPtr<ID3D12PipelineState> D3D12Device::CreateDXPipelineState(const D3D12_GRAPH
     ComPtr<ID3D12PipelineState> pipelineState;
 
     auto hr = device_->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 graphics pipeline state");
+    DXThrowIfCreateFailed(hr, "ID3D12PipelineState");
 
     return pipelineState;
 }
@@ -82,9 +82,19 @@ ComPtr<ID3D12DescriptorHeap> D3D12Device::CreateDXDescriptorHeap(const D3D12_DES
     ComPtr<ID3D12DescriptorHeap> descHeap;
 
     auto hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(descHeap.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap");
+    DXThrowIfCreateFailed(hr, "ID3D12DescriptorHeap");
 
     return descHeap;
+}
+
+ComPtr<ID3D12QueryHeap> D3D12Device::CreateDXQueryHeap(const D3D12_QUERY_HEAP_DESC& desc)
+{
+    ComPtr<ID3D12QueryHeap> queryHeap;
+
+    auto hr = device_->CreateQueryHeap(&desc, IID_PPV_ARGS(queryHeap.ReleaseAndGetAddressOf()));
+    DXThrowIfCreateFailed(hr, "ID3D12QueryHeap");
+
+    return queryHeap;
 }
 
 /* ----- Device and queue ----- */
@@ -93,7 +103,7 @@ void D3D12Device::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandL
 {
     /* Close graphics command list */
     auto hr = commandList->Close();
-    DXThrowIfFailed(hr, "failed to close D3D12 command list");
+    DXThrowIfInvocationFailed(hr, "ID3D12GraphicsCommandList::Close");
 
     /* Execute command list */
     ID3D12CommandList* cmdLists[] = { commandList };

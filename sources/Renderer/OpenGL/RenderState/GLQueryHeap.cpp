@@ -9,31 +9,29 @@
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
+#include "../../../Core/Exception.h"
 
 
 namespace LLGL
 {
 
 
+#ifdef GL_ARB_pipeline_statistics_query
 static const GLenum g_queryGLTypes[] =
 {
-    #if defined LLGL_OPENGL && defined GL_ARB_pipeline_statistics_query
-    GL_PRIMITIVES_GENERATED, //TODO: this does not belong to the pipeline statistics
     GL_VERTICES_SUBMITTED_ARB,
     GL_PRIMITIVES_SUBMITTED_ARB,
     GL_VERTEX_SHADER_INVOCATIONS_ARB,
-    GL_TESS_CONTROL_SHADER_PATCHES_ARB,
-    GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB,
     GL_GEOMETRY_SHADER_INVOCATIONS,
-    GL_FRAGMENT_SHADER_INVOCATIONS_ARB,
-    GL_COMPUTE_SHADER_INVOCATIONS_ARB,
     GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED_ARB,
     GL_CLIPPING_INPUT_PRIMITIVES_ARB,
     GL_CLIPPING_OUTPUT_PRIMITIVES_ARB,
-    #else
-    GL_PRIMITIVES_GENERATED, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #endif
+    GL_FRAGMENT_SHADER_INVOCATIONS_ARB,
+    GL_TESS_CONTROL_SHADER_PATCHES_ARB,
+    GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB,
+    GL_COMPUTE_SHADER_INVOCATIONS_ARB,
 };
+#endif
 
 // for pipeline statistice query:
 // see https://www.opengl.org/registry/specs/ARB/pipeline_statistics_query.txt
@@ -54,7 +52,9 @@ static GLenum MapQueryType(const QueryType queryType, std::size_t idx)
         case QueryType::StreamOutOverflow:                  return GL_TRANSFORM_FEEDBACK_OVERFLOW_ARB;
         //GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB;
         #endif
+        #ifdef GL_ARB_pipeline_statistics_query
         case QueryType::PipelineStatistics:                 return g_queryGLTypes[idx];
+        #endif
         default:                                            return 0;
     }
 }
@@ -62,19 +62,14 @@ static GLenum MapQueryType(const QueryType queryType, std::size_t idx)
 GLQueryHeap::GLQueryHeap(const QueryHeapDescriptor& desc) :
     QueryHeap { desc.type }
 {
-    #if defined LLGL_OPENGL && defined GL_ARB_pipeline_statistics_query
+    #ifdef GL_ARB_pipeline_statistics_query
     if (desc.type == QueryType::PipelineStatistics)
     {
+        /* Allocate IDs for all pipeline statistics queries or throw error on failure */
         if (HasExtension(GLExt::ARB_pipeline_statistics_query))
-        {
-            /* Allocate IDs for all pipeline statistics queries */
             groupSize_ = static_cast<std::uint32_t>(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
-        }
         else
-        {
-            /* Allocate single ID for GL_PRIMITIVES_GENERATED */
-            groupSize_ = 1;
-        }
+            ThrowGLExtensionNotSupportedExcept(__func__, "GL_ARB_pipeline_statistics_query");
     }
     else
     #endif

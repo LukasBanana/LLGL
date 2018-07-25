@@ -23,7 +23,6 @@ namespace LLGL
 \see CommandBuffer::BeginQuery
 \see CommandBuffer::BeginRenderCondition
 \see CommandQueue::QueryResult
-\see CommandQueue::QueryResult
 */
 class LLGL_EXPORT QueryHeap : public RenderSystemChild
 {

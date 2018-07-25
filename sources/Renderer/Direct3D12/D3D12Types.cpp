@@ -231,7 +231,7 @@ D3D12_LOGIC_OP Map(const LogicOp logicOp)
     DXTypes::MapFailed("LogicOp", "D3D12_LOGIC_OP");
 }
 
-D3D12_SRV_DIMENSION Map(const TextureType textureType)
+D3D12_SRV_DIMENSION MapSrvDimension(const TextureType textureType)
 {
     switch (textureType)
     {
@@ -248,9 +248,9 @@ D3D12_SRV_DIMENSION Map(const TextureType textureType)
     DXTypes::MapFailed("TextureType", "D3D12_SRV_DIMENSION");
 }
 
-D3D12_RESOURCE_DIMENSION ToResourceDimension(const TextureType type)
+D3D12_RESOURCE_DIMENSION MapResourceDimension(const TextureType textureType)
 {
-    switch (type)
+    switch (textureType)
     {
         case TextureType::Texture1D:        /* pass */
         case TextureType::Texture1DArray:   return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
@@ -263,6 +263,36 @@ D3D12_RESOURCE_DIMENSION ToResourceDimension(const TextureType type)
         case TextureType::Texture3D:        return D3D12_RESOURCE_DIMENSION_TEXTURE3D;
     }
     DXTypes::MapFailed("TextureType", "D3D12_RESOURCE_DIMENSION");
+}
+
+D3D12_QUERY_TYPE MapQueryType(const QueryType queryType)
+{
+    switch (queryType)
+    {
+        case QueryType::SamplesPassed:                  return D3D12_QUERY_TYPE_OCCLUSION;
+        case QueryType::AnySamplesPassed:               /* pass */
+        case QueryType::AnySamplesPassedConservative:   return D3D12_QUERY_TYPE_BINARY_OCCLUSION;
+        case QueryType::TimeElapsed:                    return D3D12_QUERY_TYPE_TIMESTAMP;
+        case QueryType::StreamOutPrimitivesWritten:     break; // D3D12_QUERY_TYPE_SO_STATISTICS_STREAM0 ???
+        case QueryType::StreamOutOverflow:              break; // D3D12_QUERY_TYPE_SO_STATISTICS_STREAM1 ???
+        case QueryType::PipelineStatistics:             return D3D12_QUERY_TYPE_PIPELINE_STATISTICS;
+    }
+    DXTypes::MapFailed("QueryType", "D3D12_QUERY_TYPE");
+}
+
+D3D12_QUERY_HEAP_TYPE MapQueryHeapType(const QueryType queryType)
+{
+    switch (queryType)
+    {
+        case QueryType::SamplesPassed:                  /* pass */
+        case QueryType::AnySamplesPassed:               /* pass */
+        case QueryType::AnySamplesPassedConservative:   return D3D12_QUERY_HEAP_TYPE_OCCLUSION;
+        case QueryType::TimeElapsed:                    return D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
+        case QueryType::StreamOutPrimitivesWritten:     /* pass */
+        case QueryType::StreamOutOverflow:              return D3D12_QUERY_HEAP_TYPE_SO_STATISTICS;
+        case QueryType::PipelineStatistics:             return D3D12_QUERY_HEAP_TYPE_PIPELINE_STATISTICS;
+    }
+    DXTypes::MapFailed("QueryType", "D3D12_QUERY_HEAP_TYPE");
 }
 
 Format Unmap(const DXGI_FORMAT format)

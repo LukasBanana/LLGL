@@ -20,7 +20,7 @@ namespace LLGL
 
 static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 {
-    dst.Dimension           = D3D12Types::ToResourceDimension(src.type);
+    dst.Dimension           = D3D12Types::MapResourceDimension(src.type);
     dst.Alignment           = 0;
     #ifndef _DEB_DISABLE_MIPS//TODO: mipmapping is not supported yet
     dst.MipLevels           = NumMipLevels(src);
@@ -239,7 +239,7 @@ void D3D12Texture::CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
     {
         srvDesc.Format                  = format_;
-        srvDesc.ViewDimension           = D3D12Types::Map(GetType());
+        srvDesc.ViewDimension           = D3D12Types::MapSrvDimension(GetType());
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
         switch (srvDesc.ViewDimension)

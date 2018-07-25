@@ -432,6 +432,15 @@ struct RenderingFeatures
     \see BlendDescriptor::logicOp
     */
     bool hasLogicOp                     = false;
+
+    #if 0//TODO: enable this
+    /**
+    \brief Specifies whether queries for pipeline statistics are supported.
+    \see QueryType::PipelineStatistics
+    \see QueryPipelineStatistics
+    */
+    bool hasPipelineStatistics          = false;
+    #endif
 };
 
 /**

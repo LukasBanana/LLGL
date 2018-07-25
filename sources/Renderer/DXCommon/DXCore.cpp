@@ -79,31 +79,73 @@ static const char* DXErrorToStr(const HRESULT hr)
     return nullptr;
 }
 
+[[noreturn]]
+static void DXThrowFailure(const HRESULT hr, const char* info)
+{
+    std::string s;
+
+    if (info)
+    {
+        s += info;
+        s += " (error code = ";
+    }
+    else
+        s += "Direct3D operation failed (error code = ";
+
+    if (auto err = DXErrorToStr(hr))
+        s += err;
+    else
+    {
+        s += "0x";
+        s += ToHex(hr);
+    }
+
+    s += ")";
+
+    throw std::runtime_error(s);
+}
+
 void DXThrowIfFailed(const HRESULT hr, const char* info)
+{
+    if (FAILED(hr))
+        DXThrowFailure(hr, info);
+}
+
+void DXThrowIfCreateFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo)
 {
     if (FAILED(hr))
     {
         std::string s;
-
-        if (info)
         {
-            s += info;
-            s += " (error code = ";
+            s = "failed to create instance of <";
+            s += interfaceName;
+            s += '>';
+            if (contextInfo != nullptr)
+            {
+                s += ' ';
+                s += contextInfo;
+            }
         }
-        else
-            s += "Direct3D operation failed (error code = ";
+        DXThrowFailure(hr, s.c_str());
+    }
+}
 
-        if (auto err = DXErrorToStr(hr))
-            s += err;
-        else
+void DXThrowIfInvocationFailed(const HRESULT hr, const char* funcName, const char* contextInfo)
+{
+    if (FAILED(hr))
+    {
+        std::string s;
         {
-            s += "0x";
-            s += ToHex(hr);
+            s = "invocation of <";
+            s += funcName;
+            s += "> failed";
+            if (contextInfo != nullptr)
+            {
+                s += ' ';
+                s += contextInfo;
+            }
         }
-
-        s += ")";
-
-        throw std::runtime_error(s);
+        DXThrowFailure(hr, s.c_str());
     }
 }
 

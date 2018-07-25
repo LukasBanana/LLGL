@@ -69,9 +69,12 @@ void D3D11CommandQueue::WaitIdle()
  * ======= Private: =======
  */
 
-bool D3D11CommandQueue::QueryResultSingleUInt64(D3D11QueryHeap& queryHeapD3D, std::uint32_t query, std::uint64_t& data)
+bool D3D11CommandQueue::QueryResultSingleUInt64(
+    D3D11QueryHeap& queryHeapD3D,
+    std::uint32_t   query,
+    std::uint64_t&  data)
 {
-    switch (queryHeapD3D.GetD3DQueryType())
+    switch (queryHeapD3D.GetNativeType())
     {
         /* Query result from data of type: UINT64 */
         case D3D11_QUERY_OCCLUSION:
@@ -149,7 +152,11 @@ bool D3D11CommandQueue::QueryResultSingleUInt64(D3D11QueryHeap& queryHeapD3D, st
     return false;
 }
 
-bool D3D11CommandQueue::QueryResultUInt32(D3D11QueryHeap& queryHeapD3D, std::uint32_t firstQuery, std::uint32_t numQueries, std::uint32_t* data)
+bool D3D11CommandQueue::QueryResultUInt32(
+    D3D11QueryHeap& queryHeapD3D,
+    std::uint32_t   firstQuery,
+    std::uint32_t   numQueries,
+    std::uint32_t*  data)
 {
     for (std::uint32_t i = 0; i < numQueries; ++i)
     {
@@ -162,7 +169,11 @@ bool D3D11CommandQueue::QueryResultUInt32(D3D11QueryHeap& queryHeapD3D, std::uin
     return true;
 }
 
-bool D3D11CommandQueue::QueryResultUInt64(D3D11QueryHeap& queryHeapD3D, std::uint32_t firstQuery, std::uint32_t numQueries, std::uint64_t* data)
+bool D3D11CommandQueue::QueryResultUInt64(
+    D3D11QueryHeap& queryHeapD3D,
+    std::uint32_t   firstQuery,
+    std::uint32_t   numQueries,
+    std::uint64_t*  data)
 {
     for (std::uint32_t i = 0; i < numQueries; ++i)
     {
@@ -172,32 +183,65 @@ bool D3D11CommandQueue::QueryResultUInt64(D3D11QueryHeap& queryHeapD3D, std::uin
     return true;
 }
 
-bool D3D11CommandQueue::QueryResultPipelineStatistics(D3D11QueryHeap& queryHeapD3D, std::uint32_t firstQuery, std::uint32_t numQueries, QueryPipelineStatistics* data)
+// Static function (can be checked at compile time) to determine if
+// the structs <QueryPipelineStatistics> and <D3D11_QUERY_DATA_PIPELINE_STATISTICS> are compatible.
+static bool IsQueryPipelineStatsD3DCompatible()
+{
+    return
+    (
+        sizeof(QueryPipelineStatistics)                                    == sizeof(D3D11_QUERY_DATA_PIPELINE_STATISTICS)                  &&
+        offsetof(QueryPipelineStatistics, inputAssemblyVertices          ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, IAVertices   ) &&
+        offsetof(QueryPipelineStatistics, inputAssemblyPrimitives        ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, IAPrimitives ) &&
+        offsetof(QueryPipelineStatistics, vertexShaderInvocations        ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, VSInvocations) &&
+        offsetof(QueryPipelineStatistics, geometryShaderInvocations      ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, GSInvocations) &&
+        offsetof(QueryPipelineStatistics, geometryShaderPrimitives       ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, GSPrimitives ) &&
+        offsetof(QueryPipelineStatistics, clippingInvocations            ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, CInvocations ) &&
+        offsetof(QueryPipelineStatistics, clippingPrimitives             ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, CPrimitives  ) &&
+        offsetof(QueryPipelineStatistics, fragmentShaderInvocations      ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, PSInvocations) &&
+        offsetof(QueryPipelineStatistics, tessControlShaderInvocations   ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, HSInvocations) &&
+        offsetof(QueryPipelineStatistics, tessEvaluationShaderInvocations) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, DSInvocations) &&
+        offsetof(QueryPipelineStatistics, computeShaderInvocations       ) == offsetof(D3D11_QUERY_DATA_PIPELINE_STATISTICS, CSInvocations)
+    );
+}
+
+//TODO: use <query> index
+bool D3D11CommandQueue::QueryResultPipelineStatistics(
+    D3D11QueryHeap&             queryHeapD3D,
+    std::uint32_t               firstQuery,
+    std::uint32_t               numQueries,
+    QueryPipelineStatistics*    data)
 {
     /* Query result from data of type: D3D11_QUERY_DATA_PIPELINE_STATISTICS */
-    if (queryHeapD3D.GetD3DQueryType() == D3D11_QUERY_PIPELINE_STATISTICS)
+    if (queryHeapD3D.GetNativeType() == D3D11_QUERY_PIPELINE_STATISTICS)
     {
-        D3D11_QUERY_DATA_PIPELINE_STATISTICS tempData;
         for (std::uint32_t query = firstQuery; query < firstQuery + numQueries; ++query)
         {
-            //TODO: use <query> index
-            if (context_->GetData(queryHeapD3D.GetNative(), &tempData, sizeof(tempData), 0) == S_OK)
+            if (IsQueryPipelineStatsD3DCompatible())
             {
-                data->numPrimitivesGenerated               = tempData.CInvocations; // TODO: remove <numPrimitivesGenerated> from pipeline statistics
-                data->numVerticesSubmitted                 = tempData.IAVertices;
-                data->numPrimitivesSubmitted               = tempData.IAPrimitives;
-                data->numVertexShaderInvocations           = tempData.VSInvocations;
-                data->numTessControlShaderInvocations      = tempData.HSInvocations;
-                data->numTessEvaluationShaderInvocations   = tempData.DSInvocations;
-                data->numGeometryShaderInvocations         = tempData.GSInvocations;
-                data->numFragmentShaderInvocations         = tempData.PSInvocations;
-                data->numComputeShaderInvocations          = tempData.CSInvocations;
-                data->numGeometryPrimitivesGenerated       = tempData.GSPrimitives;
-                data->numClippingInputPrimitives           = tempData.CInvocations;
-                data->numClippingOutputPrimitives          = tempData.CPrimitives;
+                /* Use output storage directly when structure is compatible with D3D */
+                return (context_->GetData(queryHeapD3D.GetNative(), &data[query], sizeof(QueryPipelineStatistics), 0) == S_OK);
             }
             else
-                return false;
+            {
+                /* Copy temporary query data to output */
+                D3D11_QUERY_DATA_PIPELINE_STATISTICS tempData;
+                if (context_->GetData(queryHeapD3D.GetNative(), &tempData, sizeof(tempData), 0) == S_OK)
+                {
+                    data->inputAssemblyVertices             = tempData.IAVertices;
+                    data->inputAssemblyPrimitives           = tempData.IAPrimitives;
+                    data->vertexShaderInvocations           = tempData.VSInvocations;
+                    data->geometryShaderInvocations         = tempData.GSInvocations;
+                    data->geometryShaderPrimitives          = tempData.GSPrimitives;
+                    data->clippingInvocations               = tempData.CInvocations;
+                    data->clippingPrimitives                = tempData.CPrimitives;
+                    data->fragmentShaderInvocations         = tempData.PSInvocations;
+                    data->tessControlShaderInvocations      = tempData.HSInvocations;
+                    data->tessEvaluationShaderInvocations   = tempData.DSInvocations;
+                    data->computeShaderInvocations          = tempData.CSInvocations;
+                }
+                else
+                    return false;
+            }
         }
         return true;
     }

@@ -50,15 +50,24 @@ void VKCommandQueue::Submit(CommandBuffer& commandBuffer)
 
 /* ----- Queries ----- */
 
-bool VKCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize)
+bool VKCommandQueue::QueryResult(
+    QueryHeap&      queryHeap,
+    std::uint32_t   firstQuery,
+    std::uint32_t   numQueries,
+    void*           data,
+    std::size_t     dataSize)
 {
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
-    /* Determine flags */
-    VkQueryResultFlags resultFlags = 0;
+    /* Determine flags and stride */
+    VkQueryResultFlags  resultFlags = 0;
+    VkDeviceSize        stride      = sizeof(std::uint32_t);
 
     if (dataSize != numQueries * sizeof(std::uint32_t))
+    {
         resultFlags |= VK_QUERY_RESULT_64_BIT;
+        stride      = sizeof(std::uint64_t);
+    }
 
     /* Store result directly into output parameter */
     auto stateResult = vkGetQueryPoolResults(
@@ -68,7 +77,7 @@ bool VKCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery,
         numQueries,
         dataSize,
         data,
-        sizeof(std::uint64_t),
+        stride,
         resultFlags
     );
 
@@ -77,7 +86,30 @@ bool VKCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery,
         return false;
 
     VKThrowIfFailed(stateResult, "failed to retrieve results from Vulkan query pool");
+
+    return true;
 }
+
+#if 0
+bool VKCommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result)
+{
+
+    /* Copy result to output parameter */
+    result.inputAssemblyVertices            = intermediateResults[ 0]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT
+    result.inputAssemblyPrimitives          = intermediateResults[ 1]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT
+    result.vertexShaderInvocations          = intermediateResults[ 2]; // VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT
+    result.tessControlShaderInvocations     = intermediateResults[ 8]; // VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT
+    result.tessEvaluationShaderInvocations  = intermediateResults[ 9]; // VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT
+    result.geometryShaderInvocations        = intermediateResults[ 3]; // VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_INVOCATIONS_BIT
+    result.fragmentShaderInvocations        = intermediateResults[ 7]; // VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT
+    result.computeShaderInvocations         = intermediateResults[10]; // VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT
+    result.geometryShaderPrimitives         = intermediateResults[ 4]; // VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_PRIMITIVES_BIT
+    result.clippingInvocations              = intermediateResults[ 5]; // VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT
+    result.clippingPrimitives               = intermediateResults[ 6]; // VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT
+
+    return true;
+}
+#endif
 
 /* ----- Fences ----- */
 

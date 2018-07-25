@@ -288,9 +288,9 @@ QueryHeap* D3D11RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
     return TakeOwnership(queryHeaps_, MakeUnique<D3D11QueryHeap>(device_.Get(), desc));
 }
 
-void D3D11RenderSystem::Release(QueryHeap& query)
+void D3D11RenderSystem::Release(QueryHeap& queryHeap)
 {
-    RemoveFromUniqueSet(queryHeaps_, &query);
+    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
 }
 
 /* ----- Fences ----- */
@@ -314,7 +314,7 @@ void D3D11RenderSystem::CreateFactory()
 {
     /* Create DXGI factory */
     auto hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
-    DXThrowIfFailed(hr, "failed to create DXGI factor");
+    DXThrowIfCreateFailed(hr, "IDXGIFactory");
 }
 
 void D3D11RenderSystem::QueryVideoAdapters()
@@ -349,7 +349,7 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
 
     #endif
 
-    DXThrowIfFailed(hr, "failed to create D3D11 device");
+    DXThrowIfCreateFailed(hr, "ID3D11Device");
 
     /* Try to get an extended D3D11 device */
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3

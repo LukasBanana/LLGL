@@ -31,9 +31,16 @@ class VKQueryHeap final : public QueryHeap
             return queryPool_.Get();
         }
 
+        // Returns the number of queries per group.
+        inline std::uint32_t GetGroupSize() const
+        {
+            return groupSize_;
+        }
+
     private:
 
-        VKPtr<VkQueryPool> queryPool_;
+        VKPtr<VkQueryPool>  queryPool_;
+        std::uint32_t       groupSize_  = 1;
 
 };
 

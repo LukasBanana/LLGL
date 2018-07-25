@@ -39,7 +39,13 @@ class DbgCommandQueue : public CommandQueue
 
         /* ----- Queries ----- */
 
-        bool QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize) override;
+        bool QueryResult(
+            QueryHeap&      queryHeap,
+            std::uint32_t   firstQuery,
+            std::uint32_t   numQueries,
+            void*           data,
+            std::size_t     dataSize
+        ) override;
 
         /* ----- Fences ----- */
 
@@ -54,7 +60,13 @@ class DbgCommandQueue : public CommandQueue
 
     private:
 
-        void ValidateQueryResult(DbgQueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize);
+        void ValidateQueryResult(
+            DbgQueryHeap&   queryHeap,
+            std::uint32_t   firstQuery,
+            std::uint32_t   numQueries,
+            void*           data,
+            std::size_t     dataSize
+        );
 
         //RenderingProfiler* profiler_ = nullptr;
         RenderingDebugger* debugger_ = nullptr;

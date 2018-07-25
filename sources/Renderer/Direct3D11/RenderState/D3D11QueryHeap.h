@@ -39,10 +39,10 @@ class D3D11QueryHeap final : public QueryHeap
 
         D3D11QueryHeap(ID3D11Device* device, const QueryHeapDescriptor& desc);
 
-        // Returns the D3D11_QUERY type.
-        inline D3D11_QUERY GetD3DQueryType() const
+        // Returns the native D3D11_QUERY type.
+        inline D3D11_QUERY GetNativeType() const
         {
-            return queryObjectType_;
+            return nativeType_;
         }
 
         // Returns the native ID3D11Query object.
@@ -71,8 +71,7 @@ class D3D11QueryHeap final : public QueryHeap
 
     private:
 
-        D3D11_QUERY         queryObjectType_    = D3D11_QUERY_EVENT;
-
+        D3D11_QUERY         nativeType_             = D3D11_QUERY_EVENT;
         D3D11NativeQuery    native_;
 
         // Query objects for the special query type: TimeElapsed

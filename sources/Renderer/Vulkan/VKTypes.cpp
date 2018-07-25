@@ -324,8 +324,8 @@ VkQueryType Map(const QueryType queryType)
         case QueryType::AnySamplesPassed:               /* pass */
         case QueryType::AnySamplesPassedConservative:   return VK_QUERY_TYPE_OCCLUSION;
         case QueryType::TimeElapsed:                    return VK_QUERY_TYPE_TIMESTAMP;
-        case QueryType::StreamOutPrimitivesWritten:     break; // ???
-        case QueryType::StreamOutOverflow:              break; // ???
+        case QueryType::StreamOutPrimitivesWritten:     break;
+        case QueryType::StreamOutOverflow:              break;
         case QueryType::PipelineStatistics:             return VK_QUERY_TYPE_PIPELINE_STATISTICS;
     }
     MapFailed("QueryType", "VkQueryType");

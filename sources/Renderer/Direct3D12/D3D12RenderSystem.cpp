@@ -432,12 +432,12 @@ void D3D12RenderSystem::Release(ComputePipeline& computePipeline)
 
 QueryHeap* D3D12RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
-    return nullptr;//todo...
+    return TakeOwnership(queryHeaps_, MakeUnique<D3D12QueryHeap>(device_, desc));
 }
 
-void D3D12RenderSystem::Release(QueryHeap& query)
+void D3D12RenderSystem::Release(QueryHeap& queryHeap)
 {
-    //todo...
+    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
 }
 
 /* ----- Fences ----- */

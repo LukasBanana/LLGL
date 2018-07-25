@@ -149,7 +149,7 @@ class GLRenderSystem final : public RenderSystem
 
         QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) override;
 
-        void Release(QueryHeap& query) override;
+        void Release(QueryHeap& queryHeap) override;
 
         /* ----- Fences ----- */
 

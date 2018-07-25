@@ -25,6 +25,10 @@ LLGL_EXPORT void ThrowNotSupportedExcept(const char* funcName, const char* featu
 [[noreturn]]
 LLGL_EXPORT void ThrowRenderingFeatureNotSupportedExcept(const char* funcName, const char* featureName);
 
+// Throws an std::runtime_error exception with the message, that the specified OpenGL extension is not supported.
+[[noreturn]]
+LLGL_EXPORT void ThrowGLExtensionNotSupportedExcept(const char* funcName, const char* extensionName);
+
 // Throws an std::runtime_error exception with the message, that the specified interface function is not implemented yet.
 [[noreturn]]
 LLGL_EXPORT void ThrowNotImplementedExcept(const char* funcName);

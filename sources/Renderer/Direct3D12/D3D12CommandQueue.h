@@ -36,7 +36,13 @@ class D3D12CommandQueue final : public CommandQueue
 
         /* ----- Queries ----- */
 
-        bool QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize) override;
+        bool QueryResult(
+            QueryHeap&      queryHeap,
+            std::uint32_t   firstQuery,
+            std::uint32_t   numQueries,
+            void*           data,
+            std::size_t     dataSize
+        ) override;
 
         /* ----- Fences ----- */
 

@@ -584,49 +584,6 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
     AppendQueryPoolInFlight(queryHeapVK.GetVkQueryPool());
 }
 
-#if 0
-bool VKCommandBuffer::QueryPipelineStatisticsResult(QueryHeap& queryHeap, QueryPipelineStatistics& result)
-{
-    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
-
-    /* Store results in intermediate memory */
-    std::uint64_t intermediateResults[11];
-
-    auto stateResult = vkGetQueryPoolResults(
-        device_,
-        queryHeapVK.GetVkQueryPool(),
-        0,
-        1,
-        sizeof(intermediateResults),
-        intermediateResults,
-        sizeof(std::uint64_t),
-        VK_QUERY_RESULT_64_BIT
-    );
-
-    /* Check if result is not ready yet */
-    if (stateResult == VK_NOT_READY)
-        return false;
-
-    VKThrowIfFailed(stateResult, "failed to retrieve results from Vulkan query pool");
-
-    /* Copy result to output parameter */
-    result.numPrimitivesGenerated               = intermediateResults[ 1]; // ???
-    result.numVerticesSubmitted                 = intermediateResults[ 0]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT
-    result.numPrimitivesSubmitted               = intermediateResults[ 1]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT
-    result.numVertexShaderInvocations           = intermediateResults[ 2]; // VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT
-    result.numTessControlShaderInvocations      = intermediateResults[ 8]; // VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT
-    result.numTessEvaluationShaderInvocations   = intermediateResults[ 9]; // VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT
-    result.numGeometryShaderInvocations         = intermediateResults[ 3]; // VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_INVOCATIONS_BIT
-    result.numFragmentShaderInvocations         = intermediateResults[ 7]; // VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT
-    result.numComputeShaderInvocations          = intermediateResults[10]; // VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT
-    result.numGeometryPrimitivesGenerated       = intermediateResults[ 4]; // VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_PRIMITIVES_BIT
-    result.numClippingInputPrimitives           = intermediateResults[ 5]; // VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT
-    result.numClippingOutputPrimitives          = intermediateResults[ 6]; // VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT
-
-    return true;
-}
-#endif
-
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     // not supported

@@ -484,7 +484,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         virtual QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) = 0;
 
         //! Releases the specified QueryHeap object. After this call, the specified object must no longer be used.
-        virtual void Release(QueryHeap& query) = 0;
+        virtual void Release(QueryHeap& queryHeap) = 0;
 
         /* ----- Fences ----- */
 

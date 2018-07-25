@@ -374,7 +374,7 @@ void D3D11CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
 
-    if (queryHeapD3D.GetD3DQueryType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    if (queryHeapD3D.GetNativeType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Begin disjoint query first, and insert the beginning timestamp query */
         context_->Begin(queryHeapD3D.GetNative());
@@ -391,7 +391,7 @@ void D3D11CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
 
-    if (queryHeapD3D.GetD3DQueryType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    if (queryHeapD3D.GetNativeType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Insert the ending timestamp query, and end the disjoint query */
         context_->End(queryHeapD3D.GetTimeStampQueryEnd());

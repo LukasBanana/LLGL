@@ -608,9 +608,9 @@ QueryHeap* VKRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
     return TakeOwnership(queryHeaps_, MakeUnique<VKQueryHeap>(device_, desc));
 }
 
-void VKRenderSystem::Release(QueryHeap& query)
+void VKRenderSystem::Release(QueryHeap& queryHeap)
 {
-    RemoveFromUniqueSet(queryHeaps_, &query);
+    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
 }
 
 /* ----- Fences ----- */

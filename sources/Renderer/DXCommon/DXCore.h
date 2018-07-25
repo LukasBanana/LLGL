@@ -39,6 +39,12 @@ struct D3DTextureFormatDescriptor
 // Throws an std::runtime_error exception if 'hr' is not S_OK.
 void DXThrowIfFailed(const HRESULT hr, const char* info);
 
+// Throws an std::runtime_error exception if 'hr' is not S_OK, with an info about the failed interface creation.
+void DXThrowIfCreateFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo = nullptr);
+
+// Throws an std::runtime_error exception if 'hr' is not S_OK, with an info about the failed function call.
+void DXThrowIfInvocationFailed(const HRESULT hr, const char* funcName, const char* contextInfo = nullptr);
+
 // Returns the specified value as a DirectX BOOL type.
 BOOL DXBoolean(bool value);
 

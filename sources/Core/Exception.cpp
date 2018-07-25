@@ -13,18 +13,19 @@ namespace LLGL
 {
 
 
-[[noreturn]]
-LLGL_EXPORT void ThrowNotSupportedExcept(const char* funcName, const char* featureName)
+static void AddFuncName(std::string& s, const char* funcName)
 {
-    throw std::runtime_error(std::string(funcName) + ": " + std::string(featureName) + " not supported");
+    s += "in '";
+    s += funcName;
+    s += "': ";
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowRenderingFeatureNotSupportedExcept(const char* funcName, const char* featureName)
+LLGL_EXPORT void ThrowNotSupportedExcept(const char* funcName, const char* featureName)
 {
-    std::string s = funcName;
+    std::string s;
     {
-        s += ": LLGL::RenderingFeatures::";
+        AddFuncName(s, funcName);
         s += featureName;
         s += " not supported";
     }
@@ -32,28 +33,68 @@ LLGL_EXPORT void ThrowRenderingFeatureNotSupportedExcept(const char* funcName, c
 }
 
 [[noreturn]]
+LLGL_EXPORT void ThrowRenderingFeatureNotSupportedExcept(const char* funcName, const char* featureName)
+{
+    std::string s;
+    {
+        AddFuncName(s, funcName);
+        s += "LLGL::RenderingFeatures::";
+        s += featureName;
+        s += " not supported";
+    }
+    throw std::runtime_error(s);
+}
+
+[[noreturn]]
+LLGL_EXPORT void ThrowGLExtensionNotSupportedExcept(const char* funcName, const char* extensionName)
+{
+    std::string s;
+    {
+        AddFuncName(s, funcName);
+        s += "OpenGL extension '";
+        s += extensionName;
+        s += "' not supported";
+    }
+    throw std::runtime_error(s);
+}
+
+[[noreturn]]
 LLGL_EXPORT void ThrowNotImplementedExcept(const char* funcName)
 {
+    std::string s;
+    {
+        AddFuncName(s, funcName);
+        s += "not implemented yet";
+    }
     throw std::runtime_error(std::string(funcName) + ": not implemented yet");
 }
 
 [[noreturn]]
 LLGL_EXPORT void ThrowNullPointerExcept(const char* funcName, const char* paramName)
 {
-    throw std::runtime_error(std::string(funcName) + ": null pointer passed to parameter: " + std::string(paramName));
+    std::string s;
+    {
+        AddFuncName(s, funcName);
+        s += "parameter '";
+        s += paramName;
+        s += "' must not be a null pointer";
+    }
+    throw std::runtime_error(s);
 }
 
 [[noreturn]]
 LLGL_EXPORT void ThrowExceededUpperBoundExcept(const char* funcName, const char* paramName, int value, int upperBound)
 {
-    std::string s = funcName;
+    std::string s;
     {
-        s += ": parameter out of half-open range (";
-        s += std::to_string(value);
-        s += " is specified, but upper bound is ";
-        s += std::to_string(upperBound);
-        s += "): ";
+        AddFuncName(s, funcName);
+        s += "parameter '";
         s += paramName;
+        s += " = ";
+        s += std::to_string(value);
+        s += "' out of half-open range [0, ";
+        s += std::to_string(upperBound);
+        s += ")";
     }
     throw std::out_of_range(s);
 }
@@ -63,12 +104,14 @@ LLGL_EXPORT void ThrowExceededMaximumExcept(const char* funcName, const char* pa
 {
     std::string s = funcName;
     {
-        s += ": parameter out of range (";
-        s += std::to_string(value);
-        s += " is specified, but maximum is ";
-        s += std::to_string(maximum);
-        s += "): ";
+        AddFuncName(s, funcName);
+        s += "parameter '";
         s += paramName;
+        s += " = ";
+        s += std::to_string(value);
+        s += "' out of range [0, ";
+        s += std::to_string(maximum);
+        s += "]";
     }
     throw std::out_of_range(s);
 }

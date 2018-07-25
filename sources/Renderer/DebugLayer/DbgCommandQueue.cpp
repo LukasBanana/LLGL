@@ -69,7 +69,12 @@ void DbgCommandQueue::WaitIdle()
  * ======= Private: =======
  */
 
-void DbgCommandQueue::ValidateQueryResult(DbgQueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize)
+void DbgCommandQueue::ValidateQueryResult(
+    DbgQueryHeap&   queryHeap,
+    std::uint32_t   firstQuery,
+    std::uint32_t   numQueries,
+    void*           data,
+    std::size_t     dataSize)
 {
     if (queryHeap.desc.renderCondition)
         LLGL_DBG_ERROR(ErrorType::UndefinedBehavior, "cannot retrieve result from query that was created as render condition");
