@@ -354,7 +354,7 @@ std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLe
     return featureLeves;
 }
 
-std::string DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
+const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
 {
     switch (featureLevel)
     {
@@ -373,7 +373,7 @@ std::string DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
     return "";
 }
 
-std::string DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel)
+const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel)
 {
     switch (featureLevel)
     {

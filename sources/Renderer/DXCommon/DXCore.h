@@ -61,10 +61,10 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
 std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLevel);
 
 // Returns the specified feature level as version string.
-std::string DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel);
+const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel);
 
 // Returns the specified feature level as HLSL shader model version string.
-std::string DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel);
+const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel);
 
 // Returns the compiler flags for the 'ShaderCompileFlags' enumeration values.
 UINT DXGetCompilerFlags(int flags);

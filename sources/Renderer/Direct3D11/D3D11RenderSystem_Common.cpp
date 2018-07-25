@@ -417,12 +417,12 @@ void D3D11RenderSystem::QueryRendererInfo()
             info.rendererName = "Direct3D 11.1";
             break;
         default:
-            info.rendererName = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
+            info.rendererName = "Direct3D " + std::string(DXFeatureLevelToVersion(GetFeatureLevel()));
             break;
     }
 
     /* Initialize HLSL version string */
-    info.shadingLanguageName = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
+    info.shadingLanguageName = "HLSL " + std::string(DXFeatureLevelToShaderModel(GetFeatureLevel()));
 
     /* Initialize video adapter strings */
     if (!videoAdatperDescs_.empty())

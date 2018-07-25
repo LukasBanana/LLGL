@@ -583,13 +583,51 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
         DXThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()), "failed to create Win32 event object");
 }
 
+static bool FindHighestShaderModel(ID3D12Device* device, D3D_SHADER_MODEL& shaderModel)
+{
+    D3D12_FEATURE_DATA_SHADER_MODEL feature;
+
+    for (auto model : { D3D_SHADER_MODEL_6_0, D3D_SHADER_MODEL_5_1 })
+    {
+        feature.HighestShaderModel = model;
+        auto hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &feature, sizeof(feature));
+        if (SUCCEEDED(hr))
+        {
+            shaderModel = model;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static const char* DXShaderModelToString(D3D_SHADER_MODEL shaderModel)
+{
+    switch (shaderModel)
+    {
+        case D3D_SHADER_MODEL_5_1: return "5.1";
+        case D3D_SHADER_MODEL_6_0: return "6.0";
+    }
+    return "";
+}
+
 void D3D12RenderSystem::QueryRendererInfo()
 {
     RendererInfo info;
 
-    info.rendererName           = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
-    info.shadingLanguageName    = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
+    /* Get D3D version */
+    info.rendererName = "Direct3D " + std::string(DXFeatureLevelToVersion(GetFeatureLevel()));
 
+    /* Get shading language support */
+    info.shadingLanguageName = "HLSL ";
+
+    D3D_SHADER_MODEL shaderModel = D3D_SHADER_MODEL_5_1;
+    if (FindHighestShaderModel(device_.GetNative(), shaderModel))
+        info.shadingLanguageName += DXShaderModelToString(shaderModel);
+    else
+        info.shadingLanguageName += DXFeatureLevelToShaderModel(GetFeatureLevel());
+
+    /* Get device and vendor name from adapter */
     if (!videoAdatperDescs_.empty())
     {
         const auto& videoAdapterDesc = videoAdatperDescs_.front();
