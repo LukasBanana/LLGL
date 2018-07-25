@@ -26,6 +26,7 @@
 - [Introduction of command encoding](#introduction-of-command-encoding)
 - [Introduction of render passes](#introduction-of-render-passes)
 - [Buffer updates](#buffer-updates)
+- [Queries](#queries)
 
 
 ## `Shader` interface
@@ -829,9 +830,66 @@ for (auto myModel : myModelList) {
     myCmdBuffer->Draw(...);
     myCmdBuffer->EndRenderPass();
 }
-
 ```
 
+
+## Queries
+
+Queries are now allocated as a heap object rather than single queries. The interface `Query` has been renamed to `QueryHeap` to apply to D3D12 and Vulkan. The result is now retrieved by the `CommandQueue` rather than the `CommandBuffer`.
+
+Before:
+```cpp
+// Interface:
+struct QueryDescriptor;
+class Query;
+Query* RenderSystem::CreateQuery(const QueryDescriptor& desc);
+void CommandBuffer::BeginQuery(Query& query);
+void CommandBuffer::EndQuery(Query& query);
+void CommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode);
+bool CommandBuffer::QueryResult(Query& query, std::uint64_t& result);
+bool CommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result);
+
+// Usage:
+LLGL::QueryDescriptor myQueryDesc;
+myQueryDesc.type = LLGL::QueryType::SamplesPassed;
+LLGL::Query* myQuery = myRenderer->CreateQuery(myQueryDesc);
+/* ... */
+myCmdBuffer->BeginQuery(*myQuery);
+/* ... */
+myCmdBuffer->EndQuery(*myQuery);
+/* ... */
+std::uint64_t result = 0;
+if (myCmdBuffer->QueryResult(*myQuery, result)) {
+    /* ... */
+}
+```
+
+After:
+```cpp
+// Interface:
+struct QueryHeapDescriptor;
+class QueryHeap;
+QueryHeap* RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc);
+void CommandBuffer::BeginQuery(Query& queryHeap, std::uint32_t query);
+void CommandBuffer::EndQuery(Query& queryHeap, std::uint32_t query);
+void CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode);
+bool CommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize);
+
+// Usage:
+LLGL::QueryHeapDescriptor myQueryHeapDesc;
+myQueryHeapDesc.type       = LLGL::QueryType::SamplesPassed;
+myQueryHeapDesc.numQueries = 1;
+LLGL::QueryHeap* myQueryHeap = myRenderer->CreateQueryHeap(myQueryHeapDesc);
+/* ... */
+myCmdBuffer->BeginQuery(*myQueryHeap, 0);
+/* ... */
+myCmdBuffer->EndQuery(*myQueryHeap, 0);
+/* ... */
+std::uint64_t result = 0;
+if (myCmdQueue->QueryResult(*myQueryHeap, 0, 1, &result, sizeof(result))) {
+    /* ... */
+}
+```
 
 
 
