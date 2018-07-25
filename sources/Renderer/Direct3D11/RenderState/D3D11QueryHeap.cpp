@@ -14,53 +14,78 @@ namespace LLGL
 {
 
 
-static void DXCreateQuery(ID3D11Device* device, const D3D11_QUERY_DESC& desc, ComPtr<ID3D11Query>& query)
+static ComPtr<ID3D11Query> DXCreateQuery(ID3D11Device* device, const D3D11_QUERY_DESC& desc)
 {
+    ComPtr<ID3D11Query> query;
+
     auto hr = device->CreateQuery(&desc, query.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 query");
+    DXThrowIfCreateFailed(hr, "ID3D11Query");
+
+    return query;
 }
 
-static void DXCreatePredicate(ID3D11Device* device, const D3D11_QUERY_DESC& desc, ComPtr<ID3D11Predicate>& predicate)
+static ComPtr<ID3D11Predicate> DXCreatePredicate(ID3D11Device* device, const D3D11_QUERY_DESC& desc)
 {
+    ComPtr<ID3D11Predicate> predicate;
+
     auto hr = device->CreatePredicate(&desc, predicate.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 predicate");
+    DXThrowIfCreateFailed(hr, "ID3D11Predicate");
+
+    return predicate;
 }
 
-static bool IsPredicateQuery(D3D11_QUERY queryType)
+static std::uint32_t GetDXQueryGroupSize(D3D11_QUERY queryType)
 {
-    return
-    (
-        queryType == D3D11_QUERY_OCCLUSION_PREDICATE     ||
-        queryType == D3D11_QUERY_SO_OVERFLOW_PREDICATE
-    );
+    /* For timestamp, use group size of 3: one primary and two secondary <ID3D11Query> objects */
+    if (queryType == D3D11_QUERY_TIMESTAMP_DISJOINT)
+        return 3u;
+    else
+        return 1u;
 }
 
 D3D11QueryHeap::D3D11QueryHeap(ID3D11Device* device, const QueryHeapDescriptor& desc) :
-    QueryHeap   { desc.type                  },
-    nativeType_ { D3D11Types::Map(desc.type) }
+    QueryHeap   { desc.type                        },
+    nativeType_ { D3D11Types::Map(desc.type)       },
+    groupSize_  { GetDXQueryGroupSize(nativeType_) }
 {
-    /* Create D3D query object */
+    /* Allocate native queries and initialize descriptor for primary query */
+    auto numNativeQueries = groupSize_ * desc.numQueries;
+    nativeQueries_.reserve(numNativeQueries);
+
     D3D11_QUERY_DESC queryDesc;
     {
         queryDesc.Query     = nativeType_;
         queryDesc.MiscFlags = (desc.renderCondition ? D3D11_QUERY_MISC_PREDICATEHINT : 0);
     }
 
-    if (IsPredicateQuery(nativeType_))
-        DXCreatePredicate(device, queryDesc, native_.predicate);
-    else
-        DXCreateQuery(device, queryDesc, native_.query);
-
-    /* Create secondary D3D query objects */
-    if (nativeType_ == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    if (nativeType_ == D3D11_QUERY_OCCLUSION_PREDICATE || nativeType_ == D3D11_QUERY_SO_OVERFLOW_PREDICATE)
+    {
+        /* Create predicate queries */
+        for (std::uint32_t i = 0; i < numNativeQueries; i += groupSize_)
+            nativeQueries_.push_back(DXCreatePredicate(device, queryDesc));
+    }
+    else if (nativeType_ == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         D3D11_QUERY_DESC timerQueryDesc;
         {
             timerQueryDesc.Query        = D3D11_QUERY_TIMESTAMP;
             timerQueryDesc.MiscFlags    = 0;
         }
-        DXCreateQuery(device, timerQueryDesc, timeStampQueryBegin_);
-        DXCreateQuery(device, timerQueryDesc, timeStampQueryEnd_);
+
+        for (std::uint32_t i = 0; i < numNativeQueries; i += groupSize_)
+        {
+            /* Create primary query object */
+            nativeQueries_.push_back(DXCreateQuery(device, queryDesc));
+
+            /* Create secondary query objects */
+            nativeQueries_.push_back(DXCreateQuery(device, timerQueryDesc));
+            nativeQueries_.push_back(DXCreateQuery(device, timerQueryDesc));
+        }
+    }
+    else
+    {
+        for (std::uint32_t i = 0; i < numNativeQueries; i += groupSize_)
+            nativeQueries_.push_back(DXCreateQuery(device, queryDesc));
     }
 }
 

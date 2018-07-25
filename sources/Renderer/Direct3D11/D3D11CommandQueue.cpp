@@ -80,7 +80,7 @@ bool D3D11CommandQueue::QueryResultSingleUInt64(
         case D3D11_QUERY_OCCLUSION:
         {
             UINT64 tempData = 0;
-            if (context_->GetData(queryHeapD3D.GetNative(), &tempData, sizeof(tempData), 0) == S_OK)
+            if (context_->GetData(queryHeapD3D.GetNative(query), &tempData, sizeof(tempData), 0) == S_OK)
             {
                 data = tempData;
                 return true;
@@ -91,14 +91,16 @@ bool D3D11CommandQueue::QueryResultSingleUInt64(
         /* Query result from special case query type: TimeElapsed */
         case D3D11_QUERY_TIMESTAMP_DISJOINT:
         {
+            query *= queryHeapD3D.GetGroupSize();
+
             UINT64 startTime = 0;
-            if (context_->GetData(queryHeapD3D.GetTimeStampQueryBegin(), &startTime, sizeof(startTime), 0) == S_OK)
+            if (context_->GetData(queryHeapD3D.GetNative(query + 1), &startTime, sizeof(startTime), 0) == S_OK)
             {
                 UINT64 endTime = 0;
-                if (context_->GetData(queryHeapD3D.GetTimeStampQueryEnd(), &endTime, sizeof(endTime), 0) == S_OK)
+                if (context_->GetData(queryHeapD3D.GetNative(query + 2), &endTime, sizeof(endTime), 0) == S_OK)
                 {
                     D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjointData;
-                    if (context_->GetData(queryHeapD3D.GetNative(), &disjointData, sizeof(disjointData), 0) == S_OK)
+                    if (context_->GetData(queryHeapD3D.GetNative(query), &disjointData, sizeof(disjointData), 0) == S_OK)
                     {
                         if (disjointData.Disjoint == FALSE)
                         {
@@ -125,7 +127,7 @@ bool D3D11CommandQueue::QueryResultSingleUInt64(
         case D3D11_QUERY_SO_OVERFLOW_PREDICATE:
         {
             BOOL tempData = FALSE;
-            if (context_->GetData(queryHeapD3D.GetPredicate(), &tempData, sizeof(tempData), 0) == S_OK)
+            if (context_->GetData(queryHeapD3D.GetPredicate(query), &tempData, sizeof(tempData), 0) == S_OK)
             {
                 data = tempData;
                 return true;
@@ -137,7 +139,7 @@ bool D3D11CommandQueue::QueryResultSingleUInt64(
         case D3D11_QUERY_SO_STATISTICS:
         {
             D3D11_QUERY_DATA_SO_STATISTICS tempData;
-            if (context_->GetData(queryHeapD3D.GetNative(), &tempData, sizeof(tempData), 0) == S_OK)
+            if (context_->GetData(queryHeapD3D.GetNative(query), &tempData, sizeof(tempData), 0) == S_OK)
             {
                 data = tempData.NumPrimitivesWritten;
                 return true;
@@ -219,13 +221,13 @@ bool D3D11CommandQueue::QueryResultPipelineStatistics(
             if (IsQueryPipelineStatsD3DCompatible())
             {
                 /* Use output storage directly when structure is compatible with D3D */
-                return (context_->GetData(queryHeapD3D.GetNative(), &data[query], sizeof(QueryPipelineStatistics), 0) == S_OK);
+                return (context_->GetData(queryHeapD3D.GetNative(query), &data[query], sizeof(QueryPipelineStatistics), 0) == S_OK);
             }
             else
             {
                 /* Copy temporary query data to output */
                 D3D11_QUERY_DATA_PIPELINE_STATISTICS tempData;
-                if (context_->GetData(queryHeapD3D.GetNative(), &tempData, sizeof(tempData), 0) == S_OK)
+                if (context_->GetData(queryHeapD3D.GetNative(query), &tempData, sizeof(tempData), 0) == S_OK)
                 {
                     data->inputAssemblyVertices             = tempData.IAVertices;
                     data->inputAssemblyPrimitives           = tempData.IAPrimitives;

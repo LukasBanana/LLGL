@@ -12,6 +12,8 @@
 #include <LLGL/QueryHeap.h>
 #include "../../DXCommon/ComPtr.h"
 #include <d3d11.h>
+#include <vector>
+#include <cstdint>
 
 
 namespace LLGL
@@ -22,6 +24,18 @@ union D3D11NativeQuery
 {
     inline D3D11NativeQuery() :
         query { nullptr }
+    {
+    }
+    inline D3D11NativeQuery(ComPtr<ID3D11Query>&& query) :
+        query { std::move(query) }
+    {
+    }
+    inline D3D11NativeQuery(ComPtr<ID3D11Predicate>&& predicate) :
+        predicate { std::move(predicate) }
+    {
+    }
+    inline D3D11NativeQuery(const D3D11NativeQuery& rhs) :
+        query { rhs.query }
     {
     }
     inline ~D3D11NativeQuery()
@@ -46,37 +60,28 @@ class D3D11QueryHeap final : public QueryHeap
         }
 
         // Returns the native ID3D11Query object.
-        inline ID3D11Query* GetNative() const
+        inline ID3D11Query* GetNative(std::uint32_t query) const
         {
-            return native_.query.Get();
+            return nativeQueries_[query].query.Get();
         }
 
         // Returns the native ID3D11Predicate object.
-        inline ID3D11Predicate* GetPredicate() const
+        inline ID3D11Predicate* GetPredicate(std::uint32_t query) const
         {
-            return native_.predicate.Get();
+            return nativeQueries_[query].predicate.Get();
         }
 
-        // Returns the query object for a time-stamp begin.
-        inline ID3D11Query* GetTimeStampQueryBegin() const
+        // Returns the number of queries within a group.
+        inline std::uint32_t GetGroupSize() const
         {
-            return timeStampQueryBegin_.Get();
-        }
-
-        // Returns the query object for a time-stamp end.
-        inline ID3D11Query* GetTimeStampQueryEnd() const
-        {
-            return timeStampQueryEnd_.Get();
+            return groupSize_;
         }
 
     private:
 
-        D3D11_QUERY         nativeType_             = D3D11_QUERY_EVENT;
-        D3D11NativeQuery    native_;
-
-        // Query objects for the special query type: TimeElapsed
-        ComPtr<ID3D11Query> timeStampQueryBegin_;
-        ComPtr<ID3D11Query> timeStampQueryEnd_;
+        D3D11_QUERY                     nativeType_     = D3D11_QUERY_EVENT;
+        std::uint32_t                   groupSize_      = 1;
+        std::vector<D3D11NativeQuery>   nativeQueries_;
 
 };
 

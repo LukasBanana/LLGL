@@ -374,16 +374,18 @@ void D3D11CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
 
+    query *= queryHeapD3D.GetGroupSize();
+
     if (queryHeapD3D.GetNativeType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Begin disjoint query first, and insert the beginning timestamp query */
-        context_->Begin(queryHeapD3D.GetNative());
-        context_->End(queryHeapD3D.GetTimeStampQueryBegin());
+        context_->Begin(queryHeapD3D.GetNative(query));
+        context_->End(queryHeapD3D.GetNative(query + 1));
     }
     else
     {
         /* Begin standard query */
-        context_->Begin(queryHeapD3D.GetNative());
+        context_->Begin(queryHeapD3D.GetNative(query));
     }
 }
 
@@ -391,23 +393,28 @@ void D3D11CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
 
+    query *= queryHeapD3D.GetGroupSize();
+
     if (queryHeapD3D.GetNativeType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Insert the ending timestamp query, and end the disjoint query */
-        context_->End(queryHeapD3D.GetTimeStampQueryEnd());
-        context_->End(queryHeapD3D.GetNative());
+        context_->End(queryHeapD3D.GetNative(query + 2));
+        context_->End(queryHeapD3D.GetNative(query));
     }
     else
     {
         /* End standard query */
-        context_->End(queryHeapD3D.GetNative());
+        context_->End(queryHeapD3D.GetNative(query));
     }
 }
 
 void D3D11CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
-    context_->SetPredication(queryHeapD3D.GetPredicate(), (mode >= RenderConditionMode::WaitInverted));
+    context_->SetPredication(
+        queryHeapD3D.GetPredicate(query * queryHeapD3D.GetGroupSize()),
+        (mode >= RenderConditionMode::WaitInverted)
+    );
 }
 
 void D3D11CommandBuffer::EndRenderCondition()
