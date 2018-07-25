@@ -353,22 +353,30 @@ void D3D12CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
     commandList_->EndQuery(queryHeapD3D.GetNative(), queryHeapD3D.GetNativeType(), query);
+    queryHeapD3D.ResolveData(commandList_.Get(), query, 1);
+}
+
+static D3D12_PREDICATION_OP GetDXPredicateOp(const RenderConditionMode mode)
+{
+    if (mode >= RenderConditionMode::WaitInverted)
+        return D3D12_PREDICATION_OP_NOT_EQUAL_ZERO;
+    else
+        return D3D12_PREDICATION_OP_EQUAL_ZERO;
 }
 
 void D3D12CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    #if 0
-    auto predicateOp = (mode >= RenderConditionMode::WaitInverted ? D3D12_PREDICATION_OP_NOT_EQUAL_ZERO : D3D12_PREDICATION_OP_EQUAL_ZERO);
-    commandList_->SetPredication(queryHeapD3D.GetResultResource(), offset, predicateOp);
-    //TODO...
-    #endif
+    auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
+    commandList_->SetPredication(
+        queryHeapD3D.GetResultResource(),
+        queryHeapD3D.GetAlignedBufferOffest(query),
+        GetDXPredicateOp(mode)
+    );
 }
 
 void D3D12CommandBuffer::EndRenderCondition()
 {
-    #if 0 //TODO: enable as soon as <BeginRenderCondition> is ready
     commandList_->SetPredication(nullptr, 0, D3D12_PREDICATION_OP_EQUAL_ZERO);
-    #endif
 }
 
 /* ----- Drawing ----- */

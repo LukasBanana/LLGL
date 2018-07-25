@@ -27,7 +27,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 |----------|:--------:|---------|
 | OpenGL | ~90% | |
 | Direct3D 11 | ~85% | Depth-textures are incomplete |
-| Direct3D 12 | ~15% | Experimental state; Tutorials working: 01, 02, (03), 06, 07, (10) |
+| Direct3D 12 | ~30% | Experimental state; Tutorials working: 01, 02, (03), 04, 06, 07, (10) |
 | Vulkan | ~60% | Stream-outputs are incomplete |
 | Metal | ~5% | Experimental state; Tutorials working: 01, (03), (07) |
 
