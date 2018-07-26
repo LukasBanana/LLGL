@@ -79,7 +79,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This is limited to 2^16 = 65536 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
         \remarks To update buffers larger than 65536 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
-        It is recommended to call this only outside of a render pass.
+        It is recommended to call this outside of a render pass.
         Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
         */
         virtual void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) = 0;
@@ -93,6 +93,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] srcOffset Specifies teh source offset (in bytes) at which the source buffer is to be read from.
         This offset plus the size (i.e. <code>srcOffset + size</code>) must be less than or equal to the size of the source buffer.
         \param[in] size Specifies the size of the buffer region to copy.
+        \remarks It is recommended to call this outside of a render pass.
+        Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
         */
         virtual void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) = 0;
 
@@ -110,7 +112,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Generates all MIP-maps for the specified texture.
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
         \remarks To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
-        It is recommended to call this only outside of a render pass.
+        It is recommended to call this outside of a render pass.
         Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
         \see GenerateMips(Texture&, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
         */

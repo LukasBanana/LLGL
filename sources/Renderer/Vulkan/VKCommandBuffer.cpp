@@ -132,7 +132,15 @@ void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
         region.dstOffset    = static_cast<VkDeviceSize>(dstOffset);
         region.size         = static_cast<VkDeviceSize>(size);
     }
-    vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
+
+    if (IsInsideRenderPass())
+    {
+        PauseRenderPass();
+        vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
+        ResumeRenderPass();
+    }
+    else
+        vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
 }
 
 /* ----- Configuration ----- */

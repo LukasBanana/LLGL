@@ -41,10 +41,10 @@ static void Convert(GLBlend& to, const BlendTargetDescriptor& from)
     to.srcAlpha     = GLTypes::Map(from.srcAlpha);
     to.dstAlpha     = GLTypes::Map(from.dstAlpha);
     to.funcAlpha    = GLTypes::Map(from.alphaArithmetic);
-    to.colorMask.r  = GLBoolean(from.colorMask.r);
-    to.colorMask.g  = GLBoolean(from.colorMask.g);
-    to.colorMask.b  = GLBoolean(from.colorMask.b);
-    to.colorMask.a  = GLBoolean(from.colorMask.a);
+    to.colorMask[0] = GLBoolean(from.colorMask.r);
+    to.colorMask[1] = GLBoolean(from.colorMask.g);
+    to.colorMask[2] = GLBoolean(from.colorMask.b);
+    to.colorMask[3] = GLBoolean(from.colorMask.a);
 }
 
 template <typename DstType, typename SrcType>

@@ -58,7 +58,7 @@ OutputHS PatchConstantFuncHS(InputPatch<OutputVS, 4> inp)
 
 [domain("quad")]
 [partitioning("fractional_odd")]
-[outputtopology("triangle_ccw")] // <-- CCW for DirectD3D because projection works differently to OpenGL
+[outputtopology("triangle_cw")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("PatchConstantFuncHS")]
 [maxtessfactor(64.0)]

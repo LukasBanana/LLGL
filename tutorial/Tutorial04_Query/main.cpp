@@ -23,8 +23,10 @@ class Tutorial04 : public Tutorial
     LLGL::Buffer*           indexBuffer             = nullptr;
     LLGL::Buffer*           constantBuffer          = nullptr;
 
-    LLGL::QueryHeap*            occlusionQuery          = nullptr;
-    LLGL::QueryHeap*            geometryQuery           = nullptr;
+    LLGL::QueryHeap*        occlusionQuery          = nullptr;
+    LLGL::QueryHeap*        geometryQuery           = nullptr;
+
+    Gs::Matrix4f            modelTransform[2];
 
     struct Settings
     {
@@ -72,11 +74,14 @@ public:
             pipelineDesc.pipelineLayout             = pipelineLayout;
 
             pipelineDesc.depth.testEnabled          = true;
+            pipelineDesc.depth.writeEnabled         = true;
+
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
 
             LLGL::BlendTargetDescriptor blendDesc;
             {
-                blendDesc.colorMask = LLGL::ColorRGBAb(false);
+                blendDesc.colorMask = LLGL::ColorRGBAb{ false };
             }
             pipelineDesc.blend.targets.push_back(blendDesc);
         }
@@ -84,9 +89,8 @@ public:
 
         // Create graphics pipeline for scene rendering
         {
-            pipelineDesc.depth.testEnabled          = true;
-            pipelineDesc.depth.writeEnabled         = true;
-            pipelineDesc.blend.targets[0].colorMask = LLGL::ColorRGBAb(true);
+            pipelineDesc.blend.blendEnabled         = true;
+            pipelineDesc.blend.targets[0].colorMask = LLGL::ColorRGBAb{ true };
         }
         scenePipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
@@ -146,24 +150,84 @@ public:
         std::flush(std::cout);
     }
 
-    void SetBoxColor(const LLGL::ColorRGBAf& color)
+    void SetBoxTransformAndColor(const Gs::Matrix4f& matrix, const LLGL::ColorRGBAf& color)
     {
-        settings.color = color;
+        settings.wvpMatrix  = projection;
+        settings.wvpMatrix *= matrix;
+        settings.color      = color;
         UpdateBuffer(constantBuffer, settings, true);
     }
 
 private:
 
-    void OnDrawFrame() override
+    void UpdateScene()
     {
         // Update matrices in constant buffer
         static float anim;
         anim += 0.01f;
 
-        settings.wvpMatrix = projection;
-        Gs::RotateFree(settings.wvpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(std::sin(anim)*55.0f));
-        Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
-        Gs::RotateFree(settings.wvpMatrix, Gs::Vector3f(1).Normalized(), anim*3);
+        modelTransform[0].LoadIdentity();
+        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, Gs::Deg2Rad(std::sin(anim)*55.0f));
+        Gs::Translate(modelTransform[0], { 0, 0, 5 });
+        Gs::RotateFree(modelTransform[0], Gs::Vector3f(1).Normalized(), anim*3);
+
+        modelTransform[1].LoadIdentity();
+        Gs::Translate(modelTransform[1], { 0, 0, 10 });
+        Gs::RotateFree(modelTransform[1], Gs::Vector3f(1).Normalized(), anim*-1.5f);
+    }
+
+    void RenderBoundingBoxes()
+    {
+        // Clear depth buffer
+        commands->Clear(LLGL::ClearFlags::Depth);
+
+        // Set resources
+        commands->SetGraphicsPipeline(*occlusionPipeline);
+        commands->SetGraphicsResourceHeap(*resourceHeap);
+
+        // Draw occluder box
+        SetBoxTransformAndColor(modelTransform[0], { 1, 1, 1 });
+        commands->BeginQuery(*occlusionQuery);
+        {
+            commands->DrawIndexed(36, 0);
+        }
+        commands->EndQuery(*occlusionQuery);
+
+        // Draw box for occlusion query
+        SetBoxTransformAndColor(modelTransform[1], { 1, 1, 1 });
+        commands->BeginQuery(*occlusionQuery);
+        {
+            commands->DrawIndexed(36, 0);
+        }
+        commands->EndQuery(*occlusionQuery);
+    }
+
+    void RenderScene()
+    {
+        // Clear color and depth buffers
+        commands->Clear(LLGL::ClearFlags::ColorDepth);
+
+        // Set resources
+        commands->SetGraphicsPipeline(*scenePipeline);
+
+        // Draw scene
+        SetBoxTransformAndColor(modelTransform[1], { 0, 1, 0 });
+        commands->BeginRenderCondition(*occlusionQuery);
+        {
+            commands->DrawIndexed(36, 0);
+        }
+        commands->EndRenderCondition();
+
+        // Draw scene
+        SetBoxTransformAndColor(modelTransform[0], { 1, 1, 1, 0.5f });
+        commands->SetGraphicsPipeline(*scenePipeline);
+
+        commands->DrawIndexed(36, 0);
+    }
+
+    void OnDrawFrame() override
+    {
+        UpdateScene();
 
         commands->Begin();
         {
@@ -171,36 +235,15 @@ private:
             commands->SetVertexBuffer(*vertexBuffer);
             commands->SetIndexBuffer(*indexBuffer);
 
-            // Start with qeometry query
             commands->BeginQuery(*geometryQuery);
             {
+                // Start with qeometry query
                 commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
 
                 commands->BeginRenderPass(*context);
                 {
-                    // Clear color and depth buffers
-                    commands->Clear(LLGL::ClearFlags::ColorDepth);
-
-                    // Draw box for occlusion query
-                    commands->SetGraphicsPipeline(*occlusionPipeline);
-                    commands->SetGraphicsResourceHeap(*resourceHeap);
-
-                    SetBoxColor({ 1, 1, 1 });
-                    commands->BeginQuery(*occlusionQuery);
-                    {
-                        commands->DrawIndexed(36, 0);
-                    }
-                    commands->EndQuery(*occlusionQuery);
-
-                    // Draw scene
-                    SetBoxColor({ 0, 1, 0 });
-                    commands->SetGraphicsPipeline(*scenePipeline);
-
-                    commands->BeginRenderCondition(*occlusionQuery);
-                    {
-                        commands->DrawIndexed(36, 0);
-                    }
-                    commands->EndRenderCondition();
+                    RenderBoundingBoxes();
+                    RenderScene();
                 }
                 commands->EndRenderPass();
             }

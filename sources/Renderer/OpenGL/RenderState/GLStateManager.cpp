@@ -6,6 +6,7 @@
  */
 
 #include "GLStateManager.h"
+#include "../Texture/GLRenderTarget.h"
 #include "../../GLCommon/GLImportExt.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
@@ -105,6 +106,18 @@ static const GLenum g_textureLayersEnum[] =
     GL_TEXTURE20, GL_TEXTURE21, GL_TEXTURE22, GL_TEXTURE23,
     GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27,
     GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
+};
+
+static const GLenum g_drawBuffers[] =
+{
+    GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
+    GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7,
+    GL_COLOR_ATTACHMENT8, GL_COLOR_ATTACHMENT9, GL_COLOR_ATTACHMENT10, GL_COLOR_ATTACHMENT11,
+    GL_COLOR_ATTACHMENT12, GL_COLOR_ATTACHMENT13, GL_COLOR_ATTACHMENT14, GL_COLOR_ATTACHMENT15,
+    GL_COLOR_ATTACHMENT16, GL_COLOR_ATTACHMENT17, GL_COLOR_ATTACHMENT18, GL_COLOR_ATTACHMENT19,
+    GL_COLOR_ATTACHMENT20, GL_COLOR_ATTACHMENT21, GL_COLOR_ATTACHMENT22, GL_COLOR_ATTACHMENT23,
+    GL_COLOR_ATTACHMENT24, GL_COLOR_ATTACHMENT25, GL_COLOR_ATTACHMENT26, GL_COLOR_ATTACHMENT27,
+    GL_COLOR_ATTACHMENT28, GL_COLOR_ATTACHMENT29, GL_COLOR_ATTACHMENT30, GL_COLOR_ATTACHMENT31,
 };
 
 static const GLuint g_GLInvalidId = ~0;
@@ -413,57 +426,6 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* sci
     }
 }
 
-void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled)
-{
-    if (blendStates.size() == 1)
-    {
-        /* Set blend state only for the single draw buffer */
-        const auto& state = blendStates.front();
-
-        glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
-        if (blendEnabled)
-        {
-            glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-            glBlendEquationSeparate(state.funcColor, state.funcAlpha);
-        }
-    }
-    else if (blendStates.size() > 1)
-    {
-        GLenum drawBuffer = GL_COLOR_ATTACHMENT0;
-
-        /* Set respective blend state for each draw buffer */
-        for (const auto& state : blendStates)
-            SetBlendState(drawBuffer++, state, blendEnabled);
-    }
-}
-
-void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled)
-{
-    #ifdef GL_ARB_draw_buffers_blend
-    if (HasExtension(GLExt::ARB_draw_buffers_blend))
-    {
-        glColorMaski(drawBuffer, state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
-
-        if (blendEnabled)
-        {
-            glBlendFuncSeparatei(drawBuffer, state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-            glBlendEquationSeparatei(drawBuffer, state.funcColor, state.funcAlpha);
-        }
-    }
-    else
-    #endif
-    {
-        glDrawBuffer(drawBuffer);
-        glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
-
-        if (blendEnabled)
-        {
-            glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-            glBlendEquationSeparate(state.funcColor, state.funcAlpha);
-        }
-    }
-}
-
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 {
     #if 0
@@ -546,24 +508,6 @@ void GLStateManager::SetPatchVertices(GLint patchVertices)
     }
 }
 
-void GLStateManager::SetBlendColor(const ColorRGBAf& color)
-{
-    if (color != commonState_.blendColor)
-    {
-        commonState_.blendColor = color;
-        glBlendColor(color.r, color.g, color.b, color.a);
-    }
-}
-
-void GLStateManager::SetLogicOp(GLenum opcode)
-{
-    if (commonState_.logicOpCode != opcode)
-    {
-        commonState_.logicOpCode = opcode;
-        glLogicOp(opcode);
-    }
-}
-
 void GLStateManager::SetLineWidth(GLfloat width)
 {
     /* Clamp width silently into limited range */
@@ -572,6 +516,183 @@ void GLStateManager::SetLineWidth(GLfloat width)
     {
         commonState_.lineWidth = width;
         glLineWidth(width);
+    }
+}
+
+/* ----- Blend states ----- */
+
+GLenum GLStateManager::ToGLColorAttachment(GLuint index)
+{
+    return g_drawBuffers[index];
+}
+
+void GLStateManager::SetBlendColor(const ColorRGBAf& color)
+{
+    if (color != blendState_.blendColor)
+    {
+        blendState_.blendColor = color;
+        glBlendColor(color.r, color.g, color.b, color.a);
+    }
+}
+
+void GLStateManager::SetLogicOp(GLenum opcode)
+{
+    if (blendState_.logicOpCode != opcode)
+    {
+        blendState_.logicOpCode = opcode;
+        glLogicOp(opcode);
+    }
+}
+
+void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled)
+{
+    if (blendStates.empty())
+    {
+        /* Set default blend states */
+        GLBlend defaultBlendState;
+        SetAllDrawBufferBlendState(defaultBlendState, blendEnabled);
+
+        /* Store color masks */
+        blendState_.numDrawBuffers = 1;
+        blendState_.colorMasks[0][0] = GL_TRUE;
+        blendState_.colorMasks[0][1] = GL_TRUE;
+        blendState_.colorMasks[0][2] = GL_TRUE;
+        blendState_.colorMasks[0][3] = GL_TRUE;
+    }
+    else
+    {
+        if (blendStates.size() == 1)
+        {
+            /* Set blend state only for the single draw buffer */
+            SetAllDrawBufferBlendState(blendStates.front(), blendEnabled);
+        }
+        else if (blendStates.size() > 1)
+        {
+            /* Set respective blend state for each draw buffer */
+            GLuint drawBufferIndex = 0;
+            for (const auto& state : blendStates)
+                SetDrawBufferBlendState(drawBufferIndex++, state, blendEnabled);
+
+            #ifdef GL_ARB_draw_buffers_blend
+            if (!HasExtension(GLExt::ARB_draw_buffers_blend))
+            #endif
+            {
+                /* Restore draw buffer settings for current render target */
+                if (framebufferState_.boundRenderTarget)
+                    framebufferState_.boundRenderTarget->SetDrawBuffers();
+            }
+        }
+
+        /* Store color masks */
+        blendState_.numDrawBuffers = static_cast<GLuint>(blendStates.size());
+        for (GLuint i = 0; i < blendState_.numDrawBuffers; ++i)
+        {
+            blendState_.colorMasks[i][0] = blendStates[i].colorMask[0];
+            blendState_.colorMasks[i][1] = blendStates[i].colorMask[1];
+            blendState_.colorMasks[i][2] = blendStates[i].colorMask[2];
+            blendState_.colorMasks[i][3] = blendStates[i].colorMask[3];
+        }
+    }
+}
+
+// private
+void GLStateManager::SetAllDrawBufferBlendState(const GLBlend& state, bool blendEnabled)
+{
+    glColorMask(state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
+    if (blendEnabled)
+    {
+        glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
+        glBlendEquationSeparate(state.funcColor, state.funcAlpha);
+    }
+}
+
+// private
+void GLStateManager::SetDrawBufferBlendState(GLuint drawBufferIndex, const GLBlend& state, bool blendEnabled)
+{
+    #ifdef GL_ARB_draw_buffers_blend
+    if (HasExtension(GLExt::ARB_draw_buffers_blend))
+    {
+        glColorMaski(drawBufferIndex, state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
+        if (blendEnabled)
+        {
+            glBlendFuncSeparatei(drawBufferIndex, state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
+            glBlendEquationSeparatei(drawBufferIndex, state.funcColor, state.funcAlpha);
+        }
+    }
+    else
+    #endif // /GL_ARB_draw_buffers_blend
+    {
+        glDrawBuffer(GLStateManager::ToGLColorAttachment(drawBufferIndex));
+        glColorMask(state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
+        if (blendEnabled)
+        {
+            glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
+            glBlendEquationSeparate(state.funcColor, state.funcAlpha);
+        }
+    }
+}
+
+void GLStateManager::PushColorMaskAndEnable()
+{
+    if (!blendState_.colorMaskOnStack)
+    {
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        blendState_.colorMaskOnStack = true;
+    }
+}
+
+void GLStateManager::PopColorMask()
+{
+    if (blendState_.colorMaskOnStack)
+    {
+        if (blendState_.numDrawBuffers == 1)
+        {
+            /* Restore color mask for all draw buffers */
+            glColorMask(
+                blendState_.colorMasks[0][0],
+                blendState_.colorMasks[0][1],
+                blendState_.colorMasks[0][2],
+                blendState_.colorMasks[0][3]
+            );
+        }
+        else if (blendState_.numDrawBuffers > 1)
+        {
+            #ifdef GL_EXT_draw_buffers2
+            if (HasExtension(GLExt::EXT_draw_buffers2))
+            {
+                /* Restore color mask for each draw buffer */
+                for (GLuint i = 0; i < blendState_.numDrawBuffers; ++i)
+                {
+                    glColorMaski(
+                        i,
+                        blendState_.colorMasks[i][0],
+                        blendState_.colorMasks[i][1],
+                        blendState_.colorMasks[i][2],
+                        blendState_.colorMasks[i][3]
+                    );
+                }
+            }
+            else
+            #endif // /GL_EXT_draw_buffers2
+            {
+                /* Restore color mask for each draw buffer */
+                for (GLuint i = 0; i < blendState_.numDrawBuffers; ++i)
+                {
+                    glDrawBuffer(GLStateManager::ToGLColorAttachment(i));
+                    glColorMask(
+                        blendState_.colorMasks[i][0],
+                        blendState_.colorMasks[i][1],
+                        blendState_.colorMasks[i][2],
+                        blendState_.colorMasks[i][3]
+                    );
+                }
+
+                /* Restore draw buffer settings for current render target */
+                if (framebufferState_.boundRenderTarget)
+                    framebufferState_.boundRenderTarget->SetDrawBuffers();
+            }
+        }
+        blendState_.colorMaskOnStack = false;
     }
 }
 
@@ -664,8 +785,9 @@ void GLStateManager::SetStencilState(GLenum face, const GLStencil& state)
     }
 }
 
-void GLStateManager::PushDepthMask()
+void GLStateManager::PushDepthMaskAndEnable()
 {
+    SetDepthMask(GL_TRUE);
     depthStencilState_.depthMaskStack = depthStencilState_.depthMask;
 }
 
@@ -811,6 +933,15 @@ void GLStateManager::NotifyBufferRelease(GLuint buffer, GLBufferTarget target)
 }
 
 /* ----- Framebuffer ----- */
+
+void GLStateManager::BindRenderTarget(GLRenderTarget* renderTarget)
+{
+    framebufferState_.boundRenderTarget = renderTarget;
+    if (renderTarget)
+        BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTarget->GetFramebuffer().GetID());
+    else
+        BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+}
 
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {

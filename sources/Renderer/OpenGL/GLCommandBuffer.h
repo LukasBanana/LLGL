@@ -172,7 +172,7 @@ class GLCommandBuffer final : public CommandBufferExt
             const ClearValue*   clearValues
         );
 
-        void ClearColorBuffers(
+        std::uint32_t ClearColorBuffers(
             const std::uint8_t* colorBuffers,
             std::uint32_t       numClearValues,
             const ClearValue*   clearValues,
@@ -183,6 +183,7 @@ class GLCommandBuffer final : public CommandBufferExt
         RenderState                     renderState_;
 
         GLRenderTarget*                 boundRenderTarget_  = nullptr;
+        std::uint32_t                   numDrawBuffers_     = 1;        // number of draw buffers of the active render target
 
         GLClearValue                    clearValue_;
 

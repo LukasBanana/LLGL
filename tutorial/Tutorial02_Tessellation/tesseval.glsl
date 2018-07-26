@@ -2,7 +2,7 @@
 #version 400
 
 // Tessellation evaluation input configuration
-layout(quads, fractional_odd_spacing, cw) in; // <-- CW for OpenGL because projection works differently to Direct3D
+layout(quads, fractional_odd_spacing, ccw) in; // <-- CCW for OpenGL because projection works differently to Direct3D
 
 // Uniform buffer object (also named "Constant Buffer")
 layout(std140) uniform Settings

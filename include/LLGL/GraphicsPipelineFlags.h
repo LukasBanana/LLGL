@@ -438,7 +438,10 @@ struct MultiSamplingDescriptor
     std::uint32_t   sampleMask  = ~0;
 };
 
-//! Depth state descriptor structure.
+/**
+\brief Depth state descriptor structure.
+\see GraphicsPipelineDescriptor::depth
+*/
 struct DepthDescriptor
 {
     /**
@@ -454,7 +457,11 @@ struct DepthDescriptor
     CompareOp   compareOp       = CompareOp::Less;
 };
 
-//! Stencil face descriptor structure.
+/**
+\brief Stencil face descriptor structure.
+\see StencilDescriptor::front
+\see StencilDescriptor::back
+*/
 struct StencilFaceDescriptor
 {
     //! Specifies the operation to take when the stencil test fails.
@@ -492,7 +499,10 @@ struct StencilFaceDescriptor
     std::uint32_t   reference       = 0;
 };
 
-//! Stencil state descriptor structure.
+/**
+\brief Stencil state descriptor structure.
+\see GraphicsPipelineDescriptor::stencil
+*/
 struct StencilDescriptor
 {
     /**
@@ -535,7 +545,10 @@ struct DepthBiasDescriptor
     float clamp             = 0.0f;
 };
 
-//! Rasterizer state descriptor structure.
+/**
+\brief Rasterizer state descriptor structure.
+\see GraphicsPipelineDescriptor::rasterizer
+*/
 struct RasterizerDescriptor
 {
     //! Polygon render mode. By default PolygonMode::Fill.
@@ -585,7 +598,10 @@ struct RasterizerDescriptor
     float                   lineWidth                   = 1.0f;
 };
 
-//! Blend target state descriptor structure.
+/**
+\brief Blend target state descriptor structure.
+\see BlendDescriptor::targets
+*/
 struct BlendTargetDescriptor
 {
     //! Source color blending operation. By default BlendOp::SrcAlpha.
@@ -610,7 +626,10 @@ struct BlendTargetDescriptor
     ColorRGBAb      colorMask       = { true, true, true, true };
 };
 
-//! Blending state descriptor structure.
+/**
+\brief Blending state descriptor structure.
+\see GraphicsPipelineDescriptor::blend
+*/
 struct BlendDescriptor
 {
     //! Specifies whether blending is enabled or disabled. This applies to all blending targets.
