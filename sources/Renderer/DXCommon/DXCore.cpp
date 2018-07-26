@@ -311,17 +311,17 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = 1.0f;
     caps.limits.lineWidthRange[1]                   = 1.0f;
-    caps.limits.maxNumTextureArrayLayers            = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
-    caps.limits.maxNumRenderTargetAttachments       = GetMaxRenderTargets(featureLevel);
+    caps.limits.maxTextureArrayLayers               = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
+    caps.limits.maxColorAttachments                 = GetMaxRenderTargets(featureLevel);
     caps.limits.maxPatchVertices                    = 32u;
     caps.limits.max1DTextureSize                    = GetMaxTextureDimension(featureLevel);
     caps.limits.max2DTextureSize                    = GetMaxTextureDimension(featureLevel);
     caps.limits.max3DTextureSize                    = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
     caps.limits.maxCubeTextureSize                  = GetMaxCubeTextureDimension(featureLevel);
     caps.limits.maxAnisotropy                       = (featureLevel >= D3D_FEATURE_LEVEL_9_2 ? 16u : 2u);
-    caps.limits.maxNumComputeShaderWorkGroups[0]    = maxThreadGroups;
-    caps.limits.maxNumComputeShaderWorkGroups[1]    = maxThreadGroups;
-    caps.limits.maxNumComputeShaderWorkGroups[2]    = (featureLevel >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u);
+    caps.limits.maxComputeShaderWorkGroups[0]       = maxThreadGroups;
+    caps.limits.maxComputeShaderWorkGroups[1]       = maxThreadGroups;
+    caps.limits.maxComputeShaderWorkGroups[2]       = (featureLevel >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u);
     caps.limits.maxComputeShaderWorkGroupSize[0]    = 1024u;
     caps.limits.maxComputeShaderWorkGroupSize[1]    = 1024u;
     caps.limits.maxComputeShaderWorkGroupSize[2]    = 1024u;

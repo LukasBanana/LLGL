@@ -434,7 +434,7 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether multiple viewports, depth-ranges, and scissors at once are supported.
-    \see RenderingLimits::maxNumViewports
+    \see RenderingLimits::maxViewports
     */
     bool hasViewportArrays              = false;
 
@@ -490,15 +490,16 @@ struct RenderingLimits
     \brief Specifies the maximum number of texture array layers (for 1D-, 2D-, and cube textures).
     \see TextureDescriptor::arrayLayers
     */
-    std::uint32_t   maxNumTextureArrayLayers            = 0;
+    std::uint32_t   maxTextureArrayLayers               = 0;
 
     /**
     \brief Specifies the maximum number of color attachments for each render target.
+    \remarks This value must not be greater than 8.
     \see RenderTargetDescriptor::attachments
     \see RenderPassDescriptor::colorAttachments
     \see BlendDescriptor::targets
     */
-    std::uint32_t   maxNumRenderTargetAttachments       = 0;
+    std::uint32_t   maxColorAttachments                 = 0;
 
     /**
     \brief Specifies the maximum number of patch control points.
@@ -541,7 +542,7 @@ struct RenderingLimits
     \brief Specifies the maximum number of work groups in a compute shader.
     \see CommandBuffer::Dispatch
     */
-    std::uint32_t   maxNumComputeShaderWorkGroups[3]    = { 0, 0, 0 };
+    std::uint32_t   maxComputeShaderWorkGroups[3]       = { 0, 0, 0 };
 
     //! Specifies the maximum work group size in a compute shader.
     std::uint32_t   maxComputeShaderWorkGroupSize[3]    = { 0, 0, 0 };
@@ -550,14 +551,18 @@ struct RenderingLimits
     \brief Specifies the maximum number of viewports and scissor rectangles. Most render systems have a maximum of 16.
     \see CommandBuffer::SetViewports
     \see CommandBuffer::SetScissors
+    \see GraphicsPipelineDescriptor::viewports
+    \see GraphicsPipelineDescriptor::scissors
     \see RenderingFeatures::hasViewportArrays
     */
-    std::uint32_t   maxNumViewports                     = 0;
+    std::uint32_t   maxViewports                        = 0;
 
     /**
     \brief Specifies the maximum width and height of each viewport and scissor rectangle.
     \see Viewport::width
     \see Viewport::height
+    \see Scissor::width
+    \see Scissor::height
     */
     std::uint32_t   maxViewportSize[2]                  = { 0, 0 };
 
@@ -650,9 +655,9 @@ If this is null the validation process breaks with the first attribute that did 
 LLGL::RenderingCapabilities myRequirements;
 myRequirements.features.hasStorageBuffers = true;
 myRequirements.features.hasComputeShaders = true;
-myRequirements.limits.maxNumComputeShaderWorkGroups[0] = 1024;
-myRequirements.limits.maxNumComputeShaderWorkGroups[1] = 1024;
-myRequirements.limits.maxNumComputeShaderWorkGroups[2] = 1;
+myRequirements.limits.maxComputeShaderWorkGroups[0] = 1024;
+myRequirements.limits.maxComputeShaderWorkGroups[1] = 1024;
+myRequirements.limits.maxComputeShaderWorkGroups[2] = 1;
 myRequirements.limits.maxComputeShaderWorkGroupSize[0] = 8;
 myRequirements.limits.maxComputeShaderWorkGroupSize[1] = 8;
 myRequirements.limits.maxComputeShaderWorkGroupSize[2] = 8;

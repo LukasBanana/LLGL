@@ -121,12 +121,12 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         /* Validate array size */
         if (numViewports == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no viewports are specified");
-        else if (numViewports > limits_.maxNumViewports)
+        else if (numViewports > limits_.maxViewports)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "viewport array exceeded maximal number of viewports (" + std::to_string(numViewports) +
-                " specified but limit is " + std::to_string(limits_.maxNumViewports) + ")"
+                " specified but limit is " + std::to_string(limits_.maxViewports) + ")"
             );
         }
     }
@@ -715,9 +715,9 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
             LLGL_DBG_WARN(WarningType::PointlessOperation, "thread group size has volume of 0 units");
 
         AssertComputePipelineBound();
-        ValidateThreadGroupLimit(groupSizeX, limits_.maxNumComputeShaderWorkGroups[0]);
-        ValidateThreadGroupLimit(groupSizeY, limits_.maxNumComputeShaderWorkGroups[1]);
-        ValidateThreadGroupLimit(groupSizeZ, limits_.maxNumComputeShaderWorkGroups[2]);
+        ValidateThreadGroupLimit(groupSizeX, limits_.maxComputeShaderWorkGroups[0]);
+        ValidateThreadGroupLimit(groupSizeY, limits_.maxComputeShaderWorkGroups[1]);
+        ValidateThreadGroupLimit(groupSizeZ, limits_.maxComputeShaderWorkGroups[2]);
     }
 
     instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);

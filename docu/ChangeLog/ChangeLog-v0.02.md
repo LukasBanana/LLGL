@@ -552,21 +552,25 @@ Various structures, enumerations, and fields have been renamed to either fit LLG
 
 Before/After:
 ```cpp
-ShaderStageFlags                 --> StageFlags
-BlendTargetDescriptor::destColor --> BlendTargetDescriptor::dstColor
-BlendTargetDescriptor::destAlpha --> BlendTargetDescriptor::dstAlpha
-BlendOp::DestColor               --> BlendOp::DstColor
-BlendOp::InvDestColor            --> BlendOp::InvDstColor
-BlendOp::DestAlpha               --> BlendOp::DstAlpha
-BlendOp::InvDestAlpha            --> BlendOp::InvDstAlpha
-ImageDescriptor                  --> SrcImageDescriptor
-BufferCPUAccess                  --> CPUAccess
-TextureFilter                    --> SamplerFilter
-TextureWrap                      --> SamplerAddressMode
-Surface::Recreate                --> Surface::ResetPixelFormat
-SubTextureDescriptor             --> TextureRegion
-CompareOp::Never                 --> CompareOp::NeverPass
-CompareOp::Ever                  --> CompareOp::AlwaysPass
+ShaderStageFlags                               --> StageFlags
+BlendTargetDescriptor::destColor               --> BlendTargetDescriptor::dstColor
+BlendTargetDescriptor::destAlpha               --> BlendTargetDescriptor::dstAlpha
+BlendOp::DestColor                             --> BlendOp::DstColor
+BlendOp::InvDestColor                          --> BlendOp::InvDstColor
+BlendOp::DestAlpha                             --> BlendOp::DstAlpha
+BlendOp::InvDestAlpha                          --> BlendOp::InvDstAlpha
+ImageDescriptor                                --> SrcImageDescriptor
+BufferCPUAccess                                --> CPUAccess
+TextureFilter                                  --> SamplerFilter
+TextureWrap                                    --> SamplerAddressMode
+Surface::Recreate                              --> Surface::ResetPixelFormat
+SubTextureDescriptor                           --> TextureRegion
+CompareOp::Never                               --> CompareOp::NeverPass
+CompareOp::Ever                                --> CompareOp::AlwaysPass
+RenderingLimits::maxNumTextureArrayLayers      --> RenderingLimits::maxTextureArrayLayers
+RenderingLimits::maxNumRenderTargetAttachments --> RenderingLimits::maxColorAttachments
+RenderingLimits::maxNumViewports               --> RenderingLimits::maxViewports
+RenderingLimits::maxNumComputeShaderWorkGroups --> RenderingLimits::maxComputeShaderWorkGroups
 ```
 
 

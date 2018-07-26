@@ -121,7 +121,7 @@ struct RenderPassDescriptor
     /**
     \briefs Specifies the color attachments used within the render pass.
     \remarks A render context usually uses an BGRA format instead of an RGBA format.
-    \see RenderingLimits::maxNumRenderTargetAttachments
+    \see RenderingLimits::maxColorAttachments
     \see Format::BGRA8UNorm
     \see Format::BGRA8sRGB
     */

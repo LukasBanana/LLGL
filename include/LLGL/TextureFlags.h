@@ -190,7 +190,7 @@ struct TextureDescriptor
     - <code>Z-</code> direction has index offset 5.
     \see IsArrayTexture
     \see IsCubeTexture
-    \see RenderingLimits::maxNumTextureArrayLayers
+    \see RenderingLimits::maxTextureArrayLayers
     */
     std::uint32_t   arrayLayers = 1;
 

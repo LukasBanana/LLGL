@@ -142,21 +142,21 @@ LLGL_EXPORT bool ValidateRenderingCaps(
             LLGL_CONTINUE_VALIDATION_IF(continueValidation);                                \
         }
 
-    LLGL_VALIDATE_LIMIT( maxNumTextureArrayLayers,          "texture array layers count"                );
-    LLGL_VALIDATE_LIMIT( maxNumRenderTargetAttachments,     "render target attachment count"            );
+    LLGL_VALIDATE_LIMIT( maxTextureArrayLayers,             "texture array layers"                      );
+    LLGL_VALIDATE_LIMIT( maxColorAttachments,               "color attachments"                         );
     LLGL_VALIDATE_LIMIT( maxPatchVertices,                  "patch vertices"                            );
     LLGL_VALIDATE_LIMIT( max1DTextureSize,                  "1D texture size"                           );
     LLGL_VALIDATE_LIMIT( max2DTextureSize,                  "2D texture size"                           );
     LLGL_VALIDATE_LIMIT( max3DTextureSize,                  "3D texture size"                           );
     LLGL_VALIDATE_LIMIT( maxCubeTextureSize,                "cube texture size"                         );
     LLGL_VALIDATE_LIMIT( maxAnisotropy,                     "anisotropy"                                );
-    LLGL_VALIDATE_LIMIT( maxNumComputeShaderWorkGroups[0],  "compute shader work group count on X-axis" );
-    LLGL_VALIDATE_LIMIT( maxNumComputeShaderWorkGroups[1],  "compute shader work group count on Y-axis" );
-    LLGL_VALIDATE_LIMIT( maxNumComputeShaderWorkGroups[2],  "compute shader work group count on Z-axis" );
+    LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroups[0],     "compute shader work groups on X-axis"      );
+    LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroups[1],     "compute shader work groups on Y-axis"      );
+    LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroups[2],     "compute shader work groups on Z-axis"      );
     LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroupSize[0],  "compute shader work group size on X-axis"  );
     LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroupSize[1],  "compute shader work group size on Y-axis"  );
     LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroupSize[2],  "compute shader work group size on Z-axis"  );
-    LLGL_VALIDATE_LIMIT( maxNumViewports,                   "viewport count"                            );
+    LLGL_VALIDATE_LIMIT( maxViewports,                      "viewports"                                 );
     LLGL_VALIDATE_LIMIT( maxViewportSize[0],                "viewport width"                            );
     LLGL_VALIDATE_LIMIT( maxViewportSize[1],                "viewport height"                           );
     LLGL_VALIDATE_LIMIT( maxBufferSize,                     "buffer size"                               );

@@ -808,7 +808,7 @@ void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::ui
                 {
                     LLGL_DBG_ERROR(
                         ErrorType::InvalidArgument,
-                        "number fo texture layers must be 6 for cube textures (but " +
+                        "number of texture layers must be 6 for cube textures (but " +
                         std::to_string(layers) + " was specified)"
                     );
                 }
@@ -821,7 +821,7 @@ void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::ui
                 {
                     LLGL_DBG_ERROR(
                         ErrorType::InvalidArgument,
-                        "number fo texture layers must be a multiple of 6 for cube array textures (but " +
+                        "number of texture layers must be a multiple of 6 for cube array textures (but " +
                         std::to_string(layers) + " was specified)"
                     );
                 }
@@ -832,12 +832,12 @@ void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::ui
             {
                 if (IsArrayTexture(type))
                 {
-                    const auto maxNumLayers = limits_.maxNumTextureArrayLayers;
+                    const auto maxNumLayers = limits_.maxTextureArrayLayers;
                     if (layers > maxNumLayers)
                     {
                         LLGL_DBG_ERROR(
                             ErrorType::InvalidArgument,
-                            "number fo texture layers exceeded limit (" + std::to_string(layers) +
+                            "number of texture layers exceeded limit (" + std::to_string(layers) +
                             " specified but limit is " + std::to_string(maxNumLayers) + ")"
                         );
                     }

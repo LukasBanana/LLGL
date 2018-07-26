@@ -158,7 +158,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each viewport is on the lower-left.
         \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
-        \see RenderingLimits::maxNumViewports
+        \see RenderingLimits::maxViewports
         */
         virtual void SetViewports(std::uint32_t numViewports, const Viewport* viewports) = 0;
 
@@ -536,7 +536,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] groupSizeY Specifies the number of thread groups in the Y-dimension.
         \param[in] groupSizeZ Specifies the number of thread groups in the Z-dimension.
         \see SetComputePipeline
-        \see RenderingLimits::maxNumComputeShaderWorkGroups
+        \see RenderingLimits::maxComputeShaderWorkGroups
         */
         virtual void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) = 0;
 
