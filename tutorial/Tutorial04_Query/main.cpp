@@ -20,7 +20,6 @@ class Tutorial04 : public Tutorial
     LLGL::ResourceHeap*     resourceHeap            = nullptr;
 
     LLGL::Buffer*           vertexBuffer            = nullptr;
-    LLGL::Buffer*           indexBuffer             = nullptr;
     LLGL::Buffer*           constantBuffer          = nullptr;
 
     LLGL::QueryHeap*        occlusionQuery          = nullptr;
@@ -28,9 +27,18 @@ class Tutorial04 : public Tutorial
 
     Gs::Matrix4f            modelTransform[2];
 
+    struct Model
+    {
+        std::uint32_t numVertices = 0;
+        std::uint32_t firstVertex = 0;
+    };
+
+    Model                   model0;
+
     struct Settings
     {
         Gs::Matrix4f        wvpMatrix;
+        Gs::Matrix4f        wMatrix;
         LLGL::ColorRGBAf    color;
     }
     settings;
@@ -53,10 +61,14 @@ public:
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
+        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
+
+        // Load models
+        auto vertices = LoadObjModel("../Media/Models/Pyramid.obj");
+        model0.numVertices = static_cast<std::uint32_t>(vertices.size());
 
         // Create vertex, index, and constant buffer
-        vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
-        indexBuffer = CreateIndexBuffer(GenerateCubeTriangleIndices(), LLGL::DataType::UInt32);
+        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
         constantBuffer = CreateConstantBuffer(settings);
 
         return vertexFormat;
@@ -154,11 +166,17 @@ public:
     {
         settings.wvpMatrix  = projection;
         settings.wvpMatrix *= matrix;
+        settings.wMatrix    = matrix;
         settings.color      = color;
         UpdateBuffer(constantBuffer, settings, true);
     }
 
 private:
+
+    void DrawModel(const Model& mdl)
+    {
+        commands->Draw(mdl.numVertices, mdl.firstVertex);
+    }
 
     void UpdateScene()
     {
@@ -169,11 +187,11 @@ private:
         modelTransform[0].LoadIdentity();
         Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, Gs::Deg2Rad(std::sin(anim)*55.0f));
         Gs::Translate(modelTransform[0], { 0, 0, 5 });
-        Gs::RotateFree(modelTransform[0], Gs::Vector3f(1).Normalized(), anim*3);
+        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, anim*3);
 
         modelTransform[1].LoadIdentity();
         Gs::Translate(modelTransform[1], { 0, 0, 10 });
-        Gs::RotateFree(modelTransform[1], Gs::Vector3f(1).Normalized(), anim*-1.5f);
+        Gs::RotateFree(modelTransform[1], { 0, 1, 0 }, anim*-1.5f);
     }
 
     void RenderBoundingBoxes()
@@ -187,17 +205,13 @@ private:
 
         // Draw occluder box
         SetBoxTransformAndColor(modelTransform[0], { 1, 1, 1 });
-        commands->BeginQuery(*occlusionQuery);
-        {
-            commands->DrawIndexed(36, 0);
-        }
-        commands->EndQuery(*occlusionQuery);
+        DrawModel(model0);
 
         // Draw box for occlusion query
         SetBoxTransformAndColor(modelTransform[1], { 1, 1, 1 });
         commands->BeginQuery(*occlusionQuery);
         {
-            commands->DrawIndexed(36, 0);
+            DrawModel(model0);
         }
         commands->EndQuery(*occlusionQuery);
     }
@@ -214,15 +228,13 @@ private:
         SetBoxTransformAndColor(modelTransform[1], { 0, 1, 0 });
         commands->BeginRenderCondition(*occlusionQuery);
         {
-            commands->DrawIndexed(36, 0);
+            DrawModel(model0);
         }
         commands->EndRenderCondition();
 
         // Draw scene
         SetBoxTransformAndColor(modelTransform[0], { 1, 1, 1, 0.5f });
-        commands->SetGraphicsPipeline(*scenePipeline);
-
-        commands->DrawIndexed(36, 0);
+        DrawModel(model0);
     }
 
     void OnDrawFrame() override
@@ -233,7 +245,6 @@ private:
         {
             // Set buffers
             commands->SetVertexBuffer(*vertexBuffer);
-            commands->SetIndexBuffer(*indexBuffer);
 
             commands->BeginQuery(*geometryQuery);
             {

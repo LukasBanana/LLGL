@@ -198,6 +198,7 @@ class GLStateManager
 
         void SetDrawBufferBlendState(GLuint drawBufferIndex, const GLBlend& state, bool blendEnabled);
         void SetAllDrawBufferBlendState(const GLBlend& state, bool blendEnabled);
+        void SetAllDrawBufferBlendStateDefault(bool blendEnabled);
 
         void AdjustViewport(GLViewport& viewport);
         void AdjustScissor(GLScissor& scissor);

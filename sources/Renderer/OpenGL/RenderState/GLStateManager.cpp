@@ -549,8 +549,7 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
     if (blendStates.empty())
     {
         /* Set default blend states */
-        GLBlend defaultBlendState;
-        SetAllDrawBufferBlendState(defaultBlendState, blendEnabled);
+        SetAllDrawBufferBlendStateDefault(blendEnabled);
 
         /* Store color masks */
         blendState_.numDrawBuffers = 1;
@@ -596,17 +595,6 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
 }
 
 // private
-void GLStateManager::SetAllDrawBufferBlendState(const GLBlend& state, bool blendEnabled)
-{
-    glColorMask(state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
-    if (blendEnabled)
-    {
-        glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-        glBlendEquationSeparate(state.funcColor, state.funcAlpha);
-    }
-}
-
-// private
 void GLStateManager::SetDrawBufferBlendState(GLuint drawBufferIndex, const GLBlend& state, bool blendEnabled)
 {
     #ifdef GL_ARB_draw_buffers_blend
@@ -629,6 +617,28 @@ void GLStateManager::SetDrawBufferBlendState(GLuint drawBufferIndex, const GLBle
             glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
             glBlendEquationSeparate(state.funcColor, state.funcAlpha);
         }
+    }
+}
+
+// private
+void GLStateManager::SetAllDrawBufferBlendState(const GLBlend& state, bool blendEnabled)
+{
+    glColorMask(state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
+    if (blendEnabled)
+    {
+        glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
+        glBlendEquationSeparate(state.funcColor, state.funcAlpha);
+    }
+}
+
+// private
+void GLStateManager::SetAllDrawBufferBlendStateDefault(bool blendEnabled)
+{
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    if (blendEnabled)
+    {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
     }
 }
 
