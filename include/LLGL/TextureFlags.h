@@ -154,15 +154,15 @@ struct TextureDescriptor
     //! Hardware texture type. By default TextureType::Texture1D.
     TextureType     type        = TextureType::Texture1D;
 
-    //! Hardware texture format. By default Format::RGBA8UNorm.
-    Format          format      = Format::RGBA8UNorm;
-
     /**
     \brief Specifies the texture creation flags (e.g. if MIP-mapping is required). By default TextureFlags::Default.
     \remarks This can be bitwise OR combination of the entries of the TextureFlags enumeration.
     \see TextureFlags
     */
     long            flags       = TextureFlags::Default;
+
+    //! Hardware texture format. By default Format::RGBA8UNorm.
+    Format          format      = Format::RGBA8UNorm;
 
     /**
     \brief Texture extent. By default (1, 1, 1).

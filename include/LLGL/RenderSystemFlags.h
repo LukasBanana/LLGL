@@ -433,14 +433,19 @@ struct RenderingFeatures
     */
     bool hasLogicOp                     = false;
 
-    #if 0//TODO: enable this
     /**
     \brief Specifies whether queries for pipeline statistics are supported.
     \see QueryType::PipelineStatistics
     \see QueryPipelineStatistics
     */
     bool hasPipelineStatistics          = false;
-    #endif
+
+    /**
+    \brief Specifies whether queries for conditional rendering are supported.
+    \see QueryHeapDescriptor::renderCondition
+    \see CommandBuffer:BeginRenderCondition
+    */
+    bool hasRenderCondition             = false;
 };
 
 /**

@@ -305,6 +305,8 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     caps.features.hasViewportArrays                 = true;
     caps.features.hasStreamOutputs                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasLogicOp                        = (featureLevel >= D3D_FEATURE_LEVEL_11_1);
+    caps.features.hasPipelineStatistics             = true;
+    caps.features.hasRenderCondition                = true;
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = 1.0f;

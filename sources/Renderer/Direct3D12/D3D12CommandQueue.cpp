@@ -66,10 +66,6 @@ bool D3D12CommandQueue::QueryResult(
 {
     auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
 
-    #if 1//TESTING
-    WaitIdle();
-    #endif
-
     if (auto mappedData = queryHeapD3D.Map(firstQuery, numQueries))
     {
         ::memcpy(data, mappedData, dataSize);

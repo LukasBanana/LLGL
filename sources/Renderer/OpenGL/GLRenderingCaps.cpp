@@ -250,6 +250,8 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasConservativeRasterization   = ( HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization) );
     features.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );
     features.hasLogicOp                     = true;
+    features.hasPipelineStatistics          = HasExtension(GLExt::ARB_pipeline_statistics_query);
+    features.hasRenderCondition             = true;
 }
 
 static void GLGetFeatureLimits(RenderingLimits& limits)
