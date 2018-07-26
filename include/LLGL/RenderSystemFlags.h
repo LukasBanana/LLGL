@@ -493,9 +493,10 @@ struct RenderingLimits
     std::uint32_t   maxNumTextureArrayLayers            = 0;
 
     /**
-    \brief Specifies the maximum number of attachment points for each render target.
+    \brief Specifies the maximum number of color attachments for each render target.
     \see RenderTargetDescriptor::attachments
     \see RenderPassDescriptor::colorAttachments
+    \see BlendDescriptor::targets
     */
     std::uint32_t   maxNumRenderTargetAttachments       = 0;
 

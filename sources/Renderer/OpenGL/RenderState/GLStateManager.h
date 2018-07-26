@@ -25,6 +25,11 @@ namespace LLGL
 
 class GLRenderTarget;
 
+/*
+TODO:
+Refactore this entire class and maybe rename it to "GLContextState".
+Don't store every single state, instead separate the states into groups of states like "GLRasterizerState", "GLBlendState" etc.
+*/
 // OpenGL state machine manager that tries to reduce GL state changes.
 class GLStateManager
 {

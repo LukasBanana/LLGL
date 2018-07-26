@@ -636,18 +636,22 @@ struct BlendDescriptor
     bool                                blendEnabled            = false;
 
     /**
+    \brief Specifies whether to use alpha-to-coverage as a multi-sampling technique when setting a pixel to a render target. By default disabled.
+    \remarks This is useful when multi-sampling is enabled and alpha tests are implemented in a fragment shader (e.g. to render fences, plants, or other transparent geometries).
+    */
+    bool                                alphaToCoverageEnabled  = false;
+
+    #if 0//TODO: add this option
+    bool                                independentBlendEnabled = false;
+    #endif
+
+    /**
     \brief Specifies the blending color factor. By default (0, 0, 0, 0).
     \remarks This is only used if any blending operations of any blending target is either BlendOp::BlendFactor or BlendOp::InvBlendFactor.
     \see BlendOp::BlendFactor
     \see BlendOp::InvBlendFactor
     */
     ColorRGBAf                          blendFactor             = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-    /**
-    \brief Specifies whether to use alpha-to-coverage as a multi-sampling technique when setting a pixel to a render target. By default disabled.
-    \remarks This is useful when multi-sampling is enabled and alpha tests are implemented in a fragment shader (e.g. to render fences, plants, or other transparent geometries).
-    */
-    bool                                alphaToCoverageEnabled  = false;
 
     /**
     \brief Specifies the logic fragment operation. By default LogicOp::Disabled.
@@ -659,6 +663,9 @@ struct BlendDescriptor
     */
     LogicOp                             logicOp                 = LogicOp::Disabled;
 
+    #if 0//TODO: use fixed size array
+    BlendTargetDescriptor               targets[8];
+    #else
     /**
     \brief Render-target blend states. A maximum of 8 targets is supported. Further targets will be ignored.
     \remarks If the number of targets is not equal to the number of attachments of the respective render target (either RenderTarget or RenderContext), the behavior is undefined.
@@ -666,6 +673,7 @@ struct BlendDescriptor
     \todo Change this to a fixed size array of 8 elements (like in D3D11 and D3D12), and move 'blendEnabled' attribute into 'BlendTargetDescriptor'.
     */
     std::vector<BlendTargetDescriptor>  targets;
+    #endif
 };
 
 /**

@@ -117,7 +117,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
     caps.limits.lineWidthRange[1]                   = limits.lineWidthRange[1];
     caps.limits.maxNumTextureArrayLayers            = limits.maxImageArrayLayers;
-    caps.limits.maxNumRenderTargetAttachments       = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
+    caps.limits.maxNumRenderTargetAttachments       = limits.maxColorAttachments;
     caps.limits.maxPatchVertices                    = limits.maxTessellationPatchSize;
     caps.limits.max1DTextureSize                    = limits.maxImageDimension1D;
     caps.limits.max2DTextureSize                    = limits.maxImageDimension2D;

@@ -157,7 +157,16 @@ public:
 
     void PrintQueryResult()
     {
-        std::cout << "primitives generated: " << GetAndSyncQueryResult(geometryQuery);
+        // Query pipeline statistics results
+        LLGL::QueryPipelineStatistics stats;
+        while (!commandQueue->QueryResult(*geometryQuery, 0, 1, &stats, sizeof(stats)))
+        {
+            /* wait */
+        }
+
+        // Print result
+        std::cout << "input assembly primitives: " << stats.inputAssemblyPrimitives;
+        std::cout << ", vertex shader invocations: " << stats.vertexShaderInvocations;
         std::cout << "                         \r";
         std::flush(std::cout);
     }
@@ -185,7 +194,7 @@ private:
         anim += 0.01f;
 
         modelTransform[0].LoadIdentity();
-        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, Gs::Deg2Rad(std::sin(anim)*55.0f));
+        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, Gs::Deg2Rad(std::sin(anim)*15.0f));
         Gs::Translate(modelTransform[0], { 0, 0, 5 });
         Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, anim*3);
 
