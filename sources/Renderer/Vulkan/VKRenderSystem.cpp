@@ -247,7 +247,7 @@ void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     if (auto stagingBuffer = bufferVK.GetStagingVkBuffer())
     {
         /* Copy GPU local buffer into staging buffer for read accces */
-        if (access != CPUAccess::WriteOnly)
+        if (access != CPUAccess::WriteOnly && access != CPUAccess::WriteDiscard)
             device_.CopyBuffer(bufferVK.GetVkBuffer(), stagingBuffer, bufferVK.GetSize());
 
         /* Map staging buffer */

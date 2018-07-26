@@ -228,11 +228,10 @@ D3D11_MAP Map(const CPUAccess cpuAccess)
 {
     switch (cpuAccess)
     {
-        case CPUAccess::ReadOnly:   return D3D11_MAP_READ;
-        case CPUAccess::WriteOnly:  return D3D11_MAP_WRITE;
-        case CPUAccess::ReadWrite:  return D3D11_MAP_READ_WRITE;
-                                  /*return D3D11_MAP_WRITE_DISCARD;
-                                    return D3D11_MAP_WRITE_NO_OVERWRITE;*/
+        case CPUAccess::ReadOnly:       return D3D11_MAP_READ;
+        case CPUAccess::WriteOnly:      return D3D11_MAP_WRITE;
+        case CPUAccess::WriteDiscard:   return D3D11_MAP_WRITE_DISCARD;
+        case CPUAccess::ReadWrite:      return D3D11_MAP_READ_WRITE;
     }
     DXTypes::MapFailed("CPUAccess", "D3D11_MAP");
 }

@@ -147,9 +147,10 @@ GLenum Map(const CPUAccess cpuAccess)
     #ifdef LLGL_OPENGL
     switch (cpuAccess)
     {
-        case CPUAccess::ReadOnly:   return GL_READ_ONLY;
-        case CPUAccess::WriteOnly:  return GL_WRITE_ONLY;
-        case CPUAccess::ReadWrite:  return GL_READ_WRITE;
+        case CPUAccess::ReadOnly:       return GL_READ_ONLY;
+        case CPUAccess::WriteOnly:      return GL_WRITE_ONLY;
+        case CPUAccess::WriteDiscard:   return GL_WRITE_ONLY; // discard is optional
+        case CPUAccess::ReadWrite:      return GL_READ_WRITE;
     }
     #endif
     MapFailed("CPUAccess");
