@@ -79,7 +79,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This is limited to 2^16 = 65536 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
         \remarks To update buffers larger than 65536 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
-        \note This must not be called during a render pass.
+        It is recommended to call this only outside of a render pass.
+        Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
         */
         virtual void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) = 0;
 
@@ -108,36 +109,12 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Generates all MIP-maps for the specified texture.
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
-        \remarks To generate only a small amout of MIP levels, use the secondary \c GenerateMips function.
-        To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
+        \remarks To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
+        It is recommended to call this only outside of a render pass.
+        Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
         \see GenerateMips(Texture&, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
-        \note This must not be called during a render pass.
         */
         virtual void GenerateMips(Texture& texture) = 0;
-
-        /**
-        \brief Generates the specified range of MIP-maps for the specified texture.
-        \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
-        \param[in] baseMipLevel Specifies the zero-based index of the first MIP-map level.
-        \param[in] numMipLevels Specifies the number of MIP-maps to generate. This also includes the base MIP-map level, so a number of less than 2 has no effect.
-        \param[in] baseArrayLayer Specifies the zero-based index of the first array layer (if an array texture is used). By default 0.
-        \param[in] numArrayLayers Specifies the number of array layers. For both array textures and non-array textures this must be at least 1. By default 1.
-        \remarks This function only guarantees to generate at least the specified amount of MIP-maps.
-        It may also update all other MIP-maps if the respective rendering API does not support hardware accelerated generation of a sub-range of MIP-maps.
-        To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
-        \note Only use this function if the range of MIP-maps is significantly smaller than the entire MIP chain,
-        e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
-        \note This must not be called during a render pass.
-        \see GenerateMips(Texture&)
-        \see NumMipLevels
-        */
-        virtual void GenerateMips(
-            Texture&        texture,
-            std::uint32_t   baseMipLevel,
-            std::uint32_t   numMipLevels,
-            std::uint32_t   baseArrayLayer  = 0,
-            std::uint32_t   numArrayLayers  = 1
-        ) = 0;
         #endif // /TODO
 
         /* ----- Configuration ----- */

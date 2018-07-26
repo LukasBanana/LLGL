@@ -176,7 +176,6 @@ private:
             {
                 commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
 
-                SetBoxColor({ 1, 1, 1 });
                 commands->BeginRenderPass(*context);
                 {
                     // Clear color and depth buffers
@@ -186,18 +185,15 @@ private:
                     commands->SetGraphicsPipeline(*occlusionPipeline);
                     commands->SetGraphicsResourceHeap(*resourceHeap);
 
+                    SetBoxColor({ 1, 1, 1 });
                     commands->BeginQuery(*occlusionQuery);
                     {
                         commands->DrawIndexed(36, 0);
                     }
                     commands->EndQuery(*occlusionQuery);
-                }
-                commands->EndRenderPass();
 
-                SetBoxColor({ 0, 1, 0 });
-                commands->BeginRenderPass(*context);
-                {
                     // Draw scene
+                    SetBoxColor({ 0, 1, 0 });
                     commands->SetGraphicsPipeline(*scenePipeline);
 
                     commands->BeginRenderCondition(*occlusionQuery);

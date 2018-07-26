@@ -89,6 +89,9 @@ void VKCommandBuffer::Begin()
     /* Reset all query pools that were in flight during last encoding */
     ResetQueryPoolsInFlight();
     #endif
+
+    /* Store new record state */
+    recordState_ = RecordState::OutsideRenderPass;
 }
 
 void VKCommandBuffer::End()
@@ -96,6 +99,9 @@ void VKCommandBuffer::End()
     /* End encoding of current command buffer */
     auto result = vkEndCommandBuffer(commandBuffer_);
     VKThrowIfFailed(result, "failed to end Vulkan command buffer");
+
+    /* Store new record state */
+    recordState_ = RecordState::ReadyForSubmit;
 }
 
 void VKCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
@@ -105,7 +111,14 @@ void VKCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, c
     auto size   = static_cast<VkDeviceSize>(dataSize);
     auto offset = static_cast<VkDeviceSize>(dstOffset);
 
-    vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+    if (IsInsideRenderPass())
+    {
+        PauseRenderPass();
+        vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+        ResumeRenderPass();
+    }
+    else
+        vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
 }
 
 void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
@@ -434,6 +447,7 @@ void VKCommandBuffer::BeginRenderPass(
 
         /* Store information about framebuffer attachments */
         renderPass_             = renderContextVK.GetSwapChainRenderPass().GetVkRenderPass();
+        secondaryRenderPass_    = renderContextVK.GetSecondaryVkRenderPass();
         framebuffer_            = renderContextVK.GetVkFramebuffer();
         framebufferExtent_      = renderContextVK.GetVkExtent();
         numColorAttachments_    = renderContextVK.GetNumColorAttachments();
@@ -446,6 +460,7 @@ void VKCommandBuffer::BeginRenderPass(
 
         /* Store information about framebuffer attachments */
         renderPass_             = renderTargetVK.GetVkRenderPass();
+        secondaryRenderPass_    = renderTargetVK.GetSecondaryVkRenderPass();
         framebuffer_            = renderTargetVK.GetVkFramebuffer();
         framebufferExtent_      = renderTargetVK.GetVkExtent();
         numColorAttachments_    = renderTargetVK.GetNumColorAttachments();
@@ -517,6 +532,9 @@ void VKCommandBuffer::BeginRenderPass(
         beginInfo.pClearValues      = clearValuesVK;
     }
     vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    /* Store new record state */
+    recordState_ = RecordState::InsideRenderPass;
 }
 
 void VKCommandBuffer::EndRenderPass()
@@ -527,6 +545,9 @@ void VKCommandBuffer::EndRenderPass()
     /* Reset render pass and framebuffer attributes */
     renderPass_     = VK_NULL_HANDLE;
     framebuffer_    = VK_NULL_HANDLE;
+
+    /* Store new record state */
+    recordState_ = RecordState::OutsideRenderPass;
 }
 
 
@@ -731,12 +752,42 @@ void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, 
     }
 }
 
+void VKCommandBuffer::PauseRenderPass()
+{
+    vkCmdEndRenderPass(commandBuffer_);
+}
+
+void VKCommandBuffer::ResumeRenderPass()
+{
+    /* Record begin of render pass */
+    VkRenderPassBeginInfo beginInfo;
+    {
+        beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        beginInfo.pNext             = nullptr;
+        beginInfo.renderPass        = secondaryRenderPass_;
+        beginInfo.framebuffer       = framebuffer_;
+        beginInfo.renderArea.offset = { 0, 0 };
+        beginInfo.renderArea.extent = framebufferExtent_;
+        beginInfo.clearValueCount   = 0;
+        beginInfo.pClearValues      = nullptr;
+    }
+    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+bool VKCommandBuffer::IsInsideRenderPass() const
+{
+    return (recordState_ == RecordState::InsideRenderPass);
+}
+
 //TODO: current unused; previously used for 'Clear' function
 #if 0
 
 void VKCommandBuffer::BeginClearImage(
-    VkImageMemoryBarrier& clearToPresentBarrier, VkImage image, const VkImageAspectFlags clearFlags,
-    const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil)
+    VkImageMemoryBarrier&           clearToPresentBarrier,
+    VkImage                         image,
+    const VkImageAspectFlags        clearFlags,
+    const VkClearColorValue*        clearColor,
+    const VkClearDepthStencilValue* clearDepthStencil)
 {
     /* Initialize image subresource range */
     VkImageSubresourceRange subresourceRange;

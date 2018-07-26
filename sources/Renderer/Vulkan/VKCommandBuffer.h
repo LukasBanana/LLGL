@@ -148,17 +148,33 @@ class VKCommandBuffer final : public CommandBuffer
 
     private:
 
+        enum class RecordState
+        {
+            Undefined,          // before "Begin"
+            OutsideRenderPass,  // after "Begin"
+            InsideRenderPass,   // after "BeginRenderPass"
+            ReadyForSubmit,     // after "End"
+        };
+
         void CreateCommandPool(std::uint32_t queueFamilyIndex);
         void CreateCommandBuffers(std::size_t bufferCount);
         void CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences);
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
 
+        void PauseRenderPass();
+        void ResumeRenderPass();
+
+        bool IsInsideRenderPass() const;
+
         //TODO: current unused; previously used for 'Clear' function
         #if 0
         void BeginClearImage(
-            VkImageMemoryBarrier& clearToPresentBarrier, VkImage image, const VkImageAspectFlags clearFlags,
-            const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil
+            VkImageMemoryBarrier&           clearToPresentBarrier,
+            VkImage                         image,
+            const VkImageAspectFlags        clearFlags,
+            const VkClearColorValue*        clearColor,
+            const VkClearDepthStencilValue* clearDepthStencil
         );
         void EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier);
         #endif
@@ -180,13 +196,15 @@ class VKCommandBuffer final : public CommandBuffer
         std::vector<VKPtr<VkFence>>     recordingFenceList_;
         VkFence                         recordingFence_;
 
+        RecordState                     recordState_                = RecordState::Undefined;
+
         VkCommandBufferUsageFlags       usageFlags_                 = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
 
-        VkRenderPass                    renderPass_                 = VK_NULL_HANDLE;
-        bool                            renderPassActive_           = false;
-        VkFramebuffer                   framebuffer_                = VK_NULL_HANDLE;
+        VkRenderPass                    renderPass_                 = VK_NULL_HANDLE; // primary render pass
+        VkRenderPass                    secondaryRenderPass_        = VK_NULL_HANDLE; // to pause/resume render pass (load and store content)
+        VkFramebuffer                   framebuffer_                = VK_NULL_HANDLE; // active framebuffer handle
         VkExtent2D                      framebufferExtent_          = { 0, 0 };
         std::uint32_t                   numColorAttachments_        = 0;
         bool                            hasDSVAttachment_           = false;

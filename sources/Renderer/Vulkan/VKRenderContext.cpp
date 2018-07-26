@@ -40,6 +40,7 @@ VKRenderContext::VKRenderContext(
         surface_             { instance, vkDestroySurfaceKHR },
         swapChain_           { device, vkDestroySwapchainKHR },
         swapChainRenderPass_ { device                        },
+        secondaryRenderPass_ { device                        },
         depthStencilBuffer_  { device                        }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
@@ -53,6 +54,8 @@ VKRenderContext::VKRenderContext(
 
     CreateSwapChainRenderPass();
     CreateSwapChain(desc.videoMode, desc.vsync);
+
+    CreateSecondaryRenderPass();
 }
 
 VKRenderContext::~VKRenderContext()
@@ -227,29 +230,39 @@ void VKRenderContext::CreateGpuSurface()
     swapChainFormat_ = PickSwapSurfaceFormat(surfaceSupportDetails_.formats);
 }
 
-void VKRenderContext::CreateSwapChainRenderPass()
+void VKRenderContext::CreateRenderPass(VKRenderPass& renderPass, bool isSecondary)
 {
     RenderPassDescriptor renderPassDesc;
     {
+        /* Determine load and store operations for primary and secondary render passes */
+        auto loadOp     = (isSecondary ? AttachmentLoadOp::Load : AttachmentLoadOp::Undefined);
+        auto storeOp    = AttachmentStoreOp::Store;
+
         /* Specify single color attachment */
         renderPassDesc.colorAttachments =
         {
-            AttachmentFormatDescriptor
-            {
-                QueryColorFormat(),
-                AttachmentLoadOp::Undefined
-            }
+            AttachmentFormatDescriptor { QueryColorFormat(), loadOp, storeOp }
         };
 
         /* Specify depth-stencil attachment */
         auto depthStencilFormat = QueryDepthStencilFormat();
 
         if (IsDepthFormat(depthStencilFormat))
-            renderPassDesc.depthAttachment.format = depthStencilFormat;
+            renderPassDesc.depthAttachment = AttachmentFormatDescriptor { depthStencilFormat, loadOp, storeOp };
         if (IsStencilFormat(depthStencilFormat))
-            renderPassDesc.stencilAttachment.format = depthStencilFormat;
+            renderPassDesc.stencilAttachment = AttachmentFormatDescriptor { depthStencilFormat, loadOp, storeOp };
     }
-    swapChainRenderPass_.CreateVkRenderPass(device_, renderPassDesc);
+    renderPass.CreateVkRenderPass(device_, renderPassDesc);
+}
+
+void VKRenderContext::CreateSecondaryRenderPass()
+{
+    CreateRenderPass(secondaryRenderPass_, true);
+}
+
+void VKRenderContext::CreateSwapChainRenderPass()
+{
+    CreateRenderPass(swapChainRenderPass_, false);
 }
 
 void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, const VsyncDescriptor& vsyncDesc)

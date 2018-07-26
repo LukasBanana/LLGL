@@ -59,6 +59,12 @@ class VKRenderContext final : public RenderContext
             return swapChainRenderPass_;
         }
 
+        // Returns the secondary Vulkan render pass object.
+        inline VkRenderPass GetSecondaryVkRenderPass() const
+        {
+            return secondaryRenderPass_.GetVkRenderPass();
+        }
+
         // Returns the native VkFramebuffer object that is currently used from swap-chain.
         inline VkFramebuffer GetVkFramebuffer() const
         {
@@ -82,6 +88,9 @@ class VKRenderContext final : public RenderContext
         void CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore);
         void CreatePresentSemaphores();
         void CreateGpuSurface();
+
+        void CreateRenderPass(VKRenderPass& renderPass, bool isSecondary);
+        void CreateSecondaryRenderPass();
 
         void CreateSwapChainRenderPass();
         void CreateSwapChain(const VideoModeDescriptor& videoModeDesc, const VsyncDescriptor& vsyncDesc);
@@ -119,6 +128,7 @@ class VKRenderContext final : public RenderContext
         std::vector<VKPtr<VkFramebuffer>>   swapChainFramebuffers_;
         std::uint32_t                       presentImageIndex_          = 0;
 
+        VKRenderPass                        secondaryRenderPass_;
         VKDepthStencilBuffer                depthStencilBuffer_;
 
         VkQueue                             graphicsQueue_              = VK_NULL_HANDLE;
