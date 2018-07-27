@@ -27,6 +27,7 @@
 - [Introduction of render passes](#introduction-of-render-passes)
 - [Buffer updates](#buffer-updates)
 - [Queries](#queries)
+- [Independent blend states](#independent-blend-states)
 
 
 ## `Shader` interface
@@ -894,6 +895,43 @@ if (myCmdQueue->QueryResult(*myQueryHeap, 0, 1, &result, sizeof(result))) {
     /* ... */
 }
 ```
+
+
+## Independent blend states
+
+From now on, independent blend states must be explicitly enabled and the blend targets have been changed from an `std::vector` to a fixed size array of 8 elements (just like in D3D11 and D3D12).
+
+Before:
+```cpp
+// Interface:
+bool                               BlendDescriptor::blendEnabled;
+std::vector<BlendTargetDescriptor> BlendDescriptor::targets;
+
+// Usage:
+LLGL::BlendTargetDescriptor myBlendTarget;
+myBlendTarget.srcColor = LLGL::BlendOp::BlendFactor;
+
+LLGL::GraphicsPipelineDescriptor myPipelineDesc;
+myPipelineDesc.blend.blendEnabled   = true;
+myPipelineDesc.blend.blendFactor    = { 1.0f, 0.5f, 0.0f, 1.0f };
+myPipelineDesc.blend.targets.push_back(myBlendTarget);
+```
+
+After:
+```cpp
+// Interface:
+bool                    BlendTargetDescriptor::blendEnabled;
+BlendTargetDescriptor   BlendDescriptor::targets[8];
+
+// Usage:
+LLGL::GraphicsPipelineDescriptor myPipelineDesc;
+myPipelineDesc.blend.blendFactor                = { 1.0f, 0.5f, 0.0f, 1.0f }; // <-- NOTE: will be moved to "CommandBuffer::SetBlendFactor"
+myPipelineDesc.blend.targets[0].blendEnabled    = true;
+myPipelineDesc.blend.targets[0].srcColor        = LLGL::BlendOp::BlendFactor;
+```
+
+
+
 
 
 
