@@ -74,8 +74,6 @@ static void QueryResultUInt64(GLQueryHeap& queryHeapGL, std::uint32_t firstQuery
 
 static void QueryResultPipelineStatistics(GLQueryHeap& queryHeapGL, std::uint32_t firstQuery, std::uint32_t numQueries, QueryPipelineStatistics* data)
 {
-    const auto& idList = queryHeapGL.GetIDs();
-
     #ifdef GL_ARB_pipeline_statistics_query
     if (HasExtension(GLExt::ARB_pipeline_statistics_query))
     {
@@ -89,7 +87,8 @@ static void QueryResultPipelineStatistics(GLQueryHeap& queryHeapGL, std::uint32_
         }
         params[memberCount];
 
-        const auto numResults = std::min(queryHeapGL.GetGroupSize(), memberCount);
+        const auto  numResults  = std::min(queryHeapGL.GetGroupSize(), memberCount);
+        const auto& idList      = queryHeapGL.GetIDs();
 
         for (std::uint32_t query = firstQuery; query < firstQuery + numQueries; query += queryHeapGL.GetGroupSize(), ++data)
         {

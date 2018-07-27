@@ -29,7 +29,7 @@ std::string Module::GetModuleFilename(const char* moduleName)
 bool Module::IsAvailable(const char* moduleFilename)
 {
     /* Check if MacOS dynamic library can be loaded properly */
-    auto handle = dlopen(moduleFilename.c_str(), RTLD_LAZY);
+    auto handle = dlopen(moduleFilename, RTLD_LAZY);
     if (handle)
     {
         dlclose(handle);
@@ -40,7 +40,7 @@ bool Module::IsAvailable(const char* moduleFilename)
 
 std::unique_ptr<Module> Module::Load(const char* moduleFilename)
 {
-    return MakeUnique<MacOSModule>(moduleFilename));
+    return MakeUnique<MacOSModule>(moduleFilename);
 }
 
 MacOSModule::MacOSModule(const char* moduleFilename)

@@ -258,15 +258,15 @@ void MTRenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* MTRenderSystem::CreateQuery(const QueryDescriptor& desc)
+QueryHeap* MTRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
     return nullptr;//todo
 }
 
-void MTRenderSystem::Release(Query& query)
+void MTRenderSystem::Release(QueryHeap& queryHeap)
 {
     //todo
-    //RemoveFromUniqueSet(queries_, &query);
+    //RemoveFromUniqueSet(queryHeaps_, &queryHeap);
 }
 
 /* ----- Fences ----- */
