@@ -197,8 +197,8 @@ enum class BlendOp
     DstAlpha,           //!< Data source is alpha data (A) from a framebuffer.
     InvDstAlpha,        //!< Data source is inverted alpha data (1 - A) from a framebuffer.
     SrcAlphaSaturate,   //!< Data source is alpha data (A) from a fragment shader which is clamped to 1 or less.
-    BlendFactor,        //!< Data source is the blend factor (RGBA) from the blend state. \see BlendDescriptor::blendFactor
-    InvBlendFactor,     //!< Data source is the inverted blend factor (1 - RGBA) from the blend state. \see BlendDescriptor::blendFactor
+    BlendFactor,        //!< Data source is the blend factor (RGBA) from the blend state. \see CommandBuffer::SetBlendFactor
+    InvBlendFactor,     //!< Data source is the inverted blend factor (1 - RGBA) from the blend state. \see CommandBuffer::SetBlendFactor
     Src1Color,          //!< Data sources are both color data (RGB) from a fragment shader with dual-source color blending.
     InvSrc1Color,       //!< Data sources are both inverted color data (1 - RGB) from a fragment shader with dual-source color blending.
     Src1Alpha,          //!< Data sources are both alpha data (A) from a fragment shader with dual-source color blending.
@@ -604,6 +604,9 @@ struct RasterizerDescriptor
 */
 struct BlendTargetDescriptor
 {
+    //! Specifies whether blending is enabled or disabled for the respective color attachment.
+    bool            blendEnabled    = false;
+
     //! Source color blending operation. By default BlendOp::SrcAlpha.
     BlendOp         srcColor        = BlendOp::SrcAlpha;
 
@@ -632,48 +635,50 @@ struct BlendTargetDescriptor
 */
 struct BlendDescriptor
 {
-    //! Specifies whether blending is enabled or disabled. This applies to all blending targets.
-    bool                                blendEnabled            = false;
-
     /**
     \brief Specifies whether to use alpha-to-coverage as a multi-sampling technique when setting a pixel to a render target. By default disabled.
     \remarks This is useful when multi-sampling is enabled and alpha tests are implemented in a fragment shader (e.g. to render fences, plants, or other transparent geometries).
     */
     bool                                alphaToCoverageEnabled  = false;
 
-    #if 0//TODO: add this option
+    /**
+    \brief Specifies whether to enable independent blending in simultaneous color attachments. By default false.
+    \remarks If this is true, each color attachment has its own blending configuration described in the \c targets array.
+    Otherwise, each color attachment uses the blending configuration described only by the first entry of the \c targets array,
+    i.e. <code>targets[0]</code> and all remaining entries <code>targets[1..7]</code> are ignored.
+    \see targets
+    */
     bool                                independentBlendEnabled = false;
-    #endif
 
+    /**
+    \brief Specifies the logic fragment operation. By default LogicOp::Disabled.
+    \remarks Logic pixel operations can not be used in combination with color and alpha blending.
+    Therefore, if this is not LogicOp::Disabled, \c independentBlendEnabled must be false and \c blendEnabled of the first target must be false as well.
+    If logic fragment operations are not supported by the renderer, this must be LogicOp::Disabled.
+    \note For Direct3D 11, feature level 11.1 is required.
+    \see blendEnabled
+    \see RenderingFeatures::hasLogicOp
+    */
+    LogicOp                             logicOp                 = LogicOp::Disabled;
+
+    #if 1//TODO: replace this by CommandBuffer::SetBlendFactor
     /**
     \brief Specifies the blending color factor. By default (0, 0, 0, 0).
     \remarks This is only used if any blending operations of any blending target is either BlendOp::BlendFactor or BlendOp::InvBlendFactor.
     \see BlendOp::BlendFactor
     \see BlendOp::InvBlendFactor
+    \todo Move this into a dynamic function "CommandBuffer::SetBlendFactor".
     */
     ColorRGBAf                          blendFactor             = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-    /**
-    \brief Specifies the logic fragment operation. By default LogicOp::Disabled.
-    \remarks Logic pixel operations can not be used in combination with color and alpha blending.
-    Therefore, if this is not LogicOp::Disabled, 'blendEnabled' will be ignored.
-    If logic fragment operations are not supported by the renderer, this must be LogicOp::Disabled.
-    \note For Direct3D 11, feature level 11.1 is required.
-    \see RenderingFeatures::hasLogicOp
-    */
-    LogicOp                             logicOp                 = LogicOp::Disabled;
-
-    #if 0//TODO: use fixed size array
-    BlendTargetDescriptor               targets[8];
-    #else
-    /**
-    \brief Render-target blend states. A maximum of 8 targets is supported. Further targets will be ignored.
-    \remarks If the number of targets is not equal to the number of attachments of the respective render target (either RenderTarget or RenderContext), the behavior is undefined.
-    Especially for low-level APIs such as Vulkan, this must be compatible to the render target that is used with the graphics pipeline state of this blend descriptor.
-    \todo Change this to a fixed size array of 8 elements (like in D3D11 and D3D12), and move 'blendEnabled' attribute into 'BlendTargetDescriptor'.
-    */
-    std::vector<BlendTargetDescriptor>  targets;
     #endif
+
+    /**
+    \brief Render-target blend states for the respective color attachments. A maximum of 8 targets is supported.
+    \remarks If \c independentBlendEnabled is set to false, only the first entry is used,
+    i.e. <code>targets[0]</code> and all remaining entries <code>targets[1..7]</code> are ignored.
+    \see independentBlendEnabled
+    */
+    BlendTargetDescriptor               targets[8];
 };
 
 /**

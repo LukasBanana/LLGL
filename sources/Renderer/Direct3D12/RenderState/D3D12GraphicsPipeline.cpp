@@ -10,6 +10,7 @@
 #include "../D3D12Types.h"
 #include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
+#include "D3D12RenderPass.h"
 #include "D3D12PipelineLayout.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
@@ -113,9 +114,9 @@ static void Convert(D3D12_DEPTH_STENCILOP_DESC& dst, const StencilFaceDescriptor
     dst.StencilFunc         = D3D12Types::Map(src.compareOp);
 }
 
-static void Convert(D3D12_RENDER_TARGET_BLEND_DESC& dst, const BlendTargetDescriptor& src, const BlendDescriptor& blendDesc)
+static void Convert(D3D12_RENDER_TARGET_BLEND_DESC& dst, const BlendTargetDescriptor& src)
 {
-    dst.BlendEnable             = DXBoolean(blendDesc.blendEnabled);
+    dst.BlendEnable             = DXBoolean(src.blendEnabled);
     dst.LogicOpEnable           = FALSE;
     dst.SrcBlend                = D3D12Types::Map(src.srcColor);
     dst.DestBlend               = D3D12Types::Map(src.dstColor);
@@ -123,7 +124,7 @@ static void Convert(D3D12_RENDER_TARGET_BLEND_DESC& dst, const BlendTargetDescri
     dst.SrcBlendAlpha           = D3D12Types::Map(src.srcAlpha);
     dst.DestBlendAlpha          = D3D12Types::Map(src.dstAlpha);
     dst.BlendOpAlpha            = D3D12Types::Map(src.alphaArithmetic);
-    dst.LogicOp                 = D3D12Types::Map(blendDesc.logicOp);
+    dst.LogicOp                 = D3D12_LOGIC_OP_NOOP;
     dst.RenderTargetWriteMask   = GetColorWriteMask(src.colorMask);
 }
 
@@ -194,7 +195,13 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     rootSignature_ = rootSignature;
 
     /* Get number of render-target attachments */
-    UINT numAttachments = 1u; //TODO: get information from <RenderPass> interface
+    UINT numAttachments = 1;
+
+    if (auto renderPass = desc.renderPass)
+    {
+        auto renderPassD3D = LLGL_CAST(const D3D12RenderPass*, renderPass);
+        numAttachments = std::min(renderPassD3D->GetNumColorAttachments(), LLGL_MAX_NUM_COLOR_ATTACHMENTS);
+    }
 
     /* Setup D3D12 graphics pipeline descriptor */
     D3D12_GRAPHICS_PIPELINE_STATE_DESC stateDesc = {};
@@ -226,21 +233,21 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     if (desc.blend.logicOp == LogicOp::Disabled)
     {
         /* Enable independent blend states when multiple targets are specified */
-        stateDesc.BlendState.IndependentBlendEnable = DXBoolean(desc.blend.targets.size() > 1);
+        stateDesc.BlendState.IndependentBlendEnable = DXBoolean(desc.blend.independentBlendEnabled);
 
-        for (UINT i = 0, n = std::min(numAttachments, static_cast<UINT>(desc.blend.targets.size())); i < 8u; ++i)
+        for (UINT i = 0; i < 8u; ++i)
         {
-            if (i < n)
+            if (i < numAttachments)
             {
                 /* Convert blend target descriptor */
-                Convert(stateDesc.BlendState.RenderTarget[i], desc.blend.targets[i], desc.blend);
+                Convert(stateDesc.BlendState.RenderTarget[i], desc.blend.targets[i]);
                 stateDesc.RTVFormats[i] = DXGI_FORMAT_B8G8R8A8_UNORM;
             }
             else
             {
                 /* Initialize blend target to default values */
                 SetBlendDescToDefault(stateDesc.BlendState.RenderTarget[i]);
-                stateDesc.RTVFormats[i] = (i > 0 ? DXGI_FORMAT_UNKNOWN : DXGI_FORMAT_B8G8R8A8_UNORM);
+                stateDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
             }
         }
     }

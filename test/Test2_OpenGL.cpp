@@ -321,16 +321,12 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram          = &shaderProgram;
-            pipelineDesc.primitiveTopology      = LLGL::PrimitiveTopology::TriangleFan;
+            pipelineDesc.shaderProgram              = &shaderProgram;
+            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleFan;
 
-            pipelineDesc.rasterizer.multiSampling    = contextDesc.multiSampling;
+            pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
 
-            LLGL::BlendTargetDescriptor blendDesc;
-            {
-                blendDesc.dstColor = LLGL::BlendOp::Zero;
-            }
-            pipelineDesc.blend.targets.push_back(blendDesc);
+            pipelineDesc.blend.targets[0].dstColor  = LLGL::BlendOp::Zero;
         }
         auto& pipeline = *renderer->CreateGraphicsPipeline(pipelineDesc);
 

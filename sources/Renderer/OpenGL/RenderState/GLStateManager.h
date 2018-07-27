@@ -14,7 +14,6 @@
 #include "../Texture/GLTexture.h"
 #include <LLGL/CommandBufferFlags.h>
 #include <array>
-#include <vector>
 #include <stack>
 #include <cstdint>
 
@@ -109,7 +108,11 @@ class GLStateManager
         void SetBlendColor(const ColorRGBAf& color);
         void SetLogicOp(GLenum opcode);
 
-        void SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled);
+        void SetBlendStates(
+            std::size_t     numBlendStates,
+            const GLBlend*  blendStates,
+            bool            anyBlendTargetEnabled
+        );
 
         void PushColorMaskAndEnable();
         void PopColorMask();

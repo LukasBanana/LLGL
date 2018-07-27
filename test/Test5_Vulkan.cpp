@@ -222,8 +222,7 @@ int main()
 
             pipelineDesc.viewports.push_back(LLGL::Viewport{ 0.0f, 0.0f, viewportSize.x, viewportSize.y });
 
-            pipelineDesc.blend.blendEnabled = true;
-            pipelineDesc.blend.targets.push_back({});
+            pipelineDesc.blend.targets[0].blendEnabled = true;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 

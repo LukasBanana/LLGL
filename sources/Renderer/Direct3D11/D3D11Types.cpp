@@ -365,50 +365,36 @@ static UINT8 GetColorWriteMask(const ColorRGBAb& color)
     return mask;
 }
 
+static void Convert(D3D11_RENDER_TARGET_BLEND_DESC& dst, const BlendTargetDescriptor& src)
+{
+    dst.BlendEnable             = DXBoolean(src.blendEnabled);
+    dst.SrcBlend                = Map(src.srcColor);
+    dst.DestBlend               = Map(src.dstColor);
+    dst.BlendOp                 = Map(src.colorArithmetic);
+    dst.SrcBlendAlpha           = Map(src.srcAlpha);
+    dst.DestBlendAlpha          = Map(src.dstAlpha);
+    dst.BlendOpAlpha            = Map(src.alphaArithmetic);
+    dst.RenderTargetWriteMask   = GetColorWriteMask(src.colorMask);
+}
+
 void Convert(D3D11_BLEND_DESC& dst, const BlendDescriptor& src)
 {
     if (src.logicOp != LogicOp::Disabled)
         DXTypes::ParamNotSupported("LLGL::BlendDescriptor::logicOp", "Direct3D 11.1");
 
-    dst.AlphaToCoverageEnable  = DXBoolean(src.alphaToCoverageEnabled);
-    dst.IndependentBlendEnable = DXBoolean(src.targets.size() > 1);
+    dst.AlphaToCoverageEnable   = DXBoolean(src.alphaToCoverageEnabled);
+    dst.IndependentBlendEnable  = DXBoolean(src.independentBlendEnabled);
 
-    for (UINT i = 0, n = static_cast<UINT>(src.targets.size()); i < 8u; ++i)
-    {
-        auto& dstTarget = dst.RenderTarget[i];
-
-        if (i < n)
-        {
-            const auto& srcTarget = src.targets[i];
-            dstTarget.BlendEnable           = DXBoolean(src.blendEnabled);
-            dstTarget.SrcBlend              = Map(srcTarget.srcColor);
-            dstTarget.DestBlend             = Map(srcTarget.dstColor);
-            dstTarget.BlendOp               = Map(srcTarget.colorArithmetic);
-            dstTarget.SrcBlendAlpha         = Map(srcTarget.srcAlpha);
-            dstTarget.DestBlendAlpha        = Map(srcTarget.dstAlpha);
-            dstTarget.BlendOpAlpha          = Map(srcTarget.alphaArithmetic);
-            dstTarget.RenderTargetWriteMask = GetColorWriteMask(srcTarget.colorMask);
-        }
-        else
-        {
-            dstTarget.BlendEnable           = FALSE;
-            dstTarget.SrcBlend              = D3D11_BLEND_ONE;
-            dstTarget.DestBlend             = D3D11_BLEND_ZERO;
-            dstTarget.BlendOp               = D3D11_BLEND_OP_ADD;
-            dstTarget.SrcBlendAlpha         = D3D11_BLEND_ONE;
-            dstTarget.DestBlendAlpha        = D3D11_BLEND_ZERO;
-            dstTarget.BlendOpAlpha          = D3D11_BLEND_OP_ADD;
-            dstTarget.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-        }
-    }
+    for (int i = 0; i < 8; ++i)
+        Convert(dst.RenderTarget[i], src.targets[i]);
 }
 
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
 
 // Direct3D 11.1
-static void Convert(D3D11_RENDER_TARGET_BLEND_DESC1& dst, const BlendTargetDescriptor& src, BOOL blendEnabled)
+static void Convert(D3D11_RENDER_TARGET_BLEND_DESC1& dst, const BlendTargetDescriptor& src)
 {
-    dst.BlendEnable             = blendEnabled;
+    dst.BlendEnable             = DXBoolean(src.blendEnabled);
     dst.LogicOpEnable           = FALSE;
     dst.SrcBlend                = Map(src.srcColor);
     dst.DestBlend               = Map(src.dstColor);
@@ -421,10 +407,10 @@ static void Convert(D3D11_RENDER_TARGET_BLEND_DESC1& dst, const BlendTargetDescr
 }
 
 // Direct3D 11.1
-static void SetBlendDescToDefaut(D3D11_RENDER_TARGET_BLEND_DESC1& dst, BOOL logicOpEnabled, D3D11_LOGIC_OP logicOp)
+static void SetBlendDescToLogicOp(D3D11_RENDER_TARGET_BLEND_DESC1& dst, D3D11_LOGIC_OP logicOp)
 {
     dst.BlendEnable             = FALSE;
-    dst.LogicOpEnable           = logicOpEnabled;
+    dst.LogicOpEnable           = TRUE;
     dst.SrcBlend                = D3D11_BLEND_ONE;
     dst.DestBlend               = D3D11_BLEND_ZERO;
     dst.BlendOp                 = D3D11_BLEND_OP_ADD;
@@ -438,28 +424,22 @@ static void SetBlendDescToDefaut(D3D11_RENDER_TARGET_BLEND_DESC1& dst, BOOL logi
 // Direct3D 11.1
 void Convert(D3D11_BLEND_DESC1& dst, const BlendDescriptor& src)
 {
-    dst.AlphaToCoverageEnable  = DXBoolean(src.alphaToCoverageEnabled);
+    dst.AlphaToCoverageEnable = DXBoolean(src.alphaToCoverageEnabled);
 
     if (src.logicOp == LogicOp::Disabled)
     {
-        dst.IndependentBlendEnable = DXBoolean(src.targets.size() > 1);
+        dst.IndependentBlendEnable = DXBoolean(src.independentBlendEnabled);
 
-        for (UINT i = 0, n = static_cast<UINT>(src.targets.size()); i < 8u; ++i)
-        {
-            if (i < n)
-                Convert(dst.RenderTarget[i], src.targets[i], DXBoolean(src.blendEnabled));
-            else
-                SetBlendDescToDefaut(dst.RenderTarget[i], FALSE, D3D11_LOGIC_OP_NOOP);
-        }
+        for (int i = 0; i < 8; ++i)
+            Convert(dst.RenderTarget[i], src.targets[i]);
     }
     else
     {
-        const auto logicOp = Map(src.logicOp);
-
         dst.IndependentBlendEnable = FALSE;
 
-        for (UINT i = 0, n = static_cast<UINT>(src.targets.size()); i < 8u; ++i)
-            SetBlendDescToDefaut(dst.RenderTarget[i], TRUE, logicOp);
+        const auto logicOp = Map(src.logicOp);
+        for (int i = 0; i < 8; ++i)
+            SetBlendDescToLogicOp(dst.RenderTarget[i], logicOp);
     }
 }
 

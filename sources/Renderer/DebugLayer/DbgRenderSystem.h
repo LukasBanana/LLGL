@@ -168,6 +168,7 @@ class DbgRenderSystem : public RenderSystem
         void ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers);
         void ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit);
 
+        void ValidateBlendDescriptor(const BlendDescriptor& desc);
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc);
         void ValidatePrimitiveTopology(const PrimitiveTopology primitiveTopology);
 

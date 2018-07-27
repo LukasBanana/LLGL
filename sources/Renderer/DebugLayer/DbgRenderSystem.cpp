@@ -8,6 +8,7 @@
 #include "DbgRenderSystem.h"
 #include "DbgCore.h"
 #include "../../Core/Helper.h"
+#include "../StaticLimits.h"
 #include "../CheckedCast.h"
 
 
@@ -924,13 +925,39 @@ void DbgRenderSystem::ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLa
     }
 }
 
+void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& desc)
+{
+    if (desc.logicOp != LogicOp::Disabled)
+    {
+        if (!GetRenderingCaps().features.hasLogicOp)
+            LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "logic pixel operations not supported");
+
+        if (desc.independentBlendEnabled)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "logic pixel operations cannot be used in combination with independent blending"
+            );
+        }
+
+        for (const auto& target : desc.targets)
+        {
+            if (target.blendEnabled)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "logic pixel operations cannot be used in combination with color and alpha blending"
+                );
+            }
+        }
+    }
+}
+
 void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc)
 {
     if (desc.rasterizer.conservativeRasterization && !features_.hasConservativeRasterization)
         LLGL_DBG_ERROR_NOT_SUPPORTED("conservative rasterization");
-    if (desc.blend.targets.size() > 8)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "too many blend state targets (limit is 8)");
-
+    ValidateBlendDescriptor(desc.blend);
     ValidatePrimitiveTopology(desc.primitiveTopology);
 }
 

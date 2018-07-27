@@ -109,8 +109,8 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
     caps.features.hasConservativeRasterization      = false;
     caps.features.hasStreamOutputs                  = false;
-    caps.features.hasLogicOp                        = true;
-    caps.features.hasPipelineStatistics             = true;
+    caps.features.hasLogicOp                        = (features_.logicOp != VK_FALSE);
+    caps.features.hasPipelineStatistics             = (features_.pipelineStatisticsQuery != VK_FALSE);
     caps.features.hasRenderCondition                = false;
 
     /* Query limits */

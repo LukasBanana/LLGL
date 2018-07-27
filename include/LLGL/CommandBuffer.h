@@ -415,6 +415,18 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetComputePipeline(ComputePipeline& computePipeline) = 0;
 
+        #if 0//TODO: enable this
+        /**
+        \brief Sets the dynamic pipeline state for blending factors.
+        \param[in] color Specifies the blending factors for each color component.
+        The default value is <code>{ 1, 1, 1, 1 }</code>.
+        \remarks This is only used for the following blending operations:
+        - BlendOp::BlendFactor
+        - BlendOp::InvBlendFactor
+        */
+        virtual void SetBlendFactor(const ColorRGBAf& color) = 0;
+        #endif
+
         /* ----- Queries ----- */
 
         /**

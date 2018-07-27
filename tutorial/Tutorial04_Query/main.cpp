@@ -82,27 +82,23 @@ public:
         // Create graphics pipeline for occlusion query
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = shaderProgram;
-            pipelineDesc.pipelineLayout             = pipelineLayout;
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.pipelineLayout                 = pipelineLayout;
 
-            pipelineDesc.depth.testEnabled          = true;
-            pipelineDesc.depth.writeEnabled         = true;
+            pipelineDesc.depth.testEnabled              = true;
+            pipelineDesc.depth.writeEnabled             = true;
 
-            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
-            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
+            pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
 
-            LLGL::BlendTargetDescriptor blendDesc;
-            {
-                blendDesc.colorMask = LLGL::ColorRGBAb{ false };
-            }
-            pipelineDesc.blend.targets.push_back(blendDesc);
+            pipelineDesc.blend.targets[0].colorMask     = LLGL::ColorRGBAb{ false };
         }
         occlusionPipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Create graphics pipeline for scene rendering
         {
-            pipelineDesc.blend.blendEnabled         = true;
-            pipelineDesc.blend.targets[0].colorMask = LLGL::ColorRGBAb{ true };
+            pipelineDesc.blend.targets[0].blendEnabled  = true;
+            pipelineDesc.blend.targets[0].colorMask     = LLGL::ColorRGBAb{ true };
         }
         scenePipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }

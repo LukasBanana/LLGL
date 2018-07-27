@@ -87,10 +87,11 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         #endif
 
         // blend state
-        bool                    blendEnabled_           = false;
+        bool                    anyBlendTargetEnabled_  = false;
         ColorRGBAf              blendColor_             = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool                    blendColorNeeded_       = false;
-        std::vector<GLBlend>    blendStates_;
+        GLBlend                 blendStates_[8];
+        std::uint8_t            numBlendStates_         = 0;
         bool                    sampleAlphaToCoverage_  = false;
 
         // color logic operation state

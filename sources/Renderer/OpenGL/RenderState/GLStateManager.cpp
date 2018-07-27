@@ -546,12 +546,15 @@ void GLStateManager::SetLogicOp(GLenum opcode)
     }
 }
 
-void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled)
+void GLStateManager::SetBlendStates(
+    std::size_t     numBlendStates,
+    const GLBlend*  blendStates,
+    bool            anyBlendTargetEnabled)
 {
-    if (blendStates.empty())
+    if (numBlendStates == 0)
     {
         /* Set default blend states */
-        SetAllDrawBufferBlendStateDefault(blendEnabled);
+        SetAllDrawBufferBlendStateDefault(anyBlendTargetEnabled);
 
         /* Store color masks */
         blendState_.numDrawBuffers = 1;
@@ -562,17 +565,17 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
     }
     else
     {
-        if (blendStates.size() == 1)
+        if (numBlendStates == 1)
         {
             /* Set blend state only for the single draw buffer */
-            SetAllDrawBufferBlendState(blendStates.front(), blendEnabled);
+            SetAllDrawBufferBlendState(blendStates[0], anyBlendTargetEnabled);
         }
-        else if (blendStates.size() > 1)
+        else if (numBlendStates > 1)
         {
             /* Set respective blend state for each draw buffer */
             GLuint drawBufferIndex = 0;
-            for (const auto& state : blendStates)
-                SetDrawBufferBlendState(drawBufferIndex++, state, blendEnabled);
+            for (std::size_t i = 0; i < numBlendStates; ++i)
+                SetDrawBufferBlendState(drawBufferIndex++, blendStates[i], anyBlendTargetEnabled);
 
             #ifdef GL_ARB_draw_buffers_blend
             if (!HasExtension(GLExt::ARB_draw_buffers_blend))
@@ -585,8 +588,8 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
         }
 
         /* Store color masks */
-        blendState_.numDrawBuffers = static_cast<GLuint>(blendStates.size());
-        for (GLuint i = 0; i < blendState_.numDrawBuffers; ++i)
+        blendState_.numDrawBuffers = static_cast<GLuint>(numBlendStates);
+        for (std::size_t i = 0; i < numBlendStates; ++i)
         {
             blendState_.colorMasks[i][0] = blendStates[i].colorMask[0];
             blendState_.colorMasks[i][1] = blendStates[i].colorMask[1];

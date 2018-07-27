@@ -22,37 +22,29 @@ namespace LLGL
 
 /* ----- Internal functions ----- */
 
-static void Convert(GLStencil& to, const StencilFaceDescriptor& from)
+static void Convert(GLStencil& dst, const StencilFaceDescriptor& src)
 {
-    to.sfail        = GLTypes::Map(from.stencilFailOp);
-    to.dpfail       = GLTypes::Map(from.depthFailOp);
-    to.dppass       = GLTypes::Map(from.depthPassOp);
-    to.func         = GLTypes::Map(from.compareOp);
-    to.ref          = static_cast<GLint>(from.reference);
-    to.mask         = from.readMask;
-    to.writeMask    = from.writeMask;
+    dst.sfail        = GLTypes::Map(src.stencilFailOp);
+    dst.dpfail       = GLTypes::Map(src.depthFailOp);
+    dst.dppass       = GLTypes::Map(src.depthPassOp);
+    dst.func         = GLTypes::Map(src.compareOp);
+    dst.ref          = static_cast<GLint>(src.reference);
+    dst.mask         = src.readMask;
+    dst.writeMask    = src.writeMask;
 }
 
-static void Convert(GLBlend& to, const BlendTargetDescriptor& from)
+static void Convert(GLBlend& dst, const BlendTargetDescriptor& src)
 {
-    to.srcColor     = GLTypes::Map(from.srcColor);
-    to.dstColor     = GLTypes::Map(from.dstColor);
-    to.funcColor    = GLTypes::Map(from.colorArithmetic);
-    to.srcAlpha     = GLTypes::Map(from.srcAlpha);
-    to.dstAlpha     = GLTypes::Map(from.dstAlpha);
-    to.funcAlpha    = GLTypes::Map(from.alphaArithmetic);
-    to.colorMask[0] = GLBoolean(from.colorMask.r);
-    to.colorMask[1] = GLBoolean(from.colorMask.g);
-    to.colorMask[2] = GLBoolean(from.colorMask.b);
-    to.colorMask[3] = GLBoolean(from.colorMask.a);
-}
-
-template <typename DstType, typename SrcType>
-void Convert(std::vector<DstType>& to, const std::vector<SrcType>& from)
-{
-    to.resize(from.size());
-    for (std::size_t i = 0, n = from.size(); i < n; ++i)
-        Convert(to[i], from[i]);
+    dst.srcColor     = GLTypes::Map(src.srcColor);
+    dst.dstColor     = GLTypes::Map(src.dstColor);
+    dst.funcColor    = GLTypes::Map(src.colorArithmetic);
+    dst.srcAlpha     = GLTypes::Map(src.srcAlpha);
+    dst.dstAlpha     = GLTypes::Map(src.dstAlpha);
+    dst.funcAlpha    = GLTypes::Map(src.alphaArithmetic);
+    dst.colorMask[0] = GLBoolean(src.colorMask.r);
+    dst.colorMask[1] = GLBoolean(src.colorMask.g);
+    dst.colorMask[2] = GLBoolean(src.colorMask.b);
+    dst.colorMask[3] = GLBoolean(src.colorMask.a);
 }
 
 static bool IsBlendColorNeeded(const BlendOp blendOp)
@@ -63,20 +55,19 @@ static bool IsBlendColorNeeded(const BlendOp blendOp)
 // Returns true if the specified blend description requires that "glBlendColor" is called when the blend state is bound
 static bool IsBlendColorNeeded(const BlendDescriptor& blendDesc)
 {
-    if (!blendDesc.blendEnabled)
-        return false;
-
     for (const auto& target : blendDesc.targets)
     {
-        if ( IsBlendColorNeeded(target.srcColor) ||
-             IsBlendColorNeeded(target.srcAlpha) ||
-             IsBlendColorNeeded(target.dstColor) ||
-             IsBlendColorNeeded(target.dstAlpha) )
+        if (target.blendEnabled)
         {
-            return true;
+            if ( IsBlendColorNeeded(target.srcColor) ||
+                 IsBlendColorNeeded(target.srcAlpha) ||
+                 IsBlendColorNeeded(target.dstColor) ||
+                 IsBlendColorNeeded(target.dstAlpha) )
+            {
+                return true;
+            }
         }
     }
-
     return false;
 }
 
@@ -157,19 +148,46 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     conservativeRaster_ = desc.rasterizer.conservativeRasterization;
     #endif
 
-    /* Convert blend state */
-    blendEnabled_           = desc.blend.blendEnabled;
-    blendColor_             = desc.blend.blendFactor;
-    blendColorNeeded_       = IsBlendColorNeeded(desc.blend);
-    Convert(blendStates_, desc.blend.targets);
-    sampleAlphaToCoverage_  = desc.blend.alphaToCoverageEnabled;
-
-    /* Convert color logic operation state */
-    if (desc.blend.logicOp != LogicOp::Disabled)
+    /* Determine if any blend target is enabled */
+    if (desc.blend.logicOp == LogicOp::Disabled)
     {
+        if (desc.blend.independentBlendEnabled)
+        {
+            /* Check if any blend target is enabled */
+            for (std::uint32_t i = 0; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
+            {
+                if (desc.blend.targets[i].blendEnabled)
+                {
+                    anyBlendTargetEnabled_  = true;
+                    numBlendStates_         = std::max(numBlendStates_, static_cast<std::uint8_t>(i + 1u));
+                }
+            }
+
+            /* Convert all blend targets */
+            for (int i = 0; i < 8; ++i)
+                Convert(blendStates_[i], desc.blend.targets[i]);
+        }
+        else
+        {
+            /* Take information only from first target */
+            anyBlendTargetEnabled_  = desc.blend.targets[0].blendEnabled;
+            numBlendStates_         = 1;
+
+            /* Convert only first target */
+            Convert(blendStates_[0], desc.blend.targets[0]);
+        }
+    }
+    else
+    {
+        /* Convert logic pixel operation */
         logicOpEnabled_ = true;
         logicOp_        = GLTypes::Map(desc.blend.logicOp);
     }
+
+    /* Convert blend state */
+    blendColor_             = desc.blend.blendFactor;
+    blendColorNeeded_       = IsBlendColorNeeded(desc.blend);
+    sampleAlphaToCoverage_  = desc.blend.alphaToCoverageEnabled;
 
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())
@@ -238,8 +256,8 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     #endif
 
     /* Setup blend state */
-    stateMngr.Set(GLState::BLEND, blendEnabled_);
-    stateMngr.SetBlendStates(blendStates_, blendEnabled_);
+    stateMngr.Set(GLState::BLEND, anyBlendTargetEnabled_);
+    stateMngr.SetBlendStates(numBlendStates_, blendStates_, anyBlendTargetEnabled_);
 
     if (blendColorNeeded_)
         stateMngr.SetBlendColor(blendColor_);
