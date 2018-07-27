@@ -482,29 +482,17 @@ void MTCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void MTCommandBuffer::BeginQuery(Query& query)
+void MTCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     //todo
 }
 
-void MTCommandBuffer::EndQuery(Query& query)
+void MTCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     //todo
 }
 
-bool MTCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
-{
-    //todo
-    return false;
-}
-
-bool MTCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
-{
-    //todo
-    return false;
-}
-
-void MTCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+void MTCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     //todo
 }

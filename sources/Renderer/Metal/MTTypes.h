@@ -18,7 +18,7 @@
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
-#include <LLGL/QueryFlags.h>
+//#include <LLGL/QueryHeapFlags.h>
 
 
 namespace LLGL
