@@ -13,11 +13,12 @@
     (lhs.MEMBER == rhs.MEMBER)
 
 #define LLGL_COMPARE_MEMBER_SWO(MEMBER)         \
-    if (lhs.MEMBER < rhs.MEMBER) return true;   \
-    if (lhs.MEMBER > rhs.MEMBER) return false
+    if (lhs.MEMBER < rhs.MEMBER) { return -1; } \
+    if (lhs.MEMBER > rhs.MEMBER) { return +1; }
 
-#define LLGL_COMPARE_MEMBER_SWO_LAST(MEMBER) \
-    return (lhs.MEMBER < rhs.MEMBER)
+#define LLGL_COMPARE_BOOL_MEMBER_SWO(MEMBER)        \
+    if (!lhs.MEMBER &&  rhs.MEMBER) { return -1; }  \
+    if ( lhs.MEMBER && !rhs.MEMBER) { return +1; }
 
 #define LLGL_CASE_TO_STR(VALUE) \
     case VALUE: return #VALUE

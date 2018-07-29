@@ -96,7 +96,7 @@ static const GLenum g_textureTargetsEnum[] =
 };
 
 // Maps std::uint32_t to <texture> in glActiveTexture
-static const GLenum g_textureLayersEnum[] = 
+static const GLenum g_textureLayersEnum[] =
 {
     GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3,
     GL_TEXTURE4, GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7,
@@ -106,20 +106,6 @@ static const GLenum g_textureLayersEnum[] =
     GL_TEXTURE20, GL_TEXTURE21, GL_TEXTURE22, GL_TEXTURE23,
     GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27,
     GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
-};
-
-static const GLenum g_drawBuffers[] =
-{
-    GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
-    GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7,
-    GL_COLOR_ATTACHMENT8, GL_COLOR_ATTACHMENT9, GL_COLOR_ATTACHMENT10, GL_COLOR_ATTACHMENT11,
-    GL_COLOR_ATTACHMENT12, GL_COLOR_ATTACHMENT13, GL_COLOR_ATTACHMENT14, GL_COLOR_ATTACHMENT15,
-    #ifndef __APPLE__
-    GL_COLOR_ATTACHMENT16, GL_COLOR_ATTACHMENT17, GL_COLOR_ATTACHMENT18, GL_COLOR_ATTACHMENT19,
-    GL_COLOR_ATTACHMENT20, GL_COLOR_ATTACHMENT21, GL_COLOR_ATTACHMENT22, GL_COLOR_ATTACHMENT23,
-    GL_COLOR_ATTACHMENT24, GL_COLOR_ATTACHMENT25, GL_COLOR_ATTACHMENT26, GL_COLOR_ATTACHMENT27,
-    GL_COLOR_ATTACHMENT28, GL_COLOR_ATTACHMENT29, GL_COLOR_ATTACHMENT30, GL_COLOR_ATTACHMENT31,
-    #endif // /__APPLE__
 };
 
 static const GLuint g_GLInvalidId = ~0;
@@ -523,17 +509,18 @@ void GLStateManager::SetLineWidth(GLfloat width)
 
 /* ----- Blend states ----- */
 
-GLenum GLStateManager::ToGLColorAttachment(GLuint index)
+void GLStateManager::SetBlendColor(const GLfloat (&color)[4])
 {
-    return g_drawBuffers[index];
-}
-
-void GLStateManager::SetBlendColor(const ColorRGBAf& color)
-{
-    if (color != blendState_.blendColor)
+    if ( color[0] != blendState_.blendColor[0] ||
+         color[1] != blendState_.blendColor[1] ||
+         color[2] != blendState_.blendColor[2] ||
+         color[3] != blendState_.blendColor[3] )
     {
-        blendState_.blendColor = color;
-        glBlendColor(color.r, color.g, color.b, color.a);
+        blendState_.blendColor[0] = color[0];
+        blendState_.blendColor[1] = color[1];
+        blendState_.blendColor[2] = color[2];
+        blendState_.blendColor[3] = color[3];
+        glBlendColor(color[0], color[1], color[2], color[3]);
     }
 }
 
@@ -615,7 +602,7 @@ void GLStateManager::SetDrawBufferBlendState(GLuint drawBufferIndex, const GLBle
     else
     #endif // /GL_ARB_draw_buffers_blend
     {
-        glDrawBuffer(GLStateManager::ToGLColorAttachment(drawBufferIndex));
+        glDrawBuffer(GLTypes::ToColorAttachment(drawBufferIndex));
         glColorMask(state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
         if (blendEnabled)
         {
@@ -693,7 +680,7 @@ void GLStateManager::PopColorMask()
                 /* Restore color mask for each draw buffer */
                 for (GLuint i = 0; i < blendState_.numDrawBuffers; ++i)
                 {
-                    glDrawBuffer(GLStateManager::ToGLColorAttachment(i));
+                    glDrawBuffer(GLTypes::ToColorAttachment(i));
                     glColorMask(
                         blendState_.colorMasks[i][0],
                         blendState_.colorMasks[i][1],
@@ -992,6 +979,11 @@ void GLStateManager::NotifyFramebufferRelease(GLuint framebuffer)
 {
     for (auto& boundFramebuffer : framebufferState_.boundFramebuffers)
         InvalidateBoundGLObject(boundFramebuffer, framebuffer);
+}
+
+GLRenderTarget* GLStateManager::GetBoundRenderTarget() const
+{
+    return framebufferState_.boundRenderTarget;
 }
 
 /* ----- Renderbuffer ----- */

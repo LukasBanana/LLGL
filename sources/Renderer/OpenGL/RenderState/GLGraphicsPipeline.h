@@ -88,7 +88,7 @@ class GLGraphicsPipeline final : public GraphicsPipeline
 
         // blend state
         bool                    anyBlendTargetEnabled_  = false;
-        ColorRGBAf              blendColor_             = { 0.0f, 0.0f, 0.0f, 0.0f };
+        GLfloat                 blendColor_[4]          = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool                    blendColorNeeded_       = false;
         GLBlend                 blendStates_[8];
         std::uint8_t            numBlendStates_         = 0;

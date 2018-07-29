@@ -128,6 +128,7 @@ struct GLScissor
     GLsizei height; // default is context height
 };
 
+//TODO: replace by "GLDepthStencilState" class
 struct GLStencil
 {
     GLenum  sfail       = GL_KEEP;
@@ -139,6 +140,7 @@ struct GLStencil
     GLuint  writeMask   = ~0;
 };
 
+//TODO: replace by "GLBlendState" class
 struct GLBlend
 {
     GLenum      srcColor        = GL_ONE;

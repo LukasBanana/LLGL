@@ -102,10 +102,7 @@ class GLStateManager
 
         /* ----- Blend states ----- */
 
-        // Returns GL_COLOR_ATTACHMENT0 for index 0, GL_COLOR_ATTACHMENT1 for index 1, etc.
-        static GLenum ToGLColorAttachment(GLuint index);
-
-        void SetBlendColor(const ColorRGBAf& color);
+        void SetBlendColor(const GLfloat (&color)[4]);
         void SetLogicOp(GLenum opcode);
 
         void SetBlendStates(
@@ -160,6 +157,8 @@ class GLStateManager
         void PopBoundFramebuffer();
 
         void NotifyFramebufferRelease(GLuint framebuffer);
+
+        GLRenderTarget* GetBoundRenderTarget() const;
 
         /* ----- Renderbuffer ----- */
 
@@ -260,7 +259,7 @@ class GLStateManager
 
         struct GLBlendState
         {
-            ColorRGBAf  blendColor          = { 0.0f, 0.0f, 0.0f, 0.0f };
+            GLfloat     blendColor[4]       = { 0.0f, 0.0f, 0.0f, 0.0f };
             GLenum      logicOpCode         = GL_COPY;
             GLboolean   colorMasks[32][4]   = {};
             GLuint      numDrawBuffers      = 0;

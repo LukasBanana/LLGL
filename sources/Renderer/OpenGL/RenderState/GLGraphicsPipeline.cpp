@@ -185,7 +185,9 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     }
 
     /* Convert blend state */
-    blendColor_             = desc.blend.blendFactor;
+    for (std::size_t i = 0; i < 4; ++i)
+        blendColor_[i] = desc.blend.blendFactor[i];
+
     blendColorNeeded_       = IsBlendColorNeeded(desc.blend);
     sampleAlphaToCoverage_  = desc.blend.alphaToCoverageEnabled;
 

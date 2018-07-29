@@ -464,7 +464,7 @@ GLenum GLRenderTarget::MakeFramebufferAttachment(GLenum internalFormat)
     {
         /* Add color attachment and color buffer bit to blit mask */
         blitMask_ |= GL_COLOR_BUFFER_BIT;
-        const GLenum attachment = GLStateManager::ToGLColorAttachment(static_cast<GLuint>(colorAttachments_.size()));
+        const GLenum attachment = GLTypes::ToColorAttachment(static_cast<std::uint32_t>(colorAttachments_.size()));
         colorAttachments_.push_back(attachment);
         return attachment;
     }

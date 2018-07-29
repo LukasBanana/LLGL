@@ -228,7 +228,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
     /* Convert blend state */
-    stateDesc.BlendState.AlphaToCoverageEnable  = DXBoolean(desc.blend.alphaToCoverageEnabled);
+    stateDesc.BlendState.AlphaToCoverageEnable = DXBoolean(desc.blend.alphaToCoverageEnabled);
 
     if (desc.blend.logicOp == LogicOp::Disabled)
     {
