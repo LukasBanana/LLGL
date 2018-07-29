@@ -509,6 +509,89 @@ void GLStateManager::SetLineWidth(GLfloat width)
 
 /* ----- Blend states ----- */
 
+GLBlendStateSPtr GLStateManager::CreateBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments)
+{
+    /* Try to find blend state with same parameter */
+    GLBlendState blendStateToCompare { desc, numColorAttachments };
+
+    std::size_t insertionIndex = 0;
+    if (auto blendState = FindCompatibleBlendState(blendStateToCompare, insertionIndex))
+        return blendState;
+
+    /* Allocate new blend state with insertion sort */
+    auto sharedBlendState = std::make_shared<GLBlendState>(blendStateToCompare);
+
+    if (blendStates_.size() < insertionIndex)
+        blendStates_.insert(blendStates_.begin() + insertionIndex, sharedBlendState);
+    else
+        blendStates_.push_back(sharedBlendState);
+
+    return sharedBlendState;
+}
+
+// private
+GLBlendStateSPtr GLStateManager::FindCompatibleBlendState(const GLBlendState& other, std::size_t& insertionIndex)
+{
+    return FindCompatibleBlendStateInRange(other, 0, blendStates_.size(), 1, insertionIndex);
+}
+
+// private
+GLBlendStateSPtr GLStateManager::FindCompatibleBlendStateInRange(
+    const GLBlendState& other,
+    std::size_t         first,
+    std::size_t         last,
+    std::size_t         stride,
+    std::size_t&        index)
+{
+    for (index = first; index < last; index += stride)
+    {
+        /* Check if current blend state is compatible */
+        auto order = blendStates_[index]->CompareSWO(other);
+        if (order == 0)
+            return blendStates_[index];
+
+        if (order > 0)
+        {
+            /* Increase step size and reduce boundary */
+            stride *= 2;
+            first   = index;
+        }
+        else
+        {
+            /* Reset step size, then reduce boundary, finally reset index */
+            stride  = 1;
+            last    = index;
+            index   = first;
+        }
+    }
+    return nullptr;
+}
+
+void GLStateManager::ReleaseUnusedBlendStates(bool firstOnly)
+{
+    if (firstOnly)
+    {
+        for (auto it = blendStates_.begin(); it != blendStates_.end(); ++it)
+        {
+            if (it->use_count() == 1)
+            {
+                blendStates_.erase(it);
+                break;
+            }
+        }
+    }
+    else
+    {
+        RemoveAllFromListIf(
+            blendStates_,
+            [](const GLBlendStateSPtr& entry)
+            {
+                return (entry.use_count() == 1);
+            }
+        );
+    }
+}
+
 void GLStateManager::SetBlendColor(const GLfloat (&color)[4])
 {
     if ( color[0] != blendState_.blendColor[0] ||

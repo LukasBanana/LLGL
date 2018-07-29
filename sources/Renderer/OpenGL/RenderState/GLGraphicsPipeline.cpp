@@ -6,6 +6,7 @@
  */
 
 #include "GLGraphicsPipeline.h"
+#include "GLRenderPass.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLCore.h"
@@ -148,6 +149,16 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     conservativeRaster_ = desc.rasterizer.conservativeRasterization;
     #endif
 
+    /* Create blend state from context state */
+    if (auto renderPass = desc.renderPass)
+    {
+        auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
+        blendState_ = GLStateManager::active->CreateBlendState(desc.blend, renderPassGL->GetNumColorAttachments());
+    }
+    else
+        blendState_ = GLStateManager::active->CreateBlendState(desc.blend, 1);
+
+    #if 1//TODO: remove this
     /* Determine if any blend target is enabled */
     if (desc.blend.logicOp == LogicOp::Disabled)
     {
@@ -189,11 +200,22 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
         blendColor_[i] = desc.blend.blendFactor[i];
 
     blendColorNeeded_       = IsBlendColorNeeded(desc.blend);
+    #endif // /TODO
+
     sampleAlphaToCoverage_  = desc.blend.alphaToCoverageEnabled;
 
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())
         BuildStaticStateBuffer(desc);
+}
+
+GLGraphicsPipeline::~GLGraphicsPipeline()
+{
+    if (blendState_.use_count() == 2)
+    {
+        blendState_.reset();
+        GLStateManager::active->ReleaseUnusedBlendStates(true);
+    }
 }
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)

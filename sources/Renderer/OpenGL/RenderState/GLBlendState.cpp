@@ -31,8 +31,11 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
 {
     Convert(blendColor_, desc.blendFactor);
 
-    logicOpEnabled_ = (desc.logicOp != LogicOp::Disabled);
-    logicOp_        = GLTypes::Map(desc.logicOp);
+    if (desc.logicOp != LogicOp::Disabled)
+    {
+        logicOpEnabled_ = true;
+        logicOp_        = GLTypes::Map(desc.logicOp);
+    }
 
     if (desc.independentBlendEnabled)
     {

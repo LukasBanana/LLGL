@@ -27,6 +27,12 @@ class GLRenderPass final : public RenderPass
 
         GLRenderPass(const RenderPassDescriptor& desc);
 
+        // Returns the number of color attachments used for this render pass.
+        inline std::uint8_t GetNumColorAttachments() const
+        {
+            return numColorAttachments_;
+        }
+
         // Specifies which buffer groups are meant to be cleared when a render pass begins.
         inline GLbitfield GetClearMask() const
         {
@@ -41,6 +47,7 @@ class GLRenderPass final : public RenderPass
 
     private:
 
+        std::uint8_t    numColorAttachments_                                    = 0;
         GLbitfield      clearMask_                                              = 0;
         std::uint8_t    clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
 

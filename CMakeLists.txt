@@ -287,6 +287,7 @@ set(FilesTest6 ${PROJECT_SOURCE_DIR}/test/Test6_Performance.cpp)
 set(FilesTest7 ${PROJECT_SOURCE_DIR}/test/Test7_Display.cpp)
 set(FilesTest8 ${PROJECT_SOURCE_DIR}/test/Test8_Image.cpp)
 set(FilesTest9 ${PROJECT_SOURCE_DIR}/test/Test9_Metal.cpp)
+set(FilesTest10 ${PROJECT_SOURCE_DIR}/test/Test10_BlendStates.cpp)
 
 # Tutorial files
 file(GLOB FilesTutorialBase ${PROJECT_SOURCE_DIR}/tutorial/TutorialBase/*.*)
@@ -621,6 +622,7 @@ if(GaussLib_INCLUDE_DIR)
 		if(APPLE)
 			ADD_TEST_PROJECT(Test9_Metal "${FilesTest9}" "${TEST_PROJECT_LIBS}")
 		endif()
+        ADD_TEST_PROJECT(Test10_BlendStates "${FilesTest10}" "${TEST_PROJECT_LIBS}")
     endif()
 
     # Tutorial Projects

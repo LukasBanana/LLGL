@@ -11,6 +11,7 @@
 
 #include "../OpenGL.h"
 #include "GLStateManager.h"
+#include "GLBlendState.h"
 #include "../Shader/GLShaderProgram.h"
 #include <LLGL/GraphicsPipeline.h>
 #include <LLGL/RenderSystemFlags.h>
@@ -30,6 +31,7 @@ class GLGraphicsPipeline final : public GraphicsPipeline
     public:
 
         GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits);
+        ~GLGraphicsPipeline();
 
         // Binds this graphics pipeline state with the specified GL state manager.
         void Bind(GLStateManager& stateMngr);
@@ -87,12 +89,15 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         #endif
 
         // blend state
+        GLBlendStateSPtr        blendState_;
+        #if 1//TODO: replace this by "GLBlendState" class
         bool                    anyBlendTargetEnabled_  = false;
         GLfloat                 blendColor_[4]          = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool                    blendColorNeeded_       = false;
         GLBlend                 blendStates_[8];
         std::uint8_t            numBlendStates_         = 0;
         bool                    sampleAlphaToCoverage_  = false;
+        #endif
 
         // color logic operation state
         bool                    logicOpEnabled_         = false;

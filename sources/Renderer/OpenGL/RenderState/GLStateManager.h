@@ -10,6 +10,7 @@
 
 
 #include "GLState.h"
+#include "GLBlendState.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include <LLGL/CommandBufferFlags.h>
@@ -101,6 +102,9 @@ class GLStateManager
         #endif
 
         /* ----- Blend states ----- */
+
+        GLBlendStateSPtr CreateBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments);
+        void ReleaseUnusedBlendStates(bool firstOnly = false);
 
         void SetBlendColor(const GLfloat (&color)[4]);
         void SetLogicOp(GLenum opcode);
@@ -221,6 +225,15 @@ class GLStateManager
         void DetermineVendorSpecificExtensions();
         #endif
 
+        GLBlendStateSPtr FindCompatibleBlendState(const GLBlendState& other, std::size_t& insertionIndex);
+        GLBlendStateSPtr FindCompatibleBlendStateInRange(
+            const GLBlendState& other,
+            std::size_t         first,
+            std::size_t         last,
+            std::size_t         stride,
+            std::size_t&        index
+        );
+
         /* ----- Constants ----- */
 
         static const std::uint32_t numTextureLayers         = 32;
@@ -257,7 +270,8 @@ class GLStateManager
             GLfloat     lineWidth       = 1.0f;
         };
 
-        struct GLBlendState
+        //TODO: replace this by global "GLBlendState" class
+        struct GLBlendState_OBSOLETE
         {
             GLfloat     blendColor[4]       = { 0.0f, 0.0f, 0.0f, 0.0f };
             GLenum      logicOpCode         = GL_COPY;
@@ -266,6 +280,7 @@ class GLStateManager
             bool        colorMaskOnStack    = false;
         };
 
+        //TODO: replace this by global "GLDepthStencilState" class
         struct GLDepthStencilState
         {
             GLenum      depthFunc       = GL_LESS;
@@ -375,7 +390,7 @@ class GLStateManager
 
         GLCommonState                   commonState_;
         GLDepthStencilState             depthStencilState_;
-        GLBlendState                    blendState_;
+        GLBlendState_OBSOLETE           blendState_; //TODO: replace this by "GLBlendState" class
         GLRenderState                   renderState_;
         GLBufferState                   bufferState_;
         GLFramebufferState              framebufferState_;
@@ -393,6 +408,8 @@ class GLStateManager
 
         bool                            emulateClipControl_ = false;
         GLint                           renderTargetHeight_ = 0;
+
+        std::vector<GLBlendStateSPtr>   blendStates_;
 
 };
 

@@ -12,16 +12,24 @@
 #include <LLGL/GraphicsPipelineFlags.h>
 #include "../OpenGL.h"
 #include "../../StaticLimits.h"
+#include <memory>
 
 
 namespace LLGL
 {
 
 
+class GLBlendState;
+using GLBlendStateSPtr = std::shared_ptr<GLBlendState>;
+
 class GLBlendState
 {
 
     public:
+
+        GLBlendState() = default;
+        GLBlendState(const GLBlendState&) = default;
+        GLBlendState& operator = (const GLBlendState&) = default;
 
         GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments);
 
