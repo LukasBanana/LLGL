@@ -34,44 +34,6 @@ static void Convert(GLStencil& dst, const StencilFaceDescriptor& src)
     dst.writeMask    = src.writeMask;
 }
 
-static void Convert(GLBlend& dst, const BlendTargetDescriptor& src)
-{
-    dst.srcColor     = GLTypes::Map(src.srcColor);
-    dst.dstColor     = GLTypes::Map(src.dstColor);
-    dst.funcColor    = GLTypes::Map(src.colorArithmetic);
-    dst.srcAlpha     = GLTypes::Map(src.srcAlpha);
-    dst.dstAlpha     = GLTypes::Map(src.dstAlpha);
-    dst.funcAlpha    = GLTypes::Map(src.alphaArithmetic);
-    dst.colorMask[0] = GLBoolean(src.colorMask.r);
-    dst.colorMask[1] = GLBoolean(src.colorMask.g);
-    dst.colorMask[2] = GLBoolean(src.colorMask.b);
-    dst.colorMask[3] = GLBoolean(src.colorMask.a);
-}
-
-static bool IsBlendColorNeeded(const BlendOp blendOp)
-{
-    return (blendOp == BlendOp::BlendFactor || blendOp == BlendOp::InvBlendFactor);
-}
-
-// Returns true if the specified blend description requires that "glBlendColor" is called when the blend state is bound
-static bool IsBlendColorNeeded(const BlendDescriptor& blendDesc)
-{
-    for (const auto& target : blendDesc.targets)
-    {
-        if (target.blendEnabled)
-        {
-            if ( IsBlendColorNeeded(target.srcColor) ||
-                 IsBlendColorNeeded(target.srcAlpha) ||
-                 IsBlendColorNeeded(target.dstColor) ||
-                 IsBlendColorNeeded(target.dstAlpha) )
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 static GLState PolygonModeToPolygonOffset(const PolygonMode mode)
 {
     switch (mode)
@@ -158,52 +120,6 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     else
         blendState_ = GLStateManager::active->CreateBlendState(desc.blend, 1);
 
-    #if 1//TODO: remove this
-    /* Determine if any blend target is enabled */
-    if (desc.blend.logicOp == LogicOp::Disabled)
-    {
-        if (desc.blend.independentBlendEnabled)
-        {
-            /* Check if any blend target is enabled */
-            for (std::uint32_t i = 0; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
-            {
-                if (desc.blend.targets[i].blendEnabled)
-                {
-                    anyBlendTargetEnabled_  = true;
-                    numBlendStates_         = std::max(numBlendStates_, static_cast<std::uint8_t>(i + 1u));
-                }
-            }
-
-            /* Convert all blend targets */
-            for (int i = 0; i < 8; ++i)
-                Convert(blendStates_[i], desc.blend.targets[i]);
-        }
-        else
-        {
-            /* Take information only from first target */
-            anyBlendTargetEnabled_  = desc.blend.targets[0].blendEnabled;
-            numBlendStates_         = 1;
-
-            /* Convert only first target */
-            Convert(blendStates_[0], desc.blend.targets[0]);
-        }
-    }
-    else
-    {
-        /* Convert logic pixel operation */
-        logicOpEnabled_ = true;
-        logicOp_        = GLTypes::Map(desc.blend.logicOp);
-    }
-
-    /* Convert blend state */
-    for (std::size_t i = 0; i < 4; ++i)
-        blendColor_[i] = desc.blend.blendFactor[i];
-
-    blendColorNeeded_       = IsBlendColorNeeded(desc.blend);
-    #endif // /TODO
-
-    sampleAlphaToCoverage_  = desc.blend.alphaToCoverageEnabled;
-
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())
         BuildStaticStateBuffer(desc);
@@ -279,29 +195,13 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     stateMngr.Set(GLStateExt::CONSERVATIVE_RASTERIZATION, conservativeRaster_);
     #endif
 
-    /* Setup blend state */
-    stateMngr.Set(GLState::BLEND, anyBlendTargetEnabled_);
-    stateMngr.SetBlendStates(numBlendStates_, blendStates_, anyBlendTargetEnabled_);
-
-    if (blendColorNeeded_)
-        stateMngr.SetBlendColor(blendColor_);
-
+    #if 0//TODO
     if (multiSampleEnabled_)
-    {
-        #if 0//TODO
         stateMngr.SetSampleMask(sampleMask_);
-        #endif
-        stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);
-    }
+    #endif
 
-    /* Setup color logic operation */
-    if (logicOpEnabled_)
-    {
-        stateMngr.Enable(GLState::COLOR_LOGIC_OP);
-        stateMngr.SetLogicOp(logicOp_);
-    }
-    else
-        stateMngr.Disable(GLState::COLOR_LOGIC_OP);
+    /* Setup blend state */
+    stateMngr.SetBlendState(blendState_.get());
 
     /* Set static viewports and scissors */
     if (staticStateBuffer_)

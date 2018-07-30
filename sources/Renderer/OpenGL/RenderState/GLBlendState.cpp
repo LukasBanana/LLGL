@@ -31,6 +31,8 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
 {
     Convert(blendColor_, desc.blendFactor);
 
+    sampleAlphaToCoverage_ = desc.alphaToCoverageEnabled;
+
     if (desc.logicOp != LogicOp::Disabled)
     {
         logicOpEnabled_ = true;
@@ -52,14 +54,17 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
 
 void GLBlendState::Bind()
 {
+    auto& stateMngr = *GLStateManager::active;
+
     /* Set blend factor */
-    GLStateManager::active->SetBlendColor(blendColor_);
+    stateMngr.SetBlendColor(blendColor_);
+    stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);
 
     if (logicOpEnabled_)
     {
         /* Enable logic pixel operation */
-        GLStateManager::active->Enable(GLState::COLOR_LOGIC_OP);
-        GLStateManager::active->SetLogicOp(logicOp_);
+        stateMngr.Enable(GLState::COLOR_LOGIC_OP);
+        stateMngr.SetLogicOp(logicOp_);
 
         /* Bind only color masks for all draw buffers */
         BindDrawBufferColorMasks();
@@ -67,7 +72,7 @@ void GLBlendState::Bind()
     else
     {
         /* Disable logic pixel operation */
-        GLStateManager::active->Disable(GLState::COLOR_LOGIC_OP);
+        stateMngr.Disable(GLState::COLOR_LOGIC_OP);
 
         /* Bind blend states for all draw buffers */
         BindDrawBufferStates();
@@ -76,20 +81,21 @@ void GLBlendState::Bind()
 
 void GLBlendState::BindColorMaskOnly()
 {
-    BindDrawBufferStates();
+    BindDrawBufferColorMasks();
 }
 
 int GLBlendState::CompareSWO(const GLBlendState& rhs) const
 {
     const auto& lhs = *this;
 
-    LLGL_COMPARE_MEMBER_SWO     ( blendColor_[0]  );
-    LLGL_COMPARE_MEMBER_SWO     ( blendColor_[1]  );
-    LLGL_COMPARE_MEMBER_SWO     ( blendColor_[2]  );
-    LLGL_COMPARE_MEMBER_SWO     ( blendColor_[3]  );
-    LLGL_COMPARE_BOOL_MEMBER_SWO( logicOpEnabled_ );
-    LLGL_COMPARE_MEMBER_SWO     ( logicOp_        );
-    LLGL_COMPARE_MEMBER_SWO     ( numDrawBuffers_ );
+    LLGL_COMPARE_MEMBER_SWO     ( blendColor_[0]         );
+    LLGL_COMPARE_MEMBER_SWO     ( blendColor_[1]         );
+    LLGL_COMPARE_MEMBER_SWO     ( blendColor_[2]         );
+    LLGL_COMPARE_MEMBER_SWO     ( blendColor_[3]         );
+    LLGL_COMPARE_MEMBER_SWO     ( sampleAlphaToCoverage_ );
+    LLGL_COMPARE_BOOL_MEMBER_SWO( logicOpEnabled_        );
+    LLGL_COMPARE_MEMBER_SWO     ( logicOp_               );
+    LLGL_COMPARE_MEMBER_SWO     ( numDrawBuffers_        );
 
     for (decltype(numDrawBuffers_) i = 0; i < numDrawBuffers_; ++i)
     {

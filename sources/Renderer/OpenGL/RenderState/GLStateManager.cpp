@@ -521,7 +521,7 @@ GLBlendStateSPtr GLStateManager::CreateBlendState(const BlendDescriptor& desc, s
     /* Allocate new blend state with insertion sort */
     auto sharedBlendState = std::make_shared<GLBlendState>(blendStateToCompare);
 
-    if (blendStates_.size() < insertionIndex)
+    if (insertionIndex < blendStates_.size())
         blendStates_.insert(blendStates_.begin() + insertionIndex, sharedBlendState);
     else
         blendStates_.push_back(sharedBlendState);
@@ -575,6 +575,7 @@ void GLStateManager::ReleaseUnusedBlendStates(bool firstOnly)
         {
             if (it->use_count() == 1)
             {
+                NotifyBlendStateRelease(it->get());
                 blendStates_.erase(it);
                 break;
             }
@@ -584,201 +585,75 @@ void GLStateManager::ReleaseUnusedBlendStates(bool firstOnly)
     {
         RemoveAllFromListIf(
             blendStates_,
-            [](const GLBlendStateSPtr& entry)
+            [&](const GLBlendStateSPtr& entry)
             {
-                return (entry.use_count() == 1);
+                if (entry.use_count() == 1)
+                {
+                    NotifyBlendStateRelease(entry.get());
+                    return true;
+                }
+                return false;
             }
         );
     }
 }
 
+void GLStateManager::SetBlendState(GLBlendState* blendState)
+{
+    if (blendState && blendState != boundBlendState_)
+    {
+        blendState->Bind();
+        boundBlendState_ = blendState;
+    }
+}
+
 void GLStateManager::SetBlendColor(const GLfloat (&color)[4])
 {
-    if ( color[0] != blendState_.blendColor[0] ||
-         color[1] != blendState_.blendColor[1] ||
-         color[2] != blendState_.blendColor[2] ||
-         color[3] != blendState_.blendColor[3] )
+    if ( color[0] != commonState_.blendColor[0] ||
+         color[1] != commonState_.blendColor[1] ||
+         color[2] != commonState_.blendColor[2] ||
+         color[3] != commonState_.blendColor[3] )
     {
-        blendState_.blendColor[0] = color[0];
-        blendState_.blendColor[1] = color[1];
-        blendState_.blendColor[2] = color[2];
-        blendState_.blendColor[3] = color[3];
+        commonState_.blendColor[0] = color[0];
+        commonState_.blendColor[1] = color[1];
+        commonState_.blendColor[2] = color[2];
+        commonState_.blendColor[3] = color[3];
         glBlendColor(color[0], color[1], color[2], color[3]);
     }
 }
 
 void GLStateManager::SetLogicOp(GLenum opcode)
 {
-    if (blendState_.logicOpCode != opcode)
+    if (commonState_.logicOpCode != opcode)
     {
-        blendState_.logicOpCode = opcode;
+        commonState_.logicOpCode = opcode;
         glLogicOp(opcode);
-    }
-}
-
-void GLStateManager::SetBlendStates(
-    std::size_t     numBlendStates,
-    const GLBlend*  blendStates,
-    bool            anyBlendTargetEnabled)
-{
-    if (numBlendStates == 0)
-    {
-        /* Set default blend states */
-        SetAllDrawBufferBlendStateDefault(anyBlendTargetEnabled);
-
-        /* Store color masks */
-        blendState_.numDrawBuffers = 1;
-        blendState_.colorMasks[0][0] = GL_TRUE;
-        blendState_.colorMasks[0][1] = GL_TRUE;
-        blendState_.colorMasks[0][2] = GL_TRUE;
-        blendState_.colorMasks[0][3] = GL_TRUE;
-    }
-    else
-    {
-        if (numBlendStates == 1)
-        {
-            /* Set blend state only for the single draw buffer */
-            SetAllDrawBufferBlendState(blendStates[0], anyBlendTargetEnabled);
-        }
-        else if (numBlendStates > 1)
-        {
-            /* Set respective blend state for each draw buffer */
-            GLuint drawBufferIndex = 0;
-            for (std::size_t i = 0; i < numBlendStates; ++i)
-                SetDrawBufferBlendState(drawBufferIndex++, blendStates[i], anyBlendTargetEnabled);
-
-            #ifdef GL_ARB_draw_buffers_blend
-            if (!HasExtension(GLExt::ARB_draw_buffers_blend))
-            #endif
-            {
-                /* Restore draw buffer settings for current render target */
-                if (framebufferState_.boundRenderTarget)
-                    framebufferState_.boundRenderTarget->SetDrawBuffers();
-            }
-        }
-
-        /* Store color masks */
-        blendState_.numDrawBuffers = static_cast<GLuint>(numBlendStates);
-        for (std::size_t i = 0; i < numBlendStates; ++i)
-        {
-            blendState_.colorMasks[i][0] = blendStates[i].colorMask[0];
-            blendState_.colorMasks[i][1] = blendStates[i].colorMask[1];
-            blendState_.colorMasks[i][2] = blendStates[i].colorMask[2];
-            blendState_.colorMasks[i][3] = blendStates[i].colorMask[3];
-        }
-    }
-}
-
-// private
-void GLStateManager::SetDrawBufferBlendState(GLuint drawBufferIndex, const GLBlend& state, bool blendEnabled)
-{
-    #ifdef GL_ARB_draw_buffers_blend
-    if (HasExtension(GLExt::ARB_draw_buffers_blend))
-    {
-        glColorMaski(drawBufferIndex, state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
-        if (blendEnabled)
-        {
-            glBlendFuncSeparatei(drawBufferIndex, state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-            glBlendEquationSeparatei(drawBufferIndex, state.funcColor, state.funcAlpha);
-        }
-    }
-    else
-    #endif // /GL_ARB_draw_buffers_blend
-    {
-        glDrawBuffer(GLTypes::ToColorAttachment(drawBufferIndex));
-        glColorMask(state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
-        if (blendEnabled)
-        {
-            glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-            glBlendEquationSeparate(state.funcColor, state.funcAlpha);
-        }
-    }
-}
-
-// private
-void GLStateManager::SetAllDrawBufferBlendState(const GLBlend& state, bool blendEnabled)
-{
-    glColorMask(state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
-    if (blendEnabled)
-    {
-        glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-        glBlendEquationSeparate(state.funcColor, state.funcAlpha);
-    }
-}
-
-// private
-void GLStateManager::SetAllDrawBufferBlendStateDefault(bool blendEnabled)
-{
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    if (blendEnabled)
-    {
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBlendEquation(GL_FUNC_ADD);
     }
 }
 
 void GLStateManager::PushColorMaskAndEnable()
 {
-    if (!blendState_.colorMaskOnStack)
+    if (!colorMaskOnStack_)
     {
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        blendState_.colorMaskOnStack = true;
+        colorMaskOnStack_ = true;
     }
 }
 
 void GLStateManager::PopColorMask()
 {
-    if (blendState_.colorMaskOnStack)
+    if (colorMaskOnStack_)
     {
-        if (blendState_.numDrawBuffers == 1)
-        {
-            /* Restore color mask for all draw buffers */
-            glColorMask(
-                blendState_.colorMasks[0][0],
-                blendState_.colorMasks[0][1],
-                blendState_.colorMasks[0][2],
-                blendState_.colorMasks[0][3]
-            );
-        }
-        else if (blendState_.numDrawBuffers > 1)
-        {
-            #ifdef GL_EXT_draw_buffers2
-            if (HasExtension(GLExt::EXT_draw_buffers2))
-            {
-                /* Restore color mask for each draw buffer */
-                for (GLuint i = 0; i < blendState_.numDrawBuffers; ++i)
-                {
-                    glColorMaski(
-                        i,
-                        blendState_.colorMasks[i][0],
-                        blendState_.colorMasks[i][1],
-                        blendState_.colorMasks[i][2],
-                        blendState_.colorMasks[i][3]
-                    );
-                }
-            }
-            else
-            #endif // /GL_EXT_draw_buffers2
-            {
-                /* Restore color mask for each draw buffer */
-                for (GLuint i = 0; i < blendState_.numDrawBuffers; ++i)
-                {
-                    glDrawBuffer(GLTypes::ToColorAttachment(i));
-                    glColorMask(
-                        blendState_.colorMasks[i][0],
-                        blendState_.colorMasks[i][1],
-                        blendState_.colorMasks[i][2],
-                        blendState_.colorMasks[i][3]
-                    );
-                }
-
-                /* Restore draw buffer settings for current render target */
-                if (framebufferState_.boundRenderTarget)
-                    framebufferState_.boundRenderTarget->SetDrawBuffers();
-            }
-        }
-        blendState_.colorMaskOnStack = false;
+        if (boundBlendState_)
+            boundBlendState_->BindColorMaskOnly();
+        colorMaskOnStack_ = false;
     }
+}
+
+void GLStateManager::NotifyBlendStateRelease(GLBlendState* blendState)
+{
+    if (boundBlendState_ == blendState)
+        boundBlendState_ = nullptr;
 }
 
 /* ----- Depth-stencil states ----- */

@@ -52,9 +52,9 @@ int main()
         vertices[] =
         {
             { { -0.5f, -0.5f }, { 255,   0,   0, 255 } },
-            { { -0.5f,  0.5f }, {   0, 255,   0, 255 } },
-            { {  0.5f, -0.5f }, { 255,   0, 255, 128 } },
-            { {  0.5f,  0.5f }, {   0,   0, 255, 128 } },
+            { { -0.5f,  0.5f }, {   0, 255,   0, 160 } },
+            { {  0.5f, -0.5f }, { 255,   0, 255,  80 } },
+            { {  0.5f,  0.5f }, {   0,   0, 255,   0 } },
         };
 
         LLGL::VertexFormat vertexFormat;
@@ -83,7 +83,7 @@ int main()
             throw std::runtime_error(shaderProgram->QueryInfoLog());
 
         // Create graphics pipeline
-        static const std::size_t numPipelines = 3;
+        static const std::size_t numPipelines = 4;
 
         LLGL::GraphicsPipeline* pipeline[numPipelines] = {};
 
@@ -95,24 +95,38 @@ int main()
         pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         {
-            pipelineDesc.primitiveTopology = LLGL::PrimitiveTopology::LineLoop;
+            pipelineDesc.blend.targets[0].blendEnabled = true;
         }
         pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         {
-            pipelineDesc.blend.targets[0].blendEnabled = true;
+            pipelineDesc.primitiveTopology = LLGL::PrimitiveTopology::LineLoop;
         }
         pipeline[2] = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        {
+            pipelineDesc.blend.targets[0].blendEnabled = false;
+            pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
+        }
+        pipeline[3] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();
         auto commands = renderer->CreateCommandBuffer();
 
+        // Scene parameters
         std::size_t pipelineIndex = 0;
+
+        const auto& resolution = context->GetResolution();
+        auto w = resolution.width / 2;
+        auto h = resolution.height / 2;
+        auto x = static_cast<std::int32_t>(w);
+        auto y = static_cast<std::int32_t>(h);
 
         // Main loop
         while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
+            // User input
             if (input->KeyDownRepeated(LLGL::Key::Tab))
             {
                 if (input->KeyPressed(LLGL::Key::Shift))
@@ -126,16 +140,34 @@ int main()
                     pipelineIndex = (pipelineIndex + 1) % numPipelines;
             }
 
+            // Update scene
+            static float angle;
+            angle += 0.1f;
+
+            auto dx = static_cast<int>(std::sin(angle) * 10.0f);
+            auto dy = static_cast<int>(std::cos(angle) * 10.0f);
+
+            LLGL::Viewport viewports[4] =
+            {
+                { { 0, 0 }, { w, h } },
+                { { x, 0 }, { w, h } },
+                { { x + dx, y + dy }, { w, h } },
+                { { 0, y }, { w, h } },
+            };
+
+            // Render scene
             commands->Begin();
             {
                 commands->SetVertexBuffer(*vertexBuffer);
                 commands->BeginRenderPass(*context);
                 {
-                    commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
                     commands->Clear(LLGL::ClearFlags::Color);
-
-                    commands->SetGraphicsPipeline(*pipeline[pipelineIndex]);
-                    commands->Draw(4, 0);
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        commands->SetViewport(viewports[i]);
+                        commands->SetGraphicsPipeline(*pipeline[i]);
+                        commands->Draw(4, 0);
+                    }
                 }
                 commands->EndRenderPass();
             }

@@ -66,6 +66,7 @@ class GLBlendState
         void BindIndexedDrawBufferColorMask(const GLDrawBufferState& state, GLuint index);
 
         GLfloat             blendColor_[4]                                  = { 0.0f, 0.0f, 0.0f, 0.0f };
+        bool                sampleAlphaToCoverage_                          = false;
         bool                logicOpEnabled_                                 = false;
         GLenum              logicOp_                                        = GL_COPY;
         GLuint              numDrawBuffers_                                 = 0;

@@ -90,18 +90,6 @@ class GLGraphicsPipeline final : public GraphicsPipeline
 
         // blend state
         GLBlendStateSPtr        blendState_;
-        #if 1//TODO: replace this by "GLBlendState" class
-        bool                    anyBlendTargetEnabled_  = false;
-        GLfloat                 blendColor_[4]          = { 0.0f, 0.0f, 0.0f, 0.0f };
-        bool                    blendColorNeeded_       = false;
-        GLBlend                 blendStates_[8];
-        std::uint8_t            numBlendStates_         = 0;
-        bool                    sampleAlphaToCoverage_  = false;
-        #endif
-
-        // color logic operation state
-        bool                    logicOpEnabled_         = false;
-        GLenum                  logicOp_                = GL_COPY;
 
         // packed byte buffer for static viewports and scissors
         std::unique_ptr<char[]> staticStateBuffer_;

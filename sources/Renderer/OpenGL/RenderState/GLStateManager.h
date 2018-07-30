@@ -106,17 +106,15 @@ class GLStateManager
         GLBlendStateSPtr CreateBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments);
         void ReleaseUnusedBlendStates(bool firstOnly = false);
 
+        void SetBlendState(GLBlendState* blendState);
+
         void SetBlendColor(const GLfloat (&color)[4]);
         void SetLogicOp(GLenum opcode);
 
-        void SetBlendStates(
-            std::size_t     numBlendStates,
-            const GLBlend*  blendStates,
-            bool            anyBlendTargetEnabled
-        );
-
         void PushColorMaskAndEnable();
         void PopColorMask();
+
+        void NotifyBlendStateRelease(GLBlendState* blendState);
 
         /* ----- Depth-stencil states ----- */
 
@@ -207,10 +205,6 @@ class GLStateManager
 
         /* ----- Functions ----- */
 
-        void SetDrawBufferBlendState(GLuint drawBufferIndex, const GLBlend& state, bool blendEnabled);
-        void SetAllDrawBufferBlendState(const GLBlend& state, bool blendEnabled);
-        void SetAllDrawBufferBlendStateDefault(bool blendEnabled);
-
         void AdjustViewport(GLViewport& viewport);
         void AdjustScissor(GLScissor& scissor);
 
@@ -268,16 +262,8 @@ class GLStateManager
             GLenum      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
             GLint       patchVertices_  = 0;
             GLfloat     lineWidth       = 1.0f;
-        };
-
-        //TODO: replace this by global "GLBlendState" class
-        struct GLBlendState_OBSOLETE
-        {
-            GLfloat     blendColor[4]       = { 0.0f, 0.0f, 0.0f, 0.0f };
-            GLenum      logicOpCode         = GL_COPY;
-            GLboolean   colorMasks[32][4]   = {};
-            GLuint      numDrawBuffers      = 0;
-            bool        colorMaskOnStack    = false;
+            GLfloat     blendColor[4]   = { 0.0f, 0.0f, 0.0f, 0.0f };
+            GLenum      logicOpCode     = GL_COPY;
         };
 
         //TODO: replace this by global "GLDepthStencilState" class
@@ -390,7 +376,6 @@ class GLStateManager
 
         GLCommonState                   commonState_;
         GLDepthStencilState             depthStencilState_;
-        GLBlendState_OBSOLETE           blendState_; //TODO: replace this by "GLBlendState" class
         GLRenderState                   renderState_;
         GLBufferState                   bufferState_;
         GLFramebufferState              framebufferState_;
@@ -410,6 +395,8 @@ class GLStateManager
         GLint                           renderTargetHeight_ = 0;
 
         std::vector<GLBlendStateSPtr>   blendStates_;
+        GLBlendState*                   boundBlendState_    = nullptr;
+        bool                            colorMaskOnStack_   = false;
 
 };
 
