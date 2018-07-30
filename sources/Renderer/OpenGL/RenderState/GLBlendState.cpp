@@ -13,6 +13,7 @@
 #include "../../../Core/HelperMacros.h"
 #include "../Texture/GLRenderTarget.h"
 #include "GLStateManager.h"
+#include <LLGL/GraphicsPipelineFlags.h>
 
 
 namespace LLGL

@@ -9,7 +9,7 @@
 #define LLGL_GL_BLEND_STATE_H
 
 
-#include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/ForwardDecls.h>
 #include "../OpenGL.h"
 #include "../../StaticLimits.h"
 #include <memory>

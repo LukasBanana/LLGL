@@ -12,6 +12,7 @@
 #include "../../GLCommon/GLTypes.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
+#include <functional>
 
 
 namespace LLGL
@@ -176,6 +177,40 @@ std::shared_ptr<T> CreateRenderStateObject(std::vector<std::shared_ptr<T>>& cont
     return newState;
 }
 
+template <typename T>
+void ReleaseUnusedRenderStateObject(
+    std::vector<std::shared_ptr<T>>&    container,
+    const std::function<void(T*)>&      callback,
+    bool                                firstOnly)
+{
+    if (firstOnly)
+    {
+        for (auto it = container.begin(); it != container.end(); ++it)
+        {
+            if (it->use_count() == 1)
+            {
+                callback(it->get());
+                container.erase(it);
+                break;
+            }
+        }
+    }
+    else
+    {
+        RemoveAllFromListIf(
+            container,
+            [&](const std::shared_ptr<T>& entry)
+            {
+                if (entry.use_count() == 1)
+                {
+                    callback(entry.get());
+                    return true;
+                }
+                return false;
+            }
+        );
+    }
+}
 
 /* ----- Common ----- */
 
@@ -233,9 +268,12 @@ void GLStateManager::SetGraphicsAPIDependentState(const OpenGLDependentStateDesc
     /* Store new graphics state */
     apiDependentState_ = stateDesc;
 
-    /* Update front face */
     if (updateFrontFace)
+    {
+        /* Update front face and reset bound rasterizer state */
         SetFrontFace(commonState_.frontFaceAct);
+        boundRasterizerState_ = nullptr;
+    }
 }
 
 /* ----- Boolean states ----- */
@@ -498,7 +536,7 @@ void GLStateManager::SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat cla
     #ifdef GL_ARB_polygon_offset_clamp
     if (HasExtension(GLExt::ARB_polygon_offset_clamp))
     {
-        if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units)
+        if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units || commonState_.offsetClamp != clamp)
         {
             commonState_.offsetFactor   = factor;
             commonState_.offsetUnits    = units;
@@ -564,6 +602,97 @@ void GLStateManager::SetLineWidth(GLfloat width)
     }
 }
 
+/* ----- Depth-stencil states ----- */
+
+GLDepthStencilStateSPtr GLStateManager::CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc)
+{
+    return CreateRenderStateObject(depthStencilStates_, depthDesc, stencilDesc);
+}
+
+void GLStateManager::ReleaseUnusedDepthStencilStates(bool firstOnly)
+{
+    ReleaseUnusedRenderStateObject<GLDepthStencilState>(
+        depthStencilStates_,
+        std::bind(&GLStateManager::NotifyDepthStencilStateRelease, this, std::placeholders::_1),
+        firstOnly
+    );
+}
+
+void GLStateManager::NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState)
+{
+    if (boundDepthStencilState_ == depthStencilState)
+        boundDepthStencilState_ = nullptr;
+}
+
+void GLStateManager::SetDepthStencilState(GLDepthStencilState* depthStencilState)
+{
+    if (depthStencilState != nullptr && depthStencilState != boundDepthStencilState_)
+    {
+        depthStencilState->Bind(*this);
+        boundDepthStencilState_ = depthStencilState;
+    }
+}
+
+void GLStateManager::SetDepthFunc(GLenum func)
+{
+    if (commonState_.depthFunc != func)
+    {
+        commonState_.depthFunc = func;
+        glDepthFunc(func);
+    }
+}
+
+void GLStateManager::SetDepthMask(GLboolean flag)
+{
+    if (commonState_.depthMask != flag)
+    {
+        commonState_.depthMask = flag;
+        glDepthMask(flag);
+    }
+}
+
+void GLStateManager::PushDepthMaskAndEnable()
+{
+    SetDepthMask(GL_TRUE);
+    commonState_.cachedDepthMask = commonState_.depthMask;
+}
+
+void GLStateManager::PopDepthMask()
+{
+    SetDepthMask(commonState_.cachedDepthMask);
+}
+
+/* ----- Rasterizer states ----- */
+
+GLRasterizerStateSPtr GLStateManager::CreateRasterizerState(const RasterizerDescriptor& rasterizerDesc)
+{
+    return CreateRenderStateObject(rasterizerStates_, rasterizerDesc);
+}
+
+void GLStateManager::ReleaseUnusedRasterizerStates(bool firstOnly)
+{
+    ReleaseUnusedRenderStateObject<GLRasterizerState>(
+        rasterizerStates_,
+        std::bind(&GLStateManager::NotifyRasterizerStateRelease, this, std::placeholders::_1),
+        firstOnly
+    );
+}
+
+void GLStateManager::NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState)
+{
+    if (boundRasterizerState_ == rasterizerState)
+        boundRasterizerState_ = nullptr;
+}
+
+void GLStateManager::SetRasterizerState(GLRasterizerState* rasterizerState)
+{
+    if (rasterizerState != nullptr && rasterizerState != boundRasterizerState_)
+    {
+        rasterizerState->Bind(*this);
+        boundRasterizerState_ = rasterizerState;
+    }
+}
+
 /* ----- Blend states ----- */
 
 GLBlendStateSPtr GLStateManager::CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments)
@@ -573,33 +702,11 @@ GLBlendStateSPtr GLStateManager::CreateBlendState(const BlendDescriptor& blendDe
 
 void GLStateManager::ReleaseUnusedBlendStates(bool firstOnly)
 {
-    if (firstOnly)
-    {
-        for (auto it = blendStates_.begin(); it != blendStates_.end(); ++it)
-        {
-            if (it->use_count() == 1)
-            {
-                NotifyBlendStateRelease(it->get());
-                blendStates_.erase(it);
-                break;
-            }
-        }
-    }
-    else
-    {
-        RemoveAllFromListIf(
-            blendStates_,
-            [&](const GLBlendStateSPtr& entry)
-            {
-                if (entry.use_count() == 1)
-                {
-                    NotifyBlendStateRelease(entry.get());
-                    return true;
-                }
-                return false;
-            }
-        );
-    }
+    ReleaseUnusedRenderStateObject<GLBlendState>(
+        blendStates_,
+        std::bind(&GLStateManager::NotifyBlendStateRelease, this, std::placeholders::_1),
+        firstOnly
+    );
 }
 
 void GLStateManager::NotifyBlendStateRelease(GLBlendState* blendState)
@@ -658,88 +765,6 @@ void GLStateManager::PopColorMask()
             boundBlendState_->BindColorMaskOnly(*this);
         colorMaskOnStack_ = false;
     }
-}
-
-/* ----- Depth-stencil states ----- */
-
-GLDepthStencilStateSPtr GLStateManager::CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc)
-{
-    return CreateRenderStateObject(depthStencilStates_, depthDesc, stencilDesc);
-}
-
-void GLStateManager::ReleaseUnusedDepthStencilStates(bool firstOnly)
-{
-    if (firstOnly)
-    {
-        for (auto it = depthStencilStates_.begin(); it != depthStencilStates_.end(); ++it)
-        {
-            if (it->use_count() == 1)
-            {
-                NotifyDepthStencilStateRelease(it->get());
-                depthStencilStates_.erase(it);
-                break;
-            }
-        }
-    }
-    else
-    {
-        RemoveAllFromListIf(
-            depthStencilStates_,
-            [&](const GLDepthStencilStateSPtr& entry)
-            {
-                if (entry.use_count() == 1)
-                {
-                    NotifyDepthStencilStateRelease(entry.get());
-                    return true;
-                }
-                return false;
-            }
-        );
-    }
-}
-
-void GLStateManager::NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState)
-{
-    if (boundDepthStencilState_ == depthStencilState)
-        boundDepthStencilState_ = nullptr;
-}
-
-void GLStateManager::SetDepthStencilState(GLDepthStencilState* depthStencilState)
-{
-    if (depthStencilState != nullptr && depthStencilState != boundDepthStencilState_)
-    {
-        depthStencilState->Bind(*this);
-        boundDepthStencilState_ = depthStencilState;
-    }
-}
-
-void GLStateManager::SetDepthFunc(GLenum func)
-{
-    if (commonState_.depthFunc != func)
-    {
-        commonState_.depthFunc = func;
-        glDepthFunc(func);
-    }
-}
-
-void GLStateManager::SetDepthMask(GLboolean flag)
-{
-    if (commonState_.depthMask != flag)
-    {
-        commonState_.depthMask = flag;
-        glDepthMask(flag);
-    }
-}
-
-void GLStateManager::PushDepthMaskAndEnable()
-{
-    SetDepthMask(GL_TRUE);
-    commonState_.cachedDepthMask = commonState_.depthMask;
-}
-
-void GLStateManager::PopDepthMask()
-{
-    SetDepthMask(commonState_.cachedDepthMask);
 }
 
 /* ----- Buffer ----- */

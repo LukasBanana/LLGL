@@ -12,6 +12,7 @@
 #include "../../GLCommon/GLTypes.h"
 #include "../../../Core/HelperMacros.h"
 #include "GLStateManager.h"
+#include <LLGL/GraphicsPipelineFlags.h>
 
 
 namespace LLGL

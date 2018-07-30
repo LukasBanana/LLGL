@@ -57,28 +57,9 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         GLenum                  drawMode_               = GL_TRIANGLES;
         GLint                   patchVertices_          = 0;
 
-        // rasterizer state
-        GLenum                  polygonMode_            = GL_FILL;
-        GLenum                  cullFace_               = 0;
-        GLenum                  frontFace_              = GL_CCW;
-        bool                    scissorTestEnabled_     = false;    // glEnable(GL_SCISSOR_TEST)
-        bool                    depthClampEnabled_      = false;    // glEnable(GL_DEPTH_CLAMP)
-        bool                    multiSampleEnabled_     = false;    // glEnable(GL_MULTISAMPLE)
-        GLbitfield              sampleMask_             = ~0;
-        bool                    lineSmoothEnabled_      = false;    // glEnable(GL_LINE_SMOOTH)
-        GLfloat                 lineWidth_              = 1.0f;
-        bool                    polygonOffsetEnabled_   = false;
-        GLState                 polygonOffsetMode_      = GLState::POLYGON_OFFSET_FILL;
-        GLfloat                 polygonOffsetFactor_    = 0.0f;
-        GLfloat                 polygonOffsetUnits_     = 0.0f;
-        GLfloat                 polygonOffsetClamp_     = 0.0f;
-
-        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        bool                    conservativeRaster_     = false;    // glEnable(GL_CONSERVATIVE_RASTERIZATION_NV/INTEL)
-        #endif
-
         // state objects
         GLDepthStencilStateSPtr depthStencilState_;
+        GLRasterizerStateSPtr   rasterizerState_;
         GLBlendStateSPtr        blendState_;
 
         // packed byte buffer for static viewports and scissors

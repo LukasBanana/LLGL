@@ -10,8 +10,9 @@
 
 
 #include "GLState.h"
-#include "GLBlendState.h"
 #include "GLDepthStencilState.h"
+#include "GLRasterizerState.h"
+#include "GLBlendState.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include <LLGL/CommandBufferFlags.h>
@@ -26,12 +27,7 @@ namespace LLGL
 
 class GLRenderTarget;
 
-/*
-TODO:
-Refactore this entire class and maybe rename it to "GLContextState".
-Don't store every single state, instead separate the states into groups of states like "GLRasterizerState", "GLBlendState" etc.
-*/
-// OpenGL state machine manager that tries to reduce GL state changes.
+// OpenGL state machine manager that keeps track of certain GL states.
 class GLStateManager
 {
 
@@ -102,20 +98,6 @@ class GLStateManager
         void SetSampleMask(GLuint maskNumber, GLbitfield mask);
         #endif
 
-        /* ----- Blend states ----- */
-
-        GLBlendStateSPtr CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments);
-        void ReleaseUnusedBlendStates(bool firstOnly = false);
-        void NotifyBlendStateRelease(GLBlendState* blendState);
-
-        void BindBlendState(GLBlendState* blendState);
-
-        void SetBlendColor(const GLfloat (&color)[4]);
-        void SetLogicOp(GLenum opcode);
-
-        void PushColorMaskAndEnable();
-        void PopColorMask();
-
         /* ----- Depth-stencil states ----- */
 
         GLDepthStencilStateSPtr CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc);
@@ -129,6 +111,28 @@ class GLStateManager
 
         void PushDepthMaskAndEnable();
         void PopDepthMask();
+
+        /* ----- Rasterizer states ----- */
+
+        GLRasterizerStateSPtr CreateRasterizerState(const RasterizerDescriptor& rasterizerDesc);
+        void ReleaseUnusedRasterizerStates(bool firstOnly = false);
+        void NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState);
+
+        void SetRasterizerState(GLRasterizerState* rasterizerState);
+
+        /* ----- Blend states ----- */
+
+        GLBlendStateSPtr CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments);
+        void ReleaseUnusedBlendStates(bool firstOnly = false);
+        void NotifyBlendStateRelease(GLBlendState* blendState);
+
+        void BindBlendState(GLBlendState* blendState);
+
+        void SetBlendColor(const GLfloat (&color)[4]);
+        void SetLogicOp(GLenum opcode);
+
+        void PushColorMaskAndEnable();
+        void PopColorMask();
 
         /* ----- Buffer ----- */
 
@@ -384,12 +388,15 @@ class GLStateManager
         bool                                    emulateClipControl_     = false;
         GLint                                   renderTargetHeight_     = 0;
 
+        std::vector<GLDepthStencilStateSPtr>    depthStencilStates_;
+        GLDepthStencilState*                    boundDepthStencilState_ = nullptr;
+
+        std::vector<GLRasterizerStateSPtr>      rasterizerStates_;
+        GLRasterizerState*                      boundRasterizerState_   = nullptr;
+
         std::vector<GLBlendStateSPtr>           blendStates_;
         GLBlendState*                           boundBlendState_        = nullptr;
         bool                                    colorMaskOnStack_       = false;
-
-        std::vector<GLDepthStencilStateSPtr>    depthStencilStates_;
-        GLDepthStencilState*                    boundDepthStencilState_ = nullptr;
 
 };
 
