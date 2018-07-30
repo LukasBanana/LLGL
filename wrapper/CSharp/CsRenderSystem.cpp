@@ -9,7 +9,6 @@
 #include "CsHelper.h"
 #include <algorithm>
 
-#include <iostream>
 
 namespace LHermanns
 {
@@ -469,6 +468,7 @@ static void Convert(::LLGL::RasterizerDescriptor& dst, RasterizerDescriptor^ src
 
 static void Convert(::LLGL::BlendTargetDescriptor& dst, BlendTargetDescriptor^ src)
 {
+    dst.blendEnabled    = src->BlendEnabled;
     dst.srcColor        = static_cast<::LLGL::BlendOp>(src->SrcColor);
     dst.dstColor        = static_cast<::LLGL::BlendOp>(src->DstColor);
     dst.colorArithmetic = static_cast<::LLGL::BlendArithmetic>(src->ColorArithmetic);
@@ -481,13 +481,12 @@ static void Convert(::LLGL::BlendTargetDescriptor& dst, BlendTargetDescriptor^ s
 
 static void Convert(::LLGL::BlendDescriptor& dst, BlendDescriptor^ src)
 {
-    dst.blendEnabled            = src->BlendEnabled;
     for (int i = 0; i < 4; ++i)
         dst.blendFactor[i] = (src->BlendFactor->Length > i ? src->BlendFactor[i] : 0.0f);
     dst.alphaToCoverageEnabled  = src->AlphaToCoverageEnabled;
+    dst.independentBlendEnabled = src->IndependentBlendEnabled;
     dst.logicOp                 = static_cast<::LLGL::LogicOp>(src->LogicOp);
-    dst.targets.resize(src->Targets->Count);
-    for (std::size_t i = 0; i < dst.targets.size(); ++i)
+    for (int i = 0, n = std::min(8, src->Targets->Length); i < n; ++i)
         Convert(dst.targets[i], src->Targets[i]);
 }
 

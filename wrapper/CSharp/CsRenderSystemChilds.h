@@ -12,7 +12,7 @@
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
 #include <LLGL/Fence.h>
-#include <LLGL/Query.h>
+#include <LLGL/QueryHeap.h>
 #include <LLGL/RenderPass.h>
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/GraphicsPipeline.h>
@@ -141,16 +141,16 @@ public ref class Sampler : public Resource
 
 };
 
-public ref class Query
+public ref class QueryHeap
 {
 
     public:
 
-        Query(::LLGL::Query* native);
+        QueryHeap(::LLGL::QueryHeap* native);
 
-        property ::LLGL::Query* Native
+        property ::LLGL::QueryHeap* Native
         {
-            ::LLGL::Query* get();
+            ::LLGL::QueryHeap* get();
         };
 
         property QueryType Type
@@ -160,7 +160,7 @@ public ref class Query
 
     private:
 
-        ::LLGL::Query* native_ = nullptr;
+        ::LLGL::QueryHeap* native_ = nullptr;
 
 };
 

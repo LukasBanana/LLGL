@@ -314,6 +314,7 @@ public ref class BlendTargetDescriptor
 
         BlendTargetDescriptor();
 
+        property bool               BlendEnabled;
         property BlendOp            SrcColor;
         property BlendOp            DstColor;
         property BlendArithmetic    ColorArithmetic;
@@ -331,11 +332,11 @@ public ref class BlendDescriptor
 
         BlendDescriptor();
 
-        property bool                           BlendEnabled;
         property array<float>^                  BlendFactor;
         property bool                           AlphaToCoverageEnabled;
+        property bool                           IndependentBlendEnabled;
         property LogicOp                        LogicOp;
-        property List<BlendTargetDescriptor^>^  Targets;
+        property array<BlendTargetDescriptor^>^ Targets;
 
 };
 

@@ -46,6 +46,17 @@ public ref class CommandQueue
 
         void Submit(CommandBuffer^ commandBuffer);
 
+        #if 0
+        /* ----- Queries ----- */
+
+        bool QueryResult(
+            QueryHeap^      queryHeap,
+            System::UInt32  firstQuery,
+            System::UInt32  numQueries,
+
+        );
+        #endif
+
         /* ----- Fences ----- */
 
         void Submit(Fence^ fence);

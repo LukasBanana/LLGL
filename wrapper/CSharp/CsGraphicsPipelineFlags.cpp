@@ -198,6 +198,7 @@ RasterizerDescriptor::RasterizerDescriptor()
 
 BlendTargetDescriptor::BlendTargetDescriptor()
 {
+    BlendEnabled    = false;
     SrcColor        = BlendOp::SrcAlpha;
     DstColor        = BlendOp::InvSrcAlpha;
     ColorArithmetic = BlendArithmetic::Add;
@@ -216,13 +217,15 @@ BlendTargetDescriptor::BlendTargetDescriptor()
 
 BlendDescriptor::BlendDescriptor()
 {
-    BlendEnabled            = false;
     BlendFactor             = gcnew array<float>(4);
     for (int i = 0; i < 4; ++i)
         BlendFactor[i] = 0.0f;
     AlphaToCoverageEnabled  = false;
+    IndependentBlendEnabled = false;
     LogicOp                 = LHermanns::LLGL::LogicOp::Disabled;
-    Targets                 = gcnew List<BlendTargetDescriptor^>();
+    Targets                 = gcnew array<BlendTargetDescriptor^>(8);
+    for (int i = 0; i < Targets->Length; ++i)
+        Targets[i] = gcnew BlendTargetDescriptor();
 }
 
 

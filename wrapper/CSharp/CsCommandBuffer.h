@@ -121,14 +121,13 @@ public ref class CommandBuffer
         /* ----- Queries ----- */
 
         #if 0
-        void BeginQuery(Query^ query);
-        void EndQuery(Query^ query);
+        void BeginQuery(QueryHeap^ queryHeap);
+        void BeginQuery(QueryHeap^ queryHeap, unsigned int query);
+        void EndQuery(QueryHeap^ queryHeap);
 
-        bool QueryResult(Query^ query, UInt64& result);
-
-        bool QueryPipelineStatisticsResult(Query^ query, QueryPipelineStatistics^ result);
-
-        void BeginRenderCondition(Query^ query, RenderConditionMode mode);
+        void BeginRenderCondition(QueryHeap^ queryHeap);
+        void BeginRenderCondition(QueryHeap^ queryHeap, unsigned int query);
+        void BeginRenderCondition(QueryHeap^ queryHeap, unsigned int query, RenderConditionMode mode);
         void EndRenderCondition();
         #endif
 

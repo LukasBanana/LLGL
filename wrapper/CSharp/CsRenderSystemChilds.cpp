@@ -86,20 +86,20 @@ Sampler::Sampler(::LLGL::Sampler* native) :
 
 
 /*
- * Query class
+ * QueryHeap class
  */
 
-Query::Query(::LLGL::Query* native) :
+QueryHeap::QueryHeap(::LLGL::QueryHeap* native) :
     native_ { native }
 {
 }
 
-::LLGL::Query* Query::Native::get()
+::LLGL::QueryHeap* QueryHeap::Native::get()
 {
     return native_;
 }
 
-QueryType Query::Type::get()
+QueryType QueryHeap::Type::get()
 {
     return static_cast<LHermanns::LLGL::QueryType>(native_->GetType());
 }

@@ -192,9 +192,9 @@ public ref class RenderSystem
         #if 0
         /* ----- Queries ----- */
 
-        Query^ CreateQuery(QueryDescriptor^ desc);
+        QueryHeap^ CreateQueryHeap(QueryHeapDescriptor^ desc);
 
-        void Release(Query^ query);
+        void Release(QueryHeap^ queryHeap);
 
         #endif
 
