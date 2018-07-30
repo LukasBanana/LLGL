@@ -48,6 +48,9 @@ void D3D12CommandBuffer::Begin()
 
 void D3D12CommandBuffer::End()
 {
+    /* Flush remaining resource barriers */
+    commandContext_.FlushResourceBarrieres();
+
     /* Close native command list */
     auto hr = commandList_->Close();
     DXThrowIfFailed(hr, "failed to close D3D12 command list");
@@ -292,6 +295,8 @@ void D3D12CommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
+    boundRenderTarget_ = &(renderTarget);
+
     /* Bind render target/context */
     if (renderTarget.IsRenderContext())
         BindRenderContext(LLGL_CAST(D3D12RenderContext&, renderTarget));
@@ -310,15 +315,21 @@ void D3D12CommandBuffer::BeginRenderPass(
 
 void D3D12CommandBuffer::EndRenderPass()
 {
-    if (boundBackBuffer_)
+    if (boundRenderTarget_)
     {
-        /* Indicate that the render target will now be used to present when the command list is done executing */
-        TransitionRenderTarget(
-            boundBackBuffer_,
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_PRESENT
-        );
-        boundBackBuffer_ = nullptr;
+        if (boundRenderTarget_->IsRenderContext())
+        {
+            auto renderContextD3D = LLGL_CAST(D3D12RenderContext*, boundRenderTarget_);
+            renderContextD3D->ResolveRenderTarget(commandContext_);
+        }
+        #if 0
+        else
+        {
+            //TODO...
+        }
+        #endif
+
+        boundRenderTarget_ = nullptr;
     }
 }
 
@@ -436,12 +447,22 @@ void D3D12CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupS
 void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 {
     /* Create command allocators */
+    int i = 0;
     for (auto& cmdAllocator : cmdAllocators_)
+    {
         cmdAllocator = renderSystem.GetDevice().CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+        #ifdef LLGL_DEBUG
+        std::wstring name = L"LLGL::D3D12CommandBuffer::commandAllocator[" + std::to_wstring(i++) + L"]";
+        cmdAllocator->SetName(name.c_str());
+        #endif
+    }
 
     /* Create graphics command list */
     commandList_ = renderSystem.GetDevice().CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocators_[0].Get());
     commandList_->Close();
+
+    /* Initialize command context */
+    commandContext_.SetCommandList(commandList_.Get());
 }
 
 void D3D12CommandBuffer::NextCommandAllocator()
@@ -452,34 +473,6 @@ void D3D12CommandBuffer::NextCommandAllocator()
     /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
     auto hr = GetCommandAllocator()->Reset();
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
-}
-
-void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
-{
-    if (boundBackBuffer_)
-    {
-        /* Indicate that the back buffer will be used as render target */
-        TransitionRenderTarget(
-            boundBackBuffer_,
-            D3D12_RESOURCE_STATE_PRESENT,
-            D3D12_RESOURCE_STATE_RENDER_TARGET
-        );
-    }
-
-    /* Set current back buffer as RTV */
-    rtvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForCurrentRTV();
-    dsvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForDSV();
-
-    if (dsvDescHandle_.ptr != 0)
-    {
-        /* Set current RTV and DSV */
-        commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, &dsvDescHandle_);
-    }
-    else
-    {
-        /* Set only current RTV */
-        commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
-    }
 }
 
 void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
@@ -513,29 +506,26 @@ void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
 
 void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
 {
-    if (!renderContextD3D.HasMultiSampling())
-        boundBackBuffer_ = renderContextD3D.GetCurrentColorBuffer();
-
-    /* Set back-buffer RTVs */
-    SetBackBufferRTV(renderContextD3D);
-
-    #if 0//unused
-    /* Store framebuffer extent */
-    const auto& framebufferExtent = renderContextD3D.GetVideoMode().resolution;
-    framebufferWidth_   = static_cast<LONG>(framebufferExtent.width);
-    framebufferHeight_  = static_cast<LONG>(framebufferExtent.height);
-    #endif
-}
-
-void D3D12CommandBuffer::TransitionRenderTarget(
-    ID3D12Resource*         colorBuffer,
-    D3D12_RESOURCE_STATES   stateBefore,
-    D3D12_RESOURCE_STATES   stateAfter)
-{
-    /* Indicate a transition in the render-target usage and synchronize with the resource barrier */
-    commandList_->ResourceBarrier(
-        1, &CD3DX12_RESOURCE_BARRIER::Transition(colorBuffer, stateBefore, stateAfter)
+    /* Indicate that the back buffer will be used as render target */
+    commandContext_.TransitionResource(
+        renderContextD3D.GetCurrentColorBuffer(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET
     );
+
+    /* Set current back buffer as RTV */
+    rtvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForRTV();
+    dsvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForDSV();
+
+    if (dsvDescHandle_.ptr != 0)
+    {
+        /* Set current RTV and DSV */
+        commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, &dsvDescHandle_);
+    }
+    else
+    {
+        /* Set only current RTV */
+        commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
+    }
 }
 
 void D3D12CommandBuffer::ClearAttachmentsWithRenderPass(

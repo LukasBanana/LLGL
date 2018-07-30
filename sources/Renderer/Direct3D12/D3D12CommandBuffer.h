@@ -11,6 +11,7 @@
 
 #include <LLGL/CommandBuffer.h>
 #include <cstddef>
+#include "D3D12CommandContext.h"
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
 
@@ -25,6 +26,7 @@ namespace LLGL
 class D3D12RenderSystem;
 class D3D12RenderContext;
 class D3D12RenderPass;
+struct D3D12Resource;
 
 class D3D12CommandBuffer final : public CommandBuffer
 {
@@ -142,19 +144,10 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         void NextCommandAllocator();
 
-        // Sets the current back buffer as render target view.
-        void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
-
         void SetScissorRectsToDefault(UINT numScissorRects);
 
         //void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
         void BindRenderContext(D3D12RenderContext& renderContextD3D);
-
-        void TransitionRenderTarget(
-            ID3D12Resource*         colorBuffer,
-            D3D12_RESOURCE_STATES   stateBefore,
-            D3D12_RESOURCE_STATES   stateAfter
-        );
 
         void ClearAttachmentsWithRenderPass(
             const D3D12RenderPass&  renderPassD3D,
@@ -180,6 +173,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         std::size_t                         currentCmdAllocator_                = 0;
 
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
+        D3D12CommandContext                 commandContext_;
 
         D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_          = {};
         D3D12_CPU_DESCRIPTOR_HANDLE         dsvDescHandle_          = {};
@@ -189,12 +183,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         bool                                scissorEnabled_         = false;
         UINT                                numBoundScissorRects_   = 0;
 
-        #if 0//unused
-        LONG                                framebufferWidth_       = 0;
-        LONG                                framebufferHeight_      = 0;
-        #endif
-
-        ID3D12Resource*                     boundBackBuffer_        = nullptr;  // Currently bound color buffer from D3D12RenderContext
+        RenderTarget*                       boundRenderTarget_      = nullptr;
 
 };
 

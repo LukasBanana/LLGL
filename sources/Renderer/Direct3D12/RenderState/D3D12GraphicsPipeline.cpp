@@ -114,6 +114,19 @@ static void Convert(D3D12_DEPTH_STENCILOP_DESC& dst, const StencilFaceDescriptor
     dst.StencilFunc         = D3D12Types::Map(src.compareOp);
 }
 
+static void Convert(D3D12_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil)
+{
+    dst.DepthEnable         = DXBoolean(srcDepth.testEnabled);
+    dst.DepthWriteMask      = (srcDepth.writeEnabled ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO);
+    dst.DepthFunc           = D3D12Types::Map(srcDepth.compareOp);
+    dst.StencilEnable       = DXBoolean(srcStencil.testEnabled);
+    dst.StencilReadMask     = static_cast<UINT8>(srcStencil.front.readMask);
+    dst.StencilWriteMask    = static_cast<UINT8>(srcStencil.front.writeMask);
+
+    Convert(dst.FrontFace, srcStencil.front);
+    Convert(dst.BackFace, srcStencil.back);
+}
+
 static void Convert(D3D12_RENDER_TARGET_BLEND_DESC& dst, const BlendTargetDescriptor& src)
 {
     dst.BlendEnable             = DXBoolean(src.blendEnabled);
@@ -154,6 +167,67 @@ static void SetBlendDescToLogicOp(D3D12_RENDER_TARGET_BLEND_DESC& dst, D3D12_LOG
     dst.BlendOpAlpha            = D3D12_BLEND_OP_ADD;
     dst.LogicOp                 = logicOp;
     dst.RenderTargetWriteMask   = D3D12_COLOR_WRITE_ENABLE_ALL;
+}
+
+static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], const BlendDescriptor& src, UINT numAttachments)
+{
+    dst.AlphaToCoverageEnable = DXBoolean(src.alphaToCoverageEnabled);
+
+    if (src.logicOp == LogicOp::Disabled)
+    {
+        /* Enable independent blend states when multiple targets are specified */
+        dst.IndependentBlendEnable = DXBoolean(src.independentBlendEnabled);
+
+        for (UINT i = 0; i < 8u; ++i)
+        {
+            if (i < numAttachments)
+            {
+                /* Convert blend target descriptor */
+                Convert(dst.RenderTarget[i], src.targets[i]);
+                dstColorFormats[i] = DXGI_FORMAT_B8G8R8A8_UNORM;
+            }
+            else
+            {
+                /* Initialize blend target to default values */
+                SetBlendDescToDefault(dst.RenderTarget[i]);
+                dstColorFormats[i] = DXGI_FORMAT_UNKNOWN;
+            }
+        }
+    }
+    else
+    {
+        /* Independent blend states is not allowed when logic operations are used */
+        dst.IndependentBlendEnable = FALSE;
+
+        /*
+        Special output format required for logic operations
+        see https://msdn.microsoft.com/en-us/library/windows/desktop/mt426648(v=vs.85).aspx
+        */
+        SetBlendDescToLogicOp(dst.RenderTarget[0], D3D12Types::Map(src.logicOp));
+        dstColorFormats[0] = DXGI_FORMAT_R8G8B8A8_UINT;
+
+        /* Initialize remaining blend target to default values */
+        for (int i = 1; i < 8; ++i)
+        {
+            SetBlendDescToDefault(dst.RenderTarget[i]);
+            dstColorFormats[i] = DXGI_FORMAT_UNKNOWN;
+        }
+    }
+}
+
+static void Convert(D3D12_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
+{
+    dst.FillMode                = D3D12Types::Map(src.polygonMode);
+    dst.CullMode                = D3D12Types::Map(src.cullMode);
+    dst.FrontCounterClockwise   = DXBoolean(src.frontCCW);
+    dst.DepthBias               = static_cast<INT>(src.depthBias.constantFactor);
+    dst.DepthBiasClamp          = src.depthBias.clamp;
+    dst.SlopeScaledDepthBias    = src.depthBias.slopeFactor;
+    dst.DepthClipEnable         = DXBoolean(!src.depthClampEnabled);
+    dst.MultisampleEnable       = DXBoolean(src.multiSampling.enabled);
+    dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
+    dst.ForcedSampleCount       = 0; // no forced sample count
+    dst.ConservativeRaster      = GetConservativeRaster(src.conservativeRasterization);
 }
 
 static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopology topology)
@@ -228,83 +302,13 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
     /* Convert blend state */
-    stateDesc.BlendState.AlphaToCoverageEnable = DXBoolean(desc.blend.alphaToCoverageEnabled);
-
-    if (desc.blend.logicOp == LogicOp::Disabled)
-    {
-        /* Enable independent blend states when multiple targets are specified */
-        stateDesc.BlendState.IndependentBlendEnable = DXBoolean(desc.blend.independentBlendEnabled);
-
-        for (UINT i = 0; i < 8u; ++i)
-        {
-            if (i < numAttachments)
-            {
-                /* Convert blend target descriptor */
-                Convert(stateDesc.BlendState.RenderTarget[i], desc.blend.targets[i]);
-                stateDesc.RTVFormats[i] = DXGI_FORMAT_B8G8R8A8_UNORM;
-            }
-            else
-            {
-                /* Initialize blend target to default values */
-                SetBlendDescToDefault(stateDesc.BlendState.RenderTarget[i]);
-                stateDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
-            }
-        }
-    }
-    else
-    {
-        /* Independent blend states is not allowed when logic operations are used */
-        stateDesc.BlendState.IndependentBlendEnable = FALSE;
-
-        const auto logicOp = D3D12Types::Map(desc.blend.logicOp);
-
-        for (UINT i = 0; i < 8u; ++i)
-        {
-            if (i < numAttachments)
-            {
-                /*
-                Special output format required for logic operations
-                see https://msdn.microsoft.com/en-us/library/windows/desktop/mt426648(v=vs.85).aspx
-                */
-                SetBlendDescToLogicOp(stateDesc.BlendState.RenderTarget[i], logicOp);
-                stateDesc.RTVFormats[i] = DXGI_FORMAT_R8G8B8A8_UINT;
-            }
-            else
-            {
-                /* Initialize blend target to default values */
-                SetBlendDescToDefault(stateDesc.BlendState.RenderTarget[i]);
-                stateDesc.RTVFormats[i] = (i > 0 ? DXGI_FORMAT_UNKNOWN : DXGI_FORMAT_B8G8R8A8_UNORM);
-            }
-        }
-    }
+    Convert(stateDesc.BlendState, stateDesc.RTVFormats, desc.blend, numAttachments);
 
     /* Convert rasterizer state */
-    stateDesc.RasterizerState.FillMode              = D3D12Types::Map(desc.rasterizer.polygonMode);
-    stateDesc.RasterizerState.CullMode              = D3D12Types::Map(desc.rasterizer.cullMode);
-    stateDesc.RasterizerState.FrontCounterClockwise = DXBoolean(desc.rasterizer.frontCCW);
-    stateDesc.RasterizerState.DepthBias             = static_cast<INT>(desc.rasterizer.depthBias.constantFactor);
-    stateDesc.RasterizerState.DepthBiasClamp        = desc.rasterizer.depthBias.clamp;
-    stateDesc.RasterizerState.SlopeScaledDepthBias  = desc.rasterizer.depthBias.slopeFactor;
-    stateDesc.RasterizerState.DepthClipEnable       = DXBoolean(!desc.rasterizer.depthClampEnabled);
-    #if 1//TODO: currently not supported
-    stateDesc.RasterizerState.MultisampleEnable     = FALSE; //!!!
-    #else
-    stateDesc.RasterizerState.MultisampleEnable     = DXBoolean(desc.rasterizer.multiSampling.enabled);
-    #endif
-    stateDesc.RasterizerState.AntialiasedLineEnable = DXBoolean(desc.rasterizer.antiAliasedLineEnabled);
-    stateDesc.RasterizerState.ForcedSampleCount     = 0; // no forced sample count
-    stateDesc.RasterizerState.ConservativeRaster    = GetConservativeRaster(desc.rasterizer.conservativeRasterization);
+    Convert(stateDesc.RasterizerState, desc.rasterizer);
 
     /* Convert depth-stencil state */
-    stateDesc.DepthStencilState.DepthEnable         = DXBoolean(desc.depth.testEnabled);
-    stateDesc.DepthStencilState.DepthWriteMask      = (desc.depth.writeEnabled ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO);
-    stateDesc.DepthStencilState.DepthFunc           = D3D12Types::Map(desc.depth.compareOp);
-    stateDesc.DepthStencilState.StencilEnable       = DXBoolean(desc.stencil.testEnabled);
-    stateDesc.DepthStencilState.StencilReadMask     = static_cast<UINT8>(desc.stencil.front.readMask);
-    stateDesc.DepthStencilState.StencilWriteMask    = static_cast<UINT8>(desc.stencil.front.writeMask);
-
-    Convert(stateDesc.DepthStencilState.FrontFace, desc.stencil.front);
-    Convert(stateDesc.DepthStencilState.BackFace, desc.stencil.back);
+    Convert(stateDesc.DepthStencilState, desc.depth, desc.stencil);
 
     /* Convert other states */
     stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
@@ -312,11 +316,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.rasterizer.multiSampling.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;
-    #if 1//TODO: currently not supported
-    stateDesc.SampleDesc.Count      = 1; //!!!
-    #else
     stateDesc.SampleDesc.Count      = desc.rasterizer.multiSampling.SampleCount();
-    #endif
 
     /* Create graphics pipeline state and graphics command list */
     pipelineState_ = device.CreateDXPipelineState(stateDesc);

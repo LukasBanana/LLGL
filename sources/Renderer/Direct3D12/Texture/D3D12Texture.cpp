@@ -87,7 +87,7 @@ Extent3D D3D12Texture::QueryMipExtent(std::uint32_t mipLevel) const
 {
     Extent3D size;
 
-    auto desc = resource_->GetDesc();
+    auto desc = resource_.native->GetDesc();
 
     switch (desc.Dimension)
     {
@@ -136,7 +136,7 @@ TextureDescriptor D3D12Texture::QueryDesc() const
     /* Setup texture descriptor */
     TextureDescriptor texDesc;
 
-    auto desc = resource_->GetDesc();
+    auto desc = resource_.native->GetDesc();
 
     texDesc.type   = GetType();
     texDesc.format = D3D12Types::Unmap(desc.Format);
@@ -191,7 +191,7 @@ void D3D12Texture::UpdateSubresource(
     numArrayLayers  = std::min(numArrayLayers, numArrayLayers_ - firstArrayLayer);
 
     /* Create the GPU upload buffer */
-    UINT64 uploadBufferSize     = GetRequiredIntermediateSize(resource_.Get(), 0, numArrayLayers);
+    UINT64 uploadBufferSize     = GetRequiredIntermediateSize(resource_.native.Get(), 0, numArrayLayers);
     UINT64 uploadBufferOffset   = 0;
 
     auto hr = device->CreateCommittedResource(
@@ -210,13 +210,13 @@ void D3D12Texture::UpdateSubresource(
         UINT subresourceIndex = D3D12CalcSubresource(0, firstArrayLayer + arrayLayer, 0, numMipLevels_, numArrayLayers_);
 
         UpdateSubresources(
-            commandList,        // pCmdList
-            resource_.Get(),    // pDestinationResource
-            uploadBuffer.Get(), // pIntermediate
-            uploadBufferOffset, // IntermediateOffset
-            subresourceIndex,   // FirstSubresource
-            1,                  // NumSubresources
-            &subresourceData    // pSrcData
+            commandList,            // pCmdList
+            resource_.native.Get(), // pDestinationResource
+            uploadBuffer.Get(),     // pIntermediate
+            uploadBufferOffset,     // IntermediateOffset
+            subresourceIndex,       // FirstSubresource
+            1,                      // NumSubresources
+            &subresourceData        // pSrcData
         );
 
         /* Move to next buffer region */
@@ -226,7 +226,7 @@ void D3D12Texture::UpdateSubresource(
 
     /* Transition texture resource for shader access */
     auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        resource_.Get(),
+        resource_.native.Get(),
         D3D12_RESOURCE_STATE_COPY_DEST,
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
@@ -306,7 +306,7 @@ void D3D12Texture::CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR
                 break;
         }
     }
-    device->CreateShaderResourceView(resource_.Get(), &srvDesc, cpuDescriptorHandle);
+    device->CreateShaderResourceView(resource_.native.Get(), &srvDesc, cpuDescriptorHandle);
 }
 
 
@@ -323,7 +323,7 @@ void D3D12Texture::CreateResource(ID3D12Device* device, const D3D12_RESOURCE_DES
         &desc,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
-        IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf())
+        IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );
     DXThrowIfFailed(hr, "failed to create D3D12 committed resource for texture");
 }
