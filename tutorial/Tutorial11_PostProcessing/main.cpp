@@ -410,8 +410,6 @@ public:
 
 private:
 
-#define TEST_UPDATE_BUFFER
-
     void SetSceneSettingsInnerModel(float rotation)
     {
         // Transform scene mesh
@@ -428,11 +426,7 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
-        #ifdef TEST_UPDATE_BUFFER
-        commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
-        #else
-        UpdateBuffer(constantBufferScene, sceneSettings);
-        #endif
+        UpdateBuffer(constantBufferScene, sceneSettings, true);
     }
 
     void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
@@ -456,22 +450,14 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
-        #ifdef TEST_UPDATE_BUFFER
-        commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
-        #else
-        UpdateBuffer(constantBufferScene, sceneSettings);
-        #endif
+        UpdateBuffer(constantBufferScene, sceneSettings, true);
     }
 
     void SetBlurSettings(const Gs::Vector2f& blurShift)
     {
         // Update constant buffer for blur pass
         blurSettings.blurShift = blurShift;
-        #ifdef TEST_UPDATE_BUFFER
-        commands->UpdateBuffer(*constantBufferBlur, 0, &blurSettings, sizeof(blurSettings));
-        #else
-        UpdateBuffer(constantBufferBlur, blurSettings);
-        #endif
+        UpdateBuffer(constantBufferBlur, blurSettings, true);
     }
 
     void OnDrawFrame() override
@@ -539,7 +525,6 @@ private:
             commands->SetVertexBuffer(*vertexBufferScene);
 
             // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
-            SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
             commands->BeginRenderPass(*renderTargetScene);
             {
                 // Set viewport to full size
@@ -559,14 +544,11 @@ private:
                 commands->SetGraphicsResourceHeap(*resourceHeapScene);
 
                 // Draw outer scene model
+                SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
                 commands->Draw(numSceneVertices, 0);
-            }
-            commands->EndRenderPass();
 
-            // Draw inner scene model
-            SetSceneSettingsInnerModel(innerModelRotation);
-            commands->BeginRenderPass(*renderTargetScene);
-            {
+                // Draw inner scene model
+                SetSceneSettingsInnerModel(innerModelRotation);
                 commands->Draw(numSceneVertices, 0);
             }
             commands->EndRenderPass();

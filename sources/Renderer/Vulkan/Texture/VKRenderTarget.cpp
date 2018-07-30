@@ -20,10 +20,11 @@ namespace LLGL
 
 
 VKRenderTarget::VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc) :
-    resolution_         { desc.resolution              },
-    framebuffer_        { device, vkDestroyFramebuffer },
-    defaultRenderPass_  { device                       },
-    depthStencilBuffer_ { device                       }
+    resolution_          { desc.resolution              },
+    framebuffer_         { device, vkDestroyFramebuffer },
+    defaultRenderPass_   { device                       },
+    secondaryRenderPass_ { device                       },
+    depthStencilBuffer_  { device                       }
 {
     if (desc.renderPass)
     {
@@ -33,9 +34,10 @@ VKRenderTarget::VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryMana
     else
     {
         /* Create default render pass */
-        CreateRenderPass(device, desc);
+        CreateDefaultRenderPass(device, desc);
         renderPass_ = (&defaultRenderPass_);
     }
+    CreateSecondaryRenderPass(device, desc);
     CreateFramebuffer(device, deviceMemoryMngr, desc);
 }
 
@@ -115,20 +117,30 @@ void VKRenderTarget::CreateDepthStencilForAttachment(VKDeviceMemoryManager& devi
         ErrDepthAttachmentFailed();
 }
 
-static void Convert(VkAttachmentDescription& dst, const AttachmentDescriptor& src, VkFormat srcFormat, VkSampleCountFlagBits srcSampleFlags)
+static void Convert(
+    VkAttachmentDescription&    dst,
+    const AttachmentDescriptor& src,
+    VkFormat                    srcFormat,
+    VkSampleCountFlagBits       srcSampleFlags,
+    bool                        loadContent)
 {
     dst.flags           = 0;
     dst.format          = srcFormat;
     dst.samples         = srcSampleFlags;
-    dst.loadOp          = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    dst.loadOp          = (loadContent ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
     dst.storeOp         = VK_ATTACHMENT_STORE_OP_STORE;
-    dst.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    dst.stencilLoadOp   = (loadContent && HasStencilComponent(src.type) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
     dst.stencilStoreOp  = (HasStencilComponent(src.type) ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE);
     dst.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
     dst.finalLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
-void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc)
+static void CreateRenderPass(
+    VkDevice                        device,
+    const RenderTargetDescriptor&   desc,
+    VKRenderPass&                   renderPass,
+    VkSampleCountFlagBits           sampleCountFlags,
+    bool                            loadContent)
 {
     /* Initialize attachment descriptors */
     std::uint32_t numAttachments        = static_cast<std::uint32_t>(desc.attachments.size());
@@ -138,10 +150,6 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const Rende
 
     for (const auto& attachment : desc.attachments)
     {
-        /* Initialize format and sample count flags */
-        VkFormat                format          = VK_FORMAT_UNDEFINED;
-        VkSampleCountFlagBits   samplesFlags    = VK_SAMPLE_COUNT_1_BIT; //TODO: multi-sampling
-
         if (auto texture = attachment.texture)
         {
             /* Get format from texture */
@@ -152,7 +160,8 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const Rende
                 attachmentDescs[numColorAttachments],
                 attachment,
                 textureVK->GetVkFormat(),
-                GetSampleCountFlags()
+                sampleCountFlags,
+                loadContent
             );
             ++numColorAttachments;
         }
@@ -163,12 +172,23 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const Rende
                 attachmentDescs[numAttachments - 1],
                 attachment,
                 GetDepthAttachmentVkFormat(attachment.type),
-                GetSampleCountFlags()
+                sampleCountFlags,
+                loadContent
             );
         }
     }
 
-    defaultRenderPass_.CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs.data());
+    renderPass.CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs.data());
+}
+
+void VKRenderTarget::CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
+{
+    CreateRenderPass(device, desc, defaultRenderPass_, GetSampleCountFlags(), false);
+}
+
+void VKRenderTarget::CreateSecondaryRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
+{
+    CreateRenderPass(device, desc, secondaryRenderPass_, GetSampleCountFlags(), true);
 }
 
 void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc)

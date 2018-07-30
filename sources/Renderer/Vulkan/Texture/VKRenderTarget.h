@@ -51,6 +51,12 @@ class VKRenderTarget final : public RenderTarget
             return renderPass_->GetVkRenderPass();
         }
 
+        // Returns the secondary Vulkan render pass object.
+        inline VkRenderPass GetSecondaryVkRenderPass() const
+        {
+            return secondaryRenderPass_.GetVkRenderPass();
+        }
+
         // Returns the render target resolution as VkExtent2D.
         inline VkExtent2D GetVkExtent() const
         {
@@ -60,7 +66,8 @@ class VKRenderTarget final : public RenderTarget
     private:
 
         void CreateDepthStencilForAttachment(VKDeviceMemoryManager& deviceMemoryMngr, const AttachmentDescriptor& attachmentDesc);
-        void CreateRenderPass(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
+        void CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc);
+        void CreateSecondaryRenderPass(VkDevice device, const RenderTargetDescriptor& desc);
         void CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
 
         VkSampleCountFlagBits GetSampleCountFlags() const;
@@ -68,8 +75,9 @@ class VKRenderTarget final : public RenderTarget
         Extent2D                        resolution_;
 
         VKPtr<VkFramebuffer>            framebuffer_;
-        VKRenderPass                    defaultRenderPass_;
         const VKRenderPass*             renderPass_             = nullptr;
+        VKRenderPass                    defaultRenderPass_;
+        VKRenderPass                    secondaryRenderPass_;
 
         std::vector<VKPtr<VkImageView>> imageViews_;
 

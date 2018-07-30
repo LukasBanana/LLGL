@@ -12,7 +12,7 @@
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"
 #include "RenderState/VKResourceHeap.h"
-#include "RenderState/VKQuery.h"
+#include "RenderState/VKQueryHeap.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKRenderTarget.h"
 #include "Buffer/VKBuffer.h"
@@ -84,6 +84,14 @@ void VKCommandBuffer::Begin()
     }
     auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
+
+    #if 1//TODO: optimize
+    /* Reset all query pools that were in flight during last encoding */
+    ResetQueryPoolsInFlight();
+    #endif
+
+    /* Store new record state */
+    recordState_ = RecordState::OutsideRenderPass;
 }
 
 void VKCommandBuffer::End()
@@ -91,6 +99,9 @@ void VKCommandBuffer::End()
     /* End encoding of current command buffer */
     auto result = vkEndCommandBuffer(commandBuffer_);
     VKThrowIfFailed(result, "failed to end Vulkan command buffer");
+
+    /* Store new record state */
+    recordState_ = RecordState::ReadyForSubmit;
 }
 
 void VKCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
@@ -100,7 +111,14 @@ void VKCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, c
     auto size   = static_cast<VkDeviceSize>(dataSize);
     auto offset = static_cast<VkDeviceSize>(dstOffset);
 
-    vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+    if (IsInsideRenderPass())
+    {
+        PauseRenderPass();
+        vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+        ResumeRenderPass();
+    }
+    else
+        vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
 }
 
 void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
@@ -114,7 +132,15 @@ void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
         region.dstOffset    = static_cast<VkDeviceSize>(dstOffset);
         region.size         = static_cast<VkDeviceSize>(size);
     }
-    vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
+
+    if (IsInsideRenderPass())
+    {
+        PauseRenderPass();
+        vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
+        ResumeRenderPass();
+    }
+    else
+        vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
 }
 
 /* ----- Configuration ----- */
@@ -429,6 +455,7 @@ void VKCommandBuffer::BeginRenderPass(
 
         /* Store information about framebuffer attachments */
         renderPass_             = renderContextVK.GetSwapChainRenderPass().GetVkRenderPass();
+        secondaryRenderPass_    = renderContextVK.GetSecondaryVkRenderPass();
         framebuffer_            = renderContextVK.GetVkFramebuffer();
         framebufferExtent_      = renderContextVK.GetVkExtent();
         numColorAttachments_    = renderContextVK.GetNumColorAttachments();
@@ -441,6 +468,7 @@ void VKCommandBuffer::BeginRenderPass(
 
         /* Store information about framebuffer attachments */
         renderPass_             = renderTargetVK.GetVkRenderPass();
+        secondaryRenderPass_    = renderTargetVK.GetSecondaryVkRenderPass();
         framebuffer_            = renderTargetVK.GetVkFramebuffer();
         framebufferExtent_      = renderTargetVK.GetVkExtent();
         numColorAttachments_    = renderTargetVK.GetNumColorAttachments();
@@ -512,6 +540,9 @@ void VKCommandBuffer::BeginRenderPass(
         beginInfo.pClearValues      = clearValuesVK;
     }
     vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    /* Store new record state */
+    recordState_ = RecordState::InsideRenderPass;
 }
 
 void VKCommandBuffer::EndRenderPass()
@@ -522,6 +553,9 @@ void VKCommandBuffer::EndRenderPass()
     /* Reset render pass and framebuffer attributes */
     renderPass_     = VK_NULL_HANDLE;
     framebuffer_    = VK_NULL_HANDLE;
+
+    /* Store new record state */
+    recordState_ = RecordState::OutsideRenderPass;
 }
 
 
@@ -559,99 +593,34 @@ void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void VKCommandBuffer::BeginQuery(Query& query)
+void VKCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryVK = LLGL_CAST(VKQuery&, query);
+    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
-    /* Determine control flags (for either 'SamplesPassed' or 'AnySamplesPassed') */
+    /* Begin query and determine control flags (for either 'SamplesPassed' or 'AnySamplesPassed') */
     VkQueryControlFlags flags = 0;
 
-    if (query.GetType() == QueryType::SamplesPassed)
+    if (queryHeapVK.GetType() == QueryType::SamplesPassed)
         flags |= VK_QUERY_CONTROL_PRECISE_BIT;
 
-    vkCmdBeginQuery(commandBuffer_, queryVK.GetVkQueryPool(), 0, flags);
+    vkCmdBeginQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query, flags);
 }
 
-void VKCommandBuffer::EndQuery(Query& query)
+void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryVK = LLGL_CAST(VKQuery&, query);
-    vkCmdEndQuery(commandBuffer_, queryVK.GetVkQueryPool(), 0);
+    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
+    vkCmdEndQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query);
+    AppendQueryPoolInFlight(queryHeapVK.GetVkQueryPool());
 }
 
-bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
+void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    auto& queryVK = LLGL_CAST(VKQuery&, query);
-
-    /* Store result directly into output parameter */
-    auto stateResult = vkGetQueryPoolResults(
-        device_,
-        queryVK.GetVkQueryPool(),
-        0,
-        1,
-        sizeof(result),
-        &result,
-        sizeof(std::uint64_t),
-        VK_QUERY_RESULT_64_BIT
-    );
-
-    /* Check if result is not ready yet */
-    if (stateResult == VK_NOT_READY)
-        return false;
-
-    VKThrowIfFailed(stateResult, "failed to retrieve results from Vulkan query pool");
-
-    return true;
-}
-
-bool VKCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
-{
-    auto& queryVK = LLGL_CAST(VKQuery&, query);
-
-    /* Store results in intermediate memory */
-    std::uint64_t intermediateResults[11];
-
-    auto stateResult = vkGetQueryPoolResults(
-        device_,
-        queryVK.GetVkQueryPool(),
-        0,
-        1,
-        sizeof(intermediateResults),
-        intermediateResults,
-        sizeof(std::uint64_t),
-        VK_QUERY_RESULT_64_BIT
-    );
-
-    /* Check if result is not ready yet */
-    if (stateResult == VK_NOT_READY)
-        return false;
-
-    VKThrowIfFailed(stateResult, "failed to retrieve results from Vulkan query pool");
-
-    /* Copy result to output parameter */
-    result.numPrimitivesGenerated               = 0;
-    result.numVerticesSubmitted                 = intermediateResults[ 0]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT
-    result.numPrimitivesSubmitted               = intermediateResults[ 1]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT
-    result.numVertexShaderInvocations           = intermediateResults[ 2]; // VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT
-    result.numTessControlShaderInvocations      = intermediateResults[ 8]; // VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT
-    result.numTessEvaluationShaderInvocations   = intermediateResults[ 9]; // VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT
-    result.numGeometryShaderInvocations         = intermediateResults[ 3]; // VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_INVOCATIONS_BIT
-    result.numFragmentShaderInvocations         = intermediateResults[ 7]; // VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT
-    result.numComputeShaderInvocations          = intermediateResults[10]; // VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT
-    result.numGeometryPrimitivesGenerated       = intermediateResults[ 4]; // VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_PRIMITIVES_BIT
-    result.numClippingInputPrimitives           = intermediateResults[ 5]; // VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT
-    result.numClippingOutputPrimitives          = intermediateResults[ 6]; // VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT
-
-    return true;
-}
-
-void VKCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
-{
-    //todo
+    // not supported
 }
 
 void VKCommandBuffer::EndRenderCondition()
 {
-    //todo
+    // not supported
 }
 
 /* ----- Drawing ----- */
@@ -791,12 +760,42 @@ void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, 
     }
 }
 
+void VKCommandBuffer::PauseRenderPass()
+{
+    vkCmdEndRenderPass(commandBuffer_);
+}
+
+void VKCommandBuffer::ResumeRenderPass()
+{
+    /* Record begin of render pass */
+    VkRenderPassBeginInfo beginInfo;
+    {
+        beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        beginInfo.pNext             = nullptr;
+        beginInfo.renderPass        = secondaryRenderPass_;
+        beginInfo.framebuffer       = framebuffer_;
+        beginInfo.renderArea.offset = { 0, 0 };
+        beginInfo.renderArea.extent = framebufferExtent_;
+        beginInfo.clearValueCount   = 0;
+        beginInfo.pClearValues      = nullptr;
+    }
+    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+bool VKCommandBuffer::IsInsideRenderPass() const
+{
+    return (recordState_ == RecordState::InsideRenderPass);
+}
+
 //TODO: current unused; previously used for 'Clear' function
 #if 0
 
 void VKCommandBuffer::BeginClearImage(
-    VkImageMemoryBarrier& clearToPresentBarrier, VkImage image, const VkImageAspectFlags clearFlags,
-    const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil)
+    VkImageMemoryBarrier&           clearToPresentBarrier,
+    VkImage                         image,
+    const VkImageAspectFlags        clearFlags,
+    const VkClearColorValue*        clearColor,
+    const VkClearDepthStencilValue* clearDepthStencil)
 {
     /* Initialize image subresource range */
     VkImageSubresourceRange subresourceRange;
@@ -868,6 +867,22 @@ void VKCommandBuffer::EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier)
 }
 
 #endif
+
+void VKCommandBuffer::ResetQueryPoolsInFlight()
+{
+    for (std::size_t i = 0; i < numQueryPoolsInFlight_; ++i)
+        vkCmdResetQueryPool(commandBuffer_, queryPoolsInFlight_[i], 0, 1);
+    numQueryPoolsInFlight_ = 0;
+}
+
+void VKCommandBuffer::AppendQueryPoolInFlight(VkQueryPool queryPool)
+{
+    if (numQueryPoolsInFlight_ >= queryPoolsInFlight_.size())
+        queryPoolsInFlight_.push_back(queryPool);
+    else
+        queryPoolsInFlight_[numQueryPoolsInFlight_] = queryPool;
+    ++numQueryPoolsInFlight_;
+}
 
 
 } // /namespace LLGL

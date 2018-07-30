@@ -31,6 +31,18 @@ void MTCommandQueue::Submit(CommandBuffer& commandBuffer)
     //todo
 }
 
+/* ----- Queries ----- */
+
+bool MTCommandQueue::QueryResult(
+    QueryHeap&      queryHeap,
+    std::uint32_t   firstQuery,
+    std::uint32_t   numQueries,
+    void*           data,
+    std::size_t     dataSize)
+{
+    return false; //todo
+}
+
 /* ----- Fences ----- */
 
 void MTCommandQueue::Submit(Fence& fence)

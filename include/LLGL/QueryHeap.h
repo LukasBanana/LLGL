@@ -1,16 +1,16 @@
 /*
- * Query.h
+ * QueryHeap.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_QUERY_H
-#define LLGL_QUERY_H
+#ifndef LLGL_QUERY_HEAP_H
+#define LLGL_QUERY_HEAP_H
 
 
 #include "RenderSystemChild.h"
-#include "QueryFlags.h"
+#include "QueryHeapFlags.h"
 
 
 namespace LLGL
@@ -18,18 +18,18 @@ namespace LLGL
 
 
 /**
-\brief Query interface.
-\see RenderSystem::CreateQuery
+\brief Query heap interface that holds a certain number of queries that are all of the same type.
+\see RenderSystem::CreateQueryHeap
 \see CommandBuffer::BeginQuery
-\see CommandBuffer::QueryResult
 \see CommandBuffer::BeginRenderCondition
+\see CommandQueue::QueryResult
 */
-class LLGL_EXPORT Query : public RenderSystemChild
+class LLGL_EXPORT QueryHeap : public RenderSystemChild
 {
 
     public:
 
-        //! Returns the type of this query.
+        //! Returns the type of queries within this heap.
         inline QueryType GetType() const
         {
             return type_;
@@ -37,7 +37,7 @@ class LLGL_EXPORT Query : public RenderSystemChild
 
     protected:
 
-        Query(const QueryType type);
+        QueryHeap(const QueryType type);
 
     private:
 

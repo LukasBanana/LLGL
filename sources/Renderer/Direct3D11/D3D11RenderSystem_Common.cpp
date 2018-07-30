@@ -283,21 +283,21 @@ void D3D11RenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* D3D11RenderSystem::CreateQuery(const QueryDescriptor& desc)
+QueryHeap* D3D11RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
-    return TakeOwnership(queries_, MakeUnique<D3D11Query>(device_.Get(), desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<D3D11QueryHeap>(device_.Get(), desc));
 }
 
-void D3D11RenderSystem::Release(Query& query)
+void D3D11RenderSystem::Release(QueryHeap& queryHeap)
 {
-    RemoveFromUniqueSet(queries_, &query);
+    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
 }
 
 /* ----- Fences ----- */
 
 Fence* D3D11RenderSystem::CreateFence()
 {
-    return TakeOwnership(fences_, MakeUnique<D3D11Fence>(/*device_.Get(), 0*/));
+    return TakeOwnership(fences_, MakeUnique<D3D11Fence>(device_.Get()));
 }
 
 void D3D11RenderSystem::Release(Fence& fence)
@@ -314,7 +314,7 @@ void D3D11RenderSystem::CreateFactory()
 {
     /* Create DXGI factory */
     auto hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
-    DXThrowIfFailed(hr, "failed to create DXGI factor");
+    DXThrowIfCreateFailed(hr, "IDXGIFactory");
 }
 
 void D3D11RenderSystem::QueryVideoAdapters()
@@ -349,7 +349,7 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
 
     #endif
 
-    DXThrowIfFailed(hr, "failed to create D3D11 device");
+    DXThrowIfCreateFailed(hr, "ID3D11Device");
 
     /* Try to get an extended D3D11 device */
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
@@ -396,7 +396,7 @@ bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::
 void D3D11RenderSystem::CreateStateManagerAndCommandQueue()
 {
     stateMngr_ = MakeUnique<D3D11StateManager>(context_);
-    commandQueue_ = MakeUnique<D3D11CommandQueue>(context_);
+    commandQueue_ = MakeUnique<D3D11CommandQueue>(device_.Get(), context_);
 }
 
 void D3D11RenderSystem::QueryRendererInfo()
@@ -417,12 +417,12 @@ void D3D11RenderSystem::QueryRendererInfo()
             info.rendererName = "Direct3D 11.1";
             break;
         default:
-            info.rendererName = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
+            info.rendererName = "Direct3D " + std::string(DXFeatureLevelToVersion(GetFeatureLevel()));
             break;
     }
 
     /* Initialize HLSL version string */
-    info.shadingLanguageName = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
+    info.shadingLanguageName = "HLSL " + std::string(DXFeatureLevelToShaderModel(GetFeatureLevel()));
 
     /* Initialize video adapter strings */
     if (!videoAdatperDescs_.empty())
@@ -450,7 +450,7 @@ void D3D11RenderSystem::QueryRenderingCaps()
         caps.features.hasCommandBufferExt           = true;
         caps.features.hasConservativeRasterization  = (minorVersion >= 3);
 
-        caps.limits.maxNumViewports                 = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+        caps.limits.maxViewports                    = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
         caps.limits.maxViewportSize[0]              = D3D11_VIEWPORT_BOUNDS_MAX;
         caps.limits.maxViewportSize[1]              = D3D11_VIEWPORT_BOUNDS_MAX;
         caps.limits.maxBufferSize                   = std::numeric_limits<UINT>::max();

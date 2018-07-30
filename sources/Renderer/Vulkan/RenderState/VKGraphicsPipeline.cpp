@@ -7,11 +7,12 @@
 
 #include "VKGraphicsPipeline.h"
 #include "VKPipelineLayout.h"
-#include "../Shader/VKShaderProgram.h"
 #include "VKRenderPass.h"
+#include "../Shader/VKShaderProgram.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
+#include "../../StaticLimits.h"
 #include <cstddef>
 #include <LLGL/GraphicsPipelineFlags.h>
 
@@ -231,36 +232,37 @@ static void CreateDepthStencilState(
     createInfo.maxDepthBounds           = 1.0f;
 }
 
+static void Convert(VkColorComponentFlags& dst, const ColorRGBAb& src)
+{
+    dst = 0;
+    if (src.r) { dst |= VK_COLOR_COMPONENT_R_BIT; }
+    if (src.g) { dst |= VK_COLOR_COMPONENT_G_BIT; }
+    if (src.b) { dst |= VK_COLOR_COMPONENT_B_BIT; }
+    if (src.a) { dst |= VK_COLOR_COMPONENT_A_BIT; }
+}
+
 static void CreateColorBlendAttachmentState(
     VkPipelineColorBlendAttachmentState&    createInfo,
-    const BlendTargetDescriptor&            desc,
-    VkBool32                                blendEnable)
+    const BlendTargetDescriptor&            desc)
 {
-    createInfo.blendEnable          = blendEnable;
+    createInfo.blendEnable          = VKBoolean(desc.blendEnabled);
     createInfo.srcColorBlendFactor  = VKTypes::Map(desc.srcColor);
     createInfo.dstColorBlendFactor  = VKTypes::Map(desc.dstColor);
     createInfo.colorBlendOp         = VKTypes::Map(desc.colorArithmetic);
     createInfo.srcAlphaBlendFactor  = VKTypes::Map(desc.srcAlpha);
     createInfo.dstAlphaBlendFactor  = VKTypes::Map(desc.dstAlpha);
     createInfo.alphaBlendOp         = VKTypes::Map(desc.alphaArithmetic);
-    createInfo.colorWriteMask       = 0;
-
-    if (desc.colorMask.r)
-        createInfo.colorWriteMask |= VK_COLOR_COMPONENT_R_BIT;
-    if (desc.colorMask.g)
-        createInfo.colorWriteMask |= VK_COLOR_COMPONENT_G_BIT;
-    if (desc.colorMask.b)
-        createInfo.colorWriteMask |= VK_COLOR_COMPONENT_B_BIT;
-    if (desc.colorMask.a)
-        createInfo.colorWriteMask |= VK_COLOR_COMPONENT_A_BIT;
+    Convert(createInfo.colorWriteMask, desc.colorMask);
 }
 
 static void CreateColorBlendState(
     const BlendDescriptor&                              desc,
     VkPipelineColorBlendStateCreateInfo&                createInfo,
     std::vector<VkPipelineColorBlendAttachmentState>&   attachmentStatesVK,
-    std::uint32_t                                       numAttachments)
+    std::uint32_t                                       numColorAttachments)
 {
+    numColorAttachments = std::min(numColorAttachments, LLGL_MAX_NUM_COLOR_ATTACHMENTS);
+
     createInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     createInfo.pNext                = nullptr;
     createInfo.flags                = 0;
@@ -277,18 +279,16 @@ static void CreateColorBlendState(
     }
 
     /* Convert blend targets to Vulkan structure */
-    attachmentStatesVK.resize(numAttachments);
+    attachmentStatesVK.resize(numColorAttachments);
+    for (std::uint32_t i = 0; i < numColorAttachments; ++i)
     {
-        std::size_t i = 0, numBlendTargets = desc.targets.size();
-
-        for (; i < numBlendTargets; ++i)
-            CreateColorBlendAttachmentState(attachmentStatesVK[i], desc.targets[i], VKBoolean(desc.blendEnabled));
-
-        for (; i < numAttachments; ++i)
-            CreateColorBlendAttachmentState(attachmentStatesVK[i], {}, VKBoolean(desc.blendEnabled));
+        CreateColorBlendAttachmentState(
+            attachmentStatesVK[i],
+            desc.targets[desc.independentBlendEnabled ? i : 0]
+        );
     }
 
-    createInfo.attachmentCount      = numAttachments;
+    createInfo.attachmentCount      = numColorAttachments;
     createInfo.pAttachments         = attachmentStatesVK.data();
     createInfo.blendConstants[0]    = desc.blendFactor.r;
     createInfo.blendConstants[1]    = desc.blendFactor.g;

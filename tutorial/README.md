@@ -26,7 +26,7 @@ Simple texturing and sampler state example.
 
 Shows how to use Query objects and conditional rendering for occlusion culling.
 
-*No screenshot available*
+<p align="center"><img src="Tutorial04_Query.png" width="400" height="300"/></p>
 
 ### [Tutorial 05: Render Target](Tutorial05_RenderTarget/main.cpp)
 

@@ -141,8 +141,10 @@ static ComPtr<ID3D11Texture1D> DXCreateTexture1D(
     ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr)
 {
     ComPtr<ID3D11Texture1D> tex1D;
+
     auto hr = device->CreateTexture1D(&desc, initialData, &tex1D);
-    DXThrowIfFailed(hr, "failed to create D3D11 1D-texture");
+    DXThrowIfCreateFailed(hr, "ID3D11Texture1D");
+
     return tex1D;
 }
 
@@ -150,8 +152,10 @@ static ComPtr<ID3D11Texture2D> DXCreateTexture2D(
     ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr)
 {
     ComPtr<ID3D11Texture2D> tex2D;
+
     auto hr = device->CreateTexture2D(&desc, initialData, &tex2D);
-    DXThrowIfFailed(hr, "failed to create D3D11 2D-texture");
+    DXThrowIfCreateFailed(hr, "ID3D11Texture2D");
+
     return tex2D;
 }
 
@@ -159,8 +163,10 @@ static ComPtr<ID3D11Texture3D> DXCreateTexture3D(
     ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr)
 {
     ComPtr<ID3D11Texture3D> tex3D;
+
     auto hr = device->CreateTexture3D(&desc, initialData, &tex3D);
-    DXThrowIfFailed(hr, "failed to create D3D11 3D-texture");
+    DXThrowIfCreateFailed(hr, "ID3D11Texture3D");
+
     return tex3D;
 }
 
@@ -431,7 +437,7 @@ void D3D11Texture::CreateSubresourceSRV(
         }
     }
     auto hr = device->CreateShaderResourceView(native_.resource.Get(), &srvDesc, srvOutput);
-    DXThrowIfFailed(hr, "failed to create D3D11 shader-resouce-view (SRV) for texture subresource");
+    DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", "for texture subresource");
 }
 
 
@@ -447,7 +453,7 @@ void D3D11Texture::CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RES
         srvDesc,
         srv_.ReleaseAndGetAddressOf()
     );
-    DXThrowIfFailed(hr, "failed to create D3D11 shader-resouce-view (SRV) for texture");
+    DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", "for texture");
 }
 
 void D3D11Texture::SetResourceParams(DXGI_FORMAT format, const Extent3D& size, UINT arraySize)

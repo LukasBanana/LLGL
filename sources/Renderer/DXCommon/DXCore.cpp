@@ -79,31 +79,73 @@ static const char* DXErrorToStr(const HRESULT hr)
     return nullptr;
 }
 
+[[noreturn]]
+static void DXThrowFailure(const HRESULT hr, const char* info)
+{
+    std::string s;
+
+    if (info)
+    {
+        s += info;
+        s += " (error code = ";
+    }
+    else
+        s += "Direct3D operation failed (error code = ";
+
+    if (auto err = DXErrorToStr(hr))
+        s += err;
+    else
+    {
+        s += "0x";
+        s += ToHex(hr);
+    }
+
+    s += ")";
+
+    throw std::runtime_error(s);
+}
+
 void DXThrowIfFailed(const HRESULT hr, const char* info)
+{
+    if (FAILED(hr))
+        DXThrowFailure(hr, info);
+}
+
+void DXThrowIfCreateFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo)
 {
     if (FAILED(hr))
     {
         std::string s;
-
-        if (info)
         {
-            s += info;
-            s += " (error code = ";
+            s = "failed to create instance of <";
+            s += interfaceName;
+            s += '>';
+            if (contextInfo != nullptr)
+            {
+                s += ' ';
+                s += contextInfo;
+            }
         }
-        else
-            s += "Direct3D operation failed (error code = ";
+        DXThrowFailure(hr, s.c_str());
+    }
+}
 
-        if (auto err = DXErrorToStr(hr))
-            s += err;
-        else
+void DXThrowIfInvocationFailed(const HRESULT hr, const char* funcName, const char* contextInfo)
+{
+    if (FAILED(hr))
+    {
+        std::string s;
         {
-            s += "0x";
-            s += ToHex(hr);
+            s = "invocation of <";
+            s += funcName;
+            s += "> failed";
+            if (contextInfo != nullptr)
+            {
+                s += ' ';
+                s += contextInfo;
+            }
         }
-
-        s += ")";
-
-        throw std::runtime_error(s);
+        DXThrowFailure(hr, s.c_str());
     }
 }
 
@@ -263,21 +305,23 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     caps.features.hasViewportArrays                 = true;
     caps.features.hasStreamOutputs                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasLogicOp                        = (featureLevel >= D3D_FEATURE_LEVEL_11_1);
+    caps.features.hasPipelineStatistics             = true;
+    caps.features.hasRenderCondition                = true;
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = 1.0f;
     caps.limits.lineWidthRange[1]                   = 1.0f;
-    caps.limits.maxNumTextureArrayLayers            = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
-    caps.limits.maxNumRenderTargetAttachments       = GetMaxRenderTargets(featureLevel);
+    caps.limits.maxTextureArrayLayers               = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
+    caps.limits.maxColorAttachments                 = GetMaxRenderTargets(featureLevel);
     caps.limits.maxPatchVertices                    = 32u;
     caps.limits.max1DTextureSize                    = GetMaxTextureDimension(featureLevel);
     caps.limits.max2DTextureSize                    = GetMaxTextureDimension(featureLevel);
     caps.limits.max3DTextureSize                    = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
     caps.limits.maxCubeTextureSize                  = GetMaxCubeTextureDimension(featureLevel);
     caps.limits.maxAnisotropy                       = (featureLevel >= D3D_FEATURE_LEVEL_9_2 ? 16u : 2u);
-    caps.limits.maxNumComputeShaderWorkGroups[0]    = maxThreadGroups;
-    caps.limits.maxNumComputeShaderWorkGroups[1]    = maxThreadGroups;
-    caps.limits.maxNumComputeShaderWorkGroups[2]    = (featureLevel >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u);
+    caps.limits.maxComputeShaderWorkGroups[0]       = maxThreadGroups;
+    caps.limits.maxComputeShaderWorkGroups[1]       = maxThreadGroups;
+    caps.limits.maxComputeShaderWorkGroups[2]       = (featureLevel >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u);
     caps.limits.maxComputeShaderWorkGroupSize[0]    = 1024u;
     caps.limits.maxComputeShaderWorkGroupSize[1]    = 1024u;
     caps.limits.maxComputeShaderWorkGroupSize[2]    = 1024u;
@@ -312,7 +356,7 @@ std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLe
     return featureLeves;
 }
 
-std::string DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
+const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
 {
     switch (featureLevel)
     {
@@ -331,7 +375,7 @@ std::string DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
     return "";
 }
 
-std::string DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel)
+const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel)
 {
     switch (featureLevel)
     {

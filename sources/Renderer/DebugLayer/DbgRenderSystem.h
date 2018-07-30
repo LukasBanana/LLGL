@@ -21,7 +21,7 @@
 #include "DbgRenderTarget.h"
 #include "DbgShader.h"
 #include "DbgShaderProgram.h"
-#include "DbgQuery.h"
+#include "DbgQueryHeap.h"
 
 #include "../ContainerTypes.h"
 
@@ -133,9 +133,9 @@ class DbgRenderSystem : public RenderSystem
 
         /* ----- Queries ----- */
 
-        Query* CreateQuery(const QueryDescriptor& desc) override;
+        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) override;
 
-        void Release(Query& query) override;
+        void Release(QueryHeap& queryHeap) override;
 
         /* ----- Fences ----- */
 
@@ -168,6 +168,7 @@ class DbgRenderSystem : public RenderSystem
         void ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers);
         void ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit);
 
+        void ValidateBlendDescriptor(const BlendDescriptor& desc);
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc);
         void ValidatePrimitiveTopology(const PrimitiveTopology primitiveTopology);
 
@@ -206,7 +207,7 @@ class DbgRenderSystem : public RenderSystem
         HWObjectContainer<DbgGraphicsPipeline>  graphicsPipelines_;
         //HWObjectContainer<DbgComputePipeline>   computePipelines_;
         //HWObjectContainer<DbgSampler>           samplers_;
-        HWObjectContainer<DbgQuery>             queries_;
+        HWObjectContainer<DbgQueryHeap>         queryHeaps_;
 
 };
 

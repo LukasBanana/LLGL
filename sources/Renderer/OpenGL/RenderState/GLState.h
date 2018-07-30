@@ -128,28 +128,6 @@ struct GLScissor
     GLsizei height; // default is context height
 };
 
-struct GLStencil
-{
-    GLenum  sfail       = GL_KEEP;
-    GLenum  dpfail      = GL_KEEP;
-    GLenum  dppass      = GL_KEEP;
-    GLenum  func        = GL_ALWAYS;
-    GLint   ref         = 0;
-    GLuint  mask        = ~0;
-    GLuint  writeMask   = ~0;
-};
-
-struct GLBlend
-{
-    GLenum                  srcColor    = GL_ONE;
-    GLenum                  dstColor    = GL_ZERO;
-    GLenum                  funcColor   = GL_FUNC_ADD;
-    GLenum                  srcAlpha    = GL_ONE;
-    GLenum                  dstAlpha    = GL_ZERO;
-    GLenum                  funcAlpha   = GL_FUNC_ADD;
-    ColorRGBAT<GLboolean>   colorMask   = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
-};
-
 
 } // /namespace LLGL
 

@@ -1,11 +1,11 @@
 /*
- * VKQuery.cpp
+ * VKQueryHeap.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "VKQuery.h"
+#include "VKQueryHeap.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
 
@@ -14,7 +14,16 @@ namespace LLGL
 {
 
 
-static VkQueryPipelineStatisticFlags GetPipelineStatisticsFlags(const QueryDescriptor& desc)
+// Returns the number of individual queries within a group
+static std::uint32_t GetQueryGroupSize(const QueryHeapDescriptor& desc)
+{
+    if (desc.type == QueryType::PipelineStatistics)
+        return static_cast<std::uint32_t>(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
+    else
+        return 1u;
+}
+
+static VkQueryPipelineStatisticFlags GetPipelineStatisticsFlags(const QueryHeapDescriptor& desc)
 {
     if (desc.type == QueryType::PipelineStatistics)
     {
@@ -36,9 +45,10 @@ static VkQueryPipelineStatisticFlags GetPipelineStatisticsFlags(const QueryDescr
     return 0;
 }
 
-VKQuery::VKQuery(const VKPtr<VkDevice>& device, const QueryDescriptor& desc) :
-    Query      { desc.type                  },
-    queryPool_ { device, vkDestroyQueryPool }
+VKQueryHeap::VKQueryHeap(const VKPtr<VkDevice>& device, const QueryHeapDescriptor& desc) :
+    QueryHeap  { desc.type                  },
+    queryPool_ { device, vkDestroyQueryPool },
+    groupSize_ { GetQueryGroupSize(desc)    }
 {
     /* Create query pool object */
     VkQueryPoolCreateInfo createInfo;
@@ -47,7 +57,7 @@ VKQuery::VKQuery(const VKPtr<VkDevice>& device, const QueryDescriptor& desc) :
         createInfo.pNext                = nullptr;
         createInfo.flags                = 0;
         createInfo.queryType            = VKTypes::Map(desc.type);
-        createInfo.queryCount           = 1;
+        createInfo.queryCount           = desc.numQueries;// * groupSize_;
         createInfo.pipelineStatistics   = GetPipelineStatisticsFlags(desc);
     }
     auto result = vkCreateQueryPool(device, &createInfo, nullptr, queryPool_.ReleaseAndGetAddressOf());

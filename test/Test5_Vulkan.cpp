@@ -222,14 +222,13 @@ int main()
 
             pipelineDesc.viewports.push_back(LLGL::Viewport{ 0.0f, 0.0f, viewportSize.x, viewportSize.y });
 
-            pipelineDesc.blend.blendEnabled = true;
-            pipelineDesc.blend.targets.push_back({});
+            pipelineDesc.blend.targets[0].blendEnabled = true;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Create query
         #ifdef TEST_QUERY
-        auto query = renderer->CreateQuery(LLGL::QueryType::PipelineStatistics);
+        auto query = renderer->CreateQueryHeap(LLGL::QueryType::PipelineStatistics);
         #endif
 
         // Add input event listener

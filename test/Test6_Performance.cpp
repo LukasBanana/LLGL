@@ -60,10 +60,11 @@ class PerformanceTest
     private:
 
         std::unique_ptr<LLGL::RenderSystem> renderer;
-        LLGL::RenderContext*                context     = nullptr;
-        LLGL::CommandBuffer*                commands    = nullptr;
+        LLGL::RenderContext*                context         = nullptr;
+        LLGL::CommandQueue*                 commandQueue    = nullptr;
+        LLGL::CommandBuffer*                commands        = nullptr;
 
-        LLGL::Query*                        timerQuery  = nullptr;
+        LLGL::QueryHeap*                    timerQuery      = nullptr;
         std::vector<LLGL::Texture*>         textures;
 
         TestConfig                          config;
@@ -111,17 +112,20 @@ class PerformanceTest
         void MeasureTime(const std::string& title, const std::function<void()>& callback)
         {
             // Measure time with query
-            commands->BeginQuery(*timerQuery);
+            commands->Begin();
+            commands->BeginQuery(*timerQuery, 0);
             {
                 callback();
             }
-            commands->EndQuery(*timerQuery);
+            commands->EndQuery(*timerQuery, 0);
+            commands->End();
+            commandQueue->Submit(*commands);
 
             // Print result
             std::uint64_t result = 0;
             while (true)
             {
-                if (commands->QueryResult(*timerQuery, result))
+                if (commandQueue->QueryResult(*timerQuery, 0, 1, &result, sizeof(result)))
                 {
                     std::cout << title << std::endl;
                     std::cout << "\tduration: " << result << "ns (" << (static_cast<double>(result) / 1000000.0) << "ms)" << "\n\n";
@@ -167,7 +171,11 @@ class PerformanceTest
             commands = renderer->CreateCommandBuffer();
 
             // Create timer query
-            timerQuery = renderer->CreateQuery(LLGL::QueryType::TimeElapsed);
+            LLGL::QueryHeapDescriptor queryDesc;
+            {
+                queryDesc.type = LLGL::QueryType::TimeElapsed;
+            }
+            timerQuery = renderer->CreateQueryHeap(queryDesc);
 
             // Create resources
             CreateTextures(config.numTextures * 2);

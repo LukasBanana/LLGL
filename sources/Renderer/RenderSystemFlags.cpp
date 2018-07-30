@@ -82,19 +82,21 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     LLGL_VALIDATE_FEATURE( hasArrayTextures,             "array textures"             );
     LLGL_VALIDATE_FEATURE( hasCubeArrayTextures,         "cube array textures"        );
     LLGL_VALIDATE_FEATURE( hasMultiSampleTextures,       "multi-sample textures"      );
-    LLGL_VALIDATE_FEATURE( hasSamplers,                  "samplers"                   );
+    LLGL_VALIDATE_FEATURE( hasSamplers,                  "sampler states"             );
     LLGL_VALIDATE_FEATURE( hasConstantBuffers,           "constant buffers"           );
     LLGL_VALIDATE_FEATURE( hasStorageBuffers,            "storage buffers"            );
     LLGL_VALIDATE_FEATURE( hasUniforms,                  "uniforms"                   );
     LLGL_VALIDATE_FEATURE( hasGeometryShaders,           "geometry shaders"           );
     LLGL_VALIDATE_FEATURE( hasTessellationShaders,       "tessellation shaders"       );
     LLGL_VALIDATE_FEATURE( hasComputeShaders,            "compute shaders"            );
-    LLGL_VALIDATE_FEATURE( hasInstancing,                "instancing"                 );
+    LLGL_VALIDATE_FEATURE( hasInstancing,                "hardware instancing"        );
     LLGL_VALIDATE_FEATURE( hasOffsetInstancing,          "offset instancing"          );
     LLGL_VALIDATE_FEATURE( hasViewportArrays,            "viewport arrays"            );
     LLGL_VALIDATE_FEATURE( hasConservativeRasterization, "conservative rasterization" );
     LLGL_VALIDATE_FEATURE( hasStreamOutputs,             "stream outputs"             );
     LLGL_VALIDATE_FEATURE( hasLogicOp,                   "logic fragment operations"  );
+    LLGL_VALIDATE_FEATURE( hasPipelineStatistics,        "query pipeline statistics"  );
+    LLGL_VALIDATE_FEATURE( hasRenderCondition,           "conditional rendering"      );
 
     #undef LLGL_VALIDATE_FEATURE
 
@@ -140,21 +142,21 @@ LLGL_EXPORT bool ValidateRenderingCaps(
             LLGL_CONTINUE_VALIDATION_IF(continueValidation);                                \
         }
 
-    LLGL_VALIDATE_LIMIT( maxNumTextureArrayLayers,          "texture array layers count"                );
-    LLGL_VALIDATE_LIMIT( maxNumRenderTargetAttachments,     "render target attachment count"            );
+    LLGL_VALIDATE_LIMIT( maxTextureArrayLayers,             "texture array layers"                      );
+    LLGL_VALIDATE_LIMIT( maxColorAttachments,               "color attachments"                         );
     LLGL_VALIDATE_LIMIT( maxPatchVertices,                  "patch vertices"                            );
     LLGL_VALIDATE_LIMIT( max1DTextureSize,                  "1D texture size"                           );
     LLGL_VALIDATE_LIMIT( max2DTextureSize,                  "2D texture size"                           );
     LLGL_VALIDATE_LIMIT( max3DTextureSize,                  "3D texture size"                           );
     LLGL_VALIDATE_LIMIT( maxCubeTextureSize,                "cube texture size"                         );
     LLGL_VALIDATE_LIMIT( maxAnisotropy,                     "anisotropy"                                );
-    LLGL_VALIDATE_LIMIT( maxNumComputeShaderWorkGroups[0],  "compute shader work group count on X-axis" );
-    LLGL_VALIDATE_LIMIT( maxNumComputeShaderWorkGroups[1],  "compute shader work group count on Y-axis" );
-    LLGL_VALIDATE_LIMIT( maxNumComputeShaderWorkGroups[2],  "compute shader work group count on Z-axis" );
+    LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroups[0],     "compute shader work groups on X-axis"      );
+    LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroups[1],     "compute shader work groups on Y-axis"      );
+    LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroups[2],     "compute shader work groups on Z-axis"      );
     LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroupSize[0],  "compute shader work group size on X-axis"  );
     LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroupSize[1],  "compute shader work group size on Y-axis"  );
     LLGL_VALIDATE_LIMIT( maxComputeShaderWorkGroupSize[2],  "compute shader work group size on Z-axis"  );
-    LLGL_VALIDATE_LIMIT( maxNumViewports,                   "viewport count"                            );
+    LLGL_VALIDATE_LIMIT( maxViewports,                      "viewports"                                 );
     LLGL_VALIDATE_LIMIT( maxViewportSize[0],                "viewport width"                            );
     LLGL_VALIDATE_LIMIT( maxViewportSize[1],                "viewport height"                           );
     LLGL_VALIDATE_LIMIT( maxBufferSize,                     "buffer size"                               );

@@ -14,6 +14,7 @@
 #include <LLGL/RenderContextFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/SamplerFlags.h>
+#include <LLGL/QueryHeapFlags.h>
 #include <d3d12.h>
 
 
@@ -25,7 +26,7 @@ namespace D3D12Types
 
 
 DXGI_FORMAT                 Map( const DataType             dataType        );
-DXGI_FORMAT                 Map( const Format        textureFormat   );
+DXGI_FORMAT                 Map( const Format               textureFormat   );
 D3D_PRIMITIVE_TOPOLOGY      Map( const PrimitiveTopology    topology        );
 D3D12_FILL_MODE             Map( const PolygonMode          polygonMode     );
 D3D12_CULL_MODE             Map( const CullMode             cullMode        );
@@ -36,9 +37,12 @@ D3D12_STENCIL_OP            Map( const StencilOp            stencilOp       );
 D3D12_FILTER                Map( const SamplerDescriptor&   samplerDesc     );
 D3D12_TEXTURE_ADDRESS_MODE  Map( const SamplerAddressMode   addressMode     );
 D3D12_LOGIC_OP              Map( const LogicOp              logicOp         );
-D3D12_SRV_DIMENSION         Map( const TextureType          textureType     );
 
-D3D12_RESOURCE_DIMENSION    ToResourceDimension(const TextureType type);
+D3D12_SRV_DIMENSION         MapSrvDimension     ( const TextureType textureType );
+D3D12_RESOURCE_DIMENSION    MapResourceDimension( const TextureType textureType );
+
+D3D12_QUERY_TYPE            MapQueryType        ( const QueryType   queryType   );
+D3D12_QUERY_HEAP_TYPE       MapQueryHeapType    ( const QueryType   queryType   );
 
 Format                      Unmap( const DXGI_FORMAT format );
 

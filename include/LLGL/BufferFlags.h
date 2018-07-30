@@ -47,6 +47,14 @@ enum class BufferType
     \note Only supported with: OpenGL, Direct3D 11, Direct3D 12.
     */
     StreamOutput,
+
+    #if 0//TODO: planned for v0.03
+    /**
+    \brief Result buffer type for query heaps.
+    \see CommandBuffer::ResolveQuery
+    */
+    QueryResult,
+    #endif
 };
 
 /**
@@ -157,18 +165,18 @@ struct BufferDescriptor
     BufferType      type            = BufferType::Vertex;
 
     /**
-    \brief Buffer size (in bytes). This must not be larger than 'RenderingLimits::maxBufferSize'. By default 0.
-    \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage), 'size' must be a multiple of 'storageBuffer.stride'.
-    \see RenderingLimits::maxBufferSize
-    */
-    std::uint64_t   size            = 0;
-
-    /**
     \brief Specifies the buffer creation flags. By default 0.
     \remarks This can be bitwise OR combination of the entries of the BufferFlags enumeration.
     \see BufferFlags
     */
     long            flags           = 0;
+
+    /**
+    \brief Buffer size (in bytes). This must not be larger than 'RenderingLimits::maxBufferSize'. By default 0.
+    \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage), 'size' must be a multiple of 'storageBuffer.stride'.
+    \see RenderingLimits::maxBufferSize
+    */
+    std::uint64_t   size            = 0;
 
     //! Vertex buffer type descriptor appendix.
     VertexBuffer    vertexBuffer;

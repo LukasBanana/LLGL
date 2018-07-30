@@ -24,6 +24,7 @@
 
 #include "RenderState/D3D12ResourceHeap.h"
 #include "RenderState/D3D12RenderPass.h"
+#include "RenderState/D3D12QueryHeap.h"
 
 
 namespace LLGL
@@ -332,7 +333,7 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     /* Scissor rectangle must be updated (if scissor test is disabled) */
     scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();
     if (!scissorEnabled_)
-        SetScissorRectsToDefault(1);
+        SetScissorRectsToDefault(graphicsPipelineD3D.NumDefaultScissorRects());
 }
 
 void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
@@ -342,37 +343,40 @@ void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void D3D12CommandBuffer::BeginQuery(Query& query)
+void D3D12CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    //todo
+    auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
+    commandList_->BeginQuery(queryHeapD3D.GetNative(), queryHeapD3D.GetNativeType(), query);
 }
 
-void D3D12CommandBuffer::EndQuery(Query& query)
+void D3D12CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    //todo
+    auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
+    commandList_->EndQuery(queryHeapD3D.GetNative(), queryHeapD3D.GetNativeType(), query);
+    queryHeapD3D.ResolveData(commandList_.Get(), query, 1);
 }
 
-bool D3D12CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
+static D3D12_PREDICATION_OP GetDXPredicateOp(const RenderConditionMode mode)
 {
-    return false; //todo
+    if (mode >= RenderConditionMode::WaitInverted)
+        return D3D12_PREDICATION_OP_NOT_EQUAL_ZERO;
+    else
+        return D3D12_PREDICATION_OP_EQUAL_ZERO;
 }
 
-bool D3D12CommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+void D3D12CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    return false; //todo
-}
-
-void D3D12CommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
-{
-    //auto predicateOp = (mode >= RenderConditionMode::WaitInverted ? D3D12_PREDICATION_OP_EQUAL_NOT_ZERO : D3D12_PREDICATION_OP_EQUAL_ZERO);
-    //commandList_->SetPredication(nullptr, offset, predicateOp);
-    //todo...
+    auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
+    commandList_->SetPredication(
+        queryHeapD3D.GetResultResource(),
+        queryHeapD3D.GetAlignedBufferOffest(query),
+        GetDXPredicateOp(mode)
+    );
 }
 
 void D3D12CommandBuffer::EndRenderCondition()
 {
-    //commandList_->SetPredication(nullptr, offset, D3D12_PREDICATION_OP_EQUAL_ZERO);
-    //todo...
+    commandList_->SetPredication(nullptr, 0, D3D12_PREDICATION_OP_EQUAL_ZERO);
 }
 
 /* ----- Drawing ----- */

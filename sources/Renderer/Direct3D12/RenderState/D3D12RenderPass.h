@@ -27,6 +27,12 @@ class D3D12RenderPass final : public RenderPass
 
         D3D12RenderPass(const RenderPassDescriptor& desc);
 
+        // Returns the number of color attachments used for this render pass.
+        inline UINT GetNumColorAttachments() const
+        {
+            return numColorAttachments_;
+        }
+
         // Specifies the clear flags for the depth-stencil view (DSV).
         inline D3D12_CLEAR_FLAGS GetClearFlagsDSV() const
         {
@@ -41,6 +47,7 @@ class D3D12RenderPass final : public RenderPass
 
     private:
 
+        UINT            numColorAttachments_                                    = 0;
         UINT            clearFlagsDSV_                                          = 0;
         std::uint8_t    clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
 

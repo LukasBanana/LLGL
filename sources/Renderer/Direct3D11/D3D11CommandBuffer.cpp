@@ -16,7 +16,7 @@
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11GraphicsPipelineBase.h"
 #include "RenderState/D3D11ComputePipeline.h"
-#include "RenderState/D3D11Query.h"
+#include "RenderState/D3D11QueryHeap.h"
 #include "RenderState/D3D11ResourceHeap.h"
 #include "RenderState/D3D11RenderPass.h"
 
@@ -370,155 +370,51 @@ void D3D11CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void D3D11CommandBuffer::BeginQuery(Query& query)
+void D3D11CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
+    auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
 
-    if (queryD3D.GetD3DQueryType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    query *= queryHeapD3D.GetGroupSize();
+
+    if (queryHeapD3D.GetNativeType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Begin disjoint query first, and insert the beginning timestamp query */
-        context_->Begin(queryD3D.GetNative());
-        context_->End(queryD3D.GetTimeStampQueryBegin());
+        context_->Begin(queryHeapD3D.GetNative(query));
+        context_->End(queryHeapD3D.GetNative(query + 1));
     }
     else
     {
         /* Begin standard query */
-        context_->Begin(queryD3D.GetNative());
+        context_->Begin(queryHeapD3D.GetNative(query));
     }
 }
 
-void D3D11CommandBuffer::EndQuery(Query& query)
+void D3D11CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
+    auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
 
-    if (queryD3D.GetD3DQueryType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    query *= queryHeapD3D.GetGroupSize();
+
+    if (queryHeapD3D.GetNativeType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Insert the ending timestamp query, and end the disjoint query */
-        context_->End(queryD3D.GetTimeStampQueryEnd());
-        context_->End(queryD3D.GetNative());
+        context_->End(queryHeapD3D.GetNative(query + 2));
+        context_->End(queryHeapD3D.GetNative(query));
     }
     else
     {
         /* End standard query */
-        context_->End(queryD3D.GetNative());
+        context_->End(queryHeapD3D.GetNative(query));
     }
 }
 
-bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
+void D3D11CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-
-    switch (queryD3D.GetD3DQueryType())
-    {
-        /* Query result from data of type: UINT64 */
-        case D3D11_QUERY_OCCLUSION:
-        {
-            UINT64 data = 0;
-            if (context_->GetData(queryD3D.GetNative(), &data, sizeof(data), 0) == S_OK)
-            {
-                result = data;
-                return true;
-            }
-        }
-        break;
-
-        /* Query result from special case query type: TimeElapsed */
-        case D3D11_QUERY_TIMESTAMP_DISJOINT:
-        {
-            UINT64 startTime = 0;
-            if (context_->GetData(queryD3D.GetTimeStampQueryBegin(), &startTime, sizeof(startTime), 0) == S_OK)
-            {
-                UINT64 endTime = 0;
-                if (context_->GetData(queryD3D.GetTimeStampQueryEnd(), &endTime, sizeof(endTime), 0) == S_OK)
-                {
-                    D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjointData;
-                    if (context_->GetData(queryD3D.GetNative(), &disjointData, sizeof(disjointData), 0) == S_OK)
-                    {
-                        if (disjointData.Disjoint == FALSE)
-                        {
-                            /* Normalize elapsed time to nanoseconds */
-                            static const double nanoseconds = 1000000000.0;
-
-                            auto deltaTime      = (endTime - startTime);
-                            auto scale          = (nanoseconds / static_cast<double>(disjointData.Frequency));
-                            auto elapsedTime    = (static_cast<double>(deltaTime) * scale);
-
-                            result = static_cast<std::uint64_t>(elapsedTime + 0.5);
-                        }
-                        else
-                            result = 0;
-                        return true;
-                    }
-                }
-            }
-        }
-        break;
-
-        /* Query result from data of type: BOOL */
-        case D3D11_QUERY_OCCLUSION_PREDICATE:
-        case D3D11_QUERY_SO_OVERFLOW_PREDICATE:
-        {
-            BOOL data = 0;
-            if (context_->GetData(queryD3D.GetNative(), &data, sizeof(data), 0) == S_OK)
-            {
-                result = data;
-                return true;
-            }
-        }
-        break;
-
-        /* Query result from data of type: D3D11_QUERY_DATA_SO_STATISTICS */
-        case D3D11_QUERY_SO_STATISTICS:
-        {
-            D3D11_QUERY_DATA_SO_STATISTICS data;
-            if (context_->GetData(queryD3D.GetNative(), &data, sizeof(data), 0) == S_OK)
-            {
-                result = data.NumPrimitivesWritten;
-                return true;
-            }
-        }
-        break;
-
-        default:
-        break;
-    }
-
-    return false;
-}
-
-bool D3D11CommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
-{
-    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-
-    /* Query result from data of type: D3D11_QUERY_DATA_PIPELINE_STATISTICS */
-    if (queryD3D.GetD3DQueryType() == D3D11_QUERY_PIPELINE_STATISTICS)
-    {
-        D3D11_QUERY_DATA_PIPELINE_STATISTICS data;
-        if (context_->GetData(queryD3D.GetNative(), &data, sizeof(data), 0) == S_OK)
-        {
-            result.numPrimitivesGenerated               = data.CInvocations;
-            result.numVerticesSubmitted                 = data.IAVertices;
-            result.numPrimitivesSubmitted               = data.IAPrimitives;
-            result.numVertexShaderInvocations           = data.VSInvocations;
-            result.numTessControlShaderInvocations      = data.HSInvocations;
-            result.numTessEvaluationShaderInvocations   = data.DSInvocations;
-            result.numGeometryShaderInvocations         = data.GSInvocations;
-            result.numFragmentShaderInvocations         = data.PSInvocations;
-            result.numComputeShaderInvocations          = data.CSInvocations;
-            result.numGeometryPrimitivesGenerated       = data.GSPrimitives;
-            result.numClippingInputPrimitives           = data.CInvocations; // <-- TODO: workaround
-            result.numClippingOutputPrimitives          = data.CPrimitives;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void D3D11CommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
-{
-    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-    context_->SetPredication(queryD3D.GetPredicate(), (mode >= RenderConditionMode::WaitInverted));
+    auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
+    context_->SetPredication(
+        queryHeapD3D.GetPredicate(query * queryHeapD3D.GetGroupSize()),
+        (mode >= RenderConditionMode::WaitInverted)
+    );
 }
 
 void D3D11CommandBuffer::EndRenderCondition()

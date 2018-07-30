@@ -6,6 +6,7 @@
  */
 
 #include "GLTypes.h"
+#include "../StaticLimits.h"
 #include <stdexcept>
 #include <string>
 
@@ -147,9 +148,10 @@ GLenum Map(const CPUAccess cpuAccess)
     #ifdef LLGL_OPENGL
     switch (cpuAccess)
     {
-        case CPUAccess::ReadOnly:   return GL_READ_ONLY;
-        case CPUAccess::WriteOnly:  return GL_WRITE_ONLY;
-        case CPUAccess::ReadWrite:  return GL_READ_WRITE;
+        case CPUAccess::ReadOnly:       return GL_READ_ONLY;
+        case CPUAccess::WriteOnly:      return GL_WRITE_ONLY;
+        case CPUAccess::WriteDiscard:   return GL_WRITE_ONLY; // discard is optional
+        case CPUAccess::ReadWrite:      return GL_READ_WRITE;
     }
     #endif
     MapFailed("CPUAccess");
@@ -743,6 +745,24 @@ GLenum ToTextureCubeMap(std::uint32_t arrayLayer)
         GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     };
     return g_textureCubeMaps[arrayLayer % 6];
+}
+
+GLenum ToColorAttachment(std::uint32_t attachmentIndex)
+{
+    if (attachmentIndex < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+    {
+        static const GLenum g_drawBuffers[] =
+        {
+            GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
+            GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7,
+            #if LLGL_MAX_NUM_COLOR_ATTACHMENTS > 8
+            GL_COLOR_ATTACHMENT8, GL_COLOR_ATTACHMENT9, GL_COLOR_ATTACHMENT10, GL_COLOR_ATTACHMENT11,
+            GL_COLOR_ATTACHMENT12, GL_COLOR_ATTACHMENT13, GL_COLOR_ATTACHMENT14, GL_COLOR_ATTACHMENT15,
+            #endif
+        };
+        return g_drawBuffers[attachmentIndex];
+    }
+    return 0;
 }
 
 void Unmap(UniformType& result, const GLenum uniformType)

@@ -84,11 +84,11 @@ int main()
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
 
         // Create timer query
-        LLGL::QueryDescriptor queryDesc;
+        LLGL::QueryHeapDescriptor queryDesc;
         {
             queryDesc.type = LLGL::QueryType::TimeElapsed;
         }
-        auto timerQuery = renderer->CreateQuery(queryDesc);
+        auto timerQuery = renderer->CreateQueryHeap(queryDesc);
 
         // Create graphics pipeline
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram });
@@ -105,17 +105,17 @@ int main()
                 commands->Dispatch(1, 1, 1);
             }
             commands->EndQuery(*timerQuery);
-
-            // Show elapsed time from timer query
-            std::uint64_t result = 0;
-            while (!commands->QueryResult(*timerQuery, result))
-            {
-                /* wait until the result is available */
-            }
-            std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
         }
         commands->End();
         commandQueue->Submit(*commands);
+
+        // Show elapsed time from timer query
+        std::uint64_t result = 0;
+        while (!commandQueue->QueryResult(*timerQuery, 0, 1, &result, sizeof(result)))
+        {
+            /* wait until the result is available */
+        }
+        std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
 
         // Wait until the GPU has completed all work, to be sure we can evaluate the storage buffer
         renderer->GetCommandQueue()->WaitIdle();

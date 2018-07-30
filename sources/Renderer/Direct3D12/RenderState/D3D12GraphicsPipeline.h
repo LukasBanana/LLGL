@@ -37,6 +37,9 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
 
         void Bind(ID3D12GraphicsCommandList* commandList);
 
+        // Returns the number of required default scissor rectangles.
+        UINT NumDefaultScissorRects() const;
+
         // Returns true if scissors are enabled.
         inline bool IsScissorEnabled() const
         {

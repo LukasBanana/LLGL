@@ -163,6 +163,20 @@ const GLFramebuffer& GLRenderTarget::GetFramebuffer() const
     return (framebufferMS_.Valid() ? framebufferMS_ : framebuffer_);
 }
 
+void GLRenderTarget::SetDrawBuffers()
+{
+    /*
+    Tell OpenGL which buffers are to be written when drawing operations are performed.
+    Each color attachment has its own draw buffer.
+    */
+    if (colorAttachments_.empty())
+        glDrawBuffer(GL_NONE);
+    else if (colorAttachments_.size() == 1)
+        glDrawBuffer(colorAttachments_.front());
+    else
+        glDrawBuffers(static_cast<GLsizei>(colorAttachments_.size()), colorAttachments_.data());
+}
+
 
 /*
  * ======= Private: =======
@@ -450,24 +464,10 @@ GLenum GLRenderTarget::MakeFramebufferAttachment(GLenum internalFormat)
     {
         /* Add color attachment and color buffer bit to blit mask */
         blitMask_ |= GL_COLOR_BUFFER_BIT;
-        const GLenum attachment = (GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(colorAttachments_.size()));
+        const GLenum attachment = GLTypes::ToColorAttachment(static_cast<std::uint32_t>(colorAttachments_.size()));
         colorAttachments_.push_back(attachment);
         return attachment;
     }
-}
-
-void GLRenderTarget::SetDrawBuffers()
-{
-    /*
-    Tell OpenGL which buffers are to be written when drawing operations are performed.
-    Each color attachment has its own draw buffer.
-    */
-    if (colorAttachments_.empty())
-        glDrawBuffer(GL_NONE);
-    else if (colorAttachments_.size() == 1)
-        glDrawBuffer(colorAttachments_.front());
-    else
-        glDrawBuffers(static_cast<GLsizei>(colorAttachments_.size()), colorAttachments_.data());
 }
 
 bool GLRenderTarget::HasMultiSampling() const

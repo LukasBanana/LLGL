@@ -250,6 +250,8 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasConservativeRasterization   = ( HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization) );
     features.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );
     features.hasLogicOp                     = true;
+    features.hasPipelineStatistics          = HasExtension(GLExt::ARB_pipeline_statistics_query);
+    features.hasRenderCondition             = true;
 }
 
 static void GLGetFeatureLimits(RenderingLimits& limits)
@@ -261,34 +263,32 @@ static void GLGetFeatureLimits(RenderingLimits& limits)
     GLfloat smoothLineRange[2];
     glGetFloatv(GL_SMOOTH_LINE_WIDTH_RANGE, smoothLineRange);
 
-    limits.lineWidthRange[0] = std::max(aliasedLineRange[0], smoothLineRange[0]);
-    limits.lineWidthRange[1] = std::min(aliasedLineRange[1], smoothLineRange[1]);
+    limits.lineWidthRange[0]                = std::max(aliasedLineRange[0], smoothLineRange[0]);
+    limits.lineWidthRange[1]                = std::min(aliasedLineRange[1], smoothLineRange[1]);
 
     /* Query integral attributes */
-    limits.maxNumTextureArrayLayers         = GLGetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
-    limits.maxNumRenderTargetAttachments    = GLGetUInt(GL_MAX_DRAW_BUFFERS);
+    limits.maxTextureArrayLayers            = GLGetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
+    limits.maxColorAttachments              = GLGetUInt(GL_MAX_DRAW_BUFFERS);
     limits.maxPatchVertices                 = GLGetUInt(GL_MAX_PATCH_VERTICES);
     limits.maxAnisotropy                    = static_cast<std::uint32_t>(GLGetFloat(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
-
-    limits.maxNumComputeShaderWorkGroups[0] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
-    limits.maxNumComputeShaderWorkGroups[1] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
-    limits.maxNumComputeShaderWorkGroups[2] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
-
+    limits.maxComputeShaderWorkGroups[0]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
+    limits.maxComputeShaderWorkGroups[1]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
+    limits.maxComputeShaderWorkGroups[2]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
     limits.maxComputeShaderWorkGroupSize[0] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
     limits.maxComputeShaderWorkGroupSize[1] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
     limits.maxComputeShaderWorkGroupSize[2] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
 
     /* Query viewport limits */
-    limits.maxNumViewports                  = GLGetUInt(GL_MAX_VIEWPORTS);
+    limits.maxViewports                     = GLGetUInt(GL_MAX_VIEWPORTS);
 
     GLint maxViewportDims[2];
     glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxViewportDims);
-    limits.maxViewportSize[0] = static_cast<std::uint32_t>(maxViewportDims[0]);
-    limits.maxViewportSize[1] = static_cast<std::uint32_t>(maxViewportDims[1]);
+    limits.maxViewportSize[0]               = static_cast<std::uint32_t>(maxViewportDims[0]);
+    limits.maxViewportSize[1]               = static_cast<std::uint32_t>(maxViewportDims[1]);
 
     /* Set maximum buffer size to maximum value for <GLsizei> (used in 'glBufferData') */
-    limits.maxBufferSize          = static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max());
-    limits.maxConstantBufferSize  = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
+    limits.maxBufferSize                    = static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max());
+    limits.maxConstantBufferSize            = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
 }
 
 static void GLGetTextureLimits(const RenderingFeatures& features, RenderingLimits& limits)

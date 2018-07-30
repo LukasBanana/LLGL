@@ -26,6 +26,7 @@
 #include "RenderState/D3D12PipelineLayout.h"
 #include "RenderState/D3D12ResourceHeap.h"
 #include "RenderState/D3D12RenderPass.h"
+#include "RenderState/D3D12QueryHeap.h"
 
 #include "Shader/D3D12Shader.h"
 #include "Shader/D3D12ShaderProgram.h"
@@ -141,9 +142,9 @@ class D3D12RenderSystem final : public RenderSystem
 
         /* ----- Queries ----- */
 
-        Query* CreateQuery(const QueryDescriptor& desc) override;
+        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) override;
 
-        void Release(Query& query) override;
+        void Release(QueryHeap& queryHeap) override;
 
         /* ----- Fences ----- */
 
@@ -241,7 +242,7 @@ class D3D12RenderSystem final : public RenderSystem
         HWObjectContainer<D3D12PipelineLayout>      pipelineLayouts_;
         HWObjectContainer<D3D12GraphicsPipeline>    graphicsPipelines_;
         HWObjectContainer<D3D12ResourceHeap>        resourceHeaps_;
-        //HWObjectContainer<D3D12Query>               queries_;
+        HWObjectContainer<D3D12QueryHeap>           queryHeaps_;
         HWObjectContainer<D3D12Fence>               fences_;
 
         /* ----- Other members ----- */

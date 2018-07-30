@@ -136,9 +136,9 @@ class MTRenderSystem : public RenderSystem
 
         /* ----- Queries ----- */
 
-        Query* CreateQuery(const QueryDescriptor& desc) override;
+        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) override;
 
-        void Release(Query& query) override;
+        void Release(QueryHeap& queryHeap) override;
 
         /* ----- Fences ----- */
 
@@ -171,7 +171,7 @@ class MTRenderSystem : public RenderSystem
         HWObjectContainer<MTGraphicsPipeline>   graphicsPipelines_;
         //HWObjectContainer<MTComputePipeline>    computePipelines_;
         HWObjectContainer<MTResourceHeap>       resourceHeaps_;
-        //HWObjectContainer<MTQuery>              queries_;
+        //HWObjectContainer<MTQueryHeap>          queryHeaps_;
         //HWObjectContainer<MTFence>              fences_;
 
 };

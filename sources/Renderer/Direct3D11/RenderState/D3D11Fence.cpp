@@ -6,32 +6,34 @@
  */
 
 #include "D3D11Fence.h"
+#include "../../DXCommon/DXCore.h"
 
 
 namespace LLGL
 {
 
 
-#if 0
-
-D3D11Fence::D3D11Fence(ID3D11Device5* device, UINT64 initialValue) :
-    value_ { initialValue }
+D3D11Fence::D3D11Fence(ID3D11Device* device)
 {
-    device->CreateFence(value_, D3D11_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
+    /* Create event query */
+    D3D11_QUERY_DESC queryDesc;
+    {
+        queryDesc.Query     = D3D11_QUERY_EVENT;
+        queryDesc.MiscFlags = 0;
+    }
+    auto hr = device->CreateQuery(&queryDesc, query_.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create D3D11 query");
 }
 
-void D3D11Fence::Submit(ID3D11DeviceContext4* context)
+void D3D11Fence::Submit(ID3D11DeviceContext* context)
 {
-    ++value_;
-    context->Signal(fence_.Get(), value_);
+    context->End(query_.Get());
 }
 
-bool D3D11Fence::Wait(ID3D11DeviceContext4* context)
+void D3D11Fence::Wait(ID3D11DeviceContext* context)
 {
-    return context->Wait(fence_.Get(), value_);
+    while (context->GetData(query_.Get(), nullptr, 0, 0) == S_FALSE) { /* dummy */ }
 }
-
-#endif
 
 
 } // /namespace LLGL

@@ -30,7 +30,7 @@
 #include "RenderState/GLComputePipeline.h"
 #include "RenderState/GLResourceHeap.h"
 #include "RenderState/GLRenderPass.h"
-#include "RenderState/GLQuery.h"
+#include "RenderState/GLQueryHeap.h"
 
 
 namespace LLGL
@@ -182,45 +182,51 @@ void GLCommandBuffer::SetClearStencil(std::uint32_t stencil)
     clearValue_.stencil = static_cast<GLint>(stencil);
 }
 
-//TODO: maybe glColorMask must be set to (1, 1, 1, 1) to clear color correctly
 void GLCommandBuffer::Clear(long flags)
 {
-    stateMngr_->PushDepthMask();
+    /* Setup GL clear mask and clear respective buffer */
+    GLbitfield mask = 0;
+
+    if ((flags & ClearFlags::Color) != 0)
     {
-        /* Setup GL clear mask and clear respective buffer */
-        GLbitfield mask = 0;
-
-        if ((flags & ClearFlags::Color) != 0)
-        {
-            //stateMngr_->SetColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-            mask |= GL_COLOR_BUFFER_BIT;
-        }
-
-        if ((flags & ClearFlags::Depth) != 0)
-        {
-            stateMngr_->SetDepthMask(GL_TRUE);
-            mask |= GL_DEPTH_BUFFER_BIT;
-        }
-
-        if ((flags & ClearFlags::Stencil) != 0)
-        {
-            //stateMngr_->SetStencilMask(GL_TRUE);
-            mask |= GL_STENCIL_BUFFER_BIT;
-        }
-
-        /* Clear buffers */
-        glClear(mask);
+        stateMngr_->PushColorMaskAndEnable();
+        mask |= GL_COLOR_BUFFER_BIT;
     }
-    stateMngr_->PopDepthMask();
+
+    if ((flags & ClearFlags::Depth) != 0)
+    {
+        stateMngr_->PushDepthMaskAndEnable();
+        mask |= GL_DEPTH_BUFFER_BIT;
+    }
+
+    if ((flags & ClearFlags::Stencil) != 0)
+    {
+        //stateMngr_->SetStencilMask(GL_TRUE);
+        mask |= GL_STENCIL_BUFFER_BIT;
+    }
+
+    /* Clear buffers */
+    glClear(mask);
+
+    /* Restore framebuffer masks */
+    if ((flags & ClearFlags::Depth) != 0)
+        stateMngr_->PopDepthMask();
+    if ((flags & ClearFlags::Color) != 0)
+        stateMngr_->PopColorMask();
 }
 
-//TODO: maybe glColorMask must be set to (1, 1, 1, 1) to clear color correctly
 void GLCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
+    bool clearedDepth = false, clearedColor = false;
+
     for (; numAttachments-- > 0; ++attachments)
     {
         if ((attachments->flags & ClearFlags::Color) != 0)
         {
+            /* Enable color mask temporarily */
+            stateMngr_->PushColorMaskAndEnable();
+            clearedColor = true;
+
             /* Clear color buffer */
             glClearBufferfv(
                 GL_COLOR,
@@ -230,28 +236,26 @@ void GLCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
         }
         else if ((attachments->flags & ClearFlags::DepthStencil) == ClearFlags::DepthStencil)
         {
+            /* Enable depth mask temporarily */
+            stateMngr_->PushDepthMaskAndEnable();
+            clearedDepth = true;
+
             /* Clear depth and stencil buffer simultaneously */
-            stateMngr_->PushDepthMask();
-            stateMngr_->SetDepthMask(GL_TRUE);
-            {
-                glClearBufferfi(
-                    GL_DEPTH_STENCIL,
-                    0,
-                    attachments->clearValue.depth,
-                    static_cast<GLint>(attachments->clearValue.stencil)
-                );
-            }
-            stateMngr_->PopDepthMask();
+            glClearBufferfi(
+                GL_DEPTH_STENCIL,
+                0,
+                attachments->clearValue.depth,
+                static_cast<GLint>(attachments->clearValue.stencil)
+            );
         }
         else if ((attachments->flags & ClearFlags::Depth) != 0)
         {
+            /* Enable depth mask temporarily */
+            stateMngr_->PushDepthMaskAndEnable();
+            clearedDepth = true;
+
             /* Clear only depth buffer */
-            stateMngr_->PushDepthMask();
-            stateMngr_->SetDepthMask(GL_TRUE);
-            {
-                glClearBufferfv(GL_DEPTH, 0, &(attachments->clearValue.depth));
-            }
-            stateMngr_->PopDepthMask();
+            glClearBufferfv(GL_DEPTH, 0, &(attachments->clearValue.depth));
         }
         else if ((attachments->flags & ClearFlags::Stencil) != 0)
         {
@@ -260,6 +264,11 @@ void GLCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
             glClearBufferiv(GL_STENCIL, 0, &stencil);
         }
     }
+
+    if (clearedDepth)
+        stateMngr_->PopDepthMask();
+    if (clearedColor)
+        stateMngr_->PopColorMask();
 }
 
 /* ----- Input Assembly ------ */
@@ -431,125 +440,24 @@ void GLCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void GLCommandBuffer::BeginQuery(Query& query)
+void GLCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     /* Begin query with internal target */
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
-    queryGL.Begin();
+    auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
+    queryHeapGL.Begin(query);
 }
 
-void GLCommandBuffer::EndQuery(Query& query)
+void GLCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     /* Begin query with internal target */
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
-    queryGL.End();
+    auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
+    queryHeapGL.End(query);
 }
 
-bool GLCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
+void GLCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
-
-    /* Check if query result is available */
-    GLint available = 0;
-    glGetQueryObjectiv(queryGL.GetFirstID(), GL_QUERY_RESULT_AVAILABLE, &available);
-
-    if (available != GL_FALSE)
-    {
-        if (HasExtension(GLExt::ARB_timer_query))
-        {
-            /* Get query result with 64-bit version */
-            glGetQueryObjectui64v(queryGL.GetFirstID(), GL_QUERY_RESULT, &result);
-        }
-        else
-        {
-            /* Get query result with 32-bit version and convert to 64-bit */
-            GLuint result32 = 0;
-            glGetQueryObjectuiv(queryGL.GetFirstID(), GL_QUERY_RESULT, &result32);
-            result = result32;
-        }
-        return true;
-    }
-
-    return false;
-}
-
-bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
-{
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
-
-    if (HasExtension(GLExt::ARB_pipeline_statistics_query))
-    {
-        /* Check if query result is available for all query objects */
-        GLint available = 0;
-        for (auto id : queryGL.GetIDs())
-        {
-            glGetQueryObjectiv(id, GL_QUERY_RESULT_AVAILABLE, &available);
-            if (available == GL_FALSE)
-                return false;
-        }
-
-        /* Parameter setup for 32-bit and 64-bit version of query function */
-        static const std::size_t memberCount = sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t);
-
-        union
-        {
-            GLuint      ui32;
-            GLuint64    ui64;
-        }
-        params[memberCount];
-
-        const auto numResults = std::min(queryGL.GetIDs().size(), memberCount);
-
-        if (HasExtension(GLExt::ARB_timer_query))
-        {
-            /* Get query result with 64-bit version */
-            for (std::size_t i = 0; i < numResults; ++i)
-            {
-                params[i].ui64 = 0;
-                glGetQueryObjectui64v(queryGL.GetIDs()[i], GL_QUERY_RESULT, &(params[i].ui64));
-            }
-        }
-        else
-        {
-            /* Get query result with 32-bit version and convert to 64-bit */
-            for (std::size_t i = 0; i < numResults; ++i)
-            {
-                params[i].ui64 = 0;
-                glGetQueryObjectuiv(queryGL.GetIDs()[i], GL_QUERY_RESULT, &(params[i].ui32));
-            }
-        }
-
-        /* Reset remaining output parameters (just for safety) */
-        for (auto i = numResults; i < memberCount; ++i)
-            params[i].ui64 = 0;
-
-        /* Copy result to output parameter */
-        result.numPrimitivesGenerated               = params[0].ui64;
-        result.numVerticesSubmitted                 = params[1].ui64;
-        result.numPrimitivesSubmitted               = params[2].ui64;
-        result.numVertexShaderInvocations           = params[3].ui64;
-        result.numTessControlShaderInvocations      = params[4].ui64;
-        result.numTessEvaluationShaderInvocations   = params[5].ui64;
-        result.numGeometryShaderInvocations         = params[6].ui64;
-        result.numFragmentShaderInvocations         = params[7].ui64;
-        result.numComputeShaderInvocations          = params[8].ui64;
-        result.numGeometryPrimitivesGenerated       = params[9].ui64;
-        result.numClippingInputPrimitives           = params[10].ui64;
-        result.numClippingOutputPrimitives          = params[11].ui64;
-    }
-    else
-    {
-        /* Return only result of first query object (of type GL_PRIMITIVES_GENERATED) */
-        return QueryResult(query, result.numPrimitivesGenerated);
-    }
-
-    return true;
-}
-
-void GLCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
-{
-    auto& queryGL = LLGL_CAST(GLQuery&, query);
-    glBeginConditionalRender(queryGL.GetFirstID(), GLTypes::Map(mode));
+    auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
+    glBeginConditionalRender(queryHeapGL.GetFirstID(query), GLTypes::Map(mode));
 }
 
 void GLCommandBuffer::EndRenderCondition()
@@ -716,13 +624,14 @@ void GLCommandBuffer::BindRenderTarget(GLRenderTarget& renderTargetGL)
     BlitBoundRenderTarget();
 
     /* Bind framebuffer object */
-    stateMngr_->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFramebuffer().GetID());
+    stateMngr_->BindRenderTarget(&renderTargetGL);
 
     /* Notify state manager about new render target height */
     stateMngr_->NotifyRenderTargetHeight(static_cast<GLint>(renderTargetGL.GetResolution().height));
 
     /* Store current render target */
-    boundRenderTarget_ = &renderTargetGL;
+    boundRenderTarget_  = (&renderTargetGL);
+    numDrawBuffers_     = renderTargetGL.GetNumColorAttachments();
 
     //TODO: maybe use 'glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
 }
@@ -733,7 +642,7 @@ void GLCommandBuffer::BindRenderContext(GLRenderContext& renderContextGL)
     BlitBoundRenderTarget();
 
     /* Unbind framebuffer object */
-    stateMngr_->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+    stateMngr_->BindRenderTarget(nullptr);
 
     /*
     Ensure the specified render context is the active one,
@@ -742,7 +651,8 @@ void GLCommandBuffer::BindRenderContext(GLRenderContext& renderContextGL)
     GLRenderContext::GLMakeCurrent(&renderContextGL);
 
     /* Reset reference to render target */
-    boundRenderTarget_ = nullptr;
+    boundRenderTarget_  = nullptr;
+    numDrawBuffers_     = 1;
 
     //TODO: maybe use 'glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
 }
@@ -757,14 +667,16 @@ void GLCommandBuffer::ClearAttachmentsWithRenderPass(
     /* Clear color attachments */
     std::uint32_t idx = 0;
     if ((mask & GL_COLOR_BUFFER_BIT) != 0)
-        ClearColorBuffers(renderPassGL.GetClearColorAttachments(), numClearValues, clearValues, idx);
+    {
+        if (ClearColorBuffers(renderPassGL.GetClearColorAttachments(), numClearValues, clearValues, idx) > 0)
+            stateMngr_->PopColorMask();
+    }
 
     /* Clear depth-stencil attachment */
     static const GLbitfield g_maskDepthStencil = (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     if ((mask & g_maskDepthStencil) == g_maskDepthStencil)
     {
-        stateMngr_->PushDepthMask();
-        stateMngr_->SetDepthMask(GL_TRUE);
+        stateMngr_->PushDepthMaskAndEnable();
         {
             /* Clear depth and stencil buffer simultaneously */
             if (idx < numClearValues)
@@ -776,8 +688,7 @@ void GLCommandBuffer::ClearAttachmentsWithRenderPass(
     }
     if ((mask & GL_DEPTH_BUFFER_BIT) != 0)
     {
-        stateMngr_->PushDepthMask();
-        stateMngr_->SetDepthMask(GL_TRUE);
+        stateMngr_->PushDepthMaskAndEnable();
         {
             /* Clear only depth buffer */
             if (idx < numClearValues)
@@ -800,22 +711,26 @@ void GLCommandBuffer::ClearAttachmentsWithRenderPass(
     }
 }
 
-void GLCommandBuffer::ClearColorBuffers(
+std::uint32_t GLCommandBuffer::ClearColorBuffers(
     const std::uint8_t* colorBuffers,
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues,
     std::uint32_t&      idx)
 {
-    std::uint32_t i = 0;
+    std::uint32_t i = 0, n = 0;
 
     /* Use specified clear values */
     for (; i < numClearValues; ++i)
     {
         /* Check if attachment list has ended */
         if (colorBuffers[i] != 0xFF)
+        {
+            stateMngr_->PushColorMaskAndEnable();
             glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), clearValues[idx++].color.Ptr());
+            ++n;
+        }
         else
-            return;
+            return n;
     }
 
     /* Use default clear values */
@@ -823,10 +738,16 @@ void GLCommandBuffer::ClearColorBuffers(
     {
         /* Check if attachment list has ended */
         if (colorBuffers[i] != 0xFF)
+        {
+            stateMngr_->PushColorMaskAndEnable();
             glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), clearValue_.color);
+            ++n;
+        }
         else
-            return;
+            return n;
     }
+
+    return n;
 }
 
 

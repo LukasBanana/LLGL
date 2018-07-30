@@ -1,18 +1,18 @@
 /*
- * Query.cpp
+ * QueryHeap.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/Query.h>
+#include <LLGL/QueryHeap.h>
 
 
 namespace LLGL
 {
 
 
-Query::Query(const QueryType type) :
+QueryHeap::QueryHeap(const QueryType type) :
     type_ { type }
 {
 }

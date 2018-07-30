@@ -115,13 +115,10 @@ class GLCommandBuffer final : public CommandBufferExt
 
         /* ----- Queries ----- */
 
-        void BeginQuery(Query& query) override;
-        void EndQuery(Query& query) override;
+        void BeginQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
+        void EndQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
 
-        bool QueryResult(Query& query, std::uint64_t& result) override;
-        bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) override;
-
-        void BeginRenderCondition(Query& query, const RenderConditionMode mode) override;
+        void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) override;
         void EndRenderCondition() override;
 
         /* ----- Drawing ----- */
@@ -175,7 +172,7 @@ class GLCommandBuffer final : public CommandBufferExt
             const ClearValue*   clearValues
         );
 
-        void ClearColorBuffers(
+        std::uint32_t ClearColorBuffers(
             const std::uint8_t* colorBuffers,
             std::uint32_t       numClearValues,
             const ClearValue*   clearValues,
@@ -186,6 +183,7 @@ class GLCommandBuffer final : public CommandBufferExt
         RenderState                     renderState_;
 
         GLRenderTarget*                 boundRenderTarget_  = nullptr;
+        std::uint32_t                   numDrawBuffers_     = 1;        // number of draw buffers of the active render target
 
         GLClearValue                    clearValue_;
 

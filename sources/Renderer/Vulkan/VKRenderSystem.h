@@ -29,7 +29,7 @@
 #include "Texture/VKSampler.h"
 #include "Texture/VKRenderTarget.h"
 
-#include "RenderState/VKQuery.h"
+#include "RenderState/VKQueryHeap.h"
 #include "RenderState/VKFence.h"
 #include "RenderState/VKRenderPass.h"
 #include "RenderState/VKPipelineLayout.h"
@@ -148,9 +148,9 @@ class VKRenderSystem final : public RenderSystem
 
         /* ----- Queries ----- */
 
-        Query* CreateQuery(const QueryDescriptor& desc) override;
+        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) override;
 
-        void Release(Query& query) override;
+        void Release(QueryHeap& queryHeap) override;
 
         /* ----- Fences ----- */
 
@@ -213,7 +213,7 @@ class VKRenderSystem final : public RenderSystem
         HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<VKComputePipeline>    computePipelines_;
         HWObjectContainer<VKResourceHeap>       resourceHeaps_;
-        HWObjectContainer<VKQuery>              queries_;
+        HWObjectContainer<VKQueryHeap>          queryHeaps_;
         HWObjectContainer<VKFence>              fences_;
 
 };

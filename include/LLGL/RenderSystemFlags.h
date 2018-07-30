@@ -113,14 +113,39 @@ enum class ClippingRange
 };
 
 /**
-\brief Classifications of CPU access to hardware buffers and textures.
+\brief Classifications of CPU access to mapped resources.
 \see RenderSystem::MapBuffer
 */
 enum class CPUAccess
 {
-    ReadOnly,   //!< CPU read access only.
-    WriteOnly,  //!< CPU write access only.
-    ReadWrite,  //!< CPU read and write access.
+    /**
+    \brief CPU read access to a mapped resource.
+    \remarks If this is used for RenderSystem::MapBuffer,
+    the respective buffer must have been created with the BufferFlags::MapReadAccess flag.
+    */
+    ReadOnly,
+
+    /**
+    \brief CPU write access to a mapped resource.
+    \remarks If this is used for RenderSystem::MapBuffer,
+    the respective buffer must have been created with the BufferFlags::MapWriteAccess flag.
+    */
+    WriteOnly,
+
+    /**
+    \brief CPU write access to a mapped resource, where the previous content \e can be discarded.
+    \remarks If this is used for RenderSystem::MapBuffer,
+    the respective buffer must have been created with the BufferFlags::MapWriteAccess flag.
+    \note Whether the previous content is discarded depends on the rendering API.
+    */
+    WriteDiscard,
+
+    /**
+    \brief CPU read and write access to a mapped resource.
+    \remarks If this is used for RenderSystem::MapBuffer,
+    the respective buffer must have been created with both the BufferFlags::MapReadAccess and the BufferFlags::MapWriteAccess flag.
+    */
+    ReadWrite,
 };
 
 
@@ -423,7 +448,7 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether multiple viewports, depth-ranges, and scissors at once are supported.
-    \see RenderingLimits::maxNumViewports
+    \see RenderingLimits::maxViewports
     */
     bool hasViewportArrays              = false;
 
@@ -446,6 +471,20 @@ struct RenderingFeatures
     \see BlendDescriptor::logicOp
     */
     bool hasLogicOp                     = false;
+
+    /**
+    \brief Specifies whether queries for pipeline statistics are supported.
+    \see QueryType::PipelineStatistics
+    \see QueryPipelineStatistics
+    */
+    bool hasPipelineStatistics          = false;
+
+    /**
+    \brief Specifies whether queries for conditional rendering are supported.
+    \see QueryHeapDescriptor::renderCondition
+    \see CommandBuffer:BeginRenderCondition
+    */
+    bool hasRenderCondition             = false;
 };
 
 /**
@@ -465,14 +504,16 @@ struct RenderingLimits
     \brief Specifies the maximum number of texture array layers (for 1D-, 2D-, and cube textures).
     \see TextureDescriptor::arrayLayers
     */
-    std::uint32_t   maxNumTextureArrayLayers            = 0;
+    std::uint32_t   maxTextureArrayLayers               = 0;
 
     /**
-    \brief Specifies the maximum number of attachment points for each render target.
+    \brief Specifies the maximum number of color attachments for each render target.
+    \remarks This value must not be greater than 8.
     \see RenderTargetDescriptor::attachments
     \see RenderPassDescriptor::colorAttachments
+    \see BlendDescriptor::targets
     */
-    std::uint32_t   maxNumRenderTargetAttachments       = 0;
+    std::uint32_t   maxColorAttachments                 = 0;
 
     /**
     \brief Specifies the maximum number of patch control points.
@@ -515,7 +556,7 @@ struct RenderingLimits
     \brief Specifies the maximum number of work groups in a compute shader.
     \see CommandBuffer::Dispatch
     */
-    std::uint32_t   maxNumComputeShaderWorkGroups[3]    = { 0, 0, 0 };
+    std::uint32_t   maxComputeShaderWorkGroups[3]       = { 0, 0, 0 };
 
     //! Specifies the maximum work group size in a compute shader.
     std::uint32_t   maxComputeShaderWorkGroupSize[3]    = { 0, 0, 0 };
@@ -524,14 +565,18 @@ struct RenderingLimits
     \brief Specifies the maximum number of viewports and scissor rectangles. Most render systems have a maximum of 16.
     \see CommandBuffer::SetViewports
     \see CommandBuffer::SetScissors
+    \see GraphicsPipelineDescriptor::viewports
+    \see GraphicsPipelineDescriptor::scissors
     \see RenderingFeatures::hasViewportArrays
     */
-    std::uint32_t   maxNumViewports                     = 0;
+    std::uint32_t   maxViewports                        = 0;
 
     /**
     \brief Specifies the maximum width and height of each viewport and scissor rectangle.
     \see Viewport::width
     \see Viewport::height
+    \see Scissor::width
+    \see Scissor::height
     */
     std::uint32_t   maxViewportSize[2]                  = { 0, 0 };
 
@@ -624,9 +669,9 @@ If this is null the validation process breaks with the first attribute that did 
 LLGL::RenderingCapabilities myRequirements;
 myRequirements.features.hasStorageBuffers = true;
 myRequirements.features.hasComputeShaders = true;
-myRequirements.limits.maxNumComputeShaderWorkGroups[0] = 1024;
-myRequirements.limits.maxNumComputeShaderWorkGroups[1] = 1024;
-myRequirements.limits.maxNumComputeShaderWorkGroups[2] = 1;
+myRequirements.limits.maxComputeShaderWorkGroups[0] = 1024;
+myRequirements.limits.maxComputeShaderWorkGroups[1] = 1024;
+myRequirements.limits.maxComputeShaderWorkGroups[2] = 1;
 myRequirements.limits.maxComputeShaderWorkGroupSize[0] = 8;
 myRequirements.limits.maxComputeShaderWorkGroupSize[1] = 8;
 myRequirements.limits.maxComputeShaderWorkGroupSize[2] = 8;

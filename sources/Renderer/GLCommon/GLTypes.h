@@ -55,6 +55,9 @@ GLenum Map( const LogicOp               logicOp             );
 // Returns an enum in [GL_TEXTURE_CUBE_MAP_POSITIVE_X, ..., GL_TEXTURE_CUBE_MAP_NEGATIVE_Z] for (arrayLayer % 6).
 GLenum ToTextureCubeMap(std::uint32_t arrayLayer);
 
+// Returns an enum in [GL_COLOR_ATTACHMENT0, ..., GL_COLOR_ATTACHMENT7].
+GLenum ToColorAttachment(std::uint32_t attachmentIndex);
+
 void Unmap( UniformType& result,    const GLenum uniformType    );
 void Unmap( Format& result,         const GLenum internalFormat );
 

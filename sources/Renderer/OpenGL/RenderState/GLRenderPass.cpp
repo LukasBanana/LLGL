@@ -14,7 +14,8 @@ namespace LLGL
 {
 
 
-GLRenderPass::GLRenderPass(const RenderPassDescriptor& desc)
+GLRenderPass::GLRenderPass(const RenderPassDescriptor& desc) :
+    numColorAttachments_ { static_cast<std::uint8_t>(desc.colorAttachments.size()) }
 {
     /* Check which color attachment must be cleared */
     if (FillClearColorAttachmentIndices(clearColorAttachments_, desc) > 0)

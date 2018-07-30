@@ -11,6 +11,7 @@
 
 #include <LLGL/CommandBufferExt.h>
 #include "DbgGraphicsPipeline.h"
+#include "DbgQueryHeap.h"
 #include <cstdint>
 
 
@@ -122,13 +123,10 @@ class DbgCommandBuffer : public CommandBufferExt
 
         /* ----- Queries ----- */
 
-        void BeginQuery(Query& query) override;
-        void EndQuery(Query& query) override;
+        void BeginQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
+        void EndQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
 
-        bool QueryResult(Query& query, std::uint64_t& result) override;
-        bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) override;
-
-        void BeginRenderCondition(Query& query, const RenderConditionMode mode) override;
+        void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) override;
         void EndRenderCondition() override;
 
         /* ----- Drawing ----- */
@@ -180,6 +178,9 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void ValidateStageFlags(long stageFlags, long validFlags);
         void ValidateBufferType(const BufferType bufferType, const BufferType compareType);
+
+        bool ValidateQueryIndex(DbgQueryHeap& queryHeap, std::uint32_t query);
+        DbgQueryHeap::State* GetAndValidateQueryState(DbgQueryHeap& queryHeap, std::uint32_t query);
 
         void AssertRecording();
         void AssertInsideRenderPass();

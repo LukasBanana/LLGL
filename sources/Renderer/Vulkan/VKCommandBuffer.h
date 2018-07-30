@@ -105,13 +105,10 @@ class VKCommandBuffer final : public CommandBuffer
 
         /* ----- Queries ----- */
 
-        void BeginQuery(Query& query) override;
-        void EndQuery(Query& query) override;
+        void BeginQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
+        void EndQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;
 
-        bool QueryResult(Query& query, std::uint64_t& result) override;
-        bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) override;
-
-        void BeginRenderCondition(Query& query, const RenderConditionMode mode) override;
+        void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) override;
         void EndRenderCondition() override;
 
         /* ----- Drawing ----- */
@@ -151,22 +148,43 @@ class VKCommandBuffer final : public CommandBuffer
 
     private:
 
+        enum class RecordState
+        {
+            Undefined,          // before "Begin"
+            OutsideRenderPass,  // after "Begin"
+            InsideRenderPass,   // after "BeginRenderPass"
+            ReadyForSubmit,     // after "End"
+        };
+
         void CreateCommandPool(std::uint32_t queueFamilyIndex);
         void CreateCommandBuffers(std::size_t bufferCount);
         void CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences);
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
 
+        void PauseRenderPass();
+        void ResumeRenderPass();
+
+        bool IsInsideRenderPass() const;
+
         //TODO: current unused; previously used for 'Clear' function
         #if 0
         void BeginClearImage(
-            VkImageMemoryBarrier& clearToPresentBarrier, VkImage image, const VkImageAspectFlags clearFlags,
-            const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil
+            VkImageMemoryBarrier&           clearToPresentBarrier,
+            VkImage                         image,
+            const VkImageAspectFlags        clearFlags,
+            const VkClearColorValue*        clearColor,
+            const VkClearDepthStencilValue* clearDepthStencil
         );
         void EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier);
         #endif
 
         void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
+
+        #if 1//TODO: optimize
+        void ResetQueryPoolsInFlight();
+        void AppendQueryPoolInFlight(VkQueryPool queryPool);
+        #endif
 
         const VKPtr<VkDevice>&          device_;
         VKPtr<VkCommandPool>            commandPool_;
@@ -178,26 +196,28 @@ class VKCommandBuffer final : public CommandBuffer
         std::vector<VKPtr<VkFence>>     recordingFenceList_;
         VkFence                         recordingFence_;
 
+        RecordState                     recordState_                = RecordState::Undefined;
+
         VkCommandBufferUsageFlags       usageFlags_                 = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
 
-        VkRenderPass                    renderPass_                 = VK_NULL_HANDLE;
-        bool                            renderPassActive_           = false;
-        VkFramebuffer                   framebuffer_                = VK_NULL_HANDLE;
+        VkRenderPass                    renderPass_                 = VK_NULL_HANDLE; // primary render pass
+        VkRenderPass                    secondaryRenderPass_        = VK_NULL_HANDLE; // to pause/resume render pass (load and store content)
+        VkFramebuffer                   framebuffer_                = VK_NULL_HANDLE; // active framebuffer handle
         VkExtent2D                      framebufferExtent_          = { 0, 0 };
         std::uint32_t                   numColorAttachments_        = 0;
         bool                            hasDSVAttachment_           = false;
-
-        #if 1//TODO: remove (use numColorAttachments_ instead)
-        VkImage                         imageColor_                 = VK_NULL_HANDLE;
-        VkImage                         imageDepthStencil_          = VK_NULL_HANDLE;
-        #endif
 
         std::uint32_t                   queuePresentFamily_         = 0;
 
         bool                            scissorEnabled_             = false;
         bool                            scissorRectInvalidated_     = true;
+
+        #if 1//TODO: optimize usage of query pools
+        std::vector<VkQueryPool>        queryPoolsInFlight_;
+        std::size_t                     numQueryPoolsInFlight_      = 0;
+        #endif
 
 };
 

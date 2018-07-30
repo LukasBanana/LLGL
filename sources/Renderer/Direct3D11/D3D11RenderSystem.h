@@ -22,7 +22,7 @@
 #include "RenderState/D3D11GraphicsPipelineBase.h"
 #include "RenderState/D3D11ComputePipeline.h"
 #include "RenderState/D3D11StateManager.h"
-#include "RenderState/D3D11Query.h"
+#include "RenderState/D3D11QueryHeap.h"
 #include "RenderState/D3D11Fence.h"
 #include "RenderState/D3D11ResourceHeap.h"
 #include "RenderState/D3D11RenderPass.h"
@@ -146,9 +146,9 @@ class D3D11RenderSystem final : public RenderSystem
 
         /* ----- Queries ----- */
 
-        Query* CreateQuery(const QueryDescriptor& desc) override;
+        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) override;
 
-        void Release(Query& query) override;
+        void Release(QueryHeap& queryHeap) override;
 
         /* ----- Fences ----- */
 
@@ -269,7 +269,7 @@ class D3D11RenderSystem final : public RenderSystem
         HWObjectContainer<D3D11GraphicsPipelineBase>    graphicsPipelines_;
         HWObjectContainer<D3D11ComputePipeline>         computePipelines_;
         HWObjectContainer<D3D11ResourceHeap>            resourceHeaps_;
-        HWObjectContainer<D3D11Query>                   queries_;
+        HWObjectContainer<D3D11QueryHeap>               queryHeaps_;
         HWObjectContainer<D3D11Fence>                   fences_;
 
         /* ----- Other members ----- */

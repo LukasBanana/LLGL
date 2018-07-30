@@ -6,11 +6,13 @@
  */
 
 #include "GLStateManager.h"
+#include "../Texture/GLRenderTarget.h"
 #include "../../GLCommon/GLImportExt.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
+#include <functional>
 
 
 namespace LLGL
@@ -95,7 +97,7 @@ static const GLenum g_textureTargetsEnum[] =
 };
 
 // Maps std::uint32_t to <texture> in glActiveTexture
-static const GLenum g_textureLayersEnum[] = 
+static const GLenum g_textureLayersEnum[] =
 {
     GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3,
     GL_TEXTURE4, GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7,
@@ -118,6 +120,97 @@ static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObject
         boundId = g_GLInvalidId;
 }
 
+
+/* ----- Internal templates ----- */
+
+template <typename T>
+std::shared_ptr<T> FindCompatibleStateObject(
+    std::vector<std::shared_ptr<T>>&    container,
+    const T&                            other,
+    std::size_t                         first,
+    std::size_t                         last,
+    std::size_t                         stride,
+    std::size_t&                        index)
+{
+    for (index = first; index < last; index += stride)
+    {
+        /* Check if current blend state is compatible */
+        auto order = container[index]->CompareSWO(other);
+        if (order == 0)
+            return container[index];
+
+        if (order > 0)
+        {
+            /* Increase step size and reduce boundary */
+            stride *= 2;
+            first   = index;
+        }
+        else
+        {
+            /* Reset step size, then reduce boundary, finally reset index */
+            stride  = 1;
+            last    = index;
+            index   = first;
+        }
+    }
+    return nullptr;
+}
+
+template <typename T, typename... Args>
+std::shared_ptr<T> CreateRenderStateObject(std::vector<std::shared_ptr<T>>& container, Args&&... args)
+{
+    /* Try to find blend state with same parameter */
+    T stateToCompare { std::forward<Args>(args)... };
+
+    std::size_t insertionIndex = 0;
+    if (auto sharedState = FindCompatibleStateObject(container, stateToCompare, 0, container.size(), 1, insertionIndex))
+        return sharedState;
+
+    /* Allocate new blend state with insertion sort */
+    auto newState = std::make_shared<T>(stateToCompare);
+
+    if (insertionIndex < container.size())
+        container.insert(container.begin() + insertionIndex, newState);
+    else
+        container.push_back(newState);
+
+    return newState;
+}
+
+template <typename T>
+void ReleaseUnusedRenderStateObject(
+    std::vector<std::shared_ptr<T>>&    container,
+    const std::function<void(T*)>&      callback,
+    bool                                firstOnly)
+{
+    if (firstOnly)
+    {
+        for (auto it = container.begin(); it != container.end(); ++it)
+        {
+            if (it->use_count() == 1)
+            {
+                callback(it->get());
+                container.erase(it);
+                break;
+            }
+        }
+    }
+    else
+    {
+        RemoveAllFromListIf(
+            container,
+            [&](const std::shared_ptr<T>& entry)
+            {
+                if (entry.use_count() == 1)
+                {
+                    callback(entry.get());
+                    return true;
+                }
+                return false;
+            }
+        );
+    }
+}
 
 /* ----- Common ----- */
 
@@ -175,9 +268,12 @@ void GLStateManager::SetGraphicsAPIDependentState(const OpenGLDependentStateDesc
     /* Store new graphics state */
     apiDependentState_ = stateDesc;
 
-    /* Update front face */
     if (updateFrontFace)
+    {
+        /* Update front face and reset bound rasterizer state */
         SetFrontFace(commonState_.frontFaceAct);
+        boundRasterizerState_ = nullptr;
+    }
 }
 
 /* ----- Boolean states ----- */
@@ -413,57 +509,6 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* sci
     }
 }
 
-void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled)
-{
-    if (blendStates.size() == 1)
-    {
-        /* Set blend state only for the single draw buffer */
-        const auto& state = blendStates.front();
-
-        glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
-        if (blendEnabled)
-        {
-            glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-            glBlendEquationSeparate(state.funcColor, state.funcAlpha);
-        }
-    }
-    else if (blendStates.size() > 1)
-    {
-        GLenum drawBuffer = GL_COLOR_ATTACHMENT0;
-
-        /* Set respective blend state for each draw buffer */
-        for (const auto& state : blendStates)
-            SetBlendState(drawBuffer++, state, blendEnabled);
-    }
-}
-
-void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled)
-{
-    #ifdef GL_ARB_draw_buffers_blend
-    if (HasExtension(GLExt::ARB_draw_buffers_blend))
-    {
-        glColorMaski(drawBuffer, state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
-
-        if (blendEnabled)
-        {
-            glBlendFuncSeparatei(drawBuffer, state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-            glBlendEquationSeparatei(drawBuffer, state.funcColor, state.funcAlpha);
-        }
-    }
-    else
-    #endif
-    {
-        glDrawBuffer(drawBuffer);
-        glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
-
-        if (blendEnabled)
-        {
-            glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
-            glBlendEquationSeparate(state.funcColor, state.funcAlpha);
-        }
-    }
-}
-
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 {
     #if 0
@@ -491,7 +536,7 @@ void GLStateManager::SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat cla
     #ifdef GL_ARB_polygon_offset_clamp
     if (HasExtension(GLExt::ARB_polygon_offset_clamp))
     {
-        if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units)
+        if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units || commonState_.offsetClamp != clamp)
         {
             commonState_.offsetFactor   = factor;
             commonState_.offsetUnits    = units;
@@ -546,24 +591,6 @@ void GLStateManager::SetPatchVertices(GLint patchVertices)
     }
 }
 
-void GLStateManager::SetBlendColor(const ColorRGBAf& color)
-{
-    if (color != commonState_.blendColor)
-    {
-        commonState_.blendColor = color;
-        glBlendColor(color.r, color.g, color.b, color.a);
-    }
-}
-
-void GLStateManager::SetLogicOp(GLenum opcode)
-{
-    if (commonState_.logicOpCode != opcode)
-    {
-        commonState_.logicOpCode = opcode;
-        glLogicOp(opcode);
-    }
-}
-
 void GLStateManager::SetLineWidth(GLfloat width)
 {
     /* Clamp width silently into limited range */
@@ -577,101 +604,167 @@ void GLStateManager::SetLineWidth(GLfloat width)
 
 /* ----- Depth-stencil states ----- */
 
+GLDepthStencilStateSPtr GLStateManager::CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc)
+{
+    return CreateRenderStateObject(depthStencilStates_, depthDesc, stencilDesc);
+}
+
+void GLStateManager::ReleaseUnusedDepthStencilStates(bool firstOnly)
+{
+    ReleaseUnusedRenderStateObject<GLDepthStencilState>(
+        depthStencilStates_,
+        std::bind(&GLStateManager::NotifyDepthStencilStateRelease, this, std::placeholders::_1),
+        firstOnly
+    );
+}
+
+void GLStateManager::NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState)
+{
+    if (boundDepthStencilState_ == depthStencilState)
+        boundDepthStencilState_ = nullptr;
+}
+
+void GLStateManager::SetDepthStencilState(GLDepthStencilState* depthStencilState)
+{
+    if (depthStencilState != nullptr && depthStencilState != boundDepthStencilState_)
+    {
+        depthStencilState->Bind(*this);
+        boundDepthStencilState_ = depthStencilState;
+    }
+}
+
 void GLStateManager::SetDepthFunc(GLenum func)
 {
-    if (depthStencilState_.depthFunc != func)
+    if (commonState_.depthFunc != func)
     {
-        depthStencilState_.depthFunc = func;
+        commonState_.depthFunc = func;
         glDepthFunc(func);
     }
 }
 
 void GLStateManager::SetDepthMask(GLboolean flag)
 {
-    if (depthStencilState_.depthMask != flag)
+    if (commonState_.depthMask != flag)
     {
-        depthStencilState_.depthMask = flag;
+        commonState_.depthMask = flag;
         glDepthMask(flag);
     }
 }
 
-static void SetStencilFaceState(GLenum face, GLStencil& dst, const GLStencil& src)
+void GLStateManager::PushDepthMaskAndEnable()
 {
-    if (dst.sfail != src.sfail || dst.dpfail != src.dpfail || dst.dppass != src.dppass)
-    {
-        dst.sfail   = src.sfail;
-        dst.dpfail  = src.dpfail;
-        dst.dppass  = src.dppass;
-        glStencilOpSeparate(face, src.sfail, src.dpfail, src.dppass);
-    }
-
-    if (dst.func != src.func || dst.ref != src.ref || dst.mask != src.mask)
-    {
-        dst.func    = src.func;
-        dst.ref     = src.ref;
-        dst.mask    = src.mask;
-        glStencilFuncSeparate(face, src.func, src.ref, src.mask);
-    }
-
-    if (dst.writeMask != src.writeMask)
-    {
-        dst.writeMask = src.writeMask;
-        glStencilMaskSeparate(face, src.writeMask);
-    }
-}
-
-static void SetStencilFrontAndBackState(GLStencil& dst0, GLStencil& dst1, const GLStencil& src)
-{
-    if (dst0.sfail != src.sfail || dst0.dpfail != src.dpfail || dst0.dppass != src.dppass ||
-        dst1.sfail != src.sfail || dst1.dpfail != src.dpfail || dst1.dppass != src.dppass)
-    {
-        dst0.sfail  = dst1.sfail  = src.sfail;
-        dst0.dpfail = dst1.dpfail = src.dpfail;
-        dst0.dppass = dst1.dppass = src.dppass;
-        glStencilOp(src.sfail, src.dpfail, src.dppass);
-    }
-
-    if (dst0.func != src.func || dst0.ref != src.ref || dst0.mask != src.mask ||
-        dst1.func != src.func || dst1.ref != src.ref || dst1.mask != src.mask)
-    {
-        dst0.func = dst1.func = src.func;
-        dst0.ref  = dst1.ref  = src.ref;
-        dst0.mask = dst1.mask = src.mask;
-        glStencilFunc(src.func, src.ref, src.mask);
-    }
-
-    if (dst0.writeMask != src.writeMask ||
-        dst1.writeMask != src.writeMask)
-    {
-        dst0.writeMask = dst1.writeMask = src.writeMask;
-        glStencilMask(src.writeMask);
-    }
-}
-
-void GLStateManager::SetStencilState(GLenum face, const GLStencil& state)
-{
-    switch (face)
-    {
-        case GL_FRONT:
-            SetStencilFaceState(GL_FRONT, depthStencilState_.stencil[0], state);
-            break;
-        case GL_BACK:
-            SetStencilFaceState(GL_BACK, depthStencilState_.stencil[1], state);
-            break;
-        case GL_FRONT_AND_BACK:
-            SetStencilFrontAndBackState(depthStencilState_.stencil[0], depthStencilState_.stencil[1], state);
-            break;
-    }
-}
-
-void GLStateManager::PushDepthMask()
-{
-    depthStencilState_.depthMaskStack = depthStencilState_.depthMask;
+    SetDepthMask(GL_TRUE);
+    commonState_.cachedDepthMask = commonState_.depthMask;
 }
 
 void GLStateManager::PopDepthMask()
 {
-    SetDepthMask(depthStencilState_.depthMaskStack);
+    SetDepthMask(commonState_.cachedDepthMask);
+}
+
+/* ----- Rasterizer states ----- */
+
+GLRasterizerStateSPtr GLStateManager::CreateRasterizerState(const RasterizerDescriptor& rasterizerDesc)
+{
+    return CreateRenderStateObject(rasterizerStates_, rasterizerDesc);
+}
+
+void GLStateManager::ReleaseUnusedRasterizerStates(bool firstOnly)
+{
+    ReleaseUnusedRenderStateObject<GLRasterizerState>(
+        rasterizerStates_,
+        std::bind(&GLStateManager::NotifyRasterizerStateRelease, this, std::placeholders::_1),
+        firstOnly
+    );
+}
+
+void GLStateManager::NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState)
+{
+    if (boundRasterizerState_ == rasterizerState)
+        boundRasterizerState_ = nullptr;
+}
+
+void GLStateManager::SetRasterizerState(GLRasterizerState* rasterizerState)
+{
+    if (rasterizerState != nullptr && rasterizerState != boundRasterizerState_)
+    {
+        rasterizerState->Bind(*this);
+        boundRasterizerState_ = rasterizerState;
+    }
+}
+
+/* ----- Blend states ----- */
+
+GLBlendStateSPtr GLStateManager::CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments)
+{
+    return CreateRenderStateObject(blendStates_, blendDesc, numColorAttachments);
+}
+
+void GLStateManager::ReleaseUnusedBlendStates(bool firstOnly)
+{
+    ReleaseUnusedRenderStateObject<GLBlendState>(
+        blendStates_,
+        std::bind(&GLStateManager::NotifyBlendStateRelease, this, std::placeholders::_1),
+        firstOnly
+    );
+}
+
+void GLStateManager::NotifyBlendStateRelease(GLBlendState* blendState)
+{
+    if (boundBlendState_ == blendState)
+        boundBlendState_ = nullptr;
+}
+
+void GLStateManager::BindBlendState(GLBlendState* blendState)
+{
+    if (blendState != nullptr && blendState != boundBlendState_)
+    {
+        blendState->Bind(*this);
+        boundBlendState_ = blendState;
+    }
+}
+
+void GLStateManager::SetBlendColor(const GLfloat (&color)[4])
+{
+    if ( color[0] != commonState_.blendColor[0] ||
+         color[1] != commonState_.blendColor[1] ||
+         color[2] != commonState_.blendColor[2] ||
+         color[3] != commonState_.blendColor[3] )
+    {
+        commonState_.blendColor[0] = color[0];
+        commonState_.blendColor[1] = color[1];
+        commonState_.blendColor[2] = color[2];
+        commonState_.blendColor[3] = color[3];
+        glBlendColor(color[0], color[1], color[2], color[3]);
+    }
+}
+
+void GLStateManager::SetLogicOp(GLenum opcode)
+{
+    if (commonState_.logicOpCode != opcode)
+    {
+        commonState_.logicOpCode = opcode;
+        glLogicOp(opcode);
+    }
+}
+
+void GLStateManager::PushColorMaskAndEnable()
+{
+    if (!colorMaskOnStack_)
+    {
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        colorMaskOnStack_ = true;
+    }
+}
+
+void GLStateManager::PopColorMask()
+{
+    if (colorMaskOnStack_)
+    {
+        if (boundBlendState_)
+            boundBlendState_->BindColorMaskOnly(*this);
+        colorMaskOnStack_ = false;
+    }
 }
 
 /* ----- Buffer ----- */
@@ -812,6 +905,15 @@ void GLStateManager::NotifyBufferRelease(GLuint buffer, GLBufferTarget target)
 
 /* ----- Framebuffer ----- */
 
+void GLStateManager::BindRenderTarget(GLRenderTarget* renderTarget)
+{
+    framebufferState_.boundRenderTarget = renderTarget;
+    if (renderTarget)
+        BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTarget->GetFramebuffer().GetID());
+    else
+        BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+}
+
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {
     /* Only bind framebuffer if the framebuffer has changed */
@@ -846,6 +948,11 @@ void GLStateManager::NotifyFramebufferRelease(GLuint framebuffer)
 {
     for (auto& boundFramebuffer : framebufferState_.boundFramebuffers)
         InvalidateBoundGLObject(boundFramebuffer, framebuffer);
+}
+
+GLRenderTarget* GLStateManager::GetBoundRenderTarget() const
+{
+    return framebufferState_.boundRenderTarget;
 }
 
 /* ----- Renderbuffer ----- */

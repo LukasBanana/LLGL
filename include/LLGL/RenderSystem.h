@@ -31,7 +31,7 @@
 #include "PipelineLayout.h"
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
-#include "Query.h"
+#include "QueryHeap.h"
 #include "Fence.h"
 
 #include <string>
@@ -412,7 +412,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         /**
         \brief Creates a new and Shader object and compiles the specified source.
-        \remarks To check whether the compilation was successful or not, use the 'HasErrors' and 'QueryInfoLog' functions of the Shader interface.
+        \remarks To check whether the compilation was successful or not, use the \c HasErrors and \c QueryInfoLog functions of the Shader interface.
         \see Shader::HasErrors
         \see Shader::QueryInfoLog
         \see ShaderDescriptor
@@ -422,7 +422,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         /**
         \brief Creates a new shader program and links all specified shaders.
-        \remarks To check whether the linking was successful or not, use the 'HasErrors' and 'QueryInfoLog' functions of the ShaderProgram interface.
+        \remarks To check whether the linking was successful or not, use the \c HasErrors and \c QueryInfoLog functions of the ShaderProgram interface.
         \see ShaderProgram::HasErrors
         \see ShaderProgram::QueryInfoLog
         \see ShaderProgramDescriptor
@@ -480,11 +480,11 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         /* ----- Queries ----- */
 
-        //! Creates a new query.
-        virtual Query* CreateQuery(const QueryDescriptor& desc) = 0;
+        //! Creates a new query heap.
+        virtual QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) = 0;
 
-        //! Releases the specified Query object. After this call, the specified object must no longer be used.
-        virtual void Release(Query& query) = 0;
+        //! Releases the specified QueryHeap object. After this call, the specified object must no longer be used.
+        virtual void Release(QueryHeap& queryHeap) = 0;
 
         /* ----- Fences ----- */
 

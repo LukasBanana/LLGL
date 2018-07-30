@@ -16,6 +16,11 @@ echo ####### Tutorial03_Texturing #######
 glslang -V -S vert -o Tutorial03_Texturing/vertex.450core.spv Tutorial03_Texturing/vertex.450core.glsl
 glslang -V -S frag -o Tutorial03_Texturing/fragment.450core.spv Tutorial03_Texturing/fragment.450core.glsl
 
+REM Tutorial04_Query
+echo ####### Tutorial04_Query #######
+glslang -V -S vert -o Tutorial04_Query/vertex.450core.spv Tutorial04_Query/vertex.450core.glsl
+glslang -V -S frag -o Tutorial04_Query/fragment.450core.spv Tutorial04_Query/fragment.450core.glsl
+
 REM Tutorial05_RenderTarget
 echo ####### Tutorial05_RenderTarget #######
 glslang -V -S vert -o Tutorial05_RenderTarget/vertex.450core.spv Tutorial05_RenderTarget/vertex.450core.glsl

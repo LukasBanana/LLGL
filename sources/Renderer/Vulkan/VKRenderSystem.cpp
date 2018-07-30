@@ -247,7 +247,7 @@ void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     if (auto stagingBuffer = bufferVK.GetStagingVkBuffer())
     {
         /* Copy GPU local buffer into staging buffer for read accces */
-        if (access != CPUAccess::WriteOnly)
+        if (access != CPUAccess::WriteOnly && access != CPUAccess::WriteDiscard)
             device_.CopyBuffer(bufferVK.GetVkBuffer(), stagingBuffer, bufferVK.GetSize());
 
         /* Map staging buffer */
@@ -603,14 +603,14 @@ void VKRenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* VKRenderSystem::CreateQuery(const QueryDescriptor& desc)
+QueryHeap* VKRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
-    return TakeOwnership(queries_, MakeUnique<VKQuery>(device_, desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<VKQueryHeap>(device_, desc));
 }
 
-void VKRenderSystem::Release(Query& query)
+void VKRenderSystem::Release(QueryHeap& queryHeap)
 {
-    RemoveFromUniqueSet(queries_, &query);
+    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
 }
 
 /* ----- Fences ----- */

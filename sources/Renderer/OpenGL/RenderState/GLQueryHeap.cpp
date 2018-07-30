@@ -1,39 +1,37 @@
 /*
- * GLQuery.cpp
+ * GLQueryHeap.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLQuery.h"
+#include "GLQueryHeap.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
+#include "../../../Core/Exception.h"
 
 
 namespace LLGL
 {
 
 
+#ifdef GL_ARB_pipeline_statistics_query
 static const GLenum g_queryGLTypes[] =
 {
-    #if defined LLGL_OPENGL && defined GL_ARB_pipeline_statistics_query
-    GL_PRIMITIVES_GENERATED,
     GL_VERTICES_SUBMITTED_ARB,
     GL_PRIMITIVES_SUBMITTED_ARB,
     GL_VERTEX_SHADER_INVOCATIONS_ARB,
-    GL_TESS_CONTROL_SHADER_PATCHES_ARB,
-    GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB,
     GL_GEOMETRY_SHADER_INVOCATIONS,
-    GL_FRAGMENT_SHADER_INVOCATIONS_ARB,
-    GL_COMPUTE_SHADER_INVOCATIONS_ARB,
     GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED_ARB,
     GL_CLIPPING_INPUT_PRIMITIVES_ARB,
     GL_CLIPPING_OUTPUT_PRIMITIVES_ARB,
-    #else
-    GL_PRIMITIVES_GENERATED, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #endif
+    GL_FRAGMENT_SHADER_INVOCATIONS_ARB,
+    GL_TESS_CONTROL_SHADER_PATCHES_ARB,
+    GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB,
+    GL_COMPUTE_SHADER_INVOCATIONS_ARB,
 };
+#endif
 
 // for pipeline statistice query:
 // see https://www.opengl.org/registry/specs/ARB/pipeline_statistics_query.txt
@@ -54,56 +52,54 @@ static GLenum MapQueryType(const QueryType queryType, std::size_t idx)
         case QueryType::StreamOutOverflow:                  return GL_TRANSFORM_FEEDBACK_OVERFLOW_ARB;
         //GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB;
         #endif
+        #ifdef GL_ARB_pipeline_statistics_query
         case QueryType::PipelineStatistics:                 return g_queryGLTypes[idx];
+        #endif
         default:                                            return 0;
     }
 }
 
-GLQuery::GLQuery(const QueryDescriptor& desc) :
-    Query { desc.type }
+GLQueryHeap::GLQueryHeap(const QueryHeapDescriptor& desc) :
+    QueryHeap { desc.type }
 {
-    #if defined LLGL_OPENGL && defined GL_ARB_pipeline_statistics_query
+    #ifdef GL_ARB_pipeline_statistics_query
     if (desc.type == QueryType::PipelineStatistics)
     {
+        /* Allocate IDs for all pipeline statistics queries or throw error on failure */
         if (HasExtension(GLExt::ARB_pipeline_statistics_query))
-        {
-            /* Allocate IDs for all pipeline statistics queries */
-            ids_.resize(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
-        }
+            groupSize_ = static_cast<std::uint32_t>(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
         else
-        {
-            /* Allocate single ID for GL_PRIMITIVES_GENERATED */
-            ids_.resize(1);
-        }
+            ThrowGLExtensionNotSupportedExcept(__func__, "GL_ARB_pipeline_statistics_query");
     }
     else
     #endif
     {
         /* Allocate single ID */
-        ids_.resize(1);
+        groupSize_ = 1;
     }
 
     /* Generate all GL query objects */
+    ids_.resize(groupSize_ * desc.numQueries);
     glGenQueries(static_cast<GLsizei>(ids_.size()), ids_.data());
 }
 
-GLQuery::~GLQuery()
+GLQueryHeap::~GLQueryHeap()
 {
     glDeleteQueries(static_cast<GLsizei>(ids_.size()), ids_.data());
 }
 
-void GLQuery::Begin()
+void GLQueryHeap::Begin(std::uint32_t query)
 {
     /* Begin all queries in forward order: [0, n) */
-    for (std::size_t i = 0, n = ids_.size(); i < n; ++i)
-        glBeginQuery(MapQueryType(GetType(), i), ids_[i]);
+    for (std::size_t i = 0; i < groupSize_; ++i)
+        glBeginQuery(MapQueryType(GetType(), i), ids_[i + groupSize_ * query]);
 }
 
-void GLQuery::End()
+void GLQueryHeap::End(std::uint32_t query)
 {
     /* End all queries in reverse order: (n, 0] */
-    for (std::size_t i = 1, n = ids_.size(); i <= n; ++i)
-        glEndQuery(MapQueryType(GetType(), n - i));
+    for (std::size_t i = 1; i <= groupSize_; ++i)
+        glEndQuery(MapQueryType(GetType(), groupSize_ - i));
 }
 
 

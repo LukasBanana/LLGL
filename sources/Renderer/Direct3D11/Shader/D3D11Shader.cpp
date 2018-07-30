@@ -146,7 +146,10 @@ bool D3D11Shader::LoadBinary(ID3D11Device* device, const ShaderDescriptor& shade
     return false;
 }
 
-void D3D11Shader::CreateNativeShader(ID3D11Device* device, const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage)
+void D3D11Shader::CreateNativeShader(
+    ID3D11Device*                           device,
+    const ShaderDescriptor::StreamOutput&   streamOutputDesc,
+    ID3D11ClassLinkage*                     classLinkage)
 {
     native_.vs.Reset();
 
@@ -202,9 +205,15 @@ void D3D11Shader::CreateNativeShader(ID3D11Device* device, const ShaderDescripto
 
                     /* Create geometry shader with stream-output declaration */
                     hr = device->CreateGeometryShaderWithStreamOutput(
-                        byteCode_.data(), byteCode_.size(),
-                        outputElements.data(), static_cast<UINT>(outputElements.size()), nullptr, 0, 0,
-                        classLinkage, native_.gs.ReleaseAndGetAddressOf()
+                        byteCode_.data(),
+                        byteCode_.size(),
+                        outputElements.data(),
+                        static_cast<UINT>(outputElements.size()),
+                        nullptr,
+                        0,
+                        0,
+                        classLinkage,
+                        native_.gs.ReleaseAndGetAddressOf()
                     );
                 }
                 else

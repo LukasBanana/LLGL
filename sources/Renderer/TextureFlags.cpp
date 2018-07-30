@@ -54,10 +54,10 @@ LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc)
         case TextureType::Texture1D:        return extent.width;
         case TextureType::Texture2D:        return extent.width * extent.height;
         case TextureType::Texture3D:        return extent.width * extent.height * extent.depth;
-        case TextureType::TextureCube:      return extent.width * extent.height * 6;
+        case TextureType::TextureCube:      return extent.width * extent.height * textureDesc.arrayLayers;
         case TextureType::Texture1DArray:   return extent.width * textureDesc.arrayLayers;
         case TextureType::Texture2DArray:   return extent.width * extent.height * textureDesc.arrayLayers;
-        case TextureType::TextureCubeArray: return extent.width * extent.height * 6 * textureDesc.arrayLayers;
+        case TextureType::TextureCubeArray: return extent.width * extent.height * textureDesc.arrayLayers;
         case TextureType::Texture2DMS:      return extent.width * extent.height;
         case TextureType::Texture2DMSArray: return extent.width * extent.height * textureDesc.arrayLayers;
         default:                            return 0;

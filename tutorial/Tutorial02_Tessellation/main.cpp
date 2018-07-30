@@ -219,7 +219,6 @@ public:
 
             // Enable back-face culling
             pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-            pipelineDesc.rasterizer.frontCCW        = true;
         }
 
         // Create graphics pipelines

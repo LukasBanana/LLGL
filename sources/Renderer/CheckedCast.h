@@ -11,9 +11,6 @@
 
 #ifdef LLGL_ENABLE_CHECKED_CAST
 #   include <typeinfo>
-#   ifdef _WIN32
-#       include <Windows.h>
-#   endif
 #endif
 
 
@@ -23,38 +20,38 @@ namespace LLGL
 
 #ifdef LLGL_ENABLE_CHECKED_CAST
 
-template <typename To, typename From>
-To& CheckedCast(From& obj)
+template <typename DstT, typename SrcT>
+DstT& CheckedCast(SrcT& obj)
 {
     try
     {
-        return dynamic_cast<To&>(obj);
+        return dynamic_cast<DstT&>(obj);
     }
-    catch (const std::bad_cast& e)
+    catch (const std::bad_cast&)
     {
-        #ifdef _WIN32
-        DebugBreak();
+        #if defined _WIN32 && defined _DEBUG
+        __debugbreak();
         #endif
-        throw e;
+        throw;
     }
 }
 
-template <typename To, typename From>
-To CheckedCast(From* obj)
+template <typename DstT, typename SrcT>
+DstT CheckedCast(SrcT* obj)
 {
     try
     {
-        To casted = dynamic_cast<To>(obj);
+        DstT casted = dynamic_cast<DstT>(obj);
         if (!casted)
             throw std::bad_cast();
         return casted;
     }
-    catch (const std::bad_cast& e)
+    catch (const std::bad_cast&)
     {
-        #ifdef _WIN32
-        DebugBreak();
+        #if defined _WIN32 && defined _DEBUG
+        __debugbreak();
         #endif
-        throw e;
+        throw;
     }
 }
 

@@ -34,6 +34,16 @@ class D3D12CommandQueue final : public CommandQueue
 
         void Submit(CommandBuffer& commandBuffer) override;
 
+        /* ----- Queries ----- */
+
+        bool QueryResult(
+            QueryHeap&      queryHeap,
+            std::uint32_t   firstQuery,
+            std::uint32_t   numQueries,
+            void*           data,
+            std::size_t     dataSize
+        ) override;
+
         /* ----- Fences ----- */
 
         void Submit(Fence& fence) override;
@@ -46,12 +56,12 @@ class D3D12CommandQueue final : public CommandQueue
         // Returns the native ID3D12CommandQueue object.
         inline ID3D12CommandQueue* GetNative() const
         {
-            return queue_;
+            return native_;
         }
 
     private:
 
-        ID3D12CommandQueue* queue_              = nullptr;
+        ID3D12CommandQueue* native_             = nullptr;
         D3D12Fence          intermediateFence_;
 
 };

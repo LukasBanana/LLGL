@@ -10,7 +10,9 @@
 
 
 #include <LLGL/Fence.h>
-//#include <d3d11_4.h>
+#include "../../DXCommon/ComPtr.h"
+#include <d3d11.h>
+#include <cstdint>
 
 
 namespace LLGL
@@ -22,19 +24,14 @@ class D3D11Fence final : public Fence
 
     public:
 
-        #if 0
-        D3D11Fence(ID3D11Device5* device, UINT64 initialValue);
+        D3D11Fence(ID3D11Device* device);
 
-        void Submit(ID3D11DeviceContext4* context);
-        bool Wait(ID3D11DeviceContext4* context);
-        #endif
+        void Submit(ID3D11DeviceContext* context);
+        void Wait(ID3D11DeviceContext* context);
 
     private:
 
-        #if 0
-        ComPtr<ID3D11Fence> fence_;
-        UINT64              value_  = 0;
-        #endif
+        ComPtr<ID3D11Query> query_;
 
 };
 

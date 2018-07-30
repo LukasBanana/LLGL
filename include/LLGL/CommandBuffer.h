@@ -24,7 +24,7 @@
 #include "ShaderProgram.h"
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
-#include "Query.h"
+#include "QueryHeap.h"
 
 #include <cstdint>
 
@@ -79,7 +79,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This is limited to 2^16 = 65536 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
         \remarks To update buffers larger than 65536 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
-        \note This must not be called during a render pass.
+        It is recommended to call this outside of a render pass.
+        Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
         */
         virtual void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) = 0;
 
@@ -92,11 +93,15 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] srcOffset Specifies teh source offset (in bytes) at which the source buffer is to be read from.
         This offset plus the size (i.e. <code>srcOffset + size</code>) must be less than or equal to the size of the source buffer.
         \param[in] size Specifies the size of the buffer region to copy.
+        \remarks It is recommended to call this outside of a render pass.
+        Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
         */
         virtual void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) = 0;
 
         #if 0
+        //FillBuffer or ClearBuffer
         virtual void FillBuffer(Buffer& buffer, [...]) = 0;
+        //FillTexture or ClearTexture
         virtual void FillTexture(Texture& texture, [...]) = 0;
         virtual void CopyTexture(Texture& dstTexture, Texture& srcTexture, [...]) = 0;
         virtual void BlitTexture(Texture& dstTexture, Texture& srcTexture, [...], Filter filter) = 0;
@@ -106,36 +111,12 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Generates all MIP-maps for the specified texture.
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
-        \remarks To generate only a small amout of MIP levels, use the secondary \c GenerateMips function.
-        To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
+        \remarks To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
+        It is recommended to call this outside of a render pass.
+        Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
         \see GenerateMips(Texture&, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
-        \note This must not be called during a render pass.
         */
         virtual void GenerateMips(Texture& texture) = 0;
-
-        /**
-        \brief Generates the specified range of MIP-maps for the specified texture.
-        \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
-        \param[in] baseMipLevel Specifies the zero-based index of the first MIP-map level.
-        \param[in] numMipLevels Specifies the number of MIP-maps to generate. This also includes the base MIP-map level, so a number of less than 2 has no effect.
-        \param[in] baseArrayLayer Specifies the zero-based index of the first array layer (if an array texture is used). By default 0.
-        \param[in] numArrayLayers Specifies the number of array layers. For both array textures and non-array textures this must be at least 1. By default 1.
-        \remarks This function only guarantees to generate at least the specified amount of MIP-maps.
-        It may also update all other MIP-maps if the respective rendering API does not support hardware accelerated generation of a sub-range of MIP-maps.
-        To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
-        \note Only use this function if the range of MIP-maps is significantly smaller than the entire MIP chain,
-        e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
-        \note This must not be called during a render pass.
-        \see GenerateMips(Texture&)
-        \see NumMipLevels
-        */
-        virtual void GenerateMips(
-            Texture&        texture,
-            std::uint32_t   baseMipLevel,
-            std::uint32_t   numMipLevels,
-            std::uint32_t   baseArrayLayer  = 0,
-            std::uint32_t   numArrayLayers  = 1
-        ) = 0;
         #endif // /TODO
 
         /* ----- Configuration ----- */
@@ -177,7 +158,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each viewport is on the lower-left.
         \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
-        \see RenderingLimits::maxNumViewports
+        \see RenderingLimits::maxViewports
         */
         virtual void SetViewports(std::uint32_t numViewports, const Viewport* viewports) = 0;
 
@@ -434,66 +415,60 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetComputePipeline(ComputePipeline& computePipeline) = 0;
 
+        #if 0//TODO: enable this
+        /**
+        \brief Sets the dynamic pipeline state for blending factors.
+        \param[in] color Specifies the blending factors for each color component.
+        The default value is <code>{ 1, 1, 1, 1 }</code>.
+        \remarks This is only used for the following blending operations:
+        - BlendOp::BlendFactor
+        - BlendOp::InvBlendFactor
+        */
+        virtual void SetBlendFactor(const ColorRGBAf& color) = 0;
+        #endif
+
         /* ----- Queries ----- */
 
         /**
-        \brief Begins the specified query.
-        \param[in] query Specifies the query to begin with.
-        This must be same query object as in the subsequent "EndQuery" function call, to end the query operation.
-        \remarks The "BeginQuery" and "EndQuery" functions can be wrapped around any drawing and/or compute operation.
-        This can an occlusion query for instance, which determines how many fragments have passed the depth test.
-        \see RenderSystem::CreateQuery
+        \brief Begins a query of the specified query heap.
+        \param[in] queryHeap Specifies the query heap.
+        \param[in] query Specifies the zero-based index of the query within the heap to begin with. By default 0.
+        This must be in the half-open range [0, QueryHeapDescriptor::numQueries).
+        \remarks The \c BeginQuery and \c EndQuery functions can be wrapped around any drawing and/or compute operation.
+        This can be an occlusion query for instance, which determines how many fragments have passed the depth test.
+        The result of a query can be retrieved by the command queue after this command buffer has been submitted.
         \see EndQuery
-        \see QueryResult
+        \see RenderSystem::CreateQueryHeap
+        \see CommandQueue::QueryResult
         */
-        virtual void BeginQuery(Query& query) = 0;
+        virtual void BeginQuery(QueryHeap& queryHeap, std::uint32_t query = 0) = 0;
 
         /**
         \brief Ends the specified query.
-        \see RenderSystem::CreateQuery
         \see BeginQuery
-        \see QueryResult
         */
-        virtual void EndQuery(Query& query) = 0;
-
-        /**
-        \brief Queries the result of the specified query object.
-        \param[in] query Specifies the query object whose result is to be queried. This query object must not have been created with the QueryType::PipelineStatistics type.
-        \param[out] result Specifies the output result in form of a 64-bit unsigned integer.
-        \return True if the result is available, otherwise false in which case 'result' is not modified.
-        \remarks For a query of type QueryType::PipelineStatistics, the function CommandBuffer::QueryPipelineStatisticsResult must be used.
-        \see QueryPipelineStatisticsResult
-        */
-        virtual bool QueryResult(Query& query, std::uint64_t& result) = 0;
-
-        /**
-        \brief Queries the result of the specified query object for pipeline statistics.
-        \param[in] query Specifies the query object whose result is to be queried. This query object must have been created with the QueryType::PipelineStatistics type.
-        \param[out] result Specifies the output result in form of the QueryPipelineStatistics structure.
-        \remarks For a query of type other than QueryType::PipelineStatistics, the function CommandBuffer::QueryResult must be used.
-        \see QueryResult
-        */
-        virtual bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) = 0;
+        virtual void EndQuery(QueryHeap& queryHeap, std::uint32_t query = 0) = 0;
 
         /**
         \brief Begins conditional rendering with the specified query object.
-        \param[in] query Specifies the query object which is to be used as render condition.
-        This must be an occlusion query, i.e. it's type must be either
-        QueryType::SamplesPassed, QueryType::AnySamplesPassed, or QueryType::AnySamplesPassedConservative.
+        \param[in] queryHeap Specifies the query heap.
+        This query heap must have been created with the \c renderCondition member set to \c true.
+        \param[in] query Specifies the zero-based index of the query within the heap which is to be used as render condition. By default 0.
+        This must be in the half-open range <code>[0, QueryHeapDescriptor::numQueries)</code>.
         \param[in] mode Specifies the mode of the render condition.
         \remarks Here is a usage example:
         \code
-        context->BeginQuery(*occlusionQuery);
+        myCmdBuffer->BeginQuery(*myOcclusionQuery);
         // draw bounding box ...
-        context->EndQuery(*occlusionQuery);
-        context->BeginRenderConidtion(*occlusionQuery, LLGL::RenderConditionMode::Wait);
+        myCmdBuffer->EndQuery(*myOcclusionQuery);
+        myCmdBuffer->BeginRenderCondition(*myOcclusionQuery, LLGL::RenderConditionMode::Wait);
         // draw actual object ...
-        context->EndRenderConidtion();
+        myCmdBuffer->EndRenderCondition();
         \endcode
-        \see QueryType
-        \see RenderConditionMode
+        \see RenderSystem::CreateQueryHeap
+        \see QueryHeapDescriptor::renderCondition
         */
-        virtual void BeginRenderCondition(Query& query, const RenderConditionMode mode) = 0;
+        virtual void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) = 0;
 
         /**
         \brief Ends the current render condition.
@@ -573,7 +548,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] groupSizeY Specifies the number of thread groups in the Y-dimension.
         \param[in] groupSizeZ Specifies the number of thread groups in the Z-dimension.
         \see SetComputePipeline
-        \see RenderingLimits::maxNumComputeShaderWorkGroups
+        \see RenderingLimits::maxComputeShaderWorkGroups
         */
         virtual void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) = 0;
 

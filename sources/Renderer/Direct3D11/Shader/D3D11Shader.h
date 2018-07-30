@@ -78,7 +78,11 @@ class D3D11Shader final : public Shader
         bool CompileSource(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
         bool LoadBinary(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
 
-        void CreateNativeShader(ID3D11Device* device, const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage);
+        void CreateNativeShader(
+            ID3D11Device*                           device,
+            const ShaderDescriptor::StreamOutput&   streamOutputDesc,
+            ID3D11ClassLinkage*                     classLinkage
+        );
 
         void ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const;
 

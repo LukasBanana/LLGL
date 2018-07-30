@@ -16,7 +16,7 @@
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
 #include "DbgShaderProgram.h"
-#include "DbgQuery.h"
+#include "DbgQueryHeap.h"
 
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
@@ -121,12 +121,12 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         /* Validate array size */
         if (numViewports == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no viewports are specified");
-        else if (numViewports > limits_.maxNumViewports)
+        else if (numViewports > limits_.maxViewports)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "viewport array exceeded maximal number of viewports (" + std::to_string(numViewports) +
-                " specified but limit is " + std::to_string(limits_.maxNumViewports) + ")"
+                " specified but limit is " + std::to_string(limits_.maxViewports) + ")"
             );
         }
     }
@@ -535,76 +535,52 @@ void DbgCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void DbgCommandBuffer::BeginQuery(Query& query)
+void DbgCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        if (queryDbg.state == DbgQuery::State::Busy)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "query is already busy");
-        queryDbg.state = DbgQuery::State::Busy;
+        if (auto state = GetAndValidateQueryState(queryHeapDbg, query))
+        {
+            if (*state == DbgQueryHeap::State::Busy)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "query is already busy");
+            *state = DbgQueryHeap::State::Busy;
+        }
     }
 
-    instance.BeginQuery(queryDbg.instance);
+    instance.BeginQuery(queryHeapDbg.instance, query);
 }
 
-void DbgCommandBuffer::EndQuery(Query& query)
+void DbgCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        if (queryDbg.state != DbgQuery::State::Busy)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "query has not started");
-        queryDbg.state = DbgQuery::State::Ready;
+        if (auto state = GetAndValidateQueryState(queryHeapDbg, query))
+        {
+            if (*state != DbgQueryHeap::State::Busy)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "query has not started");
+            *state = DbgQueryHeap::State::Ready;
+        }
     }
 
-    instance.EndQuery(queryDbg.instance);
+    instance.EndQuery(queryHeapDbg.instance, query);
 }
 
-bool DbgCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
+void DbgCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        if (queryDbg.state != DbgQuery::State::Ready)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
-    }
-
-    return instance.QueryResult(queryDbg.instance, result);
-}
-
-bool DbgCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
-{
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        if (queryDbg.state != DbgQuery::State::Ready)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
-    }
-
-    return instance.QueryPipelineStatisticsResult(queryDbg.instance, result);
-}
-
-void DbgCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
-{
-    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+    auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
     LLGL_DBG_SOURCE;
     AssertRecording();
 
-    instance.BeginRenderCondition(queryDbg.instance, mode);
+    instance.BeginRenderCondition(queryHeapDbg.instance, query, mode);
 }
 
 void DbgCommandBuffer::EndRenderCondition()
@@ -739,9 +715,9 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
             LLGL_DBG_WARN(WarningType::PointlessOperation, "thread group size has volume of 0 units");
 
         AssertComputePipelineBound();
-        ValidateThreadGroupLimit(groupSizeX, limits_.maxNumComputeShaderWorkGroups[0]);
-        ValidateThreadGroupLimit(groupSizeY, limits_.maxNumComputeShaderWorkGroups[1]);
-        ValidateThreadGroupLimit(groupSizeZ, limits_.maxNumComputeShaderWorkGroups[2]);
+        ValidateThreadGroupLimit(groupSizeX, limits_.maxComputeShaderWorkGroups[0]);
+        ValidateThreadGroupLimit(groupSizeY, limits_.maxComputeShaderWorkGroups[1]);
+        ValidateThreadGroupLimit(groupSizeZ, limits_.maxComputeShaderWorkGroups[2]);
     }
 
     instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);
@@ -1028,6 +1004,28 @@ void DbgCommandBuffer::ValidateBufferType(const BufferType bufferType, const Buf
 {
     if (bufferType != compareType)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type");
+}
+
+bool DbgCommandBuffer::ValidateQueryIndex(DbgQueryHeap& queryHeap, std::uint32_t query)
+{
+    if (query >= queryHeap.states.size())
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "query index out of bounds (" + std::to_string(query) +
+            " specified but upper bound is " + std::to_string(queryHeap.states.size()) + ")"
+        );
+        return false;
+    }
+    return true;
+}
+
+DbgQueryHeap::State* DbgCommandBuffer::GetAndValidateQueryState(DbgQueryHeap& queryHeap, std::uint32_t query)
+{
+    if (ValidateQueryIndex(queryHeap, query))
+        return &(queryHeap.states[query]);
+    else
+        return nullptr;
 }
 
 void DbgCommandBuffer::AssertRecording()

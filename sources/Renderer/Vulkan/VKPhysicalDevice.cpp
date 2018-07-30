@@ -109,26 +109,28 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
     caps.features.hasConservativeRasterization      = false;
     caps.features.hasStreamOutputs                  = false;
-    caps.features.hasLogicOp                        = true;
+    caps.features.hasLogicOp                        = (features_.logicOp != VK_FALSE);
+    caps.features.hasPipelineStatistics             = (features_.pipelineStatisticsQuery != VK_FALSE);
+    caps.features.hasRenderCondition                = false;
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
     caps.limits.lineWidthRange[1]                   = limits.lineWidthRange[1];
-    caps.limits.maxNumTextureArrayLayers            = limits.maxImageArrayLayers;
-    caps.limits.maxNumRenderTargetAttachments       = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
+    caps.limits.maxTextureArrayLayers               = limits.maxImageArrayLayers;
+    caps.limits.maxColorAttachments                 = limits.maxColorAttachments;
     caps.limits.maxPatchVertices                    = limits.maxTessellationPatchSize;
     caps.limits.max1DTextureSize                    = limits.maxImageDimension1D;
     caps.limits.max2DTextureSize                    = limits.maxImageDimension2D;
     caps.limits.max3DTextureSize                    = limits.maxImageDimension3D;
     caps.limits.maxCubeTextureSize                  = limits.maxImageDimensionCube;
     caps.limits.maxAnisotropy                       = static_cast<std::uint32_t>(limits.maxSamplerAnisotropy);
-    caps.limits.maxNumComputeShaderWorkGroups[0]    = limits.maxComputeWorkGroupCount[0];
-    caps.limits.maxNumComputeShaderWorkGroups[1]    = limits.maxComputeWorkGroupCount[1];
-    caps.limits.maxNumComputeShaderWorkGroups[2]    = limits.maxComputeWorkGroupCount[2];
+    caps.limits.maxComputeShaderWorkGroups[0]       = limits.maxComputeWorkGroupCount[0];
+    caps.limits.maxComputeShaderWorkGroups[1]       = limits.maxComputeWorkGroupCount[1];
+    caps.limits.maxComputeShaderWorkGroups[2]       = limits.maxComputeWorkGroupCount[2];
     caps.limits.maxComputeShaderWorkGroupSize[0]    = limits.maxComputeWorkGroupSize[0];
     caps.limits.maxComputeShaderWorkGroupSize[1]    = limits.maxComputeWorkGroupSize[1];
     caps.limits.maxComputeShaderWorkGroupSize[2]    = limits.maxComputeWorkGroupSize[2];
-    caps.limits.maxNumViewports                     = limits.maxViewports;
+    caps.limits.maxViewports                        = limits.maxViewports;
     caps.limits.maxViewportSize[0]                  = limits.maxViewportDimensions[0];
     caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
     caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();

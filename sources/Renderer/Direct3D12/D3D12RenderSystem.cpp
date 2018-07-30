@@ -430,14 +430,14 @@ void D3D12RenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* D3D12RenderSystem::CreateQuery(const QueryDescriptor& desc)
+QueryHeap* D3D12RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
-    return nullptr;//todo...
+    return TakeOwnership(queryHeaps_, MakeUnique<D3D12QueryHeap>(device_, desc));
 }
 
-void D3D12RenderSystem::Release(Query& query)
+void D3D12RenderSystem::Release(QueryHeap& queryHeap)
 {
-    //todo...
+    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
 }
 
 /* ----- Fences ----- */
@@ -583,13 +583,51 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
         DXThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()), "failed to create Win32 event object");
 }
 
+static bool FindHighestShaderModel(ID3D12Device* device, D3D_SHADER_MODEL& shaderModel)
+{
+    D3D12_FEATURE_DATA_SHADER_MODEL feature;
+
+    for (auto model : { D3D_SHADER_MODEL_6_0, D3D_SHADER_MODEL_5_1 })
+    {
+        feature.HighestShaderModel = model;
+        auto hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &feature, sizeof(feature));
+        if (SUCCEEDED(hr))
+        {
+            shaderModel = model;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static const char* DXShaderModelToString(D3D_SHADER_MODEL shaderModel)
+{
+    switch (shaderModel)
+    {
+        case D3D_SHADER_MODEL_5_1: return "5.1";
+        case D3D_SHADER_MODEL_6_0: return "6.0";
+    }
+    return "";
+}
+
 void D3D12RenderSystem::QueryRendererInfo()
 {
     RendererInfo info;
 
-    info.rendererName           = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
-    info.shadingLanguageName    = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
+    /* Get D3D version */
+    info.rendererName = "Direct3D " + std::string(DXFeatureLevelToVersion(GetFeatureLevel()));
 
+    /* Get shading language support */
+    info.shadingLanguageName = "HLSL ";
+
+    D3D_SHADER_MODEL shaderModel = D3D_SHADER_MODEL_5_1;
+    if (FindHighestShaderModel(device_.GetNative(), shaderModel))
+        info.shadingLanguageName += DXShaderModelToString(shaderModel);
+    else
+        info.shadingLanguageName += DXFeatureLevelToShaderModel(GetFeatureLevel());
+
+    /* Get device and vendor name from adapter */
     if (!videoAdatperDescs_.empty())
     {
         const auto& videoAdapterDesc = videoAdatperDescs_.front();
@@ -612,7 +650,7 @@ void D3D12RenderSystem::QueryRenderingCaps()
         /* Set extended attributes */
         caps.features.hasConservativeRasterization  = (GetFeatureLevel() >= D3D_FEATURE_LEVEL_12_0);
 
-        caps.limits.maxNumViewports                 = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+        caps.limits.maxViewports                    = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
         caps.limits.maxViewportSize[0]              = D3D12_VIEWPORT_BOUNDS_MAX;
         caps.limits.maxViewportSize[1]              = D3D12_VIEWPORT_BOUNDS_MAX;
         caps.limits.maxBufferSize                   = std::numeric_limits<UINT64>::max();

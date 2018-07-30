@@ -48,6 +48,9 @@ class GLRenderTarget final : public RenderTarget
         // Returns the active framebuffer (i.e. either the default framebuffer or the multi-sample framebuffer).
         const GLFramebuffer& GetFramebuffer() const;
 
+        // Sets the draw buffers for the currently bound FBO.
+        void SetDrawBuffers();
+
     private:
 
         void CreateFramebufferWithAttachments(const RenderTargetDescriptor& desc);
@@ -69,9 +72,6 @@ class GLRenderTarget final : public RenderTarget
 
         void CreateRenderbuffersMS(const GLenum* internalFormats);
         void CreateRenderbufferMS(GLenum attachment, GLenum internalFormat);
-
-        // Sets the draw buffers for the currently bound FBO.
-        void SetDrawBuffers();
 
         bool HasMultiSampling() const;
         bool HasCustomMultiSampling() const;

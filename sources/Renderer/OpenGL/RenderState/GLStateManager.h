@@ -10,11 +10,13 @@
 
 
 #include "GLState.h"
+#include "GLDepthStencilState.h"
+#include "GLRasterizerState.h"
+#include "GLBlendState.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include <LLGL/CommandBufferFlags.h>
 #include <array>
-#include <vector>
 #include <stack>
 #include <cstdint>
 
@@ -23,7 +25,9 @@ namespace LLGL
 {
 
 
-// OpenGL state machine manager that tries to reduce GL state changes.
+class GLRenderTarget;
+
+// OpenGL state machine manager that keeps track of certain GL states.
 class GLStateManager
 {
 
@@ -83,16 +87,12 @@ class GLStateManager
         void SetScissor(GLScissor& scissor);
         void SetScissorArray(GLuint first, GLsizei count, GLScissor* scissors);
 
-        void SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled);
-
         void SetClipControl(GLenum origin, GLenum depth);
         void SetPolygonMode(GLenum mode);
         void SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat clamp);
         void SetCullFace(GLenum face);
         void SetFrontFace(GLenum mode);
         void SetPatchVertices(GLint patchVertices);
-        void SetBlendColor(const ColorRGBAf& color);
-        void SetLogicOp(GLenum opcode);
         void SetLineWidth(GLfloat width);
         #if 0//TODO
         void SetSampleMask(GLuint maskNumber, GLbitfield mask);
@@ -100,12 +100,39 @@ class GLStateManager
 
         /* ----- Depth-stencil states ----- */
 
+        GLDepthStencilStateSPtr CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc);
+        void ReleaseUnusedDepthStencilStates(bool firstOnly = false);
+        void NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState);
+
+        void SetDepthStencilState(GLDepthStencilState* depthStencilState);
+
         void SetDepthFunc(GLenum func);
         void SetDepthMask(GLboolean flag);
-        void SetStencilState(GLenum face, const GLStencil& state);
 
-        void PushDepthMask();
+        void PushDepthMaskAndEnable();
         void PopDepthMask();
+
+        /* ----- Rasterizer states ----- */
+
+        GLRasterizerStateSPtr CreateRasterizerState(const RasterizerDescriptor& rasterizerDesc);
+        void ReleaseUnusedRasterizerStates(bool firstOnly = false);
+        void NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState);
+
+        void SetRasterizerState(GLRasterizerState* rasterizerState);
+
+        /* ----- Blend states ----- */
+
+        GLBlendStateSPtr CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments);
+        void ReleaseUnusedBlendStates(bool firstOnly = false);
+        void NotifyBlendStateRelease(GLBlendState* blendState);
+
+        void BindBlendState(GLBlendState* blendState);
+
+        void SetBlendColor(const GLfloat (&color)[4]);
+        void SetLogicOp(GLenum opcode);
+
+        void PushColorMaskAndEnable();
+        void PopColorMask();
 
         /* ----- Buffer ----- */
 
@@ -134,12 +161,15 @@ class GLStateManager
 
         /* ----- Framebuffer ----- */
 
+        void BindRenderTarget(GLRenderTarget* renderTarget);
         void BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer);
 
         void PushBoundFramebuffer(GLFramebufferTarget target);
         void PopBoundFramebuffer();
 
         void NotifyFramebufferRelease(GLuint framebuffer);
+
+        GLRenderTarget* GetBoundRenderTarget() const;
 
         /* ----- Renderbuffer ----- */
 
@@ -184,7 +214,6 @@ class GLStateManager
 
         /* ----- Functions ----- */
 
-        void SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled);
         void AdjustViewport(GLViewport& viewport);
         void AdjustScissor(GLScissor& scissor);
 
@@ -220,7 +249,6 @@ class GLStateManager
             GLfloat     lineWidthRange[2]   = { 1.0f, 1.0f };   // minimal range of both <aliased> and <smooth> line width range
         };
 
-        //TODO: separate this in to "GLRasterizerState"
         // Common GL states
         struct GLCommonState
         {
@@ -232,18 +260,14 @@ class GLStateManager
             GLenum      frontFace       = GL_CCW;
             GLenum      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
             GLint       patchVertices_  = 0;
-            ColorRGBAf  blendColor      = { 0.0f, 0.0f, 0.0f, 0.0f };
-            GLenum      logicOpCode     = GL_COPY;
             GLfloat     lineWidth       = 1.0f;
-        };
 
-        struct GLDepthStencilState
-        {
             GLenum      depthFunc       = GL_LESS;
             GLboolean   depthMask       = GL_TRUE;
-            GLStencil   stencil[2];
+            GLboolean   cachedDepthMask = GL_TRUE;
 
-            GLboolean   depthMaskStack  = GL_TRUE;
+            GLfloat     blendColor[4]   = { 0.0f, 0.0f, 0.0f, 0.0f };
+            GLenum      logicOpCode     = GL_COPY;
         };
 
         struct GLRenderState
@@ -295,6 +319,7 @@ class GLStateManager
 
             std::array<GLuint, numFramebufferTargets>   boundFramebuffers;
             std::stack<StackEntry>                      boundFramebufferStack;
+            GLRenderTarget*                             boundRenderTarget       = nullptr;
         };
 
         struct GLRenderbufferState
@@ -340,29 +365,38 @@ class GLStateManager
 
         /* ----- Members ----- */
 
-        GLLimits                        limits_;
+        GLLimits                                limits_;
 
-        OpenGLDependentStateDescriptor  apiDependentState_;
+        OpenGLDependentStateDescriptor          apiDependentState_;
 
-        GLCommonState                   commonState_;
-        GLDepthStencilState             depthStencilState_;
-        GLRenderState                   renderState_;
-        GLBufferState                   bufferState_;
-        GLFramebufferState              framebufferState_;
-        GLRenderbufferState             renderbufferState_;
-        GLTextureState                  textureState_;
-        GLVertexArrayState              vertexArrayState_;
-        GLShaderState                   shaderState_;
-        GLSamplerState                  samplerState_;
+        GLCommonState                           commonState_;
+        GLRenderState                           renderState_;
+        GLBufferState                           bufferState_;
+        GLFramebufferState                      framebufferState_;
+        GLRenderbufferState                     renderbufferState_;
+        GLTextureState                          textureState_;
+        GLVertexArrayState                      vertexArrayState_;
+        GLShaderState                           shaderState_;
+        GLSamplerState                          samplerState_;
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        GLRenderStateExt                renderStateExt_;
+        GLRenderStateExt                        renderStateExt_;
         #endif
 
-        GLTextureLayer*                 activeTextureLayer_ = nullptr;
+        GLTextureLayer*                         activeTextureLayer_     = nullptr;
 
-        bool                            emulateClipControl_ = false;
-        GLint                           renderTargetHeight_ = 0;
+        bool                                    emulateClipControl_     = false;
+        GLint                                   renderTargetHeight_     = 0;
+
+        std::vector<GLDepthStencilStateSPtr>    depthStencilStates_;
+        GLDepthStencilState*                    boundDepthStencilState_ = nullptr;
+
+        std::vector<GLRasterizerStateSPtr>      rasterizerStates_;
+        GLRasterizerState*                      boundRasterizerState_   = nullptr;
+
+        std::vector<GLBlendStateSPtr>           blendStates_;
+        GLBlendState*                           boundBlendState_        = nullptr;
+        bool                                    colorMaskOnStack_       = false;
 
 };
 
