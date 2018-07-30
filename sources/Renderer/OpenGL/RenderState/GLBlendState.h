@@ -19,7 +19,9 @@ namespace LLGL
 {
 
 
+class GLStateManager;
 class GLBlendState;
+
 using GLBlendStateSPtr = std::shared_ptr<GLBlendState>;
 
 class GLBlendState
@@ -33,8 +35,8 @@ class GLBlendState
 
         GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments);
 
-        void Bind();
-        void BindColorMaskOnly();
+        void Bind(GLStateManager& stateMngr);
+        void BindColorMaskOnly(GLStateManager& stateMngr);
 
         // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
         int CompareSWO(const GLBlendState& rhs) const;
@@ -56,8 +58,8 @@ class GLBlendState
             GLboolean   colorMask[4]    = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
         };
 
-        void BindDrawBufferStates();
-        void BindDrawBufferColorMasks();
+        void BindDrawBufferStates(GLStateManager& stateMngr);
+        void BindDrawBufferColorMasks(GLStateManager& stateMngr);
 
         void BindDrawBufferState(const GLDrawBufferState& state);
         void BindIndexedDrawBufferState(const GLDrawBufferState& state, GLuint index);

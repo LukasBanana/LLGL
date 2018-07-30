@@ -11,7 +11,6 @@
 
 #include "../OpenGL.h"
 #include "GLStateManager.h"
-#include "GLBlendState.h"
 #include "../Shader/GLShaderProgram.h"
 #include <LLGL/GraphicsPipeline.h>
 #include <LLGL/RenderSystemFlags.h>
@@ -58,16 +57,6 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         GLenum                  drawMode_               = GL_TRIANGLES;
         GLint                   patchVertices_          = 0;
 
-        // depth state
-        bool                    depthTestEnabled_       = false;    // glEnable(GL_DEPTH_TEST)
-        GLboolean               depthMask_              = false;    // glDepthMask(GL_TRUE)
-        GLenum                  depthFunc_              = GL_LESS;
-
-        // stencil state
-        bool                    stencilTestEnabled_     = false;    // glEnable(GL_STENCIL_TEST)
-        GLStencil               stencilFront_;
-        GLStencil               stencilBack_;
-
         // rasterizer state
         GLenum                  polygonMode_            = GL_FILL;
         GLenum                  cullFace_               = 0;
@@ -88,7 +77,8 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         bool                    conservativeRaster_     = false;    // glEnable(GL_CONSERVATIVE_RASTERIZATION_NV/INTEL)
         #endif
 
-        // blend state
+        // state objects
+        GLDepthStencilStateSPtr depthStencilState_;
         GLBlendStateSPtr        blendState_;
 
         // packed byte buffer for static viewports and scissors

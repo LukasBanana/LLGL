@@ -120,6 +120,63 @@ static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObject
 }
 
 
+/* ----- Internal templates ----- */
+
+template <typename T>
+std::shared_ptr<T> FindCompatibleStateObject(
+    std::vector<std::shared_ptr<T>>&    container,
+    const T&                            other,
+    std::size_t                         first,
+    std::size_t                         last,
+    std::size_t                         stride,
+    std::size_t&                        index)
+{
+    for (index = first; index < last; index += stride)
+    {
+        /* Check if current blend state is compatible */
+        auto order = container[index]->CompareSWO(other);
+        if (order == 0)
+            return container[index];
+
+        if (order > 0)
+        {
+            /* Increase step size and reduce boundary */
+            stride *= 2;
+            first   = index;
+        }
+        else
+        {
+            /* Reset step size, then reduce boundary, finally reset index */
+            stride  = 1;
+            last    = index;
+            index   = first;
+        }
+    }
+    return nullptr;
+}
+
+template <typename T, typename... Args>
+std::shared_ptr<T> CreateRenderStateObject(std::vector<std::shared_ptr<T>>& container, Args&&... args)
+{
+    /* Try to find blend state with same parameter */
+    T stateToCompare { std::forward<Args>(args)... };
+
+    std::size_t insertionIndex = 0;
+    if (auto sharedState = FindCompatibleStateObject(container, stateToCompare, 0, container.size(), 1, insertionIndex))
+        return sharedState;
+
+    /* Allocate new blend state with insertion sort */
+    auto newState = std::make_shared<T>(stateToCompare);
+
+    if (insertionIndex < container.size())
+        container.insert(container.begin() + insertionIndex, newState);
+    else
+        container.push_back(newState);
+
+    return newState;
+}
+
+
 /* ----- Common ----- */
 
 static std::vector<GLStateManager*> g_GLStateManagerList;
@@ -509,62 +566,9 @@ void GLStateManager::SetLineWidth(GLfloat width)
 
 /* ----- Blend states ----- */
 
-GLBlendStateSPtr GLStateManager::CreateBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments)
+GLBlendStateSPtr GLStateManager::CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments)
 {
-    /* Try to find blend state with same parameter */
-    GLBlendState blendStateToCompare { desc, numColorAttachments };
-
-    std::size_t insertionIndex = 0;
-    if (auto blendState = FindCompatibleBlendState(blendStateToCompare, insertionIndex))
-        return blendState;
-
-    /* Allocate new blend state with insertion sort */
-    auto sharedBlendState = std::make_shared<GLBlendState>(blendStateToCompare);
-
-    if (insertionIndex < blendStates_.size())
-        blendStates_.insert(blendStates_.begin() + insertionIndex, sharedBlendState);
-    else
-        blendStates_.push_back(sharedBlendState);
-
-    return sharedBlendState;
-}
-
-// private
-GLBlendStateSPtr GLStateManager::FindCompatibleBlendState(const GLBlendState& other, std::size_t& insertionIndex)
-{
-    return FindCompatibleBlendStateInRange(other, 0, blendStates_.size(), 1, insertionIndex);
-}
-
-// private
-GLBlendStateSPtr GLStateManager::FindCompatibleBlendStateInRange(
-    const GLBlendState& other,
-    std::size_t         first,
-    std::size_t         last,
-    std::size_t         stride,
-    std::size_t&        index)
-{
-    for (index = first; index < last; index += stride)
-    {
-        /* Check if current blend state is compatible */
-        auto order = blendStates_[index]->CompareSWO(other);
-        if (order == 0)
-            return blendStates_[index];
-
-        if (order > 0)
-        {
-            /* Increase step size and reduce boundary */
-            stride *= 2;
-            first   = index;
-        }
-        else
-        {
-            /* Reset step size, then reduce boundary, finally reset index */
-            stride  = 1;
-            last    = index;
-            index   = first;
-        }
-    }
-    return nullptr;
+    return CreateRenderStateObject(blendStates_, blendDesc, numColorAttachments);
 }
 
 void GLStateManager::ReleaseUnusedBlendStates(bool firstOnly)
@@ -598,11 +602,17 @@ void GLStateManager::ReleaseUnusedBlendStates(bool firstOnly)
     }
 }
 
-void GLStateManager::SetBlendState(GLBlendState* blendState)
+void GLStateManager::NotifyBlendStateRelease(GLBlendState* blendState)
 {
-    if (blendState && blendState != boundBlendState_)
+    if (boundBlendState_ == blendState)
+        boundBlendState_ = nullptr;
+}
+
+void GLStateManager::BindBlendState(GLBlendState* blendState)
+{
+    if (blendState != nullptr && blendState != boundBlendState_)
     {
-        blendState->Bind();
+        blendState->Bind(*this);
         boundBlendState_ = blendState;
     }
 }
@@ -645,115 +655,91 @@ void GLStateManager::PopColorMask()
     if (colorMaskOnStack_)
     {
         if (boundBlendState_)
-            boundBlendState_->BindColorMaskOnly();
+            boundBlendState_->BindColorMaskOnly(*this);
         colorMaskOnStack_ = false;
     }
 }
 
-void GLStateManager::NotifyBlendStateRelease(GLBlendState* blendState)
+/* ----- Depth-stencil states ----- */
+
+GLDepthStencilStateSPtr GLStateManager::CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc)
 {
-    if (boundBlendState_ == blendState)
-        boundBlendState_ = nullptr;
+    return CreateRenderStateObject(depthStencilStates_, depthDesc, stencilDesc);
 }
 
-/* ----- Depth-stencil states ----- */
+void GLStateManager::ReleaseUnusedDepthStencilStates(bool firstOnly)
+{
+    if (firstOnly)
+    {
+        for (auto it = depthStencilStates_.begin(); it != depthStencilStates_.end(); ++it)
+        {
+            if (it->use_count() == 1)
+            {
+                NotifyDepthStencilStateRelease(it->get());
+                depthStencilStates_.erase(it);
+                break;
+            }
+        }
+    }
+    else
+    {
+        RemoveAllFromListIf(
+            depthStencilStates_,
+            [&](const GLDepthStencilStateSPtr& entry)
+            {
+                if (entry.use_count() == 1)
+                {
+                    NotifyDepthStencilStateRelease(entry.get());
+                    return true;
+                }
+                return false;
+            }
+        );
+    }
+}
+
+void GLStateManager::NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState)
+{
+    if (boundDepthStencilState_ == depthStencilState)
+        boundDepthStencilState_ = nullptr;
+}
+
+void GLStateManager::SetDepthStencilState(GLDepthStencilState* depthStencilState)
+{
+    if (depthStencilState != nullptr && depthStencilState != boundDepthStencilState_)
+    {
+        depthStencilState->Bind(*this);
+        boundDepthStencilState_ = depthStencilState;
+    }
+}
 
 void GLStateManager::SetDepthFunc(GLenum func)
 {
-    if (depthStencilState_.depthFunc != func)
+    if (commonState_.depthFunc != func)
     {
-        depthStencilState_.depthFunc = func;
+        commonState_.depthFunc = func;
         glDepthFunc(func);
     }
 }
 
 void GLStateManager::SetDepthMask(GLboolean flag)
 {
-    if (depthStencilState_.depthMask != flag)
+    if (commonState_.depthMask != flag)
     {
-        depthStencilState_.depthMask = flag;
+        commonState_.depthMask = flag;
         glDepthMask(flag);
-    }
-}
-
-static void SetStencilFaceState(GLenum face, GLStencil& dst, const GLStencil& src)
-{
-    if (dst.sfail != src.sfail || dst.dpfail != src.dpfail || dst.dppass != src.dppass)
-    {
-        dst.sfail   = src.sfail;
-        dst.dpfail  = src.dpfail;
-        dst.dppass  = src.dppass;
-        glStencilOpSeparate(face, src.sfail, src.dpfail, src.dppass);
-    }
-
-    if (dst.func != src.func || dst.ref != src.ref || dst.mask != src.mask)
-    {
-        dst.func    = src.func;
-        dst.ref     = src.ref;
-        dst.mask    = src.mask;
-        glStencilFuncSeparate(face, src.func, src.ref, src.mask);
-    }
-
-    if (dst.writeMask != src.writeMask)
-    {
-        dst.writeMask = src.writeMask;
-        glStencilMaskSeparate(face, src.writeMask);
-    }
-}
-
-static void SetStencilFrontAndBackState(GLStencil& dst0, GLStencil& dst1, const GLStencil& src)
-{
-    if (dst0.sfail != src.sfail || dst0.dpfail != src.dpfail || dst0.dppass != src.dppass ||
-        dst1.sfail != src.sfail || dst1.dpfail != src.dpfail || dst1.dppass != src.dppass)
-    {
-        dst0.sfail  = dst1.sfail  = src.sfail;
-        dst0.dpfail = dst1.dpfail = src.dpfail;
-        dst0.dppass = dst1.dppass = src.dppass;
-        glStencilOp(src.sfail, src.dpfail, src.dppass);
-    }
-
-    if (dst0.func != src.func || dst0.ref != src.ref || dst0.mask != src.mask ||
-        dst1.func != src.func || dst1.ref != src.ref || dst1.mask != src.mask)
-    {
-        dst0.func = dst1.func = src.func;
-        dst0.ref  = dst1.ref  = src.ref;
-        dst0.mask = dst1.mask = src.mask;
-        glStencilFunc(src.func, src.ref, src.mask);
-    }
-
-    if (dst0.writeMask != src.writeMask ||
-        dst1.writeMask != src.writeMask)
-    {
-        dst0.writeMask = dst1.writeMask = src.writeMask;
-        glStencilMask(src.writeMask);
-    }
-}
-
-void GLStateManager::SetStencilState(GLenum face, const GLStencil& state)
-{
-    switch (face)
-    {
-        case GL_FRONT:
-            SetStencilFaceState(GL_FRONT, depthStencilState_.stencil[0], state);
-            break;
-        case GL_BACK:
-            SetStencilFaceState(GL_BACK, depthStencilState_.stencil[1], state);
-            break;
-        case GL_FRONT_AND_BACK:
-            SetStencilFrontAndBackState(depthStencilState_.stencil[0], depthStencilState_.stencil[1], state);
-            break;
     }
 }
 
 void GLStateManager::PushDepthMaskAndEnable()
 {
     SetDepthMask(GL_TRUE);
-    depthStencilState_.depthMaskStack = depthStencilState_.depthMask;
+    commonState_.cachedDepthMask = commonState_.depthMask;
 }
 
 void GLStateManager::PopDepthMask()
 {
-    SetDepthMask(depthStencilState_.depthMaskStack);
+    SetDepthMask(commonState_.cachedDepthMask);
 }
 
 /* ----- Buffer ----- */

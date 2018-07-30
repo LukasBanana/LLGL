@@ -52,10 +52,8 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
     }
 }
 
-void GLBlendState::Bind()
+void GLBlendState::Bind(GLStateManager& stateMngr)
 {
-    auto& stateMngr = *GLStateManager::active;
-
     /* Set blend factor */
     stateMngr.SetBlendColor(blendColor_);
     stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);
@@ -67,7 +65,7 @@ void GLBlendState::Bind()
         stateMngr.SetLogicOp(logicOp_);
 
         /* Bind only color masks for all draw buffers */
-        BindDrawBufferColorMasks();
+        BindDrawBufferColorMasks(stateMngr);
     }
     else
     {
@@ -75,13 +73,13 @@ void GLBlendState::Bind()
         stateMngr.Disable(GLState::COLOR_LOGIC_OP);
 
         /* Bind blend states for all draw buffers */
-        BindDrawBufferStates();
+        BindDrawBufferStates(stateMngr);
     }
 }
 
-void GLBlendState::BindColorMaskOnly()
+void GLBlendState::BindColorMaskOnly(GLStateManager& stateMngr)
 {
-    BindDrawBufferColorMasks();
+    BindDrawBufferColorMasks(stateMngr);
 }
 
 int GLBlendState::CompareSWO(const GLBlendState& rhs) const
@@ -99,9 +97,9 @@ int GLBlendState::CompareSWO(const GLBlendState& rhs) const
 
     for (decltype(numDrawBuffers_) i = 0; i < numDrawBuffers_; ++i)
     {
-        auto v = GLDrawBufferState::CompareSWO(lhs.drawBuffers_[i], rhs.drawBuffers_[i]);
-        if (v != 0)
-            return v;
+        auto order = GLDrawBufferState::CompareSWO(lhs.drawBuffers_[i], rhs.drawBuffers_[i]);
+        if (order != 0)
+            return order;
     }
 
     return 0;
@@ -112,7 +110,7 @@ int GLBlendState::CompareSWO(const GLBlendState& rhs) const
  * ======= Private: =======
  */
 
-void GLBlendState::BindDrawBufferStates()
+void GLBlendState::BindDrawBufferStates(GLStateManager& stateMngr)
 {
     if (numDrawBuffers_ == 1)
     {
@@ -139,13 +137,13 @@ void GLBlendState::BindDrawBufferStates()
             }
 
             /* Restore draw buffer settings for current render target */
-            if (auto boundRenderTarget = GLStateManager::active->GetBoundRenderTarget())
+            if (auto boundRenderTarget = stateMngr.GetBoundRenderTarget())
                 boundRenderTarget->SetDrawBuffers();
         }
     }
 }
 
-void GLBlendState::BindDrawBufferColorMasks()
+void GLBlendState::BindDrawBufferColorMasks(GLStateManager& stateMngr)
 {
     if (numDrawBuffers_ == 1)
     {
@@ -172,7 +170,7 @@ void GLBlendState::BindDrawBufferColorMasks()
             }
 
             /* Restore draw buffer settings for current render target */
-            if (auto boundRenderTarget = GLStateManager::active->GetBoundRenderTarget())
+            if (auto boundRenderTarget = stateMngr.GetBoundRenderTarget())
                 boundRenderTarget->SetDrawBuffers();
         }
     }

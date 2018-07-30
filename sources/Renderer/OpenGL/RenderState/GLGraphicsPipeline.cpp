@@ -23,6 +23,7 @@ namespace LLGL
 
 /* ----- Internal functions ----- */
 
+#if 0
 static void Convert(GLStencil& dst, const StencilFaceDescriptor& src)
 {
     dst.sfail        = GLTypes::Map(src.stencilFailOp);
@@ -33,6 +34,7 @@ static void Convert(GLStencil& dst, const StencilFaceDescriptor& src)
     dst.mask         = src.readMask;
     dst.writeMask    = src.writeMask;
 }
+#endif
 
 static GLState PolygonModeToPolygonOffset(const PolygonMode mode)
 {
@@ -81,15 +83,8 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     else
         patchVertices_ = 0;
 
-    /* Convert depth state */
-    depthTestEnabled_       = desc.depth.testEnabled;
-    depthMask_              = (desc.depth.writeEnabled ? GL_TRUE : GL_FALSE);
-    depthFunc_              = GLTypes::Map(desc.depth.compareOp);
-
-    /* Convert stencil state */
-    stencilTestEnabled_     = desc.stencil.testEnabled;
-    Convert(stencilFront_, desc.stencil.front);
-    Convert(stencilBack_, desc.stencil.back);
+    /* Create depth-stencil state */
+    depthStencilState_ = GLStateManager::active->CreateDepthStencilState(desc.depth, desc.stencil);
 
     /* Convert rasterizer state */
     polygonMode_            = GLTypes::Map(desc.rasterizer.polygonMode);
@@ -140,32 +135,14 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     stateMngr.BindShaderProgram(shaderProgram_->GetID());
     stateMngr.Set(GLState::RASTERIZER_DISCARD, !shaderProgram_->HasFragmentShader());
 
-    /* Setup input-assembler state */
+    /* Set input-assembler state */
     if (patchVertices_ > 0)
         stateMngr.SetPatchVertices(patchVertices_);
 
-    /* Setup depth state */
-    if (depthTestEnabled_)
-    {
-        stateMngr.Enable(GLState::DEPTH_TEST);
-        stateMngr.SetDepthFunc(depthFunc_);
-    }
-    else
-        stateMngr.Disable(GLState::DEPTH_TEST);
+    /* Set depth states */
+    stateMngr.SetDepthStencilState(depthStencilState_.get());
 
-    stateMngr.SetDepthMask(depthMask_);
-
-    /* Setup stencil state */
-    if (stencilTestEnabled_)
-    {
-        stateMngr.Enable(GLState::STENCIL_TEST);
-        stateMngr.SetStencilState(GL_FRONT, stencilFront_);
-        stateMngr.SetStencilState(GL_BACK, stencilBack_);
-    }
-    else
-        stateMngr.Disable(GLState::STENCIL_TEST);
-
-    /* Setup rasterizer state */
+    /* Set rasterizer state */
     stateMngr.SetPolygonMode(polygonMode_);
     stateMngr.SetFrontFace(frontFace_);
 
@@ -200,8 +177,8 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
         stateMngr.SetSampleMask(sampleMask_);
     #endif
 
-    /* Setup blend state */
-    stateMngr.SetBlendState(blendState_.get());
+    /* Set blend state */
+    stateMngr.BindBlendState(blendState_.get());
 
     /* Set static viewports and scissors */
     if (staticStateBuffer_)

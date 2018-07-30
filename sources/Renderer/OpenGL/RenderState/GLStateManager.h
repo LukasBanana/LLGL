@@ -11,6 +11,7 @@
 
 #include "GLState.h"
 #include "GLBlendState.h"
+#include "GLDepthStencilState.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include <LLGL/CommandBufferFlags.h>
@@ -103,10 +104,11 @@ class GLStateManager
 
         /* ----- Blend states ----- */
 
-        GLBlendStateSPtr CreateBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments);
+        GLBlendStateSPtr CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments);
         void ReleaseUnusedBlendStates(bool firstOnly = false);
+        void NotifyBlendStateRelease(GLBlendState* blendState);
 
-        void SetBlendState(GLBlendState* blendState);
+        void BindBlendState(GLBlendState* blendState);
 
         void SetBlendColor(const GLfloat (&color)[4]);
         void SetLogicOp(GLenum opcode);
@@ -114,13 +116,16 @@ class GLStateManager
         void PushColorMaskAndEnable();
         void PopColorMask();
 
-        void NotifyBlendStateRelease(GLBlendState* blendState);
-
         /* ----- Depth-stencil states ----- */
+
+        GLDepthStencilStateSPtr CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc);
+        void ReleaseUnusedDepthStencilStates(bool firstOnly = false);
+        void NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState);
+
+        void SetDepthStencilState(GLDepthStencilState* depthStencilState);
 
         void SetDepthFunc(GLenum func);
         void SetDepthMask(GLboolean flag);
-        void SetStencilState(GLenum face, const GLStencil& state);
 
         void PushDepthMaskAndEnable();
         void PopDepthMask();
@@ -219,15 +224,6 @@ class GLStateManager
         void DetermineVendorSpecificExtensions();
         #endif
 
-        GLBlendStateSPtr FindCompatibleBlendState(const GLBlendState& other, std::size_t& insertionIndex);
-        GLBlendStateSPtr FindCompatibleBlendStateInRange(
-            const GLBlendState& other,
-            std::size_t         first,
-            std::size_t         last,
-            std::size_t         stride,
-            std::size_t&        index
-        );
-
         /* ----- Constants ----- */
 
         static const std::uint32_t numTextureLayers         = 32;
@@ -249,7 +245,6 @@ class GLStateManager
             GLfloat     lineWidthRange[2]   = { 1.0f, 1.0f };   // minimal range of both <aliased> and <smooth> line width range
         };
 
-        //TODO: separate this in to "GLRasterizerState"
         // Common GL states
         struct GLCommonState
         {
@@ -262,17 +257,13 @@ class GLStateManager
             GLenum      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
             GLint       patchVertices_  = 0;
             GLfloat     lineWidth       = 1.0f;
-            GLfloat     blendColor[4]   = { 0.0f, 0.0f, 0.0f, 0.0f };
-            GLenum      logicOpCode     = GL_COPY;
-        };
 
-        //TODO: replace this by global "GLDepthStencilState" class
-        struct GLDepthStencilState
-        {
             GLenum      depthFunc       = GL_LESS;
             GLboolean   depthMask       = GL_TRUE;
-            GLStencil   stencil[2];
-            GLboolean   depthMaskStack  = GL_TRUE;
+            GLboolean   cachedDepthMask = GL_TRUE;
+
+            GLfloat     blendColor[4]   = { 0.0f, 0.0f, 0.0f, 0.0f };
+            GLenum      logicOpCode     = GL_COPY;
         };
 
         struct GLRenderState
@@ -370,33 +361,35 @@ class GLStateManager
 
         /* ----- Members ----- */
 
-        GLLimits                        limits_;
+        GLLimits                                limits_;
 
-        OpenGLDependentStateDescriptor  apiDependentState_;
+        OpenGLDependentStateDescriptor          apiDependentState_;
 
-        GLCommonState                   commonState_;
-        GLDepthStencilState             depthStencilState_;
-        GLRenderState                   renderState_;
-        GLBufferState                   bufferState_;
-        GLFramebufferState              framebufferState_;
-        GLRenderbufferState             renderbufferState_;
-        GLTextureState                  textureState_;
-        GLVertexArrayState              vertexArrayState_;
-        GLShaderState                   shaderState_;
-        GLSamplerState                  samplerState_;
+        GLCommonState                           commonState_;
+        GLRenderState                           renderState_;
+        GLBufferState                           bufferState_;
+        GLFramebufferState                      framebufferState_;
+        GLRenderbufferState                     renderbufferState_;
+        GLTextureState                          textureState_;
+        GLVertexArrayState                      vertexArrayState_;
+        GLShaderState                           shaderState_;
+        GLSamplerState                          samplerState_;
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        GLRenderStateExt                renderStateExt_;
+        GLRenderStateExt                        renderStateExt_;
         #endif
 
-        GLTextureLayer*                 activeTextureLayer_ = nullptr;
+        GLTextureLayer*                         activeTextureLayer_     = nullptr;
 
-        bool                            emulateClipControl_ = false;
-        GLint                           renderTargetHeight_ = 0;
+        bool                                    emulateClipControl_     = false;
+        GLint                                   renderTargetHeight_     = 0;
 
-        std::vector<GLBlendStateSPtr>   blendStates_;
-        GLBlendState*                   boundBlendState_    = nullptr;
-        bool                            colorMaskOnStack_   = false;
+        std::vector<GLBlendStateSPtr>           blendStates_;
+        GLBlendState*                           boundBlendState_        = nullptr;
+        bool                                    colorMaskOnStack_       = false;
+
+        std::vector<GLDepthStencilStateSPtr>    depthStencilStates_;
+        GLDepthStencilState*                    boundDepthStencilState_ = nullptr;
 
 };
 

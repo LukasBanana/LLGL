@@ -128,18 +128,6 @@ struct GLScissor
     GLsizei height; // default is context height
 };
 
-//TODO: replace by "GLDepthStencilState" class
-struct GLStencil
-{
-    GLenum  sfail       = GL_KEEP;
-    GLenum  dpfail      = GL_KEEP;
-    GLenum  dppass      = GL_KEEP;
-    GLenum  func        = GL_ALWAYS;
-    GLint   ref         = 0;
-    GLuint  mask        = ~0;
-    GLuint  writeMask   = ~0;
-};
-
 
 } // /namespace LLGL
 
