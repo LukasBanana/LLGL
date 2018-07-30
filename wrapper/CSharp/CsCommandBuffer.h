@@ -11,6 +11,7 @@
 #include <LLGL/CommandBuffer.h>
 #include "CsTypes.h"
 #include "CsRenderSystemChilds.h"
+#include "CsCommandBufferFlags.h"
 #include "CsGraphicsPipelineFlags.h"
 #include "CsRenderTarget.h"
 
@@ -74,9 +75,7 @@ public ref class CommandBuffer
 
         void Clear(int flags);
 
-        #if 0
         void ClearAttachments(array<AttachmentClear^>^ attachments);
-        #endif
 
         /* ----- Input Assembly ------ */
 

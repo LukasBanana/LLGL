@@ -17,14 +17,14 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-Window::Window(::LLGL::Window* instance) :
-    instance_ { instance }
+Window::Window(::LLGL::Window* native) :
+    native_ { native }
 {
 }
 
 Offset2D^ Window::Position::get()
 {
-    auto pos = instance_->GetPosition();
+    auto pos = native_->GetPosition();
     auto result = gcnew Offset2D();
     {
         result->X = pos.x;
@@ -35,12 +35,12 @@ Offset2D^ Window::Position::get()
 
 void Window::Position::set(Offset2D^ position)
 {
-    instance_->SetPosition({ position->X, position->Y });
+    native_->SetPosition({ position->X, position->Y });
 }
 
 Extent2D^ Window::Size::get()
 {
-    auto size = instance_->GetSize(false);
+    auto size = native_->GetSize(false);
     auto result = gcnew Extent2D();
     {
         result->Width   = size.width;
@@ -51,12 +51,12 @@ Extent2D^ Window::Size::get()
 
 void Window::Size::set(Extent2D^ size)
 {
-    instance_->SetSize({ size->Width, size->Height }, false);
+    native_->SetSize({ size->Width, size->Height }, false);
 }
 
 Extent2D^ Window::ClientAreaSize::get()
 {
-    auto size = instance_->GetSize(true);
+    auto size = native_->GetSize(true);
     auto result = gcnew Extent2D();
     {
         result->Width   = size.width;
@@ -67,27 +67,27 @@ Extent2D^ Window::ClientAreaSize::get()
 
 void Window::ClientAreaSize::set(Extent2D^ size)
 {
-    instance_->SetSize({ size->Width, size->Height }, true);
+    native_->SetSize({ size->Width, size->Height }, true);
 }
 
 String^ Window::Title::get()
 {
-    return ToManagedString(instance_->GetTitle());
+    return ToManagedString(native_->GetTitle());
 }
 
 void Window::Title::set(String^ title)
 {
-    instance_->SetTitle(ToStdWString(title));
+    native_->SetTitle(ToStdWString(title));
 }
 
 bool Window::Shown::get()
 {
-    return instance_->IsShown();
+    return native_->IsShown();
 }
 
 void Window::Shown::set(bool shown)
 {
-    instance_->Show(shown);
+    native_->Show(shown);
 }
 
 #if 0
@@ -98,12 +98,12 @@ property WindowBehavior^ Behavior;
 
 bool Window::HasFocus::get()
 {
-    return instance_->HasFocus();
+    return native_->HasFocus();
 }
 
 bool Window::ProcessEvents()
 {
-    return instance_->ProcessEvents();
+    return native_->ProcessEvents();
 }
 
 

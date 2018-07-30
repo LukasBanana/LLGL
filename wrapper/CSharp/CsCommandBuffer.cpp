@@ -16,6 +16,9 @@ namespace LLGL
 {
 
 
+static const int g_maxNumViewports      = 32;
+static const int g_maxNumAttachments    = 16;
+
 CommandBuffer::CommandBuffer(::LLGL::CommandBuffer* native) :
     native_ { native }
 {
@@ -50,8 +53,6 @@ void CommandBuffer::CopyBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, Buff
 
 /* ----- Viewport and Scissor ----- */
 
-static const int g_maxNumViewports = 32;
-
 static void Convert(::LLGL::Viewport& dst, Viewport^ src)
 {
     dst.x           = src->X;
@@ -64,20 +65,20 @@ static void Convert(::LLGL::Viewport& dst, Viewport^ src)
 
 void CommandBuffer::SetViewport(Viewport^ viewport)
 {
-    ::LLGL::Viewport viewportNative;
-    Convert(viewportNative, viewport);
-    native_->SetViewport(viewportNative);
+    ::LLGL::Viewport nativeViewport;
+    Convert(nativeViewport, viewport);
+    native_->SetViewport(nativeViewport);
 }
 
 void CommandBuffer::SetViewports(array<Viewport^>^ viewports)
 {
-    ::LLGL::Viewport viewportsNative[g_maxNumViewports];
+    ::LLGL::Viewport nativeViewports[g_maxNumViewports];
 
     auto numViewports = static_cast<std::uint32_t>(std::min(viewports->Length, g_maxNumViewports));
     for (std::uint32_t i = 0; i < numViewports; ++i)
-        Convert(viewportsNative[i], viewports[i]);
+        Convert(nativeViewports[i], viewports[i]);
 
-    native_->SetViewports(numViewports, viewportsNative);
+    native_->SetViewports(numViewports, nativeViewports);
 }
 
 static void Convert(::LLGL::Scissor& dst, Scissor^ src)
@@ -90,20 +91,20 @@ static void Convert(::LLGL::Scissor& dst, Scissor^ src)
 
 void CommandBuffer::SetScissor(Scissor^ scissor)
 {
-    ::LLGL::Scissor scissorNative;
-    Convert(scissorNative, scissor);
-    native_->SetScissor(scissorNative);
+    ::LLGL::Scissor nativeScissor;
+    Convert(nativeScissor, scissor);
+    native_->SetScissor(nativeScissor);
 }
 
 void CommandBuffer::SetScissors(array<Scissor^>^ scissors)
 {
-    ::LLGL::Scissor scissorsNative[g_maxNumViewports];
+    ::LLGL::Scissor nativeScissors[g_maxNumViewports];
 
     auto numScissors = static_cast<std::uint32_t>(std::min(scissors->Length, g_maxNumViewports));
     for (std::uint32_t i = 0; i < numScissors; ++i)
-        Convert(scissorsNative[i], scissors[i]);
+        Convert(nativeScissors[i], scissors[i]);
 
-    native_->SetScissors(numScissors, scissorsNative);
+    native_->SetScissors(numScissors, nativeScissors);
 }
 
 /* ----- Clear ----- */
@@ -128,9 +129,38 @@ void CommandBuffer::Clear(int flags)
     native_->Clear(static_cast<long>(flags));
 }
 
-#if 0
-void CommandBuffer::ClearAttachments(array<AttachmentClear^>^ attachments);
-#endif
+static void Convert(::LLGL::ColorRGBAf& dst, ColorRGBA^ src)
+{
+    dst.r = src->R;
+    dst.g = src->G;
+    dst.b = src->B;
+    dst.a = src->A;
+}
+
+static void Convert(::LLGL::ClearValue& dst, ClearValue^ src)
+{
+    Convert(dst.color, src->Color);
+    dst.depth   = src->Depth;
+    dst.stencil = src->Stencil;
+}
+
+static void Convert(::LLGL::AttachmentClear& dst, AttachmentClear^ src)
+{
+    dst.flags           = static_cast<long>(src->Flags);
+    dst.colorAttachment = src->ColorAttachment;
+    Convert(dst.clearValue, src->ClearValue);
+}
+
+void CommandBuffer::ClearAttachments(array<AttachmentClear^>^ attachments)
+{
+    ::LLGL::AttachmentClear nativeAttachments[g_maxNumAttachments];
+
+    auto numAttachments = static_cast<std::uint32_t>(std::min(attachments->Length, g_maxNumAttachments));
+    for (std::uint32_t i = 0; i < numAttachments; ++i)
+        Convert(nativeAttachments[i], attachments[i]);
+
+    native_->ClearAttachments(numAttachments, nativeAttachments);
+}
 
 /* ----- Input Assembly ------ */
 

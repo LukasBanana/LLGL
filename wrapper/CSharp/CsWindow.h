@@ -33,9 +33,40 @@ public ref class Window
 
     public:
 
+        #if 0
+        ref class EventListener
+        {
+
+            public:
+
+                virtual ~EventListener() = default;
+
+            protected:
+
+                virtual void OnProcessEvents(Window^ sender);
+                virtual void OnKeyDown(Window^ sender, Key keyCode);
+                virtual void OnKeyUp(Window^ sender, Key keyCode);
+                virtual void OnDoubleClick(Window^ sender, Key keyCode);
+                virtual void OnChar(Window^ sender, System::Char chr);
+                virtual void OnWheelMotion(Window^ sender, int motion);
+                virtual void OnLocalMotion(Window^ sender, Offset2D^ position);
+                virtual void OnGlobalMotion(Window^ sender, Offset2D^ motion);
+                virtual void OnResize(Window^ sender, const Extent2D& clientAreaSize);
+                virtual void OnGetFocus(Window^ sender);
+                virtual void OnLoseFocus(Window^ sender);
+                virtual bool OnQuit(Window^ sender);
+                virtual void OnTimer(Window^ sender, std::uint32_t timerID);
+
+            private:
+
+                ::LLGL::Window::EventListener* native_ = nullptr;
+
+        };
+        #endif
+
         /* ----- Common ----- */
 
-        Window(::LLGL::Window* instance);
+        Window(::LLGL::Window* native);
 
         #if 0
         static Window^ Create(WindowDescriptor^ desc);
@@ -110,7 +141,7 @@ public ref class Window
 
     private:
 
-        ::LLGL::Window* instance_ = nullptr;
+        ::LLGL::Window* native_ = nullptr;
 
 };
 
