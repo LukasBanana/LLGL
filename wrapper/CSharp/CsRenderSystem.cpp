@@ -15,6 +15,27 @@ namespace SharpLLGL
 
 
 /*
+ * Common converions
+ */
+
+static void Convert(LLGL::ColorRGBAf& dst, ColorRGBA<float>^ src)
+{
+    dst.r = src->R;
+    dst.g = src->G;
+    dst.b = src->B;
+    dst.a = src->A;
+}
+
+static void Convert(LLGL::ColorRGBAb& dst, ColorRGBA<bool>^ src)
+{
+    dst.r = src->R;
+    dst.g = src->G;
+    dst.b = src->B;
+    dst.a = src->A;
+}
+
+
+/*
  * Internal classes
  */
 
@@ -465,13 +486,37 @@ void RenderSystem::GenerateMips(Texture^ texture, unsigned int baseMipLevel, uns
     native_->GenerateMips(*texture->NativeSub, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
 }
 
-#if 0
 /* ----- Samplers ---- */
 
-Sampler^ RenderSystem::CreateSampler(SamplerDescriptor^ desc);
+static void Convert(LLGL::SamplerDescriptor& dst, SamplerDescriptor^ src)
+{
+    dst.addressModeU    = static_cast<LLGL::SamplerAddressMode>(src->AddressModeU);
+    dst.addressModeV    = static_cast<LLGL::SamplerAddressMode>(src->AddressModeV);
+    dst.addressModeW    = static_cast<LLGL::SamplerAddressMode>(src->AddressModeW);
+    dst.minFilter       = static_cast<LLGL::SamplerFilter>(src->MinFilter);
+    dst.magFilter       = static_cast<LLGL::SamplerFilter>(src->MagFilter);
+    dst.mipMapFilter    = static_cast<LLGL::SamplerFilter>(src->MipMapFilter);
+    dst.mipMapping      = src->MipMapping;
+    dst.mipMapLODBias   = src->MipMapLODBias;
+    dst.minLOD          = src->MinLOD;
+    dst.maxLOD          = src->MaxLOD;
+    dst.maxAnisotropy   = src->MaxAnisotropy;
+    dst.compareEnabled  = src->CompareEnabled;
+    dst.compareOp       = static_cast<LLGL::CompareOp>(src->CompareOp);
+    Convert(dst.borderColor, src->BorderColor);
+}
 
-void RenderSystem::Release(Sampler^ sampler);
-#endif
+Sampler^ RenderSystem::CreateSampler(SamplerDescriptor^ desc)
+{
+    LLGL::SamplerDescriptor nativeDesc;
+    Convert(nativeDesc, desc);
+    return gcnew Sampler(native_->CreateSampler(nativeDesc));
+}
+
+void RenderSystem::Release(Sampler^ sampler)
+{
+    native_->Release(*sampler->NativeSub);
+}
 
 /* ----- Resource Heaps ----- */
 
@@ -683,14 +728,12 @@ static void Convert(LLGL::BlendTargetDescriptor& dst, BlendTargetDescriptor^ src
     dst.srcAlpha        = static_cast<LLGL::BlendOp>(src->SrcAlpha);
     dst.dstAlpha        = static_cast<LLGL::BlendOp>(src->DstAlpha);
     dst.alphaArithmetic = static_cast<LLGL::BlendArithmetic>(src->AlphaArithmetic);
-    for (int i = 0; i < 4; ++i)
-        dst.colorMask[i] = (src->ColorMask->Length > i ? src->ColorMask[i] : true);
+    Convert(dst.colorMask, src->ColorMask);
 }
 
 static void Convert(LLGL::BlendDescriptor& dst, BlendDescriptor^ src)
 {
-    for (int i = 0; i < 4; ++i)
-        dst.blendFactor[i] = (src->BlendFactor->Length > i ? src->BlendFactor[i] : 0.0f);
+    Convert(dst.blendFactor, src->BlendFactor);
     dst.alphaToCoverageEnabled  = src->AlphaToCoverageEnabled;
     dst.independentBlendEnabled = src->IndependentBlendEnabled;
     dst.logicOp                 = static_cast<LLGL::LogicOp>(src->LogicOp);

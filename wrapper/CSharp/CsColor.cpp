@@ -25,21 +25,16 @@ namespace SharpLLGL
  * ColorRGB struct
  */
 
-ColorRGB::ColorRGB()
-{
-    R = 1.0f;
-    G = 1.0f;
-    B = 1.0f;
-}
-
-ColorRGB::ColorRGB(float r, float g, float b)
+generic <typename T>
+ColorRGB<T>::ColorRGB(T r, T g, T b)
 {
     R = r;
     G = g;
     B = b;
 }
 
-ColorRGB::ColorRGB(ColorRGB^ rhs)
+generic <typename T>
+ColorRGB<T>::ColorRGB(ColorRGB<T>^ rhs)
 {
     R = rhs->R;
     G = rhs->G;
@@ -51,15 +46,8 @@ ColorRGB::ColorRGB(ColorRGB^ rhs)
  * ColorRGBA struct
  */
 
-ColorRGBA::ColorRGBA()
-{
-    R = 1.0f;
-    G = 1.0f;
-    B = 1.0f;
-    A = 1.0f;
-}
-
-ColorRGBA::ColorRGBA(float r, float g, float b, float a)
+generic <typename T>
+ColorRGBA<T>::ColorRGBA(T r, T g, T b, T a)
 {
     R = r;
     G = g;
@@ -67,7 +55,8 @@ ColorRGBA::ColorRGBA(float r, float g, float b, float a)
     A = a;
 }
 
-ColorRGBA::ColorRGBA(ColorRGBA^ rhs)
+generic <typename T>
+ColorRGBA<T>::ColorRGBA(ColorRGBA<T>^ rhs)
 {
     R = rhs->R;
     G = rhs->G;

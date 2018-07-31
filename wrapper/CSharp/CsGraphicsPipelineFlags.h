@@ -11,6 +11,7 @@
 #include "CsShaderProgram.h"
 #include "CsRenderSystemChilds.h"
 #include "CsTypes.h"
+#include "CsColor.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -320,7 +321,7 @@ public ref class BlendTargetDescriptor
         property BlendOp            SrcAlpha;
         property BlendOp            DstAlpha;
         property BlendArithmetic    AlphaArithmetic;
-        property array<bool>^       ColorMask;
+        property ColorRGBA<bool>^   ColorMask;
 
 };
 
@@ -331,7 +332,7 @@ public ref class BlendDescriptor
 
         BlendDescriptor();
 
-        property array<float>^                  BlendFactor;
+        property ColorRGBA<float>^              BlendFactor;
         property bool                           AlphaToCoverageEnabled;
         property bool                           IndependentBlendEnabled;
         property LogicOp                        LogicOp;

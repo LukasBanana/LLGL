@@ -15,34 +15,34 @@ namespace SharpLLGL
 {
 
 
+generic <typename T>
 public ref struct ColorRGB
 {
 
     public:
 
-        ColorRGB();
-        ColorRGB(float r, float g, float b);
-        ColorRGB(ColorRGB^ rhs);
+        ColorRGB(T r, T g, T b);
+        ColorRGB(ColorRGB<T>^ rhs);
 
-        property float R;
-        property float G;
-        property float B;
+        property T R;
+        property T G;
+        property T B;
 
 };
 
+generic <typename T>
 public ref struct ColorRGBA
 {
 
     public:
 
-        ColorRGBA();
-        ColorRGBA(float r, float g, float b, float a);
-        ColorRGBA(ColorRGBA^ rhs);
+        ColorRGBA(T r, T g, T b, T a);
+        ColorRGBA(ColorRGBA<T>^ rhs);
 
-        property float R;
-        property float G;
-        property float B;
-        property float A;
+        property T R;
+        property T G;
+        property T B;
+        property T A;
 
 };
 

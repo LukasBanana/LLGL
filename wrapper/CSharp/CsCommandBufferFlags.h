@@ -49,9 +49,9 @@ public ref class ClearValue
 
         ClearValue();
 
-        property ColorRGBA^     Color;
-        property float          Depth;
-        property unsigned int   Stencil;
+        property ColorRGBA<float>^  Color;
+        property float              Depth;
+        property unsigned int       Stencil;
 
 };
 
@@ -61,7 +61,7 @@ public ref class AttachmentClear
     public:
 
         AttachmentClear();
-        AttachmentClear(ColorRGBA^ color, unsigned int colorAttachment);
+        AttachmentClear(ColorRGBA<float>^ color, unsigned int colorAttachment);
         AttachmentClear(float depth);
         AttachmentClear(unsigned int stencil);
         AttachmentClear(float depth, unsigned int stencil);

@@ -19,7 +19,7 @@ namespace SharpLLGL
 
 ClearValue::ClearValue()
 {
-    Color   = gcnew ColorRGBA();
+    Color   = gcnew ColorRGBA<float>(0.0f, 0.0f, 0.0f, 0.0f);
     Depth   = 1.0f;
     Stencil = 0;
 }
@@ -36,7 +36,7 @@ AttachmentClear::AttachmentClear()
     ClearValue      = gcnew SharpLLGL::ClearValue();
 }
 
-AttachmentClear::AttachmentClear(ColorRGBA^ color, unsigned int colorAttachment)
+AttachmentClear::AttachmentClear(ColorRGBA<float>^ color, unsigned int colorAttachment)
 {
     Flags               = ClearFlags::Color;
     ColorAttachment     = colorAttachment;

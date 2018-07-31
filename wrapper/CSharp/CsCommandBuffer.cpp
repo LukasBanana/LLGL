@@ -13,6 +13,23 @@ namespace SharpLLGL
 {
 
 
+/*
+ * Common converions
+ */
+
+static void Convert(LLGL::ColorRGBAf& dst, ColorRGBA<float>^ src)
+{
+    dst.r = src->R;
+    dst.g = src->G;
+    dst.b = src->B;
+    dst.a = src->A;
+}
+
+
+/*
+ * CommandBuffer class
+ */
+
 static const int g_maxNumViewports      = 32;
 static const int g_maxNumAttachments    = 16;
 
@@ -126,14 +143,6 @@ void CommandBuffer::SetClearStencil(unsigned int stencil)
 void CommandBuffer::Clear(ClearFlags flags)
 {
     native_->Clear(static_cast<long>(flags));
-}
-
-static void Convert(LLGL::ColorRGBAf& dst, ColorRGBA^ src)
-{
-    dst.r = src->R;
-    dst.g = src->G;
-    dst.b = src->B;
-    dst.a = src->A;
 }
 
 static void Convert(LLGL::ClearValue& dst, ClearValue^ src)

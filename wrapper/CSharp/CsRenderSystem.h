@@ -22,6 +22,7 @@
 #include "CsGraphicsPipelineFlags.h"
 #include "CsPipelineLayoutFlags.h"
 #include "CsResourceHeapFlags.h"
+#include "CsSamplerFlags.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -169,13 +170,11 @@ public ref class RenderSystem
         void GenerateMips(Texture^ texture);
         void GenerateMips(Texture^ texture, unsigned int baseMipLevel, unsigned int numMipLevels, unsigned int baseArrayLayer, unsigned int numArrayLayers);
 
-        #if 0
         /* ----- Samplers ---- */
 
         Sampler^ CreateSampler(SamplerDescriptor^ desc);
 
         void Release(Sampler^ sampler);
-        #endif
 
         /* ----- Resource Heaps ----- */
 

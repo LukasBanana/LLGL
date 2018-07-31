@@ -211,9 +211,7 @@ BlendTargetDescriptor::BlendTargetDescriptor()
     SrcAlpha        = BlendOp::SrcAlpha;
     DstAlpha        = BlendOp::InvSrcAlpha;
     AlphaArithmetic = BlendArithmetic::Add;
-    ColorMask       = gcnew array<bool>(4);
-    for (int i = 0; i < 4; ++i)
-        ColorMask[i] = true;
+    ColorMask       = gcnew ColorRGBA<bool>(true, true, true, true);
 }
 
 
@@ -223,9 +221,7 @@ BlendTargetDescriptor::BlendTargetDescriptor()
 
 BlendDescriptor::BlendDescriptor()
 {
-    BlendFactor             = gcnew array<float>(4);
-    for (int i = 0; i < 4; ++i)
-        BlendFactor[i] = 0.0f;
+    BlendFactor             = gcnew ColorRGBA<float>(0.0f, 0.0f, 0.0f, 0.0f);
     AlphaToCoverageEnabled  = false;
     IndependentBlendEnabled = false;
     LogicOp                 = SharpLLGL::LogicOp::Disabled;
