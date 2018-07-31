@@ -12,7 +12,7 @@
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -314,7 +314,7 @@ void CommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, u
 }
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

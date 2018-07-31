@@ -13,7 +13,7 @@
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -24,13 +24,13 @@ namespace LLGL
 VertexAttribute::VertexAttribute()
 {
     Name            = "";
-    Format          = LHermanns::LLGL::Format::Undefined;
+    Format          = LHermanns::SharpLLGL::Format::Undefined;
     InstanceDivisor = 0;
     Offset          = 0;
     SemanticIndex   = 0;
 }
 
-VertexAttribute::VertexAttribute(String^ name, LHermanns::LLGL::Format format)
+VertexAttribute::VertexAttribute(String^ name, LHermanns::SharpLLGL::Format format)
 {
     Name            = name;
     Format          = format;
@@ -39,7 +39,7 @@ VertexAttribute::VertexAttribute(String^ name, LHermanns::LLGL::Format format)
     SemanticIndex   = 0;
 }
 
-VertexAttribute::VertexAttribute(String^ name, LHermanns::LLGL::Format format, unsigned int instanceDivisor)
+VertexAttribute::VertexAttribute(String^ name, LHermanns::SharpLLGL::Format format, unsigned int instanceDivisor)
 {
     Name            = name;
     Format          = format;
@@ -48,7 +48,7 @@ VertexAttribute::VertexAttribute(String^ name, LHermanns::LLGL::Format format, u
     SemanticIndex   = 0;
 }
 
-VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, LHermanns::LLGL::Format format, unsigned int instanceDivisor)
+VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, LHermanns::SharpLLGL::Format format, unsigned int instanceDivisor)
 {
     Name            = name;
     Format          = format;
@@ -82,7 +82,7 @@ void VertexFormat::AppendAttribute(VertexAttribute^ attrib)
 }
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

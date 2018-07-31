@@ -14,7 +14,7 @@
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -27,7 +27,7 @@ System::String^ ToManagedString(const char* s);
 System::String^ ToManagedString(const wchar_t* s);
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

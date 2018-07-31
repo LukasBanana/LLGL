@@ -3,7 +3,7 @@
 
 ## Build Notes
 
-Exchange the imported DLL for LLGL. Default path is `..\..\..\..\build_msvc14\build\Debug\LHermanns.LLGL.dll`. You'll find the respective DLL when you build the main project with the CMake option `LLGL_BUILD_WRAPPER_CSHARP` being enabled.
+Exchange the imported DLL for LLGL. Default path is `..\..\..\..\build_msvc14\build\Debug\SharpLLGL.dll`. You'll find the respective DLL when you build the main project with the CMake option `LLGL_BUILD_WRAPPER_CSHARP` being enabled.
 
 ## Prerequisite
 
@@ -17,12 +17,14 @@ LLGL
     `-HelloTriangle
       `-bin
         |-Debug
-        | |-LLGLD.dll
+        | |-LLGL_Direct3D11D.dll
         | |-LLGL_OpenGLD.dll
-        | `-LLGL_Direct3D11D.dll
+        | |-LLGLD.dll
+        | `-SharpLLGL.dll
         `-Release
-          |-LLGL.dll
+          |-LLGL_Direct3D11.dll
           |-LLGL_OpenGL.dll
-          `-LLGL_Direct3D11.dll
+          |-LLGL.dll
+          `-SharpLLGL.dll
 ```
 

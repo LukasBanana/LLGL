@@ -11,7 +11,7 @@
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -138,7 +138,7 @@ DepthDescriptor::DepthDescriptor()
 {
     TestEnabled     = false;
     WriteEnabled    = false;
-    CompareOp       = LHermanns::LLGL::CompareOp::Less;
+    CompareOp       = LHermanns::SharpLLGL::CompareOp::Less;
 }
 
 
@@ -151,7 +151,7 @@ StencilFaceDescriptor::StencilFaceDescriptor()
     StencilFailOp   = StencilOp::Keep;
     DepthFailOp     = StencilOp::Keep;
     DepthPassOp     = StencilOp::Keep;
-    CompareOp       = LHermanns::LLGL::CompareOp::Less;
+    CompareOp       = LHermanns::SharpLLGL::CompareOp::Less;
     ReadMask        = ~0;
     WriteMask       = ~0;
     Reference       = 0;
@@ -188,8 +188,8 @@ DepthBiasDescriptor::DepthBiasDescriptor()
 
 RasterizerDescriptor::RasterizerDescriptor()
 {
-    PolygonMode                 = LHermanns::LLGL::PolygonMode::Fill;
-    CullMode                    = LHermanns::LLGL::CullMode::Disabled;
+    PolygonMode                 = LHermanns::SharpLLGL::PolygonMode::Fill;
+    CullMode                    = LHermanns::SharpLLGL::CullMode::Disabled;
     DepthBias                   = gcnew DepthBiasDescriptor();
     MultiSampling               = gcnew MultiSamplingDescriptor();
     FrontCCW                    = false;
@@ -231,7 +231,7 @@ BlendDescriptor::BlendDescriptor()
         BlendFactor[i] = 0.0f;
     AlphaToCoverageEnabled  = false;
     IndependentBlendEnabled = false;
-    LogicOp                 = LHermanns::LLGL::LogicOp::Disabled;
+    LogicOp                 = LHermanns::SharpLLGL::LogicOp::Disabled;
     Targets                 = gcnew array<BlendTargetDescriptor^>(8);
     for (int i = 0; i < Targets->Length; ++i)
         Targets[i] = gcnew BlendTargetDescriptor();
@@ -247,7 +247,7 @@ GraphicsPipelineDescriptor::GraphicsPipelineDescriptor()
     ShaderProgram       = nullptr;
     RenderPass          = nullptr;
     PipelineLayout      = nullptr;
-    PrimitiveTopology   = LHermanns::LLGL::PrimitiveTopology::TriangleList;
+    PrimitiveTopology   = LHermanns::SharpLLGL::PrimitiveTopology::TriangleList;
     Viewports           = gcnew List<Viewport^>();
     Scissors            = gcnew List<Scissor^>();
     Depth               = gcnew DepthDescriptor();
@@ -257,7 +257,7 @@ GraphicsPipelineDescriptor::GraphicsPipelineDescriptor()
 }
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

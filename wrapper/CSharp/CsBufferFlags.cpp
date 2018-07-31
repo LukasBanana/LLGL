@@ -12,7 +12,7 @@
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -21,7 +21,7 @@ namespace LLGL
  */
 
 IndexFormat::IndexFormat() :
-    dataType_ { LHermanns::LLGL::DataType::UInt32 }
+    dataType_ { LHermanns::SharpLLGL::DataType::UInt32 }
 {
 }
 
@@ -30,12 +30,12 @@ IndexFormat::IndexFormat(IndexFormat^ rhs) :
 {
 }
 
-IndexFormat::IndexFormat(LHermanns::LLGL::DataType dataType) :
+IndexFormat::IndexFormat(LHermanns::SharpLLGL::DataType dataType) :
     dataType_ { dataType }
 {
 }
 
-LHermanns::LLGL::DataType IndexFormat::DataType::get()
+LHermanns::SharpLLGL::DataType IndexFormat::DataType::get()
 {
     return dataType_;
 }
@@ -73,7 +73,7 @@ BufferDescriptor::IndexBufferDescriptor::IndexBufferDescriptor()
 BufferDescriptor::StorageBufferDescriptor::StorageBufferDescriptor()
 {
     StorageType = StorageBufferType::Buffer;
-    Format      = LHermanns::LLGL::Format::RGBA32Float;
+    Format      = LHermanns::SharpLLGL::Format::RGBA32Float;
 }
 
 
@@ -92,7 +92,7 @@ BufferDescriptor::BufferDescriptor()
 }
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

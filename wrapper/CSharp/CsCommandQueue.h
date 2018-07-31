@@ -24,7 +24,7 @@ using namespace System::Runtime::InteropServices;
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -72,7 +72,7 @@ public ref class CommandQueue
 };
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

@@ -12,7 +12,7 @@
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -103,7 +103,7 @@ void RenderContext::Vsync::set(VsyncDescriptor^ value)
 }
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

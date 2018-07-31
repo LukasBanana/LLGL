@@ -24,7 +24,7 @@ using namespace System::Collections::Generic;
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -75,11 +75,11 @@ public ref class IndexFormat
 
         IndexFormat();
         IndexFormat(IndexFormat^ rhs);
-        IndexFormat(LHermanns::LLGL::DataType dataType);
+        IndexFormat(LHermanns::SharpLLGL::DataType dataType);
 
-        property LHermanns::LLGL::DataType DataType
+        property LHermanns::SharpLLGL::DataType DataType
         {
-            LHermanns::LLGL::DataType get();
+            LHermanns::SharpLLGL::DataType get();
         };
 
         property unsigned int FormatSize
@@ -89,7 +89,7 @@ public ref class IndexFormat
 
     private:
 
-        LHermanns::LLGL::DataType dataType_;
+        LHermanns::SharpLLGL::DataType dataType_;
 
 };
 
@@ -144,7 +144,7 @@ public ref class BufferDescriptor
 };
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

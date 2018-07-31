@@ -36,8 +36,8 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LHermanns.LLGL">
-      <HintPath>..\..\..\..\build_msvc14\build\Debug\LHermanns.LLGL.dll</HintPath>
+    <Reference Include="SharpLLGL">
+      <HintPath>..\..\..\..\build_msvc14\build\Debug\SharpLLGL.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

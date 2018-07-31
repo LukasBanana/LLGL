@@ -27,7 +27,7 @@ using namespace System::Runtime::InteropServices;
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -154,7 +154,7 @@ public ref class CommandBuffer
 };
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

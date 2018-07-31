@@ -20,7 +20,7 @@ using namespace System::Runtime::InteropServices;
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -77,7 +77,7 @@ System::String^ ToManagedString(const wchar_t* s)
 }
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

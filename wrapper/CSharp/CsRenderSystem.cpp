@@ -13,7 +13,7 @@
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -270,7 +270,7 @@ void RenderSystem::Release(RenderContext^ renderContext)
 CommandQueue^ RenderSystem::CommandQueue::get()
 {
     if (commandQueue_ == nullptr)
-        commandQueue_ = gcnew LHermanns::LLGL::CommandQueue(native_->GetCommandQueue());
+        commandQueue_ = gcnew LHermanns::SharpLLGL::CommandQueue(native_->GetCommandQueue());
     return commandQueue_;
 }
 
@@ -671,7 +671,7 @@ RenderSystem::RenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& native)
 }
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

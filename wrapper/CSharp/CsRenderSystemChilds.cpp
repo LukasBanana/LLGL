@@ -11,7 +11,7 @@
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -29,9 +29,9 @@ Resource::Resource(::LLGL::Resource* native) :
     return native_;
 }
 
-LHermanns::LLGL::ResourceType Resource::ResourceType::get()
+LHermanns::SharpLLGL::ResourceType Resource::ResourceType::get()
 {
-    return static_cast<LHermanns::LLGL::ResourceType>(native_->QueryResourceType());
+    return static_cast<LHermanns::SharpLLGL::ResourceType>(native_->QueryResourceType());
 }
 
 
@@ -66,7 +66,7 @@ Texture::Texture(::LLGL::Texture* native) :
 
 TextureType Texture::Type::get()
 {
-    return static_cast<LHermanns::LLGL::TextureType>(reinterpret_cast<::LLGL::Texture*>(Native::get())->GetType());
+    return static_cast<LHermanns::SharpLLGL::TextureType>(reinterpret_cast<::LLGL::Texture*>(Native::get())->GetType());
 }
 
 
@@ -101,7 +101,7 @@ QueryHeap::QueryHeap(::LLGL::QueryHeap* native) :
 
 QueryType QueryHeap::Type::get()
 {
-    return static_cast<LHermanns::LLGL::QueryType>(native_->GetType());
+    return static_cast<LHermanns::SharpLLGL::QueryType>(native_->GetType());
 }
 
 
@@ -210,7 +210,7 @@ BufferArray::BufferArray(::LLGL::BufferArray* native) :
 };
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

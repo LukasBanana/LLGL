@@ -25,7 +25,7 @@ using namespace System::Collections::Generic;
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -363,7 +363,7 @@ public ref class GraphicsPipelineDescriptor
 };
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

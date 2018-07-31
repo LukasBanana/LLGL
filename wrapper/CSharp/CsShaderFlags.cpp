@@ -12,7 +12,7 @@
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -87,7 +87,7 @@ ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type,
 }
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

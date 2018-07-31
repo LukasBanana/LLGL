@@ -24,7 +24,7 @@ using namespace System::Runtime::InteropServices;
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -69,18 +69,18 @@ public ref class RenderTarget
 
         property RenderPass^ RenderPass
         {
-            LHermanns::LLGL::RenderPass^ get();
+            LHermanns::SharpLLGL::RenderPass^ get();
         }
 
     private:
 
         ::LLGL::RenderTarget*           native_     = nullptr;
-        LHermanns::LLGL::RenderPass^    renderPass_ = nullptr;
+        LHermanns::SharpLLGL::RenderPass^    renderPass_ = nullptr;
 
 };
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 

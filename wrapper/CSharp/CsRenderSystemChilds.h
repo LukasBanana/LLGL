@@ -30,7 +30,7 @@ using namespace System::Runtime::InteropServices;
 namespace LHermanns
 {
 
-namespace LLGL
+namespace SharpLLGL
 {
 
 
@@ -85,7 +85,7 @@ public ref class Resource
         /// <summary>Returns the resource type enumeration entry for this resource object.</summary>
         property ResourceType ResourceType
         {
-            LHermanns::LLGL::ResourceType get();
+            LHermanns::SharpLLGL::ResourceType get();
         }
 
     private:
@@ -291,7 +291,7 @@ public ref class BufferArray
 };
 
 
-} // /namespace LLGL
+} // /namespace SharpLLGL
 
 } // /namespace LHermanns
 
