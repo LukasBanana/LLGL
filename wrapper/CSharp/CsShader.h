@@ -51,9 +51,9 @@ public ref class Shader
             ShaderType get();
         }
 
-        property int StageFlags
+        property SharpLLGL::StageFlags StageFlags
         {
-            int get();
+            SharpLLGL::StageFlags get();
         };
 
     private:

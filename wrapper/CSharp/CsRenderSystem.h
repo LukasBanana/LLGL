@@ -20,6 +20,8 @@
 #include "CsShader.h"
 #include "CsShaderProgram.h"
 #include "CsGraphicsPipelineFlags.h"
+#include "CsPipelineLayoutFlags.h"
+#include "CsResourceHeapFlags.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -173,6 +175,7 @@ public ref class RenderSystem
         Sampler^ CreateSampler(SamplerDescriptor^ desc);
 
         void Release(Sampler^ sampler);
+        #endif
 
         /* ----- Resource Heaps ----- */
 
@@ -180,6 +183,7 @@ public ref class RenderSystem
 
         void Release(ResourceHeap^ resourceHeap);
 
+        #if 0
         /* ----- Render Targets ----- */
 
         RenderTarget^ CreateRenderTarget(RenderTargetDescriptor^ desc);
@@ -197,13 +201,11 @@ public ref class RenderSystem
 
         void Release(ShaderProgram^ shaderProgram);
 
-        #if 0
         /* ----- Pipeline Layouts ----- */
 
         PipelineLayout^ CreatePipelineLayout(PipelineLayoutDescriptor^ desc);
 
         void Release(PipelineLayout^ pipelineLayout);
-        #endif
 
         /* ----- Pipeline States ----- */
 

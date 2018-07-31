@@ -471,13 +471,36 @@ void RenderSystem::GenerateMips(Texture^ texture, unsigned int baseMipLevel, uns
 Sampler^ RenderSystem::CreateSampler(SamplerDescriptor^ desc);
 
 void RenderSystem::Release(Sampler^ sampler);
+#endif
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap^ RenderSystem::CreateResourceHeap(ResourceHeapDescriptor^ desc);
+static void Convert(LLGL::ResourceViewDescriptor& dst, ResourceViewDescriptor^ src)
+{
+    dst.resource = src->Resource->Native;
+}
 
-void RenderSystem::Release(ResourceHeap^ resourceHeap);
+static void Convert(LLGL::ResourceHeapDescriptor& dst, ResourceHeapDescriptor^ src)
+{
+    dst.pipelineLayout = src->PipelineLayout->Native;
+    dst.resourceViews.resize(src->ResourceViews->Count);
+    for (std::size_t i = 0; i < dst.resourceViews.size(); ++i)
+        Convert(dst.resourceViews[i], src->ResourceViews[i]);
+}
 
+ResourceHeap^ RenderSystem::CreateResourceHeap(ResourceHeapDescriptor^ desc)
+{
+    LLGL::ResourceHeapDescriptor nativeDesc;
+    Convert(nativeDesc, desc);
+    return gcnew ResourceHeap(native_->CreateResourceHeap(nativeDesc));
+}
+
+void RenderSystem::Release(ResourceHeap^ resourceHeap)
+{
+    native_->Release(*resourceHeap->Native);
+}
+
+#if 0
 /* ----- Render Targets ----- */
 
 RenderTarget^ RenderSystem::CreateRenderTarget(RenderTargetDescriptor^ desc);
@@ -499,7 +522,7 @@ static void Convert(LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src, std::str
     dst.sourceType      = static_cast<LLGL::ShaderSourceType>(src->SourceType);
     dst.entryPoint      = tempStr[1].c_str();
     dst.profile         = tempStr[2].c_str();
-    dst.flags           = src->Flags;
+    dst.flags           = static_cast<long>(src->Flags);
     #if 0
     dst.streamOutput    = ;
     #endif
@@ -556,13 +579,34 @@ void RenderSystem::Release(ShaderProgram^ shaderProgram)
     native_->Release(*shaderProgram->Native);
 }
 
-#if 0
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout^ RenderSystem::CreatePipelineLayout(PipelineLayoutDescriptor^ desc);
+static void Convert(LLGL::BindingDescriptor& dst, BindingDescriptor^ src)
+{
+    dst.type        = static_cast<LLGL::ResourceType>(src->Type);
+    dst.stageFlags  = static_cast<long>(src->StageFlags);
+    dst.slot        = src->Slot;
+    dst.arraySize   = src->ArraySize;
+}
 
-void RenderSystem::Release(PipelineLayout^ pipelineLayout);
-#endif
+static void Convert(LLGL::PipelineLayoutDescriptor& dst, PipelineLayoutDescriptor^ src)
+{
+    dst.bindings.resize(src->Bindings->Count);
+    for (std::size_t i = 0; i < dst.bindings.size(); ++i)
+        Convert(dst.bindings[i], src->Bindings[i]);
+}
+
+PipelineLayout^ RenderSystem::CreatePipelineLayout(PipelineLayoutDescriptor^ desc)
+{
+    LLGL::PipelineLayoutDescriptor nativeDesc;
+    Convert(nativeDesc, desc);
+    return gcnew PipelineLayout(native_->CreatePipelineLayout(nativeDesc));
+}
+
+void RenderSystem::Release(PipelineLayout^ pipelineLayout)
+{
+    native_->Release(*pipelineLayout->Native);
+}
 
 /* ----- Pipeline States ----- */
 

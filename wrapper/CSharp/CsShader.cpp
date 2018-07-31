@@ -48,9 +48,9 @@ ShaderType Shader::Type::get()
     return static_cast<ShaderType>(native_->GetType());
 }
 
-int Shader::StageFlags::get()
+SharpLLGL::StageFlags Shader::StageFlags::get()
 {
-    return static_cast<int>(native_->GetStageFlags());
+    return static_cast<SharpLLGL::StageFlags>(native_->GetStageFlags());
 };
 
 

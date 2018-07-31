@@ -20,7 +20,7 @@ ShaderDescriptor::ShaderDescriptor()
     SourceType  = ShaderSourceType::CodeFile;
     EntryPoint  = "";
     Profile     = "";
-    Flags       = 0;
+    Flags       = ShaderCompileFlags::None;
 }
 
 ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source)
@@ -30,7 +30,7 @@ ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source)
     SourceType  = ShaderSourceType::CodeFile;
     EntryPoint  = "";
     Profile     = "";
-    Flags       = 0;
+    Flags       = ShaderCompileFlags::None;
 }
 
 ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source, String^ entryPoint, String^ profile)
@@ -40,10 +40,10 @@ ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source, String^ entr
     SourceType  = ShaderSourceType::CodeFile;
     EntryPoint  = entryPoint;
     Profile     = profile;
-    Flags       = 0;
+    Flags       = ShaderCompileFlags::None;
 }
 
-ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source, String^ entryPoint, String^ profile, int flags)
+ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source, String^ entryPoint, String^ profile, ShaderCompileFlags flags)
 {
     Type        = type;
     Source      = source;
@@ -60,7 +60,7 @@ ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type,
     SourceType  = sourceType;
     EntryPoint  = "";
     Profile     = "";
-    Flags       = 0;
+    Flags       = ShaderCompileFlags::None;
 }
 
 ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source, String^ entryPoint, String^ profile)
@@ -70,10 +70,10 @@ ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type,
     SourceType  = sourceType;
     EntryPoint  = entryPoint;
     Profile     = profile;
-    Flags       = 0;
+    Flags       = ShaderCompileFlags::None;
 }
 
-ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source, String^ entryPoint, String^ profile, int flags)
+ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source, String^ entryPoint, String^ profile, ShaderCompileFlags flags)
 {
     Type        = type;
     Source      = source;
