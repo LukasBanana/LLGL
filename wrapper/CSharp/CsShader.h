@@ -29,11 +29,11 @@ public ref class Shader
 
     public:
 
-        Shader(::LLGL::Shader* native);
+        Shader(LLGL::Shader* native);
 
-        property ::LLGL::Shader* Native
+        property LLGL::Shader* Native
         {
-            ::LLGL::Shader* get();
+            LLGL::Shader* get();
         }
 
         property bool HasErrors
@@ -58,7 +58,7 @@ public ref class Shader
 
     private:
 
-        ::LLGL::Shader* native_ = nullptr;
+        LLGL::Shader* native_ = nullptr;
 
 };
 

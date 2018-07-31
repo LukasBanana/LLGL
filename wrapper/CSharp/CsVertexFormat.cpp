@@ -56,7 +56,7 @@ VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, Sharp
 
 unsigned int VertexAttribute::Size::get()
 {
-    return (::LLGL::FormatBitSize(static_cast<::LLGL::Format>(Format)) / 8);
+    return (LLGL::FormatBitSize(static_cast<LLGL::Format>(Format)) / 8);
 };
 
 

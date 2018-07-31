@@ -40,9 +40,9 @@ public ref class RenderingDebugger
         RenderingDebugger();
         ~RenderingDebugger();
 
-        property ::LLGL::RenderingDebugger* Native
+        property LLGL::RenderingDebugger* Native
         {
-            ::LLGL::RenderingDebugger* get();
+            LLGL::RenderingDebugger* get();
         };
 
 #if 0
@@ -54,7 +54,7 @@ public ref class RenderingDebugger
 
     private:
 
-        ::LLGL::RenderingDebugger* native_ = nullptr;
+        LLGL::RenderingDebugger* native_ = nullptr;
 
 };
 
@@ -231,11 +231,11 @@ public ref class RenderSystem
 
     private:
 
-        RenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& native);
+        RenderSystem(std::unique_ptr<LLGL::RenderSystem>&& native);
 
     private:
 
-        ::LLGL::RenderSystem*       native_         = nullptr;
+        LLGL::RenderSystem*         native_         = nullptr;
         SharpLLGL::CommandQueue^    commandQueue_;
 
 };

@@ -14,7 +14,7 @@ namespace SharpLLGL
 
 /* ----- Common ----- */
 
-Window::Window(::LLGL::Window* native) :
+Window::Window(LLGL::Window* native) :
     native_ { native }
 {
 }

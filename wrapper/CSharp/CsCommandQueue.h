@@ -32,11 +32,11 @@ public ref class CommandQueue
 
         /* ----- Common ----- */
 
-        CommandQueue(::LLGL::CommandQueue* native);
+        CommandQueue(LLGL::CommandQueue* native);
 
-        property ::LLGL::CommandQueue* Native
+        property LLGL::CommandQueue* Native
         {
-            ::LLGL::CommandQueue* get();
+            LLGL::CommandQueue* get();
         }
 
         /* ----- Command Buffers ----- */
@@ -64,7 +64,7 @@ public ref class CommandQueue
 
     private:
 
-        ::LLGL::CommandQueue* native_ = nullptr;
+        LLGL::CommandQueue* native_ = nullptr;
 
 };
 

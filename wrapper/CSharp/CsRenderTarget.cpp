@@ -12,12 +12,12 @@ namespace SharpLLGL
 {
 
 
-RenderTarget::RenderTarget(::LLGL::RenderTarget* native) :
+RenderTarget::RenderTarget(LLGL::RenderTarget* native) :
     native_ { native }
 {
 }
 
-::LLGL::RenderTarget* RenderTarget::Native::get()
+LLGL::RenderTarget* RenderTarget::Native::get()
 {
     return native_;
 }

@@ -13,21 +13,21 @@ namespace SharpLLGL
 {
 
 
-RenderContext::RenderContext(::LLGL::RenderContext* instance) :
+RenderContext::RenderContext(LLGL::RenderContext* instance) :
     RenderTarget { instance }
 {
 }
 
 void RenderContext::Present()
 {
-    static_cast<::LLGL::RenderContext*>(Native::get())->Present();
+    static_cast<LLGL::RenderContext*>(Native::get())->Present();
 }
 
 Window^ RenderContext::Surface::get()
 {
     if (!surface_)
     {
-        auto& window = static_cast<::LLGL::Window&>(static_cast<::LLGL::RenderContext*>(Native::get())->GetSurface());
+        auto& window = static_cast<LLGL::Window&>(static_cast<LLGL::RenderContext*>(Native::get())->GetSurface());
         surface_ = gcnew Window(&window);
     }
     return surface_;
@@ -35,7 +35,7 @@ Window^ RenderContext::Surface::get()
 
 /* ----- Configuration ----- */
 
-static void Convert(VideoModeDescriptor^ dst, const ::LLGL::VideoModeDescriptor& src)
+static void Convert(VideoModeDescriptor^ dst, const LLGL::VideoModeDescriptor& src)
 {
     dst->Resolution->Width  = src.resolution.width;
     dst->Resolution->Height = src.resolution.height;
@@ -49,11 +49,11 @@ static void Convert(VideoModeDescriptor^ dst, const ::LLGL::VideoModeDescriptor&
 VideoModeDescriptor^ RenderContext::VideoMode::get()
 {
     auto managedDesc = gcnew VideoModeDescriptor();
-    Convert(managedDesc, static_cast<::LLGL::RenderContext*>(Native)->GetVideoMode());
+    Convert(managedDesc, static_cast<LLGL::RenderContext*>(Native)->GetVideoMode());
     return managedDesc;
 }
 
-static void Convert(::LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
+static void Convert(LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
 {
     dst.resolution.width    = src->Resolution->Width;
     dst.resolution.height   = src->Resolution->Height;
@@ -66,12 +66,12 @@ static void Convert(::LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
 
 void RenderContext::VideoMode::set(VideoModeDescriptor^ value)
 {
-    ::LLGL::VideoModeDescriptor nativeDesc;
+    LLGL::VideoModeDescriptor nativeDesc;
     Convert(nativeDesc, value);
-    static_cast<::LLGL::RenderContext*>(Native)->SetVideoMode(nativeDesc);
+    static_cast<LLGL::RenderContext*>(Native)->SetVideoMode(nativeDesc);
 }
 
-static void Convert(VsyncDescriptor^ dst, const ::LLGL::VsyncDescriptor& src)
+static void Convert(VsyncDescriptor^ dst, const LLGL::VsyncDescriptor& src)
 {
     dst->Enabled        = src.enabled;
     dst->RefreshRate    = src.refreshRate;
@@ -81,11 +81,11 @@ static void Convert(VsyncDescriptor^ dst, const ::LLGL::VsyncDescriptor& src)
 VsyncDescriptor^ RenderContext::Vsync::get()
 {
     auto managedDesc = gcnew VsyncDescriptor();
-    Convert(managedDesc, static_cast<::LLGL::RenderContext*>(Native)->GetVsync());
+    Convert(managedDesc, static_cast<LLGL::RenderContext*>(Native)->GetVsync());
     return managedDesc;
 }
 
-static void Convert(::LLGL::VsyncDescriptor& dst, VsyncDescriptor^ src)
+static void Convert(LLGL::VsyncDescriptor& dst, VsyncDescriptor^ src)
 {
     dst.enabled     = src->Enabled;
     dst.refreshRate = src->RefreshRate;
@@ -94,9 +94,9 @@ static void Convert(::LLGL::VsyncDescriptor& dst, VsyncDescriptor^ src)
 
 void RenderContext::Vsync::set(VsyncDescriptor^ value)
 {
-    ::LLGL::VsyncDescriptor nativeDesc;
+    LLGL::VsyncDescriptor nativeDesc;
     Convert(nativeDesc, value);
-    static_cast<::LLGL::RenderContext*>(Native)->SetVsync(nativeDesc);
+    static_cast<LLGL::RenderContext*>(Native)->SetVsync(nativeDesc);
 }
 
 

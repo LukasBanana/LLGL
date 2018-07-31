@@ -33,7 +33,7 @@ public ref class RenderContext : public RenderTarget
 
         /* ----- Common ----- */
 
-        RenderContext(::LLGL::RenderContext* instance);
+        RenderContext(LLGL::RenderContext* instance);
 
         void Present();
 

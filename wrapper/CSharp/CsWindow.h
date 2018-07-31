@@ -56,14 +56,14 @@ public ref class Window
 
             private:
 
-                ::LLGL::Window::EventListener* native_ = nullptr;
+                LLGL::Window::EventListener* native_ = nullptr;
 
         };
         #endif
 
         /* ----- Common ----- */
 
-        Window(::LLGL::Window* native);
+        Window(LLGL::Window* native);
 
         #if 0
         static Window^ Create(WindowDescriptor^ desc);
@@ -138,7 +138,7 @@ public ref class Window
 
     private:
 
-        ::LLGL::Window* native_ = nullptr;
+        LLGL::Window* native_ = nullptr;
 
 };
 

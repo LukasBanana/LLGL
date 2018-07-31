@@ -39,7 +39,7 @@ SharpLLGL::DataType IndexFormat::DataType::get()
 
 unsigned int IndexFormat::FormatSize::get()
 {
-    return ::LLGL::DataTypeSize(static_cast<::LLGL::DataType>(dataType_));
+    return LLGL::DataTypeSize(static_cast<LLGL::DataType>(dataType_));
 }
 
 

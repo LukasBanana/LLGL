@@ -12,12 +12,12 @@ namespace SharpLLGL
 {
 
 
-CommandQueue::CommandQueue(::LLGL::CommandQueue* native) :
+CommandQueue::CommandQueue(LLGL::CommandQueue* native) :
     native_ { native }
 {
 }
 
-::LLGL::CommandQueue* CommandQueue::Native::get()
+LLGL::CommandQueue* CommandQueue::Native::get()
 {
     return native_;
 }

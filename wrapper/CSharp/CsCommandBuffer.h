@@ -35,11 +35,11 @@ public ref class CommandBuffer
 
         /* ----- Common ----- */
 
-        CommandBuffer(::LLGL::CommandBuffer* native);
+        CommandBuffer(LLGL::CommandBuffer* native);
 
-        property ::LLGL::CommandBuffer* Native
+        property LLGL::CommandBuffer* Native
         {
-            ::LLGL::CommandBuffer* get();
+            LLGL::CommandBuffer* get();
         }
 
         /* ----- Encoding ----- */
@@ -146,7 +146,7 @@ public ref class CommandBuffer
 
     private:
 
-        ::LLGL::CommandBuffer* native_ = nullptr;
+        LLGL::CommandBuffer* native_ = nullptr;
 
 };
 

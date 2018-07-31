@@ -16,12 +16,12 @@ namespace SharpLLGL
  * Resource class
  */
 
-Resource::Resource(::LLGL::Resource* native) :
+Resource::Resource(LLGL::Resource* native) :
     native_ { native }
 {
 }
 
-::LLGL::Resource* Resource::Native::get()
+LLGL::Resource* Resource::Native::get()
 {
     return native_;
 }
@@ -36,14 +36,14 @@ SharpLLGL::ResourceType Resource::ResourceType::get()
  * Buffer class
  */
 
-Buffer::Buffer(::LLGL::Buffer* native) :
+Buffer::Buffer(LLGL::Buffer* native) :
     Resource { native }
 {
 }
 
-::LLGL::Buffer* Buffer::NativeSub::get()
+LLGL::Buffer* Buffer::NativeSub::get()
 {
-    return static_cast<::LLGL::Buffer*>(Native);
+    return static_cast<LLGL::Buffer*>(Native);
 }
 
 
@@ -51,19 +51,19 @@ Buffer::Buffer(::LLGL::Buffer* native) :
  * Texture class
  */
 
-Texture::Texture(::LLGL::Texture* native) :
+Texture::Texture(LLGL::Texture* native) :
     Resource { native }
 {
 }
 
-::LLGL::Texture* Texture::NativeSub::get()
+LLGL::Texture* Texture::NativeSub::get()
 {
-    return static_cast<::LLGL::Texture*>(Native);
+    return static_cast<LLGL::Texture*>(Native);
 }
 
 TextureType Texture::Type::get()
 {
-    return static_cast<SharpLLGL::TextureType>(reinterpret_cast<::LLGL::Texture*>(Native::get())->GetType());
+    return static_cast<SharpLLGL::TextureType>(reinterpret_cast<LLGL::Texture*>(Native::get())->GetType());
 }
 
 
@@ -71,14 +71,14 @@ TextureType Texture::Type::get()
  * Sampler class
  */
 
-Sampler::Sampler(::LLGL::Sampler* native) :
+Sampler::Sampler(LLGL::Sampler* native) :
     Resource { native }
 {
 }
 
-::LLGL::Sampler* Sampler::NativeSub::get()
+LLGL::Sampler* Sampler::NativeSub::get()
 {
-    return static_cast<::LLGL::Sampler*>(Native);
+    return static_cast<LLGL::Sampler*>(Native);
 }
 
 
@@ -86,12 +86,12 @@ Sampler::Sampler(::LLGL::Sampler* native) :
  * QueryHeap class
  */
 
-QueryHeap::QueryHeap(::LLGL::QueryHeap* native) :
+QueryHeap::QueryHeap(LLGL::QueryHeap* native) :
     native_ { native }
 {
 }
 
-::LLGL::QueryHeap* QueryHeap::Native::get()
+LLGL::QueryHeap* QueryHeap::Native::get()
 {
     return native_;
 }
@@ -106,12 +106,12 @@ QueryType QueryHeap::Type::get()
  * Fence class
  */
 
-Fence::Fence(::LLGL::Fence* native) :
+Fence::Fence(LLGL::Fence* native) :
     native_ { native }
 {
 }
 
-::LLGL::Fence* Fence::Native::get()
+LLGL::Fence* Fence::Native::get()
 {
     return native_;
 }
@@ -121,12 +121,12 @@ Fence::Fence(::LLGL::Fence* native) :
  * RenderPass class
  */
 
-RenderPass::RenderPass(::LLGL::RenderPass* native) :
+RenderPass::RenderPass(LLGL::RenderPass* native) :
     native_ { native }
 {
 }
 
-::LLGL::RenderPass* RenderPass::Native::get()
+LLGL::RenderPass* RenderPass::Native::get()
 {
     return native_;
 };
@@ -136,12 +136,12 @@ RenderPass::RenderPass(::LLGL::RenderPass* native) :
  * PipelineLayout class
  */
 
-PipelineLayout::PipelineLayout(::LLGL::PipelineLayout* native) :
+PipelineLayout::PipelineLayout(LLGL::PipelineLayout* native) :
     native_ { native }
 {
 }
 
-::LLGL::PipelineLayout* PipelineLayout::Native::get()
+LLGL::PipelineLayout* PipelineLayout::Native::get()
 {
     return native_;
 };
@@ -151,12 +151,12 @@ PipelineLayout::PipelineLayout(::LLGL::PipelineLayout* native) :
  * GraphicsPipeline class
  */
 
-GraphicsPipeline::GraphicsPipeline(::LLGL::GraphicsPipeline* native) :
+GraphicsPipeline::GraphicsPipeline(LLGL::GraphicsPipeline* native) :
     native_ { native }
 {
 }
 
-::LLGL::GraphicsPipeline* GraphicsPipeline::Native::get()
+LLGL::GraphicsPipeline* GraphicsPipeline::Native::get()
 {
     return native_;
 };
@@ -166,12 +166,12 @@ GraphicsPipeline::GraphicsPipeline(::LLGL::GraphicsPipeline* native) :
  * ComputePipeline class
  */
 
-ComputePipeline::ComputePipeline(::LLGL::ComputePipeline* native) :
+ComputePipeline::ComputePipeline(LLGL::ComputePipeline* native) :
     native_ { native }
 {
 }
 
-::LLGL::ComputePipeline* ComputePipeline::Native::get()
+LLGL::ComputePipeline* ComputePipeline::Native::get()
 {
     return native_;
 };
@@ -181,12 +181,12 @@ ComputePipeline::ComputePipeline(::LLGL::ComputePipeline* native) :
  * ResourceHeap class
  */
 
-ResourceHeap::ResourceHeap(::LLGL::ResourceHeap* native) :
+ResourceHeap::ResourceHeap(LLGL::ResourceHeap* native) :
     native_ { native }
 {
 }
 
-::LLGL::ResourceHeap* ResourceHeap::Native::get()
+LLGL::ResourceHeap* ResourceHeap::Native::get()
 {
     return native_;
 };
@@ -196,12 +196,12 @@ ResourceHeap::ResourceHeap(::LLGL::ResourceHeap* native) :
  * BufferArray class
  */
 
-BufferArray::BufferArray(::LLGL::BufferArray* native) :
+BufferArray::BufferArray(LLGL::BufferArray* native) :
     native_ { native }
 {
 }
 
-::LLGL::BufferArray* BufferArray::Native::get()
+LLGL::BufferArray* BufferArray::Native::get()
 {
     return native_;
 };

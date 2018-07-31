@@ -13,12 +13,12 @@ namespace SharpLLGL
 {
 
 
-Shader::Shader(::LLGL::Shader* native) :
+Shader::Shader(LLGL::Shader* native) :
     native_ { native }
 {
 }
 
-::LLGL::Shader* Shader::Native::get()
+LLGL::Shader* Shader::Native::get()
 {
     return native_;
 }
