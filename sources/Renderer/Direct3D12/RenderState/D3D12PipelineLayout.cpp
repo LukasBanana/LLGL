@@ -23,7 +23,7 @@ D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLay
 void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
     D3D12RootSignature rootSignature;
-    rootSignature.Reset(desc.bindings.size(), 0);
+    rootSignature.Reset(static_cast<UINT>(desc.bindings.size()), 0);
 
     /* Build root parameter for each descriptor range type */
     BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::ConstantBuffer);

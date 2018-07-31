@@ -10,7 +10,7 @@
 
 
 // Enable multi-sampling render context
-//#define ENABLE_MULTISAMPLING
+#define ENABLE_MULTISAMPLING
 
 // Enable timer to show render times every second
 //#define ENABLE_TIMER

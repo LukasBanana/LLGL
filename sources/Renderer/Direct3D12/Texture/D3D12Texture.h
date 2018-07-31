@@ -10,8 +10,7 @@
 
 
 #include <LLGL/Texture.h>
-#include <d3d12.h>
-#include "../../DXCommon/ComPtr.h"
+#include "../D3D12Resource.h"
 
 
 namespace LLGL
@@ -42,10 +41,22 @@ class D3D12Texture final : public Texture
 
         void CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);
 
-        //! Returns the native ID3D12Resource object.
+        // Returns the resource wrapper.
+        inline D3D12Resource& GetResource()
+        {
+            return resource_;
+        }
+
+        // Returns the constant resource wrapper.
+        inline const D3D12Resource& GetResource() const
+        {
+            return resource_;
+        }
+
+        // Returns the native ID3D12Resource object.
         inline ID3D12Resource* GetNative() const
         {
-            return resource_.Get();
+            return resource_.native.Get();
         }
 
         // Returns the hardware resource format.
@@ -70,11 +81,11 @@ class D3D12Texture final : public Texture
 
         void CreateResource(ID3D12Device* device, const D3D12_RESOURCE_DESC& desc);
 
-        ComPtr<ID3D12Resource>  resource_;
+        D3D12Resource   resource_;
 
-        DXGI_FORMAT             format_         = DXGI_FORMAT_UNKNOWN;
-        UINT                    numMipLevels_   = 0;
-        UINT                    numArrayLayers_ = 0;
+        DXGI_FORMAT     format_         = DXGI_FORMAT_UNKNOWN;
+        UINT            numMipLevels_   = 0;
+        UINT            numArrayLayers_ = 0;
 
 };
 

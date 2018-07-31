@@ -19,7 +19,7 @@ namespace LLGL
 {
 
 
-// Helper class to manage a root parameter of a root signature
+// Helper class to manage all root parameters of a root signature
 class D3D12RootSignature
 {
 

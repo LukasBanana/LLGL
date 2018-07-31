@@ -12,6 +12,7 @@
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
 #include <cstddef>
+#include "D3D12Resource.h"
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
 
@@ -25,6 +26,7 @@ namespace LLGL
 
 class D3D12RenderSystem;
 class D3D12CommandBuffer;
+class D3D12CommandContext;
 
 class D3D12RenderContext final : public RenderContext
 {
@@ -48,23 +50,18 @@ class D3D12RenderContext final : public RenderContext
 
         /* --- Extended functions --- */
 
-        ID3D12Resource* GetCurrentColorBuffer();
+        // Returns the native color buffer resource from the swap-chain that is currently being used.
+        D3D12Resource& GetCurrentColorBuffer();
 
-        void ResolveRenderTarget(ID3D12GraphicsCommandList* commandList);
+        void ResolveRenderTarget(D3D12CommandContext& commandContext);
 
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForCurrentRTV() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForRTV() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForDSV() const;
 
         bool HasMultiSampling() const;
         bool HasDepthBuffer() const;
 
         void SyncGPU();
-
-        // Returns the native color buffer resource from the swap-chain that is currently being used.
-        inline ID3D12Resource* GetCurrentColorBuffer() const
-        {
-            return colorBuffers_[currentFrame_].Get();
-        }
 
     private:
 
@@ -90,11 +87,11 @@ class D3D12RenderContext final : public RenderContext
         UINT                            rtvDescSize_                        = 0;
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
 
-        ComPtr<ID3D12Resource>          colorBuffers_[g_maxSwapChainSize];
-        ComPtr<ID3D12Resource>          colorBuffersMS_[g_maxSwapChainSize];
+        D3D12Resource                   colorBuffers_[g_maxSwapChainSize];
+        D3D12Resource                   colorBuffersMS_[g_maxSwapChainSize];
         DXGI_FORMAT                     colorFormat_                        = DXGI_FORMAT_B8G8R8A8_UNORM;
 
-        ComPtr<ID3D12Resource>          depthStencil_;
+        D3D12Resource                   depthStencil_;
         DXGI_FORMAT                     depthStencilFormat_                 = DXGI_FORMAT_UNKNOWN;
 
         UINT64                          fenceValues_[g_maxSwapChainSize]    = {};
