@@ -11,9 +11,6 @@
 #include <string>
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -51,8 +48,6 @@ public ref struct ColorRGBA
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

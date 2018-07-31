@@ -13,9 +13,6 @@
 using namespace System;
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -56,8 +53,6 @@ public ref class RendererInfo
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

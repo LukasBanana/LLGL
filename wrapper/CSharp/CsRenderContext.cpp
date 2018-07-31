@@ -9,9 +9,6 @@
 #include "CsHelper.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -104,8 +101,6 @@ void RenderContext::Vsync::set(VsyncDescriptor^ value)
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

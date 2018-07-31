@@ -28,9 +28,6 @@ using namespace System;
 using namespace System::Runtime::InteropServices;
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -119,7 +116,7 @@ public ref class RenderSystem
 
         property CommandQueue^ CommandQueue
         {
-            LHermanns::SharpLLGL::CommandQueue^ get();
+            SharpLLGL::CommandQueue^ get();
         }
 
         /* ----- Command buffers ----- */
@@ -238,16 +235,13 @@ public ref class RenderSystem
 
     private:
 
-        ::LLGL::RenderSystem* native_ = nullptr;
-
-        LHermanns::SharpLLGL::CommandQueue^ commandQueue_;
+        ::LLGL::RenderSystem*       native_         = nullptr;
+        SharpLLGL::CommandQueue^    commandQueue_;
 
 };
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

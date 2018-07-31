@@ -8,9 +8,6 @@
 #pragma once
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -125,8 +122,6 @@ public enum class DataType
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

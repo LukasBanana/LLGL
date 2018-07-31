@@ -16,9 +16,6 @@ using namespace System;
 using namespace System::Runtime::InteropServices;
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -96,8 +93,6 @@ Offset3D::Offset3D(int x, int y, int z)
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

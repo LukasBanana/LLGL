@@ -9,9 +9,6 @@
 #include "CsHelper.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -29,8 +26,6 @@ ShaderProgramDescriptor::ShaderProgramDescriptor()
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

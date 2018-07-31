@@ -9,9 +9,6 @@
 #include "CsHelper.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -88,8 +85,6 @@ ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type,
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

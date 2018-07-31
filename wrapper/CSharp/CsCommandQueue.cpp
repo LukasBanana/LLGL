@@ -8,9 +8,6 @@
 #include "CsCommandQueue.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -51,8 +48,6 @@ void CommandQueue::WaitIdle()
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

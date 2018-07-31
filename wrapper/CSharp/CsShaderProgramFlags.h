@@ -21,9 +21,6 @@ using namespace System::Runtime::InteropServices;
 using namespace System::Collections::Generic;
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -47,8 +44,6 @@ public ref class ShaderProgramDescriptor
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

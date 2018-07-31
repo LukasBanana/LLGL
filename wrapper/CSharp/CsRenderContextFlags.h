@@ -12,9 +12,6 @@
 #include "CsGraphicsPipelineFlags.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -90,8 +87,6 @@ public ref class RenderContextDescriptor
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

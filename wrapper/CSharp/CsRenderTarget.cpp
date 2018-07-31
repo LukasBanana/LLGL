@@ -8,9 +8,6 @@
 #include "CsRenderTarget.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -58,8 +55,6 @@ RenderPass^ RenderTarget::RenderPass::get()
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

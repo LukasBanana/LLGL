@@ -9,9 +9,6 @@
 #include "CsHelper.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -36,14 +33,14 @@ AttachmentClear::AttachmentClear()
 {
     Flags           = ClearFlags::None;
     ColorAttachment = 0;
-    ClearValue      = gcnew LHermanns::SharpLLGL::ClearValue();
+    ClearValue      = gcnew SharpLLGL::ClearValue();
 }
 
 AttachmentClear::AttachmentClear(ColorRGBA^ color, unsigned int colorAttachment)
 {
     Flags               = ClearFlags::Color;
     ColorAttachment     = colorAttachment;
-    ClearValue          = gcnew LHermanns::SharpLLGL::ClearValue();
+    ClearValue          = gcnew SharpLLGL::ClearValue();
     ClearValue->Color   = color;
 }
 
@@ -51,7 +48,7 @@ AttachmentClear::AttachmentClear(float depth)
 {
     Flags               = ClearFlags::Depth;
     ColorAttachment     = 0;
-    ClearValue          = gcnew LHermanns::SharpLLGL::ClearValue();
+    ClearValue          = gcnew SharpLLGL::ClearValue();
     ClearValue->Depth   = depth;
 }
 
@@ -59,7 +56,7 @@ AttachmentClear::AttachmentClear(unsigned int stencil)
 {
     Flags               = ClearFlags::Stencil;
     ColorAttachment     = 0;
-    ClearValue          = gcnew LHermanns::SharpLLGL::ClearValue();
+    ClearValue          = gcnew SharpLLGL::ClearValue();
     ClearValue->Stencil = stencil;
 }
 
@@ -67,15 +64,13 @@ AttachmentClear::AttachmentClear(float depth, unsigned int stencil)
 {
     Flags               = ClearFlags::DepthStencil;
     ColorAttachment     = 0;
-    ClearValue          = gcnew LHermanns::SharpLLGL::ClearValue();
+    ClearValue          = gcnew SharpLLGL::ClearValue();
     ClearValue->Depth   = depth;
     ClearValue->Stencil = stencil;
 }
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

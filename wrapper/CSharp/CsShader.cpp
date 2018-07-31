@@ -9,9 +9,6 @@
 #include "CsHelper.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -58,8 +55,6 @@ int Shader::StageFlags::get()
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

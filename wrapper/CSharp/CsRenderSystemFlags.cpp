@@ -8,9 +8,6 @@
 #include "CsRenderSystemFlags.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -29,8 +26,6 @@ RendererInfo::RendererInfo()
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

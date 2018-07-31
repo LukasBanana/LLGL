@@ -5,9 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
-using LHermanns.SharpLLGL;
-
-using SharpLLGL = LHermanns.SharpLLGL;
+using SharpLLGL;
 
 namespace LLGLExamples
 {
@@ -19,7 +17,7 @@ namespace LLGLExamples
 
     class HelloTriangle
     {
-        private SharpLLGL.RenderingDebugger debugger = new RenderingDebugger();
+        private RenderingDebugger debugger = new RenderingDebugger();
         private RenderSystem renderer;
         private RenderContext context;
         private CommandQueue cmdQueue;

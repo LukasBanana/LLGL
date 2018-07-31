@@ -11,9 +11,6 @@
 #include <LLGL/Types.h>
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -74,8 +71,6 @@ public ref class Offset3D
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

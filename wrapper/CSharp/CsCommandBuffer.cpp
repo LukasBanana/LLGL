@@ -9,9 +9,6 @@
 #include <algorithm>
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -315,8 +312,6 @@ void CommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, u
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

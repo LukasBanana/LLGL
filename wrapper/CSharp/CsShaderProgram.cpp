@@ -9,9 +9,6 @@
 #include "CsHelper.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -55,8 +52,6 @@ void ShaderProgram::BindStorageBuffer(String^ name, unsigned int bindingIndex)
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

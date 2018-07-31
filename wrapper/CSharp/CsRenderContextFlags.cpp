@@ -8,9 +8,6 @@
 #include "CsRenderContextFlags.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -49,8 +46,6 @@ RenderContextDescriptor::RenderContextDescriptor()
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

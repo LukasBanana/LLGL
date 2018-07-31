@@ -8,9 +8,6 @@
 #include "CsRenderSystemChilds.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -29,9 +26,9 @@ Resource::Resource(::LLGL::Resource* native) :
     return native_;
 }
 
-LHermanns::SharpLLGL::ResourceType Resource::ResourceType::get()
+SharpLLGL::ResourceType Resource::ResourceType::get()
 {
-    return static_cast<LHermanns::SharpLLGL::ResourceType>(native_->QueryResourceType());
+    return static_cast<SharpLLGL::ResourceType>(native_->QueryResourceType());
 }
 
 
@@ -66,7 +63,7 @@ Texture::Texture(::LLGL::Texture* native) :
 
 TextureType Texture::Type::get()
 {
-    return static_cast<LHermanns::SharpLLGL::TextureType>(reinterpret_cast<::LLGL::Texture*>(Native::get())->GetType());
+    return static_cast<SharpLLGL::TextureType>(reinterpret_cast<::LLGL::Texture*>(Native::get())->GetType());
 }
 
 
@@ -101,7 +98,7 @@ QueryHeap::QueryHeap(::LLGL::QueryHeap* native) :
 
 QueryType QueryHeap::Type::get()
 {
-    return static_cast<LHermanns::SharpLLGL::QueryType>(native_->GetType());
+    return static_cast<SharpLLGL::QueryType>(native_->GetType());
 }
 
 
@@ -211,8 +208,6 @@ BufferArray::BufferArray(::LLGL::BufferArray* native) :
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

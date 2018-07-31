@@ -22,9 +22,6 @@ using namespace System::Runtime::InteropServices;
 using namespace System::Collections::Generic;
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -364,8 +361,6 @@ public ref class GraphicsPipelineDescriptor
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

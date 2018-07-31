@@ -8,9 +8,6 @@
 #include "CsWindow.h"
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -108,8 +105,6 @@ bool Window::ProcessEvents()
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

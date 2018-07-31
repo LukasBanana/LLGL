@@ -17,9 +17,6 @@ using namespace System;
 using namespace System::Runtime::InteropServices;
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -80,8 +77,6 @@ ColorRGBA::ColorRGBA(ColorRGBA^ rhs)
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

@@ -22,9 +22,6 @@ using namespace System;
 using namespace System::Runtime::InteropServices;
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -72,8 +69,6 @@ public ref class RenderContext : public RenderTarget
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 

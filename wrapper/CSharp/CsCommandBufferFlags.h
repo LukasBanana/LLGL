@@ -20,9 +20,6 @@ using namespace System;
 using namespace System::Runtime::InteropServices;
 
 
-namespace LHermanns
-{
-
 namespace SharpLLGL
 {
 
@@ -77,8 +74,6 @@ public ref class AttachmentClear
 
 
 } // /namespace SharpLLGL
-
-} // /namespace LHermanns
 
 
 
