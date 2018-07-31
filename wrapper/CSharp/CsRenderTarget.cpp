@@ -25,28 +25,28 @@ RenderTarget::RenderTarget(::LLGL::RenderTarget* native) :
     return native_;
 }
 
-bool RenderTarget::IsRenderContext()
+bool RenderTarget::IsRenderContext::get()
 {
     return native_->IsRenderContext();
 }
 
-Extent2D^ RenderTarget::GetResolution()
+Extent2D^ RenderTarget::Resolution::get()
 {
     auto extent = native_->GetResolution();
     return gcnew Extent2D(extent.width, extent.height);
 }
 
-unsigned int RenderTarget::GetNumColorAttachments()
+unsigned int RenderTarget::NumColorAttachments::get()
 {
     return native_->GetNumColorAttachments();
 }
 
-bool RenderTarget::HasDepthAttachment()
+bool RenderTarget::HasDepthAttachment::get()
 {
     return native_->HasDepthAttachment();
 }
 
-bool RenderTarget::HasStencilAttachment()
+bool RenderTarget::HasStencilAttachment::get()
 {
     return native_->HasStencilAttachment();
 }

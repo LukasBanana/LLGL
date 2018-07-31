@@ -50,7 +50,9 @@ public ref class CommandBuffer
         void Begin();
         void End();
 
-        void UpdateBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, System::IntPtr data, System::UInt16 dataSize);
+        generic <typename T>
+        void UpdateBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, array<T>^ data);
+
         void CopyBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, Buffer^ srcBuffer, System::UInt64 srcOffset, System::UInt64 size);
 
         /* ----- Configuration ----- */
@@ -73,7 +75,7 @@ public ref class CommandBuffer
         void SetClearDepth(float depth);
         void SetClearStencil(unsigned int stencil);
 
-        void Clear(int flags);
+        void Clear(ClearFlags flags);
 
         void ClearAttachments(array<AttachmentClear^>^ attachments);
 

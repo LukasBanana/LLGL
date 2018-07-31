@@ -33,7 +33,7 @@ VertexAttribute::VertexAttribute()
 VertexAttribute::VertexAttribute(String^ name, LHermanns::LLGL::Format format)
 {
     Name            = name;
-    Format          = LHermanns::LLGL::Format::Undefined;
+    Format          = format;
     InstanceDivisor = 0;
     Offset          = 0;
     SemanticIndex   = 0;
@@ -42,7 +42,7 @@ VertexAttribute::VertexAttribute(String^ name, LHermanns::LLGL::Format format)
 VertexAttribute::VertexAttribute(String^ name, LHermanns::LLGL::Format format, unsigned int instanceDivisor)
 {
     Name            = name;
-    Format          = LHermanns::LLGL::Format::Undefined;
+    Format          = format;
     InstanceDivisor = instanceDivisor;
     Offset          = 0;
     SemanticIndex   = 0;
@@ -51,7 +51,7 @@ VertexAttribute::VertexAttribute(String^ name, LHermanns::LLGL::Format format, u
 VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, LHermanns::LLGL::Format format, unsigned int instanceDivisor)
 {
     Name            = name;
-    Format          = LHermanns::LLGL::Format::Undefined;
+    Format          = format;
     InstanceDivisor = instanceDivisor;
     Offset          = 0;
     SemanticIndex   = semanticIndex;

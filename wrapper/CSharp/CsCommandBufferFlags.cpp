@@ -34,14 +34,14 @@ ClearValue::ClearValue()
 
 AttachmentClear::AttachmentClear()
 {
-    Flags           = 0;
+    Flags           = ClearFlags::None;
     ColorAttachment = 0;
     ClearValue      = gcnew LHermanns::LLGL::ClearValue();
 }
 
 AttachmentClear::AttachmentClear(ColorRGBA^ color, unsigned int colorAttachment)
 {
-    Flags               = static_cast<int>(ClearFlags::Color);
+    Flags               = ClearFlags::Color;
     ColorAttachment     = colorAttachment;
     ClearValue          = gcnew LHermanns::LLGL::ClearValue();
     ClearValue->Color   = color;
@@ -49,7 +49,7 @@ AttachmentClear::AttachmentClear(ColorRGBA^ color, unsigned int colorAttachment)
 
 AttachmentClear::AttachmentClear(float depth)
 {
-    Flags               = static_cast<int>(ClearFlags::Depth);
+    Flags               = ClearFlags::Depth;
     ColorAttachment     = 0;
     ClearValue          = gcnew LHermanns::LLGL::ClearValue();
     ClearValue->Depth   = depth;
@@ -57,7 +57,7 @@ AttachmentClear::AttachmentClear(float depth)
 
 AttachmentClear::AttachmentClear(unsigned int stencil)
 {
-    Flags               = static_cast<int>(ClearFlags::Stencil);
+    Flags               = ClearFlags::Stencil;
     ColorAttachment     = 0;
     ClearValue          = gcnew LHermanns::LLGL::ClearValue();
     ClearValue->Stencil = stencil;
@@ -65,7 +65,7 @@ AttachmentClear::AttachmentClear(unsigned int stencil)
 
 AttachmentClear::AttachmentClear(float depth, unsigned int stencil)
 {
-    Flags               = static_cast<int>(ClearFlags::DepthStencil);
+    Flags               = ClearFlags::DepthStencil;
     ColorAttachment     = 0;
     ClearValue          = gcnew LHermanns::LLGL::ClearValue();
     ClearValue->Depth   = depth;

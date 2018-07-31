@@ -56,8 +56,9 @@ public enum class StorageBufferType
 /* ----- Flags ----- */
 
 [Flags]
-public enum class BufferFlags : System::UInt32
+public enum class BufferFlags
 {
+    None                = 0,
     MapReadAccess       = (1 << 0),
     MapWriteAccess      = (1 << 1),
     MapReadWriteAccess  = (MapReadAccess | MapWriteAccess),
@@ -66,6 +67,31 @@ public enum class BufferFlags : System::UInt32
 
 
 /* ----- Structures ----- */
+
+public ref class IndexFormat
+{
+
+    public:
+
+        IndexFormat();
+        IndexFormat(IndexFormat^ rhs);
+        IndexFormat(LHermanns::LLGL::DataType dataType);
+
+        property LHermanns::LLGL::DataType DataType
+        {
+            LHermanns::LLGL::DataType get();
+        };
+
+        property unsigned int FormatSize
+        {
+            unsigned int get();
+        };
+
+    private:
+
+        LHermanns::LLGL::DataType dataType_;
+
+};
 
 public ref class BufferDescriptor
 {
@@ -92,7 +118,7 @@ public ref class BufferDescriptor
 
                 IndexBufferDescriptor();
 
-                //property IndexFormat^ Format;
+                property IndexFormat^ Format;
 
         };
 
@@ -110,8 +136,8 @@ public ref class BufferDescriptor
         };
 
         property BufferType                 Type;
+        property BufferFlags                Flags;
         property System::UInt64             Size;
-        property System::UInt32             Flags;
         property VertexBufferDescriptor^    VertexBuffer;
         property IndexBufferDescriptor^     IndexBuffer;
         property StorageBufferDescriptor^   StorageBuffer;

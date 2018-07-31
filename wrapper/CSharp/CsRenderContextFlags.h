@@ -9,6 +9,7 @@
 
 #include <vcclr.h>
 #include "CsTypes.h"
+#include "CsGraphicsPipelineFlags.h"
 
 
 namespace LHermanns
@@ -80,7 +81,7 @@ public ref class RenderContextDescriptor
         RenderContextDescriptor();
 
         VsyncDescriptor^            Vsync;
-        //MultiSamplingDescriptor^    MultiSampling;
+        MultiSamplingDescriptor^    MultiSampling;
         VideoModeDescriptor^        VideoMode;
         ProfileOpenGLDescriptor^    ProfileOpenGL;
         //DebugCallback^              DebugCallback;

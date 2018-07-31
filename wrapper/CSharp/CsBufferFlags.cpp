@@ -6,6 +6,7 @@
  */
 
 #include "CsBufferFlags.h"
+#include <LLGL/Format.h>
 
 
 namespace LHermanns
@@ -13,6 +14,36 @@ namespace LHermanns
 
 namespace LLGL
 {
+
+
+/*
+ * IndexFormat class
+ */
+
+IndexFormat::IndexFormat() :
+    dataType_ { LHermanns::LLGL::DataType::UInt32 }
+{
+}
+
+IndexFormat::IndexFormat(IndexFormat^ rhs) :
+    dataType_ { rhs->DataType }
+{
+}
+
+IndexFormat::IndexFormat(LHermanns::LLGL::DataType dataType) :
+    dataType_ { dataType }
+{
+}
+
+LHermanns::LLGL::DataType IndexFormat::DataType::get()
+{
+    return dataType_;
+}
+
+unsigned int IndexFormat::FormatSize::get()
+{
+    return ::LLGL::DataTypeSize(static_cast<::LLGL::DataType>(dataType_));
+}
 
 
 /*
@@ -31,6 +62,7 @@ BufferDescriptor::VertexBufferDescriptor::VertexBufferDescriptor()
 
 BufferDescriptor::IndexBufferDescriptor::IndexBufferDescriptor()
 {
+    Format = gcnew IndexFormat();
 }
 
 
@@ -51,6 +83,9 @@ BufferDescriptor::StorageBufferDescriptor::StorageBufferDescriptor()
 
 BufferDescriptor::BufferDescriptor()
 {
+    Type            = BufferType::Vertex;
+    Flags           = BufferFlags::None;
+    Size            = 0;
     VertexBuffer    = gcnew VertexBufferDescriptor();
     IndexBuffer     = gcnew IndexBufferDescriptor();
     StorageBuffer   = gcnew StorageBufferDescriptor();

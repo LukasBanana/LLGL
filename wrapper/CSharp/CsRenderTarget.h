@@ -42,14 +42,30 @@ public ref class RenderTarget
             ::LLGL::RenderTarget* get();
         }
 
-        bool IsRenderContext();
+        property bool IsRenderContext
+        {
+            bool get();
+        }
 
-        Extent2D^ GetResolution();
+        property Extent2D^ Resolution
+        {
+            Extent2D^ get();
+        }
 
-        unsigned int GetNumColorAttachments();
+        property unsigned int NumColorAttachments
+        {
+            unsigned int get();
+        }
 
-        bool HasDepthAttachment();
-        bool HasStencilAttachment();
+        property bool HasDepthAttachment
+        {
+            bool get();
+        }
+
+        property bool HasStencilAttachment
+        {
+            bool get();
+        }
 
         property RenderPass^ RenderPass
         {

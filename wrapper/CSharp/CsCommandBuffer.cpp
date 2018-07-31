@@ -41,9 +41,11 @@ void CommandBuffer::End()
     native_->End();
 }
 
-void CommandBuffer::UpdateBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, System::IntPtr data, System::UInt16 dataSize)
+generic <typename T>
+void CommandBuffer::UpdateBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, array<T>^ data)
 {
-    native_->UpdateBuffer(*(dstBuffer->NativeSub), dstOffset, data.ToPointer(), dataSize);
+    pin_ptr<T> dataRef = &data[0];
+    native_->UpdateBuffer(*(dstBuffer->NativeSub), dstOffset, dataRef, data->Length * sizeof(T));
 }
 
 void CommandBuffer::CopyBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, Buffer^ srcBuffer, System::UInt64 srcOffset, System::UInt64 size)
@@ -124,7 +126,7 @@ void CommandBuffer::SetClearStencil(unsigned int stencil)
     native_->SetClearStencil(stencil);
 }
 
-void CommandBuffer::Clear(int flags)
+void CommandBuffer::Clear(ClearFlags flags)
 {
     native_->Clear(static_cast<long>(flags));
 }

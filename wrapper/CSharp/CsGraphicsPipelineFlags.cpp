@@ -105,14 +105,23 @@ Scissor::Scissor(Offset2D^ offset, Extent2D^ extent)
 
 MultiSamplingDescriptor::MultiSamplingDescriptor()
 {
-    Enabled = false;
-    Samples = 1;
+    Enabled     = false;
+    Samples     = 1;
+    SampleMask  = ~0;
 }
 
 MultiSamplingDescriptor::MultiSamplingDescriptor(unsigned int samples)
 {
-    Enabled = (samples > 1);
-    Samples = samples;
+    Enabled     = (samples > 1);
+    Samples     = samples;
+    SampleMask  = ~0;
+}
+
+MultiSamplingDescriptor::MultiSamplingDescriptor(unsigned int samples, unsigned int sampleMask)
+{
+    Enabled     = (samples > 1);
+    Samples     = samples;
+    SampleMask  = sampleMask;
 }
 
 unsigned int MultiSamplingDescriptor::SampleCount::get()

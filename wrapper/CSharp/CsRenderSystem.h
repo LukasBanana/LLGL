@@ -35,6 +35,32 @@ namespace LLGL
 {
 
 
+public ref class RenderingDebugger
+{
+
+    public:
+
+        RenderingDebugger();
+        ~RenderingDebugger();
+
+        property ::LLGL::RenderingDebugger* Native
+        {
+            ::LLGL::RenderingDebugger* get();
+        };
+
+#if 0
+    protected:
+
+        virtual void OnError();
+        virtual void OnWarning();
+#endif
+
+    private:
+
+        ::LLGL::RenderingDebugger* native_ = nullptr;
+
+};
+
 public ref class RenderSystem
 {
 
@@ -47,6 +73,7 @@ public ref class RenderSystem
         static Collections::Generic::List<String^>^ FindModules();
 
         static RenderSystem^ Load(String^ moduleName);
+        static RenderSystem^ Load(String^ moduleName, RenderingDebugger^ renderingDebugger);
 
         static void Unload(RenderSystem^ renderSystem);
 
@@ -109,7 +136,8 @@ public ref class RenderSystem
 
         Buffer^ CreateBuffer(BufferDescriptor^ desc);
 
-        Buffer^ CreateBuffer(BufferDescriptor^ desc, array<System::Byte>^ initialData);
+        generic <typename T>
+        Buffer^ CreateBuffer(BufferDescriptor^ desc, array<T>^ initialData);
 
         BufferArray^ CreateBufferArray(array<Buffer^>^ bufferArray);
 

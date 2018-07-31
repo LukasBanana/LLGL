@@ -50,15 +50,19 @@ public ref class RenderContext : public RenderTarget
             Window^ get();
         }
 
-        #if 0
         /* ----- Configuration ----- */
 
-        bool SetVideoMode(VideoModeDescriptor^ videoModeDesc)
-        VideoModeDescriptor^ GetVideoMode();
+        property VideoModeDescriptor^ VideoMode
+        {
+            VideoModeDescriptor^ get();
+            void set(VideoModeDescriptor^ value);
+        }
 
-        SetVsync(VsyncDescriptor^ vsyncDesc);
-        VsyncDescriptor^ GetVsync();
-        #endif
+        property VsyncDescriptor^ Vsync
+        {
+            VsyncDescriptor^ get();
+            void set(VsyncDescriptor^ value);
+        };
 
     private:
 

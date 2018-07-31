@@ -220,6 +220,7 @@ public ref class MultiSamplingDescriptor
 
         MultiSamplingDescriptor();
         MultiSamplingDescriptor(unsigned int samples);
+        MultiSamplingDescriptor(unsigned int samples, unsigned int sampleMask);
 
         property unsigned int SampleCount
         {
@@ -228,6 +229,7 @@ public ref class MultiSamplingDescriptor
 
         property bool           Enabled;
         property unsigned int   Samples;
+        property unsigned int   SampleMask;
 
 };
 

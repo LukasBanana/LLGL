@@ -17,46 +17,112 @@ namespace LLGL
 {
 
 
+/*
+ * Internal classes
+ */
+
 class UniquePtrContainer
 {
 
-    public:
+    private:
 
-        static ::LLGL::RenderSystem* AddRenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& native)
+        template <typename T>
+        static T* AddUniqueObject(std::vector<std::unique_ptr<T>>& container, std::unique_ptr<T>&& native)
         {
             auto ref = native.get();
-            g_renderSystemInstance.emplace_back(std::forward<std::unique_ptr<::LLGL::RenderSystem>&&>(native));
+            container.emplace_back(std::forward<std::unique_ptr<T>&&>(native));
             return ref;
         }
 
-        static std::unique_ptr<::LLGL::RenderSystem> RemoveRenderSystem(::LLGL::RenderSystem* native)
+        template <typename T>
+        static std::unique_ptr<T> RemoveUniqueObject(std::vector<std::unique_ptr<T>>& container, T* native)
         {
             auto it = std::find_if(
-                g_renderSystemInstance.begin(),
-                g_renderSystemInstance.end(),
-                [native](const std::unique_ptr<::LLGL::RenderSystem>& entry)
+                container.begin(),
+                container.end(),
+                [native](const std::unique_ptr<T>& entry)
                 {
                     return (entry.get() == native);
                 }
             );
-            if (it != g_renderSystemInstance.end())
+            if (it != container.end())
             {
                 auto native = std::move(*it);
-                g_renderSystemInstance.erase(it);
+                container.erase(it);
                 return native;
             }
             else
                 return nullptr;
         }
 
+    public:
+
+        /* ----- RenderSystem ----- */
+
+        static ::LLGL::RenderSystem* AddRenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& native)
+        {
+            return AddUniqueObject(g_renderSystems, std::forward<std::unique_ptr<::LLGL::RenderSystem>&&>(native));
+        }
+
+        static std::unique_ptr<::LLGL::RenderSystem> RemoveRenderSystem(::LLGL::RenderSystem* native)
+        {
+            return RemoveUniqueObject(g_renderSystems, native);
+        }
+
+        /* ----- RenderingDebugger ----- */
+
+        static ::LLGL::RenderingDebugger* AddRenderingDebugger(std::unique_ptr<::LLGL::RenderingDebugger>&& native)
+        {
+            return AddUniqueObject(g_renderingDebuggers, std::forward<std::unique_ptr<::LLGL::RenderingDebugger>&&>(native));
+        }
+
+        static std::unique_ptr<::LLGL::RenderingDebugger> RemoveRenderingDebugger(::LLGL::RenderingDebugger* native)
+        {
+            return RemoveUniqueObject(g_renderingDebuggers, native);
+        }
+
     private:
 
-        static std::vector<std::unique_ptr<::LLGL::RenderSystem>> g_renderSystemInstance;
+        static std::vector<std::unique_ptr<::LLGL::RenderSystem>>       g_renderSystems;
+        static std::vector<std::unique_ptr<::LLGL::RenderingDebugger>>  g_renderingDebuggers;
 
 };
 
-std::vector<std::unique_ptr<::LLGL::RenderSystem>> UniquePtrContainer::g_renderSystemInstance;
+std::vector<std::unique_ptr<::LLGL::RenderSystem>>      UniquePtrContainer::g_renderSystems;
+std::vector<std::unique_ptr<::LLGL::RenderingDebugger>> UniquePtrContainer::g_renderingDebuggers;
 
+
+
+/*
+ * RenderingDebugger class
+ */
+
+RenderingDebugger::RenderingDebugger() :
+    native_
+    {
+        UniquePtrContainer::AddRenderingDebugger(
+            std::unique_ptr<::LLGL::RenderingDebugger>(
+                new ::LLGL::RenderingDebugger()
+            )
+        )
+    }
+{
+}
+
+RenderingDebugger::~RenderingDebugger()
+{
+    UniquePtrContainer::RemoveRenderingDebugger(native_);
+}
+
+::LLGL::RenderingDebugger* RenderingDebugger::Native::get()
+{
+    return native_;
+}
+
+
+/*
+ * RenderSystem class
+ */
 
 RenderSystem::~RenderSystem()
 {
@@ -76,9 +142,18 @@ Collections::Generic::List<String^>^ RenderSystem::FindModules()
 
 RenderSystem^ RenderSystem::Load(String^ moduleName)
 {
+    return Load(moduleName, nullptr);
+}
+
+RenderSystem^ RenderSystem::Load(String^ moduleName, RenderingDebugger^ renderingDebugger)
+{
     try
     {
-        auto native = ::LLGL::RenderSystem::Load(ToStdString(moduleName));
+        auto native = ::LLGL::RenderSystem::Load(
+            ToStdString(moduleName),
+            nullptr,
+            (renderingDebugger != nullptr ? renderingDebugger->Native : nullptr)
+        );
         return gcnew RenderSystem(std::move(native));
     }
     catch (const std::exception& e)
@@ -135,15 +210,45 @@ const RenderSystemConfiguration& GetConfiguration()
 
 /* ----- Render Context ----- */
 
+static void Convert(::LLGL::VsyncDescriptor& dst, VsyncDescriptor^ src)
+{
+    dst.enabled     = src->Enabled;
+    dst.refreshRate = src->RefreshRate;
+    dst.interval    = src->Interval;
+}
+
+static void Convert(::LLGL::MultiSamplingDescriptor& dst, MultiSamplingDescriptor^ src)
+{
+    dst.enabled     = src->Enabled;
+    dst.samples     = src->Samples;
+    dst.sampleMask  = src->SampleMask;
+}
+
+static void Convert(::LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
+{
+    dst.resolution.width    = src->Resolution->Width;
+    dst.resolution.height   = src->Resolution->Height;
+    dst.colorBits           = src->ColorBits;
+    dst.depthBits           = src->DepthBits;
+    dst.stencilBits         = src->StencilBits;
+    dst.fullscreen          = src->Fullscreen;
+    dst.swapChainSize       = src->SwapChainSize;
+}
+
+static void Convert(::LLGL::ProfileOpenGLDescriptor& dst, ProfileOpenGLDescriptor^ src)
+{
+    dst.contextProfile  = static_cast<::LLGL::OpenGLContextProfile>(src->ContextProfile);
+    dst.majorVersion    = src->MajorVersion;
+    dst.minorVersion    = src->MinorVersion;
+}
+
 static void Convert(::LLGL::RenderContextDescriptor& dst, RenderContextDescriptor^ src)
 {
-    dst.videoMode.resolution.width   = src->VideoMode->Resolution->Width;
-    dst.videoMode.resolution.height  = src->VideoMode->Resolution->Height;
-    dst.videoMode.colorBits          = src->VideoMode->ColorBits;
-    dst.videoMode.depthBits          = src->VideoMode->DepthBits;
-    dst.videoMode.stencilBits        = src->VideoMode->StencilBits;
-    dst.videoMode.fullscreen         = src->VideoMode->Fullscreen;
-    dst.videoMode.swapChainSize      = src->VideoMode->SwapChainSize;
+    Convert(dst.vsync, src->Vsync);
+    Convert(dst.multiSampling, src->MultiSampling);
+    Convert(dst.videoMode, src->VideoMode);
+    Convert(dst.profileOpenGL, src->ProfileOpenGL);
+    //Convert(dst.debugCallback, src->DebugCallback);
 }
 
 RenderContext^ RenderSystem::CreateRenderContext(RenderContextDescriptor^ desc)
@@ -213,9 +318,15 @@ static void Convert(::LLGL::BufferDescriptor::VertexBuffer& dst, BufferDescripto
         Convert(dst.format, src->Format);
 }
 
+static void Convert(::LLGL::IndexFormat& dst, IndexFormat^ src)
+{
+    dst = ::LLGL::IndexFormat(static_cast<::LLGL::DataType>(src->DataType));
+}
+
 static void Convert(::LLGL::BufferDescriptor::IndexBuffer& dst, BufferDescriptor::IndexBufferDescriptor^ src)
 {
-    //TODO...
+    if (src->Format)
+        Convert(dst.format, src->Format);
 }
 
 static void Convert(::LLGL::BufferDescriptor::StorageBuffer& dst, BufferDescriptor::StorageBufferDescriptor^ src)
@@ -226,8 +337,8 @@ static void Convert(::LLGL::BufferDescriptor::StorageBuffer& dst, BufferDescript
 static void Convert(::LLGL::BufferDescriptor& dst, BufferDescriptor^ src)
 {
     dst.type    = static_cast<::LLGL::BufferType>(src->Type);
-    dst.size    = src->Size;
     dst.flags   = static_cast<long>(src->Flags);
+    dst.size    = src->Size;
     if (src->VertexBuffer)
         Convert(dst.vertexBuffer, src->VertexBuffer);
     if (src->IndexBuffer)
@@ -243,11 +354,12 @@ Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc)
     return gcnew Buffer(native_->CreateBuffer(nativeDesc));
 }
 
-Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc, array<System::Byte>^ initialData)
+generic <typename T>
+Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc, array<T>^ initialData)
 {
     ::LLGL::BufferDescriptor nativeDesc;
     Convert(nativeDesc, desc);
-    pin_ptr<System::Byte> initialDataPtr = &initialData[0];
+    pin_ptr<T> initialDataPtr = &initialData[0];
     return gcnew Buffer(native_->CreateBuffer(nativeDesc, initialDataPtr));
 }
 
@@ -344,10 +456,17 @@ static void Convert(::LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src, std::s
 
 Shader^ RenderSystem::CreateShader(ShaderDescriptor^ desc)
 {
-    std::string tempStr[3];
-    ::LLGL::ShaderDescriptor nativeDesc;
-    Convert(nativeDesc, desc, tempStr);
-    return gcnew Shader(native_->CreateShader(nativeDesc));
+    try
+    {
+        std::string tempStr[3];
+        ::LLGL::ShaderDescriptor nativeDesc;
+        Convert(nativeDesc, desc, tempStr);
+        return gcnew Shader(native_->CreateShader(nativeDesc));
+    }
+    catch (const std::exception& e)
+    {
+        throw gcnew Exception(ToManagedString(e.what()));
+    }
 }
 
 static void Convert(::LLGL::ShaderProgramDescriptor& dst, ShaderProgramDescriptor^ src)
@@ -412,12 +531,6 @@ static void Convert(::LLGL::Scissor& dst, Scissor^ src)
     dst.y       = src->Y;
     dst.width   = src->Width;
     dst.height  = src->Height;
-}
-
-static void Convert(::LLGL::MultiSamplingDescriptor& dst, MultiSamplingDescriptor^ src)
-{
-    dst.enabled = src->Enabled;
-    dst.samples = src->Samples;
 }
 
 static void Convert(::LLGL::DepthDescriptor& dst, DepthDescriptor^ src)
@@ -515,7 +628,14 @@ GraphicsPipeline^ RenderSystem::CreateGraphicsPipeline(GraphicsPipelineDescripto
 {
     ::LLGL::GraphicsPipelineDescriptor nativeDesc;
     Convert(nativeDesc, desc);
-    return gcnew GraphicsPipeline(native_->CreateGraphicsPipeline(nativeDesc));
+    try
+    {
+        return gcnew GraphicsPipeline(native_->CreateGraphicsPipeline(nativeDesc));
+    }
+    catch (const std::exception& e)
+    {
+        throw gcnew Exception(ToManagedString(e.what()));
+    }
 }
 
 #if 0
@@ -524,6 +644,7 @@ ComputePipeline^ RenderSystem::CreateComputePipeline(ComputePipelineDescriptor^ 
 
 void RenderSystem::Release(GraphicsPipeline^ graphicsPipeline)
 {
+    native_->Release(*graphicsPipeline->Native);
 }
 
 #if 0

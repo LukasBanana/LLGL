@@ -42,6 +42,7 @@ ProfileOpenGLDescriptor::ProfileOpenGLDescriptor()
 RenderContextDescriptor::RenderContextDescriptor()
 {
     Vsync           = gcnew VsyncDescriptor();
+    MultiSampling   = gcnew MultiSamplingDescriptor();
     VideoMode       = gcnew VideoModeDescriptor();
     ProfileOpenGL   = gcnew ProfileOpenGLDescriptor();
 }

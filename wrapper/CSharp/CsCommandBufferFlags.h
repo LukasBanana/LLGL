@@ -30,8 +30,9 @@ namespace LLGL
 /* ----- Flags ----- */
 
 [Flags]
-public enum class ClearFlags : System::UInt32
+public enum class ClearFlags
 {
+    None            = 0,
     Color           = (1 << 0),
     Depth           = (1 << 1),
     Stencil         = (1 << 2),
@@ -68,7 +69,7 @@ public ref class AttachmentClear
         AttachmentClear(unsigned int stencil);
         AttachmentClear(float depth, unsigned int stencil);
 
-        property int            Flags;
+        property ClearFlags     Flags;
         property unsigned int   ColorAttachment;
         property ClearValue^    ClearValue;
 
