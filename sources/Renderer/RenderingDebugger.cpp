@@ -66,13 +66,13 @@ void RenderingDebugger::PostWarning(const WarningType type, const std::string& m
 
 void RenderingDebugger::OnError(ErrorType type, Message& message)
 {
-    Log::StdErr() << "ERROR (" << LLGL::ToString(type) << "): in '" << message.GetSource() << "': " << message.GetText() << std::endl;
+    Log::StdErr() << "ERROR (" << ToString(type) << "): in '" << message.GetSource() << "': " << message.GetText() << std::endl;
     message.Block();
 }
 
 void RenderingDebugger::OnWarning(WarningType type, Message& message)
 {
-    Log::StdErr() << "WARNING (" << LLGL::ToString(type) << "): in '" << message.GetSource() << "': " << message.GetText() << std::endl;
+    Log::StdErr() << "WARNING (" << ToString(type) << "): in '" << message.GetSource() << "': " << message.GetText() << std::endl;
     message.Block();
 }
 

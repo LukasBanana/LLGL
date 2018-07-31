@@ -21,7 +21,7 @@ class DbgBuffer : public Buffer
 
     public:
 
-        DbgBuffer(LLGL::Buffer& instance, const BufferType type) :
+        DbgBuffer(Buffer& instance, const BufferType type) :
             Buffer   { type     },
             instance { instance }
         {

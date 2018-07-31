@@ -23,7 +23,7 @@ class DbgBufferArray : public BufferArray
 
     public:
 
-        DbgBufferArray(LLGL::BufferArray& instance, const BufferType type) :
+        DbgBufferArray(BufferArray& instance, const BufferType type) :
             BufferArray { type     },
             instance    { instance }
         {
