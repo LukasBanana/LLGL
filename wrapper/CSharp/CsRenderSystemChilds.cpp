@@ -46,6 +46,11 @@ LLGL::Buffer* Buffer::NativeSub::get()
     return static_cast<LLGL::Buffer*>(Native);
 }
 
+BufferType Buffer::Type::get()
+{
+    return static_cast<BufferType>(reinterpret_cast<LLGL::Texture*>(Native)->GetType());
+}
+
 
 /*
  * Texture class
@@ -63,7 +68,7 @@ LLGL::Texture* Texture::NativeSub::get()
 
 TextureType Texture::Type::get()
 {
-    return static_cast<SharpLLGL::TextureType>(reinterpret_cast<LLGL::Texture*>(Native::get())->GetType());
+    return static_cast<TextureType>(reinterpret_cast<LLGL::Texture*>(Native)->GetType());
 }
 
 
@@ -98,7 +103,7 @@ LLGL::QueryHeap* QueryHeap::Native::get()
 
 QueryType QueryHeap::Type::get()
 {
-    return static_cast<SharpLLGL::QueryType>(native_->GetType());
+    return static_cast<QueryType>(native_->GetType());
 }
 
 

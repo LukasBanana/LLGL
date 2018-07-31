@@ -17,6 +17,8 @@
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/GraphicsPipeline.h>
 #include <LLGL/ComputePipeline.h>
+#include "CsTextureFlags.h"
+#include "CsBufferFlags.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -41,19 +43,6 @@ public enum class ResourceType
     StreamOutputBuffer,
     Texture,
     Sampler,
-};
-
-public enum class TextureType
-{
-    Texture1D,
-    Texture2D,
-    Texture3D,
-    TextureCube,
-    Texture1DArray,
-    Texture2DArray,
-    TextureCubeArray,
-    Texture2DMS,
-    Texture2DMSArray,
 };
 
 public enum class QueryType
@@ -102,6 +91,11 @@ public ref class Buffer : public Resource
         {
             LLGL::Buffer* get();
         };
+
+        property BufferType Type
+        {
+            BufferType get();
+        }
 
 };
 

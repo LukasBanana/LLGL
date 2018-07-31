@@ -397,21 +397,75 @@ void RenderSystem::UnmapBuffer(Buffer^ buffer)
     native_->UnmapBuffer(*(buffer->NativeSub));
 }
 
-#if 0
-
 /* ----- Textures ----- */
 
-Texture^ RenderSystem::CreateTexture(TextureDescriptor^ textureDesc);
-Texture^ RenderSystem::CreateTexture(TextureDescriptor^ textureDesc, SrcImageDescriptor^ imageDesc);
+static void Convert(LLGL::Extent3D& dst, Extent3D^ src)
+{
+    dst.width   = src->Width;
+    dst.height  = src->Height;
+    dst.depth   = src->Depth;
+}
 
-void RenderSystem::Release(Texture^ texture);
+static void Convert(LLGL::TextureDescriptor& dst, TextureDescriptor^ src)
+{
+    dst.type        = static_cast<LLGL::TextureType>(src->Type);
+    dst.flags       = static_cast<long>(src->Flags);
+    Convert(dst.extent, src->Extent);
+    dst.arrayLayers = src->ArrayLayers;
+    dst.mipLevels   = src->MipLevels;
+    dst.samples     = src->Samples;
+}
 
+Texture^ RenderSystem::CreateTexture(TextureDescriptor^ textureDesc)
+{
+    LLGL::TextureDescriptor nativeDesc;
+    Convert(nativeDesc, textureDesc);
+    return gcnew Texture(native_->CreateTexture(nativeDesc));
+}
+
+generic <typename T>
+Texture^ RenderSystem::CreateTexture(TextureDescriptor^ textureDesc, SrcImageDescriptor<T>^ imageDesc)
+{
+    LLGL::TextureDescriptor nativeDesc;
+    Convert(nativeDesc, textureDesc);
+
+    if (imageDesc != nullptr)
+    {
+        pin_ptr<T> imageDataRef = &(imageDesc->Data[0]);
+        LLGL::SrcImageDescriptor nativeImageDesc;
+        {
+            nativeImageDesc.format      = static_cast<LLGL::ImageFormat>(imageDesc->Format);
+            nativeImageDesc.dataType    = static_cast<LLGL::DataType>(imageDesc->DataType);
+            nativeImageDesc.data        = imageDataRef;
+            nativeImageDesc.dataSize    = static_cast<std::size_t>(imageDesc->Data->Length) * sizeof(T);
+        }
+        return gcnew Texture(native_->CreateTexture(nativeDesc, &nativeImageDesc));
+    }
+
+    return gcnew Texture(native_->CreateTexture(nativeDesc));
+}
+
+void RenderSystem::Release(Texture^ texture)
+{
+    native_->Release(*texture->NativeSub);
+}
+
+#if 0
 void RenderSystem::WriteTexture(Texture^ texture, SubTextureDescriptor^ subTextureDesc, SrcImageDescriptor^ imageDesc);
 void RenderSystem::ReadTexture(Texture^ texture, unsigned int mipLevel, DstImageDescriptor^ imageDesc);
+#endif
 
-void RenderSystem::GenerateMips(Texture^ texture);
-void RenderSystem::GenerateMips(Texture^ texture, unsigned int baseMipLevel, unsigned int numMipLevels, unsigned int baseArrayLayer, unsigned int numArrayLayers);
+void RenderSystem::GenerateMips(Texture^ texture)
+{
+    native_->GenerateMips(*texture->NativeSub);
+}
 
+void RenderSystem::GenerateMips(Texture^ texture, unsigned int baseMipLevel, unsigned int numMipLevels, unsigned int baseArrayLayer, unsigned int numArrayLayers)
+{
+    native_->GenerateMips(*texture->NativeSub, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
+}
+
+#if 0
 /* ----- Samplers ---- */
 
 Sampler^ RenderSystem::CreateSampler(SamplerDescriptor^ desc);

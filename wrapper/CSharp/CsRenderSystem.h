@@ -14,6 +14,8 @@
 #include "CsRenderContext.h"
 #include "CsRenderContextFlags.h"
 #include "CsBufferFlags.h"
+#include "CsTextureFlags.h"
+#include "CsImageFlags.h"
 #include "CsCommandQueue.h"
 #include "CsShader.h"
 #include "CsShaderProgram.h"
@@ -148,21 +150,24 @@ public ref class RenderSystem
 
         void UnmapBuffer(Buffer^ buffer);
 
-        #if 0
-
         /* ----- Textures ----- */
 
         Texture^ CreateTexture(TextureDescriptor^ textureDesc);
-        Texture^ CreateTexture(TextureDescriptor^ textureDesc, SrcImageDescriptor^ imageDesc);
+
+        generic <typename T>
+        Texture^ CreateTexture(TextureDescriptor^ textureDesc, SrcImageDescriptor<T>^ imageDesc);
 
         void Release(Texture^ texture);
 
+        #if 0
         void WriteTexture(Texture^ texture, SubTextureDescriptor^ subTextureDesc, SrcImageDescriptor^ imageDesc);
         void ReadTexture(Texture^ texture, unsigned int mipLevel, DstImageDescriptor^ imageDesc);
+        #endif
 
         void GenerateMips(Texture^ texture);
         void GenerateMips(Texture^ texture, unsigned int baseMipLevel, unsigned int numMipLevels, unsigned int baseArrayLayer, unsigned int numArrayLayers);
 
+        #if 0
         /* ----- Samplers ---- */
 
         Sampler^ CreateSampler(SamplerDescriptor^ desc);
