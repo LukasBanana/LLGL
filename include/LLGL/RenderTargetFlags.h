@@ -46,18 +46,18 @@ struct AttachmentDescriptor
     AttachmentDescriptor() = default;
     AttachmentDescriptor(const AttachmentDescriptor&) = default;
 
+    //! Constructor for the specified depth-, or stencil attachment.
+    inline AttachmentDescriptor(AttachmentType type) :
+        type { type }
+    {
+    }
+
     //! Constructor for the specified depth-, stencil-, or color attachment.
     inline AttachmentDescriptor(AttachmentType type, Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t arrayLayer = 0) :
         type       { type       },
         texture    { texture    },
         mipLevel   { mipLevel   },
         arrayLayer { arrayLayer }
-    {
-    }
-
-    //! Constructor for the specified depth-, or stencil attachment.
-    inline AttachmentDescriptor(AttachmentType type) :
-        type { type }
     {
     }
 

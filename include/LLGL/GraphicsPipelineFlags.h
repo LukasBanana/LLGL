@@ -308,6 +308,22 @@ struct Viewport
     {
     }
 
+    //! Viewport constructor with extent and default depth range of [0, 1].
+    inline Viewport(const Extent2D& extent) :
+        width  { static_cast<float>(extent.width)  },
+        height { static_cast<float>(extent.height) }
+    {
+    }
+
+    //! Viewport constructor with extent and explicit depth range.
+    inline Viewport(const Extent2D& extent, float minDepth, float maxDepth) :
+        width    { static_cast<float>(extent.width)  },
+        height   { static_cast<float>(extent.height) },
+        minDepth { minDepth                          },
+        maxDepth { maxDepth                          }
+    {
+    }
+
     //! Viewport constructor with offset, extent, and default depth range of [0, 1].
     inline Viewport(const Offset2D& offset, const Extent2D& extent) :
         x      { static_cast<float>(offset.x)      },
