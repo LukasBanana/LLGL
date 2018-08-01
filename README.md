@@ -38,6 +38,10 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 | macOS | 70% | Tested on *macOS Sierra* |
 | iOS | 1% | Currently not compilable |
 
+| Language Binding | Progress | Remarks |
+|------------------|:--------:|---------|
+| C# | 30% | Experimental state |
+
 
 ## Build Notes
 

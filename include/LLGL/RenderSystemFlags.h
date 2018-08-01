@@ -212,10 +212,17 @@ struct RendererID
 //! Renderer basic information structure.
 struct RendererInfo
 {
-    std::string rendererName;           //!< Rendering API name and version (e.g. "OpenGL 4.5.0").
-    std::string deviceName;             //!< Renderer device name (e.g. "GeForce GTX 1070/PCIe/SSE2").
-    std::string vendorName;             //!< Vendor name of the renderer device (e.g. "NVIDIA Corporation").
-    std::string shadingLanguageName;    //!< Shading language version (e.g. "GLSL 4.50").
+    //! Rendering API name and version (e.g. "OpenGL 4.6").
+    std::string rendererName;
+
+    //! Renderer device name (e.g. "GeForce GTX 1070/PCIe/SSE2").
+    std::string deviceName;
+
+    //! Vendor name of the renderer device (e.g. "NVIDIA Corporation").
+    std::string vendorName;
+
+    //! Shading language version (e.g. "GLSL 4.50").
+    std::string shadingLanguageName;
 };
 
 /**
@@ -224,10 +231,17 @@ struct RendererInfo
 */
 struct ApplicationDescriptor
 {
-    std::string     applicationName;    //!< Descriptive string of the application.
-    std::uint32_t   applicationVersion; //!< Version number of the application.
-    std::string     engineName;         //!< Descriptive string of the engine or middleware.
-    std::uint32_t   engineVersion;      //!< Version number of the engine or middleware.
+    //! Descriptive string of the application.
+    std::string     applicationName;
+
+    //! Version number of the application.
+    std::uint32_t   applicationVersion;
+
+    //! Descriptive string of the engine or middleware.
+    std::string     engineName;
+
+    //! Version number of the engine or middleware.
+    std::uint32_t   engineVersion;
 };
 
 /**
@@ -679,7 +693,7 @@ LLGL::ValidateRenderingCaps(
 LLGL_EXPORT bool ValidateRenderingCaps(
     const RenderingCapabilities&        presentCaps,
     const RenderingCapabilities&        requiredCaps,
-    const ValidateRenderingCapsFunc&    callback = nullptr
+    const ValidateRenderingCapsFunc&    callback        = {}
 );
 
 
