@@ -63,11 +63,6 @@ public ref class Resource
 
         Resource(LLGL::Resource* native);
 
-        property LLGL::Resource* Native
-        {
-            LLGL::Resource* get();
-        }
-
         /// <summary>Returns the resource type enumeration entry for this resource object.</summary>
         property ResourceType ResourceType
         {
@@ -78,6 +73,13 @@ public ref class Resource
 
         LLGL::Resource* native_ = nullptr;
 
+    internal:
+
+        property LLGL::Resource* Native
+        {
+            LLGL::Resource* get();
+        }
+
 };
 
 public ref class Buffer : public Resource
@@ -87,15 +89,17 @@ public ref class Buffer : public Resource
 
         Buffer(LLGL::Buffer* native);
 
-        property LLGL::Buffer* NativeSub
-        {
-            LLGL::Buffer* get();
-        };
-
         property BufferType Type
         {
             BufferType get();
         }
+
+    internal:
+
+        property LLGL::Buffer* NativeSub
+        {
+            LLGL::Buffer* get();
+        };
 
 };
 
@@ -106,14 +110,16 @@ public ref class Texture : public Resource
 
         Texture(LLGL::Texture* native);
 
-        property LLGL::Texture* NativeSub
-        {
-            LLGL::Texture* get();
-        };
-
         property TextureType Type
         {
             TextureType get();
+        };
+
+    internal:
+
+        property LLGL::Texture* NativeSub
+        {
+            LLGL::Texture* get();
         };
 
 };
@@ -124,6 +130,8 @@ public ref class Sampler : public Resource
     public:
 
         Sampler(LLGL::Sampler* native);
+
+    internal:
 
         property LLGL::Sampler* NativeSub
         {
@@ -139,11 +147,6 @@ public ref class QueryHeap
 
         QueryHeap(LLGL::QueryHeap* native);
 
-        property LLGL::QueryHeap* Native
-        {
-            LLGL::QueryHeap* get();
-        };
-
         property QueryType Type
         {
             QueryType get();
@@ -152,6 +155,13 @@ public ref class QueryHeap
     private:
 
         LLGL::QueryHeap* native_ = nullptr;
+
+    internal:
+
+        property LLGL::QueryHeap* Native
+        {
+            LLGL::QueryHeap* get();
+        };
 
 };
 
@@ -162,14 +172,16 @@ public ref class Fence
 
         Fence(LLGL::Fence* native);
 
+    private:
+
+        LLGL::Fence* native_ = nullptr;
+
+    internal:
+
         property LLGL::Fence* Native
         {
             LLGL::Fence* get();
         };
-
-    private:
-
-        LLGL::Fence* native_ = nullptr;
 
 };
 
@@ -180,14 +192,16 @@ public ref class RenderPass
 
         RenderPass(LLGL::RenderPass* native);
 
+    private:
+
+        LLGL::RenderPass* native_ = nullptr;
+
+    internal:
+
         property LLGL::RenderPass* Native
         {
             LLGL::RenderPass* get();
         };
-
-    private:
-
-        LLGL::RenderPass* native_ = nullptr;
 
 };
 
@@ -198,14 +212,16 @@ public ref class PipelineLayout
 
         PipelineLayout(LLGL::PipelineLayout* native);
 
+    private:
+
+        LLGL::PipelineLayout* native_ = nullptr;
+
+    internal:
+
         property LLGL::PipelineLayout* Native
         {
             LLGL::PipelineLayout* get();
         };
-
-    private:
-
-        LLGL::PipelineLayout* native_ = nullptr;
 
 };
 
@@ -216,14 +232,16 @@ public ref class GraphicsPipeline
 
         GraphicsPipeline(LLGL::GraphicsPipeline* native);
 
+    private:
+
+        LLGL::GraphicsPipeline* native_ = nullptr;
+
+    internal:
+
         property LLGL::GraphicsPipeline* Native
         {
             LLGL::GraphicsPipeline* get();
         };
-
-    private:
-
-        LLGL::GraphicsPipeline* native_ = nullptr;
 
 };
 
@@ -234,14 +252,16 @@ public ref class ComputePipeline
 
         ComputePipeline(LLGL::ComputePipeline* native);
 
+    private:
+
+        LLGL::ComputePipeline* native_ = nullptr;
+
+    internal:
+
         property LLGL::ComputePipeline* Native
         {
             LLGL::ComputePipeline* get();
         };
-
-    private:
-
-        LLGL::ComputePipeline* native_ = nullptr;
 
 };
 
@@ -252,14 +272,16 @@ public ref class ResourceHeap
 
         ResourceHeap(LLGL::ResourceHeap* native);
 
+    private:
+
+        LLGL::ResourceHeap* native_ = nullptr;
+
+    internal:
+
         property LLGL::ResourceHeap* Native
         {
             LLGL::ResourceHeap* get();
         };
-
-    private:
-
-        LLGL::ResourceHeap* native_ = nullptr;
 
 };
 
@@ -270,14 +292,16 @@ public ref class BufferArray
 
         BufferArray(LLGL::BufferArray* native);
 
+    private:
+
+        LLGL::BufferArray* native_ = nullptr;
+
+    internal:
+
         property LLGL::BufferArray* Native
         {
             LLGL::BufferArray* get();
         };
-
-    private:
-
-        LLGL::BufferArray* native_ = nullptr;
 
 };
 

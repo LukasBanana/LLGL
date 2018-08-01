@@ -46,6 +46,26 @@ Viewport::Viewport(float x, float y, float width, float height, float minDepth, 
     MaxDepth    = maxDepth;
 }
 
+Viewport::Viewport(Extent2D^ extent)
+{
+    X           = 0.0f;
+    Y           = 0.0f;
+    Width       = static_cast<float>(extent->Width);
+    Height      = static_cast<float>(extent->Height);
+    MinDepth    = 0.0f;
+    MaxDepth    = 1.0f;
+}
+
+Viewport::Viewport(Extent2D^ extent, float minDepth, float maxDepth)
+{
+    X           = 0.0f;
+    Y           = 0.0f;
+    Width       = static_cast<float>(extent->Width);
+    Height      = static_cast<float>(extent->Height);
+    MinDepth    = minDepth;
+    MaxDepth    = maxDepth;
+}
+
 Viewport::Viewport(Offset2D^ offset, Extent2D^ extent)
 {
     X           = static_cast<float>(offset->X);

@@ -20,18 +20,43 @@ namespace SharpLLGL
 
 static void Convert(LLGL::ColorRGBAf& dst, ColorRGBA<float>^ src)
 {
-    dst.r = src->R;
-    dst.g = src->G;
-    dst.b = src->B;
-    dst.a = src->A;
+    if (src)
+    {
+        dst.r = src->R;
+        dst.g = src->G;
+        dst.b = src->B;
+        dst.a = src->A;
+    }
 }
 
 static void Convert(LLGL::ColorRGBAb& dst, ColorRGBA<bool>^ src)
 {
-    dst.r = src->R;
-    dst.g = src->G;
-    dst.b = src->B;
-    dst.a = src->A;
+    if (src)
+    {
+        dst.r = src->R;
+        dst.g = src->G;
+        dst.b = src->B;
+        dst.a = src->A;
+    }
+}
+
+static void Convert(LLGL::Extent2D& dst, Extent2D^ src)
+{
+    if (src)
+    {
+        dst.width   = src->Width;
+        dst.height  = src->Height;
+    }
+}
+
+static void Convert(LLGL::Extent3D& dst, Extent3D^ src)
+{
+    if (src)
+    {
+        dst.width   = src->Width;
+        dst.height  = src->Height;
+        dst.depth   = src->Depth;
+    }
 }
 
 
@@ -230,43 +255,58 @@ const RenderSystemConfiguration& GetConfiguration()
 
 static void Convert(LLGL::VsyncDescriptor& dst, VsyncDescriptor^ src)
 {
-    dst.enabled     = src->Enabled;
-    dst.refreshRate = src->RefreshRate;
-    dst.interval    = src->Interval;
+    if (src)
+    {
+        dst.enabled     = src->Enabled;
+        dst.refreshRate = src->RefreshRate;
+        dst.interval    = src->Interval;
+    }
 }
 
 static void Convert(LLGL::MultiSamplingDescriptor& dst, MultiSamplingDescriptor^ src)
 {
-    dst.enabled     = src->Enabled;
-    dst.samples     = src->Samples;
-    dst.sampleMask  = src->SampleMask;
+    if (src)
+    {
+        dst.enabled     = src->Enabled;
+        dst.samples     = src->Samples;
+        dst.sampleMask  = src->SampleMask;
+    }
 }
 
 static void Convert(LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
 {
-    dst.resolution.width    = src->Resolution->Width;
-    dst.resolution.height   = src->Resolution->Height;
-    dst.colorBits           = src->ColorBits;
-    dst.depthBits           = src->DepthBits;
-    dst.stencilBits         = src->StencilBits;
-    dst.fullscreen          = src->Fullscreen;
-    dst.swapChainSize       = src->SwapChainSize;
+    if (src)
+    {
+        dst.resolution.width    = src->Resolution->Width;
+        dst.resolution.height   = src->Resolution->Height;
+        dst.colorBits           = src->ColorBits;
+        dst.depthBits           = src->DepthBits;
+        dst.stencilBits         = src->StencilBits;
+        dst.fullscreen          = src->Fullscreen;
+        dst.swapChainSize       = src->SwapChainSize;
+    }
 }
 
 static void Convert(LLGL::ProfileOpenGLDescriptor& dst, ProfileOpenGLDescriptor^ src)
 {
-    dst.contextProfile  = static_cast<LLGL::OpenGLContextProfile>(src->ContextProfile);
-    dst.majorVersion    = src->MajorVersion;
-    dst.minorVersion    = src->MinorVersion;
+    if (src)
+    {
+        dst.contextProfile  = static_cast<LLGL::OpenGLContextProfile>(src->ContextProfile);
+        dst.majorVersion    = src->MajorVersion;
+        dst.minorVersion    = src->MinorVersion;
+    }
 }
 
 static void Convert(LLGL::RenderContextDescriptor& dst, RenderContextDescriptor^ src)
 {
-    Convert(dst.vsync, src->Vsync);
-    Convert(dst.multiSampling, src->MultiSampling);
-    Convert(dst.videoMode, src->VideoMode);
-    Convert(dst.profileOpenGL, src->ProfileOpenGL);
-    //Convert(dst.debugCallback, src->DebugCallback);
+    if (src)
+    {
+        Convert(dst.vsync, src->Vsync);
+        Convert(dst.multiSampling, src->MultiSampling);
+        Convert(dst.videoMode, src->VideoMode);
+        Convert(dst.profileOpenGL, src->ProfileOpenGL);
+        //Convert(dst.debugCallback, src->DebugCallback);
+    }
 }
 
 RenderContext^ RenderSystem::CreateRenderContext(RenderContextDescriptor^ desc)
@@ -314,37 +354,50 @@ void RenderSystem::Release(CommandBuffer^ commandBuffer)
 
 static void Convert(LLGL::VertexAttribute& dst, VertexAttribute^ src)
 {
-    dst.name            = ToStdString(src->Name);
-    dst.format          = static_cast<LLGL::Format>(src->Format);
-    dst.instanceDivisor = src->InstanceDivisor;
-    dst.offset          = src->Offset;
-    dst.semanticIndex   = src->SemanticIndex;
+    if (src)
+    {
+        dst.name            = ToStdString(src->Name);
+        dst.format          = static_cast<LLGL::Format>(src->Format);
+        dst.instanceDivisor = src->InstanceDivisor;
+        dst.offset          = src->Offset;
+        dst.semanticIndex   = src->SemanticIndex;
+    }
 }
 
 static void Convert(LLGL::VertexFormat& dst, VertexFormat^ src)
 {
-    dst.attributes.resize(static_cast<std::size_t>(src->Attributes->Count));
-    for (std::size_t i = 0; i < dst.attributes.size(); ++i)
-        Convert(dst.attributes[i], src->Attributes[i]);
-    dst.stride      = src->Stride;
-    dst.inputSlot   = src->InputSlot;
+    if (src)
+    {
+        dst.attributes.resize(static_cast<std::size_t>(src->Attributes->Count));
+        for (std::size_t i = 0; i < dst.attributes.size(); ++i)
+            Convert(dst.attributes[i], src->Attributes[i]);
+        dst.stride      = src->Stride;
+        dst.inputSlot   = src->InputSlot;
+    }
 }
 
 static void Convert(LLGL::BufferDescriptor::VertexBuffer& dst, BufferDescriptor::VertexBufferDescriptor^ src)
 {
-    if (src->Format)
-        Convert(dst.format, src->Format);
+    if (src)
+    {
+        if (src->Format)
+            Convert(dst.format, src->Format);
+    }
 }
 
 static void Convert(LLGL::IndexFormat& dst, IndexFormat^ src)
 {
-    dst = LLGL::IndexFormat(static_cast<LLGL::DataType>(src->DataType));
+    if (src)
+        dst = LLGL::IndexFormat(static_cast<LLGL::DataType>(src->DataType));
 }
 
 static void Convert(LLGL::BufferDescriptor::IndexBuffer& dst, BufferDescriptor::IndexBufferDescriptor^ src)
 {
-    if (src->Format)
-        Convert(dst.format, src->Format);
+    if (src)
+    {
+        if (src->Format)
+            Convert(dst.format, src->Format);
+    }
 }
 
 static void Convert(LLGL::BufferDescriptor::StorageBuffer& dst, BufferDescriptor::StorageBufferDescriptor^ src)
@@ -354,15 +407,18 @@ static void Convert(LLGL::BufferDescriptor::StorageBuffer& dst, BufferDescriptor
 
 static void Convert(LLGL::BufferDescriptor& dst, BufferDescriptor^ src)
 {
-    dst.type    = static_cast<LLGL::BufferType>(src->Type);
-    dst.flags   = static_cast<long>(src->Flags);
-    dst.size    = src->Size;
-    if (src->VertexBuffer)
-        Convert(dst.vertexBuffer, src->VertexBuffer);
-    if (src->IndexBuffer)
-        Convert(dst.indexBuffer, src->IndexBuffer);
-    if (src->StorageBuffer)
-        Convert(dst.storageBuffer, src->StorageBuffer);
+    if (src)
+    {
+        dst.type    = static_cast<LLGL::BufferType>(src->Type);
+        dst.flags   = static_cast<long>(src->Flags);
+        dst.size    = src->Size;
+        if (src->VertexBuffer)
+            Convert(dst.vertexBuffer, src->VertexBuffer);
+        if (src->IndexBuffer)
+            Convert(dst.indexBuffer, src->IndexBuffer);
+        if (src->StorageBuffer)
+            Convert(dst.storageBuffer, src->StorageBuffer);
+    }
 }
 
 Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc)
@@ -420,21 +476,17 @@ void RenderSystem::UnmapBuffer(Buffer^ buffer)
 
 /* ----- Textures ----- */
 
-static void Convert(LLGL::Extent3D& dst, Extent3D^ src)
-{
-    dst.width   = src->Width;
-    dst.height  = src->Height;
-    dst.depth   = src->Depth;
-}
-
 static void Convert(LLGL::TextureDescriptor& dst, TextureDescriptor^ src)
 {
-    dst.type        = static_cast<LLGL::TextureType>(src->Type);
-    dst.flags       = static_cast<long>(src->Flags);
-    Convert(dst.extent, src->Extent);
-    dst.arrayLayers = src->ArrayLayers;
-    dst.mipLevels   = src->MipLevels;
-    dst.samples     = src->Samples;
+    if (src)
+    {
+        dst.type        = static_cast<LLGL::TextureType>(src->Type);
+        dst.flags       = static_cast<long>(src->Flags);
+        Convert(dst.extent, src->Extent);
+        dst.arrayLayers = src->ArrayLayers;
+        dst.mipLevels   = src->MipLevels;
+        dst.samples     = src->Samples;
+    }
 }
 
 Texture^ RenderSystem::CreateTexture(TextureDescriptor^ textureDesc)
@@ -490,20 +542,23 @@ void RenderSystem::GenerateMips(Texture^ texture, unsigned int baseMipLevel, uns
 
 static void Convert(LLGL::SamplerDescriptor& dst, SamplerDescriptor^ src)
 {
-    dst.addressModeU    = static_cast<LLGL::SamplerAddressMode>(src->AddressModeU);
-    dst.addressModeV    = static_cast<LLGL::SamplerAddressMode>(src->AddressModeV);
-    dst.addressModeW    = static_cast<LLGL::SamplerAddressMode>(src->AddressModeW);
-    dst.minFilter       = static_cast<LLGL::SamplerFilter>(src->MinFilter);
-    dst.magFilter       = static_cast<LLGL::SamplerFilter>(src->MagFilter);
-    dst.mipMapFilter    = static_cast<LLGL::SamplerFilter>(src->MipMapFilter);
-    dst.mipMapping      = src->MipMapping;
-    dst.mipMapLODBias   = src->MipMapLODBias;
-    dst.minLOD          = src->MinLOD;
-    dst.maxLOD          = src->MaxLOD;
-    dst.maxAnisotropy   = src->MaxAnisotropy;
-    dst.compareEnabled  = src->CompareEnabled;
-    dst.compareOp       = static_cast<LLGL::CompareOp>(src->CompareOp);
-    Convert(dst.borderColor, src->BorderColor);
+    if (src)
+    {
+        dst.addressModeU    = static_cast<LLGL::SamplerAddressMode>(src->AddressModeU);
+        dst.addressModeV    = static_cast<LLGL::SamplerAddressMode>(src->AddressModeV);
+        dst.addressModeW    = static_cast<LLGL::SamplerAddressMode>(src->AddressModeW);
+        dst.minFilter       = static_cast<LLGL::SamplerFilter>(src->MinFilter);
+        dst.magFilter       = static_cast<LLGL::SamplerFilter>(src->MagFilter);
+        dst.mipMapFilter    = static_cast<LLGL::SamplerFilter>(src->MipMapFilter);
+        dst.mipMapping      = src->MipMapping;
+        dst.mipMapLODBias   = src->MipMapLODBias;
+        dst.minLOD          = src->MinLOD;
+        dst.maxLOD          = src->MaxLOD;
+        dst.maxAnisotropy   = src->MaxAnisotropy;
+        dst.compareEnabled  = src->CompareEnabled;
+        dst.compareOp       = static_cast<LLGL::CompareOp>(src->CompareOp);
+        Convert(dst.borderColor, src->BorderColor);
+    }
 }
 
 Sampler^ RenderSystem::CreateSampler(SamplerDescriptor^ desc)
@@ -522,15 +577,19 @@ void RenderSystem::Release(Sampler^ sampler)
 
 static void Convert(LLGL::ResourceViewDescriptor& dst, ResourceViewDescriptor^ src)
 {
-    dst.resource = src->Resource->Native;
+    if (src)
+        dst.resource = src->Resource->Native;
 }
 
 static void Convert(LLGL::ResourceHeapDescriptor& dst, ResourceHeapDescriptor^ src)
 {
-    dst.pipelineLayout = src->PipelineLayout->Native;
-    dst.resourceViews.resize(src->ResourceViews->Count);
-    for (std::size_t i = 0; i < dst.resourceViews.size(); ++i)
-        Convert(dst.resourceViews[i], src->ResourceViews[i]);
+    if (src)
+    {
+        dst.pipelineLayout = src->PipelineLayout->Native;
+        dst.resourceViews.resize(src->ResourceViews->Count);
+        for (std::size_t i = 0; i < dst.resourceViews.size(); ++i)
+            Convert(dst.resourceViews[i], src->ResourceViews[i]);
+    }
 }
 
 ResourceHeap^ RenderSystem::CreateResourceHeap(ResourceHeapDescriptor^ desc)
@@ -545,32 +604,66 @@ void RenderSystem::Release(ResourceHeap^ resourceHeap)
     native_->Release(*resourceHeap->Native);
 }
 
-#if 0
 /* ----- Render Targets ----- */
 
-RenderTarget^ RenderSystem::CreateRenderTarget(RenderTargetDescriptor^ desc);
+static void Convert(LLGL::AttachmentDescriptor& dst, AttachmentDescriptor^ src)
+{
+    if (src)
+    {
+        dst.type        = static_cast<LLGL::AttachmentType>(src->Type);
+        dst.texture     = (src->Texture != nullptr ? src->Texture->NativeSub : nullptr);
+        dst.mipLevel    = src->MipLevel;
+        dst.arrayLayer  = src->ArrayLayer;
+    }
+}
 
-void RenderSystem::Release(RenderTarget^ renderTarget);
-#endif
+static void Convert(LLGL::RenderTargetDescriptor& dst, RenderTargetDescriptor^ src)
+{
+    if (src)
+    {
+        dst.renderPass = (src->RenderPass != nullptr ? src->RenderPass->Native : nullptr);
+        Convert(dst.resolution, src->Resolution);
+        Convert(dst.multiSampling, src->MultiSampling);
+        dst.customMultiSampling = src->CustomMultiSampling;
+        dst.attachments.resize(src->Attachments->Count);
+        for (std::size_t i = 0; i < dst.attachments.size(); ++i)
+            Convert(dst.attachments[i], src->Attachments[i]);
+    }
+}
+
+RenderTarget^ RenderSystem::CreateRenderTarget(RenderTargetDescriptor^ desc)
+{
+    LLGL::RenderTargetDescriptor nativeDesc;
+    Convert(nativeDesc, desc);
+    return gcnew RenderTarget(native_->CreateRenderTarget(nativeDesc));
+}
+
+void RenderSystem::Release(RenderTarget^ renderTarget)
+{
+    native_->Release(*renderTarget->Native);
+}
 
 /* ----- Shader ----- */
 
 static void Convert(LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src, std::string (&tempStr)[3])
 {
-    tempStr[0] = ToStdString(src->Source);
-    tempStr[1] = ToStdString(src->EntryPoint);
-    tempStr[2] = ToStdString(src->Profile);
+    if (src)
+    {
+        tempStr[0] = ToStdString(src->Source);
+        tempStr[1] = ToStdString(src->EntryPoint);
+        tempStr[2] = ToStdString(src->Profile);
 
-    dst.type            = static_cast<LLGL::ShaderType>(src->Type);
-    dst.source          = tempStr[0].c_str();
-    dst.sourceSize      = tempStr[0].size();
-    dst.sourceType      = static_cast<LLGL::ShaderSourceType>(src->SourceType);
-    dst.entryPoint      = tempStr[1].c_str();
-    dst.profile         = tempStr[2].c_str();
-    dst.flags           = static_cast<long>(src->Flags);
-    #if 0
-    dst.streamOutput    = ;
-    #endif
+        dst.type            = static_cast<LLGL::ShaderType>(src->Type);
+        dst.source          = tempStr[0].c_str();
+        dst.sourceSize      = tempStr[0].size();
+        dst.sourceType      = static_cast<LLGL::ShaderSourceType>(src->SourceType);
+        dst.entryPoint      = tempStr[1].c_str();
+        dst.profile         = tempStr[2].c_str();
+        dst.flags           = static_cast<long>(src->Flags);
+        #if 0
+        dst.streamOutput    = ;
+        #endif
+    }
 }
 
 Shader^ RenderSystem::CreateShader(ShaderDescriptor^ desc)
@@ -590,21 +683,24 @@ Shader^ RenderSystem::CreateShader(ShaderDescriptor^ desc)
 
 static void Convert(LLGL::ShaderProgramDescriptor& dst, ShaderProgramDescriptor^ src)
 {
-    dst.vertexFormats.resize(static_cast<std::size_t>(src->VertexFormats->Count));
-    for (std::size_t i = 0; i < dst.vertexFormats.size(); ++i)
-        Convert(dst.vertexFormats[i], src->VertexFormats[i]);
-    if (src->VertexShader)
-        dst.vertexShader = src->VertexShader->Native;
-    if (src->TessControlShader)
-        dst.tessControlShader = src->TessControlShader->Native;
-    if (src->TessEvaluationShader)
-        dst.tessEvaluationShader = src->TessEvaluationShader->Native;
-    if (src->GeometryShader)
-        dst.geometryShader = src->GeometryShader->Native;
-    if (src->FragmentShader)
-        dst.fragmentShader = src->FragmentShader->Native;
-    if (src->ComputeShader)
-        dst.computeShader = src->ComputeShader->Native;
+    if (src)
+    {
+        dst.vertexFormats.resize(static_cast<std::size_t>(src->VertexFormats->Count));
+        for (std::size_t i = 0; i < dst.vertexFormats.size(); ++i)
+            Convert(dst.vertexFormats[i], src->VertexFormats[i]);
+        if (src->VertexShader)
+            dst.vertexShader = src->VertexShader->Native;
+        if (src->TessControlShader)
+            dst.tessControlShader = src->TessControlShader->Native;
+        if (src->TessEvaluationShader)
+            dst.tessEvaluationShader = src->TessEvaluationShader->Native;
+        if (src->GeometryShader)
+            dst.geometryShader = src->GeometryShader->Native;
+        if (src->FragmentShader)
+            dst.fragmentShader = src->FragmentShader->Native;
+        if (src->ComputeShader)
+            dst.computeShader = src->ComputeShader->Native;
+    }
 }
 
 ShaderProgram^ RenderSystem::CreateShaderProgram(ShaderProgramDescriptor^ desc)
@@ -628,17 +724,23 @@ void RenderSystem::Release(ShaderProgram^ shaderProgram)
 
 static void Convert(LLGL::BindingDescriptor& dst, BindingDescriptor^ src)
 {
-    dst.type        = static_cast<LLGL::ResourceType>(src->Type);
-    dst.stageFlags  = static_cast<long>(src->StageFlags);
-    dst.slot        = src->Slot;
-    dst.arraySize   = src->ArraySize;
+    if (src)
+    {
+        dst.type        = static_cast<LLGL::ResourceType>(src->Type);
+        dst.stageFlags  = static_cast<long>(src->StageFlags);
+        dst.slot        = src->Slot;
+        dst.arraySize   = src->ArraySize;
+    }
 }
 
 static void Convert(LLGL::PipelineLayoutDescriptor& dst, PipelineLayoutDescriptor^ src)
 {
-    dst.bindings.resize(src->Bindings->Count);
-    for (std::size_t i = 0; i < dst.bindings.size(); ++i)
-        Convert(dst.bindings[i], src->Bindings[i]);
+    if (src)
+    {
+        dst.bindings.resize(src->Bindings->Count);
+        for (std::size_t i = 0; i < dst.bindings.size(); ++i)
+            Convert(dst.bindings[i], src->Bindings[i]);
+    }
 }
 
 PipelineLayout^ RenderSystem::CreatePipelineLayout(PipelineLayoutDescriptor^ desc)
@@ -657,109 +759,139 @@ void RenderSystem::Release(PipelineLayout^ pipelineLayout)
 
 static void Convert(LLGL::Viewport& dst, Viewport^ src)
 {
-    dst.x           = src->X;
-    dst.y           = src->Y;
-    dst.width       = src->Width;
-    dst.height      = src->Height;
-    dst.minDepth    = src->MinDepth;
-    dst.maxDepth    = src->MaxDepth;
+    if (src)
+    {
+        dst.x           = src->X;
+        dst.y           = src->Y;
+        dst.width       = src->Width;
+        dst.height      = src->Height;
+        dst.minDepth    = src->MinDepth;
+        dst.maxDepth    = src->MaxDepth;
+    }
 }
 
 static void Convert(LLGL::Scissor& dst, Scissor^ src)
 {
-    dst.x       = src->X;
-    dst.y       = src->Y;
-    dst.width   = src->Width;
-    dst.height  = src->Height;
+    if (src)
+    {
+        dst.x       = src->X;
+        dst.y       = src->Y;
+        dst.width   = src->Width;
+        dst.height  = src->Height;
+    }
 }
 
 static void Convert(LLGL::DepthDescriptor& dst, DepthDescriptor^ src)
 {
-    dst.testEnabled     = src->TestEnabled;
-    dst.writeEnabled    = src->WriteEnabled;
-    dst.compareOp       = static_cast<LLGL::CompareOp>(src->CompareOp);
+    if (src)
+    {
+        dst.testEnabled     = src->TestEnabled;
+        dst.writeEnabled    = src->WriteEnabled;
+        dst.compareOp       = static_cast<LLGL::CompareOp>(src->CompareOp);
+    }
 }
 
 static void Convert(LLGL::StencilFaceDescriptor& dst, StencilFaceDescriptor^ src)
 {
-    dst.stencilFailOp   = static_cast<LLGL::StencilOp>(src->StencilFailOp);
-    dst.depthFailOp     = static_cast<LLGL::StencilOp>(src->DepthFailOp);
-    dst.depthPassOp     = static_cast<LLGL::StencilOp>(src->DepthPassOp);
-    dst.compareOp       = static_cast<LLGL::CompareOp>(src->CompareOp);
-    dst.readMask        = src->ReadMask;
-    dst.writeMask       = src->WriteMask;
-    dst.reference       = src->Reference;
+    if (src)
+    {
+        dst.stencilFailOp   = static_cast<LLGL::StencilOp>(src->StencilFailOp);
+        dst.depthFailOp     = static_cast<LLGL::StencilOp>(src->DepthFailOp);
+        dst.depthPassOp     = static_cast<LLGL::StencilOp>(src->DepthPassOp);
+        dst.compareOp       = static_cast<LLGL::CompareOp>(src->CompareOp);
+        dst.readMask        = src->ReadMask;
+        dst.writeMask       = src->WriteMask;
+        dst.reference       = src->Reference;
+    }
 }
 
 static void Convert(LLGL::StencilDescriptor& dst, StencilDescriptor^ src)
 {
-    dst.testEnabled = src->TestEnabled;
-    Convert(dst.front, src->Front);
-    Convert(dst.back, src->Back);
+    if (src)
+    {
+        dst.testEnabled = src->TestEnabled;
+        Convert(dst.front, src->Front);
+        Convert(dst.back, src->Back);
+    }
 }
 
 static void Convert(LLGL::DepthBiasDescriptor& dst, DepthBiasDescriptor^ src)
 {
-    dst.constantFactor  = src->ConstantFactor;
-    dst.slopeFactor     = src->SlopeFactor;
-    dst.clamp           = src->Clamp;
+    if (src)
+    {
+        dst.constantFactor  = src->ConstantFactor;
+        dst.slopeFactor     = src->SlopeFactor;
+        dst.clamp           = src->Clamp;
+    }
 }
 
 static void Convert(LLGL::RasterizerDescriptor& dst, RasterizerDescriptor^ src)
 {
-    dst.polygonMode                 = static_cast<LLGL::PolygonMode>(src->PolygonMode);
-    dst.cullMode                    = static_cast<LLGL::CullMode>(src->CullMode);
-    Convert(dst.depthBias, src->DepthBias);
-    Convert(dst.multiSampling, src->MultiSampling);
-    dst.frontCCW                    = src->FrontCCW;
-    dst.depthClampEnabled           = src->DepthClampEnabled;
-    dst.scissorTestEnabled          = src->ScissorTestEnabled;
-    dst.antiAliasedLineEnabled      = src->AntiAliasedLineEnabled;
-    dst.conservativeRasterization   = src->ConservativeRasterization;
-    dst.lineWidth                   = src->LineWidth;
+    if (src)
+    {
+        dst.polygonMode                 = static_cast<LLGL::PolygonMode>(src->PolygonMode);
+        dst.cullMode                    = static_cast<LLGL::CullMode>(src->CullMode);
+        Convert(dst.depthBias, src->DepthBias);
+        Convert(dst.multiSampling, src->MultiSampling);
+        dst.frontCCW                    = src->FrontCCW;
+        dst.depthClampEnabled           = src->DepthClampEnabled;
+        dst.scissorTestEnabled          = src->ScissorTestEnabled;
+        dst.antiAliasedLineEnabled      = src->AntiAliasedLineEnabled;
+        dst.conservativeRasterization   = src->ConservativeRasterization;
+        dst.lineWidth                   = src->LineWidth;
+    }
 }
 
 static void Convert(LLGL::BlendTargetDescriptor& dst, BlendTargetDescriptor^ src)
 {
-    dst.blendEnabled    = src->BlendEnabled;
-    dst.srcColor        = static_cast<LLGL::BlendOp>(src->SrcColor);
-    dst.dstColor        = static_cast<LLGL::BlendOp>(src->DstColor);
-    dst.colorArithmetic = static_cast<LLGL::BlendArithmetic>(src->ColorArithmetic);
-    dst.srcAlpha        = static_cast<LLGL::BlendOp>(src->SrcAlpha);
-    dst.dstAlpha        = static_cast<LLGL::BlendOp>(src->DstAlpha);
-    dst.alphaArithmetic = static_cast<LLGL::BlendArithmetic>(src->AlphaArithmetic);
-    Convert(dst.colorMask, src->ColorMask);
+    if (src)
+    {
+        dst.blendEnabled    = src->BlendEnabled;
+        dst.srcColor        = static_cast<LLGL::BlendOp>(src->SrcColor);
+        dst.dstColor        = static_cast<LLGL::BlendOp>(src->DstColor);
+        dst.colorArithmetic = static_cast<LLGL::BlendArithmetic>(src->ColorArithmetic);
+        dst.srcAlpha        = static_cast<LLGL::BlendOp>(src->SrcAlpha);
+        dst.dstAlpha        = static_cast<LLGL::BlendOp>(src->DstAlpha);
+        dst.alphaArithmetic = static_cast<LLGL::BlendArithmetic>(src->AlphaArithmetic);
+        Convert(dst.colorMask, src->ColorMask);
+    }
 }
 
 static void Convert(LLGL::BlendDescriptor& dst, BlendDescriptor^ src)
 {
-    Convert(dst.blendFactor, src->BlendFactor);
-    dst.alphaToCoverageEnabled  = src->AlphaToCoverageEnabled;
-    dst.independentBlendEnabled = src->IndependentBlendEnabled;
-    dst.logicOp                 = static_cast<LLGL::LogicOp>(src->LogicOp);
-    for (int i = 0, n = std::min(8, src->Targets->Length); i < n; ++i)
-        Convert(dst.targets[i], src->Targets[i]);
+    if (src)
+    {
+        Convert(dst.blendFactor, src->BlendFactor);
+        dst.alphaToCoverageEnabled  = src->AlphaToCoverageEnabled;
+        dst.independentBlendEnabled = src->IndependentBlendEnabled;
+        dst.logicOp                 = static_cast<LLGL::LogicOp>(src->LogicOp);
+        for (int i = 0, n = std::min(8, src->Targets->Length); i < n; ++i)
+            Convert(dst.targets[i], src->Targets[i]);
+    }
 }
 
 static void Convert(LLGL::GraphicsPipelineDescriptor& dst, GraphicsPipelineDescriptor^ src)
 {
-    dst.shaderProgram       = (src->ShaderProgram != nullptr ? src->ShaderProgram->Native : nullptr);
-    dst.renderPass          = (src->RenderPass != nullptr ? src->RenderPass->Native : nullptr);
-    dst.pipelineLayout      = (src->PipelineLayout != nullptr ? src->PipelineLayout->Native : nullptr);
-    dst.primitiveTopology   = static_cast<LLGL::PrimitiveTopology>(src->PrimitiveTopology);
+    if (src)
+    {
+        dst.shaderProgram       = (src->ShaderProgram != nullptr ? src->ShaderProgram->Native : nullptr);
+        dst.renderPass          = (src->RenderPass != nullptr ? src->RenderPass->Native : nullptr);
+        dst.pipelineLayout      = (src->PipelineLayout != nullptr ? src->PipelineLayout->Native : nullptr);
+        dst.primitiveTopology   = static_cast<LLGL::PrimitiveTopology>(src->PrimitiveTopology);
 
-    dst.viewports.resize(src->Viewports->Count);
-    for (std::size_t i = 0; i < dst.viewports.size(); ++i)
-        Convert(dst.viewports[i], src->Viewports[i]);
+        dst.viewports.resize(src->Viewports->Count);
+        for (std::size_t i = 0; i < dst.viewports.size(); ++i)
+            Convert(dst.viewports[i], src->Viewports[i]);
 
-    dst.scissors.resize(src->Scissors->Count);
-    for (std::size_t i = 0; i < dst.scissors.size(); ++i)
-        Convert(dst.scissors[i], src->Scissors[i]);
+        dst.scissors.resize(src->Scissors->Count);
+        for (std::size_t i = 0; i < dst.scissors.size(); ++i)
+            Convert(dst.scissors[i], src->Scissors[i]);
 
-    Convert(dst.depth, src->Depth);
-    Convert(dst.stencil, src->Stencil);
-    Convert(dst.rasterizer, src->Rasterizer);
-    Convert(dst.blend, src->Blend);
+        Convert(dst.depth, src->Depth);
+        Convert(dst.stencil, src->Stencil);
+        Convert(dst.rasterizer, src->Rasterizer);
+        Convert(dst.blend, src->Blend);
+    }
 }
 
 GraphicsPipeline^ RenderSystem::CreateGraphicsPipeline(GraphicsPipelineDescriptor^ desc)

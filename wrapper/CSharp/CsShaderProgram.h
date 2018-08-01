@@ -31,11 +31,6 @@ public ref class ShaderProgram
 
         ShaderProgram(LLGL::ShaderProgram* native);
 
-        property LLGL::ShaderProgram* Native
-        {
-            LLGL::ShaderProgram* get();
-        }
-
         property bool HasErrors
         {
             bool get();
@@ -58,6 +53,13 @@ public ref class ShaderProgram
     private:
 
         LLGL::ShaderProgram* native_ = nullptr;
+
+    internal:
+
+        property LLGL::ShaderProgram* Native
+        {
+            LLGL::ShaderProgram* get();
+        }
 
 };
 

@@ -125,6 +125,11 @@ void CommandBuffer::SetScissors(array<Scissor^>^ scissors)
 
 /* ----- Clear ----- */
 
+void CommandBuffer::SetClearColor(ColorRGBA<float>^ color)
+{
+    native_->SetClearColor({ color->R, color->G, color->B, color->A });
+}
+
 void CommandBuffer::SetClearColor(float r, float g, float b, float a)
 {
     native_->SetClearColor({ r, g, b, a });
@@ -243,14 +248,27 @@ void CommandBuffer::BeginRenderPass(RenderTarget^ renderTarget)
 
 void CommandBuffer::BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ renderPass)
 {
-    native_->BeginRenderPass(*renderTarget->Native, renderPass->Native);
+    native_->BeginRenderPass(
+        *renderTarget->Native,
+        (renderPass != nullptr ? renderPass->Native : nullptr)
+    );
 }
 
-#if 0
 void CommandBuffer::BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ renderPass, array<ClearValue^>^ clearValues)
 {
+    LLGL::ClearValue nativeClearValues[10];
+
+    std::uint32_t numClearValues = static_cast<std::uint32_t>(std::max(clearValues->Length, 10));
+    for (std::uint32_t i = 0; i < numClearValues; ++i)
+        Convert(nativeClearValues[i], clearValues[i]);
+
+    native_->BeginRenderPass(
+        *renderTarget->Native,
+        (renderPass != nullptr ? renderPass->Native : nullptr),
+        numClearValues,
+        nativeClearValues
+    );
 }
-#endif
 
 void CommandBuffer::EndRenderPass()
 {

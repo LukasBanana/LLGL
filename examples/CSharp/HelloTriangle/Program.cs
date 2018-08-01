@@ -147,7 +147,7 @@ namespace LLGLExamples
                         cmdBuffer.BeginRenderPass(context);
                         {
                             cmdBuffer.Clear(ClearFlags.Color);
-                            cmdBuffer.SetViewport(new Viewport(0, 0, context.Resolution.Width, context.Resolution.Height));
+                            cmdBuffer.SetViewport(new Viewport(context.Resolution));
 
                             cmdBuffer.SetGraphicsPipeline(pipeline);
 

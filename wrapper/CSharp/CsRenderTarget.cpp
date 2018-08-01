@@ -17,11 +17,6 @@ RenderTarget::RenderTarget(LLGL::RenderTarget* native) :
 {
 }
 
-LLGL::RenderTarget* RenderTarget::Native::get()
-{
-    return native_;
-}
-
 bool RenderTarget::IsRenderContext::get()
 {
     return native_->IsRenderContext();
@@ -51,6 +46,16 @@ bool RenderTarget::HasStencilAttachment::get()
 RenderPass^ RenderTarget::RenderPass::get()
 {
     return renderPass_;
+}
+
+
+/*
+ * ======= Internal: =======
+ */
+
+LLGL::RenderTarget* RenderTarget::Native::get()
+{
+    return native_;
 }
 
 

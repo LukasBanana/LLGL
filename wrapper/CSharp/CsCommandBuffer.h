@@ -14,6 +14,7 @@
 #include "CsCommandBufferFlags.h"
 #include "CsGraphicsPipelineFlags.h"
 #include "CsRenderTarget.h"
+#include "CsColor.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -31,16 +32,18 @@ namespace SharpLLGL
 public ref class CommandBuffer
 {
 
-    public:
-
-        /* ----- Common ----- */
-
-        CommandBuffer(LLGL::CommandBuffer* native);
+    internal:
 
         property LLGL::CommandBuffer* Native
         {
             LLGL::CommandBuffer* get();
         }
+
+    public:
+
+        /* ----- Common ----- */
+
+        CommandBuffer(LLGL::CommandBuffer* native);
 
         /* ----- Encoding ----- */
 
@@ -55,7 +58,7 @@ public ref class CommandBuffer
         /* ----- Configuration ----- */
 
         #if 0
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize);
+        void SetGraphicsAPIDependentState(APIDependentStateDescriptor stateDesc);
         #endif
 
         /* ----- Viewport and Scissor ----- */
@@ -68,6 +71,7 @@ public ref class CommandBuffer
 
         /* ----- Clear ----- */
 
+        void SetClearColor(ColorRGBA<float>^ color);
         void SetClearColor(float r, float g, float b, float a);
         void SetClearDepth(float depth);
         void SetClearStencil(unsigned int stencil);
@@ -105,9 +109,7 @@ public ref class CommandBuffer
 
         void BeginRenderPass(RenderTarget^ renderTarget);
         void BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ renderPass);
-        #if 0
         void BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ renderPass, array<ClearValue^>^ clearValues);
-        #endif
 
         void EndRenderPass();
 

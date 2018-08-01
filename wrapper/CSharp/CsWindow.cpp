@@ -104,6 +104,16 @@ bool Window::ProcessEvents()
 }
 
 
+/*
+ * ======= Internal: =======
+ */
+
+LLGL::Window* Window::Native::get()
+{
+    return native_;
+}
+
+
 } // /namespace SharpLLGL
 
 

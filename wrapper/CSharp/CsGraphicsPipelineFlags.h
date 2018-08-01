@@ -183,6 +183,8 @@ public ref class Viewport
         Viewport();
         Viewport(float x, float y, float width, float height);
         Viewport(float x, float y, float width, float height, float minDepth, float maxDepth);
+        Viewport(Extent2D^ extent);
+        Viewport(Extent2D^ extent, float minDepth, float maxDepth);
         Viewport(Offset2D^ offset, Extent2D^ extent);
         Viewport(Offset2D^ offset, Extent2D^ extent, float minDepth, float maxDepth);
 

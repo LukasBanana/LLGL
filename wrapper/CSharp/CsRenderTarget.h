@@ -34,11 +34,6 @@ public ref class RenderTarget
 
         RenderTarget(LLGL::RenderTarget* native);
 
-        property LLGL::RenderTarget* Native
-        {
-            LLGL::RenderTarget* get();
-        }
-
         property bool IsRenderContext
         {
             bool get();
@@ -73,6 +68,13 @@ public ref class RenderTarget
 
         LLGL::RenderTarget*     native_     = nullptr;
         SharpLLGL::RenderPass^  renderPass_ = nullptr;
+
+    internal:
+
+        property LLGL::RenderTarget* Native
+        {
+            LLGL::RenderTarget* get();
+        }
 
 };
 

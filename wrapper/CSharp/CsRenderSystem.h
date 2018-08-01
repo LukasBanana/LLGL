@@ -23,6 +23,7 @@
 #include "CsPipelineLayoutFlags.h"
 #include "CsResourceHeapFlags.h"
 #include "CsSamplerFlags.h"
+#include "CsRenderTargetFlags.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -40,15 +41,17 @@ namespace SharpLLGL
 public ref class RenderingDebugger
 {
 
-    public:
-
-        RenderingDebugger();
-        ~RenderingDebugger();
+    internal:
 
         property LLGL::RenderingDebugger* Native
         {
             LLGL::RenderingDebugger* get();
         };
+
+    public:
+
+        RenderingDebugger();
+        ~RenderingDebugger();
 
 #if 0
     protected:
@@ -163,8 +166,11 @@ public ref class RenderSystem
         void Release(Texture^ texture);
 
         #if 0
-        void WriteTexture(Texture^ texture, SubTextureDescriptor^ subTextureDesc, SrcImageDescriptor^ imageDesc);
-        void ReadTexture(Texture^ texture, unsigned int mipLevel, DstImageDescriptor^ imageDesc);
+        generic <typename T>
+        void WriteTexture(Texture^ texture, TextureRegion^ textureRegion, SrcImageDescriptor<T>^ imageDesc);
+
+        generic <typename T>
+        void ReadTexture(Texture^ texture, unsigned int mipLevel, DstImageDescriptor<T>^ imageDesc);
         #endif
 
         void GenerateMips(Texture^ texture);
@@ -182,13 +188,11 @@ public ref class RenderSystem
 
         void Release(ResourceHeap^ resourceHeap);
 
-        #if 0
         /* ----- Render Targets ----- */
 
         RenderTarget^ CreateRenderTarget(RenderTargetDescriptor^ desc);
 
         void Release(RenderTarget^ renderTarget);
-        #endif
 
         /* ----- Shader ----- */
 

@@ -140,6 +140,13 @@ public ref class Window
 
         LLGL::Window* native_ = nullptr;
 
+    internal:
+
+        property LLGL::Window* Native
+        {
+            LLGL::Window* get();
+        };
+
 };
 
 

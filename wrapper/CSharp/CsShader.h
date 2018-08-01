@@ -31,11 +31,6 @@ public ref class Shader
 
         Shader(LLGL::Shader* native);
 
-        property LLGL::Shader* Native
-        {
-            LLGL::Shader* get();
-        }
-
         property bool HasErrors
         {
             bool get();
@@ -59,6 +54,13 @@ public ref class Shader
     private:
 
         LLGL::Shader* native_ = nullptr;
+
+    internal:
+
+        property LLGL::Shader* Native
+        {
+            LLGL::Shader* get();
+        }
 
 };
 
