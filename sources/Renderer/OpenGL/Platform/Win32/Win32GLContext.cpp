@@ -87,7 +87,7 @@ bool Win32GLContext::Activate(bool activate)
 
 static void ErrAntiAliasingNotSupported()
 {
-    Log::StdErr() << "multi-sample anti-aliasing is not supported" << std::endl;
+    Log::PostReport(Log::ReportType::Error, "multi-sample anti-aliasing is not supported");
 }
 
 /*
@@ -130,7 +130,7 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
             stdRenderContext = CreateGLContext(false, sharedContext);
 
             if (!stdRenderContext)
-                Log::StdErr() << "failed to create multi-sample anti-aliasing" << std::endl;
+                Log::PostReport(Log::ReportType::Error, "failed to create multi-sample anti-aliasing");
         }
         else
         {
@@ -164,14 +164,14 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
             else
             {
                 /* Print warning and disbale profile selection */
-                Log::StdErr() << "failed to create extended OpenGL profile" << std::endl;
+                Log::PostReport(Log::ReportType::Error, "failed to create extended OpenGL profile");
                 desc_.profileOpenGL.contextProfile = OpenGLContextProfile::CompatibilityProfile;
             }
         }
         else
         {
             /* Print warning and disable profile settings */
-            Log::StdErr() << "failed to select OpenGL profile" << std::endl;
+            Log::PostReport(Log::ReportType::Error, "failed to select OpenGL profile");
             desc_.profileOpenGL.contextProfile = OpenGLContextProfile::CompatibilityProfile;
         }
     }
@@ -214,7 +214,7 @@ void Win32GLContext::DeleteGLContext(HGLRC& renderContext)
 {
     /* Delete GL render context */
     if (!wglDeleteContext(renderContext))
-        Log::StdErr() << "failed to delete OpenGL render context" << std::endl;
+        Log::PostReport(Log::ReportType::Error, "failed to delete OpenGL render context");
     else
         renderContext = 0;
 }
@@ -252,7 +252,7 @@ HGLRC Win32GLContext::CreateGLContext(bool useExtProfile, Win32GLContext* shared
     if (wglMakeCurrent(hDC_, renderContext) != TRUE)
     {
         /* Print error and delete unusable render context */
-        Log::StdErr() << "failed to active OpenGL render context (wglMakeCurrent)" << std::endl;
+        Log::PostReport(Log::ReportType::Error, "failed to active OpenGL render context (wglMakeCurrent)");
         DeleteGLContext(renderContext);
         return 0;
     }
@@ -310,9 +310,9 @@ HGLRC Win32GLContext::CreateExtContextProfile(HGLRC sharedGLRC)
     DWORD error = GetLastError();
 
     if (error == ERROR_INVALID_VERSION_ARB)
-        Log::StdErr() << "invalid version for OpenGL profile" << std::endl;
+        Log::PostReport(Log::ReportType::Error, "invalid version for OpenGL profile");
     else if (error == ERROR_INVALID_PROFILE_ARB)
-        Log::StdErr() << "invalid OpenGL profile" << std::endl;
+        Log::PostReport(Log::ReportType::Error, "invalid OpenGL profile");
     else
         return renderContext;
 
@@ -492,10 +492,13 @@ bool Win32GLContext::SetupAntiAliasing()
     /* Check if multi-sample count was reduced */
     if (desc_.multiSampling.samples < queriedMultiSamples)
     {
-        Log::StdOut()
-            << "reduced multi-samples for anti-aliasing from "
-            << std::to_string(queriedMultiSamples) << " to "
-            << std::to_string(desc_.multiSampling.samples) << std::endl;
+        Log::PostReport(
+            Log::ReportType::Information,
+            (
+                "reduced multi-samples for anti-aliasing from " + std::to_string(queriedMultiSamples) +
+                " to " + std::to_string(desc_.multiSampling.samples)
+            )
+        );
     }
 
     /* Enable anti-aliasing */

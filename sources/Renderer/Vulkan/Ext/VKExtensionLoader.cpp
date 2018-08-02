@@ -27,7 +27,7 @@ bool LoadVKProc(VkInstance instance, T& procAddr, const char* procName)
     /* Check for errors */
     if (!procAddr)
     {
-        Log::StdErr() << "failed to load Vulkan procedure: " << procName << std::endl;
+        Log::PostReport(Log::ReportType::Error, "failed to load Vulkan procedure: " + std::string(procName));
         return false;
     }
 
@@ -70,7 +70,7 @@ void LoadAllExtensions(VkInstance instance)
         if (!extLoadingProc(instance))
         {
             /* Loading extension failed */
-            Log::StdErr() << "failed to load Vulkan extension: " << extName << std::endl;
+            Log::PostReport(Log::ReportType::Error, "failed to load Vulkan extension: " + extName);
         }
     };
 

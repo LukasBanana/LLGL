@@ -143,7 +143,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
 
         #else
 
-        Log::StdErr() << "LLGL was not compiled with debug layer support" << std::endl;
+        Log::PostReport(Log::ReportType::Error, "LLGL was not compiled with debug layer support");
 
         #endif // /LLGL_ENABLE_DEBUG_LAYER
     }
@@ -181,7 +181,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
 
             #else
 
-            Log::StdErr() << "LLGL was not compiled with debug layer support" << std::endl;
+            Log::PostReport(Log::ReportType::Error, "LLGL was not compiled with debug layer support");
 
             #endif // /LLGL_ENABLE_DEBUG_LAYER
         }

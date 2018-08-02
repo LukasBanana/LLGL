@@ -8,6 +8,7 @@
 #include "D3D11RenderContext.h"
 #include "D3D11RenderSystem.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/Log.h>
 #include "../../Core/Helper.h"
 #include "../DXCommon/DXTypes.h"
 
@@ -94,10 +95,8 @@ bool D3D11RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
  * ======= Private: =======
  */
 
-static bool FintSuitableMultisamples(ID3D11Device* device, DXGI_FORMAT format, UINT& sampleCount)
+static UINT FintSuitableMultisamples(ID3D11Device* device, DXGI_FORMAT format, UINT sampleCount)
 {
-    bool result = true;
-
     for (; sampleCount > 1; --sampleCount)
     {
         UINT numLevels = 0;
@@ -105,12 +104,9 @@ static bool FintSuitableMultisamples(ID3D11Device* device, DXGI_FORMAT format, U
         {
             if (numLevels > 0)
                 return sampleCount;
-            else
-                result = false;
         }
     }
-
-    return result;
+    return 1;
 }
 
 void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
@@ -123,7 +119,18 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
     colorFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM
 
     /* Find suitable multi-samples for color format */
-    FintSuitableMultisamples(device_.Get(), colorFormat_, swapChainSamples_);
+    auto sampleCount = FintSuitableMultisamples(device_.Get(), colorFormat_, swapChainSamples_);
+    if (swapChainSamples_ != sampleCount)
+    {
+        Log::PostReport(
+            Log::ReportType::Information,
+            (
+                "reduced multi-samples for anti-aliasing from " +
+                std::to_string(swapChainSamples_) + " to " + std::to_string(sampleCount)
+            )
+        );
+        swapChainSamples_ = sampleCount;
+    }
 
     /* Create swap chain for window handle */
     NativeHandle wndHandle;

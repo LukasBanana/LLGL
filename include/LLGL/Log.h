@@ -10,7 +10,7 @@
 
 
 #include "Export.h"
-#include <ostream>
+#include <functional>
 
 
 namespace LLGL
@@ -20,17 +20,71 @@ namespace Log
 {
 
 
-//! Sets the standard output stream. By default std::cout.
-LLGL_EXPORT void SetStdOut(std::ostream& stream);
+/* ----- Enumerations ----- */
 
-//! Sets the standard output stream for error and warning messages. By default std::cerr.
-LLGL_EXPORT void SetStdErr(std::ostream& stream);
+/**
+\brief Report type enumeration.
+\see ReportCallback
+*/
+enum class ReportType
+{
+    /**
+    \brief Error message type.
+    \remarks For example, when a feature is used that is not supported.
+    */
+    Error,
 
-//! Returns the standard output stream.
-LLGL_EXPORT std::ostream& StdOut();
+    /**
+    \brief Warning message type.
+    \remarks For example, when an operation has no effect like submitting a draw command with zero vertices.
+    */
+    Warning,
 
-//! Returns the standard output stream for error and warning messages.
-LLGL_EXPORT std::ostream& StdErr();
+    /**
+    \brief Information message type.
+    \remarks For example, when a multi-sampling format is not supported so it's set to a lower quality than it was specified.
+    */
+    Information,
+
+    /**
+    \brief Performance penelty message type.
+    \remarks For example, when unnecessary clear commands are submitted.
+    */
+    Performance,
+};
+
+
+/* ----- Types ----- */
+
+/**
+\brief Report callback function signature.
+\param[in] type Specifies the type of the report message.
+\param[in] message Specifies the report message.
+\param[in] contextInfo Specifies a descriptive string about the context of the report (e.g. <code>"in 'LLGL::RenderSystem::CreateShader'"</code>). This may also be empty.
+\param[in] userData Specifies the user data that was set in the previous call to SetReportCallback.
+\see ReportType
+\see SetReportCallback
+*/
+using ReportCallback = std::function<void(ReportType type, const std::string& message, const std::string& contextInfo, void* userData)>;
+
+
+/* ----- Functions ----- */
+
+/**
+\briefs Posts a report to the currently set report callback.
+\see ReportCallback
+*/
+LLGL_EXPORT void PostReport(ReportType type, const std::string& message, const std::string& contextInfo = "");
+
+/**
+\brief Sets the new report callback. No report callback is specified by default, in which case the reports are ignored.
+\param[in] callback Specifies the new report callback. This can also be null.
+\param[in] userData Optional raw pointer to some user data that will be passed to the callback each time a report is generated.
+\remarks The reports can be generated in a multi-threaded environment. Even this function can be called on multiple threads.
+The functionality of the entire \c Log namespace is synchronized by LLGL.
+\see PostReport
+*/
+LLGL_EXPORT void SetReportCallback(const ReportCallback& callback, void* userData = nullptr);
 
 
 } // /namespace Log

@@ -30,14 +30,14 @@ bool LoadGLProc(T& procAddr, const char* procName)
     #elif defined(__linux__)
     procAddr = reinterpret_cast<T>(glXGetProcAddress(reinterpret_cast<const GLubyte*>(procName)));
     #else
-    Log::StdErr() << "OS not supported for loading OpenGL extensions" << std::endl;
+    Log::PostReport(Log::ReportType::Error, "OS not supported for loading OpenGL extensions");
     return false;
     #endif
 
     /* Check for errors */
     if (!procAddr)
     {
-        Log::StdErr() << "failed to load OpenGL procedure: " << procName << std::endl;
+        Log::PostReport(Log::ReportType::Error, "failed to load OpenGL procedure: " + std::string(procName));
         return false;
     }
 
@@ -845,7 +845,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
             else
             {
                 /* Loading extension failed */
-                Log::StdErr() << "failed to load OpenGL extension: " << extName << std::endl;
+                Log::PostReport(Log::ReportType::Error, "failed to load OpenGL extension: " + extName);
             }
         }
         #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS

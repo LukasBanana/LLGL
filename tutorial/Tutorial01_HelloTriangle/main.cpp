@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
             contextDesc.vsync.enabled                   = true;
             contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
             #ifdef ENABLE_MULTISAMPLING
-            contextDesc.multiSampling                   = LLGL::MultiSamplingDescriptor { 8 };
+            contextDesc.multiSampling                   = LLGL::MultiSamplingDescriptor { 20 };
             #endif
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);

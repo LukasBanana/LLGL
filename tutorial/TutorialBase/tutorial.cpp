@@ -210,6 +210,16 @@ Tutorial::Tutorial(
         timer        { LLGL::Timer::Create()         },
         profiler     { *profilerObj_                 }
 {
+    // Set report callback to standard output
+    LLGL::Log::SetReportCallback(
+        [](LLGL::Log::ReportType type, const std::string& message, const std::string& contextInfo, void* userData)
+        {
+            if (!contextInfo.empty())
+                std::cout << contextInfo << ": ";
+            std::cout << message << std::endl;
+        }
+    );
+
     // Create render system
     renderer = LLGL::RenderSystem::Load(
         rendererModule_,

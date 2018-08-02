@@ -132,7 +132,10 @@ class LLGL_EXPORT RenderingDebugger
         \code
         class MyDebugger : public LLGL::RenderingDebugger {
             void OnError(ErrorType type, Message& message) override {
-                LLGL::Log::StdErr() << "ERROR (" << LLGL::ToString(type) << "): in '" << message.GetSource() << "': " << message.GetText() << std::endl;
+                LLGL::Log::PostReport(
+                    LLGL::Log::ReportType::Error,
+                    "ERROR (" + std::string(LLGL::ToString(type)) + "): in '" + message.GetSource() + "': " + message.GetText()
+                );
                 message.Block();
             }
         };

@@ -707,6 +707,17 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
         CreateDebugReportCallback();
 }
 
+static Log::ReportType ToReportType(VkDebugReportFlagsEXT flags)
+{
+    if ((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0)
+        return Log::ReportType::Error;
+    if ((flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) != 0)
+        return Log::ReportType::Warning;
+    if ((flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) != 0)
+        return Log::ReportType::Performance;
+    return Log::ReportType::Information;
+}
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     VkDebugReportFlagsEXT       flags,
     VkDebugReportObjectTypeEXT  objectType,
@@ -718,7 +729,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     void*                       userData)
 {
     //auto renderSystemVK = reinterpret_cast<VKRenderSystem*>(userData);
-    Log::StdErr() << message << std::endl;
+    Log::PostReport(ToReportType(flags), message, "vkDebugReportCallback");
     return VK_FALSE;
 }
 
