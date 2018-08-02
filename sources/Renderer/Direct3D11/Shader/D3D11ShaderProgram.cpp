@@ -77,7 +77,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     }
     catch (const std::exception& e)
     {
-        throw std::invalid_argument(std::string(e.what()) + " (for vertex attribute \"" + attrib.name + "\")");
+        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: \"" + attrib.name + "\"");
     }
 }
 
@@ -111,18 +111,27 @@ void D3D11ShaderProgram::BuildInputLayout(ID3D11Device* device, std::size_t numV
     if (device == nullptr || numVertexFormats == 0 || vertexFormats == nullptr)
         return;
 
+    /* Determine number of input elements */
+    UINT numElements = 0;
+    for (std::size_t i = 0; i < numVertexFormats; ++i)
+        numElements += static_cast<UINT>(vertexFormats[i].attributes.size());
+
+    if (numElements == 0)
+        return;
+
+    /* Check if input layout is allowed */
     if (!vs_ || vs_->GetByteCode().empty())
         throw std::runtime_error("cannot build input layout without valid vertex shader");
 
     /* Setup input element descriptors */
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
-    inputElements.reserve(numVertexFormats);
+    inputElements.resize(numElements);
 
-    for (std::size_t i = 0; i < numVertexFormats; ++i)
+    for (std::size_t i = 0, j = 0; i < numVertexFormats; ++i)
     {
         for (const auto& attrib : vertexFormats[i].attributes)
         {
-            D3D11_INPUT_ELEMENT_DESC elementDesc;
+            auto& elementDesc = inputElements[j++];
             {
                 elementDesc.SemanticName            = attrib.name.c_str();
                 elementDesc.SemanticIndex           = attrib.semanticIndex;
@@ -132,14 +141,13 @@ void D3D11ShaderProgram::BuildInputLayout(ID3D11Device* device, std::size_t numV
                 elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
                 elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
             }
-            inputElements.push_back(elementDesc);
         }
     }
 
     /* Create input layout */
     auto hr = device->CreateInputLayout(
         inputElements.data(),
-        static_cast<UINT>(inputElements.size()),
+        numElements,
         vs_->GetByteCode().data(),
         vs_->GetByteCode().size(),
         inputLayout_.ReleaseAndGetAddressOf()
