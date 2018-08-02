@@ -632,29 +632,6 @@ void VKRenderSystem::Release(Fence& fence)
 
 void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc)
 {
-    /* Initialize application descriptor */
-    VkApplicationInfo appInfo;
-
-    appInfo.sType                   = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pNext                   = nullptr;
-
-    if (applicationDesc)
-    {
-        appInfo.pApplicationName    = applicationDesc->applicationName.c_str();
-        appInfo.applicationVersion  = applicationDesc->applicationVersion;
-        appInfo.pEngineName         = applicationDesc->engineName.c_str();
-        appInfo.engineVersion       = applicationDesc->engineVersion;
-    }
-    else
-    {
-        appInfo.pApplicationName    = nullptr;
-        appInfo.applicationVersion  = 0;
-        appInfo.pEngineName         = nullptr;
-        appInfo.engineVersion       = 0;
-    }
-
-    appInfo.apiVersion              = VK_API_VERSION_1_0;
-
     /* Query instance layer properties */
     auto layerProperties = VKQueryInstanceLayerProperties();
     std::vector<const char*> layerNames;
@@ -677,11 +654,28 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
 
     /* Setup Vulkan instance descriptor */
     VkInstanceCreateInfo instanceInfo;
+    VkApplicationInfo appInfo;
 
     instanceInfo.sType                          = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceInfo.pNext                          = nullptr;
     instanceInfo.flags                          = 0;
-    instanceInfo.pApplicationInfo               = (&appInfo);
+
+    if (applicationDesc)
+    {
+        /* Initialize application information struct */
+        {
+            appInfo.sType                       = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+            appInfo.pNext                       = nullptr;
+            appInfo.pApplicationName            = applicationDesc->applicationName.c_str();
+            appInfo.applicationVersion          = applicationDesc->applicationVersion;
+            appInfo.pEngineName                 = applicationDesc->engineName.c_str();
+            appInfo.engineVersion               = applicationDesc->engineVersion;
+            appInfo.apiVersion                  = VK_API_VERSION_1_0;
+        }
+        instanceInfo.pApplicationInfo           = (&appInfo);
+    }
+    else
+        instanceInfo.pApplicationInfo           = nullptr;
 
     if (layerNames.empty())
     {

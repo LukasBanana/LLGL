@@ -85,8 +85,8 @@ void VKDevice::CreateLogicalDevice(VkPhysicalDevice physicalDevice, const VkPhys
         createInfo.flags                    = 0;
         createInfo.queueCreateInfoCount     = static_cast<std::uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos        = queueCreateInfos.data();
-        createInfo.enabledLayerCount        = 0;
-        createInfo.ppEnabledLayerNames      = nullptr;
+        createInfo.enabledLayerCount        = 0;        // deprecated and ignored
+        createInfo.ppEnabledLayerNames      = nullptr;  // deprecated and ignored
         createInfo.enabledExtensionCount    = (sizeof(g_deviceExtensions) / sizeof(g_deviceExtensions[0]));
         createInfo.ppEnabledExtensionNames  = g_deviceExtensions;
         createInfo.pEnabledFeatures         = features;

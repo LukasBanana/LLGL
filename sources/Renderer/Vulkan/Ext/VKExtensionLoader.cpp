@@ -23,14 +23,14 @@ bool LoadVKProc(VkInstance instance, T& procAddr, const char* procName)
 {
     /* Load Vulkan procedure address */
     procAddr = reinterpret_cast<T>(vkGetInstanceProcAddr(instance, procName));
-    
+
     /* Check for errors */
     if (!procAddr)
     {
         Log::StdErr() << "failed to load Vulkan procedure: " << procName << std::endl;
         return false;
     }
-    
+
     return true;
 }
 
@@ -63,7 +63,7 @@ void LoadAllExtensions(VkInstance instance)
     /* Only load GL extensions once */
     if (g_extAlreadyLoaded)
         return;
-    
+
     auto LoadExtension = [&](const std::string& extName, const std::function<bool(VkInstance)>& extLoadingProc) -> void
     {
         /* Try to load OpenGL extension */
@@ -76,14 +76,14 @@ void LoadAllExtensions(VkInstance instance)
 
     #define LOAD_VKEXT(NAME) \
         LoadExtension("VK_" + std::string(#NAME), Load_VK_##NAME)
-        
+
     /* Load platform specific extensions */
     #ifdef LLGL_OS_WIN32
     LOAD_VKEXT( KHR_win32_surface );
     #endif // /LLGL_OS_WIN32
 
     #undef LOAD_VKEXT
-    
+
     g_extAlreadyLoaded = true;
 }
 

@@ -227,7 +227,8 @@ struct RendererInfo
 
 /**
 \brief Application descriptor structure.
-\remarks This is currently only used for the Vulkan renderer, when a debug or validation layer is enabled.
+\note Only supported with: Vulkan.
+\see VulkanRendererConfiguration::application
 */
 struct ApplicationDescriptor
 {
