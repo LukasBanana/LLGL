@@ -26,8 +26,9 @@ int main()
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
 
-        contextDesc.videoMode.resolution    = { 800, 600 };
-        contextDesc.vsync.enabled           = true;
+        contextDesc.videoMode.resolution            = { 800, 600 };
+        contextDesc.vsync.enabled                   = true;
+        contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
 
         auto context = renderer->CreateRenderContext(contextDesc);
 

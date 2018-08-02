@@ -20,7 +20,7 @@
 
 std::string GetSelectedRendererModule(int argc, char* argv[])
 {
-    #ifdef __APPLE__
+    #if 0//def __APPLE__
     return "Metal";
     #else
     /* Select renderer module */
