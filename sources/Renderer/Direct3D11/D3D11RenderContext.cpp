@@ -94,6 +94,25 @@ bool D3D11RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
  * ======= Private: =======
  */
 
+static bool FintSuitableMultisamples(ID3D11Device* device, DXGI_FORMAT format, UINT& sampleCount)
+{
+    bool result = true;
+
+    for (; sampleCount > 1; --sampleCount)
+    {
+        UINT numLevels = 0;
+        if (device->CheckMultisampleQualityLevels(format, sampleCount, &numLevels) == S_OK)
+        {
+            if (numLevels > 0)
+                return sampleCount;
+            else
+                result = false;
+        }
+    }
+
+    return result;
+}
+
 void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
 {
     /* Get current settings */
@@ -102,6 +121,9 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
 
     /* Pick and store color format */
     colorFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM
+
+    /* Find suitable multi-samples for color format */
+    FintSuitableMultisamples(device_.Get(), colorFormat_, swapChainSamples_);
 
     /* Create swap chain for window handle */
     NativeHandle wndHandle;
