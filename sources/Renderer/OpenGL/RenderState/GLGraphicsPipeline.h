@@ -22,7 +22,7 @@ namespace LLGL
 
 
 struct GraphicsPipelineDescriptor;
-class RawBufferIterator;
+class ByteBufferIterator;
 
 class GLGraphicsPipeline final : public GraphicsPipeline
 {
@@ -44,11 +44,11 @@ class GLGraphicsPipeline final : public GraphicsPipeline
     private:
 
         void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
-        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter);
-        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter);
+        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
+        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
 
-        void SetStaticViewports(GLStateManager& stateMngr, RawBufferIterator& rawBufferIter);
-        void SetStaticScissors(GLStateManager& stateMngr, RawBufferIterator& rawBufferIter);
+        void SetStaticViewports(GLStateManager& stateMngr, ByteBufferIterator& byteBufferIter);
+        void SetStaticScissors(GLStateManager& stateMngr, ByteBufferIterator& byteBufferIter);
 
         // shader state
         const GLShaderProgram*  shaderProgram_          = nullptr;

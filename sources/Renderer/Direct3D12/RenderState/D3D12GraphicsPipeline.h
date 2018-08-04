@@ -22,7 +22,7 @@ namespace LLGL
 
 class D3D12Device;
 class D3D12ShaderProgram;
-class RawBufferIterator;
+class ByteBufferIterator;
 
 class D3D12GraphicsPipeline final : public GraphicsPipeline
 {
@@ -56,8 +56,8 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
         );
 
         void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
-        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter);
-        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter);
+        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
+        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
         void SetStaticViewportsAndScissors(ID3D12GraphicsCommandList* commandList);
 
         ComPtr<ID3D12PipelineState> pipelineState_;

@@ -17,7 +17,7 @@
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
-#include "../../../Core/RawBufferIterator.h"
+#include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <algorithm>
 #include <limits>
@@ -333,18 +333,18 @@ void D3D12GraphicsPipeline::BuildStaticStateBuffer(const GraphicsPipelineDescrip
 
     staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
 
-    RawBufferIterator rawBufferIter { staticStateBuffer_.get() };
+    ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
 
     /* Build static viewports in raw buffer */
     if (!desc.viewports.empty())
-        BuildStaticViewports(desc.viewports.size(), desc.viewports.data(), rawBufferIter);
+        BuildStaticViewports(desc.viewports.size(), desc.viewports.data(), byteBufferIter);
 
     /* Build static scissors in raw buffer */
     if (!desc.scissors.empty())
-        BuildStaticScissors(desc.scissors.size(), desc.scissors.data(), rawBufferIter);
+        BuildStaticScissors(desc.scissors.size(), desc.scissors.data(), byteBufferIter);
 }
 
-void D3D12GraphicsPipeline::BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter)
+void D3D12GraphicsPipeline::BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter)
 {
     /* Store number of viewports and validate limit */
     numStaticViewports_ = static_cast<UINT>(numViewports);
@@ -360,7 +360,7 @@ void D3D12GraphicsPipeline::BuildStaticViewports(std::size_t numViewports, const
     /* Build <D3D12_VIEWPORT> entries */
     for (std::size_t i = 0; i < numViewports; ++i)
     {
-        auto dst = rawBufferIter.Next<D3D12_VIEWPORT>();
+        auto dst = byteBufferIter.Next<D3D12_VIEWPORT>();
         {
             dst->TopLeftX   = viewports[i].x;
             dst->TopLeftY   = viewports[i].y;
@@ -372,7 +372,7 @@ void D3D12GraphicsPipeline::BuildStaticViewports(std::size_t numViewports, const
     }
 }
 
-void D3D12GraphicsPipeline::BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter)
+void D3D12GraphicsPipeline::BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter)
 {
     /* Store number of scissors and validate limit */
     numStaticScissors_ = static_cast<UINT>(numScissors);
@@ -388,7 +388,7 @@ void D3D12GraphicsPipeline::BuildStaticScissors(std::size_t numScissors, const S
     /* Build <D3D12_RECT> entries */
     for (std::size_t i = 0; i < numScissors; ++i)
     {
-        auto dst = rawBufferIter.Next<D3D12_RECT>();
+        auto dst = byteBufferIter.Next<D3D12_RECT>();
         {
             dst->left   = static_cast<LONG>(scissors[i].x);
             dst->top    = static_cast<LONG>(scissors[i].y);
@@ -402,19 +402,19 @@ void D3D12GraphicsPipeline::SetStaticViewportsAndScissors(ID3D12GraphicsCommandL
 {
     if (staticStateBuffer_)
     {
-        RawBufferIterator rawBufferIter { staticStateBuffer_.get() };
+        ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
         if (numStaticViewports_ > 0)
         {
             commandList->RSSetViewports(
                 numStaticViewports_,
-                rawBufferIter.Next<D3D12_VIEWPORT>(numStaticViewports_)
+                byteBufferIter.Next<D3D12_VIEWPORT>(numStaticViewports_)
             );
         }
         if (numStaticScissors_ > 0)
         {
             commandList->RSSetScissorRects(
                 numStaticScissors_,
-                rawBufferIter.Next<D3D12_RECT>(numStaticScissors_)
+                byteBufferIter.Next<D3D12_RECT>(numStaticScissors_)
             );
         }
     }

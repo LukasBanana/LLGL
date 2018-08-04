@@ -13,7 +13,7 @@
 #include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/Helper.h"
-#include "../../../Core/RawBufferIterator.h"
+#include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/GraphicsPipelineFlags.h>
 
 
@@ -71,19 +71,19 @@ void D3D11GraphicsPipelineBase::SetStaticViewportsAndScissors(D3D11StateManager&
 {
     if (staticStateBuffer_)
     {
-        RawBufferIterator rawBufferIter { staticStateBuffer_.get() };
+        ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
         if (numStaticViewports_ > 0)
         {
             stateMngr.GetContext()->RSSetViewports(
                 numStaticViewports_,
-                rawBufferIter.Next<D3D11_VIEWPORT>(numStaticViewports_)
+                byteBufferIter.Next<D3D11_VIEWPORT>(numStaticViewports_)
             );
         }
         if (numStaticScissors_ > 0)
         {
             stateMngr.GetContext()->RSSetScissorRects(
                 numStaticScissors_,
-                rawBufferIter.Next<D3D11_RECT>(numStaticScissors_)
+                byteBufferIter.Next<D3D11_RECT>(numStaticScissors_)
             );
         }
     }
@@ -113,18 +113,18 @@ void D3D11GraphicsPipelineBase::BuildStaticStateBuffer(const GraphicsPipelineDes
     );
     staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
 
-    RawBufferIterator rawBufferIter { staticStateBuffer_.get() };
+    ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
 
     /* Build static viewports in raw buffer */
     if (!desc.viewports.empty())
-        BuildStaticViewports(desc.viewports.size(), desc.viewports.data(), rawBufferIter);
+        BuildStaticViewports(desc.viewports.size(), desc.viewports.data(), byteBufferIter);
 
     /* Build static scissors in raw buffer */
     if (!desc.scissors.empty())
-        BuildStaticScissors(desc.scissors.size(), desc.scissors.data(), rawBufferIter);
+        BuildStaticScissors(desc.scissors.size(), desc.scissors.data(), byteBufferIter);
 }
 
-void D3D11GraphicsPipelineBase::BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter)
+void D3D11GraphicsPipelineBase::BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter)
 {
     /* Store number of viewports and validate limit */
     numStaticViewports_ = static_cast<UINT>(numViewports);
@@ -140,7 +140,7 @@ void D3D11GraphicsPipelineBase::BuildStaticViewports(std::size_t numViewports, c
     /* Build <D3D11_VIEWPORT> entries */
     for (std::size_t i = 0; i < numViewports; ++i)
     {
-        auto dst = rawBufferIter.Next<D3D11_VIEWPORT>();
+        auto dst = byteBufferIter.Next<D3D11_VIEWPORT>();
         {
             dst->TopLeftX   = viewports[i].x;
             dst->TopLeftY   = viewports[i].y;
@@ -152,7 +152,7 @@ void D3D11GraphicsPipelineBase::BuildStaticViewports(std::size_t numViewports, c
     }
 }
 
-void D3D11GraphicsPipelineBase::BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter)
+void D3D11GraphicsPipelineBase::BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter)
 {
     /* Store number of scissors and validate limit */
     numStaticScissors_ = static_cast<UINT>(numScissors);
@@ -168,7 +168,7 @@ void D3D11GraphicsPipelineBase::BuildStaticScissors(std::size_t numScissors, con
     /* Build <D3D11_RECT> entries */
     for (std::size_t i = 0; i < numScissors; ++i)
     {
-        auto dst = rawBufferIter.Next<D3D11_RECT>();
+        auto dst = byteBufferIter.Next<D3D11_RECT>();
         {
             dst->left   = static_cast<LONG>(scissors[i].x);
             dst->top    = static_cast<LONG>(scissors[i].y);

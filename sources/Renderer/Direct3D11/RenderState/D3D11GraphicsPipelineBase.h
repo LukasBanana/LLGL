@@ -22,7 +22,7 @@ namespace LLGL
 
 class D3D11ShaderProgram;
 class D3D11StateManager;
-class RawBufferIterator;
+class ByteBufferIterator;
 
 class D3D11GraphicsPipelineBase : public GraphicsPipeline
 {
@@ -67,8 +67,8 @@ class D3D11GraphicsPipelineBase : public GraphicsPipeline
         void StoreShaderObjects(const D3D11ShaderProgram& shaderProgramD3D);
 
         void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
-        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, RawBufferIterator& rawBufferIter);
-        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, RawBufferIterator& rawBufferIter);
+        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
+        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
 
         ComPtr<ID3D11InputLayout>       inputLayout_;
 

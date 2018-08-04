@@ -1,30 +1,30 @@
 /*
- * RawBufferIterator.h
+ * ByteBufferIterator.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_RAW_BUFFER_ITERATOR_H
-#define LLGL_RAW_BUFFER_ITERATOR_H
+#ifndef LLGL_BYTE_BUFFER_ITERATOR_H
+#define LLGL_BYTE_BUFFER_ITERATOR_H
 
 
 namespace LLGL
 {
 
 
-// Helper class to iterate over a raw buffer (or byte aligned buffer).
-class RawBufferIterator
+// Helper class to iterate over a byte aligned buffer that is casted to structured types.
+class ByteBufferIterator
 {
 
     public:
 
-        RawBufferIterator() = default;
-        RawBufferIterator(const RawBufferIterator&) = default;
-        RawBufferIterator& operator = (const RawBufferIterator&) = default;
+        ByteBufferIterator() = default;
+        ByteBufferIterator(const ByteBufferIterator&) = default;
+        ByteBufferIterator& operator = (const ByteBufferIterator&) = default;
 
         // Initializes the byte buffer.
-        inline RawBufferIterator(char* byteBuffer) :
+        inline ByteBufferIterator(char* byteBuffer) :
             byteBuffer_ { byteBuffer }
         {
         }
