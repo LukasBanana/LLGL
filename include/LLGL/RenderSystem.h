@@ -78,14 +78,27 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         /**
         \brief Loads a new render system from the specified module.
         \param[in] renderSystemDesc Specifies the render system descriptor structure. The 'moduleName' member of this strucutre must not be empty.
-        \param[in] profiler Optional pointer to a rendering profiler. If this is used, the counters of the profiler must be reset manually.
-        This is only supported if LLGL was compiled with the "LLGL_ENABLE_DEBUG_LAYER" flag.
-        \param[in] debugger Optional pointer to a rendering debugger.
-        This is only supported if LLGL was compiled with the "LLGL_ENABLE_DEBUG_LAYER" flag.
+        \param[in] profiler Optional pointer to a rendering profiler. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
+        If this is used, the counters of the profiler must be reset manually.
+        \param[in] debugger Optional pointer to a rendering debugger. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
+        If the default debugger is used (i.e. no sub class of RenderingDebugger), then all reports will be send to the Log.
+        In order to see any reports from the Log, use either Log::SetReportCallback or Log::SetReportCallbackStd.
         \remarks The descriptor structure can be initialized by only the module name like shown in the following example:
         \code
         // Load the "OpenGL" render system module
-        auto renderer = LLGL::RenderSystem::Load("OpenGL");
+        auto myRenderSystem = LLGL::RenderSystem::Load("OpenGL");
+        \endcode
+        \remarks The debugger and profiler can be used like this:
+        \code
+        // Forward all log reports to the standard output stream for errors
+        LLGL::Log::SetReportCallbackStd(std::cerr);
+
+        // Declare profiler and debugger (these classes can also be extended)
+        LLGL::RenderingProfiler myProfiler;
+        LLGL::RenderingDebugger myDebugger;
+
+        // Load the "Direct3D11" render system module
+        auto myRenderSystem = LLGL::RenderSystem::Load("Direct3D11", &myProfiler, &myDebugger);
         \endcode
         \throws std::runtime_error If loading the render system from the specified module failed.
         \see RenderSystemDescriptor::moduleName

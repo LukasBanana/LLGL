@@ -20,6 +20,7 @@ struct LogState
 {
     std::mutex      reportMutex;
     ReportCallback  reportCallback  = nullptr;
+    std::ostream*   outputStream    = nullptr;
     void*           userData        = nullptr;
 };
 
@@ -50,6 +51,19 @@ LLGL_EXPORT void SetReportCallback(const ReportCallback& callback, void* userDat
     std::lock_guard<std::mutex> guard { g_logState.reportMutex };
     g_logState.reportCallback   = callback;
     g_logState.userData         = userData;
+}
+
+LLGL_EXPORT void SetReportCallbackStd(std::ostream& stream)
+{
+    std::lock_guard<std::mutex> guard { g_logState.reportMutex };
+    g_logState.outputStream     = (&stream);
+    g_logState.reportCallback   = [](ReportType type, const std::string& message, const std::string& contextInfo, void* userData)
+    {
+        if (!contextInfo.empty())
+            (*g_logState.outputStream) << contextInfo << ": ";
+        (*g_logState.outputStream) << message << std::endl;
+    };
+    g_logState.userData         = nullptr;
 }
 
 

@@ -11,6 +11,8 @@
 
 #include "Export.h"
 #include <functional>
+#include <string>
+#include <iostream>
 
 
 namespace LLGL
@@ -81,10 +83,19 @@ LLGL_EXPORT void PostReport(ReportType type, const std::string& message, const s
 \param[in] callback Specifies the new report callback. This can also be null.
 \param[in] userData Optional raw pointer to some user data that will be passed to the callback each time a report is generated.
 \remarks The reports can be generated in a multi-threaded environment. Even this function can be called on multiple threads.
-The functionality of the entire \c Log namespace is synchronized by LLGL.
+The functionality of the entire Log namespace is synchronized by LLGL.
+Use SetReportCallbackStd to forward the reports to the standard C++ I/O streams.
 \see PostReport
+\see SetReportCallbackStd
 */
 LLGL_EXPORT void SetReportCallback(const ReportCallback& callback, void* userData = nullptr);
+
+/**
+\brief Sets the new report callback to the standard output streams.
+\param[in] stream Specifies the output stream. By default <code>std::cerr</code>.
+\see SetReportCallback
+*/
+LLGL_EXPORT void SetReportCallbackStd(std::ostream& stream = std::cerr);
 
 
 } // /namespace Log

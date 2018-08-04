@@ -38,19 +38,19 @@ class LLGL_EXPORT RenderingProfiler
                 using ValueType = std::uint32_t;
 
                 //! Increment internal counter by one.
-                void Inc()
+                inline void Inc()
                 {
                     ++value_;
                 }
 
                 //! Increment internal counter by the specified value.
-                void Inc(ValueType value)
+                inline void Inc(ValueType value)
                 {
                     value_ += value;
                 }
 
                 //! Reset internal counter to zero.
-                void Reset()
+                inline void Reset()
                 {
                     value_ = 0;
                 }
