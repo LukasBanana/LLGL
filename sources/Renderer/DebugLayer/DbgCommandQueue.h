@@ -68,7 +68,7 @@ class DbgCommandQueue : public CommandQueue
             std::size_t     dataSize
         );
 
-        //RenderingProfiler* profiler_ = nullptr;
+        RenderingProfiler* profiler_ = nullptr;
         RenderingDebugger* debugger_ = nullptr;
 
 };

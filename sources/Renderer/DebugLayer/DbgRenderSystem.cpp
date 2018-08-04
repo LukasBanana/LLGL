@@ -34,10 +34,8 @@ DbgRenderSystem::DbgRenderSystem(
         features_ { caps_.features     },
         limits_   { caps_.limits       }
 {
-}
-
-DbgRenderSystem::~DbgRenderSystem()
-{
+    /* Instantiate command queue */
+    commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance->GetCommandQueue()), profiler, debugger);
 }
 
 void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
@@ -67,12 +65,7 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
 
 CommandQueue* DbgRenderSystem::GetCommandQueue()
 {
-    if (!commandQueue_)
-    {
-        /* Instantiate command queue */
-        commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
-    }
-    return commandQueue_.get();;
+    return commandQueue_.get();
 }
 
 /* ----- Command buffers ----- */
@@ -82,7 +75,7 @@ CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescripto
     return TakeOwnership(
         commandBuffers_,
         MakeUnique<DbgCommandBuffer>(
-            *instance_->CreateCommandBuffer(desc), nullptr, profiler_, debugger_, GetRenderingCaps()
+            *instance_->CreateCommandBuffer(desc), nullptr, debugger_, GetRenderingCaps()
         )
     );
 }
@@ -94,7 +87,7 @@ CommandBufferExt* DbgRenderSystem::CreateCommandBufferExt(const CommandBufferDes
         return TakeOwnership(
             commandBuffers_,
             MakeUnique<DbgCommandBuffer>(
-                *instance, instance, profiler_, debugger_, GetRenderingCaps()
+                *instance, instance, debugger_, GetRenderingCaps()
             )
         );
     }
@@ -190,7 +183,8 @@ void DbgRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, co
 
     instance_->WriteBuffer(dstBufferDbg.instance, dstOffset, data, dataSize);
 
-    LLGL_DBG_PROFILER_DO(writeBuffer.Inc());
+    if (profiler_)
+        profiler_->frameProfile.bufferWrites++;
 }
 
 void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
@@ -208,7 +202,8 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 
     bufferDbg.mapped = true;
 
-    LLGL_DBG_PROFILER_DO(mapBuffer.Inc());
+    if (profiler_)
+        profiler_->frameProfile.bufferMappings++;
 
     return result;
 }
@@ -256,6 +251,9 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
     }
 
     instance_->WriteTexture(textureDbg.instance, textureRegion, imageDesc);
+
+    if (profiler_)
+        profiler_->frameProfile.textureWrites++;
 }
 
 void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
@@ -298,6 +296,9 @@ void DbgRenderSystem::GenerateMips(Texture& texture)
     }
 
     instance_->GenerateMips(textureDbg.instance);
+
+    if (profiler_)
+        profiler_->frameProfile.mipMapsGenerations++;
 }
 
 void DbgRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
@@ -315,6 +316,9 @@ void DbgRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel,
     }
 
     instance_->GenerateMips(textureDbg.instance, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
+
+    if (profiler_)
+        profiler_->frameProfile.mipMapsGenerations++;
 }
 
 /* ----- Sampler States ---- */

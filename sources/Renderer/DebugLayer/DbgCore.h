@@ -17,10 +17,6 @@ namespace LLGL
 {
 
 
-#define LLGL_DBG_PROFILER_DO(EXPR)  \
-    if (profiler_)                  \
-        profiler_->EXPR
-
 #define LLGL_DBG_SOURCE \
     DbgSetSource(debugger_, __FUNCTION__)
 

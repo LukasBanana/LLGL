@@ -19,7 +19,7 @@ namespace LLGL
 
 DbgCommandQueue::DbgCommandQueue(CommandQueue& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
     instance  { instance },
-    //profiler_ { profiler },
+    profiler_ { profiler },
     debugger_ { debugger }
 {
 }
@@ -29,7 +29,18 @@ DbgCommandQueue::DbgCommandQueue(CommandQueue& instance, RenderingProfiler* prof
 void DbgCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
     auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, commandBuffer);
+
     instance.Submit(commandBufferDbg.instance);
+
+    if (profiler_)
+    {
+        /* Merge frame profile values into rendering profiler */
+        FrameProfile profile;
+        commandBufferDbg.NextProfile(profile);
+        profile.commandBufferSubmittions++;
+
+        profiler_->Accumulate(profile);
+    }
 }
 
 /* ----- Queries ----- */
@@ -52,6 +63,8 @@ bool DbgCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery
 void DbgCommandQueue::Submit(Fence& fence)
 {
     instance.Submit(fence);
+    if (profiler_)
+        profiler_->frameProfile.fenceSubmissions++;
 }
 
 bool DbgCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)

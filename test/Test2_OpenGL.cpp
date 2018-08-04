@@ -371,7 +371,7 @@ int main()
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
             if (profiler)
-                profiler->ResetCounters();
+                profiler->NextProfile();
 
             commands->Begin();
             {

@@ -194,7 +194,7 @@ void Tutorial::Run()
     auto& window = static_cast<LLGL::Window&>(context->GetSurface());
     while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
     {
-        profilerObj_->ResetCounters();
+        profilerObj_->NextProfile();
         OnDrawFrame();
     }
 }

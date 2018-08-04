@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandBufferExt.h>
+#include <LLGL/RenderingProfiler.h>
 #include "DbgGraphicsPipeline.h"
 #include "DbgQueryHeap.h"
 #include <cstdint>
@@ -22,7 +23,6 @@ namespace LLGL
 class DbgBuffer;
 class DbgRenderContext;
 class DbgRenderTarget;
-class RenderingProfiler;
 class RenderingDebugger;
 
 class DbgCommandBuffer : public CommandBufferExt
@@ -33,11 +33,10 @@ class DbgCommandBuffer : public CommandBufferExt
         /* ----- Common ----- */
 
         DbgCommandBuffer(
-            CommandBuffer& instance,
-            CommandBufferExt* instanceExt,
-            RenderingProfiler* profiler,
-            RenderingDebugger* debugger,
-            const RenderingCapabilities& caps
+            CommandBuffer&                  instance,
+            CommandBufferExt*               instanceExt,
+            RenderingDebugger*              debugger,
+            const RenderingCapabilities&    caps
         );
 
         /* ----- Encoding ----- */
@@ -151,6 +150,8 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void EnableRecording(bool enable);
 
+        void NextProfile(FrameProfile& outputProfile);
+
         /* ----- Debugging members ----- */
 
         CommandBuffer&      instance;
@@ -194,16 +195,18 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 
+        void ResetFrameProfile();
+
         /* ----- Common objects ----- */
 
-        RenderingProfiler*              profiler_               = nullptr;
         RenderingDebugger*              debugger_               = nullptr;
 
-        //const RenderingCapabilities&    caps_;
         const RenderingFeatures&        features_;
         const RenderingLimits&          limits_;
 
         /* ----- Render states ----- */
+
+        FrameProfile                    profile_;
 
         PrimitiveTopology               topology_               = PrimitiveTopology::TriangleList;
 
