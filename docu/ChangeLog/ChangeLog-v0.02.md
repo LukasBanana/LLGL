@@ -28,6 +28,7 @@
 - [Buffer updates](#buffer-updates)
 - [Queries](#queries)
 - [Independent blend states](#independent-blend-states)
+- [`RenderingProfiler` interface](#renderingprofiler-interface)
 
 
 ## `Shader` interface
@@ -928,6 +929,55 @@ LLGL::GraphicsPipelineDescriptor myPipelineDesc;
 myPipelineDesc.blend.blendFactor                = { 1.0f, 0.5f, 0.0f, 1.0f }; // <-- NOTE: will be moved to "CommandBuffer::SetBlendFactor"
 myPipelineDesc.blend.targets[0].blendEnabled    = true;
 myPipelineDesc.blend.targets[0].srcColor        = LLGL::BlendOp::BlendFactor;
+```
+
+
+## `RenderingProfiler` interface
+
+The profiler has been refactored completely and the counter values are now declared in the `FrameProfile` structure.
+
+Before:
+```cpp
+// Interface:
+RenderingProfile::Counter RenderingProfile::setVertexBuffer;
+RenderingProfile::Counter RenderingProfile::setIndexBuffer;
+/* For more details, see documentation ... */
+
+// Usage:
+LLGL::RenderingProfiler myProfile;
+auto myRenderer = LLGL::RenderSystem::Load("OpenGL", &myProfile);
+
+while (/* ... */) {
+    /* Render ... */
+    
+    /* Evaluate frame profile (e.g. 'myProfile.setVertexBuffer') ... */
+    
+    // Reset counters
+    myProfile.ResetCounters();
+}
+```
+
+After:
+```cpp
+// Interface:
+FrameProfile    RenderingProfile::frameProfile;
+std::uint32_t   FrameProfile::vertexBufferBindings;
+std::uint32_t   FrameProfile::indexBufferBindings;
+/* For more details, see documentation ... */
+
+// Usage:
+LLGL::RenderingProfiler myProfile;
+auto myRenderer = LLGL::RenderSystem::Load("OpenGL", &myProfile);
+
+while (/* ... */) {
+    /* Render ... */
+    
+    // Get frame profile and reset counters
+    LLGL::FrameProfile myFrameProfile;
+    myProfile.NextProfile(&myFrameProfile);
+    
+    /* Evaluate frame profile (e.g. 'myFrameProfile.vertexBufferBindings') ... */
+}
 ```
 
 
