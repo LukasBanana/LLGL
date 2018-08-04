@@ -55,6 +55,8 @@ class GLRenderSystem final : public RenderSystem
 
         /* ----- Common ----- */
 
+        GLRenderSystem();
+
         void SetConfiguration(const RenderSystemConfiguration& config) override;
 
         /* ----- Render Context ----- */

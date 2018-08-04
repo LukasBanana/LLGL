@@ -20,7 +20,13 @@ namespace LLGL
 {
 
 
-/* ----- Render System ----- */
+/* ----- Common ----- */
+
+GLRenderSystem::GLRenderSystem()
+{
+    /* Create command queue instance */
+    commandQueue_ = MakeUnique<GLCommandQueue>();
+}
 
 void GLRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 {
@@ -249,7 +255,6 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
     {
         LoadGLExtensions(desc.profileOpenGL);
         SetDebugCallback(desc.debugCallback);
-        commandQueue_ = MakeUnique<GLCommandQueue>();
     }
 
     /* Use uniform clipping space */
