@@ -137,10 +137,6 @@ void GLShaderProgram::Attach(Shader* shader)
         /* Attach shader to shader program */
         glAttachShader(id_, shaderGL->GetID());
 
-        /* Store attribute if fragment shader is set */
-        if (shader->GetType() == ShaderType::Fragment)
-            hasFragmentShader_ = true;
-
         /* Move stream-output format from shader to shader program (if available) */
         shaderGL->MoveStreamOutputFormat(streamOutputFormat_);
     }

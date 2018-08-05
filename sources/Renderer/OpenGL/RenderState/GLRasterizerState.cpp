@@ -41,6 +41,7 @@ GLRasterizerState::GLRasterizerState(const RasterizerDescriptor& desc)
     polygonMode_            = GLTypes::Map(desc.polygonMode);
     cullFace_               = GLTypes::Map(desc.cullMode);
     frontFace_              = (desc.frontCCW ? GL_CCW : GL_CW);
+    rasterizerDiscard_      = desc.discardEnabled;
     scissorTestEnabled_     = desc.scissorTestEnabled;
     depthClampEnabled_      = desc.depthClampEnabled;
     multiSampleEnabled_     = desc.multiSampling.enabled;
@@ -62,6 +63,7 @@ void GLRasterizerState::Bind(GLStateManager& stateMngr)
 {
     stateMngr.SetPolygonMode(polygonMode_);
     stateMngr.SetFrontFace(frontFace_);
+    stateMngr.Set(GLState::RASTERIZER_DISCARD, rasterizerDiscard_);
 
     if (cullFace_ != 0)
     {

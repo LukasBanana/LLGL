@@ -48,8 +48,6 @@ class VKShaderProgram final : public ShaderProgram
 
         void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
 
-        bool HasFragmentShader() const;
-
     private:
 
         void Attach(Shader* shader);

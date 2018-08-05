@@ -150,7 +150,7 @@ static void CreateRasterizerState(
     createInfo.pNext                    = nullptr;
     createInfo.flags                    = 0;
     createInfo.depthClampEnable         = VKBoolean(desc.rasterizer.depthClampEnabled);
-    createInfo.rasterizerDiscardEnable  = VKBoolean(!shaderProgramVK->HasFragmentShader());
+    createInfo.rasterizerDiscardEnable  = VKBoolean(desc.rasterizer.discardEnabled);
     createInfo.polygonMode              = VKTypes::Map(desc.rasterizer.polygonMode);
     createInfo.cullMode                 = VKTypes::Map(desc.rasterizer.cullMode);
     #if 0//TODO: make this optional for the user (for now: flip front face to overcome flipped viewport)

@@ -46,6 +46,7 @@ class GLRasterizerState
         GLenum      polygonMode_            = GL_FILL;
         GLenum      cullFace_               = 0;
         GLenum      frontFace_              = GL_CCW;
+        bool        rasterizerDiscard_      = false;    // glEnable(GL_RASTERIZER_DISCARD)
         bool        scissorTestEnabled_     = false;    // glEnable(GL_SCISSOR_TEST)
         bool        depthClampEnabled_      = false;    // glEnable(GL_DEPTH_CLAMP)
         bool        multiSampleEnabled_     = false;    // glEnable(GL_MULTISAMPLE)

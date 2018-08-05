@@ -111,16 +111,6 @@ void VKShaderProgram::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateC
     }
 }
 
-bool VKShaderProgram::HasFragmentShader() const
-{
-    for (auto shader : shaders_)
-    {
-        if (shader->GetType() == ShaderType::Fragment)
-            return true;
-    }
-    return false;
-}
-
 
 /*
  * ======= Private: =======

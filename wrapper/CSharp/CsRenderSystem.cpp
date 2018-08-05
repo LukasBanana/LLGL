@@ -834,6 +834,7 @@ static void Convert(LLGL::RasterizerDescriptor& dst, RasterizerDescriptor^ src)
         Convert(dst.depthBias, src->DepthBias);
         Convert(dst.multiSampling, src->MultiSampling);
         dst.frontCCW                    = src->FrontCCW;
+        dst.discardEnabled              = src->DiscardEnabled;
         dst.depthClampEnabled           = src->DepthClampEnabled;
         dst.scissorTestEnabled          = src->ScissorTestEnabled;
         dst.antiAliasedLineEnabled      = src->AntiAliasedLineEnabled;

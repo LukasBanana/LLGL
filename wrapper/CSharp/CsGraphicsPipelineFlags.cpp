@@ -209,6 +209,7 @@ RasterizerDescriptor::RasterizerDescriptor()
     CullMode                    = SharpLLGL::CullMode::Disabled;
     DepthBias                   = gcnew DepthBiasDescriptor();
     MultiSampling               = gcnew MultiSamplingDescriptor();
+    DiscardEnabled              = false;
     FrontCCW                    = false;
     DepthClampEnabled           = false;
     ScissorTestEnabled          = false;

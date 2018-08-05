@@ -301,6 +301,7 @@ public ref class RasterizerDescriptor
         property DepthBiasDescriptor^       DepthBias;
         property MultiSamplingDescriptor^   MultiSampling;
         property bool                       FrontCCW;
+        property bool                       DiscardEnabled;
         property bool                       DepthClampEnabled;
         property bool                       ScissorTestEnabled;
         property bool                       AntiAliasedLineEnabled;

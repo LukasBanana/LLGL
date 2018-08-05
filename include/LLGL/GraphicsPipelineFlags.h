@@ -579,8 +579,14 @@ struct RasterizerDescriptor
     //! (Multi-)sampling descriptor.
     MultiSamplingDescriptor multiSampling;
 
-    //! If enabled, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding.
+    //! If enabled, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding. By default disabled.
     bool                    frontCCW                    = false;
+
+    /**
+    \brief If enabled, primitives are discarded after optional stream-outputs but before the rasterization stage. By default disabled.
+    \note Only supported with: OpenGL, Vulkan.
+    */
+    bool                    discardEnabled              = false;
 
     //! If enabled, there is effectively no near and far clipping plane. By default disabled.
     bool                    depthClampEnabled           = false;
@@ -749,16 +755,16 @@ struct GraphicsPipelineDescriptor
     */
     std::vector<Scissor>    scissors;
 
-    //! Specifies the depth state descriptor.
+    //! Specifies the depth state for the depth-stencil stage.
     DepthDescriptor         depth;
 
-    //! Specifies the stencil state descriptor.
+    //! Specifies the stencil state for the depth-stencil stage.
     StencilDescriptor       stencil;
 
-    //! Specifies the rasterizer state descriptor.
+    //! Specifies the state for the rasterizer stage.
     RasterizerDescriptor    rasterizer;
 
-    //! Specifies the blending state descriptor.
+    //! Specifies the state descriptor for the blend stage.
     BlendDescriptor         blend;
 };
 
