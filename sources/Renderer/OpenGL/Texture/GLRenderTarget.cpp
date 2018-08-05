@@ -196,7 +196,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
     colorAttachments_.reserve(numColorAttachments);
 
     /* Bind primary FBO */
-    GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, framebuffer_.GetID());
+    GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
     {
         if (framebufferMS_)
         {
@@ -219,7 +219,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
     if (framebufferMS_)
     {
         /* Bind multi-sampled FBO */
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, framebufferMS_.GetID());
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebufferMS_.GetID());
         {
             /* Create depth-stencil attachmnets */
             AttachAllDepthStencilBuffers(desc.attachments);
@@ -248,7 +248,7 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescri
     #endif // /GL_ARB_framebuffer_no_attachments
     {
         /* Bind primary FBO */
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, framebuffer_.GetID());
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
 
         /* Create dummy renderbuffer attachment */
         renderbuffer_.GenRenderbuffer();
@@ -438,27 +438,34 @@ void GLRenderTarget::CreateAndAttachRenderbuffer(GLenum internalFormat, GLenum a
 
 GLenum GLRenderTarget::MakeFramebufferAttachment(GLenum internalFormat)
 {
-    if (internalFormat == GL_DEPTH_COMPONENT)
+    /* Unmap internal texture format to easily check against depth-stencil formats */
+    Format format = Format::Undefined;
+    GLTypes::Unmap(format, internalFormat);
+
+    if (IsDepthStencilFormat(format))
     {
-        if (!HasDepthStencilAttachment())
+        if (IsStencilFormat(format))
         {
-            /* Add depth attachment and depth buffer bit to blit mask */
-            blitMask_ |= GL_DEPTH_BUFFER_BIT;
-            return GL_DEPTH_ATTACHMENT;
+            if (!HasDepthStencilAttachment())
+            {
+                /* Add depth-stencil attachment and depth-stencil buffer bit to blit mask */
+                blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                return GL_DEPTH_STENCIL_ATTACHMENT;
+            }
+            else
+                ErrDepthAttachmentFailed();
         }
         else
-            ErrDepthAttachmentFailed();
-    }
-    else if (internalFormat == GL_DEPTH_STENCIL)
-    {
-        if (!HasDepthStencilAttachment())
         {
-            /* Add depth-stencil attachment and depth-stencil buffer bit to blit mask */
-            blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            return GL_DEPTH_STENCIL_ATTACHMENT;
+            if (!HasDepthStencilAttachment())
+            {
+                /* Add depth attachment and depth buffer bit to blit mask */
+                blitMask_ |= GL_DEPTH_BUFFER_BIT;
+                return GL_DEPTH_ATTACHMENT;
+            }
+            else
+                ErrDepthAttachmentFailed();
         }
-        else
-            ErrDepthAttachmentFailed();
     }
     else
     {
