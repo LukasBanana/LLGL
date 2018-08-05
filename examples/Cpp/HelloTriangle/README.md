@@ -1,10 +1,8 @@
-Hello Triangle
-==============
+# Hello Triangle
 
-<p align="center"><img src="../Tutorial01_HelloTriangle.png"/></p>
+<p align="center"><img src="Example.png"/></p>
 
-Initialization:
----------------
+## Initialization
 
 The first thing we need to use LLGL is an instance of the `RenderSystem` interface. This instannce will take care of all objects used for rendering:
 ```cpp
@@ -39,8 +37,7 @@ LLGL::RenderContext* myContext = myRenderer->CreateRenderContext(contextDesc);
 Most objects in LLGL are created with descriptors (similar to Direct3D and Vulkan). This one describes that we want a render context with a resolution of 800 x 600 pixels, windowed-mode (no fullscreen), V-sync enabled, and 8 samples for anti-aliasing.
 
 
-Vertex Buffer:
---------------
+## Vertex Buffer
 
 Next we create our vertex data for our triangle we want to render and then declare the vertex format which will be passed to the vertex buffer and shader program:
 ```cpp
@@ -75,8 +72,7 @@ LLGL::Buffer* myVertexBuffer = myRenderer->CreateBuffer(myVertexBufferDesc, myVe
 ```
 
 
-Shaders:
---------
+## Shaders
 
 In LLGL, shaders are organized with an instance of the `ShaderProgram` interface to which we can attach one or more instances of the `Shader` interface, but only at creation time. In this tutorial we only need a vertex and fragment shader. We can either store them (of type `LLGL::Shader*`) or we just pass them to the `ShaderProgramDescriptor`. To determine which shading language is supported by the current renderer, we can use the `shadingLanguages` container as shown here:
 ```cpp
@@ -138,8 +134,7 @@ if (myShaderProgram->HasErrors()) {
 ```
 
 
-Graphics Pipeline & Command Buffer:
------------------------------------
+## Graphics Pipeline & Command Buffer
 
 Before we enter our render loop we need a pipeline state object and a command buffer to submit draw commands to the GPU. For this tutorial we can use almost all default values in the graphics pipeline state descriptor, but we always need to set the shader program:
 ```cpp
@@ -156,8 +151,7 @@ LLGL::CommandBuffer* myCmdBuffer = myRenderer->CreateCommandBuffer();
 ```
 
 
-Render Loop:
-------------
+## Render Loop
 
 Our render loop can be implemented with a simple `while`-statement in which is update the window events. For this we need the instance of the `Window` interface, which was created when we called `CreateRenderContext`:
 ```cpp

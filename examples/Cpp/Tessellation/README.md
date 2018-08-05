@@ -1,16 +1,14 @@
-Tessellation
-============
+# Tessellation
 
-<p align="center"><img src="../Tutorial02_Tessellation.png"/></p>
+<p align="center"><img src="Example.png"/></p>
 
-Prerequisites:
---------------
+## Prerequisites
 
-This tutorial requires that you have already read the [Hello Triangle](../Example_HelloTriangle) tutorial.
+This tutorial requires that you have already read the [Hello Triangle](../HelloTriangle) tutorial.
 
 
-Shader Resources:
------------------
+## Shader Resources
+
 In legacy rendering APIs, such as OpenGL, shader resources were bound individually like with `glBindTexture`. Recent extensions allowed to bind multiple textures or uniform buffers at once. With modern rendering APIs there is only the option to bind one or more heaps of resources. This is either called "descriptor heap" (Direct3D 12) or "descriptor set" (Vulkan). In LLGL, this is managed by the `ResourceHeap` interface. But before we can create such a resource heap, we need a pipeline layout that specifies at which binding points the resources in the heap will be bound to a graphics or compute pipeline. This is done with the `PipelineLayout` interface and created as follows:
 ```cpp
 LLGL::PipelineLayoutDescriptor myLayoutDesc;
@@ -37,8 +35,7 @@ LLGL::ResourceHeap* myResourceHeap = myRenderer->CreateResourceHeap(myResourceHe
 The resource heap needs a reference to the pipeline layout we created. The resources (previously created with `CreateBuffer`, `CreateTexture`, or `CreateSampler`) are specified in the brace initializer list of the `resourceViews` container. The elements from this container are of the type `LLGL::ResourceViewDescriptor` but can be implicitly constructed with a pointer to a resource object. Speaking of which, all resources inherit from the `Resource` interface and these interfaces are: `Buffer`, `Texture`, and `Sampler`.
 
 
-Graphics Pipeline:
-------------------
+## Graphics Pipeline
 
 Once we use resource heaps, we also need to specify our pipeline layout for the graphics pipeline where the resources are needed:
 ```cpp
@@ -58,8 +55,7 @@ myRenderer->GetRenderingCaps().limits.maxPatchVertices
 ```
 
 
-Rendering:
-----------
+## Rendering
 
 Since we use a depth buffer, we need to clear it just like the color buffer:
 ```cpp
