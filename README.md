@@ -4,8 +4,8 @@
 
 <p align="center"><img src="docu/LLGL_Logo.png"/></p>
 
-License
--------
+
+## License
 
 [3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
 
@@ -16,7 +16,8 @@ License
 with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
 - [LLGL Reference Manual](docu/refman.pdf) (PDF)
 - [LLGL Coding Conventions](docu/CodingConventions/Coding%20Conventions%20for%20LLGL.pdf) (PDF)
-- [Tutorials and Examples](tutorial) (Overview)
+- [Tutorials and Examples for C++](examples/Cpp)
+- [Examples for C#](examples/CSharp)
 
 
 ## Progress
