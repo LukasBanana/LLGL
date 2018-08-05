@@ -8,6 +8,7 @@
 #include "GeometryUtility.h"
 #include <fstream>
 #include <stdexcept>
+#include <limits>
 
 
 /*
@@ -16,13 +17,23 @@
 
 std::vector<VertexPos3Norm3> LoadObjModel(const std::string& filename)
 {
+    std::vector<VertexPos3Norm3> vertices;
+    LoadObjModel(vertices, filename);
+    return vertices;
+}
+
+TriangleMesh LoadObjModel(std::vector<VertexPos3Norm3>& vertices, const std::string& filename)
+{
     // Read obj file
     std::ifstream file(filename);
     if (!file.good())
         throw std::runtime_error("failed to load model from file: \"" + filename + "\"");
 
+    // Initialize triangle mesh
+    TriangleMesh mesh;
+    mesh.firstVertex = static_cast<std::uint32_t>(vertices.size());
+
     std::vector<Gs::Vector3f> coords, normals;
-    std::vector<VertexPos3Norm3> vertices;
 
     while (!file.eof())
     {
@@ -63,11 +74,12 @@ std::vector<VertexPos3Norm3> LoadObjModel(const std::string& filename)
                 s.ignore(2);
                 s >> vn;
                 vertices.push_back({ coords[v - 1], normals[vn - 1] });
+                mesh.numVertices++;
             }
         }
     }
 
-    return vertices;
+    return mesh;
 }
 
 std::vector<Gs::Vector3f> GenerateCubeVertices()

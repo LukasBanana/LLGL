@@ -91,4 +91,11 @@ Experimental example of using multiple renderers at once (only supported on Win3
 <p align="center"><img src="MultiRenderer/Example.png" width="400" height="300"/></p>
 
 
+### [Shadow Mapping](ShadowMapping)
+
+Practical example of standard shadow-mapping technique.
+
+<p align="center"><img src="ShadowMapping/Example.png" width="400" height="300"/></p>
+
+
 

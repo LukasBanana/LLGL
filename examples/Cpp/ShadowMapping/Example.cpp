@@ -5,51 +5,48 @@
  * See "LICENSE.txt" for license information.
  */
 
-#if 0
-
 #include <ExampleBase.h>
 
 
 class Example_ShadowMapping : public ExampleBase
 {
 
-    LLGL::ShaderProgram*    shaderProgram           = nullptr;
+    LLGL::ShaderProgram*        shaderProgramShadowMap  = nullptr;
+    LLGL::ShaderProgram*        shaderProgramScene      = nullptr;
 
-    LLGL::GraphicsPipeline* pipelines[2]            = {};
-    LLGL::PipelineLayout*   pipelineLayout          = nullptr;
+    LLGL::PipelineLayout*       pipelineLayoutShadowMap = nullptr;
+    LLGL::PipelineLayout*       pipelineLayoutScene     = nullptr;
 
-    LLGL::Buffer*           vertexBuffer            = nullptr;
-    LLGL::Buffer*           indexBuffer             = nullptr;
-    LLGL::Buffer*           constantBuffer          = nullptr;
+    LLGL::GraphicsPipeline*     pipelineShadowMap       = {};
+    LLGL::GraphicsPipeline*     pipelineScene           = {};
 
-    LLGL::Texture*          colorMap                = nullptr;
-    LLGL::Sampler*          samplerState            = nullptr;
-    LLGL::ResourceHeap*     resourceHeaps[2]        = {};
+    LLGL::ResourceHeap*         resourceHeapShadowMap   = {};
+    LLGL::ResourceHeap*         resourceHeapScene       = {};
 
-    LLGL::RenderTarget*     renderTarget            = nullptr;
-    LLGL::Texture*          renderTargetTex         = nullptr;
+    LLGL::Buffer*               vertexBuffer            = nullptr;
+    LLGL::Buffer*               constantBuffer          = nullptr;
 
-    #ifdef ENABLE_DEPTH_TEXTURE
-    LLGL::Texture*          renderTargetDepthTex    = nullptr;
-    #endif
+    LLGL::Texture*              shadowMap               = nullptr;
+    LLGL::Sampler*              shadowMapSampler        = nullptr;
+    const LLGL::Extent2D        shadowMapResolution     = { 256, 256 };
+    LLGL::RenderTarget*         shadowMapRenderTarget   = nullptr;
 
-    Gs::Matrix4f            renderTargetProj;
+    std::vector<TriangleMesh>   meshes;
 
-    Gs::Vector2f            rotation;
-
-    const LLGL::Extent2D    renderTargetSize        = LLGL::Extent2D(
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-        64, 64
-        #else
-        512, 512
-        #endif
-    );
+    Gs::Vector3f                boxPosition             = { 0, 0, 0 };
+    float                       viewDistanceToBox       = 1.25f;
+    Gs::Vector2f                viewRotation;
+    float                       spotLightAngle          = 35.0f;
+    Gs::Vector3f                lightOffset             = { 0, 1.5f, 0 };
 
     struct Settings
     {
-        Gs::Matrix4f        wvpMatrix;
-        int                 useTexture2DMS = 0;
-        int                 _pad0[3];
+        Gs::Matrix4f            wMatrix;
+        Gs::Matrix4f            vpMatrix;
+        Gs::Matrix4f            vpShadowMatrix;
+        Gs::Vector3f            lightDir                = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
+        float                   _pad1;
+        LLGL::ColorRGBAf        diffuse                 = { 1.0f, 1.0f, 1.0f, 1.0f };
     }
     settings;
 
@@ -61,18 +58,19 @@ public:
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
         LoadShaders(vertexFormat);
-        CreateColorMap();
-        CreateRenderTarget();
+        CreateShadowMap();
+        CreatePipelineLayouts();
         CreatePipelines();
-
-        #ifndef __APPLE__
         CreateResourceHeaps();
-        #endif
 
+        commands->SetClearColor(defaultClearColor);
+
+        #if 0
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
         std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to rotate the INNER cube" << std::endl;
         std::cout << "press RETURN KEY to save the render target texture to a PNG file" << std::endl;
+        #endif
     }
 
 private:
@@ -82,17 +80,17 @@ private:
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
 
         // Initialize vertices (scale texture-coordiantes a little bit, to show the texture border)
-        auto vertices = GenerateTexturedCubeVertices();
+        std::vector<VertexPos3Norm3> vertices;
+        meshes.push_back(LoadObjModel(vertices, "../../Media/Models/SimpleRoom.obj"));
+        meshes.push_back(LoadObjModel(vertices, "../../Media/Models/WiredBox.obj"));
 
-        for (auto& v : vertices)
-            v.texCoord = (v.texCoord - Gs::Vector2f(0.5f))*1.05f + Gs::Vector2f(0.5f);
+        meshes[1].color = { 0.4f, 0.5f, 1.0f };
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
-        indexBuffer = CreateIndexBuffer(GenerateTexturedCubeTriangleIndices(), LLGL::DataType::UInt32);
         constantBuffer = CreateConstantBuffer(settings);
 
         return vertexFormat;
@@ -101,335 +99,225 @@ private:
     void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
         // Load shader program
-        if (Supported(LLGL::ShadingLanguage::HLSL))
+        if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            shaderProgram = LoadShaderProgram(
+            shaderProgramShadowMap = LoadShaderProgram(
                 {
-                    { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
+                    { LLGL::ShaderType::Vertex, "ShadowMap.vert" }
+                },
+                { vertexFormat }
+            );
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Scene.vert" },
+                    { LLGL::ShaderType::Fragment, "Scene.frag" },
                 },
                 { vertexFormat }
             );
         }
-        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        else
+            throw std::runtime_error("only supported with GLSL support");
+    }
+
+    void CreateShadowMap()
+    {
+        // Create texture
+        LLGL::TextureDescriptor textureDesc;
         {
-            shaderProgram = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex, "vertex.glsl" },
-                    #ifdef __APPLE__
-                    { LLGL::ShaderType::Fragment, "fragment.410core.glsl" }
-                    #else
-                    { LLGL::ShaderType::Fragment, "fragment.glsl" }
-                    #endif
-                },
-                { vertexFormat }
+            textureDesc.type            = LLGL::TextureType::Texture2D;
+            textureDesc.format          = LLGL::Format::D32Float;
+            textureDesc.extent.width    = shadowMapResolution.width;
+            textureDesc.extent.height   = shadowMapResolution.height;
+            textureDesc.extent.depth    = 1;
+        }
+        shadowMap = renderer->CreateTexture(textureDesc);
+
+        // Create render target
+        LLGL::RenderTargetDescriptor renderTargetDesc;
+        {
+            renderTargetDesc.resolution     = shadowMapResolution;
+            renderTargetDesc.attachments    =
+            {
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, shadowMap }
+            };
+        }
+        shadowMapRenderTarget = renderer->CreateRenderTarget(renderTargetDesc);
+
+        // Create texture sampler
+        LLGL::SamplerDescriptor samplerDesc;
+        {
+            samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
+            samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
+            samplerDesc.addressModeW    = LLGL::SamplerAddressMode::Border;
+            samplerDesc.borderColor     = { 1.0f, 1.0f, 1.0f, 1.0f };
+            samplerDesc.compareEnabled  = true;
+            samplerDesc.mipMapping      = false;
+        }
+        shadowMapSampler = renderer->CreateSampler(samplerDesc);
+    }
+
+    void CreatePipelineLayouts()
+    {
+        bool combinedSampler = IsOpenGL();
+
+        // Create pipeline layout for shadow-map rendering
+        pipelineLayoutShadowMap = renderer->CreatePipelineLayout(
+            LLGL::PipelineLayoutDesc("cbuffer(0):vert")
+        );
+
+        // Create pipeline layout for scene rendering
+        if (combinedSampler)
+        {
+            pipelineLayoutScene = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc("cbuffer(0):frag:vert, texture(0):frag, sampler(0):frag")
             );
         }
-        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        else
         {
-            shaderProgram = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex, "vertex.450core.spv" },
-                    { LLGL::ShaderType::Fragment, "fragment.450core.spv" }
-                },
-                { vertexFormat }
+            pipelineLayoutScene = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc("cbuffer(0):frag:vert, texture(1):frag, sampler(2):frag")
             );
         }
     }
 
     void CreatePipelines()
     {
-        bool combinedSampler = IsOpenGL();
-
-        // Create pipeline layout
-        LLGL::PipelineLayoutDescriptor layoutDesc;
+        // Create graphics pipeline for shadow-map rendering
         {
-            layoutDesc.bindings =
+            LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u) },
-                //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                               3 },
-            };
-        }
-        pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
-
-        // Create graphics pipeline for render context
-        LLGL::GraphicsPipelineDescriptor pipelineDesc;
-        {
-            pipelineDesc.shaderProgram              = shaderProgram;
-            pipelineDesc.renderPass                 = context->GetRenderPass();
-            pipelineDesc.pipelineLayout             = pipelineLayout;
-
-            // Enable depth test and writing
-            pipelineDesc.depth.testEnabled          = true;
-            pipelineDesc.depth.writeEnabled         = true;
-
-            // Enable culling of back-facing polygons
-            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-
-            #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
-            #endif
-        }
-        pipelines[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
-
-        // Create graphics pipeline for render target
-        {
-            pipelineDesc.renderPass = renderTarget->GetRenderPass();
-            pipelineDesc.viewports  = { LLGL::Viewport{ { 0, 0 }, renderTarget->GetResolution() } };
-
-            if (IsOpenGL())
-            {
-                /*
-                Set front face to counter-clock wise (CCW) to be uniform between OpenGL and Direct3D:
-                A huge difference between OpenGL and Direct3D is,
-                that OpenGL stores image data from the lower-left to the upper-right in a texture,
-                but Direct3D stores image data from the upper-left to the lower-right in a texture.
-                The default screen-space origin of LLGL is the upper-left, so when rendering into a texture,
-                we need to render vertically flipped when OpenGL is used.
-                To do this we flip the Y-axis of the world-view-projection matrix and invert the front-facing,
-                so that the face-culling works as excepted.
-                */
-                pipelineDesc.rasterizer.frontCCW = true;
+                pipelineDesc.shaderProgram                          = shaderProgramShadowMap;
+                pipelineDesc.renderPass                             = shadowMapRenderTarget->GetRenderPass();
+                pipelineDesc.pipelineLayout                         = pipelineLayoutShadowMap;
+                pipelineDesc.depth.testEnabled                      = true;
+                pipelineDesc.depth.writeEnabled                     = true;
+                pipelineDesc.rasterizer.cullMode                    = LLGL::CullMode::Back;
+                pipelineDesc.rasterizer.depthBias.constantFactor    = 1.1f;
+                pipelineDesc.rasterizer.depthBias.slopeFactor       = 4.0f;
+                pipelineDesc.blend.targets[0].colorMask             = { false, false, false, false };
             }
+            pipelineShadowMap = renderer->CreateGraphicsPipeline(pipelineDesc);
         }
-        pipelines[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
-    }
 
-    void CreateColorMap()
-    {
-        // Load color map texture from file
-        colorMap = LoadTexture("colorMap.jpg");
-
-        // Create common sampler state for all textures
-        LLGL::SamplerDescriptor samplerDesc;
+        // Create graphics pipeline for scene rendering
         {
-            samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
-            samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
-            samplerDesc.maxAnisotropy   = 8;
-            samplerDesc.borderColor     = { 0, 0, 0, 1 };
-        }
-        samplerState = renderer->CreateSampler(samplerDesc);
-    }
-
-    void CreateRenderTarget()
-    {
-        // Initialize multisampling
-        #ifdef ENABLE_MULTISAMPLING
-        LLGL::MultiSamplingDescriptor multiSamplingDesc { 8 };
-        #endif
-
-        // Create empty render-target texture
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-        renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DMSDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height, multiSamplingDesc.samples)
-        );
-
-        #else
-
-        renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height)
-        );
-
-        #endif
-
-        #ifdef ENABLE_DEPTH_TEXTURE
-
-        // Create depth texture
-        renderTargetDepthTex = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::Format::D32Float, renderTargetSize.width, renderTargetSize.height)
-        );
-
-        #endif
-
-        #if 0//TEST
-        // Create depth texture
-        auto renderTargetDepthTex2 = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::Format::D32Float, renderTargetSize.width, renderTargetSize.height)
-        );
-        #endif
-
-        // Generate all MIP-map levels
-        renderer->GenerateMips(*renderTargetTex);
-
-        // Create render-target with multi-sampling
-        LLGL::RenderTargetDescriptor renderTargetDesc;
-        {
-            renderTargetDesc.resolution = renderTargetSize;
-
-            #ifdef ENABLE_MULTISAMPLING
-            renderTargetDesc.multiSampling          = multiSamplingDesc;
-            #   ifdef ENABLE_CUSTOM_MULTISAMPLING
-            renderTargetDesc.customMultiSampling    = true;
-            #   endif
-            #endif
-
-            renderTargetDesc.attachments =
+            LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                #ifdef ENABLE_DEPTH_TEXTURE
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetDepthTex },
-                #else
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth },
-                #endif
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
-            };
+                pipelineDesc.shaderProgram              = shaderProgramScene;
+                pipelineDesc.renderPass                 = context->GetRenderPass();
+                pipelineDesc.pipelineLayout             = pipelineLayoutScene;
+                pipelineDesc.depth.testEnabled          = true;
+                pipelineDesc.depth.writeEnabled         = true;
+                pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
+                pipelineDesc.rasterizer.multiSampling   = 8;
+            }
+            pipelineScene = renderer->CreateGraphicsPipeline(pipelineDesc);
         }
-        renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
-
-        // Initialize projection matrix for render-target scene rendering
-        renderTargetProj = PerspectiveProjection(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
     }
 
     void CreateResourceHeaps()
     {
-        // Create resource heap for render target
+        // Create resource heap for shadow-map rendering
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
-            resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews = { constantBuffer, samplerState, colorMap /*, colorMap*/ };
+            resourceHeapDesc.pipelineLayout = pipelineLayoutShadowMap;
+            resourceHeapDesc.resourceViews  = { constantBuffer };
         }
-        resourceHeaps[0] = renderer->CreateResourceHeap(resourceHeapDesc);
+        resourceHeapShadowMap = renderer->CreateResourceHeap(resourceHeapDesc);
 
-        // Create resource heap for final render
+        // Create resource heap for scene rendering
         {
-            resourceHeapDesc.resourceViews = { constantBuffer, samplerState, renderTargetTex /*, renderTargetTex*/ };
+            resourceHeapDesc.pipelineLayout = pipelineLayoutScene;
+            resourceHeapDesc.resourceViews  = { constantBuffer, shadowMap, shadowMapSampler };
         }
-        resourceHeaps[1] = renderer->CreateResourceHeap(resourceHeapDesc);
+        resourceHeapScene = renderer->CreateResourceHeap(resourceHeapDesc);
     }
-
-    void UpdateModelTransform(const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
-    {
-        settings.wvpMatrix = proj;
-        Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
-        Gs::RotateFree(settings.wvpMatrix, axis.Normalized(), rotation);
-    }
-
-    static const auto shaderStages = LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage;
 
     void UpdateScene()
     {
-        // Update scene animation (simple rotation)
+        // Update animation
+        static float animation;
+
         if (input->KeyPressed(LLGL::Key::LButton))
-            rotation.x += static_cast<float>(input->GetMouseMotion().x)*0.005f;
-        if (input->KeyPressed(LLGL::Key::RButton))
-            rotation.y += static_cast<float>(input->GetMouseMotion().x)*0.005f;
-
-        // Check if user wants to sage the render target texture to file
-        if (input->KeyDown(LLGL::Key::Return))
-            SaveTexture(*renderTargetTex, "RenderTargetTexture.png");
-    }
-
-    void DrawSceneIntoTexture()
-    {
-        // Update model transformation with render-target projection
-        UpdateModelTransform(renderTargetProj, rotation.y, Gs::Vector3f(1));
-
-        if (IsOpenGL())
         {
-            /*
-            Now flip the Y-axis (0 for X-axis, 1 for Y-axis, 2 for Z-axis) of the
-            world-view-projection matrix to render vertically flipped into the render-target
-            */
-            Gs::FlipAxis(settings.wvpMatrix, 1);
+            auto motion = input->GetMouseMotion();
+            viewRotation.x += static_cast<float>(motion.y) * 0.25f;
+            viewRotation.x = Gs::Clamp(viewRotation.x, -90.0f, 0.0f);
+            viewRotation.y += static_cast<float>(motion.x) * 0.25f;
         }
 
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-        // Disable multi-sample texture in fragment shader
-        settings.useTexture2DMS = 0;
-
-        #endif
-
-        // Update constant buffer with current settings
-        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
-
-        // Begin render pass for render target
-        commands->BeginRenderPass(*renderTarget);
+        if (input->KeyPressed(LLGL::Key::RButton))
         {
-            // Clear color and depth buffers of active framebuffer (i.e. the render target)
-            commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
+            auto motion = input->GetMouseMotion();
+            animation += static_cast<float>(motion.x) * 0.25f;
+        }
 
-            // Bind graphics pipeline for render target
-            commands->SetGraphicsPipeline(*pipelines[0]);
+        // Update model transform
+        meshes[1].transform.LoadIdentity();
+        Gs::Translate(meshes[1].transform, boxPosition);
+        Gs::RotateFree(meshes[1].transform, Gs::Vector3f(1.0f).Normalized(), Gs::Deg2Rad(animation));
+        Gs::Scale(meshes[1].transform, Gs::Vector3f(0.15f));
 
-            // Set common buffers and sampler states
-            commands->SetIndexBuffer(*indexBuffer);
-            commands->SetVertexBuffer(*vertexBuffer);
+        // Update view transformation
+        settings.vpMatrix.LoadIdentity();
+        Gs::Translate(settings.vpMatrix, boxPosition);
+        Gs::RotateFree(settings.vpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y));
+        Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x));
+        Gs::Translate(settings.vpMatrix, { 0, 0, -viewDistanceToBox });
+        settings.vpMatrix.MakeInverse();
+        settings.vpMatrix = projection * settings.vpMatrix;
 
-            if (resourceHeaps[0])
-            {
-                // Set graphics pipeline resources
-                commands->SetGraphicsResourceHeap(*resourceHeaps[0]);
-            }
-            else
-            {
-                commandsExt->SetConstantBuffer(*constantBuffer, 0, shaderStages);
-                commandsExt->SetTexture(*colorMap, 0, shaderStages);
-                commandsExt->SetSampler(*samplerState, 0, shaderStages);
-            }
+        // Update light transformation
+        auto lightProjection = PerspectiveProjection(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(spotLightAngle));
 
-            // Draw scene
-            commands->DrawIndexed(36, 0);
+        settings.vpShadowMatrix.LoadIdentity();
+        Gs::Translate(settings.vpShadowMatrix, boxPosition + lightOffset);
+        Gs::RotateFree(settings.vpShadowMatrix, { 1, 0, 0 }, Gs::Deg2Rad(-90.0f));
+        settings.vpShadowMatrix.MakeInverse();
+        settings.vpShadowMatrix = lightProjection * settings.vpShadowMatrix;
+    }
+
+    void RenderMesh(const TriangleMesh& mesh)
+    {
+        settings.wMatrix = mesh.transform;
+        settings.diffuse = mesh.color;
+        UpdateBuffer(constantBuffer, settings);
+        commands->Draw(mesh.numVertices, mesh.firstVertex);
+    }
+
+    void RenderAllMeshes()
+    {
+        for (const auto& mesh : meshes)
+            RenderMesh(mesh);
+    }
+
+    void RenderShadowMap()
+    {
+        // Render scene into shadow-map texture
+        commands->BeginRenderPass(*shadowMapRenderTarget);
+        {
+            commands->Clear(LLGL::ClearFlags::Depth);
+            commands->SetViewport(shadowMapResolution);
+            commands->SetGraphicsPipeline(*pipelineShadowMap);
+            commands->SetGraphicsResourceHeap(*resourceHeapShadowMap);
+            RenderAllMeshes();
         }
         commands->EndRenderPass();
+
+        // Update MIP-maps of shadow-map texture
+        //renderer->GenerateMips(*shadowMap);
     }
 
-    void DrawSceneOntoScreen()
+    void RenderScene()
     {
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-        // Enable multi-sample texture in fragment shader
-        settings.useTexture2DMS = 1;
-
-        #endif // ENABLE_CUSTOM_MULTISAMPLING
-
-        // Update model transformation with standard projection
-        UpdateModelTransform(projection, rotation.x);
-        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
-
-        // Begin render pass for render context
+        // Render scene onto screen
         commands->BeginRenderPass(*context);
         {
-            // Clear color and depth buffers of active framebuffer (i.e. the screen)
-            commands->SetClearColor(defaultClearColor);
             commands->Clear(LLGL::ClearFlags::ColorDepth);
-
-            // Binds graphics pipeline for render context
-            commands->SetGraphicsPipeline(*pipelines[1]);
-
-            // Set viewport to fullscreen.
-            // Note: this must be done AFTER the respective graphics pipeline has been set,
-            //       since the previous pipeline has no dynamic viewport!
-            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
-
-            // Generate MIP-maps again after texture has been written by the render-target
-            renderer->GenerateMips(*renderTargetTex);
-
-            if (resourceHeaps[1])
-            {
-                // Set graphics pipeline resources
-                commands->SetGraphicsResourceHeap(*resourceHeaps[1]);
-            }
-            else
-            {
-                #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-                // Set multi-sample render-target texture
-                commandsExt->SetTexture(*renderTargetTex, 1, shaderStages);
-
-                #else
-
-                // Set render-target texture
-                commandsExt->SetTexture(*renderTargetTex, 0, shaderStages);
-
-                #endif // /ENABLE_CUSTOM_MULTISAMPLING
-            }
-
-            // Draw scene
-            commands->DrawIndexed(36, 0);
+            commands->SetViewport(context->GetResolution());
+            commands->SetGraphicsPipeline(*pipelineScene);
+            commands->SetGraphicsResourceHeap(*resourceHeapScene);
+            RenderAllMeshes();
         }
         commands->EndRenderPass();
     }
@@ -441,9 +329,12 @@ private:
 
         commands->Begin();
         {
-            // Draw scene into texture, then draw scene onto screen
-            DrawSceneIntoTexture();
-            DrawSceneOntoScreen();
+            // Bind common input assembly
+            commands->SetVertexBuffer(*vertexBuffer);
+
+            // Draw scene into shadow-map, then draw scene onto screen
+            RenderShadowMap();
+            RenderScene();
         }
         commands->End();
         commandQueue->Submit(*commands);
@@ -455,15 +346,6 @@ private:
 };
 
 LLGL_IMPLEMENT_EXAMPLE(Example_ShadowMapping);
-
-#else
-
-int main()
-{
-    return 0;
-}
-
-#endif
 
 
 

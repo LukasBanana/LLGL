@@ -30,6 +30,14 @@ struct VertexPos3Tex2
     Gs::Vector2f texCoord;
 };
 
+struct TriangleMesh
+{
+    std::uint32_t       firstVertex = 0;
+    std::uint32_t       numVertices = 0;
+    Gs::Matrix4f        transform;
+    LLGL::ColorRGBAf    color;
+};
+
 
 /*
  * Global helper functions
@@ -37,6 +45,9 @@ struct VertexPos3Tex2
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
 std::vector<VertexPos3Norm3> LoadObjModel(const std::string& filename);
+
+// Loads the vertices with position and normal from the specified Wavefront OBJ model file.
+TriangleMesh LoadObjModel(std::vector<VertexPos3Norm3>& vertices, const std::string& filename);
 
 // Generates eight vertices for a unit cube.
 std::vector<Gs::Vector3f> GenerateCubeVertices();
