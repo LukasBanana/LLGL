@@ -11,6 +11,7 @@
 #include "D3D12Types.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/Log.h>
 #include "../../Core/Helper.h"
 #include "../DXCommon/DXTypes.h"
 #include <algorithm>
@@ -292,6 +293,21 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
 
         rtvDescHandle.Offset(1, rtvDescSize_);
     }
+
+    /* Find suitable multi-samples for color format */
+    auto sampleCount = renderSystem_.GetDevice().FintSuitableMultisamples(colorFormat_, swapChainSamples_);
+    if (swapChainSamples_ != sampleCount)
+    {
+        Log::PostReport(
+            Log::ReportType::Information,
+            (
+                "reduced multi-samples for anti-aliasing from " +
+                std::to_string(swapChainSamples_) + " to " + std::to_string(sampleCount)
+            )
+        );
+        swapChainSamples_ = sampleCount;
+    }
+
 
     if (HasMultiSampling())
     {

@@ -316,7 +316,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.rasterizer.multiSampling.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;
-    stateDesc.SampleDesc.Count      = desc.rasterizer.multiSampling.SampleCount();
+    stateDesc.SampleDesc.Count      = device.FintSuitableMultisamples(stateDesc.RTVFormats[0], desc.rasterizer.multiSampling.SampleCount());
 
     /* Create graphics pipeline state and graphics command list */
     pipelineState_ = device.CreateDXPipelineState(stateDesc);

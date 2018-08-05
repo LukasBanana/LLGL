@@ -93,7 +93,7 @@ void GLShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t 
     if (blockIndex != GL_INVALID_INDEX)
         glUniformBlockBinding(id_, blockIndex, bindingIndex);
     else
-        throw std::invalid_argument("failed to bind constant buffer, because uniform block name is invalid");
+        throw std::invalid_argument("failed to bind constant buffer due to invalid uniform block name: " + name);
 }
 
 void GLShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
@@ -104,7 +104,7 @@ void GLShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t b
     if (blockIndex != GL_INVALID_INDEX)
         glShaderStorageBlockBinding(id_, blockIndex, bindingIndex);
     else
-        throw std::invalid_argument("failed to bind storage buffer, because storage block name is invalid");
+        throw std::invalid_argument("failed to bind storage buffer due to invalid storage block name: " + name);
     #else
     throw std::runtime_error("storage buffers not supported on this platform");
     #endif

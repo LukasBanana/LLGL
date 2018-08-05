@@ -39,6 +39,10 @@ class D3D12Device
 
         void CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList);
 
+        /* ----- Data queries ----- */
+
+        UINT FintSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount);
+
         /* ----- Native handles ----- */
 
         // Returns the native ID3D12Device object.

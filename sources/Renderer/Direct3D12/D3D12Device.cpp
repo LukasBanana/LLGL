@@ -110,6 +110,27 @@ void D3D12Device::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandL
     queue_->ExecuteCommandLists(1, cmdLists);
 }
 
+/* ----- Data queries ----- */
+
+UINT D3D12Device::FintSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount)
+{
+    D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS feature;
+    feature.Format              = format;
+    feature.Flags               = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+    feature.NumQualityLevels    = 0;
+
+    for (; sampleCount > 1; --sampleCount)
+    {
+        feature.SampleCount = sampleCount;
+        if (device_->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &feature, sizeof(feature)) == S_OK)
+        {
+            if (feature.NumQualityLevels > 0)
+                return sampleCount;
+        }
+    }
+    return 1;
+}
+
 
 } // /namespace LLGL
 
