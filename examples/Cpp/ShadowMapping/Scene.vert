@@ -5,7 +5,7 @@
 layout(std140) uniform Settings
 {
     mat4 wMatrix;
-	mat4 vpMatrix;
+    mat4 vpMatrix;
     mat4 vpShadowMatrix;
     vec4 lightDir;
     vec4 diffuse;
