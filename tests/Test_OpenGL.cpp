@@ -93,9 +93,8 @@ int main()
         class ResizeEventHandler : public LLGL::Window::EventListener
         {
         public:
-            ResizeEventHandler(LLGL::RenderContext* context, LLGL::CommandBuffer* commands) :
-                context_  { context  },
-                commands_ { commands }
+            ResizeEventHandler(LLGL::RenderContext* context) :
+                context_ { context  }
             {
             }
             void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override
@@ -106,10 +105,9 @@ int main()
             }
         private:
             LLGL::RenderContext* context_;
-            LLGL::CommandBuffer* commands_;
         };
 
-        auto resizeEventHandler = std::make_shared<ResizeEventHandler>(context, commands);
+        auto resizeEventHandler = std::make_shared<ResizeEventHandler>(context);
         window->AddEventListener(resizeEventHandler);
 
         // Create vertex buffer
@@ -290,7 +288,7 @@ int main()
         }
         //renderer->WriteTexture(texture, subTexDesc, imageDesc); // update 2D texture
 
-        auto textureQueryDesc = texture.QueryDesc();
+        //auto textureQueryDesc = texture.QueryDesc();
 
         // Create render target
         LLGL::RenderTarget* renderTarget = nullptr;
