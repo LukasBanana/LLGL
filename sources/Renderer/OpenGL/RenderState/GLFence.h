@@ -29,8 +29,6 @@ class GLFence final : public Fence
 
     private:
 
-        void Release();
-
         GLsync sync_ = 0;
 
 };

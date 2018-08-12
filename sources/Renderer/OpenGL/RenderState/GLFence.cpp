@@ -14,16 +14,17 @@ namespace LLGL
 {
 
 
+// NOTE: <glDeleteSync> will silently ignore a <sync> value of zero
 GLFence::~GLFence()
 {
-    Release();
+    glDeleteSync(sync_);
 }
 
 void GLFence::Submit()
 {
     if (HasExtension(GLExt::ARB_sync))
     {
-        Release();
+        glDeleteSync(sync_);
         sync_ = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
 }
@@ -39,20 +40,6 @@ bool GLFence::Wait(GLuint64 timeout)
     {
         glFinish();
         return true;
-    }
-}
-
-
-/*
- * ======= Private: =======
- */
-
-void GLFence::Release()
-{
-    if (sync_)
-    {
-        glDeleteSync(sync_);
-        sync_ = 0;
     }
 }
 
