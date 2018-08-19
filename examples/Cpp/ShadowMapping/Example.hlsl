@@ -53,7 +53,7 @@ float4 PScene(OutputVScene inp) : SV_Target
     // Project world position into shadow-map space
     float4 shadowPos = mul(vpShadowMatrix, inp.worldPos);
     shadowPos /= shadowPos.w;
-    shadowPos = shadowPos * 0.5 + 0.5;
+    shadowPos.xy = shadowPos.xy * float2(0.5, -0.5) + 0.5;
     
     // Sample shadow map
     float shadow = shadowMap.SampleCmp(shadowMapSampler, shadowPos.xy, shadowPos.z);

@@ -209,7 +209,7 @@ private:
                 pipelineDesc.depth.testEnabled                      = true;
                 pipelineDesc.depth.writeEnabled                     = true;
                 pipelineDesc.rasterizer.cullMode                    = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.depthBias.constantFactor    = 1.1f;
+                pipelineDesc.rasterizer.depthBias.constantFactor    = 4.0f;
                 pipelineDesc.rasterizer.depthBias.slopeFactor       = 4.0f;
                 pipelineDesc.blend.targets[0].colorMask             = { false, false, false, false };
             }
