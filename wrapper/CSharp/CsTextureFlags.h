@@ -47,12 +47,13 @@ public enum class TextureType
 [Flags]
 public enum class TextureFlags
 {
-    None            = 0,
-    AttachmentUsage = (1 << 3),
-    SampleUsage     = (1 << 4),
-    StorageUsage    = (1 << 5),
-    FixedSamples    = (1 << 6),
-    Default         = (AttachmentUsage | SampleUsage | FixedSamples),
+    None                        = 0,
+    ColorAttachmentUsage        = (1 << 3),
+    DepthStencilAttachmentUsage = (1 << 4),
+    SampleUsage                 = (1 << 5),
+    StorageUsage                = (1 << 6),
+    FixedSamples                = (1 << 7),
+    Default                     = (ColorAttachmentUsage | SampleUsage | FixedSamples),
 };
 
 

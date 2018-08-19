@@ -28,10 +28,29 @@ namespace LLGL
 */
 enum class AttachmentType
 {
-    Color,          //!< Attachment is used for color output.
-    Depth,          //!< Attachment is used for depth component output.
-    DepthStencil,   //!< Attachment is used for depth component and stencil index output.
-    Stencil,        //!< Attachment is used for stencil index output.
+    /**
+    \brief Attachment is used for color output.
+    \remarks A texture attached to a render target with this attachment type must have been created with the TextureFlags::ColorAttachmentUsage flag.
+    */
+    Color,
+
+    /**
+    \brief Attachment is used for depth component output.
+    \remarks A texture attached to a render target with this attachment type must have been created with the TextureFlags::DepthStencilAttachmentUsage flag.
+    */
+    Depth,
+
+    /**
+    \brief Attachment is used for depth component and stencil index output.
+    \remarks A texture attached to a render target with this attachment type must have been created with the TextureFlags::DepthStencilAttachmentUsage flag.
+    */
+    DepthStencil,
+
+    /**
+    \brief Attachment is used for stencil index output.
+    \remarks A texture attached to a render target with this attachment type must have been created with the TextureFlags::DepthStencilAttachmentUsage flag.
+    */
+    Stencil,
 };
 
 
@@ -70,9 +89,9 @@ struct AttachmentDescriptor
     /**
     \brief Pointer to the texture which is to be used as target output. By default null.
     \remarks If this is null, the attribute 'type' must not be AttachmentType::Color.
-    The texture must also have been created with the flag 'TextureFlags::AttachmentUsage'.
+    The texture must also have been created with the flag 'TextureFlags::BindRenderTarget'.
     \see AttachmentDescriptor::type
-    \see TextureFlags::AttachmentUsage
+    \see TextureFlags::BindRenderTarget
     */
     Texture*        texture     = nullptr;
 

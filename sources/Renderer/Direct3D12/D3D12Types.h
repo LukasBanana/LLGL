@@ -26,7 +26,7 @@ namespace D3D12Types
 
 
 DXGI_FORMAT                 Map( const DataType             dataType        );
-DXGI_FORMAT                 Map( const Format               textureFormat   );
+DXGI_FORMAT                 Map( const Format               format          );
 D3D_PRIMITIVE_TOPOLOGY      Map( const PrimitiveTopology    topology        );
 D3D12_FILL_MODE             Map( const PolygonMode          polygonMode     );
 D3D12_CULL_MODE             Map( const CullMode             cullMode        );
@@ -45,6 +45,9 @@ D3D12_QUERY_TYPE            MapQueryType        ( const QueryType   queryType   
 D3D12_QUERY_HEAP_TYPE       MapQueryHeapType    ( const QueryType   queryType   );
 
 Format                      Unmap( const DXGI_FORMAT format );
+
+DXGI_FORMAT                 ToDXGIFormatDSV(const DXGI_FORMAT format);
+DXGI_FORMAT                 ToDXGIFormatSRV(const DXGI_FORMAT format);
 
 
 } // /namespace D3D12Types

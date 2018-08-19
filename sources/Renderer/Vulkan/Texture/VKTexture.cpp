@@ -245,13 +245,10 @@ static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
         usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
     /* Enable either color or depth-stencil ATTACHMENT_BIT image usage when attachment usage is enabled */
-    if ((desc.flags & TextureFlags::AttachmentUsage) != 0)
-    {
-        if (IsDepthStencilFormat(desc.format))
-            usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        else
-            usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    }
+    if ((desc.flags & TextureFlags::ColorAttachmentUsage) != 0)
+        usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    if ((desc.flags & TextureFlags::DepthStencilAttachmentUsage) != 0)
+        usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     /* Enable sampling the image */
     if ((desc.flags & TextureFlags::SampleUsage) != 0)

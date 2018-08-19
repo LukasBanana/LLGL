@@ -139,10 +139,10 @@ DXGI_FORMAT Map(const Format format)
         case Format::BGRA8sRGB:         return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
 
         /* --- Depth-stencil formats --- */
-        case Format::D16UNorm:          return DXGI_FORMAT_R16_TYPELESS;        // typeless format to be used with SRV and DSV
-        case Format::D32Float:          return DXGI_FORMAT_R32_TYPELESS;        // typeless format to be used with SRV and DSV
-        case Format::D24UNormS8UInt:    return DXGI_FORMAT_R24G8_TYPELESS;      // typeless format to be used with SRV and DSV
-        case Format::D32FloatS8X24UInt: return DXGI_FORMAT_R32G8X24_TYPELESS;   // typeless format to be used with SRV and DSV
+        case Format::D16UNorm:          return DXGI_FORMAT_R16_TYPELESS;
+        case Format::D32Float:          return DXGI_FORMAT_R32_TYPELESS;
+        case Format::D24UNormS8UInt:    return DXGI_FORMAT_R24G8_TYPELESS;
+        case Format::D32FloatS8X24UInt: return DXGI_FORMAT_R32G8X24_TYPELESS;
 
         /* --- Compressed color formats --- */
         case Format::BC1RGB:            break;
@@ -209,71 +209,75 @@ Format Unmap(const DXGI_FORMAT format)
     switch (format)
     {
         /* --- Color formats --- */
-        case DXGI_FORMAT_R8_UNORM:              return Format::R8UNorm;
-        case DXGI_FORMAT_R8_SNORM:              return Format::R8SNorm;
-        case DXGI_FORMAT_R8_UINT:               return Format::R8UInt;
-        case DXGI_FORMAT_R8_SINT:               return Format::R8SInt;
+        case DXGI_FORMAT_R8_UNORM:                  return Format::R8UNorm;
+        case DXGI_FORMAT_R8_SNORM:                  return Format::R8SNorm;
+        case DXGI_FORMAT_R8_UINT:                   return Format::R8UInt;
+        case DXGI_FORMAT_R8_SINT:                   return Format::R8SInt;
 
-        case DXGI_FORMAT_R16_UNORM:             return Format::R16UNorm;
-        case DXGI_FORMAT_R16_SNORM:             return Format::R16SNorm;
-        case DXGI_FORMAT_R16_UINT:              return Format::R16UInt;
-        case DXGI_FORMAT_R16_SINT:              return Format::R16SInt;
-        case DXGI_FORMAT_R16_FLOAT:             return Format::R16Float;
+        case DXGI_FORMAT_R16_UNORM:                 return Format::R16UNorm;
+        case DXGI_FORMAT_R16_SNORM:                 return Format::R16SNorm;
+        case DXGI_FORMAT_R16_UINT:                  return Format::R16UInt;
+        case DXGI_FORMAT_R16_SINT:                  return Format::R16SInt;
+        case DXGI_FORMAT_R16_FLOAT:                 return Format::R16Float;
 
-        case DXGI_FORMAT_R32_UINT:              return Format::R32UInt;
-        case DXGI_FORMAT_R32_SINT:              return Format::R32SInt;
-        case DXGI_FORMAT_R32_FLOAT:             return Format::R32Float;
+        case DXGI_FORMAT_R32_UINT:                  return Format::R32UInt;
+        case DXGI_FORMAT_R32_SINT:                  return Format::R32SInt;
+        case DXGI_FORMAT_R32_FLOAT:                 return Format::R32Float;
 
-        case DXGI_FORMAT_R8G8_UNORM:            return Format::RG8UNorm;
-        case DXGI_FORMAT_R8G8_SNORM:            return Format::RG8SNorm;
-        case DXGI_FORMAT_R8G8_UINT:             return Format::RG8UInt;
-        case DXGI_FORMAT_R8G8_SINT:             return Format::RG8SInt;
+        case DXGI_FORMAT_R8G8_UNORM:                return Format::RG8UNorm;
+        case DXGI_FORMAT_R8G8_SNORM:                return Format::RG8SNorm;
+        case DXGI_FORMAT_R8G8_UINT:                 return Format::RG8UInt;
+        case DXGI_FORMAT_R8G8_SINT:                 return Format::RG8SInt;
 
-        case DXGI_FORMAT_R16G16_UNORM:          return Format::RG16UNorm;
-        case DXGI_FORMAT_R16G16_SNORM:          return Format::RG16SNorm;
-        case DXGI_FORMAT_R16G16_UINT:           return Format::RG16UInt;
-        case DXGI_FORMAT_R16G16_SINT:           return Format::RG16SInt;
-        case DXGI_FORMAT_R16G16_FLOAT:          return Format::RG16Float;
+        case DXGI_FORMAT_R16G16_UNORM:              return Format::RG16UNorm;
+        case DXGI_FORMAT_R16G16_SNORM:              return Format::RG16SNorm;
+        case DXGI_FORMAT_R16G16_UINT:               return Format::RG16UInt;
+        case DXGI_FORMAT_R16G16_SINT:               return Format::RG16SInt;
+        case DXGI_FORMAT_R16G16_FLOAT:              return Format::RG16Float;
 
-        case DXGI_FORMAT_R32G32_UINT:           return Format::RG32UInt;
-        case DXGI_FORMAT_R32G32_SINT:           return Format::RG32SInt;
-        case DXGI_FORMAT_R32G32_FLOAT:          return Format::RG32Float;
+        case DXGI_FORMAT_R32G32_UINT:               return Format::RG32UInt;
+        case DXGI_FORMAT_R32G32_SINT:               return Format::RG32SInt;
+        case DXGI_FORMAT_R32G32_FLOAT:              return Format::RG32Float;
 
-        case DXGI_FORMAT_R32G32B32_UINT:        return Format::RGB32UInt;
-        case DXGI_FORMAT_R32G32B32_SINT:        return Format::RGB32SInt;
-        case DXGI_FORMAT_R32G32B32_FLOAT:       return Format::RGB32Float;
+        case DXGI_FORMAT_R32G32B32_UINT:            return Format::RGB32UInt;
+        case DXGI_FORMAT_R32G32B32_SINT:            return Format::RGB32SInt;
+        case DXGI_FORMAT_R32G32B32_FLOAT:           return Format::RGB32Float;
 
-        case DXGI_FORMAT_R8G8B8A8_UNORM:        return Format::RGBA8UNorm;
-        case DXGI_FORMAT_R8G8B8A8_SNORM:        return Format::RGBA8SNorm;
-        case DXGI_FORMAT_R8G8B8A8_UINT:         return Format::RGBA8UInt;
-        case DXGI_FORMAT_R8G8B8A8_SINT:         return Format::RGBA8SInt;
+        case DXGI_FORMAT_R8G8B8A8_UNORM:            return Format::RGBA8UNorm;
+        case DXGI_FORMAT_R8G8B8A8_SNORM:            return Format::RGBA8SNorm;
+        case DXGI_FORMAT_R8G8B8A8_UINT:             return Format::RGBA8UInt;
+        case DXGI_FORMAT_R8G8B8A8_SINT:             return Format::RGBA8SInt;
 
-        case DXGI_FORMAT_R16G16B16A16_UNORM:    return Format::RGBA16UNorm;
-        case DXGI_FORMAT_R16G16B16A16_SNORM:    return Format::RGBA16SNorm;
-        case DXGI_FORMAT_R16G16B16A16_UINT:     return Format::RGBA16UInt;
-        case DXGI_FORMAT_R16G16B16A16_SINT:     return Format::RGBA16SInt;
-        case DXGI_FORMAT_R16G16B16A16_FLOAT:    return Format::RGBA16Float;
+        case DXGI_FORMAT_R16G16B16A16_UNORM:        return Format::RGBA16UNorm;
+        case DXGI_FORMAT_R16G16B16A16_SNORM:        return Format::RGBA16SNorm;
+        case DXGI_FORMAT_R16G16B16A16_UINT:         return Format::RGBA16UInt;
+        case DXGI_FORMAT_R16G16B16A16_SINT:         return Format::RGBA16SInt;
+        case DXGI_FORMAT_R16G16B16A16_FLOAT:        return Format::RGBA16Float;
 
-        case DXGI_FORMAT_R32G32B32A32_UINT:     return Format::RGBA32UInt;
-        case DXGI_FORMAT_R32G32B32A32_SINT:     return Format::RGBA32SInt;
-        case DXGI_FORMAT_R32G32B32A32_FLOAT:    return Format::RGBA32Float;
+        case DXGI_FORMAT_R32G32B32A32_UINT:         return Format::RGBA32UInt;
+        case DXGI_FORMAT_R32G32B32A32_SINT:         return Format::RGBA32SInt;
+        case DXGI_FORMAT_R32G32B32A32_FLOAT:        return Format::RGBA32Float;
 
         /* --- Reversed color formats --- */
-        case DXGI_FORMAT_B8G8R8A8_UNORM:        return Format::BGRA8UNorm;
-        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:   return Format::BGRA8sRGB;
+        case DXGI_FORMAT_B8G8R8A8_UNORM:            return Format::BGRA8UNorm;
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:       return Format::BGRA8sRGB;
 
         /* --- Depth-stencil formats --- */
-        case DXGI_FORMAT_D16_UNORM:             return Format::D16UNorm;
-        case DXGI_FORMAT_D32_FLOAT:             return Format::D32Float;
-        case DXGI_FORMAT_D24_UNORM_S8_UINT:     return Format::D24UNormS8UInt;
-        case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:  return Format::D32FloatS8X24UInt;
+        case DXGI_FORMAT_R16_TYPELESS:              /* pass */
+        case DXGI_FORMAT_D16_UNORM:                 return Format::D16UNorm;
+        case DXGI_FORMAT_R32_TYPELESS:              /* pass */
+        case DXGI_FORMAT_D32_FLOAT:                 return Format::D32Float;
+        case DXGI_FORMAT_R24G8_TYPELESS:            /* pass */
+        case DXGI_FORMAT_D24_UNORM_S8_UINT:         return Format::D24UNormS8UInt;
+        case DXGI_FORMAT_R32G8X24_TYPELESS:         /* pass */
+        case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:      return Format::D32FloatS8X24UInt;
 
         /* --- Compressed color formats --- */
-        case DXGI_FORMAT_BC1_UNORM:             return Format::BC1RGBA;
-        case DXGI_FORMAT_BC2_UNORM:             return Format::BC2RGBA;
-        case DXGI_FORMAT_BC3_UNORM:             return Format::BC3RGBA;
+        case DXGI_FORMAT_BC1_UNORM:                 return Format::BC1RGBA;
+        case DXGI_FORMAT_BC2_UNORM:                 return Format::BC2RGBA;
+        case DXGI_FORMAT_BC3_UNORM:                 return Format::BC3RGBA;
 
-        default:                                return Format::Undefined;
+        default:                                    return Format::Undefined;
     }
 }
 
@@ -290,6 +294,30 @@ StorageBufferType Unmap(const D3D_SHADER_INPUT_TYPE inputType)
         case D3D_SIT_UAV_APPEND_STRUCTURED:         return StorageBufferType::AppendStructuredBuffer;
         case D3D_SIT_UAV_CONSUME_STRUCTURED:        return StorageBufferType::ConsumeStructuredBuffer;
         default:                                    return StorageBufferType::Undefined;
+    }
+}
+
+DXGI_FORMAT ToDXGIFormatDSV(const DXGI_FORMAT format)
+{
+    switch (format)
+    {
+        case DXGI_FORMAT_R16_TYPELESS:      return DXGI_FORMAT_D16_UNORM;
+        case DXGI_FORMAT_R32_TYPELESS:      return DXGI_FORMAT_D32_FLOAT;
+        case DXGI_FORMAT_R24G8_TYPELESS:    return DXGI_FORMAT_D24_UNORM_S8_UINT;
+        case DXGI_FORMAT_R32G8X24_TYPELESS: return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+        default:                            return format;
+    }
+}
+
+DXGI_FORMAT ToDXGIFormatSRV(const DXGI_FORMAT format)
+{
+    switch (format)
+    {
+        case DXGI_FORMAT_R16_TYPELESS:      return DXGI_FORMAT_R16_UNORM;
+        case DXGI_FORMAT_R32_TYPELESS:      return DXGI_FORMAT_R32_FLOAT;
+        case DXGI_FORMAT_R24G8_TYPELESS:    return DXGI_FORMAT_UNKNOWN;
+        case DXGI_FORMAT_R32G8X24_TYPELESS: return DXGI_FORMAT_UNKNOWN;
+        default:                            return format;
     }
 }
 

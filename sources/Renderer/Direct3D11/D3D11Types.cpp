@@ -26,9 +26,9 @@ DXGI_FORMAT Map(const DataType dataType)
     return DXTypes::Map(dataType);
 }
 
-DXGI_FORMAT Map(const Format textureFormat)
+DXGI_FORMAT Map(const Format format)
 {
-    return DXTypes::Map(textureFormat);
+    return DXTypes::Map(format);
 }
 
 D3D_PRIMITIVE_TOPOLOGY Map(const PrimitiveTopology topology)
@@ -236,23 +236,6 @@ D3D11_MAP Map(const CPUAccess cpuAccess)
     DXTypes::MapFailed("CPUAccess", "D3D11_MAP");
 }
 
-D3D11_SRV_DIMENSION Map(const TextureType textureType)
-{
-    switch (textureType)
-    {
-        case TextureType::Texture1D:        return D3D11_SRV_DIMENSION_TEXTURE1D;
-        case TextureType::Texture2D:        return D3D11_SRV_DIMENSION_TEXTURE2D;
-        case TextureType::Texture3D:        return D3D11_SRV_DIMENSION_TEXTURE3D;
-        case TextureType::TextureCube:      return D3D11_SRV_DIMENSION_TEXTURECUBE;
-        case TextureType::Texture1DArray:   return D3D11_SRV_DIMENSION_TEXTURE1DARRAY;
-        case TextureType::Texture2DArray:   return D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-        case TextureType::TextureCubeArray: return D3D11_SRV_DIMENSION_TEXTURECUBEARRAY;
-        case TextureType::Texture2DMS:      return D3D11_SRV_DIMENSION_TEXTURE2DMS;
-        case TextureType::Texture2DMSArray: return D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY;
-    }
-    DXTypes::MapFailed("TextureType", "D3D11_SRV_DIMENSION");
-}
-
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
 
 // Direct3D 11.1
@@ -289,6 +272,19 @@ D3D11_LOGIC_OP Map(const LogicOp logicOp)
 Format Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);
+}
+
+
+/* ----- Other Map Functions ----- */
+
+DXGI_FORMAT ToDXGIFormatDSV(const DXGI_FORMAT format)
+{
+    return DXTypes::ToDXGIFormatDSV(format);
+}
+
+DXGI_FORMAT ToDXGIFormatSRV(const DXGI_FORMAT format)
+{
+    return DXTypes::ToDXGIFormatSRV(format);
 }
 
 

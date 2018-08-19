@@ -101,6 +101,15 @@ class D3D11Texture final : public Texture
             UINT                        numArrayLayers
         );
 
+        // Creates a depth-stencil-view (DSV) of a subresource of this texture object.
+        void CreateSubresourceDSV(
+            ID3D11Device*               device,
+            ID3D11DepthStencilView**    dsvOutput,
+            UINT                        baseMipLevel,
+            UINT                        baseArrayLayer,
+            UINT                        numArrayLayers
+        );
+
         /* ----- Hardware texture objects ----- */
 
         // Returns the native D3D texture object.

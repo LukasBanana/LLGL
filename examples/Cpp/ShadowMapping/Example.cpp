@@ -56,9 +56,9 @@ public:
         ExampleBase { L"LLGL Example: ShadowMapping" }
     {
         // Create all graphics objects
+        CreateShadowMap();
         auto vertexFormat = CreateBuffers();
         LoadShaders(vertexFormat);
-        CreateShadowMap();
         CreatePipelineLayouts();
         CreatePipelines();
         CreateResourceHeaps();
@@ -115,8 +115,24 @@ private:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::HLSL))
+        {
+            shaderProgramShadowMap = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "Example.hlsl", "VShadowMap", "vs_5_0" }
+                },
+                { vertexFormat }
+            );
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" },
+                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" },
+                },
+                { vertexFormat }
+            );
+        }
         else
-            throw std::runtime_error("only supported with GLSL support");
+            throw std::runtime_error("only supported with GLSL or HLSL support");
     }
 
     void CreateShadowMap()
@@ -125,6 +141,7 @@ private:
         LLGL::TextureDescriptor textureDesc;
         {
             textureDesc.type            = LLGL::TextureType::Texture2D;
+            textureDesc.flags           = LLGL::TextureFlags::DepthStencilAttachmentUsage | LLGL::TextureFlags::SampleUsage;
             textureDesc.format          = LLGL::Format::D32Float;
             textureDesc.extent.width    = shadowMapResolution.width;
             textureDesc.extent.height   = shadowMapResolution.height;
@@ -158,7 +175,7 @@ private:
 
     void CreatePipelineLayouts()
     {
-        bool combinedSampler = IsOpenGL();
+        bool combinedSampler = !IsVulkan();
 
         // Create pipeline layout for shadow-map rendering
         pipelineLayoutShadowMap = renderer->CreatePipelineLayout(

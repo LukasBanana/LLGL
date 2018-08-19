@@ -201,8 +201,9 @@ static UINT GetDXTextureBindFlags(const TextureDescriptor& desc)
 {
     UINT flags = D3D11_BIND_SHADER_RESOURCE;
 
-    /* Render target binding flag is required for MIP-map generation and render target attachment */
-    if (IsMipMappedTexture(desc) || (desc.flags & TextureFlags::AttachmentUsage) != 0)
+    if ((desc.flags & TextureFlags::DepthStencilAttachmentUsage) != 0)
+        flags |= D3D11_BIND_DEPTH_STENCIL;
+    else if (IsMipMappedTexture(desc) || (desc.flags & TextureFlags::ColorAttachmentUsage) != 0)
         flags |= D3D11_BIND_RENDER_TARGET;
 
     return flags;
@@ -212,7 +213,7 @@ static UINT GetDXTextureMiscFlags(const TextureDescriptor& desc)
 {
     UINT flags = 0;
 
-    if (IsMipMappedTexture(desc))
+    if (IsMipMappedTexture(desc) && !IsDepthStencilFormat(desc.format))
         flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
     if (IsCubeTexture(desc.type))
         flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;

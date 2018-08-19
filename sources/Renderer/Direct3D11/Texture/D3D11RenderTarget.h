@@ -62,6 +62,8 @@ class D3D11RenderTarget final : public RenderTarget
         void AttachStencilBuffer();
         void AttachDepthStencilBuffer();
         void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc);
+        void AttachTextureColor(D3D11Texture& textureD3D, const AttachmentDescriptor& attachmentDesc);
+        void AttachTextureDepthStencil(D3D11Texture& textureD3D, const AttachmentDescriptor& attachmentDesc);
 
         void CreateDepthStencilAndDSV(DXGI_FORMAT format);
         void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc);

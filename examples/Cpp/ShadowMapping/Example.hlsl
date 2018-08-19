@@ -1,70 +1,70 @@
 // HLSL model shader
 
-
-// VERTEX SHADER
-
 cbuffer Settings : register(b0)
 {
-	float4x4 wvpMatrix;
-	int useTexture2DMS;
+    float4x4 wMatrix;
+    float4x4 vpMatrix;
+    float4x4 vpShadowMatrix;
+    float4 lightDir;
+    float4 diffuse;
 };
 
-struct InputVS
+
+// VERTEX SHADER SHADOW-MAP
+
+float4 VShadowMap(float3 position : POSITION) : SV_Position
+{
+	return mul(vpShadowMatrix, mul(wMatrix, float4(position, 1)));
+}
+
+
+// VERTEX SHADER SCENE
+
+struct InputVScene
 {
 	float3 position : POSITION;
-	float2 texCoord : TEXCOORD;
+	float3 normal : NORMAL;
 };
 
-struct OutputVS
+struct OutputVScene
 {
 	float4 position : SV_Position;
-	float2 texCoord : TEXCOORD;
+    float4 worldPos : WORLDPOS;
+	float4 normal : NORMAL;
 };
 
-OutputVS VS(InputVS inp)
+OutputVScene VScene(InputVScene inp)
 {
-	OutputVS outp;
-	outp.position = mul(wvpMatrix, float4(inp.position, 1));
-	outp.texCoord = inp.texCoord;
+	OutputVScene outp;
+    outp.worldPos   = mul(wMatrix, float4(inp.position, 1));
+	outp.position	= mul(vpMatrix, outp.worldPos);
+	outp.normal		= mul(wMatrix, float4(inp.normal, 0));
 	return outp;
 }
 
 
-// PIXEL SHADER
+// PIXEL SHADER SCENE
 
-Texture2D colorMap : register(t2);
-Texture2DMS<float4, 8> colorMapMS : register(t3);
+Texture2D shadowMap : register(t0);
+SamplerComparisonState shadowMapSampler : register(s0);
 
-SamplerState samplerState : register(s1);
-
-float4 PS(OutputVS inp) : SV_Target
+float4 PScene(OutputVScene inp) : SV_Target
 {
-	if (useTexture2DMS)
-	{
-		// Load texel from multi-sample texture
-		uint w, h, numSamples;
-		colorMapMS.GetDimensions(w, h, numSamples);
-		
-		int2 tc = int2(
-			(int)(inp.texCoord.x * (float)w),
-			(int)(inp.texCoord.y * (float)h)
-		);
-		
-		// Compute average of all samples
-		float4 c = (float4)0.0;
-		
-		for (uint i = 0; i < numSamples; ++i)
-			c += colorMapMS.Load(tc, i);
-		
-		c /= numSamples;
-		
-		return c;
-	}
-	else
-	{
-		// Sample texel from standard texture
-		return colorMap.Sample(samplerState, inp.texCoord);
-	}
+    // Project world position into shadow-map space
+    float4 shadowPos = mul(vpShadowMatrix, inp.worldPos);
+    shadowPos /= shadowPos.w;
+    shadowPos = shadowPos * 0.5 + 0.5;
+    
+    // Sample shadow map
+    float shadow = shadowMap.SampleCmp(shadowMapSampler, shadowPos.xy, shadowPos.z);
+    
+    // Compute lighting
+    float3 normal = normalize(inp.normal.xyz);
+    float NdotL = max(0.2, dot(normal, -lightDir.xyz));
+    
+    // Set final output color
+    shadow = lerp(0.2, 1.0, shadow);
+    return float4(diffuse.rgb * (NdotL * shadow), 1.0);
 }
 
 

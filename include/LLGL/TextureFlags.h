@@ -69,61 +69,63 @@ struct TextureFlags
         \brief Texture mapping with CPU read access is required.
         \see RenderSystem::MapTexture
         */
-        MapReadAccess       = (1 << 0),
+        MapReadAccess               = (1 << 0),
 
         /**
         \brief Texture mapping with CPU write access is required.
         \see RenderSystem::MapTexture
         */
-        MapWriteAccess      = (1 << 1),
+        MapWriteAccess              = (1 << 1),
 
         /*
         \brief Texture mapping with CPU read and write access is required.
         \see TextureFlags::MapReadAccess
         \see TextureFlags::MapWriteAccess
         */
-        MapReadWriteAccess  = (MapReadAccess | MapWriteAccess),
+        MapReadWriteAccess          = (MapReadAccess | MapWriteAccess),
 
         /**
         \brief Hint to the renderer that the texture will be frequently updated from the CPU.
         \see RenderSystem::WriteTexture
         */
-        DynamicUsage        = (1 << 2),
+        DynamicUsage                = (1 << 2),
         #endif
 
         /**
-        \brief Texture can be used as render target attachment.
+        \brief Texture can be used as render target color attachment.
         \remarks This is part of the default flags.
+        \note This cannot be used together with the TextureFlags::DepthStencilAttachmentUsage flag.
         \see AttachmentDescriptor::texture
-        \see Default
+        \see AttachmentType::Color
         */
-        AttachmentUsage     = (1 << 3),
+        ColorAttachmentUsage        = (1 << 3),
+
+        /**
+        \brief Texture can be used as render target depth-stencil attachment.
+        \note This cannot be used together with the TextureFlags::ColorAttachmentUsage flag.
+        \see AttachmentDescriptor::texture
+        \see AttachmentType::DepthStencil
+        */
+        DepthStencilAttachmentUsage = (1 << 4),
 
         /**
         \brief Texture can be used for sampling (e.g. "sampler2D" in GLSL, or "Texture2D" in HLSL).
         \remarks This is part of the default flags.
-        \see Default
         */
-        SampleUsage         = (1 << 4),
+        SampleUsage                 = (1 << 5),
 
         //! Texture can be used as storage texture (e.g. "image2D" in GLSL, or "RWTexture2D" in HLSL).
-        StorageUsage        = (1 << 5),
+        StorageUsage                = (1 << 6),
 
         /**
         \brief Multi-sampled texture has fixed sample locations.
         \remarks This can only be used with multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray).
         \see TextureType
-        \see Default
         */
-        FixedSamples        = (1 << 6),
+        FixedSamples                = (1 << 7),
 
-        /**
-        \brief Default texture flags: (AttachmentUsage | SampleUsage | FixedSamples).
-        \see AttachmentUsage
-        \see SampleUsage
-        \see FixedSamples
-        */
-        Default             = (AttachmentUsage | SampleUsage | FixedSamples),
+        //! Default texture flags are <code>(ColorAttachmentUsage | SampleUsage | FixedSamples)</code>.
+        Default                     = (ColorAttachmentUsage | SampleUsage | FixedSamples),
     };
 };
 

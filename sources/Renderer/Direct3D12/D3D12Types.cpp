@@ -23,9 +23,9 @@ DXGI_FORMAT Map(const DataType dataType)
     return DXTypes::Map(dataType);
 }
 
-DXGI_FORMAT Map(const Format textureFormat)
+DXGI_FORMAT Map(const Format format)
 {
-    return DXTypes::Map(textureFormat);
+    return DXTypes::Map(format);
 }
 
 D3D_PRIMITIVE_TOPOLOGY Map(const PrimitiveTopology topology)
@@ -298,6 +298,16 @@ D3D12_QUERY_HEAP_TYPE MapQueryHeapType(const QueryType queryType)
 Format Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);
+}
+
+DXGI_FORMAT ToDXGIFormatDSV(const DXGI_FORMAT format)
+{
+    return DXTypes::ToDXGIFormatDSV(format);
+}
+
+DXGI_FORMAT ToDXGIFormatSRV(const DXGI_FORMAT format)
+{
+    return DXTypes::ToDXGIFormatSRV(format);
 }
 
 

@@ -7,6 +7,7 @@
 
 #include "D3D11RenderTarget.h"
 #include "../D3D11RenderSystem.h"
+#include "../D3D11Types.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
@@ -179,20 +180,28 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     ValidateMipResolution(texture, attachmentDesc.mipLevel);
 
+    if (attachmentDesc.type == AttachmentType::Color)
+        AttachTextureColor(textureD3D, attachmentDesc);
+    else
+        AttachTextureDepthStencil(textureD3D, attachmentDesc);
+}
+
+void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const AttachmentDescriptor& attachmentDesc)
+{
     /* Initialize RTV descriptor with attachment procedure and create RTV */
     D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
     InitMemory(rtvDesc);
 
-    rtvDesc.Format = textureD3D.GetFormat();
+    rtvDesc.Format = D3D11Types::ToDXGIFormatSRV(textureD3D.GetFormat());
 
     /*
     If this is a multi-sample render target, but the target texture is not a multi-sample texture,
     an intermediate multi-sample texture is required, which will be 'blitted' (or 'resolved') after the render target was rendered.
     */
-    if (HasMultiSampling() && !IsMultiSampleTexture(texture.GetType()))
+    if (HasMultiSampling() && !IsMultiSampleTexture(textureD3D.GetType()))
     {
         /* Get RTV descriptor for intermediate multi-sample texture */
-        switch (texture.GetType())
+        switch (textureD3D.GetType())
         {
             case TextureType::Texture2D:
                 FillViewDescForTexture2DMS(attachmentDesc, rtvDesc);
@@ -219,7 +228,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
         }
         ComPtr<ID3D11Texture2D> tex2DMS;
         auto hr = device_->CreateTexture2D(&texDesc, nullptr, tex2DMS.ReleaseAndGetAddressOf());
-        DXThrowIfFailed(hr, "failed to create D3D11 multi-sampled 2D-texture for render-target");
+        DXThrowIfCreateFailed(hr, "ID3D11Texture2D", "for multi-sampled render-target");
 
         /* Store multi-sampled texture, and reference to texture target */
         multiSampledAttachments_.push_back(
@@ -237,7 +246,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
     else
     {
         /* Get RTV descriptor for this the target texture */
-        switch (texture.GetType())
+        switch (textureD3D.GetType())
         {
             case TextureType::Texture1D:
                 FillViewDescForTexture1D(attachmentDesc, rtvDesc);
@@ -269,19 +278,28 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
     }
 }
 
+void D3D11RenderTarget::AttachTextureDepthStencil(D3D11Texture& textureD3D, const AttachmentDescriptor& attachmentDesc)
+{
+    /* Create DSV for texture */
+    textureD3D.CreateSubresourceDSV(
+        device_,
+        depthStencilView_.ReleaseAndGetAddressOf(),
+        attachmentDesc.mipLevel,
+        attachmentDesc.arrayLayer,
+        1
+    );
+}
+
 void D3D11RenderTarget::CreateDepthStencilAndDSV(DXGI_FORMAT format)
 {
-    depthStencilFormat_ = format;
-    HRESULT hr = 0;
-
-    /* Create depth stencil texture */
+    /* Create depth-stencil resource */
     D3D11_TEXTURE2D_DESC texDesc;
     {
         texDesc.Width               = GetResolution().width;
         texDesc.Height              = GetResolution().height;
         texDesc.MipLevels           = 1;
         texDesc.ArraySize           = 1;
-        texDesc.Format              = depthStencilFormat_;
+        texDesc.Format              = format;
         texDesc.SampleDesc.Count    = std::max(1u, multiSamples_);
         texDesc.SampleDesc.Quality  = 0;
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
@@ -289,12 +307,15 @@ void D3D11RenderTarget::CreateDepthStencilAndDSV(DXGI_FORMAT format)
         texDesc.CPUAccessFlags      = 0;
         texDesc.MiscFlags           = 0;
     }
-    hr = device_->CreateTexture2D(&texDesc, nullptr, depthStencil_.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 depth-texture for render-target");
+    auto hr = device_->CreateTexture2D(&texDesc, nullptr, depthStencil_.ReleaseAndGetAddressOf());
+    DXThrowIfCreateFailed(hr, "ID3D11Texture2D", "for render-target depth-stencil");
 
     /* Create DSV */
     hr = device_->CreateDepthStencilView(depthStencil_.Get(), nullptr, depthStencilView_.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil-view (DSV) for render-target");
+    DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView",  "for render-target");
+
+    /* Store native depth-stencil format */
+    depthStencilFormat_ = format;
 }
 
 void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc)
@@ -302,7 +323,7 @@ void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11
     ComPtr<ID3D11RenderTargetView> rtv;
 
     auto hr = device_->CreateRenderTargetView(resource, &rtvDesc, rtv.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV)");
+    DXThrowIfCreateFailed(hr, "ID3D11RenderTargetView");
 
     renderTargetViews_.push_back(rtv);
     renderTargetViewsRef_.push_back(rtv.Get());
