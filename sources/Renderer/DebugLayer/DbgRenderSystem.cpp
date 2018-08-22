@@ -361,12 +361,12 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
                         //TODO: DbgSampler
                         break;
                     default:
-                        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid resource type passed to ResourceViewDescriptor");
+                        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid resource type passed to <ResourceViewDescriptor>");
                         break;
                 }
             }
             else
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "null pointer passed to ResourceViewDescriptor");
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "null pointer passed to <ResourceViewDescriptor>");
         }
     }
     return instance_->CreateResourceHeap(instanceDesc);
@@ -393,10 +393,14 @@ void DbgRenderSystem::Release(RenderPass& renderPass)
 
 RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
+    LLGL_DBG_SOURCE;
+
     auto instanceDesc = desc;
 
     for (auto& attachment : instanceDesc.attachments)
     {
+        if (debugger_)
+            ValidateAttachmentDesc(attachment);
         if (auto texture = attachment.texture)
         {
             auto textureDbg = LLGL_CAST(DbgTexture*, texture);
@@ -926,6 +930,66 @@ void DbgRenderSystem::ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLa
             "array layer out of range for array texture (" + std::to_string(arrayLayerRangeEnd) +
             " specified but limit is " + std::to_string(arrayLayerLimit) + ")"
         );
+    }
+}
+
+void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& desc)
+{
+    if (auto texture = desc.texture)
+    {
+        auto textureDbg = LLGL_CAST(DbgTexture*, texture);
+
+        /* Validate attachment type for this texture */
+        if (desc.type == AttachmentType::Color)
+        {
+            if ((textureDbg->desc.flags & TextureFlags::ColorAttachmentUsage) == 0)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidState,
+                    "cannot have color attachment with a texture that was not created with the 'TextureFlags::ColorAttachmentUsage' flag"
+                );
+            }
+        }
+        else
+        {
+            if ((textureDbg->desc.flags & TextureFlags::DepthStencilAttachmentUsage) == 0)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidState,
+                    "cannot have depth-stencil attachment with a texture that was not created with the 'TextureFlags::DepthStencilAttachmentUsage' flag"
+                );
+            }
+        }
+
+        /* Validate MIP-level */
+        if (desc.mipLevel >= textureDbg->mipLevels)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "render-target attachment exceeded number of MIP-map levels (" +
+                std::to_string(desc.mipLevel) + " specified but upper bound is " + std::to_string(textureDbg->mipLevels) + ")"
+            );
+        }
+
+        /* Validate array layer */
+        if (desc.arrayLayer >= textureDbg->desc.arrayLayers)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "render-target attachment exceeded number of array layers (" +
+                std::to_string(desc.arrayLayer) + " specified but upper bound is " + std::to_string(textureDbg->desc.arrayLayers) + ")"
+            );
+        }
+    }
+    else
+    {
+        if (desc.type == AttachmentType::Color)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot have color attachment with 'texture' member being a null pointer"
+            );
+        }
     }
 }
 
