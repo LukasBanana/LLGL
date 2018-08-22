@@ -18,7 +18,7 @@ namespace LLGL
 
 
 // Throws an std::runtime_error exception if 'status' is not equal to 'statusRequired'.
-void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const char* info);
+void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const char* info = nullptr);
 
 // Converts the GL debug source into a string.
 std::string GLDebugSourceToStr(const GLenum source);

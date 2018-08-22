@@ -346,9 +346,11 @@ void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor&
     auto mipLevel = attachmentDesc.mipLevel;
     ValidateMipResolution(texture, mipLevel);
 
-    /* Make color or depth-stencil attachment */
+    /* Store internal texture format into output parameter */
     internalFormat = static_cast<GLenum>(GetTexInternalFormat(textureGL));
-    auto attachment = MakeFramebufferAttachment(internalFormat);
+
+    /* Make color or depth-stencil attachment */
+    auto attachment = MakeFramebufferAttachment(attachmentDesc.type);
 
     /* Attach texture to framebuffer */
     switch (texture.GetType())
@@ -436,45 +438,56 @@ void GLRenderTarget::CreateAndAttachRenderbuffer(GLenum internalFormat, GLenum a
         ErrDepthAttachmentFailed();
 }
 
-GLenum GLRenderTarget::MakeFramebufferAttachment(GLenum internalFormat)
+GLenum GLRenderTarget::MakeFramebufferAttachment(const AttachmentType type)
 {
-    /* Unmap internal texture format to easily check against depth-stencil formats */
-    Format format = Format::Undefined;
-    GLTypes::Unmap(format, internalFormat);
-
-    if (IsDepthStencilFormat(format))
+    /* Check if there is no depth-stencil attachment yet */
+    switch (type)
     {
-        if (IsStencilFormat(format))
+        case AttachmentType::Color:         return MakeFramebufferColorAttachment();
+        case AttachmentType::Depth:         return MakeFramebufferDepthStencilAttachment(true, false);
+        case AttachmentType::DepthStencil:  return MakeFramebufferDepthStencilAttachment(true, true);
+        case AttachmentType::Stencil:       return MakeFramebufferDepthStencilAttachment(false, true);
+    }
+    return 0;
+}
+
+GLenum GLRenderTarget::MakeFramebufferColorAttachment()
+{
+    /* Add color attachment and color buffer bit to blit mask */
+    blitMask_ |= GL_COLOR_BUFFER_BIT;
+
+    const GLenum attachment = GLTypes::ToColorAttachment(static_cast<std::uint32_t>(colorAttachments_.size()));
+    colorAttachments_.push_back(attachment);
+
+    return attachment;
+}
+
+GLenum GLRenderTarget::MakeFramebufferDepthStencilAttachment(bool depth, bool stencil)
+{
+    if (!HasDepthStencilAttachment())
+    {
+        if (depth && stencil)
         {
-            if (!HasDepthStencilAttachment())
-            {
-                /* Add depth-stencil attachment and depth-stencil buffer bit to blit mask */
-                blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-                return GL_DEPTH_STENCIL_ATTACHMENT;
-            }
-            else
-                ErrDepthAttachmentFailed();
+            /* Add depth-stencil attachment and depth-stencil buffer bit to blit mask */
+            blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            return GL_DEPTH_STENCIL_ATTACHMENT;
         }
-        else
+        else if (depth)
         {
-            if (!HasDepthStencilAttachment())
-            {
-                /* Add depth attachment and depth buffer bit to blit mask */
-                blitMask_ |= GL_DEPTH_BUFFER_BIT;
-                return GL_DEPTH_ATTACHMENT;
-            }
-            else
-                ErrDepthAttachmentFailed();
+            /* Add depth attachment and depth buffer bit to blit mask */
+            blitMask_ |= GL_DEPTH_BUFFER_BIT;
+            return GL_DEPTH_ATTACHMENT;
+        }
+        else if (stencil)
+        {
+            /* Add depth-stencil attachment but only stenicl buffer bit to blit mask */
+            blitMask_ |= GL_STENCIL_BUFFER_BIT;
+            return GL_DEPTH_STENCIL_ATTACHMENT;
         }
     }
     else
-    {
-        /* Add color attachment and color buffer bit to blit mask */
-        blitMask_ |= GL_COLOR_BUFFER_BIT;
-        const GLenum attachment = GLTypes::ToColorAttachment(static_cast<std::uint32_t>(colorAttachments_.size()));
-        colorAttachments_.push_back(attachment);
-        return attachment;
-    }
+        ErrDepthAttachmentFailed();
+    return 0;
 }
 
 bool GLRenderTarget::HasMultiSampling() const

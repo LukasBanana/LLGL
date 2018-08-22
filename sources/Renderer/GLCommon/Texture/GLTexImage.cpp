@@ -43,6 +43,25 @@ static void ErrIllegalUseOfDepthFormat()
     throw std::runtime_error("illegal use of depth-stencil format for texture");
 }
 
+// Converts the internal format if necessary
+static Format FindSuitableDepthFormat(const TextureDescriptor& desc)
+{
+    if (IsDepthStencilFormat(desc.format))
+    {
+        if ((desc.flags & TextureFlags::ColorAttachmentUsage) != 0)
+        {
+            /* Depth-stencil formats that are used as color attachments must be converted to a color renderable format */
+            switch (desc.format)
+            {
+                case Format::D16UNorm:  return Format::R16UNorm;
+                case Format::D32Float:  return Format::R32Float;
+                default:                break;
+            }
+        }
+    }
+    return desc.format;
+}
+
 #ifdef GL_ARB_texture_storage
 
 // Returns true if the specified GL texture target is a cube face other than GL_TEXTURE_CUBE_MAP_POSITIVE_X
@@ -517,7 +536,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
             auto image = GenImageDataRf(desc.extent.width * desc.extent.height, g_imageInitialization.clearValue.depth);
             GLTexImage2D(
                 NumMipLevels(desc),
-                desc.format,
+                FindSuitableDepthFormat(desc),
                 desc.extent.width,
                 desc.extent.height,
                 GL_DEPTH_COMPONENT,
@@ -530,7 +549,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
             /* Allocate depth texture image without initial data */
             GLTexImage2D(
                 NumMipLevels(desc),
-                desc.format,
+                FindSuitableDepthFormat(desc),
                 desc.extent.width,
                 desc.extent.height,
                 GL_DEPTH_COMPONENT,
@@ -655,6 +674,8 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
     }
     else if (IsDepthStencilFormat(desc.format))
     {
+        auto internalFormat = FindSuitableDepthFormat(desc);
+
         //TODO: add support for default initialization of stencil values
         std::vector<float> image;
         const void* initialData = nullptr;
@@ -671,7 +692,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
         {
             GLTexImageCube(
                 numMipLevels,
-                desc.format,
+                internalFormat,
                 desc.extent.width,
                 desc.extent.height,
                 arrayLayer,
@@ -797,7 +818,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
             auto image = GenImageDataRf(desc.extent.width * desc.extent.height * desc.arrayLayers, g_imageInitialization.clearValue.depth);
             GLTexImage2DArray(
                 NumMipLevels(desc),
-                desc.format,
+                FindSuitableDepthFormat(desc),
                 desc.extent.width,
                 desc.extent.height,
                 desc.arrayLayers,
@@ -811,7 +832,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
             /* Allocate depth texture image without initial data */
             GLTexImage2DArray(
                 NumMipLevels(desc),
-                desc.format,
+                FindSuitableDepthFormat(desc),
                 desc.extent.width,
                 desc.extent.height,
                 desc.arrayLayers,

@@ -68,7 +68,9 @@ class GLRenderTarget final : public RenderTarget
 
         void CreateAndAttachRenderbuffer(GLenum internalFormat, GLenum attachment);
 
-        GLenum MakeFramebufferAttachment(GLenum internalFormat);
+        GLenum MakeFramebufferAttachment(const AttachmentType type);
+        GLenum MakeFramebufferColorAttachment();
+        GLenum MakeFramebufferDepthStencilAttachment(bool depth, bool stencil);
 
         void CreateRenderbuffersMS(const GLenum* internalFormats);
         void CreateRenderbufferMS(GLenum attachment, GLenum internalFormat);
