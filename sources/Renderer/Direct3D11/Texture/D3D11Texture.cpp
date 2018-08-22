@@ -181,7 +181,7 @@ void D3D11Texture::CreateTexture1D(
     native_.tex1D = DXCreateTexture1D(device, desc, initialData);
 
     /* Store resource parameters */
-    SetResourceParams(desc.Format, { desc.Width, 1u, 1u }, desc.ArraySize);
+    SetResourceParams(desc.Format, Extent3D{ desc.Width, 1u, 1u }, desc.MipLevels, desc.ArraySize);
 
     /* Create resource views */
     if ((flags & TextureFlags::SampleUsage) != 0)
@@ -201,7 +201,7 @@ void D3D11Texture::CreateTexture2D(
     native_.tex2D = DXCreateTexture2D(device, desc, initialData);
 
     /* Store resource parameters */
-    SetResourceParams(desc.Format, { desc.Width, desc.Height, 1u }, desc.ArraySize);
+    SetResourceParams(desc.Format, Extent3D{ desc.Width, desc.Height, 1u }, desc.MipLevels, desc.ArraySize);
 
     /* Create resource views */
     if ((flags & TextureFlags::SampleUsage) != 0)
@@ -219,7 +219,7 @@ void D3D11Texture::CreateTexture3D(
     native_.tex3D = DXCreateTexture3D(device, desc, initialData);
 
     /* Store resource parameters */
-    SetResourceParams(desc.Format, { desc.Width, desc.Height, desc.Depth }, 1);
+    SetResourceParams(desc.Format, Extent3D{ desc.Width, desc.Height, desc.Depth }, desc.MipLevels, 1);
 
     /* Create resource views */
     if ((flags & TextureFlags::SampleUsage) != 0)
@@ -528,10 +528,10 @@ void D3D11Texture::CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RES
     }
 }
 
-void D3D11Texture::SetResourceParams(DXGI_FORMAT format, const Extent3D& size, UINT arraySize)
+void D3D11Texture::SetResourceParams(DXGI_FORMAT format, const Extent3D& extent, UINT mipLevels, UINT arraySize)
 {
     format_         = format;
-    numMipLevels_   = NumMipLevels(size.width, size.height, size.height);
+    numMipLevels_   = (mipLevels == 0 ? NumMipLevels(extent.width, extent.height, extent.height) : mipLevels);
     numArrayLayers_ = arraySize;
 }
 

@@ -148,7 +148,7 @@ class D3D11Texture final : public Texture
 
         void CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr);
 
-        void SetResourceParams(DXGI_FORMAT format, const Extent3D& size, UINT arraySize);
+        void SetResourceParams(DXGI_FORMAT format, const Extent3D& extent, UINT mipLevels, UINT arraySize);
 
         D3D11NativeTexture                  native_;
 
