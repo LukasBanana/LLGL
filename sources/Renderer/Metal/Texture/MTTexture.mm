@@ -30,7 +30,7 @@ static MTLTextureUsage GetTextureUsage(const TextureDescriptor& desc)
     
     if ((desc.flags & TextureFlags::SampleUsage) != 0)
         usage |= MTLTextureUsageShaderRead;
-    if ((desc.flags & TextureFlags::AttachmentUsage) != 0)
+    if ((desc.flags & (TextureFlags::ColorAttachmentUsage | TextureFlags::DepthStencilAttachmentUsage)) != 0)
         usage |= MTLTextureUsageRenderTarget;
     if ((desc.flags & TextureFlags::StorageUsage) != 0)
         usage |= MTLTextureUsageShaderWrite;
