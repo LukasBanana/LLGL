@@ -78,7 +78,7 @@ void GLRenderContext::GetNativeContextHandle(
     else
     {
         if (multiSamplingDesc.enabled)
-            Log::StdErr() << "failed to choose XVisualInfo for multi-sampling" << std::endl;
+            Log::PostReport(Log::ReportType::Error, "failed to choose XVisualInfo for multi-sampling");
 
         /* Choose standard XVisualInfo structure */
         int visualAttribs[] =

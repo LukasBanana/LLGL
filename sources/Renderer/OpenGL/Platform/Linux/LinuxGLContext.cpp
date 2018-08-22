@@ -119,7 +119,7 @@ void LinuxGLContext::CreateContext(const RenderContextDescriptor& contextDesc, c
 
     /* Make new OpenGL context current */
     if (glXMakeCurrent(display_, wnd_, glc_) != True)
-        Log::StdErr() << "failed to make OpenGL render context current (glXMakeCurrent)" << std::endl;
+        Log::PostReport(Log::ReportType::Error, "failed to make OpenGL render context current (glXMakeCurrent)");
 }
 
 void LinuxGLContext::DeleteContext()
@@ -190,7 +190,7 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
     }
 
     /* Context creation failed */
-    Log::StdErr() << "failed to create OpenGL core profile" << std::endl;
+    Log::PostReport(Log::ReportType::Error, "failed to create OpenGL core profile");
 
     return nullptr;
 }

@@ -59,7 +59,7 @@ bool Module::IsAvailable(const char* moduleFilename)
 
 std::unique_ptr<Module> Module::Load(const char* moduleFilename)
 {
-    return MakeUnique<LinuxModule>(moduleFilename));
+    return MakeUnique<LinuxModule>(moduleFilename);
 }
 
 LinuxModule::LinuxModule(const char* moduleFilename)
