@@ -142,17 +142,18 @@ struct BufferDescriptor
     struct StorageBuffer
     {
         /**
-        \brief Specifies the storage buffer type. By defalut StorageBufferType::Buffer.
+        \brief Specifies the storage buffer type. By defalut StorageBufferType::Undefined.
         \remarks In OpenGL there are only generic storage buffers (or rather "Shader Storage Buffer Objects").
-        \see vectorType
+        However, a valid type should always be specified when a storage buffer is created.
         */
-        StorageBufferType   storageType = StorageBufferType::Buffer;
+        StorageBufferType   storageType = StorageBufferType::Undefined;
 
         /**
-        \brief Specifies the vector format of a typed buffer.
+        \brief Specifies the vector format of a typed buffer. By default Format::Undefined.
         \remarks This is only used if the storage type is either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
+        \see IsStorageBufferTyped
         */
-        Format              format      = Format::RGBA32Float;
+        Format              format      = Format::Undefined;
 
         /**
         \brief Specifies the stride (in bytes) of each element in a storage buffer.
@@ -187,6 +188,43 @@ struct BufferDescriptor
     //! Storage buffer type descriptor appendix.
     StorageBuffer   storageBuffer;
 };
+
+
+/* ----- Functions ----- */
+
+/**
+\defgroup group_buffer_util Buffer utility functions to determine buffer types.
+\addtogroup group_buffer_util
+@{
+*/
+
+/**
+\brief Returns true if the storage buffer type denotes a read/write (RW) buffer.
+\return True if \c type either StorageBufferType::RWBuffer, StorageBufferType::RWStructuredBuffer,
+StorageBufferType::RWByteAddressBuffer, StorageBufferType::AppendStructuredBuffer, or StorageBufferType::ConsumeStructuredBuffer.
+*/
+LLGL_EXPORT bool IsRWBuffer(const StorageBufferType type);
+
+/**
+\brief Returns true if the storage buffer type denotes a simply typed buffer.
+\return True if \c type either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
+*/
+LLGL_EXPORT bool IsTypedBuffer(const StorageBufferType type);
+
+/**
+\brief Returns true if the storage buffer type denotes a structured buffer.
+\return True if \c type either StorageBufferType::StructuredBuffer, StorageBufferType::RWStructuredBuffer,
+StorageBufferType::AppendStructuredBuffer, or StorageBufferType::ConsumeStructuredBuffer.
+*/
+LLGL_EXPORT bool IsStructuredBuffer(const StorageBufferType type);
+
+/**
+\brief Returns true if the storage buffer type denotes a byte addresse buffer.
+\return True if \c type either StorageBufferType::ByteAddressBuffer or StorageBufferType::RWByteAddressBuffer.
+*/
+LLGL_EXPORT bool IsByteAddressBuffer(const StorageBufferType type);
+
+/** @} */
 
 
 } // /namespace LLGL
