@@ -24,7 +24,7 @@ namespace LLGL
 
 /**
 \brief Layout structure for a single binding point of the pipeline layout descriptor.
-\see PipelineLayoutDescriptor
+\see PipelineLayoutDescriptor::bindings
 */
 struct BindingDescriptor
 {
@@ -69,7 +69,8 @@ struct BindingDescriptor
 */
 struct PipelineLayoutDescriptor
 {
-    std::vector<BindingDescriptor> bindings; //!< List of layout resource bindings.
+    //! List of layout resource bindings.
+    std::vector<BindingDescriptor> bindings;
 };
 
 

@@ -24,7 +24,10 @@ class PipelineLayout;
 /* ----- Structures ----- */
 
 //TODO: remove this descriptor
-//! Resource view descriptor structure.
+/**
+\brief Resource view descriptor structure.
+\see ResourceHeapDescriptor::resourceViews
+*/
 struct ResourceViewDescriptor
 {
     //! Default constructor to initialize the resource view with a null pointer.
@@ -52,11 +55,19 @@ struct ResourceHeapDescriptor
     PipelineLayout*                     pipelineLayout = nullptr;
 
     #if 0//TODO: use list of resources instead of resource views, since there are no more options in <ResourceViewDescriptor>
-    //! List of all resources that are associated with the resource heap.
+    /**
+    \brief List of all resources that are associated with the resource heap.
+    \remarks These resources must be specified in the same order as they were specified when the pipeline layout was created.
+    \see PipelineLayoutDescriptor::bindings
+    */
     std::vector<Resource*>              resources;
     #endif
 
-    //! List of all resource view descriptors.
+    /**
+    \brief List of all resource view descriptors.
+    \remarks These resources must be specified in the same order as they were specified when the pipeline layout was created.
+    \see PipelineLayoutDescriptor::bindings
+    */
     std::vector<ResourceViewDescriptor> resourceViews;
 };
 

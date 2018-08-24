@@ -97,7 +97,7 @@ struct StageFlags
         \brief Specifies whether a resource is bound to the shader stages as unordered access view (UAV) instead of a read-only shader resource view (SRV).
         \remarks This can be used to bind a storage buffer (i.e. BufferType::Storage) that was created with read/write access (e.g. StorageBufferType::RWBuffer) as UAV instead of SRV.
         */
-        BindUnorderedAccess = (1 << 6),
+        StorageUsage        = (1 << 6),
 
         //! Specifies all tessellation stages, i.e. tessellation-control-, tessellation-evaluation shader stages.
         AllTessStages       = (TessControlStage | TessEvaluationStage),

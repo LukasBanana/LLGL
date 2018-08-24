@@ -230,7 +230,7 @@ void D3D11ResourceHeap::BuildShaderResourceViewSegments(ResourceBindingIterator&
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
             auto textureD3D = LLGL_CAST(D3D11Texture*, resource);
-            if ((stageFlags & StageFlags::BindUnorderedAccess) == 0)
+            if ((stageFlags & StageFlags::StorageUsage) == 0)
             {
                 if (auto srv = textureD3D->GetSRV())
                 {
@@ -252,7 +252,7 @@ void D3D11ResourceHeap::BuildShaderResourceViewSegments(ResourceBindingIterator&
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
             auto bufferD3D = LLGL_CAST(D3D11StorageBuffer*, resource);
-            if ((stageFlags & StageFlags::BindUnorderedAccess) == 0)
+            if ((stageFlags & StageFlags::StorageUsage) == 0)
             {
                 if (auto srv = bufferD3D->GetSRV())
                 {
@@ -292,7 +292,7 @@ void D3D11ResourceHeap::BuildUnorderedAccessViewSegments(ResourceBindingIterator
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
             auto textureD3D = LLGL_CAST(D3D11Texture*, resource);
-            if ((stageFlags & StageFlags::BindUnorderedAccess) != 0)
+            if ((stageFlags & StageFlags::StorageUsage) != 0)
             {
                 if (auto uav = textureD3D->GetUAV())
                 {
@@ -315,7 +315,7 @@ void D3D11ResourceHeap::BuildUnorderedAccessViewSegments(ResourceBindingIterator
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
             auto bufferD3D = LLGL_CAST(D3D11StorageBuffer*, resource);
-            if ((stageFlags & StageFlags::BindUnorderedAccess) != 0)
+            if ((stageFlags & StageFlags::StorageUsage) != 0)
             {
                 if (auto uav = bufferD3D->GetUAV())
                 {

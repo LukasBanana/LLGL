@@ -67,7 +67,7 @@ public enum class StageFlags
     GeometryStage       = (1 << 3),
     FragmentStage       = (1 << 4),
     ComputeStage        = (1 << 5),
-    BindUnorderedAccess = (1 << 6),
+    StorageUsage        = (1 << 6),
 
     AllTessStages       = (TessControlStage | TessEvaluationStage),
     AllGraphicsStages   = (VertexStage | AllTessStages | GeometryStage | FragmentStage),

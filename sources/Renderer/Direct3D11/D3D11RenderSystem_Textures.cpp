@@ -199,12 +199,15 @@ void D3D11RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLeve
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476203(v=vs.85).aspx
 static UINT GetDXTextureBindFlags(const TextureDescriptor& desc)
 {
-    UINT flags = D3D11_BIND_SHADER_RESOURCE;
+    UINT flags = 0;
 
     if ((desc.flags & TextureFlags::DepthStencilAttachmentUsage) != 0)
         flags |= D3D11_BIND_DEPTH_STENCIL;
     else if (IsMipMappedTexture(desc) || (desc.flags & TextureFlags::ColorAttachmentUsage) != 0)
         flags |= D3D11_BIND_RENDER_TARGET;
+
+    if ((desc.flags & TextureFlags::SampleUsage) != 0)
+        flags |= D3D11_BIND_SHADER_RESOURCE;
 
     if ((desc.flags & TextureFlags::StorageUsage) != 0)
         flags |= D3D11_BIND_UNORDERED_ACCESS;
