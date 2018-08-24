@@ -54,7 +54,6 @@ class D3D11RenderSystem final : public RenderSystem
         /* ----- Common ----- */
 
         D3D11RenderSystem();
-        ~D3D11RenderSystem();
 
         /* ----- Render Context ------ */
 

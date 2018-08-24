@@ -625,7 +625,7 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::BGRA8UInt:         return T{ ImageFormat::BGRA, DataType::UInt8 };
         case Format::BGRA8SInt:         return T{ ImageFormat::BGRA, DataType::Int8 };
         case Format::BGRA8sRGB:         return T{ ImageFormat::BGRA, DataType::UInt8 };
-    
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return T{ ImageFormat::Depth, DataType::UInt16 };
         case Format::D32Float:          return T{ ImageFormat::Depth, DataType::Float32 };

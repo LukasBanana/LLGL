@@ -70,6 +70,7 @@ enum class GLExt
     ARB_texture_view,
     ARB_shader_image_load_store,
     ARB_framebuffer_no_attachments,
+    ARB_clear_buffer_object,
 
     /* Extensions without procedures */
     ARB_texture_cube_map,

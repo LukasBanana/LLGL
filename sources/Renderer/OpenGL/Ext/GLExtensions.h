@@ -415,6 +415,11 @@ extern PFNGLMEMORYBARRIERPROC                               glMemoryBarrier;
 extern PFNGLFRAMEBUFFERPARAMETERIPROC                       glFramebufferParameteri;
 extern PFNGLGETFRAMEBUFFERPARAMETERIVPROC                   glGetFramebufferParameteriv;
 
+/* GL_ARB_clear_buffer_object */
+
+extern PFNGLCLEARBUFFERDATAPROC                             glClearBufferData;
+extern PFNGLCLEARBUFFERSUBDATAPROC                          glClearBufferSubData;
+
 /* GL_ARB_direct_state_access */
 
 extern PFNGLCREATETRANSFORMFEEDBACKSPROC                    glCreateTransformFeedbacks;

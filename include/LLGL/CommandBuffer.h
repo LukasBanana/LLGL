@@ -99,10 +99,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) = 0;
 
         #if 0
-        //FillBuffer or ClearBuffer
-        virtual void FillBuffer(Buffer& buffer, [...]) = 0;
-        //FillTexture or ClearTexture
-        virtual void FillTexture(Texture& texture, [...]) = 0;
+        virtual void FillBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, std::uint64_t size, [...]) = 0;
+        virtual void FillTexture(Texture& dstTexture, [...]) = 0;
         virtual void CopyTexture(Texture& dstTexture, Texture& srcTexture, [...]) = 0;
         virtual void BlitTexture(Texture& dstTexture, Texture& srcTexture, [...], Filter filter) = 0;
         #endif

@@ -6,6 +6,7 @@
  */
 
 #include "GLBuffer.h"
+#include "GLBufferConverter.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLTypes.h"
@@ -79,6 +80,109 @@ void GLBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* data)
     {
         GLStateManager::active->BindBuffer(*this);
         glBufferSubData(GLTypes::Map(GetType()), offset, size, data);
+    }
+}
+
+// Fill destination buffer repeatedly with the source buffer
+static void FillBuffer(char* dst, char* dstEnd, const void* src, std::size_t srcSize)
+{
+    if (std::distance(dst, dstEnd) % srcSize == 0)
+    {
+        while (dst != dstEnd)
+        {
+            ::memcpy(dst, src, srcSize);
+            dst += srcSize;
+        }
+    }
+}
+
+void GLBuffer::ClearBufferData(GLenum internalFormat, GLenum format, GLenum type, const void* data)
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glClearNamedBufferData(GetID(), internalFormat, format, type, data);
+    }
+    else
+    #endif // /GL_ARB_direct_state_access
+    if (HasExtension(GLExt::ARB_clear_buffer_object))
+    {
+        GLStateManager::active->BindBuffer(*this);
+        glClearBufferData(GLTypes::Map(GetType()), internalFormat, format, type, data);
+    }
+    else
+    {
+        /* Emulate buffer fill operation */
+        GLStateManager::active->BindBuffer(*this);
+
+        /* Query buffer size */
+        GLenum  bufferTarget    = GLTypes::Map(GetType());
+        GLint   bufferSize      = 0;
+
+        glGetBufferParameteriv(bufferTarget, GL_BUFFER_SIZE, &bufferSize);
+
+        /* Allocate intermediate buffer to fill the GPU buffer with */
+        auto dstSize = static_cast<std::size_t>(bufferSize);
+        auto intermediateBuffer = MakeUniqueArray<char>(dstSize);
+
+        /* Convert format data to fill the buffer with */
+        const auto srcData = reinterpret_cast<const GLBufferConverter::FormatData*>(data);
+        GLBufferConverter::FormatData formatData;
+
+        auto formatSize = GLBufferConverter::ConvertFormatData(
+            formatData,
+            GLBufferConverter::GetFormatDataDesc(internalFormat),
+            *srcData,
+            GLBufferConverter::GetFormatDataDesc(format)
+        );
+
+        /* Fill intermediate buffer with data */
+        FillBuffer(intermediateBuffer.get(), intermediateBuffer.get() + dstSize, &formatData, formatSize);
+
+        /* Submit intermeidate buffer to GPU buffer */
+        glBufferSubData(bufferTarget, 0, static_cast<GLintptr>(bufferSize), intermediateBuffer.get());
+    }
+}
+
+void GLBuffer::ClearBufferSubData(GLenum internalFormat, GLintptr offset, GLsizeiptr size, GLenum format, GLenum type, const void* data)
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glClearNamedBufferSubData(GetID(), internalFormat, offset, size, format, type, data);
+    }
+    else
+    #endif // /GL_ARB_direct_state_access
+    if (HasExtension(GLExt::ARB_clear_buffer_object))
+    {
+        GLStateManager::active->BindBuffer(*this);
+        glClearBufferSubData(GLTypes::Map(GetType()), internalFormat, offset, size, format, type, data);
+    }
+    else
+    {
+        /* Emulate buffer fill operation */
+        GLStateManager::active->BindBuffer(*this);
+
+        /* Allocate intermediate buffer to fill the GPU buffer with */
+        auto dstSize = static_cast<std::size_t>(size);
+        auto intermediateBuffer = MakeUniqueArray<char>(dstSize);
+
+        /* Convert format data to fill the buffer with */
+        const auto srcData = reinterpret_cast<const GLBufferConverter::FormatData*>(data);
+        GLBufferConverter::FormatData formatData;
+
+        auto formatSize = GLBufferConverter::ConvertFormatData(
+            formatData,
+            GLBufferConverter::GetFormatDataDesc(internalFormat),
+            *srcData,
+            GLBufferConverter::GetFormatDataDesc(format)
+        );
+
+        /* Fill intermediate buffer with data */
+        FillBuffer(intermediateBuffer.get(), intermediateBuffer.get() + dstSize, &formatData, formatSize);
+
+        /* Submit intermeidate buffer to GPU buffer */
+        glBufferSubData(GLTypes::Map(GetType()), offset, size, intermediateBuffer.get());
     }
 }
 

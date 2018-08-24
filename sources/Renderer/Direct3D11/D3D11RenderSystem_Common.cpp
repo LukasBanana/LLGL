@@ -45,10 +45,6 @@ D3D11RenderSystem::D3D11RenderSystem()
     QueryRenderingCaps();
 }
 
-D3D11RenderSystem::~D3D11RenderSystem()
-{
-}
-
 /* ----- Render Context ----- */
 
 RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)

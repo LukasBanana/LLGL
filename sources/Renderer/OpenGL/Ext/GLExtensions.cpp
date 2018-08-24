@@ -412,6 +412,11 @@ PFNGLMEMORYBARRIERPROC                                  glMemoryBarrier         
 PFNGLFRAMEBUFFERPARAMETERIPROC                          glFramebufferParameteri                         = nullptr;
 PFNGLGETFRAMEBUFFERPARAMETERIVPROC                      glGetFramebufferParameteriv                     = nullptr;
 
+/* GL_ARB_clear_buffer_object */
+
+PFNGLCLEARBUFFERDATAPROC                                glClearBufferData                               = nullptr;
+PFNGLCLEARBUFFERSUBDATAPROC                             glClearBufferSubData                            = nullptr;
+
 /* GL_ARB_direct_state_access */
 
 PFNGLCREATETRANSFORMFEEDBACKSPROC                       glCreateTransformFeedbacks                      = nullptr;

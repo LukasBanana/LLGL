@@ -442,6 +442,11 @@ DECL_GLPROC(void, glMemoryBarrier, (GLbitfield));
 DECL_GLPROC(void, glFramebufferParameteri, (GLenum, GLenum, GLint));
 DECL_GLPROC(void, glGetFramebufferParameteriv, (GLenum, GLenum, GLint*));
 
+/* GL_ARB_clear_buffer_object */
+
+DECL_GLPROC(void, glClearBufferData, (GLenum, GLenum, GLenum, GLenum, const void*));
+DECL_GLPROC(void, glClearBufferSubData, (GLenum, GLenum, GLintptr, GLsizeiptr, GLenum, GLenum, const void*));
+
 /* GL_ARB_direct_state_access */
 
 DECL_GLPROC(void, glCreateTransformFeedbacks, (GLsizei, GLuint*));

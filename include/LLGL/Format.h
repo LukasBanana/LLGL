@@ -244,7 +244,7 @@ LLGL_EXPORT bool IsUIntDataType(const DataType dataType);
 
 /**
 \brief Determines if the argument refers to a floating-pointer data type.
-\return True if the specified data type equals one of the following enumeration entries: DataType::Float32, DataType::Float64.
+\return True if the specified data type equals one of the following enumeration entries: DataType::Float16, DataType::Float32, DataType::Float64.
 */
 LLGL_EXPORT bool IsFloatDataType(const DataType dataType);
 

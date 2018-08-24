@@ -27,7 +27,12 @@ class GLBuffer : public Buffer
 
         void BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags, GLenum usage);
         void BufferSubData(GLintptr offset, GLsizeiptr size, const void* data);
+
+        void ClearBufferData(GLenum internalFormat, GLenum format, GLenum type, const void* data);
+        void ClearBufferSubData(GLenum internalFormat, GLintptr offset, GLsizeiptr size, GLenum format, GLenum type, const void* data);
+
         void CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
+
         void* MapBuffer(GLenum access);
         void UnmapBuffer();
 
