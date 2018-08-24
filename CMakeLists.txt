@@ -309,6 +309,7 @@ set(FilesExample_Instancing ${ExampleProjectsPath}/Instancing/Example.cpp)
 set(FilesExample_PostProcessing ${ExampleProjectsPath}/PostProcessing/Example.cpp)
 set(FilesExample_MultiRenderer ${ExampleProjectsPath}/MultiRenderer/Example.cpp)
 set(FilesExample_ShadowMapping ${ExampleProjectsPath}/ShadowMapping/Example.cpp)
+set(FilesExample_UnorderedAccess ${ExampleProjectsPath}/UnorderedAccess/Example.cpp)
 
 
 # === Source group folders ===
@@ -653,6 +654,7 @@ if(GaussLib_INCLUDE_DIR)
         ADD_TEST_PROJECT(Example_PostProcessing "${FilesExample_PostProcessing}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_MultiRenderer "${FilesExample_MultiRenderer}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_ShadowMapping "${FilesExample_ShadowMapping}" "${EXAMPLE_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Example_UnorderedAccess "${FilesExample_UnorderedAccess}" "${EXAMPLE_PROJECT_LIBS}")
     endif()
 else()
     if(LLGL_BUILD_TESTS)
