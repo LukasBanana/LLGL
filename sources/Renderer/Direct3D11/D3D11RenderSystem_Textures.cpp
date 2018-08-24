@@ -213,7 +213,7 @@ static UINT GetDXTextureMiscFlags(const TextureDescriptor& desc)
 {
     UINT flags = 0;
 
-    if (IsMipMappedTexture(desc) && !IsDepthStencilFormat(desc.format))
+    if (IsMipMappedTexture(desc) && (desc.flags & TextureFlags::DepthStencilAttachmentUsage) == 0)
         flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
     if (IsCubeTexture(desc.type))
         flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;

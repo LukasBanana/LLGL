@@ -501,7 +501,7 @@ static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, con
         else
             bindingDesc.arraySize = 1;
 
-        /* Add new  */
+        /* Add new binding point to output descriptor */
         desc.bindings.push_back(bindingDesc);
 
         if (*s == ',')
