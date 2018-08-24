@@ -29,6 +29,7 @@
 - [Queries](#queries)
 - [Independent blend states](#independent-blend-states)
 - [`RenderingProfiler` interface](#renderingprofiler-interface)
+- [Binding unordered access views (UAV)](#binding-unordered-access-views-uav)
 
 
 ## `Shader` interface
@@ -981,7 +982,22 @@ while (/* ... */) {
 ```
 
 
+## Binding unordered access views (UAV)
 
+Unordered access views (UAV) must be now explicitly bound with `StageFlags::StorageUsage`. Previously, the UAV was preferred over a shader resource view (SRV) and could be disabled when binding a resource using `ShaderStageFlags::ReadOnlyResource`.
+
+Before:
+```cpp
+// Usage:
+myCmdBufferExt->SetStorageBuffer(*myStorageBuffer1, 1, LLGL::ShaderStageFlags::ComputeStage | LLGL::ShaderStageFlags::ReadOnlyResource); // SRV
+myCmdBufferExt->SetStorageBuffer(*myStorageBuffer2, 2, LLGL::ShaderStageFlags::ComputeStage);                                            // UAV
+```
+
+After:
+```cpp
+myCmdBufferExt->SetStorageBuffer(*myStorageBuffer1, 1, LLGL::StageFlags::ComputeStage);                                  // SRV
+myCmdBufferExt->SetStorageBuffer(*myStorageBuffer2, 2, LLGL::StageFlags::ComputeStage | LLGL::StageFlags::StorageUsage); // UAV
+```
 
 
 
