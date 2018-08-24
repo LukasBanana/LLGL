@@ -42,7 +42,7 @@ namespace LLGL
 #define GS_STAGE(FLAG)  ( ((FLAG) & StageFlags::GeometryStage      ) != 0 )
 #define PS_STAGE(FLAG)  ( ((FLAG) & StageFlags::FragmentStage      ) != 0 )
 #define CS_STAGE(FLAG)  ( ((FLAG) & StageFlags::ComputeStage       ) != 0 )
-#define SRV_STAGE(FLAG) ( ((FLAG) & StageFlags::ReadOnlyResource   ) != 0 )
+#define UAV_STAGE(FLAG) ( ((FLAG) & StageFlags::BindUnorderedAccess) != 0 )
 
 D3D11CommandBuffer::D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPtr<ID3D11DeviceContext>& context) :
     stateMngr_ { stateMngr },
@@ -245,7 +245,7 @@ void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, lo
 {
     auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
 
-    if (storageBufferD3D.HasUAV() && !SRV_STAGE(stageFlags))
+    if (IsRWBuffer(storageBufferD3D.GetStorageType()) && UAV_STAGE(stageFlags))
     {
         /* Set UAVs to specified shader stages */
         ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
@@ -531,7 +531,7 @@ void D3D11CommandBuffer::SetUnorderedAccessViewsOnStages(
 #undef GS_STAGE
 #undef PS_STAGE
 #undef CS_STAGE
-#undef SRV_STAGE
+#undef UAV_STAGE
 
 void D3D11CommandBuffer::ResolveBoundRenderTarget()
 {

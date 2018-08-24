@@ -23,44 +23,34 @@ class D3D11StorageBuffer final : public D3D11Buffer
 
         D3D11StorageBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
-        // True, if this storage buffer has a UAV object.
-        bool HasUAV() const;
-
-        // True, if storage type is: Buffer or RWBuffer.
-        bool IsTyped() const;
-
-        // True, if storage type is: StructuredBuffer, RWStructuredBuffer, AppendStructuredBuffer, or ConsumeStructuredBuffer.
-        bool IsStructured() const;
-
-        // True, if storage type is: ByteAddressBuffer or RWByteAddressBuffer.
-        bool IsByteAddressable() const;
-
+        // Returns the native SRV object.
         inline ID3D11ShaderResourceView* GetSRV() const
         {
             return srv_.Get();
         }
 
+        // Returns the native UAV object.
         inline ID3D11UnorderedAccessView* GetUAV() const
         {
             return uav_.Get();
         }
 
+        // Returns the initial value for the internal buffer counter.
         inline UINT GetInitialCount() const
         {
             return initialCount_;
         }
 
+        // Returns the storage buffer type that was specified when the buffer was created.
+        inline StorageBufferType GetStorageType() const
+        {
+            return storageType_;
+        }
+
     private:
 
-        UINT GetBindFlags() const;
-        UINT GetMiscFlags() const;
-        UINT GetUAVFlags() const;
-
-        //TODO: rename to "GetDXFormat"
-        DXGI_FORMAT GetFormat(const Format format) const;
-
         void CreateSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
-        void CreateUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
+        void CreateUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements, UINT flags);
 
         StorageBufferType                   storageType_        = StorageBufferType::Buffer;
 
