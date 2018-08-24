@@ -175,19 +175,13 @@ void D3D11Texture::CreateTexture1D(
     const D3D11_TEXTURE1D_DESC&             desc,
     long                                    flags,
     const D3D11_SUBRESOURCE_DATA*           initialData,
-    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc)
+    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
+    const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
 {
-    /* Create native D3D texture */
+    /* Create native D3D texture, store resource parameters and create standard resource views */
     native_.tex1D = DXCreateTexture1D(device, desc, initialData);
-
-    /* Store resource parameters */
     SetResourceParams(desc.Format, Extent3D{ desc.Width, 1u, 1u }, desc.MipLevels, desc.ArraySize);
-
-    /* Create resource views */
-    if ((flags & TextureFlags::SampleUsage) != 0)
-        CreateDefaultSRV(device, srvDesc);
-    if ((flags & TextureFlags::StorageUsage) != 0)
-        CreateDefaultUAV(device/*, uavDesc*/);
+    CreateDefaultResourceViews(device, srvDesc, uavDesc, flags);
 }
 
 void D3D11Texture::CreateTexture2D(
@@ -195,17 +189,13 @@ void D3D11Texture::CreateTexture2D(
     const D3D11_TEXTURE2D_DESC&             desc,
     long                                    flags,
     const D3D11_SUBRESOURCE_DATA*           initialData,
-    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc)
+    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
+    const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
 {
-    /* Create native D3D texture */
+    /* Create native D3D texture, store resource parameters and create standard resource views */
     native_.tex2D = DXCreateTexture2D(device, desc, initialData);
-
-    /* Store resource parameters */
     SetResourceParams(desc.Format, Extent3D{ desc.Width, desc.Height, 1u }, desc.MipLevels, desc.ArraySize);
-
-    /* Create resource views */
-    if ((flags & TextureFlags::SampleUsage) != 0)
-        CreateDefaultSRV(device, srvDesc);
+    CreateDefaultResourceViews(device, srvDesc, uavDesc, flags);
 }
 
 void D3D11Texture::CreateTexture3D(
@@ -213,17 +203,13 @@ void D3D11Texture::CreateTexture3D(
     const D3D11_TEXTURE3D_DESC&             desc,
     long                                    flags,
     const D3D11_SUBRESOURCE_DATA*           initialData,
-    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc)
+    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
+    const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
 {
-    /* Create native D3D texture */
+    /* Create native D3D texture, store resource parameters and create standard resource views */
     native_.tex3D = DXCreateTexture3D(device, desc, initialData);
-
-    /* Store resource parameters */
     SetResourceParams(desc.Format, Extent3D{ desc.Width, desc.Height, desc.Depth }, desc.MipLevels, 1);
-
-    /* Create resource views */
-    if ((flags & TextureFlags::SampleUsage) != 0)
-        CreateDefaultSRV(device, srvDesc);
+    CreateDefaultResourceViews(device, srvDesc, uavDesc, flags);
 }
 
 void D3D11Texture::UpdateSubresource(
@@ -508,6 +494,18 @@ void D3D11Texture::CreateSubresourceDSV(
 /*
  * ====== Private: ======
  */
+
+void D3D11Texture::CreateDefaultResourceViews(
+    ID3D11Device*                           device,
+    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
+    const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc,
+    long                                    flags)
+{
+    if ((flags & TextureFlags::SampleUsage) != 0)
+        CreateDefaultSRV(device, srvDesc);
+    if ((flags & TextureFlags::StorageUsage) != 0)
+        CreateDefaultUAV(device, uavDesc);
+}
 
 void D3D11Texture::CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {

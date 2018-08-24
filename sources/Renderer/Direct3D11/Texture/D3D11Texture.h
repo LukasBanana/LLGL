@@ -54,7 +54,8 @@ class D3D11Texture final : public Texture
             const D3D11_TEXTURE1D_DESC&             desc,
             long                                    flags,
             const D3D11_SUBRESOURCE_DATA*           initialData = nullptr,
-            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc     = nullptr
+            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc     = nullptr,
+            const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc     = nullptr
         );
 
         void CreateTexture2D(
@@ -62,7 +63,8 @@ class D3D11Texture final : public Texture
             const D3D11_TEXTURE2D_DESC&             desc,
             long                                    flags,
             const D3D11_SUBRESOURCE_DATA*           initialData = nullptr,
-            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc     = nullptr
+            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc     = nullptr,
+            const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc     = nullptr
         );
 
         void CreateTexture3D(
@@ -70,7 +72,8 @@ class D3D11Texture final : public Texture
             const D3D11_TEXTURE3D_DESC&             desc,
             long                                    flags,
             const D3D11_SUBRESOURCE_DATA*           initialData = nullptr,
-            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc     = nullptr
+            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc     = nullptr,
+            const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc     = nullptr
         );
 
         void UpdateSubresource(
@@ -151,6 +154,13 @@ class D3D11Texture final : public Texture
         }
 
     private:
+
+        void CreateDefaultResourceViews(
+            ID3D11Device*                           device,
+            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
+            const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc,
+            long                                    flags
+        );
 
         void CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr);
         void CreateDefaultUAV(ID3D11Device* device, const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc = nullptr);

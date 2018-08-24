@@ -23,6 +23,7 @@ class PipelineLayout;
 
 /* ----- Structures ----- */
 
+//TODO: remove this descriptor
 //! Resource view descriptor structure.
 struct ResourceViewDescriptor
 {
@@ -48,11 +49,11 @@ The resource heap is a container for one or more resources such as textures, sam
 struct ResourceHeapDescriptor
 {
     //! Reference to the pipeline layout. This must not be null, when a resource heap is created.
-    PipelineLayout*         pipelineLayout = nullptr;
+    PipelineLayout*                     pipelineLayout = nullptr;
 
-    #if 0
+    #if 0//TODO: use list of resources instead of resource views, since there are no more options in <ResourceViewDescriptor>
     //! List of all resources that are associated with the resource heap.
-    std::vector<Resource*>  resources;
+    std::vector<Resource*>              resources;
     #endif
 
     //! List of all resource view descriptors.
