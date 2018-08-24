@@ -297,20 +297,20 @@ LLGL_EXPORT bool IsMipMappedTexture(const TextureDescriptor& textureDesc);
 
 /**
 \brief Returns true if the specified texture type is an array texture.
-\return True if 'type' is . either TextureType::Texture1DArray, TextureType::Texture2DArray,
+\return True if \c type is either TextureType::Texture1DArray, TextureType::Texture2DArray,
 TextureType::TextureCubeArray, or TextureType::Texture2DMSArray.
 */
 LLGL_EXPORT bool IsArrayTexture(const TextureType type);
 
 /**
 \brief Returns true if the specified texture type is a multi-sample texture.
-\return True if 'type' is either TextureType::Texture2DMS, or TextureType::Texture2DMSArray.
+\return True if \c type is either TextureType::Texture2DMS, or TextureType::Texture2DMSArray.
 */
 LLGL_EXPORT bool IsMultiSampleTexture(const TextureType type);
 
 /**
 \brief Returns true if the specified texture type is a cube texture.
-\return True if 'type' is either TextureType::TextureCube or TextureType::TextureCubeArray.
+\return True if \c type is either TextureType::TextureCube or TextureType::TextureCubeArray.
 */
 LLGL_EXPORT bool IsCubeTexture(const TextureType type);
 

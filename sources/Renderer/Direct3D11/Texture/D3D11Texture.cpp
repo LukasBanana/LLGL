@@ -186,8 +186,8 @@ void D3D11Texture::CreateTexture1D(
     /* Create resource views */
     if ((flags & TextureFlags::SampleUsage) != 0)
         CreateDefaultSRV(device, srvDesc);
-    //if ((flags & TextureFlags::StorageUsage) != 0)
-    //    CreateDefaultUAV(device, uavDesc);
+    if ((flags & TextureFlags::StorageUsage) != 0)
+        CreateDefaultUAV(device/*, uavDesc*/);
 }
 
 void D3D11Texture::CreateTexture2D(
@@ -519,13 +519,15 @@ void D3D11Texture::CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RES
     else
     {
         /* Create internal SRV for entire texture resource */
-        auto hr = device->CreateShaderResourceView(
-            native_.resource.Get(),
-            srvDesc,
-            srv_.ReleaseAndGetAddressOf()
-        );
+        auto hr = device->CreateShaderResourceView(native_.resource.Get(), srvDesc, srv_.ReleaseAndGetAddressOf());
         DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", "for texture");
     }
+}
+
+void D3D11Texture::CreateDefaultUAV(ID3D11Device* device, const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
+{
+    auto hr = device->CreateUnorderedAccessView(native_.resource.Get(), uavDesc, uav_.ReleaseAndGetAddressOf());
+    DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", "for texture");
 }
 
 void D3D11Texture::SetResourceParams(DXGI_FORMAT format, const Extent3D& extent, UINT mipLevels, UINT arraySize)

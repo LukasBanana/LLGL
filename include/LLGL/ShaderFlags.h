@@ -94,11 +94,10 @@ struct StageFlags
         ComputeStage        = (1 << 5), //!< Specifies the compute shader stage.
 
         /**
-        \brief Specifies whether a resource is bound to the shader stages for reading only.
-        \remarks This can be used to set the shader-resource-view (SRV) of a storage buffer to the shader stages
-        instead of the unordered-access-view (UAV), which is the default, if the storage buffer has such a UAV.
+        \brief Specifies whether a resource is bound to the shader stages as unordered access view (UAV) instead of a read-only shader resource view (SRV).
+        \remarks This can be used to bind a storage buffer (i.e. BufferType::Storage) that was created with read/write access (e.g. StorageBufferType::RWBuffer) as UAV instead of SRV.
         */
-        ReadOnlyResource    = (1 << 6),
+        BindUnorderedAccess = (1 << 6),
 
         //! Specifies all tessellation stages, i.e. tessellation-control-, tessellation-evaluation shader stages.
         AllTessStages       = (TessControlStage | TessEvaluationStage),

@@ -323,7 +323,7 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long
         LLGL_DBG_SOURCE;
         AssertRecording();
         ValidateBufferType(buffer.GetType(), BufferType::Storage);
-        ValidateStageFlags(stageFlags, StageFlags::AllStages | StageFlags::ReadOnlyResource);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages | StageFlags::BindUnorderedAccess);
     }
 
     instanceExt->SetStorageBuffer(bufferDbg.instance, slot, stageFlags);

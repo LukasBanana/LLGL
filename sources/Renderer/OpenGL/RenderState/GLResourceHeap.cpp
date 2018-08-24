@@ -303,7 +303,7 @@ void GLResourceHeap::BuildSegment1(GLResourceBindingIter it, GLsizei count)
     std::size_t startOffset = buffer_.size();
 
     /* Allocate space for segment */
-    const auto segmentSize = sizeof(GLResourceViewHeapSegment1) + sizeof(GLuint) * count;
+    const std::size_t segmentSize = sizeof(GLResourceViewHeapSegment1) + sizeof(GLuint) * count;
     buffer_.resize(startOffset + segmentSize);
 
     /* Write segment header */
@@ -325,8 +325,8 @@ void GLResourceHeap::BuildSegment2(GLResourceBindingIter it, GLsizei count)
     std::size_t startOffset = buffer_.size();
 
     /* Allocate space for segment */
-    const auto segmentOffsetEnd0    = sizeof(GLResourceViewHeapSegment2) + sizeof(GLTextureTarget) * count;
-    const auto segmentSize          = segmentOffsetEnd0 + sizeof(GLuint) * count;
+    const std::size_t segmentOffsetEnd0 = sizeof(GLResourceViewHeapSegment2) + sizeof(GLTextureTarget) * count;
+    const std::size_t segmentSize       = segmentOffsetEnd0 + sizeof(GLuint) * count;
     buffer_.resize(startOffset + segmentSize);
 
     /* Write segment header */

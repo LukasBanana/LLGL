@@ -118,10 +118,16 @@ class D3D11Texture final : public Texture
             return native_;
         }
 
-        // Returns the standard shader-resource-view (SRV) of the hardware texture object (full view of all layers and MIP levels).
+        // Returns the standard shader resource view (SRV) of the hardware texture object (full view of all layers and MIP levels).
         inline ID3D11ShaderResourceView* GetSRV() const
         {
             return srv_.Get();
+        }
+
+        // Returns the standard unordered access view (UAV) of the hardware texture object (full view of all layers and MIP levels).
+        inline ID3D11UnorderedAccessView* GetUAV() const
+        {
+            return uav_.Get();
         }
 
         /* ----- Hardware texture parameters ----- */
@@ -147,13 +153,14 @@ class D3D11Texture final : public Texture
     private:
 
         void CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr);
+        void CreateDefaultUAV(ID3D11Device* device, const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc = nullptr);
 
         void SetResourceParams(DXGI_FORMAT format, const Extent3D& extent, UINT mipLevels, UINT arraySize);
 
         D3D11NativeTexture                  native_;
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
-        //ComPtr<ID3D11UnorderedAccessView>   uav_; //TODO: use this to support UAV of textures
+        ComPtr<ID3D11UnorderedAccessView>   uav_;
 
         DXGI_FORMAT                         format_             = DXGI_FORMAT_UNKNOWN;
         UINT                                numMipLevels_       = 0;

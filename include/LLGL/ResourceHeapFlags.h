@@ -21,20 +21,6 @@ class Resource;
 class PipelineLayout;
 
 
-/* ----- Enumerations ----- */
-
-#if 0//TODO
-//! Texture flags enumeration.
-struct ResourceViewFlags
-{
-    enum
-    {
-        UnorderedAccess = (1 << 0),
-    };
-};
-#endif
-
-
 /* ----- Structures ----- */
 
 //! Resource view descriptor structure.
@@ -51,10 +37,6 @@ struct ResourceViewDescriptor
 
     //! Pointer to the hardware resoudce.
     Resource*   resource    = nullptr;
-
-    #if 0//TODO
-    long        flags       = 0;
-    #endif
 };
 
 /**
@@ -66,7 +48,12 @@ The resource heap is a container for one or more resources such as textures, sam
 struct ResourceHeapDescriptor
 {
     //! Reference to the pipeline layout. This must not be null, when a resource heap is created.
-    PipelineLayout*                     pipelineLayout = nullptr;
+    PipelineLayout*         pipelineLayout = nullptr;
+
+    #if 0
+    //! List of all resources that are associated with the resource heap.
+    std::vector<Resource*>  resources;
+    #endif
 
     //! List of all resource view descriptors.
     std::vector<ResourceViewDescriptor> resourceViews;

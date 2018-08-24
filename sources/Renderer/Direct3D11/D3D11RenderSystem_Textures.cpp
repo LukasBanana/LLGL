@@ -206,6 +206,9 @@ static UINT GetDXTextureBindFlags(const TextureDescriptor& desc)
     else if (IsMipMappedTexture(desc) || (desc.flags & TextureFlags::ColorAttachmentUsage) != 0)
         flags |= D3D11_BIND_RENDER_TARGET;
 
+    if ((desc.flags & TextureFlags::StorageUsage) != 0)
+        flags |= D3D11_BIND_UNORDERED_ACCESS;
+
     return flags;
 }
 
@@ -215,6 +218,7 @@ static UINT GetDXTextureMiscFlags(const TextureDescriptor& desc)
 
     if (IsMipMappedTexture(desc) && (desc.flags & TextureFlags::DepthStencilAttachmentUsage) == 0)
         flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
     if (IsCubeTexture(desc.type))
         flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
 
