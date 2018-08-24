@@ -37,6 +37,11 @@ namespace LLGL
 {
 
 
+// Global array of null pointers to unbind resource slots
+static const std::uint32_t  g_maxNumResourceSlots                   = 64;
+static GLuint               g_nullResources[g_maxNumResourceSlots]  = {};
+
+
 GLCommandBuffer::GLCommandBuffer(const std::shared_ptr<GLStateManager>& stateMngr) :
     stateMngr_ { stateMngr }
 {
@@ -299,20 +304,6 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
     renderState_.indexBufferStride      = static_cast<GLsizeiptr>(format.GetFormatSize());
 }
 
-/* ----- Constant Buffers ------ */
-
-void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
-{
-    SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
-}
-
-/* ----- Storage Buffers ------ */
-
-void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
-{
-    SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
-}
-
 /* ----- Stream Output Buffers ------ */
 
 void GLCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
@@ -361,24 +352,6 @@ void GLCommandBuffer::EndStreamOutput()
     else
         ErrTransformFeedbackNotSupported(__FUNCTION__);
     #endif
-}
-
-/* ----- Textures ----- */
-
-void GLCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*stageFlags*/)
-{
-    /* Bind texture to layer */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    stateMngr_->ActiveTexture(slot);
-    stateMngr_->BindTexture(textureGL);
-}
-
-/* ----- Sampler States ----- */
-
-void GLCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*stageFlags*/)
-{
-    auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
-    stateMngr_->BindSampler(slot, samplerGL.GetID());
 }
 
 /* ----- Resource Heaps ----- */
@@ -580,6 +553,72 @@ void GLCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
     #ifndef __APPLE__
     glDispatchCompute(groupSizeX, groupSizeY, groupSizeZ);
     #endif
+}
+
+/* ----- Direct Resource Access ------ */
+
+void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+{
+    SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
+}
+
+void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+{
+    SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
+}
+
+void GLCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*stageFlags*/)
+{
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    stateMngr_->ActiveTexture(slot);
+    stateMngr_->BindTexture(textureGL);
+}
+
+void GLCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*stageFlags*/)
+{
+    auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
+    stateMngr_->BindSampler(slot, samplerGL.GetID());
+}
+
+void GLCommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                stageFlags)
+{
+    if (numSlots > 0)
+    {
+        auto first = static_cast<GLuint>(std::min(firstSlot, g_maxNumResourceSlots - 1u));
+        auto count = static_cast<GLsizei>(std::min(numSlots, g_maxNumResourceSlots - first));
+
+        switch (resourceType)
+        {
+            case ResourceType::Undefined:
+            case ResourceType::VertexBuffer:
+            case ResourceType::IndexBuffer:
+                break;
+
+            case ResourceType::ConstantBuffer:
+                stateMngr_->BindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, first, count, g_nullResources);
+                break;
+
+            case ResourceType::StorageBuffer:
+                stateMngr_->BindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, first, count, g_nullResources);
+                break;
+
+            case ResourceType::StreamOutputBuffer:
+                stateMngr_->BindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, first, count, g_nullResources);
+                break;
+
+            case ResourceType::Texture:
+                stateMngr_->UnbindTextures(first, count);
+                break;
+
+            case ResourceType::Sampler:
+                stateMngr_->BindSamplers(first, count, g_nullResources);
+                break;
+        }
+    }
 }
 
 

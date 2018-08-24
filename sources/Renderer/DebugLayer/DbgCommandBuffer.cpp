@@ -289,48 +289,6 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
     profile_.indexBufferBindings++;
 }
 
-/* ----- Constant Buffers ------ */
-
-void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateBufferType(buffer.GetType(), BufferType::Constant);
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetConstantBuffer(bufferDbg.instance, slot, stageFlags);
-
-    profile_.constantBufferBindings++;
-}
-
-/* ----- Storage Buffers ------ */
-
-void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateBufferType(buffer.GetType(), BufferType::Storage);
-        ValidateStageFlags(stageFlags, StageFlags::AllStages | StageFlags::BindUnorderedAccess);
-    }
-
-    instanceExt->SetStorageBuffer(bufferDbg.instance, slot, stageFlags);
-
-    profile_.storageBufferBindings++;
-}
-
 /* ----- Stream Output Buffers ------ */
 
 void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
@@ -394,44 +352,6 @@ void DbgCommandBuffer::EndStreamOutput()
     }
 
     instance.EndStreamOutput();
-}
-
-/* ----- Textures ----- */
-
-void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetTexture(textureDbg.instance, slot, stageFlags);
-
-    profile_.textureBindings++;
-}
-
-/* ----- Sampler States ----- */
-
-void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetSampler(sampler, slot, stageFlags);
-
-    profile_.samplerBindings++;
 }
 
 /* ----- Resource View Heaps ----- */
@@ -750,6 +670,94 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
     instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 
     profile_.dispatchCommands++;
+}
+
+/* ----- Direct Resource Access ------ */
+
+void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    AssertCommandBufferExt(__func__);
+
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateBufferType(buffer.GetType(), BufferType::Constant);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
+    }
+
+    instanceExt->SetConstantBuffer(bufferDbg.instance, slot, stageFlags);
+
+    profile_.constantBufferBindings++;
+}
+
+void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    AssertCommandBufferExt(__func__);
+
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateBufferType(buffer.GetType(), BufferType::Storage);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages | StageFlags::StorageUsage);
+    }
+
+    instanceExt->SetStorageBuffer(bufferDbg.instance, slot, stageFlags);
+
+    profile_.storageBufferBindings++;
+}
+
+void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
+{
+    AssertCommandBufferExt(__func__);
+
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
+    }
+
+    instanceExt->SetTexture(textureDbg.instance, slot, stageFlags);
+
+    profile_.textureBindings++;
+}
+
+void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
+{
+    AssertCommandBufferExt(__func__);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
+    }
+
+    instanceExt->SetSampler(sampler, slot, stageFlags);
+
+    profile_.samplerBindings++;
+}
+
+void DbgCommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                stageFlags)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateStageFlags(stageFlags, StageFlags::AllStages | StageFlags::StorageUsage);
+    }
+    instanceExt->ResetResourceSlots(resourceType, firstSlot, numSlots, stageFlags);
 }
 
 /* ----- Extended functions ----- */

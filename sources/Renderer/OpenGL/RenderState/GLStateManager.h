@@ -184,13 +184,14 @@ class GLStateManager
         void ActiveTexture(std::uint32_t layer);
 
         void BindTexture(GLTextureTarget target, GLuint texture);
+        void BindTexture(const GLTexture& texture);
+
         void BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures);
+        void UnbindTextures(GLuint first, GLsizei count);
 
         void PushBoundTexture(std::uint32_t layer, GLTextureTarget target);
         void PushBoundTexture(GLTextureTarget target);
         void PopBoundTexture();
-
-        void BindTexture(const GLTexture& texture);
 
         void NotifyTextureRelease(GLuint texture, GLTextureTarget target);
 

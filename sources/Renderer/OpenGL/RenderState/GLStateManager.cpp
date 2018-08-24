@@ -1016,6 +1016,11 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
     }
 }
 
+void GLStateManager::BindTexture(const GLTexture& texture)
+{
+    BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
+}
+
 void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures)
 {
     #ifdef GL_ARB_multi_bind
@@ -1050,6 +1055,39 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
     }
 }
 
+void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
+{
+    #ifdef GL_ARB_multi_bind
+    if (HasExtension(GLExt::ARB_multi_bind))
+    {
+        /* Reset bound textures */
+        for (GLsizei i = 0; i < count; ++i)
+        {
+            auto& boundTextures = textureState_.layers[i].boundTextures;
+            std::fill(std::begin(boundTextures), std::end(boundTextures), 0);
+        }
+
+        /*
+        Bind all textures at once, but don't reset the currently active texture layer.
+        The spec. of GL_ARB_multi_bind states that the active texture slot is not modified by this function.
+        see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_multi_bind.txt
+        */
+        glBindTextures(first, count, nullptr);
+    }
+    else
+    #endif
+    {
+        /* Unbind all targets for each texture layer individually */
+        while (count-- > 0)
+        {
+            ActiveTexture(first);
+            for (std::size_t target = 0; target < numTextureTargets; ++target)
+                BindTexture(static_cast<GLTextureTarget>(target), 0);
+            ++first;
+        }
+    }
+}
+
 void GLStateManager::PushBoundTexture(std::uint32_t layer, GLTextureTarget target)
 {
     #ifdef LLGL_DEBUG
@@ -1078,11 +1116,6 @@ void GLStateManager::PopBoundTexture()
         BindTexture(state.target, state.texture);
     }
     textureState_.boundTextureStack.pop();
-}
-
-void GLStateManager::BindTexture(const GLTexture& texture)
-{
-    BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
 void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target)

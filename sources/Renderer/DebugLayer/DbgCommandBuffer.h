@@ -75,14 +75,6 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void SetIndexBuffer(Buffer& buffer) override;
 
-        /* ----- Constant Buffers ------ */
-
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
-        /* ----- Storage Buffers ------ */
-
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
         /* ----- Stream Output Buffers ------ */
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
@@ -90,14 +82,6 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
-
-        /* ----- Textures ----- */
-
-        void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
-        /* ----- Sampler States ----- */
-
-        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Resource View Heaps ----- */
 
@@ -145,6 +129,20 @@ class DbgCommandBuffer : public CommandBufferExt
         /* ----- Compute ----- */
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
+
+        /* ----- Direct Resource Access ------ */
+
+        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+
+        void ResetResourceSlots(
+            const ResourceType  resourceType,
+            std::uint32_t       firstSlot,
+            std::uint32_t       numSlots,
+            long                stageFlags      = StageFlags::AllStages
+        ) override;
 
         /* ----- Extended functions ----- */
 

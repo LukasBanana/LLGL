@@ -27,7 +27,7 @@ class LLGL_EXPORT CommandBufferExt : public CommandBuffer
 
     public:
 
-        /* ----- Constant Buffers ------ */
+        /* ----- Direct Resource Access ------ */
 
         /**
         \brief Sets the active constant buffer at the specified slot index for subsequent drawing and compute operations.
@@ -41,8 +41,6 @@ class LLGL_EXPORT CommandBufferExt : public CommandBuffer
         */
         virtual void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
 
-        /* ----- Storage Buffers ----- */
-
         /**
         \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.
         \param[in] buffer Specifies the storage buffer to set. This buffer must have been created with the buffer type: BufferType::Storage.
@@ -55,16 +53,12 @@ class LLGL_EXPORT CommandBufferExt : public CommandBuffer
         */
         virtual void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
 
-        /* ----- Textures ----- */
-
         /**
         \brief Sets the active texture of the specified slot index for subsequent drawing and compute operations.
         \param[in] texture Specifies the texture to set.
         \param[in] slot Specifies the slot index where to put the texture.
         */
         virtual void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
-
-        /* ----- Samplers ----- */
 
         /**
         \brief Sets the active sampler of the specified slot index for subsequent drawing and compute operations.
@@ -73,6 +67,23 @@ class LLGL_EXPORT CommandBufferExt : public CommandBuffer
         \see RenderSystem::CreateSampler
         */
         virtual void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
+
+        /**
+        \brief Resets the binding slots for the specified resources.
+        \remarks This should be called when a resource is currently bound as shader output and will be bound as shader input for the next draw or compute commands.
+        \param[in] resourceType Specifies the type of resources to unbind.
+        \param[in] firstSlot Specifies the first binding slot beginning with zero.
+        This must be zero for the following resource types: ResourceType::IndexBuffer, ResourceType::StreamOutputBuffer.
+        \param[in] numSlots Specifies the number of bindings slots to reset. If this is zero, the function has no effect.
+        \param[in] stageFlags Specifies which shader stages are affected. This can be a bitwise OR combination of the StageFlags entries. By default StageFlags::AllStages.
+        \see StageFlags
+        */
+        virtual void ResetResourceSlots(
+            const ResourceType  resourceType,
+            std::uint32_t       firstSlot,
+            std::uint32_t       numSlots,
+            long                stageFlags      = StageFlags::AllStages
+        ) = 0;
 
     protected:
 

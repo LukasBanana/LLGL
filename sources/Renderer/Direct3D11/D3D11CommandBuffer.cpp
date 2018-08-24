@@ -42,7 +42,13 @@ namespace LLGL
 #define GS_STAGE(FLAG)  ( ((FLAG) & StageFlags::GeometryStage      ) != 0 )
 #define PS_STAGE(FLAG)  ( ((FLAG) & StageFlags::FragmentStage      ) != 0 )
 #define CS_STAGE(FLAG)  ( ((FLAG) & StageFlags::ComputeStage       ) != 0 )
-#define UAV_STAGE(FLAG) ( ((FLAG) & StageFlags::BindUnorderedAccess) != 0 )
+#define UAV_STAGE(FLAG) ( ((FLAG) & StageFlags::StorageUsage       ) != 0 )
+
+
+// Global array of null pointers to unbind resource slots
+static void*    g_nullResources[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]   = {};
+static UINT     g_zeroCounters[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT]       = {};
+
 
 D3D11CommandBuffer::D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPtr<ID3D11DeviceContext>& context) :
     stateMngr_ { stateMngr },
@@ -229,37 +235,6 @@ void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer)
     context_->IASetIndexBuffer(indexBufferD3D.GetNative(), indexBufferD3D.GetFormat(), 0);
 }
 
-/* ----- Constant Buffers ------ */
-
-void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    /* Set constant buffer resource to all shader stages */
-    auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, buffer);
-    auto resource = constantBufferD3D.GetNative();
-    SetConstantBuffersOnStages(slot, 1, &resource, stageFlags);
-}
-
-/* ----- Storage Buffers ------ */
-
-void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
-
-    if (IsRWBuffer(storageBufferD3D.GetStorageType()) && UAV_STAGE(stageFlags))
-    {
-        /* Set UAVs to specified shader stages */
-        ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
-        UINT auvCounts[] = { storageBufferD3D.GetInitialCount() };
-        SetUnorderedAccessViewsOnStages(slot, 1, uavList, auvCounts, stageFlags);
-    }
-    else
-    {
-        /* Set SRVs to specified shader stages */
-        ID3D11ShaderResourceView* srvList[] = { storageBufferD3D.GetSRV() };
-        SetShaderResourcesOnStages(slot, 1, srvList, stageFlags);
-    }
-}
-
 /* ----- Stream Output Buffers ------ */
 
 void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
@@ -290,27 +265,6 @@ void D3D11CommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
 void D3D11CommandBuffer::EndStreamOutput()
 {
     // dummy
-}
-
-
-/* ----- Textures ----- */
-
-void D3D11CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
-{
-    /* Set texture resource to all shader stages */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    auto resource = textureD3D.GetSRV();
-    SetShaderResourcesOnStages(slot, 1, &resource, stageFlags);
-}
-
-/* ----- Sampler States ----- */
-
-void D3D11CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
-{
-    /* Set sampler state object to all shader stages */
-    auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
-    auto resource = samplerD3D.GetNative();
-    SetSamplersOnStages(slot, 1, &resource, stageFlags);
 }
 
 /* ----- Resource Heaps ----- */
@@ -469,6 +423,180 @@ void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uin
 void D3D11CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     context_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
+}
+
+/* ----- Direct Resource Access ------ */
+
+void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    /* Set constant buffer resource to all shader stages */
+    auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, buffer);
+    auto resource = constantBufferD3D.GetNative();
+    SetConstantBuffersOnStages(slot, 1, &resource, stageFlags);
+}
+
+void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
+
+    if (IsRWBuffer(storageBufferD3D.GetStorageType()) && UAV_STAGE(stageFlags))
+    {
+        /* Set UAVs to specified shader stages */
+        ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
+        UINT auvCounts[] = { storageBufferD3D.GetInitialCount() };
+        SetUnorderedAccessViewsOnStages(slot, 1, uavList, auvCounts, stageFlags);
+    }
+    else
+    {
+        /* Set SRVs to specified shader stages */
+        ID3D11ShaderResourceView* srvList[] = { storageBufferD3D.GetSRV() };
+        SetShaderResourcesOnStages(slot, 1, srvList, stageFlags);
+    }
+}
+
+void D3D11CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
+{
+    /* Set texture resource to all shader stages */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    auto resource = textureD3D.GetSRV();
+    SetShaderResourcesOnStages(slot, 1, &resource, stageFlags);
+}
+
+void D3D11CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
+{
+    /* Set sampler state object to all shader stages */
+    auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
+    auto resource = samplerD3D.GetNative();
+    SetSamplersOnStages(slot, 1, &resource, stageFlags);
+}
+
+void D3D11CommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                stageFlags)
+{
+    if (numSlots > 0)
+    {
+        /* Reset resource binding slots */
+        switch (resourceType)
+        {
+            case ResourceType::Undefined:
+            break;
+
+            case ResourceType::VertexBuffer:
+            {
+                if ((stageFlags & StageFlags::VertexStage) != 0)
+                {
+                    /* Clamp slot indices */
+                    firstSlot   = std::min(firstSlot, std::uint32_t(D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT) - 1);
+                    numSlots    = std::min(numSlots, std::uint32_t(D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT) - firstSlot);
+
+                    /* Unbind vertex buffers */
+                    context_->IASetVertexBuffers(
+                        firstSlot,
+                        numSlots,
+                        reinterpret_cast<ID3D11Buffer* const*>(g_nullResources),
+                        g_zeroCounters,
+                        g_zeroCounters
+                    );
+                }
+            }
+            break;
+
+            case ResourceType::IndexBuffer:
+            {
+                if (firstSlot == 0 && (stageFlags & StageFlags::VertexStage) != 0)
+                    context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_R16_UINT, 0);
+            }
+            break;
+
+            case ResourceType::ConstantBuffer:
+            {
+                /* Clamp slot indices */
+                firstSlot   = std::min(firstSlot, std::uint32_t(D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT) - 1);
+                numSlots    = std::min(numSlots, std::uint32_t(D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT) - firstSlot);
+
+                /* Unbind constant buffers */
+                SetConstantBuffersOnStages(
+                    firstSlot,
+                    numSlots,
+                    reinterpret_cast<ID3D11Buffer* const*>(g_nullResources),
+                    stageFlags
+                );
+            }
+            break;
+
+            case ResourceType::StreamOutputBuffer:
+            {
+                if (firstSlot == 0 && (stageFlags & (StageFlags::VertexStage | StageFlags::GeometryStage)) !=0 )
+                {
+                    /* Clamp slot indices */
+                    firstSlot   = std::min(firstSlot, std::uint32_t(D3D11_SO_BUFFER_SLOT_COUNT) - 1);
+                    numSlots    = std::min(numSlots, std::uint32_t(D3D11_SO_BUFFER_SLOT_COUNT) - firstSlot);
+
+                    /* Unbind stream-output buffers */
+                    context_->SOSetTargets(
+                        numSlots,
+                        reinterpret_cast<ID3D11Buffer* const*>(g_nullResources),
+                        g_zeroCounters
+                    );
+                }
+            }
+            break;
+
+            case ResourceType::StorageBuffer:
+            case ResourceType::Texture:
+            {
+                if ((stageFlags & StageFlags::StorageUsage) != 0)
+                {
+                    /* Clamp slot indices */
+                    firstSlot   = std::min(firstSlot, std::uint32_t(D3D11_1_UAV_SLOT_COUNT) - 1);
+                    numSlots    = std::min(numSlots, std::uint32_t(D3D11_1_UAV_SLOT_COUNT) - firstSlot);
+
+                    /* Unbind UAVs */
+                    SetUnorderedAccessViewsOnStages(
+                        firstSlot,
+                        numSlots,
+                        reinterpret_cast<ID3D11UnorderedAccessView* const*>(g_nullResources),
+                        nullptr,
+                        stageFlags
+                    );
+                }
+                else
+                {
+                    /* Clamp slot indices */
+                    firstSlot   = std::min(firstSlot, std::uint32_t(D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT) - 1);
+                    numSlots    = std::min(numSlots, std::uint32_t(D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT) - firstSlot);
+
+                    /* Unbind SRVs */
+                    SetShaderResourcesOnStages(
+                        firstSlot,
+                        numSlots,
+                        reinterpret_cast<ID3D11ShaderResourceView* const*>(g_nullResources),
+                        stageFlags
+                    );
+                }
+            }
+            break;
+
+            case ResourceType::Sampler:
+            {
+                /* Clamp slot indices */
+                firstSlot   = std::min(firstSlot, std::uint32_t(D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT) - 1);
+                numSlots    = std::min(numSlots, std::uint32_t(D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT) - firstSlot);
+
+                /* Unbind sampler states */
+                SetSamplersOnStages(
+                    firstSlot,
+                    numSlots,
+                    reinterpret_cast<ID3D11SamplerState* const*>(g_nullResources),
+                    stageFlags
+                );
+            }
+            break;
+        }
+    }
 }
 
 
