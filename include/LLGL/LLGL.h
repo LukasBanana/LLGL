@@ -39,9 +39,10 @@
  * --------
  * 
  * - **OpenGL Renderer**: ~90% done
- * - **Direct3D 11 Renderer**: ~85% done
- * - **Direct3D 12 Renderer**: ~5% done
- * - **Vulkan Renderer**: ~15% done
+ * - **Direct3D 11 Renderer**: ~90% done
+ * - **Direct3D 12 Renderer**: ~15% done
+ * - **Vulkan Renderer**: ~30% done
+ * - **Metal enderer**: ~5% done
  * 
  * 
  * Getting Started
@@ -86,36 +87,57 @@
  * ----------------------
  * ```cpp
  * // Unified Interface:
- * CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex);
+ * CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex);
  * 
  * // OpenGL Implementation:
- * void GLCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
- * {
+ * void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
  *     const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
  *     glDrawElements(
  *         renderState_.drawMode,
- *         static_cast<GLsizei>(numVertices),
+ *         static_cast<GLsizei>(numIndices),
  *         renderState_.indexBufferDataType,
  *         reinterpret_cast<const GLvoid*>(indices)
  *     );
  * }
  * 
  * // Direct3D 11 Implementation
- * void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
- * {
- *     context_->DrawIndexed(numVertices, 0, firstIndex);
+ * void D3D11CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
+ *     context_->DrawIndexed(numIndices, firstIndex, 0);
  * }
  * 
  * // Direct3D 12 Implementation
- * void D3D12CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
- * {
- *     commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
+ * void D3D12CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
+ *     commandList_->DrawIndexedInstanced(numIndices, 1, firstIndex, 0, 0);
  * }
  * 
  * // Vulkan Implementation
- * void VKCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
- * {
- *     vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, 0, 0);
+ * void VKCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
+ *     vkCmdDrawIndexed(commandBuffer_, numIndices, 1, firstIndex, 0, 0);
+ * }
+ * 
+ * // Metal implementation
+ * void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
+ *     if (numPatchControlPoints_ > 0) {
+ *         [renderEncoder_
+ *             drawIndexedPatches:             numPatchControlPoints_
+ *             patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
+ *             patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
+ *             patchIndexBuffer:               nil
+ *             patchIndexBufferOffset:         0
+ *             controlPointIndexBuffer:        indexBuffer_
+ *             controlPointIndexBufferOffset:  indexTypeSize_ * (static_cast<NSUInteger>(firstIndex))
+ *             instanceCount:                  1
+ *             baseInstance:                   0
+ *         ];
+ *     } else {
+ *         [renderEncoder_
+ *             drawIndexedPrimitives:  primitiveType_
+ *             indexCount:             static_cast<NSUInteger>(numIndices)
+ *             indexType:              indexType_
+ *             indexBuffer:            indexBuffer_
+ *             indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+ *         ];
+ *     }
  * }
  * ```
  * 
