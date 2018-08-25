@@ -549,7 +549,7 @@ GLenum Map(const LogicOp logicOp)
 
 /* ----- Unmap functions ----- */
 
-static UniformType UnmapUniformType(const GLenum uniformType)
+UniformType UnmapUniformType(const GLenum uniformType)
 {
     #ifdef LLGL_OPENGLES3
 
@@ -765,12 +765,7 @@ GLenum ToColorAttachment(std::uint32_t attachmentIndex)
     return 0;
 }
 
-void Unmap(UniformType& result, const GLenum uniformType)
-{
-    result = UnmapUniformType(uniformType);
-}
-
-static Format UnmapTextureFormat(const GLenum internalFormat)
+Format UnmapFormat(const GLenum internalFormat)
 {
     switch (internalFormat)
     {
@@ -868,11 +863,6 @@ static Format UnmapTextureFormat(const GLenum internalFormat)
         default:                                break;
     }
     return Format::Undefined;
-}
-
-void Unmap(Format& result, const GLenum internalFormat)
-{
-    result = UnmapTextureFormat(internalFormat);
 }
 
 DataType UnmapDataType(const GLenum type)

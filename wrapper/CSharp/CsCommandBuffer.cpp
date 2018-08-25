@@ -59,7 +59,7 @@ generic <typename T>
 void CommandBuffer::UpdateBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, array<T>^ data)
 {
     pin_ptr<T> dataRef = &data[0];
-    native_->UpdateBuffer(*(dstBuffer->NativeSub), dstOffset, dataRef, data->Length * sizeof(T));
+    native_->UpdateBuffer(*(dstBuffer->NativeSub), dstOffset, dataRef, static_cast<std::uint16_t>(data->Length * sizeof(T)));
 }
 
 void CommandBuffer::CopyBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, Buffer^ srcBuffer, System::UInt64 srcOffset, System::UInt64 size)

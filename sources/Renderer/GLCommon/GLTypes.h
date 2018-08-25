@@ -58,10 +58,9 @@ GLenum ToTextureCubeMap(std::uint32_t arrayLayer);
 // Returns an enum in [GL_COLOR_ATTACHMENT0, ..., GL_COLOR_ATTACHMENT7].
 GLenum ToColorAttachment(std::uint32_t attachmentIndex);
 
-void Unmap( UniformType& result,    const GLenum uniformType    );
-void Unmap( Format& result,         const GLenum internalFormat );
-
-DataType UnmapDataType(const GLenum type);
+UniformType UnmapUniformType( const GLenum uniformType    );
+Format      UnmapFormat     ( const GLenum internalFormat );
+DataType    UnmapDataType   ( const GLenum type           );
 
 
 } // /namespace GLTypes

@@ -590,8 +590,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
         glGetActiveUniform(id_, i, maxNameLength, &nameLength, &size, &type, uniformName.data());
 
         /* Integrate uniform into reflection containers */
-        UniformType uniformType = UniformType::Undefined;
-        GLTypes::Unmap(uniformType, type);
+        UniformType uniformType = GLTypes::UnmapUniformType(type);
 
         if (uniformType == UniformType::Sampler)
         {

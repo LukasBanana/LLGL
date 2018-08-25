@@ -112,7 +112,7 @@ TextureDescriptor GLTexture::QueryDesc() const
     Transform data from OpenGL to LLGL
     NOTE: for cube textures, depth extent can also be copied directly without transformation (no need to multiply by 6)
     */
-    GLTypes::Unmap(texDesc.format, static_cast<GLenum>(internalFormat));
+    texDesc.format              = GLTypes::UnmapFormat(static_cast<GLenum>(internalFormat));
 
     texDesc.extent.width        = static_cast<std::uint32_t>(extent[0]);
     texDesc.extent.height       = static_cast<std::uint32_t>(extent[1]);

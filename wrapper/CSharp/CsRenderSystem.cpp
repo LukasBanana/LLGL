@@ -443,7 +443,7 @@ BufferArray^ RenderSystem::CreateBufferArray(array<Buffer^>^ bufferArray)
     {
         std::vector<LLGL::Buffer*> nativeBufferArray(static_cast<std::size_t>(bufferArray->Length));
         for (std::size_t i = 0; i < nativeBufferArray.size(); ++i)
-            nativeBufferArray[i] = bufferArray[i]->NativeSub;
+            nativeBufferArray[i] = bufferArray[static_cast<int>(i)]->NativeSub;
         return gcnew BufferArray(native_->CreateBufferArray(static_cast<std::uint32_t>(nativeBufferArray.size()), nativeBufferArray.data()));
     }
     return nullptr;
