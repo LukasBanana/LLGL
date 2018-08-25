@@ -11,6 +11,7 @@
 #include "Memory/VKDeviceMemory.h"
 #include <set>
 #include <algorithm>
+#include <string.h>
 
 
 namespace LLGL
