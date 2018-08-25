@@ -26,11 +26,11 @@ static void MapFailed(const char* typeName)
     throw std::invalid_argument("failed to map <LLGL::" + std::string(typeName) + "> to OpenGL parameter");
 }
 
-/*[[noreturn]]
+[[noreturn]]
 static void UnmapFailed(const char* typeName)
 {
     throw std::invalid_argument("failed to unmap <LLGL::" + std::string(typeName) + "> from OpenGL parameter");
-}*/
+}
 
 
 /* ----- MapOrZero functions ----- */
@@ -873,6 +873,25 @@ static Format UnmapTextureFormat(const GLenum internalFormat)
 void Unmap(Format& result, const GLenum internalFormat)
 {
     result = UnmapTextureFormat(internalFormat);
+}
+
+DataType UnmapDataType(const GLenum type)
+{
+    switch (type)
+    {
+        case GL_BYTE:           return DataType::Int8;
+        case GL_UNSIGNED_BYTE:  return DataType::UInt8;
+        case GL_SHORT:          return DataType::Int16;
+        case GL_UNSIGNED_SHORT: return DataType::UInt16;
+        case GL_INT:            return DataType::Int32;
+        case GL_UNSIGNED_INT:   return DataType::UInt32;
+        case GL_HALF_FLOAT:     return DataType::Float16;
+        case GL_FLOAT:          return DataType::Float32;
+        #ifdef LLGL_OPENGL
+        case GL_DOUBLE:         return DataType::Float64;
+        #endif
+    }
+    UnmapFailed("DataType");
 }
 
 

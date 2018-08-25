@@ -61,6 +61,8 @@ GLenum ToColorAttachment(std::uint32_t attachmentIndex);
 void Unmap( UniformType& result,    const GLenum uniformType    );
 void Unmap( Format& result,         const GLenum internalFormat );
 
+DataType UnmapDataType(const GLenum type);
+
 
 } // /namespace GLTypes
 
