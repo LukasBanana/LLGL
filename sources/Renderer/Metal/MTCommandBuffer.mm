@@ -338,61 +338,6 @@ void MTCommandBuffer::EndStreamOutput()
     //todo
 }
 
-/* ----- Constant Buffers ------ */
-
-void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    if ((stageFlags & StageFlags::VertexStage) != 0)
-        [renderEncoder_ setVertexBuffer:bufferMT.GetNative() offset:0 atIndex:static_cast<NSUInteger>(slot)];
-    if ((stageFlags & StageFlags::FragmentStage) != 0)
-        [renderEncoder_ setFragmentBuffer:bufferMT.GetNative() offset:0 atIndex:static_cast<NSUInteger>(slot)];
-}
-
-/* ----- Storage Buffers ----- */
-
-void MTCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    //todo
-}
-
-/* ----- Textures ----- */
-
-void MTCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
-{
-    auto& textureMT = LLGL_CAST(MTTexture&, texture);
-    if ((stageFlags & StageFlags::VertexStage) != 0)
-    {
-        [renderEncoder_
-            setVertexTexture:   textureMT.GetNative()
-            atIndex:            static_cast<NSUInteger>(slot)
-        ];
-    }
-    if ((stageFlags & StageFlags::FragmentStage) != 0)
-    {
-        [renderEncoder_
-            setFragmentTexture: textureMT.GetNative()
-            atIndex:            static_cast<NSUInteger>(slot)
-        ];
-    }
-}
-
-/* ----- Samplers ----- */
-
-void MTCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
-{
-    /* Get native MTLSamplerState object */
-    auto& samplerMT = LLGL_CAST(MTSampler&, sampler);
-    
-    auto samplerState   = samplerMT.GetNative();
-    auto index          = static_cast<NSUInteger>(slot);
-    
-    if ((stageFlags & StageFlags::VertexStage) != 0)
-        [renderEncoder_ setVertexSamplerState:samplerState atIndex:index];
-    if ((stageFlags & StageFlags::FragmentStage) != 0)
-        [renderEncoder_ setFragmentSamplerState:samplerState atIndex:index];
-}
-
 /* ----- Resource Heaps ----- */
 
 void MTCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
@@ -735,6 +680,64 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 /* ----- Compute ----- */
 
 void MTCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
+{
+    //todo
+}
+
+/* ----- Direct Resource Access ------ */
+
+void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    if ((stageFlags & StageFlags::VertexStage) != 0)
+        [renderEncoder_ setVertexBuffer:bufferMT.GetNative() offset:0 atIndex:static_cast<NSUInteger>(slot)];
+    if ((stageFlags & StageFlags::FragmentStage) != 0)
+        [renderEncoder_ setFragmentBuffer:bufferMT.GetNative() offset:0 atIndex:static_cast<NSUInteger>(slot)];
+}
+
+void MTCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    //todo
+}
+
+void MTCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
+{
+    auto& textureMT = LLGL_CAST(MTTexture&, texture);
+    if ((stageFlags & StageFlags::VertexStage) != 0)
+    {
+        [renderEncoder_
+            setVertexTexture:   textureMT.GetNative()
+            atIndex:            static_cast<NSUInteger>(slot)
+        ];
+    }
+    if ((stageFlags & StageFlags::FragmentStage) != 0)
+    {
+        [renderEncoder_
+            setFragmentTexture: textureMT.GetNative()
+            atIndex:            static_cast<NSUInteger>(slot)
+        ];
+    }
+}
+
+void MTCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
+{
+    /* Get native MTLSamplerState object */
+    auto& samplerMT = LLGL_CAST(MTSampler&, sampler);
+    
+    auto samplerState   = samplerMT.GetNative();
+    auto index          = static_cast<NSUInteger>(slot);
+    
+    if ((stageFlags & StageFlags::VertexStage) != 0)
+        [renderEncoder_ setVertexSamplerState:samplerState atIndex:index];
+    if ((stageFlags & StageFlags::FragmentStage) != 0)
+        [renderEncoder_ setFragmentSamplerState:samplerState atIndex:index];
+}
+
+void MTCommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                stageFlags)
 {
     //todo
 }

@@ -73,22 +73,6 @@ class MTCommandBuffer : public CommandBufferExt
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
     
-        /* ----- Constant Buffers ------ */
-
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
-        /* ----- Storage Buffers ----- */
-
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
-        /* ----- Textures ----- */
-
-        void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
-        /* ----- Samplers ----- */
-
-        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
         /* ----- Resource Heaps ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
@@ -136,6 +120,20 @@ class MTCommandBuffer : public CommandBufferExt
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
 
+        /* ----- Direct Resource Access ------ */
+    
+        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+
+        void ResetResourceSlots(
+            const ResourceType  resourceType,
+            std::uint32_t       firstSlot,
+            std::uint32_t       numSlots,
+            long                stageFlags      = StageFlags::AllStages
+        ) override;
+    
     private:
     
         static const std::uint32_t g_maxNumVertexBuffers = 16;
