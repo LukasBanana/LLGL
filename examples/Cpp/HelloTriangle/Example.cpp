@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
             contextDesc.vsync.enabled                   = true;
             contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
             #ifdef ENABLE_MULTISAMPLING
-            contextDesc.multiSampling                   = LLGL::MultiSamplingDescriptor { 20 }; // check if LLGL adapts sample count that is too high
+            contextDesc.multiSampling                   = LLGL::MultiSamplingDescriptor { 8 }; // check if LLGL adapts sample count that is too high
             #endif
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
         if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
         {
             #ifdef __APPLE__
-            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.140core.vert."   });
+            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.140core.vert"   });
             fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.140core.frag" });
             #else
             vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.vert"   });
