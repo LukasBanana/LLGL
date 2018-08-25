@@ -188,7 +188,7 @@ To work with this library you should be familiar with these subjects:
 	\item \textbf{Shading Languages} \\
 	\LLGL forces you to always write your own shaders, so you should be familiar with
 	\href{https://www.opengl.org/documentation/glsl/}{GLSL} or
-	\href{https://msdn.microsoft.com/de-de/library/windows/desktop/bb509561(v=vs.85).aspx}{HLSL}.
+	\href{https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl}{HLSL}.
 \end{itemize}
 
 
@@ -221,13 +221,16 @@ This project is still in its early steps. Here is a short overview of its progre
 	OpenGL renderer is almost done (\textasciitilde 90\% complete).
 	
 	\item \textbf{Direct3D 11} \\
-	Direct3D 11 renderer is almost done (\textasciitilde 85\% complete).
+	Direct3D 11 renderer is almost done (\textasciitilde 90\% complete).
 	
 	\item \textbf{Direct3D 12} \\
 	Direct3D 12 renderer is only in an experimental state (\textasciitilde 15\% complete).
 	
 	\item \textbf{Vulkan} \\
 	Vulkan renderer is under heavy construction (\textasciitilde 30\% complete).
+	
+	\item \textbf{Metal} \\
+	Metal renderer is only in an experimental state (\textasciitilde 5\% complete)..
 \end{itemize}
 
 
@@ -255,7 +258,7 @@ git clone --recursive https://github.com/LukasBanana/LLGL.git
 
 Since version 0.02, LLGL has no longer any required base dependencies except the one for the repsective renderers.
 Previously, the \href{https://github.com/LukasBanana/GaussianLib}{\textsc{GaussianLib}} was required but has been replaced by a few plain-old-data structures.
-The GaussianLib is now only required for the Tutorials and Test projects.
+The GaussianLib is now only required for the Examples and Test projects.
 
 \subsubsection{OpenGL}
 
@@ -277,6 +280,7 @@ the VisualStudio setup, so no further SDK needs to be installed.
 To build the Vulkan render system you need the \href{https://lunarg.com/vulkan-sdk/}{Vulkan SDK},
 and of course a graphics driver which supports at least Vulkan 1.0.
 
+\newpage
 \subsection{Build Tool}
 
 To build the \LLGL project files you need the build tool \href{https://cmake.org/}{CMake 2.8} or later.
@@ -303,8 +307,8 @@ Then your project files should be located in the build directory you just set up
 
 There are several options you can enable or disable to build the project:
 \begin{itemize}
-	\item \texttt{LLGL\_BUILD\_(TESTS/TUTORIALS/RENDERER\_\dots)} \\
-	Specifies whether to include all test, all tutorials, or the repsective renderer projects.
+	\item \texttt{LLGL\_BUILD\_(TESTS/EXAMPLES/RENDERER\_\dots)} \\
+	Specifies whether to include all test, all examples, or the repsective renderer projects.
 	
 	\item \texttt{LLGL\_D3D11\_ENABLE\_FEATURELEVEL} \\
 	Specifies which feature level is enabled in the Direct3D 11 renderer.
@@ -763,9 +767,9 @@ public:
 	
 	// Interface implementation
 	void GetNativeHandle(void* nativeHandle) const override;
-	void Recreate() override;
 	LLGL::Extent2D GetContentSize() const override;
 	bool AdaptForVideoMode(LLGL::VideoModeDescriptor& videoModeDesc) override;
+	void ResetPixelFormat() override;
 	
 	// Additional class functions
 	void PollEvents();
@@ -804,11 +808,12 @@ GLFWwindow* CustomSurface::CreateGLFWWindow()
 	return wnd;
 }
 \end{lstlisting}
-Now we cross over to the major functions in the \texttt{Surface} interface. The first one is \texttt{Recreate}.
+Now we cross over to the major functions in the \texttt{Surface} interface. The first one is \texttt{ResetPixelFormat}.
 It is mainly used by the OpenGL renderer when a multi-sampled render context is created on Win32.
-In our custom class we merely destroy the GLFW window and create a new one:
+In our custom class we merely destroy the GLFW window and create a new one.
+It's the only way on Win32 to reset the internal pixel format of the native window object:
 \begin{lstlisting}
-void CustomSurface::Recreate()
+void CustomSurface::ResetPixelFormat()
 {
 	// Destroy and recreate GLFW window
 	glfwDestroyWindow(wnd_);
