@@ -199,7 +199,7 @@ struct TextureDescriptor
     /**
     \brief Number of MIP-map levels. By default 0.
     \remarks If this is 0, the full MIP-chain will be generated.
-    If this is 1, no MIP-mapping is used for this texture and it has only a MIP level.
+    If this is 1, no MIP-mapping is used for this texture and it has only a single MIP-map level.
     This field is ignored for multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray),
     since these texture types only have a single MIP-map level.
     \see NumMipLevels
@@ -238,7 +238,7 @@ struct TextureRegion
     /**
     \brief Sub-texture extent. By default (1, 1, 1).
     \remarks For array textures, the depth component specifies the number of array layers (for 1D-array textures it's the height component).
-    For cube textures, the depthj component specifies the number of array layers and cube faces (where each cube has 6 faces).
+    For cube textures, the depth component specifies the number of array layers and cube faces (where each cube has 6 faces).
     */
     Extent3D        extent      = { 1, 1, 1 };
 };

@@ -135,7 +135,7 @@ struct RenderPassDescriptor
     AttachmentFormatDescriptor              depthAttachment;
 
     /**
-    \brief Specifies the depth attachment used within the render pass.
+    \brief Specifies the stencil attachment used within the render pass.
     \remarks The depth attachment and stencil attachment usually share the same format (e.g. Format::D24UNormS8UInt).
     They are separated here to specify different load and store operations.
     */

@@ -248,6 +248,7 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
     {
         LLGL_DBG_SOURCE;
         ValidateMipLevelLimit(textureRegion.mipLevel, textureDbg.mipLevels);
+        ValidateTextureRegion(textureDbg, textureRegion);
     }
 
     instance_->WriteTexture(textureDbg.instance, textureRegion, imageDesc);
@@ -929,6 +930,32 @@ void DbgRenderSystem::ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLa
             ErrorType::InvalidArgument,
             "array layer out of range for array texture (" + std::to_string(arrayLayerRangeEnd) +
             " specified but limit is " + std::to_string(arrayLayerLimit) + ")"
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateTextureRegion(const DbgTexture& textureDbg, const TextureRegion& textureRegion)
+{
+    if (textureRegion.offset.x < 0 || textureRegion.offset.y < 0 || textureRegion.offset.z < 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::UndefinedBehavior,
+            "negative offset not allowed to write a texture region"
+        );
+    }
+
+    auto IsRegionOutside = [](std::int32_t offset, std::uint32_t extent, std::uint32_t limit)
+    {
+        return (offset >= 0 && static_cast<std::uint32_t>(offset) + extent > limit);
+    };
+
+    if ( IsRegionOutside(textureRegion.offset.x, textureRegion.extent.width,  textureDbg.desc.extent.width ) ||
+         IsRegionOutside(textureRegion.offset.y, textureRegion.extent.height, textureDbg.desc.extent.height) ||
+         IsRegionOutside(textureRegion.offset.z, textureRegion.extent.depth,  textureDbg.desc.extent.depth ) )
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::UndefinedBehavior,
+            "texture region exceeded size of texture"
         );
     }
 }

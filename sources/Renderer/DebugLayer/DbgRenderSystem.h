@@ -166,6 +166,7 @@ class DbgRenderSystem : public RenderSystem
         void ValidateTextureMipRange(const DbgTexture& textureDbg, std::uint32_t baseMipLevel, std::uint32_t numMipLevels);
         void ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers);
         void ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit);
+        void ValidateTextureRegion(const DbgTexture& textureDbg, const TextureRegion& textureRegion);
 
         void ValidateAttachmentDesc(const AttachmentDescriptor& desc);
 
