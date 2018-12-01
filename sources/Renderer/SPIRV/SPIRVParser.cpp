@@ -15,10 +15,6 @@ namespace LLGL
 {
 
 
-SPIRVParser::~SPIRVParser()
-{
-}
-
 void SPIRVParser::Parse(const void* byteCode, std::size_t byteCodeSize)
 {
     if (!byteCode)

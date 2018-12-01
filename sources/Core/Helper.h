@@ -170,7 +170,7 @@ std::string ToHex(T value)
 {
     static_assert(std::is_integral<T>::value, "input parameter of 'LLGL::ToHex' must be an integral type");
     std::stringstream s;
-    s << std::setfill('0') << std::setw(sizeof(T)*2) << std::hex << std::uppercase << value;
+    s << std::setfill('0') << std::setw(sizeof(T)*2) << std::hex << std::uppercase << static_cast<std::uint64_t>(value);
     return s.str();
 }
 
@@ -198,7 +198,7 @@ T GetAlignedSize(T size, T alignment)
 {
     if (alignment > 1)
     {
-        const auto alignmentBitmask = alignment - 1;
+        const T alignmentBitmask = alignment - 1;
         return ((size + alignmentBitmask) & ~alignmentBitmask);
     }
     return size;

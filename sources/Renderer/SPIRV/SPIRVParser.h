@@ -33,7 +33,7 @@ class SPIRVParser
 
     public:
 
-        virtual ~SPIRVParser();
+        virtual ~SPIRVParser() = default;
 
         // Parses the specified SPIR-V shader byte code and throws an std::invalid_argument exception if the byte code is invalid.
         void Parse(const void* byteCode, std::size_t byteCodeSize);

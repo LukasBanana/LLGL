@@ -141,7 +141,10 @@ std::shared_ptr<T> FindCompatibleStateObject(
 
         if (order > 0)
         {
-            /* Increase step size and reduce boundary */
+            /*
+            Increase step size and reduce boundary,
+            NOTE: don't set to index+1 since the +1 part will happen in the loop iteration
+            */
             stride *= 2;
             first   = index;
         }
