@@ -19,6 +19,7 @@
 #include "ColorRGBA.h"
 #include "RenderSystem.h"
 #include "Log.h"
+#include "IndirectCommandArgs.h"
 
 
 //DOXYGEN MAIN PAGE

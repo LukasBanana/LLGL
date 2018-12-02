@@ -560,12 +560,14 @@ void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 
 void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    /* Bind indirect argument buffer */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
 
     GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
+        /* Use native multi draw command */
         glMultiDrawArraysIndirect(
             renderState_.drawMode,
             reinterpret_cast<const GLvoid*>(indirect),
@@ -575,6 +577,7 @@ void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::ui
     }
     else
     {
+        /* Emulate multi draw command */
         while (numCommands-- > 0)
         {
             glDrawArraysIndirect(
@@ -601,12 +604,14 @@ void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 
 void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    /* Bind indirect argument buffer */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
 
     GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
+        /* Use native multi draw command */
         glMultiDrawElementsIndirect(
             renderState_.drawMode,
             renderState_.indexBufferDataType,
@@ -617,6 +622,7 @@ void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
     }
     else
     {
+        /* Emulate multi draw command */
         while (numCommands-- > 0)
         {
             glDrawElementsIndirect(

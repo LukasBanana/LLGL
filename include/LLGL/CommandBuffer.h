@@ -555,9 +555,17 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \param[in] numCommands Specifies the number of draw commands that are to be taken from the argument buffer.
-        \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments. This stride must be a multiple of 4.
-        \remarks This is also known as a "multi draw command" that is only natively supported by OpenGL and Vulkan.
-        For other rendering APIs, the recording of multiple draw commands is emulated with a simple loop.
+        \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments,
+        which is commonly greater than or euqal to <code>sizeof(DrawIndirectArguments)</code>. This stride must be a multiple of 4.
+        \remarks This is also known as a "multi draw command" which is only natively supported by OpenGL and Vulkan.
+        For other rendering APIs, the recording of multiple draw commands is emulated with a simple loop, which is equivalent to the following example:
+        \code
+        while (numCommands-- > 0)
+        {
+            DrawIndirect(buffer, offset);
+            offset += stride;
+        }
+        \endcode
         \see DrawIndirectArguments
         */
         virtual void DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) = 0;
@@ -575,9 +583,17 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \param[in] numCommands Specifies the number of draw commands that are to be taken from the argument buffer.
-        \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments. This stride must be a multiple of 4.
-        \remarks This is also known as a "multi draw command" that is only natively supported by OpenGL and Vulkan.
-        For other rendering APIs, the recording of multiple draw commands is emulated with a simple loop.
+        \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments,
+        which is commonly greater than or euqal to <code>sizeof(DrawIndexedIndirectArguments)</code>. This stride must be a multiple of 4.
+        \remarks This is also known as a "multi draw command" which is only natively supported by OpenGL and Vulkan.
+        For other rendering APIs, the recording of multiple draw commands is emulated with a simple loop, which is equivalent to the following example:
+        \code
+        while (numCommands-- > 0)
+        {
+            DrawIndexedIndirect(buffer, offset);
+            offset += stride;
+        }
+        \endcode
         \see DrawIndexedIndirectArguments
         */
         virtual void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) = 0;
