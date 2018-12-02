@@ -105,6 +105,26 @@ static UINT GetCPUAccessFlags(long bufferFlags)
     return flags;
 }
 
+D3D11_BUFFER_DESC D3D11Buffer::GetNativeBufferDesc(const BufferDescriptor& desc, UINT bindFlags) const
+{
+    /* Initialize native buffer descriptor */
+    D3D11_BUFFER_DESC descD3D;
+    {
+        descD3D.ByteWidth           = static_cast<UINT>(desc.size);
+        descD3D.Usage               = D3D11_USAGE_DEFAULT;
+        descD3D.BindFlags           = bindFlags;
+        descD3D.CPUAccessFlags      = 0;
+        descD3D.MiscFlags           = 0;
+        descD3D.StructureByteStride = 0;
+    }
+
+    /* Apply additional flags */
+    if ((desc.flags & BufferFlags::IndirectArgumentBinding) != 0)
+        descD3D.MiscFlags |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
+
+    return descD3D;
+}
+
 void D3D11Buffer::CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData, long bufferFlags)
 {
     /* Setup initial subresource data */

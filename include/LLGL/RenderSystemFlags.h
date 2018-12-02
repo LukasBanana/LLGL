@@ -429,7 +429,11 @@ struct RenderingFeatures
     //! Specifies whether tessellation shaders are supported.
     bool hasTessellationShaders         = false;
 
-    //! Speciifes whether compute shaders are supported.
+    /**
+    \brief Specifies whether compute shaders are supported.
+    \see CommandBuffer::Dispatch
+    \see CommandBuffer::DispatchIndirect
+    */
     bool hasComputeShaders              = false;
 
     /**
@@ -446,6 +450,16 @@ struct RenderingFeatures
     \see CommandBuffer::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
     */
     bool hasOffsetInstancing            = false;
+
+    //TODO
+    #if 0
+    /**
+    \brief Specifies whether indirect draw commands are supported.
+    \see CommandBuffer::DrawIndirect
+    \see CommandBuffer::DrawIndexedIndirect
+    */
+    bool hasIndirectDrawing             = false;
+    #endif
 
     /**
     \brief Specifies whether multiple viewports, depth-ranges, and scissors at once are supported.

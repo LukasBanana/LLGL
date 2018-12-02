@@ -603,6 +603,20 @@ static bool Load_GL_ARB_clear_buffer_object(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_draw_indirect(bool usePlaceholder)
+{
+    LOAD_GLPROC( glDrawArraysIndirect   );
+    LOAD_GLPROC( glDrawElementsIndirect );
+    return true;
+}
+
+static bool Load_GL_ARB_multi_draw_indirect(bool usePlaceholder)
+{
+    LOAD_GLPROC( glMultiDrawArraysIndirect   );
+    LOAD_GLPROC( glMultiDrawElementsIndirect );
+    return true;
+}
+
 static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
@@ -826,6 +840,8 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_sync                         );
     ENABLE_GLEXT( ARB_polygon_offset_clamp         );
     ENABLE_GLEXT( ARB_copy_buffer                  );
+    ENABLE_GLEXT( ARB_draw_indirect                );
+    ENABLE_GLEXT( ARB_multi_draw_indirect          );
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );
@@ -948,6 +964,8 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_shader_image_load_store      );
     LOAD_GLEXT( ARB_framebuffer_no_attachments   );
     LOAD_GLEXT( ARB_clear_buffer_object          );
+    LOAD_GLEXT( ARB_draw_indirect                );
+    LOAD_GLEXT( ARB_multi_draw_indirect          );
     #ifdef LLGL_GL_ENABLE_DSA_EXT
     LOAD_GLEXT( ARB_direct_state_access          );
     #endif

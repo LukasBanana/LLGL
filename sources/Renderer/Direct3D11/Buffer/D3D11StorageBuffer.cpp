@@ -27,13 +27,19 @@ static UINT GetBindFlags(const BufferDescriptor::StorageBuffer& desc)
     return flags;
 }
 
-static UINT GetMiscFlags(const BufferDescriptor::StorageBuffer& desc)
+static UINT GetMiscFlags(const BufferDescriptor& desc)
 {
-    if (IsStructuredBuffer(desc.storageType))
-        return D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-    if (IsByteAddressBuffer(desc.storageType))
-        return D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
-    return 0;
+    UINT flags = 0;
+
+    if ((desc.flags & BufferFlags::IndirectArgumentBinding) != 0)
+        flags |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
+
+    if (IsStructuredBuffer(desc.storageBuffer.storageType))
+        flags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    else if (IsByteAddressBuffer(desc.storageBuffer.storageType))
+        flags |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+
+    return flags;
 }
 
 static UINT GetUAVFlags(const BufferDescriptor::StorageBuffer& desc)
@@ -76,7 +82,7 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
         bufferDesc.Usage                = D3D11_USAGE_DEFAULT;
         bufferDesc.BindFlags            = GetBindFlags(desc.storageBuffer);
         bufferDesc.CPUAccessFlags       = 0;
-        bufferDesc.MiscFlags            = GetMiscFlags(desc.storageBuffer);
+        bufferDesc.MiscFlags            = GetMiscFlags(desc);
         bufferDesc.StructureByteStride  = desc.storageBuffer.stride;
     }
     CreateResource(device, bufferDesc, initialData, desc.flags);

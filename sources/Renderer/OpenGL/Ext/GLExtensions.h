@@ -420,6 +420,16 @@ extern PFNGLGETFRAMEBUFFERPARAMETERIVPROC                   glGetFramebufferPara
 extern PFNGLCLEARBUFFERDATAPROC                             glClearBufferData;
 extern PFNGLCLEARBUFFERSUBDATAPROC                          glClearBufferSubData;
 
+/* GL_ARB_draw_indirect */
+
+extern PFNGLDRAWARRAYSINDIRECTPROC                          glDrawArraysIndirect;
+extern PFNGLDRAWELEMENTSINDIRECTPROC                        glDrawElementsIndirect;
+
+/* GL_ARB_multi_draw_indirect */
+
+extern PFNGLMULTIDRAWARRAYSINDIRECTPROC                     glMultiDrawArraysIndirect;
+extern PFNGLMULTIDRAWELEMENTSINDIRECTPROC                   glMultiDrawElementsIndirect;
+
 /* GL_ARB_direct_state_access */
 
 extern PFNGLCREATETRANSFORMFEEDBACKSPROC                    glCreateTransformFeedbacks;

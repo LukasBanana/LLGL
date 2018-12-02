@@ -17,7 +17,7 @@ D3D11StreamOutputBuffer::D3D11StreamOutputBuffer(ID3D11Device* device, const Buf
 {
     CreateResource(
         device,
-        CD3D11_BUFFER_DESC(static_cast<UINT>(desc.size), D3D11_BIND_STREAM_OUTPUT),
+        GetNativeBufferDesc(desc, D3D11_BIND_STREAM_OUTPUT),
         initialData,
         desc.flags
     );

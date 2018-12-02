@@ -432,11 +432,36 @@ void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uin
     commandList_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
+void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    //TODO
+}
+
+void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    //TODO
+}
+
+void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    //TODO
+}
+
+void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    //TODO
+}
+
 /* ----- Compute ----- */
 
 void D3D12CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     commandList_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
+}
+
+void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    //TODO
 }
 
 

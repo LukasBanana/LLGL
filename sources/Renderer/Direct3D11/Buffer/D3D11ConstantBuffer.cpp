@@ -20,11 +20,9 @@ D3D11ConstantBuffer::D3D11ConstantBuffer(ID3D11Device* device, const BufferDescr
     D3D11Buffer { BufferType::Constant }
 {
     /* Setup descriptor and create constant buffer */
-    CD3D11_BUFFER_DESC bufferDesc
-    {
-        GetAlignedSize(static_cast<UINT>(desc.size), 16u),
-        D3D11_BIND_CONSTANT_BUFFER
-    };
+    auto bufferDesc = GetNativeBufferDesc(desc, D3D11_BIND_CONSTANT_BUFFER);
+
+    bufferDesc.ByteWidth = GetAlignedSize(bufferDesc.ByteWidth, 16u);
 
     if ((desc.flags & BufferFlags::DynamicUsage) != 0)
     {

@@ -27,6 +27,7 @@ namespace LLGL
 \brief Hardware buffer type enumeration.
 \see ResourceType
 \todo Maybe replace this enum by "ResourceType".
+\todo Maybe replace this by "BindFlags" to support binding the same buffer for multiple purposes.
 */
 enum class BufferType
 {
@@ -86,27 +87,62 @@ struct BufferFlags
         \brief Buffer mapping with CPU read access is required.
         \see RenderSystem::MapBuffer
         */
-        MapReadAccess       = (1 << 0),
+        MapReadAccess           = (1 << 0),
 
         /**
         \brief Buffer mapping with CPU write access is required.
         \see RenderSystem::MapBuffer
         */
-        MapWriteAccess      = (1 << 1),
+        MapWriteAccess          = (1 << 1),
 
         /*
         \brief Buffer mapping with CPU read and write access is required.
         \see BufferFlags::MapReadAccess
         \see BufferFlags::MapWriteAccess
         */
-        MapReadWriteAccess  = (MapReadAccess | MapWriteAccess),
+        MapReadWriteAccess      = (MapReadAccess | MapWriteAccess),
 
         /**
         \brief Hint to the renderer that the buffer will be frequently updated from the CPU.
         \remarks This is useful for a constant buffer for instance, that is updated by the host program every frame.
         \see RenderSystem::WriteBuffer
         */
-        DynamicUsage        = (1 << 2),
+        DynamicUsage            = (1 << 2),
+
+        #if 0
+        /**
+        \brief The buffer can be used to bind a stream of vertices.
+        \see CommandBuffer::SetVertexBuffer
+        */
+        VertexBinding           = (1 << 3),
+
+        /**
+        \brief The buffer can be used to bind a stream of indices.
+        \see CommandBuffer::SetIndexBuffer
+        */
+        IndexBinding            = (1 << 4),
+
+        //! The buffer can be used to bind a set of constants.
+        ConstantBinding         = (1 << 5),
+
+        //! The buffer can be used to bind a set of constants.
+        StorageBinding          = (1 << 6),
+
+        /**
+        \brief The buffer can be used to bind an output stream buffer (also referred to as "transform feedback").
+        \see CommandBuffer::SetStreamOutputBuffer
+        */
+        StreamOutputBinding     = (1 << 7),
+        #endif
+
+        /**
+        \brief Hint to the renderer that the buffer will hold the arguments for indirect commands.
+        \remarks This must be used with a buffer of type BufferType::Storage.
+        \see CommandBuffer::DrawIndirect
+        \see CommandBuffer::DrawIndexedIndirect
+        \see CommandBuffer::DispatchIndirect
+        */
+        IndirectArgumentBinding = (1 << 8),
     };
 };
 

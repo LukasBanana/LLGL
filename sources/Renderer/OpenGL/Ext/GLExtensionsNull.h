@@ -447,6 +447,16 @@ DECL_GLPROC(void, glGetFramebufferParameteriv, (GLenum, GLenum, GLint*));
 DECL_GLPROC(void, glClearBufferData, (GLenum, GLenum, GLenum, GLenum, const void*));
 DECL_GLPROC(void, glClearBufferSubData, (GLenum, GLenum, GLintptr, GLsizeiptr, GLenum, GLenum, const void*));
 
+/* GL_ARB_draw_indirect */
+
+DECL_GLPROC(void, glDrawArraysIndirect, (GLenum, const void*));
+DECL_GLPROC(void, glDrawElementsIndirect, (GLenum, GLenum, const void*));
+
+/* GL_ARB_multi_draw_indirect */
+
+DECL_GLPROC(void, glMultiDrawArraysIndirect, (GLenum, const void*, GLsizei, GLsizei));
+DECL_GLPROC(void, glMultiDrawElementsIndirect, (GLenum, GLenum, const void*, GLsizei, GLsizei));
+
 /* GL_ARB_direct_state_access */
 
 DECL_GLPROC(void, glCreateTransformFeedbacks, (GLsizei, GLuint*));

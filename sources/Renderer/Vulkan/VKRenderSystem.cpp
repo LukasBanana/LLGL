@@ -45,10 +45,17 @@ static void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCall
 
 static VkBufferUsageFlags GetVkBufferUsageFlags(long bufferFlags)
 {
+    VkBufferUsageFlags flags = 0;
+
+    if ((bufferFlags & BufferFlags::IndirectArgumentBinding) != 0)
+        flags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
+
     if ((bufferFlags & BufferFlags::MapReadAccess) != 0)
-        return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     else
-        return VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+    return flags;
 }
 
 static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long bufferFlags)

@@ -28,12 +28,12 @@ class MTCommandBuffer : public CommandBufferExt
 
         MTCommandBuffer(id<MTLCommandQueue> cmdQueue);
         ~MTCommandBuffer();
-    
+
         /* ----- Encoding ----- */
-    
+
         void Begin() override;
         void End() override;
-    
+
         void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) override;
         void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) override;
 
@@ -72,7 +72,7 @@ class MTCommandBuffer : public CommandBufferExt
 
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
-    
+
         /* ----- Resource Heaps ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
@@ -116,12 +116,19 @@ class MTCommandBuffer : public CommandBufferExt
         void DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset) override;
         void DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance) override;
 
+        void DrawIndirect(Buffer& buffer, std::uint64_t offset) override;
+        void DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) override;
+
+        void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset) override;
+        void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) override;
+
         /* ----- Compute ----- */
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
+        void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
 
         /* ----- Direct Resource Access ------ */
-    
+
         void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
         void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
         void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
@@ -133,11 +140,11 @@ class MTCommandBuffer : public CommandBufferExt
             std::uint32_t       numSlots,
             long                stageFlags      = StageFlags::AllStages
         ) override;
-    
+
     private:
-    
+
         static const std::uint32_t g_maxNumVertexBuffers = 16;
-    
+
         struct MTRenderEncoderState
         {
             MTLViewport                 viewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]      = {};
@@ -152,14 +159,14 @@ class MTCommandBuffer : public CommandBufferExt
             id<MTLRenderPipelineState>  renderPipelineState                                 = nil;
             id<MTLDepthStencilState>    depthStencilState                                   = nil;
         };
-    
+
         struct MTClearValue
         {
             MTLClearColor   color   = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
             double          depth   = 1.0;
             std::uint32_t   stencil = 0;
         };
-    
+
         // Submits all global lstates to the render encoder (i.e. vertex buffers, graphics pipeline, viewports etc.)
         void SubmitRenderEncoderState();
         void ResetRenderEncoderState();
@@ -175,9 +182,9 @@ class MTCommandBuffer : public CommandBufferExt
         MTLIndexType                    indexType_              = MTLIndexTypeUInt32;
         NSUInteger                      indexTypeSize_          = 4;
         NSUInteger                      numPatchControlPoints_  = 0;
-    
+
         MTRenderEncoderState            renderEncoderState_;
-    
+
         MTClearValue                    clearValue_;
         MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
 

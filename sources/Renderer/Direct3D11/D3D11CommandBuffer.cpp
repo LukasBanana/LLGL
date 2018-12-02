@@ -418,11 +418,49 @@ void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uin
     context_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
+void D3D11CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    context_->DrawInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
+}
+
+void D3D11CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    while (numCommands-- > 0)
+    {
+        context_->DrawInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
+        offset += stride;
+    }
+}
+
+void D3D11CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    context_->DrawIndexedInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
+}
+
+void D3D11CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    while (numCommands-- > 0)
+    {
+        context_->DrawIndexedInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
+        offset += stride;
+    }
+}
+
 /* ----- Compute ----- */
 
 void D3D11CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     context_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
+}
+
+void D3D11CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    context_->DispatchIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
 }
 
 /* ----- Direct Resource Access ------ */

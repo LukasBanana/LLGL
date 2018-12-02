@@ -125,9 +125,16 @@ class VKCommandBuffer final : public CommandBuffer
         void DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset) override;
         void DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance) override;
 
+        void DrawIndirect(Buffer& buffer, std::uint64_t offset) override;
+        void DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) override;
+
+        void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset) override;
+        void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) override;
+
         /* ----- Compute ----- */
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
+        void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
 
         /* ----- Extended functions ----- */
 

@@ -54,18 +54,17 @@ enum class QueryType
 
 /* ----- Structures ----- */
 
+#include "PackPush.h"
+
 /**
 \brief Query data structure for pipeline statistics.
-\remarks This structure is designed to be compatible to the equivalent in
-Direct3D 11 (i.e. \c D3D11_QUERY_DATA_PIPELINE_STATISTICS),
-Direct3D 12 (i.e. \c D3D12_QUERY_DATA_PIPELINE_STATISTICS),
-and Vulkan (i.e. \c VkQueryPipelineStatisticFlagBits).
+\remarks This structure is byte aligned, i.e. it can be reinterpret casted to a buffer in CPU memory space.
 \see QueryType::PipelineStatistics
 \see CommandQueue::QueryResult
 \see RenderingFeatures::hasPipelineStatistics
-\see https://docs.microsoft.com/en-us/windows/desktop/api/d3d11/ns-d3d11-d3d11_query_data_pipeline_statistics
-\see https://docs.microsoft.com/en-us/windows/desktop/api/d3d12/ns-d3d12-d3d12_query_data_pipeline_statistics
-\see https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkQueryPipelineStatisticFlagBits.html
+\see Direct3D11 counterpart \c D3D11_QUERY_DATA_PIPELINE_STATISTICS: https://docs.microsoft.com/en-us/windows/desktop/api/d3d11/ns-d3d11-d3d11_query_data_pipeline_statistics
+\see Direct3D12 counterpart \c D3D12_QUERY_DATA_PIPELINE_STATISTICS: https://docs.microsoft.com/en-us/windows/desktop/api/d3d12/ns-d3d12-d3d12_query_data_pipeline_statistics
+\see Vulkan counterpart \c VkQueryPipelineStatisticFlagBits: https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkQueryPipelineStatisticFlagBits.html
 */
 struct QueryPipelineStatistics
 {
@@ -101,7 +100,10 @@ struct QueryPipelineStatistics
 
     //! Number of compute shader invocations.
     std::uint64_t computeShaderInvocations          = 0;
-};
+}
+LLGL_PACK_STRUCT;
+
+#include "PackPop.h"
 
 /**
 \brief Query heap descriptor structure.

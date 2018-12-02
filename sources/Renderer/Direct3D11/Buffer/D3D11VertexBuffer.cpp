@@ -17,7 +17,7 @@ D3D11VertexBuffer::D3D11VertexBuffer(ID3D11Device* device, const BufferDescripto
 {
     CreateResource(
         device,
-        CD3D11_BUFFER_DESC(static_cast<UINT>(desc.size), D3D11_BIND_VERTEX_BUFFER),
+        GetNativeBufferDesc(desc, D3D11_BIND_VERTEX_BUFFER),
         initialData,
         desc.flags
     );

@@ -19,6 +19,7 @@
 #include "DbgQueryHeap.h"
 
 #include <LLGL/RenderingDebugger.h>
+#include <LLGL/IndirectCommandArgs.h>
 #include <algorithm>
 
 
@@ -650,6 +651,76 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint3
     profile_.drawCommands++;
 }
 
+void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndirectArguments));
+        ValidateAddressAlignment(offset, 4, "<offset> parameter");
+    }
+
+    instance.DrawIndirect(bufferDbg.instance, offset);
+
+    profile_.drawCommands++;
+}
+
+void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateBufferRange(bufferDbg, offset, stride*numCommands);
+        ValidateAddressAlignment(offset, 4, "<offset> parameter");
+        ValidateAddressAlignment(stride, 4, "<stride> parameter");
+    }
+
+    instance.DrawIndirect(bufferDbg.instance, offset, numCommands, stride);
+
+    profile_.drawCommands += numCommands;
+}
+
+void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndexedIndirectArguments));
+        ValidateAddressAlignment(offset, 4, "<offset> parameter");
+    }
+
+    instance.DrawIndexedIndirect(bufferDbg.instance, offset);
+
+    profile_.drawCommands++;
+}
+
+void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateBufferRange(bufferDbg, offset, stride*numCommands);
+        ValidateAddressAlignment(offset, 4, "<offset> parameter");
+        ValidateAddressAlignment(stride, 4, "<stride> parameter");
+    }
+
+    instance.DrawIndexedIndirect(bufferDbg.instance, offset, numCommands, stride);
+
+    profile_.drawCommands += numCommands;
+}
+
 /* ----- Compute ----- */
 
 void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
@@ -668,6 +739,23 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
     }
 
     instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);
+
+    profile_.dispatchCommands++;
+}
+
+void DbgCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateBufferRange(bufferDbg, offset, sizeof(DispatchIndirectArguments));
+        ValidateAddressAlignment(offset, 4, "<offset> parameter");
+    }
+
+    instance.DispatchIndirect(bufferDbg.instance, offset);
 
     profile_.dispatchCommands++;
 }
@@ -1045,6 +1133,40 @@ void DbgCommandBuffer::ValidateBufferType(const BufferType bufferType, const Buf
 {
     if (bufferType != compareType)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type");
+}
+
+void DbgCommandBuffer::ValidateBufferFlag(DbgBuffer& bufferDbg, long requiredFlag, const char* flagName)
+{
+    if ((bufferDbg.desc.flags & requiredFlag) != requiredFlag)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "buffer was not created with the " + std::string(flagName) + " flag enabled"
+        );
+    }
+}
+
+void DbgCommandBuffer::ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size)
+{
+    if (offset + size > bufferDbg.desc.size)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "buffer range out of bounds (" + std::to_string(offset + size) +
+            "specified but limit is " + std::to_string(bufferDbg.desc.size) + ")"
+        );
+    }
+}
+
+void DbgCommandBuffer::ValidateAddressAlignment(std::uint64_t address, std::uint64_t alignment, const char* addressName)
+{
+    if (alignment > 0 && (address % alignment != 0))
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            std::string(addressName) + " not aligned to " + std::to_string(alignment) + " byte(s)"
+        );
+    }
 }
 
 bool DbgCommandBuffer::ValidateQueryIndex(DbgQueryHeap& queryHeap, std::uint32_t query)

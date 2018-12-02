@@ -480,11 +480,11 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Draws the specified amount of primitives from the currently set vertex buffer.
         \param[in] numVertices Specifies the number of vertices to generate.
         \param[in] firstVertex Specifies the zero-based offset of the first vertex from the vertex buffer.
-        \note The parameter <code>firstVertex</code> modifies the vertex ID within the shader pipeline differently for <code>SV_VertexID</code>
-        in HLSL and <code>gl_VertexID</code> in GLSL (or <code>gl_VertexIndex</code> for Vulkan), due to rendering API differences.
-        The system value <code>SV_VertexID</code> in HLSL will always start with zero,
-        but the system value <code>gl_VertexID</code> in GLSL (or <code>gl_VertexIndex</code> for Vulkan)
-        will start with the value of <code>firstVertex</code>.
+        \note The parameter \c firstVertex modifies the vertex ID within the shader pipeline differently for \c SV_VertexID
+        in HLSL and \c gl_VertexID in GLSL (or \c gl_VertexIndex for Vulkan), due to rendering API differences.
+        The system value \c SV_VertexID in HLSL will always start with zero,
+        but the system value \c gl_VertexID in GLSL (or \c gl_VertexIndex for Vulkan)
+        will start with the value of \c firstVertex.
         */
         virtual void Draw(std::uint32_t numVertices, std::uint32_t firstVertex) = 0;
 
@@ -508,12 +508,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] firstVertex Specifies the zero-based offset of the first vertex from the vertex buffer.
         \param[in] numInstances Specifies the number of instances to generate.
         \param[in] firstInstance Specifies the zero-based offset of the first instance.
-        \note The parameter <code>firstVertex</code> modifies the vertex ID within the shader pipeline differently for <code>SV_VertexID</code>
-        in HLSL and <code>gl_VertexID</code> in GLSL (or <code>gl_VertexIndex</code> for Vulkan), due to rendering API differences.
-        The system value <code>SV_VertexID</code> in HLSL will always start with zero,
-        but the system value <code>gl_VertexID</code> in GLSL (or <code>gl_VertexIndex</code> for Vulkan)
-        will start with the value of <code>firstVertex</code>.
-        The same holds true for the parameter <code>firstInstance</code> and the system values <code>SV_InstanceID</code> in HLSL and <code>gl_InstanceID</code> in GLSL (or <code>gl_InstanceIndex</code> for Vulkan).
+        \note The parameter \c firstVertex modifies the vertex ID within the shader pipeline differently for \c SV_VertexID
+        in HLSL and \c gl_VertexID in GLSL (or \c gl_VertexIndex for Vulkan), due to rendering API differences.
+        The system value \c SV_VertexID in HLSL will always start with zero,
+        but the system value \c gl_VertexID in GLSL (or \c gl_VertexIndex for Vulkan)
+        will start with the value of \c firstVertex.
+        The same holds true for the parameter \c firstInstance and the system values \c SV_InstanceID in HLSL and \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan).
+        \see RenderingFeatures::hasInstancing
+        \see RenderingFeatures::hasOffsetInstancing
         */
         virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance) = 0;
 
@@ -530,18 +532,60 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] firstIndex Specifies the zero-based offset of the first index from the index buffer.
         \param[in] vertexOffset Specifies the base vertex offset (positive or negative) which is added to each index from the index buffer.
         \param[in] firstInstance Specifies the zero-based offset of the first instance.
-        \note The parameter <code>firstInstance</code> modifies the instance ID within the shader pipeline differently for <code>SV_InstanceID</code>
-        in HLSL and <code>gl_InstanceID</code> in GLSL (or <code>gl_InstanceIndex</code> for Vulkan), due to rendering API differences.
-        The system value <code>SV_InstanceID</code> in HLSL will always start with zero,
-        but the system value <code>gl_InstanceID</code> in GLSL (or <code>gl_InstanceIndex</code> for Vulkan)
-        will start with the value of <code>firstInstance</code>.
+        \note The parameter \c firstInstance modifies the instance ID within the shader pipeline differently for \c SV_InstanceID
+        in HLSL and \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan), due to rendering API differences.
+        The system value \c SV_InstanceID in HLSL will always start with zero,
+        but the system value \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan)
+        will start with the value of \c firstInstance.
+        \see RenderingFeatures::hasInstancing
+        \see RenderingFeatures::hasOffsetInstancing
         */
         virtual void DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance) = 0;
+
+        /**
+        \brief Draws an unknown amount of instances of primitives whose draw command arguments are taken from a buffer object.
+        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
+        \see DrawIndirectArguments
+        */
+        virtual void DrawIndirect(Buffer& buffer, std::uint64_t offset) = 0;
+
+        /**
+        \brief Draws an unknown amount of instances of primitives whose draw command arguments are taken from a buffer object.
+        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
+        \param[in] numCommands Specifies the number of draw commands that are to be taken from the argument buffer.
+        \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments. This stride must be a multiple of 4.
+        \remarks This is also known as a "multi draw command" that is only natively supported by OpenGL and Vulkan.
+        For other rendering APIs, the recording of multiple draw commands is emulated with a simple loop.
+        \see DrawIndirectArguments
+        */
+        virtual void DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) = 0;
+
+        /**
+        \brief Draws an unknown amount of instances of primitives whose indexed draw command arguments are taken from a buffer object.
+        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
+        \see DrawIndexedIndirectArguments
+        */
+        virtual void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset) = 0;
+
+        /**
+        \brief Draws an unknown amount of instances of primitives whose indexed draw command arguments are taken from a buffer object.
+        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
+        \param[in] numCommands Specifies the number of draw commands that are to be taken from the argument buffer.
+        \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments. This stride must be a multiple of 4.
+        \remarks This is also known as a "multi draw command" that is only natively supported by OpenGL and Vulkan.
+        For other rendering APIs, the recording of multiple draw commands is emulated with a simple loop.
+        \see DrawIndexedIndirectArguments
+        */
+        virtual void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) = 0;
 
         /* ----- Compute ----- */
 
         /**
-        \brief Dispachtes a compute command.
+        \brief Dispatches a compute command.
         \param[in] groupSizeX Specifies the number of thread groups in the X-dimension.
         \param[in] groupSizeY Specifies the number of thread groups in the Y-dimension.
         \param[in] groupSizeZ Specifies the number of thread groups in the Z-dimension.
@@ -549,6 +593,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see RenderingLimits::maxComputeShaderWorkGroups
         */
         virtual void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) = 0;
+
+        /**
+        \brief Dispatches a compute command with an unknown amount of thread grounds.
+        \param[in] buffer Specifies the buffer from which the dispatch command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
+        \see DispatchIndirectArguments
+        */
+        virtual void DispatchIndirect(Buffer& buffer, std::uint64_t offset) = 0;
 
     protected:
 

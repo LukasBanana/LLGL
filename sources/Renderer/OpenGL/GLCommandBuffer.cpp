@@ -546,12 +546,108 @@ void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     #endif
 }
 
+void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
+
+    const GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
+    glDrawArraysIndirect(
+        renderState_.drawMode,
+        reinterpret_cast<const GLvoid*>(indirect)
+    );
+}
+
+void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
+
+    GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
+    if (HasExtension(GLExt::ARB_multi_draw_indirect))
+    {
+        glMultiDrawArraysIndirect(
+            renderState_.drawMode,
+            reinterpret_cast<const GLvoid*>(indirect),
+            static_cast<GLsizei>(numCommands),
+            static_cast<GLsizei>(stride)
+        );
+    }
+    else
+    {
+        while (numCommands-- > 0)
+        {
+            glDrawArraysIndirect(
+                renderState_.drawMode,
+                reinterpret_cast<const GLvoid*>(indirect)
+            );
+            indirect += stride;
+        }
+    }
+}
+
+void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
+
+    const GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
+    glDrawElementsIndirect(
+        renderState_.drawMode,
+        renderState_.indexBufferDataType,
+        reinterpret_cast<const GLvoid*>(indirect)
+    );
+}
+
+void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
+
+    GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
+    if (HasExtension(GLExt::ARB_multi_draw_indirect))
+    {
+        glMultiDrawElementsIndirect(
+            renderState_.drawMode,
+            renderState_.indexBufferDataType,
+            reinterpret_cast<const GLvoid*>(indirect),
+            static_cast<GLsizei>(numCommands),
+            static_cast<GLsizei>(stride)
+        );
+    }
+    else
+    {
+        while (numCommands-- > 0)
+        {
+            glDrawElementsIndirect(
+                renderState_.drawMode,
+                renderState_.indexBufferDataType,
+                reinterpret_cast<const GLvoid*>(indirect)
+            );
+            indirect += stride;
+        }
+    }
+}
+
 /* ----- Compute ----- */
 
 void GLCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     #ifndef __APPLE__
     glDispatchCompute(groupSizeX, groupSizeY, groupSizeZ);
+    #else
+    ErrUnsupportedGLProc("glDispatchCompute");
+    #endif
+}
+
+void GLCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    #ifndef __APPLE__
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBuffer(GLBufferTarget::DISPATCH_INDIRECT_BUFFER, bufferGL.GetID());
+    glDispatchComputeIndirect(static_cast<GLintptr>(offset));
+    #else
+    ErrUnsupportedGLProc("glDispatchComputeIndirect");
     #endif
 }
 

@@ -665,11 +665,41 @@ void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     vkCmdDrawIndexed(commandBuffer_, numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
+void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    vkCmdDrawIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, 1, 0);
+}
+
+void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    vkCmdDrawIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, numCommands, stride);
+}
+
+void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, 1, 0);
+}
+
+void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, numCommands, stride);
+}
+
 /* ----- Compute ----- */
 
 void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     vkCmdDispatch(commandBuffer_, groupSizeX, groupSizeY, groupSizeZ);
+}
+
+void VKCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    vkCmdDispatchIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset);
 }
 
 /* ----- Extended functions ----- */

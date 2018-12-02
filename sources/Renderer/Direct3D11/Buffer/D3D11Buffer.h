@@ -40,6 +40,8 @@ class D3D11Buffer : public Buffer
 
     protected:
 
+        D3D11_BUFFER_DESC GetNativeBufferDesc(const BufferDescriptor& desc, UINT bindFlags) const;
+
         void CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData, long bufferFlags);
 
     private:

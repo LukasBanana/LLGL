@@ -677,9 +677,38 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     }
 }
 
+void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    //todo
+}
+
+void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    //todo
+}
+
+void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
+{
+    //todo
+}
+
+void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+{
+    //todo
+}
+
+/* ----- Compute ----- */
+
+void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
+
 /* ----- Compute ----- */
 
 void MTCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
+{
+    //todo
+}
+
+void MTCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
     //todo
 }
