@@ -565,6 +565,7 @@ void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::ui
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
 
     GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
+    #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
         /* Use native multi draw command */
@@ -576,6 +577,7 @@ void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::ui
         );
     }
     else
+    #endif // /__APPLE__
     {
         /* Emulate multi draw command */
         while (numCommands-- > 0)
@@ -609,6 +611,7 @@ void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
 
     GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
+    #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
         /* Use native multi draw command */
@@ -621,6 +624,7 @@ void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
         );
     }
     else
+    #endif // /__APPLE__
     {
         /* Emulate multi draw command */
         while (numCommands-- > 0)

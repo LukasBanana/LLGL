@@ -124,7 +124,7 @@ class MTCommandBuffer : public CommandBufferExt
 
         /* ----- Compute ----- */
 
-        void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
+        void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
 
         /* ----- Direct Resource Access ------ */
@@ -182,6 +182,7 @@ class MTCommandBuffer : public CommandBufferExt
         MTLIndexType                    indexType_              = MTLIndexTypeUInt32;
         NSUInteger                      indexTypeSize_          = 4;
         NSUInteger                      numPatchControlPoints_  = 0;
+        MTLSize                         numThreadsPerGroup_     = { 1, 1, 1 };
 
         MTRenderEncoderState            renderEncoderState_;
 

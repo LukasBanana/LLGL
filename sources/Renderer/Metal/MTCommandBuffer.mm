@@ -679,38 +679,141 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 
 void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    if (numPatchControlPoints_ > 0)
+    {
+        [renderEncoder_
+            drawPatches:            numPatchControlPoints_
+            patchIndexBuffer:       nil
+            patchIndexBufferOffset: 0
+            indirectBuffer:         bufferMT.GetNative()
+            indirectBufferOffset:   static_cast<NSUInteger>(offset)
+        ];
+    }
+    else
+    {
+        [renderEncoder_
+            drawPrimitives:         primitiveType_
+            indirectBuffer:         bufferMT.GetNative()
+            indirectBufferOffset:   static_cast<NSUInteger>(offset)
+        ];
+    }
 }
 
 void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    if (numPatchControlPoints_ > 0)
+    {
+        while (numCommands-- > 0)
+        {
+            [renderEncoder_
+                drawPatches:            numPatchControlPoints_
+                patchIndexBuffer:       nil
+                patchIndexBufferOffset: 0
+                indirectBuffer:         bufferMT.GetNative()
+                indirectBufferOffset:   static_cast<NSUInteger>(offset)
+            ];
+            offset += stride;
+        }
+    }
+    else
+    {
+        while (numCommands-- > 0)
+        {
+            [renderEncoder_
+                drawPrimitives:         primitiveType_
+                indirectBuffer:         bufferMT.GetNative()
+                indirectBufferOffset:   static_cast<NSUInteger>(offset)
+            ];
+            offset += stride;
+        }
+    }
 }
 
 void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    if (numPatchControlPoints_ > 0)
+    {
+        [renderEncoder_
+            drawIndexedPatches:             numPatchControlPoints_
+            patchIndexBuffer:               nil
+            patchIndexBufferOffset:         0
+            controlPointIndexBuffer:        indexBuffer_
+            controlPointIndexBufferOffset:  0
+            indirectBuffer:                 bufferMT.GetNative()
+            indirectBufferOffset:           static_cast<NSUInteger>(offset)
+        ];
+    }
+    else
+    {
+        [renderEncoder_
+            drawIndexedPrimitives:  primitiveType_
+            indexType:              indexType_
+            indexBuffer:            indexBuffer_
+            indexBufferOffset:      0
+            indirectBuffer:         bufferMT.GetNative()
+            indirectBufferOffset:   static_cast<NSUInteger>(offset)
+        ];
+    }
 }
 
 void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    if (numPatchControlPoints_ > 0)
+    {
+        while (numCommands-- > 0)
+        {
+            [renderEncoder_
+                drawIndexedPatches:             numPatchControlPoints_
+                patchIndexBuffer:               nil
+                patchIndexBufferOffset:         0
+                controlPointIndexBuffer:        indexBuffer_
+                controlPointIndexBufferOffset:  0
+                indirectBuffer:                 bufferMT.GetNative()
+                indirectBufferOffset:           static_cast<NSUInteger>(offset)
+            ];
+            offset += stride;
+        }
+    }
+    else
+    {
+        while (numCommands-- > 0)
+        {
+            [renderEncoder_
+                drawIndexedPrimitives:  primitiveType_
+                indexType:              indexType_
+                indexBuffer:            indexBuffer_
+                indexBufferOffset:      0
+                indirectBuffer:         bufferMT.GetNative()
+                indirectBufferOffset:   static_cast<NSUInteger>(offset)
+            ];
+            offset += stride;
+        }
+    }
 }
 
 /* ----- Compute ----- */
 
-void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
-
-/* ----- Compute ----- */
-
-void MTCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
+void MTCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
-    //todo
+    MTLSize numGroups = { numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ };
+    [computeEncoder_
+        dispatchThreadgroups:   numGroups
+        threadsPerThreadgroup:  numThreadsPerGroup_
+    ];
 }
 
 void MTCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    [computeEncoder_
+        dispatchThreadgroupsWithIndirectBuffer: bufferMT.GetNative()
+        indirectBufferOffset:                   static_cast<NSUInteger>(offset)
+        threadsPerThreadgroup:                  numThreadsPerGroup_
+    ];
 }
 
 /* ----- Direct Resource Access ------ */

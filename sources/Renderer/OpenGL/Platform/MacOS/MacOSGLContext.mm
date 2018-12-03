@@ -41,7 +41,11 @@ MacOSGLContext::~MacOSGLContext()
 
 bool MacOSGLContext::SetSwapInterval(int interval)
 {
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14
+    [ctx_ setValues:&interval forParameter:NSOpenGLContextParameterSwapInterval];
+    #else
     [ctx_ setValues:&interval forParameter:NSOpenGLCPSwapInterval];
+    #endif
     return true;
 }
 
@@ -63,8 +67,19 @@ void MacOSGLContext::Resize(const Extent2D& resolution)
 
 bool MacOSGLContext::Activate(bool activate)
 {
+    /* Make context current */
     [ctx_ makeCurrentContext];
+    
+    /* 'setView' is deprecated since macOS 10.14 together with OpenGL in general, so suppress this deprecation warning */
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    
     [ctx_ setView:[wnd_ contentView]];
+    
+    #pragma clang diagnostic pop
+    
+    [ctx_ update];
+    
     return true;
 }
 

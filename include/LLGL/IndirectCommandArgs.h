@@ -99,6 +99,31 @@ struct DrawIndexedIndirectArguments
 LLGL_PACK_STRUCT;
 
 /**
+\brief Format structure for the arguments of an indirect draw/indexed-draw command for tessellation on Metal renderer.
+\remarks The Metal API treats the arguments for rendering tessellated patches differently,
+so this structure is required to fill the buffer that is used for the arguments of an indirect draw command on the Metal backend.
+\note Only supported with: Metal.
+\see CommandBuffer::DrawIndirect
+\see CommandBuffer::DrawIndexedIndirect
+\see Metal counterpart \c MTLDrawPatchIndirectArguments: https://developer.apple.com/documentation/metal/mtldrawpatchindirectarguments?language=objc
+*/
+struct DrawPatchIndirectArgument
+{
+    //! Number of patches per instance.
+    std::uint32_t numPatches;
+    
+    //! Number of instances to draw.
+    std::uint32_t numInstances;
+    
+    //! Specifies the patch start index.
+    std::uint32_t firstPatch;
+    
+    //! Specifies the first instance to draw.
+    std::uint32_t firstInstance;
+}
+LLGL_PACK_STRUCT;
+
+/**
 \brief Format structure for the arguments of an indirect compute command.
 \remarks This structure is byte aligned, i.e. it can be reinterpret casted to a buffer in CPU memory space.
 \note This is a plain-old-data (POD) structure, so it has no default constructor to make it easily compatible with the GPU memory space.
@@ -111,14 +136,8 @@ LLGL_PACK_STRUCT;
 */
 struct DispatchIndirectArguments
 {
-    //! Number of thread groups in X dimension.
-    std::uint32_t   groupSizeX;
-
-    //! Number of thread groups in Y dimension.
-    std::uint32_t   groupSizeY;
-
-    //! Number of thread groups in Z dimension.
-    std::uint32_t   groupSizeZ;
+    //! Number of thread groups in X, Y, and Z dimension.
+    std::uint32_t numThreadGroups[3];
 }
 LLGL_PACK_STRUCT;
 
