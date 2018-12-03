@@ -50,6 +50,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasComputeShaders              = true;
     features.hasInstancing                  = true;
     features.hasOffsetInstancing            = true;
+    features.hasIndirectDrawing             = true;
     features.hasViewportArrays              = AnyOf(fset, { MTLFeatureSet_macOS_GPUFamily1_v3 });
     features.hasConservativeRasterization   = false;
     features.hasStreamOutputs               = false;

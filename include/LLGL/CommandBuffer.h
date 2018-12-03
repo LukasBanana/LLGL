@@ -547,6 +547,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \see DrawIndirectArguments
+        \see RenderingFeatures::hasIndirectDrawing
         */
         virtual void DrawIndirect(Buffer& buffer, std::uint64_t offset) = 0;
 
@@ -567,6 +568,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         }
         \endcode
         \see DrawIndirectArguments
+        \see RenderingFeatures::hasIndirectDrawing
         */
         virtual void DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) = 0;
 
@@ -602,13 +604,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Dispatches a compute command.
-        \param[in] groupSizeX Specifies the number of thread groups in the X-dimension.
-        \param[in] groupSizeY Specifies the number of thread groups in the Y-dimension.
-        \param[in] groupSizeZ Specifies the number of thread groups in the Z-dimension.
+        \param[in] numWorkGroupsX Specifies the number of worker thread groups in the X-dimension.
+        \param[in] numWorkGroupsY Specifies the number of worker thread groups in the Y-dimension.
+        \param[in] numWorkGroupsZ Specifies the number of worker thread groups in the Z-dimension.
         \see SetComputePipeline
         \see RenderingLimits::maxComputeShaderWorkGroups
         */
-        virtual void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) = 0;
+        virtual void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) = 0;
 
         /**
         \brief Dispatches a compute command with an unknown amount of thread grounds.

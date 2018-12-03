@@ -91,6 +91,7 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     LLGL_VALIDATE_FEATURE( hasComputeShaders,            "compute shaders"            );
     LLGL_VALIDATE_FEATURE( hasInstancing,                "hardware instancing"        );
     LLGL_VALIDATE_FEATURE( hasOffsetInstancing,          "offset instancing"          );
+    LLGL_VALIDATE_FEATURE( hasIndirectDrawing,           "indirect drawing"           );
     LLGL_VALIDATE_FEATURE( hasViewportArrays,            "viewport arrays"            );
     LLGL_VALIDATE_FEATURE( hasConservativeRasterization, "conservative rasterization" );
     LLGL_VALIDATE_FEATURE( hasStreamOutputs,             "stream outputs"             );

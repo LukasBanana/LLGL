@@ -21,6 +21,7 @@ namespace LLGL
 {
 
 
+class VKPhysicalDevice;
 class VKResourceHeap;
 
 class VKCommandBuffer final : public CommandBuffer
@@ -31,6 +32,7 @@ class VKCommandBuffer final : public CommandBuffer
         /* ----- Common ----- */
 
         VKCommandBuffer(
+            const VKPhysicalDevice&         physicalDevice,
             const VKPtr<VkDevice>&          device,
             VkQueue                         graphicsQueue,
             const QueueFamilyIndices&       queueFamilyIndices,
@@ -133,7 +135,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         /* ----- Compute ----- */
 
-        void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
+        void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
 
         /* ----- Extended functions ----- */
@@ -220,6 +222,8 @@ class VKCommandBuffer final : public CommandBuffer
 
         bool                            scissorEnabled_             = false;
         bool                            scissorRectInvalidated_     = true;
+
+        bool                            emulateMultiDrawIndirect_   = false;
 
         #if 1//TODO: optimize usage of query pools
         std::vector<VkQueryPool>        queryPoolsInFlight_;

@@ -134,7 +134,7 @@ class DbgCommandBuffer : public CommandBufferExt
 
         /* ----- Compute ----- */
 
-        void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
+        void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
 
         /* ----- Direct Resource Access ------ */
@@ -200,6 +200,7 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void AssertInstancingSupported();
         void AssertOffsetInstancingSupported();
+        void AssertIndirectDrawingSupported();
 
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 

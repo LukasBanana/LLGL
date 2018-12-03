@@ -246,6 +246,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasComputeShaders              = HasExtension(GLExt::ARB_compute_shader);
     features.hasInstancing                  = HasExtension(GLExt::ARB_draw_instanced);
     features.hasOffsetInstancing            = HasExtension(GLExt::ARB_base_instance);
+    features.hasIndirectDrawing             = HasExtension(GLExt::ARB_draw_indirect);
     features.hasViewportArrays              = HasExtension(GLExt::ARB_viewport_array);
     features.hasConservativeRasterization   = ( HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization) );
     features.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );

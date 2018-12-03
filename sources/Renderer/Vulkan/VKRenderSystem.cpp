@@ -139,7 +139,7 @@ CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
 {
     return TakeOwnership(
         commandBuffers_,
-        MakeUnique<VKCommandBuffer>(device_, device_.GetVkQueue(), device_.GetQueueFamilyIndices(), desc)
+        MakeUnique<VKCommandBuffer>(physicalDevice_, device_, device_.GetVkQueue(), device_.GetQueueFamilyIndices(), desc)
     );
 }
 

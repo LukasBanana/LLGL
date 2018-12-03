@@ -6,6 +6,7 @@
  */
 
 #include "VKCommandBuffer.h"
+#include "VKPhysicalDevice.h"
 #include "VKRenderContext.h"
 #include "VKTypes.h"
 #include "RenderState/VKRenderPass.h"
@@ -29,14 +30,21 @@ namespace LLGL
 
 static const std::uint32_t g_maxNumViewportsPerBatch = 16;
 
+static bool MustEmulateMultiDrawIndirect(const VKPhysicalDevice& physicalDevice)
+{
+    return (physicalDevice.GetFeatures().multiDrawIndirect != VK_FALSE);
+}
+
 VKCommandBuffer::VKCommandBuffer(
+    const VKPhysicalDevice&         physicalDevice,
     const VKPtr<VkDevice>&          device,
     VkQueue                         graphicsQueue,
     const QueueFamilyIndices&       queueFamilyIndices,
     const CommandBufferDescriptor&  desc) :
-        device_             { device                           },
-        commandPool_        { device, vkDestroyCommandPool     },
-        queuePresentFamily_ { queueFamilyIndices.presentFamily }
+        device_                   { device                                       },
+        commandPool_              { device, vkDestroyCommandPool                 },
+        queuePresentFamily_       { queueFamilyIndices.presentFamily             },
+        emulateMultiDrawIndirect_ { MustEmulateMultiDrawIndirect(physicalDevice) }
 {
     std::size_t bufferCount = std::max(1u, desc.numNativeBuffers);
 
@@ -674,7 +682,16 @@ void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-    vkCmdDrawIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, numCommands, stride);
+    if (emulateMultiDrawIndirect_)
+    {
+        while (numCommands-- > 0)
+        {
+            vkCmdDrawIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, 1, 0);
+            offset += stride;
+        }
+    }
+    else
+        vkCmdDrawIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, numCommands, stride);
 }
 
 void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
@@ -686,14 +703,23 @@ void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-    vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, numCommands, stride);
+    if (emulateMultiDrawIndirect_)
+    {
+        while (numCommands-- > 0)
+        {
+            vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, 1, 0);
+            offset += stride;
+        }
+    }
+    else
+        vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, numCommands, stride);
 }
 
 /* ----- Compute ----- */
 
-void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
+void VKCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
-    vkCmdDispatch(commandBuffer_, groupSizeX, groupSizeY, groupSizeZ);
+    vkCmdDispatch(commandBuffer_, numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
 void VKCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)

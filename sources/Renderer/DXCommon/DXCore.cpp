@@ -302,6 +302,7 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     caps.features.hasComputeShaders                 = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasInstancing                     = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasOffsetInstancing               = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
+    caps.features.hasIndirectDrawing                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);//???
     caps.features.hasViewportArrays                 = true;
     caps.features.hasStreamOutputs                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasLogicOp                        = (featureLevel >= D3D_FEATURE_LEVEL_11_1);

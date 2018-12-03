@@ -127,7 +127,7 @@ class GLCommandBuffer final : public CommandBufferExt
 
         /* ----- Compute ----- */
 
-        void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
+        void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
 
         /* ----- Direct Resource Access ------ */

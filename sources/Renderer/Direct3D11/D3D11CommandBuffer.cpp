@@ -452,9 +452,9 @@ void D3D11CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offse
 
 /* ----- Compute ----- */
 
-void D3D11CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
+void D3D11CommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
-    context_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
+    context_->Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
 void D3D11CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)

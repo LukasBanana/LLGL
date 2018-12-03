@@ -641,10 +641,10 @@ void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
 
 /* ----- Compute ----- */
 
-void GLCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
+void GLCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
     #ifndef __APPLE__
-    glDispatchCompute(groupSizeX, groupSizeY, groupSizeZ);
+    glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
     #else
     ErrUnsupportedGLProc("glDispatchCompute");
     #endif
@@ -690,7 +690,7 @@ void GLCommandBuffer::ResetResourceSlots(
     const ResourceType  resourceType,
     std::uint32_t       firstSlot,
     std::uint32_t       numSlots,
-    long                stageFlags)
+    long                /*stageFlags*/)
 {
     if (numSlots > 0)
     {

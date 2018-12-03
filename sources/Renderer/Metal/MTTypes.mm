@@ -121,7 +121,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::RG64Float:         break;
         case Format::RGB64Float:        break;
         case Format::RGBA64Float:       break;
-        
+
         /* --- Reversed color formats --- */
         case Format::BGRA8UNorm:        return MTLPixelFormatBGRA8Unorm;
         case Format::BGRA8SNorm:        break;
@@ -153,7 +153,7 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
         case Format::R8SNorm:       return MTLVertexFormatCharNormalized;
         case Format::R8UInt:        return MTLVertexFormatUChar;
         case Format::R8SInt:        return MTLVertexFormatChar;
-        
+
         case Format::R16UNorm:      return MTLVertexFormatUShortNormalized;
         case Format::R16SNorm:      return MTLVertexFormatShortNormalized;
         case Format::R16UInt:       return MTLVertexFormatUShort;
@@ -208,7 +208,7 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
         case Format::RGBA32UInt:    return MTLVertexFormatUInt4;
         case Format::RGBA32SInt:    return MTLVertexFormatInt4;
         case Format::RGBA32Float:   return MTLVertexFormatFloat4;
-        
+
         default:                    break;
     }
     MapFailed("Format", "MTLVertexFormat");
@@ -390,7 +390,7 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatBC1_RGBA:                return Format::BC1RGBA;
         case MTLPixelFormatBC2_RGBA:                return Format::BC2RGBA;
         case MTLPixelFormatBC3_RGBA:                return Format::BC3RGBA;
-        
+
         default:                                    break;
     }
     UnmapFailed("Format", "MTLPixelFormat");

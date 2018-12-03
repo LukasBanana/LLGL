@@ -106,6 +106,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.features.hasComputeShaders                 = true;
     caps.features.hasInstancing                     = true;
     caps.features.hasOffsetInstancing               = true;
+    caps.features.hasIndirectDrawing                = (features_.drawIndirectFirstInstance != VK_FALSE);
     caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
     caps.features.hasConservativeRasterization      = false;
     caps.features.hasStreamOutputs                  = false;

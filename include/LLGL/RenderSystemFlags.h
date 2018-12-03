@@ -451,15 +451,12 @@ struct RenderingFeatures
     */
     bool hasOffsetInstancing            = false;
 
-    //TODO
-    #if 0
     /**
     \brief Specifies whether indirect draw commands are supported.
     \see CommandBuffer::DrawIndirect
     \see CommandBuffer::DrawIndexedIndirect
     */
     bool hasIndirectDrawing             = false;
-    #endif
 
     /**
     \brief Specifies whether multiple viewports, depth-ranges, and scissors at once are supported.

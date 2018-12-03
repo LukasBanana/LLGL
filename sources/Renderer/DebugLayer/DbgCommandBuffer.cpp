@@ -658,6 +658,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertIndirectDrawingSupported();
         ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
         ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
@@ -675,6 +676,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::u
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertIndirectDrawingSupported();
         ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
         ValidateBufferRange(bufferDbg, offset, stride*numCommands);
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
@@ -693,6 +695,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertIndirectDrawingSupported();
         ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
         ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndexedIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
@@ -710,6 +713,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset,
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertIndirectDrawingSupported();
         ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
         ValidateBufferRange(bufferDbg, offset, stride*numCommands);
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
@@ -723,22 +727,22 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset,
 
 /* ----- Compute ----- */
 
-void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
+void DbgCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
 
-        if (groupSizeX * groupSizeY * groupSizeZ == 0)
+        if (numWorkGroupsX * numWorkGroupsY * numWorkGroupsZ == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "thread group size has volume of 0 units");
 
         AssertComputePipelineBound();
-        ValidateThreadGroupLimit(groupSizeX, limits_.maxComputeShaderWorkGroups[0]);
-        ValidateThreadGroupLimit(groupSizeY, limits_.maxComputeShaderWorkGroups[1]);
-        ValidateThreadGroupLimit(groupSizeZ, limits_.maxComputeShaderWorkGroups[2]);
+        ValidateThreadGroupLimit(numWorkGroupsX, limits_.maxComputeShaderWorkGroups[0]);
+        ValidateThreadGroupLimit(numWorkGroupsY, limits_.maxComputeShaderWorkGroups[1]);
+        ValidateThreadGroupLimit(numWorkGroupsZ, limits_.maxComputeShaderWorkGroups[2]);
     }
 
-    instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);
+    instance.Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 
     profile_.dispatchCommands++;
 }
@@ -1255,7 +1259,13 @@ void DbgCommandBuffer::AssertInstancingSupported()
 void DbgCommandBuffer::AssertOffsetInstancingSupported()
 {
     if (!features_.hasOffsetInstancing)
-        LLGL_DBG_ERROR_NOT_SUPPORTED("offset-instancing");
+        LLGL_DBG_ERROR_NOT_SUPPORTED("offset instancing");
+}
+
+void DbgCommandBuffer::AssertIndirectDrawingSupported()
+{
+    if (!features_.hasIndirectDrawing)
+        LLGL_DBG_ERROR_NOT_SUPPORTED("indirect drawing");
 }
 
 void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices)
