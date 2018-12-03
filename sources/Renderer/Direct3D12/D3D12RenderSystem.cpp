@@ -48,8 +48,9 @@ D3D12RenderSystem::D3D12RenderSystem()
     computeCmdAlloc_    = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     computeCmdList_     = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCmdAlloc_.Get());
 
-    /* Create default pipeline layout */
+    /* Create default pipeline layout and command signature pool */
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
+    commandSignaturePool_.CreateDefaultSignatures(device_.GetNative());
 
     /* Initialize renderer information */
     QueryRendererInfo();

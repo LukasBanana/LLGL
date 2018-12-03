@@ -26,6 +26,7 @@ namespace LLGL
 class D3D12RenderSystem;
 class D3D12RenderContext;
 class D3D12RenderPass;
+class D3D12CommandSignaturePool;
 struct D3D12Resource;
 
 class D3D12CommandBuffer final : public CommandBuffer
@@ -181,16 +182,17 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
         D3D12CommandContext                 commandContext_;
+        const D3D12CommandSignaturePool*    commandSignaturePool_               = nullptr;
 
-        D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_          = {};
-        D3D12_CPU_DESCRIPTOR_HANDLE         dsvDescHandle_          = {};
+        D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_                      = {};
+        D3D12_CPU_DESCRIPTOR_HANDLE         dsvDescHandle_                      = {};
 
         ClearValue                          clearValue_;
 
-        bool                                scissorEnabled_         = false;
-        UINT                                numBoundScissorRects_   = 0;
+        bool                                scissorEnabled_                     = false;
+        UINT                                numBoundScissorRects_               = 0;
 
-        RenderTarget*                       boundRenderTarget_      = nullptr;
+        RenderTarget*                       boundRenderTarget_                  = nullptr;
 
 };
 

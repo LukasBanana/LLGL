@@ -8,6 +8,7 @@
 #include "D3D12CommandBuffer.h"
 #include "D3D12RenderContext.h"
 #include "D3D12RenderSystem.h"
+#include "D3D12CommandSignaturePool.h"
 #include "D3D12Types.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
@@ -31,7 +32,8 @@ namespace LLGL
 {
 
 
-D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem)
+D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem) :
+    commandSignaturePool_ { &(renderSystem.GetCommandSignaturePool()) }
 {
     CreateDevices(renderSystem);
 }
@@ -434,22 +436,42 @@ void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uin
 
 void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    //TODO
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandList_->ExecuteIndirect(
+        commandSignaturePool_->GetSignatureDrawIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+    );
 }
 
 void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    //TODO
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    while (numCommands-- > 0)
+    {
+        commandList_->ExecuteIndirect(
+            commandSignaturePool_->GetSignatureDrawIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+        );
+        offset += stride;
+    }
 }
 
 void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    //TODO
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandList_->ExecuteIndirect(
+        commandSignaturePool_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+    );
 }
 
 void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    //TODO
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    while (numCommands-- > 0)
+    {
+        commandList_->ExecuteIndirect(
+            commandSignaturePool_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+        );
+        offset += stride;
+    }
 }
 
 /* ----- Compute ----- */
@@ -461,7 +483,10 @@ void D3D12CommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t nu
 
 void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    //TODO
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandList_->ExecuteIndirect(
+        commandSignaturePool_->GetSignatureDispatchIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+    );
 }
 
 
@@ -471,11 +496,16 @@ void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 {
+    auto& device = renderSystem.GetDevice();
+
     /* Create command allocators */
+    #ifdef LLGL_DEBUG
     int i = 0;
+    #endif
+
     for (auto& cmdAllocator : cmdAllocators_)
     {
-        cmdAllocator = renderSystem.GetDevice().CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+        cmdAllocator = device.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
         #ifdef LLGL_DEBUG
         std::wstring name = L"LLGL::D3D12CommandBuffer::commandAllocator[" + std::to_wstring(i++) + L"]";
         cmdAllocator->SetName(name.c_str());
@@ -483,7 +513,7 @@ void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
     }
 
     /* Create graphics command list */
-    commandList_ = renderSystem.GetDevice().CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocators_[0].Get());
+    commandList_ = device.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocators_[0].Get());
     commandList_->Close();
 
     /* Initialize command context */
