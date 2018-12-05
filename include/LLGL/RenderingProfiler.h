@@ -82,10 +82,16 @@ struct FrameProfile
             std::uint32_t constantBufferBindings;
 
             /**
-            \brief Counter for all individual storage buffer bindings (i.e. without a ResourceHeap).
-            \see CommandBufferExt::SetStorageBuffer
+            \brief Counter for all individual sample buffer bindings (i.e. without a ResourceHeap).
+            \see CommandBufferExt::SetSampleBuffer
             */
-            std::uint32_t storageBufferBindings;
+            std::uint32_t sampleBufferBindings;
+
+            /**
+            \brief Counter for all individual read/write storage buffer bindings (i.e. without a ResourceHeap).
+            \see CommandBufferExt::SetRWStorageBuffer
+            */
+            std::uint32_t rwStorageBufferBindings;
 
             /**
             \brief Counter for all individual texture bindings (i.e. without a ResourceHeap).
@@ -250,7 +256,7 @@ struct FrameProfile
         };
 
         //! All proflile values as linear array.
-        std::uint32_t values[31];
+        std::uint32_t values[32];
     };
 };
 

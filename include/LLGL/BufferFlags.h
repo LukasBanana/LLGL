@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "ResourceFlags.h"
 #include "VertexFormat.h"
 #include "IndexFormat.h"
 #include "RenderSystemFlags.h"
@@ -23,6 +24,7 @@ namespace LLGL
 
 /* ----- Enumerations ----- */
 
+#if 0 // TODO: replace this by <BindFlags> enum
 /**
 \brief Hardware buffer type enumeration.
 \see ResourceType
@@ -57,6 +59,7 @@ enum class BufferType
     QueryResult,
     #endif
 };
+#endif // /TODO
 
 /**
 \brief Storage buffer type enumeration.
@@ -75,6 +78,7 @@ enum class StorageBufferType
     ConsumeStructuredBuffer,    //!< Consume structured buffer.
 };
 
+#if 0 // TODO: replace this by <BindFlags> and <CPUAccessFlags>
 /**
 \brief Buffer creation flags enumeration.
 \see BufferDescriptor::flags
@@ -109,32 +113,6 @@ struct BufferFlags
         */
         DynamicUsage            = (1 << 2),
 
-        #if 0
-        /**
-        \brief The buffer can be used to bind a stream of vertices.
-        \see CommandBuffer::SetVertexBuffer
-        */
-        VertexBinding           = (1 << 3),
-
-        /**
-        \brief The buffer can be used to bind a stream of indices.
-        \see CommandBuffer::SetIndexBuffer
-        */
-        IndexBinding            = (1 << 4),
-
-        //! The buffer can be used to bind a set of constants.
-        ConstantBinding         = (1 << 5),
-
-        //! The buffer can be used to bind a set of constants.
-        StorageBinding          = (1 << 6),
-
-        /**
-        \brief The buffer can be used to bind an output stream buffer (also referred to as "transform feedback").
-        \see CommandBuffer::SetStreamOutputBuffer
-        */
-        StreamOutputBinding     = (1 << 7),
-        #endif
-
         /**
         \brief Hint to the renderer that the buffer will hold the arguments for indirect commands.
         \remarks This must be used with a buffer of type BufferType::Storage.
@@ -142,9 +120,10 @@ struct BufferFlags
         \see CommandBuffer::DrawIndexedIndirect
         \see CommandBuffer::DispatchIndirect
         */
-        IndirectArgumentBinding = (1 << 8),
+        IndirectBinding         = (1 << 8),
     };
 };
+#endif // /TODO
 
 
 /* ----- Structures ----- */
@@ -198,6 +177,14 @@ struct BufferDescriptor
         std::uint32_t       stride      = 0;
     };
 
+    /**
+    \brief Buffer size (in bytes). This must not be larger than 'RenderingLimits::maxBufferSize'. By default 0.
+    \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage), 'size' must be a multiple of 'storageBuffer.stride'.
+    \see RenderingLimits::maxBufferSize
+    */
+    std::uint64_t   size            = 0;
+
+    #if 0 // TODO: replace this by "bindFlags" etc.
     //! Hardware buffer type. By default BufferType::Vertex.
     BufferType      type            = BufferType::Vertex;
 
@@ -207,13 +194,29 @@ struct BufferDescriptor
     \see BufferFlags
     */
     long            flags           = 0;
+    #else
+    /**
+    \brief These flags describe to which resource slots the buffer can be bound. By default 0.
+    \remarks When the buffer will be bound to a vertex buffer slot for instance, the BindFlags::VertexBuffer flag is required.
+    \see BindFlags
+    */
+    long            bindFlags       = 0;
 
     /**
-    \brief Buffer size (in bytes). This must not be larger than 'RenderingLimits::maxBufferSize'. By default 0.
-    \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage), 'size' must be a multiple of 'storageBuffer.stride'.
-    \see RenderingLimits::maxBufferSize
+    \brief CPU read/write access flags. By default 0.
+    \remarks If this is 0 the buffer cannot be mapped from GPU memory space into CPU memory space and vice versa.
+    \see CPUAccessFlags
+    \see RenderSystem::MapBuffer
     */
-    std::uint64_t   size            = 0;
+    long            cpuAccessFlags  = 0;
+
+    /**
+    \brief Miscellaneous buffer flags. By default 0.
+    \remarks This can be used as a hint for the renderer how frequently the buffer will be updated.
+    \see MiscFlags
+    */
+    long            miscFlags       = 0;
+    #endif // /TODO
 
     //! Vertex buffer type descriptor appendix.
     VertexBuffer    vertexBuffer;

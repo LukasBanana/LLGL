@@ -232,12 +232,14 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \brief Creates a new buffer array.
         \param[in] numBuffers Specifies the number of buffers in the array. This must be greater than 0.
         \param[in] bufferArray Pointer to an array of Buffer object pointers. This must not be null.
-        \remarks This array can only contain buffers which are all from the same type, like an array of vertex buffers for instance.
+        \remarks All buffers within this array must have the same binding flags.
         The buffers inside this array must persist as long as this buffer array is used,
         and the individual buffers are still required to read and write its data from and to the GPU.
-        \throws std::invalid_argument If 'numBuffers' is 0, if 'bufferArray' is null,
-        if any of the pointers in the array are null, if not all buffers have the same type, or if the buffer array type is
-        not one of these: BufferType::Vertex, BufferType::Constant, BufferType::Storage, or BufferType::StreamOutput.
+        \throws std::invalid_argument If \c numBuffers is 0.
+        \throws std::invalid_argument If \c bufferArray is null.
+        \throws std::invalid_argument If any of the pointers in the array are null.
+        \throws std::invalid_argument If not all buffers have the same binding flags.
+        \see BufferDescriptor::bindFlags
         */
         virtual BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) = 0;
 

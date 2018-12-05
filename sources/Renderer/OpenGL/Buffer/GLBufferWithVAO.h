@@ -1,12 +1,12 @@
 /*
- * GLVertexBuffer.h
+ * GLBufferWithVAO.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_GL_VERTEX_BUFFER_H
-#define LLGL_GL_VERTEX_BUFFER_H
+#ifndef LLGL_GL_BUFFER_WITH_VAO_H
+#define LLGL_GL_BUFFER_WITH_VAO_H
 
 
 #include "GLBuffer.h"
@@ -17,12 +17,12 @@ namespace LLGL
 {
 
 
-class GLVertexBuffer final : public GLBuffer
+class GLBufferWithVAO final : public GLBuffer
 {
 
     public:
 
-        GLVertexBuffer();
+        GLBufferWithVAO(long bindFlags);
 
         void BuildVertexArray(const VertexFormat& vertexFormat);
 

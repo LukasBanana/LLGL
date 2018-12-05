@@ -280,16 +280,22 @@ void GLCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
 
 void GLCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
-    /* Bind vertex buffer */
-    auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, buffer);
-    stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
+    if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
+    {
+        /* Bind vertex buffer */
+        auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
+        stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
+    }
 }
 
 void GLCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    /* Bind vertex buffer */
-    auto& vertexBufferArrayGL = LLGL_CAST(GLVertexBufferArray&, bufferArray);
-    stateMngr_->BindVertexArray(vertexBufferArrayGL.GetVaoID());
+    if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)
+    {
+        /* Bind vertex buffer */
+        auto& vertexBufferArrayGL = LLGL_CAST(GLBufferArrayWithVAO&, bufferArray);
+        stateMngr_->BindVertexArray(vertexBufferArrayGL.GetVaoID());
+    }
 }
 
 void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
@@ -668,7 +674,12 @@ void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long
     SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
 }
 
-void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+void GLCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+{
+    SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
+}
+
+void GLCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
 }
@@ -690,6 +701,7 @@ void GLCommandBuffer::ResetResourceSlots(
     const ResourceType  resourceType,
     std::uint32_t       firstSlot,
     std::uint32_t       numSlots,
+    long                bindFlags,
     long                /*stageFlags*/)
 {
     if (numSlots > 0)
@@ -700,21 +712,18 @@ void GLCommandBuffer::ResetResourceSlots(
         switch (resourceType)
         {
             case ResourceType::Undefined:
-            case ResourceType::VertexBuffer:
-            case ResourceType::IndexBuffer:
                 break;
 
-            case ResourceType::ConstantBuffer:
-                stateMngr_->BindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, first, count, g_nullResources);
-                break;
-
-            case ResourceType::StorageBuffer:
-                stateMngr_->BindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, first, count, g_nullResources);
-                break;
-
-            case ResourceType::StreamOutputBuffer:
-                stateMngr_->BindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, first, count, g_nullResources);
-                break;
+            case ResourceType::Buffer:
+            {
+                if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+                    stateMngr_->BindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, first, count, g_nullResources);
+                if ((bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+                    stateMngr_->BindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, first, count, g_nullResources);
+                if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
+                    stateMngr_->BindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, first, count, g_nullResources);
+            }
+            break;
 
             case ResourceType::Texture:
                 stateMngr_->UnbindTextures(first, count);

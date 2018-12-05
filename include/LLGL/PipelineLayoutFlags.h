@@ -32,8 +32,9 @@ struct BindingDescriptor
     BindingDescriptor(const BindingDescriptor&) = default;
 
     //! Constructors with all attributes and a default value for a uniform array.
-    inline BindingDescriptor(ResourceType type, long stageFlags, std::uint32_t slot, std::uint32_t arraySize = 1) :
+    inline BindingDescriptor(ResourceType type, long bindFlags, long stageFlags, std::uint32_t slot, std::uint32_t arraySize = 1) :
         type       { type       },
+        bindFlags  { bindFlags  },
         stageFlags { stageFlags },
         slot       { slot       },
         arraySize  { arraySize  }
@@ -42,6 +43,14 @@ struct BindingDescriptor
 
     //! Resource view type for this layout binding. By default ResourceType::Undefined.
     ResourceType    type        = ResourceType::Undefined;
+
+    /**
+    \brief Specifies to which kind of resource slot the resource will be bound. By default 0.
+    \remarks When a Buffer is bound to a constant buffer slot for instance, the BindFlags::ConstantBuffer is requried.
+    For texture resources, the bind flags are optional and only required to bind a read/write texture, e.g. \c image2D in GLSL or \c RWTexture2D in HLSL, using the BindFlags::RWStorageBuffer flag.
+    \see BindFlags
+    */
+    long            bindFlags   = 0;
 
     /**
     \brief Specifies which shader stages are affected by this layout binding. By default 0.

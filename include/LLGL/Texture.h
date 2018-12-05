@@ -29,7 +29,7 @@ class LLGL_EXPORT Texture : public Resource
     public:
 
         //! Returns ResourceType::Texture.
-        ResourceType QueryResourceType() const override;
+        ResourceType QueryResourceType() const override final;
 
         //! Returns the type of this texture.
         inline TextureType GetType() const
@@ -39,8 +39,6 @@ class LLGL_EXPORT Texture : public Resource
 
         /**
         \brief Queries a descriptor of this texture (including type, format, and size).
-        \remarks This function is guaranteed to keep the currently bound textures,
-        i.e. all previously boundd textures (e.g. using the CommandBufferExt::SetTexture function) will remain.
         \note The field TextureDescriptor::flags will always be 0, i.e. the texture flags cannot be retrived after texture creation.
         \see TextureDescriptor
         */

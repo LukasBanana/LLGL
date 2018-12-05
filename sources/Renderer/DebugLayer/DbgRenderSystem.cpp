@@ -113,7 +113,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
     }
 
     /* Create buffer object */
-    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(desc, initialData), desc.type);
+    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(desc, initialData), desc.bindFlags);
 
     /* Store settings */
     bufferDbg->desc         = desc;
@@ -127,7 +127,7 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
 
-    const auto bufferType = (*bufferArray)->GetType();
+    const auto bindFlags = (*bufferArray)->GetBindFlags();
 
     /* Create temporary buffer array with buffer instances */
     std::vector<Buffer*>    bufferInstanceArray(numBuffers);
@@ -142,7 +142,7 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
 
     /* Create native buffer and debug buffer */
     auto bufferArrayInstance    = instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
-    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, bufferType);
+    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, bindFlags);
 
     /* Store buffer references */
     bufferArrayDbg->buffers = std::move(bufferDbgArray);
@@ -194,7 +194,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateBufferCPUAccess(bufferDbg, access);
+        ValidateResourceCPUAccess(bufferDbg.desc.cpuAccessFlags, access, "buffer");
         ValidateBufferMapping(bufferDbg, true);
     }
 
@@ -348,11 +348,7 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
             {
                 switch (resource->QueryResourceType())
                 {
-                    case ResourceType::VertexBuffer:
-                    case ResourceType::IndexBuffer:
-                    case ResourceType::ConstantBuffer:
-                    case ResourceType::StorageBuffer:
-                    case ResourceType::StreamOutputBuffer:
+                    case ResourceType::Buffer:
                         resourceView.resource = &(LLGL_CAST(DbgBuffer*, resourceView.resource)->instance);
                         break;
                     case ResourceType::Texture:
@@ -555,51 +551,129 @@ void DbgRenderSystem::Release(Fence& fence)
  * ======= Private: =======
  */
 
-void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSize)
+void DbgRenderSystem::ValidateBindFlags(long flags)
 {
+    const long bufferOnlyFlags =
+    (
+        BindFlags::VertexBuffer             |
+        BindFlags::IndexBuffer              |
+        BindFlags::ConstantBuffer           |
+        BindFlags::StreamOutputBuffer       |
+        BindFlags::IndirectBuffer
+    );
+
+    const long textureOnlyFlags =
+    (
+        BindFlags::ColorAttachment          |
+        BindFlags::DepthStencilAttachment
+    );
+
+    const long validFlags =
+    (
+        bufferOnlyFlags                     |
+        textureOnlyFlags                    |
+        BindFlags::SampleBuffer             |
+        BindFlags::RWStorageBuffer
+    );
+
+    /* Check for unknown flags */
+    if ((flags & (~validFlags)) != 0)
+        LLGL_DBG_WARN(WarningType::ImproperArgument, "unknown bind flags specified");
+
+    /* Validate combination of flags */
+    if ((flags & bufferOnlyFlags) != 0 && (flags & textureOnlyFlags) != 0)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot combine binding flags that are exclusive for buffers and textures");
+    if ((flags & BindFlags::ColorAttachment) != 0 && (flags & BindFlags::DepthStencilAttachment) != 0)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "resources cannot have color attachment and depth-stencil attachment binding flags at the same time");
+}
+
+void DbgRenderSystem::ValidateCPUAccessFlags(long flags, long validFlags, const char* contextDesc)
+{
+    if ((flags & (~validFlags)) != 0)
+    {
+        std::string msg = "unknown CPU access flags specified";
+        if (contextDesc)
+            msg += (" for " + std::string(contextDesc));
+        LLGL_DBG_WARN(WarningType::ImproperArgument, msg);
+    }
+}
+
+void DbgRenderSystem::ValidateMiscFlags(long flags, long validFlags, const char* contextDesc)
+{
+    if ((flags & (~validFlags)) != 0)
+    {
+        std::string msg = "unknown miscellaneous flags specified";
+        if (contextDesc)
+            msg += (" for " + std::string(contextDesc));
+        LLGL_DBG_WARN(WarningType::ImproperArgument, msg);
+    }
+}
+
+void DbgRenderSystem::ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAccess access, const char* resourceTypeName)
+{
+    if (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite)
+    {
+        if ((cpuAccessFlags & CPUAccessFlags::Read) == 0)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "cannot map " + std::string(resourceTypeName) + " with CPU read access, because the resource was not created with 'LLGL::CPUAccessFlags::Read' flag"
+            );
+        }
+    }
+    if (access == CPUAccess::WriteOnly || access == CPUAccess::ReadWrite)
+    {
+        if ((cpuAccessFlags & CPUAccessFlags::Write) == 0)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "cannot map " + std::string(resourceTypeName) + " with CPU write access, because the resource was not created with 'LLGL::CPUAccessFlags::Write' flag"
+            );
+        }
+    }
+}
+
+void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSizeOut)
+{
+    /* Validate flags */
+    ValidateBindFlags(desc.bindFlags);
+    ValidateCPUAccessFlags(desc.cpuAccessFlags, CPUAccessFlags::ReadWrite, "buffer");
+    ValidateMiscFlags(desc.miscFlags, MiscFlags::DynamicUsage, "buffer");
+
     /* Validate (constant-) buffer size */
-    if (desc.type == BufferType::Constant)
+    if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
         ValidateConstantBufferSize(desc.size);
     else
         ValidateBufferSize(desc.size);
 
-    std::uint32_t formatSizeTemp = 0;
+    std::uint32_t formatSize = 0;
 
-    switch (desc.type)
+    if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
-        case BufferType::Vertex:
-        {
-            /* Validate buffer size for specified vertex format */
-            formatSizeTemp = desc.vertexBuffer.format.stride;
-            if (formatSizeTemp > 0 && desc.size % formatSizeTemp != 0)
-                LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSizeTemp) + " bytes");
-        }
-        break;
-
-        case BufferType::Index:
-        {
-            /* Validate buffer size for specified index format */
-            formatSizeTemp = desc.indexBuffer.format.GetFormatSize();
-            if (formatSizeTemp > 0 && desc.size % formatSizeTemp != 0)
-                LLGL_DBG_WARN(WarningType::ImproperArgument, "improper index buffer size with index format of " + std::to_string(formatSizeTemp) + " bytes");
-        }
-        break;
-
-        case BufferType::Constant:
-        {
-            /* Validate pack alginemnt of 16 bytes */
-            static const std::size_t packAlignment = 16;
-            if (desc.size % packAlignment != 0)
-                LLGL_DBG_WARN(WarningType::ImproperArgument, "constant buffer size is out of pack alignment (alignment is 16 bytes)");
-        }
-        break;
-
-        default:
-        break;
+        /* Validate buffer size for specified vertex format */
+        formatSize = desc.vertexBuffer.format.stride;
+        if (formatSize > 0 && desc.size % formatSize != 0)
+            LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
     }
 
-    if (formatSize)
-        *formatSize = formatSizeTemp;
+    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
+    {
+        /* Validate buffer size for specified index format */
+        formatSize = desc.indexBuffer.format.GetFormatSize();
+        if (formatSize > 0 && desc.size % formatSize != 0)
+            LLGL_DBG_WARN(WarningType::ImproperArgument, "improper index buffer size with index format of " + std::to_string(formatSize) + " bytes");
+    }
+
+    if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
+    {
+        /* Validate pack alginemnt of 16 bytes */
+        static const std::uint64_t packAlignment = 16;
+        if (desc.size % packAlignment != 0)
+            LLGL_DBG_WARN(WarningType::ImproperArgument, "constant buffer size is out of pack alignment (alignment is 16 bytes)");
+    }
+
+    if (formatSizeOut)
+        *formatSizeOut = formatSize;
 }
 
 void DbgRenderSystem::ValidateBufferSize(std::uint64_t size)
@@ -630,20 +704,6 @@ void DbgRenderSystem::ValidateBufferBoundary(std::uint64_t bufferSize, std::uint
 {
     if (dataSize + dstOffset > bufferSize)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds");
-}
-
-void DbgRenderSystem::ValidateBufferCPUAccess(DbgBuffer& bufferDbg, const CPUAccess access)
-{
-    if (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite)
-    {
-        if ((bufferDbg.desc.flags & BufferFlags::MapReadAccess) == 0)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot map buffer with CPU read access (buffer was not created with 'LLGL::BufferFlags::MapReadAccess' flag)");
-    }
-    if (access == CPUAccess::WriteOnly || access == CPUAccess::ReadWrite)
-    {
-        if ((bufferDbg.desc.flags & BufferFlags::MapWriteAccess) == 0)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot map buffer with CPU write access (buffer was not created with 'LLGL::BufferFlags::MapWriteAccess' flag)");
-    }
 }
 
 void DbgRenderSystem::ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory)
@@ -731,6 +791,9 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
 
     ValidateTextureDescMipLevels(desc);
     ValidateArrayTextureLayers(desc.type, desc.arrayLayers);
+    ValidateBindFlags(desc.bindFlags);
+    ValidateCPUAccessFlags(desc.cpuAccessFlags, CPUAccessFlags::ReadWrite, "texture");
+    ValidateMiscFlags(desc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::FixedSamples), "texture");
 }
 
 void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& desc)
@@ -969,21 +1032,21 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& desc)
         /* Validate attachment type for this texture */
         if (desc.type == AttachmentType::Color)
         {
-            if ((textureDbg->desc.flags & TextureFlags::ColorAttachmentUsage) == 0)
+            if ((textureDbg->desc.bindFlags & BindFlags::ColorAttachment) == 0)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidState,
-                    "cannot have color attachment with a texture that was not created with the 'TextureFlags::ColorAttachmentUsage' flag"
+                    "cannot have color attachment with a texture that was not created with the 'BindFlags::ColorAttachment' flag"
                 );
             }
         }
         else
         {
-            if ((textureDbg->desc.flags & TextureFlags::DepthStencilAttachmentUsage) == 0)
+            if ((textureDbg->desc.bindFlags & BindFlags::DepthStencilAttachment) == 0)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidState,
-                    "cannot have depth-stencil attachment with a texture that was not created with the 'TextureFlags::DepthStencilAttachmentUsage' flag"
+                    "cannot have depth-stencil attachment with a texture that was not created with the 'BindFlags::DepthStencilAttachment' flag"
                 );
             }
         }

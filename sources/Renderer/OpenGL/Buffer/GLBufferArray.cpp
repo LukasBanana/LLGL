@@ -15,13 +15,13 @@ namespace LLGL
 {
 
 
-GLBufferArray::GLBufferArray(const BufferType type) :
-    BufferArray { type }
+GLBufferArray::GLBufferArray(long bindFlags) :
+    BufferArray { bindFlags }
 {
 }
 
-GLBufferArray::GLBufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { type }
+GLBufferArray::GLBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { bindFlags }
 {
     BuildArray(numBuffers, bufferArray);
 }

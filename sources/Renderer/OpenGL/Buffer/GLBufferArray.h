@@ -26,8 +26,8 @@ class GLBufferArray : public BufferArray
 
     public:
 
-        GLBufferArray(const BufferType type);
-        GLBufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray);
+        GLBufferArray(long bindFlags);
+        GLBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer IDs.
         inline const std::vector<GLuint>& GetIDArray() const

@@ -12,8 +12,8 @@ namespace LLGL
 {
 
 
-BufferArray::BufferArray(const BufferType type) :
-    type_ { type }
+BufferArray::BufferArray(long bindFlags) :
+    bindFlags_ { bindFlags }
 {
 }
 

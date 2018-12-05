@@ -119,7 +119,7 @@ D3D11_BUFFER_DESC D3D11Buffer::GetNativeBufferDesc(const BufferDescriptor& desc,
     }
 
     /* Apply additional flags */
-    if ((desc.flags & BufferFlags::IndirectArgumentBinding) != 0)
+    if ((desc.flags & BufferFlags::IndirectBinding) != 0)
         descD3D.MiscFlags |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
 
     return descD3D;

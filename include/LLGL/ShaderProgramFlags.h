@@ -120,6 +120,14 @@ struct ShaderReflectionDescriptor
         ResourceType        type                = ResourceType::Undefined;
 
         /**
+        \brief Specifies to which kind of resource slot the resource is bound. By default 0.
+        \remarks For a constant buffer for instance, the flags will contain the BindFlags::ConstantBuffer flag.
+        For a 2D texture for instance, the flags will contain the BindFlags::SampleBuffer flag.
+        \see BindFlags
+        */
+        long                bindFlags           = 0;
+
+        /**
         \brief Specifies in which shader stages the resource is located. By default 0.
         \remarks This can be a bitwise OR combination of the StageFlags bitmasks.
         \see StageFlags

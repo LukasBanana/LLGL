@@ -10,7 +10,7 @@
 
 
 #include "Resource.h"
-#include "BufferFlags.h"
+#include "BufferFlags.h"//TODO: replace by "ResourceFlags.h"
 
 
 namespace LLGL
@@ -27,21 +27,24 @@ class LLGL_EXPORT Buffer : public Resource
     public:
 
         //! Returns the ResourceType for the respective BufferType.
-        ResourceType QueryResourceType() const override;
+        ResourceType QueryResourceType() const override final;
 
-        //! Returns the type of this buffer.
-        inline BufferType GetType() const
+        /**
+        \brief Returns the binding flags this buffer was created with.
+        \see BufferDescriptor::bindFlags
+        */
+        inline long GetBindFlags() const
         {
-            return type_;
+            return bindFlags_;
         }
 
     protected:
 
-        Buffer(const BufferType type);
+        Buffer(long bindFlags);
 
     private:
 
-        BufferType type_;
+        long bindFlags_ = 0;
 
 };
 

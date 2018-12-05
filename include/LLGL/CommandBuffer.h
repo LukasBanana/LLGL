@@ -544,7 +544,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Draws an unknown amount of instances of primitives whose draw command arguments are taken from a buffer object.
-        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectBinding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \see DrawIndirectArguments
         \see RenderingFeatures::hasIndirectDrawing
@@ -553,7 +553,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Draws an unknown amount of instances of primitives whose draw command arguments are taken from a buffer object.
-        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectBinding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \param[in] numCommands Specifies the number of draw commands that are to be taken from the argument buffer.
         \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments,
@@ -574,7 +574,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Draws an unknown amount of instances of primitives whose indexed draw command arguments are taken from a buffer object.
-        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectBinding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \see DrawIndexedIndirectArguments
         */
@@ -582,7 +582,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Draws an unknown amount of instances of primitives whose indexed draw command arguments are taken from a buffer object.
-        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BufferFlags::IndirectBinding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \param[in] numCommands Specifies the number of draw commands that are to be taken from the argument buffer.
         \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments,
@@ -614,7 +614,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Dispatches a compute command with an unknown amount of thread grounds.
-        \param[in] buffer Specifies the buffer from which the dispatch command arguments are taken. This buffer must have been created with the BufferFlags::IndirectArgumentBinding flag.
+        \param[in] buffer Specifies the buffer from which the dispatch command arguments are taken. This buffer must have been created with the BufferFlags::IndirectBinding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \see DispatchIndirectArguments
         */

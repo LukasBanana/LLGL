@@ -22,38 +22,38 @@ namespace LLGL
 
 /* ----- TextureDescriptor utility functions ----- */
 
-LLGL_EXPORT TextureDescriptor Texture1DDesc(Format format, std::uint32_t width, long flags)
+LLGL_EXPORT TextureDescriptor Texture1DDesc(Format format, std::uint32_t width, long bindFlags)
 {
     TextureDescriptor desc;
     {
         desc.type           = TextureType::Texture1D;
+        desc.bindFlags      = bindFlags;
         desc.format         = format;
-        desc.flags          = flags;
         desc.extent.width   = width;
     }
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DDesc(Format format, std::uint32_t width, std::uint32_t height, long flags)
+LLGL_EXPORT TextureDescriptor Texture2DDesc(Format format, std::uint32_t width, std::uint32_t height, long bindFlags)
 {
     TextureDescriptor desc;
     {
         desc.type           = TextureType::Texture2D;
+        desc.bindFlags      = bindFlags;
         desc.format         = format;
-        desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
     }
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture3DDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t depth, long flags)
+LLGL_EXPORT TextureDescriptor Texture3DDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t depth, long bindFlags)
 {
     TextureDescriptor desc;
     {
         desc.type           = TextureType::Texture3D;
+        desc.bindFlags      = bindFlags;
         desc.format         = format;
-        desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
         desc.extent.depth   = depth;
@@ -61,39 +61,39 @@ LLGL_EXPORT TextureDescriptor Texture3DDesc(Format format, std::uint32_t width, 
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width, std::uint32_t height, long flags)
+LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width, std::uint32_t height, long bindFlags)
 {
     TextureDescriptor desc;
     {
         desc.type           = TextureType::TextureCube;
+        desc.bindFlags      = bindFlags;
         desc.format         = format;
-        desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
     }
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t arrayLayers, long flags)
+LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t arrayLayers, long bindFlags)
 {
     TextureDescriptor desc;
     {
         desc.type           = TextureType::Texture1DArray;
+        desc.bindFlags      = bindFlags;
         desc.format         = format;
-        desc.flags          = flags;
         desc.extent.width   = width;
         desc.arrayLayers    = arrayLayers;
     }
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long flags)
+LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long bindFlags)
 {
     TextureDescriptor desc;
     {
         desc.type           = TextureType::Texture2DArray;
+        desc.bindFlags      = bindFlags;
         desc.format         = format;
-        desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
         desc.arrayLayers    = arrayLayers;
@@ -101,13 +101,13 @@ LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t wi
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long flags)
+LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long bindFlags)
 {
     TextureDescriptor desc;
     {
         desc.type           = TextureType::TextureCubeArray;
+        desc.bindFlags      = bindFlags;
         desc.format         = format;
-        desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
         desc.arrayLayers    = arrayLayers;
@@ -115,13 +115,14 @@ LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t 
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t samples, long flags)
+LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t samples, long bindFlags)
 {
     TextureDescriptor desc;
     {
         desc.type           = TextureType::Texture2DMS;
+        desc.bindFlags      = bindFlags;
+        desc.miscFlags      = MiscFlags::FixedSamples;
         desc.format         = format;
-        desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
         desc.samples        = samples;
@@ -129,13 +130,14 @@ LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, std::uint32_t samples, long flags)
+LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, std::uint32_t samples, long bindFlags)
 {
     TextureDescriptor desc;
     {
         desc.type           = TextureType::Texture2DMSArray;
+        desc.bindFlags      = bindFlags;
+        desc.miscFlags      = MiscFlags::FixedSamples;
         desc.format         = format;
-        desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
         desc.arrayLayers    = arrayLayers;
@@ -146,48 +148,49 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t 
 
 /* ----- BufferDescriptor utility functions ----- */
 
-LLGL_EXPORT BufferDescriptor VertexBufferDesc(std::uint64_t size, const VertexFormat& vertexFormat, long flags)
+LLGL_EXPORT BufferDescriptor VertexBufferDesc(std::uint64_t size, const VertexFormat& vertexFormat, long cpuAccessFlags)
 {
     BufferDescriptor desc;
     {
-        desc.type                   = BufferType::Vertex;
         desc.size                   = size;
-        desc.flags                  = flags;
+        desc.bindFlags              = BindFlags::VertexBuffer;
+        desc.cpuAccessFlags         = cpuAccessFlags;
         desc.vertexBuffer.format    = vertexFormat;
     }
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor IndexBufferDesc(std::uint64_t size, const IndexFormat& indexFormat, long flags)
+LLGL_EXPORT BufferDescriptor IndexBufferDesc(std::uint64_t size, const IndexFormat& indexFormat, long cpuAccessFlags)
 {
     BufferDescriptor desc;
     {
-        desc.type               = BufferType::Index;
         desc.size               = size;
-        desc.flags              = flags;
+        desc.bindFlags          = BindFlags::IndexBuffer;
+        desc.cpuAccessFlags     = cpuAccessFlags;
         desc.indexBuffer.format = indexFormat;
     }
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor ConstantBufferDesc(std::uint64_t size, long flags)
+LLGL_EXPORT BufferDescriptor ConstantBufferDesc(std::uint64_t size, long cpuAccessFlags)
 {
     BufferDescriptor desc;
     {
-        desc.type   = BufferType::Constant;
-        desc.size   = size;
-        desc.flags  = flags;
+        desc.size           = size;
+        desc.bindFlags      = BindFlags::ConstantBuffer;
+        desc.cpuAccessFlags = cpuAccessFlags;
+        desc.miscFlags      = MiscFlags::DynamicUsage;
     }
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const StorageBufferType storageType, std::uint32_t stride, long flags)
+LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const StorageBufferType storageType, std::uint32_t stride, long cpuAccessFlags)
 {
     BufferDescriptor desc;
     {
-        desc.type                       = BufferType::Storage;
         desc.size                       = size;
-        desc.flags                      = flags;
+        desc.bindFlags                  = BindFlags::RWStorageBuffer;
+        desc.cpuAccessFlags             = cpuAccessFlags;
         desc.storageBuffer.storageType  = storageType;
         desc.storageBuffer.stride       = stride;
     }
@@ -290,6 +293,7 @@ LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>
 static void Convert(BindingDescriptor& dst, const ShaderReflectionDescriptor::ResourceView& src)
 {
     dst.type        = src.type;
+    dst.bindFlags   = src.bindFlags;
     dst.stageFlags  = src.stageFlags;
     dst.slot        = src.slot;
     dst.arraySize   = src.arraySize;
@@ -359,15 +363,18 @@ static ResourceType ParseLayoutSignatureResourceType(const char*& s)
 {
     struct ResourceTypeIdent
     {
-        ResourceType    type;
         const char*     ident;
+        ResourceType    type;
+        long            bindFlags;
     };
     const ResourceTypeIdent g_resources[] =
     {
-        { ResourceType::ConstantBuffer, "cbuffer" },
-        { ResourceType::StorageBuffer,  "sbuffer" },
-        { ResourceType::Texture,        "texture" },
-        { ResourceType::Sampler,        "sampler" },
+        { "cbuffer",   ResourceType::Buffer,  BindFlags::ConstantBuffer  },
+        { "sbuffer",   ResourceType::Buffer,  BindFlags::SampleBuffer    },
+        { "rwbuffer",  ResourceType::Buffer,  BindFlags::RWStorageBuffer },
+        { "texture",   ResourceType::Texture, BindFlags::SampleBuffer    },
+        { "rwtexture", ResourceType::Texture, BindFlags::RWStorageBuffer },
+        { "sampler",   ResourceType::Sampler, 0                          },
     };
 
     /* Parse identifier (find end of alphabetic characters) */
@@ -383,7 +390,7 @@ static ResourceType ParseLayoutSignatureResourceType(const char*& s)
         /* Determine which identifier is used */
         for (const auto& resource : g_resources)
         {
-            if (std::strncmp(token, resource.ident, tokenLen) == 0)
+            if (std::strlen(resource.ident) == tokenLen && std::strncmp(token, resource.ident, tokenLen) == 0)
                 return resource.type;
         }
 

@@ -28,19 +28,22 @@ class LLGL_EXPORT BufferArray : public RenderSystemChild
 
     public:
 
-        //! Returns the type of buffers this array contains.
-        inline BufferType GetType() const
+        /**
+        \brief Returns the binding flags this buffer array was created with.
+        \see BufferDescriptor::bindFlags
+        */
+        inline long GetBindFlags() const
         {
-            return type_;
+            return bindFlags_;
         }
 
     protected:
 
-        BufferArray(const BufferType type);
+        BufferArray(long bindFlags);
 
     private:
 
-        BufferType type_;
+        long bindFlags_ = 0;
 
 };
 

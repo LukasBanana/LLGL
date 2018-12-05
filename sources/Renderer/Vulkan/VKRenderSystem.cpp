@@ -47,7 +47,7 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(long bufferFlags)
 {
     VkBufferUsageFlags flags = 0;
 
-    if ((bufferFlags & BufferFlags::IndirectArgumentBinding) != 0)
+    if ((bufferFlags & BufferFlags::IndirectBinding) != 0)
         flags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
 
     if ((bufferFlags & BufferFlags::MapReadAccess) != 0)

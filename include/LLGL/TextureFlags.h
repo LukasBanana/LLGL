@@ -56,6 +56,7 @@ enum class TextureSwizzle
 
 /* ----- Flags ----- */
 
+#if 0 // TODO: replace by <BindFlags> entries
 /**
 \brief Texture creation flags enumeration.
 \see TextureDescriptor::flags
@@ -128,6 +129,7 @@ struct TextureFlags
         Default                     = (ColorAttachmentUsage | SampleUsage | FixedSamples),
     };
 };
+#endif // /TODO
 
 
 /* ----- Structures ----- */
@@ -154,17 +156,42 @@ struct TextureSwizzleRGBA
 struct TextureDescriptor
 {
     //! Hardware texture type. By default TextureType::Texture1D.
-    TextureType     type        = TextureType::Texture1D;
+    TextureType     type            = TextureType::Texture1D;
 
+    #if 0 // TODO: repalce by "bindFlags" etc.
     /**
     \brief Specifies the texture creation flags (e.g. if MIP-mapping is required). By default TextureFlags::Default.
     \remarks This can be bitwise OR combination of the entries of the TextureFlags enumeration.
     \see TextureFlags
     */
-    long            flags       = TextureFlags::Default;
+    long            flags           = TextureFlags::Default;
+    #else
+    /**
+    \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default (BindFlags::SampleBuffer | BindFlags::ColorAttachment).
+    \remarks When the texture will be bound as a color attachment to a render target for instance, the BindFlags::ColorAttachment flag is required.
+    \see BindFlags
+    */
+    long            bindFlags       = (BindFlags::SampleBuffer | BindFlags::ColorAttachment);
+
+    /**
+    \brief CPU read/write access flags. By default 0.
+    \remarks If this is 0 the texture cannot be mapped from GPU memory space into CPU memory space and vice versa.
+    \see CPUAccessFlags
+    \see RenderSystem::MapTexture
+    \todo Not supported yet.
+    */
+    long            cpuAccessFlags  = 0;
+
+    /**
+    \brief Miscellaneous texture flags. By default MiscFlags::FixedSamples.
+    \remarks This can be used as a hint for the renderer how frequently the texture will be updated, or whether a multi-sampled texture has fixed sample locations.
+    \see MiscFlags
+    */
+    long            miscFlags       = MiscFlags::FixedSamples;
+    #endif // /TODO
 
     //! Hardware texture format. By default Format::RGBA8UNorm.
-    Format          format      = Format::RGBA8UNorm;
+    Format          format          = Format::RGBA8UNorm;
 
     /**
     \brief Texture extent. By default (1, 1, 1).
@@ -175,7 +202,7 @@ struct TextureDescriptor
     \see IsArrayTexture
     \see IsCubeTexture
     */
-    Extent3D        extent      = { 1, 1, 1 };
+    Extent3D        extent          = { 1, 1, 1 };
 
     /**
     \brief Number of array layers. By default 1.
@@ -194,7 +221,7 @@ struct TextureDescriptor
     \see IsCubeTexture
     \see RenderingLimits::maxTextureArrayLayers
     */
-    std::uint32_t   arrayLayers = 1;
+    std::uint32_t   arrayLayers     = 1;
 
     /**
     \brief Number of MIP-map levels. By default 0.
@@ -205,7 +232,7 @@ struct TextureDescriptor
     \see NumMipLevels
     \see RenderSystem::GenerateMips
     */
-    std::uint32_t   mipLevels   = 0;
+    std::uint32_t   mipLevels       = 0;
 
     /**
     \brief Number of samples per texel. By default 1.
@@ -213,7 +240,7 @@ struct TextureDescriptor
     The equivalent member for graphics pipeline states is MultiSamplingDescriptor::samples.
     \see IsMultiSampleTexture
     */
-    std::uint32_t   samples     = 1;
+    std::uint32_t   samples         = 1;
 };
 
 /**

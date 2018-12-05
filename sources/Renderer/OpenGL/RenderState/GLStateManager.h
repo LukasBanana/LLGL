@@ -95,7 +95,7 @@ class GLStateManager
         void SetPatchVertices(GLint patchVertices);
         void SetLineWidth(GLfloat width);
         #if 0//TODO
-        void SetSampleMask(GLuint maskNumber, GLbitfield mask);
+        //void SetSampleMask(GLuint maskNumber, GLbitfield mask);
         #endif
 
         /* ----- Depth-stencil states ----- */
@@ -136,13 +136,13 @@ class GLStateManager
 
         /* ----- Buffer ----- */
 
-        static GLBufferTarget GetBufferTarget(const BufferType type);
-
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
         void BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers);
 
         void BindVertexArray(GLuint vertexArray);
+
+        void BindBuffer(const GLBuffer& buffer);
 
         void NotifyVertexArrayRelease(GLuint vertexArray);
 
@@ -155,9 +155,8 @@ class GLStateManager
         void PushBoundBuffer(GLBufferTarget target);
         void PopBoundBuffer();
 
-        void BindBuffer(const GLBuffer& buffer);
-
         void NotifyBufferRelease(GLuint buffer, GLBufferTarget target);
+        void NotifyBufferRelease(const GLBuffer& buffer);
 
         /* ----- Framebuffer ----- */
 

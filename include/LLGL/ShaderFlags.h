@@ -93,11 +93,13 @@ struct StageFlags
         FragmentStage       = (1 << 4), //!< Specifies the fragment shader stage (also "Pixel Shader").
         ComputeStage        = (1 << 5), //!< Specifies the compute shader stage.
 
+        #if 0 // TODO: replace this by <BindFlags> or other respective enum
         /**
         \brief Specifies whether a resource is bound to the shader stages as unordered access view (UAV) instead of a read-only shader resource view (SRV).
         \remarks This can be used to bind a storage buffer (i.e. BufferType::Storage) that was created with read/write access (e.g. StorageBufferType::RWBuffer) as UAV instead of SRV.
         */
         StorageUsage        = (1 << 6),
+        #endif // /TODO
 
         //! Specifies all tessellation stages, i.e. tessellation-control-, tessellation-evaluation shader stages.
         AllTessStages       = (TessControlStage | TessEvaluationStage),

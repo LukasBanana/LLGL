@@ -140,7 +140,8 @@ class DbgCommandBuffer : public CommandBufferExt
         /* ----- Direct Resource Access ------ */
 
         void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
         void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
         void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
 
@@ -148,6 +149,7 @@ class DbgCommandBuffer : public CommandBufferExt
             const ResourceType  resourceType,
             std::uint32_t       firstSlot,
             std::uint32_t       numSlots,
+            long                bindFlags,
             long                stageFlags      = StageFlags::AllStages
         ) override;
 
@@ -182,9 +184,9 @@ class DbgCommandBuffer : public CommandBufferExt
         void ValidateThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
         void ValidateAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound);
 
+        void ValidateResourceFlag(long resourceFlags, long requiredFlag, const char* flagName);
+
         void ValidateStageFlags(long stageFlags, long validFlags);
-        void ValidateBufferType(const BufferType bufferType, const BufferType compareType);
-        void ValidateBufferFlag(DbgBuffer& bufferDbg, long requiredFlag, const char* flagName);
         void ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size);
         void ValidateAddressAlignment(std::uint64_t address, std::uint64_t alignment, const char* addressName);
 

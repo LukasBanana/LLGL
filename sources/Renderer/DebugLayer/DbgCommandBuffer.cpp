@@ -222,7 +222,7 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateBufferType(buffer.GetType(), BufferType::Vertex);
+        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::VertexBuffer, "BindFlags::VertexBuffer");
     }
 
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
@@ -242,17 +242,14 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
 
 void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateBufferType(bufferArray.GetType(), BufferType::Vertex);
-    }
-
     auto& bufferArrayDbg = LLGL_CAST(DbgBufferArray&, bufferArray);
 
     if (debugger_)
     {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateResourceFlag(bufferArrayDbg.GetBindFlags(), BindFlags::VertexBuffer, "BindFlags::VertexBuffer");
+
         bindings_.vertexBuffers         = bufferArrayDbg.buffers.data();
         bindings_.numVertexBuffers      = static_cast<std::uint32_t>(bufferArrayDbg.buffers.size());
 
@@ -281,7 +278,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateBufferType(buffer.GetType(), BufferType::Index);
+        ValidateResourceFlag(bufferDbg.desc.bindFlags, BindFlags::IndexBuffer, "BindFlags::IndexBuffer");
         bindings_.indexBuffer = (&bufferDbg);
     }
 
@@ -300,7 +297,7 @@ void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateBufferType(buffer.GetType(), BufferType::StreamOutput);
+        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::StreamOutputBuffer, "BindFlags::StreamOutputBuffer");
         bindings_.streamOutput = (&bufferDbg);
     }
 
@@ -315,7 +312,7 @@ void DbgCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateBufferType(bufferArray.GetType(), BufferType::StreamOutput);
+        ValidateResourceFlag(bufferArray.GetBindFlags(), BindFlags::StreamOutputBuffer, "BindFlags::StreamOutputBuffer");
     }
 
     instance.SetStreamOutputBufferArray(bufferArray);
@@ -659,7 +656,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
     {
         LLGL_DBG_SOURCE;
         AssertIndirectDrawingSupported();
-        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
         ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
     }
@@ -677,7 +674,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::u
     {
         LLGL_DBG_SOURCE;
         AssertIndirectDrawingSupported();
-        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
         ValidateBufferRange(bufferDbg, offset, stride*numCommands);
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
         ValidateAddressAlignment(stride, 4, "<stride> parameter");
@@ -696,7 +693,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
     {
         LLGL_DBG_SOURCE;
         AssertIndirectDrawingSupported();
-        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
         ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndexedIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
     }
@@ -714,7 +711,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset,
     {
         LLGL_DBG_SOURCE;
         AssertIndirectDrawingSupported();
-        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
         ValidateBufferRange(bufferDbg, offset, stride*numCommands);
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
         ValidateAddressAlignment(stride, 4, "<stride> parameter");
@@ -754,7 +751,7 @@ void DbgCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateBufferFlag(bufferDbg, BufferFlags::IndirectArgumentBinding, "<BufferFlags::IndirectArgumentBinding>");
+        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
         ValidateBufferRange(bufferDbg, offset, sizeof(DispatchIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
     }
@@ -776,7 +773,7 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, lon
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateBufferType(buffer.GetType(), BufferType::Constant);
+        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::ConstantBuffer, "BindFlags::ConstantBuffer");
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
@@ -785,7 +782,7 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, lon
     profile_.constantBufferBindings++;
 }
 
-void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+void DbgCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
@@ -795,13 +792,32 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateBufferType(buffer.GetType(), BufferType::Storage);
-        ValidateStageFlags(stageFlags, StageFlags::AllStages | StageFlags::StorageUsage);
+        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::SampleBuffer, "BindFlags::SampleBuffer");
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
-    instanceExt->SetStorageBuffer(bufferDbg.instance, slot, stageFlags);
+    instanceExt->SetSampleBuffer(bufferDbg.instance, slot, stageFlags);
 
-    profile_.storageBufferBindings++;
+    profile_.sampleBufferBindings++;
+}
+
+void DbgCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    AssertCommandBufferExt(__func__);
+
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::RWStorageBuffer, "BindFlags::RWStorageBuffer");
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
+    }
+
+    instanceExt->SetRWStorageBuffer(bufferDbg.instance, slot, stageFlags);
+
+    profile_.rwStorageBufferBindings++;
 }
 
 void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
@@ -842,14 +858,17 @@ void DbgCommandBuffer::ResetResourceSlots(
     const ResourceType  resourceType,
     std::uint32_t       firstSlot,
     std::uint32_t       numSlots,
+    long                bindFlags,
     long                stageFlags)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateStageFlags(stageFlags, StageFlags::AllStages | StageFlags::StorageUsage);
+        if (numSlots == 0)
+            LLGL_DBG_WARN(WarningType::PointlessOperation, "no slots are specified to reset");
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
-    instanceExt->ResetResourceSlots(resourceType, firstSlot, numSlots, stageFlags);
+    instanceExt->ResetResourceSlots(resourceType, firstSlot, numSlots, bindFlags, stageFlags);
 }
 
 /* ----- Extended functions ----- */
@@ -1125,29 +1144,23 @@ void DbgCommandBuffer::ValidateAttachmentLimit(std::uint32_t attachmentIndex, st
     }
 }
 
+void DbgCommandBuffer::ValidateResourceFlag(long resourceFlags, long requiredFlag, const char* flagName)
+{
+    if ((resourceFlags & requiredFlag) != requiredFlag)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "resource was not created with the 'LLGL::" + std::string(flagName) + "' flag enabled"
+        );
+    }
+}
+
 void DbgCommandBuffer::ValidateStageFlags(long stageFlags, long validFlags)
 {
     if ((stageFlags & validFlags) == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stage is specified");
     if ((stageFlags & (~validFlags)) != 0)
-        LLGL_DBG_WARN(WarningType::PointlessOperation, "unknown shader stage flag is specified");
-}
-
-void DbgCommandBuffer::ValidateBufferType(const BufferType bufferType, const BufferType compareType)
-{
-    if (bufferType != compareType)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type");
-}
-
-void DbgCommandBuffer::ValidateBufferFlag(DbgBuffer& bufferDbg, long requiredFlag, const char* flagName)
-{
-    if ((bufferDbg.desc.flags & requiredFlag) != requiredFlag)
-    {
-        LLGL_DBG_ERROR(
-            ErrorType::InvalidArgument,
-            "buffer was not created with the " + std::string(flagName) + " flag enabled"
-        );
-    }
+        LLGL_DBG_WARN(WarningType::ImproperArgument, "unknown shader stage flags specified");
 }
 
 void DbgCommandBuffer::ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size)

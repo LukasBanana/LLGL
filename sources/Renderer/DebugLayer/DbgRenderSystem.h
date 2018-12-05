@@ -144,11 +144,15 @@ class DbgRenderSystem : public RenderSystem
 
     private:
 
-        void ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSize = nullptr);
+        void ValidateBindFlags(long flags);
+        void ValidateCPUAccessFlags(long flags, long validFlags, const char* contextDesc = nullptr);
+        void ValidateMiscFlags(long flags, long validFlags, const char* contextDesc = nullptr);
+        void ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAccess access, const char* resourceTypeName);
+
+        void ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSizeOut = nullptr);
         void ValidateBufferSize(std::uint64_t size);
         void ValidateConstantBufferSize(std::uint64_t size);
         void ValidateBufferBoundary(std::uint64_t bufferSize, std::uint64_t dstOffset, std::uint64_t dataSize);
-        void ValidateBufferCPUAccess(DbgBuffer& bufferDbg, const CPUAccess access);
         void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
 
         void ValidateTextureDesc(const TextureDescriptor& desc);

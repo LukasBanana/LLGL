@@ -1,5 +1,5 @@
 /*
- * GLVertexBufferArray.cpp
+ * GLBufferArrayWithVAO.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -15,19 +15,19 @@ namespace LLGL
 {
 
 
-GLVertexBufferArray::GLVertexBufferArray() :
+GLBufferArrayWithVAO::GLBufferArrayWithVAO() :
     GLBufferArray { BufferType::Vertex }
 {
 }
 
-void GLVertexBufferArray::BuildVertexArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+void GLBufferArrayWithVAO::BuildVertexArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     /* Bind VAO */
     GLStateManager::active->BindVertexArray(GetVaoID());
     {
         for (std::uint32_t i = 0; numBuffers > 0; --numBuffers)
         {
-            auto vertexBufferGL = LLGL_CAST(GLVertexBuffer*, (*bufferArray));
+            auto vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, (*bufferArray));
             {
                 const auto& vertexFormat = vertexBufferGL->GetVertexFormat();
 

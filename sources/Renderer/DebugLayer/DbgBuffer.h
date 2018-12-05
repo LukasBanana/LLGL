@@ -21,9 +21,9 @@ class DbgBuffer : public Buffer
 
     public:
 
-        DbgBuffer(Buffer& instance, const BufferType type) :
-            Buffer   { type     },
-            instance { instance }
+        DbgBuffer(Buffer& instance, long bindFlags) :
+            Buffer   { bindFlags },
+            instance { instance  }
         {
         }
 

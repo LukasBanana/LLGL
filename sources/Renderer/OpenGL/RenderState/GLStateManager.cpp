@@ -772,19 +772,6 @@ void GLStateManager::PopColorMask()
 
 /* ----- Buffer ----- */
 
-GLBufferTarget GLStateManager::GetBufferTarget(const BufferType type)
-{
-    switch (type)
-    {
-        case BufferType::Vertex:        return GLBufferTarget::ARRAY_BUFFER;
-        case BufferType::Index:         return GLBufferTarget::ELEMENT_ARRAY_BUFFER;
-        case BufferType::Constant:      return GLBufferTarget::UNIFORM_BUFFER;
-        case BufferType::Storage:       return GLBufferTarget::SHADER_STORAGE_BUFFER;
-        case BufferType::StreamOutput:  return GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER;
-    }
-    throw std::invalid_argument("failed to map 'BufferType' to internal type 'GLBufferTarget'");
-}
-
 void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 {
     /* Only bind buffer if the buffer has changed */
@@ -861,6 +848,11 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
     }
 }
 
+void GLStateManager::BindBuffer(const GLBuffer& buffer)
+{
+    BindBuffer(buffer.GetTarget(), buffer.GetID());
+}
+
 void GLStateManager::NotifyVertexArrayRelease(GLuint vertexArray)
 {
     InvalidateBoundGLObject(vertexArrayState_.boundVertexArray, vertexArray);
@@ -895,15 +887,32 @@ void GLStateManager::PopBoundBuffer()
     bufferState_.boundBufferStack.pop();
 }
 
-void GLStateManager::BindBuffer(const GLBuffer& buffer)
-{
-    BindBuffer(GLStateManager::GetBufferTarget(buffer.GetType()), buffer.GetID());
-}
-
 void GLStateManager::NotifyBufferRelease(GLuint buffer, GLBufferTarget target)
 {
     auto targetIdx = static_cast<std::size_t>(target);
     InvalidateBoundGLObject(bufferState_.boundBuffers[targetIdx], buffer);
+}
+
+void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
+{
+    auto id         = buffer.GetID();
+    auto bindFlags  = buffer.GetBindFlags();
+
+    if ((bindFlags & BindFlags::VertexBuffer) != 0)
+        NotifyBufferRelease(id, GLBufferTarget::ARRAY_BUFFER);
+    if ((bindFlags & BindFlags::IndexBuffer) != 0)
+        NotifyBufferRelease(id, GLBufferTarget::ELEMENT_ARRAY_BUFFER);
+    if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+        NotifyBufferRelease(id, GLBufferTarget::UNIFORM_BUFFER);
+    if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
+        NotifyBufferRelease(id, GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER);
+    if ((bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+        NotifyBufferRelease(id, GLBufferTarget::SHADER_STORAGE_BUFFER);
+    if ((bindFlags & BindFlags::IndirectBuffer) != 0)
+    {
+        NotifyBufferRelease(id, GLBufferTarget::DRAW_INDIRECT_BUFFER);
+        NotifyBufferRelease(id, GLBufferTarget::DISPATCH_INDIRECT_BUFFER);
+    }
 }
 
 /* ----- Framebuffer ----- */

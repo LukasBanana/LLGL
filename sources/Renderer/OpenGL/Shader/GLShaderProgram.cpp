@@ -501,8 +501,9 @@ void GLShaderProgram::QueryConstantBuffers(ShaderReflectionDescriptor& reflectio
         ShaderReflectionDescriptor::ResourceView resourceView;
         {
             /* Initialize resource view descriptor */
-            resourceView.type           = ResourceType::ConstantBuffer;
+            resourceView.type           = ResourceType::Buffer;
             resourceView.stageFlags     = StageFlags::AllStages;
+            resourceView.bindFlags      = BindFlags::ConstantBuffer;
 
             /* Query uniform block name */
             GLsizei nameLength = 0;
@@ -553,7 +554,8 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflectionDescriptor& reflection
         ShaderReflectionDescriptor::ResourceView resourceView;
         {
             /* Initialize resource view descriptor */
-            resourceView.type       = ResourceType::StorageBuffer;
+            resourceView.type       = ResourceType::Buffer;
+            resourceView.bindFlags  = BindFlags::RWStorageBuffer;
 
             /* Query shader storage block name */
             GLsizei nameLength = 0;
@@ -592,13 +594,15 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
         /* Integrate uniform into reflection containers */
         UniformType uniformType = GLTypes::UnmapUniformType(type);
 
-        if (uniformType == UniformType::Sampler)
+        if (uniformType == UniformType::Sampler || uniformType == UniformType::Image)
         {
             /* Append GLSL compiled texture-sampler as both texture and sampler resource */
             ShaderReflectionDescriptor::ResourceView resourceView;
             {
-                resourceView.name = std::string(uniformName.data());
-                resourceView.type = ResourceType::Texture;
+                /* Initiaöize name, type, and binding flags for resource view */
+                resourceView.name       = std::string(uniformName.data());
+                resourceView.type       = ResourceType::Texture;
+                resourceView.bindFlags  = (uniformType == UniformType::Image ? BindFlags::RWStorageBuffer : BindFlags::SampleBuffer);
 
                 /* Get binding slot from uniform value */
                 GLint uniformValue      = 0;
@@ -638,7 +642,8 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
             }
             reflection.resourceViews.push_back(resourceView);
             {
-                resourceView.type = ResourceType::Sampler;
+                resourceView.type       = ResourceType::Sampler;
+                resourceView.bindFlags  = 0;
             }
             reflection.resourceViews.push_back(resourceView);
         }
@@ -648,6 +653,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
             UniformDescriptor uniform;
             {
                 uniform.name        = std::string(uniformName.data());
+                uniform.type        = uniformType;
                 uniform.location    = glGetUniformLocation(id_, uniformName.data());
                 uniform.size        = static_cast<std::uint32_t>(size);
             }

@@ -12,22 +12,14 @@ namespace LLGL
 {
 
 
-Buffer::Buffer(const BufferType type) :
-    type_ { type }
+Buffer::Buffer(long bindFlags) :
+    bindFlags_ { bindFlags }
 {
 }
 
 ResourceType Buffer::QueryResourceType() const
 {
-    switch (GetType())
-    {
-        case BufferType::Vertex:        return ResourceType::VertexBuffer;
-        case BufferType::Index:         return ResourceType::IndexBuffer;
-        case BufferType::Constant:      return ResourceType::ConstantBuffer;
-        case BufferType::Storage:       return ResourceType::StorageBuffer;
-        case BufferType::StreamOutput:  return ResourceType::StreamOutputBuffer;
-    }
-    return ResourceType::Undefined;
+    return ResourceType::Buffer;
 }
 
 

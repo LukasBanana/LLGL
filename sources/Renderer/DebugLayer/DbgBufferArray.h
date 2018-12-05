@@ -23,9 +23,9 @@ class DbgBufferArray : public BufferArray
 
     public:
 
-        DbgBufferArray(BufferArray& instance, const BufferType type) :
-            BufferArray { type     },
-            instance    { instance }
+        DbgBufferArray(BufferArray& instance, long bindFlags) :
+            BufferArray { bindFlags },
+            instance    { instance  }
         {
         }
 

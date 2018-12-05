@@ -10,9 +10,8 @@
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../GLCommon/GLTypes.h"
-#include "Buffer/GLVertexBuffer.h"
-#include "Buffer/GLIndexBuffer.h"
-#include "Buffer/GLVertexBufferArray.h"
+#include "Buffer/GLBufferWithVAO.h"
+#include "Buffer/GLBufferArrayWithVAO.h"
 
 
 namespace LLGL
@@ -21,7 +20,7 @@ namespace LLGL
 
 /* ----- Buffers ------ */
 
-static GLbitfield GetGLBufferFlags(long flags)
+static GLbitfield GetGLBufferStorageFlags(long cpuAccessFlags)
 {
     #ifdef GL_ARB_buffer_storage
 
@@ -30,9 +29,9 @@ static GLbitfield GetGLBufferFlags(long flags)
     /* Allways enable dynamic storage, to enable usage of 'glBufferSubData' */
     flagsGL |= GL_DYNAMIC_STORAGE_BIT;
 
-    if ((flags & BufferFlags::MapReadAccess) != 0)
+    if ((cpuAccessFlags & CPUAccessFlags::Read) != 0)
         flagsGL |= GL_MAP_READ_BIT;
-    if ((flags & BufferFlags::MapWriteAccess) != 0)
+    if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
         flagsGL |= GL_MAP_WRITE_BIT;
 
     return flagsGL;
@@ -44,9 +43,9 @@ static GLbitfield GetGLBufferFlags(long flags)
     #endif // /GL_ARB_buffer_storage
 }
 
-static GLenum GetGLBufferUsage(long flags)
+static GLenum GetGLBufferUsage(long miscFlags)
 {
-    return ((flags & BufferFlags::DynamicUsage) != 0 ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+    return ((miscFlags & MiscFlags::DynamicUsage) != 0 ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 }
 
 static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& desc, const void* initialData)
@@ -54,8 +53,8 @@ static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& desc, co
     bufferGL.BufferStorage(
         static_cast<GLsizeiptr>(desc.size),
         initialData,
-        GetGLBufferFlags(desc.flags),
-        GetGLBufferUsage(desc.flags)
+        GetGLBufferStorageFlags(desc.cpuAccessFlags),
+        GetGLBufferUsage(desc.miscFlags)
     );
 }
 
@@ -63,53 +62,49 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 {
     AssertCreateBuffer(desc, static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max()));
 
+    auto bufferGL = CreateGLBuffer(desc, initialData);
+
+    /* Store meta data for certain types of buffers */
+    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
+        bufferGL->SetDataType(desc.indexBuffer.format.GetDataType());
+
+    return bufferGL;
+}
+
+// private
+GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& desc, const void* initialData)
+{
     /* Create either base of sub-class GLBuffer object */
-    switch (desc.type)
+    if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
-        case BufferType::Vertex:
+        /* Create buffer with VAO and build vertex array */
+        auto bufferGL = MakeUnique<GLBufferWithVAO>(desc.bindFlags);
         {
-            /* Create vertex buffer and build vertex array */
-            auto bufferGL = MakeUnique<GLVertexBuffer>();
-            {
-                GLBufferStorage(*bufferGL, desc, initialData);
-                bufferGL->BuildVertexArray(desc.vertexBuffer.format);
-            }
-            return TakeOwnership(buffers_, std::move(bufferGL));
+            GLBufferStorage(*bufferGL, desc, initialData);
+            bufferGL->BuildVertexArray(desc.vertexBuffer.format);
         }
-        break;
-
-        case BufferType::Index:
+        return TakeOwnership(buffers_, std::move(bufferGL));
+    }
+    else
+    {
+        /* Create generic buffer */
+        auto bufferGL = MakeUnique<GLBuffer>(desc.bindFlags);
         {
-            /* Create index buffer and store index format */
-            auto bufferGL = MakeUnique<GLIndexBuffer>(desc.indexBuffer.format);
-            {
-                GLBufferStorage(*bufferGL, desc, initialData);
-            }
-            return TakeOwnership(buffers_, std::move(bufferGL));
+            GLBufferStorage(*bufferGL, desc, initialData);
         }
-        break;
-
-        default:
-        {
-            /* Create generic buffer */
-            auto bufferGL = MakeUnique<GLBuffer>(desc.type);
-            {
-                GLBufferStorage(*bufferGL, desc, initialData);
-            }
-            return TakeOwnership(buffers_, std::move(bufferGL));
-        }
+        return TakeOwnership(buffers_, std::move(bufferGL));
     }
 }
 
 BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    auto type = (*bufferArray)->GetType();
 
-    if (type == BufferType::Vertex)
+    auto refBindFlags = bufferArray[0]->GetBindFlags();
+    if ((refBindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create vertex buffer array and build VAO */
-        auto vertexBufferArray = MakeUnique<GLVertexBufferArray>();
+        auto vertexBufferArray = MakeUnique<GLBufferArrayWithVAO>();
         vertexBufferArray->BuildVertexArray(numBuffers, bufferArray);
         return TakeOwnership(bufferArrays_, std::move(vertexBufferArray));
     }

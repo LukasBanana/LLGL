@@ -31,7 +31,7 @@ static UINT GetMiscFlags(const BufferDescriptor& desc)
 {
     UINT flags = 0;
 
-    if ((desc.flags & BufferFlags::IndirectArgumentBinding) != 0)
+    if ((desc.flags & BufferFlags::IndirectBinding) != 0)
         flags |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
 
     if (IsStructuredBuffer(desc.storageBuffer.storageType))

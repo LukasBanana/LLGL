@@ -10,7 +10,9 @@
 
 
 #include <LLGL/Buffer.h>
+#include <LLGL/Format.h>
 #include "../OpenGL.h"
+#include "../RenderState/GLState.h"
 #include <cstdint>
 
 
@@ -23,7 +25,7 @@ class GLBuffer : public Buffer
 
     public:
 
-        GLBuffer(const BufferType type);
+        GLBuffer(long bindFlags);
         ~GLBuffer();
 
         void BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags, GLenum usage);
@@ -43,9 +45,29 @@ class GLBuffer : public Buffer
             return id_;
         }
 
+        // Returns the primary buffer target. In case the buffer was created with multiple binding flags, other targets can be used, too.
+        inline GLBufferTarget GetTarget() const
+        {
+            return target_;
+        }
+
+        // Sets the base data type of buffer entries. This is only used for a resource that can be bound as index buffer.
+        void SetDataType(const DataType dataType)
+        {
+            dataType_ = dataType;
+        }
+
+        // Returns the base data type of buffer entries. This is only used for a resource that can be bound as index buffer.
+        inline DataType GetDataType() const
+        {
+            return dataType_;
+        }
+
     private:
 
-        GLuint id_ = 0;
+        GLuint          id_         = 0;
+        GLBufferTarget  target_     = GLBufferTarget::ARRAY_BUFFER;
+        DataType        dataType_   = DataType::Int8;
 
 };
 
