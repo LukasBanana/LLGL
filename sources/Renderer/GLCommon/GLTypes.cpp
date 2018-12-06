@@ -481,22 +481,6 @@ GLenum Map(const ShaderType shaderType)
     MapFailed("ShaderType");
 }
 
-GLenum Map(const BufferType bufferType)
-{
-    switch (bufferType)
-    {
-        case BufferType::Vertex:        return GL_ARRAY_BUFFER;
-        case BufferType::Index:         return GL_ELEMENT_ARRAY_BUFFER;
-        case BufferType::Constant:      return GL_UNIFORM_BUFFER;
-        #ifdef LLGL_OPENGL
-        case BufferType::Storage:       return GL_SHADER_STORAGE_BUFFER;
-        #endif
-        case BufferType::StreamOutput:  return GL_TRANSFORM_FEEDBACK_BUFFER;
-        default:                        break;
-    }
-    MapFailed("BufferType");
-}
-
 GLenum Map(const RenderConditionMode renderConditionMode)
 {
     #ifdef LLGL_OPENGL

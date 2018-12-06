@@ -21,9 +21,8 @@
 #include "Texture/GLSampler.h"
 #include "Texture/GLRenderTarget.h"
 
-#include "Buffer/GLVertexBuffer.h"
-#include "Buffer/GLIndexBuffer.h"
-#include "Buffer/GLVertexBufferArray.h"
+#include "Buffer/GLBufferWithVAO.h"
+#include "Buffer/GLBufferArrayWithVAO.h"
 
 #include "RenderState/GLStateManager.h"
 #include "RenderState/GLGraphicsPipeline.h"
@@ -301,13 +300,13 @@ void GLCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     /* Bind index buffer deferred (can only be bound to the active VAO) */
-    auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, buffer);
-    stateMngr_->BindElementArrayBufferToVAO(indexBufferGL.GetID());
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindElementArrayBufferToVAO(bufferGL.GetID());
 
     /* Store new index buffer data in global render state */
-    const auto& format = indexBufferGL.GetIndexFormat();
-    renderState_.indexBufferDataType    = GLTypes::Map(format.GetDataType());
-    renderState_.indexBufferStride      = static_cast<GLsizeiptr>(format.GetFormatSize());
+    const auto formatDataType = bufferGL.GetDataType();
+    renderState_.indexBufferDataType    = GLTypes::Map(formatDataType);
+    renderState_.indexBufferStride      = static_cast<GLsizeiptr>(DataTypeSize(formatDataType));
 }
 
 /* ----- Stream Output Buffers ------ */
@@ -726,12 +725,21 @@ void GLCommandBuffer::ResetResourceSlots(
             break;
 
             case ResourceType::Texture:
-                stateMngr_->UnbindTextures(first, count);
-                break;
+            {
+                if ((bindFlags & BindFlags::SampleBuffer) != 0)
+                    stateMngr_->UnbindTextures(first, count);
+                #if 0//TODO
+                if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
+                    stateMngr_->UnbindImages(first, count);
+                #endif
+            }
+            break;
 
             case ResourceType::Sampler:
+            {
                 stateMngr_->BindSamplers(first, count, g_nullResources);
-                break;
+            }
+            break;
         }
     }
 }

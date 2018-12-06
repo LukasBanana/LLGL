@@ -39,7 +39,8 @@ class LLGL_EXPORT Texture : public Resource
 
         /**
         \brief Queries a descriptor of this texture (including type, format, and size).
-        \note The field TextureDescriptor::flags will always be 0, i.e. the texture flags cannot be retrived after texture creation.
+        \note All flags members (i.e. TextureDescriptor::bindFlags, TextureDescriptor::cpuAccessFlags, and TextureDescriptor::miscFlags) will always be 0,
+        i.e. the texture flags cannot be retrived after texture creation.
         \see TextureDescriptor
         */
         virtual TextureDescriptor QueryDesc() const = 0;

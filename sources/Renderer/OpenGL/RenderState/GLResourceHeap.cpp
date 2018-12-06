@@ -165,18 +165,19 @@ using GLResourceBindingFunc = std::function<GLResourceBinding(Resource* resource
 
 static std::vector<GLResourceBinding> CollectGLResourceBindings(
     ResourceBindingIterator&        resourceIterator,
-    const ResourceType              resourceType,
-    const GLResourceBindingFunc&    resourceFunc)
+    ResourceType                    resourceType,
+    long                            resourceBindFlags,
+    const GLResourceBindingFunc&    bindingFunc)
 {
     /* Collect all binding points of the specified resource type */
     BindingDescriptor bindingDesc;
-    resourceIterator.Reset(resourceType);
+    resourceIterator.Reset(resourceType, resourceBindFlags);
 
     std::vector<GLResourceBinding> resourceBindings;
     resourceBindings.reserve(resourceIterator.GetCount());
 
     while (auto resource = resourceIterator.Next(bindingDesc))
-        resourceBindings.push_back(resourceFunc(resource, bindingDesc.slot));
+        resourceBindings.push_back(bindingFunc(resource, bindingDesc.slot));
 
     /* Sort resources by slot index */
     std::sort(
@@ -190,12 +191,13 @@ static std::vector<GLResourceBinding> CollectGLResourceBindings(
     return resourceBindings;
 }
 
-void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterator, const ResourceType resourceType, std::uint8_t& numSegments)
+void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterator, long bindFlags, std::uint8_t& numSegments)
 {
     /* Collect all buffers */
     auto resourceBindings = CollectGLResourceBindings(
         resourceIterator,
-        resourceType,
+        ResourceType::Buffer,
+        bindFlags,
         [](Resource* resource, std::uint32_t slot) -> GLResourceBinding
         {
             auto bufferGL = LLGL_CAST(GLBuffer*, resource);
@@ -213,12 +215,20 @@ void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterat
 
 void GLResourceHeap::BuildConstantBufferSegments(ResourceBindingIterator& resourceIterator)
 {
-    BuildBufferSegments(resourceIterator, ResourceType::ConstantBuffer, segmentationHeader_.numConstantBufferSegments);
+    BuildBufferSegments(
+        resourceIterator,
+        BindFlags::ConstantBuffer,
+        segmentationHeader_.numConstantBufferSegments
+    );
 }
 
 void GLResourceHeap::BuildStorageBufferSegments(ResourceBindingIterator& resourceIterator)
 {
-    BuildBufferSegments(resourceIterator, ResourceType::StorageBuffer, segmentationHeader_.numStorageBufferSegments);
+    BuildBufferSegments(
+        resourceIterator,
+        (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer),
+        segmentationHeader_.numStorageBufferSegments
+    );
 }
 
 void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceIterator)
@@ -227,6 +237,7 @@ void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceItera
     auto resourceBindings = CollectGLResourceBindings(
         resourceIterator,
         ResourceType::Texture,
+        0,
         [](Resource* resource, std::uint32_t slot) -> GLResourceBinding
         {
             auto textureGL = LLGL_CAST(GLTexture*, resource);
@@ -248,6 +259,7 @@ void GLResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceItera
     auto resourceBindings = CollectGLResourceBindings(
         resourceIterator,
         ResourceType::Sampler,
+        0,
         [](Resource* resource, std::uint32_t slot) -> GLResourceBinding
         {
             auto samplerGL = LLGL_CAST(GLSampler*, resource);

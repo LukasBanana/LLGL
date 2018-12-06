@@ -48,7 +48,7 @@ static Format FindSuitableDepthFormat(const TextureDescriptor& desc)
 {
     if (IsDepthStencilFormat(desc.format))
     {
-        if ((desc.flags & TextureFlags::ColorAttachmentUsage) != 0)
+        if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
         {
             /* Depth-stencil formats that are used as color attachments must be converted to a color renderable format */
             switch (desc.format)
@@ -936,7 +936,7 @@ void GLTexImage2DMS(const TextureDescriptor& desc)
         desc.format,
         desc.extent.width,
         desc.extent.height,
-        ((desc.flags & TextureFlags::FixedSamples) != 0)
+        ((desc.miscFlags & MiscFlags::FixedSamples) != 0)
     );
 }
 
@@ -949,7 +949,7 @@ void GLTexImage2DMSArray(const TextureDescriptor& desc)
         desc.extent.width,
         desc.extent.height,
         desc.arrayLayers,
-        ((desc.flags & TextureFlags::FixedSamples) != 0)
+        ((desc.miscFlags & MiscFlags::FixedSamples) != 0)
     );
 }
 

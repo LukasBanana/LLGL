@@ -359,7 +359,7 @@ static void IgnoreWhiteSpaces(const char*& s)
 }
 
 // Parse resource type identifier for layout signature, e.g. "texture".
-static ResourceType ParseLayoutSignatureResourceType(const char*& s)
+static void ParseLayoutSignatureResourceType(const char*& s, ResourceType& type, long& bindFlags)
 {
     struct ResourceTypeIdent
     {
@@ -391,7 +391,11 @@ static ResourceType ParseLayoutSignatureResourceType(const char*& s)
         for (const auto& resource : g_resources)
         {
             if (std::strlen(resource.ident) == tokenLen && std::strncmp(token, resource.ident, tokenLen) == 0)
-                return resource.type;
+            {
+                type        = resource.type;
+                bindFlags   = resource.bindFlags;
+                return;
+            }
         }
 
         /* Identifier not found */
@@ -481,8 +485,8 @@ static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, con
     BindingDescriptor bindingDesc;
 
     /* Parse resource type and set stages to default */
-    bindingDesc.type        = ParseLayoutSignatureResourceType(s);
-    bindingDesc.stageFlags  = StageFlags::AllStages;
+    ParseLayoutSignatureResourceType(s, bindingDesc.type, bindingDesc.bindFlags);
+    bindingDesc.stageFlags = StageFlags::AllStages;
 
     /* Parse binding points */
     IgnoreWhiteSpaces(s);

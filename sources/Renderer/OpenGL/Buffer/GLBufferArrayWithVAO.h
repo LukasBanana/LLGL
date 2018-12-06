@@ -22,7 +22,7 @@ class GLBufferArrayWithVAO final : public GLBufferArray
 
     public:
 
-        GLBufferArrayWithVAO();
+        GLBufferArrayWithVAO(long bindFlags);
 
         void BuildVertexArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 

@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "Types.h"
 #include "Format.h"
+#include "ResourceFlags.h"
 #include <cstddef>
 #include <cstdint>
 
@@ -167,7 +168,7 @@ struct TextureDescriptor
     long            flags           = TextureFlags::Default;
     #else
     /**
-    \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default (BindFlags::SampleBuffer | BindFlags::ColorAttachment).
+    \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default BindFlags::SampleBuffer and BindFlags::ColorAttachment.
     \remarks When the texture will be bound as a color attachment to a render target for instance, the BindFlags::ColorAttachment flag is required.
     \see BindFlags
     */

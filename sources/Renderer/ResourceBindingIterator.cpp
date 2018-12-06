@@ -22,11 +22,12 @@ ResourceBindingIterator::ResourceBindingIterator(
 {
 }
 
-void ResourceBindingIterator::Reset(const ResourceType typesOfInterest, long stagesOfInterest)
+void ResourceBindingIterator::Reset(const ResourceType typeOfInterest, long bindFlagsOfInterest, long stagesOfInterest)
 {
-    iterator_           = 0;
-    typeOfInterest_     = typesOfInterest;
-    stagesOfInterest_   = stagesOfInterest;
+    iterator_               = 0;
+    typeOfInterest_         = typeOfInterest;
+    bindFlagsOfInterest_    = bindFlagsOfInterest;
+    stagesOfInterest_       = stagesOfInterest;
 }
 
 // Returns the specified resource type as string
@@ -34,14 +35,10 @@ static const char* ResourceTypeToString(const ResourceType t)
 {
     switch (t)
     {
-        case ResourceType::VertexBuffer:        return "VertexBuffer";
-        case ResourceType::IndexBuffer:         return "IndexBuffer";
-        case ResourceType::ConstantBuffer:      return "ConstantBuffer";
-        case ResourceType::StorageBuffer:       return "StorageBuffer";
-        case ResourceType::StreamOutputBuffer:  return "StreamOutputBuffer";
-        case ResourceType::Texture:             return "Texture";
-        case ResourceType::Sampler:             return "Sampler";
-        default:                                return "Undefined";
+        case ResourceType::Buffer:  return "Buffer";
+        case ResourceType::Texture: return "Texture";
+        case ResourceType::Sampler: return "Sampler";
+        default:                    return "Undefined";
     }
 }
 
@@ -59,8 +56,10 @@ Resource* ResourceBindingIterator::Next(BindingDescriptor& bindingDesc)
     while (iterator_ < count_)
     {
         /* Search for resource type of interest */
-        auto resourceType = bindings_[iterator_].type;
-        if (resourceType == typeOfInterest_ && (bindings_[iterator_].stageFlags & stagesOfInterest_) != 0)
+        const auto& current = bindings_[iterator_];
+        if ( current.type == typeOfInterest_ &&
+             ( bindFlagsOfInterest_ == 0 || (current.bindFlags  & bindFlagsOfInterest_) != 0 ) &&
+             ( stagesOfInterest_    == 0 || (current.stageFlags & stagesOfInterest_   ) != 0 ) )
         {
             /* Check for null pointer exception */
             if (auto resource = resourceViews_[iterator_].resource)
@@ -69,7 +68,8 @@ Resource* ResourceBindingIterator::Next(BindingDescriptor& bindingDesc)
                 ++iterator_;
                 return resource;
             }
-            ErrNullPointerResource(resourceType);
+            else
+                ErrNullPointerResource(current.type);
         }
         ++iterator_;
     }

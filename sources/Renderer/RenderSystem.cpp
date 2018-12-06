@@ -236,10 +236,34 @@ void RenderSystem::SetRenderingCaps(const RenderingCapabilities& caps)
 
 void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize)
 {
-    if (desc.type < BufferType::Vertex || desc.type > BufferType::StreamOutput)
-        throw std::invalid_argument("cannot create buffer of unknown type (0x" + ToHex(static_cast<std::uint8_t>(desc.type)) + ")");
+    /* Validate size */
     if (desc.size > maxSize)
-        throw std::runtime_error("cannot create buffer with size of " + std::to_string(desc.size) + " bytes (limit is " + std::to_string(maxSize) + " bytes)");
+    {
+        throw std::runtime_error(
+            "cannot create buffer with size of " + std::to_string(desc.size) +
+            " byte(s) while limit is " + std::to_string(maxSize)
+        );
+    }
+
+    /* Validate binding flags */
+    const long validBindFlags =
+    (
+        BindFlags::VertexBuffer         |
+        BindFlags::IndexBuffer          |
+        BindFlags::ConstantBuffer       |
+        BindFlags::SampleBuffer         |
+        BindFlags::RWStorageBuffer      |
+        BindFlags::StreamOutputBuffer   |
+        BindFlags::IndirectBuffer
+    );
+
+    if ((desc.bindFlags & (~validBindFlags)) != 0)
+    {
+        throw std::invalid_argument(
+            "cannot create buffer with invalid binding flags: "
+            "0x" + ToHex(static_cast<std::uint32_t>(desc.bindFlags))
+        );
+    }
 }
 
 static void AssertCreateResourceArrayCommon(std::uint32_t numResources, void* const * resourceArray, const std::string& resourceName)

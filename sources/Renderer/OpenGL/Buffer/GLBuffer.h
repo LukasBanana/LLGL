@@ -12,7 +12,7 @@
 #include <LLGL/Buffer.h>
 #include <LLGL/Format.h>
 #include "../OpenGL.h"
-#include "../RenderState/GLState.h"
+#include "../RenderState/GLStateManager.h"
 #include <cstdint>
 
 
@@ -49,6 +49,12 @@ class GLBuffer : public Buffer
         inline GLBufferTarget GetTarget() const
         {
             return target_;
+        }
+
+        // Returns the GL target type for the primary buffer target.
+        inline GLenum GetGLTarget() const
+        {
+            return GLStateManager::ToGLBufferTarget(GetTarget());
         }
 
         // Sets the base data type of buffer entries. This is only used for a resource that can be bound as index buffer.

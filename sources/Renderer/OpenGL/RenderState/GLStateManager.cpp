@@ -6,6 +6,8 @@
  */
 
 #include "GLStateManager.h"
+#include "../Buffer/GLBuffer.h"
+#include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"
 #include "../../GLCommon/GLImportExt.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
@@ -771,6 +773,12 @@ void GLStateManager::PopColorMask()
 }
 
 /* ----- Buffer ----- */
+
+GLenum GLStateManager::ToGLBufferTarget(GLBufferTarget target)
+{
+    auto targetIdx = static_cast<std::size_t>(target);
+    return g_bufferTargetsEnum[targetIdx];
+}
 
 void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 {

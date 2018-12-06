@@ -473,7 +473,7 @@ LLGL::ShaderProgram* ExampleBase::LoadStandardShaderProgram(const std::vector<LL
     return nullptr;
 }
 
-LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long flags)
+LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags)
 {
     // Load image data from file (using STBI library, see https://github.com/nothings/stb)
     int width = 0, height = 0, components = 0;
@@ -500,7 +500,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 
     // Create texture and upload image data onto hardware texture
     auto tex = renderSys.CreateTexture(
-        LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, width, height, flags), &imageDesc
+        LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, width, height, bindFlags), &imageDesc
     );
 
     // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
@@ -557,9 +557,9 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
     return true;
 }
 
-LLGL::Texture* ExampleBase::LoadTexture(const std::string& filename, long flags)
+LLGL::Texture* ExampleBase::LoadTexture(const std::string& filename, long bindFlags)
 {
-    return LoadTextureWithRenderer(*renderer, filename, flags);
+    return LoadTextureWithRenderer(*renderer, filename, bindFlags);
 }
 
 bool ExampleBase::SaveTexture(LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)

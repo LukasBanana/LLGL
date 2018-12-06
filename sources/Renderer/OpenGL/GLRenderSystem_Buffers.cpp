@@ -104,12 +104,12 @@ BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer*
     if ((refBindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create vertex buffer array and build VAO */
-        auto vertexBufferArray = MakeUnique<GLBufferArrayWithVAO>();
+        auto vertexBufferArray = MakeUnique<GLBufferArrayWithVAO>(refBindFlags);
         vertexBufferArray->BuildVertexArray(numBuffers, bufferArray);
         return TakeOwnership(bufferArrays_, std::move(vertexBufferArray));
     }
 
-    return TakeOwnership(bufferArrays_, MakeUnique<GLBufferArray>(type, numBuffers, bufferArray));
+    return TakeOwnership(bufferArrays_, MakeUnique<GLBufferArray>(refBindFlags, numBuffers, bufferArray));
 }
 
 void GLRenderSystem::Release(Buffer& buffer)

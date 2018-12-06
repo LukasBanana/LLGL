@@ -31,7 +31,7 @@ class LLGL_EXPORT ResourceBindingIterator
         );
 
         // Resets the iteration process for the specified type of interest.
-        void Reset(const ResourceType typesOfInterest, long stagesOfInterest = StageFlags::AllStages);
+        void Reset(const ResourceType typeOfInterest, long bindFlagsOfInterest = 0, long stagesOfInterest = 0);
 
         // Returns the next resource of the current type of interest, or null if there are no more resources of that type.
         Resource* Next(BindingDescriptor& bindingDesc);
@@ -49,7 +49,8 @@ class LLGL_EXPORT ResourceBindingIterator
         std::size_t                                 iterator_           = 0;
         std::size_t                                 count_              = 0;
         ResourceType                                typeOfInterest_     = ResourceType::Undefined;
-        long                                        stagesOfInterest_   = StageFlags::AllStages;
+        long                                        bindFlagsOfInterest_    = ~0;
+        long                                        stagesOfInterest_       = StageFlags::AllStages;
 
 };
 

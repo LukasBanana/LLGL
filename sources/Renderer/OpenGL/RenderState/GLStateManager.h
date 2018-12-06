@@ -13,9 +13,9 @@
 #include "GLDepthStencilState.h"
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
-#include "../Buffer/GLBuffer.h"
-#include "../Texture/GLTexture.h"
+#include <LLGL/TextureFlags.h>
 #include <LLGL/CommandBufferFlags.h>
+#include <vector>
 #include <array>
 #include <stack>
 #include <cstdint>
@@ -26,6 +26,8 @@ namespace LLGL
 
 
 class GLRenderTarget;
+class GLBuffer;
+class GLTexture;
 
 // OpenGL state machine manager that keeps track of certain GL states.
 class GLStateManager
@@ -135,6 +137,8 @@ class GLStateManager
         void PopColorMask();
 
         /* ----- Buffer ----- */
+
+        static GLenum ToGLBufferTarget(GLBufferTarget target);
 
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);

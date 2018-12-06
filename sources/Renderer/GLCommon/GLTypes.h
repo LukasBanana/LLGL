@@ -48,7 +48,6 @@ GLenum Map( const SamplerAddressMode    addressMode         ); // GL_REPEAT, ...
 GLenum Map( const SamplerFilter         textureFilter       ); // GL_NEAREST, GL_LINEAR
 GLenum Map( const SamplerFilter         textureMinFilter, const SamplerFilter textureMipMapFilter );
 GLenum Map( const ShaderType            shaderType          );
-GLenum Map( const BufferType            bufferType          );
 GLenum Map( const RenderConditionMode   renderConditionMode );
 GLenum Map( const LogicOp               logicOp             );
 
