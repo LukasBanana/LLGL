@@ -148,7 +148,7 @@ int main()
         matrices.projection = Gs::ProjectionMatrix4f::Orthogonal(viewportSize.x * projectionScale, viewportSize.y * projectionScale, -100.0f, 100.0f, 0).ToMatrix4();
         //Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.5f);
 
-        auto constBufferMatrices = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices), LLGL::BufferFlags::MapReadWriteAccess), &matrices);
+        auto constBufferMatrices = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices), LLGL::CPUAccessFlags::ReadWrite), &matrices);
 
         struct Colors
         {
@@ -196,10 +196,10 @@ int main()
 
         layoutDesc.bindings =
         {
-            LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage  , 2 },
-            LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage, 5 },
-            LLGL::BindingDescriptor { LLGL::ResourceType::Sampler       , LLGL::StageFlags::FragmentStage, 3 },
-            LLGL::BindingDescriptor { LLGL::ResourceType::Texture       , LLGL::StageFlags::FragmentStage, 4 },
+            LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage  , 2 },
+            LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage, 5 },
+            LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, 3 },
+            LLGL::BindingDescriptor { LLGL::ResourceType::Texture, 0,                               LLGL::StageFlags::FragmentStage, 4 },
         };
 
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

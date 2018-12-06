@@ -132,8 +132,8 @@ public:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::ComputeStage,                                  0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::ComputeStage | LLGL::StageFlags::StorageUsage, 0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,    LLGL::StageFlags::ComputeStage, 0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage, 0 },
             };
         }
         computePipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -150,8 +150,8 @@ public:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::FragmentStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLGL::StageFlags::FragmentStage, 0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer, LLGL::StageFlags::FragmentStage, 0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                             LLGL::StageFlags::FragmentStage, 0 },
             };
         }
         graphicsPipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -174,7 +174,7 @@ public:
         // Create texture with unordered access
         LLGL::TextureDescriptor outputTextureDesc = inputTexture->QueryDesc();
         {
-            outputTextureDesc.flags     = LLGL::TextureFlags::Default | LLGL::TextureFlags::StorageUsage;
+            outputTextureDesc.bindFlags = LLGL::BindFlags::SampleBuffer | LLGL::BindFlags::RWStorageBuffer;
             outputTextureDesc.mipLevels = 1;
         }
         outputTexture = renderer->CreateTexture(outputTextureDesc);
@@ -226,7 +226,7 @@ private:
             commands->Dispatch(textureSize.width, textureSize.height, textureSize.depth);
 
             // Reset texture from shader output binding point
-            commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::StageFlags::ComputeStage | LLGL::StageFlags::StorageUsage);
+            commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage);
 
             // Set graphics resources
             commands->SetVertexBuffer(*vertexBuffer);
@@ -243,7 +243,7 @@ private:
             commands->EndRenderPass();
 
             // Reset texture from shader input binding point
-            commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::StageFlags::FragmentStage);
+            commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::SampleBuffer, LLGL::StageFlags::FragmentStage);
         }
         commands->End();
         commandQueue->Submit(*commands);

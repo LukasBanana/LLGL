@@ -12,6 +12,31 @@
 #include <LLGL/Platform/NativeHandle.h>
 
 
+#if 0
+class MyRenderer
+{
+
+        LLGL::RenderSystem*     renderer;
+        LLGL::RenderContext*    context;
+        LLGL::CommandQueue*     cmdQueue;
+        LLGL::CommandBufferExt* cmdBuffer;
+        LLGL::GraphicsPipeline* pipeline;
+        LLGL::Buffer*           constantBuffer;
+        LLGL::Buffer*           vertexBuffer;
+        LLGL::Buffer*           indexBuffer;
+        LLGL::Sampler*          sampler;
+        LLGL::Texture*          texture;
+
+    private:
+
+        void Render()
+        {
+            //TODO...
+        }
+
+};
+#endif
+
 static void RecordCommandBuffer(
     LLGL::RenderSystem*     renderer,
     LLGL::RenderContext*    context,

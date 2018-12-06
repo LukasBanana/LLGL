@@ -159,6 +159,7 @@ class PerformanceTest
 
             // Load renderer
             renderer = LLGL::RenderSystem::Load(rendererModule);
+            commandQueue = renderer->GetCommandQueue();
 
             // Create render context
             LLGL::RenderContextDescriptor contextDesc;

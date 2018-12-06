@@ -61,9 +61,10 @@ int main()
 
         LLGL::BufferDescriptor storageBufferDesc;
         {
-            storageBufferDesc.type  = LLGL::BufferType::Storage;
-            storageBufferDesc.size  = sizeof(Gs::Vector4f)*vecSize;
-            storageBufferDesc.flags = LLGL::BufferFlags::DynamicUsage | LLGL::BufferFlags::MapReadAccess;
+            storageBufferDesc.size              = sizeof(Gs::Vector4f)*vecSize;
+            storageBufferDesc.bindFlags         = LLGL::BindFlags::RWStorageBuffer;
+            storageBufferDesc.cpuAccessFlags    = LLGL::CPUAccessFlags::Read;
+            storageBufferDesc.miscFlags         = LLGL::MiscFlags::DynamicUsage;
         }
         auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, vec.data());
 
@@ -96,7 +97,7 @@ int main()
         // Set resources
         commands->Begin();
         {
-            commands->SetStorageBuffer(*storageBuffer, 0);
+            commands->SetRWStorageBuffer(*storageBuffer, 0);
             commands->SetComputePipeline(*pipeline);
 
             // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query

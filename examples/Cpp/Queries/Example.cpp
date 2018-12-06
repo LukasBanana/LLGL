@@ -26,6 +26,7 @@ class Example_Queries : public ExampleBase
     LLGL::QueryHeap*        geometryQuery           = nullptr;
 
     Gs::Matrix4f            modelTransform[2];
+    bool                    animEnabled             = true;
 
     struct Model
     {
@@ -54,6 +55,9 @@ public:
         CreatePipelines();
         CreateQueries();
         CreateResourceHeaps();
+
+        // Show info
+        std::cout << "press SPACE KEY to enable/disable animation of occluder" << std::endl;
     }
 
     LLGL::VertexFormat CreateBuffers()
@@ -186,17 +190,24 @@ private:
     void UpdateScene()
     {
         // Update matrices in constant buffer
-        static float anim;
-        anim += 0.01f;
+        static float anim0, anim1;
+
+        if (input->KeyDown(LLGL::Key::Space))
+            animEnabled = !animEnabled;
+
+        if (animEnabled)
+            anim0 += 0.01f;
+
+        anim1 += 0.01f;
 
         modelTransform[0].LoadIdentity();
-        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, Gs::Deg2Rad(std::sin(anim)*15.0f));
+        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, Gs::Deg2Rad(std::sin(anim0)*15.0f));
         Gs::Translate(modelTransform[0], { 0, 0, 5 });
-        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, anim*3);
+        Gs::RotateFree(modelTransform[0], { 0, 1, 0 }, anim0*3);
 
         modelTransform[1].LoadIdentity();
         Gs::Translate(modelTransform[1], { 0, 0, 10 });
-        Gs::RotateFree(modelTransform[1], { 0, 1, 0 }, anim*-1.5f);
+        Gs::RotateFree(modelTransform[1], { 0, 1, 0 }, anim1*-1.5f);
     }
 
     void RenderBoundingBoxes()

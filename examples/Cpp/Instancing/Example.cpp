@@ -163,8 +163,8 @@ private:
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor desc;
 
-        desc.type                   = LLGL::BufferType::Vertex;
         desc.size                   = sizeof(vertexData);
+        desc.bindFlags              = LLGL::BindFlags::VertexBuffer;
         desc.vertexBuffer.format    = vertexFormatPerVertex;
 
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexData);
@@ -275,9 +275,9 @@ private:
         {
             plDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage,   0u },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 1u) },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 2u) },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage,   0u                             },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 1u) },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 2u) },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(plDesc);

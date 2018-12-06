@@ -75,9 +75,9 @@ int main()
 
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.type                   = LLGL::BufferType::Vertex;
             vertexBufferDesc.size                   = sizeof(vertices);
-            vertexBufferDesc.flags                  = LLGL::BufferFlags::DynamicUsage;
+            vertexBufferDesc.bindFlags              = LLGL::BindFlags::VertexBuffer;
+            vertexBufferDesc.miscFlags              = LLGL::MiscFlags::DynamicUsage;
             vertexBufferDesc.vertexBuffer.format    = vertexFormat;
         }
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
@@ -97,9 +97,9 @@ int main()
 
         LLGL::BufferDescriptor constantBufferDesc;
         {
-            constantBufferDesc.type     = LLGL::BufferType::Constant;
-            constantBufferDesc.size     = sizeof(matrices);
-            constantBufferDesc.flags    = LLGL::BufferFlags::DynamicUsage;
+            constantBufferDesc.size         = sizeof(matrices);
+            constantBufferDesc.bindFlags    = LLGL::BindFlags::ConstantBuffer;
+            constantBufferDesc.miscFlags    = LLGL::MiscFlags::DynamicUsage;
         }
         auto constantBuffer = renderer->CreateBuffer(constantBufferDesc, &matrices);
 
@@ -152,7 +152,7 @@ int main()
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage, 0 }
+                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, 0 }
             };
         }
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

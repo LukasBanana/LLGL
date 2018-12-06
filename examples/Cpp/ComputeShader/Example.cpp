@@ -60,9 +60,10 @@ int main(int argc, char* argv[])
         // Create storage buffer for input
         LLGL::BufferDescriptor storageBufferDesc;
         {
-            storageBufferDesc.type                      = LLGL::BufferType::Storage;
             storageBufferDesc.size                      = static_cast<std::uint32_t>(inputData.size() * sizeof(DataBlock));
-            storageBufferDesc.flags                     = LLGL::BufferFlags::DynamicUsage | LLGL::BufferFlags::MapReadAccess;
+            storageBufferDesc.bindFlags                 = LLGL::BindFlags::RWStorageBuffer;
+            storageBufferDesc.cpuAccessFlags            = LLGL::CPUAccessFlags::Read;
+            storageBufferDesc.miscFlags                 = LLGL::MiscFlags::DynamicUsage;
             storageBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWStructuredBuffer;
             storageBufferDesc.storageBuffer.stride      = sizeof(DataBlock);
         }
@@ -96,7 +97,7 @@ int main(int argc, char* argv[])
         {
             pipelineLayoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::StorageBuffer, LLGL::StageFlags::ComputeStage | LLGL::StageFlags::StorageUsage, 0 }
+                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage, 0 }
             };
         }
         auto pipelineLayout = renderer->CreatePipelineLayout(pipelineLayoutDesc);
@@ -121,7 +122,7 @@ int main(int argc, char* argv[])
             if (resourceHeap)
                 commands->SetComputeResourceHeap(*resourceHeap, 0);
             else if (commandsExt)
-                commandsExt->SetStorageBuffer(*storageBuffer, 0, LLGL::StageFlags::ComputeStage | LLGL::StageFlags::StorageUsage);
+                commandsExt->SetRWStorageBuffer(*storageBuffer, 0, LLGL::StageFlags::ComputeStage);
 
             // Dispatch compute shader
             commands->Dispatch(static_cast<std::uint32_t>(inputData.size()), 1, 1);

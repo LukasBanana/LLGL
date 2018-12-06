@@ -64,9 +64,9 @@ public:
         // Create stream-output buffer
         LLGL::BufferDescriptor soBufferDesc;
         {
-            soBufferDesc.type   = LLGL::BufferType::StreamOutput;
-            soBufferDesc.size   = sizeof(Gs::Vector4f) * 36 * 3;
-            soBufferDesc.flags  = LLGL::BufferFlags::MapReadAccess;
+            soBufferDesc.size           = sizeof(Gs::Vector4f) * 36 * 3;
+            soBufferDesc.bindFlags      = LLGL::BindFlags::StreamOutputBuffer;
+            soBufferDesc.cpuAccessFlags = LLGL::CPUAccessFlags::Read;
         }
         streamOutputBuffer = renderer->CreateBuffer(soBufferDesc);
     }

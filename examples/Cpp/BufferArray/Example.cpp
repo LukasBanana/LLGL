@@ -78,8 +78,8 @@ public:
         // Create buffer for vertex positions
         LLGL::BufferDescriptor desc;
 
-        desc.type                   = LLGL::BufferType::Vertex;
         desc.size                   = sizeof(vertexPositions);
+        desc.bindFlags              = LLGL::BindFlags::VertexBuffer;
         desc.vertexBuffer.format    = vertexFormatPositions;
 
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexPositions);

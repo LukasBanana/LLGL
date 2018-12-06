@@ -6,7 +6,11 @@
  */
 
 #include <ExampleBase.h>
+
+//#define DEBUG_FPS
+#ifdef DEBUG_FPS
 #include <chrono>//!!!
+#endif
 
 
 class Example_PostProcessing : public ExampleBase
@@ -108,8 +112,8 @@ public:
         // because to draw meshes a vertex buffer is always required, even if it's empty
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.type   = LLGL::BufferType::Vertex;
-            vertexBufferDesc.size   = 1;
+            vertexBufferDesc.size       = 1;
+            vertexBufferDesc.bindFlags  = LLGL::BindFlags::VertexBuffer;
         }
         vertexBufferNull = renderer->CreateBuffer(vertexBufferDesc);
 
@@ -462,7 +466,7 @@ private:
 
     void OnDrawFrame() override
     {
-        #if 0
+        #ifdef DEBUG_FPS
         // Show frame time
         static std::unique_ptr<LLGL::Timer> frameTimer;
         static std::chrono::time_point<std::chrono::system_clock> printTime;

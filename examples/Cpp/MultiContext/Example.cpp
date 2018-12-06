@@ -12,6 +12,9 @@ int main(int argc, char* argv[])
 {
     try
     {
+        // Set report callback to standard output
+        LLGL::Log::SetReportCallbackStd();
+
         // Load render system module
         LLGL::RenderingDebugger debugger;
         auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv), nullptr, &debugger);
@@ -95,8 +98,8 @@ int main(int argc, char* argv[])
         // Create vertex buffer
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.type                   = LLGL::BufferType::Vertex;
             vertexBufferDesc.size                   = sizeof(vertices);         // Size (in bytes) of the vertex buffer
+            vertexBufferDesc.bindFlags              = 0;//LLGL::BindFlags::VertexBuffer;
             vertexBufferDesc.vertexBuffer.format    = vertexFormat;             // Vertex format layout
         }
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
