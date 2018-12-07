@@ -23,11 +23,11 @@ class D3D11Buffer : public Buffer
 
     public:
 
-        D3D11Buffer(const BufferType type);
-        D3D11Buffer(const BufferType type, ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData = nullptr, long bufferFlags = 0);
+        D3D11Buffer(long bindFlags);
+        D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
-        virtual void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
-        virtual void UpdateSubresource(ID3D11DeviceContext* context, const void* data);
+        void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
+        void UpdateSubresource(ID3D11DeviceContext* context, const void* data);
 
         void* Map(ID3D11DeviceContext* context, const CPUAccess access);
         void Unmap(ID3D11DeviceContext* context, const CPUAccess access);
@@ -38,18 +38,50 @@ class D3D11Buffer : public Buffer
             return buffer_.Get();
         }
 
+        // Returns the buffer size (in bytes).
+        inline UINT GetSize() const
+        {
+            return size_;
+        }
+
+        // Returns the buffer stride (e.g. vertex stride).
+        inline UINT GetStride() const
+        {
+            return stride_;
+        }
+
+        // Returns the native buffer format (e.g. index format).
+        inline DXGI_FORMAT GetFormat() const
+        {
+            return format_;
+        }
+
+        // Returns the native usage type.
+        inline D3D11_USAGE GetUsage() const
+        {
+            return usage_;
+        }
+
     protected:
 
+        #if 0//TODO: replace by "CreateNativeBuffer"
         D3D11_BUFFER_DESC GetNativeBufferDesc(const BufferDescriptor& desc, UINT bindFlags) const;
-
         void CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData, long bufferFlags);
+        #endif
+
+        void CreateNativeBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData);
 
     private:
 
-        void CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags);
+        void CreateCPUAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc);
 
-        ComPtr<ID3D11Buffer> buffer_;
-        ComPtr<ID3D11Buffer> cpuAccessBuffer_;
+        ComPtr<ID3D11Buffer>    buffer_;
+        ComPtr<ID3D11Buffer>    cpuAccessBuffer_;
+
+        UINT                    size_               = 0;
+        UINT                    stride_             = 0;
+        DXGI_FORMAT             format_             = DXGI_FORMAT_UNKNOWN;
+        D3D11_USAGE             usage_              = D3D11_USAGE_DEFAULT;
 
 };
 

@@ -1,12 +1,12 @@
 /*
- * D3D11StorageBuffer.h
+ * D3D11BufferWithRV.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_D3D11_STORAGE_BUFFER_H
-#define LLGL_D3D11_STORAGE_BUFFER_H
+#ifndef LLGL_D3D11_BUFFER_WITH_RV_H
+#define LLGL_D3D11_BUFFER_WITH_RV_H
 
 
 #include "D3D11Buffer.h"
@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-class D3D11StorageBuffer final : public D3D11Buffer
+class D3D11BufferWithRV final : public D3D11Buffer
 {
 
     public:
 
-        D3D11StorageBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
+        D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
         // Returns the native SRV object.
         inline ID3D11ShaderResourceView* GetSRV() const
@@ -41,23 +41,15 @@ class D3D11StorageBuffer final : public D3D11Buffer
             return initialCount_;
         }
 
-        // Returns the storage buffer type that was specified when the buffer was created.
-        inline StorageBufferType GetStorageType() const
-        {
-            return storageType_;
-        }
-
     private:
 
-        void CreateSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
-        void CreateUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements, UINT flags);
-
-        StorageBufferType                   storageType_        = StorageBufferType::Buffer;
+        void CreateNativeSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
+        void CreateNativeUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements, UINT flags);
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;
 
-        UINT                                initialCount_       = -1;
+        UINT                                initialCount_   = -1;
 
 };
 

@@ -25,7 +25,7 @@ class D3D11BufferArray final : public BufferArray
 
     public:
 
-        D3D11BufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray);
+        D3D11BufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the number fo buffers in this array.
         UINT GetCount() const;

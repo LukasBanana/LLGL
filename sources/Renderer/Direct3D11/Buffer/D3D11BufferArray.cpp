@@ -15,8 +15,8 @@ namespace LLGL
 {
 
 
-D3D11BufferArray::D3D11BufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { type }
+D3D11BufferArray::D3D11BufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { bindFlags }
 {
     /* Store the pointer of each ID3D11Buffer, strides, and offests inside the arrays */
     buffers_.resize(numBuffers);

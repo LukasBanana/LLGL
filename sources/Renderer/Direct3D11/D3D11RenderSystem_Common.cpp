@@ -16,12 +16,9 @@
 #include <iomanip>
 #include <limits>
 
-#include "Buffer/D3D11VertexBuffer.h"
+#include "Buffer/D3D11Buffer.h"
 #include "Buffer/D3D11BufferArray.h"
-#include "Buffer/D3D11IndexBuffer.h"
-#include "Buffer/D3D11ConstantBuffer.h"
-#include "Buffer/D3D11StorageBuffer.h"
-#include "Buffer/D3D11StreamOutputBuffer.h"
+#include "Buffer/D3D11BufferWithRV.h"
 
 #include "RenderState/D3D11GraphicsPipeline.h"
 #include "RenderState/D3D11GraphicsPipeline1.h"
@@ -86,18 +83,18 @@ void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
+static bool NeedsBufferResourceViews(long bindFlags)
+{
+    return ((bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0);
+}
+
 static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Make respective buffer type */
-    switch (desc.type)
-    {
-        case BufferType::Vertex:        return MakeUnique< D3D11VertexBuffer       >(device, desc, initialData);
-        case BufferType::Index:         return MakeUnique< D3D11IndexBuffer        >(device, desc, initialData);
-        case BufferType::Constant:      return MakeUnique< D3D11ConstantBuffer     >(device, desc, initialData);
-        case BufferType::Storage:       return MakeUnique< D3D11StorageBuffer      >(device, desc, initialData);
-        case BufferType::StreamOutput:  return MakeUnique< D3D11StreamOutputBuffer >(device, desc, initialData);
-    }
-    return nullptr;
+    if (NeedsBufferResourceViews(desc.bindFlags))
+        return MakeUnique<D3D11BufferWithRV>(device, desc, initialData);
+    else
+        return MakeUnique<D3D11Buffer>(device, desc, initialData);
 }
 
 Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
@@ -109,8 +106,8 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
 BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    auto bufferType = (*bufferArray)->GetType();
-    return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(bufferType, numBuffers, bufferArray));
+    auto bindFlags = bufferArray[0]->GetBindFlags();
+    return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(bindFlags, numBuffers, bufferArray));
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)
