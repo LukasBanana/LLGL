@@ -16,25 +16,19 @@ namespace LLGL
 class ShaderProgram;
 class PipelineLayout;
 
-//! Compute pipeline descriptor structure.
+/**
+\brief Compute pipeline descriptor structure.
+\see RenderSystem::CreateComputePipeline
+*/
 struct ComputePipelineDescriptor
 {
-    ComputePipelineDescriptor() = default;
-
-    //! Constructor to initialize the entire descriptor.
-    inline ComputePipelineDescriptor(ShaderProgram* shaderProgram, PipelineLayout* pipelineLayout = nullptr) :
-        shaderProgram  { shaderProgram  },
-        pipelineLayout { pipelineLayout }
-    {
-    }
-
     /**
     \brief Pointer to the shader program for the compute pipeline.
-    \remarks This must never be null when "RenderSystem::CreateComputePipeline" is called with this structure.
+    \remarks This must never be null when RenderSystem::CreateComputePipeline is called with this structure.
     \see RenderSystem::CreateComputePipeline
     \see RenderSystem::CreateShaderProgram
     */
-    ShaderProgram*  shaderProgram   = nullptr;
+    const ShaderProgram*  shaderProgram     = nullptr;
 
     /**
     \brief Pointer to an optional pipeline layout for the graphics pipeline.
@@ -42,7 +36,7 @@ struct ComputePipelineDescriptor
     This is ignored by render systems which do not support pipeline layouts.
     \note Only supported with: Vulkan, Direct3D 12
     */
-    PipelineLayout* pipelineLayout  = nullptr;
+    const PipelineLayout* pipelineLayout    = nullptr;
 };
 
 

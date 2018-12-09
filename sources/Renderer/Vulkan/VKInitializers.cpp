@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-void InitVkBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize size, VkBufferUsageFlags usage)
+void BuildVkBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize size, VkBufferUsageFlags usage)
 {
     createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     createInfo.pNext                    = nullptr;
@@ -22,13 +22,6 @@ void InitVkBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize size, V
     createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
     createInfo.queueFamilyIndexCount    = 0;
     createInfo.pQueueFamilyIndices      = nullptr;
-}
-
-VkBufferCreateInfo MakeVkBufferCreateInfo(VkDeviceSize size, VkBufferUsageFlags usage)
-{
-    VkBufferCreateInfo createInfo;
-    InitVkBufferCreateInfo(createInfo, size, usage);
-    return createInfo;
 }
 
 

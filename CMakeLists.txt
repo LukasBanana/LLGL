@@ -127,6 +127,7 @@ endif()
 
 if(NOT APPLE)
 	option(LLGL_BUILD_RENDERER_VULKAN "Include Vulkan renderer project (experimental)" OFF)
+    option(LLGL_VK_ENABLE_EXT "Enable extensions for Vulkan 1.1+" OFF)
 endif()
 
 if(WIN32)
@@ -165,6 +166,10 @@ endif()
 
 if(LLGL_BUILD_STATIC_LIB)
 	ADD_DEFINE(LLGL_BUILD_STATIC_LIB)
+endif()
+
+if(LLGL_VK_ENABLE_EXT)
+    ADD_DEFINE(LLGL_VK_ENABLE_EXT)
 endif()
 
 if(WIN32)

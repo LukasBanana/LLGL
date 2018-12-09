@@ -16,8 +16,7 @@ namespace LLGL
 {
 
 
-void InitVkBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize size, VkBufferUsageFlags usage);
-VkBufferCreateInfo MakeVkBufferCreateInfo(VkDeviceSize size, VkBufferUsageFlags usage);
+void BuildVkBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize size, VkBufferUsageFlags usage);
 
 
 } // /namespace LLGL

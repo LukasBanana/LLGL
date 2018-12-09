@@ -59,6 +59,19 @@ LLGL_EXPORT void ThrowGLExtensionNotSupportedExcept(const char* funcName, const 
 }
 
 [[noreturn]]
+LLGL_EXPORT void ThrowVKExtensionNotSupportedExcept(const char* funcName, const char* extensionName)
+{
+    std::string s;
+    {
+        AddFuncName(s, funcName);
+        s += "Vulkan extension '";
+        s += extensionName;
+        s += "' not supported";
+    }
+    throw std::runtime_error(s);
+}
+
+[[noreturn]]
 LLGL_EXPORT void ThrowNotImplementedExcept(const char* funcName)
 {
     std::string s;

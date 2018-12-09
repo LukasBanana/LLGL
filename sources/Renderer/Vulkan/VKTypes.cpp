@@ -304,18 +304,6 @@ VkSamplerAddressMode Map(const SamplerAddressMode addressMode)
     MapFailed("SamplerAddressMode", "VkSamplerAddressMode");
 }
 
-VkDescriptorType Map(ResourceType resourceViewType)
-{
-    switch (resourceViewType)
-    {
-        case ResourceType::Sampler:         return VK_DESCRIPTOR_TYPE_SAMPLER;
-        case ResourceType::Texture:         return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-        case ResourceType::ConstantBuffer:  return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        case ResourceType::StorageBuffer:   return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    }
-    MapFailed("LayoutBindingType", "VkDescriptorType");
-}
-
 VkQueryType Map(const QueryType queryType)
 {
     switch (queryType)

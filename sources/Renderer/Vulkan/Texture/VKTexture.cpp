@@ -67,9 +67,11 @@ TextureDescriptor VKTexture::QueryDesc() const
 {
     TextureDescriptor texDesc;
 
-    texDesc.type    = GetType();
-    texDesc.format  = VKTypes::Unmap(GetVkFormat());
-    texDesc.flags   = 0;
+    texDesc.type            = GetType();
+    texDesc.bindFlags       = 0;
+    texDesc.cpuAccessFlags  = 0;
+    texDesc.miscFlags       = 0;
+    texDesc.format          = VKTypes::Unmap(GetVkFormat());
 
     switch (texDesc.type)
     {
@@ -105,7 +107,7 @@ TextureDescriptor VKTexture::QueryDesc() const
             texDesc.extent.height   = extent_.height;
             texDesc.arrayLayers     = numArrayLayers_;
             texDesc.samples         = 0; //TODO
-            texDesc.flags           |= TextureFlags::FixedSamples;
+            texDesc.miscFlags       |= MiscFlags::FixedSamples;
             break;
     }
 
@@ -245,18 +247,27 @@ static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
         usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
     /* Enable either color or depth-stencil ATTACHMENT_BIT image usage when attachment usage is enabled */
-    if ((desc.flags & TextureFlags::ColorAttachmentUsage) != 0)
-        usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-    if ((desc.flags & TextureFlags::DepthStencilAttachmentUsage) != 0)
+    if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
         usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
+        usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
     /* Enable sampling the image */
-    if ((desc.flags & TextureFlags::SampleUsage) != 0)
+    if ((desc.bindFlags & BindFlags::SampleBuffer) != 0)
         usageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
     /* Enable load/store operations on the image */
-    if ((desc.flags & TextureFlags::StorageUsage) != 0)
+    if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
         usageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
+
+    #if 0//???
+    /* Enable input attachment bit when used for reading AND as attachment */
+    if ( (desc.bindFlags & (BindFlags::SampleBuffer    | BindFlags::RWStorageBuffer       )) != 0 &&
+         (desc.bindFlags & (BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment)) != 0 )
+    {
+        usageFlags |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+    }
+    #endif
 
     return usageFlags;
 }

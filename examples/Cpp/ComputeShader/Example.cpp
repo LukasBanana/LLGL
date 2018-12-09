@@ -113,7 +113,12 @@ int main(int argc, char* argv[])
         auto resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
 
         // Create compute pipeline
-        auto pipeline = renderer->CreateComputePipeline({ shaderProgram, pipelineLayout });
+        LLGL::ComputePipelineDescriptor pipelineDesc;
+        {
+            pipelineDesc.shaderProgram  = shaderProgram;
+            pipelineDesc.pipelineLayout = pipelineLayout;
+        }
+        auto pipeline = renderer->CreateComputePipeline(pipelineDesc);
 
         commands->Begin();
         {

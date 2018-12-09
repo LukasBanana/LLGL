@@ -19,7 +19,7 @@ namespace LLGL
 D3D11ComputePipeline::D3D11ComputePipeline(const ComputePipelineDescriptor& desc)
 {
     /* Convert shader state */
-    auto shaderProgramD3D = LLGL_CAST(D3D11ShaderProgram*, desc.shaderProgram);
+    auto shaderProgramD3D = LLGL_CAST(const D3D11ShaderProgram*, desc.shaderProgram);
     if (shaderProgramD3D && shaderProgramD3D->GetCS())
         cs_ = shaderProgramD3D->GetCS()->GetNative().cs;
     else

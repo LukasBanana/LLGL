@@ -18,9 +18,9 @@
 #include "Texture/VKRenderTarget.h"
 #include "Buffer/VKBuffer.h"
 #include "Buffer/VKBufferArray.h"
-#include "Buffer/VKIndexBuffer.h"
 #include "../CheckedCast.h"
 #include "../StaticLimits.h"
+#include "../../Core/Exception.h"
 #include <cstddef>
 
 
@@ -393,30 +393,30 @@ void VKCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 
 void VKCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
-    auto& indexBufferVK = LLGL_CAST(VKIndexBuffer&, buffer);
-    vkCmdBindIndexBuffer(commandBuffer_, indexBufferVK.GetVkBuffer(), 0, indexBufferVK.GetIndexType());
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    vkCmdBindIndexBuffer(commandBuffer_, bufferVK.GetVkBuffer(), 0, bufferVK.GetIndexType());
 }
 
 /* ----- Stream Output Buffers ------ */
 
 void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
-    //todo
+    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
 }
 
 void VKCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
 {
-    //todo
+    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
 }
 
 void VKCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
 {
-    //todo
+    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
 }
 
 void VKCommandBuffer::EndStreamOutput()
 {
-    //todo
+    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
 }
 
 /* ----- Resource Heaps ----- */
@@ -623,12 +623,28 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    // not supported
+    /*#ifdef LLGL_VK_ENABLE_EXT
+    VkConditionalRenderingBeginInfoEXT beginInfo;
+    {
+        beginInfo.sType     = VK_STRUCTURE_TYPE_CONDITIONAL_RENDERING_BEGIN_INFO_EXT;
+        beginInfo.pNext     = nullptr;
+        beginInfo.buffer    = ;
+        beginInfo.offset    = ;
+        beginInfo.flags     = (mode >= RenderConditionMode::WaitInverted ? VK_CONDITIONAL_RENDERING_INVERTED_BIT_EXT : 0);
+    }
+    vkCmdBeginConditionalRenderingEXT(commandBuffer_, &beginInfo);
+    //#else
+    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_conditional_rendering");
+    #endif*/
 }
 
 void VKCommandBuffer::EndRenderCondition()
 {
-    // not supported
+    /*#ifdef LLGL_VK_ENABLE_EXT
+    vkCmdEndConditionalRenderingEXT(commandBuffer_);
+    #else
+    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_conditional_rendering");
+    #endif*/
 }
 
 /* ----- Drawing ----- */

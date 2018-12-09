@@ -15,8 +15,8 @@ namespace LLGL
 {
 
 
-VKBufferArray::VKBufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { type }
+VKBufferArray::VKBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { bindFlags }
 {
     /* Store the object of each VKBuffer inside the array and  */
     buffers_.reserve(numBuffers);

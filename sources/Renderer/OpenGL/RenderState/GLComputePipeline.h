@@ -30,7 +30,7 @@ class GLComputePipeline final : public ComputePipeline
 
     private:
 
-        GLShaderProgram* shaderProgram_ = nullptr;
+        const GLShaderProgram* shaderProgram_ = nullptr;
 
 };
 

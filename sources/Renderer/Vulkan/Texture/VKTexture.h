@@ -94,13 +94,13 @@ class VKTexture final : public Texture
 
         void CreateImage(VkDevice device, const TextureDescriptor& desc);
 
-        VKDeviceImage          imageWrapper_;
-        VKPtr<VkImageView>      imageView_;
+        VKDeviceImage       imageWrapper_;
+        VKPtr<VkImageView>  imageView_;
 
-        VkFormat                format_         = VK_FORMAT_UNDEFINED;
-        VkExtent3D              extent_;
-        std::uint32_t           numMipLevels_   = 0;
-        std::uint32_t           numArrayLayers_ = 0;
+        VkFormat            format_         = VK_FORMAT_UNDEFINED;
+        VkExtent3D          extent_;
+        std::uint32_t       numMipLevels_   = 0;
+        std::uint32_t       numArrayLayers_ = 0;
 
 };
 

@@ -27,7 +27,7 @@ VKComputePipeline::VKComputePipeline(
     /* Get pipeline layout object */
     if (desc.pipelineLayout)
     {
-        auto pipelineLayoutVK = LLGL_CAST(VKPipelineLayout*, desc.pipelineLayout);
+        auto pipelineLayoutVK = LLGL_CAST(const VKPipelineLayout*, desc.pipelineLayout);
         pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
     }
 
@@ -43,7 +43,7 @@ VKComputePipeline::VKComputePipeline(
 void VKComputePipeline::CreateComputePipeline(const ComputePipelineDescriptor& desc)
 {
     /* Get shader program object */
-    auto shaderProgramVK = LLGL_CAST(VKShaderProgram*, desc.shaderProgram);
+    auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
     if (!shaderProgramVK)
         throw std::invalid_argument("failed to create compute pipeline due to missing shader program");
 

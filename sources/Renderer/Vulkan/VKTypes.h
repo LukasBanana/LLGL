@@ -44,7 +44,6 @@ VkLogicOp               Map( const LogicOp              logicOp           );
 VkBlendFactor           Map( const BlendOp              blendOp           );
 VkBlendOp               Map( const BlendArithmetic      blendArithmetic   );
 VkSamplerAddressMode    Map( const SamplerAddressMode   addressMode       );
-VkDescriptorType        Map( const ResourceType         resourceViewType  );
 VkQueryType             Map( const QueryType            queryType         );
 VkAttachmentLoadOp      Map( const AttachmentLoadOp     loadOp            );
 VkAttachmentStoreOp     Map( const AttachmentStoreOp    storeOp           );

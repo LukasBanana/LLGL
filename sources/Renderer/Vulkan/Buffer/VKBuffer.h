@@ -23,7 +23,7 @@ class VKBuffer : public Buffer
 
     public:
 
-        VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
+        VKBuffer(const VKPtr<VkDevice>& device, const BufferDescriptor& desc);
 
         void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
         void TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer);
@@ -62,9 +62,15 @@ class VKBuffer : public Buffer
         }
 
         // Returns the CPU access previously set when "Map" was called.
-        inline CPUAccess GetMappingCPUAccess() const
+        inline CPUAccess GetMappedCPUAccess() const
         {
-            return mappingCPUAccess_;
+            return mappedCPUAccess_;
+        }
+
+        // Returns the VkIndexType specified at creation time.
+        inline VkIndexType GetIndexType() const
+        {
+            return indexType_;
         }
 
     private:
@@ -73,7 +79,9 @@ class VKBuffer : public Buffer
         VKDeviceBuffer  bufferObjStaging_;
 
         VkDeviceSize    size_               = 0;
-        CPUAccess       mappingCPUAccess_   = CPUAccess::ReadOnly;
+        CPUAccess       mappedCPUAccess_    = CPUAccess::ReadOnly;
+
+        VkIndexType     indexType_          = VK_INDEX_TYPE_UINT32;
 
 };
 

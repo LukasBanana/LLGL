@@ -29,6 +29,10 @@ LLGL_EXPORT void ThrowRenderingFeatureNotSupportedExcept(const char* funcName, c
 [[noreturn]]
 LLGL_EXPORT void ThrowGLExtensionNotSupportedExcept(const char* funcName, const char* extensionName);
 
+// Throws an std::runtime_error exception with the message, that the specified Vulkan extension is not supported.
+[[noreturn]]
+LLGL_EXPORT void ThrowVKExtensionNotSupportedExcept(const char* funcName, const char* extensionName);
+
 // Throws an std::runtime_error exception with the message, that the specified interface function is not implemented yet.
 [[noreturn]]
 LLGL_EXPORT void ThrowNotImplementedExcept(const char* funcName);

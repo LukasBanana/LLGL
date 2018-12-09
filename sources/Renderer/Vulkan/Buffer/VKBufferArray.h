@@ -26,7 +26,7 @@ class VKBufferArray final : public BufferArray
 
     public:
 
-        VKBufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray);
+        VKBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer objects.
         inline const std::vector<VkBuffer>& GetBuffers() const

@@ -91,8 +91,12 @@ int main()
         }
         auto timerQuery = renderer->CreateQueryHeap(queryDesc);
 
-        // Create graphics pipeline
-        auto pipeline = renderer->CreateComputePipeline({ shaderProgram });
+        // Create compute pipeline
+        LLGL::ComputePipelineDescriptor pipelineDesc;
+        {
+            pipelineDesc.shaderProgram = shaderProgram;
+        }
+        auto pipeline = renderer->CreateComputePipeline(pipelineDesc);
 
         // Set resources
         commands->Begin();

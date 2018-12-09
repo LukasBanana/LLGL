@@ -35,13 +35,34 @@ static VkShaderStageFlags GetVkShaderStageFlags(long flags)
     return bitmask;
 }
 
+// Returns the appropriate VkDescriptorType enum entry for the specified binding descriptor
+static VkDescriptorType GetVkDescriptorType(const BindingDescriptor& desc)
+{
+    switch (desc.type)
+    {
+        case ResourceType::Sampler:
+            return VK_DESCRIPTOR_TYPE_SAMPLER;
+        case ResourceType::Texture:
+            return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        case ResourceType::Buffer:
+            if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
+                return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            if ((desc.bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+                return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            break;
+        default:
+            break;
+    }
+    VKTypes::MapFailed("ResourceType", "VkDescriptorType");
+}
+
 //TODO:
 // looks like 'VkDescriptorSetLayoutBinding::descriptorCount' can only be greater than 1
 // for arrays in a shader (e.g. array of uniform buffers), but not for multiple binding points.
 static void Convert(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& src)
 {
     dst.binding             = src.slot;
-    dst.descriptorType      = VKTypes::Map(src.type);
+    dst.descriptorType      = GetVkDescriptorType(src);
     dst.descriptorCount     = src.arraySize;
     dst.stageFlags          = GetVkShaderStageFlags(src.stageFlags);
     dst.pImmutableSamplers  = nullptr;
@@ -100,8 +121,8 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
 
     /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
     bindings_.reserve(numBindings);
-    for (const auto& binding : desc.bindings)
-        bindings_.push_back({ binding.slot, VKTypes::Map(binding.type) });
+    for (std::size_t i = 0; i < numBindings; ++i)
+        bindings_.push_back({ desc.bindings[i].slot, layoutBindings[i].descriptorType });
 }
 
 

@@ -212,6 +212,7 @@ ExampleBase::ExampleBase(
 {
     // Set report callback to standard output
     LLGL::Log::SetReportCallbackStd();
+    LLGL::Log::SetReportLimit(10);
 
     // Create render system
     renderer = LLGL::RenderSystem::Load(

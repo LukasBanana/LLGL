@@ -10,7 +10,6 @@
 #include "Ext/VKExtensionLoader.h"
 #include "Ext/VKExtensions.h"
 #include "Memory/VKDeviceMemory.h"
-#include "Buffer/VKIndexBuffer.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
@@ -43,24 +42,9 @@ static void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCall
         func(instance, callback, allocator);
 }
 
-static VkBufferUsageFlags GetVkBufferUsageFlags(long bufferFlags)
+static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long cpuAccessFlags)
 {
-    VkBufferUsageFlags flags = 0;
-
-    if ((bufferFlags & BufferFlags::IndirectBinding) != 0)
-        flags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
-
-    if ((bufferFlags & BufferFlags::MapReadAccess) != 0)
-        flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    else
-        flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-    return flags;
-}
-
-static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long bufferFlags)
-{
-    if ((bufferFlags & BufferFlags::MapWriteAccess) != 0)
+    if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
         return VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     else
         return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -158,20 +142,20 @@ void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    static const long g_stagingBufferRelatedFlags = (BufferFlags::MapReadWriteAccess | BufferFlags::DynamicUsage);
-
     AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
 
     /* Create staging buffer */
-    auto stagingCreateInfo = MakeVkBufferCreateInfo(
+    VkBufferCreateInfo stagingCreateInfo;
+    BuildVkBufferCreateInfo(
+        stagingCreateInfo,
         static_cast<VkDeviceSize>(desc.size),
-        GetStagingVkBufferUsageFlags(desc.flags)
+        GetStagingVkBufferUsageFlags(desc.cpuAccessFlags)
     );
 
     auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, initialData, desc.size);
 
-    /* Create device buffer */
-    auto buffer = CreateGpuBuffer(desc, GetVkBufferUsageFlags(desc.flags));
+    /* Create primary buffer object */
+    auto buffer = TakeOwnership(buffers_, MakeUnique<VKBuffer>(device_, desc));
 
     /* Allocate device memory */
     auto memoryRegion = deviceMemoryMngr_->Allocate(
@@ -183,7 +167,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     /* Copy staging buffer into hardware buffer */
     device_.CopyBuffer(stagingBuffer.GetVkBuffer(), buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
 
-    if ((desc.flags & g_stagingBufferRelatedFlags) != 0)
+    if ((desc.cpuAccessFlags & CPUAccessFlags::Write) != 0 || (desc.miscFlags & MiscFlags::DynamicUsage) != 0)
     {
         /* Store ownership of staging buffer */
         buffer->TakeStagingBuffer(std::move(stagingBuffer));
@@ -200,8 +184,8 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 BufferArray* VKRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    auto type = (*bufferArray)->GetType();
-    return TakeOwnership(bufferArrays_, MakeUnique<VKBufferArray>(type, numBuffers, bufferArray));
+    auto refBindFlags = bufferArray[0]->GetBindFlags();
+    return TakeOwnership(bufferArrays_, MakeUnique<VKBufferArray>(refBindFlags, numBuffers, bufferArray));
 }
 
 void VKRenderSystem::Release(Buffer& buffer)
@@ -233,8 +217,11 @@ void VKRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, con
     else
     {
         /* Create staging buffer */
-        auto stagingCreateInfo = MakeVkBufferCreateInfo(
-            dataSize, (VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+        VkBufferCreateInfo stagingCreateInfo;
+        BuildVkBufferCreateInfo(
+            stagingCreateInfo,
+            dataSize,
+            (VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
         );
 
         auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, data, dataSize);
@@ -274,7 +261,7 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
         bufferVK.Unmap(device_);
 
         /* Copy staging buffer into GPU local buffer for write access */
-        if (bufferVK.GetMappingCPUAccess() != CPUAccess::ReadOnly)
+        if (bufferVK.GetMappedCPUAccess() != CPUAccess::ReadOnly)
             device_.CopyBuffer(stagingBuffer, bufferVK.GetVkBuffer(), bufferVK.GetSize());
     }
 }
@@ -369,9 +356,11 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     }
 
     /* Create staging buffer */
-    auto stagingCreateInfo = MakeVkBufferCreateInfo(
+    VkBufferCreateInfo stagingCreateInfo;
+    BuildVkBufferCreateInfo(
+        stagingCreateInfo,
         initialDataSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.flags)
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.cpuAccessFlags)
     );
 
     auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, initialData, initialDataSize);
@@ -827,53 +816,6 @@ bool VKRenderSystem::IsExtensionRequired(const std::string& name) const
         #endif
         || (debugLayerEnabled_ && name == VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
     );
-}
-
-VKBuffer* VKRenderSystem::CreateGpuBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage)
-{
-    /* Create hardware buffer */
-    VkBufferCreateInfo createInfo;
-
-    switch (desc.type)
-    {
-        case BufferType::Vertex:
-        {
-            InitVkBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
-            return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Vertex, device_, createInfo));
-        }
-        break;
-
-        case BufferType::Index:
-        {
-            InitVkBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_INDEX_BUFFER_BIT));
-            return TakeOwnership(buffers_, MakeUnique<VKIndexBuffer>(device_, createInfo, desc.indexBuffer.format));
-        }
-        break;
-
-        case BufferType::Constant:
-        {
-            InitVkBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT));
-            return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Constant, device_, createInfo));
-        }
-        break;
-
-        case BufferType::Storage:
-        {
-            InitVkBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
-            return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Storage, device_, createInfo));
-        }
-        break;
-
-        case BufferType::StreamOutput:
-        {
-            throw std::runtime_error("stream output buffer not supported by Vulkan renderer");
-        }
-        break;
-
-        default:
-        break;
-    }
-    return nullptr;
 }
 
 VKDeviceBuffer VKRenderSystem::CreateStagingBuffer(const VkBufferCreateInfo& createInfo)
