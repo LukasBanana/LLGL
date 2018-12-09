@@ -13,7 +13,9 @@ int main(int argc, char* argv[])
     try
     {
         // Load render system module
-        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv));
+        LLGL::Log::SetReportCallbackStd();
+        LLGL::RenderingDebugger deb;
+        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv), nullptr, &deb);
 
         // Create render context but do not show its window
         LLGL::RenderContextDescriptor contextDesc;

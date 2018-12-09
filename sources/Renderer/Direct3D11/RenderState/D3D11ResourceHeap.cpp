@@ -252,13 +252,17 @@ void D3D11ResourceHeap::BuildShaderResourceViewSegments(ResourceBindingIterator&
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
-            auto bufferD3D = LLGL_CAST(D3D11BufferWithRV*, resource);
-            if (auto srv = bufferD3D->GetSRV())
+            auto bufferD3D = LLGL_CAST(D3D11Buffer*, resource);
+            if ((bufferD3D->GetBindFlags() & BindFlags::SampleBuffer) != 0)
             {
-                binding.slot    = slot;
-                binding.stages  = stageFlags;
-                binding.srv     = srv;
-                return true;
+                auto bufferWithRVD3D = LLGL_CAST(D3D11BufferWithRV*, bufferD3D);
+                if (auto srv = bufferWithRVD3D->GetSRV())
+                {
+                    binding.slot    = slot;
+                    binding.stages  = stageFlags;
+                    binding.srv     = srv;
+                    return true;
+                }
             }
             return false;
         }
@@ -311,14 +315,18 @@ void D3D11ResourceHeap::BuildUnorderedAccessViewSegments(ResourceBindingIterator
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
-            auto bufferD3D = LLGL_CAST(D3D11BufferWithRV*, resource);
-            if (auto uav = bufferD3D->GetUAV())
+            auto bufferD3D = LLGL_CAST(D3D11Buffer*, resource);
+            if ((bufferD3D->GetBindFlags() & BindFlags::RWStorageBuffer) != 0)
             {
-                binding.slot            = slot;
-                binding.stages          = stageFlags;
-                binding.uav             = uav;
-                binding.initialCount    = 0;
-                return true;
+                auto bufferWithRVD3D = LLGL_CAST(D3D11BufferWithRV*, bufferD3D);
+                if (auto uav = bufferWithRVD3D->GetUAV())
+                {
+                    binding.slot            = slot;
+                    binding.stages          = stageFlags;
+                    binding.uav             = uav;
+                    binding.initialCount    = 0;
+                    return true;
+                }
             }
             return false;
         }

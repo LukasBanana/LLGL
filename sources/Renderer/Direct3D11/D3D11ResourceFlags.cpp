@@ -96,10 +96,13 @@ UINT DXGetBufferMiscFlags(const BufferDescriptor& desc)
     if ((desc.bindFlags & BindFlags::IndirectBuffer) != 0)
         flagsD3D |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
 
-    if (IsStructuredBuffer(desc.storageBuffer.storageType))
-        flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-    else if (IsByteAddressBuffer(desc.storageBuffer.storageType))
-        flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+    if ((desc.bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+    {
+        if (IsStructuredBuffer(desc.storageBuffer.storageType))
+            flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+        else if (IsByteAddressBuffer(desc.storageBuffer.storageType))
+            flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+    }
 
     return flagsD3D;
 }
@@ -122,14 +125,32 @@ UINT DXGetTextureMiscFlags(const TextureDescriptor& desc)
  * see https://docs.microsoft.com/en-us/windows/desktop/api/d3d11/ne-d3d11-d3d11_usage
  */
 
-D3D11_USAGE DXGetUsageForCPUAccessFlags(UINT cpuAccessFlags)
+D3D11_USAGE DXGetBufferUsage(const BufferDescriptor& desc)
 {
-    if ((cpuAccessFlags & D3D11_CPU_ACCESS_READ) != 0)
+    if ((desc.bindFlags & BindFlags::RWStorageBuffer) == 0)
+    {
+        if ((desc.miscFlags & MiscFlags::DynamicUsage) != 0)
+            return D3D11_USAGE_DYNAMIC;
+    }
+    return D3D11_USAGE_DEFAULT;
+}
+
+D3D11_USAGE DXGetCPUAccessBufferUsage(const BufferDescriptor& desc)
+{
+    if ((desc.cpuAccessFlags & CPUAccessFlags::Read) != 0)
         return D3D11_USAGE_STAGING;
-    else if ((cpuAccessFlags & D3D11_CPU_ACCESS_WRITE) != 0)
+    if ((desc.cpuAccessFlags & CPUAccessFlags::Write) != 0)
         return D3D11_USAGE_DYNAMIC;
-    else
-        return D3D11_USAGE_DEFAULT;
+    return D3D11_USAGE_DEFAULT;
+}
+
+D3D11_USAGE DXGetTextureUsage(const TextureDescriptor& desc)
+{
+    if ((desc.cpuAccessFlags & CPUAccessFlags::Read) != 0)
+        return D3D11_USAGE_STAGING;
+    if ((desc.cpuAccessFlags & CPUAccessFlags::Write) != 0)
+        return D3D11_USAGE_DYNAMIC;
+    return D3D11_USAGE_DEFAULT;
 }
 
 

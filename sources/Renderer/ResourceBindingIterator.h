@@ -19,7 +19,7 @@ namespace LLGL
 {
 
 
-// Helper class to iterate over a all resource views and theirs bindings points of a certain type
+// Helper class to iterate over all resource views and their binding points of a certain type
 class LLGL_EXPORT ResourceBindingIterator
 {
 
@@ -30,7 +30,7 @@ class LLGL_EXPORT ResourceBindingIterator
             const std::vector<BindingDescriptor>&       bindings
         );
 
-        // Resets the iteration process for the specified type of interest.
+        // Resets the iteration for the specified binding parameters.
         void Reset(const ResourceType typeOfInterest, long bindFlagsOfInterest = 0, long stagesOfInterest = 0);
 
         // Returns the next resource of the current type of interest, or null if there are no more resources of that type.

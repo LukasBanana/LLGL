@@ -180,8 +180,6 @@ void D3D11Texture::CreateTexture1D(
     const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
     const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
 {
-    auto cpuAccessFlags = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
-
     /* Create native D3D texture */
     D3D11_TEXTURE1D_DESC descD3D;
     {
@@ -189,9 +187,9 @@ void D3D11Texture::CreateTexture1D(
         descD3D.MipLevels       = desc.mipLevels;
         descD3D.ArraySize       = desc.arrayLayers;
         descD3D.Format          = D3D11Types::Map(desc.format);
-        descD3D.Usage           = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.Usage           = DXGetTextureUsage(desc);
         descD3D.BindFlags       = DXGetTextureBindFlags(desc);
-        descD3D.CPUAccessFlags  = cpuAccessFlags;
+        descD3D.CPUAccessFlags  = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
         descD3D.MiscFlags       = DXGetTextureMiscFlags(desc);
     }
     native_.tex1D = DXCreateTexture1D(device, descD3D, initialData);
@@ -208,8 +206,6 @@ void D3D11Texture::CreateTexture2D(
     const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
     const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
 {
-    auto cpuAccessFlags = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
-
     /* Create native D3D texture */
     D3D11_TEXTURE2D_DESC descD3D;
     {
@@ -220,9 +216,9 @@ void D3D11Texture::CreateTexture2D(
         descD3D.Format              = D3D11Types::Map(desc.format);
         descD3D.SampleDesc.Count    = (IsMultiSampleTexture(desc.type) ? std::max(1u, desc.samples) : 1u);
         descD3D.SampleDesc.Quality  = 0;//(desc.miscFlags & MiscFlags::FixedSamples ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);
-        descD3D.Usage               = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.Usage               = DXGetTextureUsage(desc);
         descD3D.BindFlags           = DXGetTextureBindFlags(desc);
-        descD3D.CPUAccessFlags      = cpuAccessFlags;
+        descD3D.CPUAccessFlags      = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
         descD3D.MiscFlags           = DXGetTextureMiscFlags(desc);
     }
     native_.tex2D = DXCreateTexture2D(device, descD3D, initialData);
@@ -239,8 +235,6 @@ void D3D11Texture::CreateTexture3D(
     const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
     const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
 {
-    auto cpuAccessFlags = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
-
     /* Create native D3D texture */
     D3D11_TEXTURE3D_DESC descD3D;
     {
@@ -249,9 +243,9 @@ void D3D11Texture::CreateTexture3D(
         descD3D.Depth           = desc.extent.depth;
         descD3D.MipLevels       = desc.mipLevels;
         descD3D.Format          = D3D11Types::Map(desc.format);
-        descD3D.Usage           = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.Usage           = DXGetTextureUsage(desc);
         descD3D.BindFlags       = DXGetTextureBindFlags(desc);
-        descD3D.CPUAccessFlags  = cpuAccessFlags;
+        descD3D.CPUAccessFlags  = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
         descD3D.MiscFlags       = DXGetTextureMiscFlags(desc);
     }
     native_.tex3D = DXCreateTexture3D(device, descD3D, initialData);

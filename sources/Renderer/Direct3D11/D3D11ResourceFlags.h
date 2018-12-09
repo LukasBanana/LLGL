@@ -30,7 +30,10 @@ UINT DXGetCPUAccessFlags(long cpuAccessFlags);
 UINT DXGetBufferMiscFlags(const BufferDescriptor& desc);
 UINT DXGetTextureMiscFlags(const TextureDescriptor& desc);
 
-D3D11_USAGE DXGetUsageForCPUAccessFlags(UINT cpuAccessFlags);
+// Returns the appropriate <D3D11_USAGE> entry
+D3D11_USAGE DXGetBufferUsage(const BufferDescriptor& desc);
+D3D11_USAGE DXGetCPUAccessBufferUsage(const BufferDescriptor& desc);
+D3D11_USAGE DXGetTextureUsage(const TextureDescriptor& desc);
 
 
 } // /namespace LLGL

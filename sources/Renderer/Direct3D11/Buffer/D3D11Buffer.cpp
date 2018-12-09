@@ -183,14 +183,12 @@ static UINT GetD3DBufferSize(const BufferDescriptor& desc)
 void D3D11Buffer::CreateNativeBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Initialize native buffer descriptor */
-    auto cpuAccessFlags = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
-
     D3D11_BUFFER_DESC descD3D;
     {
         descD3D.ByteWidth           = GetD3DBufferSize(desc);
-        descD3D.Usage               = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.Usage               = DXGetBufferUsage(desc);
         descD3D.BindFlags           = DXGetBufferBindFlags(desc.bindFlags);
-        descD3D.CPUAccessFlags      = cpuAccessFlags;
+        descD3D.CPUAccessFlags      = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
         descD3D.MiscFlags           = DXGetBufferMiscFlags(desc);
         descD3D.StructureByteStride = desc.storageBuffer.stride;
     }
@@ -227,15 +225,13 @@ void D3D11Buffer::CreateNativeBuffer(ID3D11Device* device, const BufferDescripto
 
 void D3D11Buffer::CreateCPUAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc)
 {
-    auto cpuAccessFlags = DXGetCPUAccessFlags(desc.cpuAccessFlags);
-
     /* Create new D3D11 hardware buffer (for CPU access) */
     D3D11_BUFFER_DESC descD3D;
     {
         descD3D.ByteWidth           = static_cast<UINT>(desc.size);
-        descD3D.Usage               = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.Usage               = DXGetCPUAccessBufferUsage(desc);
         descD3D.BindFlags           = 0;
-        descD3D.CPUAccessFlags      = cpuAccessFlags;
+        descD3D.CPUAccessFlags      = DXGetCPUAccessFlags(desc.cpuAccessFlags);
         descD3D.MiscFlags           = 0;
         descD3D.StructureByteStride = desc.storageBuffer.stride;
     }
