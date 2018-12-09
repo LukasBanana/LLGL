@@ -54,8 +54,6 @@ enum class QueryType
 
 /* ----- Structures ----- */
 
-#include "PackPush.h"
-
 /**
 \brief Query data structure for pipeline statistics.
 \remarks This structure is byte aligned, i.e. it can be reinterpret casted to a buffer in CPU memory space.
@@ -100,10 +98,7 @@ struct QueryPipelineStatistics
 
     //! Number of compute shader invocations.
     std::uint64_t computeShaderInvocations          = 0;
-}
-LLGL_PACK_STRUCT;
-
-#include "PackPop.h"
+};
 
 /**
 \brief Query heap descriptor structure.

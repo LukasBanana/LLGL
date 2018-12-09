@@ -24,8 +24,6 @@ namespace LLGL
 @{
 */
 
-#include "PackPush.h"
-
 /**
 \brief Format structure for the arguments of an indirect draw command.
 \remarks This structure is byte aligned, i.e. it can be reinterpret casted to a buffer in CPU memory space.
@@ -58,8 +56,7 @@ struct DrawIndirectArguments
     The same holds true for the parameter \c firstInstance and the system values \c SV_InstanceID in HLSL and \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan).
     */
     std::uint32_t   firstInstance;
-}
-LLGL_PACK_STRUCT;
+};
 
 /**
 \brief Format structure for the arguments of an indirect indexed draw command.
@@ -95,8 +92,7 @@ struct DrawIndexedIndirectArguments
     will start with the value of \c firstInstance.
     */
     std::uint32_t   firstInstance;
-}
-LLGL_PACK_STRUCT;
+};
 
 /**
 \brief Format structure for the arguments of an indirect draw/indexed-draw command for tessellation on Metal renderer.
@@ -111,17 +107,16 @@ struct DrawPatchIndirectArgument
 {
     //! Number of patches per instance.
     std::uint32_t numPatches;
-    
+
     //! Number of instances to draw.
     std::uint32_t numInstances;
-    
+
     //! Specifies the patch start index.
     std::uint32_t firstPatch;
-    
+
     //! Specifies the first instance to draw.
     std::uint32_t firstInstance;
-}
-LLGL_PACK_STRUCT;
+};
 
 /**
 \brief Format structure for the arguments of an indirect compute command.
@@ -138,10 +133,7 @@ struct DispatchIndirectArguments
 {
     //! Number of thread groups in X, Y, and Z dimension.
     std::uint32_t numThreadGroups[3];
-}
-LLGL_PACK_STRUCT;
-
-#include "PackPop.h"
+};
 
 /** @} */
 
