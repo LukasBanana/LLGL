@@ -333,15 +333,24 @@ Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& desc)
 void DbgRenderSystem::Release(Sampler& sampler)
 {
     instance_->Release(sampler);
-    //RemoveFromUniqueSet(samplers_, &sampler);
+    //ReleaseDbg(samplers_, sampler);
 }
 
 /* ----- Resource Views ----- */
 
 ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
 {
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateResourceHeapDesc(desc);
+    }
+
+    /* Create copy of descriptor to pass native renderer object references */
     auto instanceDesc = desc;
     {
+        instanceDesc.pipelineLayout = &(LLGL_CAST(DbgPipelineLayout*, desc.pipelineLayout)->instance);
+
         for (auto& resourceView : instanceDesc.resourceViews)
         {
             if (auto resource = resourceView.resource)
@@ -413,7 +422,7 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
 
 void DbgRenderSystem::Release(RenderTarget& renderTarget)
 {
-    RemoveFromUniqueSet(renderTargets_, &renderTarget);
+    ReleaseDbg(renderTargets_, renderTarget);
 }
 
 /* ----- Shader ----- */
@@ -462,12 +471,12 @@ void DbgRenderSystem::Release(ShaderProgram& shaderProgram)
 
 PipelineLayout* DbgRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
 {
-    return instance_->CreatePipelineLayout(desc);
+    return TakeOwnership(pipelineLayouts_, MakeUnique<DbgPipelineLayout>(*instance_->CreatePipelineLayout(desc), desc));
 }
 
 void DbgRenderSystem::Release(PipelineLayout& pipelineLayout)
 {
-    instance_->Release(pipelineLayout);
+    ReleaseDbg(pipelineLayouts_, pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */
@@ -519,7 +528,7 @@ void DbgRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 void DbgRenderSystem::Release(ComputePipeline& computePipeline)
 {
     instance_->Release(computePipeline);
-    //RemoveFromUniqueSet(computePipelines_, &computePipeline);
+    //ReleaseDbg(computePipelines_, computePipeline);
 }
 
 /* ----- Queries ----- */
@@ -1036,7 +1045,7 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& desc)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidState,
-                    "cannot have color attachment with a texture that was not created with the 'BindFlags::ColorAttachment' flag"
+                    "cannot have color attachment with a texture that was not created with the 'LLGL::BindFlags::ColorAttachment' flag"
                 );
             }
         }
@@ -1046,7 +1055,7 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& desc)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidState,
-                    "cannot have depth-stencil attachment with a texture that was not created with the 'BindFlags::DepthStencilAttachment' flag"
+                    "cannot have depth-stencil attachment with a texture that was not created with the 'LLGL::BindFlags::DepthStencilAttachment' flag"
                 );
             }
         }
@@ -1080,6 +1089,83 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& desc)
                 "cannot have color attachment with 'texture' member being a null pointer"
             );
         }
+    }
+}
+
+void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& desc)
+{
+    if (desc.pipelineLayout)
+    {
+        auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, desc.pipelineLayout);
+        const auto& bindings = pipelineLayoutDbg->desc.bindings;
+
+        if (desc.resourceViews.size() == bindings.size())
+        {
+            /* Validate all resource view descriptors against their respective binding descriptor */
+            for (std::size_t i = 0, n = desc.resourceViews.size(); i < n; ++i)
+                ValidateResourceViewForBinding(desc.resourceViews[i], bindings[i]);
+        }
+        else
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "resource count mismatch between pipeline layout and resource heap descriptor");
+    }
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "pipeline layout must not be null");
+}
+
+void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescriptor& resourceViewDesc, const BindingDescriptor& bindingDesc)
+{
+    /* Validate stage flags against shader program */
+    if (bindingDesc.stageFlags == 0)
+        LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stages are specified for binding descriptor");
+
+    /* Validate resource binding flags */
+    if (auto resource = resourceViewDesc.resource)
+    {
+        switch (resource->QueryResourceType())
+        {
+            case ResourceType::Buffer:
+            {
+                auto bufferDbg = LLGL_CAST(DbgBuffer*, resource);
+                ValidateBufferForBinding(*bufferDbg, bindingDesc);
+            }
+            break;
+
+            case ResourceType::Texture:
+            {
+                auto textureDbg = LLGL_CAST(DbgTexture*, resource);
+                ValidateTextureForBinding(*textureDbg, bindingDesc);
+            }
+            break;
+
+            default:
+            break;
+        }
+    }
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "resource must not be null");
+}
+
+void DbgRenderSystem::ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc)
+{
+    if ((bufferDbg.desc.bindFlags & bindingDesc.bindFlags) != bindingDesc.bindFlags)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "binding flags mismatch between buffer resource (slot = " +
+            std::to_string(bindingDesc.slot) + ") and binding descriptor"
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateTextureForBinding(const DbgTexture& textureDbg, const BindingDescriptor& bindingDesc)
+{
+    if ((textureDbg.desc.bindFlags & bindingDesc.bindFlags) != bindingDesc.bindFlags)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "binding flags mismatch between texture resource (slot = " +
+            std::to_string(bindingDesc.slot) + ") and binding descriptor"
+        );
     }
 }
 

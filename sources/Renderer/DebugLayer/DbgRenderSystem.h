@@ -16,6 +16,7 @@
 
 #include "DbgBuffer.h"
 #include "DbgBufferArray.h"
+#include "DbgPipelineLayout.h"
 #include "DbgGraphicsPipeline.h"
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
@@ -174,6 +175,11 @@ class DbgRenderSystem : public RenderSystem
 
         void ValidateAttachmentDesc(const AttachmentDescriptor& desc);
 
+        void ValidateResourceHeapDesc(const ResourceHeapDescriptor& desc);
+        void ValidateResourceViewForBinding(const ResourceViewDescriptor& resourceViewDesc, const BindingDescriptor& bindingDesc);
+        void ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc);
+        void ValidateTextureForBinding(const DbgTexture& textureDbg, const BindingDescriptor& bindingDesc);
+
         void ValidateBlendDescriptor(const BlendDescriptor& desc);
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc);
         void ValidatePrimitiveTopology(const PrimitiveTopology primitiveTopology);
@@ -210,6 +216,7 @@ class DbgRenderSystem : public RenderSystem
         HWObjectContainer<DbgRenderTarget>      renderTargets_;
         HWObjectContainer<DbgShader>            shaders_;
         HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
+        HWObjectContainer<DbgPipelineLayout>    pipelineLayouts_;
         HWObjectContainer<DbgGraphicsPipeline>  graphicsPipelines_;
         //HWObjectContainer<DbgComputePipeline>   computePipelines_;
         //HWObjectContainer<DbgSampler>           samplers_;
