@@ -15,6 +15,7 @@
 #include "D3D12Device.h"
 #include "D3D12CommandQueue.h"
 #include "D3D12CommandBuffer.h"
+#include "D3D12CommandContext.h"
 #include "D3D12RenderContext.h"
 #include "D3D12CommandSignaturePool.h"
 
@@ -209,7 +210,7 @@ class D3D12RenderSystem final : public RenderSystem
         // Close, execute, and reset command list.
         void ExecuteCommandList();
 
-        std::unique_ptr<D3D12Buffer> MakeBufferAndInitialize(const BufferDescriptor& desc, const void* initialData);
+        std::unique_ptr<D3D12Buffer> CreateGpuBuffer(const BufferDescriptor& desc, const void* initialData);
 
         /* ----- Common objects ----- */
 
@@ -227,6 +228,7 @@ class D3D12RenderSystem final : public RenderSystem
 
         D3D12PipelineLayout                         defaultPipelineLayout_;
         D3D12CommandSignaturePool                   commandSignaturePool_;
+        D3D12CommandContext                         commandContext_;
 
         #ifdef LLGL_DEBUG
         //ComPtr<ID3D12Debug>                         debugDevice_;

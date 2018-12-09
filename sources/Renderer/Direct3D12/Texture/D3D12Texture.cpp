@@ -138,9 +138,11 @@ TextureDescriptor D3D12Texture::QueryDesc() const
 
     auto desc = resource_.native->GetDesc();
 
-    texDesc.type   = GetType();
-    texDesc.format = D3D12Types::Unmap(desc.Format);
-    texDesc.flags  = 0;
+    texDesc.type            = GetType();
+    texDesc.bindFlags       = 0;
+    texDesc.cpuAccessFlags  = 0;
+    texDesc.miscFlags       = 0;
+    texDesc.format          = D3D12Types::Unmap(desc.Format);
 
     switch (GetType())
     {
@@ -171,7 +173,7 @@ TextureDescriptor D3D12Texture::QueryDesc() const
             texDesc.extent.height   = desc.Height;
             texDesc.arrayLayers     = desc.DepthOrArraySize;
             texDesc.samples         = desc.SampleDesc.Count;
-            texDesc.flags           |= TextureFlags::FixedSamples;
+            texDesc.miscFlags       |= MiscFlags::FixedSamples;
             break;
     }
 

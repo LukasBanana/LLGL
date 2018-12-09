@@ -15,11 +15,8 @@
 #include <algorithm>
 #include "D3DX12/d3dx12.h"
 
-#include "Buffer/D3D12VertexBuffer.h"
-#include "Buffer/D3D12VertexBufferArray.h"
-#include "Buffer/D3D12IndexBuffer.h"
-#include "Buffer/D3D12ConstantBuffer.h"
-#include "Buffer/D3D12StorageBuffer.h"
+#include "Buffer/D3D12Buffer.h"
+#include "Buffer/D3D12BufferArray.h"
 
 #include "Texture/D3D12Texture.h"
 
@@ -221,24 +218,24 @@ void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
 
 void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
-    auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, buffer);
-    commandList_->IASetVertexBuffers(0, 1, &(vertexBufferD3D.GetView()));
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandList_->IASetVertexBuffers(0, 1, &(bufferD3D.GetVertexBufferView()));
 }
 
 void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    auto& vertexBufferArrayD3D = LLGL_CAST(D3D12VertexBufferArray&, bufferArray);
+    auto& bufferArrayD3D = LLGL_CAST(D3D12BufferArray&, bufferArray);
     commandList_->IASetVertexBuffers(
         0,
-        static_cast<UINT>(vertexBufferArrayD3D.GetViews().size()),
-        vertexBufferArrayD3D.GetViews().data()
+        static_cast<UINT>(bufferArrayD3D.GetVertexBufferViews().size()),
+        bufferArrayD3D.GetVertexBufferViews().data()
     );
 }
 
 void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
-    auto& indexBufferD3D = LLGL_CAST(D3D12IndexBuffer&, buffer);
-    commandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandList_->IASetIndexBuffer(&(bufferD3D.GetIndexBufferView()));
 }
 
 /* ----- Stream Output Buffers ------ */

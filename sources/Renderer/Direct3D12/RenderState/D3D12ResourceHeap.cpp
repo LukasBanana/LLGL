@@ -7,7 +7,7 @@
 
 #include "D3D12ResourceHeap.h"
 //#include "D3D12PipelineLayout.h"
-#include "../Buffer/D3D12ConstantBuffer.h"
+#include "../Buffer/D3D12Buffer.h"
 #include "../Texture/D3D12Sampler.h"
 #include "../Texture/D3D12Texture.h"
 #include "../D3DX12/d3dx12.h"
@@ -55,9 +55,8 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeCbvSrvUav(ID3D12Dev
         {
             switch (resource->QueryResourceType())
             {
-                case ResourceType::ConstantBuffer:  // CBV
+                case ResourceType::Buffer:          // SRV/UAV/CBV
                 case ResourceType::Texture:         // SRV
-                case ResourceType::StorageBuffer:   // UAV
                     ++numDescriptors;
                     break;
                 default:
@@ -162,12 +161,16 @@ void D3D12ResourceHeap::CreateConstantBufferViews(ID3D12Device* device, D3D12_CP
     UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     ForEachResourceViewOfType(
-        desc, ResourceType::ConstantBuffer,
+        desc,
+        ResourceType::Buffer,
         [&](Resource& resource)
         {
-            auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, resource);
-            constantBufferD3D.CreateResourceView(device, cpuDescHandle);
-            cpuDescHandle.ptr += cpuDescStride;
+            auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
+            if ((bufferD3D.GetBindFlags() & BindFlags::ConstantBuffer) != 0)
+            {
+                bufferD3D.CreateConstantBufferView(device, cpuDescHandle);
+                cpuDescHandle.ptr += cpuDescStride;
+            }
         }
     );
 }
@@ -177,7 +180,8 @@ void D3D12ResourceHeap::CreateShaderResourceViews(ID3D12Device* device, D3D12_CP
     UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     ForEachResourceViewOfType(
-        desc, ResourceType::Texture,
+        desc,
+        ResourceType::Texture,
         [&](Resource& resource)
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
@@ -197,7 +201,8 @@ void D3D12ResourceHeap::CreateSamplers(ID3D12Device* device, D3D12_CPU_DESCRIPTO
     UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
     ForEachResourceViewOfType(
-        desc, ResourceType::Sampler,
+        desc,
+        ResourceType::Sampler,
         [&](Resource& resource)
         {
             auto& samplerD3D = LLGL_CAST(D3D12Sampler&, resource);

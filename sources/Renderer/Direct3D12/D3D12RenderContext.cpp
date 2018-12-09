@@ -9,6 +9,7 @@
 #include "D3D12RenderSystem.h"
 #include "D3D12CommandContext.h"
 #include "D3D12Types.h"
+#include "Buffer/D3D12Buffer.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
@@ -16,11 +17,6 @@
 #include "../DXCommon/DXTypes.h"
 #include <algorithm>
 #include "D3DX12/d3dx12.h"
-
-#include "Buffer/D3D12VertexBuffer.h"
-#include "Buffer/D3D12IndexBuffer.h"
-#include "Buffer/D3D12ConstantBuffer.h"
-#include "Buffer/D3D12StorageBuffer.h"
 
 
 namespace LLGL

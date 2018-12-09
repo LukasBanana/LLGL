@@ -45,7 +45,8 @@ class D3D12PipelineLayout final : public PipelineLayout
             D3D12RootSignature&             rootSignature,
             D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
             const PipelineLayoutDescriptor& layoutDesc,
-            const ResourceType              resourceType
+            const ResourceType              resourceType,
+            long                            bindFlags
         );
 
         void BuildRootSignatureFlags(

@@ -26,10 +26,12 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
     rootSignature.Reset(static_cast<UINT>(desc.bindings.size()), 0);
 
     /* Build root parameter for each descriptor range type */
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::ConstantBuffer);
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Texture       );
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::StorageBuffer );
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler       );
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::Buffer,  BindFlags::ConstantBuffer );
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Buffer,  BindFlags::SampleBuffer   );
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Texture, BindFlags::SampleBuffer   );
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Buffer,  BindFlags::RWStorageBuffer);
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Texture, BindFlags::RWStorageBuffer);
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0                         );
 
     /* Get root signature flags */
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
@@ -53,11 +55,12 @@ void D3D12PipelineLayout::BuildRootParameter(
     D3D12RootSignature&             rootSignature,
     D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
     const PipelineLayoutDescriptor& layoutDesc,
-    const ResourceType              resourceType)
+    const ResourceType              resourceType,
+    long                            bindFlags)
 {
     for (const auto& binding : layoutDesc.bindings)
     {
-        if (binding.type == resourceType)
+        if (binding.type == resourceType && (bindFlags == 0 || (binding.bindFlags & bindFlags) != 0))
         {
             if (auto rootParam = rootSignature.FindCompatibleRootParameter(descRangeType))
             {

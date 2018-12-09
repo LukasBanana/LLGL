@@ -14,6 +14,15 @@ namespace LLGL
 {
 
 
+void D3D12CommandContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
+{
+    if (commandList_ != commandList)
+    {
+        FlushResourceBarrieres();
+        commandList_ = commandList;
+    }
+}
+
 void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushBarrieres)
 {
     auto oldState = resource.transitionState;

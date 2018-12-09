@@ -25,10 +25,7 @@ class D3D12CommandContext
 
     public:
 
-        inline void SetCommandList(ID3D12GraphicsCommandList* commandList)
-        {
-            commandList_ = commandList;
-        }
+        void SetCommandList(ID3D12GraphicsCommandList* commandList);
 
         inline ID3D12GraphicsCommandList* GetCommandList() const
         {

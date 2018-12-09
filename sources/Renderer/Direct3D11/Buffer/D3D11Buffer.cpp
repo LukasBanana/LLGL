@@ -128,49 +128,6 @@ void D3D11Buffer::Unmap(ID3D11DeviceContext* context, const CPUAccess access)
  * ======= Protected: =======
  */
 
-#if 0 // TODO: replace by "CreateNativeBuffer"
-D3D11_BUFFER_DESC D3D11Buffer::GetNativeBufferDesc(const BufferDescriptor& desc, UINT bindFlags) const
-{
-    /* Initialize native buffer descriptor */
-    D3D11_BUFFER_DESC descD3D;
-    {
-        descD3D.ByteWidth           = static_cast<UINT>(desc.size);
-        descD3D.Usage               = D3D11_USAGE_DEFAULT;
-        descD3D.BindFlags           = bindFlags;
-        descD3D.CPUAccessFlags      = 0;
-        descD3D.MiscFlags           = 0;
-        descD3D.StructureByteStride = 0;
-    }
-
-    /* Apply additional flags */
-    if ((desc.flags & BufferFlags::IndirectBinding) != 0)
-        descD3D.MiscFlags |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
-
-    return descD3D;
-}
-
-void D3D11Buffer::CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData, long bufferFlags)
-{
-    /* Setup initial subresource data */
-    D3D11_SUBRESOURCE_DATA subresourceData;
-
-    if (initialData)
-    {
-        InitMemory(subresourceData);
-        subresourceData.pSysMem = initialData;
-    }
-
-    /* Create new D3D11 hardware buffer */
-    auto hr = device->CreateBuffer(&desc, (initialData != nullptr ? &subresourceData : nullptr), buffer_.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 buffer");
-
-    /* Create CPU access buffer (if required) */
-    auto cpuAccessFlags = GetCPUAccessFlags(bufferFlags);
-    if (cpuAccessFlags != 0)
-        CreateCPUAccessBuffer(device, desc, cpuAccessFlags);
-}
-#endif // /TODO
-
 static UINT GetD3DBufferSize(const BufferDescriptor& desc)
 {
     auto size = static_cast<UINT>(desc.size);
