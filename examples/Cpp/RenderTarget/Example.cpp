@@ -160,8 +160,8 @@ private:
             {
                 LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,   LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0                           },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,  0,                               LLGL::StageFlags::FragmentStage,                                 1                           },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  0,                               LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u) },
-              //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  0,                               LLGL::StageFlags::FragmentStage,                                 3                           },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u) },
+              //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 3                           },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

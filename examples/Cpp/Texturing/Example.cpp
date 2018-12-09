@@ -80,8 +80,8 @@ public:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0, LLGL::StageFlags::FragmentStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, 0, LLGL::StageFlags::FragmentStage, 1 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                             LLGL::StageFlags::FragmentStage, 0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer, LLGL::StageFlags::FragmentStage, 1 },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

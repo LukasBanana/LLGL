@@ -8,7 +8,7 @@
 #include "D3D11ResourceHeap.h"
 #include "D3D11PipelineLayout.h"
 #include "../Buffer/D3D11Buffer.h"
-#include "../Buffer/D3D11StorageBuffer.h"
+#include "../Buffer/D3D11BufferWithRV.h"
 #include "../Texture/D3D11Sampler.h"
 #include "../Texture/D3D11Texture.h"
 #include "../../CheckedCast.h"
@@ -151,12 +151,13 @@ using D3DResourceBindingFunc = std::function<bool(D3DResourceBinding& binding, R
 static std::vector<D3DResourceBinding> CollectD3DResourceBindings(
     ResourceBindingIterator&        resourceIterator,
     const ResourceType              resourceType,
+    long                            bindFlags,
     long                            affectedStage,
     const D3DResourceBindingFunc&   resourceFunc)
 {
     /* Collect all binding points of the specified resource type */
     BindingDescriptor bindingDesc;
-    resourceIterator.Reset(resourceType, affectedStage);
+    resourceIterator.Reset(resourceType, bindFlags, affectedStage);
 
     std::vector<D3DResourceBinding> resourceBindings;
     resourceBindings.reserve(resourceIterator.GetCount());
@@ -193,7 +194,8 @@ void D3D11ResourceHeap::BuildConstantBufferSegments(ResourceBindingIterator& res
     /* Collect all constant buffers */
     auto resourceBindings = CollectD3DResourceBindings(
         resourceIterator,
-        ResourceType::ConstantBuffer,
+        ResourceType::Buffer,
+        BindFlags::ConstantBuffer,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
@@ -226,19 +228,17 @@ void D3D11ResourceHeap::BuildShaderResourceViewSegments(ResourceBindingIterator&
     auto textureBindings = CollectD3DResourceBindings(
         resourceIterator,
         ResourceType::Texture,
+        BindFlags::SampleBuffer,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
             auto textureD3D = LLGL_CAST(D3D11Texture*, resource);
-            if ((stageFlags & StageFlags::StorageUsage) == 0)
+            if (auto srv = textureD3D->GetSRV())
             {
-                if (auto srv = textureD3D->GetSRV())
-                {
-                    binding.slot    = slot;
-                    binding.stages  = stageFlags;
-                    binding.srv     = srv;
-                    return true;
-                }
+                binding.slot    = slot;
+                binding.stages  = stageFlags;
+                binding.srv     = srv;
+                return true;
             }
             return false;
         }
@@ -247,20 +247,18 @@ void D3D11ResourceHeap::BuildShaderResourceViewSegments(ResourceBindingIterator&
     /* Collect all shader resource views for storage buffers */
     auto bufferBindings = CollectD3DResourceBindings(
         resourceIterator,
-        ResourceType::StorageBuffer,
+        ResourceType::Buffer,
+        BindFlags::SampleBuffer,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
-            auto bufferD3D = LLGL_CAST(D3D11StorageBuffer*, resource);
-            if ((stageFlags & StageFlags::StorageUsage) == 0)
+            auto bufferD3D = LLGL_CAST(D3D11BufferWithRV*, resource);
+            if (auto srv = bufferD3D->GetSRV())
             {
-                if (auto srv = bufferD3D->GetSRV())
-                {
-                    binding.slot    = slot;
-                    binding.stages  = stageFlags;
-                    binding.srv     = srv;
-                    return true;
-                }
+                binding.slot    = slot;
+                binding.stages  = stageFlags;
+                binding.srv     = srv;
+                return true;
             }
             return false;
         }
@@ -288,20 +286,18 @@ void D3D11ResourceHeap::BuildUnorderedAccessViewSegments(ResourceBindingIterator
     auto textureBindings = CollectD3DResourceBindings(
         resourceIterator,
         ResourceType::Texture,
+        BindFlags::RWStorageBuffer,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
             auto textureD3D = LLGL_CAST(D3D11Texture*, resource);
-            if ((stageFlags & StageFlags::StorageUsage) != 0)
+            if (auto uav = textureD3D->GetUAV())
             {
-                if (auto uav = textureD3D->GetUAV())
-                {
-                    binding.slot            = slot;
-                    binding.stages          = stageFlags;
-                    binding.uav             = uav;
-                    binding.initialCount    = 0;
-                    return true;
-                }
+                binding.slot            = slot;
+                binding.stages          = stageFlags;
+                binding.uav             = uav;
+                binding.initialCount    = 0;
+                return true;
             }
             return false;
         }
@@ -310,21 +306,19 @@ void D3D11ResourceHeap::BuildUnorderedAccessViewSegments(ResourceBindingIterator
     /* Collect all unordered acces views for storage buffers */
     auto bufferBindings = CollectD3DResourceBindings(
         resourceIterator,
-        ResourceType::StorageBuffer,
+        ResourceType::Buffer,
+        BindFlags::RWStorageBuffer,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
-            auto bufferD3D = LLGL_CAST(D3D11StorageBuffer*, resource);
-            if ((stageFlags & StageFlags::StorageUsage) != 0)
+            auto bufferD3D = LLGL_CAST(D3D11BufferWithRV*, resource);
+            if (auto uav = bufferD3D->GetUAV())
             {
-                if (auto uav = bufferD3D->GetUAV())
-                {
-                    binding.slot            = slot;
-                    binding.stages          = stageFlags;
-                    binding.uav             = uav;
-                    binding.initialCount    = 0;
-                    return true;
-                }
+                binding.slot            = slot;
+                binding.stages          = stageFlags;
+                binding.uav             = uav;
+                binding.initialCount    = 0;
+                return true;
             }
             return false;
         }
@@ -349,6 +343,7 @@ void D3D11ResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceIt
     auto resourceBindings = CollectD3DResourceBindings(
         resourceIterator,
         ResourceType::Sampler,
+        0,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {

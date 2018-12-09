@@ -6,8 +6,9 @@
  */
 
 #include "D3D11Texture.h"
-#include "../../DXCommon/DXCore.h"
 #include "../D3D11Types.h"
+#include "../D3D11ResourceFlags.h"
+#include "../../DXCommon/DXCore.h"
 
 
 namespace LLGL
@@ -88,8 +89,10 @@ TextureDescriptor D3D11Texture::QueryDesc() const
     /* Initialize texture descriptor */
     TextureDescriptor texDesc;
 
-    texDesc.type    = GetType();
-    texDesc.flags   = 0;
+    texDesc.type            = GetType();
+    texDesc.bindFlags       = 0;
+    texDesc.cpuAccessFlags  = 0;
+    texDesc.mipLevels       = 0;
 
     /* Get resource dimension to query the respective D3D descriptor */
     D3D11_RESOURCE_DIMENSION dimension;
@@ -172,44 +175,90 @@ static ComPtr<ID3D11Texture3D> DXCreateTexture3D(
 
 void D3D11Texture::CreateTexture1D(
     ID3D11Device*                           device,
-    const D3D11_TEXTURE1D_DESC&             desc,
-    long                                    flags,
+    const TextureDescriptor&                desc,
     const D3D11_SUBRESOURCE_DATA*           initialData,
     const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
     const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
 {
-    /* Create native D3D texture, store resource parameters and create standard resource views */
-    native_.tex1D = DXCreateTexture1D(device, desc, initialData);
-    SetResourceParams(desc.Format, Extent3D{ desc.Width, 1u, 1u }, desc.MipLevels, desc.ArraySize);
-    CreateDefaultResourceViews(device, srvDesc, uavDesc, flags);
+    auto cpuAccessFlags = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
+
+    /* Create native D3D texture */
+    D3D11_TEXTURE1D_DESC descD3D;
+    {
+        descD3D.Width           = desc.extent.width;
+        descD3D.MipLevels       = desc.mipLevels;
+        descD3D.ArraySize       = desc.arrayLayers;
+        descD3D.Format          = D3D11Types::Map(desc.format);
+        descD3D.Usage           = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.BindFlags       = DXGetTextureBindFlags(desc);
+        descD3D.CPUAccessFlags  = cpuAccessFlags;
+        descD3D.MiscFlags       = DXGetTextureMiscFlags(desc);
+    }
+    native_.tex1D = DXCreateTexture1D(device, descD3D, initialData);
+
+    /* Store parameters and create default resource views */
+    SetResourceParams(descD3D.Format, Extent3D{ descD3D.Width, 1u, 1u }, descD3D.MipLevels, descD3D.ArraySize);
+    CreateDefaultResourceViews(device, srvDesc, uavDesc, desc.bindFlags);
 }
 
 void D3D11Texture::CreateTexture2D(
     ID3D11Device*                           device,
-    const D3D11_TEXTURE2D_DESC&             desc,
-    long                                    flags,
+    const TextureDescriptor&                desc,
     const D3D11_SUBRESOURCE_DATA*           initialData,
     const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
     const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
 {
-    /* Create native D3D texture, store resource parameters and create standard resource views */
-    native_.tex2D = DXCreateTexture2D(device, desc, initialData);
-    SetResourceParams(desc.Format, Extent3D{ desc.Width, desc.Height, 1u }, desc.MipLevels, desc.ArraySize);
-    CreateDefaultResourceViews(device, srvDesc, uavDesc, flags);
+    auto cpuAccessFlags = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
+
+    /* Create native D3D texture */
+    D3D11_TEXTURE2D_DESC descD3D;
+    {
+        descD3D.Width               = desc.extent.width;
+        descD3D.Height              = desc.extent.height;
+        descD3D.MipLevels           = desc.mipLevels;
+        descD3D.ArraySize           = desc.arrayLayers;
+        descD3D.Format              = D3D11Types::Map(desc.format);
+        descD3D.SampleDesc.Count    = (IsMultiSampleTexture(desc.type) ? std::max(1u, desc.samples) : 1u);
+        descD3D.SampleDesc.Quality  = 0;//(desc.miscFlags & MiscFlags::FixedSamples ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);
+        descD3D.Usage               = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.BindFlags           = DXGetTextureBindFlags(desc);
+        descD3D.CPUAccessFlags      = cpuAccessFlags;
+        descD3D.MiscFlags           = DXGetTextureMiscFlags(desc);
+    }
+    native_.tex2D = DXCreateTexture2D(device, descD3D, initialData);
+
+    /* Store parameters and create default resource views */
+    SetResourceParams(descD3D.Format, Extent3D{ descD3D.Width, descD3D.Height, 1u }, descD3D.MipLevels, descD3D.ArraySize);
+    CreateDefaultResourceViews(device, srvDesc, uavDesc, desc.bindFlags);
 }
 
 void D3D11Texture::CreateTexture3D(
     ID3D11Device*                           device,
-    const D3D11_TEXTURE3D_DESC&             desc,
-    long                                    flags,
+    const TextureDescriptor&                desc,
     const D3D11_SUBRESOURCE_DATA*           initialData,
     const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
     const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
 {
-    /* Create native D3D texture, store resource parameters and create standard resource views */
-    native_.tex3D = DXCreateTexture3D(device, desc, initialData);
-    SetResourceParams(desc.Format, Extent3D{ desc.Width, desc.Height, desc.Depth }, desc.MipLevels, 1);
-    CreateDefaultResourceViews(device, srvDesc, uavDesc, flags);
+    auto cpuAccessFlags = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
+
+    /* Create native D3D texture */
+    D3D11_TEXTURE3D_DESC descD3D;
+    {
+        descD3D.Width           = desc.extent.width;
+        descD3D.Height          = desc.extent.height;
+        descD3D.Depth           = desc.extent.depth;
+        descD3D.MipLevels       = desc.mipLevels;
+        descD3D.Format          = D3D11Types::Map(desc.format);
+        descD3D.Usage           = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.BindFlags       = DXGetTextureBindFlags(desc);
+        descD3D.CPUAccessFlags  = cpuAccessFlags;
+        descD3D.MiscFlags       = DXGetTextureMiscFlags(desc);
+    }
+    native_.tex3D = DXCreateTexture3D(device, descD3D, initialData);
+
+    /* Store parameters and create default resource views */
+    SetResourceParams(descD3D.Format, Extent3D{ descD3D.Width, descD3D.Height, descD3D.Depth }, descD3D.MipLevels, 1);
+    CreateDefaultResourceViews(device, srvDesc, uavDesc, desc.bindFlags);
 }
 
 void D3D11Texture::UpdateSubresource(
@@ -499,11 +548,11 @@ void D3D11Texture::CreateDefaultResourceViews(
     ID3D11Device*                           device,
     const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
     const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc,
-    long                                    flags)
+    long                                    bindFlags)
 {
-    if ((flags & TextureFlags::SampleUsage) != 0)
+    if ((bindFlags & BindFlags::SampleBuffer) != 0)
         CreateDefaultSRV(device, srvDesc);
-    if ((flags & TextureFlags::StorageUsage) != 0)
+    if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
         CreateDefaultUAV(device, uavDesc);
 }
 

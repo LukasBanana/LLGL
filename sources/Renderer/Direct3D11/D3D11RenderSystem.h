@@ -183,10 +183,10 @@ class D3D11RenderSystem final : public RenderSystem
         // Returns the minor version of Direct3D 11.X.
         int GetMinorVersion() const;
 
-        void BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
-        void BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
-        void BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
-        void BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc);
+        void CreateAndInitializeGpuTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
+        void CreateAndInitializeGpuTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
+        void CreateAndInitializeGpuTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
+        void CreateAndInitializeGpuTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc);
 
         void UpdateGenericTexture(
             Texture&                    texture,

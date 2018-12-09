@@ -29,20 +29,20 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            BuildGenericTexture1D(*texture, textureDesc, imageDesc);
+            CreateAndInitializeGpuTexture1D(*texture, textureDesc, imageDesc);
             break;
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
-            BuildGenericTexture2D(*texture, textureDesc, imageDesc);
+            CreateAndInitializeGpuTexture2D(*texture, textureDesc, imageDesc);
             break;
         case TextureType::Texture3D:
-            BuildGenericTexture3D(*texture, textureDesc, imageDesc);
+            CreateAndInitializeGpuTexture3D(*texture, textureDesc, imageDesc);
             break;
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            BuildGenericTexture2DMS(*texture, textureDesc);
+            CreateAndInitializeGpuTexture2DMS(*texture, textureDesc);
             break;
         default:
             throw std::invalid_argument("failed to create texture with invalid texture type");
@@ -107,12 +107,12 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     auto& textureD3D = LLGL_CAST(const D3D11Texture&, texture);
 
     /* Create a copy of the hardware texture with CPU read access */
-    D3D11NativeTexture hwTextureCopy;
-    textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), hwTextureCopy, D3D11_CPU_ACCESS_READ, mipLevel);
+    D3D11NativeTexture texCopy;
+    textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), texCopy, D3D11_CPU_ACCESS_READ, mipLevel);
 
     /* Map subresource for reading */
     D3D11_MAPPED_SUBRESOURCE mappedSubresource;
-    auto hr = context_->Map(hwTextureCopy.resource.Get(), 0, D3D11_MAP_READ, 0, &mappedSubresource);
+    auto hr = context_->Map(texCopy.resource.Get(), 0, D3D11_MAP_READ, 0, &mappedSubresource);
     DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
     /* Query MIP-level size to determine image buffer size */
@@ -152,7 +152,7 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     }
 
     /* Unmap resource */
-    context_->Unmap(hwTextureCopy.resource.Get(), 0);
+    context_->Unmap(texCopy.resource.Get(), 0);
 }
 
 void D3D11RenderSystem::GenerateMips(Texture& texture)
@@ -196,120 +196,31 @@ void D3D11RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLeve
  * ======= Private: =======
  */
 
-// see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476203(v=vs.85).aspx
-static UINT GetDXTextureBindFlags(const TextureDescriptor& desc)
+void D3D11RenderSystem::CreateAndInitializeGpuTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    UINT flags = 0;
-
-    if ((desc.flags & TextureFlags::DepthStencilAttachmentUsage) != 0)
-        flags |= D3D11_BIND_DEPTH_STENCIL;
-    else if (IsMipMappedTexture(desc) || (desc.flags & TextureFlags::ColorAttachmentUsage) != 0)
-        flags |= D3D11_BIND_RENDER_TARGET;
-
-    if ((desc.flags & TextureFlags::SampleUsage) != 0)
-        flags |= D3D11_BIND_SHADER_RESOURCE;
-
-    if ((desc.flags & TextureFlags::StorageUsage) != 0)
-        flags |= D3D11_BIND_UNORDERED_ACCESS;
-
-    return flags;
-}
-
-static UINT GetDXTextureMiscFlags(const TextureDescriptor& desc)
-{
-    UINT flags = 0;
-
-    if (IsMipMappedTexture(desc) && (desc.flags & TextureFlags::DepthStencilAttachmentUsage) == 0)
-        flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-    if (IsCubeTexture(desc.type))
-        flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
-
-    return flags;
-}
-
-void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
-{
-    /* Setup D3D texture descriptor and create D3D texture resouce */
-    D3D11_TEXTURE1D_DESC descDX;
-    {
-        descDX.Width            = desc.extent.width;
-        descDX.MipLevels        = desc.mipLevels;
-        descDX.ArraySize        = desc.arrayLayers;
-        descDX.Format           = D3D11Types::Map(desc.format);
-        descDX.Usage            = D3D11_USAGE_DEFAULT;
-        descDX.BindFlags        = GetDXTextureBindFlags(desc);
-        descDX.CPUAccessFlags   = 0;
-        descDX.MiscFlags        = GetDXTextureMiscFlags(desc);
-    }
-    textureD3D.CreateTexture1D(device_.Get(), descDX, desc.flags);
-
-    /* Initialize texture image data */
+    /* Create native texture and initialize with image data */
+    textureD3D.CreateTexture1D(device_.Get(), desc);
     InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, desc.arrayLayers);
 }
 
-void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+void D3D11RenderSystem::CreateAndInitializeGpuTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    /* Setup D3D texture descriptor and create D3D texture resouce */
-    D3D11_TEXTURE2D_DESC descDX;
-    {
-        descDX.Width                = desc.extent.width;
-        descDX.Height               = desc.extent.height;
-        descDX.MipLevels            = desc.mipLevels;
-        descDX.ArraySize            = desc.arrayLayers;
-        descDX.Format               = D3D11Types::Map(desc.format);
-        descDX.SampleDesc.Count     = 1;
-        descDX.SampleDesc.Quality   = 0;
-        descDX.Usage                = D3D11_USAGE_DEFAULT;
-        descDX.BindFlags            = GetDXTextureBindFlags(desc);
-        descDX.CPUAccessFlags       = 0;
-        descDX.MiscFlags            = GetDXTextureMiscFlags(desc);
-    }
-    textureD3D.CreateTexture2D(device_.Get(), descDX, desc.flags);
-
-    /* Initialize texture image data */
+    /* Create native texture and initialize with image data */
+    textureD3D.CreateTexture2D(device_.Get(), desc);
     InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, desc.arrayLayers);
 }
 
-void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+void D3D11RenderSystem::CreateAndInitializeGpuTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    /* Setup D3D texture descriptor and create D3D texture resouce */
-    D3D11_TEXTURE3D_DESC descDX;
-    {
-        descDX.Width            = desc.extent.width;
-        descDX.Height           = desc.extent.height;
-        descDX.Depth            = desc.extent.depth;
-        descDX.MipLevels        = desc.mipLevels;
-        descDX.Format           = D3D11Types::Map(desc.format);
-        descDX.Usage            = D3D11_USAGE_DEFAULT;
-        descDX.BindFlags        = GetDXTextureBindFlags(desc);
-        descDX.CPUAccessFlags   = 0;
-        descDX.MiscFlags        = GetDXTextureMiscFlags(desc);
-    }
-    textureD3D.CreateTexture3D(device_.Get(), descDX, desc.flags);
-
-    /* Initialize texture image data */
+    /* Create native texture and initialize with image data */
+    textureD3D.CreateTexture3D(device_.Get(), desc);
     InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, 1);
 }
 
-void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc)
+void D3D11RenderSystem::CreateAndInitializeGpuTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc)
 {
-    /* Setup D3D texture descriptor and create D3D texture resouce */
-    D3D11_TEXTURE2D_DESC descDX;
-    {
-        descDX.Width                = desc.extent.width;
-        descDX.Height               = desc.extent.height;
-        descDX.MipLevels            = 1;
-        descDX.ArraySize            = desc.arrayLayers;
-        descDX.Format               = D3D11Types::Map(desc.format);
-        descDX.SampleDesc.Count     = desc.samples;
-        descDX.SampleDesc.Quality   = 0;//((descD3D.flags & TextureFlags::FixedSamples) ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);
-        descDX.Usage                = D3D11_USAGE_DEFAULT;
-        descDX.BindFlags            = GetDXTextureBindFlags(desc);
-        descDX.CPUAccessFlags       = 0;
-        descDX.MiscFlags            = 0;
-    }
-    textureD3D.CreateTexture2D(device_.Get(), descDX, desc.flags);
+    /* Create native texture */
+    textureD3D.CreateTexture2D(device_.Get(), desc);
 }
 
 void D3D11RenderSystem::UpdateGenericTexture(

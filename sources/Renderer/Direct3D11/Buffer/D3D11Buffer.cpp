@@ -7,6 +7,7 @@
 
 #include "D3D11Buffer.h"
 #include "../D3D11Types.h"
+#include "../D3D11ResourceFlags.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
@@ -179,86 +180,18 @@ static UINT GetD3DBufferSize(const BufferDescriptor& desc)
         return size;
 }
 
-static UINT GetD3DBindFlags(long bindFlags)
-{
-    UINT flagsD3D = 0;
-
-    if ((bindFlags & BindFlags::VertexBuffer) != 0)
-        flagsD3D |= D3D11_BIND_VERTEX_BUFFER;
-    if ((bindFlags & BindFlags::IndexBuffer) != 0)
-        flagsD3D |= D3D11_BIND_INDEX_BUFFER;
-    if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-        flagsD3D |= D3D11_BIND_CONSTANT_BUFFER;
-    if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
-        flagsD3D |= D3D11_BIND_STREAM_OUTPUT;
-    if ((bindFlags & BindFlags::SampleBuffer) != 0)
-        flagsD3D |= D3D11_BIND_SHADER_RESOURCE;
-    if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
-        flagsD3D |= D3D11_BIND_UNORDERED_ACCESS;
-
-    return flagsD3D;
-}
-
-static UINT GetD3DCPUAccessFlagsForMiscFlags(long miscFlags)
-{
-    UINT flagsD3D = 0;
-
-    if ((miscFlags & MiscFlags::DynamicUsage) != 0)
-        flagsD3D |= D3D11_CPU_ACCESS_WRITE;
-
-    return flagsD3D;
-}
-
-static UINT GetD3DMiscFlags(const BufferDescriptor& desc)
-{
-    UINT flagsD3D = 0;
-
-    if ((desc.bindFlags & BindFlags::IndirectBuffer) != 0)
-        flagsD3D |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
-
-    if (IsStructuredBuffer(desc.storageBuffer.storageType))
-        flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-    else if (IsByteAddressBuffer(desc.storageBuffer.storageType))
-        flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
-
-    return flagsD3D;
-}
-
-static UINT GetD3DCPUAccessFlags(long cpuAccessFlags)
-{
-    UINT flagsD3D = 0;
-
-    if ((cpuAccessFlags & CPUAccessFlags::Read) != 0)
-        flagsD3D |= D3D11_CPU_ACCESS_READ;
-    if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
-        flagsD3D |= D3D11_CPU_ACCESS_WRITE;
-
-    return flagsD3D;
-}
-
-static D3D11_USAGE GetD3DUsageForCPUAccessFlags(UINT cpuAccessFlags)
-{
-    // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476106(v=vs.85).aspx
-    if ((cpuAccessFlags & D3D11_CPU_ACCESS_READ) != 0)
-        return D3D11_USAGE_STAGING;
-    else if ((cpuAccessFlags & D3D11_CPU_ACCESS_WRITE) != 0)
-        return D3D11_USAGE_DYNAMIC;
-    else
-        return D3D11_USAGE_DEFAULT;
-}
-
 void D3D11Buffer::CreateNativeBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Initialize native buffer descriptor */
-    auto cpuAccessFlags = GetD3DCPUAccessFlagsForMiscFlags(desc.miscFlags);
+    auto cpuAccessFlags = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
 
     D3D11_BUFFER_DESC descD3D;
     {
         descD3D.ByteWidth           = GetD3DBufferSize(desc);
-        descD3D.Usage               = GetD3DUsageForCPUAccessFlags(cpuAccessFlags);
-        descD3D.BindFlags           = GetD3DBindFlags(desc.bindFlags);
+        descD3D.Usage               = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.BindFlags           = DXGetBufferBindFlags(desc.bindFlags);
         descD3D.CPUAccessFlags      = cpuAccessFlags;
-        descD3D.MiscFlags           = GetD3DMiscFlags(desc);
+        descD3D.MiscFlags           = DXGetBufferMiscFlags(desc);
         descD3D.StructureByteStride = desc.storageBuffer.stride;
     }
 
@@ -294,13 +227,13 @@ void D3D11Buffer::CreateNativeBuffer(ID3D11Device* device, const BufferDescripto
 
 void D3D11Buffer::CreateCPUAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc)
 {
-    auto cpuAccessFlags = GetD3DCPUAccessFlags(desc.cpuAccessFlags);
+    auto cpuAccessFlags = DXGetCPUAccessFlags(desc.cpuAccessFlags);
 
     /* Create new D3D11 hardware buffer (for CPU access) */
     D3D11_BUFFER_DESC descD3D;
     {
         descD3D.ByteWidth           = static_cast<UINT>(desc.size);
-        descD3D.Usage               = GetD3DUsageForCPUAccessFlags(cpuAccessFlags);
+        descD3D.Usage               = DXGetUsageForCPUAccessFlags(cpuAccessFlags);
         descD3D.BindFlags           = 0;
         descD3D.CPUAccessFlags      = cpuAccessFlags;
         descD3D.MiscFlags           = 0;

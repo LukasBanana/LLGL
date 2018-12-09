@@ -6,7 +6,7 @@
  */
 
 #include "D3D11BufferArray.h"
-#include "D3D11VertexBuffer.h"
+#include "D3D11Buffer.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 
@@ -24,7 +24,7 @@ D3D11BufferArray::D3D11BufferArray(long bindFlags, std::uint32_t numBuffers, Buf
 
     offsetStart_ = numBuffers;
 
-    for (std::size_t i = 0; auto next = NextArrayResource<D3D11VertexBuffer>(numBuffers, bufferArray); ++i)
+    for (std::size_t i = 0; auto next = NextArrayResource<D3D11Buffer>(numBuffers, bufferArray); ++i)
     {
         buffers_[i]                             = next->GetNative();
         stridesAndOffsets_[i]                   = next->GetStride();

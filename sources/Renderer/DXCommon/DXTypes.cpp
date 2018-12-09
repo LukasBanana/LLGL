@@ -285,7 +285,7 @@ StorageBufferType Unmap(const D3D_SHADER_INPUT_TYPE inputType)
 {
     switch (inputType)
     {
-        case D3D_SIT_UAV_RWTYPED:                   return StorageBufferType::Buffer;
+        case D3D_SIT_UAV_RWTYPED:                   return StorageBufferType::RWBuffer;
         case D3D_SIT_STRUCTURED:                    return StorageBufferType::StructuredBuffer;
         case D3D_SIT_UAV_RWSTRUCTURED:              return StorageBufferType::RWStructuredBuffer;
         case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER: return StorageBufferType::RWStructuredBuffer;

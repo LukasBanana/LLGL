@@ -299,28 +299,17 @@ static void ReflectShaderVertexAttributes(
 
 static void ReflectShaderResourceGeneric(
     const D3D11_SHADER_INPUT_BIND_DESC& inputBindDesc,
-    long                                stageFlags,
+    ShaderReflectionDescriptor&         reflectionDesc,
     const ResourceType                  resourceType,
-    ShaderReflectionDescriptor&         reflectionDesc)
+    long                                bindFlags,
+    long                                stageFlags,
+    const StorageBufferType             storageBufferType   = StorageBufferType::Undefined)
 {
-    /* Initialize resource view descriptor for a generic resource (texture, sampler etc.) */
+    /* Initialize resource view descriptor for a generic resource (texture, sampler, storage buffer etc.) */
     auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, resourceType, inputBindDesc.BindPoint);
     {
-        resourceView->stageFlags    = (resourceView->stageFlags | stageFlags);
-        resourceView->arraySize     = inputBindDesc.BindCount;
-    }
-}
-
-static void ReflectShaderStorageBuffer(
-    const D3D11_SHADER_INPUT_BIND_DESC& inputBindDesc,
-    long                                stageFlags,
-    const StorageBufferType             storageBufferType,
-    ShaderReflectionDescriptor&         reflectionDesc)
-{
-    /* Initialize resource view descriptor for storage buffer */
-    auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, ResourceType::StorageBuffer, inputBindDesc.BindPoint);
-    {
-        resourceView->stageFlags        = (resourceView->stageFlags | stageFlags);
+        resourceView->bindFlags         |= bindFlags;
+        resourceView->stageFlags        |= stageFlags;
         resourceView->arraySize         = inputBindDesc.BindCount;
         resourceView->storageBufferType = storageBufferType;
     }
@@ -328,16 +317,17 @@ static void ReflectShaderStorageBuffer(
 
 static void ReflectShaderConstantBuffer(
     ID3D11ShaderReflection*             reflection,
+    ShaderReflectionDescriptor&         reflectionDesc,
     const D3D11_SHADER_DESC&            shaderDesc,
     const D3D11_SHADER_INPUT_BIND_DESC& inputBindDesc,
     long                                stageFlags,
-    UINT&                               cbufferIdx,
-    ShaderReflectionDescriptor&         reflectionDesc)
+    UINT&                               cbufferIdx)
 {
     /* Initialize resource view descriptor for constant buffer */
-    auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, ResourceType::ConstantBuffer, inputBindDesc.BindPoint);
+    auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, ResourceType::Buffer, inputBindDesc.BindPoint);
     {
-        resourceView->stageFlags    = (resourceView->stageFlags | stageFlags);
+        resourceView->bindFlags     |= BindFlags::ConstantBuffer;
+        resourceView->stageFlags    |= stageFlags;
         resourceView->arraySize     = inputBindDesc.BindCount;
     }
 
@@ -390,30 +380,34 @@ static void ReflectShaderInputBindings(
         switch (inputBindDesc.Type)
         {
             case D3D_SIT_CBUFFER:
-            {
-                ReflectShaderConstantBuffer(reflection, shaderDesc, inputBindDesc, stageFlags, cbufferIdx, reflectionDesc);
-            }
-            break;
+                ReflectShaderConstantBuffer(reflection, reflectionDesc, shaderDesc, inputBindDesc, stageFlags, cbufferIdx);
+                break;
 
+            case D3D_SIT_TBUFFER:
             case D3D_SIT_TEXTURE:
-            {
-                ReflectShaderResourceGeneric(inputBindDesc, stageFlags, ResourceType::Texture, reflectionDesc);
-            }
-            break;
+                ReflectShaderResourceGeneric(inputBindDesc, reflectionDesc, ResourceType::Texture, BindFlags::SampleBuffer, stageFlags);
+                break;
 
             case D3D_SIT_SAMPLER:
-            {
-                ReflectShaderResourceGeneric(inputBindDesc, stageFlags, ResourceType::Sampler, reflectionDesc);
-            }
-            break;
+                ReflectShaderResourceGeneric(inputBindDesc, reflectionDesc, ResourceType::Sampler, 0, stageFlags);
+                break;
+
+            case D3D_SIT_STRUCTURED:
+            case D3D_SIT_BYTEADDRESS:
+                ReflectShaderResourceGeneric(inputBindDesc, reflectionDesc, ResourceType::Buffer, BindFlags::SampleBuffer, stageFlags);
+                break;
+
+            case D3D_SIT_UAV_RWTYPED:
+            case D3D_SIT_UAV_RWSTRUCTURED:
+            case D3D_SIT_UAV_RWBYTEADDRESS:
+            case D3D_SIT_UAV_APPEND_STRUCTURED:
+            case D3D_SIT_UAV_CONSUME_STRUCTURED:
+            case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
+                ReflectShaderResourceGeneric(inputBindDesc, reflectionDesc, ResourceType::Buffer, BindFlags::RWStorageBuffer, stageFlags);
+                break;
 
             default:
-            {
-                auto storageBufferType = DXTypes::Unmap(inputBindDesc.Type);
-                if (storageBufferType != StorageBufferType::Undefined)
-                    ReflectShaderStorageBuffer(inputBindDesc, stageFlags, storageBufferType, reflectionDesc);
-            }
-            break;
+                break;
         }
     }
 }
