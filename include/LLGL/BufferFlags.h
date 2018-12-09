@@ -24,43 +24,6 @@ namespace LLGL
 
 /* ----- Enumerations ----- */
 
-#if 0 // TODO: replace this by <BindFlags> enum
-/**
-\brief Hardware buffer type enumeration.
-\see ResourceType
-\todo Maybe replace this enum by "ResourceType".
-\todo Maybe replace this by "BindFlags" to support binding the same buffer for multiple purposes.
-*/
-enum class BufferType
-{
-    //! Vertex buffer type.
-    Vertex,
-
-    //! Index buffer type.
-    Index,
-
-    //! Constant buffer type (also called "Uniform Buffer Object").
-    Constant,
-
-    //! Storage buffer type (also called "Shader Storage Buffer Object" or "Read/Write Buffer").
-    Storage,
-
-    /**
-    \brief Stream output buffer type (also called "Transform Feedback Buffer").
-    \note Only supported with: OpenGL, Direct3D 11, Direct3D 12.
-    */
-    StreamOutput,
-
-    #if 0//TODO: planned for v0.03
-    /**
-    \brief Result buffer type for query heaps.
-    \see CommandBuffer::ResolveQuery
-    */
-    QueryResult,
-    #endif
-};
-#endif // /TODO
-
 /**
 \brief Storage buffer type enumeration.
 \note Only supported with: Direct3D 11, Direct3D 12.
@@ -77,53 +40,6 @@ enum class StorageBufferType
     AppendStructuredBuffer,     //!< Append structured buffer.
     ConsumeStructuredBuffer,    //!< Consume structured buffer.
 };
-
-#if 0 // TODO: replace this by <BindFlags> and <CPUAccessFlags>
-/**
-\brief Buffer creation flags enumeration.
-\see BufferDescriptor::flags
-*/
-struct BufferFlags
-{
-    enum
-    {
-        /**
-        \brief Buffer mapping with CPU read access is required.
-        \see RenderSystem::MapBuffer
-        */
-        MapReadAccess           = (1 << 0),
-
-        /**
-        \brief Buffer mapping with CPU write access is required.
-        \see RenderSystem::MapBuffer
-        */
-        MapWriteAccess          = (1 << 1),
-
-        /*
-        \brief Buffer mapping with CPU read and write access is required.
-        \see BufferFlags::MapReadAccess
-        \see BufferFlags::MapWriteAccess
-        */
-        MapReadWriteAccess      = (MapReadAccess | MapWriteAccess),
-
-        /**
-        \brief Hint to the renderer that the buffer will be frequently updated from the CPU.
-        \remarks This is useful for a constant buffer for instance, that is updated by the host program every frame.
-        \see RenderSystem::WriteBuffer
-        */
-        DynamicUsage            = (1 << 2),
-
-        /**
-        \brief Hint to the renderer that the buffer will hold the arguments for indirect commands.
-        \remarks This must be used with a buffer of type BufferType::Storage.
-        \see CommandBuffer::DrawIndirect
-        \see CommandBuffer::DrawIndexedIndirect
-        \see CommandBuffer::DispatchIndirect
-        */
-        IndirectBinding         = (1 << 8),
-    };
-};
-#endif // /TODO
 
 
 /* ----- Structures ----- */
@@ -184,17 +100,6 @@ struct BufferDescriptor
     */
     std::uint64_t   size            = 0;
 
-    #if 0 // TODO: replace this by "bindFlags" etc.
-    //! Hardware buffer type. By default BufferType::Vertex.
-    BufferType      type            = BufferType::Vertex;
-
-    /**
-    \brief Specifies the buffer creation flags. By default 0.
-    \remarks This can be bitwise OR combination of the entries of the BufferFlags enumeration.
-    \see BufferFlags
-    */
-    long            flags           = 0;
-    #else
     /**
     \brief These flags describe to which resource slots the buffer can be bound. By default 0.
     \remarks When the buffer will be bound to a vertex buffer slot for instance, the BindFlags::VertexBuffer flag is required.
@@ -216,7 +121,6 @@ struct BufferDescriptor
     \see MiscFlags
     */
     long            miscFlags       = 0;
-    #endif // /TODO
 
     //! Vertex buffer type descriptor appendix.
     VertexBuffer    vertexBuffer;

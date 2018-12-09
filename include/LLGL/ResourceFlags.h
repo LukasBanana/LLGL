@@ -27,49 +27,12 @@ enum class ResourceType
     //! Undefined resource type.
     Undefined,
 
-    #if 0//TODO: use "Buffer" resource type only
-    /**
-    \brief Vertex buffer resource.
-    \see Buffer
-    \see BufferType::Vertex
-    */
-    VertexBuffer,
-
-    /**
-    \brief Index buffer resource.
-    \see Buffer
-    \see BufferType::Index
-    */
-    IndexBuffer,
-
-    /**
-    \brief Constant buffer (or uniform buffer) resource.
-    \see Buffer
-    \see BufferType::Constant
-    */
-    ConstantBuffer,
-
-    /**
-    \brief Storage buffer resource.
-    \see Buffer
-    \see BufferType::Storage
-    */
-    StorageBuffer,
-
-    /**
-    \brief Stream-output buffer resource.
-    \see Buffer
-    \see BufferType::StreamOutput
-    */
-    StreamOutputBuffer,
-    #else
     /**
     \brief Buffer resource.
     \see Buffer
     \see RenderSystem::CreateBuffer
     */
     Buffer,
-    #endif
 
     /**
     \brief Texture resource.

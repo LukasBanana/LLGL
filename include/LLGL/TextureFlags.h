@@ -55,84 +55,6 @@ enum class TextureSwizzle
 #endif
 
 
-/* ----- Flags ----- */
-
-#if 0 // TODO: replace by <BindFlags> entries
-/**
-\brief Texture creation flags enumeration.
-\see TextureDescriptor::flags
-*/
-struct TextureFlags
-{
-    enum
-    {
-        #if 0
-        /**
-        \brief Texture mapping with CPU read access is required.
-        \see RenderSystem::MapTexture
-        */
-        MapReadAccess               = (1 << 0),
-
-        /**
-        \brief Texture mapping with CPU write access is required.
-        \see RenderSystem::MapTexture
-        */
-        MapWriteAccess              = (1 << 1),
-
-        /*
-        \brief Texture mapping with CPU read and write access is required.
-        \see TextureFlags::MapReadAccess
-        \see TextureFlags::MapWriteAccess
-        */
-        MapReadWriteAccess          = (MapReadAccess | MapWriteAccess),
-
-        /**
-        \brief Hint to the renderer that the texture will be frequently updated from the CPU.
-        \see RenderSystem::WriteTexture
-        */
-        DynamicUsage                = (1 << 2),
-        #endif
-
-        /**
-        \brief Texture can be used as render target color attachment.
-        \remarks This is part of the default flags.
-        \note This cannot be used together with the TextureFlags::DepthStencilAttachmentUsage flag.
-        \see AttachmentDescriptor::texture
-        \see AttachmentType::Color
-        */
-        ColorAttachmentUsage        = (1 << 3),
-
-        /**
-        \brief Texture can be used as render target depth-stencil attachment.
-        \note This cannot be used together with the TextureFlags::ColorAttachmentUsage flag.
-        \see AttachmentDescriptor::texture
-        \see AttachmentType::DepthStencil
-        */
-        DepthStencilAttachmentUsage = (1 << 4),
-
-        /**
-        \brief Texture can be used for sampling (e.g. "sampler2D" in GLSL, or "Texture2D" in HLSL).
-        \remarks This is part of the default flags.
-        */
-        SampleUsage                 = (1 << 5),
-
-        //! Texture can be used as storage texture (e.g. "image2D" in GLSL, or "RWTexture2D" in HLSL).
-        StorageUsage                = (1 << 6),
-
-        /**
-        \brief Multi-sampled texture has fixed sample locations.
-        \remarks This can only be used with multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray).
-        \see TextureType
-        */
-        FixedSamples                = (1 << 7),
-
-        //! Default texture flags are <code>(ColorAttachmentUsage | SampleUsage | FixedSamples)</code>.
-        Default                     = (ColorAttachmentUsage | SampleUsage | FixedSamples),
-    };
-};
-#endif // /TODO
-
-
 /* ----- Structures ----- */
 
 #if 0//TODO: currently unused
@@ -159,14 +81,6 @@ struct TextureDescriptor
     //! Hardware texture type. By default TextureType::Texture1D.
     TextureType     type            = TextureType::Texture1D;
 
-    #if 0 // TODO: repalce by "bindFlags" etc.
-    /**
-    \brief Specifies the texture creation flags (e.g. if MIP-mapping is required). By default TextureFlags::Default.
-    \remarks This can be bitwise OR combination of the entries of the TextureFlags enumeration.
-    \see TextureFlags
-    */
-    long            flags           = TextureFlags::Default;
-    #else
     /**
     \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default BindFlags::SampleBuffer and BindFlags::ColorAttachment.
     \remarks When the texture will be bound as a color attachment to a render target for instance, the BindFlags::ColorAttachment flag is required.
@@ -189,7 +103,6 @@ struct TextureDescriptor
     \see MiscFlags
     */
     long            miscFlags       = MiscFlags::FixedSamples;
-    #endif // /TODO
 
     //! Hardware texture format. By default Format::RGBA8UNorm.
     Format          format          = Format::RGBA8UNorm;
