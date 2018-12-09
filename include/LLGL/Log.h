@@ -97,6 +97,12 @@ LLGL_EXPORT void SetReportCallback(const ReportCallback& callback, void* userDat
 */
 LLGL_EXPORT void SetReportCallbackStd(std::ostream& stream = std::cerr);
 
+/**
+\brief Sets the maximum number of reports that will be triggered. All remaining reports will be ignored.
+\param[in] maxCount Specifies the maximum number of reports. If this is 0, there is affectively no limit. By default 0.
+*/
+LLGL_EXPORT void SetReportLimit(std::size_t maxCount);
+
 
 } // /namespace Log
 

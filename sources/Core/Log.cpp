@@ -22,6 +22,8 @@ struct LogState
     ReportCallback  reportCallback  = nullptr;
     std::ostream*   outputStream    = nullptr;
     void*           userData        = nullptr;
+    std::size_t     limit           = 0;
+    std::size_t     counter         = 0;
 };
 
 static LogState g_logState;
@@ -32,17 +34,25 @@ static LogState g_logState;
 LLGL_EXPORT void PostReport(ReportType type, const std::string& message, const std::string& contextInfo)
 {
     ReportCallback  callback;
-    void*           userData = nullptr;
+    void*           userData    = nullptr;
+    bool            ignore      = false;
 
     /* Get callback and user data with a lock guard */
     {
         std::lock_guard<std::mutex> guard { g_logState.reportMutex };
+
+        /* Get callback and user data */
         callback = g_logState.reportCallback;
         userData = g_logState.userData;
+
+        /* Increase report counter and check if the report must be ignored */
+        g_logState.counter++;
+        if (g_logState.limit > 0 && g_logState.counter > g_logState.limit)
+            ignore = true;
     }
 
     /* Post report to callback */
-    if (callback != nullptr)
+    if (!ignore && callback != nullptr)
         callback(type, message, contextInfo, userData);
 }
 
@@ -64,6 +74,12 @@ LLGL_EXPORT void SetReportCallbackStd(std::ostream& stream)
         (*g_logState.outputStream) << message << std::endl;
     };
     g_logState.userData         = nullptr;
+}
+
+LLGL_EXPORT void SetReportLimit(std::size_t maxCount)
+{
+    std::lock_guard<std::mutex> guard { g_logState.reportMutex };
+    g_logState.limit = maxCount;
 }
 
 
