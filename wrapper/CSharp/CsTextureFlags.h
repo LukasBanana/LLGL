@@ -10,6 +10,7 @@
 #include <vcclr.h>
 #include "CsTypes.h"
 #include "CsFormat.h"
+#include "CsResourceFlags.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -42,21 +43,6 @@ public enum class TextureType
 };
 
 
-/* ----- Flags ----- */
-
-[Flags]
-public enum class TextureFlags
-{
-    None                        = 0,
-    ColorAttachmentUsage        = (1 << 3),
-    DepthStencilAttachmentUsage = (1 << 4),
-    SampleUsage                 = (1 << 5),
-    StorageUsage                = (1 << 6),
-    FixedSamples                = (1 << 7),
-    Default                     = (ColorAttachmentUsage | SampleUsage | FixedSamples),
-};
-
-
 /* ----- Structures ----- */
 
 public ref class TextureDescriptor
@@ -67,7 +53,9 @@ public ref class TextureDescriptor
         TextureDescriptor();
 
         property TextureType    Type;
-        property TextureFlags   Flags;
+        property BindFlags      BindFlags;
+        property CPUAccessFlags CPUAccessFlags;
+        property MiscFlags      MiscFlags;
         property Format         Format;
         property Extent3D^      Extent;
         property unsigned int   ArrayLayers;

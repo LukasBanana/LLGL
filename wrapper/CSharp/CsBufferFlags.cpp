@@ -80,9 +80,10 @@ BufferDescriptor::StorageBufferDescriptor::StorageBufferDescriptor()
 
 BufferDescriptor::BufferDescriptor()
 {
-    Type            = BufferType::Vertex;
-    Flags           = BufferFlags::None;
     Size            = 0;
+    BindFlags       = SharpLLGL::BindFlags::None;
+    CPUAccessFlags  = SharpLLGL::CPUAccessFlags::None;
+    MiscFlags       = SharpLLGL::MiscFlags::None;
     VertexBuffer    = gcnew VertexBufferDescriptor();
     IndexBuffer     = gcnew IndexBufferDescriptor();
     StorageBuffer   = gcnew StorageBufferDescriptor();

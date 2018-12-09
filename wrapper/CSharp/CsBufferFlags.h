@@ -10,6 +10,7 @@
 #include <vcclr.h>
 #include "CsFormat.h"
 #include "CsVertexFormat.h"
+#include "CsResourceFlags.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -27,15 +28,6 @@ namespace SharpLLGL
 
 /* ----- Enumerations ----- */
 
-public enum class BufferType
-{
-    Vertex,
-    Index,
-    Constant,
-    Storage,
-    StreamOutput,
-};
-
 public enum class StorageBufferType
 {
     Undefined,
@@ -47,19 +39,6 @@ public enum class StorageBufferType
     RWByteAddressBuffer,
     AppendStructuredBuffer,
     ConsumeStructuredBuffer,
-};
-
-
-/* ----- Flags ----- */
-
-[Flags]
-public enum class BufferFlags
-{
-    None                = 0,
-    MapReadAccess       = (1 << 0),
-    MapWriteAccess      = (1 << 1),
-    MapReadWriteAccess  = (MapReadAccess | MapWriteAccess),
-    DynamicUsage        = (1 << 2),
 };
 
 
@@ -132,9 +111,10 @@ public ref class BufferDescriptor
 
         };
 
-        property BufferType                 Type;
-        property BufferFlags                Flags;
         property System::UInt64             Size;
+        property BindFlags                  BindFlags;
+        property CPUAccessFlags             CPUAccessFlags;
+        property MiscFlags                  MiscFlags;
         property VertexBufferDescriptor^    VertexBuffer;
         property IndexBufferDescriptor^     IndexBuffer;
         property StorageBufferDescriptor^   StorageBuffer;

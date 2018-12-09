@@ -46,9 +46,9 @@ LLGL::Buffer* Buffer::NativeSub::get()
     return static_cast<LLGL::Buffer*>(Native);
 }
 
-BufferType Buffer::Type::get()
+BindFlags Buffer::BindFlags::get()
 {
-    return static_cast<BufferType>(reinterpret_cast<LLGL::Texture*>(Native)->GetType());
+    return static_cast<SharpLLGL::BindFlags>(reinterpret_cast<LLGL::Buffer*>(Native)->GetBindFlags());
 }
 
 

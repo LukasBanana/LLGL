@@ -1,0 +1,77 @@
+/*
+ * CsResourceFlags.h
+ * 
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#pragma once
+
+#include <vcclr.h>
+
+#using <System.dll>
+#using <System.Core.dll>
+#using <System.Runtime.InteropServices.dll>
+
+
+using namespace System;
+using namespace System::Runtime::InteropServices;
+using namespace System::Collections::Generic;
+
+
+namespace SharpLLGL
+{
+
+
+/* ----- Enumeration ----- */
+
+public enum class ResourceType
+{
+    Undefined,
+    Buffer,
+    Texture,
+    Sampler,
+};
+
+
+/* ----- Flags ----- */
+
+[Flags]
+public enum class BindFlags
+{
+    None                    = 0,
+    VertexBuffer            = (1 << 0),
+    IndexBuffer             = (1 << 1),
+    ConstantBuffer          = (1 << 2),
+    SampleBuffer            = (1 << 3),
+    RWStorageBuffer         = (1 << 4),
+    StreamOutputBuffer      = (1 << 5),
+    IndirectBuffer          = (1 << 6),
+    ColorAttachment         = (1 << 7),
+    DepthStencilAttachment  = (1 << 8),
+};
+
+[Flags]
+public enum class CPUAccessFlags
+{
+    None        = 0,
+    Read        = (1 << 0),
+    Write       = (1 << 1),
+    ReadWrite   = (Read | Write),
+};
+
+[Flags]
+public enum class MiscFlags
+{
+    None            = 0,
+    DynamicUsage    = (1 << 0),
+    FixedSamples    = (1 << 1),
+};
+
+
+
+} // /namespace SharpLLGL
+
+
+
+// ================================================================================

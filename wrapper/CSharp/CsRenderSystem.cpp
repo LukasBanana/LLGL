@@ -409,9 +409,10 @@ static void Convert(LLGL::BufferDescriptor& dst, BufferDescriptor^ src)
 {
     if (src)
     {
-        dst.type    = static_cast<LLGL::BufferType>(src->Type);
-        dst.flags   = static_cast<long>(src->Flags);
-        dst.size    = src->Size;
+        dst.size            = src->Size;
+        dst.bindFlags       = static_cast<long>(src->BindFlags);
+        dst.cpuAccessFlags  = static_cast<long>(src->CPUAccessFlags);
+        dst.miscFlags       = static_cast<long>(src->MiscFlags);
         if (src->VertexBuffer)
             Convert(dst.vertexBuffer, src->VertexBuffer);
         if (src->IndexBuffer)
@@ -480,12 +481,14 @@ static void Convert(LLGL::TextureDescriptor& dst, TextureDescriptor^ src)
 {
     if (src)
     {
-        dst.type        = static_cast<LLGL::TextureType>(src->Type);
-        dst.flags       = static_cast<long>(src->Flags);
+        dst.type            = static_cast<LLGL::TextureType>(src->Type);
+        dst.bindFlags       = static_cast<long>(src->BindFlags);
+        dst.cpuAccessFlags  = static_cast<long>(src->CPUAccessFlags);
+        dst.miscFlags       = static_cast<long>(src->MiscFlags);
         Convert(dst.extent, src->Extent);
-        dst.arrayLayers = src->ArrayLayers;
-        dst.mipLevels   = src->MipLevels;
-        dst.samples     = src->Samples;
+        dst.arrayLayers     = src->ArrayLayers;
+        dst.mipLevels       = src->MipLevels;
+        dst.samples         = src->Samples;
     }
 }
 

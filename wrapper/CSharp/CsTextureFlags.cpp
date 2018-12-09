@@ -14,13 +14,15 @@ namespace SharpLLGL
 
 TextureDescriptor::TextureDescriptor()
 {
-    Type        = TextureType::Texture1D;
-    Flags       = TextureFlags::Default;
-    Format      = SharpLLGL::Format::RGBA8UNorm;
-    Extent      = gcnew Extent3D(1, 1, 1);
-    ArrayLayers = 1;
-    MipLevels   = 0;
-    Samples     = 1;
+    Type            = TextureType::Texture1D;
+    BindFlags       = SharpLLGL::BindFlags::SampleBuffer | SharpLLGL::BindFlags::ColorAttachment;
+    CPUAccessFlags  = SharpLLGL::CPUAccessFlags::None;
+    MiscFlags       = SharpLLGL::MiscFlags::FixedSamples;
+    Format          = SharpLLGL::Format::RGBA8UNorm;
+    Extent          = gcnew Extent3D(1, 1, 1);
+    ArrayLayers     = 1;
+    MipLevels       = 0;
+    Samples         = 1;
 }
 
 

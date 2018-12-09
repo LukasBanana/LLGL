@@ -19,6 +19,7 @@
 #include <LLGL/ComputePipeline.h>
 #include "CsTextureFlags.h"
 #include "CsBufferFlags.h"
+#include "CsResourceFlags.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -32,18 +33,6 @@ using namespace System::Runtime::InteropServices;
 namespace SharpLLGL
 {
 
-
-public enum class ResourceType
-{
-    Undefined,
-    VertexBuffer,
-    IndexBuffer,
-    ConstantBuffer,
-    StorageBuffer,
-    StreamOutputBuffer,
-    Texture,
-    Sampler,
-};
 
 public enum class QueryType
 {
@@ -89,9 +78,9 @@ public ref class Buffer : public Resource
 
         Buffer(LLGL::Buffer* native);
 
-        property BufferType Type
+        property BindFlags BindFlags
         {
-            BufferType get();
+            SharpLLGL::BindFlags get();
         }
 
     internal:
