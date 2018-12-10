@@ -1,15 +1,16 @@
 /*
  * GLRenderSystem_Common.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "GLRenderSystem.h"
+#include "Ext/GLExtensions.h"
+#include "RenderState/GLStatePool.h"
 #include "../GLCommon/GLTypes.h"
 #include "../GLCommon/GLCore.h"
 #include "../GLCommon/Texture/GLTexImage.h"
-#include "Ext/GLExtensions.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Assertion.h"
@@ -26,6 +27,12 @@ GLRenderSystem::GLRenderSystem()
 {
     /* Create command queue instance */
     commandQueue_ = MakeUnique<GLCommandQueue>();
+}
+
+GLRenderSystem::~GLRenderSystem()
+{
+    /* Clear all render state containers first, the rest will be deleted automatically */
+    GLStatePool::Instance().Clear();
 }
 
 void GLRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)

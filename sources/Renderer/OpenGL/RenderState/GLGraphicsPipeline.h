@@ -1,6 +1,6 @@
 /*
  * GLGraphicsPipeline.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -11,6 +11,9 @@
 
 #include "../OpenGL.h"
 #include "GLStateManager.h"
+#include "GLDepthStencilState.h"
+#include "GLRasterizerState.h"
+#include "GLBlendState.h"
 #include "../Shader/GLShaderProgram.h"
 #include <LLGL/GraphicsPipeline.h>
 #include <LLGL/RenderSystemFlags.h>

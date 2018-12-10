@@ -1,12 +1,13 @@
 /*
  * GLGraphicsPipeline.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "GLGraphicsPipeline.h"
 #include "GLRenderPass.h"
+#include "GLStatePool.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLCore.h"
@@ -49,19 +50,19 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
         patchVertices_ = 0;
 
     /* Create depth-stencil state */
-    depthStencilState_ = GLStateManager::active->CreateDepthStencilState(desc.depth, desc.stencil);
+    depthStencilState_ = GLStatePool::Instance().CreateDepthStencilState(desc.depth, desc.stencil);
 
     /* Create rasterizer state */
-    rasterizerState_ = GLStateManager::active->CreateRasterizerState(desc.rasterizer);
+    rasterizerState_ = GLStatePool::Instance().CreateRasterizerState(desc.rasterizer);
 
     /* Create blend state */
     if (auto renderPass = desc.renderPass)
     {
         auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
-        blendState_ = GLStateManager::active->CreateBlendState(desc.blend, renderPassGL->GetNumColorAttachments());
+        blendState_ = GLStatePool::Instance().CreateBlendState(desc.blend, renderPassGL->GetNumColorAttachments());
     }
     else
-        blendState_ = GLStateManager::active->CreateBlendState(desc.blend, 1);
+        blendState_ = GLStatePool::Instance().CreateBlendState(desc.blend, 1);
 
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())
@@ -70,11 +71,9 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
 
 GLGraphicsPipeline::~GLGraphicsPipeline()
 {
-    if (blendState_.use_count() == 2)
-    {
-        blendState_.reset();
-        GLStateManager::active->ReleaseUnusedBlendStates(true);
-    }
+    GLStatePool::Instance().ReleaseDepthStencilState(std::move(depthStencilState_));
+    GLStatePool::Instance().ReleaseRasterizerState(std::move(rasterizerState_));
+    GLStatePool::Instance().ReleaseBlendState(std::move(blendState_));
 }
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)

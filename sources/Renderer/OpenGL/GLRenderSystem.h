@@ -1,6 +1,6 @@
 /*
  * GLRenderSystem.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -56,6 +56,7 @@ class GLRenderSystem final : public RenderSystem
         /* ----- Common ----- */
 
         GLRenderSystem();
+        ~GLRenderSystem();
 
         void SetConfiguration(const RenderSystemConfiguration& config) override;
 

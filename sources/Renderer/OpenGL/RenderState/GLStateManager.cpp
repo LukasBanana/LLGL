@@ -1,11 +1,14 @@
 /*
  * GLStateManager.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "GLStateManager.h"
+#include "GLDepthStencilState.h"
+#include "GLRasterizerState.h"
+#include "GLBlendState.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"
@@ -21,7 +24,9 @@ namespace LLGL
 {
 
 
-/* ----- Internal constants ---- */
+/*
+ * Internal constants
+ */
 
 // Maps GLState to <cap> in glEnable, glDisable, glIsEnabled
 static const GLenum g_stateCapsEnum[] =
@@ -114,7 +119,9 @@ static const GLenum g_textureLayersEnum[] =
 static const GLuint g_GLInvalidId = ~0;
 
 
-/* ----- Internal functions ----- */
+/*
+ * Internal functions
+ */
 
 static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObjectId)
 {
@@ -123,101 +130,9 @@ static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObject
 }
 
 
-/* ----- Internal templates ----- */
-
-template <typename T>
-std::shared_ptr<T> FindCompatibleStateObject(
-    std::vector<std::shared_ptr<T>>&    container,
-    const T&                            other,
-    std::size_t                         first,
-    std::size_t                         last,
-    std::size_t                         stride,
-    std::size_t&                        index)
-{
-    for (index = first; index < last; index += stride)
-    {
-        /* Check if current blend state is compatible */
-        auto order = container[index]->CompareSWO(other);
-        if (order == 0)
-            return container[index];
-
-        if (order > 0)
-        {
-            /*
-            Increase step size and reduce boundary,
-            NOTE: don't set to index+1 since the +1 part will happen in the loop iteration
-            */
-            stride *= 2;
-            first   = index;
-        }
-        else
-        {
-            /* Reset step size, then reduce boundary, finally reset index */
-            stride  = 1;
-            last    = index;
-            index   = first;
-        }
-    }
-    return nullptr;
-}
-
-template <typename T, typename... Args>
-std::shared_ptr<T> CreateRenderStateObject(std::vector<std::shared_ptr<T>>& container, Args&&... args)
-{
-    /* Try to find blend state with same parameter */
-    T stateToCompare { std::forward<Args>(args)... };
-
-    std::size_t insertionIndex = 0;
-    if (auto sharedState = FindCompatibleStateObject(container, stateToCompare, 0, container.size(), 1, insertionIndex))
-        return sharedState;
-
-    /* Allocate new blend state with insertion sort */
-    auto newState = std::make_shared<T>(stateToCompare);
-
-    if (insertionIndex < container.size())
-        container.insert(container.begin() + insertionIndex, newState);
-    else
-        container.push_back(newState);
-
-    return newState;
-}
-
-template <typename T>
-void ReleaseUnusedRenderStateObject(
-    std::vector<std::shared_ptr<T>>&    container,
-    const std::function<void(T*)>&      callback,
-    bool                                firstOnly)
-{
-    if (firstOnly)
-    {
-        for (auto it = container.begin(); it != container.end(); ++it)
-        {
-            if (it->use_count() == 1)
-            {
-                callback(it->get());
-                container.erase(it);
-                break;
-            }
-        }
-    }
-    else
-    {
-        RemoveAllFromListIf(
-            container,
-            [&](const std::shared_ptr<T>& entry)
-            {
-                if (entry.use_count() == 1)
-                {
-                    callback(entry.get());
-                    return true;
-                }
-                return false;
-            }
-        );
-    }
-}
-
-/* ----- Common ----- */
+/*
+ * GLStateManager class
+ */
 
 static std::vector<GLStateManager*> g_GLStateManagerList;
 
@@ -609,20 +524,6 @@ void GLStateManager::SetLineWidth(GLfloat width)
 
 /* ----- Depth-stencil states ----- */
 
-GLDepthStencilStateSPtr GLStateManager::CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc)
-{
-    return CreateRenderStateObject(depthStencilStates_, depthDesc, stencilDesc);
-}
-
-void GLStateManager::ReleaseUnusedDepthStencilStates(bool firstOnly)
-{
-    ReleaseUnusedRenderStateObject<GLDepthStencilState>(
-        depthStencilStates_,
-        std::bind(&GLStateManager::NotifyDepthStencilStateRelease, this, std::placeholders::_1),
-        firstOnly
-    );
-}
-
 void GLStateManager::NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState)
 {
     if (boundDepthStencilState_ == depthStencilState)
@@ -669,20 +570,6 @@ void GLStateManager::PopDepthMask()
 
 /* ----- Rasterizer states ----- */
 
-GLRasterizerStateSPtr GLStateManager::CreateRasterizerState(const RasterizerDescriptor& rasterizerDesc)
-{
-    return CreateRenderStateObject(rasterizerStates_, rasterizerDesc);
-}
-
-void GLStateManager::ReleaseUnusedRasterizerStates(bool firstOnly)
-{
-    ReleaseUnusedRenderStateObject<GLRasterizerState>(
-        rasterizerStates_,
-        std::bind(&GLStateManager::NotifyRasterizerStateRelease, this, std::placeholders::_1),
-        firstOnly
-    );
-}
-
 void GLStateManager::NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState)
 {
     if (boundRasterizerState_ == rasterizerState)
@@ -699,20 +586,6 @@ void GLStateManager::SetRasterizerState(GLRasterizerState* rasterizerState)
 }
 
 /* ----- Blend states ----- */
-
-GLBlendStateSPtr GLStateManager::CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments)
-{
-    return CreateRenderStateObject(blendStates_, blendDesc, numColorAttachments);
-}
-
-void GLStateManager::ReleaseUnusedBlendStates(bool firstOnly)
-{
-    ReleaseUnusedRenderStateObject<GLBlendState>(
-        blendStates_,
-        std::bind(&GLStateManager::NotifyBlendStateRelease, this, std::placeholders::_1),
-        firstOnly
-    );
-}
 
 void GLStateManager::NotifyBlendStateRelease(GLBlendState* blendState)
 {

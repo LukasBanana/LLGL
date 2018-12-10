@@ -1,6 +1,6 @@
 /*
  * GLStateManager.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,12 +10,8 @@
 
 
 #include "GLState.h"
-#include "GLDepthStencilState.h"
-#include "GLRasterizerState.h"
-#include "GLBlendState.h"
 #include <LLGL/TextureFlags.h>
 #include <LLGL/CommandBufferFlags.h>
-#include <vector>
 #include <array>
 #include <stack>
 #include <cstdint>
@@ -28,6 +24,9 @@ namespace LLGL
 class GLRenderTarget;
 class GLBuffer;
 class GLTexture;
+class GLDepthStencilState;
+class GLRasterizerState;
+class GLBlendState;
 
 // OpenGL state machine manager that keeps track of certain GL states.
 class GLStateManager
@@ -102,8 +101,6 @@ class GLStateManager
 
         /* ----- Depth-stencil states ----- */
 
-        GLDepthStencilStateSPtr CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc);
-        void ReleaseUnusedDepthStencilStates(bool firstOnly = false);
         void NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState);
 
         void SetDepthStencilState(GLDepthStencilState* depthStencilState);
@@ -116,16 +113,12 @@ class GLStateManager
 
         /* ----- Rasterizer states ----- */
 
-        GLRasterizerStateSPtr CreateRasterizerState(const RasterizerDescriptor& rasterizerDesc);
-        void ReleaseUnusedRasterizerStates(bool firstOnly = false);
         void NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState);
 
         void SetRasterizerState(GLRasterizerState* rasterizerState);
 
         /* ----- Blend states ----- */
 
-        GLBlendStateSPtr CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments);
-        void ReleaseUnusedBlendStates(bool firstOnly = false);
         void NotifyBlendStateRelease(GLBlendState* blendState);
 
         void BindBlendState(GLBlendState* blendState);
@@ -216,8 +209,6 @@ class GLStateManager
 
     private:
 
-        /* ----- Functions ----- */
-
         void AdjustViewport(GLViewport& viewport);
         void AdjustScissor(GLScissor& scissor);
 
@@ -232,7 +223,7 @@ class GLStateManager
         void DetermineVendorSpecificExtensions();
         #endif
 
-        /* ----- Constants ----- */
+    private:
 
         static const std::uint32_t numTextureLayers         = 32;
         static const std::uint32_t numStates                = (static_cast<std::uint32_t>(GLState::PROGRAM_POINT_SIZE) + 1);
@@ -244,7 +235,7 @@ class GLStateManager
         static const std::uint32_t numStatesExt             = (static_cast<std::uint32_t>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
         #endif
 
-        /* ----- Structures ----- */
+    private:
 
         // GL limitations required for validation of state parameters
         struct GLLimits
@@ -367,40 +358,35 @@ class GLStateManager
             std::array<GLuint, numTextureLayers> boundSamplers;
         };
 
-        /* ----- Members ----- */
+    private:
 
-        GLLimits                                limits_;
+        GLLimits                        limits_;
 
-        OpenGLDependentStateDescriptor          apiDependentState_;
+        OpenGLDependentStateDescriptor  apiDependentState_;
 
-        GLCommonState                           commonState_;
-        GLRenderState                           renderState_;
-        GLBufferState                           bufferState_;
-        GLFramebufferState                      framebufferState_;
-        GLRenderbufferState                     renderbufferState_;
-        GLTextureState                          textureState_;
-        GLVertexArrayState                      vertexArrayState_;
-        GLShaderState                           shaderState_;
-        GLSamplerState                          samplerState_;
+        GLCommonState                   commonState_;
+        GLRenderState                   renderState_;
+        GLBufferState                   bufferState_;
+        GLFramebufferState              framebufferState_;
+        GLRenderbufferState             renderbufferState_;
+        GLTextureState                  textureState_;
+        GLVertexArrayState              vertexArrayState_;
+        GLShaderState                   shaderState_;
+        GLSamplerState                  samplerState_;
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        GLRenderStateExt                        renderStateExt_;
+        GLRenderStateExt                renderStateExt_;
         #endif
 
-        GLTextureLayer*                         activeTextureLayer_     = nullptr;
+        GLTextureLayer*                 activeTextureLayer_     = nullptr;
 
-        bool                                    emulateClipControl_     = false;
-        GLint                                   renderTargetHeight_     = 0;
+        bool                            emulateClipControl_     = false;
+        GLint                           renderTargetHeight_     = 0;
 
-        std::vector<GLDepthStencilStateSPtr>    depthStencilStates_;
-        GLDepthStencilState*                    boundDepthStencilState_ = nullptr;
-
-        std::vector<GLRasterizerStateSPtr>      rasterizerStates_;
-        GLRasterizerState*                      boundRasterizerState_   = nullptr;
-
-        std::vector<GLBlendStateSPtr>           blendStates_;
-        GLBlendState*                           boundBlendState_        = nullptr;
-        bool                                    colorMaskOnStack_       = false;
+        GLDepthStencilState*            boundDepthStencilState_ = nullptr;
+        GLRasterizerState*              boundRasterizerState_   = nullptr;
+        GLBlendState*                   boundBlendState_        = nullptr;
+        bool                            colorMaskOnStack_       = false;
 
 };
 
