@@ -16,7 +16,7 @@
 with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
 - [LLGL Reference Manual](docu/refman.pdf) (PDF)
 - [LLGL Coding Conventions](docu/CodingConventions/Coding%20Conventions%20for%20LLGL.pdf) (PDF)
-- [Tutorials and Examples for C++](examples/Cpp)
+- [Examples and Tutorials for C++](examples/Cpp)
 - [Examples for C#](examples/CSharp)
 
 

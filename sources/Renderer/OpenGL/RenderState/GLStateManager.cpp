@@ -779,6 +779,7 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
     auto id         = buffer.GetID();
     auto bindFlags  = buffer.GetBindFlags();
 
+    /* Release buffer ID from all potentially used GL buffer targets */
     if ((bindFlags & BindFlags::VertexBuffer) != 0)
         NotifyBufferRelease(id, GLBufferTarget::ARRAY_BUFFER);
     if ((bindFlags & BindFlags::IndexBuffer) != 0)
@@ -794,6 +795,9 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
         NotifyBufferRelease(id, GLBufferTarget::DRAW_INDIRECT_BUFFER);
         NotifyBufferRelease(id, GLBufferTarget::DISPATCH_INDIRECT_BUFFER);
     }
+
+    NotifyBufferRelease(id, GLBufferTarget::COPY_READ_BUFFER);
+    NotifyBufferRelease(id, GLBufferTarget::COPY_WRITE_BUFFER);
 }
 
 /* ----- Framebuffer ----- */

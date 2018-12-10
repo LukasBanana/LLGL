@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-static DXGI_FORMAT GetResourceViewFormat(const BufferDescriptor::StorageBuffer& desc)
+static DXGI_FORMAT GetD3DResourceViewFormat(const BufferDescriptor::StorageBuffer& desc)
 {
     /*
     D3D11_BUFFER_UAV_FLAG_RAW buffer flag for ByteAddressBuffer requires the UAV to have the DXGI_FORMAT_R32_TYPELESS format.
@@ -51,7 +51,7 @@ D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescripto
     CreateNativeBuffer(device, desc, initialData);
 
     /* Create resource views (SRV and UAV) */
-    auto format         = GetResourceViewFormat(desc.storageBuffer);
+    auto format         = GetD3DResourceViewFormat(desc.storageBuffer);
     auto numElements    = static_cast<UINT>(desc.size) / desc.storageBuffer.stride;
 
     if ((desc.bindFlags & BindFlags::SampleBuffer) != 0)

@@ -288,14 +288,6 @@ void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* con
 {
     /* Validate common resource array parameters */
     AssertCreateResourceArrayCommon(numBuffers, reinterpret_cast<void* const*>(bufferArray), "buffer");
-
-    /* Validate buffer binding flags */
-    auto refBindFlags = bufferArray[0]->GetBindFlags();
-    for (std::uint32_t i = 1; i < numBuffers; ++i)
-    {
-        if (bufferArray[i]->GetBindFlags() != refBindFlags)
-            throw std::invalid_argument("cannot create buffer array with binding flags mismatch");
-    }
 }
 
 void RenderSystem::AssertCreateShader(const ShaderDescriptor& desc)

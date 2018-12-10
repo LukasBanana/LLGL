@@ -1,6 +1,6 @@
 /*
  * GLBufferArrayWithVAO.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -26,7 +26,7 @@ class GLBufferArrayWithVAO final : public GLBufferArray
 
         void BuildVertexArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
-        //! Returns the ID of the vertex-array-object (VAO)
+        // Returns the ID of the vertex-array-object (VAO)
         inline GLuint GetVaoID() const
         {
             return vao_.GetID();

@@ -493,7 +493,8 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
         auto instanceDesc = desc;
         {
             instanceDesc.shaderProgram  = &(LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram)->instance);
-            instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
+            if (desc.pipelineLayout != nullptr)
+                instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
         }
         return TakeOwnership(graphicsPipelines_, MakeUnique<DbgGraphicsPipeline>(*instance_->CreateGraphicsPipeline(instanceDesc), desc));
     }

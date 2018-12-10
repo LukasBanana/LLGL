@@ -30,15 +30,44 @@ namespace LLGL
 */
 enum class StorageBufferType
 {
-    Undefined,                  //!< Undefined storage buffer type.
-    Buffer,                     //!< Typed buffer.
-    StructuredBuffer,           //!< Structured buffer.
-    ByteAddressBuffer,          //!< Byte-address buffer.
-    RWBuffer,                   //!< Typed read/write buffer.
-    RWStructuredBuffer,         //!< Structured read/write buffer.
-    RWByteAddressBuffer,        //!< Byte-address read/write buffer.
-    AppendStructuredBuffer,     //!< Append structured buffer.
-    ConsumeStructuredBuffer,    //!< Consume structured buffer.
+    //! Undefined storage buffer type.
+    Undefined,
+
+    //! Typed buffer.
+    Buffer,
+
+    /**
+    \brief Structured buffer.
+    \note This cannot be used together with a buffer that has the binding flag BindFlags::IndirectBuffer.
+    */
+    StructuredBuffer,
+
+    //! Byte-address buffer.
+    ByteAddressBuffer,
+
+    //! Typed read/write buffer.
+    RWBuffer,
+
+    /**
+    \brief Structured read/write buffer.
+    \note This cannot be used together with a buffer that has the binding flag BindFlags::IndirectBuffer.
+    */
+    RWStructuredBuffer,
+
+    //! Byte-address read/write buffer.
+    RWByteAddressBuffer,
+
+    /**
+    \brief Append structured buffer.
+    \note This cannot be used together with a buffer that has the binding flag BindFlags::IndirectBuffer.
+    */
+    AppendStructuredBuffer,
+
+    /**
+    \brief Consume structured buffer.
+    \note This cannot be used together with a buffer that has the binding flag BindFlags::IndirectBuffer.
+    */
+    ConsumeStructuredBuffer,
 };
 
 
@@ -82,7 +111,7 @@ struct BufferDescriptor
         /**
         \brief Specifies the vector format of a typed buffer. By default Format::Undefined.
         \remarks This is only used if the storage type is either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
-        \see IsStorageBufferTyped
+        \see IsTypedBuffer
         */
         Format              format      = Format::Undefined;
 

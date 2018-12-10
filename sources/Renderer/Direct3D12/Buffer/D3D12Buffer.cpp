@@ -83,7 +83,7 @@ void D3D12Buffer::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCR
     D3D12_CONSTANT_BUFFER_VIEW_DESC viewDesc;
     {
         viewDesc.BufferLocation = GetNative()->GetGPUVirtualAddress();
-        viewDesc.SizeInBytes    = bufferSize_;
+        viewDesc.SizeInBytes    = static_cast<UINT>(GetBufferSize());
     }
     device->CreateConstantBufferView(&viewDesc, cpuDescriptorHandle);
 }

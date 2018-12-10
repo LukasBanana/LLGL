@@ -1170,7 +1170,7 @@ void DbgCommandBuffer::ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t o
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "buffer range out of bounds (" + std::to_string(offset + size) +
-            "specified but limit is " + std::to_string(bufferDbg.desc.size) + ")"
+            " specified but limit is " + std::to_string(bufferDbg.desc.size) + ")"
         );
     }
 }
