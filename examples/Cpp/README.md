@@ -60,7 +60,7 @@ Shows how to use buffer arrays, i.e. render with multiple vertex buffers simulta
 
 Small example with a compute shader and a storage buffer.
 
-*No screenshot available*
+<p align="center"><img src="ComputeShader/Example.png" width="300" height="300"/></p>
 
 
 ### [Stream-Output](StreamOutput)

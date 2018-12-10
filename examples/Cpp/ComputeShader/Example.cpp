@@ -5,165 +5,283 @@
  * See "LICENSE.txt" for license information.
  */
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <ExampleBase.h>
 
 
-int main(int argc, char* argv[])
+class Example_ComputeShader : public ExampleBase
 {
-    try
+
+    static const std::uint32_t maxNumSceneObjects = 64;
+
+    LLGL::VertexFormat      vertexFormat[2];
+
+    LLGL::Buffer*           vertexBuffer            = nullptr;
+    LLGL::Buffer*           instanceBuffer          = nullptr;
+    LLGL::BufferArray*      vertexBufferArray       = nullptr;
+
+    LLGL::Buffer*           inputBuffer             = nullptr;
+    LLGL::Buffer*           indirectArgBuffer       = nullptr;
+
+    LLGL::ShaderProgram*    computeShader           = nullptr;
+    LLGL::PipelineLayout*   computeLayout           = nullptr;
+    LLGL::ComputePipeline*  computePipeline         = nullptr;
+    LLGL::ResourceHeap*     computeResourceHeap     = nullptr;
+
+    LLGL::ShaderProgram*    graphicsShader          = nullptr;
+    LLGL::PipelineLayout*   graphicsLayout          = nullptr;
+    LLGL::GraphicsPipeline* graphicsPipeline        = nullptr;
+
+    LLGL::Fence*            fence                   = nullptr;
+
+    struct SceneState
     {
-        // Load render system module
-        LLGL::Log::SetReportCallbackStd();
-        LLGL::RenderingDebugger deb;
-        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv), nullptr, &deb);
+        float           time            = 0.0f;
+        std::uint32_t   numSceneObjects = maxNumSceneObjects;
+        float           _pad0[2];
+    }
+    sceneState;
 
-        // Create render context but do not show its window
-        LLGL::RenderContextDescriptor contextDesc;
+    struct SceneObject
+    {
+        Gs::Matrix2f    rotation;
+        Gs::Vector2f    position;
+        float           _pad0[2];
+    };
+
+public:
+
+    Example_ComputeShader() :
+        ExampleBase { L"LLGL Example: Compute Shader", { 800, 800 } }
+    {
+        // Check if samplers are supported
+        const auto& renderCaps = renderer->GetRenderingCaps();
+
+        if (!renderCaps.features.hasComputeShaders)
+            throw std::runtime_error("compute shaders are not supported by this renderer");
+
+        // Create all graphics objects
+        CreateBuffers();
+        CreateComputePipeline();
+        CreateGraphicsPipeline();
+    }
+
+    void CreateBuffers()
+    {
+        // Specify vertex format
+        vertexFormat[0].AppendAttribute({ "coord", LLGL::Format::RG32Float  });
+        vertexFormat[0].AppendAttribute({ "color", LLGL::Format::RGBA8UNorm });
+
+        vertexFormat[1].AppendAttribute({ "rotation", 0, LLGL::Format::RG32Float, 1 });
+        vertexFormat[1].AppendAttribute({ "rotation", 1, LLGL::Format::RG32Float, 1 });
+        vertexFormat[1].AppendAttribute({ "position",    LLGL::Format::RG32Float, 1 });
+        vertexFormat[1].stride      = sizeof(SceneObject);
+        vertexFormat[1].inputSlot   = 1;
+
+        // Define vertex buffer data
+        struct Vertex
         {
-            contextDesc.videoMode.resolution = { 640, 480 };
+            float           x, y;
+            std::uint8_t    r, g, b, a;
+        };
+
+        auto CircleX = [](float a) { return std::sin(a*Gs::pi/180.0f); };
+        auto CircleY = [](float a) { return std::cos(a*Gs::pi/180.0f); };
+
+        Vertex vertices[] =
+        {
+            // Triangle
+            { CircleX(  0.0f), CircleY(  0.0f), 255,   0,   0, 255 },
+            { CircleX(120.0f), CircleY(120.0f),   0, 255,   0, 255 },
+            { CircleX(240.0f), CircleY(240.0f),   0,   0, 255, 255 },
+
+            // Quad
+            { -1.0f, +1.0f,   0, 255,   0, 255 },
+            { -1.0f, -1.0f, 255,   0,   0, 255 },
+            { +1.0f, +1.0f,   0,   0, 255, 255 },
+            { +1.0f, -1.0f, 255,   0, 255, 255 },
+        };
+
+        // Create vertex buffer
+        LLGL::BufferDescriptor vertexBufferDesc;
+        {
+            vertexBufferDesc.size                   = sizeof(vertices);
+            vertexBufferDesc.bindFlags              = LLGL::BindFlags::VertexBuffer;
+            vertexBufferDesc.vertexBuffer.format    = vertexFormat[0];
         }
-        /*auto context = */renderer->CreateRenderContext(contextDesc);
+        vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
-        // Create command buffer
-        auto commandQueue = renderer->GetCommandQueue();
-
-        union
+        // Create instance buffer
+        LLGL::BufferDescriptor instanceBufferDesc;
         {
-            LLGL::CommandBuffer*    commands    = nullptr;
-            LLGL::CommandBufferExt* commandsExt;
-        };
+            instanceBufferDesc.size                         = sizeof(SceneObject)*maxNumSceneObjects;
+            instanceBufferDesc.bindFlags                    = LLGL::BindFlags::RWStorageBuffer | LLGL::BindFlags::VertexBuffer;
+            instanceBufferDesc.vertexBuffer.format          = vertexFormat[1];
+            instanceBufferDesc.storageBuffer.storageType    = LLGL::StorageBufferType::RWBuffer;
+            instanceBufferDesc.storageBuffer.format         = LLGL::Format::R32Float;
+            instanceBufferDesc.storageBuffer.stride         = sizeof(float);
+        }
+        instanceBuffer = renderer->CreateBuffer(instanceBufferDesc);
 
-        commandsExt = renderer->CreateCommandBufferExt();
-        if (!commands)
-            commands = renderer->CreateCommandBuffer();
+        // Create vertex array buffer
+        LLGL::Buffer* buffers[] = { vertexBuffer, instanceBuffer };
+        vertexBufferArray = renderer->CreateBufferArray(2, buffers);
 
-        // Initialize buffer data (16 byte pack alignment)
-        struct DataBlock
+        // Create scene state buffer
+        LLGL::BufferDescriptor inBufferDesc;
         {
-            Gs::Vector4f        position;
-            LLGL::ColorRGBAf    color;
-        };
+            inBufferDesc.size       = sizeof(SceneState);
+            inBufferDesc.bindFlags  = LLGL::BindFlags::ConstantBuffer;
+        }
+        inputBuffer = renderer->CreateBuffer(inBufferDesc, &sceneState);
 
-        std::vector<DataBlock> inputData, outputData;
-
-        for (int i = 0; i < 10; ++i)
+        // Create indirect argument buffer
+        LLGL::BufferDescriptor argBufferDesc;
         {
-            auto x = static_cast<float>(i + 1);
-            inputData.push_back(
+            argBufferDesc.size                      = sizeof(LLGL::DrawIndirectArguments)*2;
+            argBufferDesc.bindFlags                 = LLGL::BindFlags::RWStorageBuffer | LLGL::BindFlags::IndirectBuffer;
+            argBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWBuffer;
+            argBufferDesc.storageBuffer.format      = LLGL::Format::R32UInt;
+            argBufferDesc.storageBuffer.stride      = sizeof(std::uint32_t);
+        }
+        indirectArgBuffer = renderer->CreateBuffer(argBufferDesc);
+
+        // Create fence
+        fence = renderer->CreateFence();
+    }
+
+    void CreateComputePipeline()
+    {
+        // Create compute shader
+        if (Supported(LLGL::ShadingLanguage::GLSL))
+        {
+            computeShader = LoadShaderProgram(
                 {
-                    Gs::Vector4f(x, 1.0f / x, x*x, 1.0f),
-                    LLGL::ColorRGBAf(x, x*2.0f, std::sqrt(x), 1.0f),
+                    { LLGL::ShaderType::Compute, "Example.comp" }
                 }
             );
         }
-
-        outputData.resize(inputData.size());
-
-        // Create storage buffer for input
-        LLGL::BufferDescriptor storageBufferDesc;
+        else if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            storageBufferDesc.size                      = static_cast<std::uint32_t>(inputData.size() * sizeof(DataBlock));
-            storageBufferDesc.bindFlags                 = LLGL::BindFlags::RWStorageBuffer;
-            storageBufferDesc.cpuAccessFlags            = LLGL::CPUAccessFlags::Read;
-            storageBufferDesc.miscFlags                 = LLGL::MiscFlags::DynamicUsage;
-            storageBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWStructuredBuffer;
-            storageBufferDesc.storageBuffer.stride      = sizeof(DataBlock);
+            computeShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Compute, "Example.hlsl", "CS", "cs_5_0" },
+                }
+            );
         }
-        auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, inputData.data());
+        else
+            throw std::runtime_error("shaders not available for selected renderer in this example");
 
-        // Create shaders
-        LLGL::Shader* computeShader = nullptr;
-
-        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
-        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
-            computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CS", "cs_5_0" });
-        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
-            computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "Example.comp" });
-        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
-            computeShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Compute, "Example.450core.comp.spv"));
-
-        // Print info log (warnings and errors)
-        std::string log = computeShader->QueryInfoLog();
-        if (!log.empty())
-            std::cerr << log << std::endl;
-
-        // Create shader program which is used as composite
-        auto shaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc({ computeShader }));
-
-        // Link shader program and check for errors
-        if (shaderProgram->HasErrors())
-            throw std::runtime_error(shaderProgram->QueryInfoLog());
-
-        // Create pipeline layout for Vulkan and Direct3D 12 render systems
-        LLGL::PipelineLayoutDescriptor pipelineLayoutDesc;
-        {
-            pipelineLayoutDesc.bindings =
-            {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage, 0 }
-            };
-        }
-        auto pipelineLayout = renderer->CreatePipelineLayout(pipelineLayoutDesc);
-
-        // Create resource view heap
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
-        {
-            resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews  = { storageBuffer };
-        }
-        auto resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        // Create compute pipeline layout
+        computeLayout = renderer->CreatePipelineLayout(
+            LLGL::PipelineLayoutDesc("cbuffer(0):comp, rwbuffer(1):comp, rwbuffer(2):comp")
+        );
 
         // Create compute pipeline
         LLGL::ComputePipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram  = shaderProgram;
-            pipelineDesc.pipelineLayout = pipelineLayout;
+            pipelineDesc.shaderProgram  = computeShader;
+            pipelineDesc.pipelineLayout = computeLayout;
         }
-        auto pipeline = renderer->CreateComputePipeline(pipelineDesc);
+        computePipeline = renderer->CreateComputePipeline(pipelineDesc);
 
+        // Create resource heap for compute pipeline
+        LLGL::ResourceHeapDescriptor resourceHeapDesc;
+        {
+            resourceHeapDesc.pipelineLayout = computeLayout;
+            resourceHeapDesc.resourceViews  = { inputBuffer, instanceBuffer, indirectArgBuffer };
+        }
+        computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+    }
+
+    void CreateGraphicsPipeline()
+    {
+        // Create graphics shader
+        if (Supported(LLGL::ShadingLanguage::GLSL))
+        {
+            graphicsShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.vert" },
+                    { LLGL::ShaderType::Fragment, "Example.frag" }
+                },
+                { vertexFormat[0], vertexFormat[1] }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::HLSL))
+        {
+            graphicsShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" },
+                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }
+                },
+                { vertexFormat[0], vertexFormat[1] }
+            );
+        }
+        else
+            throw std::runtime_error("shaders not available for selected renderer in this example");
+
+        // Create graphics pipeline
+        LLGL::GraphicsPipelineDescriptor pipelineDesc;
+        {
+            pipelineDesc.shaderProgram              = graphicsShader;
+            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.rasterizer.multiSampling   = 8;
+        }
+        graphicsPipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+    }
+
+private:
+
+    void OnDrawFrame() override
+    {
+        timer->MeasureTime();
+
+        // Set render target
         commands->Begin();
         {
-            // Set compute pipeline
-            commands->SetComputePipeline(*pipeline);
+            // Update timer
+            sceneState.time += static_cast<float>(timer->GetDeltaTime());
+            commands->UpdateBuffer(*inputBuffer, 0, &sceneState, sizeof(sceneState));
 
-            // Set storage buffer
-            if (resourceHeap)
-                commands->SetComputeResourceHeap(*resourceHeap, 0);
-            else if (commandsExt)
-                commandsExt->SetRWStorageBuffer(*storageBuffer, 0, LLGL::StageFlags::ComputeStage);
+            // Run compute shader
+            commands->SetComputePipeline(*computePipeline);
+            commands->SetComputeResourceHeap(*computeResourceHeap);
+            commands->Dispatch(sceneState.numSceneObjects, 1, 1);
 
-            // Dispatch compute shader
-            commands->Dispatch(static_cast<std::uint32_t>(inputData.size()), 1, 1);
+            if (commandsExt)
+                commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 1, 1, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage);
+
+            // Draw scene
+            commands->BeginRenderPass(*context);
+            {
+                // Clear color buffer and set viewport
+                commands->Clear(LLGL::ClearFlags::Color);
+                commands->SetViewport(context->GetVideoMode().resolution);
+
+                // Set vertex buffer
+                commands->SetVertexBufferArray(*vertexBufferArray);
+
+                // Draw scene with indirect argument buffer
+                commands->SetGraphicsPipeline(*graphicsPipeline);
+                commands->DrawIndirect(*indirectArgBuffer, 0, 2, sizeof(LLGL::DrawIndirectArguments));
+
+                if (commandsExt)
+                    commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 1, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
+            }
+            commands->EndRenderPass();
         }
         commands->End();
         commandQueue->Submit(*commands);
 
-        // Read result
-        commandQueue->WaitIdle();
-
-        if (auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::CPUAccess::ReadOnly))
-        {
-            ::memcpy(outputData.data(), outputBuffer, sizeof(DataBlock) * outputData.size());
-            renderer->UnmapBuffer(*storageBuffer);
-        }
-
-        // Show input and output
-        std::cout << "input/output data:" << std::endl;
-
-        for (std::size_t i = 0, n = inputData.size(); i < n; ++i)
-        {
-            std::cout << "  in.position  = " << inputData[i].position << std::endl;
-            std::cout << "  out.position = " << outputData[i].position << std::endl;
-            std::cout << std::endl;
-        }
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << e.what() << std::endl;
+        // Present result on the screen
+        context->Present();
     }
 
-    #ifdef _WIN32
-    system("pause");
-    #endif
+};
 
-    return 0;
-}
+LLGL_IMPLEMENT_EXAMPLE(Example_ComputeShader);
+
+
+

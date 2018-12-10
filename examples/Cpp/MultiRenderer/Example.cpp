@@ -19,35 +19,47 @@
 class MyRenderer
 {
 
-        std::unique_ptr<LLGL::RenderSystem> renderer;
-        std::shared_ptr<LLGL::Window>       subWindow;
+    std::unique_ptr<LLGL::RenderSystem> renderer;
+    std::shared_ptr<LLGL::Window>       subWindow;
 
-        LLGL::RenderContext*                context         = nullptr;
-        LLGL::CommandQueue*                 cmdQueue        = nullptr;
-        LLGL::CommandBufferExt*             cmdBuffer       = nullptr;
-        LLGL::Buffer*                       constantBuffer  = nullptr;
-        LLGL::Buffer*                       vertexBuffer    = nullptr;
-        LLGL::Buffer*                       indexBuffer     = nullptr;
-        LLGL::Sampler*                      sampler         = nullptr;
-        LLGL::Texture*                      texture         = nullptr;
-        LLGL::ShaderProgram*                shaderProgram   = nullptr;
-        LLGL::GraphicsPipeline*             pipeline        = nullptr;
+    LLGL::RenderContext*                context         = nullptr;
+    LLGL::CommandQueue*                 cmdQueue        = nullptr;
+    LLGL::CommandBufferExt*             cmdBuffer       = nullptr;
+    LLGL::Buffer*                       constantBuffer  = nullptr;
+    LLGL::Buffer*                       vertexBuffer    = nullptr;
+    LLGL::Buffer*                       indexBuffer     = nullptr;
+    LLGL::Sampler*                      sampler         = nullptr;
+    LLGL::Texture*                      texture         = nullptr;
+    LLGL::ShaderProgram*                shaderProgram   = nullptr;
+    LLGL::GraphicsPipeline*             pipeline        = nullptr;
 
-        LLGL::MultiSamplingDescriptor       multiSampling;
-        LLGL::Viewport                      viewport;
+    LLGL::MultiSamplingDescriptor       multiSampling;
+    LLGL::Viewport                      viewport;
 
-    public:
+public:
 
-        MyRenderer(const char* rendererModule, LLGL::Window& mainWindow, const LLGL::Offset2D& subWindowOffset, const LLGL::Viewport& viewport);
+    MyRenderer(
+        const char*             rendererModule,
+        LLGL::Window&           mainWindow,
+        const LLGL::Offset2D&   subWindowOffset,
+        const LLGL::Viewport&   viewport
+    );
 
-        void CreateResources(const std::vector<VertexPos3Tex2>& vertices, const std::vector<std::uint32_t>& indices);
+    void CreateResources(
+        const std::vector<VertexPos3Tex2>&  vertices,
+        const std::vector<std::uint32_t>&   indices
+    );
 
-        void Render(const Gs::Matrix4f& wvpMatrix);
+    void Render(const Gs::Matrix4f& wvpMatrix);
 
 };
 
-MyRenderer::MyRenderer(const char* rendererModule, LLGL::Window& mainWindow, const LLGL::Offset2D& subWindowOffset, const LLGL::Viewport& viewport) :
-    viewport      { viewport },
+MyRenderer::MyRenderer(
+    const char*             rendererModule,
+    LLGL::Window&           mainWindow,
+    const LLGL::Offset2D&   subWindowOffset,
+    const LLGL::Viewport&   viewport)
+:   viewport      { viewport },
     multiSampling { 8u       }
 {
     // Load render system module
