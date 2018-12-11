@@ -31,7 +31,9 @@ glslang -V -S vert -o BufferArray/Example.450core.vert.spv BufferArray/Example.4
 glslang -V -S frag -o BufferArray/Example.450core.frag.spv BufferArray/Example.450core.frag
 
 echo ####### ComputeShader #######
-glslang -V -S comp -o ComputeShader/Example.450core.comp.spv ComputeShader/Example.comp
+glslang -V -S comp -o ComputeShader/Example.comp.spv ComputeShader/Example.comp
+glslang -V -S vert -o ComputeShader/Example.vert.spv ComputeShader/Example.vert
+glslang -V -S frag -o ComputeShader/Example.frag.spv ComputeShader/Example.frag
 
 echo ####### Instancing #######
 glslang -V -S vert -o Instancing/Example.450core.vert.spv Instancing/Example.450core.vert

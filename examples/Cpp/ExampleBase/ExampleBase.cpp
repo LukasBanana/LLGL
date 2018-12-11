@@ -258,7 +258,9 @@ ExampleBase::ExampleBase(
 
     // Create command buffer
     commandsExt = renderer->CreateCommandBufferExt();
-    if (!commands)
+    if (commandsExt)
+        commands = commandsExt;
+    else
         commands = renderer->CreateCommandBuffer();
 
     // Get command queue

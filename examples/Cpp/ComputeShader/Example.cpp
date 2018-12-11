@@ -163,6 +163,14 @@ public:
                 }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            computeShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Compute, "Example.comp.spv" }
+                }
+            );
+        }
         else if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             computeShader = LoadShaderProgram(
@@ -205,6 +213,16 @@ public:
                 {
                     { LLGL::ShaderType::Vertex,   "Example.vert" },
                     { LLGL::ShaderType::Fragment, "Example.frag" }
+                },
+                { vertexFormat[0], vertexFormat[1] }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            graphicsShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.vert.spv" },
+                    { LLGL::ShaderType::Fragment, "Example.frag.spv" }
                 },
                 { vertexFormat[0], vertexFormat[1] }
             );

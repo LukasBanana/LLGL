@@ -95,7 +95,7 @@ private:
 
         private:
 
-            ExampleBase&               tutorial_;
+            ExampleBase&            tutorial_;
             LLGL::RenderContext*    context_;
             Gs::Matrix4f&           projection_;
 
@@ -132,11 +132,8 @@ protected:
     LLGL::RenderContext*                        context         = nullptr;
 
     // Main command buffer
-    union
-    {
-        LLGL::CommandBuffer*                    commands        = nullptr;
-        LLGL::CommandBufferExt*                 commandsExt;
-    };
+    LLGL::CommandBuffer*                        commands        = nullptr;
+    LLGL::CommandBufferExt*                     commandsExt     = nullptr;
 
     // Command queue
     LLGL::CommandQueue*                         commandQueue    = nullptr;
