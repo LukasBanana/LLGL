@@ -243,9 +243,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the specified vertex buffer for subsequent drawing operations.
-        \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the buffer type: BufferType::Vertex.
-        This must not be an unspecified vertex buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
-        function or with the "RenderSystem::WriteBuffer" function.
+        \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content must not be uninitialized.
         \see RenderSystem::CreateBuffer
         \see RenderSystem::WriteBuffer
         \see SetVertexBufferArray
@@ -262,11 +260,10 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the active index buffer for subsequent drawing operations.
-        \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the buffer type: BufferType::Index.
-        This must not be an unspecified index buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
-        function or with the "RenderSystem::WriteBuffer" function.
-        \remarks An active index buffer is only required for any "DrawIndexed" or "DrawIndexedInstanced" draw call.
-        \see RenderSystem::WriteIndexBuffer
+        \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the binding flag BindFlags::IndexBuffer and its content must not be uninitialized.
+        \remarks An index buffer is only required for any DrawIndexed or DrawIndexedInstanced draw call.
+        \see RenderSystem::CreateBuffer
+        \see RenderSystem::WriteBuffer
         */
         virtual void SetIndexBuffer(Buffer& buffer) = 0;
 
@@ -274,7 +271,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the active stream-output buffer to the stream-output stage.
-        \param[in] buffer Specifies the stream-output buffer to set. This buffer must have been created with the buffer type: BufferType::StreamOutput.
+        \param[in] buffer Specifies the stream-output buffer to set. This buffer must have been created with the binding flag BindFlags::StreamOutputBuffer.
         \see RenderSystem::MapBuffer
         \see RenderSystem::UnmapBuffer
         */

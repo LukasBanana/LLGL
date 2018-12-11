@@ -408,13 +408,14 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether constant buffers (also "uniform buffer objects") are supported.
-    \see BufferType::Constant
+    \see BindFlags::ConstantBuffer
     */
     bool hasConstantBuffers             = false;
 
     /**
     \brief Specifies whether storage buffers (also "read/write buffers") are supported.
-    \see BufferType::Storage
+    \see BindFlags::SampleBuffer
+    \see BindFlags::RWStorateBuffer
     */
     bool hasStorageBuffers              = false;
 

@@ -116,9 +116,8 @@ struct LLGL_EXPORT SamplerDescriptor
 
     /**
     \brief Specifies whether MIP-maps are used or not. By default true.
-    \note Sampling a texture object that was not created with the 'TextureFlags::GenerateMips' flag while MIP-mapping is enabled is considered undefined behavior.
-    \see TextureFlags::GenerateMips
-    \see TextureDescriptor::flags
+    \remarks The number of MIP-maps a texture has is specified by the TextureDescriptor::mipLevels attribute.
+    \see TextureDescriptor::mipLevels
     */
     bool                mipMapping      = true;
 

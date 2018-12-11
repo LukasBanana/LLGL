@@ -30,25 +30,25 @@ enum class AttachmentType
 {
     /**
     \brief Attachment is used for color output.
-    \remarks A texture attached to a render target with this attachment type must have been created with the TextureFlags::ColorAttachmentUsage flag.
+    \remarks A texture attached to a render target with this attachment type must have been created with binding flag BindFlags::ColorAttachment.
     */
     Color,
 
     /**
     \brief Attachment is used for depth component output.
-    \remarks A texture attached to a render target with this attachment type must have been created with the TextureFlags::DepthStencilAttachmentUsage flag.
+    \remarks A texture attached to a render target with this attachment type must have been created with the binding flag BindFlags::DepthStencilAttachment.
     */
     Depth,
 
     /**
     \brief Attachment is used for depth component and stencil index output.
-    \remarks A texture attached to a render target with this attachment type must have been created with the TextureFlags::DepthStencilAttachmentUsage flag.
+    \remarks A texture attached to a render target with this attachment type must have been created with the binding flag BindFlags::DepthStencilAttachment.
     */
     DepthStencil,
 
     /**
     \brief Attachment is used for stencil index output.
-    \remarks A texture attached to a render target with this attachment type must have been created with the TextureFlags::DepthStencilAttachmentUsage flag.
+    \remarks A texture attached to a render target with this attachment type must have been created with the binding flag BindFlags::DepthStencilAttachment.
     */
     Stencil,
 };
@@ -88,10 +88,10 @@ struct AttachmentDescriptor
 
     /**
     \brief Pointer to the texture which is to be used as target output. By default null.
-    \remarks If this is null, the attribute 'type' must not be AttachmentType::Color.
-    The texture must also have been created with the flag 'TextureFlags::BindRenderTarget'.
+    \remarks If this is null, the attribute \c type must not be AttachmentType::Color.
+    The texture must also have been created either with the binding flag BindFlags::ColorAttachment or BindFlags::DepthStencilAttachment.
     \see AttachmentDescriptor::type
-    \see TextureFlags::BindRenderTarget
+    \see TextureDescriptor::bindFlags
     */
     Texture*        texture     = nullptr;
 
@@ -108,8 +108,8 @@ struct AttachmentDescriptor
     \remarks This is only used for array textures and cube textures (i.e. TextureType::Texture1DArray,
     TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
     For cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray), each cube has its own 6 array layers.
-    The layer index for the respective cube faces is described at the TextureDescriptor::arrayLayer member.
-    \see TextureDescriptor::arrayLayer
+    The layer index for the respective cube faces is described at the TextureDescriptor::arrayLayers member.
+    \see TextureDescriptor::arrayLayers
     */
     std::uint32_t   arrayLayer  = 0;
 };

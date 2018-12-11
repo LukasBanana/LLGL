@@ -116,16 +116,19 @@ struct BufferDescriptor
         Format              format      = Format::Undefined;
 
         /**
-        \brief Specifies the stride (in bytes) of each element in a storage buffer.
-        \remarks If this value is zero, the behavior of the buffer creation is undefined.
+        \brief Specifies the stride (in bytes) of each element in a storage buffer. By default 0.
+        \remarks If the buffer has the BindFlags::SampleBuffer or BindFlags::RWStorageBuffer flag, then \c stride must not be zero.
+        \see BufferDescriptor::bindFlags
         */
         std::uint32_t       stride      = 0;
     };
 
     /**
-    \brief Buffer size (in bytes). This must not be larger than 'RenderingLimits::maxBufferSize'. By default 0.
-    \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage), 'size' must be a multiple of 'storageBuffer.stride'.
+    \brief Buffer size (in bytes). This must not be larger than RenderingLimits::maxBufferSize. By default 0.
+    \remarks If the buffer has the BindFlags::SampleBuffer or BindFlags::RWStorageBuffer flag, then \c size must be a multiple of <code>storageBuffer.stride</code>.
     \see RenderingLimits::maxBufferSize
+    \see bindFlags
+    \see StorageBuffer::stride
     */
     std::uint64_t   size            = 0;
 

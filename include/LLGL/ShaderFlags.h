@@ -78,28 +78,30 @@ struct ShaderDisassembleFlags
 
 /**
 \brief Shader stage flags enumeration.
-\remarks Specifies which shader stages are affected by a state change,
-e.g. to which shader stages a constant buffer is set.
-For the render systems, which do not support these flags, always all shader stages are affected.
+\remarks Specifies which shader stages are affected by a state change, e.g. to which shader stages a constant buffer is bound.
+\see BindingDescriptor::stageFlags
 */
 struct StageFlags
 {
     enum
     {
-        VertexStage         = (1 << 0), //!< Specifies the vertex shader stage.
-        TessControlStage    = (1 << 1), //!< Specifies the tessellation-control shader stage (also "Hull Shader").
-        TessEvaluationStage = (1 << 2), //!< Specifies the tessellation-evaluation shader stage (also "Domain Shader").
-        GeometryStage       = (1 << 3), //!< Specifies the geometry shader stage.
-        FragmentStage       = (1 << 4), //!< Specifies the fragment shader stage (also "Pixel Shader").
-        ComputeStage        = (1 << 5), //!< Specifies the compute shader stage.
+        //! Specifies the vertex shader stage.
+        VertexStage         = (1 << 0),
 
-        #if 0 // TODO: replace this by <BindFlags> or other respective enum
-        /**
-        \brief Specifies whether a resource is bound to the shader stages as unordered access view (UAV) instead of a read-only shader resource view (SRV).
-        \remarks This can be used to bind a storage buffer (i.e. BufferType::Storage) that was created with read/write access (e.g. StorageBufferType::RWBuffer) as UAV instead of SRV.
-        */
-        StorageUsage        = (1 << 6),
-        #endif // /TODO
+        //! Specifies the tessellation-control shader stage (also referred to as "Hull Shader").
+        TessControlStage    = (1 << 1),
+
+        //! Specifies the tessellation-evaluation shader stage (also referred to as "Domain Shader").
+        TessEvaluationStage = (1 << 2),
+
+        //! Specifies the geometry shader stage.
+        GeometryStage       = (1 << 3),
+
+        //! Specifies the fragment shader stage (also "Pixel Shader").
+        FragmentStage       = (1 << 4),
+
+        //! Specifies the compute shader stage.
+        ComputeStage        = (1 << 5),
 
         //! Specifies all tessellation stages, i.e. tessellation-control-, tessellation-evaluation shader stages.
         AllTessStages       = (TessControlStage | TessEvaluationStage),

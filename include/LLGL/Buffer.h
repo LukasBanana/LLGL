@@ -26,7 +26,7 @@ class LLGL_EXPORT Buffer : public Resource
 
     public:
 
-        //! Returns the ResourceType for the respective BufferType.
+        //! Returns ResourceType::Buffer.
         ResourceType QueryResourceType() const override final;
 
         /**
