@@ -54,6 +54,7 @@ LLGL_EXPORT const char* ToString(const WarningType t)
         case T::ImproperArgument:   return "improper argument";
         case T::ImproperState:      return "improper state";
         case T::PointlessOperation: return "pointless operation";
+        case T::VaryingBehavior:    return "varying behavior";
     }
 
     return nullptr;

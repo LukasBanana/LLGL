@@ -91,6 +91,9 @@ RenderingDebugger::Message::Message(const std::string& text, const std::string& 
     text_   { text   },
     source_ { source }
 {
+    /* Replace "LLGL::Dbg" by "LLGL::" */
+    if (source_.compare(0, 9, "LLGL::Dbg") == 0)
+        source_ = "LLGL::" + source_.substr(9);
 }
 
 void RenderingDebugger::Message::Block()
