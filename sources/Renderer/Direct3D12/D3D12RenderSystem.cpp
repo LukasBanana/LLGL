@@ -48,6 +48,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     /* Create default pipeline layout and command signature pool */
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
     commandSignaturePool_.CreateDefaultSignatures(device_.GetNative());
+    commandContext_.SetCommandList(graphicsCmdList_.Get());
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -116,17 +117,19 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
 
     if (initialData)
     {
-        commandContext_.SetCommandList(graphicsCmdList_.Get());
         bufferD3D->UpdateStaticSubresource(
             device_.GetNative(),
             commandContext_,
             uploadBuffer,
             initialData,
-            desc.size,
-            0,
-            bufferD3D->GetResource().usageState
+            desc.size
         );
     }
+
+    #ifdef LLGL_DEBUG
+    std::wstring debugName = L"LLGL::D3D12RenderSystem::buffers[" + std::to_wstring(buffers_.size()) + L"]";
+    bufferD3D->GetNative()->SetName(debugName.c_str());
+    #endif // /LLGL_DEBUG
 
     /* Execute upload commands and wait for GPU to finish execution */
     ExecuteCommandList();
@@ -166,7 +169,7 @@ void D3D12RenderSystem::Release(BufferArray& bufferArray)
 void D3D12RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
-    dstBufferD3D.UpdateDynamicSubresource(data, dataSize, dstOffset);
+    dstBufferD3D.UpdateDynamicSubresource(commandContext_, data, dataSize, dstOffset);
 }
 
 void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)

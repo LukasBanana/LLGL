@@ -29,16 +29,20 @@ class D3D12Buffer : public Buffer
         D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc);
 
         void UpdateStaticSubresource(
-            ID3D12Device*               device,
-            D3D12CommandContext&        commandContext,
-            ComPtr<ID3D12Resource>&     uploadBuffer,
-            const void*                 data,
-            UINT64                      bufferSize,
-            UINT64                      offset,
-            D3D12_RESOURCE_STATES       stateAfter
+            ID3D12Device*           device,
+            D3D12CommandContext&    commandContext,
+            ComPtr<ID3D12Resource>& uploadBuffer,
+            const void*             data,
+            UINT64                  dataSize,
+            UINT64                  offset = 0
         );
 
-        void UpdateDynamicSubresource(const void* data, UINT64 bufferSize, UINT64 offset);
+        void UpdateDynamicSubresource(
+            D3D12CommandContext&    commandContext,
+            const void*             data,
+            UINT64                  dataSize,
+            UINT64                  offset = 0
+        );
 
         // Creates a constant buffer view (CBV) within the native buffer object.
         void CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);
@@ -88,8 +92,13 @@ class D3D12Buffer : public Buffer
 
     private:
 
+        void CreateUploadBuffer(ID3D12Device* device, const BufferDescriptor& desc);
+
         D3D12Resource               resource_;
+        ComPtr<ID3D12Resource>      uploadResource_;
+
         UINT64                      bufferSize_         = 0;
+        D3D12_HEAP_TYPE             heapType_           = D3D12_HEAP_TYPE_DEFAULT;
         D3D12_VERTEX_BUFFER_VIEW    vertexBufferView_;
         D3D12_INDEX_BUFFER_VIEW     indexBufferView_;
 

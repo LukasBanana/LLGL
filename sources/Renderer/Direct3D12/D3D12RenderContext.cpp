@@ -282,12 +282,12 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
         /* Create render target view (RTV) */
         device->CreateRenderTargetView(colorBuffers_[i].native.Get(), nullptr, rtvDescHandle);
 
-        #ifdef LLGL_DEBUG
-        std::wstring name = L"LLGL::D3D12RenderContext::colorBuffer[" + std::to_wstring(i) + L"]";
-        colorBuffers_[i].native->SetName(name.c_str());
-        #endif
-
         rtvDescHandle.Offset(1, rtvDescSize_);
+
+        #ifdef LLGL_DEBUG
+        std::wstring debugName = L"LLGL::D3D12RenderContext::colorBuffer[" + std::to_wstring(i) + L"]";
+        colorBuffers_[i].native->SetName(debugName.c_str());
+        #endif
     }
 
     /* Find suitable multi-samples for color format */
@@ -303,7 +303,6 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
         );
         swapChainSamples_ = sampleCount;
     }
-
 
     if (HasMultiSampling())
     {
@@ -340,6 +339,11 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
             device->CreateRenderTargetView(colorBuffersMS_[i].native.Get(), nullptr, rtvDescHandle);
 
             rtvDescHandle.Offset(1, rtvDescSize_);
+
+            #ifdef LLGL_DEBUG
+            std::wstring debugName = L"LLGL::D3D12RenderContext::colorBufferMS[" + std::to_wstring(i) + L"]";
+            colorBuffersMS_[i].native->SetName(debugName.c_str());
+            #endif
         }
     }
 }

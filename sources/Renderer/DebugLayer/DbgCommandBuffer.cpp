@@ -875,6 +875,8 @@ void DbgCommandBuffer::ResetResourceSlots(
     long                bindFlags,
     long                stageFlags)
 {
+    AssertCommandBufferExt(__func__);
+
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
@@ -882,6 +884,7 @@ void DbgCommandBuffer::ResetResourceSlots(
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no slots are specified to reset");
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
+
     instanceExt->ResetResourceSlots(resourceType, firstSlot, numSlots, bindFlags, stageFlags);
 }
 
