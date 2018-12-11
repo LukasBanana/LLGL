@@ -1,6 +1,6 @@
 // GLSL compute shader
 
-#version 450
+#version 450 core
 
 #define MIN_DIST    ( 0.5 )
 #define MAX_DIST    ( 0.5 )

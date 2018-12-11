@@ -1,5 +1,5 @@
 // GLSL fragment shader
-#version 450
+#version 450 core
 
 layout(binding = 1) uniform texture2DArray tex;
 layout(binding = 2) uniform sampler texSampler;

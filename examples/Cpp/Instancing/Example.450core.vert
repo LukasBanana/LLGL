@@ -1,5 +1,5 @@
 // GLSL vertex shader
-#version 450
+#version 450 core
 
 layout(std140, binding = 0) uniform Settings
 {
