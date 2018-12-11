@@ -454,7 +454,7 @@ ShaderProgram* DbgRenderSystem::CreateShaderProgram(const ShaderProgramDescripto
         instanceDesc.fragmentShader         = GetInstanceShader(desc.fragmentShader);
         instanceDesc.computeShader          = GetInstanceShader(desc.computeShader);
     }
-    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc));
+    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc, caps_));
 }
 
 void DbgRenderSystem::Release(Shader& shader)
@@ -506,14 +506,17 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
 
 ComputePipeline* DbgRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
 {
+    LLGL_DBG_SOURCE;
+
     if (desc.shaderProgram)
     {
         auto instanceDesc = desc;
         {
             instanceDesc.shaderProgram  = &(LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram)->instance);
-            instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
+            if (desc.pipelineLayout != nullptr)
+                instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
         }
-        return instance_->CreateComputePipeline(instanceDesc);
+        return TakeOwnership(computePipelines_, MakeUnique<DbgComputePipeline>(*instance_->CreateComputePipeline(instanceDesc), desc));
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "shader program must not be null");
@@ -528,8 +531,7 @@ void DbgRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 
 void DbgRenderSystem::Release(ComputePipeline& computePipeline)
 {
-    instance_->Release(computePipeline);
-    //ReleaseDbg(computePipelines_, computePipeline);
+    ReleaseDbg(computePipelines_, computePipeline);
 }
 
 /* ----- Queries ----- */

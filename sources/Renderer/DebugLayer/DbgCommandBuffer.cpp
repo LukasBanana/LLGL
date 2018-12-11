@@ -17,6 +17,7 @@
 #include "DbgRenderTarget.h"
 #include "DbgShaderProgram.h"
 #include "DbgQueryHeap.h"
+#include "DbgComputePipeline.h"
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectCommandArgs.h>
@@ -442,13 +443,18 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
         AssertRecording();
 
         bindings_.graphicsPipeline = (&graphicsPipelineDbg);
+
         if (auto shaderProgram = graphicsPipelineDbg.desc.shaderProgram)
         {
             auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
-            bindings_.anyShaderAttributes = !(shaderProgramDbg->GetVertexLayout().attributes.empty());
+            bindings_.shaderProgram_        = shaderProgramDbg;
+            bindings_.anyShaderAttributes   = !(shaderProgramDbg->GetVertexLayout().attributes.empty());
         }
         else
-            bindings_.anyShaderAttributes = false;
+        {
+            bindings_.shaderProgram_        = nullptr;
+            bindings_.anyShaderAttributes   = false;
+        }
     }
 
     /* Store primitive topology used in graphics pipeline */
@@ -462,14 +468,22 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
 void DbgCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
+    auto& computePipelineDbg = LLGL_CAST(DbgComputePipeline&, computePipeline);
+
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        bindings_.computePipeline = (&computePipeline);
+
+        bindings_.computePipeline = &computePipelineDbg;
+
+        if (auto shaderProgram = computePipelineDbg.desc.shaderProgram)
+            bindings_.shaderProgram_ = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
+        else
+            bindings_.shaderProgram_ = nullptr;
     }
 
-    instance.SetComputePipeline(computePipeline);
+    instance.SetComputePipeline(computePipelineDbg.instance);
 
     profile_.computePipelineBindings++;
 }
@@ -1070,11 +1084,44 @@ void DbgCommandBuffer::ValidateNumVertices(std::uint32_t numVertices)
     }
 }
 
-void DbgCommandBuffer::ValidateNumInstances(std::uint32_t numInstances, std::uint32_t firstInstance)
+void DbgCommandBuffer::ValidateNumInstances(std::uint32_t numInstances)
 {
-    //TODO: evaluate <firstInstance>
     if (numInstances == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no instances will be generated");
+}
+
+void DbgCommandBuffer::ValidateVertexID(std::uint32_t firstVertex)
+{
+    if (firstVertex > 0)
+    {
+        if (auto shaderProgramDbg = bindings_.shaderProgram_)
+        {
+            if (auto vertexID = shaderProgramDbg->GetVertexID())
+            {
+                LLGL_DBG_WARN(
+                    WarningType::VaryingBehavior,
+                    "bound shader program uses '" + std::string(vertexID) + "' while firstVertex > 0, which may result in varying behavior between different native APIs"
+                );
+            }
+        }
+    }
+}
+
+void DbgCommandBuffer::ValidateInstanceID(std::uint32_t firstInstance)
+{
+    if (firstInstance > 0)
+    {
+        if (auto shaderProgramDbg = bindings_.shaderProgram_)
+        {
+            if (auto instanceID = shaderProgramDbg->GetInstanceID())
+            {
+                LLGL_DBG_WARN(
+                    WarningType::VaryingBehavior,
+                    "bound shader program uses '" + std::string(instanceID) + "' while firstInstance > 0, which may result in varying behavior between different native APIs"
+                );
+            }
+        }
+    }
 }
 
 void DbgCommandBuffer::ValidateDrawCmd(
@@ -1086,7 +1133,9 @@ void DbgCommandBuffer::ValidateDrawCmd(
     AssertVertexBufferBound();
     ValidateVertexLayout();
     ValidateNumVertices(numVertices);
-    ValidateNumInstances(numInstances, firstInstance);
+    ValidateNumInstances(numInstances);
+    ValidateVertexID(firstVertex);
+    ValidateInstanceID(firstInstance);
 
     if (bindings_.numVertexBuffers > 0 && bindings_.anyShaderAttributes)
         ValidateVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0]->elements));
@@ -1102,7 +1151,8 @@ void DbgCommandBuffer::ValidateDrawIndexedCmd(
     AssertIndexBufferBound();
     ValidateVertexLayout();
     ValidateNumVertices(numVertices);
-    ValidateNumInstances(numInstances, firstInstance);
+    ValidateNumInstances(numInstances);
+    ValidateInstanceID(firstInstance);
 
     if (bindings_.indexBuffer)
         ValidateVertexLimit(numVertices + firstIndex, static_cast<std::uint32_t>(bindings_.indexBuffer->elements));

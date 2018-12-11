@@ -15,21 +15,26 @@ namespace LLGL
 {
 
 
-DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const ShaderProgramDescriptor& desc) :
-    instance  { instance },
+DbgShaderProgram::DbgShaderProgram(
+    ShaderProgram&                  instance,
+    RenderingDebugger*              debugger,
+    const ShaderProgramDescriptor&  desc,
+    const RenderingCapabilities&    caps)
+:   instance  { instance },
     debugger_ { debugger }
 {
     /* Debug all attachments and shader composition */
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugShaderAttachment(desc.vertexShader);
-        DebugShaderAttachment(desc.tessControlShader);
-        DebugShaderAttachment(desc.tessEvaluationShader);
-        DebugShaderAttachment(desc.geometryShader);
-        DebugShaderAttachment(desc.fragmentShader);
-        DebugShaderAttachment(desc.computeShader);
-        DebugShaderComposition();
+        ValidateShaderAttachment(desc.vertexShader);
+        ValidateShaderAttachment(desc.tessControlShader);
+        ValidateShaderAttachment(desc.tessEvaluationShader);
+        ValidateShaderAttachment(desc.geometryShader);
+        ValidateShaderAttachment(desc.fragmentShader);
+        ValidateShaderAttachment(desc.computeShader);
+        ValidateShaderComposition();
+        QueryInstanceAndVertexIDs(caps);
     }
 
     /* Store all attributes of vertex layout */
@@ -89,7 +94,7 @@ void DbgShaderProgram::UnlockShaderUniform()
 #define LLGL_GS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Geometry)
 #define LLGL_CS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Compute)
 
-void DbgShaderProgram::DebugShaderAttachment(Shader* shader)
+void DbgShaderProgram::ValidateShaderAttachment(Shader* shader)
 {
     if (shader != nullptr)
     {
@@ -114,7 +119,7 @@ void DbgShaderProgram::DebugShaderAttachment(Shader* shader)
     }
 }
 
-void DbgShaderProgram::DebugShaderComposition()
+void DbgShaderProgram::ValidateShaderComposition()
 {
     /* Validate shader composition by shader attachment bit mask */
     switch (shaderAttachmentMask_)
@@ -132,6 +137,50 @@ void DbgShaderProgram::DebugShaderComposition()
         default:
             LLGL_DBG_ERROR(ErrorType::InvalidState, "invalid shader composition");
             break;
+    }
+}
+
+void DbgShaderProgram::QueryInstanceAndVertexIDs(const RenderingCapabilities& caps)
+{
+    auto HasShadingLang = [&caps](const ShadingLanguage lang)
+    {
+        return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), lang) != caps.shadingLanguages.end());
+    };
+
+    /* Store meta information if the instance ID or vertex ID is used in the shader program */
+    if (HasShadingLang(ShadingLanguage::HLSL))
+        QueryInstanceAndVertexIDs("SV_VertexID", "SV_InstanceID");
+    if (HasShadingLang(ShadingLanguage::GLSL) || HasShadingLang(ShadingLanguage::ESSL))
+        QueryInstanceAndVertexIDs("gl_VertexID", "gl_InstanceID");
+    if (HasShadingLang(ShadingLanguage::SPIRV))
+        QueryInstanceAndVertexIDs("gl_VertexIndex", "gl_InstanceIndex");
+}
+
+void DbgShaderProgram::QueryInstanceAndVertexIDs(const char* vertexIDName, const char* instanceIDName)
+{
+    try
+    {
+        auto reflect = instance.QueryReflectionDesc();
+
+        for (const auto& attr : reflect.vertexAttributes)
+        {
+            if (vertexID_ == nullptr)
+            {
+                if (attr.name == vertexIDName)
+                    vertexID_ = vertexIDName;
+            }
+            if (instanceID_ == nullptr)
+            {
+                if (attr.name == instanceIDName)
+                    instanceID_ = instanceIDName;
+            }
+            if (vertexID_ != nullptr && instanceID_ != nullptr)
+                break;
+        }
+    }
+    catch (const std::runtime_error&)
+    {
+        // ignore here
     }
 }
 

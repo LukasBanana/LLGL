@@ -23,6 +23,8 @@ namespace LLGL
 class DbgBuffer;
 class DbgRenderContext;
 class DbgRenderTarget;
+class DbgComputePipeline;
+class DbgShaderProgram;
 class RenderingDebugger;
 
 class DbgCommandBuffer : public CommandBufferExt
@@ -175,7 +177,9 @@ class DbgCommandBuffer : public CommandBufferExt
         void ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer** vertexBuffers, std::uint32_t numVertexBuffers);
 
         void ValidateNumVertices(std::uint32_t numVertices);
-        void ValidateNumInstances(std::uint32_t numInstances, std::uint32_t firstInstance);
+        void ValidateNumInstances(std::uint32_t numInstances);
+        void ValidateVertexID(std::uint32_t firstVertex);
+        void ValidateInstanceID(std::uint32_t firstInstance);
 
         void ValidateDrawCmd(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance);
         void ValidateDrawIndexedCmd(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance);
@@ -233,7 +237,8 @@ class DbgCommandBuffer : public CommandBufferExt
             DbgBuffer*              indexBuffer             = nullptr;
             DbgBuffer*              streamOutput            = nullptr;
             DbgGraphicsPipeline*    graphicsPipeline        = nullptr;
-            ComputePipeline*        computePipeline         = nullptr;
+            DbgComputePipeline*     computePipeline         = nullptr;
+            const DbgShaderProgram* shaderProgram_          = nullptr;
         }
         bindings_;
 

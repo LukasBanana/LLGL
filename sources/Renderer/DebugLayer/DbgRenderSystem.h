@@ -18,6 +18,7 @@
 #include "DbgBufferArray.h"
 #include "DbgPipelineLayout.h"
 #include "DbgGraphicsPipeline.h"
+#include "DbgComputePipeline.h"
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
 #include "DbgShader.h"
@@ -218,7 +219,7 @@ class DbgRenderSystem : public RenderSystem
         HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
         HWObjectContainer<DbgPipelineLayout>    pipelineLayouts_;
         HWObjectContainer<DbgGraphicsPipeline>  graphicsPipelines_;
-        //HWObjectContainer<DbgComputePipeline>   computePipelines_;
+        HWObjectContainer<DbgComputePipeline>   computePipelines_;
         //HWObjectContainer<DbgSampler>           samplers_;
         HWObjectContainer<DbgQueryHeap>         queryHeaps_;
 

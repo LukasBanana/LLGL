@@ -32,7 +32,12 @@ class DbgShaderProgram : public ShaderProgram
             bool                            bound       = false;
         };
 
-        DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const ShaderProgramDescriptor& desc);
+        DbgShaderProgram(
+            ShaderProgram&                  instance,
+            RenderingDebugger*              debugger,
+            const ShaderProgramDescriptor&  desc,
+            const RenderingCapabilities&    caps
+        );
 
         bool HasErrors() const override;
 
@@ -51,18 +56,37 @@ class DbgShaderProgram : public ShaderProgram
             return vertexLayout_;
         }
 
+        // Returns the name of the vertex ID if the shader program makes use of the SV_VertexID, gl_VertexID, or gl_VertexIndex semantics. Returns null otherwise.
+        inline const char* GetVertexID() const
+        {
+            return vertexID_;
+        }
+
+        // Returns the name of the instance ID if the shader program makes use of the SV_InstanceID, gl_InstanceID, or gl_InstanceIndex semantics. Returns null otherwise.
+        inline const char* GetInstanceID() const
+        {
+            return instanceID_;
+        }
+
+    public:
+
         ShaderProgram& instance;
 
     private:
 
-        void DebugShaderAttachment(Shader* shader);
-        void DebugShaderComposition();
+        void ValidateShaderAttachment(Shader* shader);
+        void ValidateShaderComposition();
+        void QueryInstanceAndVertexIDs(const RenderingCapabilities& caps);
+        void QueryInstanceAndVertexIDs(const char* vertexIDName, const char* instanceIDName);
 
         RenderingDebugger*      debugger_               = nullptr;
         int                     shaderAttachmentMask_   = 0;
 
         std::vector<ShaderType> shaderTypes_;
         VertexLayout            vertexLayout_;
+
+        const char*             vertexID_               = nullptr;
+        const char*             instanceID_             = nullptr;
 
 };
 
