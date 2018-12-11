@@ -24,6 +24,22 @@ namespace SharpLLGL
 {
 
 
+public enum class SystemValue
+{
+    Undefined,
+    ClipDistance,
+    CullDistance,
+    FrontFacing,
+    InstanceID,
+    Position,
+    PrimitiveID,
+    RenderTargetIndex,
+    SampleID,
+    Target,
+    VertexID,
+    ViewportIndex,
+};
+
 public ref class VertexAttribute
 {
 
@@ -44,6 +60,7 @@ public ref class VertexAttribute
         property unsigned int   InstanceDivisor;
         property unsigned int   Offset;
         property unsigned int   SemanticIndex;
+        property SystemValue    SystemValue;
 
 };
 

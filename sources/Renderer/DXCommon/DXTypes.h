@@ -41,6 +41,7 @@ D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology   );
 
 Format                  Unmap( const DXGI_FORMAT            format    );
 StorageBufferType       Unmap( const D3D_SHADER_INPUT_TYPE  inputType );
+SystemValue             Unmap( const D3D_NAME               name      );
 
 DXGI_FORMAT             ToDXGIFormatDSV(const DXGI_FORMAT format);
 DXGI_FORMAT             ToDXGIFormatSRV(const DXGI_FORMAT format);

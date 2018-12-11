@@ -42,17 +42,23 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         /**
         \brief Returns a descriptor of the shader pipeline layout with all required shader resources.
         \remarks The list of resource views in the output descriptor (i.e. 'resourceViews' attribute) is always sorted in the following manner:
-        First sorting criterion is the resource type (in ascending order), second sorting criterion is the binding slot (in ascending order).
+        First sorting criterion is the resource type (in ascending order),
+        second sorting criterion is the binding flags (in ascending order),
+        third sorting criterion is the binding slot (in ascending order).
         Here is an example of such a sorted list (pseudocode):
         \code{.txt}
-        resourceViews[0] = { type: ResourceType::ConstantBuffer, slot: 0 }
-        resourceViews[1] = { type: ResourceType::ConstantBuffer, slot: 2 }
-        resourceViews[2] = { type: ResourceType::Texture, slot: 0 }
-        resourceViews[3] = { type: ResourceType::Texture, slot: 1 }
-        resourceViews[4] = { type: ResourceType::Texture, slot: 2 }
-        resourceViews[5] = { type: ResourceType::Sampler, slot: 2 }
+        resourceViews[0] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 0 }
+        resourceViews[1] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 2 }
+        resourceViews[2] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 0 }
+        resourceViews[3] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 1 }
+        resourceViews[4] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 2 }
+        resourceViews[5] = { type: ResourceType::Sampler, bindFlags: 0,                         slot: 2 }
         \endcode
+        The \c instanceDivisor and \c offset members of the vertex attributes are ignored by this function.
         \see ShaderReflectionDescriptor::resourceViews
+        \see ShaderReflectionDescriptor::vertexAttributes
+        \see VertexAttribute::instanceDivisor
+        \see VertexAttribute::offset
         \throws std::runtime_error If shader reflection failed.
         */
         virtual ShaderReflectionDescriptor QueryReflectionDesc() const = 0;

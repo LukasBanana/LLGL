@@ -81,6 +81,16 @@ void DbgShaderProgram::UnlockShaderUniform()
     return instance.UnlockShaderUniform();
 }
 
+const char* DbgShaderProgram::GetVertexID() const
+{
+    return (vertexID_.empty() ? nullptr : vertexID_.c_str());
+}
+
+const char* DbgShaderProgram::GetInstanceID() const
+{
+    return (instanceID_.empty() ? nullptr : instanceID_.c_str());
+}
+
 
 /*
  * ======= Private: =======
@@ -142,39 +152,23 @@ void DbgShaderProgram::ValidateShaderComposition()
 
 void DbgShaderProgram::QueryInstanceAndVertexIDs(const RenderingCapabilities& caps)
 {
-    auto HasShadingLang = [&caps](const ShadingLanguage lang)
-    {
-        return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), lang) != caps.shadingLanguages.end());
-    };
-
-    /* Store meta information if the instance ID or vertex ID is used in the shader program */
-    if (HasShadingLang(ShadingLanguage::HLSL))
-        QueryInstanceAndVertexIDs("SV_VertexID", "SV_InstanceID");
-    if (HasShadingLang(ShadingLanguage::GLSL) || HasShadingLang(ShadingLanguage::ESSL))
-        QueryInstanceAndVertexIDs("gl_VertexID", "gl_InstanceID");
-    if (HasShadingLang(ShadingLanguage::SPIRV))
-        QueryInstanceAndVertexIDs("gl_VertexIndex", "gl_InstanceIndex");
-}
-
-void DbgShaderProgram::QueryInstanceAndVertexIDs(const char* vertexIDName, const char* instanceIDName)
-{
     try
     {
         auto reflect = instance.QueryReflectionDesc();
 
         for (const auto& attr : reflect.vertexAttributes)
         {
-            if (vertexID_ == nullptr)
+            if (vertexID_.empty())
             {
-                if (attr.name == vertexIDName)
-                    vertexID_ = vertexIDName;
+                if (attr.systemValue == SystemValue::VertexID)
+                    vertexID_ = attr.name;
             }
-            if (instanceID_ == nullptr)
+            if (instanceID_.empty())
             {
-                if (attr.name == instanceIDName)
-                    instanceID_ = instanceIDName;
+                if (attr.systemValue == SystemValue::InstanceID)
+                    instanceID_ = attr.name;
             }
-            if (vertexID_ != nullptr && instanceID_ != nullptr)
+            if (!vertexID_.empty() && !instanceID_.empty())
                 break;
         }
     }

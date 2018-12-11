@@ -19,9 +19,95 @@ namespace LLGL
 {
 
 
+/* ----- Enumerations ----- */
+
+/**
+\brief Enumeration of system values available in a shader program.
+\remarks This is only used for shader code reflection.
+\see VertexAttribute::systemValue
+*/
+enum class SystemValue
+{
+    //! Undefined system value.
+    Undefined,
+
+    /**
+    \brief Forward-compatible mechanism for vertex clipping.
+    \remarks HLSL: \c SV_ClipDistance, GLSL and SPIR-V: \c gl_ClipDistance.
+    */
+    ClipDistance,
+
+    /**
+    \brief Mechanism for controlling user culling.
+    \remarks HLSL: \c SV_CullDistance, GLSL and SPIR-V: \c gl_CullDistance.
+    */
+    CullDistance,
+
+    /**
+    \brief Indicates whether a primitive is front or back facing.
+    \remarks HLSL: \c SV_IsFrontFace, GLSL and SPIR-V: \c gl_FrontFacing.
+    */
+    FrontFacing,
+
+    /**
+    \brief Index of the input instance.
+    \remarks HLSL: \c SV_InstanceID, GLSL: \c gl_InstanceID, SPIR-V: \c gl_InstanceIndex.
+    \note This value behalves differently between Direct3D and OpenGL.
+    \see CommandBuffer::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
+    */
+    InstanceID,
+
+    /**
+    \brief Vertex or fragment position.
+    \remarks HLSL: \c SV_Position, GLSL and SPIR-V in a vertex shader: \c gl_Position, GLSL and SPIR-V in a fragment shader: \c gl_FragCoord.
+    */
+    Position,
+
+    /**
+    \brief Index of the geometry primitive.
+    \remarks HLSL: \c SV_PrimitiveID, GLSL and SPIR-V: \c gl_PrimitiveID.
+    */
+    PrimitiveID,
+
+    /**
+    \brief Index of the render target layer.
+    \remarks HLSL: \c SV_RenderTargetArrayIndex, GLSL and SPIR-V: \c gl_Layer.
+    */
+    RenderTargetIndex,
+
+    /**
+    \brief Index of the input sample.
+    \remarks HLSL: \c SV_SampleIndex, GLSL and SPIR-V: \c gl_SampleID.
+    */
+    SampleID,
+
+    /**
+    \brief Render target output value.
+    \remarks HLSL: \c SV_Target, GLSL and SPIR-V: N/A.
+    */
+    Target,
+
+    /**
+    \brief Index of the input vertex.
+    \remarks HLSL: \c SV_VertexID, GLSL: \c gl_VertexID, SPIR-V: \c gl_VertexIndex.
+    \note This value behalves differently between Direct3D and OpenGL.
+    \see CommandBuffer::Draw
+    */
+    VertexID,
+
+    /**
+    \brief Index of the viewport array.
+    \remarks HLSL: \c SV_ViewportArrayIndex, GLSL and SPIR-V: \c gl_ViewportIndex.
+    */
+    ViewportIndex,
+};
+
+
+/* ----- Structures ----- */
+
 /**
 \brief Vertex attribute structure.
-\see VertexFormat
+\see VertexFormat::attributes
 */
 struct LLGL_EXPORT VertexAttribute
 {
@@ -82,12 +168,18 @@ struct LLGL_EXPORT VertexAttribute
     \brief Vertex attribute format. By default Format::RGBA32Float.
     \remarks Not all hardware formats are allowed for vertex attributes.
     In particular, depth-stencil formats and compressed formats are not allowed.
-    To specify a vertex attribute of a matrix type, multiple attributes with ascending semantic indices must be used:
+    To specify a vertex attribute of a matrix type, multiple attributes with ascending semantic indices must be used.
+    Here is an example of a 4x4 matrix:
     \code
-    myVertexFormat.AppendAttribute({ "myMatrix", 0, LLGL::Format::RGBA32Float });
-    myVertexFormat.AppendAttribute({ "myMatrix", 1, LLGL::Format::RGBA32Float });
-    myVertexFormat.AppendAttribute({ "myMatrix", 2, LLGL::Format::RGBA32Float });
-    myVertexFormat.AppendAttribute({ "myMatrix", 3, LLGL::Format::RGBA32Float });
+    myVertexFormat.AppendAttribute({ "myMatrix4x4", 0, LLGL::Format::RGBA32Float });
+    myVertexFormat.AppendAttribute({ "myMatrix4x4", 1, LLGL::Format::RGBA32Float });
+    myVertexFormat.AppendAttribute({ "myMatrix4x4", 2, LLGL::Format::RGBA32Float });
+    myVertexFormat.AppendAttribute({ "myMatrix4x4", 3, LLGL::Format::RGBA32Float });
+    \endcode
+    Here is an example of a 2x2 matrix:
+    \code
+    myVertexFormat.AppendAttribute({ "myMatrix2x2", 0, LLGL::Format::RG32Float });
+    myVertexFormat.AppendAttribute({ "myMatrix2x2", 1, LLGL::Format::RG32Float });
     \endcode
     */
     Format          format          = Format::RGBA32Float;
@@ -107,6 +199,16 @@ struct LLGL_EXPORT VertexAttribute
     \remarks This is used when a matrix is distributed over multiple vector attributes.
     */
     std::uint32_t   semanticIndex   = 0;
+
+    /**
+    \brief Specifies the system value type for this vertex attribute or SystemValue::Undefined if this attribute is not a system value. By default SystemValue::Undefined.
+    \remarks System value semantics must not be specified to create a shader program.
+    Instead, they are used only for shader code reflection. Examples of system value semantics are:
+    - Vertex ID: \c SV_VertexID (HLSL), \c gl_VertexID (GLSL), \c gl_VertexIndex (SPIR-V).
+    - Instance ID: \c SV_InstanceID (HLSL), \c gl_InstanceID (GLSL), \c gl_InstanceIndex (SPIR-V).
+    \see ShaderProgram::QueryReflectionDesc
+    */
+    SystemValue     systemValue     = SystemValue::Undefined;
 };
 
 

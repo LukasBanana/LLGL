@@ -231,9 +231,8 @@ int main()
             {
                 LLGL::BufferDescriptor constantBufferDesc;
                 {
-                    constantBufferDesc.type = LLGL::BufferType::Constant;
                     constantBufferDesc.size = sizeof(projection);
-                    constantBufferDesc.usage = LLGL::BufferUsage::Static;
+                    constantBufferDesc.bindFlags = LLGL::BindFlags::ConstantBuffer;
                 }
                 projectionBuffer = renderer->CreateBuffer(constantBufferDesc, &projection);
 

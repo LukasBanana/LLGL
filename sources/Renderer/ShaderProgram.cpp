@@ -8,6 +8,7 @@
 #include <LLGL/ShaderProgram.h>
 #include <LLGL/Shader.h>
 #include <algorithm>
+#include "../Core/HelperMacros.h"
 
 
 namespace LLGL
@@ -65,6 +66,14 @@ bool ShaderProgram::ValidateShaderComposition(Shader* const * shaders, std::size
     return false;
 }
 
+static int CompareResourceViewSWO(const ShaderReflectionDescriptor::ResourceView& lhs, const ShaderReflectionDescriptor::ResourceView& rhs)
+{
+    LLGL_COMPARE_MEMBER_SWO(type     );
+    LLGL_COMPARE_MEMBER_SWO(bindFlags);
+    LLGL_COMPARE_MEMBER_SWO(slot     );
+    return 0;
+}
+
 void ShaderProgram::FinalizeShaderReflection(ShaderReflectionDescriptor& reflectionDesc)
 {
     std::sort(
@@ -72,11 +81,7 @@ void ShaderProgram::FinalizeShaderReflection(ShaderReflectionDescriptor& reflect
         reflectionDesc.resourceViews.end(),
         [](const ShaderReflectionDescriptor::ResourceView& lhs, const ShaderReflectionDescriptor::ResourceView& rhs)
         {
-            if (lhs.type < rhs.type)
-                return true;
-            if (lhs.type > rhs.type)
-                return false;
-            return (lhs.slot < rhs.slot);
+            return (CompareResourceViewSWO(lhs, rhs) < 0);
         }
     );
 }

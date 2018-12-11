@@ -25,6 +25,7 @@ VertexAttribute::VertexAttribute()
     InstanceDivisor = 0;
     Offset          = 0;
     SemanticIndex   = 0;
+    SystemValue     = SharpLLGL::SystemValue::Undefined;
 }
 
 VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format)
@@ -34,6 +35,7 @@ VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format)
     InstanceDivisor = 0;
     Offset          = 0;
     SemanticIndex   = 0;
+    SystemValue     = SharpLLGL::SystemValue::Undefined;
 }
 
 VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int instanceDivisor)
@@ -43,6 +45,7 @@ VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigne
     InstanceDivisor = instanceDivisor;
     Offset          = 0;
     SemanticIndex   = 0;
+    SystemValue     = SharpLLGL::SystemValue::Undefined;
 }
 
 VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, SharpLLGL::Format format, unsigned int instanceDivisor)
@@ -52,6 +55,7 @@ VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, Sharp
     InstanceDivisor = instanceDivisor;
     Offset          = 0;
     SemanticIndex   = semanticIndex;
+    SystemValue     = SharpLLGL::SystemValue::Undefined;
 }
 
 unsigned int VertexAttribute::Size::get()

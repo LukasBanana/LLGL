@@ -22,9 +22,9 @@ namespace LLGL
 
 /**
 \brief Vertex format structure.
-\remarks A vertex format is required to describe how the vertex attributes are supported inside a vertex buffer.
+\remarks A vertex format is required to describe how the vertex attributes are layed out inside a vertex buffer.
 \see BufferDescriptor::VertexBuffer::format
-\see ShaderProgram::BuildInputLayout
+\see ShaderProgramDescriptor::vertexFormats
 */
 struct LLGL_EXPORT VertexFormat
 {
@@ -32,14 +32,11 @@ struct LLGL_EXPORT VertexFormat
     \brief Appends the specified vertex attribute to this vertex format.
     \param[in] attrib Specifies the new attribute which is appended to this vertex format.
     \param[in] offset Specifies the optional offset (in bytes) for this attribute.
-    If this is <code>Constants::ignoreOffset</code>, the offset is determined by the previous vertex attribute offset plus its size.
-    If there is no previous vertex attribute, the determined offset is 0. By default Constants::ignoreOffset.
-    \remarks This function will always overwrite the \c offset and \c inputSlot members before the attribute is appended to this vertex format.
-    The \c inputSlot member will be set to the input slot value of the previous vertex attribute and is increased by one,
-    if the new offset of the new vertex attribute is less than the offset plus size of the previous vertex attribute.
-    \throws std::invalid_argument If <code>attrib.components</code> is neither 1, 2, 3, nor 4.
+    If this is equal to <code>Constants::ignoreOffset</code>, the offset is determined by the previous vertex attribute offset plus its size.
+    If there is no previous vertex attribute, the determined offset is 0. By default <code>Constants::ignoreOffset</code>.
+    \remarks This function modifies the \c offset member of specified attribute before adding it to the \c attributes list,
+    and sets the \c stride member to the sum of the size of all attributes.
     \see VertexAttribute::offset
-    \see VertexAttribute::inputSlot
     \see Constants::ignoreOffset
     */
     void AppendAttribute(const VertexAttribute& attrib, std::uint32_t offset = Constants::ignoreOffset);

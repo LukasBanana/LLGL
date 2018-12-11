@@ -57,16 +57,10 @@ class DbgShaderProgram : public ShaderProgram
         }
 
         // Returns the name of the vertex ID if the shader program makes use of the SV_VertexID, gl_VertexID, or gl_VertexIndex semantics. Returns null otherwise.
-        inline const char* GetVertexID() const
-        {
-            return vertexID_;
-        }
+        const char* GetVertexID() const;
 
         // Returns the name of the instance ID if the shader program makes use of the SV_InstanceID, gl_InstanceID, or gl_InstanceIndex semantics. Returns null otherwise.
-        inline const char* GetInstanceID() const
-        {
-            return instanceID_;
-        }
+        const char* GetInstanceID() const;
 
     public:
 
@@ -77,7 +71,6 @@ class DbgShaderProgram : public ShaderProgram
         void ValidateShaderAttachment(Shader* shader);
         void ValidateShaderComposition();
         void QueryInstanceAndVertexIDs(const RenderingCapabilities& caps);
-        void QueryInstanceAndVertexIDs(const char* vertexIDName, const char* instanceIDName);
 
         RenderingDebugger*      debugger_               = nullptr;
         int                     shaderAttachmentMask_   = 0;
@@ -85,8 +78,8 @@ class DbgShaderProgram : public ShaderProgram
         std::vector<ShaderType> shaderTypes_;
         VertexLayout            vertexLayout_;
 
-        const char*             vertexID_               = nullptr;
-        const char*             instanceID_             = nullptr;
+        std::string             vertexID_;
+        std::string             instanceID_;
 
 };
 

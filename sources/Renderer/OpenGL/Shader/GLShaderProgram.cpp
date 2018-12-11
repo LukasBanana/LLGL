@@ -127,7 +127,7 @@ void GLShaderProgram::UnlockShaderUniform()
  * ======= Private: =======
  */
 
-//TODO: refactor "MoveStreamOutputFormat" (shader might be used multiple times, but internal contianer gets lost!)
+//TODO: refactor "MoveStreamOutputFormat" (shader might be used multiple times, but internal container gets lost!)
 void GLShaderProgram::Attach(Shader* shader)
 {
     if (shader != nullptr)
@@ -319,15 +319,52 @@ static std::pair<Format, std::uint32_t> UnmapAttribType(GLenum type)
     return { Format::R32Float, 0 };
 }
 
+struct GLVertexAttribute
+{
+    std::string     name;
+    Format          format;
+    std::uint32_t   semanticIndex;
+    std::uint32_t   location;
+};
+
+static SystemValue FindSystemValue(const std::string& name)
+{
+    const std::pair<const char*, SystemValue> glslSystemValues[] =
+    {
+        { "gl_ClipDistance",    SystemValue::ClipDistance       },
+        { "gl_CullDistance",    SystemValue::CullDistance       },
+        { "gl_FrontFacing",     SystemValue::FrontFacing        },
+        { "gl_InstanceID",      SystemValue::InstanceID         }, // GLSL
+        { "gl_InstanceIndex",   SystemValue::InstanceID         }, // SPIR-V
+        { "gl_Position",        SystemValue::Position           },
+        { "gl_FragCoord",       SystemValue::Position           },
+        { "gl_PrimitiveID",     SystemValue::PrimitiveID        },
+        { "gl_Layer",           SystemValue::RenderTargetIndex  },
+        { "gl_SampleID",        SystemValue::SampleID           },
+        { "gl_VertexID",        SystemValue::VertexID           }, // GLSL
+        { "gl_VertexIndex",     SystemValue::VertexID           }, // SPIR-V
+        { "gl_ViewportIndex",   SystemValue::ViewportIndex      },
+    };
+
+    for (const auto& sysVal : glslSystemValues)
+    {
+        if (name == sysVal.first)
+            return sysVal.second;
+    }
+
+    return SystemValue::Undefined;
+}
+
 void GLShaderProgram::QueryVertexAttributes(ShaderReflectionDescriptor& reflection) const
 {
-    VertexFormat vertexFormat;
-
     /* Query active vertex attributes */
     std::vector<char> attribName;
     GLint numAttribs = 0, maxNameLength = 0;
     if (!QueryActiveAttribs(GL_ACTIVE_ATTRIBUTES, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, numAttribs, maxNameLength, attribName))
         return;
+
+    std::vector<GLVertexAttribute> attributes;
+    attributes.reserve(static_cast<std::size_t>(numAttribs));
 
     /* Iterate over all vertex attributes */
     for (GLuint i = 0; i < static_cast<GLuint>(numAttribs); ++i)
@@ -343,12 +380,44 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflectionDescriptor& reflecti
         auto name = std::string(attribName.data());
         auto attr = UnmapAttribType(type);
 
+        /* Get attribute location */
+        auto location = static_cast<std::uint32_t>(glGetAttribLocation(id_, name.c_str()));
+
         /* Insert vertex attribute into list */
-        while (attr.second-- > 0)
-            vertexFormat.AppendAttribute({ name, attr.first });
+        for (std::uint32_t semanticIndex = 0; semanticIndex < attr.second; ++semanticIndex)
+            attributes.push_back({ name, attr.first, semanticIndex, location });
     }
 
-    reflection.vertexAttributes = std::move(vertexFormat.attributes);
+    /* Sort attributes by location */
+    std::sort(
+        attributes.begin(),
+        attributes.end(),
+        [](const GLVertexAttribute& lhs, const GLVertexAttribute& rhs)
+        {
+            if (lhs.location < rhs.location)
+                return true;
+            if (lhs.location > rhs.location)
+                return false;
+            return (lhs.name < rhs.name);
+        }
+    );
+
+    /* Copy attribute into final list and determine offsets */
+    reflection.vertexAttributes.resize(attributes.size());
+
+    for (std::size_t i = 0; i < attributes.size(); ++i)
+    {
+        auto& src = attributes[i];
+        auto& dst = reflection.vertexAttributes[i];
+
+        dst.name    = std::move(src.name);
+        dst.format  = src.format;
+
+        if (src.location == std::uint32_t(-1))
+            dst.systemValue = FindSystemValue(dst.name);
+        else
+            dst.semanticIndex = src.semanticIndex;
+    }
 }
 
 void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflectionDescriptor& reflection) const
