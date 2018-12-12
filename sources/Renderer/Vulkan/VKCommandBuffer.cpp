@@ -397,6 +397,12 @@ void VKCommandBuffer::SetIndexBuffer(Buffer& buffer)
     vkCmdBindIndexBuffer(commandBuffer_, bufferVK.GetVkBuffer(), 0, bufferVK.GetIndexType());
 }
 
+void VKCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    vkCmdBindIndexBuffer(commandBuffer_, bufferVK.GetVkBuffer(), offset, VKTypes::ToVkIndexType(format));
+}
+
 /* ----- Stream Output Buffers ------ */
 
 void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)

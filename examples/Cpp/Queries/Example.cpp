@@ -71,7 +71,7 @@ public:
         auto vertices = LoadObjModel("../../Media/Models/Pyramid.obj");
         model0.numVertices = static_cast<std::uint32_t>(vertices.size());
 
-        // Create vertex, index, and constant buffer
+        // Create vertex and constant buffer
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
         constantBuffer = CreateConstantBuffer(settings);
 

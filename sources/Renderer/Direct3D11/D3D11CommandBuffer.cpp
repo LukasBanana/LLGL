@@ -236,6 +236,12 @@ void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer)
     context_->IASetIndexBuffer(bufferD3D.GetNative(), bufferD3D.GetFormat(), 0);
 }
 
+void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
+{
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    context_->IASetIndexBuffer(bufferD3D.GetNative(), D3D11Types::Map(format), static_cast<UINT>(offset));
+}
+
 /* ----- Stream Output Buffers ------ */
 
 void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)

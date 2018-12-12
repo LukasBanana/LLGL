@@ -21,6 +21,7 @@
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectCommandArgs.h>
+#include <LLGL/Strings.h>
 #include <algorithm>
 
 
@@ -284,6 +285,25 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
     }
 
     instance.SetIndexBuffer(bufferDbg.instance);
+
+    profile_.indexBufferBindings++;
+}
+
+//TODO: validation of <offset> param
+void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateResourceFlag(bufferDbg.desc.bindFlags, BindFlags::IndexBuffer, "BindFlags::IndexBuffer");
+        ValidateIndexType(format);
+        bindings_.indexBuffer = (&bufferDbg);
+    }
+
+    instance.SetIndexBuffer(bufferDbg.instance, format, offset);
 
     profile_.indexBufferBindings++;
 }
@@ -1205,6 +1225,17 @@ void DbgCommandBuffer::ValidateResourceFlag(long resourceFlags, long requiredFla
             ErrorType::InvalidArgument,
             "resource was not created with the 'LLGL::" + std::string(flagName) + "' flag enabled"
         );
+    }
+}
+
+void DbgCommandBuffer::ValidateIndexType(const Format format)
+{
+    if (format != Format::R16UInt && format != Format::R32UInt)
+    {
+        if (auto formatName = ToString(format))
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
+        else
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(format)));
     }
 }
 

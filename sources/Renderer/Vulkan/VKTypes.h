@@ -48,6 +48,8 @@ VkQueryType             Map( const QueryType            queryType         );
 VkAttachmentLoadOp      Map( const AttachmentLoadOp     loadOp            );
 VkAttachmentStoreOp     Map( const AttachmentStoreOp    storeOp           );
 
+VkIndexType             ToVkIndexType(const Format format);
+
 Format                  Unmap( const VkFormat format );
 
 

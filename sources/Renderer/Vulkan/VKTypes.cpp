@@ -340,6 +340,17 @@ VkAttachmentStoreOp Map(const AttachmentStoreOp storeOp)
     MapFailed("AttachmentStoreOp", "VkAttachmentStoreOp");
 }
 
+VkIndexType ToVkIndexType(const Format format)
+{
+    switch (format)
+    {
+        case Format::R16UInt:   return VK_INDEX_TYPE_UINT16;
+        case Format::R32UInt:   return VK_INDEX_TYPE_UINT32;
+        default:                break;
+    }
+    VKTypes::MapFailed("Format", "VkIndexType");
+}
+
 Format Unmap(const VkFormat format)
 {
     switch (format)

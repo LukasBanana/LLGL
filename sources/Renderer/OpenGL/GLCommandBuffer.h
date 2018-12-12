@@ -68,6 +68,7 @@ class GLCommandBuffer final : public CommandBufferExt
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
+        void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override;
 
         /* ----- Stream Output Buffers ------ */
 
@@ -154,6 +155,7 @@ class GLCommandBuffer final : public CommandBufferExt
             GLenum      drawMode            = GL_TRIANGLES;     // Render mode for "glDraw*"
             GLenum      indexBufferDataType = GL_UNSIGNED_INT;
             GLsizeiptr  indexBufferStride   = 4;
+            GLsizeiptr  indexBufferOffset   = 0;
         };
 
         struct GLClearValue
@@ -167,6 +169,8 @@ class GLCommandBuffer final : public CommandBufferExt
         void SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot);
 
         void SetResourceHeap(ResourceHeap& resourceHeap);
+
+        void SetIndexFormat(bool index16Bits, std::uint64_t offset);
 
         // Blits the currently bound render target
         void BlitBoundRenderTarget();

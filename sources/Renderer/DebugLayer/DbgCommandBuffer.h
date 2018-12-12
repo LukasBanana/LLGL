@@ -76,6 +76,7 @@ class DbgCommandBuffer : public CommandBufferExt
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
+        void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override;
 
         /* ----- Stream Output Buffers ------ */
 
@@ -189,6 +190,7 @@ class DbgCommandBuffer : public CommandBufferExt
         void ValidateAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound);
 
         void ValidateResourceFlag(long resourceFlags, long requiredFlag, const char* flagName);
+        void ValidateIndexType(const Format format);
 
         void ValidateStageFlags(long stageFlags, long validFlags);
         void ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size);

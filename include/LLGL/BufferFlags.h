@@ -90,8 +90,7 @@ struct BufferDescriptor
     struct IndexBuffer
     {
         /**
-        \brief Specifies the index format layout, which is basically only the data type of each index. By default Format::R32UInt.
-        \remarks The only valid format types for an index buffer are Format::R16UInt and Format::R32UInt.
+        \brief Specifies the format of each index in the buffer. This must be either Format::R16UInt or Format::R32UInt. By default Format::R32UInt.
         \see Format
         */
         Format format = Format::R32UInt;

@@ -261,15 +261,25 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Sets the active index buffer for subsequent drawing operations.
         \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the binding flag BindFlags::IndexBuffer and its content must not be uninitialized.
-        \remarks An index buffer is only required for any DrawIndexed or DrawIndexedInstanced draw call.
+        \remarks An index buffer is only required for any \c DrawIndexed or \c DrawIndexedInstanced draw call.
         \see RenderSystem::CreateBuffer
         \see RenderSystem::WriteBuffer
+        \see DrawIndexed
+        \see DrawIndexedInstanced
         */
         virtual void SetIndexBuffer(Buffer& buffer) = 0;
 
-        #if 0//TODO
+        /**
+        \brief Sets the active index buffer for subsequent drawing operations with a dynamic format and optional buffer offset.
+        \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the binding flag BindFlags::IndexBuffer and its content must not be uninitialized.
+        \param[in] format Specifies the format of each index in the buffer. This must be either Format::R16UInt or Format::R32UInt.
+        \param[in] offset Specifies an optional offset (in bytes) where to start reading the index buffer. By default 0.
+        This has the same effect as setting the \c firstIndex argument in any \c DrawIndexed or \c DrawIndexedInstanced function, except that this offset is byte aligned.
+        \remarks The alternative version of this function uses merely the index format that was specified when the buffer was created.
+        \see BufferDescriptor::IndexBuffer::format
+        \see SetIndexBuffer(Buffer&)
+        */
         virtual void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) = 0;
-        #endif
 
         /* ----- Stream Output Buffers ------ */
 

@@ -302,18 +302,15 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
     /* Bind index buffer deferred (can only be bound to the active VAO) */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindElementArrayBufferToVAO(bufferGL.GetID());
+    SetIndexFormat(bufferGL.IsIndexType16Bits(), 0);
+}
 
-    /* Store new index buffer data in global render state */
-    if (bufferGL.IsIndexType16Bits())
-    {
-        renderState_.indexBufferDataType    = GL_UNSIGNED_SHORT;
-        renderState_.indexBufferStride      = 2;
-    }
-    else
-    {
-        renderState_.indexBufferDataType    = GL_UNSIGNED_INT;
-        renderState_.indexBufferStride      = 4;
-    }
+void GLCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
+{
+    /* Bind index buffer deferred (can only be bound to the active VAO) */
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindElementArrayBufferToVAO(bufferGL.GetID());
+    SetIndexFormat(format == Format::R16UInt, offset);
 }
 
 /* ----- Stream Output Buffers ------ */
@@ -469,7 +466,7 @@ void GLCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 
 void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
-    const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
+    const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElements(
         renderState_.drawMode,
         static_cast<GLsizei>(numIndices),
@@ -480,7 +477,7 @@ void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
 
 void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
+    const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsBaseVertex(
         renderState_.drawMode,
         static_cast<GLsizei>(numIndices),
@@ -517,7 +514,7 @@ void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
 
 void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
+    const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsInstanced(
         renderState_.drawMode,
         static_cast<GLsizei>(numIndices),
@@ -529,7 +526,7 @@ void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 
 void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    auto indices = static_cast<GLsizeiptr>(firstIndex * renderState_.indexBufferStride);
+    const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsInstancedBaseVertex(
         renderState_.drawMode,
         static_cast<GLsizei>(numIndices),
@@ -543,7 +540,7 @@ void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
     #ifndef __APPLE__
-    const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
+    const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsInstancedBaseVertexBaseInstance(
         renderState_.drawMode,
         static_cast<GLsizei>(numIndices),
@@ -779,6 +776,23 @@ void GLCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap)
 {
     auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
     resourceHeapGL.Bind(*stateMngr_);
+}
+
+void GLCommandBuffer::SetIndexFormat(bool index16Bits, std::uint64_t offset)
+{
+    /* Store new index buffer data in global render state */
+    if (index16Bits)
+    {
+        renderState_.indexBufferDataType    = GL_UNSIGNED_SHORT;
+        renderState_.indexBufferStride      = 2;
+    }
+    else
+    {
+        renderState_.indexBufferDataType    = GL_UNSIGNED_INT;
+        renderState_.indexBufferStride      = 4;
+    }
+
+    renderState_.indexBufferOffset = static_cast<GLsizeiptr>(offset);
 }
 
 void GLCommandBuffer::BlitBoundRenderTarget()

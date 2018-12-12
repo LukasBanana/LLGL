@@ -73,6 +73,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
+        void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override;
 
         /* ----- Stream Output Buffers ------ */
 

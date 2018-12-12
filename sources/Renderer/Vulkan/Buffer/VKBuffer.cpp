@@ -14,17 +14,6 @@ namespace LLGL
 {
 
 
-static VkIndexType MapIndexType(const Format format)
-{
-    switch (format)
-    {
-        case Format::R16UInt:   return VK_INDEX_TYPE_UINT16;
-        case Format::R32UInt:   return VK_INDEX_TYPE_UINT32;
-        default:                break;
-    }
-    VKTypes::MapFailed("Format", "VkIndexType");
-}
-
 static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
 {
     VkBufferUsageFlags flags = 0;
@@ -57,11 +46,11 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
 }
 
 VKBuffer::VKBuffer(const VKPtr<VkDevice>& device, const BufferDescriptor& desc) :
-    Buffer            { desc.bindFlags                        },
-    bufferObj_        { device                                },
-    bufferObjStaging_ { device                                },
-    size_             { desc.size                             },
-    indexType_        { MapIndexType(desc.indexBuffer.format) }
+    Buffer            { desc.bindFlags                                  },
+    bufferObj_        { device                                          },
+    bufferObjStaging_ { device                                          },
+    size_             { desc.size                                       },
+    indexType_        { VKTypes::ToVkIndexType(desc.indexBuffer.format) }
 {
     VkBufferCreateInfo createInfo;
     {
