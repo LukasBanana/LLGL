@@ -196,7 +196,7 @@ void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
 {
     indexBufferView_.BufferLocation = GetNative()->GetGPUVirtualAddress();
     indexBufferView_.SizeInBytes    = static_cast<UINT>(GetBufferSize());
-    indexBufferView_.Format         = D3D12Types::Map(desc.indexBuffer.format.GetDataType());
+    indexBufferView_.Format         = D3D12Types::Map(desc.indexBuffer.format);
 }
 
 

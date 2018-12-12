@@ -267,6 +267,10 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetIndexBuffer(Buffer& buffer) = 0;
 
+        #if 0//TODO
+        virtual void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) = 0;
+        #endif
+
         /* ----- Stream Output Buffers ------ */
 
         /**

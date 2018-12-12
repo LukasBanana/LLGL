@@ -12,6 +12,7 @@
 #include <LLGL/CommandBufferExt.h>
 #include "RenderState/GLState.h"
 #include "OpenGL.h"
+#include <memory>
 
 
 namespace LLGL

@@ -25,6 +25,7 @@
 #include "QueryHeap.h"
 
 #include <string>
+#include <memory>
 #include <map>
 
 

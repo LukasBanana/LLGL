@@ -40,6 +40,7 @@ using ByteBuffer = std::unique_ptr<char[]>;
 \brief Image format enumeration that applies to each pixel of an image.
 \see SrcImageDescriptor::format
 \see ImageFormatSize
+\todo Maybe replace \c DataType and \c ImageFormat by LLGL::Format.
 */
 enum class ImageFormat
 {

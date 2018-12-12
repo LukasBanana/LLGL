@@ -7,6 +7,7 @@
 
 #include "CsRenderSystem.h"
 #include "CsHelper.h"
+#include <LLGL/ImageFlags.h>
 #include <algorithm>
 
 
@@ -385,19 +386,10 @@ static void Convert(LLGL::BufferDescriptor::VertexBuffer& dst, BufferDescriptor:
     }
 }
 
-static void Convert(LLGL::IndexFormat& dst, IndexFormat^ src)
-{
-    if (src)
-        dst = LLGL::IndexFormat(static_cast<LLGL::DataType>(src->DataType));
-}
-
 static void Convert(LLGL::BufferDescriptor::IndexBuffer& dst, BufferDescriptor::IndexBufferDescriptor^ src)
 {
     if (src)
-    {
-        if (src->Format)
-            Convert(dst.format, src->Format);
-    }
+        dst.format = static_cast<LLGL::Format>(src->Format);
 }
 
 static void Convert(LLGL::BufferDescriptor::StorageBuffer& dst, BufferDescriptor::StorageBufferDescriptor^ src)

@@ -12,7 +12,6 @@
 #include "Export.h"
 #include "ResourceFlags.h"
 #include "VertexFormat.h"
-#include "IndexFormat.h"
 #include "RenderSystemFlags.h"
 #include <string>
 #include <cstdint>
@@ -91,11 +90,11 @@ struct BufferDescriptor
     struct IndexBuffer
     {
         /**
-        \brief Specifies the index format layout, which is basically only the data type of each index.
-        \remarks The only valid format types for an index buffer are: DataType::UByte, DataType::UShort, and DataType::UInt.
-        \see DataType
+        \brief Specifies the index format layout, which is basically only the data type of each index. By default Format::R32UInt.
+        \remarks The only valid format types for an index buffer are Format::R16UInt and Format::R32UInt.
+        \see Format
         */
-        IndexFormat format;
+        Format format = Format::R32UInt;
     };
 
     //! Storage buffer specific descriptor structure.

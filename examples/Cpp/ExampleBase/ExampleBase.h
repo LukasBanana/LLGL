@@ -188,10 +188,10 @@ protected:
     }
 
     template <typename IndexType>
-    LLGL::Buffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::IndexFormat& indexFormat)
+    LLGL::Buffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::Format& format)
     {
         return renderer->CreateBuffer(
-            LLGL::IndexBufferDesc(static_cast<std::uint32_t>(indices.size() * sizeof(IndexType)), indexFormat),
+            LLGL::IndexBufferDesc(static_cast<std::uint32_t>(indices.size() * sizeof(IndexType)), format),
             indices.data()
         );
     }

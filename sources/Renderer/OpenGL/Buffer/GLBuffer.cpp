@@ -230,6 +230,11 @@ void GLBuffer::UnmapBuffer()
     }
 }
 
+void GLBuffer::SetIndexType(const Format format)
+{
+    indexType16Bits_ = (format == Format::R16UInt);
+}
+
 
 } // /namespace LLGL
 

@@ -14,36 +14,6 @@ namespace SharpLLGL
 
 
 /*
- * IndexFormat class
- */
-
-IndexFormat::IndexFormat() :
-    dataType_ { SharpLLGL::DataType::UInt32 }
-{
-}
-
-IndexFormat::IndexFormat(IndexFormat^ rhs) :
-    dataType_ { rhs->DataType }
-{
-}
-
-IndexFormat::IndexFormat(SharpLLGL::DataType dataType) :
-    dataType_ { dataType }
-{
-}
-
-SharpLLGL::DataType IndexFormat::DataType::get()
-{
-    return dataType_;
-}
-
-unsigned int IndexFormat::FormatSize::get()
-{
-    return LLGL::DataTypeSize(static_cast<LLGL::DataType>(dataType_));
-}
-
-
-/*
  * VertexBufferDescriptor class
  */
 
@@ -59,7 +29,7 @@ BufferDescriptor::VertexBufferDescriptor::VertexBufferDescriptor()
 
 BufferDescriptor::IndexBufferDescriptor::IndexBufferDescriptor()
 {
-    Format = gcnew IndexFormat();
+    Format = SharpLLGL::Format::R32UInt;
 }
 
 

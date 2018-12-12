@@ -47,7 +47,7 @@ public:
 
         // Create vertex, index, and constant buffers
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
-        indexBuffer = CreateIndexBuffer(GenerateCubeTriangleIndices(), LLGL::DataType::UInt32);
+        indexBuffer = CreateIndexBuffer(GenerateCubeTriangleIndices(), LLGL::Format::R32UInt);
         constantBuffer = CreateConstantBuffer(settings);
 
         // Specify stream-output format

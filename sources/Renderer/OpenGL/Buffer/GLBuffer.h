@@ -58,22 +58,19 @@ class GLBuffer : public Buffer
         }
 
         // Sets the base data type of buffer entries. This is only used for a resource that can be bound as index buffer.
-        void SetDataType(const DataType dataType)
-        {
-            dataType_ = dataType;
-        }
+        void SetIndexType(const Format format);
 
         // Returns the base data type of buffer entries. This is only used for a resource that can be bound as index buffer.
-        inline DataType GetDataType() const
+        inline bool IsIndexType16Bits() const
         {
-            return dataType_;
+            return indexType16Bits_;
         }
 
     private:
 
-        GLuint          id_         = 0;
-        GLBufferTarget  target_     = GLBufferTarget::ARRAY_BUFFER;
-        DataType        dataType_   = DataType::Int8;
+        GLuint          id_                 = 0;
+        GLBufferTarget  target_             = GLBufferTarget::ARRAY_BUFFER;
+        bool            indexType16Bits_    = false;
 
 };
 

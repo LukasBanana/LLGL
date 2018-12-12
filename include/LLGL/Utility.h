@@ -108,7 +108,7 @@ LLGL_EXPORT BufferDescriptor VertexBufferDesc(uint64_t size, const VertexFormat&
 \brief Returns a BufferDescriptor structure for an index buffer.
 \see RenderSystem::CreateBuffer
 */
-LLGL_EXPORT BufferDescriptor IndexBufferDesc(uint64_t size, const IndexFormat& indexFormat, long cpuAccessFlags = 0);
+LLGL_EXPORT BufferDescriptor IndexBufferDesc(uint64_t size, const Format format, long cpuAccessFlags = 0);
 
 /**
 \brief Returns a BufferDescriptor structure for a constant buffer.

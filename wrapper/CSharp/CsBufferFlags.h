@@ -44,31 +44,6 @@ public enum class StorageBufferType
 
 /* ----- Structures ----- */
 
-public ref class IndexFormat
-{
-
-    public:
-
-        IndexFormat();
-        IndexFormat(IndexFormat^ rhs);
-        IndexFormat(SharpLLGL::DataType dataType);
-
-        property SharpLLGL::DataType DataType
-        {
-            SharpLLGL::DataType get();
-        };
-
-        property unsigned int FormatSize
-        {
-            unsigned int get();
-        };
-
-    private:
-
-        SharpLLGL::DataType dataType_;
-
-};
-
 public ref class BufferDescriptor
 {
 
@@ -94,7 +69,7 @@ public ref class BufferDescriptor
 
                 IndexBufferDescriptor();
 
-                property IndexFormat^ Format;
+                property Format Format;
 
         };
 

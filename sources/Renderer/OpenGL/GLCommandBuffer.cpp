@@ -304,9 +304,16 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
     stateMngr_->BindElementArrayBufferToVAO(bufferGL.GetID());
 
     /* Store new index buffer data in global render state */
-    const auto formatDataType = bufferGL.GetDataType();
-    renderState_.indexBufferDataType    = GLTypes::Map(formatDataType);
-    renderState_.indexBufferStride      = static_cast<GLsizeiptr>(DataTypeSize(formatDataType));
+    if (bufferGL.IsIndexType16Bits())
+    {
+        renderState_.indexBufferDataType    = GL_UNSIGNED_SHORT;
+        renderState_.indexBufferStride      = 2;
+    }
+    else
+    {
+        renderState_.indexBufferDataType    = GL_UNSIGNED_INT;
+        renderState_.indexBufferStride      = 4;
+    }
 }
 
 /* ----- Stream Output Buffers ------ */

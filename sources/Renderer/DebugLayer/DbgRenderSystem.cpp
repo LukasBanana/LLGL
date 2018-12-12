@@ -10,6 +10,8 @@
 #include "../../Core/Helper.h"
 #include "../StaticLimits.h"
 #include "../CheckedCast.h"
+#include <LLGL/Strings.h>
+#include <LLGL/ImageFlags.h>
 
 
 namespace LLGL
@@ -670,10 +672,24 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
 
     if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
     {
+        /* Validate index format */
+        if (desc.indexBuffer.format != Format::R16UInt && desc.indexBuffer.format != Format::R32UInt)
+        {
+            if (auto formatName = ToString(desc.indexBuffer.format))
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
+            else
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(desc.indexBuffer.format)));
+        }
+
         /* Validate buffer size for specified index format */
-        formatSize = desc.indexBuffer.format.GetFormatSize();
+        formatSize = FormatBitSize(desc.indexBuffer.format) / 8;
         if (formatSize > 0 && desc.size % formatSize != 0)
-            LLGL_DBG_WARN(WarningType::ImproperArgument, "improper index buffer size with index format of " + std::to_string(formatSize) + " bytes");
+        {
+            LLGL_DBG_WARN(
+                WarningType::ImproperArgument,
+                "improper index buffer size with index format of " + std::to_string(formatSize) + " bytes"
+            );
+        }
     }
 
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)

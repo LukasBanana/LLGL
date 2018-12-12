@@ -20,8 +20,8 @@ namespace LLGL
 /* ----- Enumerations ----- */
 
 /**
-\brief Hardware vector and pixel format enumeration.
-\remarks This enumeration is used for hardware texture formats and vertex attribute formats.
+\brief Texture and vertex attribute format enumeration used for GPU side operations.
+\remarks The counterpart of this enumeration for CPU side operations is LLGL::DataType.
 \see TextureDescriptor::format
 \see VertexAttribute::format
 \see RenderingCapabilities::textureFormats
@@ -122,8 +122,11 @@ enum class Format
 };
 
 /**
-\brief Renderer data types enumeration.
+\brief Data types enumeration used for CPU side operations.
+\remarks The counterpart of this enumeration for GPU side operations is LLGL::Format.
 \see SrcImageDescriptor::dataType
+\see DstImageDescriptor::dataType
+\todo Maybe replace \c DataType and \c ImageFormat by LLGL::Format.
 */
 enum class DataType
 {

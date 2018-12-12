@@ -20,6 +20,7 @@
 #include "RenderSystem.h"
 #include "Log.h"
 #include "IndirectCommandArgs.h"
+#include "ImageFlags.h"
 
 
 //DOXYGEN MAIN PAGE

@@ -109,7 +109,7 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
 
     // Create index buffer
     indexBuffer = renderer->CreateBuffer(
-        LLGL::IndexBufferDesc(sizeof(std::uint32_t) * indices.size(), LLGL::DataType::UInt32),
+        LLGL::IndexBufferDesc(sizeof(std::uint32_t) * indices.size(), LLGL::Format::R32UInt),
         indices.data()
     );
 

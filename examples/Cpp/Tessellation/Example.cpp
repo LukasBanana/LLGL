@@ -95,7 +95,7 @@ public:
 
         // Create buffers for a simple 3D cube model
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
-        indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt32);
+        indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::Format::R32UInt);
         constantBuffer = CreateConstantBuffer(settings);
 
         #ifdef _TEST_BUFFER_ARRAY_

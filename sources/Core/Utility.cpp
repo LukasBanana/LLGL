@@ -160,14 +160,14 @@ LLGL_EXPORT BufferDescriptor VertexBufferDesc(std::uint64_t size, const VertexFo
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor IndexBufferDesc(std::uint64_t size, const IndexFormat& indexFormat, long cpuAccessFlags)
+LLGL_EXPORT BufferDescriptor IndexBufferDesc(std::uint64_t size, const Format format, long cpuAccessFlags)
 {
     BufferDescriptor desc;
     {
         desc.size               = size;
         desc.bindFlags          = BindFlags::IndexBuffer;
         desc.cpuAccessFlags     = cpuAccessFlags;
-        desc.indexBuffer.format = indexFormat;
+        desc.indexBuffer.format = format;
     }
     return desc;
 }
