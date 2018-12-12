@@ -33,7 +33,7 @@ enum class SystemValue
 
     /**
     \brief Forward-compatible mechanism for vertex clipping.
-    \remarks HLSL: \c SV_ClipDistance, GLSL and SPIR-V: \c gl_ClipDistance.
+    \remarks HLSL: \c SV_ClipDistance, GLSL and SPIR-V: \c gl_ClipDistance, Metal: <code>[[clip_distance]]</code>.
     */
     ClipDistance,
 
@@ -45,13 +45,13 @@ enum class SystemValue
 
     /**
     \brief Indicates whether a primitive is front or back facing.
-    \remarks HLSL: \c SV_IsFrontFace, GLSL and SPIR-V: \c gl_FrontFacing.
+    \remarks HLSL: \c SV_IsFrontFace, GLSL and SPIR-V: \c gl_FrontFacing, Metal: <code>[[front_facing]]</code>.
     */
     FrontFacing,
 
     /**
     \brief Index of the input instance.
-    \remarks HLSL: \c SV_InstanceID, GLSL: \c gl_InstanceID, SPIR-V: \c gl_InstanceIndex.
+    \remarks HLSL: \c SV_InstanceID, GLSL: \c gl_InstanceID, SPIR-V: \c gl_InstanceIndex, Metal: <code>[[instance_id]]</code>.
     \note This value behalves differently between Direct3D and OpenGL.
     \see CommandBuffer::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
     */
@@ -59,7 +59,10 @@ enum class SystemValue
 
     /**
     \brief Vertex or fragment position.
-    \remarks HLSL: \c SV_Position, GLSL and SPIR-V in a vertex shader: \c gl_Position, GLSL and SPIR-V in a fragment shader: \c gl_FragCoord.
+    \remarks HLSL: \c SV_Position,
+    GLSL and SPIR-V in a vertex shader: \c gl_Position,
+    GLSL and SPIR-V in a fragment shader: \c gl_FragCoord,
+    Metal: <code>[[position]]</code>.
     */
     Position,
 
@@ -71,13 +74,13 @@ enum class SystemValue
 
     /**
     \brief Index of the render target layer.
-    \remarks HLSL: \c SV_RenderTargetArrayIndex, GLSL and SPIR-V: \c gl_Layer.
+    \remarks HLSL: \c SV_RenderTargetArrayIndex, GLSL and SPIR-V: \c gl_Layer, Metal: <code>[[render_target_array_index]]</code>.
     */
     RenderTargetIndex,
 
     /**
     \brief Index of the input sample.
-    \remarks HLSL: \c SV_SampleIndex, GLSL and SPIR-V: \c gl_SampleID.
+    \remarks HLSL: \c SV_SampleIndex, GLSL and SPIR-V: \c gl_SampleID, Metal: <code>[[sample_id]]</code>.
     */
     SampleID,
 
@@ -89,7 +92,7 @@ enum class SystemValue
 
     /**
     \brief Index of the input vertex.
-    \remarks HLSL: \c SV_VertexID, GLSL: \c gl_VertexID, SPIR-V: \c gl_VertexIndex.
+    \remarks HLSL: \c SV_VertexID, GLSL: \c gl_VertexID, SPIR-V: \c gl_VertexIndex, Metal: <code>[[vertex_id]]</code>.
     \note This value behalves differently between Direct3D and OpenGL.
     \see CommandBuffer::Draw
     */
@@ -97,7 +100,7 @@ enum class SystemValue
 
     /**
     \brief Index of the viewport array.
-    \remarks HLSL: \c SV_ViewportArrayIndex, GLSL and SPIR-V: \c gl_ViewportIndex.
+    \remarks HLSL: \c SV_ViewportArrayIndex, GLSL and SPIR-V: \c gl_ViewportIndex, Metal: <code>[[viewport_array_index]]</code>.
     */
     ViewportIndex,
 };

@@ -159,7 +159,7 @@ static std::vector<MTResourceBinding> CollectMTResourceBindings(
 {
     /* Collect all binding points of the specified resource type */
     BindingDescriptor bindingDesc;
-    resourceIterator.Reset(resourceType, affectedStage);
+    resourceIterator.Reset(resourceType, 0, affectedStage);
 
     std::vector<MTResourceBinding> resourceBindings;
     resourceBindings.reserve(resourceIterator.GetCount());
