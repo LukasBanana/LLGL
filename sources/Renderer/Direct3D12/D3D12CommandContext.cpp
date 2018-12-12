@@ -42,7 +42,7 @@ void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESO
         resource.transitionState = newState;
 
         /* Flush resource barrieres if required */
-        if (flushBarrieres || numResourceBarriers_ == g_maxNumResourceBarrieres)
+        if (flushBarrieres)
             FlushResourceBarrieres();
     }
 }
@@ -88,6 +88,8 @@ void D3D12CommandContext::ResolveRenderTarget(
 
 D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()
 {
+    if (numResourceBarriers_ == g_maxNumResourceBarrieres)
+        FlushResourceBarrieres();
     return resourceBarriers_[numResourceBarriers_++];
 }
 

@@ -53,15 +53,10 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeCbvSrvUav(ID3D12Dev
     {
         if (auto resource = resourceView.resource)
         {
-            switch (resource->QueryResourceType())
-            {
-                case ResourceType::Buffer:          // SRV/UAV/CBV
-                case ResourceType::Texture:         // SRV
-                    ++numDescriptors;
-                    break;
-                default:
-                    break;
-            }
+            /* Search SRV/UAV/CBV resources */
+            auto resType = resource->QueryResourceType();
+            if (resType == ResourceType::Buffer || resType == ResourceType::Texture)
+                ++numDescriptors;
         }
         else
             ErrNullPointerInResource();
@@ -102,14 +97,9 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeSampler(ID3D12Devic
     {
         if (auto resource = resourceView.resource)
         {
-            switch (resource->QueryResourceType())
-            {
-                case ResourceType::Sampler:
-                    ++numDescriptors;
-                    break;
-                default:
-                    break;
-            }
+            /* Search samplers */
+            if (resource->QueryResourceType() == ResourceType::Sampler)
+                ++numDescriptors;
         }
         else
             ErrNullPointerInResource();

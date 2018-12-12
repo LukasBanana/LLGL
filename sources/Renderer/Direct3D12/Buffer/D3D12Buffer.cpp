@@ -60,6 +60,8 @@ void D3D12Buffer::UpdateStaticSubresource(
         subresourceData.SlicePitch  = subresourceData.RowPitch;
     }
 
+    commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST);
+
     ::UpdateSubresources<1>(
         commandContext.GetCommandList(),
         resource_.native.Get(),
@@ -155,7 +157,7 @@ void D3D12Buffer::CreateNativeBuffer(ID3D12Device* device, const BufferDescripto
     {
         /* Constant buffers must be aligned to 256 bytes */
         const UINT64 alignment = 256;
-        bufferSize_  = GetAlignedSize(bufferSize_, alignment);
+        bufferSize_ = GetAlignedSize(bufferSize_, alignment);
     }
 
     /* Determine initial resource state */
