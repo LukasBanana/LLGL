@@ -28,7 +28,7 @@ class MTBufferArray : public BufferArray
 
         using NativeType = id<MTLBuffer>;
     
-        MTBufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray);
+        MTBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer IDs.
         inline const std::vector<NativeType>& GetIDArray() const

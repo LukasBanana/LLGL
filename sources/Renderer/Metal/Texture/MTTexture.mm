@@ -28,12 +28,12 @@ static MTLTextureUsage GetTextureUsage(const TextureDescriptor& desc)
 {
     MTLTextureUsage usage = 0;
     
-    if ((desc.flags & TextureFlags::SampleUsage) != 0)
+    if ((desc.bindFlags & BindFlags::SampleBuffer) != 0)
         usage |= MTLTextureUsageShaderRead;
-    if ((desc.flags & (TextureFlags::ColorAttachmentUsage | TextureFlags::DepthStencilAttachmentUsage)) != 0)
-        usage |= MTLTextureUsageRenderTarget;
-    if ((desc.flags & TextureFlags::StorageUsage) != 0)
+    if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
         usage |= MTLTextureUsageShaderWrite;
+    if ((desc.bindFlags & (BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment)) != 0)
+        usage |= MTLTextureUsageRenderTarget;
     
     return usage;
 }
@@ -112,7 +112,9 @@ TextureDescriptor MTTexture::QueryDesc() const
     TextureDescriptor texDesc;
 
     texDesc.type            = GetType();
-    texDesc.flags           = 0;
+    texDesc.bindFlags       = 0;
+    texDesc.cpuAccessFlags  = 0;
+    texDesc.miscFlags       = 0;
     texDesc.format          = MTTypes::ToFormat([native_ pixelFormat]);
     texDesc.extent.width    = static_cast<std::uint32_t>([native_ width]);
     texDesc.extent.height   = static_cast<std::uint32_t>([native_ height]);

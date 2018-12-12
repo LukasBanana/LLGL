@@ -827,7 +827,12 @@ void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long
         [renderEncoder_ setFragmentBuffer:bufferMT.GetNative() offset:0 atIndex:static_cast<NSUInteger>(slot)];
 }
 
-void MTCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+void MTCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    //todo
+}
+
+void MTCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     //todo
 }
@@ -869,6 +874,7 @@ void MTCommandBuffer::ResetResourceSlots(
     const ResourceType  resourceType,
     std::uint32_t       firstSlot,
     std::uint32_t       numSlots,
+    long                bindFlags,
     long                stageFlags)
 {
     //todo

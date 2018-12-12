@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-static MTLPixelFormat GetColorMTLPixelFormat(int /*color*/)
+static MTLPixelFormat GetColorMTLPixelFormat(int /*colorBits*/)
 {
     return MTLPixelFormatBGRA8Unorm;
 }
@@ -68,10 +68,6 @@ MTRenderContext::MTRenderContext(
     
     if (desc.vsync.enabled)
         view_.preferredFramesPerSecond = static_cast<NSInteger>(desc.vsync.refreshRate);
-}
-
-MTRenderContext::~MTRenderContext()
-{
 }
 
 void MTRenderContext::Present()

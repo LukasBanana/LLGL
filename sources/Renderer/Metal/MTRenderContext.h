@@ -32,8 +32,6 @@ class MTRenderContext : public RenderContext
             const std::shared_ptr<Surface>& surface
         );
 
-        ~MTRenderContext();
-
         void Present() override;
     
         Format QueryColorFormat() const override;

@@ -130,7 +130,8 @@ class MTCommandBuffer : public CommandBufferExt
         /* ----- Direct Resource Access ------ */
 
         void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
         void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
         void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
 
@@ -138,6 +139,7 @@ class MTCommandBuffer : public CommandBufferExt
             const ResourceType  resourceType,
             std::uint32_t       firstSlot,
             std::uint32_t       numSlots,
+            long                bindFlags,
             long                stageFlags      = StageFlags::AllStages
         ) override;
 

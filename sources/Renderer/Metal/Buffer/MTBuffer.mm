@@ -13,18 +13,18 @@ namespace LLGL
 {
 
 
-static MTLResourceOptions GetMTLResourceOptions(long flags)
+static MTLResourceOptions GetMTLResourceOptions(long miscFlags)
 {
-    if ((flags & BufferFlags::DynamicUsage) != 0)
+    if ((miscFlags & MiscFlags::DynamicUsage) != 0)
         return MTLResourceStorageModeShared;
     else
         return MTLResourceStorageModeManaged;
 }
 
 MTBuffer::MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const void* initialData) :
-    Buffer { desc.type }
+    Buffer { desc.bindFlags }
 {
-    auto opt = GetMTLResourceOptions(desc.flags);
+    auto opt = GetMTLResourceOptions(desc.miscFlags);
     if (initialData)
         native_ = [device newBufferWithBytes:initialData length:(NSUInteger)desc.size options:opt];
     else

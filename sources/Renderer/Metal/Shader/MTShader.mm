@@ -86,6 +86,9 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
     }
     else
         sourceString = [[NSString alloc] initWithUTF8String:shaderDesc.source];
+    
+    if (sourceString == nil)
+        throw std::runtime_error("cannot compile Metal shader without source");
 
     /* Convert entry point to string to NSString */
     NSString* entryPoint = [[NSString alloc] initWithUTF8String:(shaderDesc.entryPoint != nullptr ? shaderDesc.entryPoint : "")];

@@ -17,11 +17,6 @@ namespace LLGL
 {
 
 
-static GLenum ToGLTarget(const GLBufferTarget bufferType)
-{
-    return GLStateManager::ToGLBufferTarget(bufferType);
-}
-
 // Finds the primary buffer target used for a buffer with the specified binding flags
 static GLBufferTarget FindPrimaryBufferTarget(long bindFlags)
 {

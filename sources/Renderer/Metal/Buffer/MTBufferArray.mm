@@ -15,8 +15,8 @@ namespace LLGL
 {
 
 
-MTBufferArray::MTBufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { type }
+MTBufferArray::MTBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { bindFlags }
 {
     /* Store id<MTLBuffer> of each buffer object inside the array */
     idArray_.reserve(numBuffers);

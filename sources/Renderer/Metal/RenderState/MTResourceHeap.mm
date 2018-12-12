@@ -179,41 +179,12 @@ static std::vector<MTResourceBinding> CollectMTResourceBindings(
     return resourceBindings;
 }
 
-static std::vector<MTResourceBinding> CollectMTBufferResourceBindings(
-    ResourceBindingIterator&        resourceIterator,
-    long                            affectedStage,
-    const MTResourceBindingFunc&    resourceFunc)
-{
-    /* Collect all binding points of the specified resource type */
-    BindingDescriptor bindingDesc;
-    std::vector<MTResourceBinding> resourceBindings;
-    resourceBindings.reserve(resourceIterator.GetCount());
-
-    resourceIterator.Reset(ResourceType::ConstantBuffer, affectedStage);
-    while (auto resource = resourceIterator.Next(bindingDesc))
-        resourceBindings.push_back(resourceFunc(resource, static_cast<NSUInteger>(bindingDesc.slot)));
-
-    resourceIterator.Reset(ResourceType::StorageBuffer, affectedStage);
-    while (auto resource = resourceIterator.Next(bindingDesc))
-        resourceBindings.push_back(resourceFunc(resource, static_cast<NSUInteger>(bindingDesc.slot)));
-
-    /* Sort resources by slot index */
-    std::sort(
-        resourceBindings.begin(), resourceBindings.end(),
-        [](const MTResourceBinding& lhs, const MTResourceBinding& rhs)
-        {
-            return (lhs.slot < rhs.slot);
-        }
-    );
-
-    return resourceBindings;
-}
-
 void MTResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments)
 {
     /* Collect all buffers */
-    auto resourceBindings = CollectMTBufferResourceBindings(
+    auto resourceBindings = CollectMTResourceBindings(
         resourceIterator,
+        ResourceType::Buffer,
         stage,
         [](Resource* resource, NSUInteger slot) -> MTResourceBinding
         {
