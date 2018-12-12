@@ -40,7 +40,7 @@ public:
         CreateTextures();
         CreateSamplers();
         CreateResourceHeaps();
-
+        
         // Print some information on the standard output
         std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
     }

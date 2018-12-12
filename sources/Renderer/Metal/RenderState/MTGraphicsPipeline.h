@@ -13,6 +13,7 @@
 
 #include <LLGL/GraphicsPipeline.h>
 #include <LLGL/ForwardDecls.h>
+#include <cstdint>
 
 
 namespace LLGL
@@ -40,12 +41,18 @@ class MTGraphicsPipeline : public GraphicsPipeline
         {
             return primitiveType_;
         }
+    
+        inline std::uint32_t GetStencilRef() const
+        {
+            return stencilRef_;
+        }
 
     private:
 
         id<MTLRenderPipelineState>  renderPipelineState_    = nil;
         id<MTLDepthStencilState>    depthStencilState_      = nil;
         MTLPrimitiveType            primitiveType_          = MTLPrimitiveTypeTriangle;
+        std::uint32_t               stencilRef_             = 0;
 
 };
 

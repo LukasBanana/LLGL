@@ -509,7 +509,7 @@ struct StencilFaceDescriptor
     /**
     \brief Specifies the stencil reference value.
     \remarks This value will be used when the stencil operation is StencilOp::Replace.
-    \note For Direct3D 11 and Direct3D 12, only the stencil reference value of the front face will be used.
+    \note For Direct3D 11, Direct3D 12, and Metal, only the stencil reference value of the front face will be used.
     \see StencilDescriptor::front
     */
     std::uint32_t   reference       = 0;

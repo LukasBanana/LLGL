@@ -330,6 +330,22 @@ MTLTriangleFillMode ToMTLTriangleFillMode (const PolygonMode polygonMode)
     MapFailed("PolygonMode", "MTLTriangleFillMode");
 }
 
+MTLStencilOperation ToMTLStencilOperation(const StencilOp stencilOp)
+{
+    switch (stencilOp)
+    {
+        case StencilOp::Keep:       return MTLStencilOperationKeep;
+        case StencilOp::Zero:       return MTLStencilOperationZero;
+        case StencilOp::Replace:    return MTLStencilOperationReplace;
+        case StencilOp::IncClamp:   return MTLStencilOperationIncrementClamp;
+        case StencilOp::DecClamp:   return MTLStencilOperationDecrementClamp;
+        case StencilOp::Invert:     return MTLStencilOperationInvert;
+        case StencilOp::IncWrap:    return MTLStencilOperationIncrementWrap;
+        case StencilOp::DecWrap:    return MTLStencilOperationDecrementWrap;
+    }
+    MapFailed("StencilOp", "MTLStencilOperation");
+}
+
 Format ToFormat(const MTLPixelFormat pixelFormat)
 {
     switch (pixelFormat)

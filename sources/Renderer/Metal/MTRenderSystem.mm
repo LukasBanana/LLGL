@@ -208,7 +208,7 @@ Shader* MTRenderSystem::CreateShader(const ShaderDescriptor& desc)
 ShaderProgram* MTRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
 {
     AssertCreateShaderProgram(desc);
-    return TakeOwnership(shaderPrograms_, MakeUnique<MTShaderProgram>(desc));
+    return TakeOwnership(shaderPrograms_, MakeUnique<MTShaderProgram>(device_, desc));
 }
 
 void MTRenderSystem::Release(Shader& shader)

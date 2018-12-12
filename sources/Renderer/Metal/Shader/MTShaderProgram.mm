@@ -15,7 +15,8 @@ namespace LLGL
 {
 
 
-MTShaderProgram::MTShaderProgram(const ShaderProgramDescriptor& desc)
+MTShaderProgram::MTShaderProgram(id<MTLDevice> device, const ShaderProgramDescriptor& desc) :
+    device_ { device }
 {
     Attach(desc.vertexShader);
     Attach(desc.tessControlShader);
@@ -50,7 +51,10 @@ ShaderReflectionDescriptor MTShaderProgram::QueryReflectionDesc() const
     ShaderReflectionDescriptor reflection;
 
     /* Reflect shader program */
-    //Reflect(reflection);
+    if (kernelFunc_ != nil)
+        ReflectComputePipeline(reflection);
+    else
+        ReflectRenderPipeline(reflection);
 
     /* Sort output to meet the interface requirements */
     ShaderProgram::FinalizeShaderReflection(reflection);
@@ -177,6 +181,78 @@ void MTShaderProgram::ReleaseVertexDesc()
         [vertexDesc_ release];
         vertexDesc_ = nullptr;
     }
+}
+
+static ResourceType ToResourceType(MTLArgumentType type)
+{
+    switch (type)
+    {
+        case MTLArgumentTypeBuffer:     return ResourceType::Buffer;
+        case MTLArgumentTypeTexture:    return ResourceType::Texture;
+        case MTLArgumentTypeSampler:    return ResourceType::Sampler;
+        default:                        return ResourceType::Undefined;
+    }
+}
+
+static void ReflectShaderArgument(MTLArgument* arg, ShaderReflectionDescriptor& reflection)
+{
+    auto resourceType = ToResourceType(arg.type);
+    if (resourceType != ResourceType::Undefined)
+    {
+        ShaderReflectionDescriptor::ResourceView resourceView;
+        {
+            resourceView.name       = [arg.name UTF8String];
+            resourceView.type       = resourceType;
+            resourceView.slot       = arg.index;
+            resourceView.arraySize  = arg.arrayLength;
+            if (resourceType == ResourceType::Buffer)
+                resourceView.constantBufferSize = arg.bufferDataSize;
+        }
+        reflection.resourceViews.push_back(resourceView);
+    }
+}
+
+void MTShaderProgram::ReflectRenderPipeline(ShaderReflectionDescriptor& reflection) const
+{
+    //TODO: get pixel formats from render target or render context
+    /* Create render pipeline state */
+    MTLRenderPipelineDescriptor* pipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
+    {
+        pipelineDesc.vertexDescriptor                   = GetMTLVertexDesc();
+        pipelineDesc.alphaToCoverageEnabled             = NO;
+        pipelineDesc.alphaToOneEnabled                  = NO;
+        pipelineDesc.fragmentFunction                   = GetFragmentMTLFunction();
+        pipelineDesc.vertexFunction                     = GetVertexMTLFunction();
+        pipelineDesc.inputPrimitiveTopology             = MTLPrimitiveTopologyClassTriangle;
+        pipelineDesc.colorAttachments[0].pixelFormat    = MTLPixelFormatBGRA8Unorm;
+        pipelineDesc.depthAttachmentPixelFormat         = MTLPixelFormatDepth32Float_Stencil8;
+        pipelineDesc.stencilAttachmentPixelFormat       = MTLPixelFormatDepth32Float_Stencil8;
+        pipelineDesc.rasterizationEnabled               = (GetFragmentMTLFunction() != nil);
+        pipelineDesc.sampleCount                        = 1;
+    }
+    
+    MTLRenderPipelineReflection* psoReflect = nullptr;
+    MTLPipelineOption opt = (MTLPipelineOptionArgumentInfo | MTLPipelineOptionBufferTypeInfo);
+    NSError* error = nullptr;
+    
+    id<MTLRenderPipelineState> pso = [device_
+        newRenderPipelineStateWithDescriptor:   pipelineDesc
+        options:                                opt
+        reflection:                             &psoReflect
+        error:                                  &error
+    ];
+ 
+    for (MTLArgument* arg in psoReflect.vertexArguments)
+        ReflectShaderArgument(arg, reflection);
+    for (MTLArgument* arg in psoReflect.fragmentArguments)
+        ReflectShaderArgument(arg, reflection);
+    
+    [pso release];
+}
+
+void MTShaderProgram::ReflectComputePipeline(ShaderReflectionDescriptor& reflection) const
+{
+    //TODO
 }
 
 

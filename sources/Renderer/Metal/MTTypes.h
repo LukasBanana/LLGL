@@ -40,6 +40,7 @@ MTLSamplerAddressMode       ToMTLSamplerAddressMode     ( const SamplerAddressMo
 MTLSamplerMinMagFilter  	ToMTLSamplerMinMagFilter    ( const SamplerFilter       filter            );
 MTLSamplerMipFilter         ToMTLSamplerMipFilter       ( const SamplerFilter       filter            );
 MTLTriangleFillMode         ToMTLTriangleFillMode       ( const PolygonMode         polygonMode       );
+MTLStencilOperation         ToMTLStencilOperation       ( const StencilOp           stencilOp         );
 
 Format                      ToFormat                    ( const MTLPixelFormat      pixelFormat       );
 

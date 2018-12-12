@@ -25,7 +25,7 @@ class MTShaderProgram : public ShaderProgram
 
     public:
 
-        MTShaderProgram(const ShaderProgramDescriptor& desc);
+        MTShaderProgram(id<MTLDevice> device, const ShaderProgramDescriptor& desc);
         ~MTShaderProgram();
     
         bool HasErrors() const override;
@@ -66,7 +66,12 @@ class MTShaderProgram : public ShaderProgram
         void Attach(Shader* shader);
         void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
         void ReleaseVertexDesc();
+    
+        void ReflectRenderPipeline(ShaderReflectionDescriptor& reflection) const;
+        void ReflectComputePipeline(ShaderReflectionDescriptor& reflection) const;
 
+        id<MTLDevice>           device_             = nil;
+    
         MTLVertexDescriptor*    vertexDesc_     	= nullptr;
         id<MTLFunction>         vertexFunc_         = nil;
         id<MTLFunction>         fragmentFunc_       = nil;

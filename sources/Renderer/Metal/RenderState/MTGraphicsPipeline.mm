@@ -36,6 +36,16 @@ static BOOL MTBoolean(bool value)
     return (value ? YES : NO);
 }
 
+static void Convert(MTLStencilDescriptor* dst, const StencilFaceDescriptor& src)
+{
+    dst.stencilFailureOperation     = MTTypes::ToMTLStencilOperation(src.stencilFailOp);
+    dst.depthFailureOperation       = MTTypes::ToMTLStencilOperation(src.depthFailOp);
+    dst.depthStencilPassOperation   = MTTypes::ToMTLStencilOperation(src.depthPassOp);
+    dst.stencilCompareFunction      = MTTypes::ToMTLCompareFunction(src.compareOp);
+    dst.readMask                    = src.readMask;
+    dst.writeMask                   = src.writeMask;
+}
+
 MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
 {
     /* Get native shader functions */
@@ -67,9 +77,7 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
             renderPipelineDesc.sampleCount          = desc.rasterizer.multiSampling.SampleCount();
         }
         else
-       	{
             renderPipelineDesc.rasterizationEnabled = NO;
-        }
     }
     NSError* error = nullptr;
     renderPipelineState_ = [device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error];
@@ -88,7 +96,9 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
             depthStencilDesc.depthCompareFunction   = MTLCompareFunctionAlways;
         
         /* Convert stencil descriptor */
-        //TODO...
+       Convert(depthStencilDesc.frontFaceStencil, desc.stencil.front);
+       Convert(depthStencilDesc.backFaceStencil, desc.stencil.back);
+       stencilRef_ = desc.stencil.front.reference;
     }
     depthStencilState_ = [device newDepthStencilStateWithDescriptor:depthStencilDesc];
 }
