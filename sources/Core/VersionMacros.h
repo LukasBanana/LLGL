@@ -10,7 +10,7 @@
 
 
 #define LLGL_VERSION_MAJOR      0
-#define LLGL_VERSION_MINOR      2
+#define LLGL_VERSION_MINOR      3
 #define LLGL_VERSION_REVISION   0
 #define LLGL_VERSION_STATUS     "Beta"
 
