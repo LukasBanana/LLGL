@@ -128,6 +128,21 @@ struct GLScissor
     GLsizei height; // default is context height
 };
 
+struct GLRenderState
+{
+    GLenum      drawMode            = GL_TRIANGLES;     // Render mode for "glDraw*"
+    GLenum      indexBufferDataType = GL_UNSIGNED_INT;
+    GLsizeiptr  indexBufferStride   = 4;
+    GLsizeiptr  indexBufferOffset   = 0;
+};
+
+struct GLClearValue
+{
+    GLfloat color[4]    = { 0.0f, 0.0f, 0.0f, 0.0f };
+    GLfloat depth       = 1.0f;
+    GLint   stencil     = 0;
+};
+
 
 } // /namespace LLGL
 

@@ -1,11 +1,11 @@
 /*
- * GLCommandBuffer.cpp
+ * GLImmediateCommandBuffer.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLCommandBuffer.h"
+#include "GLImmediateCommandBuffer.h"
 #include "GLRenderContext.h"
 #include "../GLCommon/GLTypes.h"
 #include "../GLCommon/GLCore.h"
@@ -41,30 +41,35 @@ static const std::uint32_t  g_maxNumResourceSlots                   = 64;
 static GLuint               g_nullResources[g_maxNumResourceSlots]  = {};
 
 
-GLCommandBuffer::GLCommandBuffer(const std::shared_ptr<GLStateManager>& stateMngr) :
+GLImmediateCommandBuffer::GLImmediateCommandBuffer(const std::shared_ptr<GLStateManager>& stateMngr) :
     stateMngr_ { stateMngr }
 {
 }
 
+bool GLImmediateCommandBuffer::IsImmediateCmdBuffer() const
+{
+    return true;
+}
+
 /* ----- Encoding ----- */
 
-void GLCommandBuffer::Begin()
+void GLImmediateCommandBuffer::Begin()
 {
     // dummy
 }
 
-void GLCommandBuffer::End()
+void GLImmediateCommandBuffer::End()
 {
     // dummy
 }
 
-void GLCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void GLImmediateCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
 {
     auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
     dstBufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data);
 }
 
-void GLCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+void GLImmediateCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
 {
     auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
     auto& srcBufferGL = LLGL_CAST(GLBuffer&, srcBuffer);
@@ -78,7 +83,7 @@ void GLCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
 
 /* ----- Configuration ----- */
 
-void GLCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void GLImmediateCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
 {
     if (stateDesc != nullptr && stateDescSize == sizeof(OpenGLDependentStateDescriptor))
     {
@@ -90,7 +95,7 @@ void GLCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::s
 
 /* ----- Viewport and Scissor ----- */
 
-void GLCommandBuffer::SetViewport(const Viewport& viewport)
+void GLImmediateCommandBuffer::SetViewport(const Viewport& viewport)
 {
     /* Setup GL viewport and depth-range */
     GLViewport viewportGL { viewport.x, viewport.y, viewport.width, viewport.height };
@@ -101,7 +106,7 @@ void GLCommandBuffer::SetViewport(const Viewport& viewport)
     stateMngr_->SetDepthRange(depthRangeGL);
 }
 
-void GLCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
+void GLImmediateCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
     GLViewport viewportsGL[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
     GLDepthRange depthRangesGL[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
@@ -127,14 +132,14 @@ void GLCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* v
     stateMngr_->SetDepthRangeArray(0, count, depthRangesGL);
 }
 
-void GLCommandBuffer::SetScissor(const Scissor& scissor)
+void GLImmediateCommandBuffer::SetScissor(const Scissor& scissor)
 {
     /* Setup and submit GL scissor to state manager */
     GLScissor scissorGL { scissor.x, scissor.y, scissor.width, scissor.height };
     stateMngr_->SetScissor(scissorGL);
 }
 
-void GLCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
+void GLImmediateCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
     GLScissor scissorsGL[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
 
@@ -156,7 +161,7 @@ void GLCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 
 /* ----- Clear ----- */
 
-void GLCommandBuffer::SetClearColor(const ColorRGBAf& color)
+void GLImmediateCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
     /* Submit clear value to GL */
     glClearColor(color.r, color.g, color.b, color.a);
@@ -168,7 +173,7 @@ void GLCommandBuffer::SetClearColor(const ColorRGBAf& color)
     clearValue_.color[3] = color.a;
 }
 
-void GLCommandBuffer::SetClearDepth(float depth)
+void GLImmediateCommandBuffer::SetClearDepth(float depth)
 {
     /* Submit clear value to GL */
     glClearDepth(depth);
@@ -177,7 +182,7 @@ void GLCommandBuffer::SetClearDepth(float depth)
     clearValue_.depth = depth;
 }
 
-void GLCommandBuffer::SetClearStencil(std::uint32_t stencil)
+void GLImmediateCommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
     /* Submit clear value to GL */
     glClearStencil(static_cast<GLint>(stencil));
@@ -186,7 +191,7 @@ void GLCommandBuffer::SetClearStencil(std::uint32_t stencil)
     clearValue_.stencil = static_cast<GLint>(stencil);
 }
 
-void GLCommandBuffer::Clear(long flags)
+void GLImmediateCommandBuffer::Clear(long flags)
 {
     /* Setup GL clear mask and clear respective buffer */
     GLbitfield mask = 0;
@@ -205,7 +210,9 @@ void GLCommandBuffer::Clear(long flags)
 
     if ((flags & ClearFlags::Stencil) != 0)
     {
-        //stateMngr_->SetStencilMask(GL_TRUE);
+        #if 0//TODO
+        stateMngr_->SetStencilMask(GL_TRUE);
+        #endif
         mask |= GL_STENCIL_BUFFER_BIT;
     }
 
@@ -213,13 +220,17 @@ void GLCommandBuffer::Clear(long flags)
     glClear(mask);
 
     /* Restore framebuffer masks */
+    #if 0//TODO
+    if ((flags & ClearFlags::Stencil) != 0)
+        stateMngr_->PopStencilMask();
+    #endif
     if ((flags & ClearFlags::Depth) != 0)
         stateMngr_->PopDepthMask();
     if ((flags & ClearFlags::Color) != 0)
         stateMngr_->PopColorMask();
 }
 
-void GLCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
+void GLImmediateCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
     bool clearedDepth = false, clearedColor = false;
 
@@ -277,7 +288,7 @@ void GLCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
 
 /* ----- Input Assembly ------ */
 
-void GLCommandBuffer::SetVertexBuffer(Buffer& buffer)
+void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
     {
@@ -287,7 +298,7 @@ void GLCommandBuffer::SetVertexBuffer(Buffer& buffer)
     }
 }
 
-void GLCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
+void GLImmediateCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)
     {
@@ -297,7 +308,7 @@ void GLCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     }
 }
 
-void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
+void GLImmediateCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     /* Bind index buffer deferred (can only be bound to the active VAO) */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
@@ -305,7 +316,7 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
     SetIndexFormat(bufferGL.IsIndexType16Bits(), 0);
 }
 
-void GLCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
+void GLImmediateCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
 {
     /* Bind index buffer deferred (can only be bound to the active VAO) */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
@@ -315,12 +326,12 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 
 /* ----- Stream Output Buffers ------ */
 
-void GLCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
+void GLImmediateCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
     SetGenericBuffer(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, buffer, 0);
 }
 
-void GLCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
+void GLImmediateCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
 {
     SetGenericBufferArray(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, bufferArray, 0);
 }
@@ -335,7 +346,7 @@ static void ErrTransformFeedbackNotSupported(const char* funcName)
 
 #endif
 
-void GLCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+void GLImmediateCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
 {
     #ifdef __APPLE__
     glBeginTransformFeedback(GLTypes::Map(primitiveType));
@@ -349,7 +360,7 @@ void GLCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
     #endif
 }
 
-void GLCommandBuffer::EndStreamOutput()
+void GLImmediateCommandBuffer::EndStreamOutput()
 {
     #ifdef __APPLE__
     glEndTransformFeedback();
@@ -365,19 +376,19 @@ void GLCommandBuffer::EndStreamOutput()
 
 /* ----- Resource Heaps ----- */
 
-void GLCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
+void GLImmediateCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
 {
     SetResourceHeap(resourceHeap);
 }
 
-void GLCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
+void GLImmediateCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
 {
     SetResourceHeap(resourceHeap);
 }
 
 /* ----- Render Passes ----- */
 
-void GLCommandBuffer::BeginRenderPass(
+void GLImmediateCommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
@@ -397,14 +408,14 @@ void GLCommandBuffer::BeginRenderPass(
     }
 }
 
-void GLCommandBuffer::EndRenderPass()
+void GLImmediateCommandBuffer::EndRenderPass()
 {
     // dummy
 }
 
 /* ----- Pipeline States ----- */
 
-void GLCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void GLImmediateCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     /* Set graphics pipeline render states */
     auto& graphicsPipelineGL = LLGL_CAST(GLGraphicsPipeline&, graphicsPipeline);
@@ -414,7 +425,7 @@ void GLCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     renderState_.drawMode = graphicsPipelineGL.GetDrawMode();
 }
 
-void GLCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
+void GLImmediateCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
     auto& computePipelineGL = LLGL_CAST(GLComputePipeline&, computePipeline);
     computePipelineGL.Bind(*stateMngr_);
@@ -422,27 +433,27 @@ void GLCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void GLCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
+void GLImmediateCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     /* Begin query with internal target */
     auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
     queryHeapGL.Begin(query);
 }
 
-void GLCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
+void GLImmediateCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     /* Begin query with internal target */
     auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
     queryHeapGL.End(query);
 }
 
-void GLCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
+void GLImmediateCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
     glBeginConditionalRender(queryHeapGL.GetFirstID(query), GLTypes::Map(mode));
 }
 
-void GLCommandBuffer::EndRenderCondition()
+void GLImmediateCommandBuffer::EndRenderCondition()
 {
     glEndConditionalRender();
 }
@@ -455,7 +466,7 @@ In the following Draw* functions, 'indices' is from type 'GLsizeiptr' to have th
 The indices actually store the index start offset, but must be passed to GL as a void-pointer, due to an obsolete API.
 */
 
-void GLCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
+void GLImmediateCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
     glDrawArrays(
         renderState_.drawMode,
@@ -464,7 +475,7 @@ void GLCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
     );
 }
 
-void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
+void GLImmediateCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
     const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElements(
@@ -475,7 +486,7 @@ void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
     );
 }
 
-void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void GLImmediateCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsBaseVertex(
@@ -487,7 +498,7 @@ void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
     );
 }
 
-void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
+void GLImmediateCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
     glDrawArraysInstanced(
         renderState_.drawMode,
@@ -497,7 +508,7 @@ void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
     );
 }
 
-void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
+void GLImmediateCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
     #ifndef __APPLE__
     glDrawArraysInstancedBaseInstance(
@@ -512,7 +523,7 @@ void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
     #endif
 }
 
-void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
+void GLImmediateCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
     const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsInstanced(
@@ -524,7 +535,7 @@ void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     );
 }
 
-void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void GLImmediateCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsInstancedBaseVertex(
@@ -537,7 +548,7 @@ void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     );
 }
 
-void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
+void GLImmediateCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
     #ifndef __APPLE__
     const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
@@ -555,7 +566,7 @@ void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     #endif
 }
 
-void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
+void GLImmediateCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
@@ -567,7 +578,7 @@ void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
     );
 }
 
-void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+void GLImmediateCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     /* Bind indirect argument buffer */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
@@ -600,7 +611,7 @@ void GLCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::ui
     }
 }
 
-void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
+void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
@@ -613,7 +624,7 @@ void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
     );
 }
 
-void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     /* Bind indirect argument buffer */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
@@ -650,7 +661,7 @@ void GLCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
 
 /* ----- Compute ----- */
 
-void GLCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
+void GLImmediateCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
     #ifndef __APPLE__
     glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
@@ -659,7 +670,7 @@ void GLCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWo
     #endif
 }
 
-void GLCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
+void GLImmediateCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
     #ifndef __APPLE__
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
@@ -672,35 +683,35 @@ void GLCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 /* ----- Direct Resource Access ------ */
 
-void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+void GLImmediateCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
 }
 
-void GLCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+void GLImmediateCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
 }
 
-void GLCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+void GLImmediateCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
 }
 
-void GLCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*stageFlags*/)
+void GLImmediateCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*stageFlags*/)
 {
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     stateMngr_->ActiveTexture(slot);
     stateMngr_->BindTexture(textureGL);
 }
 
-void GLCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*stageFlags*/)
+void GLImmediateCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*stageFlags*/)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     stateMngr_->BindSampler(slot, samplerGL.GetID());
 }
 
-void GLCommandBuffer::ResetResourceSlots(
+void GLImmediateCommandBuffer::ResetResourceSlots(
     const ResourceType  resourceType,
     std::uint32_t       firstSlot,
     std::uint32_t       numSlots,
@@ -753,14 +764,14 @@ void GLCommandBuffer::ResetResourceSlots(
  * ======= Private: =======
  */
 
-void GLCommandBuffer::SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot)
+void GLImmediateCommandBuffer::SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot)
 {
     /* Bind buffer with BindBufferBase */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBufferBase(bufferTarget, slot, bufferGL.GetID());
 }
 
-void GLCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot)
+void GLImmediateCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot)
 {
     /* Bind buffers with BindBuffersBase */
     auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
@@ -772,13 +783,13 @@ void GLCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferTarget, B
     );
 }
 
-void GLCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap)
+void GLImmediateCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap)
 {
     auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
     resourceHeapGL.Bind(*stateMngr_);
 }
 
-void GLCommandBuffer::SetIndexFormat(bool index16Bits, std::uint64_t offset)
+void GLImmediateCommandBuffer::SetIndexFormat(bool index16Bits, std::uint64_t offset)
 {
     /* Store new index buffer data in global render state */
     if (index16Bits)
@@ -795,13 +806,13 @@ void GLCommandBuffer::SetIndexFormat(bool index16Bits, std::uint64_t offset)
     renderState_.indexBufferOffset = static_cast<GLsizeiptr>(offset);
 }
 
-void GLCommandBuffer::BlitBoundRenderTarget()
+void GLImmediateCommandBuffer::BlitBoundRenderTarget()
 {
     if (boundRenderTarget_)
         boundRenderTarget_->BlitOntoFramebuffer();
 }
 
-void GLCommandBuffer::BindRenderTarget(GLRenderTarget& renderTargetGL)
+void GLImmediateCommandBuffer::BindRenderTarget(GLRenderTarget& renderTargetGL)
 {
     /* Blit previously bound render target (in case mutli-sampling is used) */
     BlitBoundRenderTarget();
@@ -819,7 +830,7 @@ void GLCommandBuffer::BindRenderTarget(GLRenderTarget& renderTargetGL)
     //TODO: maybe use 'glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
 }
 
-void GLCommandBuffer::BindRenderContext(GLRenderContext& renderContextGL)
+void GLImmediateCommandBuffer::BindRenderContext(GLRenderContext& renderContextGL)
 {
     /* Blit previously bound render target (in case mutli-sampling is used) */
     BlitBoundRenderTarget();
@@ -840,7 +851,7 @@ void GLCommandBuffer::BindRenderContext(GLRenderContext& renderContextGL)
     //TODO: maybe use 'glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
 }
 
-void GLCommandBuffer::ClearAttachmentsWithRenderPass(
+void GLImmediateCommandBuffer::ClearAttachmentsWithRenderPass(
     const GLRenderPass& renderPassGL,
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
@@ -894,7 +905,7 @@ void GLCommandBuffer::ClearAttachmentsWithRenderPass(
     }
 }
 
-std::uint32_t GLCommandBuffer::ClearColorBuffers(
+std::uint32_t GLImmediateCommandBuffer::ClearColorBuffers(
     const std::uint8_t* colorBuffers,
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues,

@@ -15,6 +15,8 @@
 #include "../../Core/Helper.h"
 #include "../../Core/Assertion.h"
 #include "GLRenderingCaps.h"
+#include "GLImmediateCommandBuffer.h"
+#include "GLDeferredCommandBuffer.h"
 
 
 namespace LLGL
@@ -73,11 +75,28 @@ CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
     return CreateCommandBufferExt();
 }
 
-CommandBufferExt* GLRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
+CommandBufferExt* GLRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& desc)
 {
     /* Get state manager from shared render context */
     if (auto sharedContext = GetSharedRenderContext())
-        return TakeOwnership(commandBuffers_, MakeUnique<GLCommandBuffer>(sharedContext->GetStateManager()));
+    {
+        if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+        {
+            /* Create deferred command buffer */
+            return TakeOwnership(
+                commandBuffers_,
+                MakeUnique<GLDeferredCommandBuffer>()
+            );
+        }
+        else
+        {
+            /* Create immediate command buffer */
+            return TakeOwnership(
+                commandBuffers_,
+                MakeUnique<GLImmediateCommandBuffer>(sharedContext->GetStateManager())
+            );
+        }
+    }
     else
         throw std::runtime_error("cannot create OpenGL command buffer without active render context");
 }
