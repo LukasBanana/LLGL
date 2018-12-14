@@ -198,6 +198,8 @@ class VKCommandBuffer final : public CommandBuffer
         void AppendQueryPoolInFlight(VkQueryPool queryPool);
         #endif
 
+    private:
+
         const VKPtr<VkDevice>&          device_;
         VKPtr<VkCommandPool>            commandPool_;
 
@@ -211,6 +213,8 @@ class VKCommandBuffer final : public CommandBuffer
         RecordState                     recordState_                = RecordState::Undefined;
 
         VkCommandBufferUsageFlags       usageFlags_                 = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        VkCommandBufferLevel            bufferLevel_                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
         VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
 

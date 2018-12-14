@@ -50,7 +50,10 @@ VKCommandBuffer::VKCommandBuffer(
 
     /* Translate creation flags */
     if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
-        usageFlags_ = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    {
+        usageFlags_     = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        bufferLevel_    = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+    }
 
     /* Create native command buffer objects */
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
@@ -153,7 +156,9 @@ void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
 
 void VKCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 {
-    //TODO
+    auto& cmdBufferVK = LLGL_CAST(VKCommandBuffer&, deferredCommandBuffer);
+    VkCommandBuffer cmdBuffers[] = { cmdBufferVK.GetVkCommandBuffer() };
+    vkCmdExecuteCommands(commandBuffer_, 1, cmdBuffers);
 }
 
 /* ----- Configuration ----- */
@@ -793,7 +798,7 @@ void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
         allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.pNext                 = nullptr;
         allocInfo.commandPool           = commandPool_;
-        allocInfo.level                 = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.level                 = bufferLevel_;
         allocInfo.commandBufferCount    = static_cast<std::uint32_t>(bufferCount);
     }
     auto result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferList_.data());

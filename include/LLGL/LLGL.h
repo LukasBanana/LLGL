@@ -25,7 +25,7 @@
 
 //DOXYGEN MAIN PAGE
 /**
- * \mainpage LLGL 0.02 Beta Documentation
+ * \mainpage LLGL 0.03 Beta Documentation
  * 
  * LLGL (Low Level Graphics Library)
  * =================================
@@ -33,7 +33,7 @@
  * Overview
  * --------
  * 
- * - **Version**: 0.02 Beta
+ * - **Version**: 0.03 Beta
  * - **License**: [3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
  * 
  * 
@@ -93,7 +93,7 @@
  * 
  * // OpenGL Implementation:
  * void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
- *     const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
+ *     const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
  *     glDrawElements(
  *         renderState_.drawMode,
  *         static_cast<GLsizei>(numIndices),
@@ -127,7 +127,7 @@
  *             patchIndexBuffer:               nil
  *             patchIndexBufferOffset:         0
  *             controlPointIndexBuffer:        indexBuffer_
- *             controlPointIndexBufferOffset:  indexTypeSize_ * (static_cast<NSUInteger>(firstIndex))
+ *             controlPointIndexBufferOffset:  indexBufferOffset_ + indexTypeSize_ * (static_cast<NSUInteger>(firstIndex))
  *             instanceCount:                  1
  *             baseInstance:                   0
  *         ];
@@ -137,7 +137,7 @@
  *             indexCount:             static_cast<NSUInteger>(numIndices)
  *             indexType:              indexType_
  *             indexBuffer:            indexBuffer_
- *             indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+ *             indexBufferOffset:      indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
  *         ];
  *     }
  * }

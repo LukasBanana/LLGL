@@ -36,7 +36,7 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         /* ----- Common ----- */
 
-        D3D12CommandBuffer(D3D12RenderSystem& renderSystem);
+        D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc);
 
         /* ----- Encoding ----- */
 
@@ -149,9 +149,7 @@ class D3D12CommandBuffer final : public CommandBuffer
 
     private:
 
-        static const UINT maxNumBuffers = 3;
-
-        void CreateDevices(D3D12RenderSystem& renderSystem);
+        void CreateDevices(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc);
 
         void NextCommandAllocator();
 
@@ -175,13 +173,16 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         inline ID3D12CommandAllocator* GetCommandAllocator() const
         {
-            return cmdAllocators_[currentCmdAllocator_].Get();
+            return cmdAllocators_[currentAllocator_].Get();
         }
 
-        static const std::size_t g_numCmdAllocators = 3;
+    private:
 
-        ComPtr<ID3D12CommandAllocator>      cmdAllocators_[g_numCmdAllocators];
-        std::size_t                         currentCmdAllocator_                = 0;
+        static const std::uint32_t g_maxNumAllocators = 3;
+
+        ComPtr<ID3D12CommandAllocator>      cmdAllocators_[g_maxNumAllocators];
+        std::uint32_t                       currentAllocator_                   = 0;
+        std::uint32_t                       numAllocators_                      = g_maxNumAllocators;
 
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
         D3D12CommandContext                 commandContext_;

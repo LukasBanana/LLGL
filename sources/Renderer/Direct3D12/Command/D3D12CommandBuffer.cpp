@@ -30,10 +30,10 @@ namespace LLGL
 {
 
 
-D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem) :
+D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
     commandSignaturePool_ { &(renderSystem.GetCommandSignaturePool()) }
 {
-    CreateDevices(renderSystem);
+    CreateDevices(renderSystem, desc);
 }
 
 /* ----- Encoding ----- */
@@ -74,7 +74,8 @@ void D3D12CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, 
 
 void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 {
-    //TODO
+    auto& cmdBufferD3D = LLGL_CAST(D3D12CommandBuffer&, deferredCommandBuffer);
+    commandList_->ExecuteBundle(cmdBufferD3D.GetNative());
 }
 
 /* ----- Configuration ----- */
@@ -362,7 +363,7 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
     /* Scissor rectangle must be updated (if scissor test is disabled) */
     scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();
-    if (!scissorEnabled_)
+    if (!scissorEnabled_ && commandList_->GetType() == D3D12_COMMAND_LIST_TYPE_DIRECT)
         SetScissorRectsToDefault(graphicsPipelineD3D.NumDefaultScissorRects());
 }
 
@@ -511,26 +512,36 @@ void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
  * ======= Private: =======
  */
 
-void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
+static D3D12_COMMAND_LIST_TYPE GetD3DCommandListType(const CommandBufferDescriptor& desc)
+{
+    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+        return D3D12_COMMAND_LIST_TYPE_BUNDLE;
+    else
+        return D3D12_COMMAND_LIST_TYPE_DIRECT;
+}
+
+void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc)
 {
     auto& device = renderSystem.GetDevice();
 
-    /* Create command allocators */
-    #ifdef LLGL_DEBUG
-    int i = 0;
-    #endif
+    /* Determine number of command allocators */
+    numAllocators_ = std::max(1u, std::min(desc.numNativeBuffers, g_maxNumAllocators));
 
-    for (auto& cmdAllocator : cmdAllocators_)
+    /* Create command allocators */
+    auto listType = GetD3DCommandListType(desc);
+
+    for (std::uint32_t i = 0; i < numAllocators_; ++i)
     {
-        cmdAllocator = device.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+        auto& cmdAlloc = cmdAllocators_[i];
+        cmdAlloc = device.CreateDXCommandAllocator(listType);
         #ifdef LLGL_DEBUG
-        std::wstring name = L"LLGL::D3D12CommandBuffer::commandAllocator[" + std::to_wstring(i++) + L"]";
-        cmdAllocator->SetName(name.c_str());
+        std::wstring name = L"LLGL::D3D12CommandBuffer::commandAllocator[" + std::to_wstring(i) + L"]";
+        cmdAlloc->SetName(name.c_str());
         #endif
     }
 
-    /* Create graphics command list */
-    commandList_ = device.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocators_[0].Get());
+    /* Create graphics command list and close it (they are created in recording mode) */
+    commandList_ = device.CreateDXCommandList(listType, GetCommandAllocator());
     commandList_->Close();
 
     /* Initialize command context */
@@ -540,7 +551,7 @@ void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 void D3D12CommandBuffer::NextCommandAllocator()
 {
     /* Get next command allocator */
-    currentCmdAllocator_ = ((currentCmdAllocator_ + 1) % D3D12CommandBuffer::g_numCmdAllocators);
+    currentAllocator_ = ((currentAllocator_ + 1) % numAllocators_);
 
     /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
     auto hr = GetCommandAllocator()->Reset();
