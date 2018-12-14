@@ -6,9 +6,11 @@
  */
 
 #include "GLStateManager.h"
+#include "GLRenderPass.h"
 #include "GLDepthStencilState.h"
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
+#include "../GLRenderContext.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"
@@ -117,6 +119,9 @@ static const GLenum g_textureLayersEnum[] =
 };
 
 static const GLuint g_GLInvalidId = ~0;
+
+// Global array of null pointers to unbind resource slots
+static GLuint g_nullResources[GLStateManager::g_maxNumResourceSlots] = {};
 
 
 /*
@@ -557,17 +562,6 @@ void GLStateManager::SetDepthMask(GLboolean flag)
     }
 }
 
-void GLStateManager::PushDepthMaskAndEnable()
-{
-    SetDepthMask(GL_TRUE);
-    commonState_.cachedDepthMask = commonState_.depthMask;
-}
-
-void GLStateManager::PopDepthMask()
-{
-    SetDepthMask(commonState_.cachedDepthMask);
-}
-
 /* ----- Rasterizer states ----- */
 
 void GLStateManager::NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState)
@@ -623,25 +617,6 @@ void GLStateManager::SetLogicOp(GLenum opcode)
     {
         commonState_.logicOpCode = opcode;
         glLogicOp(opcode);
-    }
-}
-
-void GLStateManager::PushColorMaskAndEnable()
-{
-    if (!colorMaskOnStack_)
-    {
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        colorMaskOnStack_ = true;
-    }
-}
-
-void GLStateManager::PopColorMask()
-{
-    if (colorMaskOnStack_)
-    {
-        if (boundBlendState_)
-            boundBlendState_->BindColorMaskOnly(*this);
-        colorMaskOnStack_ = false;
     }
 }
 
@@ -701,6 +676,11 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
             ++first;
         }
     }
+}
+
+void GLStateManager::UnbindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count)
+{
+    BindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, first, count, g_nullResources);
 }
 
 void GLStateManager::BindVertexArray(GLuint vertexArray)
@@ -1058,6 +1038,11 @@ void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* sam
     }
 }
 
+void GLStateManager::UnbindSamplers(GLuint first, GLsizei count)
+{
+    BindSamplers(first, count, g_nullResources);
+}
+
 void GLStateManager::NotifySamplerRelease(GLuint sampler)
 {
     for (auto& boundSampler : samplerState_.boundSamplers)
@@ -1089,6 +1074,124 @@ void GLStateManager::PopShaderProgram()
 void GLStateManager::NotifyShaderProgramRelease(GLuint program)
 {
     InvalidateBoundGLObject(shaderState_.boundProgram, program);
+}
+
+/* ----- Render pass ----- */
+
+void GLStateManager::BindRenderPass(
+    RenderTarget&       renderTarget,
+    const RenderPass*   renderPass,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues,
+    const GLClearValue& defaultClearValue)
+{
+    /* Bind render target/context */
+    if (renderTarget.IsRenderContext())
+        BindAndBlitRenderContext(LLGL_CAST(GLRenderContext&, renderTarget));
+    else
+        BindAndBlitRenderTarget(LLGL_CAST(GLRenderTarget&, renderTarget));
+
+    /* Clear attachments */
+    if (renderPass)
+    {
+        auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
+        ClearAttachmentsWithRenderPass(*renderPassGL, numClearValues, clearValues, defaultClearValue);
+    }
+}
+
+void GLStateManager::Clear(long flags)
+{
+    /* Setup GL clear mask and clear respective buffer */
+    GLbitfield mask = 0;
+
+    if ((flags & ClearFlags::Color) != 0)
+    {
+        PushColorMaskAndEnable();
+        mask |= GL_COLOR_BUFFER_BIT;
+    }
+
+    if ((flags & ClearFlags::Depth) != 0)
+    {
+        PushDepthMaskAndEnable();
+        mask |= GL_DEPTH_BUFFER_BIT;
+    }
+
+    if ((flags & ClearFlags::Stencil) != 0)
+    {
+        #if 0//TODO
+        stateMngr_->SetStencilMask(GL_TRUE);
+        #endif
+        mask |= GL_STENCIL_BUFFER_BIT;
+    }
+
+    /* Clear buffers */
+    glClear(mask);
+
+    /* Restore framebuffer masks */
+    #if 0//TODO
+    if ((flags & ClearFlags::Stencil) != 0)
+        stateMngr_->PopStencilMask();
+    #endif
+    if ((flags & ClearFlags::Depth) != 0)
+        PopDepthMask();
+    if ((flags & ClearFlags::Color) != 0)
+        PopColorMask();
+}
+
+void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const AttachmentClear* attachments)
+{
+    bool clearedDepth = false, clearedColor = false;
+
+    for (; numAttachments-- > 0; ++attachments)
+    {
+        if ((attachments->flags & ClearFlags::Color) != 0)
+        {
+            /* Enable color mask temporarily */
+            PushColorMaskAndEnable();
+            clearedColor = true;
+
+            /* Clear color buffer */
+            glClearBufferfv(
+                GL_COLOR,
+                static_cast<GLint>(attachments->colorAttachment),
+                attachments->clearValue.color.Ptr()
+            );
+        }
+        else if ((attachments->flags & ClearFlags::DepthStencil) == ClearFlags::DepthStencil)
+        {
+            /* Enable depth mask temporarily */
+            PushDepthMaskAndEnable();
+            clearedDepth = true;
+
+            /* Clear depth and stencil buffer simultaneously */
+            glClearBufferfi(
+                GL_DEPTH_STENCIL,
+                0,
+                attachments->clearValue.depth,
+                static_cast<GLint>(attachments->clearValue.stencil)
+            );
+        }
+        else if ((attachments->flags & ClearFlags::Depth) != 0)
+        {
+            /* Enable depth mask temporarily */
+            PushDepthMaskAndEnable();
+            clearedDepth = true;
+
+            /* Clear only depth buffer */
+            glClearBufferfv(GL_DEPTH, 0, &(attachments->clearValue.depth));
+        }
+        else if ((attachments->flags & ClearFlags::Stencil) != 0)
+        {
+            /* Clear only stencil buffer */
+            GLint stencil = static_cast<GLint>(attachments->clearValue.stencil);
+            glClearBufferiv(GL_STENCIL, 0, &stencil);
+        }
+    }
+
+    if (clearedDepth)
+        PopDepthMask();
+    if (clearedColor)
+        PopColorMask();
 }
 
 
@@ -1159,6 +1262,157 @@ void GLStateManager::DetermineVendorSpecificExtensions()
 }
 
 #endif
+
+/* ----- Stacks ----- */
+
+void GLStateManager::PushDepthMaskAndEnable()
+{
+    SetDepthMask(GL_TRUE);
+    commonState_.cachedDepthMask = commonState_.depthMask;
+}
+
+void GLStateManager::PopDepthMask()
+{
+    SetDepthMask(commonState_.cachedDepthMask);
+}
+
+void GLStateManager::PushColorMaskAndEnable()
+{
+    if (!colorMaskOnStack_)
+    {
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        colorMaskOnStack_ = true;
+    }
+}
+
+void GLStateManager::PopColorMask()
+{
+    if (colorMaskOnStack_)
+    {
+        if (boundBlendState_)
+            boundBlendState_->BindColorMaskOnly(*this);
+        colorMaskOnStack_ = false;
+    }
+}
+
+/* ----- Render pass ----- */
+
+void GLStateManager::BlitBoundRenderTarget()
+{
+    if (auto renderTarget = GetBoundRenderTarget())
+        renderTarget->BlitOntoFramebuffer();
+}
+
+void GLStateManager::BindAndBlitRenderTarget(GLRenderTarget& renderTargetGL)
+{
+    /* Blit previously bound render target, bind FBO, and notify new render target height */
+    BlitBoundRenderTarget();
+    BindRenderTarget(&renderTargetGL);
+    NotifyRenderTargetHeight(static_cast<GLint>(renderTargetGL.GetResolution().height));
+}
+
+void GLStateManager::BindAndBlitRenderContext(GLRenderContext& renderContextGL)
+{
+    /* Blit previously bound render target, unbind FBO, and make context current */
+    BlitBoundRenderTarget();
+    BindRenderTarget(nullptr);
+    GLRenderContext::GLMakeCurrent(&renderContextGL);
+}
+
+void GLStateManager::ClearAttachmentsWithRenderPass(
+    const GLRenderPass& renderPassGL,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues,
+    const GLClearValue& defaultClearValue)
+{
+    auto mask = renderPassGL.GetClearMask();
+
+    /* Clear color attachments */
+    std::uint32_t idx = 0;
+    if ((mask & GL_COLOR_BUFFER_BIT) != 0)
+    {
+        if (ClearColorBuffers(renderPassGL.GetClearColorAttachments(), numClearValues, clearValues, idx, defaultClearValue) > 0)
+            PopColorMask();
+    }
+
+    /* Clear depth-stencil attachment */
+    static const GLbitfield g_maskDepthStencil = (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    if ((mask & g_maskDepthStencil) == g_maskDepthStencil)
+    {
+        PushDepthMaskAndEnable();
+        {
+            /* Clear depth and stencil buffer simultaneously */
+            if (idx < numClearValues)
+                glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValues[idx].depth, static_cast<GLint>(clearValues[idx].stencil));
+            else
+                glClearBufferfi(GL_DEPTH_STENCIL, 0, defaultClearValue.depth, defaultClearValue.stencil);
+        }
+        PopDepthMask();
+    }
+    if ((mask & GL_DEPTH_BUFFER_BIT) != 0)
+    {
+        PushDepthMaskAndEnable();
+        {
+            /* Clear only depth buffer */
+            if (idx < numClearValues)
+                glClearBufferfv(GL_DEPTH, 0, &(clearValues[idx].depth));
+            else
+                glClearBufferfv(GL_DEPTH, 0, &(defaultClearValue.depth));
+        }
+        PopDepthMask();
+    }
+    else if ((mask & GL_STENCIL_BUFFER_BIT) != 0)
+    {
+        /* Clear only stencil buffer */
+        if (idx < numClearValues)
+        {
+            GLint stencil = static_cast<GLint>(clearValues[idx].stencil);
+            glClearBufferiv(GL_STENCIL, 0, &stencil);
+        }
+        else
+            glClearBufferiv(GL_STENCIL, 0, &(defaultClearValue.stencil));
+    }
+}
+
+std::uint32_t GLStateManager::ClearColorBuffers(
+    const std::uint8_t* colorBuffers,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues,
+    std::uint32_t&      idx,
+    const GLClearValue& defaultClearValue)
+{
+    std::uint32_t i = 0, n = 0;
+
+    /* Use specified clear values */
+    for (; i < numClearValues; ++i)
+    {
+        /* Check if attachment list has ended */
+        if (colorBuffers[i] != 0xFF)
+        {
+            PushColorMaskAndEnable();
+            glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), clearValues[idx++].color.Ptr());
+            ++n;
+        }
+        else
+            return n;
+    }
+
+    /* Use default clear values */
+    for (; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
+    {
+        /* Check if attachment list has ended */
+        if (colorBuffers[i] != 0xFF)
+        {
+            PushColorMaskAndEnable();
+            glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), defaultClearValue.color);
+            ++n;
+        }
+        else
+            return n;
+    }
+
+    return n;
+}
 
 
 } // /namespace LLGL

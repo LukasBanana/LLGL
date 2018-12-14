@@ -79,7 +79,7 @@ class GLRenderContext final : public RenderContext
         std::shared_ptr<GLStateManager> stateMngr_;
         RenderState                     renderState_;
 
-        GLint                           contextHeight_      = 0;
+        GLint                           contextHeight_  = 0;
 
 };
 

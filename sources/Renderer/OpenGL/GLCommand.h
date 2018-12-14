@@ -95,7 +95,7 @@ struct GLCmdClearStencil
 
 struct GLCmdClear
 {
-    GLbitfield mask;
+    long flags;
 };
 
 struct GLCmdClearBuffers
@@ -148,20 +148,12 @@ struct GLCmdBindResourceHeap
     GLResourceHeap* resourceHeap;
 };
 
-struct GLCmdBindRenderContext
+struct GLCmdBindRenderPass
 {
-    GLRenderContext* renderContext;
-};
-
-struct GLCmdBindRenderTarget
-{
-    GLRenderTarget* renderTarget;
-};
-
-struct GLCmdClearAttachmentsWithRenderPass
-{
+    RenderTarget*       renderTarget;
     const GLRenderPass* renderPass;
     std::uint32_t       numClearValues;
+    GLClearValue        defaultClearValue;
 //  const ClearValue*   clearValues[numClearValues];
 };
 
@@ -224,55 +216,55 @@ struct GLCmdDrawArraysIndirect
     GLuint          id;
     std::uint32_t   numCommands;
     GLenum          mode;
-    GLsizeiptr      indirect;
+    GLintptr        indirect;
     std::uint32_t   stride;
 };
 
 struct GLCmdDrawElements
 {
-    GLenum      mode;
-    GLsizei     count;
-    GLenum      type;
-    const void* indices;
+    GLenum          mode;
+    GLsizei         count;
+    GLenum          type;
+    const GLvoid*   indices;
 };
 
 struct GLCmdDrawElementsBaseVertex
 {
-    GLenum      mode;
-    GLsizei     count;
-    GLenum      type;
-    const void* indices;
-    GLint       basevertex;
+    GLenum          mode;
+    GLsizei         count;
+    GLenum          type;
+    const GLvoid*   indices;
+    GLint           basevertex;
 };
 
 struct GLCmdDrawElementsInstanced
 {
-    GLenum      mode;
-    GLsizei     count;
-    GLenum      type;
-    const void* indices;
-    GLsizei     instancecount;
+    GLenum          mode;
+    GLsizei         count;
+    GLenum          type;
+    const GLvoid*   indices;
+    GLsizei         instancecount;
 };
 
 struct GLCmdDrawElementsInstancedBaseVertex
 {
-    GLenum      mode;
-    GLsizei     count;
-    GLenum      type;
-    const void* indices;
-    GLsizei     instancecount;
-    GLint       basevertex;
+    GLenum          mode;
+    GLsizei         count;
+    GLenum          type;
+    const GLvoid*   indices;
+    GLsizei         instancecount;
+    GLint           basevertex;
 };
 
 struct GLCmdDrawElementsInstancedBaseVertexBaseInstance
 {
-    GLenum      mode;
-    GLsizei     count;
-    GLenum      type;
-    const void* indices;
-    GLsizei     instancecount;
-    GLint       basevertex;
-    GLuint      baseinstance;
+    GLenum          mode;
+    GLsizei         count;
+    GLenum          type;
+    const GLvoid*   indices;
+    GLsizei         instancecount;
+    GLint           basevertex;
+    GLuint          baseinstance;
 };
 
 struct GLCmdDrawElementsIndirect
@@ -281,27 +273,27 @@ struct GLCmdDrawElementsIndirect
     std::uint32_t   numCommands;
     GLenum          mode;
     GLenum          type;
-    GLsizeiptr      indirect;
+    GLintptr        indirect;
     std::uint32_t   stride;
 };
 
 struct GLCmdMultiDrawArraysIndirect
 {
-    GLuint      id;
-    GLenum      mode;
-    const void* indirect;
-    GLsizei     drawcount;
-    GLsizei     stride;
+    GLuint          id;
+    GLenum          mode;
+    const GLvoid*   indirect;
+    GLsizei         drawcount;
+    GLsizei         stride;
 };
 
 struct GLCmdMultiDrawElementsIndirect
 {
-    GLuint      id;
-    GLenum      mode;
-    GLenum      type;
-    const void* indirect;
-    GLsizei     drawcount;
-    GLsizei     stride;
+    GLuint          id;
+    GLenum          mode;
+    GLenum          type;
+    const GLvoid*   indirect;
+    GLsizei         drawcount;
+    GLsizei         stride;
 };
 
 struct GLCmdDispatchCompute
@@ -327,18 +319,22 @@ struct GLCmdBindSampler
     GLuint          sampler;
 };
 
-struct GLCmdResetResources
+struct GLCmdUnbindResources
 {
-    std::uint32_t       firstSlot;
-    std::uint32_t       numSlots;
-    struct
+    GLuint              first;
+    GLsizei             count;
+    union
     {
-        std::uint8_t    resetUBO                : 1;
-        std::uint8_t    resetSSAO               : 1;
-        std::uint8_t    resetTransformFeedback  : 1;
-        std::uint8_t    resetTextures           : 1;
-        std::uint8_t    resetImages             : 1;
-        std::uint8_t    resetSamplers           : 1;
+        std::uint8_t    resetFlags;
+        struct
+        {
+            std::uint8_t    resetUBO                : 1;
+            std::uint8_t    resetSSAO               : 1;
+            std::uint8_t    resetTransformFeedback  : 1;
+            std::uint8_t    resetTextures           : 1;
+            std::uint8_t    resetImages             : 1;
+            std::uint8_t    resetSamplers           : 1;
+        };
     };
 };
 

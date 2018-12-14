@@ -21,16 +21,25 @@ namespace LLGL
 {
 
 
+class RenderTarget;
+class RenderPass;
 class GLRenderTarget;
+class GLRenderContext;
 class GLBuffer;
 class GLTexture;
 class GLDepthStencilState;
 class GLRasterizerState;
 class GLBlendState;
+class GLRenderPass;
 
 // OpenGL state machine manager that keeps track of certain GL states.
 class GLStateManager
 {
+
+    public:
+
+        // Maximal number of resource slots.
+        static const std::uint32_t g_maxNumResourceSlots = 64;
 
     public:
 
@@ -108,9 +117,6 @@ class GLStateManager
         void SetDepthFunc(GLenum func);
         void SetDepthMask(GLboolean flag);
 
-        void PushDepthMaskAndEnable();
-        void PopDepthMask();
-
         /* ----- Rasterizer states ----- */
 
         void NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState);
@@ -126,9 +132,6 @@ class GLStateManager
         void SetBlendColor(const GLfloat (&color)[4]);
         void SetLogicOp(GLenum opcode);
 
-        void PushColorMaskAndEnable();
-        void PopColorMask();
-
         /* ----- Buffer ----- */
 
         static GLenum ToGLBufferTarget(GLBufferTarget target);
@@ -136,6 +139,7 @@ class GLStateManager
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
         void BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers);
+        void UnbindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count);
 
         void BindVertexArray(GLuint vertexArray);
 
@@ -195,6 +199,7 @@ class GLStateManager
 
         void BindSampler(GLuint layer, GLuint sampler);
         void BindSamplers(GLuint first, GLsizei count, const GLuint* samplers);
+        void UnbindSamplers(GLuint first, GLsizei count);
 
         void NotifySamplerRelease(GLuint sampler);
 
@@ -206,6 +211,19 @@ class GLStateManager
         void PopShaderProgram();
 
         void NotifyShaderProgramRelease(GLuint program);
+
+        /* ----- Render pass ----- */
+
+        void BindRenderPass(
+            RenderTarget&       renderTarget,
+            const RenderPass*   renderPass,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            const GLClearValue& defaultClearValue
+        );
+
+        void Clear(long flags);
+        void ClearBuffers(std::uint32_t numAttachments, const AttachmentClear* attachments);
 
     private:
 
@@ -222,6 +240,37 @@ class GLStateManager
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
         void DetermineVendorSpecificExtensions();
         #endif
+
+        /* ----- Stacks ----- */
+
+        void PushDepthMaskAndEnable();
+        void PopDepthMask();
+
+        void PushColorMaskAndEnable();
+        void PopColorMask();
+
+        /* ----- Render pass ----- */
+
+        // Blits the currently bound render target
+        void BlitBoundRenderTarget();
+
+        void BindAndBlitRenderTarget(GLRenderTarget& renderTargetGL);
+        void BindAndBlitRenderContext(GLRenderContext& renderContextGL);
+
+        void ClearAttachmentsWithRenderPass(
+            const GLRenderPass& renderPassGL,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            const GLClearValue& defaultClearValue
+        );
+
+        std::uint32_t ClearColorBuffers(
+            const std::uint8_t* colorBuffers,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            std::uint32_t&      idx,
+            const GLClearValue& defaultClearValue
+        );
 
     private:
 

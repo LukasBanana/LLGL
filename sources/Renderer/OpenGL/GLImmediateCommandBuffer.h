@@ -157,33 +157,11 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         void SetResourceHeap(ResourceHeap& resourceHeap);
 
-        void SetIndexFormat(bool index16Bits, std::uint64_t offset);
-
-        // Blits the currently bound render target
-        void BlitBoundRenderTarget();
-
-        void BindRenderTarget(GLRenderTarget& renderTargetGL);
-        void BindRenderContext(GLRenderContext& renderContextGL);
-
-        void ClearAttachmentsWithRenderPass(
-            const GLRenderPass& renderPassGL,
-            std::uint32_t       numClearValues,
-            const ClearValue*   clearValues
-        );
-
-        std::uint32_t ClearColorBuffers(
-            const std::uint8_t* colorBuffers,
-            std::uint32_t       numClearValues,
-            const ClearValue*   clearValues,
-            std::uint32_t&      idx
-        );
+    private:
 
         std::shared_ptr<GLStateManager> stateMngr_;
         GLRenderState                   renderState_;
         GLClearValue                    clearValue_;
-
-        GLRenderTarget*                 boundRenderTarget_  = nullptr;
-        std::uint32_t                   numDrawBuffers_     = 1;        // number of draw buffers of the active render target
 
 };
 

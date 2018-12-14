@@ -31,8 +31,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
     public:
 
-        GLDeferredCommandBuffer() = default;
-        GLDeferredCommandBuffer(std::size_t reservedSize);
+        GLDeferredCommandBuffer(std::size_t reservedSize = 0);
 
         bool IsImmediateCmdBuffer() const override;
 
@@ -159,6 +158,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
         void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot);
         void SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot);
+        void SetResourceHeap(ResourceHeap& resourceHeap);
 
         /* Allocates only an opcode for empty commands */
         void AllocOpCode(const GLOpCode opcode);
@@ -168,6 +168,8 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         T* AllocCommand(const GLOpCode opcode, std::size_t extraSize = 0);
 
         std::size_t ExecuteCommand(const GLOpCode opcode, const void* pc, GLStateManager& stateMngr);
+
+    private:
 
         GLRenderState               renderState_;
         GLClearValue                clearValue_;

@@ -39,9 +39,7 @@ enum GLOpCode : std::uint8_t
     GLOpCodeEndTransformFeedback,
     GLOpCodeEndTransformFeedbackNV,
     GLOpCodeBindResourceHeap,
-    GLOpCodeBindRenderContext,
-    GLOpCodeBindRenderTarget,
-    GLOpCodeClearAttachmentsWithRenderPass,
+    GLOpCodeBindRenderPass,
     GLOpCodeBindGraphicsPipeline,
     GLOpCodeBindComputePipeline,
     GLOpCodeBeginQuery,
@@ -64,7 +62,7 @@ enum GLOpCode : std::uint8_t
     GLOpCodeDispatchComputeIndirect,
     GLOpCodeBindTexture,
     GLOpCodeBindSampler,
-    GLOpCodeResetResources,
+    GLOpCodeUnbindResources,
 };
 
 

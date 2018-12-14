@@ -16,12 +16,20 @@ namespace LLGL
 {
 
 
+struct GLRenderState;
+
 class GLCommandBuffer : public CommandBufferExt
 {
 
     public:
 
+        // Returns true if this is an immediate command buffer, otherwise it is a deferred command buffer.
         virtual bool IsImmediateCmdBuffer() const = 0;
+
+    protected:
+
+        // Configures the attributes of 'renderState' for the type of index buffers.
+        void SetIndexFormat(GLRenderState& renderState, bool index16Bits, std::uint64_t offset);
 
 };
 

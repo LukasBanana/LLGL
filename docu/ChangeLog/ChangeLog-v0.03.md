@@ -5,6 +5,7 @@
 - [`BufferDescriptor` interface](#bufferdescriptor-interface)
 - [`TextureDescriptor` interface](#texturedescriptor-interface)
 - [Index buffer format](#index-buffer-format)
+- [Storage buffer binding](#storage-buffer-binding)
 
 
 ## `BufferDescriptor` interface
@@ -108,6 +109,10 @@ myBufferDesc.bindFlags          = LLGL::BindFlags::IndexBuffer;
 myBufferDesc.indexBuffer.format = LLGL::Format::R16UInt;
 /* ... */
 ```
+
+
+## Storage buffer binding
+
 
 
 

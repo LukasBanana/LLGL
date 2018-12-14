@@ -33,14 +33,11 @@
 #include "RenderState/GLRenderPass.h"
 #include "RenderState/GLQueryHeap.h"
 
+#include <algorithm>
+
 
 namespace LLGL
 {
-
-
-// Global array of null pointers to unbind resource slots
-static const std::uint32_t  g_maxNumResourceSlots                   = 64;
-static GLuint               g_nullResources[g_maxNumResourceSlots]  = {};
 
 
 GLDeferredCommandBuffer::GLDeferredCommandBuffer(std::size_t reservedSize)
@@ -57,7 +54,7 @@ bool GLDeferredCommandBuffer::IsImmediateCmdBuffer() const
 
 void GLDeferredCommandBuffer::Begin()
 {
-    // dummy
+    buffer_.clear();
 }
 
 void GLDeferredCommandBuffer::End()
@@ -103,22 +100,60 @@ void GLDeferredCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc
 
 void GLDeferredCommandBuffer::SetViewport(const Viewport& viewport)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdViewport>(GLOpCodeViewport);
+    {
+        cmd->viewport   = GLViewport{ viewport.x, viewport.y, viewport.width, viewport.height };
+        cmd->depthRange = GLDepthRange{ viewport.minDepth, viewport.maxDepth };
+    }
 }
 
 void GLDeferredCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdViewportArray>(GLOpCodeViewportArray, sizeof(GLViewport) * numViewports);
+    {
+        cmd->first = 0;
+        cmd->count = static_cast<GLsizei>(std::min(numViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
+
+        auto viewportsGL = reinterpret_cast<GLViewport*>(cmd + 1);
+        for (GLsizei i = 0; i < cmd->count; ++i)
+        {
+            viewportsGL[i].x        = viewports[i].x;
+            viewportsGL[i].y        = viewports[i].y;
+            viewportsGL[i].width    = viewports[i].width;
+            viewportsGL[i].height   = viewports[i].height;
+        }
+
+        auto depthRangesGL = reinterpret_cast<GLDepthRange*>(viewportsGL + numViewports);
+        for (GLsizei i = 0; i < cmd->count; ++i)
+        {
+            depthRangesGL[i].minDepth = static_cast<GLdouble>(viewports[i].minDepth);
+            depthRangesGL[i].maxDepth = static_cast<GLdouble>(viewports[i].maxDepth);
+        }
+    }
 }
 
 void GLDeferredCommandBuffer::SetScissor(const Scissor& scissor)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdScissor>(GLOpCodeScissor);
+    cmd->scissor = GLScissor{ scissor.x, scissor.y, scissor.width, scissor.height };
 }
 
 void GLDeferredCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdScissorArray>(GLOpCodeScissorArray, sizeof(GLScissor) * numScissors);
+    {
+        cmd->first = 0;
+        cmd->count = static_cast<GLsizei>(std::min(numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
+
+        auto scissorsGL = reinterpret_cast<GLScissor*>(cmd + 1);
+        for (GLsizei i = 0; i < cmd->count; ++i)
+        {
+            scissorsGL[i].x         = static_cast<GLint>(scissors[i].x);
+            scissorsGL[i].y         = static_cast<GLint>(scissors[i].y);
+            scissorsGL[i].width     = static_cast<GLsizei>(scissors[i].width);
+            scissorsGL[i].height    = static_cast<GLsizei>(scissors[i].height);
+        }
+    }
 }
 
 /* ----- Clear ----- */
@@ -162,12 +197,17 @@ void GLDeferredCommandBuffer::SetClearStencil(std::uint32_t stencil)
 
 void GLDeferredCommandBuffer::Clear(long flags)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdClear>(GLOpCodeClear);
+    cmd->flags = flags;
 }
 
 void GLDeferredCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdClearBuffers>(GLOpCodeClearBuffers, sizeof(AttachmentClear) * numAttachments);
+    {
+        cmd->numAttachments = numAttachments;
+        ::memcpy(cmd + 1, attachments, sizeof(AttachmentClear) * numAttachments);
+    }
 }
 
 /* ----- Input Assembly ------ */
@@ -177,7 +217,7 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer)
     if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
     {
         auto cmd = AllocCommand<GLCmdBindVertexArray>(GLOpCodeBindVertexArray);
-        cmd->vao = LLGL_CAST(const GLBufferWithVAO*, &buffer)->GetVaoID();
+        cmd->vao = LLGL_CAST(const GLBufferWithVAO&, buffer).GetVaoID();
     }
 }
 
@@ -186,18 +226,24 @@ void GLDeferredCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)
     {
         auto cmd = AllocCommand<GLCmdBindVertexArray>(GLOpCodeBindVertexArray);
-        cmd->vao = LLGL_CAST(const GLBufferArrayWithVAO*, &bufferArray)->GetVaoID();
+        cmd->vao = LLGL_CAST(const GLBufferArrayWithVAO&, bufferArray).GetVaoID();
     }
 }
 
 void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
-    //TODO
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    auto cmd = AllocCommand<GLCmdBindElementArrayBufferToVAO>(GLOpCodeBindElementArrayBufferToVAO);
+    cmd->id = bufferGL.GetID();
+    SetIndexFormat(renderState_, bufferGL.IsIndexType16Bits(), 0);
 }
 
 void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
 {
-    //TODO
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    auto cmd = AllocCommand<GLCmdBindElementArrayBufferToVAO>(GLOpCodeBindElementArrayBufferToVAO);
+    cmd->id = bufferGL.GetID();
+    SetIndexFormat(renderState_, format == Format::R16UInt, offset);
 }
 
 /* ----- Stream Output Buffers ------ */
@@ -261,12 +307,12 @@ void GLDeferredCommandBuffer::EndStreamOutput()
 
 void GLDeferredCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
 {
-    //TODO
+    SetResourceHeap(resourceHeap);
 }
 
 void GLDeferredCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
 {
-    //TODO
+    SetResourceHeap(resourceHeap);
 }
 
 /* ----- Render Passes ----- */
@@ -277,7 +323,14 @@ void GLDeferredCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdBindRenderPass>(GLOpCodeBindRenderPass, sizeof(ClearValue) * numClearValues);
+    {
+        cmd->renderTarget       = &renderTarget;
+        cmd->renderPass         = LLGL_CAST(const GLRenderPass*, renderPass);
+        cmd->numClearValues     = numClearValues;
+        cmd->defaultClearValue  = clearValue_;
+        ::memcpy(cmd + 1, clearValues, sizeof(ClearValue) * numClearValues);
+    }
 }
 
 void GLDeferredCommandBuffer::EndRenderPass()
@@ -289,29 +342,44 @@ void GLDeferredCommandBuffer::EndRenderPass()
 
 void GLDeferredCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdBindGraphicsPipeline>(GLOpCodeBindGraphicsPipeline);
+    cmd->graphicsPipeline = LLGL_CAST(GLGraphicsPipeline*, &graphicsPipeline);
+    renderState_.drawMode = cmd->graphicsPipeline->GetDrawMode();
 }
 
 void GLDeferredCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdBindComputePipeline>(GLOpCodeBindComputePipeline);
+    cmd->computePipeline = LLGL_CAST(GLComputePipeline*, &computePipeline);
 }
 
 /* ----- Queries ----- */
 
 void GLDeferredCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdBeginQuery>(GLOpCodeBeginQuery);
+    {
+        cmd->queryHeap  = LLGL_CAST(GLQueryHeap*, &queryHeap);
+        cmd->query      = query;
+    }
 }
 
 void GLDeferredCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdEndQuery>(GLOpCodeEndQuery);
+    {
+        cmd->queryHeap  = LLGL_CAST(GLQueryHeap*, &queryHeap);
+        cmd->query      = query;
+    }
 }
 
 void GLDeferredCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    //TODO
+    auto cmd = AllocCommand<GLCmdBeginConditionalRender>(GLOpCodeBeginConditionalRender);
+    {
+        cmd->id     = LLGL_CAST(const GLQueryHeap&, queryHeap).GetFirstID(query);
+        cmd->mode   = GLTypes::Map(mode);
+    }
 }
 
 void GLDeferredCommandBuffer::EndRenderCondition()
@@ -323,7 +391,7 @@ void GLDeferredCommandBuffer::EndRenderCondition()
 
 /*
 NOTE:
-In the following Draw* functions, 'indices' is from type 'GLsizeiptr' to have the same size as a pointer address on either a 32-bit or 64-bit platform.
+In the following Draw* functions, 'indices' is from type <GLintptr> to have the same size as a pointer address on either a 32-bit or 64-bit platform.
 The indices actually store the index start offset, but must be passed to GL as a void-pointer, due to an obsolete API.
 */
 
@@ -339,7 +407,7 @@ void GLDeferredCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firs
 
 void GLDeferredCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
-    const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
+    const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     auto cmd = AllocCommand<GLCmdDrawElements>(GLOpCodeDrawElements);
     {
         cmd->mode       = renderState_.drawMode;
@@ -351,7 +419,7 @@ void GLDeferredCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_
 
 void GLDeferredCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
+    const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     auto cmd = AllocCommand<GLCmdDrawElementsBaseVertex>(GLOpCodeDrawElementsBaseVertex);
     {
         cmd->mode       = renderState_.drawMode;
@@ -391,45 +459,45 @@ void GLDeferredCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint
 
 void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    //TODO
-    /*const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
-    glDrawElementsInstanced(
-        renderState_.drawMode,
-        static_cast<GLsizei>(numIndices),
-        renderState_.indexBufferDataType,
-        reinterpret_cast<const GLvoid*>(indices),
-        static_cast<GLsizei>(numInstances)
-    );*/
+    const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
+    auto cmd = AllocCommand<GLCmdDrawElementsInstanced>(GLOpCodeDrawElementsInstanced);
+    {
+        cmd->mode           = renderState_.drawMode;
+        cmd->count          = static_cast<GLsizei>(numIndices);
+        cmd->type           = renderState_.indexBufferDataType;
+        cmd->indices        = reinterpret_cast<const GLvoid*>(indices);
+        cmd->instancecount  = static_cast<GLsizei>(numInstances);
+    }
 }
 
 void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    //TODO
-    /*const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
-    glDrawElementsInstancedBaseVertex(
-        renderState_.drawMode,
-        static_cast<GLsizei>(numIndices),
-        renderState_.indexBufferDataType,
-        reinterpret_cast<const GLvoid*>(indices),
-        static_cast<GLsizei>(numInstances),
-        vertexOffset
-    );*/
+    const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
+    auto cmd = AllocCommand<GLCmdDrawElementsInstancedBaseVertex>(GLOpCodeDrawElementsInstancedBaseVertex);
+    {
+        cmd->mode           = renderState_.drawMode;
+        cmd->count          = static_cast<GLsizei>(numIndices);
+        cmd->type           = renderState_.indexBufferDataType;
+        cmd->indices        = reinterpret_cast<const GLvoid*>(indices);
+        cmd->instancecount  = static_cast<GLsizei>(numInstances);
+        cmd->basevertex     = vertexOffset;
+    }
 }
 
 void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    //TODO
     #ifndef __APPLE__
-    /*const GLsizeiptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
-    glDrawElementsInstancedBaseVertexBaseInstance(
-        renderState_.drawMode,
-        static_cast<GLsizei>(numIndices),
-        renderState_.indexBufferDataType,
-        reinterpret_cast<const GLvoid*>(indices),
-        static_cast<GLsizei>(numInstances),
-        vertexOffset,
-        firstInstance
-    );*/
+    const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
+    auto cmd = AllocCommand<GLCmdDrawElementsInstancedBaseVertexBaseInstance>(GLOpCodeDrawElementsInstancedBaseVertexBaseInstance);
+    {
+        cmd->mode           = renderState_.drawMode;
+        cmd->count          = static_cast<GLsizei>(numIndices);
+        cmd->type           = renderState_.indexBufferDataType;
+        cmd->indices        = reinterpret_cast<const GLvoid*>(indices);
+        cmd->instancecount  = static_cast<GLsizei>(numInstances);
+        cmd->basevertex     = vertexOffset;
+        cmd->baseinstance   = firstInstance;
+    }
     #else
     ErrUnsupportedGLProc("glDrawElementsInstancedBaseVertexBaseInstance");
     #endif
@@ -437,103 +505,87 @@ void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std
 
 void GLDeferredCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    //TODO
-    /*auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
-
-    const GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
-    glDrawArraysIndirect(
-        renderState_.drawMode,
-        reinterpret_cast<const GLvoid*>(indirect)
-    );*/
+    auto cmd = AllocCommand<GLCmdDrawArraysIndirect>(GLOpCodeDrawArraysIndirect);
+    {
+        cmd->id             = LLGL_CAST(GLBuffer&, buffer).GetID();
+        cmd->numCommands    = 1;
+        cmd->mode           = renderState_.drawMode;
+        cmd->indirect       = static_cast<GLintptr>(offset);
+        cmd->stride         = 0;
+    }
 }
 
 void GLDeferredCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    //TODO
-    #if 0
-    /* Bind indirect argument buffer */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
-
-    GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
     #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
-        /* Use native multi draw command */
-        glMultiDrawArraysIndirect(
-            renderState_.drawMode,
-            reinterpret_cast<const GLvoid*>(indirect),
-            static_cast<GLsizei>(numCommands),
-            static_cast<GLsizei>(stride)
-        );
+        const GLintptr indirect = static_cast<GLintptr>(offset);
+        auto cmd = AllocCommand<GLCmdMultiDrawArraysIndirect>(GLOpCodeMultiDrawArraysIndirect);
+        {
+            cmd->id         = LLGL_CAST(GLBuffer&, buffer).GetID();
+            cmd->mode       = renderState_.drawMode;
+            cmd->indirect   = reinterpret_cast<const GLvoid*>(indirect);
+            cmd->drawcount  = static_cast<GLsizei>(numCommands);
+            cmd->stride     = static_cast<GLsizei>(stride);
+        }
     }
     else
     #endif // /__APPLE__
     {
-        /* Emulate multi draw command */
-        while (numCommands-- > 0)
+        auto cmd = AllocCommand<GLCmdDrawArraysIndirect>(GLOpCodeDrawArraysIndirect);
         {
-            glDrawArraysIndirect(
-                renderState_.drawMode,
-                reinterpret_cast<const GLvoid*>(indirect)
-            );
-            indirect += stride;
+            cmd->id             = LLGL_CAST(GLBuffer&, buffer).GetID();
+            cmd->numCommands    = numCommands;
+            cmd->mode           = renderState_.drawMode;
+            cmd->indirect       = static_cast<GLintptr>(offset);
+            cmd->stride         = stride;
         }
     }
-    #endif
 }
 
 void GLDeferredCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    //TODO
-    /*auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
-
-    const GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
-    glDrawElementsIndirect(
-        renderState_.drawMode,
-        renderState_.indexBufferDataType,
-        reinterpret_cast<const GLvoid*>(indirect)
-    );*/
+    auto cmd = AllocCommand<GLCmdDrawElementsIndirect>(GLOpCodeDrawElementsIndirect);
+    {
+        cmd->id             = LLGL_CAST(GLBuffer&, buffer).GetID();
+        cmd->numCommands    = 1;
+        cmd->mode           = renderState_.drawMode;
+        cmd->type           = renderState_.indexBufferDataType;
+        cmd->indirect       = static_cast<GLintptr>(offset);
+        cmd->stride         = 0;
+    }
 }
 
 void GLDeferredCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    //TODO
-    #if 0
-    /* Bind indirect argument buffer */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
-
-    GLsizeiptr indirect = static_cast<GLsizeiptr>(offset);
     #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
-        /* Use native multi draw command */
-        glMultiDrawElementsIndirect(
-            renderState_.drawMode,
-            renderState_.indexBufferDataType,
-            reinterpret_cast<const GLvoid*>(indirect),
-            static_cast<GLsizei>(numCommands),
-            static_cast<GLsizei>(stride)
-        );
+        const GLintptr indirect = static_cast<GLintptr>(offset);
+        auto cmd = AllocCommand<GLCmdMultiDrawElementsIndirect>(GLOpCodeMultiDrawElementsIndirect);
+        {
+            cmd->id         = LLGL_CAST(GLBuffer&, buffer).GetID();
+            cmd->mode       = renderState_.drawMode;
+            cmd->type       = renderState_.indexBufferDataType;
+            cmd->indirect   = reinterpret_cast<const GLvoid*>(indirect);
+            cmd->drawcount  = static_cast<GLsizei>(numCommands);
+            cmd->stride     = static_cast<GLsizei>(stride);
+        }
     }
     else
     #endif // /__APPLE__
     {
-        /* Emulate multi draw command */
-        while (numCommands-- > 0)
+        auto cmd = AllocCommand<GLCmdDrawElementsIndirect>(GLOpCodeDrawElementsIndirect);
         {
-            glDrawElementsIndirect(
-                renderState_.drawMode,
-                renderState_.indexBufferDataType,
-                reinterpret_cast<const GLvoid*>(indirect)
-            );
-            indirect += stride;
+            cmd->id             = LLGL_CAST(GLBuffer&, buffer).GetID();
+            cmd->numCommands    = numCommands;
+            cmd->mode           = renderState_.drawMode;
+            cmd->type           = renderState_.indexBufferDataType;
+            cmd->indirect       = static_cast<GLintptr>(offset);
+            cmd->stride         = stride;
         }
     }
-    #endif
 }
 
 /* ----- Compute ----- */
@@ -557,7 +609,7 @@ void GLDeferredCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t off
     #ifndef __APPLE__
     auto cmd = AllocCommand<GLCmdDispatchComputeIndirect>(GLOpCodeDispatchComputeIndirect);
     {
-        cmd->id         = LLGL_CAST(const GLBuffer*, &buffer)->GetID();
+        cmd->id         = LLGL_CAST(const GLBuffer&, buffer).GetID();
         cmd->indirect   = static_cast<GLintptr>(offset);
     }
     #else
@@ -608,7 +660,49 @@ void GLDeferredCommandBuffer::ResetResourceSlots(
     long                bindFlags,
     long                /*stageFlags*/)
 {
-    //TODO
+    GLCmdUnbindResources cmd;
+    cmd.resetFlags = 0;
+
+    cmd.first = static_cast<GLuint>(std::min(firstSlot, GLStateManager::g_maxNumResourceSlots - 1u));
+    cmd.count = static_cast<GLsizei>(std::min(numSlots, GLStateManager::g_maxNumResourceSlots - cmd.first));
+
+    if (cmd.count > 0)
+    {
+        switch (resourceType)
+        {
+            case ResourceType::Undefined:
+            break;
+
+            case ResourceType::Buffer:
+            {
+                if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+                    cmd.resetUBO = 1;
+                if ((bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+                    cmd.resetSSAO = 1;
+                if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
+                    cmd.resetTransformFeedback = 1;
+            }
+            break;
+
+            case ResourceType::Texture:
+            {
+                if ((bindFlags & BindFlags::SampleBuffer) != 0)
+                    cmd.resetTextures = 1;
+                if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
+                    cmd.resetImages = 1;
+            }
+            break;
+
+            case ResourceType::Sampler:
+            {
+                cmd.resetSamplers = 1;
+            }
+            break;
+        }
+
+        if (cmd.resetFlags != 0)
+            *AllocCommand<GLCmdUnbindResources>(GLOpCodeUnbindResources) = cmd;
+    }
 }
 
 void GLDeferredCommandBuffer::Execute(GLStateManager& stateMngr)
@@ -657,6 +751,12 @@ void GLDeferredCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferT
         cmd->count  = static_cast<GLsizei>(count);
         ::memcpy(cmd + 1, bufferArrayGL.GetIDArray().data(), count * sizeof(GLuint));
     }
+}
+
+void GLDeferredCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap)
+{
+    auto cmd = AllocCommand<GLCmdBindResourceHeap>(GLOpCodeBindResourceHeap);
+    cmd->resourceHeap = LLGL_CAST(GLResourceHeap*, &resourceHeap);
 }
 
 void GLDeferredCommandBuffer::AllocOpCode(const GLOpCode opcode)
@@ -770,38 +870,13 @@ std::size_t GLDeferredCommandBuffer::ExecuteCommand(const GLOpCode opcode, const
         case GLOpCodeClear:
         {
             auto cmd = reinterpret_cast<const GLCmdClear*>(pc);
-            {
-                auto mask = cmd->mask;
-
-                /* Setup GL clear mask and clear respective buffer */
-                if ((mask & GL_COLOR_BUFFER_BIT) != 0)
-                    stateMngr.PushColorMaskAndEnable();
-                if ((mask & GL_DEPTH_BUFFER_BIT) != 0)
-                    stateMngr.PushDepthMaskAndEnable();
-                #if 0//TODO
-                if ((mask & GL_STENCIL_BUFFER_BIT) != 0)
-                    stateMngr.SetStencilMask(GL_TRUE);
-                #endif
-
-                /* Clear buffers */
-                glClear(mask);
-
-                /* Restore framebuffer masks */
-                #if 0//TODO
-                if ((mask & GL_STENCIL_BUFFER_BIT) != 0)
-                    stateMngr.PopStencilMask();
-                #endif
-                if ((mask & GL_COLOR_BUFFER_BIT) != 0)
-                    stateMngr.PopDepthMask();
-                if ((mask & GL_DEPTH_BUFFER_BIT) != 0)
-                    stateMngr.PopColorMask();
-            }
+            stateMngr.Clear(cmd->flags);
             return sizeof(cmd);
         }
         case GLOpCodeClearBuffers:
         {
             auto cmd = reinterpret_cast<const GLCmdClearBuffers*>(pc);
-            //TODO...
+            stateMngr.ClearBuffers(cmd->numAttachments, reinterpret_cast<const AttachmentClear*>(cmd + 1));
             return sizeof(cmd);
         }
         case GLOpCodeBindVertexArray:
@@ -856,22 +931,10 @@ std::size_t GLDeferredCommandBuffer::ExecuteCommand(const GLOpCode opcode, const
             cmd->resourceHeap->Bind(stateMngr);
             return sizeof(cmd);
         }
-        case GLOpCodeBindRenderContext:
+        case GLOpCodeBindRenderPass:
         {
-            auto cmd = reinterpret_cast<const GLCmdBindRenderContext*>(pc);
-            //TODO...
-            return sizeof(cmd);
-        }
-        case GLOpCodeBindRenderTarget:
-        {
-            auto cmd = reinterpret_cast<const GLCmdBindRenderTarget*>(pc);
-            //TODO...
-            return sizeof(cmd);
-        }
-        case GLOpCodeClearAttachmentsWithRenderPass:
-        {
-            auto cmd = reinterpret_cast<const GLCmdClearAttachmentsWithRenderPass*>(pc);
-            //TODO...
+            auto cmd = reinterpret_cast<const GLCmdBindRenderPass*>(pc);
+            stateMngr.BindRenderPass(*(cmd->renderTarget), cmd->renderPass, cmd->numClearValues, reinterpret_cast<const ClearValue*>(cmd + 1), cmd->defaultClearValue);
             return sizeof(cmd);
         }
         case GLOpCodeBindGraphicsPipeline:
@@ -931,10 +994,10 @@ std::size_t GLDeferredCommandBuffer::ExecuteCommand(const GLOpCode opcode, const
         {
             auto cmd = reinterpret_cast<const GLCmdDrawArraysIndirect*>(pc);
             stateMngr.BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
-            GLsizeiptr offset = cmd->indirect;
+            GLintptr offset = cmd->indirect;
             for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
             {
-                glDrawArraysIndirect(cmd->mode, reinterpret_cast<const void*>(offset));
+                glDrawArraysIndirect(cmd->mode, reinterpret_cast<const GLvoid*>(offset));
                 offset += cmd->stride;
             }
             return sizeof(cmd);
@@ -973,10 +1036,10 @@ std::size_t GLDeferredCommandBuffer::ExecuteCommand(const GLOpCode opcode, const
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsIndirect*>(pc);
             stateMngr.BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
-            GLsizeiptr offset = cmd->indirect;
+            GLintptr offset = cmd->indirect;
             for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
             {
-                glDrawElementsIndirect(cmd->mode, cmd->type, reinterpret_cast<const void*>(offset));
+                glDrawElementsIndirect(cmd->mode, cmd->type, reinterpret_cast<const GLvoid*>(offset));
                 offset += cmd->stride;
             }
             return sizeof(cmd);
@@ -1021,10 +1084,23 @@ std::size_t GLDeferredCommandBuffer::ExecuteCommand(const GLOpCode opcode, const
             stateMngr.BindSampler(cmd->slot, cmd->sampler);
             return sizeof(cmd);
         }
-        case GLOpCodeResetResources:
+        case GLOpCodeUnbindResources:
         {
-            auto cmd = reinterpret_cast<const GLCmdResetResources*>(pc);
-            //TODO...
+            auto cmd = reinterpret_cast<const GLCmdUnbindResources*>(pc);
+            if (cmd->resetUBO)
+                stateMngr.UnbindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, cmd->first, cmd->count);
+            if (cmd->resetSSAO)
+                stateMngr.UnbindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, cmd->first, cmd->count);
+            if (cmd->resetTransformFeedback)
+                stateMngr.UnbindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, cmd->first, cmd->count);
+            if (cmd->resetTextures)
+                stateMngr.UnbindTextures(cmd->first, cmd->count);
+            #if 0//TODO
+            if (cmd->resetImages)
+                stateMngr.UnbindImages(cmd->first, cmd->count);
+            #endif
+            if (cmd->resetSamplers)
+                stateMngr.UnbindSamplers(cmd->first, cmd->count);
             return sizeof(cmd);
         }
         default:
