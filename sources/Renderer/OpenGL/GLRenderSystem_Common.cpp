@@ -70,9 +70,9 @@ CommandQueue* GLRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
+CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    return CreateCommandBufferExt();
+    return CreateCommandBufferExt(desc);
 }
 
 CommandBufferExt* GLRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& desc)

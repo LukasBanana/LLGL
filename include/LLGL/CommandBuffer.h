@@ -42,6 +42,7 @@ You can assume that all states that can be changed with a setter function are no
 Before any command can be encoded, the command buffer must be set into encode mode, which is done by the CommandBuffer::Begin function.
 There are only a few exceptions of functions that can be used outside of encoding,
 which are CommandBuffer::SetClearColor, CommandBuffer::SetClearDepth, and CommandBuffer::SetClearStencil.
+\see RenderSystem::CreateCommandBuffer
 */
 class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 {
@@ -67,8 +68,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see CommandQueue::Submit(CommandBuffer&)
         */
         virtual void End() = 0;
-
-        /* ----- Encoding ----- */
 
         /**
         \brief Updates the data of the specified buffer during encoding the command buffer.
@@ -116,6 +115,16 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void GenerateMips(Texture& texture) = 0;
         #endif // /TODO
+
+        /**
+        \brief Executes the specified deferred command buffer.
+        \param[in] deferredCommandBuffer Specifies the deferred command buffer which is meant to be executed.
+        This command buffer must have been created with the flag CommandBufferFlags::DeferredSubmit.
+        \remarks This function can only be used by primary command buffers, i.e. command buffers that have not be created with the flag CommandBufferFlags::DeferredSubmit.
+        \see CommandBufferFlags
+        \todo Not implemented yet for: D3D11, D3D12, Vulkan, Metal
+        */
+        virtual void Execute(CommandBuffer& deferredCommandBuffer) = 0;
 
         /* ----- Configuration ----- */
 

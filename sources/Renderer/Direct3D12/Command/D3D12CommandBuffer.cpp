@@ -72,6 +72,11 @@ void D3D12CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, 
     commandList_->CopyBufferRegion(dstBufferD3D.GetNative(), dstOffset, srcBufferD3D.GetNative(), srcOffset, size);
 }
 
+void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    //TODO
+}
+
 /* ----- Configuration ----- */
 
 void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

@@ -38,6 +38,7 @@ class DbgCommandBuffer : public CommandBufferExt
             CommandBuffer&                  instance,
             CommandBufferExt*               instanceExt,
             RenderingDebugger*              debugger,
+            const CommandBufferDescriptor&  desc,
             const RenderingCapabilities&    caps
         );
 
@@ -48,6 +49,8 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) override;
         void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) override;
+
+        void Execute(CommandBuffer& deferredCommandBuffer) override;
 
         /* ----- Configuration ----- */
 
@@ -162,10 +165,13 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void NextProfile(FrameProfile& outputProfile);
 
+    public:
+
         /* ----- Debugging members ----- */
 
-        CommandBuffer&      instance;
-        CommandBufferExt*   instanceExt = nullptr;
+        CommandBuffer&          instance;
+        CommandBufferExt*       instanceExt = nullptr;
+        CommandBufferDescriptor desc;
 
     private:
 
@@ -189,7 +195,7 @@ class DbgCommandBuffer : public CommandBufferExt
         void ValidateThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
         void ValidateAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound);
 
-        void ValidateResourceFlag(long resourceFlags, long requiredFlag, const char* flagName);
+        void ValidateResourceFlag(long resourceFlags, long requiredFlag, const char* flagName, const char* resourceName = nullptr);
         void ValidateIndexType(const Format format);
 
         void ValidateStageFlags(long stageFlags, long validFlags);
@@ -213,6 +219,8 @@ class DbgCommandBuffer : public CommandBufferExt
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 
         void ResetFrameProfile();
+
+    private:
 
         /* ----- Common objects ----- */
 

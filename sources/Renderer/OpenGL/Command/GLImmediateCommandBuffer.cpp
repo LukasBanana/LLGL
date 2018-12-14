@@ -6,6 +6,9 @@
  */
 
 #include "GLImmediateCommandBuffer.h"
+#include "GLDeferredCommandBuffer.h"
+#include "GLCommandExecutor.h"
+
 #include "../GLRenderContext.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
@@ -74,6 +77,16 @@ void GLImmediateCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOf
         static_cast<GLintptr>(dstOffset),
         static_cast<GLsizeiptr>(size)
     );
+}
+
+void GLImmediateCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, deferredCommandBuffer);
+    if (!cmdBufferGL.IsImmediateCmdBuffer())
+    {
+        auto& deferredCmdBufferGL = LLGL_CAST(const GLDeferredCommandBuffer&, cmdBufferGL);
+        ExecuteGLDeferredCommandBuffer(deferredCmdBufferGL, *stateMngr_);
+    }
 }
 
 /* ----- Configuration ----- */

@@ -85,6 +85,11 @@ void GLDeferredCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOff
     }
 }
 
+void GLDeferredCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    throw std::runtime_error("deferred command buffer tried to execute another command buffer");
+}
+
 /* ----- Configuration ----- */
 
 void GLDeferredCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
@@ -109,7 +114,7 @@ void GLDeferredCommandBuffer::SetViewport(const Viewport& viewport)
 
 void GLDeferredCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    auto cmd = AllocCommand<GLCmdViewportArray>(GLOpCodeViewportArray, sizeof(GLViewport) * numViewports);
+    auto cmd = AllocCommand<GLCmdViewportArray>(GLOpCodeViewportArray, sizeof(GLViewport)*numViewports);
     {
         cmd->first = 0;
         cmd->count = static_cast<GLsizei>(std::min(numViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
@@ -140,7 +145,7 @@ void GLDeferredCommandBuffer::SetScissor(const Scissor& scissor)
 
 void GLDeferredCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    auto cmd = AllocCommand<GLCmdScissorArray>(GLOpCodeScissorArray, sizeof(GLScissor) * numScissors);
+    auto cmd = AllocCommand<GLCmdScissorArray>(GLOpCodeScissorArray, sizeof(GLScissor)*numScissors);
     {
         cmd->first = 0;
         cmd->count = static_cast<GLsizei>(std::min(numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
@@ -180,7 +185,7 @@ void GLDeferredCommandBuffer::SetClearDepth(float depth)
 {
     /* Encode clear command */
     auto cmd = AllocCommand<GLCmdClearDepth>(GLOpCodeClearDepth);
-    cmd->depth = depth;
+    cmd->depth = static_cast<GLdouble>(depth);
 
     /* Store as default clear value */
     clearValue_.depth = depth;
@@ -188,11 +193,12 @@ void GLDeferredCommandBuffer::SetClearDepth(float depth)
 
 void GLDeferredCommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
-    /* Submit clear value to GL */
-    glClearStencil(static_cast<GLint>(stencil));
+    /* Encode clear command */
+    auto cmd = AllocCommand<GLCmdClearStencil>(GLOpCodeClearStencil);
+    cmd->stencil = static_cast<GLint>(stencil);
 
     /* Store as default clear value */
-    clearValue_.stencil = static_cast<GLint>(stencil);
+    clearValue_.stencil = cmd->stencil;
 }
 
 void GLDeferredCommandBuffer::Clear(long flags)
@@ -203,10 +209,10 @@ void GLDeferredCommandBuffer::Clear(long flags)
 
 void GLDeferredCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    auto cmd = AllocCommand<GLCmdClearBuffers>(GLOpCodeClearBuffers, sizeof(AttachmentClear) * numAttachments);
+    auto cmd = AllocCommand<GLCmdClearBuffers>(GLOpCodeClearBuffers, sizeof(AttachmentClear)*numAttachments);
     {
         cmd->numAttachments = numAttachments;
-        ::memcpy(cmd + 1, attachments, sizeof(AttachmentClear) * numAttachments);
+        ::memcpy(cmd + 1, attachments, sizeof(AttachmentClear)*numAttachments);
     }
 }
 
@@ -323,13 +329,13 @@ void GLDeferredCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    auto cmd = AllocCommand<GLCmdBindRenderPass>(GLOpCodeBindRenderPass, sizeof(ClearValue) * numClearValues);
+    auto cmd = AllocCommand<GLCmdBindRenderPass>(GLOpCodeBindRenderPass, sizeof(ClearValue)*numClearValues);
     {
         cmd->renderTarget       = &renderTarget;
-        cmd->renderPass         = LLGL_CAST(const GLRenderPass*, renderPass);
+        cmd->renderPass         = (renderPass != nullptr ? LLGL_CAST(const GLRenderPass*, renderPass) : nullptr);
         cmd->numClearValues     = numClearValues;
         cmd->defaultClearValue  = clearValue_;
-        ::memcpy(cmd + 1, clearValues, sizeof(ClearValue) * numClearValues);
+        ::memcpy(cmd + 1, clearValues, sizeof(ClearValue)*numClearValues);
     }
 }
 
@@ -725,12 +731,12 @@ void GLDeferredCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferT
 {
     auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
     auto count = bufferArrayGL.GetIDArray().size();
-    auto cmd = AllocCommand<GLCmdBindBuffersBase>(GLOpCodeBindBuffersBase, count * sizeof(GLuint));
+    auto cmd = AllocCommand<GLCmdBindBuffersBase>(GLOpCodeBindBuffersBase, sizeof(GLuint)*count);
     {
         cmd->target = bufferTarget;
         cmd->first  = startSlot;
         cmd->count  = static_cast<GLsizei>(count);
-        ::memcpy(cmd + 1, bufferArrayGL.GetIDArray().data(), count * sizeof(GLuint));
+        ::memcpy(cmd + 1, bufferArrayGL.GetIDArray().data(), sizeof(GLuint)*count);
     }
 }
 

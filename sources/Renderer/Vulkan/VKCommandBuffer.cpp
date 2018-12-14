@@ -151,6 +151,11 @@ void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
         vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
 }
 
+void VKCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    //TODO
+}
+
 /* ----- Configuration ----- */
 
 void VKCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

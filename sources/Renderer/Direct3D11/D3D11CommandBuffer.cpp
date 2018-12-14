@@ -95,6 +95,11 @@ void D3D11CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, 
     );
 }
 
+void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    //TODO
+}
+
 /* ----- Configuration ----- */
 
 void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)

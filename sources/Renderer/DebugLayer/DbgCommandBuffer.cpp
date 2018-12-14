@@ -33,9 +33,11 @@ DbgCommandBuffer::DbgCommandBuffer(
     CommandBuffer&                  instance,
     CommandBufferExt*               instanceExt,
     RenderingDebugger*              debugger,
+    const CommandBufferDescriptor&  desc,
     const RenderingCapabilities&    caps) :
         instance      { instance      },
         instanceExt   { instanceExt   },
+        desc          { desc          },
         debugger_     { debugger      },
         features_     { caps.features },
         limits_       { caps.limits   }
@@ -92,6 +94,28 @@ void DbgCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Bu
     instance.CopyBuffer(dstBufferDbg.instance, dstOffset, srcBufferDbg.instance, srcOffset, size);
 
     profile_.bufferCopies++;
+}
+
+void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, deferredCommandBuffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+
+        if (&deferredCommandBuffer == this)
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "command buffer tried to execute itself");
+
+        ValidateResourceFlag(
+            commandBufferDbg.desc.flags,
+            CommandBufferFlags::DeferredSubmit,
+            "CommandBufferFlags::DeferredSubmit",
+            "CommandBuffer"
+        );
+    }
+
+    instance.Execute(commandBufferDbg.instance);
 }
 
 /* ----- Configuration ----- */
@@ -1217,13 +1241,14 @@ void DbgCommandBuffer::ValidateAttachmentLimit(std::uint32_t attachmentIndex, st
     }
 }
 
-void DbgCommandBuffer::ValidateResourceFlag(long resourceFlags, long requiredFlag, const char* flagName)
+void DbgCommandBuffer::ValidateResourceFlag(long resourceFlags, long requiredFlag, const char* flagName, const char* resourceName)
 {
     if ((resourceFlags & requiredFlag) != requiredFlag)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "resource was not created with the 'LLGL::" + std::string(flagName) + "' flag enabled"
+            std::string(resourceName != nullptr ? resourceName : "resource") +
+            " was not created with the 'LLGL::" + std::string(flagName) + "' flag enabled"
         );
     }
 }
