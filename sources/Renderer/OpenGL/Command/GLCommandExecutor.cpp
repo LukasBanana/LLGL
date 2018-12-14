@@ -174,22 +174,26 @@ static std::size_t ExecuteGLCommand(const GLOpCode opcode, const void* pc, GLSta
             glBeginTransformFeedback(cmd->primitiveMove);
             return sizeof(*cmd);
         }
+        #ifdef GL_NV_transform_feedback
         case GLOpCodeBeginTransformFeedbackNV:
         {
             auto cmd = reinterpret_cast<const GLCmdBeginTransformFeedbackNV*>(pc);
             glBeginTransformFeedbackNV(cmd->primitiveMove);
             return sizeof(*cmd);
         }
+        #endif // /GL_NV_transform_feedback
         case GLOpCodeEndTransformFeedback:
         {
             glEndTransformFeedback();
             return 0;
         }
+        #ifdef GL_NV_transform_feedback
         case GLOpCodeEndTransformFeedbackNV:
         {
             glEndTransformFeedbackNV();
             return 0;
         }
+        #endif // /GL_NV_transform_feedback
         case GLOpCodeBindResourceHeap:
         {
             auto cmd = reinterpret_cast<const GLCmdBindResourceHeap*>(pc);
@@ -249,12 +253,14 @@ static std::size_t ExecuteGLCommand(const GLOpCode opcode, const void* pc, GLSta
             glDrawArraysInstanced(cmd->mode, cmd->first, cmd->count, cmd->instancecount);
             return sizeof(*cmd);
         }
+        #ifdef GL_ARB_base_instance
         case GLOpCodeDrawArraysInstancedBaseInstance:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawArraysInstancedBaseInstance*>(pc);
             glDrawArraysInstancedBaseInstance(cmd->mode, cmd->first, cmd->count, cmd->instancecount, cmd->baseinstance);
             return sizeof(*cmd);
         }
+        #endif // /GL_ARB_base_instance
         case GLOpCodeDrawArraysIndirect:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawArraysIndirect*>(pc);
@@ -291,12 +297,14 @@ static std::size_t ExecuteGLCommand(const GLOpCode opcode, const void* pc, GLSta
             glDrawElementsInstancedBaseVertex(cmd->mode, cmd->count, cmd->type, cmd->indices, cmd->instancecount, cmd->basevertex);
             return sizeof(*cmd);
         }
+        #ifdef GL_ARB_base_instance
         case GLOpCodeDrawElementsInstancedBaseVertexBaseInstance:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsInstancedBaseVertexBaseInstance*>(pc);
             glDrawElementsInstancedBaseVertexBaseInstance(cmd->mode, cmd->count, cmd->type, cmd->indices, cmd->instancecount, cmd->basevertex, cmd->baseinstance);
             return sizeof(*cmd);
         }
+        #endif // /GL_ARB_base_instance
         case GLOpCodeDrawElementsIndirect:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsIndirect*>(pc);
@@ -309,6 +317,7 @@ static std::size_t ExecuteGLCommand(const GLOpCode opcode, const void* pc, GLSta
             }
             return sizeof(*cmd);
         }
+        #ifdef GL_ARB_multi_draw_indirect
         case GLOpCodeMultiDrawArraysIndirect:
         {
             auto cmd = reinterpret_cast<const GLCmdMultiDrawArraysIndirect*>(pc);
@@ -323,6 +332,8 @@ static std::size_t ExecuteGLCommand(const GLOpCode opcode, const void* pc, GLSta
             glMultiDrawElementsIndirect(cmd->mode, cmd->type, cmd->indirect, cmd->drawcount, cmd->stride);
             return sizeof(*cmd);
         }
+        #endif // /GL_ARB_multi_draw_indirect
+        #ifdef GL_ARB_compute_shader
         case GLOpCodeDispatchCompute:
         {
             auto cmd = reinterpret_cast<const GLCmdDispatchCompute*>(pc);
@@ -336,6 +347,7 @@ static std::size_t ExecuteGLCommand(const GLOpCode opcode, const void* pc, GLSta
             glDispatchComputeIndirect(cmd->indirect);
             return sizeof(*cmd);
         }
+        #endif // /GL_ARB_compute_shader
         case GLOpCodeBindTexture:
         {
             auto cmd = reinterpret_cast<const GLCmdBindTexture*>(pc);

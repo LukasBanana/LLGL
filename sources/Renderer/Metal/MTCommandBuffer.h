@@ -37,6 +37,8 @@ class MTCommandBuffer : public CommandBufferExt
         void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) override;
         void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) override;
 
+        void Execute(CommandBuffer& deferredCommandBuffer) override;
+
         /* ----- Configuration ----- */
 
         void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
@@ -64,6 +66,7 @@ class MTCommandBuffer : public CommandBufferExt
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
+        void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override;
 
         /* ----- Stream Output Buffers ------ */
 
@@ -168,11 +171,17 @@ class MTCommandBuffer : public CommandBufferExt
             double          depth   = 1.0;
             std::uint32_t   stencil = 0;
         };
+    
+    private:
 
         // Submits all global lstates to the render encoder (i.e. vertex buffers, graphics pipeline, viewports etc.)
         void SubmitRenderEncoderState();
         void ResetRenderEncoderState();
+    
+        void SetIndexType(bool indexType16Bits);
 
+    private:
+    
         id<MTLCommandQueue>             cmdQueue_               = nil;
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
 
@@ -181,6 +190,7 @@ class MTCommandBuffer : public CommandBufferExt
 
         MTLPrimitiveType                primitiveType_          = MTLPrimitiveTypeTriangle;
         id<MTLBuffer>                   indexBuffer_            = nil;
+        NSUInteger                      indexBufferOffset_      = 0;
         MTLIndexType                    indexType_              = MTLIndexTypeUInt32;
         NSUInteger                      indexTypeSize_          = 4;
         NSUInteger                      numPatchControlPoints_  = 0;

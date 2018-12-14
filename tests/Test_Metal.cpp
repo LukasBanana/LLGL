@@ -76,8 +76,8 @@ int main()
 
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.type                   = LLGL::BufferType::Vertex;
             vertexBufferDesc.size                   = sizeof(vertices);
+            vertexBufferDesc.bindFlags              = LLGL::BindFlags::VertexBuffer;
             vertexBufferDesc.vertexBuffer.format    = vertexFormat;
         }
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);

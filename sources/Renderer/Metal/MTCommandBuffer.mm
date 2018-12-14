@@ -69,6 +69,11 @@ void MTCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
     [blitEncoder endEncoding];
 }
 
+void MTCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    //TODO
+}
+
 /* ----- Configuration ----- */
 
 void MTCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
@@ -313,7 +318,17 @@ void MTCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 void MTCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    indexBuffer_ = bufferMT.GetNative();
+    indexBuffer_        = bufferMT.GetNative();
+    indexBufferOffset_  = 0;
+    SetIndexType(bufferMT.IsIndexType16Bits());
+}
+
+void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
+{
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    indexBuffer_        = bufferMT.GetNative();
+    indexBufferOffset_  = static_cast<NSUInteger>(offset);
+    SetIndexType(format == Format::R16UInt);
 }
 
 /* ----- Stream Output Buffers ------ */
@@ -484,7 +499,7 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            controlPointIndexBufferOffset:  indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:                  1
             baseInstance:                   0
         ];
@@ -496,7 +511,7 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            indexBufferOffset:      indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
         ];
     }
 }
@@ -512,7 +527,7 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            controlPointIndexBufferOffset:  indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:                  1
             baseInstance:                   0
         ];
@@ -524,7 +539,7 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            indexBufferOffset:      indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:          1
             baseVertex:             static_cast<NSUInteger>(vertexOffset)
             baseInstance:           0
@@ -595,7 +610,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            controlPointIndexBufferOffset:  indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:                  static_cast<NSUInteger>(numInstances)
             baseInstance:                   0
         ];
@@ -607,7 +622,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            indexBufferOffset:      indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:          static_cast<NSUInteger>(numInstances)
             baseVertex:             0
             baseInstance:           0
@@ -626,7 +641,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            controlPointIndexBufferOffset:  indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:                  static_cast<NSUInteger>(numInstances)
             baseInstance:                   0
         ];
@@ -638,7 +653,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            indexBufferOffset:      indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:          static_cast<NSUInteger>(numInstances)
             baseVertex:             static_cast<NSUInteger>(vertexOffset)
             baseInstance:           0
@@ -657,7 +672,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            controlPointIndexBufferOffset:  indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:                  static_cast<NSUInteger>(numInstances)
             baseInstance:                   static_cast<NSUInteger>(firstInstance)
         ];
@@ -669,7 +684,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            indexBufferOffset:      indexBufferOffset_ + indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:          static_cast<NSUInteger>(numInstances)
             baseVertex:             static_cast<NSUInteger>(vertexOffset)
             baseInstance:           static_cast<NSUInteger>(firstInstance)
@@ -922,6 +937,20 @@ void MTCommandBuffer::ResetRenderEncoderState()
     renderEncoderState_.scissorRectCount            = 0;
     renderEncoderState_.vertexBufferRange.length    = 0;
     renderEncoderState_.renderPipelineState         = nil;
+}
+
+void MTCommandBuffer::SetIndexType(bool indexType16Bits)
+{
+    if (indexType16Bits)
+    {
+        indexType_      = MTLIndexTypeUInt16;
+        indexTypeSize_  = 2;
+    }
+    else
+    {
+        indexType_      = MTLIndexTypeUInt32;
+        indexTypeSize_  = 4;
+    }
 }
 
 

@@ -33,10 +33,17 @@ class MTBuffer : public Buffer
         {
             return native_;
         }
+    
+        // Returns true if the index buffer format has 16 bit indices.
+        inline bool IsIndexType16Bits() const
+        {
+            return indexType16Bits_;
+        }
 
     private:
 
-        id<MTLBuffer> native_ = nil;
+        id<MTLBuffer>   native_             = nil;
+        bool            indexType16Bits_    = false;
 
 };
 

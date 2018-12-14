@@ -10,6 +10,7 @@
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
 #include "MTFeatureSet.h"
+#include <LLGL/ImageFlags.h>
 
 
 namespace LLGL

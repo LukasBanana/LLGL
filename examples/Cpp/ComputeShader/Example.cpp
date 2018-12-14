@@ -31,7 +31,6 @@ class Example_ComputeShader : public ExampleBase
     LLGL::ResourceHeap*     computeResourceHeap     = nullptr;
 
     LLGL::ShaderProgram*    graphicsShader          = nullptr;
-    LLGL::PipelineLayout*   graphicsLayout          = nullptr;
     LLGL::GraphicsPipeline* graphicsPipeline        = nullptr;
 
     LLGL::Fence*            fence                   = nullptr;
