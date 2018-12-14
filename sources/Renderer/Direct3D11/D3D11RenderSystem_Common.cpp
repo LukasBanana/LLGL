@@ -66,14 +66,34 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
+CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    return CreateCommandBufferExt();
+    return CreateCommandBufferExt(desc);
 }
 
-CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
+CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& desc)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<D3D11CommandBuffer>(*stateMngr_, context_));
+    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+    {
+        /* Create deferred D3D11 device context */
+        ComPtr<ID3D11DeviceContext> deferredContext;
+        auto hr = device_->CreateDeferredContext(0, deferredContext.ReleaseAndGetAddressOf());
+        DXThrowIfCreateFailed(hr, "ID3D11DeviceContext", "for deferred command buffer");
+
+        /* Create command buffer with deferred context and dedicated state manager */
+        return TakeOwnership(
+            commandBuffers_,
+            MakeUnique<D3D11CommandBuffer>(deferredContext, std::make_shared<D3D11StateManager>(deferredContext), desc)
+        );
+    }
+    else
+    {
+        /* Create command buffer with immediate context */
+        return TakeOwnership(
+            commandBuffers_,
+            MakeUnique<D3D11CommandBuffer>(context_, stateMngr_, desc)
+        );
+    }
 }
 
 void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
@@ -388,7 +408,7 @@ bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::
 
 void D3D11RenderSystem::CreateStateManagerAndCommandQueue()
 {
-    stateMngr_ = MakeUnique<D3D11StateManager>(context_);
+    stateMngr_ = std::make_shared<D3D11StateManager>(context_);
     commandQueue_ = MakeUnique<D3D11CommandQueue>(device_.Get(), context_);
 }
 

@@ -34,7 +34,11 @@ class D3D11CommandBuffer final : public CommandBufferExt
 
         /* ----- Common ----- */
 
-        D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPtr<ID3D11DeviceContext>& context);
+        D3D11CommandBuffer(
+            const ComPtr<ID3D11DeviceContext>&          context,
+            const std::shared_ptr<D3D11StateManager>&   stateMngr,
+            const CommandBufferDescriptor&              desc
+        );
 
         /* ----- Encoding ----- */
 
@@ -155,12 +159,6 @@ class D3D11CommandBuffer final : public CommandBufferExt
 
     private:
 
-        struct D3D11FramebufferView
-        {
-            std::vector<ID3D11RenderTargetView*>    rtvList;
-            ID3D11DepthStencilView*                 dsv = nullptr;
-        };
-
         void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long stageFlags);
         void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long stageFlags);
         void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long stageFlags);
@@ -193,14 +191,24 @@ class D3D11CommandBuffer final : public CommandBufferExt
             std::uint32_t&      idx
         );
 
-        D3D11StateManager&          stateMngr_;
+    private:
 
-        ComPtr<ID3D11DeviceContext> context_;
+        struct D3D11FramebufferView
+        {
+            std::vector<ID3D11RenderTargetView*>    rtvList;
+            ID3D11DepthStencilView*                 dsv = nullptr;
+        };
 
-        D3D11FramebufferView        framebufferView_;
-        D3D11RenderTarget*          boundRenderTarget_  = nullptr;
+        ComPtr<ID3D11DeviceContext>         context_;
+        bool                                hasDeferredContext_ = false;
+        ComPtr<ID3D11CommandList>           commandList_;
 
-        ClearValue                  clearValue_;
+        std::shared_ptr<D3D11StateManager>  stateMngr_;
+
+        D3D11FramebufferView                framebufferView_;
+        D3D11RenderTarget*                  boundRenderTarget_  = nullptr;
+
+        ClearValue                          clearValue_;
 
 };
 

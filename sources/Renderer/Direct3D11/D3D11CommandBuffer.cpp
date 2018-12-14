@@ -51,10 +51,16 @@ static bool HasBufferResourceViews(const Buffer& buffer)
 }
 
 
-D3D11CommandBuffer::D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPtr<ID3D11DeviceContext>& context) :
-    stateMngr_ { stateMngr },
-    context_   { context   }
+D3D11CommandBuffer::D3D11CommandBuffer(
+    const ComPtr<ID3D11DeviceContext>&          context,
+    const std::shared_ptr<D3D11StateManager>&   stateMngr,
+    const CommandBufferDescriptor&              desc)
+:   context_   { context   },
+    stateMngr_ { stateMngr }
 {
+    /* Store information whether the command buffer has an immediate or deferred context */
+    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+        hasDeferredContext_ = true;
 }
 
 /* ----- Encoding ----- */
@@ -66,7 +72,11 @@ void D3D11CommandBuffer::Begin()
 
 void D3D11CommandBuffer::End()
 {
-    // dummy
+    if (hasDeferredContext_)
+    {
+        /* Encode commands from deferred context into command list */
+        context_->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
+    }
 }
 
 void D3D11CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
@@ -97,7 +107,12 @@ void D3D11CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, 
 
 void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 {
-    //TODO
+    auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, deferredCommandBuffer);
+    if (auto commandList = cmdBufferD3D.commandList_.Get())
+    {
+        /* Execute encoded command list with immediate context */
+        context_->ExecuteCommandList(commandList, TRUE);
+    }
 }
 
 /* ----- Configuration ----- */
@@ -111,22 +126,22 @@ void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std
 
 void D3D11CommandBuffer::SetViewport(const Viewport& viewport)
 {
-    stateMngr_.SetViewports(1, &viewport);
+    stateMngr_->SetViewports(1, &viewport);
 }
 
 void D3D11CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    stateMngr_.SetViewports(numViewports, viewports);
+    stateMngr_->SetViewports(numViewports, viewports);
 }
 
 void D3D11CommandBuffer::SetScissor(const Scissor& scissor)
 {
-    stateMngr_.SetScissors(1, &scissor);
+    stateMngr_->SetScissors(1, &scissor);
 }
 
 void D3D11CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    stateMngr_.SetScissors(numScissors, scissors);
+    stateMngr_->SetScissors(numScissors, scissors);
 }
 
 /* ----- Clear ----- */
@@ -325,13 +340,13 @@ void D3D11CommandBuffer::EndRenderPass()
 void D3D11CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineD3D = LLGL_CAST(D3D11GraphicsPipelineBase&, graphicsPipeline);
-    graphicsPipelineD3D.Bind(stateMngr_);
+    graphicsPipelineD3D.Bind(*stateMngr_);
 }
 
 void D3D11CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
     auto& computePipelineD3D = LLGL_CAST(D3D11ComputePipeline&, computePipeline);
-    computePipelineD3D.Bind(stateMngr_);
+    computePipelineD3D.Bind(*stateMngr_);
 }
 
 /* ----- Queries ----- */

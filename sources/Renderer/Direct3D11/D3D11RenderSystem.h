@@ -249,7 +249,7 @@ class D3D11RenderSystem final : public RenderSystem
 
         D3D_FEATURE_LEVEL                               featureLevel_           = D3D_FEATURE_LEVEL_9_1;
 
-        std::unique_ptr<D3D11StateManager>              stateMngr_;
+        std::shared_ptr<D3D11StateManager>              stateMngr_;
 
         /* ----- Hardware object containers ----- */
 

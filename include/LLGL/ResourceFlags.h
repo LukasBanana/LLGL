@@ -175,6 +175,7 @@ struct MiscFlags
         \remarks This is useful for a constant buffer for instance, that is updated by the host program every frame.
         \see RenderSystem::WriteBuffer
         \see RenderSystem::WriteTexture
+        \todo Restriction required to support deferred context in D3D11. This must no longer be just a "hint", it must be a strictly defined attribute for a buffer.
         */
         DynamicUsage = (1 << 0),
 
