@@ -9,7 +9,7 @@
 #define LLGL_D3D12_COMMAND_CONTEXT_H
 
 
-#include "../DXCommon/ComPtr.h"
+#include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
 #include <cstddef>
 

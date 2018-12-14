@@ -6,23 +6,24 @@
  */
 
 #include "D3D12CommandBuffer.h"
-#include "D3D12RenderContext.h"
-#include "D3D12RenderSystem.h"
 #include "D3D12CommandSignaturePool.h"
-#include "D3D12Types.h"
-#include "../CheckedCast.h"
-#include "../../Core/Helper.h"
+#include "../D3D12RenderContext.h"
+#include "../D3D12RenderSystem.h"
+#include "../D3D12Types.h"
+#include "../../CheckedCast.h"
+#include "../../../Core/Helper.h"
+
+#include "../Buffer/D3D12Buffer.h"
+#include "../Buffer/D3D12BufferArray.h"
+
+#include "../Texture/D3D12Texture.h"
+
+#include "../RenderState/D3D12ResourceHeap.h"
+#include "../RenderState/D3D12RenderPass.h"
+#include "../RenderState/D3D12QueryHeap.h"
+
+#include "../D3DX12/d3dx12.h"
 #include <algorithm>
-#include "D3DX12/d3dx12.h"
-
-#include "Buffer/D3D12Buffer.h"
-#include "Buffer/D3D12BufferArray.h"
-
-#include "Texture/D3D12Texture.h"
-
-#include "RenderState/D3D12ResourceHeap.h"
-#include "RenderState/D3D12RenderPass.h"
-#include "RenderState/D3D12QueryHeap.h"
 
 
 namespace LLGL

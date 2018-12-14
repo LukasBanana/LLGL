@@ -1,39 +1,42 @@
 /*
- * GLImmediateCommandBuffer.h
+ * D3D12CommandBuffer.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_GL_IMMEDIATE_COMMAND_BUFFER_H
-#define LLGL_GL_IMMEDIATE_COMMAND_BUFFER_H
+#ifndef LLGL_D3D12_COMMAND_BUFFER_H
+#define LLGL_D3D12_COMMAND_BUFFER_H
 
 
-#include "GLCommandBuffer.h"
-#include "RenderState/GLState.h"
-#include "OpenGL.h"
-#include <memory>
+#include <LLGL/CommandBuffer.h>
+#include <cstddef>
+#include "D3D12CommandContext.h"
+#include "../../DXCommon/ComPtr.h"
+#include "../../DXCommon/DXCore.h"
+
+#include <d3d12.h>
+#include <dxgi1_4.h>
 
 
 namespace LLGL
 {
 
 
-class GLRenderTarget;
-class GLRenderContext;
-class GLStateManager;
-class GLRenderPass;
+class D3D12RenderSystem;
+class D3D12RenderContext;
+class D3D12RenderPass;
+class D3D12CommandSignaturePool;
+struct D3D12Resource;
 
-class GLImmediateCommandBuffer final : public GLCommandBuffer
+class D3D12CommandBuffer final : public CommandBuffer
 {
 
     public:
 
         /* ----- Common ----- */
 
-        GLImmediateCommandBuffer(const std::shared_ptr<GLStateManager>& stateManager);
-
-        bool IsImmediateCmdBuffer() const override;
+        D3D12CommandBuffer(D3D12RenderSystem& renderSystem);
 
         /* ----- Encoding ----- */
 
@@ -82,8 +85,8 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         /* ----- Resource Heaps ----- */
 
-        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
-        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
+        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
         /* ----- Render Passes ----- */
 
@@ -134,34 +137,63 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
         void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
 
-        /* ----- Direct Resource Access ------ */
+        /* ----- Extended functions ----- */
 
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetTexture(Texture& texture, std::uint32_t layer, long stageFlags = StageFlags::AllStages) override;
-        void SetSampler(Sampler& sampler, std::uint32_t layer, long stageFlags = StageFlags::AllStages) override;
-
-        void ResetResourceSlots(
-            const ResourceType  resourceType,
-            std::uint32_t       firstSlot,
-            std::uint32_t       numSlots,
-            long                bindFlags,
-            long                stageFlags      = StageFlags::AllStages
-        ) override;
+        // Returns the native ID3D12GraphicsCommandList object.
+        inline ID3D12GraphicsCommandList* GetNative() const
+        {
+            return commandList_.Get();
+        }
 
     private:
 
-        void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot);
-        void SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot);
+        static const UINT maxNumBuffers = 3;
 
-        void SetResourceHeap(ResourceHeap& resourceHeap);
+        void CreateDevices(D3D12RenderSystem& renderSystem);
 
-    private:
+        void NextCommandAllocator();
 
-        std::shared_ptr<GLStateManager> stateMngr_;
-        GLRenderState                   renderState_;
-        GLClearValue                    clearValue_;
+        void SetScissorRectsToDefault(UINT numScissorRects);
+
+        //void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
+        void BindRenderContext(D3D12RenderContext& renderContextD3D);
+
+        void ClearAttachmentsWithRenderPass(
+            const D3D12RenderPass&  renderPassD3D,
+            std::uint32_t           numClearValues,
+            const ClearValue*       clearValues
+        );
+
+        void ClearColorBuffers(
+            const std::uint8_t* colorBuffers,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            std::uint32_t&      idx
+        );
+
+        inline ID3D12CommandAllocator* GetCommandAllocator() const
+        {
+            return cmdAllocators_[currentCmdAllocator_].Get();
+        }
+
+        static const std::size_t g_numCmdAllocators = 3;
+
+        ComPtr<ID3D12CommandAllocator>      cmdAllocators_[g_numCmdAllocators];
+        std::size_t                         currentCmdAllocator_                = 0;
+
+        ComPtr<ID3D12GraphicsCommandList>   commandList_;
+        D3D12CommandContext                 commandContext_;
+        const D3D12CommandSignaturePool*    commandSignaturePool_               = nullptr;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_                      = {};
+        D3D12_CPU_DESCRIPTOR_HANDLE         dsvDescHandle_                      = {};
+
+        ClearValue                          clearValue_;
+
+        bool                                scissorEnabled_                     = false;
+        UINT                                numBoundScissorRects_               = 0;
+
+        RenderTarget*                       boundRenderTarget_                  = nullptr;
 
 };
 

@@ -7,16 +7,17 @@
 
 #include "D3D12RenderContext.h"
 #include "D3D12RenderSystem.h"
-#include "D3D12CommandContext.h"
 #include "D3D12Types.h"
+#include "Command/D3D12CommandContext.h"
 #include "Buffer/D3D12Buffer.h"
 #include "../CheckedCast.h"
-#include <LLGL/Platform/NativeHandle.h>
-#include <LLGL/Log.h>
 #include "../../Core/Helper.h"
 #include "../DXCommon/DXTypes.h"
-#include <algorithm>
+
+#include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/Log.h>
 #include "D3DX12/d3dx12.h"
+#include <algorithm>
 
 
 namespace LLGL

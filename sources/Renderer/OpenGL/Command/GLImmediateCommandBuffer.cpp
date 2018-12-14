@@ -6,30 +6,30 @@
  */
 
 #include "GLImmediateCommandBuffer.h"
-#include "GLRenderContext.h"
-#include "../GLCommon/GLTypes.h"
-#include "../GLCommon/GLCore.h"
-#include "Ext/GLExtensions.h"
-#include "Ext/GLExtensionLoader.h"
-#include "../CheckedCast.h"
-#include "../StaticLimits.h"
-#include "../../Core/Assertion.h"
+#include "../GLRenderContext.h"
+#include "../Ext/GLExtensions.h"
+#include "../Ext/GLExtensionLoader.h"
+#include "../../GLCommon/GLTypes.h"
+#include "../../GLCommon/GLCore.h"
+#include "../../CheckedCast.h"
+#include "../../StaticLimits.h"
+#include "../../../Core/Assertion.h"
 
-#include "Shader/GLShaderProgram.h"
+#include "../Shader/GLShaderProgram.h"
 
-#include "Texture/GLTexture.h"
-#include "Texture/GLSampler.h"
-#include "Texture/GLRenderTarget.h"
+#include "../Texture/GLTexture.h"
+#include "../Texture/GLSampler.h"
+#include "../Texture/GLRenderTarget.h"
 
-#include "Buffer/GLBufferWithVAO.h"
-#include "Buffer/GLBufferArrayWithVAO.h"
+#include "../Buffer/GLBufferWithVAO.h"
+#include "../Buffer/GLBufferArrayWithVAO.h"
 
-#include "RenderState/GLStateManager.h"
-#include "RenderState/GLGraphicsPipeline.h"
-#include "RenderState/GLComputePipeline.h"
-#include "RenderState/GLResourceHeap.h"
-#include "RenderState/GLRenderPass.h"
-#include "RenderState/GLQueryHeap.h"
+#include "../RenderState/GLStateManager.h"
+#include "../RenderState/GLGraphicsPipeline.h"
+#include "../RenderState/GLComputePipeline.h"
+#include "../RenderState/GLResourceHeap.h"
+#include "../RenderState/GLRenderPass.h"
+#include "../RenderState/GLQueryHeap.h"
 
 
 namespace LLGL

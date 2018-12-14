@@ -13,8 +13,8 @@
 #include "Ext/GLExtensionLoader.h"
 #include "../ContainerTypes.h"
 
-#include "GLCommandQueue.h"
-#include "GLCommandBuffer.h"
+#include "Command/GLCommandQueue.h"
+#include "Command/GLCommandBuffer.h"
 #include "GLRenderContext.h"
 
 #include "Buffer/GLBuffer.h"

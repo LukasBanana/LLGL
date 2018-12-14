@@ -6,11 +6,11 @@
  */
 
 #include "GLCommandQueue.h"
-#include "../CheckedCast.h"
-#include "RenderState/GLFence.h"
-#include "RenderState/GLQueryHeap.h"
-#include "../GLCommon/GLExtensionRegistry.h"
-#include "Ext/GLExtensions.h"
+#include "../Ext/GLExtensions.h"
+#include "../RenderState/GLFence.h"
+#include "../RenderState/GLQueryHeap.h"
+#include "../../CheckedCast.h"
+#include "../../GLCommon/GLExtensionRegistry.h"
 #include <algorithm>
 
 

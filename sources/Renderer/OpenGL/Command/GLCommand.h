@@ -9,9 +9,9 @@
 #define LLGL_GL_COMMAND_H
 
 
-#include "RenderState/GLState.h"
 #include <LLGL/CommandBufferFlags.h>
-#include "OpenGL.h"
+#include "../RenderState/GLState.h"
+#include "../OpenGL.h"
 #include <cstdint>
 
 
@@ -19,6 +19,7 @@ namespace LLGL
 {
 
 
+class RenderTarget;
 class GLBuffer;
 class GLTexture;
 class GLResourceHeap;

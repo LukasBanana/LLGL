@@ -8,7 +8,7 @@
 #include "D3D12Buffer.h"
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12Types.h"
-#include "../D3D12CommandContext.h"
+#include "../Command/D3D12CommandContext.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/Helper.h"

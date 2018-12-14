@@ -7,11 +7,11 @@
 
 #include "D3D12CommandQueue.h"
 #include "D3D12CommandBuffer.h"
-#include "D3D12RenderSystem.h"
-#include "../CheckedCast.h"
-#include "../DXCommon/DXCore.h"
-#include "RenderState/D3D12Fence.h"
-#include "RenderState/D3D12QueryHeap.h"
+#include "../D3D12RenderSystem.h"
+#include "../RenderState/D3D12Fence.h"
+#include "../RenderState/D3D12QueryHeap.h"
+#include "../../CheckedCast.h"
+#include "../../DXCommon/DXCore.h"
 
 
 namespace LLGL

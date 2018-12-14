@@ -15,8 +15,8 @@
 #include "../../Core/Helper.h"
 #include "../../Core/Assertion.h"
 #include "GLRenderingCaps.h"
-#include "GLImmediateCommandBuffer.h"
-#include "GLDeferredCommandBuffer.h"
+#include "Command/GLImmediateCommandBuffer.h"
+#include "Command/GLDeferredCommandBuffer.h"
 
 
 namespace LLGL

@@ -6,8 +6,8 @@
  */
 
 #include "D3D12CommandContext.h"
-#include "D3D12Resource.h"
-#include "../DXCommon/DXCore.h"
+#include "../D3D12Resource.h"
+#include "../../DXCommon/DXCore.h"
 
 
 namespace LLGL

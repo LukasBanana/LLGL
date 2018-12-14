@@ -6,7 +6,7 @@
  */
 
 #include "D3D12CommandSignaturePool.h"
-#include "../DXCommon/DXCore.h"
+#include "../../DXCommon/DXCore.h"
 
 
 namespace LLGL

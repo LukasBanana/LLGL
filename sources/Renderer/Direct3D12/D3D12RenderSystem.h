@@ -13,11 +13,11 @@
 #include <LLGL/VideoAdapter.h>
 
 #include "D3D12Device.h"
-#include "D3D12CommandQueue.h"
-#include "D3D12CommandBuffer.h"
-#include "D3D12CommandContext.h"
 #include "D3D12RenderContext.h"
-#include "D3D12CommandSignaturePool.h"
+#include "Command/D3D12CommandQueue.h"
+#include "Command/D3D12CommandBuffer.h"
+#include "Command/D3D12CommandContext.h"
+#include "Command/D3D12CommandSignaturePool.h"
 
 #include "Buffer/D3D12Buffer.h"
 #include "Texture/D3D12Texture.h"

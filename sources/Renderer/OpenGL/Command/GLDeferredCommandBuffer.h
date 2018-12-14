@@ -11,8 +11,8 @@
 
 #include "GLCommandBuffer.h"
 #include "GLCommandOpCode.h"
-#include "RenderState/GLState.h"
-#include "OpenGL.h"
+#include "../RenderState/GLState.h"
+#include "../OpenGL.h"
 #include <memory>
 #include <vector>
 
@@ -152,7 +152,10 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
         /*  ----- Extended functions ----- */
 
-        void Execute(GLStateManager& stateMngr);
+        inline const std::vector<std::uint8_t>& GetRawBuffer() const
+        {
+            return buffer_;
+        }
 
     private:
 

@@ -6,7 +6,7 @@
  */
 
 #include "GLCommandBuffer.h"
-#include "RenderState/GLState.h"
+#include "../RenderState/GLState.h"
 
 
 namespace LLGL

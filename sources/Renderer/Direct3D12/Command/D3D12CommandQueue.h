@@ -10,9 +10,9 @@
 
 
 #include <LLGL/CommandQueue.h>
-#include "RenderState/D3D12Fence.h"
-#include "../DXCommon/ComPtr.h"
-#include "../StaticLimits.h"
+#include "../RenderState/D3D12Fence.h"
+#include "../../DXCommon/ComPtr.h"
+#include "../../StaticLimits.h"
 #include <d3d12.h>
 #include <cstddef>
 
