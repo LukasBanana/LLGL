@@ -166,10 +166,12 @@ void D3D12RenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
+//TODO: execute command list only before the next call to D3D12CommandBuffer::Begin()
 void D3D12RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
     dstBufferD3D.UpdateDynamicSubresource(commandContext_, data, dataSize, dstOffset);
+    ExecuteCommandList();
 }
 
 void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
