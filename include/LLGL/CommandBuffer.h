@@ -122,7 +122,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         This command buffer must have been created with the flag CommandBufferFlags::DeferredSubmit.
         \remarks This function can only be used by primary command buffers, i.e. command buffers that have not be created with the flag CommandBufferFlags::DeferredSubmit.
         \see CommandBufferFlags
-        \todo Not implemented yet for: D3D11, D3D12, Vulkan, Metal
+        \todo Incomplete for: D3D12, Vulkan, Metal.
         */
         virtual void Execute(CommandBuffer& deferredCommandBuffer) = 0;
 

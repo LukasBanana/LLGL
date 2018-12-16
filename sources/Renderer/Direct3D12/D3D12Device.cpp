@@ -119,7 +119,7 @@ UINT D3D12Device::FintSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount)
     feature.Flags               = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
     feature.NumQualityLevels    = 0;
 
-    for (; sampleCount > 1; --sampleCount)
+    for (; sampleCount > 1u; --sampleCount)
     {
         feature.SampleCount = sampleCount;
         if (device_->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &feature, sizeof(feature)) == S_OK)
@@ -128,7 +128,8 @@ UINT D3D12Device::FintSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount)
                 return sampleCount;
         }
     }
-    return 1;
+
+    return 1u;
 }
 
 

@@ -24,13 +24,15 @@ class MyRenderer
 
     LLGL::RenderContext*                context         = nullptr;
     LLGL::CommandQueue*                 cmdQueue        = nullptr;
-    LLGL::CommandBufferExt*             cmdBuffer       = nullptr;
+    LLGL::CommandBuffer*                cmdBuffer       = nullptr;
     LLGL::Buffer*                       constantBuffer  = nullptr;
     LLGL::Buffer*                       vertexBuffer    = nullptr;
     LLGL::Buffer*                       indexBuffer     = nullptr;
     LLGL::Sampler*                      sampler         = nullptr;
     LLGL::Texture*                      texture         = nullptr;
+    LLGL::ResourceHeap*                 resourceHeap    = nullptr;
     LLGL::ShaderProgram*                shaderProgram   = nullptr;
+    LLGL::PipelineLayout*               layout          = nullptr;
     LLGL::GraphicsPipeline*             pipeline        = nullptr;
 
     LLGL::MultiSamplingDescriptor       multiSampling;
@@ -59,8 +61,8 @@ MyRenderer::MyRenderer(
     LLGL::Window&           mainWindow,
     const LLGL::Offset2D&   subWindowOffset,
     const LLGL::Viewport&   viewport)
-:   viewport      { viewport },
-    multiSampling { 8u       }
+:   viewport      { viewport }/*,
+    multiSampling { 8u       }*/
 {
     // Load render system module
     renderer = LLGL::RenderSystem::Load(rendererModule);
@@ -166,10 +168,27 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
     if (shaderProgram->HasErrors())
         throw std::runtime_error(shaderProgram->QueryInfoLog());
 
+    // Create pipeline layout
+    bool compiledSampler = (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
+
+    if (compiledSampler)
+        layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):vert, texture(0):frag, sampler(0):frag"));
+    else
+        layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):vert, texture(1):frag, sampler(2):frag"));
+
+    // Create resource heap
+    LLGL::ResourceHeapDescriptor resHeapDesc;
+    {
+        resHeapDesc.pipelineLayout  = layout;
+        resHeapDesc.resourceViews   = { constantBuffer, texture, sampler };
+    }
+    resourceHeap = renderer->CreateResourceHeap(resHeapDesc);
+
     // Create graphics pipelines
     LLGL::GraphicsPipelineDescriptor pipelineDesc;
     {
         pipelineDesc.shaderProgram              = shaderProgram;
+        pipelineDesc.pipelineLayout             = layout;
         pipelineDesc.depth.testEnabled          = true;
         pipelineDesc.depth.writeEnabled         = true;
         pipelineDesc.rasterizer.multiSampling   = multiSampling;
@@ -180,7 +199,7 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
     cmdQueue = renderer->GetCommandQueue();
 
     // Create command buffers
-    cmdBuffer = renderer->CreateCommandBufferExt();
+    cmdBuffer = renderer->CreateCommandBuffer();
 }
 
 void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
@@ -204,10 +223,7 @@ void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
 
             // Set graphics pipeline and vertex buffer
             cmdBuffer->SetGraphicsPipeline(*pipeline);
-
-            cmdBuffer->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
-            cmdBuffer->SetSampler(*sampler, 0, LLGL::StageFlags::FragmentStage);
-            cmdBuffer->SetTexture(*texture, 0, LLGL::StageFlags::FragmentStage);
+            cmdBuffer->SetGraphicsResourceHeap(*resourceHeap);
 
             // Draw triangulated cube
             cmdBuffer->DrawIndexed(36, 0);

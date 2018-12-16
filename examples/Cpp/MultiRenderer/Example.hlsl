@@ -26,8 +26,8 @@ OutputVS VS(InputVS inp)
 	return outp;
 }
 
-Texture2D colorMap : register(t0);
-SamplerState colorMapSampler : register(s0);
+Texture2D colorMap : register(t1);
+SamplerState colorMapSampler : register(s2);
 
 // Pixel shader main function
 float4 PS(OutputVS inp) : SV_Target
