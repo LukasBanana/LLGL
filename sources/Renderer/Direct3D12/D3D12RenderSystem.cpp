@@ -297,12 +297,12 @@ void D3D12RenderSystem::Release(RenderPass& renderPass)
 
 RenderTarget* D3D12RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
-    return nullptr;//TakeOwnership(renderTargets_, MakeUnique<D3D12RenderTarget>(desc));
+    return TakeOwnership(renderTargets_, MakeUnique<D3D12RenderTarget>(device_, desc));
 }
 
 void D3D12RenderSystem::Release(RenderTarget& renderTarget)
 {
-    //RemoveFromUniqueSet(renderTargets_, &renderTarget);
+    RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
 /* ----- Shader ----- */

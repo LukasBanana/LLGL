@@ -18,55 +18,6 @@ namespace LLGL
 
 #define _DEB_DISABLE_MIPS
 
-static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
-{
-    dst.Dimension           = D3D12Types::MapResourceDimension(src.type);
-    dst.Alignment           = 0;
-    #ifndef _DEB_DISABLE_MIPS//TODO: mipmapping is not supported yet
-    dst.MipLevels           = NumMipLevels(src);
-    #else
-    dst.MipLevels           = 1;
-    #endif
-    dst.Format              = D3D12Types::Map(src.format);
-    dst.SampleDesc.Count    = 1;
-    dst.SampleDesc.Quality  = 0;
-    dst.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    dst.Flags               = D3D12_RESOURCE_FLAG_NONE;
-
-    switch (src.type)
-    {
-        case TextureType::Texture1D:
-        case TextureType::Texture1DArray:
-            dst.Width               = src.extent.width;
-            dst.Height              = 1;
-            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
-            break;
-
-        case TextureType::Texture2D:
-        case TextureType::Texture2DArray:
-        case TextureType::TextureCube:
-        case TextureType::TextureCubeArray:
-            dst.Width               = src.extent.width;
-            dst.Height              = src.extent.height;
-            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
-            break;
-
-        case TextureType::Texture3D:
-            dst.Width               = src.extent.width;
-            dst.Height              = src.extent.height;
-            dst.DepthOrArraySize    = src.extent.depth;
-            break;
-
-        case TextureType::Texture2DMS:
-        case TextureType::Texture2DMSArray:
-            dst.Width               = src.extent.width;
-            dst.Height              = src.extent.height;
-            dst.DepthOrArraySize    = src.arrayLayers;
-            dst.SampleDesc.Count    = std::max(1u, src.samples);
-            break;
-    }
-}
-
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
     Texture         { desc.type                    },
     format_         { D3D12Types::Map(desc.format) },
@@ -77,10 +28,7 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     #endif
     numArrayLayers_ { desc.arrayLayers             }
 {
-    /* Setup resource descriptor by texture descriptor and create hardware resource */
-    D3D12_RESOURCE_DESC descD3D;
-    Convert(descD3D, desc);
-    CreateResource(device, descD3D);
+    CreateNativeTexture(device, desc);
 }
 
 Extent3D D3D12Texture::QueryMipExtent(std::uint32_t mipLevel) const
@@ -230,7 +178,7 @@ void D3D12Texture::UpdateSubresource(
     auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         resource_.native.Get(),
         D3D12_RESOURCE_STATE_COPY_DEST,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+        resource_.usageState
     );
 
     commandList->ResourceBarrier(1, &resourceBarrier);
@@ -316,18 +264,96 @@ void D3D12Texture::CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR
  * ======= Private: =======
  */
 
-void D3D12Texture::CreateResource(ID3D12Device* device, const D3D12_RESOURCE_DESC& desc)
+// see https://docs.microsoft.com/en-us/windows/desktop/api/d3d12/ne-d3d12-d3d12_resource_flags
+static D3D12_RESOURCE_FLAGS GetD3DTextureResourceFlags(const TextureDescriptor& desc)
 {
+    D3D12_RESOURCE_FLAGS flagsD3D = D3D12_RESOURCE_FLAG_NONE;
+
+    if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
+        flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
+        flagsD3D |= (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
+
+    if ((desc.bindFlags & BindFlags::SampleBuffer) == 0)
+        flagsD3D |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+
+    if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
+        flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    return flagsD3D;
+}
+
+static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
+{
+    dst.Dimension           = D3D12Types::MapResourceDimension(src.type);
+    dst.Alignment           = 0;
+    #ifndef _DEB_DISABLE_MIPS//TODO: mipmapping is not supported yet
+    dst.MipLevels           = NumMipLevels(src);
+    #else
+    dst.MipLevels           = 1;
+    #endif
+    dst.Format              = D3D12Types::Map(src.format);
+    dst.SampleDesc.Count    = 1;
+    dst.SampleDesc.Quality  = 0;
+    dst.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    dst.Flags               = GetD3DTextureResourceFlags(src);
+
+    switch (src.type)
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            dst.Width               = src.extent.width;
+            dst.Height              = 1;
+            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
+            break;
+
+        case TextureType::Texture2D:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+            dst.Width               = src.extent.width;
+            dst.Height              = src.extent.height;
+            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
+            break;
+
+        case TextureType::Texture3D:
+            dst.Width               = src.extent.width;
+            dst.Height              = src.extent.height;
+            dst.DepthOrArraySize    = src.extent.depth;
+            break;
+
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            dst.Width               = src.extent.width;
+            dst.Height              = src.extent.height;
+            dst.DepthOrArraySize    = src.arrayLayers;
+            dst.SampleDesc.Count    = std::max(1u, src.samples);
+            break;
+    }
+}
+
+void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescriptor& desc)
+{
+    /* Setup resource descriptor by texture descriptor and create hardware resource */
+    D3D12_RESOURCE_DESC descD3D;
+    Convert(descD3D, desc);
+
     /* Create hardware resource for the texture */
     auto hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &desc,
+        &descD3D,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );
-    DXThrowIfFailed(hr, "failed to create D3D12 committed resource for texture");
+    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware texture");
+
+    /* Determine resource usage */
+    if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
+        resource_.usageState = D3D12_RESOURCE_STATE_DEPTH_READ;
+    else
+        resource_.usageState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 }
 
 

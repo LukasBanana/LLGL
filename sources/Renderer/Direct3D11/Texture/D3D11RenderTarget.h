@@ -38,7 +38,7 @@ class D3D11RenderTarget final : public RenderTarget
 
         const RenderPass* GetRenderPass() const override;
 
-        /* ----- Extended Internal Functions ----- */
+    public:
 
         // Resolves all multi-sampled subresources.
         void ResolveSubresources(ID3D11DeviceContext* context);
@@ -69,6 +69,8 @@ class D3D11RenderTarget final : public RenderTarget
         void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc);
 
         bool HasMultiSampling() const;
+
+    private:
 
         ID3D11Device*                               device_                     = nullptr;
 

@@ -340,6 +340,11 @@ DXGI_FORMAT ToDXGIFormatSRV(const DXGI_FORMAT format)
     }
 }
 
+bool HasStencilComponent(const DXGI_FORMAT format)
+{
+    return (format == DXGI_FORMAT_D24_UNORM_S8_UINT || format == DXGI_FORMAT_D32_FLOAT_S8X24_UINT);
+}
+
 
 } // /namespace DXTypes
 

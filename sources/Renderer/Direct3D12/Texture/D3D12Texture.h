@@ -28,7 +28,7 @@ class D3D12Texture final : public Texture
 
         TextureDescriptor QueryDesc() const override;
 
-        /* ----- Extended internal functions ---- */
+    public:
 
         void UpdateSubresource(
             ID3D12Device*               device,
@@ -79,7 +79,9 @@ class D3D12Texture final : public Texture
 
     private:
 
-        void CreateResource(ID3D12Device* device, const D3D12_RESOURCE_DESC& desc);
+        void CreateNativeTexture(ID3D12Device* device, const TextureDescriptor& desc);
+
+    private:
 
         D3D12Resource   resource_;
 

@@ -48,7 +48,7 @@ class D3D12RenderContext final : public RenderContext
 
         const RenderPass* GetRenderPass() const override;
 
-        /* --- Extended functions --- */
+    public:
 
         // Returns the native color buffer resource from the swap-chain that is currently being used.
         D3D12Resource& GetCurrentColorBuffer();
@@ -76,6 +76,8 @@ class D3D12RenderContext final : public RenderContext
         void CreateDeviceResources();
 
         void MoveToNextFrame();
+
+    private:
 
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
 

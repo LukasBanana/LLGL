@@ -25,6 +25,7 @@ namespace LLGL
 
 class D3D12RenderSystem;
 class D3D12RenderContext;
+class D3D12RenderTarget;
 class D3D12RenderPass;
 class D3D12CommandSignaturePool;
 struct D3D12Resource;
@@ -155,7 +156,7 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         void SetScissorRectsToDefault(UINT numScissorRects);
 
-        //void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
+        void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
         void BindRenderContext(D3D12RenderContext& renderContextD3D);
 
         void ClearAttachmentsWithRenderPass(

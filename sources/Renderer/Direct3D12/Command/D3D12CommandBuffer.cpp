@@ -17,6 +17,7 @@
 #include "../Buffer/D3D12BufferArray.h"
 
 #include "../Texture/D3D12Texture.h"
+#include "../Texture/D3D12RenderTarget.h"
 
 #include "../RenderState/D3D12ResourceHeap.h"
 #include "../RenderState/D3D12RenderPass.h"
@@ -320,10 +321,8 @@ void D3D12CommandBuffer::BeginRenderPass(
     /* Bind render target/context */
     if (renderTarget.IsRenderContext())
         BindRenderContext(LLGL_CAST(D3D12RenderContext&, renderTarget));
-    #if 0//TODO
     else
-        ;
-    #endif
+        BindRenderTarget(LLGL_CAST(D3D12RenderTarget&, renderTarget));
 
     /* Clear attachments */
     if (renderPass)
@@ -342,13 +341,11 @@ void D3D12CommandBuffer::EndRenderPass()
             auto renderContextD3D = LLGL_CAST(D3D12RenderContext*, boundRenderTarget_);
             renderContextD3D->ResolveRenderTarget(commandContext_);
         }
-        #if 0
         else
         {
-            //TODO...
+            auto renderTargetD3D = LLGL_CAST(D3D12RenderTarget*, boundRenderTarget_);
+            renderTargetD3D->ResolveRenderTarget(commandContext_);
         }
-        #endif
-
         boundRenderTarget_ = nullptr;
     }
 }
@@ -582,10 +579,22 @@ void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
     }
 }
 
-/*void D3D12CommandBuffer::BindRenderTarget(D3D12RenderTarget& renderTargetD3D)
+void D3D12CommandBuffer::BindRenderTarget(D3D12RenderTarget& renderTargetD3D)
 {
-    //todo
-}*/
+    /* Transition resources to state ready for output merger */
+    renderTargetD3D.TransitionToOutputMerger(commandContext_);
+
+    /* Set current back buffer as RTV and optional DSV */
+    const UINT numRenderTargets = renderTargetD3D.GetNumColorAttachments();
+
+    rtvDescHandle_ = renderTargetD3D.GetCPUDescriptorHandleForRTV();
+    dsvDescHandle_ = renderTargetD3D.GetCPUDescriptorHandleForDSV();
+
+    if (dsvDescHandle_.ptr != 0)
+        commandList_->OMSetRenderTargets(numRenderTargets, &rtvDescHandle_, TRUE, &dsvDescHandle_);
+    else
+        commandList_->OMSetRenderTargets(numRenderTargets, &rtvDescHandle_, TRUE, nullptr);
+}
 
 void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
 {
@@ -595,20 +604,14 @@ void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
         D3D12_RESOURCE_STATE_RENDER_TARGET
     );
 
-    /* Set current back buffer as RTV */
+    /* Set current back buffer as RTV and optional DSV */
     rtvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForRTV();
     dsvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForDSV();
 
     if (dsvDescHandle_.ptr != 0)
-    {
-        /* Set current RTV and DSV */
         commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, &dsvDescHandle_);
-    }
     else
-    {
-        /* Set only current RTV */
         commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
-    }
 }
 
 void D3D12CommandBuffer::ClearAttachmentsWithRenderPass(

@@ -9,6 +9,7 @@
 #include "../D3D11RenderSystem.h"
 #include "../D3D11Types.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 
@@ -54,7 +55,7 @@ bool D3D11RenderTarget::HasDepthAttachment() const
 
 bool D3D11RenderTarget::HasStencilAttachment() const
 {
-    return (depthStencilView_.Get() != nullptr && depthStencilFormat_ == DXGI_FORMAT_D24_UNORM_S8_UINT);
+    return (depthStencilView_.Get() != nullptr && DXTypes::HasStencilComponent(depthStencilFormat_));
 }
 
 const RenderPass* D3D11RenderTarget::GetRenderPass() const
@@ -97,7 +98,6 @@ void D3D11RenderTarget::Attach(const AttachmentDescriptor& attachmentDesc)
         {
             case AttachmentType::Color:
                 throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
-                break;
             case AttachmentType::Depth:
                 AttachDepthBuffer();
                 break;

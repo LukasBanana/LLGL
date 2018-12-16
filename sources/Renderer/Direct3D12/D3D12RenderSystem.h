@@ -22,6 +22,7 @@
 #include "Buffer/D3D12Buffer.h"
 #include "Texture/D3D12Texture.h"
 #include "Texture/D3D12Sampler.h"
+#include "Texture/D3D12RenderTarget.h"
 
 #include "RenderState/D3D12Fence.h"
 #include "RenderState/D3D12GraphicsPipeline.h"
@@ -245,7 +246,7 @@ class D3D12RenderSystem final : public RenderSystem
         HWObjectContainer<D3D12Texture>             textures_;
         HWObjectContainer<D3D12Sampler>             samplers_;
         HWObjectContainer<D3D12RenderPass>          renderPasses_;
-        //HWObjectContainer<D3D12RenderTarget>        renderTargets_;
+        HWObjectContainer<D3D12RenderTarget>        renderTargets_;
         HWObjectContainer<D3D12Shader>              shaders_;
         HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
         HWObjectContainer<D3D12PipelineLayout>      pipelineLayouts_;
