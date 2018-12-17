@@ -65,11 +65,12 @@ The strings "position" and "color" must be equal to the identifiers used in the 
 Now we can create the GPU vertex buffer:
 ```cpp
 LLGL::BufferDescriptor myVertexBufferDesc;
-myVertexBufferDesc.type                = LLGL::BufferType::Vertex; // Vertex buffer type
 myVertexBufferDesc.size                = sizeof(myVertices);      // Size (in bytes) of the vertex buffer
+myVertexBufferDesc.bindFlags           = LLGL::BindFlags::VertexBuffer; // Vertex buffer type
 myVertexBufferDesc.vertexBuffer.format = myVertexFormat;           // Data layout explicitly for a vertex buffer
 LLGL::Buffer* myVertexBuffer = myRenderer->CreateBuffer(myVertexBufferDesc, myVertices);
 ```
+The parameter `bindFlags` takes a bitwise OR combination of the enumeration entries of `LLG::BindFlags`, to tell the render system for which purposes the buffer will be used. In this case, we will only bind it as a vertex buffer.
 
 
 ## Shaders

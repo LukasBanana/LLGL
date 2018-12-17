@@ -63,7 +63,7 @@ myCmdBuffer->Clear(LLGL::ClearFlags::ColorDepth);
 ```
 The flag `ColorDepth` is just a shortcut for `LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth`.
 
-Together we the vertex buffer, we also use an index buffer for this tutorial to utilize each vertex for multiple polygons. The index buffer creation works analogous to the vertex buffer and can be bound with the `SetIndexBuffer` function:
+Together with the vertex buffer, we also use an index buffer for this tutorial to utilize each vertex for multiple polygons. The index buffer creation works analogous to the vertex buffer and can be bound with the `SetIndexBuffer` function:
 ```cpp
 myCmdBuffer->SetVertexBuffer(*myVertexBuffer);
 myCmdBuffer->SetIndexBuffer(*myIndexBuffer);

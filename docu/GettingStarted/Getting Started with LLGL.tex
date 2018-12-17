@@ -441,6 +441,9 @@ In section \ref{sec:custom_surface} an example of a custom implementation with \
 
 \section{Hello Triangle}
 
+\textit{NOTE: this section is not up-to-date!} \\
+\noindent
+
 After we have set up and build the library, we can start rendering some geometry.
 Our example will consist of a single C++ source file (e.g. ``\texttt{main.cpp}'') and two shader files
 (e.g. ``\texttt{vertex.glsl}'' and ``\texttt{fragment.glsl}'').
@@ -551,9 +554,11 @@ to the \texttt{initialData} parameter:
 \begin{lstlisting}
 LLGL::BufferDescriptor bufferDesc;
 
-// Set the common buffer attributes
-bufferDesc.type = LLGL::BufferType::Vertex; // Buffer type
-bufferDesc.size = sizeof(vertices);         // Size (in bytes) of the buffer
+// Define size (in bytes) of the buffer
+bufferDesc.size = sizeof(vertices);
+
+// We will bind it as a vertex buffer (can be a bitwise OR combination)
+bufferDesc.bindFlags = LLGL::BindFlags::VertexBuffer;
 
 // Set vertex buffer specific attributes
 bufferDesc.vertexBuffer.format = vertexFormat; // Copy the vertex format
