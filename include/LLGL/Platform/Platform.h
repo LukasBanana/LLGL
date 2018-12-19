@@ -33,9 +33,9 @@
 #if defined _M_ARM || defined __arm__
 #   define LLGL_ARCH_ARM
 #elif defined _M_X64 || defined __amd64__
-#   define LLGL_ARCH_X64
+#   define LLGL_ARCH_AMD64
 #elif defined _M_IX86 || defined _X86_ || defined __X86__ || defined __i386__
-#   define LLGL_ARCH_X86
+#   define LLGL_ARCH_IA32
 #endif
 
 

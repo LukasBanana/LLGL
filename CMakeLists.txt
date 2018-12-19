@@ -105,6 +105,7 @@ option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode
 option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
 option(LLGL_ENABLE_UTILITY "Enable utility functions (LLGL/Utility.h)" ON)
 option(LLGL_ENABLE_SPIRV_REFLECT "Enable shader reflection of SPIR-V modules (requires the SPIRV submodule)" OFF)
+option(LLGL_ENABLE_JIT_COMPILER "Enables Just-in-Time (JIT) compilation for emulated deferred command buffers (experimental)" OFF)
 
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL extension placeholders" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
@@ -152,6 +153,10 @@ if(LLGL_ENABLE_SPIRV_REFLECT)
     ADD_DEFINE(LLGL_ENABLE_SPIRV_REFLECT)
 endif()
 
+if(LLGL_ENABLE_JIT_COMPILER)
+    ADD_DEFINE(LLGL_ENABLE_JIT_COMPILER)
+endif()
+
 if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
     ADD_DEFINE(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
 endif()
@@ -197,6 +202,25 @@ file(GLOB FilesIncludePlatformBase          ${PROJECT_INCLUDE_DIR}/LLGL/Platform
 file(GLOB FilesCore                         ${PROJECT_SOURCE_DIR}/sources/Core/*.*)
 file(GLOB FilesPlatformBase                 ${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
 file(GLOB FilesRenderer                     ${PROJECT_SOURCE_DIR}/sources/Renderer/*.*)
+
+if(LLGL_ENABLE_JIT_COMPILER)
+    file(GLOB FilesJIT                      ${PROJECT_SOURCE_DIR}/sources/JIT/*.*)
+    file(GLOB FilesJITArchAMD64             ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/AMD64/*.*)
+    file(GLOB FilesJITArchARM64             ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/ARM64/*.*)
+    file(GLOB FilesJITArchIA32              ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/IA32/*.*)
+    if(WIN32)
+        file(GLOB FilesJITPlatform          ${PROJECT_SOURCE_DIR}/sources/JIT/Platform/Win32/*.*)
+    #elseif(APPLE)
+    #    set(CMAKE_MACOSX_RPATH 1)
+    #    if(MOBILE_PLATFORM)
+    #        file(GLOB FilesJITPlatform     ${PROJECT_SOURCE_DIR}/sources/JIT/Platform/IOS/*.*)
+    #    else()
+    #        file(GLOB FilesJITPlatform     ${PROJECT_SOURCE_DIR}/sources/JIT/Platform/MacOS/*.*)
+    #    endif()
+    #elseif(UNIX)
+    #    file(GLOB FilesJITPlatform         ${PROJECT_SOURCE_DIR}/sources/JIT/Platform/Linux/*.*)
+    endif()
+endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)
     file(GLOB FilesRendererDbg              ${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/*.*)
@@ -327,6 +351,15 @@ set(FilesExample_UnorderedAccess ${ExampleProjectsPath}/UnorderedAccess/Example.
 
 source_group("Include" FILES ${FilesInclude})
 source_group("Sources\\Core" FILES ${FilesCore})
+
+if(LLGL_ENABLE_JIT_COMPILER)
+    source_group("Sources\\JIT" FILES ${FilesJIT})
+    source_group("Sources\\JIT\\Arch\\AMD64" FILES ${FilesJITArchAMD64})
+    source_group("Sources\\JIT\\Arch\\ARM64" FILES ${FilesJITArchARM64})
+    source_group("Sources\\JIT\\Arch\\IA32" FILES ${FilesJITArchIA32})
+    source_group("Sources\\JIT\\Platform" FILES ${FilesJITPlatform})
+endif()
+
 source_group("Include\\Platform" FILES ${FilesIncludePlatformBase} ${FilesIncludePlatform})
 source_group("Sources\\Platform" FILES ${FilesPlatformBase} ${FilesPlatform})
 source_group("Sources\\Renderer" FILES ${FilesRenderer})
@@ -406,6 +439,18 @@ set(
     ${FilesPlatform}
     ${FilesRenderer}
 )
+
+if(LLGL_ENABLE_JIT_COMPILER)
+    set(
+        FilesLLGL
+        ${FilesLLGL}
+        ${FilesJIT}
+        ${FilesJITArchAMD64}
+        ${FilesJITArchARM64}
+        ${FilesJITArchIA32}
+        ${FilesJITPlatform}
+    )
+endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)
     set(FilesLLGL ${FilesLLGL} ${FilesRendererDbg})
