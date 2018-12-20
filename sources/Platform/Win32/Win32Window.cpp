@@ -222,6 +222,14 @@ std::wstring Win32Window::GetTitle() const
     return std::wstring(title);
 }
 
+void Win32Window::SetMousePosition(const Offset2D & Pos)
+{
+    POINT pos = { Pos.x, Pos.y };
+    ClientToScreen(wnd_, &pos);
+    SetCursorPos(pos.x, pos.y);
+    PostGlobalMotion(Pos);
+}
+
 void Win32Window::Show(bool show)
 {
     ShowWindow(wnd_, (show ? SW_NORMAL : SW_HIDE));

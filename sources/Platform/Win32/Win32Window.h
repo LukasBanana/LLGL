@@ -40,6 +40,8 @@ class Win32Window : public Window
         void SetTitle(const std::wstring& title) override;
         std::wstring GetTitle() const override;
 
+        void SetMousePosition(const Offset2D& Pos) override;
+
         void Show(bool show = true) override;
         bool IsShown() const override;
 

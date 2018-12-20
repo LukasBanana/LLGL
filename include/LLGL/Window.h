@@ -147,6 +147,9 @@ class LLGL_EXPORT Window : public Surface
         //! Queries a window descriptor, which describes the attributes of this window.
         virtual WindowDescriptor GetDesc() const = 0;
 
+        //! Sets the mouse cursor position
+        virtual void SetMousePosition(const Offset2D& Pos);
+        
         //! Sets the new window behavior.
         virtual void SetBehavior(const WindowBehavior& behavior);
 

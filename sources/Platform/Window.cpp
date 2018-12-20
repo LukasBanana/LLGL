@@ -81,6 +81,12 @@ void Window::EventListener::OnTimer(Window& sender, std::uint32_t timerID)
 }
 
 
+void Window::SetMousePosition(const Offset2D & Pos)
+{
+    // dummy
+}
+
+
 /* ----- Window class ----- */
 
 #define FOREACH_LISTENER_CALL(FUNC) \
