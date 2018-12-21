@@ -359,27 +359,29 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks This function starts a new render pass section and must be ended with the EndRenderPass function.
         A simple frame setup could look like this:
         \code
-        myCmdQueue->Begin(*myCmdBuffer);
+        myCmdBuffer->Begin();
         {
-            myCmdBuffer->BeginRenderPass(*myRenderTarget);
+            myCmdBuffer->BeginRenderPass(*myRenderContext);
             {
-                myCmdBuffer->SetGraphicsPipeline(*myGfxPipeline);
+                myCmdBuffer->SetGraphicsPipeline(*myGraphicsPipeline);
                 myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
                 myCmdBuffer->Draw(...);
             }
             myCmdBuffer->EndRenderPass();
         }
-        myCmdQueue->End(*myCmdBuffer);
+        myCmdBuffer->End();
+        myCmdQueue->Submit(*myCmdBuffer);
         myRenderContext->Present();
         \endcode
         \remarks
         The following commands can only appear inside a render pass section:
-        - Drawing commands (i.e. <code>Draw</code>, <code>DrawInstanced</code>, <code>DrawIndexed</code>, and <code>DrawIndexedInstanced</code>).
-        - Clear attachment commands (i.e. <code>Clear</code>, and <code>ClearAttachments</code>).
+        - Drawing commands (i.e. \c Draw, \c DrawInstanced, \c DrawIndexed, \c DrawIndexedInstanced, \c DrawIndirect and \c DrawIndexedIndirect).
+        - Clear attachment commands (i.e. \c Clear, and \c ClearAttachments).
+        - Query block (i.e. \c BeginQuery and \c EndQuery).
+        - Conditional render block (i.e. \c BeginRenderCondition and \c EndRenderCondition).
         \remarks
         The following commands can only appear outside a render pass section:
-        - Dispatch compute commands (i.e. <code>Dispatch</code>).
-        - Resource read/write from the RenderSystem (i.e. <code>WriteBuffer</code>, <code>MapBuffer</code> etc.).
+        - Dispatch compute commands (i.e. \c Dispatch and \c DispatchIndirect).
         \see RenderSystem::CreateRenderPass
         \see RenderSystem::CreateRenderTarget
         \see RenderTargetDescriptor::renderPass

@@ -12,10 +12,10 @@
 // Maximum number of color attachments allowed for render targets.
 #define LLGL_MAX_NUM_COLOR_ATTACHMENTS      (8u)
 
-// Maximum number of attachments allowed for ender targets (color attachments and depth-stencilo attachment).
+// Maximum number of attachments allowed for render targets (color attachments and depth-stencil attachment).
 #define LLGL_MAX_NUM_ATTACHMENTS            ((LLGL_MAX_NUM_COLOR_ATTACHMENTS) + 1u)
 
-// Maximum number of scissors and viewports.
+// Maximum number of viewports and scissors.
 #define LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS (16u)
 
 
