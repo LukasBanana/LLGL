@@ -7,13 +7,13 @@
 
 #include "JITCompiler.h"
 #include "AssemblyTypes.h"
-#include <LLGL/Platform/Platform.h>
 #include "../Core/Helper.h"
 
+#include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_WIN32
 #   include "Platform/Win32/Win32JITProgram.h"
 #else
-//#   include "Platform/POSIX/POSIXJITProgram.h"
+#   include "Platform/POSIX/POSIXJITProgram.h"
 #endif
 
 #if defined LLGL_ARCH_ARM
