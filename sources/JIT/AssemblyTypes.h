@@ -19,25 +19,50 @@ namespace JIT
 {
 
 
-// Word, 16 bit
+// Argument type enumeration.
+enum class ArgType
+{
+    Byte,
+    Word,
+    DWord,
+    QWord,
+    Ptr,
+};
+
+// Word (16 bit).
 union Word
 {
     std::uint16_t i16;
     std::uint8_t  i8[2];
 };
 
-// Double word, 32 bit
+// Double word (32 bit).
 union DWord
 {
     std::uint32_t i32;
     std::uint8_t  i8[4];
 };
 
-// Quad word, 64 bit
+// Quad word (64 bit).
 union QWord
 {
     std::uint64_t i64;
     std::uint8_t  i8[8];
+};
+
+// Function argument with type and value.
+struct Arg
+{
+    ArgType             type;
+    union
+    {
+        std::uint8_t    i8;
+        std::uint16_t   i16;
+        std::uint32_t   i32;
+        std::uint64_t   i64;
+        const void*     ptr;
+    }
+    value;
 };
 
 

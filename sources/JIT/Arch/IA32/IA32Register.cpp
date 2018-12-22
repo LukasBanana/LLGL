@@ -1,11 +1,11 @@
 /*
- * IA32Assembler.cpp
+ * IA32Register.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "IA32Assembler.h"
+#include "IA32Register.h"
 #include "IA32Opcode.h"
 
 

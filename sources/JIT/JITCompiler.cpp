@@ -19,39 +19,102 @@
 #if defined LLGL_ARCH_ARM
 //#   include "Arch/ARM/ARMAssembler.h"
 #elif defined LLGL_ARCH_AMD64
-//#   include "Arch/AMD64/AMD64Assembler.h"
+#   include "Arch/AMD64/AMD64Assembler.h"
 #elif defined LLGL_ARCH_IA32
 #   include "Arch/IA32/IA32Assembler.h"
 #endif
+
+#ifdef LLGL_DEBUG
+#   include <iostream>
+#endif // /LLGL_DEBUG
 
 
 namespace LLGL
 {
 
 
+using namespace JIT;
+
 std::unique_ptr<JITCompiler> JITCompiler::Create()
 {
+    std::unique_ptr<JITCompiler> compiler;
+    
+    /* Create JIT compiler for current CPU architecture */
     #if defined LLGL_ARCH_ARM
-    return nullptr; //TODO
+    //TODO
     #elif defined LLGL_ARCH_AMD64
-    return nullptr; //TODO
+    compiler = MakeUnique<AMD64Assembler>();
     #elif defined LLGL_ARCH_IA32
-    return MakeUnique<JIT::IA32::IA32Assembler>();
-    #else
-    return nullptr;
+    compiler = MakeUnique<IA32Assembler>();
     #endif
+    
+    /* Store meta data */
+    compiler->littleEndian_ = compiler->IsLittleEndian();
+    
+    return compiler;
 }
 
-void JITCompiler::Begin()
+std::unique_ptr<JITProgram> JITCompiler::FlushProgram()
 {
-    littleEndian_ = IsLittleEndian();
+    if (!assembly_.empty())
+    {
+        auto program = JITProgram::Create(assembly_.data(), assembly_.size());
+        assembly_.clear();
+        return program;
+    }
+    return nullptr;
 }
 
-std::unique_ptr<JITProgram> JITCompiler::End()
+void JITCompiler::PushThisPtr(const void* value)
 {
-    auto program = JITProgram::Create(assembly_.data(), assembly_.size());
-    assembly_.clear();
-    return program;
+    thisPtr_ = value;
+}
+
+void JITCompiler::PushPtr(const void* value)
+{
+    Arg arg;
+    arg.type = ArgType::Ptr;
+    arg.value.ptr = value;
+    args_.push_back(arg);
+}
+
+void JITCompiler::PushByte(std::uint8_t value)
+{
+    Arg arg;
+    arg.type        = ArgType::Byte;
+    arg.value.i8    = value;
+    args_.push_back(arg);
+}
+
+void JITCompiler::PushWord(std::uint16_t value)
+{
+    Arg arg;
+    arg.type        = ArgType::Word;
+    arg.value.i16   = value;
+    args_.push_back(arg);
+}
+
+void JITCompiler::PushDWord(std::uint32_t value)
+{
+    Arg arg;
+    arg.type        = ArgType::DWord;
+    arg.value.i32   = value;
+    args_.push_back(arg);
+}
+
+void JITCompiler::PushQWord(std::uint64_t value)
+{
+    Arg arg;
+    arg.type        = ArgType::QWord;
+    arg.value.i64   = value;
+    args_.push_back(arg);
+}
+
+void JITCompiler::FuncCall(const void* addr, const JITCallConv conv, bool farCall)
+{
+    WriteFuncCall(addr, conv, farCall);
+    args_.clear();
+    thisPtr_ = nullptr;
 }
 
 
@@ -96,6 +159,35 @@ void JITCompiler::WriteQWord(std::uint64_t data)
 {
     Write(&data, sizeof(data));
 }
+
+void JITCompiler::WritePtr(const void* data)
+{
+    Write(&data, sizeof(data));
+}
+
+
+#ifdef LLGL_DEBUG
+
+void LLGL_API_STDCALL Test_Foo()
+{
+    std::cout << __FUNCTION__ << /*": x = " << x <<*/ std::endl;
+}
+
+LLGL_EXPORT void TestJIT1()
+{
+    auto comp = JITCompiler::Create();
+    
+    comp->Begin();
+    comp->PushDWord(42);
+    comp->FuncCall(reinterpret_cast<const void*>(Test_Foo), JITCallConv::StdCall, false);
+    comp->End();
+    
+    auto prog = comp->FlushProgram();
+    
+    prog->Execute();
+}
+
+#endif // /LLGL_DEBUG
 
 
 } // /namespace LLGL

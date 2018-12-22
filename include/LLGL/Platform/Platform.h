@@ -9,7 +9,10 @@
 #define LLGL_PLATFORM_H
 
 
-// Macro for OS
+/*
+Macros for OS
+see https://sourceforge.net/p/predef/wiki/OperatingSystems/
+*/
 
 #if defined _WIN32
 #   define LLGL_OS_WIN32
@@ -27,8 +30,10 @@
 #endif
 
 
-// Macro for CPU architecture
-// see https://sourceforge.net/p/predef/wiki/Architectures/
+/*
+Macros for CPU architecture
+see https://sourceforge.net/p/predef/wiki/Architectures/
+*/
 
 #if defined _M_ARM || defined __arm__
 #   define LLGL_ARCH_ARM
@@ -36,6 +41,24 @@
 #   define LLGL_ARCH_AMD64
 #elif defined _M_IX86 || defined _X86_ || defined __X86__ || defined __i386__
 #   define LLGL_ARCH_IA32
+#endif
+
+
+/*
+Macros for calling conventions
+see https://clang.llvm.org/docs/AttributeReference.html#calling-conventions
+*/
+
+#if defined _MSC_VER
+#   define LLGL_API
+#   define LLGL_API_CDECL       __cdecl
+#   define LLGL_API_STDCALL     __stdcall
+#   define LLGL_API_THISCALL    __thiscall
+#elif defined __clang__ or defined __GNUC__
+#   define LLGL_API
+#   define LLGL_API_CDECL       __attribute__((cdecl))
+#   define LLGL_API_STDCALL     __attribute__((stdcall))
+#   define LLGL_API_THISCALL    __attribute__((thiscall)
 #endif
 
 

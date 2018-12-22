@@ -19,44 +19,30 @@ namespace IA32
 {
 
 
-void IA32Assembler::BeginArgList(std::size_t numArgs)
+void IA32Assembler::WriteFuncCall(const void* addr, const JITCallConv conv, bool farCall)
 {
-    //TODO
-}
-
-void IA32Assembler::PushThisPtr(const void* value)
-{
-    //TODO
-}
-
-void IA32Assembler::PushPtr(const void* value)
-{
-    //TODO
-}
-
-void IA32Assembler::PushWord(std::uint16_t value)
-{
-    //TODO
-}
-
-void IA32Assembler::PushDWord(std::uint32_t value)
-{
-    //TODO
-}
-
-void IA32Assembler::PushQWord(std::uint64_t value)
-{
-    //TODO
-}
-
-void IA32Assembler::EndArgList()
-{
-    //TODO
-}
-
-void IA32Assembler::FuncCall(const void* addr, const JITCall call)
-{
-    //TODO
+    #if 0
+    /* Write arguments */
+    for ()
+    {
+        
+    }
+    
+    /* Write 'this' pointer */
+    if (conv == JITCallConv::ThisCall)
+    {
+        if (auto ptr = GetThisPtr())
+            MovRegImm32(Reg::ECX, reinterpret_cast<std::uint32_t>(ptr));
+        else
+            throw std::runtime_error("missing 'this' pointer for '__thiscall' IA-32/x86 instruction");
+    }
+    
+    /* Write 'call' instruction */
+    if (farCall)
+        CallFar(Reg::EAX);
+    else
+        CallNear(Reg::EAX);
+    #endif
 }
 
 

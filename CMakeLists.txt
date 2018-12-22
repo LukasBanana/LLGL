@@ -92,6 +92,7 @@ endif()
 
 set(SUMMARY_TARGET_PLATFORM "Unknown")
 set(SUMMARY_LIBRARY_TYPE "Unknown")
+set(SUMMARY_TARGET_ARCH "Unknown")
 
 
 # === Options ===
@@ -195,6 +196,17 @@ if(APPLE AND LLGL_BUILD_RENDERER_OPENGL)
     ADD_DEFINE(GL_SILENCE_DEPRECATION)
 endif()
 
+if(MOBILE_PLATFORM)
+	set(ARCH_ARM64 ON)
+	set(SUMMARY_TARGET_ARCH "ARM64")
+elseif(APPLE)
+	set(ARCH_AMD64 ON)
+	set(SUMMARY_TARGET_ARCH "AMD64 (x86_x64)")
+else()
+	set(ARCH_IA32 ON)
+	set(SUMMARY_TARGET_ARCH "IA-32 (x86)")
+endif()
+
 
 # === Global files ===
 
@@ -207,9 +219,13 @@ file(GLOB FilesRenderer                     ${PROJECT_SOURCE_DIR}/sources/Render
 
 if(LLGL_ENABLE_JIT_COMPILER)
     file(GLOB FilesJIT                      ${PROJECT_SOURCE_DIR}/sources/JIT/*.*)
-    file(GLOB FilesJITArchAMD64             ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/AMD64/*.*)
-    file(GLOB FilesJITArchARM64             ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/ARM64/*.*)
-    file(GLOB FilesJITArchIA32              ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/IA32/*.*)
+	if(ARCH_IA32)
+		file(GLOB FilesJITArch              ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/IA32/*.*)
+	elseif(ARCH_AMD64)
+		file(GLOB FilesJITArch              ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/AMD64/*.*)
+	elseif(ARCH_ARM64)
+		file(GLOB FilesJITArch              ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/ARM64/*.*)
+	endif()
     if(WIN32)
         file(GLOB FilesJITPlatform          ${PROJECT_SOURCE_DIR}/sources/JIT/Platform/Win32/*.*)
 	else()
@@ -320,6 +336,7 @@ set(FilesTest_Performance ${TestProjectsPath}/Test_Performance.cpp)
 set(FilesTest_Display ${TestProjectsPath}/Test_Display.cpp)
 set(FilesTest_Image ${TestProjectsPath}/Test_Image.cpp)
 set(FilesTest_BlendStates ${TestProjectsPath}/Test_BlendStates.cpp)
+set(FilesTest_JIT ${TestProjectsPath}/Test_JIT.cpp)
 
 # Example project files
 set(ExampleProjectsPath ${PROJECT_SOURCE_DIR}/examples/Cpp)
@@ -348,9 +365,7 @@ source_group("Sources\\Core" FILES ${FilesCore})
 
 if(LLGL_ENABLE_JIT_COMPILER)
     source_group("Sources\\JIT" FILES ${FilesJIT})
-    source_group("Sources\\JIT\\Arch\\AMD64" FILES ${FilesJITArchAMD64})
-    source_group("Sources\\JIT\\Arch\\ARM64" FILES ${FilesJITArchARM64})
-    source_group("Sources\\JIT\\Arch\\IA32" FILES ${FilesJITArchIA32})
+    source_group("Sources\\JIT\\Arch" FILES ${FilesJITArch})
     source_group("Sources\\JIT\\Platform" FILES ${FilesJITPlatform})
 endif()
 
@@ -439,9 +454,7 @@ if(LLGL_ENABLE_JIT_COMPILER)
         FilesLLGL
         ${FilesLLGL}
         ${FilesJIT}
-        ${FilesJITArchAMD64}
-        ${FilesJITArchARM64}
-        ${FilesJITArchIA32}
+        ${FilesJITArch}
         ${FilesJITPlatform}
     )
 endif()
@@ -684,6 +697,7 @@ if(GaussLib_INCLUDE_DIR)
         ADD_TEST_PROJECT(Test_Image "${FilesTest_Image}" "${TEST_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Test_BlendStates "${FilesTest_BlendStates}" "${TEST_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Test_Window "${FilesTest_Window}" "${TEST_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Test_JIT "${FilesTest_JIT}" "${TEST_PROJECT_LIBS}")
     endif()
 
     # Example Projects
@@ -728,7 +742,8 @@ endif()
 message("~~~ Build Summary ~~~")
 
 message("Target Platform: ${SUMMARY_TARGET_PLATFORM}")
-message("Library Type: ${SUMMARY_LIBRARY_TYPE}")
+message("Target Architecture: ${SUMMARY_TARGET_ARCH}")
+message("Target Library: ${SUMMARY_LIBRARY_TYPE}")
 
 set(RENDERER_COUNT 0)
 
