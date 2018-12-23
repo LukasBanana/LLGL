@@ -27,6 +27,8 @@ enum class ArgType
     DWord,
     QWord,
     Ptr,
+    Float,
+    Double,
 };
 
 // Word (16 bit).
@@ -61,9 +63,16 @@ struct Arg
         std::uint32_t   i32;
         std::uint64_t   i64;
         const void*     ptr;
+        float           f32;
+        double          f64;
     }
     value;
 };
+
+inline bool IsFloat(const ArgType t)
+{
+    return (t >= ArgType::Float);
+}
 
 
 } // /namespace JIT

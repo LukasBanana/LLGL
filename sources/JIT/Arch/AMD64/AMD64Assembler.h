@@ -39,7 +39,10 @@ class AMD64Assembler final : public JITCompiler
     private:
 
         void PushReg(const Reg reg);
-    
+        void PushImm8(std::uint8_t byte);
+        void PushImm16(std::uint16_t word);
+        void PushImm32(std::uint32_t dword);
+
         void PopReg(const Reg reg);
 
         void MovReg(const Reg dst, const Reg src);
@@ -47,7 +50,6 @@ class AMD64Assembler final : public JITCompiler
         void MovRegImm64(const Reg reg, std::uint64_t qword);
 
         void CallNear(const Reg reg);
-        void CallFar(const Reg reg);
 
         void RetNear(std::uint16_t word = 0);
         void RetFar(std::uint16_t word = 0);

@@ -126,6 +126,7 @@ void JITCompiler::Write(const void* data, std::size_t size)
 {
     assembly_.reserve(assembly_.size() + size);
     auto byteAlignedData = reinterpret_cast<const std::int8_t*>(data);
+    #if 0
     if (littleEndian_)
     {
         /* Encode for little endian */
@@ -133,6 +134,7 @@ void JITCompiler::Write(const void* data, std::size_t size)
             assembly_.push_back(byteAlignedData[size - i - 1u]);
     }
     else
+    #endif
     {
         /* Encode for big endian */
         for (std::size_t i = 0; i < size; ++i)
@@ -168,9 +170,15 @@ void JITCompiler::WritePtr(const void* data)
 
 #ifdef LLGL_DEBUG
 
-void LLGL_API_STDCALL Test_Foo()
+void Test_Foo(int x, int8_t b, uint16_t h, uint64_t q, int i5, int i6, int i7, int8_t i8)
 {
-    std::cout << __FUNCTION__ << /*": x = " << x <<*/ std::endl;
+    std::cout << __FUNCTION__;
+    std::cout << ": x = " << x;
+    std::cout << ", b = " << (int)b;
+    std::cout << ", h = 0x" << std::hex << h << std::dec;
+    std::cout << ", q = " << q;
+    std::cout << ", i = { " << i5 << ", " << i6 << ", " << i7 << ", " << (int)i8 << " }";
+    std::cout << std::endl;
 }
 
 LLGL_EXPORT void TestJIT1()
@@ -179,7 +187,14 @@ LLGL_EXPORT void TestJIT1()
     
     comp->Begin();
     comp->PushDWord(42);
-    comp->FuncCall(reinterpret_cast<const void*>(Test_Foo), JITCallConv::StdCall, false);
+    comp->PushByte(-3);
+    comp->PushWord(0x40);
+    comp->PushQWord(999999ull);
+    comp->PushDWord(1);
+    comp->PushDWord(2);
+    comp->PushDWord(3);
+    comp->PushByte(4);
+    comp->FuncCall(reinterpret_cast<const void*>(Test_Foo), JITCallConv::CDecl, false);
     comp->End();
     
     auto prog = comp->FlushProgram();
