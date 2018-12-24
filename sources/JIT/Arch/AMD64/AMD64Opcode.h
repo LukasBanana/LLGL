@@ -24,6 +24,10 @@ namespace JIT
 ModR/M => Mode Register/Memory
 SIB    => Scale-Index-Base
 mod = b11 => addressing via register
+REX.W: 0 = default operand size, 1 = 64-bit operand size
+REX.R: permitting access to 16 registers in ModR/M <reg> field
+REX.X: permitting access to 16 registers in SIB <index> field
+REX.B: permitting access to 16 registers in ModR/M <r/m> field
 -------------------------------------------------------------------------------------
 | Field: |   REX    |     Opcode     | ModR/M |   SIB    | Displacement | Immediate |
 |--------|----------|----------------|--------|----------|--------------|-----------|
@@ -46,8 +50,9 @@ enum REXBits : std::uint8_t
 
 enum ModRMBits : std::uint8_t
 {
-    Operand_Mod01 = 0x40, // Use extended registers: R8, R9, etc.
-    Operand_Mod11 = 0xC0, // Use immediate value
+    Operand_Mod01 = 0x40, // ?
+    Operand_Mod10 = 0x80, // ?
+    Operand_Mod11 = 0xC0, // ?
 };
 
 enum OpcodePrefix : std::uint8_t
@@ -62,10 +67,14 @@ enum Opcode : std::uint8_t
     Opcode_PushImm      = 0x68, // 68 id
     Opcode_PushImm8     = 0x6A, // 6A ib
     Opcode_PushReg      = 0x50,
-    Opcode_PopReg       = 0x58,
-    Opcode_MovRegMem    = 0x89, // 89 /r
+    Opcode_PopReg       = 0x58, // 58 +rq
+    Opcode_AddImm       = 0x81, // 81 /0 id
+    Opcode_SubImm       = 0x81, // 81 /5 id
+    Opcode_DivReg       = 0xF7, // F7 /6
     Opcode_MovRegImm8   = 0xB0, // B0 +rb ib
     Opcode_MovRegImm    = 0xB8, // [REX.W] B8 +rd id
+    Opcode_MovMemImm    = 0xC7, // C7 /0 id
+    Opcode_MovMemReg    = 0x89, // 89 /r
     Opcode_RetNear      = 0xC3, // C3
     Opcode_RetFar       = 0xCB, // CB
     Opcode_RetNearImm16 = 0xC2, // C2 iw

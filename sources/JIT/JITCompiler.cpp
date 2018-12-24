@@ -170,19 +170,26 @@ void JITCompiler::WritePtr(const void* data)
 
 #ifdef LLGL_DEBUG
 
-void Test_Foo(int x, int8_t b, uint16_t h, uint64_t q, int i5, int i6, int i7, int8_t i8)
+void Test_Foo(int x, int8_t b, uint16_t h, uint64_t q, int i5, int i6, int i7, int8_t i8/*, uint64_t i9*/)
 {
     std::cout << __FUNCTION__;
     std::cout << ": x = " << x;
     std::cout << ", b = " << (int)b;
     std::cout << ", h = 0x" << std::hex << h << std::dec;
     std::cout << ", q = " << q;
-    std::cout << ", i = { " << i5 << ", " << i6 << ", " << i7 << ", " << (int)i8 << " }";
+    std::cout << ", i = { " << i5 << ", " << i6 << ", " << i7 << ", " << (int)i8 << /*", " << i9 <<*/ " }";
     std::cout << std::endl;
+}
+
+static void TestJIT2()
+{
+    Test_Foo(1, 2, 3, 4, 5, 6, 7, 8);
 }
 
 LLGL_EXPORT void TestJIT1()
 {
+    //TestJIT2();
+    
     auto comp = JITCompiler::Create();
     
     comp->Begin();
@@ -194,6 +201,7 @@ LLGL_EXPORT void TestJIT1()
     comp->PushDWord(2);
     comp->PushDWord(3);
     comp->PushByte(4);
+    //comp->PushQWord(888888ull);
     comp->FuncCall(reinterpret_cast<const void*>(Test_Foo), JITCallConv::CDecl, false);
     comp->End();
     

@@ -7,6 +7,7 @@
 
 #include "AMD64Assembler.h"
 #include "AMD64Opcode.h"
+#include <limits.h>
 
 
 namespace LLGL
@@ -51,11 +52,22 @@ void AMD64Assembler::Begin()
 {
     PushReg(Reg::RBP);
     MovReg(Reg::RBP, Reg::RSP);
+    SubImm32(Reg::RSP, 0x20);//???
+    
+    #if 0//TEST: force interruption
+    MovRegImm32(Reg::RAX, 0);
+    MovRegImm32(Reg::RDX, 0);
+    DivReg(Reg::RAX);
+    
+    MovMemImm32(Reg::RBX, 0x999, -0xF);
+    MovMemImm32(Reg::RBP, 0x999, -0xF);
+    MovMemReg(Reg::RBX, Reg::RCX, 0x1A);
+    #endif
 }
 
 void AMD64Assembler::End()
 {
-    MovReg(Reg::RBP, Reg::RSP);//!!!
+    AddImm32(Reg::RSP, 0x20);//???
     PopReg(Reg::RBP);
     RetNear();
 }
@@ -150,19 +162,14 @@ void AMD64Assembler::WriteFuncCall(const void* addr, const JITCallConv conv, boo
                 PushImm16(arg.value.i16);
                 break;
             case ArgType::DWord:
-                PushImm32(arg.value.i32);
-                break;
-            case ArgType::QWord:
-                //PushImm64(arg.value.i64);
-                break;
-            case ArgType::Ptr:
-                //PushImm64(arg.value.i64);
-                break;
             case ArgType::Float:
                 PushImm32(arg.value.i32);
                 break;
+            case ArgType::QWord:
+            case ArgType::Ptr:
             case ArgType::Double:
-                //PushImm64(arg.value.i64);
+                //MovRegImm64(Reg::R10, arg.value.i64);
+                //PushReg(Reg::R10);
                 break;
         }
     }
@@ -181,6 +188,23 @@ bool AMD64Assembler::IsLittleEndian() const
 {
     return true;
 }
+
+void AMD64Assembler::WriteREXOpt(const Reg reg)
+{
+    std::uint8_t prefix = 0;
+    
+    if (Is64Reg(reg))
+    {
+        prefix |= REX_W;
+        if (reg >= Reg::R8)
+            prefix |= REX_B;
+    }
+    
+    if (prefix != 0)
+        WriteByte(REX_Prefix | prefix);
+}
+
+/* ----- PUSH ----- */
 
 void AMD64Assembler::PushReg(const Reg reg)
 {
@@ -204,17 +228,20 @@ void AMD64Assembler::PushImm32(std::uint32_t dword)
     WriteDWord(dword);
 }
 
+/* ----- POP ----- */
+
 void AMD64Assembler::PopReg(const Reg reg)
 {
     WriteByte(Opcode_PopReg | RegByte(reg));
 }
 
+/* ----- MOV ----- */
+
 void AMD64Assembler::MovReg(const Reg dst, const Reg src)
 {
-    if (Is64Reg(dst))
-        WriteByte(REX_Prefix | REX_W);
-    WriteByte(Opcode_MovRegMem);
-    WriteByte(Operand_Mod11 | RegByte(dst) << 3 | RegByte(src));
+    WriteREXOpt(dst);
+    WriteByte(Opcode_MovMemReg);
+    WriteByte(Operand_Mod11 | RegByte(src) << 3 | RegByte(dst));
 }
 
 void AMD64Assembler::MovRegImm32(const Reg reg, std::uint32_t dword)
@@ -225,19 +252,109 @@ void AMD64Assembler::MovRegImm32(const Reg reg, std::uint32_t dword)
 
 void AMD64Assembler::MovRegImm64(const Reg reg, std::uint64_t qword)
 {
-    if (reg >= Reg::R8)
-        WriteByte(REX_Prefix | REX_W | REX_B);
-    else
-        WriteByte(REX_Prefix | REX_W);
+    WriteREXOpt(reg);
     WriteByte(Opcode_MovRegImm | RegByte(reg));
     WriteQWord(qword);
 }
+
+void AMD64Assembler::MovMemImm32(const Reg reg, std::uint32_t dword, std::uint32_t offset)
+{
+    #ifdef LLGL_DEBUG
+    //if (reg == Reg::RSP)
+    //    Error("invalid use of %RSP register in MOV instruction");
+    #endif
+    
+    std::uint8_t disp = 0;
+    if (offset > 0)
+    {
+        if (offset > UCHAR_MAX)
+            disp |= Operand_Mod10; // disp32
+        else
+            disp |= Operand_Mod01; // disp8
+    }
+    
+    /* Write opcode */
+    WriteREXOpt(reg);
+    WriteByte(Opcode_MovMemImm);
+    WriteByte(disp | RegByte(reg));
+    
+    /* Write optional displacement */
+    if (offset > 0)
+    {
+        if (offset > UCHAR_MAX)
+            WriteDWord(offset);
+        else
+            WriteByte(static_cast<std::uint8_t>(offset));
+    }
+    
+    /* Write immediate value */
+    WriteDWord(dword);
+}
+
+void AMD64Assembler::MovMemReg(const Reg dstMemReg, const Reg srcReg, std::uint32_t offset)
+{
+    std::uint8_t disp = 0;
+    if (offset > 0)
+    {
+        if (offset > UCHAR_MAX)
+            disp |= Operand_Mod10; // disp32
+        else
+            disp |= Operand_Mod01; // disp8
+    }
+    
+    /* Write opcode */
+    WriteREXOpt(srcReg);
+    WriteByte(Opcode_MovMemReg);
+    WriteByte(disp | RegByte(srcReg) << 3 | RegByte(dstMemReg));
+    
+    /* Write optional displacement */
+    if (offset > 0)
+    {
+        if (offset > UCHAR_MAX)
+            WriteDWord(offset);
+        else
+            WriteByte(static_cast<std::uint8_t>(offset));
+    }
+}
+
+/* ----- ADD ----- */
+
+void AMD64Assembler::AddImm32(const Reg dst, std::uint32_t dword)
+{
+    WriteREXOpt(dst);
+    WriteByte(Opcode_AddImm);
+    WriteByte(Operand_Mod11 | RegByte(dst));
+    WriteDWord(dword);
+}
+
+/* ----- SUB ----- */
+
+void AMD64Assembler::SubImm32(const Reg dst, std::uint32_t dword)
+{
+    WriteREXOpt(dst);
+    WriteByte(Opcode_SubImm);
+    WriteByte(Operand_Mod11 | (5u << 3) | RegByte(dst));
+    WriteDWord(dword);
+}
+
+/* ----- DIV ----- */
+
+void AMD64Assembler::DivReg(const Reg src)
+{
+    WriteREXOpt(src);
+    WriteByte(Opcode_DivReg);
+    WriteByte(Operand_Mod11 | (6u << 3) | RegByte(src));
+}
+
+/* ----- CALL ----- */
 
 void AMD64Assembler::CallNear(const Reg reg)
 {
     WriteByte(0xFF);
     WriteByte(Opcode_CallNear | Operand_Mod11 | RegByte(reg));
 }
+
+/* ----- RET ----- */
 
 void AMD64Assembler::RetNear(std::uint16_t word)
 {
