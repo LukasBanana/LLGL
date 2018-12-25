@@ -50,24 +50,32 @@ static const std::size_t g_amd64FltParamsCount = sizeof(g_amd64FltParams)/sizeof
 
 void AMD64Assembler::Begin()
 {
+    /* Reset data about local stack */
+    localStack_ = 0;
+    
+    /* Store base stack pointer (RBP) */
     PushReg(Reg::RBP);
     MovReg(Reg::RBP, Reg::RSP);
-    SubImm32(Reg::RSP, 0x20);//???
     
-    #if 0//TEST: force interruption
-    MovRegImm32(Reg::RAX, 0);
-    MovRegImm32(Reg::RDX, 0);
-    DivReg(Reg::RAX);
-    
-    MovMemImm32(Reg::RBX, 0x999, -0xF);
-    MovMemImm32(Reg::RBP, 0x999, -0xF);
-    MovMemReg(Reg::RBX, Reg::RCX, 0x1A);
-    #endif
+    /* Store general purpose registers */
+    //TODO: determine which registers must be stored
+    for (std::size_t i = 0; i < g_amd64IntParamsCount; ++i)
+        PushReg(g_amd64IntParams[i]);
+    PushReg(Reg::RAX);
 }
 
 void AMD64Assembler::End()
 {
-    AddImm32(Reg::RSP, 0x20);//???
+    /* Pop local stack */
+    AddImm32(Reg::RSP, localStack_);
+    
+    /* Restore general purpose registers */
+    //TODO: determine which registers must be restored
+    PopReg(Reg::RAX);
+    for (std::size_t i = 0; i < g_amd64IntParamsCount; ++i)
+        PopReg(g_amd64IntParams[g_amd64IntParamsCount - i - 1u]);
+
+    /* Restore base stack pointer (RBP) */
     PopReg(Reg::RBP);
     RetNear();
 }
@@ -86,7 +94,7 @@ void AMD64Assembler::WriteFuncCall(const void* addr, const JITCallConv conv, boo
         const auto& arg = args[i];
         
         /* Determine destination register for argument */
-        Reg dstReg = Reg::R10;
+        Reg dstReg = Reg::RAX;
         bool isFloat = IsFloat(arg.type);
         
         if (isFloat && numFltRegs < g_amd64FltParamsCount)
@@ -168,10 +176,13 @@ void AMD64Assembler::WriteFuncCall(const void* addr, const JITCallConv conv, boo
             case ArgType::QWord:
             case ArgType::Ptr:
             case ArgType::Double:
-                //MovRegImm64(Reg::R10, arg.value.i64);
-                //PushReg(Reg::R10);
+                MovRegImm64(Reg::RAX, arg.value.i64);
+                PushReg(Reg::RAX);
                 break;
         }
+        
+        /* Increase local stack size by register width (8 bytes) */
+        localStack_ += 8;
     }
     
     /* Write 'call' instruction */
@@ -189,15 +200,18 @@ bool AMD64Assembler::IsLittleEndian() const
     return true;
 }
 
-void AMD64Assembler::WriteREXOpt(const Reg reg)
+void AMD64Assembler::WriteREXOpt(const Reg reg, bool defaultsTo64Bit)
 {
     std::uint8_t prefix = 0;
     
     if (Is64Reg(reg))
     {
-        prefix |= REX_W;
-        if (reg >= Reg::R8)
-            prefix |= REX_B;
+        if (!defaultsTo64Bit || reg >= Reg::R8)
+        {
+            prefix |= REX_W;
+            if (reg >= Reg::R8)
+                prefix |= REX_B;
+        }
     }
     
     if (prefix != 0)
@@ -206,9 +220,10 @@ void AMD64Assembler::WriteREXOpt(const Reg reg)
 
 /* ----- PUSH ----- */
 
-void AMD64Assembler::PushReg(const Reg reg)
+void AMD64Assembler::PushReg(const Reg srcReg)
 {
-    WriteByte(Opcode_PushReg | RegByte(reg));
+    WriteREXOpt(srcReg, true);
+    WriteByte(Opcode_PushReg | RegByte(srcReg));
 }
 
 void AMD64Assembler::PushImm8(std::uint8_t byte)
@@ -230,34 +245,34 @@ void AMD64Assembler::PushImm32(std::uint32_t dword)
 
 /* ----- POP ----- */
 
-void AMD64Assembler::PopReg(const Reg reg)
+void AMD64Assembler::PopReg(const Reg dstReg)
 {
-    WriteByte(Opcode_PopReg | RegByte(reg));
+    WriteByte(Opcode_PopReg | RegByte(dstReg));
 }
 
 /* ----- MOV ----- */
 
-void AMD64Assembler::MovReg(const Reg dst, const Reg src)
+void AMD64Assembler::MovReg(const Reg dstReg, const Reg srcReg)
 {
-    WriteREXOpt(dst);
+    WriteREXOpt(dstReg);
     WriteByte(Opcode_MovMemReg);
-    WriteByte(Operand_Mod11 | RegByte(src) << 3 | RegByte(dst));
+    WriteByte(Operand_Mod11 | RegByte(srcReg) << 3 | RegByte(dstReg));
 }
 
-void AMD64Assembler::MovRegImm32(const Reg reg, std::uint32_t dword)
+void AMD64Assembler::MovRegImm32(const Reg dstReg, std::uint32_t dword)
 {
-    WriteByte(Opcode_MovRegImm | RegByte(reg));
+    WriteByte(Opcode_MovRegImm | RegByte(dstReg));
     WriteDWord(dword);
 }
 
-void AMD64Assembler::MovRegImm64(const Reg reg, std::uint64_t qword)
+void AMD64Assembler::MovRegImm64(const Reg dstReg, std::uint64_t qword)
 {
-    WriteREXOpt(reg);
-    WriteByte(Opcode_MovRegImm | RegByte(reg));
+    WriteREXOpt(dstReg);
+    WriteByte(Opcode_MovRegImm | RegByte(dstReg));
     WriteQWord(qword);
 }
 
-void AMD64Assembler::MovMemImm32(const Reg reg, std::uint32_t dword, std::uint32_t offset)
+void AMD64Assembler::MovMemImm32(const Reg dstMemReg, std::uint32_t dword, std::uint32_t offset)
 {
     #ifdef LLGL_DEBUG
     //if (reg == Reg::RSP)
@@ -274,9 +289,9 @@ void AMD64Assembler::MovMemImm32(const Reg reg, std::uint32_t dword, std::uint32
     }
     
     /* Write opcode */
-    WriteREXOpt(reg);
+    WriteREXOpt(dstMemReg);
     WriteByte(Opcode_MovMemImm);
-    WriteByte(disp | RegByte(reg));
+    WriteByte(disp | RegByte(dstMemReg));
     
     /* Write optional displacement */
     if (offset > 0)
@@ -339,6 +354,7 @@ void AMD64Assembler::SubImm32(const Reg dst, std::uint32_t dword)
 
 /* ----- DIV ----- */
 
+// Divide RDX:RAX -> Quotient: RAX, Remainder: RDX
 void AMD64Assembler::DivReg(const Reg src)
 {
     WriteREXOpt(src);
@@ -377,6 +393,16 @@ void AMD64Assembler::RetFar(std::uint16_t word)
     else
         WriteByte(Opcode_RetFar);
 }
+
+#if 1//TESTING
+void AMD64Assembler::_ForceExcep()
+{
+    //TEST: generate division by zero instruction to force exception
+    MovRegImm32(Reg::RAX, 0);
+    MovRegImm32(Reg::RDX, 0);
+    DivReg(Reg::RAX);
+}
+#endif
 
 
 } // /namespace JIT

@@ -26,7 +26,7 @@ enum class JITCallConv
 {
     CDecl,      // '__cdecl' to internal function
     StdCall,    // '__stdcall' to internal function
-    ThisCall,   // '__thiscall' to interna function
+    ThisCall,   // '__thiscall' to internal function
 };
 
 // IA-32 (a.k.a. x86) assembly code generator.

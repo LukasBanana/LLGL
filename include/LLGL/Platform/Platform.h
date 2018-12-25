@@ -47,18 +47,27 @@ see https://sourceforge.net/p/predef/wiki/Architectures/
 /*
 Macros for calling conventions
 see https://clang.llvm.org/docs/AttributeReference.html#calling-conventions
+( Note that AMD64 (x86_64) and ARM have a single unified calling convention
+  see https://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64/#id8 )
 */
 
-#if defined _MSC_VER
+#ifdef LLGL_ARCH_IA32
+#   if defined _MSC_VER
+#       define LLGL_API
+#       define LLGL_API_CDECL       __cdecl
+#       define LLGL_API_STDCALL     __stdcall
+#       define LLGL_API_THISCALL    __thiscall
+#   elif defined __clang__ or defined __GNUC__
+#       define LLGL_API
+#       define LLGL_API_CDECL       __attribute__((cdecl))
+#       define LLGL_API_STDCALL     __attribute__((stdcall))
+#       define LLGL_API_THISCALL    __attribute__((thiscall)
+#   endif
+#else
 #   define LLGL_API
-#   define LLGL_API_CDECL       __cdecl
-#   define LLGL_API_STDCALL     __stdcall
-#   define LLGL_API_THISCALL    __thiscall
-#elif defined __clang__ or defined __GNUC__
-#   define LLGL_API
-#   define LLGL_API_CDECL       __attribute__((cdecl))
-#   define LLGL_API_STDCALL     __attribute__((stdcall))
-#   define LLGL_API_THISCALL    __attribute__((thiscall)
+#   define LLGL_API_CDECL
+#   define LLGL_API_STDCALL
+#   define LLGL_API_THISCALL
 #endif
 
 
