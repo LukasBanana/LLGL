@@ -55,8 +55,20 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         void PushWord(std::uint16_t value);
         void PushDWord(std::uint32_t value);
         void PushQWord(std::uint64_t value);
+        void PushFloat(float value);
+        void PushDouble(double value);
 
-        void FuncCall(const void* addr, const JITCallConv conv, bool farCall);
+        /*
+        Encodes a function call.
+        \param[in] addr Specifies the pointer to the native function that is to be called.
+        \param[in] conv Specifies the calling convention. This is only used for x86 assembly and ignored otherwise.
+        \param[in] farCall Specifies whether an intersegment function (far call) is to be used.
+        */
+        void FuncCall(
+            const void* addr,
+            const JITCallConv conv  = JITCallConv::CDecl,
+            bool farCall            = false
+        );
 
     protected:
 
@@ -72,8 +84,14 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         void WriteQWord(std::uint64_t data);
         void WritePtr(const void* data);
 
-        // Returns the assembly code.
+        // Returns the assembly code (constant).
         inline const std::vector<std::uint8_t>& GetAssembly() const
+        {
+            return assembly_;
+        }
+
+        // Returns the assembly code.
+        inline std::vector<std::uint8_t>& GetAssembly()
         {
             return assembly_;
         }

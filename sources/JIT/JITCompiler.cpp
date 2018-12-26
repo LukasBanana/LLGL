@@ -110,6 +110,22 @@ void JITCompiler::PushQWord(std::uint64_t value)
     args_.push_back(arg);
 }
 
+void JITCompiler::PushFloat(float value)
+{
+    Arg arg;
+    arg.type        = ArgType::Float;
+    arg.value.f32   = value;
+    args_.push_back(arg);
+}
+
+void JITCompiler::PushDouble(double value)
+{
+    Arg arg;
+    arg.type        = ArgType::Double;
+    arg.value.f64   = value;
+    args_.push_back(arg);
+}
+
 void JITCompiler::FuncCall(const void* addr, const JITCallConv conv, bool farCall)
 {
     WriteFuncCall(addr, conv, farCall);
@@ -170,7 +186,7 @@ void JITCompiler::WritePtr(const void* data)
 
 #ifdef LLGL_DEBUG
 
-void Test_Foo(int x, int8_t b, uint16_t h, uint64_t q, int i5, int i6, int i7, int8_t i8, uint64_t i9)
+void Test1(int x, int8_t b, uint16_t h, uint64_t q, int i5, int i6, int i7, int8_t i8, uint64_t i9)
 {
     std::cout << __FUNCTION__;
     std::cout << ": x = " << x;
@@ -181,15 +197,25 @@ void Test_Foo(int x, int8_t b, uint16_t h, uint64_t q, int i5, int i6, int i7, i
     std::cout << std::endl;
 }
 
+void Test2(float f, double d)
+{
+    std::cout << __FUNCTION__;
+    std::cout << ": f = " << f;
+    std::cout << ", d = " << d;
+    std::cout << std::endl;
+}
+
 LLGL_EXPORT void TestJIT1()
 {
-    auto comp = JITCompiler::Create();
+    #if 0//TEST
+    Test2(1.23f, 4.56);
+    #endif
     
-    int a[] = { 1, 2, 3 };
-    int b[] = { 4, 5, 6 };
+    auto comp = JITCompiler::Create();
     
     comp->Begin();
     
+    #if 1
     comp->PushDWord(42);
     comp->PushByte(-3);
     comp->PushWord(0x40);
@@ -199,12 +225,22 @@ LLGL_EXPORT void TestJIT1()
     comp->PushDWord(3);
     comp->PushByte(4);
     comp->PushQWord(888888ull);
-    comp->FuncCall(reinterpret_cast<const void*>(Test_Foo), JITCallConv::CDecl, false);
+    comp->FuncCall(reinterpret_cast<const void*>(Test1));
+    
+    int a[] = { 1, 2, 3 };
+    int b[] = { 4, 5, 6 };
     
     comp->PushPtr(b);
     comp->PushPtr(a);
     comp->PushQWord(sizeof(a));
-    comp->FuncCall(reinterpret_cast<const void*>(::memcpy), JITCallConv::CDecl, true);
+    comp->FuncCall(reinterpret_cast<const void*>(::memcpy));
+    #endif
+    
+    #if 1
+    comp->PushFloat(-1.2345f);
+    comp->PushDouble(3.14);
+    comp->FuncCall(reinterpret_cast<const void*>(Test2));
+    #endif
     
     comp->End();
     

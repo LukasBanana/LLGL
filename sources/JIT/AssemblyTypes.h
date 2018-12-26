@@ -69,9 +69,28 @@ struct Arg
     value;
 };
 
+// Returns true if the specified argument type denotes a floating-point type.
 inline bool IsFloat(const ArgType t)
 {
     return (t >= ArgType::Float);
+}
+
+// Converts the specified 16-bit value from little-endian to big-endian and vice-versa.
+inline std::uint16_t SwapEndian16(std::uint16_t value)
+{
+    return (value >> 8) | (value << 8);
+}
+
+// Converts the specified 32-bit value from little-endian to big-endian and vice-versa.
+inline std::uint32_t SwapEndian32(std::uint32_t value)
+{
+    return
+    (
+        ((value >> 0x18) & 0x000000ff) | // Move byte 3 to byte 0
+        ((value >> 0x08) & 0x0000ff00) | // Move byte 2 to byte 1
+        ((value << 0x08) & 0x00ff0000) | // Move byte 1 to byte 2
+        ((value << 0x18) & 0xff000000)   // Move byte 0 to byte 3
+    );
 }
 
 

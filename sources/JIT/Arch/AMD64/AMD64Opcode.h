@@ -50,9 +50,11 @@ enum REXBits : std::uint8_t
 
 enum ModRMBits : std::uint8_t
 {
-    Operand_Mod01 = 0x40, // ?
-    Operand_Mod10 = 0x80, // ?
-    Operand_Mod11 = 0xC0, // ?
+    Operand_Mod01   = 0x40, // disp8
+    Operand_Mod10   = 0x80, // disp32
+    Operand_Mod11   = 0xC0, // direct addressing
+    Operand_RIP     = 0x05, // 00 000 101
+    Operand_SIB     = 0x04, // 00 000 100
 };
 
 enum OpcodePrefix : std::uint8_t
@@ -81,6 +83,15 @@ enum Opcode : std::uint8_t
     Opcode_RetFarImm16  = 0xCA, // CA iw
     Opcode_CallNear     = 0x10, // /2 => 00 010 000 => 0x10
 };
+
+static const std::uint8_t OpcodeSSE2_MovSSRegMem[3] = { 0xF3, 0x0F, 0x10 };
+static const std::uint8_t OpcodeSSE2_MovSSMemReg[3] = { 0xF3, 0x0F, 0x11 };
+
+static const std::uint8_t OpcodeSSE2_MovSDRegMem[3] = { 0xF2, 0x0F, 0x10 };
+static const std::uint8_t OpcodeSSE2_MovSDMemReg[3] = { 0xF2, 0x0F, 0x11 };
+
+static const std::uint8_t OpcodeSSE2_MovDQURegMem[3] = { 0xF3, 0x0F, 0x6F };
+static const std::uint8_t OpcodeSSE2_MovDQUMemReg[3] = { 0xF3, 0x0F, 0x7F };
 
 
 } // /namespace JIT
