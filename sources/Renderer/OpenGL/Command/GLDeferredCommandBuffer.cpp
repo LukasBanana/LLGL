@@ -35,6 +35,10 @@
 
 #include <algorithm>
 
+#ifdef LLGL_ENABLE_JIT_COMPILER
+#   include "GLCommandAssembler.h"
+#endif // /LLGL_ENABLE_JIT_COMPILER
+
 
 namespace LLGL
 {
@@ -59,7 +63,9 @@ void GLDeferredCommandBuffer::Begin()
 
 void GLDeferredCommandBuffer::End()
 {
-    // dummy
+    #ifdef LLGL_ENABLE_JIT_COMPILER
+    executable_ = AssembleGLDeferredCommandBuffer(*this);
+    #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
 void GLDeferredCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)

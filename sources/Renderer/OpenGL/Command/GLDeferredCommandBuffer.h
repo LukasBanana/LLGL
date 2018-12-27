@@ -16,6 +16,10 @@
 #include <memory>
 #include <vector>
 
+#ifdef LLGL_ENABLE_JIT_COMPILER
+#   include "../../../JIT/JITProgram.h"
+#endif
+
 
 namespace LLGL
 {
@@ -154,11 +158,22 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
         /*  ----- Extended functions ----- */
 
+        // Returns the internal command buffer as raw byte buffer.
         inline const std::vector<std::uint8_t>& GetRawBuffer() const
         {
             return buffer_;
         }
 
+        #ifdef LLGL_ENABLE_JIT_COMPILER
+    
+        // Returns the just-in-time compiled command buffer that can be executed natively, or null if not available.
+        inline const std::unique_ptr<JITProgram>& GetExecutable() const
+        {
+            return executable_;
+        }
+    
+        #endif // /LLGL_ENABLE_JIT_COMPILER
+    
     private:
 
         void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot);
@@ -172,17 +187,16 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         template <typename T>
         T* AllocCommand(const GLOpCode opcode, std::size_t extraSize = 0);
 
-        std::size_t ExecuteCommand(const GLOpCode opcode, const void* pc, GLStateManager& stateMngr);
-
     private:
 
         GLRenderState               renderState_;
         GLClearValue                clearValue_;
 
-        GLRenderTarget*             boundRenderTarget_  = nullptr;
-        std::uint32_t               numDrawBuffers_     = 1;        // number of draw buffers of the active render target
-
         std::vector<std::uint8_t>   buffer_;
+    
+        #ifdef LLGL_ENABLE_JIT_COMPILER
+        std::unique_ptr<JITProgram> executable_;
+        #endif
 
 };
 

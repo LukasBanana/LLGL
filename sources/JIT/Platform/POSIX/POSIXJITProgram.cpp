@@ -42,7 +42,7 @@ POSIXJITProgram::POSIXJITProgram(const void* code, std::size_t size) :
     ::memcpy(addr_, code, size);
 
     /* Set function pointer to executable memory address */
-    SetFuncPtr(addr_);
+    SetEntryPoint(addr_);
 }
 
 POSIXJITProgram::POSIXJITProgram()

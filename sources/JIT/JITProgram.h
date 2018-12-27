@@ -23,14 +23,19 @@ class LLGL_EXPORT JITProgram : public NonCopyable
 {
 
     public:
+    
+        // Function pointer type of the main entry point.
+        typedef void (*EntryPointPtr)(...);
+    
+    public:
 
         // Creates a new JIT program with the specified code.
         static std::unique_ptr<JITProgram> Create(const void* code, std::size_t size);
 
-        // Runs the JIT program natively.
-        inline void Execute()
+        // Returns the main entry point of the native JIT program.
+        inline EntryPointPtr GetEntryPoint() const
         {
-            func_();
+            return entryPoint_;
         }
 
     protected:
@@ -38,15 +43,14 @@ class LLGL_EXPORT JITProgram : public NonCopyable
         JITProgram() = default;
 
         // Sets the address for the function pointer that can be executed.
-        inline void SetFuncPtr(void* addr)
+        inline void SetEntryPoint(void* addr)
         {
-            func_ = reinterpret_cast<FuncPtr>(addr);
+            entryPoint_ = reinterpret_cast<EntryPointPtr>(addr);
         }
 
     private:
 
-        typedef void (*FuncPtr)();
-        FuncPtr func_ = nullptr;
+        EntryPointPtr entryPoint_ = nullptr;
 
 };
 

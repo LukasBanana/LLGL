@@ -15,6 +15,7 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <type_traits>
 
 
 namespace LLGL
@@ -33,6 +34,12 @@ enum class JITCallConv
 class LLGL_EXPORT JITCompiler : public NonCopyable
 {
 
+    private:
+    
+        // Forward declaration for GCC and clang.
+        //template <typename... Args>
+        //inline void PushArgs(Args&&... args);
+    
     public:
 
         /*
@@ -57,6 +64,8 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         void PushQWord(std::uint64_t value);
         void PushFloat(float value);
         void PushDouble(double value);
+        void PushSizeT(std::uint64_t value);
+        void PushSSizeT(std::int64_t value);
 
         /*
         Encodes a function call.
@@ -65,10 +74,22 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         \param[in] farCall Specifies whether an intersegment function (far call) is to be used.
         */
         void FuncCall(
-            const void* addr,
-            const JITCallConv conv  = JITCallConv::CDecl,
-            bool farCall            = false
+            const void*         addr,
+            const JITCallConv   conv    = JITCallConv::CDecl,
+            bool                farCall = false
         );
+    
+        /*
+        Encodes a function call with the specified variadic arguments.
+        \param[in] func Specifies the function object. This must be a global non-overloaded function.
+        \param[in] args Specifies the argument list. Only pointers, integrals and floating-point types are allowed (no references).
+        */
+        template <typename Func, typename... Args>
+        void Call(Func&& func, Args&&... args)
+        {
+            PushArgs(std::forward<Args>(args)...);
+            FuncCall(reinterpret_cast<const void*>(func));
+        }
 
     protected:
 
@@ -107,21 +128,102 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         {
             return thisPtr_;
         }
+    
+    private:
+    
+        template <typename T>
+        inline void PushVariant(T arg);
+    
+        template <typename T>
+        inline void PushVariant(const T* arg);
+    
+        template <typename Arg0>
+        inline void PushArgsPrimary(Arg0&& arg0);
+
+        template <typename Arg0, typename... ArgsN>
+        inline void PushArgsPrimary(Arg0&& arg0, ArgsN&&... argsN);
+    
+        template <typename... Args>
+        inline void PushArgs(Args&&... args);
 
     private:
 
         bool                        littleEndian_   = false;
         std::vector<std::uint8_t>   assembly_;
-    
+
         std::vector<JIT::Arg>       args_;
         const void*                 thisPtr_        = nullptr;
 
 };
 
+
+/* ----- Template implementations ----- */
+
+template <typename T>
+inline void JITCompiler::PushVariant(T arg)
+{
+    switch (sizeof(T))
+    {
+        case 1:
+            PushByte(static_cast<std::uint8_t>(arg));
+            break;
+        case 2:
+            PushWord(static_cast<std::uint16_t>(arg));
+            break;
+        case 4:
+            PushDWord(static_cast<std::uint32_t>(arg));
+            break;
+        case 8:
+            PushQWord(static_cast<std::uint64_t>(arg));
+            break;
+    }
+}
+
+template <typename T>
+inline void JITCompiler::PushVariant(const T* arg)
+{
+    PushPtr(reinterpret_cast<const void*>(arg));
+}
+
+template <>
+inline void JITCompiler::PushVariant<float>(float arg)
+{
+    PushFloat(arg);
+}
+
+template <>
+inline void JITCompiler::PushVariant<double>(double arg)
+{
+    PushDouble(arg);
+}
+
+template <typename Arg0>
+inline void JITCompiler::PushArgsPrimary(Arg0&& arg0)
+{
+    PushVariant(arg0);
+}
+
+template <typename Arg0, typename... ArgsN>
+inline void JITCompiler::PushArgsPrimary(Arg0&& arg0, ArgsN&&... argsN)
+{
+    PushVariant(arg0);
+    PushArgsPrimary(std::forward<ArgsN>(argsN)...);
+}
+
+template <typename... Args>
+inline void JITCompiler::PushArgs(Args&&... args)
+{
+    PushArgsPrimary(std::forward<Args>(args)...);
+}
+
+template <>
+inline void JITCompiler::PushArgs<>()
+{
+    // do nothing
+}
+
 #ifdef LLGL_DEBUG
-
 LLGL_EXPORT void TestJIT1();
-
 #endif // /LLGL_DEBUG
 
 

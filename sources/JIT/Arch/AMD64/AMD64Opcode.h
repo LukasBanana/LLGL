@@ -82,6 +82,7 @@ enum Opcode : std::uint8_t
     Opcode_RetNearImm16 = 0xC2, // C2 iw
     Opcode_RetFarImm16  = 0xCA, // CA iw
     Opcode_CallNear     = 0x10, // /2 => 00 010 000 => 0x10
+    Opcode_Int          = 0xCD, // CD ib
 };
 
 static const std::uint8_t OpcodeSSE2_MovSSRegMem[3] = { 0xF3, 0x0F, 0x10 };

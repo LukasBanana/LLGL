@@ -75,7 +75,7 @@ void AMD64Assembler::Begin()
     PushReg(Reg::RBP);
     MovReg(Reg::RBP, Reg::RSP);
     
-    #if 1
+    #if 0
     /* Store general purpose registers */
     //TODO: determine which registers must be stored
     for (std::size_t i = 0; i < g_amd64IntParamsCount; ++i)
@@ -88,9 +88,10 @@ void AMD64Assembler::Begin()
 
 void AMD64Assembler::End()
 {
-    #if 1
+    #if 0
     /* Pop local stack */
-    AddImm32(Reg::RSP, localStack_);
+    if (localStack_ > 0)
+        AddImm32(Reg::RSP, localStack_);
     
     /* Restore general purpose registers */
     //TODO: determine which registers must be restored
@@ -554,6 +555,14 @@ void AMD64Assembler::RetFar(std::uint16_t word)
     }
     else
         WriteByte(Opcode_RetFar);
+}
+
+/* ----- INT ----- */
+
+void AMD64Assembler::Int(std::uint8_t byte)
+{
+    WriteByte(Opcode_Int);
+    WriteByte(byte);
 }
 
 #if 1//TESTING

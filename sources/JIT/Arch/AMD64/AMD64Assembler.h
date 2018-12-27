@@ -89,6 +89,8 @@ class AMD64Assembler final : public JITCompiler
         void RetNear(std::uint16_t word = 0);
         void RetFar(std::uint16_t word = 0);
     
+        void Int(std::uint8_t byte);
+    
         #if 1//TESTING
         void _ForceExcep();
         #endif

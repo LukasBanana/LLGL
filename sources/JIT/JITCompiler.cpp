@@ -133,6 +133,20 @@ void JITCompiler::FuncCall(const void* addr, const JITCallConv conv, bool farCal
     thisPtr_ = nullptr;
 }
 
+void JITCompiler::PushSizeT(std::uint64_t value)
+{
+    #ifdef LLGL_ARCH_IA32
+    PushDWord(static_cast<std::uint32_t>(value));
+    #else
+    PushQWord(value);
+    #endif
+}
+
+void JITCompiler::PushSSizeT(std::int64_t value)
+{
+    PushSizeT(static_cast<std::uint64_t>(value));
+}
+
 
 /*
  * ======= Protected: =======
@@ -246,7 +260,7 @@ LLGL_EXPORT void TestJIT1()
     
     auto prog = comp->FlushProgram();
     
-    prog->Execute();
+    prog->GetEntryPoint()();
 }
 
 #endif // /LLGL_DEBUG
