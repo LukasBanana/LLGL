@@ -16,6 +16,7 @@
 #include <memory>
 #include <cstdint>
 #include <type_traits>
+#include <initializer_list>
 
 
 namespace LLGL
@@ -30,16 +31,16 @@ enum class JITCallConv
     ThisCall,   // '__thiscall' to internal function
 };
 
+// Dummy structure to pass a variadic argument via 'JITCompiler::Call' template function.
+struct JITVarArg
+{
+    std::uint8_t index;
+};
+
 // IA-32 (a.k.a. x86) assembly code generator.
 class LLGL_EXPORT JITCompiler : public NonCopyable
 {
 
-    private:
-    
-        // Forward declaration for GCC and clang.
-        //template <typename... Args>
-        //inline void PushArgs(Args&&... args);
-    
     public:
 
         /*
@@ -56,7 +57,13 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         virtual void Begin() = 0;
         virtual void End() = 0;
     
-        void PushThisPtr(const void* value);
+        // Stores the parameter list of the secified types.
+        void StoreParams(const std::initializer_list<JIT::ArgType>& paramTypes);
+    
+        // Pushes the entry point parameter, specified by the zero-based index 'idx', to the argument list.
+        void PushParam(std::uint8_t idx);
+    
+        // Pushes the specified value to the argument list for the next function call.
         void PushPtr(const void* value);
         void PushByte(std::uint8_t value);
         void PushWord(std::uint16_t value);
@@ -74,9 +81,9 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         \param[in] farCall Specifies whether an intersegment function (far call) is to be used.
         */
         void FuncCall(
-            const void*         addr,
-            const JITCallConv   conv    = JITCallConv::CDecl,
-            bool                farCall = false
+            const void* addr,
+            JITCallConv conv    = JITCallConv::CDecl,
+            bool        farCall = false
         );
     
         /*
@@ -96,7 +103,8 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         JITCompiler() = default;
 
         virtual bool IsLittleEndian() const = 0;
-        virtual void WriteFuncCall(const void* addr, const JITCallConv conv, bool farCall) = 0;
+        virtual void WriteParams(const std::vector<JIT::ArgType>& params) = 0;
+        virtual void WriteFuncCall(const void* addr, JITCallConv conv, bool farCall) = 0;
 
         void Write(const void* data, std::size_t size);
         void WriteByte(std::uint8_t data);
@@ -122,12 +130,6 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         {
             return args_;
         }
-
-        // Returns the 'this'-pointer argument, or null if there is no such argument.
-        inline const void* GetThisPtr() const
-        {
-            return thisPtr_;
-        }
     
     private:
     
@@ -152,7 +154,7 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         std::vector<std::uint8_t>   assembly_;
 
         std::vector<JIT::Arg>       args_;
-        const void*                 thisPtr_        = nullptr;
+        std::vector<JIT::ArgType>   params_;
 
 };
 
@@ -195,6 +197,12 @@ template <>
 inline void JITCompiler::PushVariant<double>(double arg)
 {
     PushDouble(arg);
+}
+
+template <>
+inline void JITCompiler::PushVariant<JITVarArg>(JITVarArg arg)
+{
+    PushParam(arg.index);
 }
 
 template <typename Arg0>

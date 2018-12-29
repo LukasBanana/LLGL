@@ -34,16 +34,17 @@ class AMD64Assembler final : public JITCompiler
     private:
 
         bool IsLittleEndian() const override;
-        void WriteFuncCall(const void* addr, const JITCallConv conv, bool farCall) override;
+        void WriteParams(const std::vector<JIT::ArgType>& params) override;
+        void WriteFuncCall(const void* addr, JITCallConv conv, bool farCall) override;
 
     private:
     
         struct Displacement;
 
         std::uint8_t DispMod(const Displacement& disp) const;
-        std::uint8_t ModRM(std::uint8_t mode, const Reg r0, const Reg r1) const;
+        std::uint8_t ModRM(std::uint8_t mode, Reg r0, Reg r1) const;
     
-        void WriteOptREX(const Reg reg, bool defaultsTo64Bit = false);
+        void WriteOptREX(Reg reg, bool defaultsTo64Bit = false);
         void WriteOptDisp(const Displacement& disp);
     
         void BeginSupplement(const Arg& arg);
@@ -54,37 +55,38 @@ class AMD64Assembler final : public JITCompiler
     
     private:
     
-        void PushReg(const Reg srcReg);
+        void PushReg(Reg srcReg);
         void PushImm8(std::uint8_t byte);
         void PushImm16(std::uint16_t word);
         void PushImm32(std::uint32_t dword);
-        void Push(const Reg srcReg);
+        void Push(Reg srcReg);
 
-        void PopReg(const Reg dstReg);
-        void Pop(const Reg dstReg);
+        void PopReg(Reg dstReg);
+        void Pop(Reg dstReg);
 
-        void MovReg(const Reg dstReg, const Reg srcReg);
-        void MovRegImm32(const Reg dstReg, std::uint32_t dword);
-        void MovRegImm64(const Reg dstReg, std::uint64_t qword);
-        void MovMemImm32(const Reg dstMemReg, std::uint32_t dword, const Displacement& disp);
-        void MovMemReg(const Reg dstMemReg, const Reg srcReg, const Displacement& disp);
+        void MovReg(Reg dstReg, Reg srcReg);
+        void MovRegImm32(Reg dstReg, std::uint32_t dword);
+        void MovRegImm64(Reg dstReg, std::uint64_t qword);
+        void MovMemImm32(Reg dstMemReg, std::uint32_t dword, const Displacement& disp);
+        void MovMemReg(Reg dstMemReg, Reg srcReg, const Displacement& disp);
+        void MovRegMem(Reg dstReg, Reg srcMemReg, const Displacement& disp);
     
         #if 0 // UNUSED
-        void MovSSRegMem(const Reg dstReg, const Reg srcMemReg, const Displacement& disp);
-        void MovSDRegMem(const Reg dstReg, const Reg srcMemReg, const Displacement& disp);
+        void MovSSRegMem(Reg dstReg, Reg srcMemReg, const Displacement& disp);
+        void MovSDRegMem(Reg dstReg, Reg srcMemReg, const Displacement& disp);
         #endif // /UNUSED
     
-        void MovSSRegImm32(const Reg dstReg, float f32);
-        void MovSDRegImm64(const Reg dstReg, double f64);
+        void MovSSRegImm32(Reg dstReg, float f32);
+        void MovSDRegImm64(Reg dstReg, double f64);
     
-        void MovDQURegMem(const Reg dstReg, const Reg srcMemReg, const Displacement& disp);
-        void MovDQUMemReg(const Reg dstMemReg, const Reg srcReg, const Displacement& disp);
+        void MovDQURegMem(Reg dstReg, Reg srcMemReg, const Displacement& disp);
+        void MovDQUMemReg(Reg dstMemReg, Reg srcReg, const Displacement& disp);
 
-        void AddImm32(const Reg dst, std::uint32_t dword);
-        void SubImm32(const Reg dst, std::uint32_t dword);
-        void DivReg(const Reg src);
+        void AddImm32(Reg dst, std::uint32_t dword);
+        void SubImm32(Reg dst, std::uint32_t dword);
+        void DivReg(Reg src);
 
-        void CallNear(const Reg reg);
+        void CallNear(Reg reg);
 
         void RetNear(std::uint16_t word = 0);
         void RetFar(std::uint16_t word = 0);
@@ -107,9 +109,7 @@ class AMD64Assembler final : public JITCompiler
     
         struct Displacement
         {
-            Displacement(std::int8_t disp8);
-            Displacement(std::int32_t disp32);
-            
+            Displacement();
             bool has32Bits;
             union
             {
@@ -118,10 +118,26 @@ class AMD64Assembler final : public JITCompiler
             };
         };
     
+        struct Disp8 : public Displacement
+        {
+            Disp8(std::int8_t disp);
+        };
+    
+        struct Disp32 : public Displacement
+        {
+            Disp32(std::int32_t disp);
+        };
+
     private:
     
-        std::uint32_t           localStack_     = 0;
-        std::vector<Supplement> supplements_;
+        std::uint32_t           	localStackSize_ = 0;
+        std::uint16_t               paramStackSize_ = 0;
+    
+        // Supplement data that must be updated after encoding
+        std::vector<Supplement>     supplements_;
+    
+        // Displacements of parameters within stack frame
+        std::vector<Displacement>   paramDisp_;
     
 };
 

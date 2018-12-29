@@ -65,72 +65,107 @@ std::unique_ptr<JITProgram> JITCompiler::FlushProgram()
     return nullptr;
 }
 
-void JITCompiler::PushThisPtr(const void* value)
+void JITCompiler::StoreParams(const std::initializer_list<JIT::ArgType>& paramTypes)
 {
-    thisPtr_ = value;
+    params_.reserve(paramTypes.size());
+    for (auto type : paramTypes)
+        params_.push_back(type);
+    WriteParams(params_);
+}
+
+void JITCompiler::PushParam(std::uint8_t idx)
+{
+    if (idx < params_.size() && idx < 0xF)
+    {
+        Arg arg;
+        arg.type        = params_[idx];
+        arg.param       = idx;
+        arg.value.i64   = 0;
+        args_.push_back(arg);
+    }
 }
 
 void JITCompiler::PushPtr(const void* value)
 {
     Arg arg;
-    arg.type = ArgType::Ptr;
-    arg.value.ptr = value;
+    {
+        arg.type        = ArgType::Ptr;
+        arg.param       = 0xF;
+        arg.value.ptr   = value;
+    }
     args_.push_back(arg);
 }
 
 void JITCompiler::PushByte(std::uint8_t value)
 {
     Arg arg;
-    arg.type        = ArgType::Byte;
-    arg.value.i8    = value;
+    {
+        arg.type        = ArgType::Byte;
+        arg.param       = 0xF;
+        arg.value.i8    = value;
+    }
     args_.push_back(arg);
 }
 
 void JITCompiler::PushWord(std::uint16_t value)
 {
     Arg arg;
-    arg.type        = ArgType::Word;
-    arg.value.i16   = value;
+    {
+        arg.type        = ArgType::Word;
+        arg.param       = 0xF;
+        arg.value.i16   = value;
+    }
     args_.push_back(arg);
 }
 
 void JITCompiler::PushDWord(std::uint32_t value)
 {
     Arg arg;
-    arg.type        = ArgType::DWord;
-    arg.value.i32   = value;
+    {
+        arg.type        = ArgType::DWord;
+        arg.param       = 0xF;
+        arg.value.i32   = value;
+    }
     args_.push_back(arg);
 }
 
 void JITCompiler::PushQWord(std::uint64_t value)
 {
     Arg arg;
-    arg.type        = ArgType::QWord;
-    arg.value.i64   = value;
+    {
+        arg.type        = ArgType::QWord;
+        arg.param       = 0xF;
+        arg.value.i64   = value;
+    }
     args_.push_back(arg);
 }
 
 void JITCompiler::PushFloat(float value)
 {
     Arg arg;
-    arg.type        = ArgType::Float;
-    arg.value.f32   = value;
+    {
+        arg.type        = ArgType::Float;
+        arg.param       = 0xF;
+        arg.value.f32   = value;
+    }
     args_.push_back(arg);
 }
 
 void JITCompiler::PushDouble(double value)
 {
     Arg arg;
-    arg.type        = ArgType::Double;
-    arg.value.f64   = value;
+    {
+        arg.type        = ArgType::Double;
+        arg.param       = 0xF;
+        arg.value.f64   = value;
+    }
     args_.push_back(arg);
 }
 
-void JITCompiler::FuncCall(const void* addr, const JITCallConv conv, bool farCall)
+void JITCompiler::FuncCall(const void* addr, JITCallConv conv, bool farCall)
 {
     WriteFuncCall(addr, conv, farCall);
     args_.clear();
-    thisPtr_ = nullptr;
 }
 
 void JITCompiler::PushSizeT(std::uint64_t value)
@@ -229,8 +264,11 @@ LLGL_EXPORT void TestJIT1()
     
     comp->Begin();
     
-    #if 1
-    comp->PushDWord(42);
+    comp->StoreParams({ JIT::ArgType::DWord, JIT::ArgType::Float, JIT::ArgType::Double });
+    
+    #if 0
+    //comp->PushDWord(42);
+    comp->PushParam(0);
     comp->PushByte(-3);
     comp->PushWord(0x40);
     comp->PushQWord(999999ull);
@@ -251,8 +289,10 @@ LLGL_EXPORT void TestJIT1()
     #endif
     
     #if 1
-    comp->PushFloat(-1.2345f);
-    comp->PushDouble(3.14);
+    //comp->PushFloat(-1.2345f);
+    //comp->PushDouble(3.14);
+    comp->PushParam(1);
+    comp->PushParam(2);
     comp->FuncCall(reinterpret_cast<const void*>(Test2));
     #endif
     
@@ -260,7 +300,7 @@ LLGL_EXPORT void TestJIT1()
     
     auto prog = comp->FlushProgram();
     
-    prog->GetEntryPoint()();
+    prog->GetEntryPoint()(28, 2.3f, 4.5);
 }
 
 #endif // /LLGL_DEBUG

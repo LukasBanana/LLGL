@@ -54,9 +54,9 @@ static void Wrapper_GLBuffer_UpdateSubData(GLBuffer* self, GLintptr arg0, GLsize
     self->BindBuffer(arg0, arg1);
 }*/
 
-static void Wrapper_GLDrawArrays(GLenum mode, GLint first, GLsizei count)
+static void Wrapper_GLStateManager_Clear(GLStateManager* self, long arg0)
 {
-    glDrawArrays(mode, first, count);
+    self->Clear(arg0);
 }
 
 static std::size_t AssembleGLCommand(const GLOpCode opcode, const void* pc, JITCompiler& compiler)
@@ -158,13 +158,13 @@ static std::size_t AssembleGLCommand(const GLOpCode opcode, const void* pc, JITC
             compiler.Call(glClearStencil, cmd->stencil);
             return sizeof(*cmd);
         }
-        #if 0 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpCodeClear:
         {
             auto cmd = reinterpret_cast<const GLCmdClear*>(pc);
-            stateMngr.Clear(cmd->flags);
+            compiler.Call(Wrapper_GLStateManager_Clear, JITVarArg{ 0 }, cmd->flags);
             return sizeof(*cmd);
         }
+        #if 0 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpCodeClearBuffers:
         {
             auto cmd = reinterpret_cast<const GLCmdClearBuffers*>(pc);
@@ -342,7 +342,7 @@ static std::size_t AssembleGLCommand(const GLOpCode opcode, const void* pc, JITC
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsIndirect*>(pc);
             {
-                compiler.Call(Wrapper_GLStateManager_BindBuffer, stateMngr, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+                compiler.Call(Wrapper_GLStateManager_BindBuffer, JITVarArg{ 0 }, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
                 GLintptr offset = cmd->indirect;
                 for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
                 {
@@ -434,6 +434,8 @@ std::unique_ptr<JITProgram> AssembleGLDeferredCommandBuffer(const GLDeferredComm
     GLOpCode opcode;
     
     compiler->Begin();
+    
+    compiler->StoreParams({ JIT::ArgType::Ptr });
 
     while (pc < pcEnd)
     {

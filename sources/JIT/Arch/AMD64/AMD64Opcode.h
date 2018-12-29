@@ -77,6 +77,7 @@ enum Opcode : std::uint8_t
     Opcode_MovRegImm    = 0xB8, // [REX.W] B8 +rd id
     Opcode_MovMemImm    = 0xC7, // C7 /0 id
     Opcode_MovMemReg    = 0x89, // 89 /r
+    Opcode_MovRegMem    = 0x8B, // 8B /r
     Opcode_RetNear      = 0xC3, // C3
     Opcode_RetFar       = 0xCB, // CB
     Opcode_RetNearImm16 = 0xC2, // C2 iw

@@ -413,8 +413,7 @@ static void ExecuteGLCommandsEmulated(const std::vector<std::uint8_t>& rawBuffer
 static void ExecuteGLCommandsNatively(const JITProgram& exec, GLStateManager& stateMngr)
 {
     /* Execute native program and pass pointer to state manager */
-    //exec.GetEntryPoint()(&stateMngr);
-    exec.GetEntryPoint()(); //TODO: process arguments in assembly
+    exec.GetEntryPoint()(&stateMngr);
 }
 
 #endif // /LLGL_ENABLE_JIT_COMPILER

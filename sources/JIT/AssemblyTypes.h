@@ -55,7 +55,8 @@ union QWord
 // Function argument with type and value.
 struct Arg
 {
-    ArgType             type;
+    ArgType             type    : 4;
+    std::uint8_t        param   : 4; // Parameter index (0xF if unused)
     union
     {
         std::uint8_t    i8;
