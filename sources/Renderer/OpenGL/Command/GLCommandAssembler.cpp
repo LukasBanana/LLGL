@@ -433,10 +433,10 @@ std::unique_ptr<JITProgram> AssembleGLDeferredCommandBuffer(const GLDeferredComm
 
     GLOpCode opcode;
     
+    compiler->EntryPointParams({ JIT::ArgType::Ptr });
+
     compiler->Begin();
     
-    compiler->StoreParams({ JIT::ArgType::Ptr });
-
     while (pc < pcEnd)
     {
         /* Read opcode */

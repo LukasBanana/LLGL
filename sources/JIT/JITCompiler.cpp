@@ -8,6 +8,7 @@
 #include "JITCompiler.h"
 #include "AssemblyTypes.h"
 #include "../Core/Helper.h"
+#include <iomanip>
 
 #include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_WIN32
@@ -23,10 +24,6 @@
 #elif defined LLGL_ARCH_IA32
 #   include "Arch/IA32/IA32Assembler.h"
 #endif
-
-#ifdef LLGL_DEBUG
-#   include <iostream>
-#endif // /LLGL_DEBUG
 
 
 namespace LLGL
@@ -54,6 +51,35 @@ std::unique_ptr<JITCompiler> JITCompiler::Create()
     return compiler;
 }
 
+void JITCompiler::DumpAssembly(std::ostream& stream, bool textForm, std::size_t bytesPerLine) const
+{
+    if (textForm)
+    {
+        stream << std::hex << std::setfill('0');
+        std::size_t n = 0;
+        for (auto x : GetAssembly())
+        {
+            /* Write current hex value */
+            stream << "0x" << std::setw(2) << static_cast<int>(x);
+            
+            /* Write separator or new-line */
+            ++n;
+            if (n == bytesPerLine)
+            {
+                stream << std::endl;
+                n = 0;
+            }
+            else
+                stream << ' ';
+        }
+    }
+    else
+    {
+        for (auto x : GetAssembly())
+            stream << x;
+    }
+}
+
 std::unique_ptr<JITProgram> JITCompiler::FlushProgram()
 {
     if (!assembly_.empty())
@@ -65,12 +91,11 @@ std::unique_ptr<JITProgram> JITCompiler::FlushProgram()
     return nullptr;
 }
 
-void JITCompiler::StoreParams(const std::initializer_list<JIT::ArgType>& paramTypes)
+void JITCompiler::EntryPointParams(const std::initializer_list<JIT::ArgType>& paramTypes)
 {
     params_.reserve(paramTypes.size());
     for (auto type : paramTypes)
         params_.push_back(type);
-    WriteParams(params_);
 }
 
 void JITCompiler::PushParam(std::uint8_t idx)
@@ -102,6 +127,7 @@ void JITCompiler::PushByte(std::uint8_t value)
     {
         arg.type        = ArgType::Byte;
         arg.param       = 0xF;
+        arg.value.i64   = 0;
         arg.value.i8    = value;
     }
     args_.push_back(arg);
@@ -113,6 +139,7 @@ void JITCompiler::PushWord(std::uint16_t value)
     {
         arg.type        = ArgType::Word;
         arg.param       = 0xF;
+        arg.value.i64   = 0;
         arg.value.i16   = value;
     }
     args_.push_back(arg);
@@ -124,6 +151,7 @@ void JITCompiler::PushDWord(std::uint32_t value)
     {
         arg.type        = ArgType::DWord;
         arg.param       = 0xF;
+        arg.value.i64   = 0;
         arg.value.i32   = value;
     }
     args_.push_back(arg);
@@ -146,6 +174,7 @@ void JITCompiler::PushFloat(float value)
     {
         arg.type        = ArgType::Float;
         arg.param       = 0xF;
+        arg.value.i64   = 0;
         arg.value.f32   = value;
     }
     args_.push_back(arg);
@@ -254,21 +283,30 @@ void Test2(float f, double d)
     std::cout << std::endl;
 }
 
+void Call_Test1()
+{
+    Test1(1, 2, 3, 4, 5, 6, 7, 8, 9);
+}
+
 LLGL_EXPORT void TestJIT1()
 {
     #if 0//TEST
-    Test2(1.23f, 4.56);
+    //Test2(1.23f, 4.56);
+    Call_Test1();
     #endif
     
     auto comp = JITCompiler::Create();
     
+    comp->EntryPointParams({ JIT::ArgType::DWord, JIT::ArgType::Float, JIT::ArgType::Double });
+    
     comp->Begin();
     
-    comp->StoreParams({ JIT::ArgType::DWord, JIT::ArgType::Float, JIT::ArgType::Double });
-    
-    #if 0
-    //comp->PushDWord(42);
+    #if 1
+    #   if 0
+    comp->PushDWord(42);
+    #   else
     comp->PushParam(0);
+    #   endif
     comp->PushByte(-3);
     comp->PushWord(0x40);
     comp->PushQWord(999999ull);
@@ -289,10 +327,13 @@ LLGL_EXPORT void TestJIT1()
     #endif
     
     #if 1
-    //comp->PushFloat(-1.2345f);
-    //comp->PushDouble(3.14);
+    #   if 0
+    comp->PushFloat(-1.2345f);
+    comp->PushDouble(3.14);
+    #   else
     comp->PushParam(1);
     comp->PushParam(2);
+    #   endif
     comp->FuncCall(reinterpret_cast<const void*>(Test2));
     #endif
     

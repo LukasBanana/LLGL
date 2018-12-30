@@ -9,6 +9,9 @@
 #include "AMD64Opcode.h"
 #include <limits.h>
 
+#include <fstream>//!!!
+#include <iomanip>
+
 
 namespace LLGL
 {
@@ -28,15 +31,23 @@ see https://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_co
 */
 #ifdef _WIN32
 
-// Microsoft x64 calling convention (Windows)
+/*
+Microsoft x64 calling convention (Windows)
+Preserved for caller: ???
+*/
 static const Reg g_amd64IntParams[] = { Reg::RCX, Reg::RDX, Reg::R8, Reg::R9 };
 static const Reg g_amd64FltParams[] = { Reg::XMM0, Reg::XMM1, Reg::XMM2, Reg::XMM3 };
+static const Reg g_amd64TempReg     = Reg::RAX;
 
 #else
 
-// System V AMD64 ABI (Solaris, Linux, BSD, macOS)
+/*
+System V AMD64 ABI (Solaris, Linux, BSD, macOS)
+Preserved for caller: RBP, RBX, R12-R15
+*/
 static const Reg g_amd64IntParams[] = { Reg::RDI, Reg::RSI, Reg::RDX, Reg::RCX, Reg::R8, Reg::R9 };
 static const Reg g_amd64FltParams[] = { Reg::XMM0, Reg::XMM1, Reg::XMM2, Reg::XMM3, Reg::XMM4, Reg::XMM5, Reg::XMM6, Reg::XMM7 };
+static const Reg g_amd64TempReg     = Reg::RAX;
 
 #endif
 
@@ -62,29 +73,19 @@ static std::uint8_t GetArgSize(const ArgType t)
 
 void AMD64Assembler::Begin()
 {
-    #if 0
+    #if 0//TEST
     _ForceExcep();
-    MovRegMem(Reg::RAX, Reg::RSP, std::int32_t(0xF1));
-    MovRegMem(Reg::RSI, Reg::RSP, std::int8_t(0xF1));
+    PopReg(Reg::RAX);
+    PopReg(Reg::R8);
     #endif
     
     /* Reset data about local stack */
-    localStackSize_ = 0;
+    localStackSize_ = 128;//0;
     paramStackSize_ = 0;
     
-    /* Store base stack pointer (RBP) */
-    PushReg(Reg::RBP);
-    MovReg(Reg::RBP, Reg::RSP);
-    
-    #if 0
-    /* Store general purpose registers */
-    //TODO: determine which registers must be stored
-    for (std::size_t i = 0; i < g_amd64IntParamsCount; ++i)
-        Push(g_amd64IntParams[i]);
-    /*for (std::size_t i = 0; i < g_amd64FltParamsCount; ++i)
-        Push(g_amd64FltParams[i]);*/
-    PushReg(Reg::RAX);
-    #endif
+    /* Write entry point prologue */
+    WritePrologue();
+    WriteParams(GetParams());
 }
 
 void AMD64Assembler::End()
@@ -93,79 +94,18 @@ void AMD64Assembler::End()
     if (localStackSize_ > 0)
         AddImm32(Reg::RSP, localStackSize_);
     
-    #if 0
-    /* Restore general purpose registers */
-    //TODO: determine which registers must be restored
-    PopReg(Reg::RAX);
-    /*for (std::size_t i = 0; i < g_amd64FltParamsCount; ++i)
-        Pop(g_amd64FltParams[g_amd64FltParamsCount - i - 1u]);*/
-    for (std::size_t i = 0; i < g_amd64IntParamsCount; ++i)
-        Pop(g_amd64IntParams[g_amd64IntParamsCount - i - 1u]);
-    #endif
-
-    /* Restore base stack pointer (RBP) */
-    PopReg(Reg::RBP);
-    RetNear(paramStackSize_);
-    
-    /* Write supplement at the end of program */
+    /* Write entry point epilogue and append supplement at the end of program */
+    WriteEpilogue();
     ApplySupplements();
-}
-
-void AMD64Assembler::WriteParams(const std::vector<JIT::ArgType>& params)
-{
-    /* Determine required stack size */
-    std::uint32_t paramSize = 0;
-    for (auto type : params)
-        paramSize += (IsFloat(type) ? 16 : 8);
     
-    /* Allocate local stack */
-    localStackSize_ += paramSize;
-    if (localStackSize_ > 0)
-        SubImm32(Reg::RSP, localStackSize_);
-    
-    /* Store parameters in local stack */
-    std::size_t numIntRegs = 0, numFltRegs = 0;
-    std::int8_t paramStackOffset = 16; // first parameter at [EBP+16]
-    std::int8_t localStackOffset = 0;
-    
-    for (auto type : params)
+    // TEST: write program to file
+    #if 0
     {
-        bool isFloat = IsFloat(type);
-        Reg srcReg = Reg::RAX;
-        
-        if (isFloat && numFltRegs < g_amd64FltParamsCount)
-        {
-            /* Get parameter from floating-point register */
-            srcReg = g_amd64FltParams[numFltRegs++];
-        }
-        else if (!isFloat && numIntRegs < g_amd64IntParamsCount)
-        {
-            /* Get parameter from integer register */
-            srcReg = g_amd64IntParams[numIntRegs++];
-        }
-        else
-        {
-            /* Load parameter from stack */
-            MovRegMem(srcReg, Reg::RBP, Disp8{ paramStackOffset });
-            paramStackOffset += 8;
-            paramStackSize_ += 8;
-        }
-        
-        /* Store parameter in local stack */
-        if (IsFltReg(srcReg))
-        {
-            localStackOffset -= 16; // SSE2 register size of 128 bits
-            MovDQUMemReg(Reg::RBP, srcReg, Disp8{ localStackOffset });
-        }
-        else
-        {
-            localStackOffset -= 8; // x64 register size of 64 bits
-            MovMemReg(Reg::RBP, srcReg, Disp8{ localStackOffset });
-        }
-        
-        /* Store parameter offset within stack frame */
-        paramDisp_.push_back(Disp8{ localStackOffset });
+        std::ofstream f("JITProgram.txt");
+        DumpAssembly(f, true);
     }
+    exit(0);
+    #endif // /TEST
 }
 
 void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farCall)
@@ -182,7 +122,7 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
         const auto& arg = args[i];
         
         /* Determine destination register for argument */
-        Reg dstReg = Reg::RAX;
+        Reg dstReg = g_amd64TempReg;
         bool isFloat = IsFloat(arg.type);
         
         if (isFloat && numFltRegs < g_amd64FltParamsCount)
@@ -245,6 +185,8 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
     }
     
     /* Push remaining arguments onto stack */
+    Displacement stackDisp;
+    
     for (std::size_t i = 0; i < num; ++i)
     {
         auto iRev = num - i - 1u;
@@ -262,6 +204,7 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
         /* Push argument onto stack */
         switch (arg.type)
         {
+            #if 0
             case ArgType::Byte:
                 PushImm8(arg.value.i8);
                 break;
@@ -272,21 +215,36 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
             case ArgType::Float:
                 PushImm32(arg.value.i32);
                 break;
+            #else
+            case ArgType::Byte:
+            case ArgType::Word:
+            case ArgType::DWord:
+            case ArgType::Float:
+                MovMemImm32(Reg::RSP, arg.value.i32, stackDisp);
+                stackDisp.disp8 += 8;
+                break;
+            #endif
             case ArgType::QWord:
             case ArgType::Ptr:
             case ArgType::Double:
-                MovRegImm64(Reg::RAX, arg.value.i64);
-                PushReg(Reg::RAX);
+                #if 0
+                MovRegImm64(g_amd64TempReg, arg.value.i64);
+                PushReg(g_amd64TempReg);
+                #else
+                MovRegImm64(g_amd64TempReg, arg.value.i64);
+                MovMemReg(Reg::RSP, g_amd64TempReg, stackDisp);
+                stackDisp.disp8 += 8;
+                #endif
                 break;
         }
         
         /* Increase local stack size by register width (8 bytes) */
-        localStackSize_ += 8;
+        //localStackSize_ += 8;
     }
     
     /* Write 'call' instruction */
-    MovRegImm64(Reg::RAX, reinterpret_cast<std::uint64_t>(addr));
-    CallNear(Reg::RAX);
+    MovRegImm64(g_amd64TempReg, reinterpret_cast<std::uint64_t>(addr));
+    CallNear(g_amd64TempReg);
 }
 
 
@@ -323,6 +281,92 @@ std::uint8_t AMD64Assembler::ModRM(std::uint8_t mode, Reg r0, Reg r1) const
     return modRM;
 }
 
+void AMD64Assembler::WritePrologue()
+{
+    /* Store base stack pointer (RBP) */
+    PushReg(Reg::RBP);
+    MovReg(Reg::RBP, Reg::RSP);
+    
+    #if 1
+    /* Store general purpose registers */
+    //TODO: determine which registers must be stored
+    PushReg(Reg::RBX);
+    #endif
+}
+
+void AMD64Assembler::WriteEpilogue()
+{
+    #if 1
+    /* Restore general purpose registers */
+    //TODO: determine which registers must be restored
+    PopReg(Reg::RBX);
+    #endif
+
+    /* Restore base stack pointer (RBP) */
+    PopReg(Reg::RBP);
+    RetNear(paramStackSize_);
+}
+
+void AMD64Assembler::WriteParams(const std::vector<JIT::ArgType>& params)
+{
+    /* Determine required stack size */
+    std::uint32_t paramSize = 0;
+    for (auto type : params)
+        paramSize += (IsFloat(type) ? 16 : 8);
+    
+    /* Allocate local stack */
+    localStackSize_ += paramSize;
+    if (localStackSize_ > 0)
+        SubImm32(Reg::RSP, localStackSize_);
+    
+    /* Store parameters in local stack */
+    std::size_t numIntRegs = 0, numFltRegs = 0;
+    std::int8_t paramStackOffset = 16; // first parameter at [EBP+16]
+    std::int8_t localStackOffset = -16; // local variables after preserved EBX
+    
+    for (auto type : params)
+    {
+        bool isFloat = IsFloat(type);
+        Reg srcReg = g_amd64TempReg;
+        
+        if (isFloat && numFltRegs < g_amd64FltParamsCount)
+        {
+            /* Get parameter from floating-point register */
+            srcReg = g_amd64FltParams[numFltRegs++];
+        }
+        else if (!isFloat && numIntRegs < g_amd64IntParamsCount)
+        {
+            /* Get parameter from integer register */
+            srcReg = g_amd64IntParams[numIntRegs++];
+        }
+        else
+        {
+            /* Load parameter from stack */
+            MovRegMem(srcReg, Reg::RBP, Disp8{ paramStackOffset });
+            paramStackOffset += 8;
+            paramStackSize_ += 8;
+        }
+        
+        /* Store parameter in local stack */
+        if (IsFltReg(srcReg))
+        {
+            localStackOffset -= 16; // SSE2 register size of 128 bits
+            MovDQUMemReg(Reg::RBP, srcReg, Disp8{ localStackOffset });
+        }
+        else
+        {
+            localStackOffset -= 8; // x64 register size of 64 bits
+            MovMemReg(Reg::RBP, srcReg, Disp8{ localStackOffset });
+        }
+        
+        /* Store parameter offset within stack frame */
+        paramDisp_.push_back(Disp8{ localStackOffset });
+    }
+    
+    /* Determine stack base for arguments of subsequent calls */
+    argStackBase_.disp8 = localStackOffset;
+}
+
 void AMD64Assembler::WriteOptREX(Reg reg, bool defaultsTo64Bit)
 {
     std::uint8_t prefix = 0;
@@ -350,6 +394,12 @@ void AMD64Assembler::WriteOptDisp(const Displacement& disp)
         else
             WriteByte(static_cast<std::uint8_t>(disp.disp8));
     }
+}
+
+void AMD64Assembler::WriteOptSIB(Reg reg)
+{
+    if (reg == Reg::RSP)
+        WriteByte((RegByte(reg) << 3) | RegByte(reg));
 }
 
 void AMD64Assembler::BeginSupplement(const Arg& arg)
@@ -434,6 +484,7 @@ void AMD64Assembler::Push(Reg srcReg)
 
 void AMD64Assembler::PopReg(Reg dstReg)
 {
+    WriteOptREX(dstReg, true);
     WriteByte(Opcode_PopReg | RegByte(dstReg));
 }
 
@@ -472,15 +523,10 @@ void AMD64Assembler::MovRegImm64(Reg dstReg, std::uint64_t qword)
 
 void AMD64Assembler::MovMemImm32(Reg dstMemReg, std::uint32_t dword, const Displacement& disp)
 {
-    #ifdef LLGL_DEBUG
-    if (dstMemReg == Reg::RSP)
-        ErrInvalidUseOfRSP();
-    #endif
-    
-    /* Write opcode */
     WriteOptREX(dstMemReg); // prefix
     WriteByte(Opcode_MovMemImm);
     WriteByte(DispMod(disp) | RegByte(dstMemReg));
+    WriteOptSIB(dstMemReg);
     WriteOptDisp(disp); // displacement
     WriteDWord(dword); // immediate
 }
@@ -489,7 +535,8 @@ void AMD64Assembler::MovMemReg(Reg dstMemReg, Reg srcReg, const Displacement& di
 {
     WriteOptREX(srcReg); // prefix
     WriteByte(Opcode_MovMemReg);
-    WriteByte(DispMod(disp) | RegByte(srcReg) << 3 | RegByte(dstMemReg));
+    WriteByte(ModRM(DispMod(disp), srcReg, dstMemReg));
+    WriteOptSIB(dstMemReg);
     WriteOptDisp(disp); // displacement
 }
 
@@ -498,8 +545,7 @@ void AMD64Assembler::MovRegMem(Reg dstReg, Reg srcMemReg, const Displacement& di
     WriteOptREX(dstReg);
     WriteByte(Opcode_MovRegMem);
     WriteByte(ModRM(DispMod(disp), dstReg, srcMemReg));
-    if (srcMemReg == Reg::RSP)
-        WriteByte((RegByte(Reg::RSP) << 3) | RegByte(Reg::RSP));
+    WriteOptSIB(srcMemReg);
     WriteOptDisp(disp);
 }
 
@@ -556,8 +602,7 @@ void AMD64Assembler::MovDQURegMem(Reg dstReg, Reg srcMemReg, const Displacement&
 {
     Write(OpcodeSSE2_MovDQURegMem, 3);
     WriteByte(ModRM(DispMod(disp), dstReg, srcMemReg));
-    if (srcMemReg == Reg::RSP)
-        WriteByte((RegByte(Reg::RSP) << 3) | RegByte(Reg::RSP));
+    WriteOptSIB(srcMemReg);
     WriteOptDisp(disp);
 }
 
@@ -566,8 +611,7 @@ void AMD64Assembler::MovDQUMemReg(Reg dstMemReg, Reg srcReg, const Displacement&
 {
     Write(OpcodeSSE2_MovDQUMemReg, 3);
     WriteByte(ModRM(DispMod(disp), srcReg, dstMemReg));
-    if (dstMemReg == Reg::RSP)
-        WriteByte((RegByte(Reg::RSP) << 3) | RegByte(Reg::RSP));
+    WriteOptSIB(dstMemReg);
     WriteOptDisp(disp);
 }
 
@@ -607,6 +651,7 @@ void AMD64Assembler::DivReg(Reg src)
 
 void AMD64Assembler::CallNear(Reg reg)
 {
+    WriteOptREX(reg, true);
     WriteByte(0xFF);
     WriteByte(Opcode_CallNear | Operand_Mod11 | RegByte(reg));
 }

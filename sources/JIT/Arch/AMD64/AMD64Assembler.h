@@ -34,7 +34,6 @@ class AMD64Assembler final : public JITCompiler
     private:
 
         bool IsLittleEndian() const override;
-        void WriteParams(const std::vector<JIT::ArgType>& params) override;
         void WriteFuncCall(const void* addr, JITCallConv conv, bool farCall) override;
 
     private:
@@ -44,8 +43,14 @@ class AMD64Assembler final : public JITCompiler
         std::uint8_t DispMod(const Displacement& disp) const;
         std::uint8_t ModRM(std::uint8_t mode, Reg r0, Reg r1) const;
     
+        void WritePrologue();
+        void WriteEpilogue();
+    
+        void WriteParams(const std::vector<JIT::ArgType>& params);
+        
         void WriteOptREX(Reg reg, bool defaultsTo64Bit = false);
         void WriteOptDisp(const Displacement& disp);
+        void WriteOptSIB(Reg reg);
     
         void BeginSupplement(const Arg& arg);
         void EndSupplement();
@@ -110,6 +115,9 @@ class AMD64Assembler final : public JITCompiler
         struct Displacement
         {
             Displacement();
+            Displacement(const Displacement&) = default;
+            Displacement& operator = (const Displacement&) = default;
+            
             bool has32Bits;
             union
             {
@@ -132,6 +140,7 @@ class AMD64Assembler final : public JITCompiler
     
         std::uint32_t           	localStackSize_ = 0;
         std::uint16_t               paramStackSize_ = 0;
+        Displacement                argStackBase_;
     
         // Supplement data that must be updated after encoding
         std::vector<Supplement>     supplements_;

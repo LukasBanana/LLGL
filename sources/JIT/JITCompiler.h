@@ -12,6 +12,7 @@
 #include "JITProgram.h"
 #include "AssemblyTypes.h"
 #include <LLGL/NonCopyable.h>
+#include <iostream>
 #include <vector>
 #include <memory>
 #include <cstdint>
@@ -49,6 +50,9 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         */
         static std::unique_ptr<JITCompiler> Create();
     
+        // Dumps the current assembly code to the output stream.
+        void DumpAssembly(std::ostream& stream, bool textForm = false, std::size_t bytesPerLine = 8) const;
+    
         // Flushes the currently build program, or null if no program was build.
         std::unique_ptr<JITProgram> FlushProgram();
 
@@ -57,8 +61,8 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         virtual void Begin() = 0;
         virtual void End() = 0;
     
-        // Stores the parameter list of the secified types.
-        void StoreParams(const std::initializer_list<JIT::ArgType>& paramTypes);
+        // Stores the parameter list of the secified types for the program entry points.
+        void EntryPointParams(const std::initializer_list<JIT::ArgType>& paramTypes);
     
         // Pushes the entry point parameter, specified by the zero-based index 'idx', to the argument list.
         void PushParam(std::uint8_t idx);
@@ -103,7 +107,6 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         JITCompiler() = default;
 
         virtual bool IsLittleEndian() const = 0;
-        virtual void WriteParams(const std::vector<JIT::ArgType>& params) = 0;
         virtual void WriteFuncCall(const void* addr, JITCallConv conv, bool farCall) = 0;
 
         void Write(const void* data, std::size_t size);
@@ -129,6 +132,12 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         inline const std::vector<JIT::Arg>& GetArgs() const
         {
             return args_;
+        }
+    
+        // Returns the list of entry point parameters.
+        inline const std::vector<JIT::ArgType>& GetParams() const
+        {
+            return params_;
         }
     
     private:
