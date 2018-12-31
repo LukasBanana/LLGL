@@ -44,9 +44,12 @@ namespace LLGL
 {
 
 
-GLDeferredCommandBuffer::GLDeferredCommandBuffer(std::size_t reservedSize)
+GLDeferredCommandBuffer::GLDeferredCommandBuffer(long flags, std::size_t reservedSize)
 {
     buffer_.reserve(reservedSize);
+    #ifdef LLGL_ENABLE_JIT_COMPILER
+    useJITCompiler_ = ((flags & CommandBufferFlags::MultiSubmit) != 0);
+    #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
 bool GLDeferredCommandBuffer::IsImmediateCmdBuffer() const
@@ -59,12 +62,16 @@ bool GLDeferredCommandBuffer::IsImmediateCmdBuffer() const
 void GLDeferredCommandBuffer::Begin()
 {
     buffer_.clear();
+    #ifdef LLGL_ENABLE_JIT_COMPILER
+    executable_.reset();
+    #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
 void GLDeferredCommandBuffer::End()
 {
     #ifdef LLGL_ENABLE_JIT_COMPILER
-    executable_ = AssembleGLDeferredCommandBuffer(*this);
+    if (useJITCompiler_)
+        executable_ = AssembleGLDeferredCommandBuffer(*this);
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 

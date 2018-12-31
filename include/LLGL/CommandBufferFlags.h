@@ -47,11 +47,18 @@ struct CommandBufferFlags
     enum
     {
         /**
-        \brief Specifies that the encoded command buffer can be submitted multiple times.
-        \remarks If this is not specified, the command buffer must be encoded again after it has been submitted to the command queue.
+        \brief Specifies that the encoded command buffer will be submitted as a secondary command buffer.
+        \remarks If this is specified, the command buffer must be submitted using the \c Execute function of a primary command buffer.
         \see CommandBuffer::Execute
         */
-        DeferredSubmit = (1 << 0),
+        DeferredSubmit  = (1 << 0),
+        
+        /**
+        \brief Specifies that the encoded command buffer can be submitted multiple times.
+        \remarks If this is not specified, the command buffer must be encoded again after it has been submitted to the command queue.
+        \see CommandQueue::Submit(CommandBuffer&)
+        */
+        MultiSubmit     = (1 << 1),
     };
 };
 

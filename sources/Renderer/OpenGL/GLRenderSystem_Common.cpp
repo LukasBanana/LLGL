@@ -25,12 +25,6 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-GLRenderSystem::GLRenderSystem()
-{
-    /* Create command queue instance */
-    commandQueue_ = MakeUnique<GLCommandQueue>();
-}
-
 GLRenderSystem::~GLRenderSystem()
 {
     /* Clear all render state containers first, the rest will be deleted automatically */
@@ -80,12 +74,12 @@ CommandBufferExt* GLRenderSystem::CreateCommandBufferExt(const CommandBufferDesc
     /* Get state manager from shared render context */
     if (auto sharedContext = GetSharedRenderContext())
     {
-        if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+        if ((desc.flags & (CommandBufferFlags::DeferredSubmit | CommandBufferFlags::MultiSubmit)) != 0)
         {
             /* Create deferred command buffer */
             return TakeOwnership(
                 commandBuffers_,
-                MakeUnique<GLDeferredCommandBuffer>()
+                MakeUnique<GLDeferredCommandBuffer>(desc.flags)
             );
         }
         else
@@ -276,12 +270,9 @@ void GLRenderSystem::Release(Fence& fence)
 
 RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc)
 {
-    /* Load all OpenGL extensions for the first time */
+    /* Create devices that require an active GL context */
     if (renderContexts_.empty())
-    {
-        LoadGLExtensions(desc.profileOpenGL);
-        SetDebugCallback(desc.debugCallback);
-    }
+        CreateGLContextDependentDevices(*renderContext, desc);
 
     /* Use uniform clipping space */
     GLStateManager::active->DetermineExtensionsAndLimits();
@@ -295,6 +286,16 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
 /*
  * ======= Private: =======
  */
+
+void GLRenderSystem::CreateGLContextDependentDevices(GLRenderContext& renderContext, const RenderContextDescriptor& desc)
+{
+    /* Load all OpenGL extensions */
+    LoadGLExtensions(desc.profileOpenGL);
+    SetDebugCallback(desc.debugCallback);
+    
+    /* Create command queue instance */
+    commandQueue_ = MakeUnique<GLCommandQueue>(renderContext.GetStateManager());
+}
 
 void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc)
 {

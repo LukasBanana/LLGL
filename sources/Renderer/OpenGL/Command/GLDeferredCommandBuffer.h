@@ -35,7 +35,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
     public:
 
-        GLDeferredCommandBuffer(std::size_t reservedSize = 0);
+        GLDeferredCommandBuffer(long flags, std::size_t reservedSize = 0);
 
         bool IsImmediateCmdBuffer() const override;
 
@@ -196,6 +196,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
     
         #ifdef LLGL_ENABLE_JIT_COMPILER
         std::unique_ptr<JITProgram> executable_;
+        bool                        useJITCompiler_ = false;
         #endif
 
 };

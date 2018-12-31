@@ -10,17 +10,22 @@
 
 
 #include <LLGL/CommandQueue.h>
+#include <memory>
 
 
 namespace LLGL
 {
 
 
+class GLStateManager;
+
 class GLCommandQueue final : public CommandQueue
 {
 
     public:
 
+        GLCommandQueue(const std::shared_ptr<GLStateManager>& stateManager);
+    
         /* ----- Command Buffers ----- */
 
         void Submit(CommandBuffer& commandBuffer) override;
@@ -41,6 +46,10 @@ class GLCommandQueue final : public CommandQueue
 
         bool WaitFence(Fence& fence, std::uint64_t timeout) override;
         void WaitIdle() override;
+    
+    private:
+    
+        std::shared_ptr<GLStateManager> stateMngr_;
 
 };
 

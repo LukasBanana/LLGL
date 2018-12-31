@@ -6,9 +6,12 @@
  */
 
 #include "GLCommandQueue.h"
+#include "GLDeferredCommandBuffer.h"
+#include "GLCommandExecutor.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLFence.h"
 #include "../RenderState/GLQueryHeap.h"
+#include "../RenderState/GLStateManager.h"
 #include "../../CheckedCast.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include <algorithm>
@@ -18,11 +21,25 @@ namespace LLGL
 {
 
 
+GLCommandQueue::GLCommandQueue(const std::shared_ptr<GLStateManager>& stateManager) :
+    stateMngr_ { stateManager }
+{
+}
+
 /* ----- Command Buffers ----- */
 
-void GLCommandQueue::Submit(CommandBuffer& /*commandBuffer*/)
+void GLCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
-    // dummy
+    /*
+    Only deferred command buffers can be submitted multiple times (via GLDeferredCommandBuffer),
+    otherwise the commands must be submitted immediately (via GLImmediateCommandBuffer).
+    */
+    auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, commandBuffer);
+    if (!cmdBufferGL.IsImmediateCmdBuffer())
+    {
+        auto& deferredCmdBufferGL = LLGL_CAST(const GLDeferredCommandBuffer&, cmdBufferGL);
+        ExecuteGLDeferredCommandBuffer(deferredCmdBufferGL, *stateMngr_);
+    }
 }
 
 /* ----- Queries ----- */
