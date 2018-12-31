@@ -82,11 +82,7 @@ void GLImmediateCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOf
 void GLImmediateCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 {
     auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, deferredCommandBuffer);
-    if (!cmdBufferGL.IsImmediateCmdBuffer())
-    {
-        auto& deferredCmdBufferGL = LLGL_CAST(const GLDeferredCommandBuffer&, cmdBufferGL);
-        ExecuteGLDeferredCommandBuffer(deferredCmdBufferGL, *stateMngr_);
-    }
+    ExecuteGLCommandBuffer(cmdBufferGL, *stateMngr_);
 }
 
 /* ----- Configuration ----- */

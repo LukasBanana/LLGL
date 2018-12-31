@@ -14,9 +14,11 @@ namespace LLGL
 
 
 class GLStateManager;
+class GLCommandBuffer;
 class GLDeferredCommandBuffer;
 
 void ExecuteGLDeferredCommandBuffer(const GLDeferredCommandBuffer& cmdbuffer, GLStateManager& stateMngr);
+void ExecuteGLCommandBuffer(const GLCommandBuffer& cmdbuffer, GLStateManager& stateMngr);
 
 
 } // /namespace LLGL

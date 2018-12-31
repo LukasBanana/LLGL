@@ -156,12 +156,23 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
             long                stageFlags      = StageFlags::AllStages
         ) override;
 
+    public:
+    
         /*  ----- Extended functions ----- */
+    
+        // Returns true if this is a primary command buffer.
+        bool IsPrimary() const;
 
         // Returns the internal command buffer as raw byte buffer.
         inline const std::vector<std::uint8_t>& GetRawBuffer() const
         {
             return buffer_;
+        }
+    
+        // Returns the flags this command buffer was created with.
+        inline long GetFlags() const
+        {
+            return flags_;
         }
 
         #ifdef LLGL_ENABLE_JIT_COMPILER
@@ -192,11 +203,11 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         GLRenderState               renderState_;
         GLClearValue                clearValue_;
 
+        long                        flags_          = 0;
         std::vector<std::uint8_t>   buffer_;
     
         #ifdef LLGL_ENABLE_JIT_COMPILER
         std::unique_ptr<JITProgram> executable_;
-        bool                        useJITCompiler_ = false;
         #endif
 
 };

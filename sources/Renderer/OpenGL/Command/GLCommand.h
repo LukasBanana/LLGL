@@ -29,6 +29,7 @@ class GLQueryHeap;
 class GLRenderContext;
 class GLRenderTarget;
 class GLRenderPass;
+class GLDeferredCommandBuffer;
 
 
 struct GLCmdUpdateBuffer
@@ -46,6 +47,11 @@ struct GLCmdCopyBuffer
     GLintptr    readOffset;
     GLintptr    writeOffset;
     GLsizeiptr  size;
+};
+
+struct GLCmdExecute
+{
+    const GLDeferredCommandBuffer* commandBuffer;
 };
 
 struct GLCmdSetAPIDepState

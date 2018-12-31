@@ -82,6 +82,12 @@ static std::size_t AssembleGLCommand(const GLOpCode opcode, const void* pc, JITC
             cmd->writeBuffer->CopyBufferSubData(*(cmd->readBuffer), cmd->readOffset, cmd->writeOffset, cmd->size);
             return sizeof(*cmd);
         }
+        case GLOpCodeExecute:
+        {
+            auto cmd = reinterpret_cast<const GLCmdExecute*>(pc);
+            ExecuteGLDeferredCommandBuffer(*(cmd->commandBuffer), stateMngr);
+            return sizeof(*cmd);
+        }
         case GLOpCodeSetAPIDepState:
         {
             auto cmd = reinterpret_cast<const GLCmdSetAPIDepState*>(pc);

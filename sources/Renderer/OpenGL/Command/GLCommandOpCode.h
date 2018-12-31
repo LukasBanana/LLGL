@@ -21,6 +21,7 @@ enum GLOpCode : std::uint8_t
     GLOpCodeUpdateBuffer = 1,
     GLOpCodeCopyBuffer,
     GLOpCodeSetAPIDepState,
+    GLOpCodeExecute,
     GLOpCodeViewport,
     GLOpCodeViewportArray,
     GLOpCodeScissor,

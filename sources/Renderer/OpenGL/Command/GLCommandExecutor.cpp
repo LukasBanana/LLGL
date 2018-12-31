@@ -61,6 +61,12 @@ static std::size_t ExecuteGLCommand(const GLOpCode opcode, const void* pc, GLSta
             cmd->writeBuffer->CopyBufferSubData(*(cmd->readBuffer), cmd->readOffset, cmd->writeOffset, cmd->size);
             return sizeof(*cmd);
         }
+        case GLOpCodeExecute:
+        {
+            auto cmd = reinterpret_cast<const GLCmdExecute*>(pc);
+            ExecuteGLDeferredCommandBuffer(*(cmd->commandBuffer), stateMngr);
+            return sizeof(*cmd);
+        }
         case GLOpCodeSetAPIDepState:
         {
             auto cmd = reinterpret_cast<const GLCmdSetAPIDepState*>(pc);
@@ -431,6 +437,20 @@ void ExecuteGLDeferredCommandBuffer(const GLDeferredCommandBuffer& cmdBuffer, GL
     {
         /* Emulate execution of GL commands */
         ExecuteGLCommandsEmulated(cmdBuffer.GetRawBuffer(), stateMngr);
+    }
+}
+
+void ExecuteGLCommandBuffer(const GLCommandBuffer& cmdBuffer, GLStateManager& stateMngr)
+{
+    /* Is this a secondary command buffer? */
+    if (!cmdBuffer.IsImmediateCmdBuffer())
+    {
+        auto& deferredCmdBufferGL = LLGL_CAST(const GLDeferredCommandBuffer&, cmdBuffer);
+        if (!deferredCmdBufferGL.IsPrimary())
+        {
+            /* Execute deferred command buffer */
+            ExecuteGLDeferredCommandBuffer(deferredCmdBufferGL, stateMngr);
+        }
     }
 }
 

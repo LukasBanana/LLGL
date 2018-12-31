@@ -44,12 +44,10 @@ namespace LLGL
 {
 
 
-GLDeferredCommandBuffer::GLDeferredCommandBuffer(long flags, std::size_t reservedSize)
+GLDeferredCommandBuffer::GLDeferredCommandBuffer(long flags, std::size_t reservedSize) :
+    flags_ { flags }
 {
     buffer_.reserve(reservedSize);
-    #ifdef LLGL_ENABLE_JIT_COMPILER
-    useJITCompiler_ = ((flags & CommandBufferFlags::MultiSubmit) != 0);
-    #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
 bool GLDeferredCommandBuffer::IsImmediateCmdBuffer() const
@@ -70,8 +68,8 @@ void GLDeferredCommandBuffer::Begin()
 void GLDeferredCommandBuffer::End()
 {
     #ifdef LLGL_ENABLE_JIT_COMPILER
-    if (useJITCompiler_)
-        executable_ = AssembleGLDeferredCommandBuffer(*this);
+    //if ((GetFlags() & CommandBufferFlags::MultiSubmit) != 0)
+    //    executable_ = AssembleGLDeferredCommandBuffer(*this);
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
@@ -100,7 +98,21 @@ void GLDeferredCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOff
 
 void GLDeferredCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 {
-    throw std::runtime_error("deferred command buffer tried to execute another command buffer");
+    if (IsPrimary())
+    {
+        /* Is this a secondary command buffer? */
+        auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, deferredCommandBuffer);
+        if (!cmdBufferGL.IsImmediateCmdBuffer())
+        {
+            auto& deferredCmdBufferGL = LLGL_CAST(const GLDeferredCommandBuffer&, cmdBufferGL);
+            if (!deferredCmdBufferGL.IsPrimary())
+            {
+                /* Encode GL command */
+                auto cmd = AllocCommand<GLCmdExecute>(GLOpCodeExecute);
+                cmd->commandBuffer = &deferredCmdBufferGL;
+            }
+        }
+    }
 }
 
 /* ----- Configuration ----- */
@@ -722,6 +734,13 @@ void GLDeferredCommandBuffer::ResetResourceSlots(
         if (cmd.resetFlags != 0)
             *AllocCommand<GLCmdUnbindResources>(GLOpCodeUnbindResources) = cmd;
     }
+}
+
+/* ----- Extended functions ----- */
+
+bool GLDeferredCommandBuffer::IsPrimary() const
+{
+    return ((GetFlags() & CommandBufferFlags::DeferredSubmit) == 0);
 }
 
 
