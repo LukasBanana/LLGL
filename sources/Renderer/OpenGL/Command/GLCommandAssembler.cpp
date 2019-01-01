@@ -44,35 +44,15 @@ namespace LLGL
 {
 
 
-static void Wrapper_GLBuffer_UpdateSubData(GLBuffer* self, GLintptr arg0, GLsizeiptr arg1, const void* arg2)
-{
-    self->BufferSubData(arg0, arg1, arg2);
-}
-
-/*static void Wrapper_GLStateManager_BindBuffer(GLStateManager* self, GLBufferTarget arg0, GLuint arg1)
-{
-    self->BindBuffer(arg0, arg1);
-}*/
-
-static void Wrapper_GLStateManager_Clear(GLStateManager* self, long arg0)
-{
-    self->Clear(arg0);
-}
-
 static std::size_t AssembleGLCommand(const GLOpCode opcode, const void* pc, JITCompiler& compiler)
 {
+    static const JITVarArg g_stateMngrArg{ 0 };
     switch (opcode)
     {
         case GLOpCodeUpdateBuffer:
         {
             auto cmd = reinterpret_cast<const GLCmdUpdateBuffer*>(pc);
-            {
-                compiler.PushPtr(cmd->buffer);
-                compiler.PushSSizeT(cmd->offset);
-                compiler.PushSSizeT(cmd->size);
-                compiler.PushPtr(cmd + 1);
-                compiler.FuncCall(reinterpret_cast<const void*>(Wrapper_GLBuffer_UpdateSubData));
-            }
+            compiler.CallMember(&GLBuffer::BufferSubData, cmd->buffer, cmd->offset, cmd->size, (cmd + 1));
             return sizeof(*cmd) + cmd->size;
         }
         #if 0 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,7 +147,7 @@ static std::size_t AssembleGLCommand(const GLOpCode opcode, const void* pc, JITC
         case GLOpCodeClear:
         {
             auto cmd = reinterpret_cast<const GLCmdClear*>(pc);
-            compiler.Call(Wrapper_GLStateManager_Clear, JITVarArg{ 0 }, cmd->flags);
+            compiler.CallMember(&GLStateManager::Clear, g_stateMngrArg, cmd->flags);
             return sizeof(*cmd);
         }
         #if 0 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -228,31 +208,33 @@ static std::size_t AssembleGLCommand(const GLOpCode opcode, const void* pc, JITC
             return 0;
         }
         #endif // /GL_NV_transform_feedback
-        #if 0 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpCodeBindResourceHeap:
         {
             auto cmd = reinterpret_cast<const GLCmdBindResourceHeap*>(pc);
-            cmd->resourceHeap->Bind(stateMngr);
+            compiler.CallMember(&GLResourceHeap::Bind, cmd->resourceHeap, g_stateMngrArg);
             return sizeof(*cmd);
         }
+        #if 0 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpCodeBindRenderPass:
         {
             auto cmd = reinterpret_cast<const GLCmdBindRenderPass*>(pc);
             stateMngr.BindRenderPass(*(cmd->renderTarget), cmd->renderPass, cmd->numClearValues, reinterpret_cast<const ClearValue*>(cmd + 1), cmd->defaultClearValue);
             return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
         }
+        #endif // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ /TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpCodeBindGraphicsPipeline:
         {
             auto cmd = reinterpret_cast<const GLCmdBindGraphicsPipeline*>(pc);
-            cmd->graphicsPipeline->Bind(stateMngr);
+            compiler.CallMember(&GLGraphicsPipeline::Bind, cmd->graphicsPipeline, g_stateMngrArg);
             return sizeof(*cmd);
         }
         case GLOpCodeBindComputePipeline:
         {
             auto cmd = reinterpret_cast<const GLCmdBindComputePipeline*>(pc);
-            cmd->computePipeline->Bind(stateMngr);
+            compiler.CallMember(&GLComputePipeline::Bind, cmd->computePipeline, g_stateMngrArg);
             return sizeof(*cmd);
         }
+        #if 0 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpCodeBeginQuery:
         {
             auto cmd = reinterpret_cast<const GLCmdBeginQuery*>(pc);
@@ -301,7 +283,7 @@ static std::size_t AssembleGLCommand(const GLOpCode opcode, const void* pc, JITC
         case GLOpCodeDrawArraysIndirect:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawArraysIndirect*>(pc);
-            compiler.Call(Wrapper_GLBuffer_UpdateSubData, stateMngr, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
             GLintptr offset = cmd->indirect;
             for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
             {
@@ -348,7 +330,7 @@ static std::size_t AssembleGLCommand(const GLOpCode opcode, const void* pc, JITC
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsIndirect*>(pc);
             {
-                compiler.Call(Wrapper_GLStateManager_BindBuffer, JITVarArg{ 0 }, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+                compiler.Call(Wrapper_GLStateManager_BindBuffer, g_stateMngrArg, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
                 GLintptr offset = cmd->indirect;
                 for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
                 {

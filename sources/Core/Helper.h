@@ -204,6 +204,20 @@ T GetAlignedSize(T size, T alignment)
     return size;
 }
 
+// Returns the raw function pointer of the specified member function, e.g. GetMemberFuncPtr(&Foo::Bar).
+template <typename T>
+const void* GetMemberFuncPtr(T pfn)
+{
+    union
+    {
+        T           func;
+        const void* addr;
+    }
+    ptr;
+    ptr.func = pfn;
+    return ptr.addr;
+}
+
 
 /* ----- Functions ----- */
 

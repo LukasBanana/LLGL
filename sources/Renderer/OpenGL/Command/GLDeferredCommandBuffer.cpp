@@ -69,7 +69,8 @@ void GLDeferredCommandBuffer::End()
 {
     #ifdef LLGL_ENABLE_JIT_COMPILER
     //if ((GetFlags() & CommandBufferFlags::MultiSubmit) != 0)
-    //    executable_ = AssembleGLDeferredCommandBuffer(*this);
+    if (!IsPrimary())//!!!
+        executable_ = AssembleGLDeferredCommandBuffer(*this);
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 

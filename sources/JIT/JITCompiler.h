@@ -11,6 +11,7 @@
 
 #include "JITProgram.h"
 #include "AssemblyTypes.h"
+#include "../Core/Helper.h"
 #include <LLGL/NonCopyable.h>
 #include <iostream>
 #include <vector>
@@ -101,6 +102,20 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
             PushArgs(std::forward<Args>(args)...);
             FuncCall(reinterpret_cast<const void*>(func));
         }
+    
+        /*
+        Encodes a member function call with the specified variadic arguments.
+        \param[in] func Specifies the function object. This must be a global non-overloaded function.
+        \param[in] inst Specifies the class instance on which the member function is to be called.
+        \param[in] args Specifies the argument list. Only pointers, integrals and floating-point types are allowed (no references).
+        */
+        template <typename Func, typename Inst, typename... Args>
+        void CallMember(Func&& func, Inst&& inst, Args&&... args)
+        {
+            PushVariant(std::forward<Inst>(inst));//TODO: PushThisPtr(inst);
+            PushArgs(std::forward<Args>(args)...);
+            FuncCall(GetMemberFuncPtr(func));
+        }
 
     protected:
 
@@ -146,6 +161,9 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         inline void PushVariant(T arg);
     
         template <typename T>
+        inline void PushVariant(T* arg);
+
+        template <typename T>
         inline void PushVariant(const T* arg);
     
         template <typename Arg0>
@@ -188,6 +206,12 @@ inline void JITCompiler::PushVariant(T arg)
             PushQWord(static_cast<std::uint64_t>(arg));
             break;
     }
+}
+
+template <typename T>
+inline void JITCompiler::PushVariant(T* arg)
+{
+    PushPtr(reinterpret_cast<void*>(arg));
 }
 
 template <typename T>
