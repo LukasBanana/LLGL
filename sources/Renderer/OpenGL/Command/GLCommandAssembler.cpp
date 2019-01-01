@@ -154,38 +154,36 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLStateManager::Clear, g_stateMngrArg, cmd->flags);
             return sizeof(*cmd);
         }
-        #if 0 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpcodeClearBuffers:
         {
             auto cmd = reinterpret_cast<const GLCmdClearBuffers*>(pc);
-            stateMngr.ClearBuffers(cmd->numAttachments, reinterpret_cast<const AttachmentClear*>(cmd + 1));
+            compiler.CallMember(&GLStateManager::ClearBuffers, g_stateMngrArg, cmd->numAttachments, (cmd + 1));
             return sizeof(*cmd);
         }
         case GLOpcodeBindVertexArray:
         {
             auto cmd = reinterpret_cast<const GLCmdBindVertexArray*>(pc);
-            stateMngr.BindVertexArray(cmd->vao);
+            compiler.CallMember(&GLStateManager::BindVertexArray, g_stateMngrArg, cmd->vao);
             return sizeof(*cmd);
         }
         case GLOpcodeBindElementArrayBufferToVAO:
         {
             auto cmd = reinterpret_cast<const GLCmdBindElementArrayBufferToVAO*>(pc);
-            stateMngr.BindElementArrayBufferToVAO(cmd->id);
+            compiler.CallMember(&GLStateManager::BindElementArrayBufferToVAO, g_stateMngrArg, cmd->id);
             return sizeof(*cmd);
         }
         case GLOpcodeBindBufferBase:
         {
             auto cmd = reinterpret_cast<const GLCmdBindBufferBase*>(pc);
-            stateMngr.BindBufferBase(cmd->target, cmd->index, cmd->id);
+            compiler.CallMember(&GLStateManager::BindBufferBase, g_stateMngrArg, cmd->target, cmd->index, cmd->id);
             return sizeof(*cmd);
         }
         case GLOpcodeBindBuffersBase:
         {
             auto cmd = reinterpret_cast<const GLCmdBindBuffersBase*>(pc);
-            stateMngr.BindBuffersBase(cmd->target, cmd->first, cmd->count, reinterpret_cast<const GLuint*>(cmd + 1));
+            compiler.CallMember(&GLStateManager::BindBuffersBase, g_stateMngrArg, cmd->target, cmd->first, cmd->count, (cmd + 1));
             return (sizeof(*cmd) + sizeof(GLuint)*cmd->count);
         }
-        #endif // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ /TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpcodeBeginTransformFeedback:
         {
             auto cmd = reinterpret_cast<const GLCmdBeginTransformFeedback*>(pc);
@@ -218,14 +216,12 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLResourceHeap::Bind, cmd->resourceHeap, g_stateMngrArg);
             return sizeof(*cmd);
         }
-        #if 0 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpcodeBindRenderPass:
         {
             auto cmd = reinterpret_cast<const GLCmdBindRenderPass*>(pc);
-            stateMngr.BindRenderPass(*(cmd->renderTarget), cmd->renderPass, cmd->numClearValues, reinterpret_cast<const ClearValue*>(cmd + 1), cmd->defaultClearValue);
+            compiler.CallMember(&GLStateManager::BindRenderPass, g_stateMngrArg, cmd->renderTarget, cmd->renderPass, cmd->numClearValues, (cmd + 1), &(cmd->defaultClearValue));
             return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
         }
-        #endif // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ /TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpcodeBindGraphicsPipeline:
         {
             auto cmd = reinterpret_cast<const GLCmdBindGraphicsPipeline*>(pc);
@@ -368,7 +364,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeDispatchComputeIndirect:
         {
             auto cmd = reinterpret_cast<const GLCmdDispatchComputeIndirect*>(pc);
-            compiler.Call(Wrapper_GLStateManager_BindBuffer, stateMngr, GLBufferTarget::DISPATCH_INDIRECT_BUFFER, cmd->id);
+            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DISPATCH_INDIRECT_BUFFER, cmd->id);
             compiler.Call(glDispatchComputeIndirect, cmd->indirect);
             return sizeof(*cmd);
         }
@@ -386,26 +382,26 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             stateMngr.BindSampler(cmd->slot, cmd->sampler);
             return sizeof(*cmd);
         }
+        #endif // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ /TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         case GLOpcodeUnbindResources:
         {
             auto cmd = reinterpret_cast<const GLCmdUnbindResources*>(pc);
             if (cmd->resetUBO)
-                stateMngr.UnbindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, cmd->first, cmd->count);
+                compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::UNIFORM_BUFFER, cmd->first, cmd->count);
             if (cmd->resetSSAO)
-                stateMngr.UnbindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, cmd->first, cmd->count);
+                compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::SHADER_STORAGE_BUFFER, cmd->first, cmd->count);
             if (cmd->resetTransformFeedback)
-                stateMngr.UnbindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, cmd->first, cmd->count);
+                compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, cmd->first, cmd->count);
             if (cmd->resetTextures)
-                stateMngr.UnbindTextures(cmd->first, cmd->count);
+                compiler.CallMember(&GLStateManager::UnbindTextures, g_stateMngrArg, cmd->first, cmd->count);
             #if 0//TODO
             if (cmd->resetImages)
-                stateMngr.UnbindImages(cmd->first, cmd->count);
+                compiler.CallMember(&GLStateManager::UnbindImages, g_stateMngrArg, cmd->first, cmd->count);
             #endif
             if (cmd->resetSamplers)
-                stateMngr.UnbindSamplers(cmd->first, cmd->count);
+                compiler.CallMember(&GLStateManager::UnbindSamplers, g_stateMngrArg, cmd->first, cmd->count);
             return sizeof(*cmd);
         }
-        #endif // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ /TODO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         default:
             return 0;
     }
