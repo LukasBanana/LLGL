@@ -409,34 +409,36 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
 
 std::unique_ptr<JITProgram> AssembleGLDeferredCommandBuffer(const GLDeferredCommandBuffer& cmdBuffer)
 {
-    auto compiler = JITCompiler::Create();
-    
-    /* Initialize program counter to execute virtual GL commands */
-    const auto& rawBuffer = cmdBuffer.GetRawBuffer();
-    
-    auto pc     = rawBuffer.data();
-    auto pcEnd  = rawBuffer.data() + rawBuffer.size();
-
-    GLOpcode opcode;
-    
-    compiler->EntryPointParams({ JIT::ArgType::Ptr });
-
-    compiler->Begin();
-    
-    while (pc < pcEnd)
+    if (auto compiler = JITCompiler::Create())
     {
-        /* Read opcode */
-        opcode = *reinterpret_cast<const GLOpcode*>(pc);
-        pc += sizeof(GLOpcode);
+        /* Initialize program counter to execute virtual GL commands */
+        const auto& rawBuffer = cmdBuffer.GetRawBuffer();
+        
+        auto pc     = rawBuffer.data();
+        auto pcEnd  = rawBuffer.data() + rawBuffer.size();
 
-        /* Execute command and increment program counter */
-        pc += AssembleGLCommand(opcode, pc, *compiler);
+        GLOpcode opcode;
+        
+        compiler->EntryPointParams({ JIT::ArgType::Ptr });
+
+        compiler->Begin();
+        
+        while (pc < pcEnd)
+        {
+            /* Read opcode */
+            opcode = *reinterpret_cast<const GLOpcode*>(pc);
+            pc += sizeof(GLOpcode);
+
+            /* Execute command and increment program counter */
+            pc += AssembleGLCommand(opcode, pc, *compiler);
+        }
+        
+        compiler->End();
+        
+        /* Build final program */
+        return compiler->FlushProgram();
     }
-    
-    compiler->End();
-    
-    /* Build final program */
-    return compiler->FlushProgram();
+    return nullptr;
 }
 
 

@@ -709,7 +709,7 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
     }
 }
 
-void GLStateManager::BindBuffer(const GLBuffer& buffer)
+void GLStateManager::BindGLBuffer(const GLBuffer& buffer)
 {
     BindBuffer(buffer.GetTarget(), buffer.GetID());
 }
@@ -782,7 +782,7 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
 
 /* ----- Framebuffer ----- */
 
-void GLStateManager::BindRenderTarget(GLRenderTarget* renderTarget)
+void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
 {
     framebufferState_.boundRenderTarget = renderTarget;
     if (renderTarget)
@@ -893,11 +893,6 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
     }
 }
 
-void GLStateManager::BindTexture(const GLTexture& texture)
-{
-    BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
-}
-
 void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures)
 {
     #ifdef GL_ARB_multi_bind
@@ -993,6 +988,11 @@ void GLStateManager::PopBoundTexture()
         BindTexture(state.target, state.texture);
     }
     textureState_.boundTextureStack.pop();
+}
+
+void GLStateManager::BindGLTexture(const GLTexture& texture)
+{
+    BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
 void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target)
@@ -1307,7 +1307,7 @@ void GLStateManager::BindAndBlitRenderTarget(GLRenderTarget& renderTargetGL)
 {
     /* Blit previously bound render target, bind FBO, and notify new render target height */
     BlitBoundRenderTarget();
-    BindRenderTarget(&renderTargetGL);
+    BindGLRenderTarget(&renderTargetGL);
     NotifyRenderTargetHeight(static_cast<GLint>(renderTargetGL.GetResolution().height));
 }
 
@@ -1315,7 +1315,7 @@ void GLStateManager::BindAndBlitRenderContext(GLRenderContext& renderContextGL)
 {
     /* Blit previously bound render target, unbind FBO, and make context current */
     BlitBoundRenderTarget();
-    BindRenderTarget(nullptr);
+    BindGLRenderTarget(nullptr);
     GLRenderContext::GLMakeCurrent(&renderContextGL);
 }
 

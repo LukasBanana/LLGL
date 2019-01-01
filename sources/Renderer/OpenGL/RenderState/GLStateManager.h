@@ -143,7 +143,7 @@ class GLStateManager
 
         void BindVertexArray(GLuint vertexArray);
 
-        void BindBuffer(const GLBuffer& buffer);
+        void BindGLBuffer(const GLBuffer& buffer);
 
         void NotifyVertexArrayRelease(GLuint vertexArray);
 
@@ -161,7 +161,7 @@ class GLStateManager
 
         /* ----- Framebuffer ----- */
 
-        void BindRenderTarget(GLRenderTarget* renderTarget);
+        void BindGLRenderTarget(GLRenderTarget* renderTarget);
         void BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer);
 
         void PushBoundFramebuffer(GLFramebufferTarget target);
@@ -184,14 +184,14 @@ class GLStateManager
         void ActiveTexture(std::uint32_t layer);
 
         void BindTexture(GLTextureTarget target, GLuint texture);
-        void BindTexture(const GLTexture& texture);
-
         void BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures);
         void UnbindTextures(GLuint first, GLsizei count);
 
         void PushBoundTexture(std::uint32_t layer, GLTextureTarget target);
         void PushBoundTexture(GLTextureTarget target);
         void PopBoundTexture();
+
+        void BindGLTexture(const GLTexture& texture);
 
         void NotifyTextureRelease(GLuint texture, GLTextureTarget target);
 

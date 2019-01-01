@@ -610,7 +610,7 @@ void GLImmediateCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, 
 {
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     stateMngr_->ActiveTexture(slot);
-    stateMngr_->BindTexture(textureGL);
+    stateMngr_->BindGLTexture(textureGL);
 }
 
 void GLImmediateCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*stageFlags*/)

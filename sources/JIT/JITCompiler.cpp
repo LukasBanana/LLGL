@@ -46,7 +46,8 @@ std::unique_ptr<JITCompiler> JITCompiler::Create()
     #endif
     
     /* Store meta data */
-    compiler->littleEndian_ = compiler->IsLittleEndian();
+    if (compiler)
+        compiler->littleEndian_ = compiler->IsLittleEndian();
     
     return compiler;
 }

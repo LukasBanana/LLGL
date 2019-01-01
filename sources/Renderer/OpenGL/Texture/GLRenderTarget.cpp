@@ -330,7 +330,7 @@ static GLint GetTexInternalFormat(const GLTexture& textureGL)
 {
     GLint internalFormat = GL_RGBA;
     {
-        GLStateManager::active->BindTexture(textureGL);
+        GLStateManager::active->BindGLTexture(textureGL);
         glGetTexLevelParameteriv(GLTypes::Map(textureGL.GetType()), 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
     }
     return internalFormat;

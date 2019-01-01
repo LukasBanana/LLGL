@@ -362,7 +362,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdBindTexture*>(pc);
             stateMngr.ActiveTexture(cmd->slot);
-            stateMngr.BindTexture(*(cmd->texture));
+            stateMngr.BindGLTexture(*(cmd->texture));
             return sizeof(*cmd);
         }
         case GLOpcodeBindSampler:
