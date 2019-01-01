@@ -10,7 +10,7 @@
 
 
 #include "GLCommandBuffer.h"
-#include "GLCommandOpCode.h"
+#include "GLCommandOpcode.h"
 #include "../RenderState/GLState.h"
 #include "../OpenGL.h"
 #include <memory>
@@ -192,11 +192,11 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void SetResourceHeap(ResourceHeap& resourceHeap);
 
         /* Allocates only an opcode for empty commands */
-        void AllocOpCode(const GLOpCode opcode);
+        void AllocOpCode(const GLOpcode opcode);
 
         /* Allocates a new command and stores the specified opcode */
         template <typename T>
-        T* AllocCommand(const GLOpCode opcode, std::size_t extraSize = 0);
+        T* AllocCommand(const GLOpcode opcode, std::size_t extraSize = 0);
 
     private:
 
