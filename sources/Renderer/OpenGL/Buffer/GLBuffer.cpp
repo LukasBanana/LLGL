@@ -73,7 +73,7 @@ void GLBuffer::BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags
     if (HasExtension(GLExt::ARB_buffer_storage))
     {
         /* Bind and allocate buffer with immutable storage (GL 4.4+) */
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glBufferStorage(GetGLTarget(), size, data, flags);
     }
     else
@@ -112,7 +112,7 @@ void GLBuffer::ClearBufferData(std::uint32_t data)
     #ifdef GL_ARB_clear_buffer_object
     if (HasExtension(GLExt::ARB_clear_buffer_object))
     {
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glClearBufferData(GetGLTarget(), GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &data);
     }
     else
@@ -149,7 +149,7 @@ void GLBuffer::ClearBufferSubData(GLintptr offset, GLsizeiptr size, std::uint32_
     #ifdef GL_ARB_clear_buffer_object
     if (HasExtension(GLExt::ARB_clear_buffer_object))
     {
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glClearBufferSubData(GetGLTarget(), GL_R32UI, offset, size, GL_RED_INTEGER, GL_UNSIGNED_INT, &data);
     }
     else
