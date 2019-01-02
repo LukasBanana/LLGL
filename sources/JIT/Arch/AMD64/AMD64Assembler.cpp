@@ -75,8 +75,10 @@ void AMD64Assembler::Begin()
 {
     #if 0//TEST
     _ForceExcep();
-    PopReg(Reg::RAX);
-    PopReg(Reg::R8);
+    XOrReg(Reg::EAX, Reg::EAX);
+    XOrReg(Reg::EAX, Reg::EBX);
+    XOrReg(Reg::RAX, Reg::RBX);
+    XOrReg(Reg::RDI, Reg::RSI);
     #endif
     
     /* Reset data about local stack */
@@ -99,7 +101,7 @@ void AMD64Assembler::End()
     ApplySupplements();
     
     // TEST: write program to file
-    #if 0
+    #if 1
     {
         std::ofstream f("JITProgram.txt");
         DumpAssembly(f, true);
@@ -510,6 +512,7 @@ void AMD64Assembler::Pop(Reg dstReg)
 
 /* ----- MOV ----- */
 
+// Opcode: 89 /r
 void AMD64Assembler::MovReg(Reg dstReg, Reg srcReg)
 {
     WriteOptREX(dstReg);
@@ -519,15 +522,25 @@ void AMD64Assembler::MovReg(Reg dstReg, Reg srcReg)
 
 void AMD64Assembler::MovRegImm32(Reg dstReg, std::uint32_t dword)
 {
-    WriteByte(Opcode_MovRegImm | RegByte(dstReg));
-    WriteDWord(dword);
+    if (dword != 0)
+    {
+        WriteByte(Opcode_MovRegImm | RegByte(dstReg));
+        WriteDWord(dword);
+    }
+    else
+        XOrReg(dstReg, dstReg);
 }
 
 void AMD64Assembler::MovRegImm64(Reg dstReg, std::uint64_t qword)
 {
-    WriteOptREX(dstReg);
-    WriteByte(Opcode_MovRegImm | RegByte(dstReg));
-    WriteQWord(qword);
+    if (qword != 0)
+    {
+        WriteOptREX(dstReg);
+        WriteByte(Opcode_MovRegImm | RegByte(dstReg));
+        WriteQWord(qword);
+    }
+    else
+        XOrReg(dstReg, dstReg);
 }
 
 void AMD64Assembler::MovMemImm32(Reg dstMemReg, std::uint32_t dword, const Displacement& disp)
@@ -637,11 +650,11 @@ void AMD64Assembler::AddImm32(Reg dst, std::uint32_t dword)
 /* ----- SUB ----- */
 
 // Opcode: 81 /5 id
-void AMD64Assembler::SubImm32(Reg dst, std::uint32_t dword)
+void AMD64Assembler::SubImm32(Reg dstReg, std::uint32_t dword)
 {
-    WriteOptREX(dst);
+    WriteOptREX(dstReg);
     WriteByte(Opcode_SubImm);
-    WriteByte(Operand_Mod11 | (5u << 3) | RegByte(dst));
+    WriteByte(Operand_Mod11 | (5u << 3) | RegByte(dstReg));
     WriteDWord(dword);
 }
 
@@ -649,11 +662,21 @@ void AMD64Assembler::SubImm32(Reg dst, std::uint32_t dword)
 
 // Opcode: F7 /6
 // Divide RDX:RAX -> Quotient: RAX, Remainder: RDX
-void AMD64Assembler::DivReg(Reg src)
+void AMD64Assembler::DivReg(Reg srcReg)
 {
-    WriteOptREX(src);
+    WriteOptREX(srcReg);
     WriteByte(Opcode_DivReg);
-    WriteByte(Operand_Mod11 | (6u << 3) | RegByte(src));
+    WriteByte(Operand_Mod11 | (6u << 3) | RegByte(srcReg));
+}
+
+/* ----- XOR ----- */
+
+// Opcode: 31 /r
+void AMD64Assembler::XOrReg(Reg dstReg, Reg srcReg)
+{
+    WriteOptREX(dstReg);
+    WriteByte(Opcode_XOrMemReg);
+    WriteByte(Operand_Mod11 | RegByte(srcReg) << 3 | RegByte(dstReg));
 }
 
 /* ----- CALL ----- */

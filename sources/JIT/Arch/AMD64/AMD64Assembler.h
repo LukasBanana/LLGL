@@ -90,9 +90,10 @@ class AMD64Assembler final : public JITCompiler
         void MovDQURegMem(Reg dstReg, Reg srcMemReg, const Displacement& disp);
         void MovDQUMemReg(Reg dstMemReg, Reg srcReg, const Displacement& disp);
 
-        void AddImm32(Reg dst, std::uint32_t dword);
-        void SubImm32(Reg dst, std::uint32_t dword);
-        void DivReg(Reg src);
+        void AddImm32(Reg dstReg, std::uint32_t dword);
+        void SubImm32(Reg dstReg, std::uint32_t dword);
+        void DivReg(Reg srcReg);
+        void XOrReg(Reg dstReg, Reg srcReg);
 
         void CallNear(Reg reg);
 

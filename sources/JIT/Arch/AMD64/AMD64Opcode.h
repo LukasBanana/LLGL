@@ -73,6 +73,8 @@ enum Opcode : std::uint8_t
     Opcode_AddImm       = 0x81, // 81 /0 id
     Opcode_SubImm       = 0x81, // 81 /5 id
     Opcode_DivReg       = 0xF7, // F7 /6
+    Opcode_XOrMemReg    = 0x31, // 31 /r
+    Opcode_XOrRegMem    = 0x33, // 33 /r
     Opcode_MovRegImm8   = 0xB0, // B0 +rb ib
     Opcode_MovRegImm    = 0xB8, // [REX.W] B8 +rd id
     Opcode_MovMemImm    = 0xC7, // C7 /0 id
