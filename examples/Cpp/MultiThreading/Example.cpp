@@ -8,27 +8,103 @@
 #include <ExampleBase.h>
 #include <thread>
 #include <mutex>
+#include <chrono>
+#include <iomanip>
 
+
+class Measure
+{
+
+        using Clock     = std::chrono::system_clock;
+        using TimePoint = std::chrono::time_point<Clock>;
+        using Ticks     = std::chrono::milliseconds;
+    
+    public:
+    
+        // Interval (in milliseconds) to the next measurement result.
+        Measure(std::uint64_t interval = 1000, const std::string& title = "Average Time") :
+            timer_    { LLGL::Timer::Create() },
+            interval_ { interval              },
+            title_    { title                 }
+        {
+        }
+    
+        void Start()
+        {
+            // Start timer
+            timer_->Start();
+        }
+    
+        void Stop()
+        {
+            // Take sample
+            elapsed_ += timer_->Stop();
+            ++samples_;
+
+            // Check if average elapsed time can be printed again
+            auto end = Clock::now();
+            auto diff = std::chrono::duration_cast<Ticks>(end - intervalStartTime_);
+            
+            if (diff.count() >= interval_)
+            {
+                Print();
+                intervalStartTime_ = Clock::now();
+            }
+        }
+    
+    private:
+    
+        void Print()
+        {
+            if (samples_ > 0)
+            {
+                auto averageTime = static_cast<double>(elapsed_);
+                averageTime /= static_cast<double>(timer_->GetFrequency());
+                averageTime *= 1000000.0;
+                averageTime /= static_cast<double>(samples_);
+                
+                std::cout << title_ << ": ";
+                std::cout << std::fixed << std::setprecision(6) << averageTime << " µs";
+                std::cout << "         \r";
+                std::flush(std::cout);
+                
+                samples_ = 0;
+                elapsed_ = 0;
+            }
+        }
+    
+    private:
+    
+        std::unique_ptr<LLGL::Timer>    timer_;
+        std::uint64_t                   interval_           = 0;
+        TimePoint                       intervalStartTime_;
+        std::uint64_t                   samples_            = 0;
+        std::uint64_t                   elapsed_            = 0;
+        std::string                     title_;
+    
+};
 
 class Example_MultiThreading : public ExampleBase
 {
 
-    LLGL::ShaderProgram*        shaderProgram       = nullptr;
-    LLGL::Buffer*               vertexBuffer        = nullptr;
-    LLGL::Buffer*               indexBuffer         = nullptr;
-    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
-    LLGL::CommandBuffer*        primaryCmdBuffer    = nullptr;
+    LLGL::ShaderProgram*            shaderProgram       = nullptr;
+    LLGL::Buffer*                   vertexBuffer        = nullptr;
+    LLGL::Buffer*                   indexBuffer         = nullptr;
+    LLGL::PipelineLayout*           pipelineLayout      = nullptr;
+    LLGL::CommandBuffer*            primaryCmdBuffer    = nullptr;
     
-    std::uint32_t               numIndices          = 0;
-    std::mutex                  logMutex;
+    std::uint32_t                   numIndices          = 0;
+    std::mutex                      logMutex;
+    
+    Measure                         measure;
     
     struct Bundle
     {
-        LLGL::GraphicsPipeline* pipeline            = nullptr;
-        LLGL::Buffer*           constantBuffer      = nullptr;
-        LLGL::ResourceHeap*     resourceHeap        = nullptr;
-        LLGL::CommandBuffer*    secondaryCmdBuffer  = nullptr;
-        Gs::Matrix4f            wvpMatrix;
+        LLGL::GraphicsPipeline*     pipeline            = nullptr;
+        LLGL::Buffer*               constantBuffer      = nullptr;
+        LLGL::ResourceHeap*         resourceHeap        = nullptr;
+        LLGL::CommandBuffer*        secondaryCmdBuffer  = nullptr;
+        Gs::Matrix4f                wvpMatrix;
     }
     bundle[2];
 
@@ -95,7 +171,7 @@ private:
             // Set references to shader program, and pipeline layout
             pipelineDesc.shaderProgram              = shaderProgram;
             pipelineDesc.pipelineLayout             = pipelineLayout;
-            //pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
 
             // Enable depth test and writing
             pipelineDesc.depth.testEnabled          = true;
@@ -168,7 +244,7 @@ private:
                 // Clear color- and depth buffers, and set viewport
                 cmdBuffer.Clear(LLGL::ClearFlags::ColorDepth);
                 cmdBuffer.SetViewport(context->GetVideoMode().resolution);
-
+                
                 // Draw scene with secondary command buffers
                 for (auto& bdl : bundle)
                     cmdBuffer.Execute(*bdl.secondaryCmdBuffer);
@@ -251,11 +327,13 @@ private:
             );
         }
     }
-
+    
     void DrawScene()
     {
         // Submit primary command buffer and present result
+        measure.Start();
         commandQueue->Submit(*primaryCmdBuffer);
+        measure.Stop();
         context->Present();
     }
 
