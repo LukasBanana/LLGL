@@ -27,6 +27,7 @@ enum class ArgType
     DWord,
     QWord,
     Ptr,
+    StackPtr,
     Float,
     Double,
 };

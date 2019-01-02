@@ -59,10 +59,10 @@ static const std::size_t g_amd64FltParamsCount = sizeof(g_amd64FltParams)/sizeof
  * Internal functions
  */
 
-// Size of byte (1), word (2), dword (4), qword (8), ptr (8), float (4), double (8)
+// Size of byte (1), word (2), dword (4), qword (8), ptr (8), stack-ptr (8), float (4), double (8)
 static std::uint8_t GetArgSize(const ArgType t)
 {
-    static const std::uint8_t sizes[] = { 1, 2, 4, 8, 8, 4, 8 };
+    static const std::uint8_t sizes[] = { 1, 2, 4, 8, 8, 8, 4, 8 };
     return sizes[static_cast<std::uint8_t>(t)];
 }
 
@@ -85,7 +85,7 @@ void AMD64Assembler::Begin()
     
     /* Write entry point prologue */
     WritePrologue();
-    WriteParams(GetParams());
+    WriteStackFrame(GetEntryVarArgs(), GetStackAllocs());
 }
 
 void AMD64Assembler::End()
@@ -140,13 +140,13 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
         
         if (arg.param < 0xF)
         {
-            if (arg.param < paramDisp_.size())
+            if (arg.param < varArgDisp_.size())
             {
                 /* Move parameter from local stack into destination register */
                 if (IsFltReg(dstReg))
-                    MovDQURegMem(dstReg, Reg::RBP, paramDisp_[arg.param]);
+                    MovDQURegMem(dstReg, Reg::RBP, varArgDisp_[arg.param]);
                 else
-                    MovRegMem(dstReg, Reg::RBP, paramDisp_[arg.param]);
+                    MovRegMem(dstReg, Reg::RBP, varArgDisp_[arg.param]);
             }
         }
         else if (dstReg >= Reg::R8 && dstReg <= Reg::R15)
@@ -173,6 +173,10 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
                     break;
                 case ArgType::Ptr:
                     MovRegImm64(dstReg, arg.value.i64);
+                    break;
+                case ArgType::StackPtr:
+                    MovReg(dstReg, Reg::RBP);
+                    SubImm32(dstReg, stackChunkOffsets_[arg.value.i8]);
                     break;
                 case ArgType::Float:
                     MovSSRegImm32(dstReg, arg.value.f32);
@@ -204,18 +208,6 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
         /* Push argument onto stack */
         switch (arg.type)
         {
-            #if 0
-            case ArgType::Byte:
-                PushImm8(arg.value.i8);
-                break;
-            case ArgType::Word:
-                PushImm16(arg.value.i16);
-                break;
-            case ArgType::DWord:
-            case ArgType::Float:
-                PushImm32(arg.value.i32);
-                break;
-            #else
             case ArgType::Byte:
             case ArgType::Word:
             case ArgType::DWord:
@@ -223,23 +215,20 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
                 MovMemImm32(Reg::RSP, arg.value.i32, stackDisp);
                 stackDisp.disp8 += 8;
                 break;
-            #endif
             case ArgType::QWord:
             case ArgType::Ptr:
             case ArgType::Double:
-                #if 0
-                MovRegImm64(g_amd64TempReg, arg.value.i64);
-                PushReg(g_amd64TempReg);
-                #else
                 MovRegImm64(g_amd64TempReg, arg.value.i64);
                 MovMemReg(Reg::RSP, g_amd64TempReg, stackDisp);
                 stackDisp.disp8 += 8;
-                #endif
+                break;
+            case ArgType::StackPtr:
+                MovReg(g_amd64TempReg, Reg::RBP);
+                SubImm32(g_amd64TempReg, stackChunkOffsets_[arg.value.i8]);
+                MovMemReg(Reg::RSP, g_amd64TempReg, stackDisp);
+                stackDisp.disp8 += 8;
                 break;
         }
-        
-        /* Increase local stack size by register width (8 bytes) */
-        //localStackSize_ += 8;
     }
     
     /* Write 'call' instruction */
@@ -307,15 +296,27 @@ void AMD64Assembler::WriteEpilogue()
     RetNear(paramStackSize_);
 }
 
-void AMD64Assembler::WriteParams(const std::vector<JIT::ArgType>& params)
+void AMD64Assembler::WriteStackFrame(
+    const std::vector<JIT::ArgType>&    varArgTypes,
+    const std::vector<std::uint32_t>&   stackChunks)
 {
-    /* Determine required stack size */
-    std::uint32_t paramSize = 0;
-    for (auto type : params)
-        paramSize += (IsFloat(type) ? 16 : 8);
+    /* Determine required stack size for variadic arguments */
+    std::uint32_t varArgSize = 0;
+    for (auto type : varArgTypes)
+        varArgSize += (IsFloat(type) ? 16 : 8);
+    
+    /* Determine required stack size for allocations */
+    std::uint32_t stackChunksSize = 0;
+    for (auto chunk : stackChunks)
+        stackChunksSize += chunk;
     
     /* Allocate local stack */
-    localStackSize_ += paramSize;
+    localStackSize_ += varArgSize;
+    
+    std::uint32_t chunkStackOffset = localStackSize_ + 8;
+    
+    localStackSize_ += stackChunksSize;
+    
     if (localStackSize_ > 0)
         SubImm32(Reg::RSP, localStackSize_);
     
@@ -324,7 +325,7 @@ void AMD64Assembler::WriteParams(const std::vector<JIT::ArgType>& params)
     std::int8_t paramStackOffset = 16; // first parameter at [EBP+16]
     std::int8_t localStackOffset = -16; // local variables after preserved EBX
     
-    for (auto type : params)
+    for (auto type : varArgTypes)
     {
         bool isFloat = IsFloat(type);
         Reg srcReg = g_amd64TempReg;
@@ -360,11 +361,19 @@ void AMD64Assembler::WriteParams(const std::vector<JIT::ArgType>& params)
         }
         
         /* Store parameter offset within stack frame */
-        paramDisp_.push_back(Disp8{ localStackOffset });
+        varArgDisp_.push_back(Disp8{ localStackOffset });
     }
     
     /* Determine stack base for arguments of subsequent calls */
     argStackBase_.disp8 = localStackOffset;
+    
+    /* Determine stack base for allocated stack chunks */
+    stackChunkOffsets_.reserve(stackChunks.size());
+    for (auto chunk : stackChunks)
+    {
+        chunkStackOffset += static_cast<std::int32_t>(chunk);
+        stackChunkOffsets_.push_back(chunkStackOffset);
+    }
 }
 
 void AMD64Assembler::WriteOptREX(Reg reg, bool defaultsTo64Bit)

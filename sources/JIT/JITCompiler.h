@@ -33,8 +33,14 @@ enum class JITCallConv
     ThisCall,   // '__thiscall' to internal function
 };
 
-// Dummy structure to pass a variadic argument via 'JITCompiler::Call' template function.
+// Structure to pass a variadic argument via 'JITCompiler::Call' template function.
 struct JITVarArg
+{
+    std::uint8_t index;
+};
+
+// Structure to pass a stack pointer via to the 'JITCompiler::Call' template function.
+struct JITStackPtr
 {
     std::uint8_t index;
 };
@@ -59,14 +65,21 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
 
     public:
     
+        // Stores the parameter list of the secified types for the program entry points (must be called before 'Begin').
+        void EntryPointVarArgs(const std::initializer_list<JIT::ArgType>& varArgTypes);
+    
+        // Stores teh stack allocation for the specified amount of bytes, and returns the ID of this allocation (must be called before 'Begin').
+        std::uint8_t StackAlloc(std::uint32_t size);
+
+        // Begins with generating assembly code
         virtual void Begin() = 0;
         virtual void End() = 0;
     
-        // Stores the parameter list of the secified types for the program entry points.
-        void EntryPointParams(const std::initializer_list<JIT::ArgType>& paramTypes);
-    
         // Pushes the entry point parameter, specified by the zero-based index 'idx', to the argument list.
-        void PushParam(std::uint8_t idx);
+        void PushVarArg(std::uint8_t idx);
+    
+        // Pushes the ID of the specified stack allocation, specified by the zero-based index 'idx', to the argument list.
+        void PushStackPtr(std::uint8_t idx);
     
         // Pushes the specified value to the argument list for the next function call.
         void PushPtr(const void* value);
@@ -124,12 +137,16 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         virtual bool IsLittleEndian() const = 0;
         virtual void WriteFuncCall(const void* addr, JITCallConv conv, bool farCall) = 0;
 
+    protected:
+    
         void Write(const void* data, std::size_t size);
         void WriteByte(std::uint8_t data);
         void WriteWord(std::uint16_t data);
         void WriteDWord(std::uint32_t data);
         void WriteQWord(std::uint64_t data);
         void WritePtr(const void* data);
+    
+    protected:
 
         // Returns the assembly code (constant).
         inline const std::vector<std::uint8_t>& GetAssembly() const
@@ -149,10 +166,16 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
             return args_;
         }
     
-        // Returns the list of entry point parameters.
-        inline const std::vector<JIT::ArgType>& GetParams() const
+        // Returns the list of entry point variadic arguments.
+        inline const std::vector<JIT::ArgType>& GetEntryVarArgs() const
         {
-            return params_;
+            return entryVarArgs_;
+        }
+    
+        // Returns the list of stack allocations.
+        inline const std::vector<std::uint32_t>& GetStackAllocs() const
+        {
+            return stackAllocs_;
         }
     
     private:
@@ -181,7 +204,8 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         std::vector<std::uint8_t>   assembly_;
 
         std::vector<JIT::Arg>       args_;
-        std::vector<JIT::ArgType>   params_;
+        std::vector<JIT::ArgType>   entryVarArgs_;
+        std::vector<std::uint32_t>  stackAllocs_;
 
 };
 
@@ -220,22 +244,32 @@ inline void JITCompiler::PushVariant(const T* arg)
     PushPtr(reinterpret_cast<const void*>(arg));
 }
 
+// Template specialization
 template <>
 inline void JITCompiler::PushVariant<float>(float arg)
 {
     PushFloat(arg);
 }
 
+// Template specialization
 template <>
 inline void JITCompiler::PushVariant<double>(double arg)
 {
     PushDouble(arg);
 }
 
+// Template specialization
 template <>
 inline void JITCompiler::PushVariant<JITVarArg>(JITVarArg arg)
 {
-    PushParam(arg.index);
+    PushVarArg(arg.index);
+}
+
+// Template specialization
+template <>
+inline void JITCompiler::PushVariant<JITStackPtr>(JITStackPtr arg)
+{
+    PushStackPtr(arg.index);
 }
 
 template <typename Arg0>

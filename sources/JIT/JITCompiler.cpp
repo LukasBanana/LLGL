@@ -92,21 +92,44 @@ std::unique_ptr<JITProgram> JITCompiler::FlushProgram()
     return nullptr;
 }
 
-void JITCompiler::EntryPointParams(const std::initializer_list<JIT::ArgType>& paramTypes)
+void JITCompiler::EntryPointVarArgs(const std::initializer_list<JIT::ArgType>& varArgTypes)
 {
-    params_.reserve(paramTypes.size());
-    for (auto type : paramTypes)
-        params_.push_back(type);
+    entryVarArgs_.reserve(varArgTypes.size());
+    for (auto type : varArgTypes)
+        entryVarArgs_.push_back(type);
 }
 
-void JITCompiler::PushParam(std::uint8_t idx)
+std::uint8_t JITCompiler::StackAlloc(std::uint32_t size)
 {
-    if (idx < params_.size() && idx < 0xF)
+    auto idx = static_cast<std::uint8_t>(stackAllocs_.size());
+    stackAllocs_.push_back(size);
+    return idx;
+}
+
+void JITCompiler::PushVarArg(std::uint8_t idx)
+{
+    if (idx < entryVarArgs_.size() && idx < 0xF)
     {
         Arg arg;
-        arg.type        = params_[idx];
-        arg.param       = idx;
-        arg.value.i64   = 0;
+        {
+            arg.type        = entryVarArgs_[idx];
+            arg.param       = idx;
+            arg.value.i64   = 0;
+        }
+        args_.push_back(arg);
+    }
+}
+
+void JITCompiler::PushStackPtr(std::uint8_t idx)
+{
+    if (idx < stackAllocs_.size())
+    {
+        Arg arg;
+        {
+            arg.type        = ArgType::StackPtr;
+            arg.param       = 0xF;
+            arg.value.i8    = idx;
+        }
         args_.push_back(arg);
     }
 }
@@ -298,7 +321,7 @@ LLGL_EXPORT void TestJIT1()
     
     auto comp = JITCompiler::Create();
     
-    comp->EntryPointParams({ JIT::ArgType::DWord, JIT::ArgType::Float, JIT::ArgType::Double });
+    comp->EntryPointVarArgs({ JIT::ArgType::DWord, JIT::ArgType::Float, JIT::ArgType::Double });
     
     comp->Begin();
     
@@ -306,7 +329,7 @@ LLGL_EXPORT void TestJIT1()
     #   if 0
     comp->PushDWord(42);
     #   else
-    comp->PushParam(0);
+    comp->PushVarArg(0);
     #   endif
     comp->PushByte(-3);
     comp->PushWord(0x40);
@@ -332,8 +355,8 @@ LLGL_EXPORT void TestJIT1()
     comp->PushFloat(-1.2345f);
     comp->PushDouble(3.14);
     #   else
-    comp->PushParam(1);
-    comp->PushParam(2);
+    comp->PushVarArg(1);
+    comp->PushVarArg(2);
     #   endif
     comp->FuncCall(reinterpret_cast<const void*>(Test2));
     #endif

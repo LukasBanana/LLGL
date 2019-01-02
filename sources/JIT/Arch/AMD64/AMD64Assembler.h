@@ -46,8 +46,11 @@ class AMD64Assembler final : public JITCompiler
         void WritePrologue();
         void WriteEpilogue();
     
-        void WriteParams(const std::vector<JIT::ArgType>& params);
-        
+        void WriteStackFrame(
+            const std::vector<JIT::ArgType>&    varArgTypes,
+            const std::vector<std::uint32_t>&   stackChunks
+        );
+
         void WriteOptREX(Reg reg, bool defaultsTo64Bit = false);
         void WriteOptDisp(const Displacement& disp);
         void WriteOptSIB(Reg reg);
@@ -146,7 +149,10 @@ class AMD64Assembler final : public JITCompiler
         std::vector<Supplement>     supplements_;
     
         // Displacements of parameters within stack frame
-        std::vector<Displacement>   paramDisp_;
+        std::vector<Displacement>   varArgDisp_;
+    
+        // Base pointer offsets of stack allocations
+        std::vector<std::uint32_t>  stackChunkOffsets_;
     
 };
 
