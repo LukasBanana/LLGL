@@ -1,7 +1,7 @@
 // GLSL vertex shader
 #version 450 core
 
-layout(std140, binding = 0) uniform Settings
+layout(std140, binding = 2) uniform Settings
 {
 	mat4 vpMatrix;
 	vec2 animationVector;

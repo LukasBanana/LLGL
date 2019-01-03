@@ -275,9 +275,9 @@ private:
         {
             plDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage,   0u                             },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 1u) },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 2u) },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage,   2u                             },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 3u) },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 4u) },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(plDesc);
@@ -301,12 +301,12 @@ private:
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.depth.testEnabled              = true;
             pipelineDesc.depth.writeEnabled             = true;
+            pipelineDesc.rasterizer.multiSampling       = GetMultiSampleDesc();
         }
         pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Create graphics pipeline with multi-sampling and alpha-to-coverage enabled
         {
-            pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
             pipelineDesc.blend.alphaToCoverageEnabled   = true;
         }
         pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);

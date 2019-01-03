@@ -1,6 +1,6 @@
 // HLSL shader version 4.0 (for Direct3D 11/ 12)
 
-cbuffer Settings : register(b0)
+cbuffer Settings : register(b2)
 {
 	float4x4	vpMatrix;
 	float2		animationVector;
@@ -52,8 +52,8 @@ OutputVS VS(InputVS inp)
 
 // PIXEL SHADER
 
-Texture2DArray tex : register(t1);
-SamplerState texSampler : register(s2);
+Texture2DArray tex : register(t3);
+SamplerState texSampler : register(s4);
 
 float4 PS(OutputVS inp) : SV_Target
 {

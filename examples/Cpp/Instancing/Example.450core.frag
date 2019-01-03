@@ -1,8 +1,8 @@
 // GLSL fragment shader
 #version 450 core
 
-layout(binding = 1) uniform texture2DArray tex;
-layout(binding = 2) uniform sampler texSampler;
+layout(binding = 3) uniform texture2DArray tex;
+layout(binding = 4) uniform sampler texSampler;
 
 // Fragment input from the vertex shader
 layout(location = 0) in vec3 vTexCoord;

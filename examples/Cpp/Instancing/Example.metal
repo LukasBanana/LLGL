@@ -26,18 +26,6 @@ VertexIn;
 
 typedef struct
 {
-    float3      color;
-    float       arrayLayer;
-    float4      wMatrix1;
-    float4      wMatrix2;
-    float4      wMatrix3;
-    float4      wMatrix4;
-    //float4x4    wMatrix;
-}
-InstanceIn;
-
-typedef struct
-{
     float4  position [[position]];
     float3  color;
     float2  texCoord;
@@ -47,8 +35,7 @@ VertexOut;
 
 vertex VertexOut VS(
     VertexIn             vert     [[stage_in]],
-    //constant InstanceIn* inst     [[buffer(1)]],
-    constant Settings&   settings [[buffer(3)]],
+    constant Settings&   settings [[buffer(2)]],
     uint                 instID   [[instance_id]])
 {
     VertexOut outp;
@@ -69,7 +56,6 @@ vertex VertexOut VS(
         vert.wMatrix4
     );
     
-    //outp.position   = settings.vpMatrix * /*inst[instID].wMatrix * */coord;
     outp.position   = settings.vpMatrix * wMatrix * coord;
     outp.texCoord   = vert.texCoord;
     outp.arrayLayer = static_cast<uint>(vert.arrayLayer);
@@ -80,8 +66,8 @@ vertex VertexOut VS(
 
 fragment float4 PS(
     VertexOut               inp [[stage_in]],
-    texture2d_array<float>  tex [[texture(1)]],
-    sampler                 smpl [[sampler(2)]])
+    texture2d_array<float>  tex [[texture(3)]],
+    sampler                 smpl [[sampler(4)]])
 {
     // Sample texture color
     float4 color = tex.sample(smpl, inp.texCoord, inp.arrayLayer);
