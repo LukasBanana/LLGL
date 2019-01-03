@@ -73,14 +73,14 @@ void GLBuffer::BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags
     if (HasExtension(GLExt::ARB_buffer_storage))
     {
         /* Bind and allocate buffer with immutable storage (GL 4.4+) */
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glBufferStorage(GetGLTarget(), size, data, flags);
     }
     else
     #endif // /GL_ARB_buffer_storage
     {
         /* Bind and allocate buffer with mutable storage */
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glBufferData(GetGLTarget(), size, data, usage);
     }
 }
@@ -95,7 +95,7 @@ void GLBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* data)
     else
     #endif // /GL_ARB_direct_state_access
     {
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glBufferSubData(GetGLTarget(), offset, size, data);
     }
 }
@@ -112,14 +112,14 @@ void GLBuffer::ClearBufferData(std::uint32_t data)
     #ifdef GL_ARB_clear_buffer_object
     if (HasExtension(GLExt::ARB_clear_buffer_object))
     {
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glClearBufferData(GetGLTarget(), GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &data);
     }
     else
     #endif // /GL_ARB_clear_buffer_object
     {
         /* Emulate buffer fill operation */
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
 
         /* Query buffer size */
         GLenum  bufferTarget    = GetGLTarget();
@@ -149,14 +149,14 @@ void GLBuffer::ClearBufferSubData(GLintptr offset, GLsizeiptr size, std::uint32_
     #ifdef GL_ARB_clear_buffer_object
     if (HasExtension(GLExt::ARB_clear_buffer_object))
     {
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glClearBufferSubData(GetGLTarget(), GL_R32UI, offset, size, GL_RED_INTEGER, GL_UNSIGNED_INT, &data);
     }
     else
     #endif // /GL_ARB_clear_buffer_object
     {
         /* Emulate buffer fill operation */
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
 
         /* Allocate intermediate buffer to fill the GPU buffer with */
         std::vector<std::uint32_t> intermediateBuffer(static_cast<std::size_t>(size + 3) / 4, data);
@@ -191,11 +191,11 @@ void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset
         auto intermediateBuffer = MakeUniqueArray<char>(size);
 
         /* Read source buffer data */
-        GLStateManager::active->BindBuffer(readBuffer);
+        GLStateManager::active->BindGLBuffer(readBuffer);
         glGetBufferSubData(readBuffer.GetGLTarget(), readOffset, size, intermediateBuffer.get());
 
         /* Write destination buffer data */
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glBufferSubData(GetGLTarget(), writeOffset, size, intermediateBuffer.get());
     }
 }
@@ -210,7 +210,7 @@ void* GLBuffer::MapBuffer(GLenum access)
     else
     #endif // /GL_ARB_direct_state_access
     {
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         return glMapBuffer(GetGLTarget(), access);
     }
 }
@@ -225,7 +225,7 @@ void GLBuffer::UnmapBuffer()
     else
     #endif // /GL_ARB_direct_state_access
     {
-        GLStateManager::active->BindBuffer(*this);
+        GLStateManager::active->BindGLBuffer(*this);
         glUnmapBuffer(GetGLTarget());
     }
 }

@@ -57,6 +57,8 @@ class GLStatePool
     private:
 
         GLStatePool() = default;
+    
+    private:
 
         std::vector<GLDepthStencilStateSPtr>    depthStencilStates_;
         std::vector<GLRasterizerStateSPtr>      rasterizerStates_;

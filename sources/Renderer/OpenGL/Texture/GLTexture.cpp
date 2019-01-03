@@ -76,7 +76,7 @@ Extent3D GLTexture::QueryMipExtent(std::uint32_t mipLevel) const
         GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
         {
             /* Bind texture and query attributes */
-            GLStateManager::active->BindTexture(*this);
+            GLStateManager::active->BindGLTexture(*this);
             auto target = GLGetTextureParamTarget(GetType());
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH,  &texSize[0]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &texSize[1]);
@@ -163,7 +163,7 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
         GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
         {
             /* Bind texture and query attributes */
-            GLStateManager::active->BindTexture(*this);
+            GLStateManager::active->BindGLTexture(*this);
             auto target = GLGetTextureParamTarget(GetType());
 
             if (internalFormat)

@@ -10,11 +10,15 @@
 
 
 #include "GLCommandBuffer.h"
-#include "GLCommandOpCode.h"
+#include "GLCommandOpcode.h"
 #include "../RenderState/GLState.h"
 #include "../OpenGL.h"
 #include <memory>
 #include <vector>
+
+#ifdef LLGL_ENABLE_JIT_COMPILER
+#   include "../../../JIT/JITProgram.h"
+#endif
 
 
 namespace LLGL
@@ -31,7 +35,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
     public:
 
-        GLDeferredCommandBuffer(std::size_t reservedSize = 0);
+        GLDeferredCommandBuffer(long flags, std::size_t reservedSize = 0);
 
         bool IsImmediateCmdBuffer() const override;
 
@@ -152,13 +156,35 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
             long                stageFlags      = StageFlags::AllStages
         ) override;
 
+    public:
+    
         /*  ----- Extended functions ----- */
+    
+        // Returns true if this is a primary command buffer.
+        bool IsPrimary() const;
 
+        // Returns the internal command buffer as raw byte buffer.
         inline const std::vector<std::uint8_t>& GetRawBuffer() const
         {
             return buffer_;
         }
+    
+        // Returns the flags this command buffer was created with.
+        inline long GetFlags() const
+        {
+            return flags_;
+        }
 
+        #ifdef LLGL_ENABLE_JIT_COMPILER
+    
+        // Returns the just-in-time compiled command buffer that can be executed natively, or null if not available.
+        inline const std::unique_ptr<JITProgram>& GetExecutable() const
+        {
+            return executable_;
+        }
+    
+        #endif // /LLGL_ENABLE_JIT_COMPILER
+    
     private:
 
         void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot);
@@ -166,23 +192,23 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void SetResourceHeap(ResourceHeap& resourceHeap);
 
         /* Allocates only an opcode for empty commands */
-        void AllocOpCode(const GLOpCode opcode);
+        void AllocOpCode(const GLOpcode opcode);
 
         /* Allocates a new command and stores the specified opcode */
         template <typename T>
-        T* AllocCommand(const GLOpCode opcode, std::size_t extraSize = 0);
-
-        std::size_t ExecuteCommand(const GLOpCode opcode, const void* pc, GLStateManager& stateMngr);
+        T* AllocCommand(const GLOpcode opcode, std::size_t extraSize = 0);
 
     private:
 
         GLRenderState               renderState_;
         GLClearValue                clearValue_;
 
-        GLRenderTarget*             boundRenderTarget_  = nullptr;
-        std::uint32_t               numDrawBuffers_     = 1;        // number of draw buffers of the active render target
-
+        long                        flags_          = 0;
         std::vector<std::uint8_t>   buffer_;
+    
+        #ifdef LLGL_ENABLE_JIT_COMPILER
+        std::unique_ptr<JITProgram> executable_;
+        #endif
 
 };
 

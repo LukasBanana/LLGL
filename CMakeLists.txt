@@ -92,6 +92,7 @@ endif()
 
 set(SUMMARY_TARGET_PLATFORM "Unknown")
 set(SUMMARY_LIBRARY_TYPE "Unknown")
+set(SUMMARY_TARGET_ARCH "Unknown")
 
 
 # === Options ===
@@ -99,12 +100,15 @@ set(SUMMARY_LIBRARY_TYPE "Unknown")
 if(WIN32)
     set(LLGL_D3D11_ENABLE_FEATURELEVEL "Direct3D 11.0" CACHE STRING "Enable maximum Direct3D 11 feature level (requires <d3d11.h>, <d3d11_1.h>, <d3d11_2.h>, or <d3d11_3.h> header files")
     set_property(CACHE LLGL_D3D11_ENABLE_FEATURELEVEL PROPERTY STRINGS "Direct3D 11.0" "Direct3D 11.1" "Direct3D 11.2" "Direct3D 11.3")
+elseif(APPLE)
+    set(CMAKE_MACOSX_RPATH 1)
 endif()
 
 option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode)" ON)
 option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
 option(LLGL_ENABLE_UTILITY "Enable utility functions (LLGL/Utility.h)" ON)
 option(LLGL_ENABLE_SPIRV_REFLECT "Enable shader reflection of SPIR-V modules (requires the SPIRV submodule)" OFF)
+option(LLGL_ENABLE_JIT_COMPILER "Enables Just-in-Time (JIT) compilation for emulated deferred command buffers (experimental)" OFF)
 
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL extension placeholders" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
@@ -152,6 +156,10 @@ if(LLGL_ENABLE_SPIRV_REFLECT)
     ADD_DEFINE(LLGL_ENABLE_SPIRV_REFLECT)
 endif()
 
+if(LLGL_ENABLE_JIT_COMPILER)
+    ADD_DEFINE(LLGL_ENABLE_JIT_COMPILER)
+endif()
+
 if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
     ADD_DEFINE(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
 endif()
@@ -188,6 +196,17 @@ if(APPLE AND LLGL_BUILD_RENDERER_OPENGL)
     ADD_DEFINE(GL_SILENCE_DEPRECATION)
 endif()
 
+if(MOBILE_PLATFORM)
+	set(ARCH_ARM64 ON)
+	set(SUMMARY_TARGET_ARCH "ARM64")
+elseif(APPLE)
+	set(ARCH_AMD64 ON)
+	set(SUMMARY_TARGET_ARCH "AMD64 (x86-x64)")
+else()
+	set(ARCH_IA32 ON)
+	set(SUMMARY_TARGET_ARCH "IA-32 (x86)")
+endif()
+
 
 # === Global files ===
 
@@ -198,6 +217,22 @@ file(GLOB FilesCore                         ${PROJECT_SOURCE_DIR}/sources/Core/*
 file(GLOB FilesPlatformBase                 ${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
 file(GLOB FilesRenderer                     ${PROJECT_SOURCE_DIR}/sources/Renderer/*.*)
 
+if(LLGL_ENABLE_JIT_COMPILER)
+    file(GLOB FilesJIT                      ${PROJECT_SOURCE_DIR}/sources/JIT/*.*)
+	if(ARCH_IA32)
+		file(GLOB FilesJITArch              ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/IA32/*.*)
+	elseif(ARCH_AMD64)
+		file(GLOB FilesJITArch              ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/AMD64/*.*)
+	elseif(ARCH_ARM64)
+		file(GLOB FilesJITArch              ${PROJECT_SOURCE_DIR}/sources/JIT/Arch/ARM64/*.*)
+	endif()
+    if(WIN32)
+        file(GLOB FilesJITPlatform          ${PROJECT_SOURCE_DIR}/sources/JIT/Platform/Win32/*.*)
+	else()
+        file(GLOB FilesJITPlatform          ${PROJECT_SOURCE_DIR}/sources/JIT/Platform/POSIX/*.*)
+    endif()
+endif()
+
 if(LLGL_ENABLE_DEBUG_LAYER)
     file(GLOB FilesRendererDbg              ${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/*.*)
 endif()
@@ -205,7 +240,6 @@ endif()
 if(WIN32)
     file(GLOB FilesPlatform                 ${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
 elseif(APPLE)
-    set(CMAKE_MACOSX_RPATH 1)
     if(MOBILE_PLATFORM)
         file(GLOB FilesPlatform             ${PROJECT_SOURCE_DIR}/sources/Platform/IOS/*.*)
     else()
@@ -302,6 +336,7 @@ set(FilesTest_Performance ${TestProjectsPath}/Test_Performance.cpp)
 set(FilesTest_Display ${TestProjectsPath}/Test_Display.cpp)
 set(FilesTest_Image ${TestProjectsPath}/Test_Image.cpp)
 set(FilesTest_BlendStates ${TestProjectsPath}/Test_BlendStates.cpp)
+set(FilesTest_JIT ${TestProjectsPath}/Test_JIT.cpp)
 
 # Example project files
 set(ExampleProjectsPath ${PROJECT_SOURCE_DIR}/examples/Cpp)
@@ -321,12 +356,20 @@ set(FilesExample_PostProcessing ${ExampleProjectsPath}/PostProcessing/Example.cp
 set(FilesExample_MultiRenderer ${ExampleProjectsPath}/MultiRenderer/Example.cpp)
 set(FilesExample_ShadowMapping ${ExampleProjectsPath}/ShadowMapping/Example.cpp)
 set(FilesExample_UnorderedAccess ${ExampleProjectsPath}/UnorderedAccess/Example.cpp)
+set(FilesExample_MultiThreading ${ExampleProjectsPath}/MultiThreading/Example.cpp)
 
 
 # === Source group folders ===
 
 source_group("Include" FILES ${FilesInclude})
 source_group("Sources\\Core" FILES ${FilesCore})
+
+if(LLGL_ENABLE_JIT_COMPILER)
+    source_group("Sources\\JIT" FILES ${FilesJIT})
+    source_group("Sources\\JIT\\Arch" FILES ${FilesJITArch})
+    source_group("Sources\\JIT\\Platform" FILES ${FilesJITPlatform})
+endif()
+
 source_group("Include\\Platform" FILES ${FilesIncludePlatformBase} ${FilesIncludePlatform})
 source_group("Sources\\Platform" FILES ${FilesPlatformBase} ${FilesPlatform})
 source_group("Sources\\Renderer" FILES ${FilesRenderer})
@@ -406,6 +449,16 @@ set(
     ${FilesPlatform}
     ${FilesRenderer}
 )
+
+if(LLGL_ENABLE_JIT_COMPILER)
+    set(
+        FilesLLGL
+        ${FilesLLGL}
+        ${FilesJIT}
+        ${FilesJITArch}
+        ${FilesJITPlatform}
+    )
+endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)
     set(FilesLLGL ${FilesLLGL} ${FilesRendererDbg})
@@ -645,6 +698,7 @@ if(GaussLib_INCLUDE_DIR)
         ADD_TEST_PROJECT(Test_Image "${FilesTest_Image}" "${TEST_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Test_BlendStates "${FilesTest_BlendStates}" "${TEST_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Test_Window "${FilesTest_Window}" "${TEST_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Test_JIT "${FilesTest_JIT}" "${TEST_PROJECT_LIBS}")
     endif()
 
     # Example Projects
@@ -670,6 +724,7 @@ if(GaussLib_INCLUDE_DIR)
         ADD_TEST_PROJECT(Example_MultiRenderer "${FilesExample_MultiRenderer}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_ShadowMapping "${FilesExample_ShadowMapping}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_UnorderedAccess "${FilesExample_UnorderedAccess}" "${EXAMPLE_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Example_MultiThreading "${FilesExample_MultiThreading}" "${EXAMPLE_PROJECT_LIBS}")
     endif()
 else()
     if(LLGL_BUILD_TESTS)
@@ -689,7 +744,8 @@ endif()
 message("~~~ Build Summary ~~~")
 
 message("Target Platform: ${SUMMARY_TARGET_PLATFORM}")
-message("Library Type: ${SUMMARY_LIBRARY_TYPE}")
+message("Target Architecture: ${SUMMARY_TARGET_ARCH}")
+message("Target Library: ${SUMMARY_LIBRARY_TYPE}")
 
 set(RENDERER_COUNT 0)
 

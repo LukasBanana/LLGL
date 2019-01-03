@@ -34,7 +34,7 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     auto texture = MakeUnique<GLTexture>(textureDesc.type);
 
     /* Bind texture */
-    GLStateManager::active->BindTexture(*texture);
+    GLStateManager::active->BindGLTexture(*texture);
 
     /* Initialize texture parameters for the first time */
     auto target = GLTypes::Map(textureDesc.type);
@@ -107,7 +107,7 @@ void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
 {
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
+    GLStateManager::active->BindGLTexture(textureGL);
 
     /* Write data into specific texture type */
     switch (texture.GetType())
@@ -173,7 +173,7 @@ void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
     #endif
     {
         /* Bind texture and read image data from texture */
-        GLStateManager::active->BindTexture(textureGL);
+        GLStateManager::active->BindGLTexture(textureGL);
         glGetTexImage(
             GLTypes::Map(textureGL.GetType()),
             static_cast<GLint>(mipLevel),
