@@ -101,7 +101,7 @@ void AMD64Assembler::End()
     ApplySupplements();
     
     // TEST: write program to file
-    #if 1
+    #if 0
     {
         std::ofstream f("JITProgram.txt");
         DumpAssembly(f, true);

@@ -68,6 +68,7 @@ void GLDeferredCommandBuffer::Begin()
 void GLDeferredCommandBuffer::End()
 {
     #ifdef LLGL_ENABLE_JIT_COMPILER
+    /* Generate native assembly only if command buffer will be submitted multiple times */
     if ((GetFlags() & CommandBufferFlags::MultiSubmit) != 0)
         executable_ = AssembleGLDeferredCommandBuffer(*this);
     #endif // /LLGL_ENABLE_JIT_COMPILER
