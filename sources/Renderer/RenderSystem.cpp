@@ -132,7 +132,9 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     #ifdef LLGL_BUILD_STATIC_LIB
 
     /* Allocate render system */
-    auto renderSystem   = std::unique_ptr<RenderSystem>(reinterpret_cast<RenderSystem*>(LLGL_RenderSystem_Alloc()));
+    auto renderSystem = std::unique_ptr<RenderSystem>(
+        reinterpret_cast<RenderSystem*>(LLGL_RenderSystem_Alloc(&renderSystemDesc))
+    );
 
     if (profiler != nullptr || debugger != nullptr)
     {
