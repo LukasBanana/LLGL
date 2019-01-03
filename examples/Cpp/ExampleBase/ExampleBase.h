@@ -115,9 +115,11 @@ private:
     std::map< LLGL::ShaderProgram*,
               ShaderProgramRecall >             shaderPrograms_;
 
-    bool                                        loadingDone_    = false;
+    bool                                        loadingDone_        = false;
 
     static std::string                          rendererModule_;
+    
+    LLGL::MultiSamplingDescriptor               multiSampleDesc_;
 
 protected:
 
@@ -144,6 +146,8 @@ protected:
     const LLGL::RenderingProfiler&              profiler;
 
     Gs::Matrix4f                                projection;
+    
+protected:
 
     ExampleBase(
         const std::wstring&     title,
@@ -239,6 +243,12 @@ protected:
 
     // Returns true if the specified shading language is supported.
     bool Supported(const LLGL::ShadingLanguage shadingLanguage) const;
+    
+    // Returns the multi-sampling descriptor that was used when the render context was created.
+    inline const LLGL::MultiSamplingDescriptor& GetMultiSampleDesc() const
+    {
+        return multiSampleDesc_;
+    }
 
 };
 

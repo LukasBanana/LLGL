@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
             commands->Begin();
             {
                 // Set viewport and scissor rectangle
-                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
+                commands->SetViewport(resolution);
 
                 // Set graphics pipeline
                 commands->SetGraphicsPipeline(*pipeline);

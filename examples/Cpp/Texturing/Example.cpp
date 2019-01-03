@@ -90,9 +90,10 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram      = shaderProgram;
-            pipelineDesc.pipelineLayout     = pipelineLayout;
-            pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.pipelineLayout             = pipelineLayout;
+            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
