@@ -399,9 +399,9 @@ static std::size_t RequiredLocalStackSize(const GLDeferredCommandBuffer& cmdBuff
 {
     std::size_t maxSize = 0;
     
-    maxSize = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS * sizeof(GLViewport);
-    maxSize = std::max(maxSize, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS * sizeof(GLDepthRange));
-    maxSize = std::max(maxSize, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS * sizeof(GLScissor));
+    maxSize = cmdBuffer.GetMaxNumViewports() * sizeof(GLViewport);
+    maxSize = std::max(maxSize, cmdBuffer.GetMaxNumViewports() * sizeof(GLDepthRange));
+    maxSize = std::max(maxSize, cmdBuffer.GetMaxNumScissors() * sizeof(GLScissor));
 
     return maxSize;
 }
@@ -419,9 +419,15 @@ std::unique_ptr<JITProgram> AssembleGLDeferredCommandBuffer(const GLDeferredComm
 
         GLOpcode opcode;
         
+        /* Declare variadic arguments for entry point of JIT program */
         compiler->EntryPointVarArgs({ JIT::ArgType::Ptr });
-        compiler->StackAlloc(static_cast<std::uint32_t>(RequiredLocalStackSize(cmdBuffer)));
+        
+        /* Declare stack allocation for temporary storage (viewports and scissors) */
+        auto stackSize = static_cast<std::uint32_t>(RequiredLocalStackSize(cmdBuffer));
+        if (stackSize > 0)
+            compiler->StackAlloc(stackSize);
 
+        /* Assemble GL commands into JIT program */
         compiler->Begin();
         
         while (pc < pcEnd)

@@ -169,7 +169,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
             return buffer_;
         }
     
-        // Returns the flags this command buffer was created with.
+        // Returns the flags this command buffer was created with (see CommandBufferDescriptor::flags).
         inline long GetFlags() const
         {
             return flags_;
@@ -181,6 +181,18 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         inline const std::unique_ptr<JITProgram>& GetExecutable() const
         {
             return executable_;
+        }
+    
+        // Returns the maximum number of viewports that are set in this command buffer.
+        inline std::uint32_t GetMaxNumViewports() const
+        {
+            return maxNumViewports_;
+        }
+    
+        // Returns the maximum number of scissors that are set in this command buffer.
+        inline std::uint32_t GetMaxNumScissors() const
+        {
+            return maxNumScissors_;
         }
     
         #endif // /LLGL_ENABLE_JIT_COMPILER
@@ -203,12 +215,14 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         GLRenderState               renderState_;
         GLClearValue                clearValue_;
 
-        long                        flags_          = 0;
+        long                        flags_              = 0;
         std::vector<std::uint8_t>   buffer_;
     
         #ifdef LLGL_ENABLE_JIT_COMPILER
         std::unique_ptr<JITProgram> executable_;
-        #endif
+        std::uint32_t               maxNumViewports_    = 0;
+        std::uint32_t               maxNumScissors_     = 0;
+        #endif // /LLGL_ENABLE_JIT_COMPILER
 
 };
 
