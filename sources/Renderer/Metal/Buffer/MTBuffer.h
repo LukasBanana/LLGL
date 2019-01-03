@@ -44,6 +44,7 @@ class MTBuffer : public Buffer
 
         id<MTLBuffer>   native_             = nil;
         bool            indexType16Bits_    = false;
+        bool            isManaged_          = false;
 
 };
 

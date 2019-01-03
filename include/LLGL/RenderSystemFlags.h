@@ -320,6 +320,7 @@ struct RenderSystemDescriptor
     Moreover, the platform dependent file extension is always added automatically
     as well as the prefix "LLGL_", i.e. a module name "OpenGL" will be
     translated to "LLGL_OpenGLD.dll", if compiled on Windows in Debug mode.
+    If LLGL was built with the \c LLGL_BUILD_STATIC_LIB option, this member is ignored.
     */
     std::string moduleName;
 

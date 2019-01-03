@@ -30,13 +30,13 @@ Here is an illustration of the buffer layout for one Texture resouce (at binding
 
 Offset      Attribute                                   Value   Description                                         Segment
 --------------------------------------------------------------------------------------------------------------------------------------------
-0x00000000  MTResourceViewHeapSegment::segmentSize         20   Size of this segment                                \
-0x00000008  MTResourceViewHeapSegment::range::location      4   First binding point                                  |-- Texture segment
-0x0000000C  MTResourceViewHeapSegment::range::length        1   Number of binding points                             |
+0x00000000  MTResourceViewHeapSegment1::segmentSize        20   Size of this segment                                \
+0x00000008  MTResourceViewHeapSegment1::range::location     4   First binding point                                  |-- Texture segment
+0x0000000C  MTResourceViewHeapSegment1::range::length       1   Number of binding points                             |
 0x00000010  texture[0]                                      1   1st Metal texture ID (of type id<MTLTexture>)        /
-0x00000018  MTResourceViewHeapSegment::segmentSize         20   Size of this segment                                \
-0x00000020  MTResourceViewHeapSegment::range::location      5   First binding point                                  |
-0x00000024  MTResourceViewHeapSegment::range::length        2   Number of binding points                             |-- Sampler segment
+0x00000018  MTResourceViewHeapSegment1::segmentSize         20   Size of this segment                                \
+0x00000020  MTResourceViewHeapSegment1::range::location     5   First binding point                                  |
+0x00000024  MTResourceViewHeapSegment1::range::length       2   Number of binding points                             |-- Sampler segment
 0x00000028  sampler[0]                                      1   1st Metal sampler ID (of type id<MTLSamplerState>)   |
 0x00000030  sampler[1]                                      2   2nd Metal sampler ID (of type id<MTLSamplerState>)  /
 
@@ -106,6 +106,7 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
 
     /* Build fragment resource segments */
     static const long fragmentStages = (StageFlags::FragmentStage);
+    
     BuildBufferSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentBufferSegments);
     BuildTextureSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentTextureSegments);
     BuildSamplerSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentSamplerSegments);
@@ -119,6 +120,7 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
 
     /* Build kernel resource segments */
     static const long kernelStages = (StageFlags::ComputeStage | StageFlags::TessControlStage);
+    
     BuildBufferSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelBufferSegments);
     BuildTextureSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelTextureSegments);
     BuildSamplerSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelSamplerSegments);
@@ -320,7 +322,7 @@ void MTResourceHeap::BuildSegment2(MTResourceBindingIter it, NSUInteger count)
         segment->range.length   = count;
     }
 
-    /* Write first part of segment body (of type <GLTextureTarget>) */
+    /* Write first part of segment body (of type <NSUInteger>) */
     auto segmentTargets = reinterpret_cast<NSUInteger*>(&buffer_[startOffset + sizeof(MTResourceViewHeapSegment2)]);
     auto begin = it;
     for (NSUInteger i = 0; i < count; ++i, ++it)
@@ -358,8 +360,8 @@ void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder,
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
         [cmdEncoder
-            setVertexBuffers:       CastToMTLBuffers(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
-            offsets:                reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + segment->offsetEnd0)
+            setVertexBuffers:       CastToMTLBuffers(byteAlignedBuffer + segment->offsetEnd0)
+            offsets:                reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
             withRange:              segment->range
         ];
         byteAlignedBuffer += segment->segmentSize;

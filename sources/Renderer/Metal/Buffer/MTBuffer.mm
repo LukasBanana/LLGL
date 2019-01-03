@@ -26,6 +26,9 @@ MTBuffer::MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const voi
     indexType16Bits_ { (desc.indexBuffer.format == Format::R16UInt) }
 {
     auto opt = GetMTLResourceOptions(desc.miscFlags);
+    
+    isManaged_ = ((opt & MTLResourceStorageModeManaged) != 0);
+    
     if (initialData)
         native_ = [device newBufferWithBytes:initialData length:(NSUInteger)desc.size options:opt];
     else
@@ -49,7 +52,8 @@ void MTBuffer::Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize
     ::memcpy(byteAlignedBuffer + dstOffset, data, dataSize);
     
     /* Notify Metal API about update */
-    [native_ didModifyRange:range];
+    if (isManaged_)
+        [native_ didModifyRange:range];
 }
 
 
