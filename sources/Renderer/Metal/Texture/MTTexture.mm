@@ -57,6 +57,7 @@ MTTexture::MTTexture(id<MTLDevice> device, const TextureDescriptor& desc) :
     MTLTextureDescriptor* texDesc = [[MTLTextureDescriptor alloc] init];
     Convert(texDesc, desc);
     native_ = [device newTextureWithDescriptor:texDesc];
+    [texDesc release];
 }
 
 MTTexture::~MTTexture()

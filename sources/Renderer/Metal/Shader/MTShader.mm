@@ -62,7 +62,6 @@ std::string MTShader::QueryInfoLog()
     {
         NSString* errorMsg = [error_ localizedDescription];
         s = [errorMsg cStringUsingEncoding:NSUTF8StringEncoding];
-        [errorMsg release];
     }
     
     return s;

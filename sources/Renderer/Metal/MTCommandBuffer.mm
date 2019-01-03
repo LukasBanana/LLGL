@@ -228,7 +228,33 @@ void MTCommandBuffer::Clear(long flags)
         
         /* Begin with new render pass to clear buffers */
         renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+        [renderPassDesc release];
+        
         SubmitRenderEncoderState();
+    }
+}
+
+// Fills the MTLRenderPassDescriptor object according to the secified attachment clear command
+static void FillMTRenderPassDesc(MTLRenderPassDescriptor* renderPassDesc, const AttachmentClear& attachment)
+{
+    if ((attachment.flags & ClearFlags::Color) != 0)
+    {
+        /* Clear color buffer */
+        auto colorBuffer = attachment.colorAttachment;
+        renderPassDesc.colorAttachments[colorBuffer].loadAction = MTLLoadActionClear;
+        renderPassDesc.colorAttachments[colorBuffer].clearColor = ToMTLClearColor(attachment.clearValue.color);
+    }
+    else if ((attachment.flags & ClearFlags::Depth) != 0)
+    {
+        /* Clear depth buffer */
+        renderPassDesc.depthAttachment.loadAction = MTLLoadActionClear;
+        renderPassDesc.depthAttachment.clearDepth = static_cast<double>(attachment.clearValue.depth);
+    }
+    else if ((attachment.flags & ClearFlags::Stencil) != 0)
+    {
+        /* Clear stencil buffer */
+        renderPassDesc.stencilAttachment.loadAction     = MTLLoadActionClear;
+        renderPassDesc.stencilAttachment.clearStencil   = attachment.clearValue.stencil;
     }
 }
 
@@ -242,31 +268,13 @@ void MTCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
         /* Make new render pass descriptor with current clear values */
         auto renderPassDesc = (MTLRenderPassDescriptor*)[renderPassDesc_ copy];
         
-        for (NSUInteger i = 0, n = static_cast<NSUInteger>(numAttachments); i < n; ++i)
-        {
-            if ((attachments[i].flags & ClearFlags::Color) != 0)
-            {
-                /* Clear color buffer */
-                auto colorBuffer = attachments[i].colorAttachment;
-                renderPassDesc.colorAttachments[colorBuffer].loadAction = MTLLoadActionClear;
-                renderPassDesc.colorAttachments[colorBuffer].clearColor = ToMTLClearColor(attachments[i].clearValue.color);
-            }
-            else if ((attachments[i].flags & ClearFlags::Depth) != 0)
-            {
-                /* Clear depth buffer */
-                renderPassDesc.depthAttachment.loadAction = MTLLoadActionClear;
-                renderPassDesc.depthAttachment.clearDepth = static_cast<double>(attachments[i].clearValue.depth);
-            }
-            else if ((attachments[i].flags & ClearFlags::Stencil) != 0)
-            {
-                /* Clear stencil buffer */
-                renderPassDesc.stencilAttachment.loadAction     = MTLLoadActionClear;
-                renderPassDesc.stencilAttachment.clearStencil   = attachments[i].clearValue.stencil;
-            }
-        }
+        for (std::uint32_t i = 0; i < numAttachments; ++i)
+            FillMTRenderPassDesc(renderPassDesc, attachments[i]);
         
         /* Begin with new render pass to clear buffers */
         renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+        [renderPassDesc release];
+        
         SubmitRenderEncoderState();
     }
 }

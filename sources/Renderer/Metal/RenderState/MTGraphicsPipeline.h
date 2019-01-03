@@ -48,6 +48,11 @@ class MTGraphicsPipeline : public GraphicsPipeline
         }
 
     private:
+    
+        void CreateRenderPipelineState(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc);
+        void CreateDepthStencilState(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc);
+    
+    private:
 
         id<MTLRenderPipelineState>  renderPipelineState_    = nil;
         id<MTLDepthStencilState>    depthStencilState_      = nil;

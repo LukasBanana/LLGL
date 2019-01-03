@@ -241,6 +241,8 @@ void MTShaderProgram::ReflectRenderPipeline(ShaderReflectionDescriptor& reflecti
         reflection:                             &psoReflect
         error:                                  &error
     ];
+    
+    [pipelineDesc release];
  
     for (MTLArgument* arg in psoReflect.vertexArguments)
         ReflectShaderArgument(arg, reflection);

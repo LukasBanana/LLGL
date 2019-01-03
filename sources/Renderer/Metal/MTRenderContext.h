@@ -54,6 +54,8 @@ class MTRenderContext : public RenderContext
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
+    private:
+    
         MTKView*                view_       = nullptr;
         id<MTLCommandBuffer>    cmdBuffer_  = nil;
 

@@ -31,6 +31,25 @@ static void MTThrowIfFailed(NSError* error, const char* info)
     }
 }
 
+static void MTThrowIfCreateFailed(NSError* error, const char* interfaceName, const char* contextInfo = nullptr)
+{
+    if (error != nullptr)
+    {
+        std::string s;
+        {
+            s = "failed to create instance of <";
+            s += interfaceName;
+            s += '>';
+            if (contextInfo != nullptr)
+            {
+                s += ' ';
+                s += contextInfo;
+            }
+        }
+        MTThrowIfFailed(error, s.c_str());
+    }
+}
+
 static BOOL MTBoolean(bool value)
 {
     return (value ? YES : NO);
@@ -46,16 +65,38 @@ static void Convert(MTLStencilDescriptor* dst, const StencilFaceDescriptor& src)
     dst.writeMask                   = src.writeMask;
 }
 
+static void FillDefaultMTStencilDesc(MTLStencilDescriptor* dst)
+{
+    dst.stencilFailureOperation     = MTLStencilOperationKeep;
+    dst.depthFailureOperation       = MTLStencilOperationKeep;
+    dst.depthStencilPassOperation   = MTLStencilOperationKeep;
+    dst.stencilCompareFunction      = MTLCompareFunctionAlways;
+    dst.readMask                    = 0;
+    dst.writeMask                   = 0;
+}
+
 MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
+{
+    /* Convert standalone parameters */
+    primitiveType_ = MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
+
+    /* Create render pipeline and depth-stencil states */
+    CreateRenderPipelineState(device, desc);
+    CreateDepthStencilState(device, desc);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void MTGraphicsPipeline::CreateRenderPipelineState(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
 {
     /* Get native shader functions */
     auto shaderProgramMT = LLGL_CAST(const MTShaderProgram*, desc.shaderProgram);
     if (!shaderProgramMT)
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
     
-    /* Convert standalone parameters */
-    primitiveType_ = MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
-
     /* Create render pipeline state */
     MTLRenderPipelineDescriptor* renderPipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
     {
@@ -81,11 +122,14 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
     }
     NSError* error = nullptr;
     renderPipelineState_ = [device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error];
+    [renderPipelineDesc release];
     
     if (!renderPipelineState_)
-        MTThrowIfFailed(error, "creating Metal render pipeline state failed");
-    
-    /* Create depth-stencil state */
+        MTThrowIfCreateFailed(error, "MTLRenderPipelineState");
+}
+
+void MTGraphicsPipeline::CreateDepthStencilState(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
+{
     MTLDepthStencilDescriptor* depthStencilDesc = [[MTLDepthStencilDescriptor alloc] init];
     {
         /* Convert depth descriptor */
@@ -96,11 +140,20 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
             depthStencilDesc.depthCompareFunction   = MTLCompareFunctionAlways;
         
         /* Convert stencil descriptor */
-       Convert(depthStencilDesc.frontFaceStencil, desc.stencil.front);
-       Convert(depthStencilDesc.backFaceStencil, desc.stencil.back);
-       stencilRef_ = desc.stencil.front.reference;
+        if (desc.stencil.testEnabled)
+        {
+            Convert(depthStencilDesc.frontFaceStencil, desc.stencil.front);
+            Convert(depthStencilDesc.backFaceStencil, desc.stencil.back);
+        }
+        else
+        {
+            FillDefaultMTStencilDesc(depthStencilDesc.frontFaceStencil);
+            FillDefaultMTStencilDesc(depthStencilDesc.backFaceStencil);
+        }
+        stencilRef_ = desc.stencil.front.reference;
     }
     depthStencilState_ = [device newDepthStencilStateWithDescriptor:depthStencilDesc];
+    [depthStencilDesc release];
 }
 
 

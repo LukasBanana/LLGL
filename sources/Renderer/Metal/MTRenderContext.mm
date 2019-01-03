@@ -65,6 +65,7 @@ MTRenderContext::MTRenderContext(
     /* Initialize color and depth buffer */
     view_.colorPixelFormat          = GetColorMTLPixelFormat(desc.videoMode.colorBits);
     view_.depthStencilPixelFormat   = GetDepthStencilMTLPixelFormat(desc.videoMode.depthBits, desc.videoMode.stencilBits);
+    view_.sampleCount               = desc.multiSampling.SampleCount();
     
     if (desc.vsync.enabled)
         view_.preferredFramesPerSecond = static_cast<NSInteger>(desc.vsync.refreshRate);
@@ -74,6 +75,7 @@ void MTRenderContext::Present()
 {
     [cmdBuffer_ presentDrawable:view_.currentDrawable];
     [cmdBuffer_ commit];
+    [view_ draw]; //really required???
 }
 
 Format MTRenderContext::QueryColorFormat() const
