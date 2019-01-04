@@ -346,6 +346,65 @@ MTLStencilOperation ToMTLStencilOperation(const StencilOp stencilOp)
     MapFailed("StencilOp", "MTLStencilOperation");
 }
 
+MTLLoadAction ToMTLLoadAction(const AttachmentLoadOp loadOp)
+{
+    switch (loadOp)
+    {
+        case AttachmentLoadOp::Undefined:   return MTLLoadActionDontCare;
+        case AttachmentLoadOp::Load:        return MTLLoadActionLoad;
+        case AttachmentLoadOp::Clear:       return MTLLoadActionClear;
+    }
+    MapFailed("AttachmentLoadOp", "MTLLoadAction");
+}
+
+MTLStoreAction ToMTLStoreAction(const AttachmentStoreOp storeOp)
+{
+    switch (storeOp)
+    {
+        case AttachmentStoreOp::Undefined:  return MTLStoreActionDontCare;
+        case AttachmentStoreOp::Store:      return MTLStoreActionStore;
+    }
+    MapFailed("AttachmentStoreOp", "MTLStoreAction");
+}
+
+MTLBlendOperation ToMTLBlendOperation(const BlendArithmetic blendArithmetic)
+{
+    switch (blendArithmetic)
+    {
+        case BlendArithmetic::Add:          return MTLBlendOperationAdd;
+        case BlendArithmetic::Subtract:     return MTLBlendOperationSubtract;
+        case BlendArithmetic::RevSubtract:  return MTLBlendOperationReverseSubtract;
+        case BlendArithmetic::Min:          return MTLBlendOperationMin;
+        case BlendArithmetic::Max:          return MTLBlendOperationMax;
+    }
+    MapFailed("BlendArithmetic", "MTLBlendOperation");
+}
+
+MTLBlendFactor ToMTLBlendFactor(const BlendOp blendOp)
+{
+    switch (blendOp)
+    {
+        case BlendOp::Zero:             return MTLBlendFactorZero;
+        case BlendOp::One:              return MTLBlendFactorOne;
+        case BlendOp::SrcColor:         return MTLBlendFactorSourceColor;
+        case BlendOp::InvSrcColor:      return MTLBlendFactorOneMinusSourceColor;
+        case BlendOp::SrcAlpha:         return MTLBlendFactorSourceAlpha;
+        case BlendOp::InvSrcAlpha:      return MTLBlendFactorOneMinusSourceAlpha;
+        case BlendOp::DstColor:         return MTLBlendFactorDestinationColor;
+        case BlendOp::InvDstColor:      return MTLBlendFactorOneMinusDestinationColor;
+        case BlendOp::DstAlpha:         return MTLBlendFactorDestinationAlpha;
+        case BlendOp::InvDstAlpha:      return MTLBlendFactorOneMinusDestinationAlpha;
+        case BlendOp::SrcAlphaSaturate: return MTLBlendFactorSourceAlphaSaturated;
+        case BlendOp::BlendFactor:      return MTLBlendFactorBlendColor;
+        case BlendOp::InvBlendFactor:   return MTLBlendFactorOneMinusBlendColor;
+        case BlendOp::Src1Color:        return MTLBlendFactorSource1Color;
+        case BlendOp::InvSrc1Color:     return MTLBlendFactorOneMinusSource1Color;
+        case BlendOp::Src1Alpha:        return MTLBlendFactorSource1Alpha;
+        case BlendOp::InvSrc1Alpha:     return MTLBlendFactorOneMinusSource1Alpha;
+    }
+    MapFailed("BlendOp", "MTLBlendFactor");
+}
+
 Format ToFormat(const MTLPixelFormat pixelFormat)
 {
     switch (pixelFormat)

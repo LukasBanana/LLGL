@@ -19,6 +19,8 @@ namespace LLGL
 {
 
 
+class MTRenderTarget;
+
 class MTCommandBuffer : public CommandBufferExt
 {
 

@@ -14,6 +14,7 @@
 #include "RenderState/MTResourceHeap.h"
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
+#include "Texture/MTRenderTarget.h"
 #include "../CheckedCast.h"
 #include <algorithm>
 
@@ -284,6 +285,7 @@ void MTCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
 void MTCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    
     if (renderEncoder_ != nil)
     {
         [renderEncoder_
@@ -292,20 +294,20 @@ void MTCommandBuffer::SetVertexBuffer(Buffer& buffer)
             atIndex:            0
         ];
     }
-    else
-    {
-        renderEncoderState_.vertexBuffer0               = bufferMT.GetNative();
-        renderEncoderState_.vertexBuffers               = &(renderEncoderState_.vertexBuffer0);
-        renderEncoderState_.vertexBufferOffset0         = 0;
-        renderEncoderState_.vertexBufferOffsets         = &(renderEncoderState_.vertexBufferOffset0);
-        renderEncoderState_.vertexBufferRange.location  = 0;
-        renderEncoderState_.vertexBufferRange.length    = 1;
-    }
+    
+    //TODO: enhance buffer cache
+    renderEncoderState_.vertexBuffer0               = bufferMT.GetNative();
+    renderEncoderState_.vertexBuffers               = &(renderEncoderState_.vertexBuffer0);
+    renderEncoderState_.vertexBufferOffset0         = 0;
+    renderEncoderState_.vertexBufferOffsets         = &(renderEncoderState_.vertexBufferOffset0);
+    renderEncoderState_.vertexBufferRange.location  = 0;
+    renderEncoderState_.vertexBufferRange.length    = 1;
 }
 
 void MTCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayMT = LLGL_CAST(MTBufferArray&, bufferArray);
+    
     if (renderEncoder_ != nil)
     {
         [renderEncoder_
@@ -314,13 +316,12 @@ void MTCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
             withRange:          NSMakeRange(0, static_cast<NSUInteger>(bufferArrayMT.GetIDArray().size()))
         ];
     }
-    else
-    {
-        renderEncoderState_.vertexBuffers               = bufferArrayMT.GetIDArray().data();
-        renderEncoderState_.vertexBufferOffsets         = bufferArrayMT.GetOffsets().data();
-        renderEncoderState_.vertexBufferRange.location  = 0;
-        renderEncoderState_.vertexBufferRange.length    = static_cast<NSUInteger>(bufferArrayMT.GetIDArray().size());
-    }
+    
+    //TODO: enhance buffer cache
+    renderEncoderState_.vertexBuffers               = bufferArrayMT.GetIDArray().data();
+    renderEncoderState_.vertexBufferOffsets         = bufferArrayMT.GetOffsets().data();
+    renderEncoderState_.vertexBufferRange.location  = 0;
+    renderEncoderState_.vertexBufferRange.length    = static_cast<NSUInteger>(bufferArrayMT.GetIDArray().size());
 }
 
 void MTCommandBuffer::SetIndexBuffer(Buffer& buffer)
@@ -396,7 +397,9 @@ void MTCommandBuffer::BeginRenderPass(
     }
     else
     {
-        //TODO
+        /* Get render pass descriptor from render target */
+        auto& renderTargetMT = LLGL_CAST(MTRenderTarget&, renderTarget);
+        renderPassDesc_ = renderTargetMT.GetNative();
     }
     
     /* Build render pass descriptor */

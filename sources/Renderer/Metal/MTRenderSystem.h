@@ -24,12 +24,14 @@
 #include "RenderState/MTGraphicsPipeline.h"
 #include "RenderState/MTPipelineLayout.h"
 #include "RenderState/MTResourceHeap.h"
+#include "RenderState/MTRenderPass.h"
 
 #include "Shader/MTShader.h"
 #include "Shader/MTShaderProgram.h"
 
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
+#include "Texture/MTRenderTarget.h"
 
 
 namespace LLGL
@@ -164,7 +166,8 @@ class MTRenderSystem : public RenderSystem
         HWObjectContainer<MTBufferArray>        bufferArrays_;
         HWObjectContainer<MTTexture>            textures_;
         HWObjectContainer<MTSampler>            samplers_;
-        //HWObjectContainer<MTRenderTarget>       renderTargets_;
+        HWObjectContainer<MTRenderPass>         renderPasses_;
+        HWObjectContainer<MTRenderTarget>       renderTargets_;
         HWObjectContainer<MTShader>             shaders_;
         HWObjectContainer<MTShaderProgram>      shaderPrograms_;
         HWObjectContainer<MTPipelineLayout>     pipelineLayouts_;

@@ -14,8 +14,9 @@
 #include <LLGL/Types.h>
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
-#include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/ResourceHeapFlags.h>
+#include <LLGL/RenderPassFlags.h>
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
 //#include <LLGL/QueryHeapFlags.h>
@@ -41,6 +42,10 @@ MTLSamplerMinMagFilter  	ToMTLSamplerMinMagFilter    ( const SamplerFilter      
 MTLSamplerMipFilter         ToMTLSamplerMipFilter       ( const SamplerFilter       filter            );
 MTLTriangleFillMode         ToMTLTriangleFillMode       ( const PolygonMode         polygonMode       );
 MTLStencilOperation         ToMTLStencilOperation       ( const StencilOp           stencilOp         );
+MTLLoadAction               ToMTLLoadAction             ( const AttachmentLoadOp    loadOp            );
+MTLStoreAction              ToMTLStoreAction            ( const AttachmentStoreOp   storeOp           );
+MTLBlendOperation           ToMTLBlendOperation         ( const BlendArithmetic     blendArithmetic   );
+MTLBlendFactor              ToMTLBlendFactor            ( const BlendOp             blendOp           );
 
 Format                      ToFormat                    ( const MTLPixelFormat      pixelFormat       );
 

@@ -360,9 +360,9 @@ void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder,
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
         [cmdEncoder
-            setVertexBuffers:       CastToMTLBuffers(byteAlignedBuffer + segment->offsetEnd0)
-            offsets:                reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
-            withRange:              segment->range
+            setVertexBuffers:   CastToMTLBuffers(byteAlignedBuffer + segment->offsetEnd0)
+            offsets:            reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
+            withRange:          segment->range
         ];
         byteAlignedBuffer += segment->segmentSize;
     }
@@ -372,8 +372,8 @@ void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder,
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
         [cmdEncoder
-            setVertexTextures:      CastToMTLTextures(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
-            withRange:              segment->range
+            setVertexTextures:  CastToMTLTextures(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
+            withRange:          segment->range
         ];
         byteAlignedBuffer += segment->segmentSize;
     }
@@ -397,9 +397,9 @@ void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncode
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
         [cmdEncoder
-            setFragmentBuffers:     	CastToMTLBuffers(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
-            offsets:                    reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + segment->offsetEnd0)
-            withRange:                  segment->range
+            setFragmentBuffers: CastToMTLBuffers(byteAlignedBuffer + segment->offsetEnd0)
+            offsets:            reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
+            withRange:          segment->range
         ];
         byteAlignedBuffer += segment->segmentSize;
     }
@@ -409,8 +409,8 @@ void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncode
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
         [cmdEncoder
-            setFragmentTextures:        CastToMTLTextures(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
-            withRange:                  segment->range
+            setFragmentTextures:    CastToMTLTextures(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
+            withRange:              segment->range
         ];
         byteAlignedBuffer += segment->segmentSize;
     }
@@ -434,9 +434,9 @@ void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
         [cmdEncoder
-            setBuffers:         CastToMTLBuffers(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
-            offsets:            reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + segment->offsetEnd0)
-            withRange:          segment->range
+            setBuffers: CastToMTLBuffers(byteAlignedBuffer + segment->offsetEnd0)
+            offsets:    reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
+            withRange:  segment->range
         ];
         byteAlignedBuffer += segment->segmentSize;
     }
@@ -446,8 +446,8 @@ void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
         [cmdEncoder
-            setTextures:        CastToMTLTextures(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
-            withRange:          segment->range
+            setTextures:    CastToMTLTextures(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
+            withRange:      segment->range
         ];
         byteAlignedBuffer += segment->segmentSize;
     }

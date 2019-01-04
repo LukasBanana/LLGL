@@ -9,7 +9,7 @@
 
 
 // Enable multi-sampling
-#define ENABLE_MULTISAMPLING
+//#define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
 //#define ENABLE_CUSTOM_MULTISAMPLING
@@ -76,10 +76,7 @@ public:
         CreateColorMap();
         CreateRenderTarget();
         CreatePipelines();
-
-        #ifndef __APPLE__
         CreateResourceHeaps();
-        #endif
 
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
@@ -147,6 +144,16 @@ private:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" },
+                    { LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" }
+                },
+                { vertexFormat }
+            );
+        }
     }
 
     void CreatePipelines()
@@ -158,7 +165,7 @@ private:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,   LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0                           },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,   LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 3                           },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,  0,                               LLGL::StageFlags::FragmentStage,                                 1                           },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u) },
               //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 3                           },
@@ -179,10 +186,7 @@ private:
 
             // Enable culling of back-facing polygons
             pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-
-            #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
-            #endif
+            pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
         }
         pipelines[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
@@ -190,6 +194,12 @@ private:
         {
             pipelineDesc.renderPass = renderTarget->GetRenderPass();
             pipelineDesc.viewports  = { LLGL::Viewport{ { 0, 0 }, renderTarget->GetResolution() } };
+            
+            #ifdef ENABLE_MULTISAMPLING
+            pipelineDesc.rasterizer.multiSampling = LLGL::MultiSamplingDescriptor{ 8 };
+            #else
+            pipelineDesc.rasterizer.multiSampling = LLGL::MultiSamplingDescriptor{ 0 };
+            #endif
 
             if (IsOpenGL())
             {
@@ -415,7 +425,7 @@ private:
             // Set viewport to fullscreen.
             // Note: this must be done AFTER the respective graphics pipeline has been set,
             //       since the previous pipeline has no dynamic viewport!
-            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
+            commands->SetViewport(context->GetResolution());
 
             // Generate MIP-maps again after texture has been written by the render-target
             renderer->GenerateMips(*renderTargetTex);

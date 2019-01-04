@@ -178,24 +178,24 @@ void MTRenderSystem::Release(ResourceHeap& resourceHeap)
 RenderPass* MTRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
 {
     AssertCreateRenderPass(desc);
-    return nullptr;//return TakeOwnership(renderPasses_, MakeUnique<MTRenderPass>(desc));
+    return TakeOwnership(renderPasses_, MakeUnique<MTRenderPass>(desc));
 }
 
 void MTRenderSystem::Release(RenderPass& renderPass)
 {
-    //RemoveFromUniqueSet(renderPasses_, &renderPass);
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
 }
 
 /* ----- Render Targets ----- */
 
 RenderTarget* MTRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(renderTargets_, MakeUnique<MTRenderTarget>(device_, desc));
 }
 
 void MTRenderSystem::Release(RenderTarget& renderTarget)
 {
-    //todo
+    RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
 /* ----- Shader ----- */

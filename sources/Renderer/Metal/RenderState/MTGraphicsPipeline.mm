@@ -6,9 +6,10 @@
  */
 
 #include "MTGraphicsPipeline.h"
-#include "../../CheckedCast.h"
+#include "MTRenderPass.h"
 #include "../Shader/MTShaderProgram.h"
 #include "../MTTypes.h"
+#include "../../CheckedCast.h"
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <string>
 #include <stdexcept>
@@ -90,6 +91,44 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
  * ======= Private: =======
  */
 
+static MTLColorWriteMask ToMTLColorWriteMask(const ColorRGBAb& color)
+{
+    MTLColorWriteMask mask = MTLColorWriteMaskNone;
+    
+    if (color.r)
+        mask |= MTLColorWriteMaskRed;
+    if (color.g)
+        mask |= MTLColorWriteMaskGreen;
+    if (color.b)
+        mask |= MTLColorWriteMaskBlue;
+    if (color.a)
+        mask |= MTLColorWriteMaskAlpha;
+
+    return mask;
+}
+
+static void FillColorAttachmentDesc(
+    MTLRenderPipelineColorAttachmentDescriptor* dst,
+    MTLPixelFormat                              pixelFormat,
+    const BlendDescriptor&                      blendDesc,
+    const BlendTargetDescriptor&                targetDesc)
+{
+    /* Render pipeline state */
+    dst.pixelFormat                 = pixelFormat;
+    dst.writeMask                   = ToMTLColorWriteMask(targetDesc.colorMask);
+    
+    /* Controlling blend operation */
+    dst.blendingEnabled             = (targetDesc.blendEnabled ? YES : NO);
+    dst.alphaBlendOperation         = MTTypes::ToMTLBlendOperation(targetDesc.colorArithmetic);
+    dst.rgbBlendOperation           = MTTypes::ToMTLBlendOperation(targetDesc.alphaArithmetic);
+    
+    /* Blend factors */
+    dst.destinationAlphaBlendFactor = MTTypes::ToMTLBlendFactor(targetDesc.dstAlpha);
+    dst.destinationRGBBlendFactor   = MTTypes::ToMTLBlendFactor(targetDesc.dstColor);
+    dst.sourceAlphaBlendFactor      = MTTypes::ToMTLBlendFactor(targetDesc.srcAlpha);
+    dst.sourceRGBBlendFactor        = MTTypes::ToMTLBlendFactor(targetDesc.srcColor);
+}
+
 void MTGraphicsPipeline::CreateRenderPipelineState(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
 {
     /* Get native shader functions */
@@ -107,10 +146,35 @@ void MTGraphicsPipeline::CreateRenderPipelineState(id<MTLDevice> device, const G
         renderPipelineDesc.vertexFunction           = shaderProgramMT->GetVertexMTLFunction();
         renderPipelineDesc.inputPrimitiveTopology   = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
         
-        //TODO: get pixel formats from render target or render context
-        renderPipelineDesc.colorAttachments[0].pixelFormat  = MTLPixelFormatBGRA8Unorm;
-        renderPipelineDesc.depthAttachmentPixelFormat       = MTLPixelFormatDepth32Float_Stencil8;
-        renderPipelineDesc.stencilAttachmentPixelFormat     = MTLPixelFormatDepth32Float_Stencil8;
+        if (auto renderPass = desc.renderPass)
+        {
+            /* Initialize pixel formats from render pass */
+            auto renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
+            const auto& colorAttachments = renderPassMT->GetColorAttachments();
+            for (std::size_t i = 0, n = std::min(colorAttachments.size(), std::size_t(8u)); i < n; ++i)
+            {
+                FillColorAttachmentDesc(
+                    renderPipelineDesc.colorAttachments[i],
+                    colorAttachments[i].pixelFormat,
+                    desc.blend,
+                    desc.blend.targets[desc.blend.independentBlendEnabled ? i : 0]
+                );
+            };
+            renderPipelineDesc.depthAttachmentPixelFormat       = renderPassMT->GetDepthAttachment().pixelFormat;
+            renderPipelineDesc.stencilAttachmentPixelFormat     = renderPassMT->GetStencilAttachment().pixelFormat;
+        }
+        else
+        {
+            /* Initialize with default formats */
+            FillColorAttachmentDesc(
+                renderPipelineDesc.colorAttachments[0],
+                MTLPixelFormatBGRA8Unorm,
+                desc.blend,
+                desc.blend.targets[0]
+            );
+            renderPipelineDesc.depthAttachmentPixelFormat       = MTLPixelFormatDepth32Float_Stencil8;
+            renderPipelineDesc.stencilAttachmentPixelFormat     = MTLPixelFormatDepth32Float_Stencil8;
+        }
         
         if (shaderProgramMT->GetFragmentMTLFunction() != nil)
         {
