@@ -131,6 +131,24 @@ private:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            shaderProgramShadowMap = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "Example.metal", "VShadowMap", "1.1" }
+                },
+                { vertexFormat }
+            );
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" },
+                    { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" },
+                },
+                { vertexFormat }
+            );
+            
+            auto desc = shaderProgramScene->QueryReflectionDesc();
+        }
         else
             throw std::runtime_error("only supported with GLSL or HLSL support");
     }
@@ -175,11 +193,11 @@ private:
 
     void CreatePipelineLayouts()
     {
-        bool combinedSampler = !IsVulkan();
+        bool combinedSampler = IsOpenGL();
 
         // Create pipeline layout for shadow-map rendering
         pipelineLayoutShadowMap = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(0):vert")
+            LLGL::PipelineLayoutDesc("cbuffer(1):vert")
         );
 
         // Create pipeline layout for scene rendering
@@ -192,7 +210,7 @@ private:
         else
         {
             pipelineLayoutScene = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc("cbuffer(0):frag:vert, texture(1):frag, sampler(2):frag")
+                LLGL::PipelineLayoutDesc("cbuffer(1):frag:vert, texture(2):frag, sampler(3):frag")
             );
         }
     }

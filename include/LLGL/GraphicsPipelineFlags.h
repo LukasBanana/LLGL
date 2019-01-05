@@ -584,7 +584,7 @@ struct RasterizerDescriptor
 
     /**
     \brief If enabled, primitives are discarded after optional stream-outputs but before the rasterization stage. By default disabled.
-    \note Only supported with: OpenGL, Vulkan.
+    \note Only supported with: OpenGL, Vulkan, Metal.
     */
     bool                    discardEnabled              = false;
 

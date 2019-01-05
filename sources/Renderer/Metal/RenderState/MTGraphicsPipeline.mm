@@ -24,6 +24,7 @@ static void MTThrowIfFailed(NSError* error, const char* info)
     if (error != nullptr)
     {
         std::string s = info;
+        s += ": ";
         
         NSString* errorMsg = [error localizedDescription];
         s += [errorMsg cStringUsingEncoding:NSUTF8StringEncoding];
@@ -176,13 +177,8 @@ void MTGraphicsPipeline::CreateRenderPipelineState(id<MTLDevice> device, const G
             renderPipelineDesc.stencilAttachmentPixelFormat     = MTLPixelFormatDepth32Float_Stencil8;
         }
         
-        if (shaderProgramMT->GetFragmentMTLFunction() != nil)
-        {
-            renderPipelineDesc.rasterizationEnabled = YES;
-            renderPipelineDesc.sampleCount          = desc.rasterizer.multiSampling.SampleCount();
-        }
-        else
-            renderPipelineDesc.rasterizationEnabled = NO;
+        renderPipelineDesc.rasterizationEnabled = (desc.rasterizer.discardEnabled ? NO : YES);
+        renderPipelineDesc.sampleCount          = desc.rasterizer.multiSampling.SampleCount();
     }
     NSError* error = nullptr;
     renderPipelineState_ = [device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error];

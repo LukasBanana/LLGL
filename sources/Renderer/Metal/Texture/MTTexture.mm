@@ -38,6 +38,16 @@ static MTLTextureUsage GetTextureUsage(const TextureDescriptor& desc)
     return usage;
 }
 
+static MTLResourceOptions GetResourceOptions(const TextureDescriptor& desc)
+{
+    MTLResourceOptions opt = 0;
+    
+    if (IsDepthStencilFormat(desc.format))
+        opt |= MTLResourceStorageModePrivate;
+    
+    return opt;
+}
+
 static void Convert(MTLTextureDescriptor* dst, const TextureDescriptor& src)
 {
     dst.textureType         = MTTypes::ToMTLTextureType(src.type);
@@ -49,6 +59,7 @@ static void Convert(MTLTextureDescriptor* dst, const TextureDescriptor& src)
     dst.sampleCount         = static_cast<NSUInteger>(std::max(1u, src.samples));
     dst.arrayLength         = GetTextureLayers(src);
     dst.usage               = GetTextureUsage(src);
+    dst.resourceOptions     = GetResourceOptions(src);
 }
 
 MTTexture::MTTexture(id<MTLDevice> device, const TextureDescriptor& desc) :
