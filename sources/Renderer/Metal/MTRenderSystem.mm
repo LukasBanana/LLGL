@@ -124,7 +124,8 @@ void MTRenderSystem::Release(Texture& texture)
 
 void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
-    //todo
+    auto& textureMT = LLGL_CAST(MTTexture&, texture);
+    textureMT.Write(imageDesc, textureRegion.offset, textureRegion.extent);
 }
 
 void MTRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)

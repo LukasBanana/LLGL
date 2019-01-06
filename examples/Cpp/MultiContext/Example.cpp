@@ -133,9 +133,12 @@ int main(int argc, char* argv[])
         // Print info log (warnings and errors)
         for (auto shader : { vertShader, geomShader, fragShader })
         {
-            std::string log = shader->QueryInfoLog();
-            if (!log.empty())
-                std::cerr << log << std::endl;
+            if (shader)
+            {
+                std::string log = shader->QueryInfoLog();
+                if (!log.empty())
+                    std::cerr << log << std::endl;
+            }
         }
 
         // Create shader program which is used as composite

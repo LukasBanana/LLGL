@@ -120,8 +120,8 @@ static void FillColorAttachmentDesc(
     
     /* Controlling blend operation */
     dst.blendingEnabled             = (targetDesc.blendEnabled ? YES : NO);
-    dst.alphaBlendOperation         = MTTypes::ToMTLBlendOperation(targetDesc.colorArithmetic);
-    dst.rgbBlendOperation           = MTTypes::ToMTLBlendOperation(targetDesc.alphaArithmetic);
+    dst.alphaBlendOperation         = MTTypes::ToMTLBlendOperation(targetDesc.alphaArithmetic);
+    dst.rgbBlendOperation           = MTTypes::ToMTLBlendOperation(targetDesc.colorArithmetic);
     
     /* Blend factors */
     dst.destinationAlphaBlendFactor = MTTypes::ToMTLBlendFactor(targetDesc.dstAlpha);
