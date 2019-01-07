@@ -682,6 +682,18 @@ void GLDeferredCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t off
     #endif
 }
 
+/* ----- Debugging ----- */
+
+void GLDeferredCommandBuffer::PushDebugGroup(const char* name)
+{
+    //TODO
+}
+
+void GLDeferredCommandBuffer::PopDebugGroup()
+{
+    //TODO
+}
+
 /* ----- Direct Resource Access ------ */
 
 void GLDeferredCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)

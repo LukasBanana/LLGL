@@ -589,6 +589,18 @@ void GLImmediateCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t of
     #endif
 }
 
+/* ----- Debugging ----- */
+
+void GLImmediateCommandBuffer::PushDebugGroup(const char* name)
+{
+    //TODO
+}
+
+void GLImmediateCommandBuffer::PopDebugGroup()
+{
+    //TODO
+}
+
 /* ----- Direct Resource Access ------ */
 
 void GLImmediateCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)

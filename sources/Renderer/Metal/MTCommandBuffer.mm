@@ -842,6 +842,22 @@ void MTCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
     ];
 }
 
+/* ----- Debugging ----- */
+
+void MTCommandBuffer::PushDebugGroup(const char* name)
+{
+    #ifdef LLGL_DEBUG
+    [cmdBuffer_ pushDebugGroup:[NSString stringWithUTF8String:name]];
+    #endif // /LLGL_DEBUG
+}
+
+void MTCommandBuffer::PopDebugGroup()
+{
+    #ifdef LLGL_DEBUG
+    [cmdBuffer_ popDebugGroup];
+    #endif // /LLGL_DEBUG
+}
+
 /* ----- Direct Resource Access ------ */
 
 void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)

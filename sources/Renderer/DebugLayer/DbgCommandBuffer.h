@@ -14,6 +14,8 @@
 #include "DbgGraphicsPipeline.h"
 #include "DbgQueryHeap.h"
 #include <cstdint>
+#include <string>
+#include <stack>
 
 
 namespace LLGL
@@ -142,6 +144,11 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
+    
+        /* ----- Debugging ----- */
+    
+        void PushDebugGroup(const char* name) override;
+        void PopDebugGroup() override;
 
         /* ----- Direct Resource Access ------ */
 
@@ -215,6 +222,8 @@ class DbgCommandBuffer : public CommandBufferExt
         void AssertInstancingSupported();
         void AssertOffsetInstancingSupported();
         void AssertIndirectDrawingSupported();
+    
+        void AssertNullPointer(const void* ptr, const char* name);
 
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 
@@ -228,6 +237,8 @@ class DbgCommandBuffer : public CommandBufferExt
 
         const RenderingFeatures&        features_;
         const RenderingLimits&          limits_;
+    
+        std::stack<std::string>         debugGroups_;
 
         /* ----- Render states ----- */
 

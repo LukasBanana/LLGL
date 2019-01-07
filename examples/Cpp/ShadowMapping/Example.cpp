@@ -368,8 +368,13 @@ private:
             commands->SetVertexBuffer(*vertexBuffer);
 
             // Draw scene into shadow-map, then draw scene onto screen
+            commands->PushDebugGroup("Shadow Map Pass");
             RenderShadowMap();
+            commands->PopDebugGroup();
+            
+            commands->PushDebugGroup("Scene Pass");
             RenderScene();
+            commands->PopDebugGroup();
         }
         commands->End();
         commandQueue->Submit(*commands);

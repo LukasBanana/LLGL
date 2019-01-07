@@ -490,6 +490,18 @@ void D3D11CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
     context_->DispatchIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
 }
 
+/* ----- Debugging ----- */
+
+void D3D11CommandBuffer::PushDebugGroup(const char* name)
+{
+    //TODO
+}
+
+void D3D11CommandBuffer::PopDebugGroup()
+{
+    //TODO
+}
+
 /* ----- Direct Resource Access ------ */
 
 void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)

@@ -218,7 +218,7 @@ ExampleBase::ExampleBase(
     // Create render system
     renderer = LLGL::RenderSystem::Load(
         rendererModule_,
-        #ifdef _DEBUG
+        #ifdef LLGL_DEBUG//_DEBUG
         (debugger ? profilerObj_.get() : nullptr),
         (debugger ? debuggerObj_.get() : nullptr)
         #else

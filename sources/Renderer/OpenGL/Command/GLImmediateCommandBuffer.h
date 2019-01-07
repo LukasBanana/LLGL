@@ -135,6 +135,11 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
+    
+        /* ----- Debugging ----- */
+    
+        void PushDebugGroup(const char* name) override;
+        void PopDebugGroup() override;
 
         /* ----- Direct Resource Access ------ */
 

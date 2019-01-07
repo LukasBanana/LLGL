@@ -48,8 +48,19 @@ class LLGL_EXPORT RenderingDebugger
 
         virtual ~RenderingDebugger();
 
-        //! Sets the new source function name.
+        /**
+        \brief Sets the new source function name.
+        \param[in] source Pointer to a null terminated string that specifies the name. If this is null, the source is disabled.
+        \note This function only stores the pointer. Hence, the pointer must be valid until a new pointer or a null pointer is set.
+        */
         void SetSource(const char* source);
+    
+        /**
+        \brief Sets the new debug group name.
+        \param[in] name Pointer to a null terminated string that specifies the name. If this is null, the debug group is disabled.
+        \note This function only stores the pointer. Hence, the pointer must be valid until a new pointer or a null pointer is set.
+        */
+        void SetDebugGroup(const char* name);
 
         /**
         \brief Posts an error message.
@@ -69,7 +80,10 @@ class LLGL_EXPORT RenderingDebugger
 
     protected:
 
-        //! Rendering debugger message class.
+        /**
+        \brief Rendering debugger message class.
+        \todo Rename to "Report"
+        */
         class LLGL_EXPORT Message
         {
 
@@ -79,13 +93,20 @@ class LLGL_EXPORT RenderingDebugger
                 Message(const Message&) = default;
                 Message& operator = (const Message&) = default;
 
-                Message(const std::string& text, const std::string& source);
+                Message(const std::string& text, const std::string& source, const std::string& groupName);
 
                 //! Blocks further occurrences of this message.
                 void Block();
 
                 //! Blocks further occurrences of this message after the specified amount of messages have been occurred.
                 void BlockAfter(std::size_t occurrences);
+            
+                /**
+                \brief Returns a report string for this message.
+                \param[in] reportTypeName Specifies the name of the report type (e.g. "ERROR").
+                \return Constructed report string containing all information of this message.
+                */
+                std::string ToReportString(const std::string& reportTypeName) const;
 
                 //! Returns the message text.
                 inline const std::string& GetText() const
@@ -97,6 +118,12 @@ class LLGL_EXPORT RenderingDebugger
                 inline const std::string& GetSource() const
                 {
                     return source_;
+                }
+            
+                //! Returns the debug group name where this message occured.
+                inline const std::string& GetGroupName() const
+                {
+                    return groupName_;
                 }
 
                 //! Returns the number of occurrences of this message.
@@ -121,11 +148,14 @@ class LLGL_EXPORT RenderingDebugger
 
                 std::string text_;
                 std::string source_;
+                std::string groupName_;
                 std::size_t occurrences_    = 1;
                 bool        blocked_        = false;
 
         };
 
+    protected:
+    
         /**
         \brief Callback function when an error was posted.
         \remarks Use the 'message' parameter to block further occurences of this error if you like.
@@ -158,6 +188,7 @@ class LLGL_EXPORT RenderingDebugger
         std::map<std::string, Message>  errors_;
         std::map<std::string, Message>  warnings_;
         const char*                     source_     = "";
+        const char*                     groupName_  = "";
 
 };
 

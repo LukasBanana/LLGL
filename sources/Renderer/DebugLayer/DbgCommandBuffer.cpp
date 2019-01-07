@@ -146,6 +146,7 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         LLGL_DBG_SOURCE;
 
         AssertRecording();
+        AssertNullPointer(viewports, "viewports");
 
         /* Validate all viewports in array */
         if (viewports)
@@ -153,8 +154,6 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
             for (std::uint32_t i = 0; i < numViewports; ++i)
                 ValidateViewport(viewports[i]);
         }
-        else
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "viewport array must not be a null pointer");
 
         /* Validate array size */
         if (numViewports == 0)
@@ -185,8 +184,7 @@ void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sci
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        if (!scissors)
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "scissor array must not be a null pointer");
+        AssertNullPointer(scissors, "scissors");
         if (numScissors == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no scissor rectangles are specified");
     }
@@ -819,6 +817,38 @@ void DbgCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
     profile_.dispatchCommands++;
 }
 
+/* ----- Debugging ----- */
+
+void DbgCommandBuffer::PushDebugGroup(const char* name)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertNullPointer(name, "name");
+        debugger_->SetDebugGroup(name);
+    }
+    
+    if (!name)
+        name = "<null pointer>";
+    
+    debugGroups_.push(name);
+    instance.PushDebugGroup(name);
+}
+
+void DbgCommandBuffer::PopDebugGroup()
+{
+    instance.PopDebugGroup();
+    debugGroups_.pop();
+    
+    if (debugger_)
+    {
+        if (debugGroups_.empty())
+            debugger_->SetDebugGroup(nullptr);
+        else
+            debugger_->SetDebugGroup(debugGroups_.top().c_str());
+    }
+}
+
 /* ----- Direct Resource Access ------ */
 
 void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
@@ -1388,6 +1418,17 @@ void DbgCommandBuffer::AssertIndirectDrawingSupported()
 {
     if (!features_.hasIndirectDrawing)
         LLGL_DBG_ERROR_NOT_SUPPORTED("indirect drawing");
+}
+
+void DbgCommandBuffer::AssertNullPointer(const void* ptr, const char* name)
+{
+    if (ptr == nullptr)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "argument '" + std::string(name) + "' must not be a null pointer"
+        );
+    }
 }
 
 void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices)

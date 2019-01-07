@@ -139,7 +139,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \code
         LLGL::OpenGLDependentStateDescriptor myOpenGLStateDesc;
         myOpenGLStateDesc.invertFrontFace = true;
-        myCommandBuffer->SetGraphicsAPIDependentState(&myOpenGLStateDesc, sizeof(myOpenGLStateDesc));
+        myCmdBuffer->SetGraphicsAPIDependentState(&myOpenGLStateDesc, sizeof(myOpenGLStateDesc));
         \endcode
         \note Invalid arguments are ignored by this function silently (except for corrupted pointers).
         \see OpenGLDependentStateDescriptor
@@ -641,6 +641,35 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see DispatchIndirectArguments
         */
         virtual void DispatchIndirect(Buffer& buffer, std::uint64_t offset) = 0;
+    
+        /* ----- Debugging ----- */
+    
+        /**
+        \brief Pushes the specified name onto a stack of group strings that is used for debug reports.
+        \param[in] name Pointer to a null terminated string that specifies the name. Must not be null!
+        \remarks
+        Here is a usage example:
+        \code
+        myCmdBuffer->PushDebugGroup("Shadow Map Pass");
+        myCmdBuffer->BeginRenderPass(...);
+        // render shadow map ...
+        myCmdBuffer->EndRenderPass();
+        myCmdBuffer->PopDebugGroup();
+        
+        myCmdBuffer->PushDebugGroup("Final Scene Pass");
+        myCmdBuffer->BeginRenderPass(...);
+        // render final scene ...
+        myCmdBuffer->EndRenderPass();
+        myCmdBuffer->PopDebugGroup();
+        \endcode
+        \note Only supported in debug mode or when the debug layer is enabled. Otherwise, the function has no effect.
+        \see PopDebugGroup
+        \see RenderSystemChild::SetDebugName
+        */
+        virtual void PushDebugGroup(const char* name) = 0;
+    
+        //! \see PushDebugGroup
+        virtual void PopDebugGroup() = 0;
 
     protected:
 

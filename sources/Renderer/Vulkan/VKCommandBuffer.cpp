@@ -760,6 +760,18 @@ void VKCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
     vkCmdDispatchIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset);
 }
 
+/* ----- Debugging ----- */
+
+void VKCommandBuffer::PushDebugGroup(const char* name)
+{
+    //TODO
+}
+
+void VKCommandBuffer::PopDebugGroup()
+{
+    //TODO
+}
+
 /* ----- Extended functions ----- */
 
 void VKCommandBuffer::AcquireNextBuffer()

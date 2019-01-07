@@ -139,7 +139,14 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
+    
+        /* ----- Debugging ----- */
+    
+        void PushDebugGroup(const char* name) override;
+        void PopDebugGroup() override;
 
+    public:
+    
         /* ----- Extended functions ----- */
 
         // Returns the native ID3D12GraphicsCommandList object.

@@ -23,6 +23,11 @@ void RenderingDebugger::SetSource(const char* source)
     source_ = (source != nullptr ? source : "");
 }
 
+void RenderingDebugger::SetDebugGroup(const char* name)
+{
+    groupName_ = (name != nullptr ? name : "");
+}
+
 void RenderingDebugger::PostError(const ErrorType type, const std::string& message)
 {
     auto it = errors_.find(message);
@@ -36,7 +41,7 @@ void RenderingDebugger::PostError(const ErrorType type, const std::string& messa
     }
     else
     {
-        errors_[message] = Message { message, source_ };
+        errors_[message] = Message{ message, source_, groupName_ };
         OnError(type, errors_[message]);
     }
 }
@@ -54,7 +59,7 @@ void RenderingDebugger::PostWarning(const WarningType type, const std::string& m
     }
     else
     {
-        warnings_[message] = Message { message, source_ };
+        warnings_[message] = Message{ message, source_, groupName_ };
         OnWarning(type, warnings_[message]);
     }
 }
@@ -68,7 +73,7 @@ void RenderingDebugger::OnError(ErrorType type, Message& message)
 {
     Log::PostReport(
         Log::ReportType::Error,
-        "ERROR (" + std::string(ToString(type)) + "): in '" + message.GetSource() + "': " + message.GetText()
+        message.ToReportString("ERROR (" + std::string(ToString(type)) + ')')
     );
     message.Block();
 }
@@ -77,7 +82,7 @@ void RenderingDebugger::OnWarning(WarningType type, Message& message)
 {
     Log::PostReport(
         Log::ReportType::Warning,
-        "WARNING (" + std::string(ToString(type)) + "): in '" + message.GetSource() + "': " + message.GetText()
+        message.ToReportString("WARNING (" + std::string(ToString(type)) + ')')
     );
     message.Block();
 }
@@ -87,9 +92,10 @@ void RenderingDebugger::OnWarning(WarningType type, Message& message)
  * Message class
  */
 
-RenderingDebugger::Message::Message(const std::string& text, const std::string& source) :
-    text_   { text   },
-    source_ { source }
+RenderingDebugger::Message::Message(const std::string& text, const std::string& source, const std::string& groupName) :
+    text_      { text      },
+    source_    { source    },
+    groupName_ { groupName }
 {
     /* Replace "LLGL::Dbg" by "LLGL::" */
     if (source_.compare(0, 9, "LLGL::Dbg") == 0)
@@ -105,6 +111,32 @@ void RenderingDebugger::Message::BlockAfter(std::size_t occurrences)
 {
     if (GetOccurrences() >= occurrences)
         Block();
+}
+
+std::string RenderingDebugger::Message::ToReportString(const std::string& reportTypeName) const
+{
+    std::string s;
+    
+    s += reportTypeName;
+    s += ": ";
+    
+    if (!GetGroupName().empty())
+    {
+        s += "during '";
+        s += GetGroupName();
+        s += "': ";
+    }
+    
+    if (!GetSource().empty())
+    {
+        s += "in '";
+        s += GetSource();
+        s += "': ";
+    }
+    
+    s += GetText();
+    
+    return s;
 }
 
 void RenderingDebugger::Message::IncOccurrence()

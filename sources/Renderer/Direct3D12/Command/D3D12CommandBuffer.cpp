@@ -504,6 +504,18 @@ void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
     );
 }
 
+/* ----- Debugging ----- */
+
+void D3D12CommandBuffer::PushDebugGroup(const char* name)
+{
+    //TODO
+}
+
+void D3D12CommandBuffer::PopDebugGroup()
+{
+    //TODO
+}
+
 
 /*
  * ======= Private: =======
