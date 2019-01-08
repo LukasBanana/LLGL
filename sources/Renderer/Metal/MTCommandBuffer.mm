@@ -54,11 +54,6 @@ void MTCommandBuffer::End()
 void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
 {
     auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
-    #if 0
-    
-    dstBufferMT.Write(dstOffset, data, dataSize);
-    
-    #else
     
     /* Copy data to staging buffer */
     id<MTLBuffer> srcBuffer = nil;
@@ -72,12 +67,10 @@ void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, c
         copyFromBuffer:     srcBuffer
         sourceOffset:       srcOffset
         toBuffer:           dstBufferMT.GetNative()
-        destinationOffset:  0u
+        destinationOffset:  static_cast<NSUInteger>(dstOffset)
         size:               static_cast<NSUInteger>(dataSize)
     ];
     [blitEncoder endEncoding];
-    
-    #endif
 }
 
 void MTCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
@@ -112,10 +105,11 @@ void MTCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::s
 
 static void Convert(MTLViewport& dst, const Viewport& src)
 {
-    dst.originX = static_cast<double>(src.x);
-    dst.originY = static_cast<double>(src.y);
-    dst.width   = static_cast<double>(src.width);
-    dst.height  = static_cast<double>(src.height);
+    const double scaling = 1.0;//2.0 for retina display
+    dst.originX = static_cast<double>(src.x)*scaling;
+    dst.originY = static_cast<double>(src.y)*scaling;
+    dst.width   = static_cast<double>(src.width)*scaling;
+    dst.height  = static_cast<double>(src.height)*scaling;
     dst.znear   = static_cast<double>(src.minDepth);
     dst.zfar    = static_cast<double>(src.maxDepth);
 }
