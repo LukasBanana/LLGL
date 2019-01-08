@@ -153,6 +153,8 @@ class MTRenderSystem : public RenderSystem
         void CreateDeviceResources();
         void QueryRenderingCaps();
 
+    private:
+    
         /* ----- Common objects ----- */
 
         id<MTLDevice>                           device_             = nil;

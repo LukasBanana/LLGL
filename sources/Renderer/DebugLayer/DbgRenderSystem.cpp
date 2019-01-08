@@ -36,8 +36,6 @@ DbgRenderSystem::DbgRenderSystem(
         features_ { caps_.features     },
         limits_   { caps_.limits       }
 {
-    /* Instantiate command queue */
-    commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance->GetCommandQueue()), profiler, debugger);
 }
 
 void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
@@ -50,11 +48,19 @@ void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 
 RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
+    /* Create primary render context */
     auto renderContextInstance = instance_->CreateRenderContext(desc, surface);
 
-    SetRendererInfo(instance_->GetRendererInfo());
-    SetRenderingCaps(instance_->GetRenderingCaps());
-
+    if (!commandQueue_)
+    {
+        /* Store meta data about render system */
+        SetRendererInfo(instance_->GetRendererInfo());
+        SetRenderingCaps(instance_->GetRenderingCaps());
+        
+        /* Instantiate command queue */
+        commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
+    }
+    
     return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(*renderContextInstance));
 }
 

@@ -1,8 +1,8 @@
 // GLSL model fragment shader
 
-#version 450
+#version 140
 
-layout(std140, binding = 0) uniform Settings
+layout(std140) uniform Settings
 {
 	mat4 wvpMatrix;
 	int useTexture2DMS;

@@ -13,6 +13,7 @@
 
 #include <LLGL/CommandBufferExt.h>
 #include "../StaticLimits.h"
+#include "Buffer/MTStagingBufferPool.h"
 
 
 namespace LLGL
@@ -28,7 +29,7 @@ class MTCommandBuffer : public CommandBufferExt
 
         /* ----- Common ----- */
 
-        MTCommandBuffer(id<MTLCommandQueue> cmdQueue);
+        MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue);
         ~MTCommandBuffer();
 
         /* ----- Encoding ----- */
@@ -207,6 +208,8 @@ class MTCommandBuffer : public CommandBufferExt
 
         MTClearValue                    clearValue_;
         MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
+    
+        MTStagingBufferPool             stagingBufferPool_;
 
 };
 

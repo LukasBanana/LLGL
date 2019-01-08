@@ -70,6 +70,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \remarks This function is only necessary if the binding index does not match the default binding index of the constant buffer within the shader.
         \see QueryConstantBuffers
         \see RenderContext::BindConstantBuffer
+        \todo Replace this by PipelineLayout
         */
         virtual void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) = 0;
 
@@ -79,6 +80,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \param[in] bindingIndex Specifies the binding index. This index must match the index which will be used for "RenderContext::BindStorageBuffer".
         \remarks This function is only necessary if the binding index does not match the default binding index of the storage buffer within the shader.
         \see RenderContext::BindStorageBuffer
+        \todo Replace this by PipelineLayout
         */
         virtual void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) = 0;
 

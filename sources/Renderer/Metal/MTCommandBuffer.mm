@@ -17,6 +17,7 @@
 #include "Texture/MTRenderTarget.h"
 #include "../CheckedCast.h"
 #include <algorithm>
+#include <limits.h>
 
 
 namespace LLGL
@@ -25,8 +26,9 @@ namespace LLGL
 
 const std::uint32_t MTCommandBuffer::g_maxNumVertexBuffers;
 
-MTCommandBuffer::MTCommandBuffer(id<MTLCommandQueue> cmdQueue) :
-    cmdQueue_ { cmdQueue }
+MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue) :
+    cmdQueue_          { cmdQueue          },
+    stagingBufferPool_ { device, USHRT_MAX }
 {
 }
 
@@ -41,6 +43,7 @@ void MTCommandBuffer::Begin()
 {
     cmdBuffer_ = [cmdQueue_ commandBuffer];
     ResetRenderEncoderState();
+    stagingBufferPool_.Reset();
 }
 
 void MTCommandBuffer::End()
@@ -51,7 +54,30 @@ void MTCommandBuffer::End()
 void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
 {
     auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
+    #if 0
+    
     dstBufferMT.Write(dstOffset, data, dataSize);
+    
+    #else
+    
+    /* Copy data to staging buffer */
+    id<MTLBuffer> srcBuffer = nil;
+    NSUInteger srcOffset = 0;
+    
+    stagingBufferPool_.Write(data, static_cast<NSUInteger>(dataSize), srcBuffer, srcOffset);
+    
+    /* Encode blit command to copy staging buffer region to destination buffer */
+    id<MTLBlitCommandEncoder> blitEncoder = [cmdBuffer_ blitCommandEncoder];
+    [blitEncoder
+        copyFromBuffer:     srcBuffer
+        sourceOffset:       srcOffset
+        toBuffer:           dstBufferMT.GetNative()
+        destinationOffset:  0u
+        size:               static_cast<NSUInteger>(dataSize)
+    ];
+    [blitEncoder endEncoding];
+    
+    #endif
 }
 
 void MTCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)

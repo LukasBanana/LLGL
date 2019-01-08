@@ -69,10 +69,12 @@ enum class ShadingLanguage
     HLSL_5_0        = (0x30000 | 500),  //!< HLSL 5.0 (since Direct3D 11).
     HLSL_5_1        = (0x30000 | 510),  //!< HLSL 5.1 (since Direct3D 12 and Direct3D 11.3).
 
-    Metal           = (0x40000),        //!< Metal Shading Language. \note Not supported yet
-    Metal_1_0       = (0x40000 | 100),  //!< Metal 1.0 (since iOS 8.0). \note Not supported yet
-    Metal_1_1       = (0x40000 | 110),  //!< Metal 1.1 (since iOS 9.0 and OS X 10.11). \note Not supported yet
-    Metal_1_2       = (0x40000 | 120),  //!< Metal 1.2 (since iOS 10.0 and macOS 10.12). \note Not supported yet
+    Metal           = (0x40000),        //!< Metal Shading Language.
+    Metal_1_0       = (0x40000 | 100),  //!< Metal 1.0 (since iOS 8.0).
+    Metal_1_1       = (0x40000 | 110),  //!< Metal 1.1 (since iOS 9.0 and OS X 10.11).
+    Metal_1_2       = (0x40000 | 120),  //!< Metal 1.2 (since iOS 10.0 and macOS 10.12).
+    Metal_2_0       = (0x40000 | 200),  //!< Metal 2.0 (since iOS 11.0 and macOS 10.13).
+    Metal_2_1       = (0x40000 | 210),  //!< Metal 2.1 (since iOS 12.0 and macOS 10.14).
 
     SPIRV           = (0x50000),        //!< SPIR-V Shading Language.
     SPIRV_100       = (0x50000 | 100),  //!< SPIR-V 1.0.

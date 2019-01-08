@@ -53,12 +53,12 @@ CommandQueue* MTRenderSystem::GetCommandQueue()
 
 CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(commandQueue_->GetNative()));
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(device_, commandQueue_->GetNative()));
 }
 
 CommandBufferExt* MTRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(commandQueue_->GetNative()));
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(device_, commandQueue_->GetNative()));
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)
@@ -299,10 +299,10 @@ void MTRenderSystem::CreateDeviceResources()
     /* Initialize renderer information */
     RendererInfo info;
     {
-        info.rendererName           = "???";
+        info.rendererName           = "Metal";
         info.deviceName             = [[device_ name] cStringUsingEncoding:NSUTF8StringEncoding];
-        info.vendorName             = "???";
-        info.shadingLanguageName    = "Metal";
+        info.vendorName             = "Apple";
+        info.shadingLanguageName    = "Metal Shading Language";
     }
     SetRendererInfo(info);
     
@@ -312,7 +312,9 @@ void MTRenderSystem::CreateDeviceResources()
 
 static const MTLFeatureSet g_potentialFeatureSets[] =
 {
-    MTLFeatureSet_macOS_ReadWriteTextureTier2,
+    //MTLFeatureSet_macOS_ReadWriteTextureTier2,
+    MTLFeatureSet_macOS_GPUFamily2_v1,
+    MTLFeatureSet_macOS_GPUFamily1_v4,
     MTLFeatureSet_macOS_GPUFamily1_v3,
     MTLFeatureSet_macOS_GPUFamily1_v2,
     MTLFeatureSet_macOS_GPUFamily1_v1,

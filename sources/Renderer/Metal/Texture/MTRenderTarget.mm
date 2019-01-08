@@ -127,7 +127,7 @@ MTRenderTarget::~MTRenderTarget()
     if (auto attachment = native_.stencilAttachment)
         [attachment.texture release];
     
-    [native_ release];
+    //[native_ release];
 }
 
 Extent2D MTRenderTarget::GetResolution() const

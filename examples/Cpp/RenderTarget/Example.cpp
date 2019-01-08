@@ -154,6 +154,16 @@ private:
                 { vertexFormat }
             );
         }
+        
+        //TODO: must be replace by "PipelineLayout" internally
+        // Bind resources
+        shaderProgram->BindConstantBuffer("Settings", 3);
+        
+        if (auto uniforms = shaderProgram->LockShaderUniform())
+        {
+            uniforms->SetUniform1i("colorMap", 1);
+            shaderProgram->UnlockShaderUniform();
+        }
     }
 
     void CreatePipelines()

@@ -58,6 +58,7 @@ MTRenderContext::MTRenderContext(
     
     /* Create MetalKit view */
     NSWindow* wnd = nativeHandle.window;
+    
     view_ = [[MTKView alloc] initWithFrame:wnd.frame device:device];
     [wnd setContentView:view_];
     [wnd.contentViewController setView:view_];
