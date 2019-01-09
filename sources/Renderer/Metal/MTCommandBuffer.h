@@ -14,6 +14,7 @@
 #include <LLGL/CommandBufferExt.h>
 #include "../StaticLimits.h"
 #include "Buffer/MTStagingBufferPool.h"
+#include "MTEncoderScheduler.h"
 
 
 namespace LLGL
@@ -156,23 +157,6 @@ class MTCommandBuffer : public CommandBufferExt
 
     private:
 
-        static const std::uint32_t g_maxNumVertexBuffers = 16;
-
-        struct MTRenderEncoderState
-        {
-            MTLViewport                 viewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]      = {};
-            NSUInteger                  viewportCount                                       = 0;
-            MTLScissorRect              scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]   = {};
-            NSUInteger                  scissorRectCount                                    = 0;
-            id<MTLBuffer>               vertexBuffer0                                       = nil;
-            const id<MTLBuffer>*        vertexBuffers                                       = nullptr;
-            NSUInteger                  vertexBufferOffset0                                 = 0;
-            const NSUInteger*           vertexBufferOffsets                                 = nullptr;
-            NSRange                     vertexBufferRange                                   = { 0, 0 };
-            id<MTLRenderPipelineState>  renderPipelineState                                 = nil;
-            id<MTLDepthStencilState>    depthStencilState                                   = nil;
-        };
-
         struct MTClearValue
         {
             MTLClearColor   color   = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
@@ -182,34 +166,26 @@ class MTCommandBuffer : public CommandBufferExt
     
     private:
 
-        // Submits all global lstates to the render encoder (i.e. vertex buffers, graphics pipeline, viewports etc.)
-        void SubmitRenderEncoderState();
-        void ResetRenderEncoderState();
-    
         void SetIndexType(bool indexType16Bits);
 
     private:
     
-        id<MTLCommandQueue>             cmdQueue_               = nil;
-        id<MTLCommandBuffer>            cmdBuffer_              = nil;
+        id<MTLCommandQueue>     cmdQueue_               = nil;
+        id<MTLCommandBuffer>    cmdBuffer_              = nil;
 
-        id<MTLRenderCommandEncoder>     renderEncoder_          = nil;
-        id<MTLComputeCommandEncoder>    computeEncoder_         = nil;
+        MTEncoderScheduler      encoderScheduler_;
 
-        MTLPrimitiveType                primitiveType_          = MTLPrimitiveTypeTriangle;
-        id<MTLBuffer>                   indexBuffer_            = nil;
-        NSUInteger                      indexBufferOffset_      = 0;
-        MTLIndexType                    indexType_              = MTLIndexTypeUInt32;
-        NSUInteger                      indexTypeSize_          = 4;
-        NSUInteger                      numPatchControlPoints_  = 0;
-        MTLSize                         numThreadsPerGroup_     = { 1, 1, 1 };
+        MTLPrimitiveType        primitiveType_          = MTLPrimitiveTypeTriangle;
+        id<MTLBuffer>           indexBuffer_            = nil;
+        NSUInteger              indexBufferOffset_      = 0;
+        MTLIndexType            indexType_              = MTLIndexTypeUInt32;
+        NSUInteger              indexTypeSize_          = 4;
+        NSUInteger              numPatchControlPoints_  = 0;
+        MTLSize                 numThreadsPerGroup_     = { 1, 1, 1 };
 
-        MTRenderEncoderState            renderEncoderState_;
-
-        MTClearValue                    clearValue_;
-        MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
+        MTClearValue            clearValue_;
     
-        MTStagingBufferPool             stagingBufferPool_;
+        MTStagingBufferPool     stagingBufferPool_;
 
 };
 

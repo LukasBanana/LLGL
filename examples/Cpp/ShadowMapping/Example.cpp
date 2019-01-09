@@ -316,7 +316,7 @@ private:
     {
         settings.wMatrix = mesh.transform;
         settings.diffuse = mesh.color;
-        UpdateBuffer(constantBuffer, settings);
+        UpdateBuffer(constantBuffer, settings, true);
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 

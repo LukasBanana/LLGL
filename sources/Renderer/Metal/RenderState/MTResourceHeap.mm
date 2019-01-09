@@ -133,17 +133,21 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
     }
 }
 
-void MTResourceHeap::Bind(
-    id<MTLRenderCommandEncoder>     renderEncoder,
-    id<MTLComputeCommandEncoder>    computeEncoder)
+void MTResourceHeap::BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder)
 {
     auto byteAlignedBuffer = buffer_.data();
     if (segmentationHeader_.hasVertexResources)
         BindVertexResources(renderEncoder, byteAlignedBuffer);
     if (segmentationHeader_.hasFragmentResources)
         BindFragmentResources(renderEncoder, byteAlignedBuffer);
-    //if (segmentationHeader_.hasKernelResources)
-    //    BindKernelResources(computeEncoder, byteAlignedBuffer);
+}
+
+//TODO: add byte offset to kernel resources!
+void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder)
+{
+    auto byteAlignedBuffer = buffer_.data();
+    if (segmentationHeader_.hasKernelResources)
+        BindKernelResources(computeEncoder, byteAlignedBuffer);
 }
 
 

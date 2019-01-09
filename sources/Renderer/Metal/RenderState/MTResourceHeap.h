@@ -35,10 +35,8 @@ class MTResourceHeap : public ResourceHeap
 
         MTResourceHeap(const ResourceHeapDescriptor& desc);
 
-        void Bind(
-            id<MTLRenderCommandEncoder>     renderEncoder,
-            id<MTLComputeCommandEncoder>    computeEncoder
-        );
+        void BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder);
+        void BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder);
 
     private:
 
