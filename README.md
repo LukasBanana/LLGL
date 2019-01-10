@@ -22,7 +22,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 
 ## Progress
 
-* **Version**: 0.02 Beta (see [ChangeLog](docu/ChangeLog))
+* **Version**: 0.03 Beta (see [ChangeLog](docu/ChangeLog))
 
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
@@ -30,7 +30,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 | Direct3D 11 | ~90% | |
 | Direct3D 12 | ~30% | Experimental state |
 | Vulkan | ~30% | Experimental state |
-| Metal | ~10% | Experimental state |
+| Metal | ~30% | Experimental state |
 
 | Platform | Progress | Remarks |
 |----------|:--------:|---------|
