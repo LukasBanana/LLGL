@@ -62,8 +62,10 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     limits.max2DTextureSize                 = 16384u;
     limits.max3DTextureSize                 = 2048u;
     limits.maxViewports                     = (fset >= MTLFeatureSet_macOS_GPUFamily1_v3 ? 16u : 1u);
+    limits.maxViewportSize[0]               = 16384u; //???
+    limits.maxViewportSize[1]               = 16384u; //???
     limits.maxColorAttachments              = 8u;
-    
+
     MTLSize workGroupSize = [device maxThreadsPerThreadgroup];
     limits.maxComputeShaderWorkGroupSize[0] = static_cast<std::uint32_t>(workGroupSize.width);
     limits.maxComputeShaderWorkGroupSize[1] = static_cast<std::uint32_t>(workGroupSize.height);

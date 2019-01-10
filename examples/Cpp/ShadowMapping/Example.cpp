@@ -146,11 +146,9 @@ private:
                 },
                 { vertexFormat }
             );
-            
-            auto desc = shaderProgramScene->QueryReflectionDesc();
         }
         else
-            throw std::runtime_error("only supported with GLSL or HLSL support");
+            throw std::runtime_error("shaders not supported for active renderer");
     }
 
     void CreateShadowMap()
@@ -244,7 +242,7 @@ private:
                 pipelineDesc.depth.testEnabled          = true;
                 pipelineDesc.depth.writeEnabled         = true;
                 pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampling   = 8;
+                pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
             }
             pipelineScene = renderer->CreateGraphicsPipeline(pipelineDesc);
         }

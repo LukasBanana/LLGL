@@ -20,6 +20,7 @@ namespace LLGL
 
 struct Viewport;
 struct Scissor;
+class MTResourceHeap;
 
 class MTEncoderScheduler
 {
@@ -36,6 +37,10 @@ class MTEncoderScheduler
         id<MTLRenderCommandEncoder> BindRenderEncoder(MTLRenderPassDescriptor* renderPassDesc, bool primaryRenderPass = false);
         id<MTLComputeCommandEncoder> BindComputeEncoder();
         id<MTLBlitCommandEncoder> BindBlitEncoder();
+
+        // Interrupts the render command encoder (if active).
+        void PauseRenderEncoder();
+        void ResumeRenderEncoder();
     
         // Retunrs a copy of the current render pass descriptor or null if there is none.
         MTLRenderPassDescriptor* CopyRenderPassDesc();
@@ -49,6 +54,7 @@ class MTEncoderScheduler
         void SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount);
         void SetRenderPipelineState(id<MTLRenderPipelineState> renderPipelineState);
         void SetDepthStencilState(id<MTLDepthStencilState> depthStencilState);
+        void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap);
 
     public:
     
@@ -90,18 +96,21 @@ class MTEncoderScheduler
             NSRange                     vertexBufferRange                                   = { 0, 0 };
             id<MTLRenderPipelineState>  renderPipelineState                                 = nil;
             id<MTLDepthStencilState>    depthStencilState                                   = nil;
+            MTResourceHeap*             resourceHeap                                        = nullptr;
         };
     
     private:
     
-        id<MTLCommandBuffer>            cmdBuffer_          = nil;
+        id<MTLCommandBuffer>            cmdBuffer_              = nil;
     
-        id<MTLRenderCommandEncoder>     renderEncoder_  	= nil;
-        id<MTLComputeCommandEncoder>    computeEncoder_     = nil;
-        id<MTLBlitCommandEncoder>       blitEncoder_        = nil;
+        id<MTLRenderCommandEncoder>     renderEncoder_  	    = nil;
+        id<MTLComputeCommandEncoder>    computeEncoder_         = nil;
+        id<MTLBlitCommandEncoder>       blitEncoder_            = nil;
     
-        MTLRenderPassDescriptor*        renderPassDesc_     = nullptr;
+        MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
         MTRenderEncoderState            renderEncoderState_;
+
+        bool                            pausedRenderEncoder_    = false;
 
 };
 

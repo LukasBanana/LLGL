@@ -64,7 +64,7 @@ vertex VSceneOut VScene(
     VSceneOut outp;
     outp.worldPos = settings.wMatrix * float4(inp.position, 1);
     outp.position = settings.vpMatrix * outp.worldPos;
-    outp.normal   = settings.wMatrix * float4(inp.position, 0);
+    outp.normal   = settings.wMatrix * float4(inp.normal, 0);
     return outp;
 }
 
@@ -74,7 +74,7 @@ vertex VSceneOut VScene(
 fragment float4 PScene(
     VSceneOut          inp              [[stage_in]],
     constant Settings& settings         [[buffer(1)]],
-    texture2d<float>   shadowMap        [[texture(2)]],
+    depth2d<float>     shadowMap        [[texture(2)]],
     sampler            shadowMapSampler [[sampler(3)]])
 {
     // Project world position into shadow-map space
@@ -83,8 +83,8 @@ fragment float4 PScene(
     shadowPos.xy = shadowPos.xy * float2(0.5, -0.5) + 0.5;
     
     // Sample shadow map
-    float shadow = shadowMap.sample(shadowMapSampler, shadowPos.xy/*, shadowPos.z*/).r;
-    
+    float shadow = shadowMap.sample_compare(shadowMapSampler, shadowPos.xy, shadowPos.z);
+
     // Compute lighting
     float3 normal = normalize(inp.normal.xyz);
     float NdotL = max(0.2, dot(normal, -settings.lightDir.xyz));

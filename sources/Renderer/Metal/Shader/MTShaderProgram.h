@@ -70,6 +70,8 @@ class MTShaderProgram : public ShaderProgram
         void ReflectRenderPipeline(ShaderReflectionDescriptor& reflection) const;
         void ReflectComputePipeline(ShaderReflectionDescriptor& reflection) const;
 
+    private:
+    
         id<MTLDevice>           device_             = nil;
     
         MTLVertexDescriptor*    vertexDesc_     	= nullptr;

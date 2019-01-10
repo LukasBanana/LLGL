@@ -46,7 +46,7 @@ void MTCommandBuffer::Begin()
 
 void MTCommandBuffer::End()
 {
-    // dummy
+    encoderScheduler_.Flush();
 }
 
 void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
@@ -60,6 +60,8 @@ void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, c
     stagingBufferPool_.Write(data, static_cast<NSUInteger>(dataSize), srcBuffer, srcOffset);
     
     /* Encode blit command to copy staging buffer region to destination buffer */
+    encoderScheduler_.PauseRenderEncoder();
+
     auto blitEncoder = encoderScheduler_.BindBlitEncoder();
     [blitEncoder
         copyFromBuffer:     srcBuffer
@@ -68,12 +70,16 @@ void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, c
         destinationOffset:  static_cast<NSUInteger>(dstOffset)
         size:               static_cast<NSUInteger>(dataSize)
     ];
+
+    encoderScheduler_.ResumeRenderEncoder();
 }
 
 void MTCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
 {
     auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
     auto& srcBufferMT = LLGL_CAST(MTBuffer&, srcBuffer);
+
+    encoderScheduler_.PauseRenderEncoder();
 
     auto blitEncoder = encoderScheduler_.BindBlitEncoder();
     [blitEncoder
@@ -83,6 +89,8 @@ void MTCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
         destinationOffset:  static_cast<NSUInteger>(dstOffset)
         size:               static_cast<NSUInteger>(size)
     ];
+
+    encoderScheduler_.ResumeRenderEncoder();
 }
 
 void MTCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -174,8 +182,6 @@ void MTCommandBuffer::Clear(long flags)
         /* Begin with new render pass to clear buffers */
         encoderScheduler_.BindRenderEncoder(renderPassDesc);
         [renderPassDesc release];
-        
-        //SubmitRenderEncoderState();
     }
 }
 
@@ -216,8 +222,6 @@ void MTCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
         /* Begin with new render pass to clear buffers */
         encoderScheduler_.BindRenderEncoder(renderPassDesc);
         [renderPassDesc release];
-        
-        //SubmitRenderEncoderState();
     }
 }
 
@@ -282,7 +286,7 @@ void MTCommandBuffer::EndStreamOutput()
 void MTCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
-    resourceHeapMT.BindGraphicsResources(encoderScheduler_.GetRenderEncoder());
+    encoderScheduler_.SetGraphicsResourceHeap(&resourceHeapMT);
 }
 
 void MTCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
@@ -316,8 +320,6 @@ void MTCommandBuffer::BeginRenderPass(
         auto& renderTargetMT = LLGL_CAST(MTRenderTarget&, renderTarget);
         encoderScheduler_.BindRenderEncoder(renderTargetMT.GetNative(), true);
     }
-    
-    //SubmitRenderEncoderState();
 }
 
 void MTCommandBuffer::EndRenderPass()
@@ -370,9 +372,10 @@ void MTCommandBuffer::EndRenderCondition()
 
 void MTCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawPatches:            numPatchControlPoints_
             patchStart:             static_cast<NSUInteger>(firstVertex) / numPatchControlPoints_
             patchCount:             static_cast<NSUInteger>(numVertices) / numPatchControlPoints_
@@ -384,7 +387,7 @@ void MTCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawPrimitives: primitiveType_
             vertexStart:    static_cast<NSUInteger>(firstVertex)
             vertexCount:    static_cast<NSUInteger>(numVertices)
@@ -394,9 +397,10 @@ void MTCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 
 void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPatches:             numPatchControlPoints_
             patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
             patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
@@ -410,7 +414,7 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPrimitives:  primitiveType_
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
@@ -422,9 +426,10 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
 
 void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPatches:             numPatchControlPoints_
             patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
             patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
@@ -438,7 +443,7 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPrimitives:  primitiveType_
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
@@ -453,9 +458,10 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
 
 void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawPatches:            numPatchControlPoints_
             patchStart:             static_cast<NSUInteger>(firstVertex) / numPatchControlPoints_
             patchCount:             static_cast<NSUInteger>(numVertices) / numPatchControlPoints_
@@ -467,7 +473,7 @@ void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawPrimitives: primitiveType_
             vertexStart:    static_cast<NSUInteger>(firstVertex)
             vertexCount:    static_cast<NSUInteger>(numVertices)
@@ -479,9 +485,10 @@ void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
 
 void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawPatches:            numPatchControlPoints_
             patchStart:             static_cast<NSUInteger>(firstVertex) / numPatchControlPoints_
             patchCount:             static_cast<NSUInteger>(numVertices) / numPatchControlPoints_
@@ -493,7 +500,7 @@ void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawPrimitives: primitiveType_
             vertexStart:    static_cast<NSUInteger>(firstVertex)
             vertexCount:    static_cast<NSUInteger>(numVertices)
@@ -505,9 +512,10 @@ void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
 
 void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPatches:             numPatchControlPoints_
             patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
             patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
@@ -521,7 +529,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPrimitives:  primitiveType_
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
@@ -536,9 +544,10 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 
 void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPatches:             numPatchControlPoints_
             patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
             patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
@@ -552,7 +561,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPrimitives:  primitiveType_
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
@@ -567,9 +576,10 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 
 void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPatches:             numPatchControlPoints_
             patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
             patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
@@ -583,7 +593,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPrimitives:  primitiveType_
             indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
@@ -599,9 +609,10 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawPatches:            numPatchControlPoints_
             patchIndexBuffer:       nil
             patchIndexBufferOffset: 0
@@ -611,7 +622,7 @@ void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawPrimitives:         primitiveType_
             indirectBuffer:         bufferMT.GetNative()
             indirectBufferOffset:   static_cast<NSUInteger>(offset)
@@ -622,11 +633,12 @@ void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
         while (numCommands-- > 0)
         {
-            [encoderScheduler_.GetRenderEncoder()
+            [renderEncoder
                 drawPatches:            numPatchControlPoints_
                 patchIndexBuffer:       nil
                 patchIndexBufferOffset: 0
@@ -640,7 +652,7 @@ void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::ui
     {
         while (numCommands-- > 0)
         {
-            [encoderScheduler_.GetRenderEncoder()
+            [renderEncoder
                 drawPrimitives:         primitiveType_
                 indirectBuffer:         bufferMT.GetNative()
                 indirectBufferOffset:   static_cast<NSUInteger>(offset)
@@ -653,9 +665,10 @@ void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::ui
 void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPatches:             numPatchControlPoints_
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
@@ -667,7 +680,7 @@ void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
     }
     else
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             drawIndexedPrimitives:  primitiveType_
             indexType:              indexType_
             indexBuffer:            indexBuffer_
@@ -681,11 +694,12 @@ void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if (numPatchControlPoints_ > 0)
     {
         while (numCommands-- > 0)
         {
-            [encoderScheduler_.GetRenderEncoder()
+            [renderEncoder
                 drawIndexedPatches:             numPatchControlPoints_
                 patchIndexBuffer:               nil
                 patchIndexBufferOffset:         0
@@ -701,7 +715,7 @@ void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
     {
         while (numCommands-- > 0)
         {
-            [encoderScheduler_.GetRenderEncoder()
+            [renderEncoder
                 drawIndexedPrimitives:  primitiveType_
                 indexType:              indexType_
                 indexBuffer:            indexBuffer_
@@ -758,9 +772,10 @@ void MTCommandBuffer::PopDebugGroup()
 void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if ((stageFlags & StageFlags::VertexStage) != 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             setVertexBuffer:    bufferMT.GetNative()
             offset:             0
             atIndex:            static_cast<NSUInteger>(slot)
@@ -768,7 +783,7 @@ void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long
     }
     if ((stageFlags & StageFlags::FragmentStage) != 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             setFragmentBuffer:  bufferMT.GetNative()
             offset:             0
             atIndex:            static_cast<NSUInteger>(slot)
@@ -789,16 +804,17 @@ void MTCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, lon
 void MTCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
 {
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
+    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
     if ((stageFlags & StageFlags::VertexStage) != 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             setVertexTexture:   textureMT.GetNative()
             atIndex:            static_cast<NSUInteger>(slot)
         ];
     }
     if ((stageFlags & StageFlags::FragmentStage) != 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             setFragmentTexture: textureMT.GetNative()
             atIndex:            static_cast<NSUInteger>(slot)
         ];
@@ -813,16 +829,18 @@ void MTCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stag
     auto samplerState   = samplerMT.GetNative();
     auto index          = static_cast<NSUInteger>(slot);
     
+    auto renderEncoder  = encoderScheduler_.GetRenderEncoder();
+
     if ((stageFlags & StageFlags::VertexStage) != 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             setVertexSamplerState:      samplerState
             atIndex:                    index
         ];
     }
     if ((stageFlags & StageFlags::FragmentStage) != 0)
     {
-        [encoderScheduler_.GetRenderEncoder()
+        [renderEncoder
             setFragmentSamplerState:    samplerState
             atIndex:                    index
         ];

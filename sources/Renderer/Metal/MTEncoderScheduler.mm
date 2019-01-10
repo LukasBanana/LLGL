@@ -6,6 +6,7 @@
  */
 
 #include "MTEncoderScheduler.h"
+#include "RenderState/MTResourceHeap.h"
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <algorithm>
 
@@ -17,6 +18,7 @@ namespace LLGL
 void MTEncoderScheduler::Reset(id<MTLCommandBuffer> cmdBuffer)
 {
     cmdBuffer_ = cmdBuffer;
+    pausedRenderEncoder_ = false;
     ResetRenderEncoderState();
 }
 
@@ -76,6 +78,27 @@ id<MTLBlitCommandEncoder> MTEncoderScheduler::BindBlitEncoder()
         blitEncoder_ = [cmdBuffer_ blitCommandEncoder];
     }
     return blitEncoder_;
+}
+
+void MTEncoderScheduler::PauseRenderEncoder()
+{
+    if (renderEncoder_ != nil && !pausedRenderEncoder_)
+        pausedRenderEncoder_ = true;
+}
+
+void MTEncoderScheduler::ResumeRenderEncoder()
+{
+    if (pausedRenderEncoder_)
+    {
+        auto renderPassDesc = CopyRenderPassDesc();
+        {
+            renderPassDesc.colorAttachments[0].loadAction   = MTLLoadActionLoad;
+            renderPassDesc.depthAttachment.loadAction       = MTLLoadActionLoad;
+            renderPassDesc.stencilAttachment.loadAction     = MTLLoadActionLoad;
+        }
+        BindRenderEncoder(renderPassDesc);
+        pausedRenderEncoder_ = false;
+    }
 }
 
 MTLRenderPassDescriptor* MTEncoderScheduler::CopyRenderPassDesc()
@@ -195,6 +218,16 @@ void MTEncoderScheduler::SetDepthStencilState(id<MTLDepthStencilState> depthSten
         [renderEncoder_ setDepthStencilState:depthStencilState];
 }
 
+void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap)
+{
+    /* Store resource heap */
+    renderEncoderState_.resourceHeap = resourceHeap;
+
+    /* Submit graphics resource heap to encoder */
+    if (renderEncoder_ != nil)
+        resourceHeap->BindGraphicsResources(renderEncoder_);
+}
+
 
 /*
  * ======= Private: =======
@@ -230,6 +263,8 @@ void MTEncoderScheduler::SubmitRenderEncoderState()
             [renderEncoder_ setRenderPipelineState:renderEncoderState_.renderPipelineState];
         if (renderEncoderState_.depthStencilState != nil)
             [renderEncoder_ setDepthStencilState:renderEncoderState_.depthStencilState];
+        if (renderEncoderState_.resourceHeap != nullptr)
+            renderEncoderState_.resourceHeap->BindGraphicsResources(renderEncoder_);
     }
 }
 
@@ -240,6 +275,7 @@ void MTEncoderScheduler::ResetRenderEncoderState()
     renderEncoderState_.vertexBufferRange.length    = 0;
     renderEncoderState_.renderPipelineState         = nil;
     renderEncoderState_.depthStencilState           = nil;
+    renderEncoderState_.resourceHeap                = nullptr;
 }
 
 

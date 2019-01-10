@@ -7,6 +7,7 @@
 
 #include "MTShader.h"
 #include "../../../Core/Exception.h"
+#include <LLGL/Platform/Platform.h>
 #include <cstring>
 
 
@@ -18,7 +19,7 @@ MTShader::MTShader(id<MTLDevice> device, const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
     if (IsShaderSourceCode(desc.sourceType))
-        hasErrors_ = CompileSource(device, desc);
+        hasErrors_ = !CompileSource(device, desc);
     else
         ThrowNotSupportedExcept(__FUNCTION__, "binary shader source");
 }
@@ -36,12 +37,20 @@ static MTLLanguageVersion GetMTLLanguageVersion(const ShaderDescriptor& desc)
 {
     if (desc.profile != nullptr)
     {
+        if (std::strcmp(desc.profile, "2.1") == 0)
+            return MTLLanguageVersion2_1;
         if (std::strcmp(desc.profile, "2.0") == 0)
             return MTLLanguageVersion2_0;
         if (std::strcmp(desc.profile, "1.2") == 0)
             return MTLLanguageVersion1_2;
+        if (std::strcmp(desc.profile, "1.1") == 0)
+            return MTLLanguageVersion1_1;
+        #ifdef LLGL_OS_IOS
+        if (std::strcmp(desc.profile, "1.0") == 0)
+            return MTLLanguageVersion1_0;
+        #endif
     }
-    return MTLLanguageVersion1_1;
+    throw std::invalid_argument("invalid Metal shader version specified");
 }
 
 bool MTShader::HasErrors() const
