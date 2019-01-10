@@ -332,10 +332,9 @@ void MTCommandBuffer::EndRenderPass()
 
 void MTCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
+    /* Set graphics pipeline with encoder scheduler */
     auto& graphicsPipelineMT = LLGL_CAST(MTGraphicsPipeline&, graphicsPipeline);
-
-    encoderScheduler_.SetRenderPipelineState(graphicsPipelineMT.GetRenderPipelineState());
-    encoderScheduler_.SetDepthStencilState(graphicsPipelineMT.GetDepthStencilState());
+    encoderScheduler_.SetGraphicsPipeline(&graphicsPipelineMT);
 
     /* Store primitive type to subsequent draw commands */
     primitiveType_ = graphicsPipelineMT.GetMTLPrimitiveType();

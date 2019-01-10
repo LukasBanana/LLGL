@@ -27,24 +27,13 @@ class MTGraphicsPipeline : public GraphicsPipeline
 
         MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc);
 
-        inline id<MTLRenderPipelineState> GetRenderPipelineState() const
-        {
-            return renderPipelineState_;
-        }
-    
-        inline id<MTLDepthStencilState> GetDepthStencilState() const
-        {
-            return depthStencilState_;
-        }
-    
+        // Binds the render pipeline state, depth-stencil states, and sets the remaining parameters with the render encoder.
+        void Bind(id<MTLRenderCommandEncoder> renderEncoder);
+
+        // Returns the native primitive type.
         inline MTLPrimitiveType GetMTLPrimitiveType() const
         {
             return primitiveType_;
-        }
-    
-        inline std::uint32_t GetStencilRef() const
-        {
-            return stencilRef_;
         }
 
     private:
@@ -56,7 +45,14 @@ class MTGraphicsPipeline : public GraphicsPipeline
 
         id<MTLRenderPipelineState>  renderPipelineState_    = nil;
         id<MTLDepthStencilState>    depthStencilState_      = nil;
+        MTLCullMode                 cullMode_               = MTLCullModeNone;
+        MTLWinding                  winding_                = MTLWindingClockwise;
+        MTLTriangleFillMode         fillMode_               = MTLTriangleFillModeFill;
         MTLPrimitiveType            primitiveType_          = MTLPrimitiveTypeTriangle;
+        MTLDepthClipMode            clipMode_               = MTLDepthClipModeClip;
+        float                       depthBias_              = 0.0f;
+        float                       depthSlope_             = 0.0f;
+        float                       depthClamp_             = 0.0f;
         std::uint32_t               stencilRef_             = 0;
 
 };

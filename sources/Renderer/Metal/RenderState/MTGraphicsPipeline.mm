@@ -8,6 +8,7 @@
 #include "MTGraphicsPipeline.h"
 #include "MTRenderPass.h"
 #include "../Shader/MTShaderProgram.h"
+#include "../MTEncoderScheduler.h"
 #include "../MTTypes.h"
 #include "../../CheckedCast.h"
 #include <LLGL/GraphicsPipelineFlags.h>
@@ -80,11 +81,29 @@ static void FillDefaultMTStencilDesc(MTLStencilDescriptor* dst)
 MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
 {
     /* Convert standalone parameters */
-    primitiveType_ = MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
+    cullMode_       = MTTypes::ToMTLCullMode(desc.rasterizer.cullMode);
+    winding_        = (desc.rasterizer.frontCCW ? MTLWindingCounterClockwise : MTLWindingClockwise);
+    fillMode_       = MTTypes::ToMTLTriangleFillMode(desc.rasterizer.polygonMode);
+    primitiveType_  = MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
+    clipMode_       = (desc.rasterizer.depthClampEnabled ? MTLDepthClipModeClamp : MTLDepthClipModeClip);
+    depthBias_      = desc.rasterizer.depthBias.constantFactor;
+    depthSlope_     = desc.rasterizer.depthBias.slopeFactor;
+    depthClamp_     = desc.rasterizer.depthBias.clamp;
 
     /* Create render pipeline and depth-stencil states */
     CreateRenderPipelineState(device, desc);
     CreateDepthStencilState(device, desc);
+}
+
+void MTGraphicsPipeline::Bind(id<MTLRenderCommandEncoder> renderEncoder)
+{
+    [renderEncoder setRenderPipelineState:renderPipelineState_];
+    [renderEncoder setDepthStencilState:depthStencilState_];
+    [renderEncoder setCullMode:cullMode_];
+    [renderEncoder setFrontFacingWinding:winding_];
+    [renderEncoder setTriangleFillMode:fillMode_];
+    [renderEncoder setDepthClipMode:clipMode_];
+    [renderEncoder setDepthBias:depthBias_ slopeScale:depthSlope_ clamp:depthClamp_];
 }
 
 

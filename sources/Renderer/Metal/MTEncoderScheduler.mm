@@ -7,6 +7,7 @@
 
 #include "MTEncoderScheduler.h"
 #include "RenderState/MTResourceHeap.h"
+#include "RenderState/MTGraphicsPipeline.h"
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <algorithm>
 
@@ -52,8 +53,7 @@ id<MTLRenderCommandEncoder> MTEncoderScheduler::BindRenderEncoder(MTLRenderPassD
         renderPassDesc_ = renderPassDesc;
 
         /* Reset pipeline states (must be reset within Begin/EndRenderPass) */
-        renderEncoderState_.renderPipelineState = nil;
-        renderEncoderState_.depthStencilState   = nil;
+        renderEncoderState_.graphicsPipeline = nullptr;
     }
 
     SubmitRenderEncoderState();
@@ -92,9 +92,10 @@ void MTEncoderScheduler::ResumeRenderEncoder()
     {
         auto renderPassDesc = CopyRenderPassDesc();
         {
-            renderPassDesc.colorAttachments[0].loadAction   = MTLLoadActionLoad;
-            renderPassDesc.depthAttachment.loadAction       = MTLLoadActionLoad;
-            renderPassDesc.stencilAttachment.loadAction     = MTLLoadActionLoad;
+            for (NSUInteger i = 0; i < 8; ++i)
+                renderPassDesc.colorAttachments[i].loadAction = MTLLoadActionLoad;
+            renderPassDesc.depthAttachment.loadAction = MTLLoadActionLoad;
+            renderPassDesc.stencilAttachment.loadAction = MTLLoadActionLoad;
         }
         BindRenderEncoder(renderPassDesc);
         pausedRenderEncoder_ = false;
@@ -198,24 +199,14 @@ void MTEncoderScheduler::SetVertexBuffers(const id<MTLBuffer>* buffers, const NS
     }
 }
 
-void MTEncoderScheduler::SetRenderPipelineState(id<MTLRenderPipelineState> renderPipelineState)
+void MTEncoderScheduler::SetGraphicsPipeline(MTGraphicsPipeline* graphicsPipeline)
 {
-    /* Store render pipeline state */
-    renderEncoderState_.renderPipelineState = renderPipelineState;
+    /* Store graphics pipeline */
+    renderEncoderState_.graphicsPipeline = graphicsPipeline;
 
-    /* Submit render pipeline state to encoder */
+    /* Submit graphics pipeline to encoder */
     if (renderEncoder_ != nil)
-        [renderEncoder_ setRenderPipelineState:renderPipelineState];
-}
-
-void MTEncoderScheduler::SetDepthStencilState(id<MTLDepthStencilState> depthStencilState)
-{
-    /* Store depth-stencil state */
-    renderEncoderState_.depthStencilState = depthStencilState;
-
-    /* Submit depth-stencil state to encoder */
-    if (renderEncoder_ != nil)
-        [renderEncoder_ setDepthStencilState:depthStencilState];
+        graphicsPipeline->Bind(renderEncoder_);
 }
 
 void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap)
@@ -259,10 +250,8 @@ void MTEncoderScheduler::SubmitRenderEncoderState()
                 withRange:          renderEncoderState_.vertexBufferRange
             ];
         }
-        if (renderEncoderState_.renderPipelineState != nil)
-            [renderEncoder_ setRenderPipelineState:renderEncoderState_.renderPipelineState];
-        if (renderEncoderState_.depthStencilState != nil)
-            [renderEncoder_ setDepthStencilState:renderEncoderState_.depthStencilState];
+        if (renderEncoderState_.graphicsPipeline != nullptr)
+            renderEncoderState_.graphicsPipeline->Bind(renderEncoder_);
         if (renderEncoderState_.resourceHeap != nullptr)
             renderEncoderState_.resourceHeap->BindGraphicsResources(renderEncoder_);
     }
@@ -273,8 +262,7 @@ void MTEncoderScheduler::ResetRenderEncoderState()
     renderEncoderState_.viewportCount               = 0;
     renderEncoderState_.scissorRectCount            = 0;
     renderEncoderState_.vertexBufferRange.length    = 0;
-    renderEncoderState_.renderPipelineState         = nil;
-    renderEncoderState_.depthStencilState           = nil;
+    renderEncoderState_.graphicsPipeline            = nullptr;
     renderEncoderState_.resourceHeap                = nullptr;
 }
 

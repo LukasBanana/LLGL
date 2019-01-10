@@ -21,6 +21,7 @@ namespace LLGL
 struct Viewport;
 struct Scissor;
 class MTResourceHeap;
+class MTGraphicsPipeline;
 
 class MTEncoderScheduler
 {
@@ -52,8 +53,7 @@ class MTEncoderScheduler
         void SetScissorRects(const Scissor* scissors, NSUInteger scissorCount);
         void SetVertexBuffer(id<MTLBuffer> buffer, NSUInteger offset);
         void SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount);
-        void SetRenderPipelineState(id<MTLRenderPipelineState> renderPipelineState);
-        void SetDepthStencilState(id<MTLDepthStencilState> depthStencilState);
+        void SetGraphicsPipeline(MTGraphicsPipeline* graphicsPipeline);
         void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap);
 
     public:
@@ -87,16 +87,15 @@ class MTEncoderScheduler
 
         struct MTRenderEncoderState
         {
-            MTLViewport                 viewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]      = {};
-            NSUInteger                  viewportCount                                       = 0;
-            MTLScissorRect              scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]   = {};
-            NSUInteger                  scissorRectCount                                    = 0;
-            id<MTLBuffer>               vertexBuffers[g_maxNumVertexBuffers];
-            NSUInteger                  vertexBufferOffsets[g_maxNumVertexBuffers];
-            NSRange                     vertexBufferRange                                   = { 0, 0 };
-            id<MTLRenderPipelineState>  renderPipelineState                                 = nil;
-            id<MTLDepthStencilState>    depthStencilState                                   = nil;
-            MTResourceHeap*             resourceHeap                                        = nullptr;
+            MTLViewport         viewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]      = {};
+            NSUInteger          viewportCount                                       = 0;
+            MTLScissorRect      scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]   = {};
+            NSUInteger          scissorRectCount                                    = 0;
+            id<MTLBuffer>       vertexBuffers[g_maxNumVertexBuffers];
+            NSUInteger          vertexBufferOffsets[g_maxNumVertexBuffers];
+            NSRange             vertexBufferRange                                   = { 0, 0 };
+            MTGraphicsPipeline* graphicsPipeline                                    = nullptr;
+            MTResourceHeap*     resourceHeap                                        = nullptr;
         };
     
     private:
