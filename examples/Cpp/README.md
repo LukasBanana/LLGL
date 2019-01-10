@@ -1,7 +1,6 @@
 # Tutorials and Examples
 
-This repository contains several tutorials and examples which show how to use LLGL.
-Here is a brief overview:
+This repository contains several tutorials and examples which show how to use LLGL. Note that you need to set the **working directory** to `<Your-LLGL-Repository>/examples/Cpp/<Example>` in order to get your examples running. For the first example, this could be `/Users/JohnDoe/LLGL/examples/Cpp/HelloTriangle` or `C:\Users\JohnDoe\LLGL\examples\Cpp\HelloTriangle` for instance.
 
 ## Tutorials
 
