@@ -31,6 +31,7 @@ union Variant
 {
     Variant()
     {
+        // do nothing
     }
 
     std::int8_t      int8;
@@ -164,9 +165,12 @@ static void WriteNormalizedTypedVariant(DataType dstDataType, VariantBuffer& dst
 
 // Worker thread procedure for the "ConvertImageBufferDataType" function
 static void ConvertImageBufferDataTypeWorker(
-    DataType srcDataType, const VariantConstBuffer& srcBuffer,
-    DataType dstDataType, VariantBuffer& dstBuffer,
-    std::size_t idxBegin, std::size_t idxEnd)
+    DataType                    srcDataType,
+    const VariantConstBuffer&   srcBuffer,
+    DataType                    dstDataType,
+    VariantBuffer&              dstBuffer,
+    std::size_t                 idxBegin,
+    std::size_t                 idxEnd)
 {
     double value = 0.0;
 
@@ -219,9 +223,12 @@ static void ConvertImageBufferDataType(
         {
             workers[i] = std::thread(
                 ConvertImageBufferDataTypeWorker,
-                srcDataType, std::ref(src),
-                dstDataType, std::ref(dst),
-                offset, offset + workSize
+                srcDataType,
+                std::ref(src),
+                dstDataType,
+                std::ref(dst),
+                offset,
+                offset + workSize
             );
             offset += workSize;
         }
@@ -409,9 +416,13 @@ static void WriteRGBAFormattedVariant(
 
 // Worker thread procedure for the "ConvertImageBufferFormat" function
 static void ConvertImageBufferFormatWorker(
-    ImageFormat srcFormat, DataType srcDataType, const VariantConstBuffer& srcBuffer,
-    ImageFormat dstFormat, VariantBuffer& dstBuffer,
-    std::size_t idxBegin, std::size_t idxEnd)
+    ImageFormat                 srcFormat,
+    DataType                    srcDataType,
+    const VariantConstBuffer&   srcBuffer,
+    ImageFormat                 dstFormat,
+    VariantBuffer&              dstBuffer,
+    std::size_t                 idxBegin,
+    std::size_t                 idxEnd)
 {
     /* Get size for source and destination formats */
     auto srcFormatSize  = ImageFormatSize(srcFormat);
@@ -475,9 +486,13 @@ static void ConvertImageBufferFormat(
         {
             workers[i] = std::thread(
                 ConvertImageBufferFormatWorker,
-                srcImageDesc.format, srcImageDesc.dataType, std::ref(src),
-                dstImageDesc.format, std::ref(dst),
-                offset, offset + workSize
+                srcImageDesc.format,
+                srcImageDesc.dataType,
+                std::ref(src),
+                dstImageDesc.format,
+                std::ref(dst),
+                offset,
+                offset + workSize
             );
             offset += workSize;
         }
@@ -486,9 +501,13 @@ static void ConvertImageBufferFormat(
         if (workSizeRemain > 0)
         {
             ConvertImageBufferFormatWorker(
-                srcImageDesc.format, srcImageDesc.dataType, src,
-                dstImageDesc.format, dst,
-                offset, offset + workSizeRemain
+                srcImageDesc.format,
+                srcImageDesc.dataType,
+                src,
+                dstImageDesc.format,
+                dst,
+                offset,
+                offset + workSizeRemain
             );
         }
 
@@ -500,9 +519,13 @@ static void ConvertImageBufferFormat(
     {
         /* Execute conversion only on main thread */
         ConvertImageBufferFormatWorker(
-            srcImageDesc.format, srcImageDesc.dataType, src,
-            dstImageDesc.format, dst,
-            0, imageSize
+            srcImageDesc.format,
+            srcImageDesc.dataType,
+            src,
+            dstImageDesc.format,
+            dst,
+            0,
+            imageSize
         );
     }
 }
@@ -694,8 +717,12 @@ LLGL_EXPORT bool ConvertImageBuffer(
         auto intermediateBuffer     = MakeUniqueArray<char>(intermediateBufferSize);
 
         ConvertImageBufferDataType(
-            srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
-            dstImageDesc.dataType, intermediateBuffer.get(), intermediateBufferSize,
+            srcImageDesc.dataType,
+            srcImageDesc.data,
+            srcImageDesc.dataSize,
+            dstImageDesc.dataType,
+            intermediateBuffer.get(),
+            intermediateBufferSize,
             threadCount
         );
 
@@ -717,8 +744,12 @@ LLGL_EXPORT bool ConvertImageBuffer(
     {
         /* Convert image data type */
         ConvertImageBufferDataType(
-            srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
-            dstImageDesc.dataType, dstImageDesc.data, dstImageDesc.dataSize,
+            srcImageDesc.dataType,
+            srcImageDesc.data,
+            srcImageDesc.dataSize,
+            dstImageDesc.dataType,
+            dstImageDesc.data,
+            dstImageDesc.dataSize,
             threadCount
         );
         return true;
@@ -765,8 +796,12 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
             auto intermediateBuffer     = MakeUniqueArray<char>(intermediateBufferSize);
 
             ConvertImageBufferDataType(
-                srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
-                dstDataType, intermediateBuffer.get(), intermediateBufferSize,
+                srcImageDesc.dataType,
+                srcImageDesc.data,
+                srcImageDesc.dataSize,
+                dstDataType,
+                intermediateBuffer.get(),
+                intermediateBufferSize,
                 threadCount
             );
 
@@ -792,8 +827,12 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
         {
             dstImageDesc.data = dstImage.get();
             ConvertImageBufferDataType(
-                srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
-                dstDataType, dstImageDesc.data, dstImageDesc.dataSize,
+                srcImageDesc.dataType,
+                srcImageDesc.data,
+                srcImageDesc.dataSize,
+                dstDataType,
+                dstImageDesc.data,
+                dstImageDesc.dataSize,
                 threadCount
             );
         }
