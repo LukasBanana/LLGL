@@ -11,6 +11,7 @@
 #include "Buffer/MTBuffer.h"
 #include "Buffer/MTBufferArray.h"
 #include "RenderState/MTGraphicsPipeline.h"
+#include "RenderState/MTComputePipeline.h"
 #include "RenderState/MTResourceHeap.h"
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
@@ -291,8 +292,8 @@ void MTCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::u
 
 void MTCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
-    encoderScheduler_.BindComputeEncoder();
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
+    encoderScheduler_.BindComputeEncoder();
     resourceHeapMT.BindComputeResources(encoderScheduler_.GetComputeEncoder());
 }
 
@@ -342,7 +343,10 @@ void MTCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
 void MTCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
-    //todo
+    /* Set compute pipeline with encoder scheduler */
+    auto& computePipelineMT = LLGL_CAST(MTComputePipeline&, computePipeline);
+    encoderScheduler_.BindComputeEncoder();
+    computePipelineMT.Bind(encoderScheduler_.GetComputeEncoder());
 }
 
 /* ----- Queries ----- */

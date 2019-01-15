@@ -22,6 +22,7 @@ struct Viewport;
 struct Scissor;
 class MTResourceHeap;
 class MTGraphicsPipeline;
+class MTComputePipeline;
 
 class MTEncoderScheduler
 {
@@ -80,7 +81,7 @@ class MTEncoderScheduler
     
         void SubmitRenderEncoderState();
         void ResetRenderEncoderState();
-    
+
     private:
 
         static const NSUInteger g_maxNumVertexBuffers = 32;
@@ -97,7 +98,7 @@ class MTEncoderScheduler
             MTGraphicsPipeline* graphicsPipeline                                    = nullptr;
             MTResourceHeap*     resourceHeap                                        = nullptr;
         };
-    
+
     private:
     
         id<MTLCommandBuffer>            cmdBuffer_              = nil;

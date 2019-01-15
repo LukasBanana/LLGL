@@ -8,6 +8,7 @@
 #include "MTEncoderScheduler.h"
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTGraphicsPipeline.h"
+#include "RenderState/MTComputePipeline.h"
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <algorithm>
 

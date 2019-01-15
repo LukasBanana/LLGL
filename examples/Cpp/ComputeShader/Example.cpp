@@ -33,7 +33,7 @@ class Example_ComputeShader : public ExampleBase
     LLGL::ShaderProgram*    graphicsShader          = nullptr;
     LLGL::GraphicsPipeline* graphicsPipeline        = nullptr;
 
-    LLGL::Fence*            fence                   = nullptr;
+    //LLGL::Fence*            fence                   = nullptr;
 
     struct SceneState
     {
@@ -148,7 +148,7 @@ public:
         indirectArgBuffer = renderer->CreateBuffer(argBufferDesc);
 
         // Create fence
-        fence = renderer->CreateFence();
+        //fence = renderer->CreateFence();
     }
 
     void CreateComputePipeline()
@@ -178,12 +178,20 @@ public:
                 }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            computeShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Compute, "Example.metal", "CS", "1.1" },
+                }
+            );
+        }
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(0):comp, rwbuffer(1):comp, rwbuffer(2):comp")
+            LLGL::PipelineLayoutDesc("cbuffer(2):comp, rwbuffer(3):comp, rwbuffer(4):comp")
         );
 
         // Create compute pipeline
@@ -236,6 +244,16 @@ public:
                 { vertexFormat[0], vertexFormat[1] }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            graphicsShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" },
+                    { LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" }
+                },
+                { vertexFormat[0], vertexFormat[1] }
+            );
+        }
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
 
@@ -244,7 +262,7 @@ public:
         {
             pipelineDesc.shaderProgram              = graphicsShader;
             pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.rasterizer.multiSampling   = 8;
+            pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
         }
         graphicsPipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
@@ -268,7 +286,7 @@ private:
             commands->Dispatch(sceneState.numSceneObjects, 1, 1);
 
             if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 1, 1, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage);
+                commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage);
 
             // Draw scene
             commands->BeginRenderPass(*context);
@@ -285,12 +303,20 @@ private:
                 commands->DrawIndirect(*indirectArgBuffer, 0, 2, sizeof(LLGL::DrawIndirectArguments));
 
                 if (commandsExt)
-                    commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 1, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
+                    commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
             }
             commands->EndRenderPass();
         }
         commands->End();
         commandQueue->Submit(*commands);
+
+        #if 0//TEST
+        if (auto buf = renderer->MapBuffer(*indirectArgBuffer, LLGL::CPUAccess::ReadOnly))
+        {
+            auto args = reinterpret_cast<const LLGL::DrawIndirectArguments*>(buf);
+            renderer->UnmapBuffer(*indirectArgBuffer);
+        }
+        #endif
 
         // Present result on the screen
         context->Present();

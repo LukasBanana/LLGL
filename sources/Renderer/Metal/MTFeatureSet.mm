@@ -66,6 +66,10 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     limits.maxViewportSize[1]               = 16384u; //???
     limits.maxColorAttachments              = 8u;
 
+    limits.maxComputeShaderWorkGroups[0]    = 512; //???
+    limits.maxComputeShaderWorkGroups[1]    = 512; //???
+    limits.maxComputeShaderWorkGroups[2]    = 512; //???
+
     MTLSize workGroupSize = [device maxThreadsPerThreadgroup];
     limits.maxComputeShaderWorkGroupSize[0] = static_cast<std::uint32_t>(workGroupSize.width);
     limits.maxComputeShaderWorkGroupSize[1] = static_cast<std::uint32_t>(workGroupSize.height);

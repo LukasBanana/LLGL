@@ -108,7 +108,7 @@ void MTRenderContext::MakeCurrent(id<MTLCommandBuffer> cmdBuffer)
 
 bool MTRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
-    return false; //todo
+    return true; // do nothing
 }
 
 bool MTRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)

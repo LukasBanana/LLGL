@@ -6,7 +6,6 @@
  */
 
 #include "MTShader.h"
-#include "../../../Core/Exception.h"
 #include <LLGL/Platform/Platform.h>
 #include <cstring>
 
@@ -18,10 +17,7 @@ namespace LLGL
 MTShader::MTShader(id<MTLDevice> device, const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
-    if (IsShaderSourceCode(desc.sourceType))
-        hasErrors_ = !CompileSource(device, desc);
-    else
-        ThrowNotSupportedExcept(__FUNCTION__, "binary shader source");
+    hasErrors_ = !Compile(device, desc);
 }
 
 MTShader::~MTShader()
@@ -81,6 +77,30 @@ std::string MTShader::QueryInfoLog()
  * ======= Private: =======
  */
 
+bool MTShader::Compile(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
+{
+    if (IsShaderSourceCode(shaderDesc.sourceType))
+        return CompileSource(device, shaderDesc);
+    else
+        return CompileBinary(device, shaderDesc);
+}
+
+static NSString* ToNSString(const char* s)
+{
+    return [[NSString alloc] initWithUTF8String:(s != nullptr ? s : "")];
+}
+
+static MTLCompileOptions* ToMTLCompileOptions(const ShaderDescriptor& shaderDesc)
+{
+    MTLCompileOptions* opt = [MTLCompileOptions alloc];
+
+    [opt setLanguageVersion:GetMTLLanguageVersion(shaderDesc)];
+    if ((shaderDesc.flags & (ShaderCompileFlags::O1 | ShaderCompileFlags::O2 | ShaderCompileFlags::O3)) != 0)
+        [opt setFastMathEnabled:YES];
+
+    return opt;
+}
+
 bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
 {
     /* Get source */
@@ -98,15 +118,8 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
     if (sourceString == nil)
         throw std::runtime_error("cannot compile Metal shader without source");
 
-    /* Convert entry point to string to NSString */
-    NSString* entryPoint = [[NSString alloc] initWithUTF8String:(shaderDesc.entryPoint != nullptr ? shaderDesc.entryPoint : "")];
-
-    /* Initialize shader compiler options */
-    MTLCompileOptions* opt = [MTLCompileOptions alloc];
-    [opt setLanguageVersion:GetMTLLanguageVersion(shaderDesc)];
-    
-    if ((shaderDesc.flags & (ShaderCompileFlags::O1 | ShaderCompileFlags::O2 | ShaderCompileFlags::O3)) != 0)
-        [opt setFastMathEnabled:YES];
+    /* Convert entry point to NSString, and initialize shader compile options */
+    MTLCompileOptions* opt = ToMTLCompileOptions(shaderDesc);
 
     /* Load shader library */
     ReleaseError();
@@ -117,30 +130,27 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
         options:                opt
         error:                  &error_
     ];
-    
-    bool result = false;
-    
-    if (library_)
-    {
-        /* Create shader function */
-        native_ = [library_ newFunctionWithName:entryPoint];
-        if (native_)
-        {
-            result = true;
-            ReleaseError();
-        }
-        else
-        {
-            //TODO...
-        }
-    }
-    
-    /* Release NSString objects */
+
     [sourceString release];
-    [entryPoint release];
     [opt release];
-    
-    return result;
+
+    /* Load shader function with entry point */
+    return LoadFunction(shaderDesc.entryPoint);
+}
+
+bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
+{
+    /* Load shader library */
+    ReleaseError();
+    error_ = [NSError alloc];
+
+    library_ = [device
+        newLibraryWithData: reinterpret_cast<dispatch_data_t>(shaderDesc.source)
+        error:              &error_
+    ];
+
+    /* Load shader function with entry point */
+    return LoadFunction(shaderDesc.entryPoint);
 }
 
 void MTShader::ReleaseError()
@@ -150,6 +160,28 @@ void MTShader::ReleaseError()
         [error_ release];
         error_ = nullptr;
     }
+}
+
+bool MTShader::LoadFunction(const char* entryPoint)
+{
+    bool result = false;
+
+    if (library_)
+    {
+        NSString* entryPointStr = ToNSString(entryPoint);
+
+        /* Load shader function with entry point name */
+        native_ = [library_ newFunctionWithName:entryPointStr];
+        if (native_)
+        {
+            ReleaseError();
+            result = true;
+        }
+
+        [entryPointStr release];
+    }
+
+    return result;
 }
 
 

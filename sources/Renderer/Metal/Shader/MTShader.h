@@ -46,8 +46,15 @@ class MTShader : public Shader
 
     private:
 
+        bool Compile(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
         bool CompileSource(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
+        bool CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
+
         void ReleaseError();
+
+        bool LoadFunction(const char* entryPoint);
+
+    private:
 
         id<MTLLibrary>  library_    = nil;
         id<MTLFunction> native_     = nil;

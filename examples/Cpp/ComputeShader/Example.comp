@@ -8,7 +8,7 @@
 #define MAX_RADIUS  ( 0.1 )
 #define M_PI        ( 3.141592654 )
 
-layout(std140, binding = 0) uniform SceneState
+layout(std140, binding = 2) uniform SceneState
 {
     float   time;
     uint    numSceneObjects;
@@ -21,7 +21,7 @@ struct SceneObject
     vec2 _pad0;
 };
 
-layout(std430, binding = 1) buffer InstanceBuffer
+layout(std430, binding = 3) buffer InstanceBuffer
 {
     SceneObject sceneObjects[];
 };
@@ -34,7 +34,7 @@ struct DrawIndirectArguments
     uint firstInstance;
 };
 
-layout(std430, binding = 2) buffer IndirectArgBuffer
+layout(std430, binding = 4) buffer IndirectArgBuffer
 {
 	DrawIndirectArguments drawArgs[];
 };

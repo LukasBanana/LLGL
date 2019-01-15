@@ -118,9 +118,11 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
         segmentationHeader_.hasFragmentResources = 1;
     }
 
-    /* Build kernel resource segments */
+    /* Build kernel resource segments (and store buffer offset to kernel segments) */
     static const long kernelStages = (StageFlags::ComputeStage | StageFlags::TessControlStage);
-    
+
+    bufferOffsetKernel_ = static_cast<std::uint16_t>(buffer_.size());
+
     BuildBufferSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelBufferSegments);
     BuildTextureSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelTextureSegments);
     BuildSamplerSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelSamplerSegments);
@@ -142,12 +144,14 @@ void MTResourceHeap::BindGraphicsResources(id<MTLRenderCommandEncoder> renderEnc
         BindFragmentResources(renderEncoder, byteAlignedBuffer);
 }
 
-//TODO: add byte offset to kernel resources!
 void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder)
 {
-    auto byteAlignedBuffer = buffer_.data();
     if (segmentationHeader_.hasKernelResources)
+    {
+        auto byteAlignedBuffer = buffer_.data();
+        byteAlignedBuffer += bufferOffsetKernel_;
         BindKernelResources(computeEncoder, byteAlignedBuffer);
+    }
 }
 
 

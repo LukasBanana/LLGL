@@ -191,22 +191,21 @@ private:
 
     void CreatePipelineLayouts()
     {
-        bool combinedSampler = IsOpenGL();
-
-        // Create pipeline layout for shadow-map rendering
-        pipelineLayoutShadowMap = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(1):vert")
-        );
-
-        // Create pipeline layout for scene rendering
-        if (combinedSampler)
+        // Create pipeline layouts for shadow-map and scene rendering
+        if (IsOpenGL())
         {
+            pipelineLayoutShadowMap = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc("cbuffer(0):vert")
+            );
             pipelineLayoutScene = renderer->CreatePipelineLayout(
                 LLGL::PipelineLayoutDesc("cbuffer(0):frag:vert, texture(0):frag, sampler(0):frag")
             );
         }
         else
         {
+            pipelineLayoutShadowMap = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc("cbuffer(1):vert")
+            );
             pipelineLayoutScene = renderer->CreatePipelineLayout(
                 LLGL::PipelineLayoutDesc("cbuffer(1):frag:vert, texture(2):frag, sampler(3):frag")
             );

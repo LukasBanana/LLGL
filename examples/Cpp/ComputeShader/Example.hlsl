@@ -8,7 +8,7 @@
 #define MAX_RADIUS  ( 0.1 )
 #define M_PI        ( 3.141592654 )
 
-cbuffer SceneState : register(b0)
+cbuffer SceneState : register(b2)
 {
     float   time;
     uint    numSceneObjects;
@@ -21,7 +21,7 @@ struct SceneObject
     float2      _pad0;
 };
 
-RWBuffer<float> sceneObjects : register(u1);
+RWBuffer<float> sceneObjects : register(u3);
 
 struct DrawIndirectArguments
 {
@@ -31,7 +31,7 @@ struct DrawIndirectArguments
     uint firstInstance;
 };
 
-RWBuffer<uint> drawArgs : register(u2);
+RWBuffer<uint> drawArgs : register(u4);
 
 void WriteDrawArgs(DrawIndirectArguments args, uint idx)
 {

@@ -13,10 +13,12 @@ namespace LLGL
 {
 
 
-static MTLResourceOptions GetMTLResourceOptions(long miscFlags)
+static MTLResourceOptions GetMTLResourceOptions(const BufferDescriptor& desc)
 {
-    if ((miscFlags & MiscFlags::DynamicUsage) != 0)
+    if ((desc.miscFlags & MiscFlags::DynamicUsage) != 0)
         return MTLResourceStorageModeShared;
+    //else if ((desc.bindFlags & BindFlags::IndirectBuffer) != 0)
+    //    return MTLResourceStorageModePrivate;
     else
         return MTLResourceStorageModeManaged;
 }
@@ -25,7 +27,7 @@ MTBuffer::MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const voi
     Buffer           { desc.bindFlags                               },
     indexType16Bits_ { (desc.indexBuffer.format == Format::R16UInt) }
 {
-    auto opt = GetMTLResourceOptions(desc.miscFlags);
+    auto opt = GetMTLResourceOptions(desc);
     
     isManaged_ = ((opt & MTLResourceStorageModeManaged) != 0);
     
@@ -54,6 +56,24 @@ void MTBuffer::Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize
     /* Notify Metal API about update */
     if (isManaged_)
         [native_ didModifyRange:range];
+}
+
+void* MTBuffer::Map(CPUAccess access)
+{
+    mappedWriteAccess_ = (access == CPUAccess::WriteOnly);
+    return [native_ contents];
+}
+
+void MTBuffer::Unmap()
+{
+    if (isManaged_ && mappedWriteAccess_)
+    {
+        NSRange range;
+        range.location  = 0;
+        range.length    = [native_ length];
+        [native_ didModifyRange:range];
+    }
+    mappedWriteAccess_ = false;
 }
 
 

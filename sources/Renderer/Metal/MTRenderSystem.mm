@@ -97,12 +97,14 @@ void MTRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, con
 
 void* MTRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
-    return nullptr;//todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    return bufferMT.Map(access);
 }
 
 void MTRenderSystem::UnmapBuffer(Buffer& buffer)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    return bufferMT.Unmap();
 }
 
 /* ----- Textures ----- */
@@ -244,7 +246,7 @@ GraphicsPipeline* MTRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
 
 ComputePipeline* MTRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(computePipelines_, MakeUnique<MTComputePipeline>(device_, desc));
 }
 
 void MTRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
@@ -254,8 +256,7 @@ void MTRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 
 void MTRenderSystem::Release(ComputePipeline& computePipeline)
 {
-    //todo
-    //RemoveFromUniqueSet(computePipelines_, &computePipeline);
+    RemoveFromUniqueSet(computePipelines_, &computePipeline);
 }
 
 /* ----- Queries ----- */

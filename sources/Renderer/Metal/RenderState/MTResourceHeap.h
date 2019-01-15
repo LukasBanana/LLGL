@@ -81,6 +81,7 @@ class MTResourceHeap : public ResourceHeap
         };
 
         SegmentationHeader          segmentationHeader_;
+        std::uint16_t               bufferOffsetKernel_ = 0;
         std::vector<std::int8_t>    buffer_;
 
 };

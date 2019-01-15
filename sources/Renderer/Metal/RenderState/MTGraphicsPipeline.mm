@@ -10,53 +10,14 @@
 #include "../Shader/MTShaderProgram.h"
 #include "../MTEncoderScheduler.h"
 #include "../MTTypes.h"
+#include "../MTCore.h"
 #include "../../CheckedCast.h"
 #include <LLGL/GraphicsPipelineFlags.h>
-#include <string>
-#include <stdexcept>
 
 
 namespace LLGL
 {
 
-
-static void MTThrowIfFailed(NSError* error, const char* info)
-{
-    if (error != nullptr)
-    {
-        std::string s = info;
-        s += ": ";
-        
-        NSString* errorMsg = [error localizedDescription];
-        s += [errorMsg cStringUsingEncoding:NSUTF8StringEncoding];
-        
-        throw std::runtime_error(s);
-    }
-}
-
-static void MTThrowIfCreateFailed(NSError* error, const char* interfaceName, const char* contextInfo = nullptr)
-{
-    if (error != nullptr)
-    {
-        std::string s;
-        {
-            s = "failed to create instance of <";
-            s += interfaceName;
-            s += '>';
-            if (contextInfo != nullptr)
-            {
-                s += ' ';
-                s += contextInfo;
-            }
-        }
-        MTThrowIfFailed(error, s.c_str());
-    }
-}
-
-static BOOL MTBoolean(bool value)
-{
-    return (value ? YES : NO);
-}
 
 static void Convert(MTLStencilDescriptor* dst, const StencilFaceDescriptor& src)
 {

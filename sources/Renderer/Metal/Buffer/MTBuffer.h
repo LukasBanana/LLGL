@@ -28,6 +28,9 @@ class MTBuffer : public Buffer
     
         void Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize);
 
+        void* Map(CPUAccess access);
+        void Unmap();
+
         // Returns the native MTLBuffer object.
         inline id<MTLBuffer> GetNative() const
         {
@@ -45,6 +48,7 @@ class MTBuffer : public Buffer
         id<MTLBuffer>   native_             = nil;
         bool            indexType16Bits_    = false;
         bool            isManaged_          = false;
+        bool            mappedWriteAccess_  = false;
 
 };
 

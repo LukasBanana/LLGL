@@ -27,7 +27,7 @@ class MTGraphicsPipeline : public GraphicsPipeline
 
         MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc);
 
-        // Binds the render pipeline state, depth-stencil states, and sets the remaining parameters with the render encoder.
+        // Binds the render pipeline state, depth-stencil states, and sets the remaining parameters with the specified command encoder.
         void Bind(id<MTLRenderCommandEncoder> renderEncoder);
 
         // Returns the native primitive type.
