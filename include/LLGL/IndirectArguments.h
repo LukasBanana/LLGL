@@ -43,17 +43,23 @@ struct DrawIndirectArguments
     //! Specifies the number of instances to draw.
     std::uint32_t   numInstances;
 
-    //! Specifies the zero-based offset of the first vertex from the vertex buffer.
-    std::uint32_t   firstVertex;
-
     /**
-    \brief Specifies the zero-based offset of the first instance.
-    \note The parameter \c firstVertex modifies the vertex ID within the shader pipeline differently for \c SV_VertexID
+    \brief Specifies the zero-based offset of the first vertex from the vertex buffer.
+    \note This parameter modifies the vertex ID within the shader pipeline differently for \c SV_VertexID
     in HLSL and \c gl_VertexID in GLSL (or \c gl_VertexIndex for Vulkan), due to rendering API differences.
     The system value \c SV_VertexID in HLSL will always start with zero,
     but the system value \c gl_VertexID in GLSL (or \c gl_VertexIndex for Vulkan)
     will start with the value of \c firstVertex.
-    The same holds true for the parameter \c firstInstance and the system values \c SV_InstanceID in HLSL and \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan).
+    */
+    std::uint32_t   firstVertex;
+
+    /**
+    \brief Specifies the zero-based offset of the first instance.
+    \note This parameter modifies the instance ID within the shader pipeline differently for \c SV_InstanceID
+    in HLSL and \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan), due to rendering API differences.
+    The system value \c SV_InstanceID in HLSL will always start with zero,
+    but the system value \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan)
+    will start with the value of \c firstInstance.
     */
     std::uint32_t   firstInstance;
 };
@@ -84,7 +90,7 @@ struct DrawIndexedIndirectArguments
     std::int32_t    vertexOffset;
 
     /**
-    \breif Specifies the zero-based offset of the first instance.
+    \brief Specifies the zero-based offset of the first instance.
     \note This parameter modifies the instance ID within the shader pipeline differently for \c SV_InstanceID
     in HLSL and \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan), due to rendering API differences.
     The system value \c SV_InstanceID in HLSL will always start with zero,
