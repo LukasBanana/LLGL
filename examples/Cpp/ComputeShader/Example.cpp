@@ -310,14 +310,6 @@ private:
         commands->End();
         commandQueue->Submit(*commands);
 
-        #if 0//TEST
-        if (auto buf = renderer->MapBuffer(*indirectArgBuffer, LLGL::CPUAccess::ReadOnly))
-        {
-            auto args = reinterpret_cast<const LLGL::DrawIndirectArguments*>(buf);
-            renderer->UnmapBuffer(*indirectArgBuffer);
-        }
-        #endif
-
         // Present result on the screen
         context->Present();
     }
