@@ -37,13 +37,13 @@ namespace LLGL
 */
 struct DrawIndirectArguments
 {
-    //! Specifies the number of vertices to generate.
+    //! Specifies the number of vertices per instance.
     std::uint32_t   numVertices;
 
-    //! Specifies the zero-based offset of the first vertex from the vertex buffer.
+    //! Specifies the number of instances to draw.
     std::uint32_t   numInstances;
 
-    //! Specifies the number of instances to generate.
+    //! Specifies the zero-based offset of the first vertex from the vertex buffer.
     std::uint32_t   firstVertex;
 
     /**
@@ -71,10 +71,10 @@ struct DrawIndirectArguments
 */
 struct DrawIndexedIndirectArguments
 {
-    //! Specifies the number of indices to generate.
+    //! Specifies the number of indices per instance.
     std::uint32_t   numIndices;
 
-    //! Specifies the number of instances to generate.
+    //! Specifies the number of instances to draw.
     std::uint32_t   numInstances;
 
     //! Specifies the zero-based offset of the first index from the index buffer.
@@ -105,10 +105,10 @@ so this structure is required to fill the buffer that is used for the arguments 
 */
 struct DrawPatchIndirectArgument
 {
-    //! Number of patches per instance.
+    //! Specifies the number of patches per instance.
     std::uint32_t numPatches;
 
-    //! Number of instances to draw.
+    //! Specifies the number of instances to draw.
     std::uint32_t numInstances;
 
     //! Specifies the patch start index.
