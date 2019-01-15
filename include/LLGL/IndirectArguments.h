@@ -1,12 +1,12 @@
 /*
- * IndirectCommandArgs.h
+ * IndirectArguments.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_INDIRECT_COMMAND_ARGS_H
-#define LLGL_INDIRECT_COMMAND_ARGS_H
+#ifndef LLGL_INDIRECT_ARGUMENTS_H
+#define LLGL_INDIRECT_ARGUMENTS_H
 
 
 #include <cstdint>

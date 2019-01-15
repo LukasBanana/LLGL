@@ -20,7 +20,7 @@
 #include "DbgComputePipeline.h"
 
 #include <LLGL/RenderingDebugger.h>
-#include <LLGL/IndirectCommandArgs.h>
+#include <LLGL/IndirectArguments.h>
 #include <LLGL/Strings.h>
 #include <algorithm>
 

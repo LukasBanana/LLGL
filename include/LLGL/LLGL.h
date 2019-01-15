@@ -19,7 +19,7 @@
 #include "ColorRGBA.h"
 #include "RenderSystem.h"
 #include "Log.h"
-#include "IndirectCommandArgs.h"
+#include "IndirectArguments.h"
 #include "ImageFlags.h"
 
 
