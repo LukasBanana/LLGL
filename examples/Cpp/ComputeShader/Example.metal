@@ -61,10 +61,10 @@ void WriteSceneObject(device SceneObject& obj, uint idx, constant SceneState& sc
     float c = cos(a*2.0);
 
     // Compute rotation and position
-    obj.rotation[0] = c*r;
-    obj.rotation[1] = s*r;
-    obj.rotation[2] = -s*r;
-    obj.rotation[3] = c*r;
+    obj.rotation[0][0] = c*r;
+    obj.rotation[0][1] = s*r;
+    obj.rotation[1][0] = -s*r;
+    obj.rotation[1][1] = c*r;
     obj.position[0] = sin(a)*d;
     obj.position[1] = cos(a)*d;
 }
@@ -73,10 +73,10 @@ kernel void CS(
     constant SceneState&          sceneState   [[buffer(2)]],
     device SceneObject*           sceneObjects [[buffer(3)]],
     device DrawIndirectArguments* drawArgs     [[buffer(4)]],
-    uint3                         threadID     [[thread_position_in_grid]])
+    uint                          threadID     [[thread_position_in_grid]])
 {
     // Write draw arguments to indirect argument buffer
-    //if (threadID.x == 0)
+    if (threadID == 0)
     {
         float t = fract(sceneState.time*0.1);
         if (t < 0.5)
@@ -94,7 +94,7 @@ kernel void CS(
     }
 
     // Write scene transformations
-    WriteSceneObject(sceneObjects[threadID.x], threadID.x, sceneState);
+    WriteSceneObject(sceneObjects[threadID], threadID, sceneState);
 }
 
 

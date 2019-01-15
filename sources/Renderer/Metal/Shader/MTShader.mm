@@ -138,16 +138,42 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
     return LoadFunction(shaderDesc.entryPoint);
 }
 
+//TODO: this is untested!!!
 bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
 {
+    /* Get source */
+    dispatch_data_t dispatchData = nil;
+    NSData* source = nullptr;
+
+    if (shaderDesc.source != nullptr)
+    {
+        if (shaderDesc.sourceType == ShaderSourceType::BinaryFile)
+        {
+            NSString* filePath = [[NSString alloc] initWithUTF8String:shaderDesc.source];
+            source = [NSData dataWithContentsOfFile:filePath];
+            dispatchData = dispatch_data_create([source bytes], [source length], nil, nil);
+            [filePath release];
+        }
+        else if (shaderDesc.sourceSize > 0)
+            dispatchData = dispatch_data_create(shaderDesc.source, shaderDesc.sourceSize, nil, nil);
+    }
+
+    if (dispatchData == nil)
+        throw std::runtime_error("cannot compile Metal shader without source");
+
     /* Load shader library */
     ReleaseError();
     error_ = [NSError alloc];
 
     library_ = [device
-        newLibraryWithData: reinterpret_cast<dispatch_data_t>(shaderDesc.source)
+        newLibraryWithData: reinterpret_cast<dispatch_data_t>(dispatchData)
         error:              &error_
     ];
+
+    if (source != nullptr)
+        [source release];
+
+    [dispatchData release];
 
     /* Load shader function with entry point */
     return LoadFunction(shaderDesc.entryPoint);
