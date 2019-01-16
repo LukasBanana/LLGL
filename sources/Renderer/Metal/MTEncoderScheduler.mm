@@ -20,7 +20,7 @@ namespace LLGL
 void MTEncoderScheduler::Reset(id<MTLCommandBuffer> cmdBuffer)
 {
     cmdBuffer_ = cmdBuffer;
-    pausedRenderEncoder_ = false;
+    isRenderEncoderPaused_ = false;
     ResetRenderEncoderState();
 }
 
@@ -48,16 +48,13 @@ id<MTLRenderCommandEncoder> MTEncoderScheduler::BindRenderEncoder(MTLRenderPassD
     Flush();
     renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
 
+    /* Store descriptor for primary render pass */
     if (primaryRenderPass)
-    {
-        /* Store descriptor for primary render pass */
         renderPassDesc_ = renderPassDesc;
 
-        /* Reset pipeline states (must be reset within Begin/EndRenderPass) */
-        renderEncoderState_.graphicsPipeline = nullptr;
-    }
+    /* A new render command encoder forces the pipeline state to be reset */
+    isRenderPassDirty_ = true;
 
-    SubmitRenderEncoderState();
     return renderEncoder_;
 }
 
@@ -83,13 +80,13 @@ id<MTLBlitCommandEncoder> MTEncoderScheduler::BindBlitEncoder()
 
 void MTEncoderScheduler::PauseRenderEncoder()
 {
-    if (renderEncoder_ != nil && !pausedRenderEncoder_)
-        pausedRenderEncoder_ = true;
+    if (renderEncoder_ != nil && !isRenderEncoderPaused_)
+        isRenderEncoderPaused_ = true;
 }
 
 void MTEncoderScheduler::ResumeRenderEncoder()
 {
-    if (pausedRenderEncoder_)
+    if (isRenderEncoderPaused_)
     {
         auto renderPassDesc = CopyRenderPassDesc();
         {
@@ -99,7 +96,7 @@ void MTEncoderScheduler::ResumeRenderEncoder()
             renderPassDesc.stencilAttachment.loadAction = MTLLoadActionLoad;
         }
         BindRenderEncoder(renderPassDesc);
-        pausedRenderEncoder_ = false;
+        isRenderEncoderPaused_ = false;
     }
 }
 
@@ -218,6 +215,16 @@ void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap)
     /* Submit graphics resource heap to encoder */
     if (renderEncoder_ != nil)
         resourceHeap->BindGraphicsResources(renderEncoder_);
+}
+
+id<MTLRenderCommandEncoder> MTEncoderScheduler::GetRenderEncoderAndFlushRenderPass()
+{
+    if (isRenderPassDirty_)
+    {
+        SubmitRenderEncoderState();
+        isRenderPassDirty_ = false;
+    }
+    return GetRenderEncoder();
 }
 
 

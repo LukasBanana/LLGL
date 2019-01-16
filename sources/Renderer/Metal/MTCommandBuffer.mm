@@ -375,7 +375,7 @@ void MTCommandBuffer::EndRenderCondition()
 
 void MTCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -400,7 +400,7 @@ void MTCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 
 void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -429,7 +429,7 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
 
 void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -461,7 +461,7 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
 
 void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -488,7 +488,7 @@ void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
 
 void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -515,7 +515,7 @@ void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
 
 void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -547,7 +547,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 
 void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -579,7 +579,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 
 void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -612,7 +612,7 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
 void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -636,7 +636,7 @@ void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         while (numCommands-- > 0)
@@ -668,7 +668,7 @@ void MTCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::ui
 void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         [renderEncoder
@@ -697,7 +697,7 @@ void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    auto renderEncoder = encoderScheduler_.GetRenderEncoder();
+    auto renderEncoder = encoderScheduler_.GetRenderEncoderAndFlushRenderPass();
     if (numPatchControlPoints_ > 0)
     {
         while (numCommands-- > 0)

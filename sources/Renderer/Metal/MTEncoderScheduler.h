@@ -59,6 +59,9 @@ class MTEncoderScheduler
 
     public:
     
+        // Returns the current render command encoder and flushes the queued render pass.
+        id<MTLRenderCommandEncoder> GetRenderEncoderAndFlushRenderPass();
+
         // Returns the current render command encoder.
         inline id<MTLRenderCommandEncoder> GetRenderEncoder() const
         {
@@ -110,7 +113,8 @@ class MTEncoderScheduler
         MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
         MTRenderEncoderState            renderEncoderState_;
 
-        bool                            pausedRenderEncoder_    = false;
+        bool                            isRenderEncoderPaused_  = false;
+        bool                            isRenderPassDirty_      = false;
 
 };
 
