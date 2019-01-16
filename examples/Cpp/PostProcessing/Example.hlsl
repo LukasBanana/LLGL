@@ -3,7 +3,7 @@
 
 // SCENE SHADERS
 
-cbuffer SceneSettings : register(b0)
+cbuffer SceneSettings : register(b1)
 {
 	float4x4	wvpMatrix;
 	float4x4	wMatrix;
@@ -85,7 +85,7 @@ float4 GetFullscreenTriangleVertex(uint id)
 	);
 }
 
-cbuffer BlurSettings : register(b1)
+cbuffer BlurSettings : register(b2)
 {
 	float2 blurShift;
 };
@@ -109,11 +109,11 @@ OutputVPP VPP(uint id : SV_VertexID)
 	return outp;
 }
 
-Texture2D colorMap : register(t2);
-Texture2D glossMap : register(t3);
+Texture2D colorMap : register(t3);
+Texture2D glossMap : register(t4);
 
-SamplerState colorMapSampler : register(s4);
-SamplerState glossMapSampler : register(s5);
+SamplerState colorMapSampler : register(s5);
+SamplerState glossMapSampler : register(s6);
 
 // Static values for the 1-dimensional gaussian kernel (sigma = 2.2, size = 11)
 // see http://dev.theomader.com/gaussian-kernel-calculator/

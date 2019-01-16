@@ -215,7 +215,7 @@ MTLTextureDescriptor* MTRenderTarget::CreateTextureDesc(
 {
     MTLTextureDescriptor* texDesc = [[MTLTextureDescriptor alloc] init];
     {
-        texDesc.textureType     = MTLTextureType2D;
+        texDesc.textureType     = (sampleCount > 1 ? MTLTextureType2DMultisample : MTLTextureType2D);
         texDesc.pixelFormat     = pixelFormat;
         texDesc.width           = resolution_.width;
         texDesc.height          = resolution_.height;

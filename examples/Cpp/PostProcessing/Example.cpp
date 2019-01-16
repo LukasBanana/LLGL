@@ -204,21 +204,49 @@ public:
                 }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            // Load scene shader program
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" },
+                    { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" }
+                },
+                { vertexFormatScene }
+            );
+
+            // Load blur shader program
+            shaderProgramBlur = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VPP",   "1.1" },
+                    { LLGL::ShaderType::Fragment, "Example.metal", "PBlur", "1.1" }
+                }
+            );
+
+            // Load final shader program
+            shaderProgramFinal = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VPP",    "1.1" },
+                    { LLGL::ShaderType::Fragment, "Example.metal", "PFinal", "1.1" }
+                }
+            );
+        }
 
         // Set shader uniforms (only required for GLSL until 4.10)
-        shaderProgramBlur->BindConstantBuffer("BlurSettings", 1);
+        shaderProgramBlur->BindConstantBuffer("Settings", 1);
+        shaderProgramBlur->BindConstantBuffer("BlurSettings", 2);
 
         if (auto uniforms = shaderProgramBlur->LockShaderUniform())
         {
-            uniforms->SetUniform1i("colorMap", 2);
-            uniforms->SetUniform1i("glossMap", 3);
+            uniforms->SetUniform1i("colorMap", 3);
+            uniforms->SetUniform1i("glossMap", 4);
             shaderProgramBlur->UnlockShaderUniform();
         }
 
         if (auto uniforms = shaderProgramFinal->LockShaderUniform())
         {
-            uniforms->SetUniform1i("colorMap", 2);
-            uniforms->SetUniform1i("glossMap", 3);
+            uniforms->SetUniform1i("colorMap", 3);
+            uniforms->SetUniform1i("glossMap", 4);
             shaderProgramFinal->UnlockShaderUniform();
         }
     }
@@ -262,7 +290,7 @@ public:
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, colorMap },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMap },
             };
-            renderTargetDesc.multiSampling = LLGL::MultiSamplingDescriptor(8);
+            renderTargetDesc.multiSampling = GetMultiSampleDesc();
         }
         renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
 
@@ -298,19 +326,19 @@ public:
         bool combinedSampler = IsOpenGL();
 
         // Create pipeline layout for scene rendering
-        layoutScene = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):vert:frag"));
+        layoutScene = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):vert:frag"));
 
         // Create pipeline layout for blur post-processor
         if (combinedSampler)
-            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3):frag, sampler(3):frag"));
+            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(2):frag, texture(4):frag, sampler(4):frag"));
         else
-            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3):frag, sampler(5):frag"));
+            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(2):frag, texture(4):frag, sampler(6):frag"));
 
         // Create pipeline layout for final post-processor
         if (combinedSampler)
-            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):frag, texture(2,3):frag, sampler(2,3):frag"));
+            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3,4):frag, sampler(3,4):frag"));
         else
-            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):frag, texture(2,3):frag, sampler(4,5):frag"));
+            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3,4):frag, sampler(5,6):frag"));
     }
 
     void CreatePipelines()
@@ -326,7 +354,7 @@ public:
             pipelineDescScene.depth.writeEnabled        = true;
 
             pipelineDescScene.rasterizer.cullMode       = LLGL::CullMode::Back;
-            pipelineDescScene.rasterizer.multiSampling  = LLGL::MultiSamplingDescriptor(8);
+            pipelineDescScene.rasterizer.multiSampling  = GetMultiSampleDesc();
         }
         pipelineScene = renderer->CreateGraphicsPipeline(pipelineDescScene);
 
