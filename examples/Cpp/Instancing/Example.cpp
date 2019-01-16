@@ -40,8 +40,11 @@ class Example_Instancing : public ExampleBase
 
     struct Settings
     {
-        Gs::Matrix4f    vpMatrix;          // View-projection matrix
-        Gs::Vector2f    animationVector;   // Animation vector to make the plants wave in the wind
+        Gs::Matrix4f    vpMatrix;                           // View-projection matrix
+        Gs::Vector4f    viewPos;                            // Camera view position (in world spce)
+        float           fogColor[3] = { 0.3f, 0.3f, 0.3f };
+        float           fogDensity  = 0.04f;
+        float           animVec[2]  = { 0.0f, 0.0f };       // Animation vector to make the plants wave in the wind
         float           _pad0[2];
     }
     settings;
@@ -268,19 +271,19 @@ private:
 
     void CreatePipelines()
     {
-        bool hasCombinedSampler = IsOpenGL();
-
         // Create pipeline layout
-        LLGL::PipelineLayoutDescriptor plDesc;
+        if (IsOpenGL())
         {
-            plDesc.bindings =
-            {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage,   2u                             },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 3u) },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, (hasCombinedSampler ? 0u : 4u) },
-            };
+            pipelineLayout = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc("cbuffer(0):vert:frag, texture(0):frag, sampler(0):frag")
+            );
         }
-        pipelineLayout = renderer->CreatePipelineLayout(plDesc);
+        else
+        {
+            pipelineLayout = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc("cbuffer(2):vert:frag, texture(3):frag, sampler(4):frag")
+            );
+        }
 
         // Create resource view heap
         for (std::size_t i = 0; i < 2; ++i)
@@ -327,7 +330,8 @@ private:
         Gs::RotateFree(vMatrix, { 1, 0, 0 }, Gs::Deg2Rad(-33.0f));
         Gs::Translate(vMatrix, { 0, 0, -18 });
 
-        settings.vpMatrix = projection * vMatrix.Inverse();
+        settings.viewPos    = vMatrix * Gs::Vector4{ 0, 0, 0, 1 };
+        settings.vpMatrix   = projection * vMatrix.Inverse();
 
         // Process wave animation
         static const float  animationRadius  = 0.1f;
@@ -336,8 +340,8 @@ private:
 
         animationTime += animationSpeed;
 
-        settings.animationVector.x = std::sin(animationTime) * animationRadius;
-        settings.animationVector.y = std::cos(animationTime) * animationRadius;
+        settings.animVec[0] = std::sin(animationTime) * animationRadius;
+        settings.animVec[1] = std::cos(animationTime) * animationRadius;
 
         // Upload new data to the constant buffer on the GPU
         if (constantBuffer)

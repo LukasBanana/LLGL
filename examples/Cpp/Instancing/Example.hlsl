@@ -3,7 +3,10 @@
 cbuffer Settings : register(b2)
 {
 	float4x4	vpMatrix;
-	float2		animationVector;
+	float4 		viewPos;
+	float3		fogColor;
+	float 		fogDensity;
+	float2		animVec;
 };
 
 struct InputVS
@@ -21,8 +24,9 @@ struct InputVS
 struct OutputVS
 {
 	float4 position	: SV_Position;
+	float4 worldPos : WORLDPOS;
 	float3 texCoord	: TEXCOORD;
-	float3 color	: COLOR;	
+	float3 color	: COLOR;
 };
 
 
@@ -32,7 +36,7 @@ OutputVS VS(InputVS inp)
 {
 	OutputVS outp;
 	
-	float2 offset = animationVector * inp.position.y;
+	float2 offset = animVec * inp.position.y;
 	
 	float4 coord = float4(
 		inp.position.x + offset.x,
@@ -41,10 +45,11 @@ OutputVS VS(InputVS inp)
 		1.0
 	);
 	
-	outp.position = mul(vpMatrix, mul(inp.wMatrix, coord));
+	outp.worldPos = mul(inp.wMatrix, coord);
+	outp.position = mul(vpMatrix, outp.worldPos);
 	
 	outp.texCoord = float3(inp.texCoord, inp.arrayLayer);
-	outp.color = inp.color;
+	outp.color    = inp.color;
 	
 	return outp;
 }
@@ -57,11 +62,19 @@ SamplerState texSampler : register(s4);
 
 float4 PS(OutputVS inp) : SV_Target
 {
+	// Sample albed texture
 	float4 color = tex.Sample(texSampler, inp.texCoord);
 	
+	// Apply alpha clipping
 	clip(color.a - 0.5);
 	
-	color.rgb *= inp.color;
+    // Compute fog density
+    float viewDist = distance(viewPos, inp.worldPos);
+    float fog = viewDist*fogDensity;
+    fog = 1.0 - 1.0/exp(fog*fog);
+
+    // Interpolate between albedo and fog color
+    color.rgb = lerp(color.rgb * inp.color, fogColor, fog);
 	
 	return color;
 };
