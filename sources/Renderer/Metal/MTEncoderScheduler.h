@@ -12,6 +12,7 @@
 #import <Metal/Metal.h>
 
 #include "../StaticLimits.h"
+#include <cstdint>
 
 
 namespace LLGL
@@ -114,7 +115,20 @@ class MTEncoderScheduler
         MTRenderEncoderState            renderEncoderState_;
 
         bool                            isRenderEncoderPaused_  = false;
-        bool                            isRenderPassDirty_      = false;
+
+        union
+        {
+            std::uint8_t bits;
+            struct
+            {
+                std::uint8_t viewports          : 1;
+                std::uint8_t scissors           : 1;
+                std::uint8_t vertexBuffers      : 1;
+                std::uint8_t graphicsPipeline   : 1;
+                std::uint8_t resourceHeap       : 1;
+            };
+        }
+        dirtyBits_;
 
 };
 

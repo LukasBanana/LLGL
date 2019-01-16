@@ -52,8 +52,8 @@ id<MTLRenderCommandEncoder> MTEncoderScheduler::BindRenderEncoder(MTLRenderPassD
     if (primaryRenderPass)
         renderPassDesc_ = renderPassDesc;
 
-    /* A new render command encoder forces the pipeline state to be reset */
-    isRenderPassDirty_ = true;
+    /* A new render command encoder forces all pipeline states to be reset */
+    dirtyBits_.bits = ~0;
 
     return renderEncoder_;
 }
@@ -118,19 +118,10 @@ static void Convert(MTLViewport& dst, const Viewport& src)
 
 void MTEncoderScheduler::SetViewports(const Viewport* viewports, NSUInteger viewportCount)
 {
-    /* Convert and store viewports */
     renderEncoderState_.viewportCount = std::min(viewportCount, NSUInteger(LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
     for (std::uint32_t i = 0; i < renderEncoderState_.viewportCount; ++i)
         Convert(renderEncoderState_.viewports[i], viewports[i]);
-
-    /* Submit viewports to encoder */
-    if (renderEncoder_ != nil)
-    {
-        [renderEncoder_
-            setViewports:   renderEncoderState_.viewports
-            count:          renderEncoderState_.viewportCount
-        ];
-    }
+    dirtyBits_.viewports = 1;
 }
 
 static void Convert(MTLScissorRect& dst, const Scissor& scissor)
@@ -143,87 +134,48 @@ static void Convert(MTLScissorRect& dst, const Scissor& scissor)
 
 void MTEncoderScheduler::SetScissorRects(const Scissor* scissors, NSUInteger scissorCount)
 {
-    /* Convert and store scissor rects */
     renderEncoderState_.scissorRectCount = std::min(scissorCount, NSUInteger(LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
     for (std::uint32_t i = 0; i < renderEncoderState_.scissorRectCount; ++i)
         Convert(renderEncoderState_.scissorRects[i], scissors[i]);
-
-    /* Submit scissor rects to encoder */
-    if (renderEncoder_ != nil)
-    {
-        [renderEncoder_
-            setScissorRects:    renderEncoderState_.scissorRects
-            count:              renderEncoderState_.scissorRectCount
-        ];
-    }
+    dirtyBits_.scissors = 1;
 }
 
 void MTEncoderScheduler::SetVertexBuffer(id<MTLBuffer> buffer, NSUInteger offset)
 {
-    /* Store reference to buffer */
     renderEncoderState_.vertexBuffers[0]            = buffer;
     renderEncoderState_.vertexBufferOffsets[0]      = offset;
     renderEncoderState_.vertexBufferRange.location  = 0;
     renderEncoderState_.vertexBufferRange.length    = 1;
-
-    /* Subtmit vertex buffer to encoder */
-    if (renderEncoder_ != nil)
-    {
-        [renderEncoder_
-            setVertexBuffer:    buffer
-            offset:             offset
-            atIndex:            0
-        ];
-    }
+    dirtyBits_.vertexBuffers = 1;
 }
 
 void MTEncoderScheduler::SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount)
 {
-    /* Store reference to buffers */
     std::copy(buffers, buffers + bufferCount, renderEncoderState_.vertexBuffers);
     std::copy(offsets, offsets + bufferCount, renderEncoderState_.vertexBufferOffsets);
 
     renderEncoderState_.vertexBufferRange.location  = 0;
     renderEncoderState_.vertexBufferRange.length    = bufferCount;
 
-    /* Subtmit vertex buffers to encoder */
-    if (renderEncoder_ != nil)
-    {
-        [renderEncoder_
-            setVertexBuffers:   renderEncoderState_.vertexBuffers
-            offsets:            renderEncoderState_.vertexBufferOffsets
-            withRange:          renderEncoderState_.vertexBufferRange
-        ];
-    }
+    dirtyBits_.vertexBuffers = 1;
 }
 
 void MTEncoderScheduler::SetGraphicsPipeline(MTGraphicsPipeline* graphicsPipeline)
 {
-    /* Store graphics pipeline */
     renderEncoderState_.graphicsPipeline = graphicsPipeline;
-
-    /* Submit graphics pipeline to encoder */
-    if (renderEncoder_ != nil)
-        graphicsPipeline->Bind(renderEncoder_);
+    dirtyBits_.graphicsPipeline = 1;
 }
 
 void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap)
 {
-    /* Store resource heap */
     renderEncoderState_.resourceHeap = resourceHeap;
-
-    /* Submit graphics resource heap to encoder */
-    if (renderEncoder_ != nil)
-        resourceHeap->BindGraphicsResources(renderEncoder_);
+    dirtyBits_.resourceHeap = 1;
 }
 
 id<MTLRenderCommandEncoder> MTEncoderScheduler::GetRenderEncoderAndFlushRenderPass()
 {
-    if (isRenderPassDirty_)
-    {
+    if (dirtyBits_.bits != 0)
         SubmitRenderEncoderState();
-        isRenderPassDirty_ = false;
-    }
     return GetRenderEncoder();
 }
 
@@ -236,32 +188,44 @@ void MTEncoderScheduler::SubmitRenderEncoderState()
 {
     if (renderEncoder_ != nil)
     {
-        if (renderEncoderState_.viewportCount > 0)
+        if (renderEncoderState_.viewportCount > 0 && dirtyBits_.viewports != 0)
         {
+            /* Bind viewports */
             [renderEncoder_
                 setViewports:   renderEncoderState_.viewports
                 count:          renderEncoderState_.viewportCount
             ];
         }
-        if (renderEncoderState_.scissorRectCount > 0)
+        if (renderEncoderState_.scissorRectCount > 0 && dirtyBits_.scissors != 0)
         {
+            /* Bind scissor rectangles */
             [renderEncoder_
                 setScissorRects:    renderEncoderState_.scissorRects
                 count:              renderEncoderState_.scissorRectCount
             ];
         }
-        if (renderEncoderState_.vertexBufferRange.length > 0)
+        if (renderEncoderState_.vertexBufferRange.length > 0 && dirtyBits_.vertexBuffers != 0)
         {
+            /* Bind vertex buffers */
             [renderEncoder_
                 setVertexBuffers:   renderEncoderState_.vertexBuffers
                 offsets:            renderEncoderState_.vertexBufferOffsets
                 withRange:          renderEncoderState_.vertexBufferRange
             ];
         }
-        if (renderEncoderState_.graphicsPipeline != nullptr)
+        if (renderEncoderState_.graphicsPipeline != nullptr && dirtyBits_.graphicsPipeline != 0)
+        {
+            /* Bind graphics pipeline */
             renderEncoderState_.graphicsPipeline->Bind(renderEncoder_);
-        if (renderEncoderState_.resourceHeap != nullptr)
+        }
+        if (renderEncoderState_.resourceHeap != nullptr && dirtyBits_.resourceHeap != 0)
+        {
+            /* Bind resource heap */
             renderEncoderState_.resourceHeap->BindGraphicsResources(renderEncoder_);
+        }
+
+        /* Reset all dirty bits */
+        dirtyBits_.bits = 0;
     }
 }
 
