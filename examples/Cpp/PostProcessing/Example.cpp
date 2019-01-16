@@ -78,7 +78,7 @@ class Example_PostProcessing : public ExampleBase
 public:
 
     Example_PostProcessing() :
-        ExampleBase { L"LLGL Example: PostProcessing", { 800, 600 }, 0 }//, false }
+        ExampleBase { L"LLGL Example: PostProcessing" }
     {
         // Create all graphics objects
         CreateBuffers();
@@ -370,9 +370,10 @@ public:
         // Create graphics pipeline for final post-processor
         LLGL::GraphicsPipelineDescriptor pipelineDescFinal;
         {
-            pipelineDescFinal.shaderProgram     = shaderProgramFinal;
-            pipelineDescFinal.pipelineLayout    = layoutFinal;
-            pipelineDescFinal.renderPass        = context->GetRenderPass();
+            pipelineDescFinal.shaderProgram             = shaderProgramFinal;
+            pipelineDescFinal.pipelineLayout            = layoutFinal;
+            pipelineDescFinal.renderPass                = context->GetRenderPass();
+            pipelineDescFinal.rasterizer.multiSampling  = GetMultiSampleDesc();
         }
         pipelineFinal = renderer->CreateGraphicsPipeline(pipelineDescFinal);
     }

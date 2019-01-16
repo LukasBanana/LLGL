@@ -66,9 +66,10 @@ class MTRenderTarget final : public RenderTarget
         id<MTLTexture> CreateRenderTargetTexture(
             id<MTLDevice>                   device,
             const AttachmentType            type,
-            const MultiSamplingDescriptor&  multiSamplingDesc
+            const MultiSamplingDescriptor&  multiSamplingDesc,
+            id<MTLTexture>                  resolveTexture      = nil
         );
-    
+
     private:
 
         Extent2D                    resolution_;

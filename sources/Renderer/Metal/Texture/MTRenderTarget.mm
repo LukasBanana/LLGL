@@ -15,33 +15,6 @@ namespace LLGL
 {
 
 
-#if 0
-// Returns true if the specified Metal pixel format has a depth component.
-static bool HasDepthComponent(MTLPixelFormat format)
-{
-    return
-    (
-        format == MTLPixelFormatDepth16Unorm            ||
-        format == MTLPixelFormatDepth24Unorm_Stencil8   ||
-        format == MTLPixelFormatDepth32Float            ||
-        format == MTLPixelFormatDepth32Float_Stencil8
-    );
-}
-
-// Returns true if the specified Metal pixel format has a stencil component.
-static bool HasStencilComponent(MTLPixelFormat format)
-{
-    return
-    (
-        format == MTLPixelFormatStencil8                ||
-        format == MTLPixelFormatX24_Stencil8            ||
-        format == MTLPixelFormatX32_Stencil8            ||
-        format == MTLPixelFormatDepth24Unorm_Stencil8   ||
-        format == MTLPixelFormatDepth32Float_Stencil8
-    );
-}
-#endif
-
 static void Copy(MTLRenderPassAttachmentDescriptor* dst, const MTLRenderPassAttachmentDescriptor* src)
 {
     dst.texture 	= src.texture;
@@ -172,8 +145,20 @@ void MTRenderTarget::CreateAttachment(
     {
         /* Get native texture and increment reference counter */
         auto textureMT = LLGL_CAST(MTTexture*, texture);
-        attachment.texture = textureMT->GetNative();
-        [attachment.texture retain];
+        id<MTLTexture> tex = textureMT->GetNative();
+        [tex retain];
+
+        if (multiSamplingDesc.SampleCount() > 1)
+        {
+            /* Create resolve texture if multi-sampling is enabled */
+            attachment.texture          = CreateRenderTargetTexture(device, desc.type, multiSamplingDesc, tex);
+            attachment.resolveTexture   = tex;
+        }
+        else
+        {
+            /* Set native texture in attachment */
+            attachment.texture = tex;
+        }
     }
     else if (desc.type != AttachmentType::Color)
     {
@@ -194,6 +179,9 @@ void MTRenderTarget::CreateAttachment(
     attachment.slice        = desc.arrayLayer;
     attachment.loadAction   = fmt.loadAction;
     attachment.storeAction  = fmt.storeAction;
+
+    if (attachment.storeAction == MTLStoreActionStore && attachment.resolveTexture != nil)
+        attachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
 }
 
 static MTLPixelFormat SelectPixelFormat(const AttachmentType type)
@@ -229,11 +217,12 @@ MTLTextureDescriptor* MTRenderTarget::CreateTextureDesc(
 id<MTLTexture> MTRenderTarget::CreateRenderTargetTexture(
     id<MTLDevice>                   device,
     const AttachmentType            type,
-    const MultiSamplingDescriptor&  multiSamplingDesc)
+    const MultiSamplingDescriptor&  multiSamplingDesc,
+    id<MTLTexture>                  resolveTexture)
 {
     auto texDesc = CreateTextureDesc(
         device,
-        SelectPixelFormat(type),
+        (resolveTexture != nil ? [resolveTexture pixelFormat] : SelectPixelFormat(type)),
         multiSamplingDesc.SampleCount()
     );
     

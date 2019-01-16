@@ -9,7 +9,7 @@
 
 
 // Enable multi-sampling
-//#define ENABLE_MULTISAMPLING
+#define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
 //#define ENABLE_CUSTOM_MULTISAMPLING
