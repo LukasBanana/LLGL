@@ -140,10 +140,11 @@ void MTRenderSystem::GenerateMips(Texture& texture)
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
     
     id<MTLCommandBuffer> cmdBuffer = [commandQueue_->GetNative() commandBuffer];
-    id<MTLBlitCommandEncoder> blitCmdEncoder = [cmdBuffer blitCommandEncoder];
-    
-    [blitCmdEncoder generateMipmapsForTexture:textureMT.GetNative()];
-    [blitCmdEncoder endEncoding];
+    {
+        id<MTLBlitCommandEncoder> blitCmdEncoder = [cmdBuffer blitCommandEncoder];
+        [blitCmdEncoder generateMipmapsForTexture:textureMT.GetNative()];
+        [blitCmdEncoder endEncoding];
+    }
     [cmdBuffer commit];
 }
 
@@ -276,13 +277,12 @@ void MTRenderSystem::Release(QueryHeap& queryHeap)
 
 Fence* MTRenderSystem::CreateFence()
 {
-    return nullptr;//todo
+    return TakeOwnership(fences_, MakeUnique<MTFence>(device_));
 }
 
 void MTRenderSystem::Release(Fence& fence)
 {
-    //todo
-    //RemoveFromUniqueSet(fences_, &fence);
+    RemoveFromUniqueSet(fences_, &fence);
 }
 
 

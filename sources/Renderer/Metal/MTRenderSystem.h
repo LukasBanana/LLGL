@@ -26,6 +26,7 @@
 #include "RenderState/MTPipelineLayout.h"
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTRenderPass.h"
+#include "RenderState/MTFence.h"
 
 #include "Shader/MTShader.h"
 #include "Shader/MTShaderProgram.h"
@@ -178,7 +179,7 @@ class MTRenderSystem : public RenderSystem
         HWObjectContainer<MTComputePipeline>    computePipelines_;
         HWObjectContainer<MTResourceHeap>       resourceHeaps_;
         //HWObjectContainer<MTQueryHeap>          queryHeaps_;
-        //HWObjectContainer<MTFence>              fences_;
+        HWObjectContainer<MTFence>              fences_;
 
 };
 

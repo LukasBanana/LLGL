@@ -119,11 +119,12 @@ Two render passes are considered compatible when all color-, depth-, and stencil
 struct RenderPassDescriptor
 {
     /**
-    \briefs Specifies the color attachments used within the render pass.
-    \remarks A render context usually uses an BGRA format instead of an RGBA format.
+    \brief Specifies the color attachments used within the render pass.
+    \remarks A render context usually uses a BGRA format instead of an RGBA format.
     \see RenderingLimits::maxColorAttachments
     \see Format::BGRA8UNorm
     \see Format::BGRA8sRGB
+    \todo Change to static array with 8 elements, i.e. <code>AttachmentFormatDescriptor colorAttachments[8]</code>.
     */
     std::vector<AttachmentFormatDescriptor> colorAttachments;
 

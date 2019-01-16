@@ -41,7 +41,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasMultiSampleTextures         = true;
     features.hasSamplers                    = true;
     features.hasConstantBuffers             = true;
-    features.hasStorageBuffers              = false;
+    features.hasStorageBuffers              = true;
     features.hasUniforms                    = false;
     features.hasGeometryShaders             = false;
     features.hasTessellationShaders         = (fset >= MTLFeatureSet_macOS_GPUFamily1_v2);
@@ -56,11 +56,12 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasIndirectDrawing             = (fset >= MTLFeatureSet_macOS_GPUFamily1_v2);
     
     /* Specify limits */
-    limits.maxBufferSize                    = static_cast<std::uint64_t>(NSUIntegerMax); //!!!
+    limits.maxBufferSize                    = [device maxBufferLength];
     limits.maxConstantBufferSize            = 65536u;
     limits.max1DTextureSize                 = 16384u;
     limits.max2DTextureSize                 = 16384u;
     limits.max3DTextureSize                 = 2048u;
+    limits.maxCubeTextureSize               = 16384u;
     limits.maxViewports                     = (fset >= MTLFeatureSet_macOS_GPUFamily1_v3 ? 16u : 1u);
     limits.maxViewportSize[0]               = 16384u; //???
     limits.maxViewportSize[1]               = 16384u; //???

@@ -36,12 +36,10 @@ namespace LLGL
 class RenderContext;
 
 /**
-\brief Command buffer interface.
-\remarks This is the main interface to encode graphics and compute commands to be submitted to the GPU.
+\brief Command buffer interface used for storing and encoding GPU commands.
+\remarks This is the main interface to encode graphics, compute, and blit commands to be submitted to the GPU.
 You can assume that all states that can be changed with a setter function are not persistent across several encoding sections, unless the opposite is mentioned.
 Before any command can be encoded, the command buffer must be set into encode mode, which is done by the CommandBuffer::Begin function.
-There are only a few exceptions of functions that can be used outside of encoding,
-which are CommandBuffer::SetClearColor, CommandBuffer::SetClearDepth, and CommandBuffer::SetClearStencil.
 \see RenderSystem::CreateCommandBuffer
 */
 class LLGL_EXPORT CommandBuffer : public RenderSystemChild
@@ -53,18 +51,17 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Begins with the encoding (also referred to as "recording") of this command buffer.
-        \remarks All functions of the CommandBuffer interface must be used between a call to \c Begin and \c End, except for the following:
-        - CommandBuffer::SetClearColor
-        - CommandBuffer::SetClearDepth
-        - CommandBuffer::SetClearStencil
+        \remarks All functions of the CommandBuffer interface must be used between a call to \c Begin and \c End.
+        This function also resets all previously encoded commands.
         \see End
-        \see RecordingFlags
         */
         virtual void Begin() = 0;
 
         /**
         \brief Ends the encoding (also referred to as "recording") of this command buffer.
+        \remarks After this call, the command buffer can be submitted to the CommandQueue or executed by a primary command buffer.
         \see Begin
+        \see Execute
         \see CommandQueue::Submit(CommandBuffer&)
         */
         virtual void End() = 0;
@@ -120,7 +117,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Executes the specified deferred command buffer.
         \param[in] deferredCommandBuffer Specifies the deferred command buffer which is meant to be executed.
         This command buffer must have been created with the flag CommandBufferFlags::DeferredSubmit.
-        \remarks This function can only be used by primary command buffers, i.e. command buffers that have not be created with the flag CommandBufferFlags::DeferredSubmit.
+        \remarks This function can only be used by primary command buffers, i.e. command buffers that have not been created with the flag CommandBufferFlags::DeferredSubmit.
         \see CommandBufferFlags
         \todo Incomplete for: D3D12, Vulkan, Metal.
         */
@@ -348,39 +345,42 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] renderTarget Specifies the render target in which the subsequent draw operations will be stored.
         \param[in] renderPass Specifies an optional render pass object. If this is null, the default render pass for the specified render target will be used.
         This render pass object must be compatible with the render pass object the specified render target was created with.
-        \param[in] numClearValues Specifies the number of clear values that are specified in the <code>clearValues</code> parameter.
-        This should be greater than or equal to the number of render pass attachments whose load operation (i.e. AttachmentFormatDescriptor::loadOp) is set to AttachmentLoadOp::Clear.
+        \param[in] numClearValues Specifies the number of clear values that are specified in the \c clearValues parameter.
+        This \em should be greater than or equal to the number of render pass attachments whose load operation (i.e. AttachmentFormatDescriptor::loadOp) is set to AttachmentLoadOp::Clear.
         Otherwise, the default values from \c SetClearColor, \c SetClearDepth, and \c SetClearStencil are used.
         \param[in] clearValues Optional pointer to the array of clear values.
-        If <code>numClearValues</code> is not zero, this must be a valid pointer to an array of at least <code>numClearValues</code> entries.
+        If \c numClearValues is not zero, this must be a valid pointer to an array of at least \c numClearValues entries.
         Each entry in the array is used to clear the attachment whose load operation is set to AttachmentLoadOp::Clear,
         where the depth attachment (i.e. RenderPassDescriptor::depthAttachment) and
         the stencil attachment (i.e. RenderPassDescriptor::stencilAttachment) are combined and appear as the last entry.
-        \remarks This function starts a new render pass section and must be ended with the EndRenderPass function.
-        A simple frame setup could look like this:
+        \remarks This function starts a new render pass section and must be ended with the \c EndRenderPass function.
+        \remarks The following example shows how to use a render pass to clear a render target with two color attachments and a depth-stencil attachment:
         \code
-        myCmdBuffer->Begin();
+        LLGL::ClearValue myClearValues[3];
+
+        // Set clear values for color attachments 0 and 1
+        myClearValues[0].color = { 1, 0, 0, 1 };
+        myClearValues[1].color = { 0, 1, 0, 1 };
+
+        // Set clear values for depth-stencil attachment
+        myClearValues[2].depth   = 1.0f;
+        myClearValues[2].stencil = 0;
+
+        // Begin render pass and clear render target
+        myCmdBuffer->BeginRenderPass(*myRenderTarget, *myRenderPass, 3, myClearValues);
         {
-            myCmdBuffer->BeginRenderPass(*myRenderContext);
-            {
-                myCmdBuffer->SetGraphicsPipeline(*myGraphicsPipeline);
-                myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
-                myCmdBuffer->Draw(...);
-            }
-            myCmdBuffer->EndRenderPass();
+            // Draw scene ...
         }
-        myCmdBuffer->End();
-        myCmdQueue->Submit(*myCmdBuffer);
-        myRenderContext->Present();
+        myCmdBuffer->EndRenderPass();
         \endcode
         \remarks
-        The following commands can only appear inside a render pass section:
+        The following commands can only appear \em inside a render pass section:
         - Drawing commands (i.e. \c Draw, \c DrawInstanced, \c DrawIndexed, \c DrawIndexedInstanced, \c DrawIndirect and \c DrawIndexedIndirect).
         - Clear attachment commands (i.e. \c Clear, and \c ClearAttachments).
         - Query block (i.e. \c BeginQuery and \c EndQuery).
         - Conditional render block (i.e. \c BeginRenderCondition and \c EndRenderCondition).
         \remarks
-        The following commands can only appear outside a render pass section:
+        The following commands can only appear \em outside a render pass section:
         - Dispatch compute commands (i.e. \c Dispatch and \c DispatchIndirect).
         \see RenderSystem::CreateRenderPass
         \see RenderSystem::CreateRenderTarget
