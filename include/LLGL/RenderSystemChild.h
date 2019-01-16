@@ -25,6 +25,11 @@ class LLGL_EXPORT RenderSystemChild : public NonCopyable
 
     public:
 
+        #if 0//TODO
+        //! Returns the interface enumeration entry this class instance is associated with.
+        virtual Interface QueryInterface() const = 0;
+        #endif
+
         /**
         \brief Sets the name of this class instance for debugging purposes.
         \param[in] name Pointer to a null terminated string that specifies the name. Must not be null!

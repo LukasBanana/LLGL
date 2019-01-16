@@ -36,11 +36,6 @@ class LLGL_EXPORT NonCopyable
 
         virtual ~NonCopyable() = default;
 
-        #if 0//TODO
-        //! Returns the interface enumeration entry this class instance is associated with.
-        virtual Interface QueryInterface() const = 0;
-        #endif
-    
     protected:
 
         NonCopyable() = default;

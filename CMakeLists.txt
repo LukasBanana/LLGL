@@ -11,6 +11,7 @@ set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
 set(LIBRARY_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
 set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
+set(EXAMPLE_PROJECTS_DIR "${PROJECT_SOURCE_DIR}/examples/Cpp")
 
 
 # === Preprocessor definitions ===
@@ -339,24 +340,23 @@ set(FilesTest_BlendStates ${TestProjectsPath}/Test_BlendStates.cpp)
 set(FilesTest_JIT ${TestProjectsPath}/Test_JIT.cpp)
 
 # Example project files
-set(ExampleProjectsPath ${PROJECT_SOURCE_DIR}/examples/Cpp)
-file(GLOB FilesExampleBase ${ExampleProjectsPath}/ExampleBase/*.*)
+file(GLOB FilesExampleBase ${EXAMPLE_PROJECTS_DIR}/ExampleBase/*.*)
 
-set(FilesExample_HelloTriangle ${ExampleProjectsPath}/HelloTriangle/Example.cpp)
-set(FilesExample_Tessellation ${ExampleProjectsPath}/Tessellation/Example.cpp)
-set(FilesExample_Texturing ${ExampleProjectsPath}/Texturing/Example.cpp)
-set(FilesExample_Queries ${ExampleProjectsPath}/Queries/Example.cpp)
-set(FilesExample_RenderTarget ${ExampleProjectsPath}/RenderTarget/Example.cpp)
-set(FilesExample_MultiContext ${ExampleProjectsPath}/MultiContext/Example.cpp)
-set(FilesExample_BufferArray ${ExampleProjectsPath}/BufferArray/Example.cpp)
-set(FilesExample_ComputeShader ${ExampleProjectsPath}/ComputeShader/Example.cpp)
-set(FilesExample_StreamOutput ${ExampleProjectsPath}/StreamOutput/Example.cpp)
-set(FilesExample_Instancing ${ExampleProjectsPath}/Instancing/Example.cpp)
-set(FilesExample_PostProcessing ${ExampleProjectsPath}/PostProcessing/Example.cpp)
-set(FilesExample_MultiRenderer ${ExampleProjectsPath}/MultiRenderer/Example.cpp)
-set(FilesExample_ShadowMapping ${ExampleProjectsPath}/ShadowMapping/Example.cpp)
-set(FilesExample_UnorderedAccess ${ExampleProjectsPath}/UnorderedAccess/Example.cpp)
-set(FilesExample_MultiThreading ${ExampleProjectsPath}/MultiThreading/Example.cpp)
+set(FilesExample_HelloTriangle ${EXAMPLE_PROJECTS_DIR}/HelloTriangle/Example.cpp)
+set(FilesExample_Tessellation ${EXAMPLE_PROJECTS_DIR}/Tessellation/Example.cpp)
+set(FilesExample_Texturing ${EXAMPLE_PROJECTS_DIR}/Texturing/Example.cpp)
+set(FilesExample_Queries ${EXAMPLE_PROJECTS_DIR}/Queries/Example.cpp)
+set(FilesExample_RenderTarget ${EXAMPLE_PROJECTS_DIR}/RenderTarget/Example.cpp)
+set(FilesExample_MultiContext ${EXAMPLE_PROJECTS_DIR}/MultiContext/Example.cpp)
+set(FilesExample_BufferArray ${EXAMPLE_PROJECTS_DIR}/BufferArray/Example.cpp)
+set(FilesExample_ComputeShader ${EXAMPLE_PROJECTS_DIR}/ComputeShader/Example.cpp)
+set(FilesExample_StreamOutput ${EXAMPLE_PROJECTS_DIR}/StreamOutput/Example.cpp)
+set(FilesExample_Instancing ${EXAMPLE_PROJECTS_DIR}/Instancing/Example.cpp)
+set(FilesExample_PostProcessing ${EXAMPLE_PROJECTS_DIR}/PostProcessing/Example.cpp)
+set(FilesExample_MultiRenderer ${EXAMPLE_PROJECTS_DIR}/MultiRenderer/Example.cpp)
+set(FilesExample_ShadowMapping ${EXAMPLE_PROJECTS_DIR}/ShadowMapping/Example.cpp)
+set(FilesExample_UnorderedAccess ${EXAMPLE_PROJECTS_DIR}/UnorderedAccess/Example.cpp)
+set(FilesExample_MultiThreading ${EXAMPLE_PROJECTS_DIR}/MultiThreading/Example.cpp)
 
 
 # === Source group folders ===
