@@ -197,6 +197,10 @@ int main(int argc, char* argv[])
         if (logicOpSupported)
             std::cout << "Press SPACE to enabled/disable logic fragment operations" << std::endl;
 
+        // Generate multiple-instances via geometry shader.
+        // Otherwise, use instanced rendering if geometry shaders are not supported (for Metal shading language).
+        std::uint32_t numInstances = (geomShader != nullptr ? 1 : 2);
+
         // Enter main loop
         while ( ( window1.ProcessEvents() || window2.ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
         {
@@ -226,14 +230,14 @@ int main(int argc, char* argv[])
                 // Draw triangle with 3 vertices in 1st render context
                 commands->BeginRenderPass(*context1);
                 {
-                    commands->Draw(3, 0);
+                    commands->DrawInstanced(3, 0, numInstances);
                 }
                 commands->EndRenderPass();
 
                 // Draw quad with 4 vertices in 2nd render context
                 commands->BeginRenderPass(*context2);
                 {
-                    commands->Draw(4, 3);
+                    commands->DrawInstanced(4, 3, numInstances);
                 }
                 commands->EndRenderPass();
             }

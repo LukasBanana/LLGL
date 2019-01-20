@@ -21,12 +21,12 @@ struct OutputVS
 // Vertex shader main function
 vertex OutputVS VS(
     InputVS inp [[stage_in]],
-    uint vertID [[vertex_id]])
+    uint instID [[instance_id]])
 {
 	OutputVS outp;
-	outp.position   = float4(inp.position, 0, 1);
+	outp.position   = float4(inp.position * mix(1.0, -1.0, (float)instID), 0, 1);
 	outp.color      = inp.color;
-    outp.viewport   = (vertID < 3 ? 0 : 1);
+    outp.viewport   = instID;
 	return outp;
 }
 
