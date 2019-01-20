@@ -69,6 +69,16 @@ void VKShaderProgram::UnlockShaderUniform()
     // dummy
 }
 
+bool VKShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
+{
+    return false; // dummy
+}
+
+bool VKShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
+{
+    return false; //TODO
+}
+
 /* --- Extended functions --- */
 
 std::vector<VkPipelineShaderStageCreateInfo> VKShaderProgram::GetShaderStageCreateInfos() const

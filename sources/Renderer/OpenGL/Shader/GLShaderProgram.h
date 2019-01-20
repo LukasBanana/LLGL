@@ -38,6 +38,11 @@ class GLShaderProgram final : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
+        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
+        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
+        
+    public:
+
         // Returns the shader program ID.
         inline GLuint GetID() const
         {
@@ -70,6 +75,8 @@ class GLShaderProgram final : public ShaderProgram
         #ifdef GL_ARB_program_interface_query
         void QueryBufferProperties(ShaderReflectionDescriptor::ResourceView& resourceView, GLenum programInterface, GLuint resourceIndex) const;
         #endif // /GL_ARB_program_interface_query
+
+    private:
 
         GLuint              id_                 = 0;
         GLShaderUniform     uniform_;

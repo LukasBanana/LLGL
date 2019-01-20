@@ -101,6 +101,16 @@ void D3D11ShaderProgram::UnlockShaderUniform()
     // dummy
 }
 
+bool D3D11ShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
+{
+    return false; // dummy
+}
+
+bool D3D11ShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
+{
+    return false; //TODO
+}
+
 
 /*
  * ======= Private: =======

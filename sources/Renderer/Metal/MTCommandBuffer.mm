@@ -16,6 +16,7 @@
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
 #include "Texture/MTRenderTarget.h"
+#include "Shader/MTShaderProgram.h"
 #include "../CheckedCast.h"
 #include <algorithm>
 #include <limits.h>
@@ -24,6 +25,8 @@
 namespace LLGL
 {
 
+
+static const MTLSize g_defaultNumThreadsPerGroup { 1, 1, 1 };
 
 MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue) :
     cmdQueue_          { cmdQueue          },
@@ -40,9 +43,15 @@ MTCommandBuffer::~MTCommandBuffer()
 
 void MTCommandBuffer::Begin()
 {
+    /* Allocate new command buffer from command queue */
     cmdBuffer_ = [cmdQueue_ commandBuffer];
+
+    /* Reset schedulers and pools */
     encoderScheduler_.Reset(cmdBuffer_);
     stagingBufferPool_.Reset();
+
+    /* Reset references */
+    numThreadsPerGroup_ = &g_defaultNumThreadsPerGroup;
 }
 
 void MTCommandBuffer::End()
@@ -349,6 +358,12 @@ void MTCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
     auto& computePipelineMT = LLGL_CAST(MTComputePipeline&, computePipeline);
     encoderScheduler_.BindComputeEncoder();
     computePipelineMT.Bind(encoderScheduler_.GetComputeEncoder());
+
+    /* Store reference to work group size of shader program */
+    if (auto shaderProgram = computePipelineMT.GetShaderProgram())
+        numThreadsPerGroup_ = &(shaderProgram->GetNumThreadsPerGroup());
+    else
+        numThreadsPerGroup_ = &g_defaultNumThreadsPerGroup;
 }
 
 /* ----- Queries ----- */
@@ -741,7 +756,7 @@ void MTCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWo
     MTLSize numGroups = { numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ };
     [encoderScheduler_.GetComputeEncoder()
         dispatchThreadgroups:   numGroups
-        threadsPerThreadgroup:  numThreadsPerGroup_
+        threadsPerThreadgroup:  *numThreadsPerGroup_
     ];
 }
 
@@ -752,7 +767,7 @@ void MTCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
     [encoderScheduler_.GetComputeEncoder()
         dispatchThreadgroupsWithIndirectBuffer: bufferMT.GetNative()
         indirectBufferOffset:                   static_cast<NSUInteger>(offset)
-        threadsPerThreadgroup:                  numThreadsPerGroup_
+        threadsPerThreadgroup:                  *numThreadsPerGroup_
     ];
 }
 

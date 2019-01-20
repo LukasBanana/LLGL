@@ -40,7 +40,10 @@ class D3D11ShaderProgram final : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
-        /* ----- Extended internal functions ----- */
+        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
+        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
+
+    public:
 
         inline const ComPtr<ID3D11InputLayout>& GetInputLayout() const
         {
@@ -58,6 +61,8 @@ class D3D11ShaderProgram final : public ShaderProgram
 
         void BuildInputLayout(ID3D11Device* device, std::size_t numVertexFormats, const VertexFormat* vertexFormats);
         void Link();
+
+    private:
 
         ComPtr<ID3D11InputLayout>   inputLayout_;
 

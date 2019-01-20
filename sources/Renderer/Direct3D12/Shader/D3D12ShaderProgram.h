@@ -40,7 +40,10 @@ class D3D12ShaderProgram final : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
-        /* ----- Extended internal functions ----- */
+        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
+        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
+
+    public:
 
         D3D12_INPUT_LAYOUT_DESC GetInputLayoutDesc() const;
 
@@ -55,6 +58,8 @@ class D3D12ShaderProgram final : public ShaderProgram
 
         void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
         void Link();
+
+    private:
 
         std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
         std::vector<std::string>                inputElementNames_; // custom string container to hold valid string pointers.

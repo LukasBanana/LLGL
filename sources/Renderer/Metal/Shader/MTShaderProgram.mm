@@ -82,6 +82,30 @@ void MTShaderProgram::UnlockShaderUniform()
     // dummy
 }
 
+bool MTShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
+{
+    if (kernelFunc_ != nil && workGroupSize.width > 0 && workGroupSize.height > 0 && workGroupSize.depth > 0)
+    {
+        numThreadsPerGroup_.width  = workGroupSize.width;
+        numThreadsPerGroup_.height = workGroupSize.height;
+        numThreadsPerGroup_.depth  = workGroupSize.depth;
+        return true;
+    }
+    return false;
+}
+
+bool MTShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
+{
+    if (kernelFunc_ != nil)
+    {
+        workGroupSize.width  = numThreadsPerGroup_.width;
+        workGroupSize.height = numThreadsPerGroup_.height;
+        workGroupSize.depth  = numThreadsPerGroup_.depth;
+        return true;
+    }
+    return false;
+}
+
 
 /*
  * ======= Private: =======

@@ -40,7 +40,10 @@ class VKShaderProgram final : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
-        /* --- Extended functions --- */
+        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
+        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
+        
+    public:
 
         //TODO: replace by "FillShaderStageCreateInfos" to avoid std::vector
         std::vector<VkPipelineShaderStageCreateInfo> GetShaderStageCreateInfos() const;

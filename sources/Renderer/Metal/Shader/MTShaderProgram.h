@@ -40,6 +40,11 @@ class MTShaderProgram : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
+        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
+        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
+
+    public:
+
         // Returns the MTLVertexDescriptor object for this shader program.
         inline MTLVertexDescriptor* GetMTLVertexDesc() const
         {
@@ -59,6 +64,12 @@ class MTShaderProgram : public ShaderProgram
         inline id<MTLFunction> GetKernelMTLFunction() const
         {
             return kernelFunc_;
+        }
+
+        // Returns the number of threads per thread-group for compute kernels.
+        inline const MTLSize& GetNumThreadsPerGroup() const
+        {
+            return numThreadsPerGroup_;
         }
     
     private:
@@ -80,6 +91,7 @@ class MTShaderProgram : public ShaderProgram
         id<MTLFunction>         kernelFunc_         = nil;
     
         MTShader*               shaderWithError_    = nullptr;
+        MTLSize                 numThreadsPerGroup_ = { 1, 1, 1 };
 
 };
 

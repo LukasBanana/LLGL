@@ -7,12 +7,12 @@
 
 #include "GLShaderProgram.h"
 #include "GLShader.h"
+#include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/Exception.h"
-#include "../RenderState/GLStateManager.h"
 #include "../../GLCommon/GLTypes.h"
+#include "../../../Core/Exception.h"
 #include <LLGL/VertexFormat.h>
 #include <LLGL/Constants.h>
 #include <vector>
@@ -120,6 +120,30 @@ ShaderUniform* GLShaderProgram::LockShaderUniform()
 void GLShaderProgram::UnlockShaderUniform()
 {
     GLStateManager::active->PopShaderProgram();
+}
+
+bool GLShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
+{
+    return false; // dummy
+}
+
+bool GLShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
+{
+    #ifdef GL_ARB_compute_shader
+    if (HasExtension(GLExt::ARB_compute_shader))
+    {
+        GLint params[3] = { 0 };
+        glGetProgramiv(id_, GL_COMPUTE_WORK_GROUP_SIZE, params);
+        if (params[0] > 0 && params[1] > 0 && params[2] > 0)
+        {
+            workGroupSize.width  = static_cast<std::uint32_t>(params[0]);
+            workGroupSize.height = static_cast<std::uint32_t>(params[1]);
+            workGroupSize.depth  = static_cast<std::uint32_t>(params[2]);
+            return true;
+        }
+    }
+    #endif // /GL_ARB_compute_shader
+    return false;
 }
 
 

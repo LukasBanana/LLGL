@@ -193,7 +193,7 @@ class MTCommandBuffer : public CommandBufferExt
         MTLIndexType                    indexType_              = MTLIndexTypeUInt32;
         NSUInteger                      indexTypeSize_          = 4;
         NSUInteger                      numPatchControlPoints_  = 0;
-        MTLSize                         numThreadsPerGroup_     = { 1, 1, 1 };
+        const MTLSize*                  numThreadsPerGroup_     = nullptr;
 
         MTClearValue                    clearValue_;
     

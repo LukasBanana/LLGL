@@ -51,6 +51,11 @@ class DbgShaderProgram : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
+        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
+        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
+
+    public:
+
         inline const VertexLayout& GetVertexLayout() const
         {
             return vertexLayout_;

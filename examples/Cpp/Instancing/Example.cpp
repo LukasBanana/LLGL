@@ -391,30 +391,15 @@ private:
                 // Set graphics pipeline state
                 commands->SetGraphicsPipeline(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
-                if (pipelineLayout)
-                {
-                    // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-                    commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
-                    commands->DrawInstanced(4, 0, numPlantInstances);
+                // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
+                commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
+                commands->DrawInstanced(4, 0, numPlantInstances);
 
-                    // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+                // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+                if (renderer->GetRenderingCaps().features.hasOffsetInstancing)
+                {
                     commands->SetGraphicsResourceHeap(*resourceHeaps[1], 0);
                     commands->DrawInstanced(4, 4, 1, numPlantInstances);
-                }
-                else
-                {
-                    commandsExt->SetTexture(*arrayTexture, 0, LLGL::StageFlags::FragmentStage);
-                    commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
-
-                    // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-                    commandsExt->SetSampler(*samplers[0], 0, LLGL::StageFlags::FragmentStage);
-                    commands->DrawInstanced(4, 0, numPlantInstances);
-
-                    #if 1//#ifndef __APPLE__
-                    // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-                    commandsExt->SetSampler(*samplers[1], 0, LLGL::StageFlags::FragmentStage);
-                    commands->DrawInstanced(4, 4, 1, numPlantInstances);
-                    #endif
                 }
             }
             commands->EndRenderPass();

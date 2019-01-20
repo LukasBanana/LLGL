@@ -88,6 +88,16 @@ void D3D12ShaderProgram::UnlockShaderUniform()
     // dummy
 }
 
+bool D3D12ShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
+{
+    return false; // dummy
+}
+
+bool D3D12ShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
+{
+    return false; //TODO
+}
+
 D3D12_INPUT_LAYOUT_DESC D3D12ShaderProgram::GetInputLayoutDesc() const
 {
     D3D12_INPUT_LAYOUT_DESC desc;

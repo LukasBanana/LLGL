@@ -20,6 +20,8 @@ namespace LLGL
 {
 
 
+class MTShaderProgram;
+
 class MTComputePipeline : public ComputePipeline
 {
 
@@ -30,9 +32,18 @@ class MTComputePipeline : public ComputePipeline
         // Binds the compute pipeline state with the specified command encoder.
         void Bind(id<MTLComputeCommandEncoder> computeEncoder);
 
+    public:
+
+        // Returns the shader program this pipeline was created with.
+        inline const MTShaderProgram* GetShaderProgram() const
+        {
+            return shaderProgram_;
+        }
+
     private:
 
-        id<MTLComputePipelineState> computePipelineState_ = nil;
+        id<MTLComputePipelineState> computePipelineState_   = nil;
+        const MTShaderProgram*      shaderProgram_          = nullptr;
 
 };
 

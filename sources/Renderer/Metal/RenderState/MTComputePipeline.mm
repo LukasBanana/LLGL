@@ -21,11 +21,11 @@ namespace LLGL
 MTComputePipeline::MTComputePipeline(id<MTLDevice> device, const ComputePipelineDescriptor& desc)
 {
     /* Get native shader functions */
-    auto shaderProgramMT = LLGL_CAST(const MTShaderProgram*, desc.shaderProgram);
-    if (!shaderProgramMT)
+    shaderProgram_ = LLGL_CAST(const MTShaderProgram*, desc.shaderProgram);
+    if (!shaderProgram_)
         throw std::invalid_argument("failed to create compute pipeline due to missing shader program");
 
-    id<MTLFunction> kernelFunc = shaderProgramMT->GetKernelMTLFunction();
+    id<MTLFunction> kernelFunc = shaderProgram_->GetKernelMTLFunction();
     if (!kernelFunc)
         throw std::invalid_argument("failed to create compute pipeline due to missing compute shader in shader program");
 

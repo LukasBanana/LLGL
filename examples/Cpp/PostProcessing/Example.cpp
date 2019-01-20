@@ -233,7 +233,8 @@ public:
         }
 
         // Set shader uniforms (only required for GLSL until 4.10)
-        shaderProgramBlur->BindConstantBuffer("Settings", 1);
+        shaderProgramScene->BindConstantBuffer("SceneSettings", 1);
+        shaderProgramFinal->BindConstantBuffer("SceneSettings", 1);
         shaderProgramBlur->BindConstantBuffer("BlurSettings", 2);
 
         if (auto uniforms = shaderProgramBlur->LockShaderUniform())
