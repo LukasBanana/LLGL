@@ -48,6 +48,7 @@ void MTCommandBuffer::Begin()
 void MTCommandBuffer::End()
 {
     encoderScheduler_.Flush();
+    PresentDrawables();
 }
 
 void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
@@ -299,6 +300,7 @@ void MTCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::ui
 
 /* ----- Render Passes ----- */
 
+//TODO: process <clearValues>!!!
 void MTCommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,
@@ -307,9 +309,9 @@ void MTCommandBuffer::BeginRenderPass(
 {
     if (renderTarget.IsRenderContext())
     {
-        /* Make this the current command buffer for the render context */
+        /* Put current drawable into queue */
         auto& renderContextMT = LLGL_CAST(MTRenderContext&, renderTarget);
-        renderContextMT.MakeCurrent(cmdBuffer_);
+        QueueDrawable(renderContextMT.GetMTKView().currentDrawable);
         
         /* Get next render pass descriptor from MetalKit view */
         MTKView* view = renderContextMT.GetMTKView();
@@ -877,6 +879,23 @@ void MTCommandBuffer::SetIndexType(bool indexType16Bits)
         indexType_      = MTLIndexTypeUInt32;
         indexTypeSize_  = 4;
     }
+}
+
+void MTCommandBuffer::QueueDrawable(id<MTLDrawable> drawable)
+{
+    for (auto d : drawables_)
+    {
+        if (d == drawable)
+            return;
+    }
+    drawables_.push_back(drawable);
+}
+
+void MTCommandBuffer::PresentDrawables()
+{
+    for (auto d : drawables_)
+        [cmdBuffer_ presentDrawable:d];
+    drawables_.clear();
 }
 
 

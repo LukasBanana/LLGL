@@ -118,6 +118,7 @@ struct LLGL_EXPORT SamplerDescriptor
     \brief Specifies whether MIP-maps are used or not. By default true.
     \remarks The number of MIP-maps a texture has is specified by the TextureDescriptor::mipLevels attribute.
     \see TextureDescriptor::mipLevels
+    \todo Rename to \c mipMapEnabled.
     */
     bool                mipMapping      = true;
 
@@ -127,7 +128,7 @@ struct LLGL_EXPORT SamplerDescriptor
     //! Lower end of the MIP-map range. By default 0.
     float               minLOD          = 0.0f;
 
-    //! Upper end of the MIP-map range. Must be greater than or equal to "minLOD". By default 1000.
+    //! Upper end of the MIP-map range. Must be greater than or equal to \c minLOD. By default 1000.
     float               maxLOD          = 1000.0f;
 
     //! Maximal anisotropy in the range [1, 16].

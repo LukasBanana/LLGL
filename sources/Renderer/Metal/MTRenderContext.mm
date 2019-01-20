@@ -74,9 +74,7 @@ MTRenderContext::MTRenderContext(
 
 void MTRenderContext::Present()
 {
-    [cmdBuffer_ presentDrawable:view_.currentDrawable];
-    [cmdBuffer_ commit];
-    [view_ draw]; //really required???
+    [view_ draw];
 }
 
 Format MTRenderContext::QueryColorFormat() const
@@ -92,13 +90,6 @@ Format MTRenderContext::QueryDepthStencilFormat() const
 const RenderPass* MTRenderContext::GetRenderPass() const
 {
     return nullptr; //TODO
-}
-
-/* ----- Extended functions ----- */
-
-void MTRenderContext::MakeCurrent(id<MTLCommandBuffer> cmdBuffer)
-{
-    cmdBuffer_ = cmdBuffer;
 }
 
 

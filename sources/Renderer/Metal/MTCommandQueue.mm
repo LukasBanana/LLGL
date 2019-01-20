@@ -16,19 +16,20 @@ namespace LLGL
 
 MTCommandQueue::MTCommandQueue(id<MTLDevice> device)
 {
-    queue_ = [device newCommandQueue];
+    native_ = [device newCommandQueue];
 }
 
 MTCommandQueue::~MTCommandQueue()
 {
-    [queue_ release];
+    [native_ release];
 }
 
 /* ----- Command Buffers ----- */
 
 void MTCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
-    //todo
+    auto& commandBufferMT = LLGL_CAST(MTCommandBuffer&, commandBuffer);
+    [commandBufferMT.GetNative() commit];
 }
 
 /* ----- Queries ----- */

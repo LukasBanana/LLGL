@@ -7,6 +7,7 @@
 
 #include "MTSampler.h"
 #include "../MTTypes.h"
+#include <algorithm>
 
 
 namespace LLGL
@@ -36,7 +37,7 @@ static void Convert(MTLSamplerDescriptor* dst, const SamplerDescriptor& src)
     //TODO: src.mipMapLODBias;
     dst.lodMinClamp     = src.minLOD;
     dst.lodMaxClamp     = src.maxLOD;
-    dst.maxAnisotropy   = static_cast<NSUInteger>(src.maxAnisotropy);
+    dst.maxAnisotropy   = std::max<NSUInteger>(1, std::min<NSUInteger>(static_cast<NSUInteger>(src.maxAnisotropy), 16));
     dst.compareFunction = (src.compareEnabled ? MTTypes::ToMTLCompareFunction(src.compareOp) : MTLCompareFunctionNever);
     dst.borderColor     = GetBorderColor(src.borderColor);
 }

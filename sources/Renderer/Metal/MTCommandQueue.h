@@ -49,17 +49,17 @@ class MTCommandQueue : public CommandQueue
         bool WaitFence(Fence& fence, std::uint64_t timeout) override;
         void WaitIdle() override;
     
-        /* ----- Extended functions ----- */
+    public:
 
         // Returns the native MTLCommandQueue object.
         inline id<MTLCommandQueue> GetNative() const
         {
-            return queue_;
+            return native_;
         }
 
     private:
 
-        id<MTLCommandQueue> queue_;
+        id<MTLCommandQueue> native_;
 
 };
 

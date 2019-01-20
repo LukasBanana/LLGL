@@ -39,10 +39,8 @@ class MTRenderContext : public RenderContext
 
         const RenderPass* GetRenderPass() const override;
 
-        /* ----- Extended functions ----- */
-    
-        void MakeCurrent(id<MTLCommandBuffer> cmdBuffer);
-    
+    public:
+
         // Returns the native MTKView object.
         inline MTKView* GetMTKView() const
         {
@@ -56,8 +54,7 @@ class MTRenderContext : public RenderContext
 
     private:
     
-        MTKView*                view_       = nullptr;
-        id<MTLCommandBuffer>    cmdBuffer_  = nil;
+        MTKView* view_ = nullptr;
 
 };
 

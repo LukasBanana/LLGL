@@ -15,6 +15,7 @@
 #include "../StaticLimits.h"
 #include "Buffer/MTStagingBufferPool.h"
 #include "MTEncoderScheduler.h"
+#include <vector>
 
 
 namespace LLGL
@@ -155,6 +156,20 @@ class MTCommandBuffer : public CommandBufferExt
             long                stageFlags      = StageFlags::AllStages
         ) override;
 
+    public:
+
+        // Returns the native MTLCommandBuffer object.
+        inline id<MTLCommandBuffer> GetNative() const
+        {
+            return cmdBuffer_;
+        }
+
+    private:
+
+        void SetIndexType(bool indexType16Bits);
+        void QueueDrawable(id<MTLDrawable> drawable);
+        void PresentDrawables();
+
     private:
 
         struct MTClearValue
@@ -165,27 +180,24 @@ class MTCommandBuffer : public CommandBufferExt
         };
     
     private:
-
-        void SetIndexType(bool indexType16Bits);
-
-    private:
     
-        id<MTLCommandQueue>     cmdQueue_               = nil;
-        id<MTLCommandBuffer>    cmdBuffer_              = nil;
+        id<MTLCommandQueue>             cmdQueue_               = nil;
+        id<MTLCommandBuffer>            cmdBuffer_              = nil;
 
-        MTEncoderScheduler      encoderScheduler_;
+        MTEncoderScheduler              encoderScheduler_;
+        std::vector<id<MTLDrawable>>    drawables_;
 
-        MTLPrimitiveType        primitiveType_          = MTLPrimitiveTypeTriangle;
-        id<MTLBuffer>           indexBuffer_            = nil;
-        NSUInteger              indexBufferOffset_      = 0;
-        MTLIndexType            indexType_              = MTLIndexTypeUInt32;
-        NSUInteger              indexTypeSize_          = 4;
-        NSUInteger              numPatchControlPoints_  = 0;
-        MTLSize                 numThreadsPerGroup_     = { 1, 1, 1 };
+        MTLPrimitiveType                primitiveType_          = MTLPrimitiveTypeTriangle;
+        id<MTLBuffer>                   indexBuffer_            = nil;
+        NSUInteger                      indexBufferOffset_      = 0;
+        MTLIndexType                    indexType_              = MTLIndexTypeUInt32;
+        NSUInteger                      indexTypeSize_          = 4;
+        NSUInteger                      numPatchControlPoints_  = 0;
+        MTLSize                         numThreadsPerGroup_     = { 1, 1, 1 };
 
-        MTClearValue            clearValue_;
+        MTClearValue                    clearValue_;
     
-        MTStagingBufferPool     stagingBufferPool_;
+        MTStagingBufferPool             stagingBufferPool_;
 
 };
 
