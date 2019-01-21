@@ -251,7 +251,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         {
             ReleaseMouseCapture();
             if (auto window = GetWindowFromUserData(wnd))
-                window->PostLoseFocus();
+                window->PostLostFocus();
         }
         break;
 
