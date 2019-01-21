@@ -23,7 +23,6 @@ class MacOSWindow : public Window
     public:
 
         MacOSWindow(const WindowDescriptor& desc);
-        ~MacOSWindow();
 
         void GetNativeHandle(void* nativeHandle) const override;
 

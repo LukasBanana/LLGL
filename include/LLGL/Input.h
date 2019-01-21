@@ -107,7 +107,7 @@ class LLGL_EXPORT Input : public Window::EventListener
         void OnLocalMotion(Window& sender, const Offset2D& position) override;
         void OnGlobalMotion(Window& sender, const Offset2D& motion) override;
 
-        void OnLoseFocus(Window& sender) override;
+        void OnLostFocus(Window& sender) override;
 
     private:
 
@@ -123,7 +123,11 @@ class LLGL_EXPORT Input : public Window::EventListener
             void Reset(KeyStateArray& keyStates);
         };
 
+    private:
+
         void InitArray(KeyStateArray& keyStates);
+
+    private:
 
         KeyStateArray       keyPressed_;
         KeyStateArray       keyDown_;

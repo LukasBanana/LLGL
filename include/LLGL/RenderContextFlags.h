@@ -64,12 +64,12 @@ struct VsyncDescriptor
 
     /**
     \brief Refresh rate (in Hz). By default 60.
-    \note Only supported with: Direct3D 11, Direct3D 12.
+    \note Only supported with: Direct3D 11, Direct3D 12, Metal.
     */
     std::uint32_t   refreshRate = 60;
 
     /**
-    \brief Synchronisation interval. Can be 1, 2, 3, or 4.
+    \brief Synchronisation interval. Can be 1, 2, 3, or 4. By default 1.
     \remarks If Vsync is disabled, this value is implicitly zero.
     */
     std::uint32_t   interval    = 1;
@@ -127,10 +127,10 @@ struct VideoModeDescriptor
     std::uint32_t   swapChainSize   = 2;
 };
 
-//TODO: move this into RenderSystemDescriptor, and make GL context creation part of GLRenderSystem instead of each GLRenderContext instance
 /**
 \brief OpenGL profile descriptor structure.
 \note On MacOS the only supported OpenGL profiles are compatibility profile (for lagecy OpenGL before 3.0), 3.2 core profile, or 4.1 core profile.
+\todo Move this into RenderSystemDescriptor, and make GL context creation part of GLRenderSystem instead of each GLRenderContext instance.
 */
 struct ProfileOpenGLDescriptor
 {

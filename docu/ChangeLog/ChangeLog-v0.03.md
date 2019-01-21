@@ -6,6 +6,7 @@
 - [`TextureDescriptor` interface](#texturedescriptor-interface)
 - [Index buffer format](#index-buffer-format)
 - [Storage buffer binding](#storage-buffer-binding)
+- [Event listener interface](#event-listener-interface)
 
 
 ## `BufferDescriptor` interface
@@ -112,6 +113,28 @@ myBufferDesc.indexBuffer.format = LLGL::Format::R16UInt;
 
 
 ## Storage buffer binding
+
+*TODO*
+
+
+## Event listener interface
+
+The following functions have been renamed:
+- `Window::EventListener::OnLoseFocus` => `...::OnLostFocus`
+- `Window::PostLoseFocus` => `...::PostLostFocus`
+
+Moreover, the interface of the `Window::EventListener::OnQuit` function has changed:
+
+Before:
+```cpp
+bool OnQuit(Window& sender);
+```
+
+After:
+```cpp
+void OnQuit(Window& sender, bool& veto);
+```
+
 
 
 

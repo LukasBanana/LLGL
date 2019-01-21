@@ -192,8 +192,7 @@ void ExampleBase::SelectRendererModule(int argc, char* argv[])
 
 void ExampleBase::Run()
 {
-    auto& window = static_cast<LLGL::Window&>(context->GetSurface());
-    while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+    while (context->GetSurface().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
     {
         profilerObj_->NextProfile();
         OnDrawFrame();
@@ -271,11 +270,6 @@ ExampleBase::ExampleBase(
 
     // Initialize command buffer
     commands->SetClearColor(defaultClearColor);
-    #if 0
-    commands->SetRenderTarget(*context);
-    commands->SetViewport({ { 0, 0 }, resolution });
-    commands->SetScissor({ { 0, 0 }, resolution });
-    #endif
 
     // Print renderer information
     const auto& info = renderer->GetRendererInfo();
@@ -285,6 +279,16 @@ ExampleBase::ExampleBase(
     std::cout << "  device:           " << info.deviceName << std::endl;
     std::cout << "  vendor:           " << info.vendorName << std::endl;
     std::cout << "  shading language: " << info.shadingLanguageName << std::endl;
+
+    #ifdef LLGL_MOBILE_PLATFORM
+
+    // Set canvas title
+    auto& canvas = static_cast<LLGL::Canvas&>(context->GetSurface());
+
+    auto rendererName = renderer->GetName();
+    canvas.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
+
+    #else // LLGL_MOBILE_PLATFORM
 
     // Set window title
     auto& window = static_cast<LLGL::Window&>(context->GetSurface());
@@ -310,11 +314,13 @@ ExampleBase::ExampleBase(
     // Add window resize listener
     window.AddEventListener(std::make_shared<ResizeEventHandler>(*this, context, projection));
 
-    // Initialize default projection matrix
-    projection = PerspectiveProjection(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
-
     // Show window
     window.Show();
+
+    #endif // /LLGL_MOBILE_PLATFORM
+
+    // Initialize default projection matrix
+    projection = PerspectiveProjection(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
     // Store information that loading is done
     loadingDone_ = true;

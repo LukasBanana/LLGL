@@ -256,10 +256,6 @@ MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
         SetPosition(desc.position);
 }
 
-MacOSWindow::~MacOSWindow()
-{
-}
-
 void MacOSWindow::GetNativeHandle(void* nativeHandle) const
 {
     auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);

@@ -70,6 +70,14 @@ class LLGL_EXPORT Surface : public NonCopyable
         */
         virtual void ResetPixelFormat() = 0;
 
+        /**
+        \brief Processes all events for this surface, i.e. input-, movement-, resize-, and other events.
+        \remarks This function is only implemented by the Window and Canvas interfaces.
+        \see Window::ProcessEvents
+        \see Canvas::ProcessEvents
+        */
+        virtual bool ProcessEvents() = 0;
+
 };
 
 

@@ -20,6 +20,11 @@ void Canvas::EventListener::OnProcessEvents(Canvas& sender)
     // dummy
 }
 
+void Canvas::EventListener::OnQuit(Canvas& sender, bool& veto)
+{
+    // dummy
+}
+
 
 /* ----- Window class ----- */
 
@@ -36,16 +41,22 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 
 #endif
 
+bool Canvas::HasQuit() const
+{
+    return quit_;
+}
+
 bool Canvas::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
 {
     /* Default implementation of this function always return false for the Canvas class */
     return false;
 }
 
-void Canvas::ProcessEvents()
+bool Canvas::ProcessEvents()
 {
     FOREACH_LISTENER_CALL( OnProcessEvents(*this) );
     OnProcessEvents();
+    return !HasQuit();
 }
 
 /* --- Event handling --- */
@@ -58,6 +69,21 @@ void Canvas::AddEventListener(const std::shared_ptr<EventListener>& eventListene
 void Canvas::RemoveEventListener(const EventListener* eventListener)
 {
     RemoveFromSharedList(eventListeners_, eventListener);
+}
+
+void Canvas::PostQuit()
+{
+    if (!HasQuit())
+    {
+        bool canQuit = true;
+        for (const auto& lst : eventListeners_)
+        {
+            bool veto = false;
+            lst->OnQuit(*this, veto);
+            canQuit = (canQuit && !veto);
+        }
+        quit_ = canQuit;
+    }
 }
 
 #undef FOREACH_LISTENER_CALL

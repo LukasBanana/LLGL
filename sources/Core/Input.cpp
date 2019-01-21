@@ -156,7 +156,7 @@ void Input::OnGlobalMotion(Window& sender, const Offset2D& motion)
     mouseMotion_.y += motion.y;
 }
 
-void Input::OnLoseFocus(Window& sender)
+void Input::OnLostFocus(Window& sender)
 {
     /* Reset all 'key-pressed' states */
     InitArray(keyPressed_);

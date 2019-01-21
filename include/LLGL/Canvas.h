@@ -49,7 +49,18 @@ class LLGL_EXPORT Canvas : public Surface
                 */
                 virtual void OnProcessEvents(Canvas& sender);
 
+                /**
+                \brief Send when the canvas is about to quit.
+                \param[out] veto Specifies whether to cancel the quit event.
+                If set to true, the call to \c PostQuit does not change the state \c sender, only the event listeners get informed.
+                If no event listener sets this parameter to true, \c sender is set to the 'Quit' state and \c ProcessEvents returns false from then on.
+                \see Canvas::ProcessEvents
+                */
+                virtual void OnQuit(Canvas& sender, bool& veto);
+
         };
+
+    public:
 
         /* --- Common --- */
 
@@ -68,11 +79,23 @@ class LLGL_EXPORT Canvas : public Surface
         //! Returns the canvas title as UTF16 string.
         virtual std::wstring GetTitle() const = 0;
 
+        /**
+        \brief Returns true if this canvas is in the 'Quit' state.
+        \see PostQuit
+        \see ProcessEvents
+        */
+        virtual bool HasQuit() const;
+
         //! This default implementation ignores the video mode descriptor completely and always return false.
         bool AdaptForVideoMode(VideoModeDescriptor& videoModeDesc) override;
 
-        //! Processes the events for this canvas (i.e. touch input, key presses etc.).
-        void ProcessEvents();
+        /**
+        \brief Processes the events for this canvas (i.e. touch input, key presses etc.).
+        \return True, as long as the window can process events.
+        Once the \c PostQuit function has set this canvas to the 'Quit' state, this function returns false.
+        \see PostQuit
+        */
+        bool ProcessEvents() override final;
 
         /* --- Event handling --- */
 
@@ -81,6 +104,16 @@ class LLGL_EXPORT Canvas : public Surface
 
         //! Removes the specified event listener from this canvas.
         void RemoveEventListener(const EventListener* eventListener);
+
+        /**
+        \brief Posts a 'Quit' event to all event listeners.
+        \remarks If at least one event listener returns false within the \c OnQuit callback, the canvas will not quit.
+        If all event listeners return true within the \c OnQuit callback, \c ProcessEvents will return false from now on.
+        \see EventListener::OnQuit
+        \see ProcessEvents
+        \see HasQuit
+        */
+        void PostQuit();
 
     protected:
 
@@ -94,6 +127,7 @@ class LLGL_EXPORT Canvas : public Surface
     private:
 
         std::vector<std::shared_ptr<EventListener>> eventListeners_;
+        bool                                        quit_           = false;
 
 };
 

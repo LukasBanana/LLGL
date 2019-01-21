@@ -56,6 +56,15 @@ class LLGL_EXPORT Window : public Surface
                 */
                 virtual void OnProcessEvents(Window& sender);
 
+                /**
+                \brief Send when the window is about to quit.
+                \param[out] veto Specifies whether to cancel the quit event.
+                If set to true, the call to \c PostQuit does not change the state \c sender, only the event listeners get informed.
+                If no event listener sets this parameter to true, \c sender is set to the 'Quit' state and \c ProcessEvents returns false from then on.
+                \see Window::ProcessEvents
+                */
+                virtual void OnQuit(Window& sender, bool& veto);
+
                 //! Send when a key (from keyboard or mouse) has been pushed.
                 virtual void OnKeyDown(Window& sender, Key keyCode);
 
@@ -83,16 +92,8 @@ class LLGL_EXPORT Window : public Surface
                 //! Send when the window gets the keyboard focus.
                 virtual void OnGetFocus(Window& sender);
 
-                //! Send when the window loses the keyboard focus.
-                virtual void OnLoseFocus(Window& sender);
-
-                /**
-                \brief Send when the window is about to be quit.
-                \return True if the sender window can quit. In this case "ProcessEvents" returns false from now on.
-                Otherwise the quit can be prevented. Returns true by default.
-                \see Window::ProcessEvents
-                */
-                virtual bool OnQuit(Window& sender);
+                //! Send when the window lost the keyboard focus.
+                virtual void OnLostFocus(Window& sender);
 
                 /**
                 \brief Send when the window received a timer event with the specified timer ID number.
@@ -101,6 +102,8 @@ class LLGL_EXPORT Window : public Surface
                 virtual void OnTimer(Window& sender, std::uint32_t timerID);
 
         };
+
+    public:
 
         /* --- Common --- */
 
@@ -116,7 +119,7 @@ class LLGL_EXPORT Window : public Surface
         //! Sets the window position relative to its parent.
         virtual void SetPosition(const Offset2D& position) = 0;
 
-        //! Returns the window position relative to its parent.
+        //! Returns the window position relative to its parent (which can also be the display).
         virtual Offset2D GetPosition() const = 0;
 
         //! Sets the either the overall window size or the client area size. By default the client area size is set.
@@ -160,6 +163,13 @@ class LLGL_EXPORT Window : public Surface
         virtual bool HasFocus() const;
 
         /**
+        \brief Returns true if this window is in the 'Quit' state.
+        \see PostQuit
+        \see ProcessEvents
+        */
+        virtual bool HasQuit() const;
+
+        /**
         \brief Adapts the window for the specified video mode.
         \remarks This is a default implementation of the base class function and makes use of "GetDesc" and "SetDesc".
         \see GetDesc
@@ -169,10 +179,12 @@ class LLGL_EXPORT Window : public Surface
 
         /**
         \brief Processes the events for this window (i.e. mouse movement, key presses etc.).
-        \return Once the "PostQuit" function was called on this window object, this function returns false.
-        This will happend, when the user clicks on the close button.
+        \return True, as long as the window can process events.
+        Once the \c PostQuit function has set this window to the 'Quit' state, this function returns false.
+        This happens when the user clicks on the close button.
+        \see PostQuit
         */
-        bool ProcessEvents();
+        bool ProcessEvents() override final;
 
         /* --- Event handling --- */
 
@@ -181,6 +193,16 @@ class LLGL_EXPORT Window : public Surface
 
         //! Removes the specified event listener from this window.
         void RemoveEventListener(const EventListener* eventListener);
+
+        /**
+        \brief Posts a 'Quit' event to all event listeners if the window is not yet in the 'Quit' state.
+        \remarks If one or more event listeners set the \c veto parameter to true in the \c OnQuit callback, the window will not quit.
+        Otherwise, the \c ProcessEvents function will return false from then on.
+        \see EventListener::OnQuit
+        \see ProcessEvents
+        \see HasQuit
+        */
+        void PostQuit();
 
         /**
         \brief Posts a 'KeyDown' event to all event listeners.
@@ -214,17 +236,8 @@ class LLGL_EXPORT Window : public Surface
         //! Posts a 'GetFocus' event to all event listeners.
         void PostGetFocus();
 
-        //! Posts a 'LoseFocus' event to all event listeners.
-        void PostLoseFocus();
-
-        /**
-        \brief Posts a 'Quit' event to all event listeners.
-        \remarks If at least one event listener returns false within the "OnQuit" callback, the window will not quit.
-        If all event listener return true within the "OnQuit" callback, "ProcessEvents" will returns false from now on.
-        \see EventListener::OnQuit
-        \see ProcessEvents
-        */
-        void PostQuit();
+        //! Posts a 'LostFocus' event to all event listeners.
+        void PostLostFocus();
 
         /**
         \brief Posts a timer event with the specified timer ID number.
@@ -247,7 +260,7 @@ class LLGL_EXPORT Window : public Surface
         std::vector<std::shared_ptr<EventListener>> eventListeners_;
         WindowBehavior                              behavior_;
         bool                                        quit_           = false;
-        bool                                        hasFocus_       = false;
+        bool                                        focus_          = false;
 
 };
 

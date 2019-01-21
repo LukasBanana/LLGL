@@ -20,6 +20,11 @@ void Window::EventListener::OnProcessEvents(Window& sender)
     // dummy
 }
 
+void Window::EventListener::OnQuit(Window& sender, bool& veto)
+{
+    // dummy
+}
+
 void Window::EventListener::OnKeyDown(Window& sender, Key keyCode)
 {
     // dummy
@@ -65,14 +70,9 @@ void Window::EventListener::OnGetFocus(Window& sender)
     // dummy
 }
 
-void Window::EventListener::OnLoseFocus(Window& sender)
+void Window::EventListener::OnLostFocus(Window& sender)
 {
     // dummy
-}
-
-bool Window::EventListener::OnQuit(Window& sender)
-{
-    return true; // dummy
 }
 
 void Window::EventListener::OnTimer(Window& sender, std::uint32_t timerID)
@@ -103,7 +103,12 @@ void Window::SetBehavior(const WindowBehavior& behavior)
 
 bool Window::HasFocus() const
 {
-    return hasFocus_;
+    return focus_;
+}
+
+bool Window::HasQuit() const
+{
+    return quit_;
 }
 
 bool Window::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
@@ -134,10 +139,8 @@ bool Window::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
 bool Window::ProcessEvents()
 {
     FOREACH_LISTENER_CALL( OnProcessEvents(*this) );
-
     OnProcessEvents();
-
-    return (!quit_);
+    return !HasQuit();
 }
 
 /* --- Event handling --- */
@@ -150,6 +153,21 @@ void Window::AddEventListener(const std::shared_ptr<EventListener>& eventListene
 void Window::RemoveEventListener(const EventListener* eventListener)
 {
     RemoveFromSharedList(eventListeners_, eventListener);
+}
+
+void Window::PostQuit()
+{
+    if (!HasQuit())
+    {
+        bool canQuit = true;
+        for (const auto& lst : eventListeners_)
+        {
+            bool veto = false;
+            lst->OnQuit(*this, veto);
+            canQuit = (canQuit && !veto);
+        }
+        quit_ = canQuit;
+    }
 }
 
 void Window::PostKeyDown(Key keyCode)
@@ -194,24 +212,14 @@ void Window::PostResize(const Extent2D& clientAreaSize)
 
 void Window::PostGetFocus()
 {
+    focus_ = true;
     FOREACH_LISTENER_CALL( OnGetFocus(*this) );
-    hasFocus_ = true;
 }
 
-void Window::PostLoseFocus()
+void Window::PostLostFocus()
 {
-    FOREACH_LISTENER_CALL( OnLoseFocus(*this) );
-    hasFocus_ = false;
-}
-
-void Window::PostQuit()
-{
-    for (const auto& lst : eventListeners_)
-    {
-        if (!lst->OnQuit(*this))
-            return;
-    }
-    quit_ = true;
+    focus_ = false;
+    FOREACH_LISTENER_CALL( OnLostFocus(*this) );
 }
 
 void Window::PostTimer(std::uint32_t timerID)
