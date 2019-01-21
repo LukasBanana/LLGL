@@ -14,7 +14,7 @@ struct VertexIn
 struct VertexOut
 {
     float4 position [[position]];
-    float3 color;
+    float4 color;
 };
 
 struct Scene
@@ -28,7 +28,7 @@ vertex VertexOut VS(
 {
     VertexOut outp;
 	outp.position   = scene.wvpMatrix * float4(inp.position, 1);
-	outp.color      = float3(inp.texCoord.x, inp.texCoord.y, 1);
+	outp.color      = float4(inp.texCoord.x, inp.texCoord.y, 1, 1);
     return outp;
 }
 

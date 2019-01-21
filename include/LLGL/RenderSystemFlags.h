@@ -161,7 +161,7 @@ struct ImageInitialization
     \brief Enables or disables the default initialization of texture images. By default true.
     \remarks This will be used when a texture is created and no initial image data is specified.
     If this is false and a texture is created without initial image data, the texture remains uninitialized.
-    \note Reading or sampling uninitialized textures is undefined behavior.
+    \remarks Reading or sampling uninitialized textures is undefined behavior.
     */
     bool        enabled     = true;
 
@@ -172,7 +172,10 @@ struct ImageInitialization
     ClearValue  clearValue;
 };
 
-//! Render system configuration structure.
+/**
+\brief Render system configuration structure.
+\see RenderSystem::SetConfiguration
+*/
 struct RenderSystemConfiguration
 {
     //! Image initialization for textures without initial image data.

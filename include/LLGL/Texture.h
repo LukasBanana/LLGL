@@ -39,7 +39,7 @@ class LLGL_EXPORT Texture : public Resource
 
         /**
         \brief Queries a descriptor of this texture (including type, format, and size).
-        \note All flags members (i.e. TextureDescriptor::bindFlags, TextureDescriptor::cpuAccessFlags, and TextureDescriptor::miscFlags) will always be 0,
+        \remarks All flags members (i.e. TextureDescriptor::bindFlags, TextureDescriptor::cpuAccessFlags, and TextureDescriptor::miscFlags) will always be 0,
         i.e. the texture flags cannot be retrived after texture creation.
         \see TextureDescriptor
         */
@@ -53,7 +53,7 @@ class LLGL_EXPORT Texture : public Resource
         \param[in] mipLevel Specifies the MIP-map level to query from. The first and largest MIP-map is level zero.
         If this level is greater than or equal to the maxmimum number of MIP-maps for this texture, the return value is undefined (i.e. depends on the render system).
         \remarks This function is guaranteed to keep the currently bound textures, i.e. all previously bounds textures (e.g. using the CommandBufferExt::SetTexture function) will remain.
-        \note For cube textures and cube array textures (i.e. texture type TextureType::TextureCube and TextureType::TextureCubeArray), the depth extent will be a multiple of 6.
+        \remarks For cube textures and cube array textures (i.e. texture type TextureType::TextureCube and TextureType::TextureCubeArray), the depth extent will be a multiple of 6.
         This is in contrast to the other handling of cube array layers, because this function determines the actual buffer extent of the hardware texture.
         \see RenderSystem::GenerateMips
         \see CommandBufferExt::SetTexture

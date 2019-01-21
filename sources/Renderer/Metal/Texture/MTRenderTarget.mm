@@ -23,7 +23,7 @@ static void Copy(MTLRenderPassAttachmentDescriptor* dst, const MTLRenderPassAtta
     dst.depthPlane  = src.depthPlane;
     dst.loadAction  = src.loadAction;
     dst.storeAction = src.storeAction;
-    [dst.texture retain];
+    //[dst.texture retain];
 }
 
 MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescriptor& desc) :
@@ -92,6 +92,7 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
 
 MTRenderTarget::~MTRenderTarget()
 {
+    #if 0//TODO: code analysis warns about invalid reference counting
     /* Release all textures */
     for (std::uint32_t i = 0; i < numColorAttachments_; ++i)
         [native_.colorAttachments[i] release];
@@ -101,6 +102,7 @@ MTRenderTarget::~MTRenderTarget()
         [attachment.texture release];
     
     //[native_ release];
+    #endif
 }
 
 Extent2D MTRenderTarget::GetResolution() const

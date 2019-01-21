@@ -300,41 +300,56 @@ void MTRenderSystem::CreateDeviceResources()
     /* Initialize renderer information */
     RendererInfo info;
     {
-        info.rendererName           = "Metal";
+        info.rendererName           = "Metal " + std::string(QueryMetalVersion());
         info.deviceName             = [[device_ name] cStringUsingEncoding:NSUTF8StringEncoding];
         info.vendorName             = "Apple";
         info.shadingLanguageName    = "Metal Shading Language";
     }
     SetRendererInfo(info);
-    
+
     /* Create command queue */
     commandQueue_ = MakeUnique<MTCommandQueue>(device_);
 }
 
-static const MTLFeatureSet g_potentialFeatureSets[] =
-{
-    //MTLFeatureSet_macOS_ReadWriteTextureTier2,
-    MTLFeatureSet_macOS_GPUFamily2_v1,
-    MTLFeatureSet_macOS_GPUFamily1_v4,
-    MTLFeatureSet_macOS_GPUFamily1_v3,
-    MTLFeatureSet_macOS_GPUFamily1_v2,
-    MTLFeatureSet_macOS_GPUFamily1_v1,
-};
-
 void MTRenderSystem::QueryRenderingCaps()
 {
     RenderingCapabilities caps;
-    
+    LoadFeatureSetCaps(device_, QueryHighestFeatureSet(), caps);
+    SetRenderingCaps(caps);
+}
+
+const char* MTRenderSystem::QueryMetalVersion() const
+{
+    switch (QueryHighestFeatureSet())
+    {
+        case MTLFeatureSet_macOS_GPUFamily2_v1: return "2.1";
+        case MTLFeatureSet_macOS_GPUFamily1_v4: return "1.4";
+        case MTLFeatureSet_macOS_GPUFamily1_v3: return "1.3";
+        case MTLFeatureSet_macOS_GPUFamily1_v2: return "1.2";
+        case MTLFeatureSet_macOS_GPUFamily1_v1: return "1.1";
+        default:                                return "1.0";
+    }
+}
+
+MTLFeatureSet MTRenderSystem::QueryHighestFeatureSet() const
+{
+    static const MTLFeatureSet g_potentialFeatureSets[] =
+    {
+        MTLFeatureSet_macOS_ReadWriteTextureTier2,
+        MTLFeatureSet_macOS_GPUFamily2_v1,
+        MTLFeatureSet_macOS_GPUFamily1_v4,
+        MTLFeatureSet_macOS_GPUFamily1_v3,
+        MTLFeatureSet_macOS_GPUFamily1_v2,
+        MTLFeatureSet_macOS_GPUFamily1_v1,
+    };
+
     for (auto fset : g_potentialFeatureSets)
     {
         if ([device_ supportsFeatureSet:fset])
-        {
-            LoadFeatureSetCaps(device_, fset, caps);
-            break;
-        }
+            return fset;
     }
 
-    SetRenderingCaps(caps);
+    return MTLFeatureSet_macOS_GPUFamily1_v1;
 }
 
 

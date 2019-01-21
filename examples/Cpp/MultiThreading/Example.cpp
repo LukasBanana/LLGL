@@ -12,6 +12,9 @@
 #include <iomanip>
 
 
+// Enables/disables the use of two secondary command buffers
+//#define ENABLE_SECONDARY_COMMAND_BUFFERS
+
 class Measure
 {
 
@@ -249,8 +252,21 @@ private:
                 cmdBuffer.SetViewport(context->GetVideoMode().resolution);
                 
                 // Draw scene with secondary command buffers
+                #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS
+
                 for (auto& bdl : bundle)
                     cmdBuffer.Execute(*bdl.secondaryCmdBuffer);
+
+                #else // ENABLE_SECONDARY_COMMAND_BUFFERS
+
+                for (auto& bdl : bundle)
+                {
+                    cmdBuffer.SetGraphicsPipeline(*bdl.pipeline);
+                    cmdBuffer.SetGraphicsResourceHeap(*bdl.resourceHeap, 0);
+                    cmdBuffer.DrawIndexed(numIndices, 0);
+                }
+
+                #endif // /ENABLE_SECONDARY_COMMAND_BUFFERS
             }
             cmdBuffer.EndRenderPass();
         }
@@ -268,7 +284,9 @@ private:
             cmdBufferDesc.flags = LLGL::CommandBufferFlags::MultiSubmit;
         }
         primaryCmdBuffer = renderer->CreateCommandBuffer(cmdBufferDesc);
-        
+
+        #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS
+
         // Create secondary command buffers
         cmdBufferDesc.flags = (LLGL::CommandBufferFlags::DeferredSubmit | LLGL::CommandBufferFlags::MultiSubmit);
         
@@ -289,16 +307,22 @@ private:
                 "workerThread[" + std::to_string(i) + "]"
             );
         }
+
+        #endif // /ENABLE_SECONDARY_COMMAND_BUFFERS
         
         // Encode primary command buffer
         EncodePrimaryCommandBuffer("mainThread");
-        
+
+        #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS
+
         // Wait for worker threads to finish
         for (auto& worker : workerThread)
         {
             if (worker.joinable())
                 worker.join();
         }
+
+        #endif // /ENABLE_SECONDARY_COMMAND_BUFFERS
     }
 
     void Transform(Gs::Matrix4f& matrix, const Gs::Vector3f& pos, float angle)

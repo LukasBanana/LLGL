@@ -59,7 +59,8 @@ class MTCommandQueue : public CommandQueue
 
     private:
 
-        id<MTLCommandQueue> native_;
+        id<MTLCommandQueue>     native_                 = nil;
+        id<MTLCommandBuffer>    lastSubmittedCmdBuffer_ = nil;
 
 };
 

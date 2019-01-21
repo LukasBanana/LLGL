@@ -122,7 +122,11 @@ struct LLGL_EXPORT SamplerDescriptor
     */
     bool                mipMapping      = true;
 
-    //! MIP-mapping level-of-detail (LOD) bias (or rather offset). By default 0.
+    /**
+    \brief MIP-mapping level-of-detail (LOD) bias (or rather offset). By default 0.
+    \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    \note For Metal, the LOD bias can only be specified within the shader code.
+    */
     float               mipMapLODBias   = 0.0f;
 
     //! Lower end of the MIP-map range. By default 0.

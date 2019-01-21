@@ -21,16 +21,18 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     auto& limits = caps.limits;
     
     /* Specify supported shading languages */
-    caps.shadingLanguages =
+    caps.shadingLanguages = { ShadingLanguage::Metal, ShadingLanguage::Metal_1_0 };
+
+    if (fset >= MTLFeatureSet_macOS_GPUFamily1_v1)
+        caps.shadingLanguages.push_back(ShadingLanguage::Metal_1_1);
+    if (fset >= MTLFeatureSet_macOS_GPUFamily1_v2)
+        caps.shadingLanguages.push_back(ShadingLanguage::Metal_1_2);
+    if (fset >= MTLFeatureSet_macOS_GPUFamily2_v1)
     {
-        ShadingLanguage::Metal,
-        ShadingLanguage::Metal_1_0,
-        ShadingLanguage::Metal_1_1,
-        ShadingLanguage::Metal_1_2,
-        ShadingLanguage::Metal_2_0,
-        ShadingLanguage::Metal_2_1,
-    };
-    
+        caps.shadingLanguages.push_back(ShadingLanguage::Metal_2_0);
+        caps.shadingLanguages.push_back(ShadingLanguage::Metal_2_1);
+    }
+
     /* Specify features */
     features.hasCommandBufferExt            = true;
     features.hasRenderTargets               = true;
@@ -62,6 +64,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     limits.max2DTextureSize                 = 16384u;
     limits.max3DTextureSize                 = 2048u;
     limits.maxCubeTextureSize               = 16384u;
+    limits.maxTextureArrayLayers            = 2048u;
     limits.maxViewports                     = (fset >= MTLFeatureSet_macOS_GPUFamily1_v3 ? 16u : 1u);
     limits.maxViewportSize[0]               = 16384u; //???
     limits.maxViewportSize[1]               = 16384u; //???

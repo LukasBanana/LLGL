@@ -108,13 +108,13 @@ struct TextureDescriptor
     Format          format          = Format::RGBA8UNorm;
 
     /**
-    \brief Texture extent. By default (1, 1, 1).
-    \remarks The height component is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
-    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, TextureType::Texture2DMSArray).
-    The depth component is only used for 3D textures (i.e. TextureType::Texture3D).
-    For cube textures, the width and height component must be equal.
-    \see IsArrayTexture
+    \brief Size of the texture (excluding the number of array layers). By default (1, 1, 1).
+    \remarks The \c height component is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
+    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, and TextureType::Texture2DMSArray).
+    \remarks The \c depth component is only used for 3D textures (i.e. TextureType::Texture3D).
+    \remarks The \c width and \c height components must be equal for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
     \see IsCubeTexture
+    \see arrayLayers
     */
     Extent3D        extent          = { 1, 1, 1 };
 
@@ -134,6 +134,7 @@ struct TextureDescriptor
     \see IsArrayTexture
     \see IsCubeTexture
     \see RenderingLimits::maxTextureArrayLayers
+    \see extent
     */
     std::uint32_t   arrayLayers     = 1;
 

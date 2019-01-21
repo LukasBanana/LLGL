@@ -155,6 +155,10 @@ class MTRenderSystem : public RenderSystem
         void CreateDeviceResources();
         void QueryRenderingCaps();
 
+        const char* QueryMetalVersion() const;
+
+        MTLFeatureSet QueryHighestFeatureSet() const;
+
     private:
     
         /* ----- Common objects ----- */

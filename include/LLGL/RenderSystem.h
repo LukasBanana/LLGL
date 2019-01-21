@@ -282,7 +282,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \brief Creates a new texture.
         \param[in] textureDesc Specifies the texture descriptor.
         \param[in] imageDesc Optional pointer to the image data descriptor.
-        If this is null, the texture will be initialized with the currently configured default image color.
+        If this is null, the texture will be initialized with the currently configured default image color (if this feature is enabled).
         If this is non-null, it is used to initialize the texture data.
         This parameter will be ignored if the texture type is a multi-sampled texture (i.e. TextureType::Texture2DMS or TextureType::Texture2DMSArray).
         \see WriteTexture
