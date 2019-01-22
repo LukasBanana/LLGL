@@ -357,6 +357,7 @@ set(FilesExample_MultiRenderer ${EXAMPLE_PROJECTS_DIR}/MultiRenderer/Example.cpp
 set(FilesExample_ShadowMapping ${EXAMPLE_PROJECTS_DIR}/ShadowMapping/Example.cpp)
 set(FilesExample_UnorderedAccess ${EXAMPLE_PROJECTS_DIR}/UnorderedAccess/Example.cpp)
 set(FilesExample_MultiThreading ${EXAMPLE_PROJECTS_DIR}/MultiThreading/Example.cpp)
+set(FilesExample_PBR ${EXAMPLE_PROJECTS_DIR}/PBR/Example.cpp)
 
 
 # === Source group folders ===
@@ -725,6 +726,7 @@ if(GaussLib_INCLUDE_DIR)
         ADD_TEST_PROJECT(Example_ShadowMapping "${FilesExample_ShadowMapping}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_UnorderedAccess "${FilesExample_UnorderedAccess}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_MultiThreading "${FilesExample_MultiThreading}" "${EXAMPLE_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Example_PBR "${FilesExample_PBR}" "${EXAMPLE_PROJECT_LIBS}")
     endif()
 else()
     if(LLGL_BUILD_TESTS)

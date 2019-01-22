@@ -15,14 +15,14 @@
  * Global helper functions
  */
 
-std::vector<VertexPos3Norm3> LoadObjModel(const std::string& filename)
+std::vector<TexturedVertex> LoadObjModel(const std::string& filename)
 {
-    std::vector<VertexPos3Norm3> vertices;
+    std::vector<TexturedVertex> vertices;
     LoadObjModel(vertices, filename);
     return vertices;
 }
 
-TriangleMesh LoadObjModel(std::vector<VertexPos3Norm3>& vertices, const std::string& filename)
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename)
 {
     // Read obj file
     std::ifstream file(filename);
@@ -34,6 +34,7 @@ TriangleMesh LoadObjModel(std::vector<VertexPos3Norm3>& vertices, const std::str
     mesh.firstVertex = static_cast<std::uint32_t>(vertices.size());
 
     std::vector<Gs::Vector3f> coords, normals;
+    std::vector<Gs::Vector2f> texCoords;
 
     while (!file.eof())
     {
@@ -56,6 +57,13 @@ TriangleMesh LoadObjModel(std::vector<VertexPos3Norm3>& vertices, const std::str
             s >> v.z;
             coords.push_back(v);
         }
+        else if (mode == "vt")
+        {
+            Gs::Vector2f t;
+            s >> t.x;
+            s >> t.y;
+            texCoords.push_back(t);
+        }
         else if (mode == "vn")
         {
             Gs::Vector3f n;
@@ -66,14 +74,34 @@ TriangleMesh LoadObjModel(std::vector<VertexPos3Norm3>& vertices, const std::str
         }
         else if (mode == "f")
         {
-            unsigned int v = 0, vn = 0;
+            unsigned int v = 0, vt = 0, vn = 0;
 
             for (int i = 0; i < 3; ++i)
             {
+                // Read vertex index
                 s >> v;
-                s.ignore(2);
+
+                // Read texture-coordinate index
+                if (texCoords.empty())
+                    s.ignore(2);
+                else
+                {
+                    s.ignore(1);
+                    s >> vt;
+                    s.ignore(1);
+                }
+
+                // Read normal index
                 s >> vn;
-                vertices.push_back({ coords[v - 1], normals[vn - 1] });
+
+                // Add vertex to mesh
+                vertices.push_back(
+                    {
+                        coords[v - 1],
+                        (vn - 1 < normals.size() ? normals[vn - 1] : Gs::Vector3f{}),
+                        (vt - 1 < texCoords.size() ? texCoords[vt - 1] : Gs::Vector2f{})
+                    }
+                );
                 mesh.numVertices++;
             }
         }
@@ -170,5 +198,55 @@ std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices()
         16, 17, 18, 16, 18, 19, // bottom
         20, 21, 22, 20, 22, 23, // back
     };
+}
+
+static void CopyVertex(TangentSpaceVertex& dst, const TexturedVertex& src)
+{
+    dst.position = src.position;
+    dst.normal   = src.normal;
+    dst.texCoord = src.texCoord;
+}
+
+static void GenerateTangentSpace(TangentSpaceVertex& v0, TangentSpaceVertex& v1, TangentSpaceVertex& v2)
+{
+    auto dv1 = v1.position - v0.position;
+    auto dv2 = v2.position - v0.position;
+
+    auto st1 = v1.texCoord - v0.texCoord;
+    auto st2 = v2.texCoord - v0.texCoord;
+
+    auto tangent    = (dv1 * st2.x) - (dv2 * st1.x);
+    auto bitangent  = (dv1 * st2.y) - (dv2 * st1.y);
+
+    tangent.Normalize();
+    bitangent.Normalize();
+
+    v0.tangents[0] = tangent;
+    v0.tangents[1] = bitangent;
+
+    v1.tangents[0] = tangent;
+    v1.tangents[1] = bitangent;
+
+    v2.tangents[0] = tangent;
+    v2.tangents[1] = bitangent;
+}
+
+std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const std::vector<TexturedVertex>& vertices)
+{
+    std::vector<TangentSpaceVertex> outp;
+    outp.resize(vertices.size());
+
+    for (std::size_t i = 0, n = outp.size(); i + 3 <= n; i += 3)
+    {
+        // Copy position and texture-coordinate
+        CopyVertex(outp[i    ], vertices[i    ]);
+        CopyVertex(outp[i + 1], vertices[i + 1]);
+        CopyVertex(outp[i + 2], vertices[i + 2]);
+
+        // Generate tangent-space
+        GenerateTangentSpace(outp[i], outp[i + 1], outp[i + 2]);
+    }
+
+    return outp;
 }
 

@@ -18,10 +18,19 @@
  * Global helper structures
  */
 
-struct VertexPos3Norm3
+struct TexturedVertex
 {
     Gs::Vector3f position;
     Gs::Vector3f normal;
+    Gs::Vector2f texCoord;
+};
+
+struct TangentSpaceVertex
+{
+    Gs::Vector3f position;
+    Gs::Vector3f normal;
+    Gs::Vector3f tangents[2];
+    Gs::Vector2f texCoord;
 };
 
 struct VertexPos3Tex2
@@ -44,10 +53,10 @@ struct TriangleMesh
  */
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
-std::vector<VertexPos3Norm3> LoadObjModel(const std::string& filename);
+std::vector<TexturedVertex> LoadObjModel(const std::string& filename);
 
 // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
-TriangleMesh LoadObjModel(std::vector<VertexPos3Norm3>& vertices, const std::string& filename);
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename);
 
 // Generates eight vertices for a unit cube.
 std::vector<Gs::Vector3f> GenerateCubeVertices();
@@ -65,6 +74,9 @@ std::vector<VertexPos3Tex2> GenerateTexturedCubeVertices();
 
 // Generates 36 indices for a unit cube of 24 vertices
 std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices();
+
+// Generates tangent-space vertices from the specified list of textured vertices.
+std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const std::vector<TexturedVertex>& vertices);
 
 
 #endif

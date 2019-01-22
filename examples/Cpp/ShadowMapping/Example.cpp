@@ -81,9 +81,10 @@ private:
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
         vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
+        vertexFormat.stride = sizeof(TexturedVertex);
 
-        // Initialize vertices (scale texture-coordiantes a little bit, to show the texture border)
-        std::vector<VertexPos3Norm3> vertices;
+        // Load 3D models
+        std::vector<TexturedVertex> vertices;
         meshes.push_back(LoadObjModel(vertices, "../../Media/Models/SimpleRoom.obj"));
         meshes.push_back(LoadObjModel(vertices, "../../Media/Models/WiredBox.obj"));
 

@@ -200,13 +200,13 @@ protected:
         );
     }
 
-    template <typename Buffer>
-    LLGL::Buffer* CreateConstantBuffer(const Buffer& buffer)
+    template <typename T>
+    LLGL::Buffer* CreateConstantBuffer(const T& initialData)
     {
-        static_assert(!std::is_pointer<Buffer>::value, "buffer type must not be a pointer");
+        static_assert(!std::is_pointer<T>::value, "buffer type must not be a pointer");
         return renderer->CreateBuffer(
-            LLGL::ConstantBufferDesc(sizeof(buffer)),
-            &buffer
+            LLGL::ConstantBufferDesc(sizeof(T)),
+            &initialData
         );
     }
 

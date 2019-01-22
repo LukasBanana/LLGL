@@ -100,6 +100,7 @@ public:
         // Specify vertex format for scene
         vertexFormatScene.AppendAttribute({ "position", LLGL::Format::RGB32Float });
         vertexFormatScene.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
+        vertexFormatScene.stride = sizeof(TexturedVertex);
 
         // Create scene buffers
         auto sceneVertices = LoadObjModel("../../Media/Models/WiredBox.obj");

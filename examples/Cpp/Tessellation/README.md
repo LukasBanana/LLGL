@@ -49,7 +49,7 @@ myPipelineDesc.rasterizer.cullMode = LLGL::CullMode::Back;              // Enabl
 myPipelineDesc.rasterizer.frontCCW = true;                              // Front facing polygons: counter-clock-wise (CCW) winding
 LLGL::GraphicsPipeline* myPipeline = myRenderer->CreateGraphicsPipeline(myPipelineDesc);
 ```
-There are several parameters besides the pipeline layout that are needed for the tessellation tutorial. This time we use the depth buffer to render a 3D scene and not just a flat triangle. We also enable back-face culling as a minor optimization to omit triangles that are never visible anyways. But make sure to only use this when you render meshes that are entirely closed. When tessellation shaders are used in the graphics pipeline, the primitive toplogy must be one ot he `LLGL::PrimitiveTopology::Patches1`-`32` enumeration entries. The number specifies the control point count. The maximum number of control points that are supported by the host platform can be determined as shown here:
+There are several parameters besides the pipeline layout that are needed for the tessellation tutorial. This time we use the depth buffer to render a 3D scene and not just a flat triangle. We also enable back-face culling as a minor optimization to omit triangles that are never visible anyways. But make sure to only use this when you render meshes that are entirely closed. When tessellation shaders are used in the graphics pipeline, the primitive toplogy must be one of the `LLGL::PrimitiveTopology::Patches1`-`32` enumeration entries. The number specifies the control point count. The maximum number of control points that are supported by the host platform can be determined as shown here:
 ```cpp
 myRenderer->GetRenderingCaps().limits.maxPatchVertices
 ```
