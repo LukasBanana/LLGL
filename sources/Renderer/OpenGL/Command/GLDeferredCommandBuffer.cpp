@@ -34,6 +34,7 @@
 #include "../RenderState/GLQueryHeap.h"
 
 #include <algorithm>
+#include <string.h>
 
 #ifdef LLGL_ENABLE_JIT_COMPILER
 #   include "GLCommandAssembler.h"
