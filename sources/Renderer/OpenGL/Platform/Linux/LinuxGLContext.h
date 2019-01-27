@@ -41,7 +41,7 @@ class LinuxGLContext : public GLContext
         GLXContext CreateContextCoreProfile(GLXContext glcShared, int major, int minor);
         GLXContext CreateContextCompatibilityProfile(GLXContext glcShared);
 
-        void QueryGLVersion(GLint& major, GLint& minor);
+        bool QueryGLVersion(GLint& major, GLint& minor);
         
     private:
     

@@ -32,6 +32,9 @@ std::string GLDebugSeverityToStr(const GLenum severity);
 // Converts the boolean value into a GLboolean value.
 GLboolean GLBoolean(bool value);
 
+// Reads major/minor version from the string by glGetString(GL_VERSION), used for GL 2.x context creation.
+bool GLParseVersionString(const GLubyte* s, GLint& major, GLint& minor);
+
 // Throws an std::runtime_error exception reporting a call to an unsupported OpenGL procedure.
 [[noreturn]]
 void ErrUnsupportedGLProc(const char* name);

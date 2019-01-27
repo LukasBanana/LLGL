@@ -8,6 +8,7 @@
 #include "LinuxGLContext.h"
 #include "../../Ext/GLExtensions.h"
 #include "../../Ext/GLExtensionLoader.h"
+#include "../../../GLCommon/GLCore.h"
 #include "../../../CheckedCast.h"
 #include "../../../../Core/Helper.h"
 #include <LLGL/Log.h>
@@ -141,9 +142,9 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
     }
     
     /* Query supported GL versions */
-    GLint majorGL = 0, minorGL = 0;
+    GLint majorGL = 1, minorGL = 1;
     QueryGLVersion(majorGL, minorGL);
-    
+
     if (majorGL < 3)
     {
         /* Don't try to create a core profile when GL version is below 3.0 */
@@ -216,45 +217,24 @@ GLXContext LinuxGLContext::CreateContextCompatibilityProfile(GLXContext glcShare
     return glXCreateContext(display_, visual_, glcShared, GL_TRUE);
 }
 
-static void ParseGLint(const GLubyte*& s, GLint& n)
+bool LinuxGLContext::QueryGLVersion(GLint& major, GLint& minor)
 {
-    n = 0;
-    while (*s >= '0' && *s <= '9')
-    {
-        n *= 10;
-        n += (*s - '0');
-        ++s;
-    }
-}
+    bool result = false;
 
-/*
-Parse GL version from 'glGetString(GL_VERSION)',
-because glGet*(GL_MAJOR_VERSION) is only available if GL 3.0+ is available.
-*/
-static void ParseGLVersionString(const GLubyte* s, GLint& major, GLint& minor)
-{
-    ParseGLint(s, major);
-    ++s; // ignore '.' character
-    ParseGLint(s, minor);
-}
-
-void LinuxGLContext::QueryGLVersion(GLint& major, GLint& minor)
-{
     /* Create temporary GL context */
     GLXContext glc = glXCreateContext(display_, visual_, nullptr, GL_TRUE);
     if (glc)
     {
         /* Query GL version from temporary GL context */
         glXMakeCurrent(display_, wnd_, glc);
-        ParseGLVersionString(glGetString(GL_VERSION), major, minor);
+
+        result = GLParseVersionString(glGetString(GL_VERSION), major, minor);
+
         glXMakeCurrent(display_, 0, nullptr);
         glXDestroyContext(display_, glc);
     }
-    else
-    {
-        major = 1;
-        minor = 1;
-    }
+
+    return result;
 }
 
 

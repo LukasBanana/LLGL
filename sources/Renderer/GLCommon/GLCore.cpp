@@ -127,6 +127,45 @@ GLboolean GLBoolean(bool value)
     return (value ? GL_TRUE : GL_FALSE);
 }
 
+// Parse single integer from 'glGetString(GL_VERSION)'.
+static bool GLParseInt(const GLubyte*& s, GLint& n)
+{
+    if (*s >= '0' && *s <= '9')
+    {
+        n = 0;
+        while (*s >= '0' && *s <= '9')
+        {
+            n *= 10;
+            n += (*s - '0');
+            ++s;
+        }
+        return true;
+    }
+    return false;
+}
+
+bool GLParseVersionString(const GLubyte* s, GLint& major, GLint& minor)
+{
+    if (s != nullptr)
+    {
+        /* Try to parse string with temporary integers */
+        GLint n[2];
+        if (!GLParseInt(s, n[0]))
+            return false;
+        if (*s++ != '.')
+            return false;
+        if (!GLParseInt(s, n[1]))
+            return false;
+
+        /* Return result */
+        major = n[0];
+        minor = n[1];
+
+        return true;
+    }
+    return false;
+}
+
 [[noreturn]]
 void ErrUnsupportedGLProc(const char* name)
 {
