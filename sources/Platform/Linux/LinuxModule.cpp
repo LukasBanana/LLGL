@@ -39,7 +39,7 @@ std::string Module::GetModuleFilename(const char* moduleName)
     std::string s = GetProgramPath();
     s += "libLLGL_";
     s += moduleName;
-    #ifdef AC_DEBUG
+    #ifdef LLGL_DEBUG
     s += "D";
     #endif
     s += ".so";

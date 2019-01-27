@@ -333,6 +333,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \throws std::invalid_argument If 'imageDesc.data' is null.
         \see Texture::QueryDesc
         \see Texture::QueryMipExtent
+        \todo Replace \c mipLevel parameter with \c textureRegion just like with the \c WriteTexture function.
         */
         virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) = 0;
 
