@@ -23,7 +23,9 @@ namespace LLGL
  */
 
 void GLRenderContext::GetNativeContextHandle(
-    NativeContextHandle& windowContext, const VideoModeDescriptor& videoModeDesc, const MultiSamplingDescriptor& multiSamplingDesc)
+    NativeContextHandle&            windowContext,
+    const VideoModeDescriptor&      videoModeDesc,
+    const MultiSamplingDescriptor&  multiSamplingDesc)
 {
     /* Open X11 display */
     windowContext.display = XOpenDisplay(nullptr);
@@ -91,8 +93,6 @@ void GLRenderContext::GetNativeContextHandle(
             GLX_ALPHA_SIZE,     (videoModeDesc.colorBits == 32 ? 8 : 0),
             GLX_DEPTH_SIZE,     videoModeDesc.depthBits,
             GLX_STENCIL_SIZE,   videoModeDesc.stencilBits,
-            GLX_SAMPLE_BUFFERS, 0,
-            GLX_SAMPLES,        0,
             None
         };
 
