@@ -552,6 +552,10 @@ elseif(UNIX)
     target_link_libraries(LLGL X11 pthread Xxf86vm Xrandr)
 endif()
 
+if(MINGW)
+    set_target_properties(LLGL PROPERTIES PREFIX "")
+endif()
+
 set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 ENABLE_CXX11(LLGL)
 
@@ -602,6 +606,10 @@ if(LLGL_BUILD_RENDERER_OPENGL)
             add_library(LLGL_OpenGL SHARED ${FilesGL})
         endif()
         
+        if(MINGW)
+            set_target_properties(LLGL_OpenGL PROPERTIES PREFIX "")
+        endif()
+        
         set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
         target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
         ENABLE_CXX11(LLGL_OpenGL)
@@ -621,6 +629,10 @@ if(LLGL_BUILD_RENDERER_VULKAN)
         ENABLE_CXX11(LLGL_Vulkan)
     else()
         message("Missing Vulkan -> LLGL_Vulkan renderer will be excluded from project")
+    endif()
+    
+    if(MINGW)
+        set_target_properties(LLGL_Vulkan PROPERTIES PREFIX "")
     endif()
     
     if(LLGL_ENABLE_SPIRV_REFLECT)
@@ -659,6 +671,10 @@ if(WIN32)
             add_library(LLGL_Direct3D11 SHARED ${FilesD3D11})
         endif()
         
+        if(MINGW)
+            set_target_properties(LLGL_Direct3D11 PROPERTIES PREFIX "")
+        endif()
+        
         set_target_properties(LLGL_Direct3D11 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
         target_link_libraries(LLGL_Direct3D11 LLGL d3d11 dxgi D3DCompiler)
         ENABLE_CXX11(LLGL_Direct3D11)
@@ -671,6 +687,10 @@ if(WIN32)
             set(TEST_PROJECT_LIBS LLGL_Direct3D12)
         else()
             add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
+        endif()
+        
+        if(MINGW)
+            set_target_properties(LLGL_Direct3D12 PROPERTIES PREFIX "")
         endif()
         
         set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
