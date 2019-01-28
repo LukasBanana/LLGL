@@ -213,7 +213,19 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
     {
         /* Bind vertex buffer */
         auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
-        stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
+
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        if (!HasExtension(GLExt::ARB_vertex_array_object))
+        {
+            /* Bind vertex array with emulator (for GL 2.x compatibility) */
+            vertexBufferGL.GetVertexArrayGL2X().Bind(*stateMngr_);
+        }
+        else
+        #endif // /LLGL_GL_ENABLE_OPENGL2X
+        {
+            /* Bind vertex array with native VAO */
+            stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
+        }
     }
 }
 
@@ -223,7 +235,19 @@ void GLImmediateCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     {
         /* Bind vertex buffer */
         auto& vertexBufferArrayGL = LLGL_CAST(GLBufferArrayWithVAO&, bufferArray);
-        stateMngr_->BindVertexArray(vertexBufferArrayGL.GetVaoID());
+
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        if (!HasExtension(GLExt::ARB_vertex_array_object))
+        {
+            /* Bind vertex array with emulator (for GL 2.x compatibility) */
+            vertexBufferArrayGL.GetVertexArrayGL2X().Bind(*stateMngr_);
+        }
+        else
+        #endif // /LLGL_GL_ENABLE_OPENGL2X
+        {
+            /* Bind vertex array with native VAO */
+            stateMngr_->BindVertexArray(vertexBufferArrayGL.GetVaoID());
+        }
     }
 }
 

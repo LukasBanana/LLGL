@@ -692,19 +692,25 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
         glBindVertexArray(vertexArray);
         vertexArrayState_.boundVertexArray = vertexArray;
 
-        /*
-        Always reset index buffer binding
-        -> see https://www.opengl.org/wiki/Vertex_Specification#Index_buffers
-        */
-        bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
-
-        /* Bind deferred index buffer */
-        if (vertexArray != 0 && vertexArrayState_.boundElementArrayBuffer != 0)
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        /* Only perform deferred binding of element array buffer if VAOs are supported */
+        if (HasExtension(GLExt::ARB_vertex_array_object))
+        #endif // /LLGL_GL_ENABLE_OPENGL2X
         {
-            BindBuffer(
-                GLBufferTarget::ELEMENT_ARRAY_BUFFER,
-                vertexArrayState_.boundElementArrayBuffer
-            );
+            /*
+            Always reset index buffer binding
+            -> see https://www.opengl.org/wiki/Vertex_Specification#Index_buffers
+            */
+            bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
+
+            /* Bind deferred index buffer */
+            if (vertexArray != 0 && vertexArrayState_.boundElementArrayBuffer != 0)
+            {
+                BindBuffer(
+                    GLBufferTarget::ELEMENT_ARRAY_BUFFER,
+                    vertexArrayState_.boundElementArrayBuffer
+                );
+            }
         }
     }
 }
@@ -721,12 +727,22 @@ void GLStateManager::NotifyVertexArrayRelease(GLuint vertexArray)
 
 void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer)
 {
-    /* Always store buffer ID to bind the index buffer the next time "BindVertexArray" is called */
-    vertexArrayState_.boundElementArrayBuffer = buffer;
-
-    /* If a valid VAO is currently being bound, bind the specified buffer directly */
-    if (vertexArrayState_.boundVertexArray != 0)
+    #ifdef LLGL_GL_ENABLE_OPENGL2X
+    if (!HasExtension(GLExt::ARB_vertex_array_object))
+    {
+        /* Bind element array buffer directly (for GL 2.x compatibility) */
         BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
+    }
+    else
+    #endif // /LLGL_GL_ENABLE_OPENGL2X
+    {
+        /* Always store buffer ID to bind the index buffer the next time "BindVertexArray" is called */
+        vertexArrayState_.boundElementArrayBuffer = buffer;
+
+        /* If a valid VAO is currently being bound, bind the specified buffer directly */
+        if (vertexArrayState_.boundVertexArray != 0)
+            BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
+    }
 }
 
 void GLStateManager::PushBoundBuffer(GLBufferTarget target)
@@ -778,6 +794,16 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
 
     NotifyBufferRelease(id, GLBufferTarget::COPY_READ_BUFFER);
     NotifyBufferRelease(id, GLBufferTarget::COPY_WRITE_BUFFER);
+}
+
+void GLStateManager::DisableVertexAttribArrays(GLuint firstIndex)
+{
+    /* Disable remaining vertex-attrib-arrays */
+    for (GLuint i = firstIndex; i < bufferState_.lastVertexAttribArray; ++i)
+        glDisableVertexAttribArray(i);
+
+    /* Store new highest vertex-attrib-array index */
+    bufferState_.lastVertexAttribArray = firstIndex;
 }
 
 /* ----- Framebuffer ----- */

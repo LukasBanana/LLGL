@@ -159,6 +159,9 @@ class GLStateManager
         void NotifyBufferRelease(GLuint buffer, GLBufferTarget target);
         void NotifyBufferRelease(const GLBuffer& buffer);
 
+        // Disables all previous enabled vertex attrib arrays, and sets the specified index as the new highest enabled index.
+        void DisableVertexAttribArrays(GLuint firstIndex);
+
         /* ----- Framebuffer ----- */
 
         void BindGLRenderTarget(GLRenderTarget* renderTarget);
@@ -351,6 +354,7 @@ class GLStateManager
 
             std::array<GLuint, numBufferTargets>    boundBuffers;
             std::stack<StackEntry>                  boundBufferStack;
+            GLuint                                  lastVertexAttribArray   = 0;
         };
 
         struct GLFramebufferState

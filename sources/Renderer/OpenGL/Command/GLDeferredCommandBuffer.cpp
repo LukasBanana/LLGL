@@ -282,8 +282,19 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     if ((buffer.GetBindFlags() & BindFlags::VertexBuffer) != 0)
     {
-        auto cmd = AllocCommand<GLCmdBindVertexArray>(GLOpcodeBindVertexArray);
-        cmd->vao = LLGL_CAST(const GLBufferWithVAO&, buffer).GetVaoID();
+        auto& bufferWithVAO = LLGL_CAST(const GLBufferWithVAO&, buffer);
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        if (!HasExtension(GLExt::ARB_vertex_array_object))
+        {
+            auto cmd = AllocCommand<GLCmdBindGL2XVertexArray>(GLOpcodeBindGL2XVertexArray);
+            cmd->vertexArrayGL2X = &(bufferWithVAO.GetVertexArrayGL2X());
+        }
+        else
+        #endif // /LLGL_GL_ENABLE_OPENGL2X
+        {
+            auto cmd = AllocCommand<GLCmdBindVertexArray>(GLOpcodeBindVertexArray);
+            cmd->vao = bufferWithVAO.GetVaoID();
+        }
     }
 }
 
@@ -291,8 +302,19 @@ void GLDeferredCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     if ((bufferArray.GetBindFlags() & BindFlags::VertexBuffer) != 0)
     {
-        auto cmd = AllocCommand<GLCmdBindVertexArray>(GLOpcodeBindVertexArray);
-        cmd->vao = LLGL_CAST(const GLBufferArrayWithVAO&, bufferArray).GetVaoID();
+        auto& bufferArrayWithVAO = LLGL_CAST(const GLBufferArrayWithVAO&, bufferArray);
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        if (!HasExtension(GLExt::ARB_vertex_array_object))
+        {
+            auto cmd = AllocCommand<GLCmdBindGL2XVertexArray>(GLOpcodeBindGL2XVertexArray);
+            cmd->vertexArrayGL2X = &(bufferArrayWithVAO.GetVertexArrayGL2X());
+        }
+        else
+        #endif
+        {
+            auto cmd = AllocCommand<GLCmdBindVertexArray>(GLOpcodeBindVertexArray);
+            cmd->vao = bufferArrayWithVAO.GetVaoID();
+        }
     }
 }
 

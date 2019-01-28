@@ -30,6 +30,7 @@ class GLRenderContext;
 class GLRenderTarget;
 class GLRenderPass;
 class GLDeferredCommandBuffer;
+class GL2XVertexArray;
 
 
 struct GLCmdUpdateBuffer
@@ -114,6 +115,11 @@ struct GLCmdClearBuffers
 struct GLCmdBindVertexArray
 {
     GLuint vao;
+};
+
+struct GLCmdBindGL2XVertexArray
+{
+    const GL2XVertexArray* vertexArrayGL2X;
 };
 
 struct GLCmdBindElementArrayBufferToVAO

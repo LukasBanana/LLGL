@@ -8,10 +8,10 @@
 #include "GLVertexArrayObject.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
-#include "../../../Core/Exception.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLCore.h"
+#include "../../../Core/Exception.h"
 
 
 namespace LLGL
@@ -29,7 +29,7 @@ GLVertexArrayObject::~GLVertexArrayObject()
     GLStateManager::active->NotifyVertexArrayRelease(id_);
 }
 
-void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute, std::uint32_t stride, std::uint32_t index)
+void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute, GLsizei stride, GLuint index)
 {
     /* Enable array index in currently bound VAO */
     glEnableVertexAttribArray(index);

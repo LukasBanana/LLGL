@@ -22,6 +22,7 @@ void RegisterExtension(GLExt extension)
 
 bool HasExtension(const GLExt extension)
 {
+    if (extension == GLExt::ARB_vertex_array_object) return false;//!!!
     return g_registeredExtensions[static_cast<std::size_t>(extension)];
 }
 

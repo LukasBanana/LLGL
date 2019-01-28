@@ -155,6 +155,12 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLStateManager::BindVertexArray, g_stateMngrArg, cmd->vao);
             return sizeof(*cmd);
         }
+        case GLOpcodeBindGL2XVertexArray:
+        {
+            auto cmd = reinterpret_cast<const GLCmdBindGL2XVertexArray*>(pc);
+            compiler.CallMember(&GL2XVertexArray::Bind, cmd->vertexArrayGL2X, g_stateMngrArg);
+            return sizeof(*cmd);
+        }
         case GLOpcodeBindElementArrayBufferToVAO:
         {
             auto cmd = reinterpret_cast<const GLCmdBindElementArrayBufferToVAO*>(pc);

@@ -11,6 +11,7 @@
 
 #include "GLBufferArray.h"
 #include "GLVertexArrayObject.h"
+#include "GL2XVertexArray.h"
 
 
 namespace LLGL
@@ -32,9 +33,28 @@ class GLBufferArrayWithVAO final : public GLBufferArray
             return vao_.GetID();
         }
 
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        // Returns the GL 2.x compatible vertex-array emulator.
+        inline const GL2XVertexArray& GetVertexArrayGL2X() const
+        {
+            return vertexArrayGL2X_;
+        }
+        #endif
+
+    private:
+
+        void BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        void BuildVertexArrayWithEmulator(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        #endif
+
     private:
 
         GLVertexArrayObject vao_;
+
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        GL2XVertexArray     vertexArrayGL2X_;
+        #endif
 
 };
 
