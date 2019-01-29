@@ -169,7 +169,7 @@ DECL_GLPROC(GLboolean, glUnmapBuffer, (GLenum));
 DECL_GLPROC(void, glGetBufferParameteriv, (GLenum, GLenum, GLint*));
 DECL_GLPROC(void, glGetBufferPointerv, (GLenum, GLenum, void**));
 
-/* GL_ARB_vertex_buffer_object ??? */
+/* GL_ARB_vertex_shader */
 
 DECL_GLPROC(void, glEnableVertexAttribArray, (GLuint));
 DECL_GLPROC(void, glDisableVertexAttribArray, (GLuint));

@@ -139,7 +139,7 @@ PFNGLUNMAPBUFFERPROC                                    glUnmapBuffer           
 PFNGLGETBUFFERPARAMETERIVPROC                           glGetBufferParameteriv                          = nullptr;
 PFNGLGETBUFFERPOINTERVPROC                              glGetBufferPointerv                             = nullptr;
 
-/* GL_ARB_vertex_buffer_object ??? */
+/* GL_ARB_vertex_shader */
 
 PFNGLENABLEVERTEXATTRIBARRAYPROC                        glEnableVertexAttribArray                       = nullptr;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC                       glDisableVertexAttribArray                      = nullptr;

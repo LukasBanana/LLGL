@@ -126,13 +126,6 @@ static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceholder)
     LOAD_GLPROC( glUnmapBuffer          );
     LOAD_GLPROC( glGetBufferParameteriv );
     LOAD_GLPROC( glGetBufferPointerv    );
-
-    #if 1//TODO: which extension???
-    LOAD_GLPROC( glEnableVertexAttribArray  );
-    LOAD_GLPROC( glDisableVertexAttribArray );
-    LOAD_GLPROC( glVertexAttribPointer      );
-    LOAD_GLPROC( glBindAttribLocation       );
-    #endif
     return true;
 }
 
@@ -142,6 +135,15 @@ static bool Load_GL_ARB_vertex_array_object(bool usePlaceholder)
     LOAD_GLPROC( glDeleteVertexArrays );
     LOAD_GLPROC( glBindVertexArray    );
     LOAD_GLPROC( glIsVertexArray      );
+    return true;
+}
+
+static bool Load_GL_ARB_vertex_shader(bool usePlaceholder)
+{
+    LOAD_GLPROC( glEnableVertexAttribArray  );
+    LOAD_GLPROC( glDisableVertexAttribArray );
+    LOAD_GLPROC( glVertexAttribPointer      );
+    LOAD_GLPROC( glBindAttribLocation       );
     return true;
 }
 
@@ -798,6 +800,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     /* Enable hardware buffer extensions */
     ENABLE_GLEXT( ARB_vertex_buffer_object         );
     ENABLE_GLEXT( ARB_vertex_array_object          );
+    ENABLE_GLEXT( ARB_vertex_shader                );
     ENABLE_GLEXT( ARB_framebuffer_object           );
     ENABLE_GLEXT( ARB_uniform_buffer_object        );
 
@@ -898,12 +901,14 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     {
         extensions[ "GL_ARB_shader_objects"       ] = false;
         extensions[ "GL_ARB_vertex_buffer_object" ] = false;
+        extensions[ "GL_ARB_vertex_shader"        ] = false;
         extensions[ "GL_EXT_texture3D"            ] = false;
     }
 
     /* Load hardware buffer extensions */
     LOAD_GLEXT( ARB_vertex_buffer_object         );
     LOAD_GLEXT( ARB_vertex_array_object          );
+    LOAD_GLEXT( ARB_vertex_shader                );
     LOAD_GLEXT( ARB_framebuffer_object           );
     LOAD_GLEXT( ARB_uniform_buffer_object        );
     LOAD_GLEXT( ARB_shader_storage_buffer_object );

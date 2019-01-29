@@ -23,7 +23,7 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
     if (attribute.instanceDivisor > 0)
         ThrowNotSupportedExcept(__FUNCTION__, "per-instance vertex attributes");
 
-    /* Check if integral vertex attributes is used */
+    /* Check if integral vertex attribute is used */
     auto isNormalizedFormat = IsNormalizedFormat(attribute.format);
     auto isFloatFormat      = IsFloatFormat(attribute.format);
 
@@ -33,7 +33,9 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
     /* Get data type and components of vector type */
     DataType        dataType    = DataType::Float32;
     std::uint32_t   components  = 0;
-    SplitFormat(attribute.format, dataType, components);
+
+    if (!SplitFormat(attribute.format, dataType, components))
+        ThrowNotSupportedExcept(__FUNCTION__, "specified vertex attribute");
 
     /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
     const GLsizeiptr offsetPtrSized = attribute.offset;
@@ -59,8 +61,8 @@ void GL2XVertexArray::Bind(GLStateManager& stateMngr) const
         for (const auto& attr : attribs_)
         {
             stateMngr.BindBuffer(GLBufferTarget::ARRAY_BUFFER, attr.buffer);
-            glEnableVertexAttribArray(attr.index);
             glVertexAttribPointer(attr.index, attr.size, attr.type, attr.normalized, attr.size, attr.pointer);
+            glEnableVertexAttribArray(attr.index);
         }
 
         /* Disable remaining vertex arrays */

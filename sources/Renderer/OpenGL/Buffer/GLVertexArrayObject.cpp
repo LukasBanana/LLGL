@@ -20,17 +20,24 @@ namespace LLGL
 
 GLVertexArrayObject::GLVertexArrayObject()
 {
-    glGenVertexArrays(1, &id_);
+    if (HasExtension(GLExt::ARB_vertex_array_object))
+        glGenVertexArrays(1, &id_);
 }
 
 GLVertexArrayObject::~GLVertexArrayObject()
 {
-    glDeleteVertexArrays(1, &id_);
-    GLStateManager::active->NotifyVertexArrayRelease(id_);
+    if (HasExtension(GLExt::ARB_vertex_array_object))
+    {
+        glDeleteVertexArrays(1, &id_);
+        GLStateManager::active->NotifyVertexArrayRelease(id_);
+    }
 }
 
 void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute, GLsizei stride, GLuint index)
 {
+    if (!HasExtension(GLExt::ARB_vertex_array_object))
+        ThrowNotSupportedExcept(__FUNCTION__, "OpenGL extension 'GL_ARB_vertex_array_object'");
+
     /* Enable array index in currently bound VAO */
     glEnableVertexAttribArray(index);
 

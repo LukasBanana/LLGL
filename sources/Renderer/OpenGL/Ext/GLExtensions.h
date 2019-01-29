@@ -142,7 +142,7 @@ extern PFNGLUNMAPBUFFERPROC                                 glUnmapBuffer;
 extern PFNGLGETBUFFERPARAMETERIVPROC                        glGetBufferParameteriv;
 extern PFNGLGETBUFFERPOINTERVPROC                           glGetBufferPointerv;
 
-/* GL_ARB_vertex_buffer_object ??? */
+/* GL_ARB_vertex_shader */
 
 extern PFNGLENABLEVERTEXATTRIBARRAYPROC                     glEnableVertexAttribArray;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC                    glDisableVertexAttribArray;

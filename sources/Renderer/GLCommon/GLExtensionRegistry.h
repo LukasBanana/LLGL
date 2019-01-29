@@ -34,6 +34,7 @@ enum class GLExt
     ARB_vertex_buffer_object,
     ARB_instanced_arrays,
     ARB_vertex_array_object,
+    ARB_vertex_shader,
     ARB_framebuffer_object,
     ARB_draw_instanced,
     ARB_draw_elements_base_vertex,

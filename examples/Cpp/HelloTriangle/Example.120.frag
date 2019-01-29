@@ -7,5 +7,5 @@ varying vec3 vertexColor;
 // Fragment shader main function
 void main()
 {
-	gl_FragColor = vec4(0, 1, 0, 1);//vec4(vertexColor, 1);
+	gl_FragColor = vec4(vertexColor, 1);
 }
