@@ -79,6 +79,11 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
         CreateFramebufferWithAttachments(desc);
 }
 
+GLRenderTarget::~GLRenderTarget()
+{
+    GLStateManager::active->NotifyGLRenderTargetRelease(this);
+}
+
 Extent2D GLRenderTarget::GetResolution() const
 {
     return resolution_;

@@ -171,6 +171,7 @@ class GLStateManager
         void PopBoundFramebuffer();
 
         void NotifyFramebufferRelease(GLuint framebuffer);
+        void NotifyGLRenderTargetRelease(GLRenderTarget* renderTarget);
 
         GLRenderTarget* GetBoundRenderTarget() const;
 

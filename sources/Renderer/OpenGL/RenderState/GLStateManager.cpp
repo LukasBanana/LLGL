@@ -853,6 +853,12 @@ void GLStateManager::NotifyFramebufferRelease(GLuint framebuffer)
         InvalidateBoundGLObject(boundFramebuffer, framebuffer);
 }
 
+void GLStateManager::NotifyGLRenderTargetRelease(GLRenderTarget* renderTarget)
+{
+    if (framebufferState_.boundRenderTarget == renderTarget)
+        framebufferState_.boundRenderTarget = nullptr;
+}
+
 GLRenderTarget* GLStateManager::GetBoundRenderTarget() const
 {
     return framebufferState_.boundRenderTarget;

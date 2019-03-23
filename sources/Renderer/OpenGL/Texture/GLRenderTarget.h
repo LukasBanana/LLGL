@@ -28,6 +28,7 @@ class GLRenderTarget final : public RenderTarget
     public:
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
+        ~GLRenderTarget();
 
         Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
