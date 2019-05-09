@@ -20,9 +20,6 @@ namespace LLGL
 namespace JIT
 {
 
-namespace IA32
-{
-
 
 enum Opcode : std::uint8_t
 {
@@ -38,8 +35,6 @@ enum Opcode : std::uint8_t
     //OpCode_CallFar      = 0xE0,
 };
 
-
-} // /namespace IA32
 
 } // /namespace JIT
 

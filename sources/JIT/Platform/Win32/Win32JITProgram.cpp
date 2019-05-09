@@ -36,7 +36,7 @@ Win32JITProgram::Win32JITProgram(const void* code, std::size_t size) :
         throw std::runtime_error("failed to change virtual memory protection");
 
     /* Set function pointer to executable memory address */
-    SetFuncPtr(addr_);
+    SetEntryPoint(addr_);
 }
 
 Win32JITProgram::~Win32JITProgram()

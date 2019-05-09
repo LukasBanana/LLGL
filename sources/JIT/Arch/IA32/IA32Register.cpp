@@ -15,9 +15,6 @@ namespace LLGL
 namespace JIT
 {
 
-namespace IA32
-{
-
 
 std::uint8_t RegByte(const Reg reg)
 {
@@ -35,8 +32,6 @@ std::uint8_t RegByte(const Reg reg)
     return 0xFF;
 }
 
-
-} // /namespace IA32
 
 } // /namespace JIT
 

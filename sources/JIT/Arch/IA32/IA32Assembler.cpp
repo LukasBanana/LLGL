@@ -15,11 +15,18 @@ namespace LLGL
 namespace JIT
 {
 
-namespace IA32
+
+void IA32Assembler::Begin()
 {
+    //TODO
+}
 
+void IA32Assembler::End()
+{
+    //TODO
+}
 
-void IA32Assembler::WriteFuncCall(const void* addr, const JITCallConv conv, bool farCall)
+void IA32Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farCall)
 {
     #if 0
     /* Write arguments */
@@ -111,8 +118,6 @@ void IA32Assembler::RetFar(std::uint16_t word)
         WriteByte(Opcode_RetFar);
 }
 
-
-} // /namespace IA32
 
 } // /namespace JIT
 

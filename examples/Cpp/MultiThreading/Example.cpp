@@ -48,7 +48,7 @@ class Measure
             auto end = Clock::now();
             auto diff = std::chrono::duration_cast<Ticks>(end - intervalStartTime_);
             
-            if (diff.count() >= interval_)
+            if (diff.count() >= static_cast<long long>(interval_))
             {
                 Print();
                 intervalStartTime_ = Clock::now();

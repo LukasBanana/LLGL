@@ -21,18 +21,20 @@ namespace LLGL
 namespace JIT
 {
 
-namespace IA32
-{
-
 
 // IA-32 (a.k.a. x86) assembly code generator.
 class IA32Assembler final : public JITCompiler
 {
 
+    public:
+    
+        void Begin() override;
+        void End() override;
+
     private:
 
         bool IsLittleEndian() const override;
-        void WriteFuncCall(const void* addr, const JITCallConv conv, bool farCall) override;
+        void WriteFuncCall(const void* addr, JITCallConv conv, bool farCall) override;
 
     private:
 
@@ -51,8 +53,6 @@ class IA32Assembler final : public JITCompiler
     
 };
 
-
-} // /namespace IA32
 
 } // /namespace JIT
 

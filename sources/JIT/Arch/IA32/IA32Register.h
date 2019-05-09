@@ -18,9 +18,6 @@ namespace LLGL
 namespace JIT
 {
 
-namespace IA32
-{
-
 
 // IA-32 register enumeration.
 enum class Reg
@@ -38,8 +35,6 @@ enum class Reg
 // Returns the specified register part of an IA-32 opcode.
 std::uint8_t RegByte(const Reg reg);
 
-
-} // /namespace IA32
 
 } // /namespace JIT
 
