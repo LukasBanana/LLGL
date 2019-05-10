@@ -23,10 +23,10 @@ class LLGL_EXPORT JITProgram : public NonCopyable
 {
 
     public:
-    
+
         // Function pointer type of the main entry point.
         typedef void (*EntryPointPtr)(...);
-    
+
     public:
 
         // Creates a new JIT program with the specified code.

@@ -13,7 +13,7 @@
 
 
 // Enables/disables the use of two secondary command buffers
-//#define ENABLE_SECONDARY_COMMAND_BUFFERS
+#define ENABLE_SECONDARY_COMMAND_BUFFERS
 
 class Measure
 {
@@ -21,9 +21,9 @@ class Measure
         using Clock     = std::chrono::system_clock;
         using TimePoint = std::chrono::time_point<Clock>;
         using Ticks     = std::chrono::milliseconds;
-    
+
     public:
-    
+
         // Interval (in milliseconds) to the next measurement result.
         Measure(std::uint64_t interval = 1000, const std::string& title = "Average Time") :
             timer_    { LLGL::Timer::Create() },
@@ -31,13 +31,13 @@ class Measure
             title_    { title                 }
         {
         }
-    
+
         void Start()
         {
             // Start timer
             timer_->Start();
         }
-    
+
         void Stop()
         {
             // Take sample
@@ -47,16 +47,16 @@ class Measure
             // Check if average elapsed time can be printed again
             auto end = Clock::now();
             auto diff = std::chrono::duration_cast<Ticks>(end - intervalStartTime_);
-            
+
             if (diff.count() >= static_cast<long long>(interval_))
             {
                 Print();
                 intervalStartTime_ = Clock::now();
             }
         }
-    
+
     private:
-    
+
         void Print()
         {
             if (samples_ > 0)
@@ -65,26 +65,26 @@ class Measure
                 averageTime /= static_cast<double>(timer_->GetFrequency());
                 averageTime *= 1000000.0;
                 averageTime /= static_cast<double>(samples_);
-                
+
                 std::cout << title_ << ": ";
-                std::cout << std::fixed << std::setprecision(6) << averageTime << " µs";
+                std::cout << std::fixed << std::setprecision(6) << averageTime << " microseconds";
                 std::cout << "         \r";
                 std::flush(std::cout);
-                
+
                 samples_ = 0;
                 elapsed_ = 0;
             }
         }
-    
+
     private:
-    
+
         std::unique_ptr<LLGL::Timer>    timer_;
         std::uint64_t                   interval_           = 0;
         TimePoint                       intervalStartTime_;
         std::uint64_t                   samples_            = 0;
         std::uint64_t                   elapsed_            = 0;
         std::string                     title_;
-    
+
 };
 
 class Example_MultiThreading : public ExampleBase
@@ -95,12 +95,12 @@ class Example_MultiThreading : public ExampleBase
     LLGL::Buffer*                   indexBuffer         = nullptr;
     LLGL::PipelineLayout*           pipelineLayout      = nullptr;
     LLGL::CommandBuffer*            primaryCmdBuffer    = nullptr;
-    
+
     std::uint32_t                   numIndices          = 0;
     std::mutex                      logMutex;
-    
+
     Measure                         measure;
-    
+
     struct Bundle
     {
         LLGL::GraphicsPipeline*     pipeline            = nullptr;
@@ -135,11 +135,11 @@ private:
         auto indices = GenerateTexturedCubeTriangleIndices();
         auto vertices = GenerateTexturedCubeVertices();
         numIndices = static_cast<std::uint32_t>(indices.size());
-        
+
         // Create buffers for a simple 3D cube model
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
         indexBuffer = CreateIndexBuffer(indices, LLGL::Format::R32UInt);
-        
+
         for (auto& bdl : bundle)
             bdl.constantBuffer = CreateConstantBuffer(bdl.wvpMatrix);
 
@@ -170,7 +170,7 @@ private:
             }
             bdl.resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
         }
-        
+
         // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
@@ -200,7 +200,7 @@ private:
         }
         bundle[1].pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
-    
+
     static void PrintThreadsafe(std::mutex& mtx, const std::string& text)
     {
         std::lock_guard<std::mutex> guard { mtx };
@@ -215,10 +215,10 @@ private:
     {
         // Print thread start
         PrintThreadsafe(mtx, "Enter thread: " + threadName);
-        
+
         // Encode command buffer
         auto& cmdBuffer = *bundle.secondaryCmdBuffer;
-        
+
         cmdBuffer.Begin();
         {
             cmdBuffer.SetGraphicsPipeline(*bundle.pipeline);
@@ -226,16 +226,16 @@ private:
             cmdBuffer.DrawIndexed(numIndices, 0);
         }
         cmdBuffer.End();
-        
+
         // Print thread end
         PrintThreadsafe(mtx, "Leave thread: " + threadName);
     }
-    
+
     void EncodePrimaryCommandBuffer(const std::string& threadName)
     {
         // Print thread start
         PrintThreadsafe(logMutex, "Enter thread: " + threadName);
-        
+
         // Encode command buffer
         auto& cmdBuffer = *primaryCmdBuffer;
         cmdBuffer.Begin();
@@ -250,7 +250,7 @@ private:
                 // Clear color- and depth buffers, and set viewport
                 cmdBuffer.Clear(LLGL::ClearFlags::ColorDepth);
                 cmdBuffer.SetViewport(context->GetVideoMode().resolution);
-                
+
                 // Draw scene with secondary command buffers
                 #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS
 
@@ -271,7 +271,7 @@ private:
             cmdBuffer.EndRenderPass();
         }
         cmdBuffer.End();
-        
+
         // Print thread end
         PrintThreadsafe(logMutex, "Leave thread: " + threadName);
     }
@@ -289,15 +289,15 @@ private:
 
         // Create secondary command buffers
         cmdBufferDesc.flags = (LLGL::CommandBufferFlags::DeferredSubmit | LLGL::CommandBufferFlags::MultiSubmit);
-        
+
         // Start encoding secondary command buffers in parallel
         std::thread workerThread[2];
-        
+
         for (int i = 0; i < 2; ++i)
         {
             // Create secondary command buffer
             bundle[i].secondaryCmdBuffer = renderer->CreateCommandBuffer(cmdBufferDesc);
-            
+
             // Start worker thread to encode secondary command buffer
             workerThread[i] = std::thread(
                 Example_MultiThreading::EncodeSecondaryCommandBuffer,
@@ -309,7 +309,7 @@ private:
         }
 
         #endif // /ENABLE_SECONDARY_COMMAND_BUFFERS
-        
+
         // Encode primary command buffer
         EncodePrimaryCommandBuffer("mainThread");
 
@@ -332,17 +332,17 @@ private:
         Gs::RotateFree(matrix, Gs::Vector3f(1, 1, 1).Normalized(), angle);
         matrix = projection * matrix;
     }
-    
+
     void UpdateScene()
     {
         // Animate rotation
         static float rotation;
         rotation += 0.001f;
-        
+
         // Update scene matrices
         Transform(bundle[0].wvpMatrix, { -1, 0, 8 }, -rotation);
         Transform(bundle[1].wvpMatrix, { +1, 0, 8 }, +rotation);
-        
+
         // Update constant buffer
         for (auto& bdl : bundle)
         {
@@ -354,7 +354,7 @@ private:
             );
         }
     }
-    
+
     void DrawScene()
     {
         // Submit primary command buffer and present result

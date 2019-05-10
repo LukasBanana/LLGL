@@ -32,9 +32,9 @@ void IA32Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farCa
     /* Write arguments */
     for ()
     {
-        
+
     }
-    
+
     /* Write 'this' pointer */
     if (conv == JITCallConv::ThisCall)
     {
@@ -43,7 +43,7 @@ void IA32Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farCa
         else
             throw std::runtime_error("missing 'this' pointer for '__thiscall' IA-32/x86 instruction");
     }
-    
+
     /* Write 'call' instruction */
     if (farCall)
         CallFar(Reg::EAX);

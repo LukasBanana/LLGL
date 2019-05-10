@@ -35,7 +35,7 @@ using namespace JIT;
 std::unique_ptr<JITCompiler> JITCompiler::Create()
 {
     std::unique_ptr<JITCompiler> compiler;
-    
+
     /* Create JIT compiler for current CPU architecture */
     #if defined LLGL_ARCH_ARM
     //TODO
@@ -44,11 +44,11 @@ std::unique_ptr<JITCompiler> JITCompiler::Create()
     #elif defined LLGL_ARCH_IA32
     compiler = MakeUnique<IA32Assembler>();
     #endif
-    
+
     /* Store meta data */
     if (compiler)
         compiler->littleEndian_ = compiler->IsLittleEndian();
-    
+
     return compiler;
 }
 
@@ -62,7 +62,7 @@ void JITCompiler::DumpAssembly(std::ostream& stream, bool textForm, std::size_t 
         {
             /* Write current hex value */
             stream << "0x" << std::setw(2) << static_cast<int>(x);
-            
+
             /* Write separator or new-line */
             ++n;
             if (n == bytesPerLine)
@@ -318,13 +318,13 @@ LLGL_EXPORT void TestJIT1()
     //Test2(1.23f, 4.56);
     Call_Test1();
     #endif
-    
+
     auto comp = JITCompiler::Create();
-    
+
     comp->EntryPointVarArgs({ JIT::ArgType::DWord, JIT::ArgType::Float, JIT::ArgType::Double });
-    
+
     comp->Begin();
-    
+
     #if 1
     #   if 0
     comp->PushDWord(42);
@@ -340,16 +340,16 @@ LLGL_EXPORT void TestJIT1()
     comp->PushByte(4);
     comp->PushQWord(888888ull);
     comp->FuncCall(reinterpret_cast<const void*>(Test1));
-    
+
     int a[] = { 1, 2, 3 };
     int b[] = { 4, 5, 6 };
-    
+
     comp->PushPtr(b);
     comp->PushPtr(a);
     comp->PushQWord(sizeof(a));
     comp->FuncCall(reinterpret_cast<const void*>(::memcpy));
     #endif
-    
+
     #if 1
     #   if 0
     comp->PushFloat(-1.2345f);
@@ -360,11 +360,11 @@ LLGL_EXPORT void TestJIT1()
     #   endif
     comp->FuncCall(reinterpret_cast<const void*>(Test2));
     #endif
-    
+
     comp->End();
-    
+
     auto prog = comp->FlushProgram();
-    
+
     prog->GetEntryPoint()(28, 2.3f, 4.5);
 }
 

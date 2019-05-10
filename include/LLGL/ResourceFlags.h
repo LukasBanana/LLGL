@@ -84,6 +84,7 @@ struct BindFlags
         \brief The resource can be used to bind a buffer for read access.
         \remarks This can be used for Buffer resources (e.g. \c samplerBuffer in GLSL, or \c StructuredBuffer in HLSL) and
         Texture resources (e.g. \c sampler2D in GLSL, or \c Texture2D in HLSL).
+        \todo Maybe rename to SRV.
         */
         SampleBuffer            = (1 << 3),
 
@@ -91,6 +92,7 @@ struct BindFlags
         \brief The resource can be used to bind a storage for unordered read/write access.
         \remarks This can be used for Buffer resources (e.g. \c buffer in GLSL, or \c RWStructuredBuffer in HLSL) and
         Texture resources (e.g. \c image2D in GLSL, or \c RWTexture2D in HLSL).
+        \todo Maybe rename to UAV.
         */
         RWStorageBuffer         = (1 << 4),
 
@@ -116,6 +118,7 @@ struct BindFlags
         \note This cannot be used together with the BindFlags::DepthStencilAttachment flag.
         \see AttachmentDescriptor::texture
         \see AttachmentType::Color
+        \todo Maybe rename to RTV
         */
         ColorAttachment         = (1 << 7),
 
@@ -125,6 +128,7 @@ struct BindFlags
         \note This cannot be used together with the BindFlags::ColorAttachment flag.
         \see AttachmentDescriptor::texture
         \see AttachmentType::DepthStencil
+        \todo Maybe rename to DSV
         */
         DepthStencilAttachment  = (1 << 8),
     };

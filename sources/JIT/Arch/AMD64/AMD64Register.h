@@ -30,7 +30,7 @@ enum class Reg
     EBP,
     ESI,
     EDI,
-    
+
     RAX,
     RCX,
     RDX,
@@ -39,7 +39,7 @@ enum class Reg
     RBP,
     RSI,
     RDI,
-    
+
     R8,
     R9,
     R10,
@@ -48,7 +48,7 @@ enum class Reg
     R13,
     R14,
     R15,
-    
+
     XMM0,
     XMM1,
     XMM2,
@@ -57,7 +57,7 @@ enum class Reg
     XMM5,
     XMM6,
     XMM7,
-    
+
     XMM8,
     XMM9,
     XMM10,

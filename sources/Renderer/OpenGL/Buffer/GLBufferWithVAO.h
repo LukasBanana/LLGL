@@ -62,7 +62,7 @@ class GLBufferWithVAO final : public GLBuffer
         #ifdef LLGL_GL_ENABLE_OPENGL2X
         GL2XVertexArray     vertexArrayGL2X_;
         #endif
-        
+
 };
 
 

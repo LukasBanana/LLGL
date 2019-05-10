@@ -56,31 +56,31 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         or null if the architecture is not supported.
         */
         static std::unique_ptr<JITCompiler> Create();
-    
+
         // Dumps the current assembly code to the output stream.
         void DumpAssembly(std::ostream& stream, bool textForm = false, std::size_t bytesPerLine = 8) const;
-    
+
         // Flushes the currently build program, or null if no program was build.
         std::unique_ptr<JITProgram> FlushProgram();
 
     public:
-    
+
         // Stores the parameter list of the secified types for the program entry points (must be called before 'Begin').
         void EntryPointVarArgs(const std::initializer_list<JIT::ArgType>& varArgTypes);
-    
+
         // Stores teh stack allocation for the specified amount of bytes, and returns the ID of this allocation (must be called before 'Begin').
         std::uint8_t StackAlloc(std::uint32_t size);
 
         // Begins with generating assembly code
         virtual void Begin() = 0;
         virtual void End() = 0;
-    
+
         // Pushes the entry point parameter, specified by the zero-based index 'idx', to the argument list.
         void PushVarArg(std::uint8_t idx);
-    
+
         // Pushes the ID of the specified stack allocation, specified by the zero-based index 'idx', to the argument list.
         void PushStackPtr(std::uint8_t idx);
-    
+
         // Pushes the specified value to the argument list for the next function call.
         void PushPtr(const void* value);
         void PushByte(std::uint8_t value);
@@ -103,7 +103,7 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
             JITCallConv conv    = JITCallConv::CDecl,
             bool        farCall = false
         );
-    
+
         /*
         Encodes a function call with the specified variadic arguments.
         \param[in] func Specifies the function object. This must be a global non-overloaded function.
@@ -115,7 +115,7 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
             PushArgs(std::forward<Args>(args)...);
             FuncCall(reinterpret_cast<const void*>(func));
         }
-    
+
         /*
         Encodes a member function call with the specified variadic arguments.
         \param[in] func Specifies the function object. This must be a global non-overloaded function.
@@ -138,14 +138,14 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         virtual void WriteFuncCall(const void* addr, JITCallConv conv, bool farCall) = 0;
 
     protected:
-    
+
         void Write(const void* data, std::size_t size);
         void WriteByte(std::uint8_t data);
         void WriteWord(std::uint16_t data);
         void WriteDWord(std::uint32_t data);
         void WriteQWord(std::uint64_t data);
         void WritePtr(const void* data);
-    
+
     protected:
 
         // Returns the assembly code (constant).
@@ -165,36 +165,36 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         {
             return args_;
         }
-    
+
         // Returns the list of entry point variadic arguments.
         inline const std::vector<JIT::ArgType>& GetEntryVarArgs() const
         {
             return entryVarArgs_;
         }
-    
+
         // Returns the list of stack allocations.
         inline const std::vector<std::uint32_t>& GetStackAllocs() const
         {
             return stackAllocs_;
         }
-    
+
     private:
-    
+
         template <typename T>
         inline void PushVariant(T arg);
-    
+
         template <typename T>
         inline void PushVariant(T* arg);
 
         template <typename T>
         inline void PushVariant(const T* arg);
-    
+
         template <typename Arg0>
         inline void PushArgsPrimary(Arg0&& arg0);
 
         template <typename Arg0, typename... ArgsN>
         inline void PushArgsPrimary(Arg0&& arg0, ArgsN&&... argsN);
-    
+
         template <typename... Args>
         inline void PushArgs(Args&&... args);
 

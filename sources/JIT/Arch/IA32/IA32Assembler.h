@@ -27,7 +27,7 @@ class IA32Assembler final : public JITCompiler
 {
 
     public:
-    
+
         void Begin() override;
         void End() override;
 
@@ -50,7 +50,7 @@ class IA32Assembler final : public JITCompiler
 
         void RetNear(std::uint16_t word = 0);
         void RetFar(std::uint16_t word = 0);
-    
+
 };
 
 
