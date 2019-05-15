@@ -4,7 +4,9 @@
 layout(std140, binding = 2) uniform Settings
 {
 	mat4 vpMatrix;
-	vec2 animationVector;
+    vec4 viewPos;
+    vec4 fogColorAndDensity;
+	vec2 animVec;
 };
 
 // Per-vertex attributes
@@ -17,8 +19,9 @@ layout(location = 3) in float arrayLayer;
 layout(location = 4) in mat4 wMatrix;
 
 // Vertex output to the fragment shader
-layout(location = 0) out vec3 vTexCoord;
-layout(location = 1) out vec3 vColor;
+layout(location = 0) out vec4 vWorldPos;
+layout(location = 1) out vec3 vTexCoord;
+layout(location = 2) out vec3 vColor;
 
 out gl_PerVertex
 {
@@ -28,7 +31,7 @@ out gl_PerVertex
 // Vertex shader main function
 void main()
 {
-	vec2 offset = animationVector * position.y;
+	vec2 offset = animVec * position.y;
 	
 	vec4 coord = vec4(
 		position.x + offset.x,
@@ -37,7 +40,8 @@ void main()
 		1.0
 	);
 	
-	gl_Position = vpMatrix * wMatrix * coord;
+    vWorldPos = wMatrix * coord;
+	gl_Position = vpMatrix * vWorldPos;
 	
 	vTexCoord = vec3(texCoord, arrayLayer);
 	

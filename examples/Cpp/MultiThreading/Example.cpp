@@ -114,7 +114,7 @@ class Example_MultiThreading : public ExampleBase
 public:
 
     Example_MultiThreading() :
-        ExampleBase { L"LLGL Example: MultiThreading" }
+        ExampleBase { L"LLGL Example: MultiThreading", { 800, 600 }, 8, true, false }
     {
         auto vertexFormat = CreateBuffers();
         LoadShaders(vertexFormat);
@@ -337,7 +337,7 @@ private:
     {
         // Animate rotation
         static float rotation;
-        rotation += 0.001f;
+        rotation += 0.01f;
 
         // Update scene matrices
         Transform(bundle[0].wvpMatrix, { -1, 0, 8 }, -rotation);

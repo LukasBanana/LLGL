@@ -2,7 +2,7 @@
 
 #version 450 core
 
-layout(std140, binding = 0) uniform SceneSettings
+layout(std140, binding = 1) uniform SceneSettings
 {
 	mat4	wvpMatrix;
 	mat4	wMatrix;

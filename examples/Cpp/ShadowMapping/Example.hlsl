@@ -1,6 +1,6 @@
 // HLSL model shader
 
-cbuffer Settings : register(b0)
+cbuffer Settings : register(b1)
 {
     float4x4 wMatrix;
     float4x4 vpMatrix;
@@ -45,8 +45,8 @@ OutputVScene VScene(InputVScene inp)
 
 // PIXEL SHADER SCENE
 
-Texture2D shadowMap : register(t0);
-SamplerComparisonState shadowMapSampler : register(s0);
+Texture2D shadowMap : register(t2);
+SamplerComparisonState shadowMapSampler : register(s3);
 
 float4 PScene(OutputVScene inp) : SV_Target
 {

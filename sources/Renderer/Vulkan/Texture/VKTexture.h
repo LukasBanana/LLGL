@@ -29,13 +29,15 @@ class VKTexture final : public Texture
     public:
 
         VKTexture(
-            const VKPtr<VkDevice>& device,
-            VKDeviceMemoryManager& deviceMemoryMngr,
-            const TextureDescriptor& desc
+            const VKPtr<VkDevice>&      device,
+            VKDeviceMemoryManager&      deviceMemoryMngr,
+            const TextureDescriptor&    desc
         );
 
         Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
         TextureDescriptor QueryDesc() const override;
+
+    public:
 
         void CreateImageView(
             VkDevice        device,
@@ -93,6 +95,8 @@ class VKTexture final : public Texture
     private:
 
         void CreateImage(VkDevice device, const TextureDescriptor& desc);
+
+    private:
 
         VKDeviceImage       imageWrapper_;
         VKPtr<VkImageView>  imageView_;

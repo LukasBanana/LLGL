@@ -35,8 +35,8 @@ class MyRenderer
     LLGL::PipelineLayout*               layout          = nullptr;
     LLGL::GraphicsPipeline*             pipeline        = nullptr;
 
-    LLGL::MultiSamplingDescriptor       multiSampling;
-    LLGL::Viewport                      viewport;
+    const LLGL::MultiSamplingDescriptor multiSampling;
+    const LLGL::Viewport                viewport;
 
 public:
 
@@ -61,8 +61,8 @@ MyRenderer::MyRenderer(
     LLGL::Window&           mainWindow,
     const LLGL::Offset2D&   subWindowOffset,
     const LLGL::Viewport&   viewport)
-:   viewport      { viewport }/*,
-    multiSampling { 8u       }*/
+:   viewport      { viewport },
+    multiSampling { 8u       }
 {
     // Load render system module
     renderer = LLGL::RenderSystem::Load(rendererModule);
@@ -75,7 +75,7 @@ MyRenderer::MyRenderer(
     LLGL::NativeContextHandle mainWindowContextHandle;
     mainWindowContextHandle.parentWindow = mainWindowHandle.window;
 
-    // Create sub window for 1st renderer
+    // Create sub window for render context
     LLGL::WindowDescriptor windowDesc;
     {
         windowDesc.position         = subWindowOffset;

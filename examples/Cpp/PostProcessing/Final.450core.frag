@@ -2,7 +2,7 @@
 
 #version 450 core
 
-layout(std140, binding = 0) uniform Settings
+layout(std140, binding = 1) uniform Settings
 {
 	mat4	wvpMatrix;
 	mat4	wMatrix;
@@ -11,11 +11,11 @@ layout(std140, binding = 0) uniform Settings
 	float	intensity;
 };
 
-layout(binding = 2) uniform texture2D colorMap;
-layout(binding = 3) uniform texture2D glossMap;
+layout(binding = 3) uniform texture2D colorMap;
+layout(binding = 4) uniform texture2D glossMap;
 
-layout(binding = 4) uniform sampler colorMapSampler;
-layout(binding = 5) uniform sampler glossMapSampler;
+layout(binding = 5) uniform sampler colorMapSampler;
+layout(binding = 6) uniform sampler glossMapSampler;
 
 layout(location = 0) in vec2 vTexCoord;
 

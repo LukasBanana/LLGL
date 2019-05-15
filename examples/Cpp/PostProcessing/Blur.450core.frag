@@ -2,13 +2,13 @@
 
 #version 450 core
 
-layout(std140, binding = 1) uniform BlurSettings
+layout(std140, binding = 2) uniform BlurSettings
 {
 	vec2 blurShift;
 };
 
-layout(binding = 3) uniform texture2D glossMap;
-layout(binding = 5) uniform sampler glossMapSampler;
+layout(binding = 4) uniform texture2D glossMap;
+layout(binding = 6) uniform sampler glossMapSampler;
 
 layout(location = 0) in vec2 vTexCoord;
 

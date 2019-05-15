@@ -2,7 +2,7 @@
 
 #version 450
 
-layout(std140, binding = 0) uniform Settings
+layout(std140, binding = 3) uniform Settings
 {
 	mat4 wvpMatrix;
 	int useTexture2DMS;
