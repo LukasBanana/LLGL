@@ -10,7 +10,6 @@
 
 
 #include "../OpenGL.h"
-#include <LLGL/ColorRGBA.h>
 
 
 namespace LLGL

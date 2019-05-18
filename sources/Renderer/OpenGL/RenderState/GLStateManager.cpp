@@ -509,9 +509,9 @@ void GLStateManager::SetFrontFace(GLenum mode)
 
 void GLStateManager::SetPatchVertices(GLint patchVertices)
 {
-    if (commonState_.patchVertices_ != patchVertices)
+    if (commonState_.patchVertices != patchVertices)
     {
-        commonState_.patchVertices_ = patchVertices;
+        commonState_.patchVertices = patchVertices;
         glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
     }
 }
@@ -918,9 +918,9 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
 {
     /* Only bind texutre if the texture has changed */
     auto targetIdx = static_cast<std::size_t>(target);
-    if (activeTextureLayer_->boundTextures[targetIdx] != texture)
+    if (textureState_.activeLayerRef->boundTextures[targetIdx] != texture)
     {
-        activeTextureLayer_->boundTextures[targetIdx] = texture;
+        textureState_.activeLayerRef->boundTextures[targetIdx] = texture;
         glBindTexture(g_textureTargetsEnum[targetIdx], texture);
     }
 }
@@ -1243,8 +1243,8 @@ void GLStateManager::AssertExtViewportArray()
 
 void GLStateManager::SetActiveTextureLayer(std::uint32_t layer)
 {
-    textureState_.activeTexture = layer;
-    activeTextureLayer_ = &(textureState_.layers[textureState_.activeTexture]);
+    textureState_.activeTexture     = layer;
+    textureState_.activeLayerRef    = &(textureState_.layers[textureState_.activeTexture]);
 }
 
 void GLStateManager::DetermineLimits()

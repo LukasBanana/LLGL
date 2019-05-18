@@ -307,7 +307,7 @@ class GLStateManager
             GLenum      cullFace        = GL_BACK;
             GLenum      frontFace       = GL_CCW;
             GLenum      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
-            GLint       patchVertices_  = 0;
+            GLint       patchVertices   = 0;
             GLfloat     lineWidth       = 1.0f;
 
             GLenum      depthFunc       = GL_LESS;
@@ -390,9 +390,10 @@ class GLStateManager
                 GLuint          texture;
             };
 
-            std::uint32_t                                   activeTexture = 0;
+            std::uint32_t                                   activeTexture       = 0;
             std::array<GLTextureLayer, numTextureLayers>    layers;
             std::stack<StackEntry>                          boundTextureStack;
+            GLTextureLayer*                                 activeLayerRef      = nullptr;
         };
 
         struct GLVertexArrayState
@@ -431,8 +432,6 @@ class GLStateManager
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
         GLRenderStateExt                renderStateExt_;
         #endif
-
-        GLTextureLayer*                 activeTextureLayer_     = nullptr;
 
         bool                            emulateClipControl_     = false;
         GLint                           renderTargetHeight_     = 0;
