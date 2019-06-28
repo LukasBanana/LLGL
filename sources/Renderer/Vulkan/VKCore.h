@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <initializer_list>
 
 
 namespace LLGL
@@ -79,7 +80,7 @@ std::vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevi
 
 SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface = nullptr);
-VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const std::initializer_list<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
 // Returns the memory type index that supports the specified type bits and properties, or throws an std::runtime_error exception on failure.
 std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties);

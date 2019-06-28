@@ -241,16 +241,16 @@ void VKRenderContext::CreateRenderPass(VKRenderPass& renderPass, bool isSecondar
         /* Specify single color attachment */
         renderPassDesc.colorAttachments =
         {
-            AttachmentFormatDescriptor { QueryColorFormat(), loadOp, storeOp }
+            AttachmentFormatDescriptor{ QueryColorFormat(), loadOp, storeOp }
         };
 
         /* Specify depth-stencil attachment */
         auto depthStencilFormat = QueryDepthStencilFormat();
 
         if (IsDepthFormat(depthStencilFormat))
-            renderPassDesc.depthAttachment = AttachmentFormatDescriptor { depthStencilFormat, loadOp, storeOp };
+            renderPassDesc.depthAttachment = AttachmentFormatDescriptor{ depthStencilFormat, loadOp, storeOp };
         if (IsStencilFormat(depthStencilFormat))
-            renderPassDesc.stencilAttachment = AttachmentFormatDescriptor { depthStencilFormat, loadOp, storeOp };
+            renderPassDesc.stencilAttachment = AttachmentFormatDescriptor{ depthStencilFormat, loadOp, storeOp };
     }
     renderPass.CreateVkRenderPass(device_, renderPassDesc);
 }
@@ -373,7 +373,7 @@ void VKRenderContext::CreateSwapChainImageViews()
         createInfo.image = image;
 
         /* Create image view for framebuffer */
-        VKPtr<VkImageView> imageView { device_, vkDestroyImageView };
+        VKPtr<VkImageView> imageView{ device_, vkDestroyImageView };
         {
             auto result = vkCreateImageView(device_, &createInfo, nullptr, imageView.ReleaseAndGetAddressOf());
             VKThrowIfFailed(result, "failed to create Vulkan swap-chain image view");
@@ -414,7 +414,7 @@ void VKRenderContext::CreateSwapChainFramebuffers()
         attachments[0] = imageView;
 
         /* Create framebuffer */
-        VKPtr<VkFramebuffer> framebuffer { device_, vkDestroyFramebuffer };
+        VKPtr<VkFramebuffer> framebuffer{ device_, vkDestroyFramebuffer };
         {
             auto result = vkCreateFramebuffer(device_, &createInfo, nullptr, framebuffer.ReleaseAndGetAddressOf());
             VKThrowIfFailed(result, "failed to create Vulkan swap-chain framebuffer");

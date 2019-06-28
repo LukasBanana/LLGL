@@ -155,6 +155,8 @@ class D3D12RenderSystem final : public RenderSystem
 
         void Release(Fence& fence) override;
 
+    public:
+
         /* ----- Extended internal functions ----- */
 
         ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
@@ -212,6 +214,8 @@ class D3D12RenderSystem final : public RenderSystem
         void ExecuteCommandList();
 
         std::unique_ptr<D3D12Buffer> CreateGpuBuffer(const BufferDescriptor& desc, const void* initialData);
+
+    private:
 
         /* ----- Common objects ----- */
 

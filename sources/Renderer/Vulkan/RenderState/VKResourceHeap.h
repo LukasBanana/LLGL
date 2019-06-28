@@ -56,6 +56,8 @@ class VKResourceHeap final : public ResourceHeap
         void FillWriteDescriptorForTexture(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container);
         void FillWriteDescriptorForBuffer(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container);
 
+    private:
+
         VkDevice                        device_         = VK_NULL_HANDLE;
         VkPipelineLayout                pipelineLayout_ = VK_NULL_HANDLE;
         VKPtr<VkDescriptorPool>         descriptorPool_;

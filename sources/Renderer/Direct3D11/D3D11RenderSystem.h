@@ -155,6 +155,8 @@ class D3D11RenderSystem final : public RenderSystem
 
         void Release(Fence& fence) override;
 
+    public:
+
         /* ----- Extended internal functions ----- */
 
         // Returns the ID3D11Device object.
@@ -226,6 +228,8 @@ class D3D11RenderSystem final : public RenderSystem
             std::uint32_t baseArrayLayer,
             std::uint32_t numArrayLayers
         );
+
+    private:
 
         /* ----- Common objects ----- */
 

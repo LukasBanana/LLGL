@@ -56,11 +56,11 @@ RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescripto
         /* Store meta data about render system */
         SetRendererInfo(instance_->GetRendererInfo());
         SetRenderingCaps(instance_->GetRenderingCaps());
-        
+
         /* Instantiate command queue */
         commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
     }
-    
+
     return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(*renderContextInstance));
 }
 

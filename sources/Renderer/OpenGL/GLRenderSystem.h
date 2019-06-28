@@ -167,7 +167,7 @@ class GLRenderSystem final : public RenderSystem
     private:
 
         void CreateGLContextDependentDevices(GLRenderContext& renderContext, const RenderContextDescriptor& desc);
-    
+
         void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
         void SetDebugCallback(const DebugCallback& debugCallback);
 
@@ -183,7 +183,7 @@ class GLRenderSystem final : public RenderSystem
         void GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers);
 
     private:
-    
+
         #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
         struct MipGenerationFBOPair
         {
@@ -195,7 +195,7 @@ class GLRenderSystem final : public RenderSystem
             GLuint fbos[2] = { 0, 0 };
         };
         #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-    
+
     private:
 
         /* ----- Hardware object containers ----- */

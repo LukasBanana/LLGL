@@ -178,6 +178,8 @@ class VKRenderSystem final : public RenderSystem
             VkDeviceSize                initialDataSize
         );
 
+    private:
+
         /* ----- Common objects ----- */
 
         VKPtr<VkInstance>                       instance_;
