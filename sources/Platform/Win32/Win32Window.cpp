@@ -212,13 +212,13 @@ Extent2D Win32Window::GetSize(bool useClientArea) const
 
 void Win32Window::SetTitle(const std::wstring& title)
 {
-    SetWindowText(wnd_, title.c_str());
+    SetWindowTextW(wnd_, title.c_str());
 }
 
 std::wstring Win32Window::GetTitle() const
 {
     wchar_t title[MAX_PATH];
-    GetWindowText(wnd_, title, MAX_PATH);
+    GetWindowTextW(wnd_, title, MAX_PATH);
     return std::wstring(title);
 }
 
@@ -369,7 +369,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     }
 
     /* Create frame window object */
-    HWND wnd = CreateWindow(
+    HWND wnd = CreateWindowW(
         windowClass->GetName(),
         desc.title.c_str(),
         appearance.style,
