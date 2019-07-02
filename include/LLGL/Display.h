@@ -13,7 +13,7 @@
 #include "DisplayFlags.h"
 #include <vector>
 #include <memory>
-
+#include <string>
 
 namespace LLGL
 {

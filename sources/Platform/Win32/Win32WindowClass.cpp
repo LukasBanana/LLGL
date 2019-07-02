@@ -21,7 +21,7 @@ namespace LLGL
 Win32WindowClass::Win32WindowClass()
 {
     /* Setup window class information */
-    WNDCLASS wc;
+    WNDCLASSW wc;
     InitMemory(wc);
 
     wc.style            = (CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS);
@@ -40,13 +40,13 @@ Win32WindowClass::Win32WindowClass()
     wc.lpszClassName    = GetName();
 
     /* Register window class */
-    if (!RegisterClass(&wc))
+    if (!RegisterClassW(&wc))
         throw std::runtime_error("failed to register window class");
 }
 
 Win32WindowClass::~Win32WindowClass()
 {
-    UnregisterClass(GetName(), GetModuleHandle(nullptr));
+    UnregisterClassW(GetName(), GetModuleHandle(nullptr));
 }
 
 Win32WindowClass* Win32WindowClass::Instance()
