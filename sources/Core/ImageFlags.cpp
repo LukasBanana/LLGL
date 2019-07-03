@@ -707,7 +707,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
     ValidateImageConversionParams(srcImageDesc, dstImageDesc.format, dstImageDesc.dataType);
     LLGL_ASSERT_PTR(dstImageDesc.data);
 
-    if (threadCount == Constants::maxThreadCount)
+    if (threadCount >= Constants::maxThreadCount)
         threadCount = std::thread::hardware_concurrency();
 
     if (srcImageDesc.dataType != dstImageDesc.dataType && srcImageDesc.format != dstImageDesc.format)
@@ -773,7 +773,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     /* Validate input parameters */
     ValidateImageConversionParams(srcImageDesc, dstFormat, dstDataType);
 
-    if (threadCount == Constants::maxThreadCount)
+    if (threadCount >= Constants::maxThreadCount)
         threadCount = std::thread::hardware_concurrency();
 
     /* Initialize destination image descriptor */

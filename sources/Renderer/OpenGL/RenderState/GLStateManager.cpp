@@ -118,7 +118,7 @@ static const GLenum g_textureLayersEnum[] =
     GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
 };
 
-static const GLuint g_GLInvalidId = ~0;
+static const GLuint g_GLInvalidId = std::numeric_limits< GLuint >::max();
 
 // Global array of null pointers to unbind resource slots
 static GLuint g_nullResources[GLStateManager::g_maxNumResourceSlots] = {};

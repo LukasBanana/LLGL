@@ -666,7 +666,6 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflectionDescriptor& reflection
 
 void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) const
 {
-    std::vector<UniformDescriptor> descList;
 
     /* Query active uniforms */
     std::vector<char> uniformName;

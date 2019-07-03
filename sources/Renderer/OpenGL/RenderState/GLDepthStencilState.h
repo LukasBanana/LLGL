@@ -52,8 +52,8 @@ class GLDepthStencilState
             GLenum  dppass      = GL_KEEP;
             GLenum  func        = GL_ALWAYS;
             GLint   ref         = 0;
-            GLuint  mask        = ~0;
-            GLuint  writeMask   = ~0;
+            GLuint  mask        = std::numeric_limits< GLuint >::max();
+            GLuint  writeMask   = std::numeric_limits< GLuint >::max();
         };
 
         void BindStencilFaceState(const GLStencilFaceState& state, GLenum face);
