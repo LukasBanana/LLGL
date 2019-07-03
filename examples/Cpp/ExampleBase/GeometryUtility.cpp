@@ -36,12 +36,10 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
     std::vector<Gs::Vector3f> coords, normals;
     std::vector<Gs::Vector2f> texCoords;
 
-    while (!file.eof())
+    std::string line;
+    // Read each line
+    while (std::getline(file, line))
     {
-        // Read each line
-        std::string line;
-        std::getline(file, line);
-
         std::stringstream s;
         s << line;
 
