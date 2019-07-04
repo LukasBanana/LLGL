@@ -9,7 +9,6 @@
 #define LLGL_CONSTANTS_H
 
 
-#include <cstddef>
 #include <cstdint>
 
 
@@ -27,19 +26,19 @@ namespace Constants
 \brief Specifies the maximal number of threads the system supports.
 \see ConvertImageBuffer
 */
-static const std::uint32_t    maxThreadCount      = ~0u;
+static const std::uint32_t  maxThreadCount  = ~0u;
 
 /**
 \brief Offset value to determine the offset automatically, e.g. to append a vertex attribute at the end of a vertex format.
 \see VertexFormat::AppendAttribute
 */
-static const std::uint32_t  ignoreOffset        = ~0u;
+static const std::uint32_t  ignoreOffset    = ~0u;
 
 /**
 \brief Specifies an invalid binding slot for shader resources.
 \see ShaderReflectionDescriptor::ResourceView::slot
 */
-static const std::uint32_t  invalidSlot         = ~0u;
+static const std::uint32_t  invalidSlot     = ~0u;
 
 
 } // /namespace Constants

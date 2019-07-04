@@ -119,7 +119,7 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
     std::size_t lastInt, lastFlt;
     std::size_t num = args.size();
 
-    lastInt = lastFlt = std::numeric_limits< std::size_t >::max();
+    lastInt = lastFlt = std::numeric_limits<std::size_t>::max();
 
     for (std::size_t i = 0; i < num; ++i)
     {

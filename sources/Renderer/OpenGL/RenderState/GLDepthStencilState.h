@@ -52,12 +52,16 @@ class GLDepthStencilState
             GLenum  dppass      = GL_KEEP;
             GLenum  func        = GL_ALWAYS;
             GLint   ref         = 0;
-            GLuint  mask        = std::numeric_limits< GLuint >::max();
-            GLuint  writeMask   = std::numeric_limits< GLuint >::max();
+            GLuint  mask        = std::numeric_limits<GLuint>::max();
+            GLuint  writeMask   = std::numeric_limits<GLuint>::max();
         };
+
+    private:
 
         void BindStencilFaceState(const GLStencilFaceState& state, GLenum face);
         void BindStencilState(const GLStencilFaceState& state);
+
+    private:
 
         // depth states
         bool                depthTestEnabled_           = false;    // glEnable(GL_DEPTH_TEST)
