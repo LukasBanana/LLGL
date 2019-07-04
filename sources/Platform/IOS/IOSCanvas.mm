@@ -102,11 +102,6 @@ void IOSCanvas::GetNativeHandle(void* nativeHandle) const
     //handle.window = wnd_;
 }
 
-void IOSCanvas::Recreate()
-{
-    //todo...
-}
-
 Extent2D IOSCanvas::GetContentSize() const
 {
     return { 0u, 0u }; //todo...
@@ -140,6 +135,11 @@ UIViewController* IOSCanvas::CreateViewController(const CanvasDescriptor& desc)
 UIView* IOSCanvas::CreateView(const CanvasDescriptor& desc)
 {
     return nullptr;
+}
+
+void IOSCanvas::ResetPixelFormat()
+{
+    // dummy
 }
 
 

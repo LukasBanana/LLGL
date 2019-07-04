@@ -21,13 +21,10 @@ class IOSModule : public Module
 
     public:
 
-        IOSModule(const std::string& moduleFilename);
+        IOSModule(const char* moduleFilename);
         ~IOSModule();
 
-        IOSModule(const IOSModule&) = delete;
-        IOSModule& operator = (const IOSModule&) = delete;
-
-        void* LoadProcedure(const std::string& procedureName) override;
+        void* LoadProcedure(const char* procedureName) override;
 
     private:
 

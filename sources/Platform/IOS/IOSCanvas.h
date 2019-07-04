@@ -27,12 +27,12 @@ class IOSCanvas : public Canvas
 
         void GetNativeHandle(void* nativeHandle) const override;
 
-        void Recreate() override;
-
         Extent2D GetContentSize() const override;
 
         void SetTitle(const std::wstring& title) override;
         std::wstring GetTitle() const override;
+
+        void ResetPixelFormat() override;
 
     private:
         
