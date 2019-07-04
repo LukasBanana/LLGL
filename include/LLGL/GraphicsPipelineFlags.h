@@ -451,7 +451,7 @@ struct MultiSamplingDescriptor
     std::uint32_t   samples     = 1;
 
     //! Specifies the bitmask for sample coverage. By default \c 0xFFFFFFFF.
-    std::uint32_t   sampleMask  = ~0;
+    std::uint32_t   sampleMask  = ~0u;
 };
 
 /**
@@ -497,14 +497,14 @@ struct StencilFaceDescriptor
     \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (i.e. <code>readMask & 0xFF</code>) of the read mask value of the front face will be used.
     \see StencilDescriptor::front
     */
-    std::uint32_t   readMask        = ~0;
+    std::uint32_t   readMask        = ~0u;
 
     /**
     \brief Specifies the portion of the depth-stencil buffer for writing stencil data. By default \c 0xFFFFFFFF.
     \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (i.e. <code>writeMask & 0xFF</code>) of the write mask value of the front face will be used.
     \see StencilDescriptor::front
     */
-    std::uint32_t   writeMask       = ~0;
+    std::uint32_t   writeMask       = ~0u;
 
     /**
     \brief Specifies the stencil reference value.
@@ -512,7 +512,7 @@ struct StencilFaceDescriptor
     \note For Direct3D 11, Direct3D 12, and Metal, only the stencil reference value of the front face will be used.
     \see StencilDescriptor::front
     */
-    std::uint32_t   reference       = 0;
+    std::uint32_t   reference       = 0u;
 };
 
 /**

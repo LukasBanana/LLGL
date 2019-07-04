@@ -81,7 +81,7 @@ class D3D11GraphicsPipelineBase : public GraphicsPipeline
         D3D11_PRIMITIVE_TOPOLOGY        primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
         UINT                            stencilRef_         = 0;
         FLOAT                           blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
-        UINT                            sampleMask_         = ~0;
+        UINT                            sampleMask_         = std::numeric_limits<UINT>::max();
 
         std::unique_ptr<char[]>         staticStateBuffer_;
         UINT                            numStaticViewports_ = 0;

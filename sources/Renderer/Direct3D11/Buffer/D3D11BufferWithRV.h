@@ -49,7 +49,7 @@ class D3D11BufferWithRV final : public D3D11Buffer
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;
 
-        UINT                                initialCount_   = -1;
+        UINT                                initialCount_   = std::numeric_limits<UINT>::max();
 
 };
 
