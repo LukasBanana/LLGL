@@ -211,8 +211,10 @@ class GLStateManager
 
         void BindShaderProgram(GLuint program);
 
+        #if 1 // TODO: remove this
         void PushShaderProgram();
         void PopShaderProgram();
+        #endif // /TODO
 
         void NotifyShaderProgramRelease(GLuint program);
 

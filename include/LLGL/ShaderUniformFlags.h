@@ -78,7 +78,10 @@ enum class UniformType
 //! Shader uniform location type, as zero-based index in 32-bit signed integer format.
 using UniformLocation = std::int32_t;
 
-//! Shader uniform descriptor structure.
+/**
+\brief Shader uniform descriptor structure.
+\see ShaderReflectionDescriptor::uniforms
+*/
 struct UniformDescriptor
 {
     //! Name of the uniform inside the shader.

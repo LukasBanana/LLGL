@@ -61,6 +61,11 @@ ShaderReflectionDescriptor DbgShaderProgram::QueryReflectionDesc() const
     return instance.QueryReflectionDesc();
 }
 
+UniformLocation DbgShaderProgram::QueryUniformLocation(const char* name) const
+{
+    return instance.QueryUniformLocation(name);
+}
+
 void DbgShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     instance.BindConstantBuffer(name, bindingIndex);

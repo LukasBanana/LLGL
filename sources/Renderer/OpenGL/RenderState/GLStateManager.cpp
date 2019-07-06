@@ -1092,6 +1092,7 @@ void GLStateManager::BindShaderProgram(GLuint program)
     }
 }
 
+#if 1 // TODO: remove this
 void GLStateManager::PushShaderProgram()
 {
     shaderState_.boundProgramStack.push(shaderState_.boundProgram);
@@ -1102,6 +1103,7 @@ void GLStateManager::PopShaderProgram()
     BindShaderProgram(shaderState_.boundProgramStack.top());
     shaderState_.boundProgramStack.pop();
 }
+#endif // /TODO
 
 void GLStateManager::NotifyShaderProgramRelease(GLuint program)
 {

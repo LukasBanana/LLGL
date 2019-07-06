@@ -86,6 +86,14 @@ ShaderReflectionDescriptor GLShaderProgram::QueryReflectionDesc() const
     return reflection;
 }
 
+UniformLocation GLShaderProgram::QueryUniformLocation(const char* name) const
+{
+    if (id_ != 0)
+        return static_cast<UniformLocation>(glGetUniformLocation(id_, name));
+    else
+        return -1;
+}
+
 void GLShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     /* Query uniform block index and bind it to the specified binding index */

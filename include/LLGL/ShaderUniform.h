@@ -17,6 +17,7 @@ namespace LLGL
 {
 
 
+#if 1 // TODO: remove this interface
 /**
 \brief Shader uniform setter interface.
 \note Only supported with: OpenGL.
@@ -84,6 +85,7 @@ class LLGL_EXPORT ShaderUniform : public NonCopyable
         virtual void SetUniform4x4fv(const char* name, const float* value, std::size_t count = 1) = 0;
 
 };
+#endif // /TODO
 
 
 } // /namespace LLGL

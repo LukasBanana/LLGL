@@ -49,6 +49,11 @@ ShaderReflectionDescriptor VKShaderProgram::QueryReflectionDesc() const
     return {}; //TODO
 }
 
+UniformLocation VKShaderProgram::QueryUniformLocation(const char* name) const
+{
+    return -1; //TODO
+}
+
 void VKShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     //todo

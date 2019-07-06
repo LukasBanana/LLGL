@@ -447,6 +447,47 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void SetBlendFactor(const ColorRGBAf& color) = 0;
         #endif
 
+        #if 0//TODO: enable this
+        /**
+        \brief Sets the value of a single uniform (a.k.a. shader constant) in the shader program that is currently bound.
+        \param[in] location Specifies the location of the uniform.
+        \param[in] data Raw pointer to the data that is to be copied to the uniform.
+        \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data.
+        \remarks This must only be used after a graphics or compute pipeline has been set.
+        \note Only supported with: OpenGL, Vulkan, Direct3D 12.
+        \see ShaderProgram::QueryUniformLocation
+        \see ShaderProgram::QueryReflectionDesc
+        \see SetGraphicsPipeline
+        \see SetComputePipeline
+        */
+        virtual void SetUniform(
+            UniformLocation location,
+            const void*     data,
+            std::uint32_t   dataSize
+        ) = 0;
+
+        /**
+        \brief Sets the value of multiple uniforms (a.k.a. shader constants) in the shader program that is currently bound.
+        \param[in] location Specifies the location of the first uniform.
+        \param[in] count Specifies the number of uniforms that are meant to be updated.
+        \param[in] data Raw pointer to the data that is to be copied to the uniforms.
+        \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data.
+        \remarks This must only be used after a graphics or compute pipeline has been set.
+        The order of uniforms that come after the first one can be determined by the ShaderReflectionDescriptor::uniform container returned by ShaderProgram::QueryReflectionDesc.
+        \note Only supported with: OpenGL, Vulkan, Direct3D 12.
+        \see ShaderProgram::QueryUniformLocation
+        \see ShaderProgram::QueryReflectionDesc
+        \see SetGraphicsPipeline
+        \see SetComputePipeline
+        */
+        virtual void SetUniforms(
+            UniformLocation location,
+            std::uint32_t   count,
+            const void*     data,
+            std::uint32_t   dataSize
+        ) = 0;
+        #endif
+
         /* ----- Queries ----- */
 
         /**

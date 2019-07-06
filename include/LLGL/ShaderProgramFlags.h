@@ -172,7 +172,7 @@ struct ShaderReflectionDescriptor
     std::vector<ResourceView>           resourceViews;
 
     /**
-    \brief List of all uniforms.
+    \brief List of all uniforms (a.k.a. shader constants).
     \note Only supported with: OpenGL, Vulkan.
     */
     std::vector<UniformDescriptor>      uniforms;
