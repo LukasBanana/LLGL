@@ -20,8 +20,6 @@
 
 std::string GetSelectedRendererModule(int argc, char* argv[])
 {
-    #ifndef LLGL_BUILD_STATIC_LIB
-
     /* Select renderer module */
     std::string rendererModule;
 
@@ -75,11 +73,6 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
 
     return rendererModule;
 
-    #else
-
-    return "";
-
-    #endif // /LLGL_BUILD_STATIC_LIB
 }
 
 std::string ReadFileContent(const std::string& filename)

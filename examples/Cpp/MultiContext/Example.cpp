@@ -179,9 +179,24 @@ int main(int argc, char* argv[])
         pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         {
-            // Only enable logic operations if it's supported, otherwise an exception is thrown
             if (logicOpSupported)
+            {
+                // Only enable logic operations if it's supported, otherwise an exception is thrown
                 pipelineDesc.blend.logicOp = LLGL::LogicOp::CopyInverted;
+            }
+            else
+            {
+                //fallback to blending enabled
+                for (auto& t : pipelineDesc.blend.targets)
+                {
+                    t.blendEnabled = true;
+                    t.srcColor = LLGL::BlendOp::InvSrcColor;
+                    t.srcAlpha = LLGL::BlendOp::InvSrcAlpha;
+
+                    t.dstColor = LLGL::BlendOp::DstColor;
+                    t.dstAlpha = LLGL::BlendOp::DstAlpha;
+                }
+            }
         }
         pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
