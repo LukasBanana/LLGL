@@ -12,6 +12,7 @@
 #include "Surface.h"
 #include "WindowFlags.h"
 #include "Key.h"
+
 #include <memory>
 #include <vector>
 

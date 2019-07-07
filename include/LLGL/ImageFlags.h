@@ -14,6 +14,7 @@
 #include "RenderSystemFlags.h"
 #include "TextureFlags.h"
 #include "ColorRGBA.h"
+
 #include <memory>
 #include <cstdint>
 

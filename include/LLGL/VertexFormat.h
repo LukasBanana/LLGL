@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "Constants.h"
 #include "VertexAttribute.h"
+
 #include <vector>
 #include <cstdint>
 

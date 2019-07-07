@@ -9,8 +9,9 @@
 #define LLGL_INPUT_H
 
 
-#include <LLGL/Window.h>
-#include <LLGL/Types.h>
+#include "Window.h"
+#include "Types.h"
+
 #include <array>
 #include <string>
 

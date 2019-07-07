@@ -13,6 +13,7 @@
 #include "Types.h"
 #include "Format.h"
 #include "ResourceFlags.h"
+
 #include <cstddef>
 #include <cstdint>
 

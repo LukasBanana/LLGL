@@ -13,6 +13,7 @@
 #include "ResourceFlags.h"
 #include "VertexFormat.h"
 #include "RenderSystemFlags.h"
+
 #include <string>
 #include <cstdint>
 

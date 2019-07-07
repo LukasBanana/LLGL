@@ -10,6 +10,7 @@
 
 
 #include "NonCopyable.h"
+
 #include <memory>
 #include <cstdint>
 
