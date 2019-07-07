@@ -186,15 +186,16 @@ int main(int argc, char* argv[])
             }
             else
             {
-                //fallback to blending enabled
+                pipelineDesc.blend.independentBlendEnabled = true;
+                //fallback to regular blending enabled
                 for (auto& t : pipelineDesc.blend.targets)
                 {
                     t.blendEnabled = true;
                     t.srcColor = LLGL::BlendOp::InvSrcColor;
-                    t.srcAlpha = LLGL::BlendOp::InvSrcAlpha;
+                    t.srcAlpha = LLGL::BlendOp::One;
 
-                    t.dstColor = LLGL::BlendOp::DstColor;
-                    t.dstAlpha = LLGL::BlendOp::DstAlpha;
+                    t.dstColor = LLGL::BlendOp::Zero;
+                    t.dstAlpha = LLGL::BlendOp::Zero;
                 }
             }
         }
