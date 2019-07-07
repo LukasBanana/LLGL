@@ -254,6 +254,38 @@ extern PFNGLUNIFORMMATRIX4FVPROC                            glUniformMatrix4fv;
 extern PFNGLGETUNIFORMIVPROC                                glGetUniformiv;
 extern PFNGLGETUNIFORMFVPROC                                glGetUniformfv;
 
+/* **GL_ARB_shader_objects** TODO: which extension from GL 2.1 ??? */
+
+extern PFNGLUNIFORMMATRIX2X3FVPROC                          glUniformMatrix2x3fv;
+extern PFNGLUNIFORMMATRIX2X4FVPROC                          glUniformMatrix2x4fv;
+extern PFNGLUNIFORMMATRIX3X2FVPROC                          glUniformMatrix3x2fv;
+extern PFNGLUNIFORMMATRIX3X4FVPROC                          glUniformMatrix3x4fv;
+extern PFNGLUNIFORMMATRIX4X2FVPROC                          glUniformMatrix4x2fv;
+extern PFNGLUNIFORMMATRIX4X3FVPROC                          glUniformMatrix4x3fv;
+
+/* **GL_ARB_shader_objects** TODO: which extension from GL 3.0 ??? */
+
+extern PFNGLUNIFORM1UIVPROC                                 glUniform1uiv;
+extern PFNGLUNIFORM2UIVPROC                                 glUniform2uiv;
+extern PFNGLUNIFORM3UIVPROC                                 glUniform3uiv;
+extern PFNGLUNIFORM4UIVPROC                                 glUniform4uiv;
+
+/* **GL_ARB_shader_objects** TODO: which extension from GL 4.0 ??? */
+
+extern PFNGLUNIFORM1DVPROC                                  glUniform1dv;
+extern PFNGLUNIFORM2DVPROC                                  glUniform2dv;
+extern PFNGLUNIFORM3DVPROC                                  glUniform3dv;
+extern PFNGLUNIFORM4DVPROC                                  glUniform4dv;
+extern PFNGLUNIFORMMATRIX2DVPROC                            glUniformMatrix2dv;
+extern PFNGLUNIFORMMATRIX3DVPROC                            glUniformMatrix3dv;
+extern PFNGLUNIFORMMATRIX4DVPROC                            glUniformMatrix4dv;
+extern PFNGLUNIFORMMATRIX2X3DVPROC                          glUniformMatrix2x3dv;
+extern PFNGLUNIFORMMATRIX2X4DVPROC                          glUniformMatrix2x4dv;
+extern PFNGLUNIFORMMATRIX3X2DVPROC                          glUniformMatrix3x2dv;
+extern PFNGLUNIFORMMATRIX3X4DVPROC                          glUniformMatrix3x4dv;
+extern PFNGLUNIFORMMATRIX4X2DVPROC                          glUniformMatrix4x2dv;
+extern PFNGLUNIFORMMATRIX4X3DVPROC                          glUniformMatrix4x3dv;
+
 /* GL_ARB_tessellation_shader */
 
 extern PFNGLPATCHPARAMETERIPROC                             glPatchParameteri;

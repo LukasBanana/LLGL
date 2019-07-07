@@ -281,6 +281,38 @@ DECL_GLPROC(void, glUniformMatrix4fv, (GLint, GLsizei, GLboolean, const GLfloat*
 DECL_GLPROC(void, glGetUniformiv, (GLuint, GLint, GLint*));
 DECL_GLPROC(void, glGetUniformfv, (GLuint, GLint, GLfloat*));
 
+/* **GL_ARB_shader_objects** TODO: which extension from GL 2.1 ??? */
+
+DECL_GLPROC(void, glUniformMatrix2x3fv, (GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(void, glUniformMatrix2x4fv, (GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(void, glUniformMatrix3x2fv, (GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(void, glUniformMatrix3x4fv, (GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(void, glUniformMatrix4x2fv, (GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(void, glUniformMatrix4x3fv, (GLint, GLsizei, GLboolean, const GLfloat*));
+
+/* **GL_ARB_shader_objects** TODO: which extension from GL 3.0 ??? */
+
+DECL_GLPROC(void, glUniform1uiv, (GLint, GLsizei, const GLuint*));
+DECL_GLPROC(void, glUniform2uiv, (GLint, GLsizei, const GLuint*));
+DECL_GLPROC(void, glUniform3uiv, (GLint, GLsizei, const GLuint*));
+DECL_GLPROC(void, glUniform4uiv, (GLint, GLsizei, const GLuint*));
+
+/* **GL_ARB_shader_objects** TODO: which extension from GL 4.0 ??? */
+
+DECL_GLPROC(void, glUniform1dv, (GLint, GLsizei, const GLdouble*));
+DECL_GLPROC(void, glUniform2dv, (GLint, GLsizei, const GLdouble*));
+DECL_GLPROC(void, glUniform3dv, (GLint, GLsizei, const GLdouble*));
+DECL_GLPROC(void, glUniform4dv, (GLint, GLsizei, const GLdouble*));
+DECL_GLPROC(void, glUniformMatrix2dv, (GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(void, glUniformMatrix3dv, (GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(void, glUniformMatrix4dv, (GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(void, glUniformMatrix2x3dv, (GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(void, glUniformMatrix2x4dv, (GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(void, glUniformMatrix3x2dv, (GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(void, glUniformMatrix3x4dv, (GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(void, glUniformMatrix4x2dv, (GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(void, glUniformMatrix4x3dv, (GLint, GLsizei, GLboolean, const GLdouble*));
+
 /* GL_ARB_tessellation_shader */
 
 DECL_GLPROC(void, glPatchParameteri, (GLenum, GLint));

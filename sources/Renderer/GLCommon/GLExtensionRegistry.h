@@ -29,23 +29,26 @@ enum class GLExt
     ARB_clear_texture,
     ARB_texture_compression,
     ARB_texture_multisample,
-    ARB_sampler_objects,
-    ARB_multi_bind,
+    ARB_sampler_objects,                // GL 3.2
+    ARB_multi_bind,                     // GL 4.3
     ARB_vertex_buffer_object,
-    ARB_instanced_arrays,
+    ARB_instanced_arrays,               // GL 2.1
     ARB_vertex_array_object,
     ARB_vertex_shader,
     ARB_framebuffer_object,
-    ARB_draw_instanced,
-    ARB_draw_elements_base_vertex,
-    ARB_base_instance,
-    ARB_shader_objects,
-    ARB_tessellation_shader,
-    ARB_compute_shader,
+    ARB_draw_instanced,                 // GL 2.1
+    ARB_draw_elements_base_vertex,      // GL 3.1
+    ARB_base_instance,                  // GL 4.1
+    ARB_shader_objects,                 // GL 2.0
+    ARB_shader_objects_21,              // GL 2.1
+    ARB_shader_objects_30,              // GL 3.0
+    ARB_shader_objects_40,              // GL 4.0
+    ARB_tessellation_shader,            // GL 3.2
+    ARB_compute_shader,                 // GL 4.2
     ARB_get_program_binary,
-    ARB_program_interface_query,
+    ARB_program_interface_query,        // GL 4.2
     ARB_uniform_buffer_object,
-    ARB_shader_storage_buffer_object,
+    ARB_shader_storage_buffer_object,   // GL 4.2
     ARB_occlusion_query,
     NV_conditional_render,
     ARB_timer_query,

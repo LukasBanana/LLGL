@@ -251,6 +251,38 @@ PFNGLUNIFORMMATRIX4FVPROC                               glUniformMatrix4fv      
 PFNGLGETUNIFORMIVPROC                                   glGetUniformiv                                  = nullptr;
 PFNGLGETUNIFORMFVPROC                                   glGetUniformfv                                  = nullptr;
 
+/* **GL_ARB_shader_objects** TODO: which extension from GL 2.1 ??? */
+
+PFNGLUNIFORMMATRIX2X3FVPROC                             glUniformMatrix2x3fv                            = nullptr;
+PFNGLUNIFORMMATRIX2X4FVPROC                             glUniformMatrix2x4fv                            = nullptr;
+PFNGLUNIFORMMATRIX3X2FVPROC                             glUniformMatrix3x2fv                            = nullptr;
+PFNGLUNIFORMMATRIX3X4FVPROC                             glUniformMatrix3x4fv                            = nullptr;
+PFNGLUNIFORMMATRIX4X2FVPROC                             glUniformMatrix4x2fv                            = nullptr;
+PFNGLUNIFORMMATRIX4X3FVPROC                             glUniformMatrix4x3fv                            = nullptr;
+
+/* **GL_ARB_shader_objects** TODO: which extension from GL 3.0 ??? */
+
+PFNGLUNIFORM1UIVPROC                                    glUniform1uiv                                   = nullptr;
+PFNGLUNIFORM2UIVPROC                                    glUniform2uiv                                   = nullptr;
+PFNGLUNIFORM3UIVPROC                                    glUniform3uiv                                   = nullptr;
+PFNGLUNIFORM4UIVPROC                                    glUniform4uiv                                   = nullptr;
+
+/* **GL_ARB_shader_objects** TODO: which extension from GL 4.0 ??? */
+
+PFNGLUNIFORM1DVPROC                                     glUniform1dv                                    = nullptr;
+PFNGLUNIFORM2DVPROC                                     glUniform2dv                                    = nullptr;
+PFNGLUNIFORM3DVPROC                                     glUniform3dv                                    = nullptr;
+PFNGLUNIFORM4DVPROC                                     glUniform4dv                                    = nullptr;
+PFNGLUNIFORMMATRIX2DVPROC                               glUniformMatrix2dv                              = nullptr;
+PFNGLUNIFORMMATRIX3DVPROC                               glUniformMatrix3dv                              = nullptr;
+PFNGLUNIFORMMATRIX4DVPROC                               glUniformMatrix4dv                              = nullptr;
+PFNGLUNIFORMMATRIX2X3DVPROC                             glUniformMatrix2x3dv                            = nullptr;
+PFNGLUNIFORMMATRIX2X4DVPROC                             glUniformMatrix2x4dv                            = nullptr;
+PFNGLUNIFORMMATRIX3X2DVPROC                             glUniformMatrix3x2dv                            = nullptr;
+PFNGLUNIFORMMATRIX3X4DVPROC                             glUniformMatrix3x4dv                            = nullptr;
+PFNGLUNIFORMMATRIX4X2DVPROC                             glUniformMatrix4x2dv                            = nullptr;
+PFNGLUNIFORMMATRIX4X3DVPROC                             glUniformMatrix4x3dv                            = nullptr;
+
 /* GL_ARB_tessellation_shader */
 
 PFNGLPATCHPARAMETERIPROC                                glPatchParameteri                               = nullptr;
