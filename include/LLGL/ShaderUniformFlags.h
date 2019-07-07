@@ -50,23 +50,23 @@ enum class UniformType
 
     /* ----- Matrices ----- */
     Float2x2,       //!< float2x2/ mat2 uniform.
-    Float3x3,       //!< float3x3/ mat3 uniform.
-    Float4x4,       //!< float4x4/ mat4 uniform.
     Float2x3,       //!< float2x3/ mat2x3 uniform.
     Float2x4,       //!< float2x4/ mat2x4 uniform.
     Float3x2,       //!< float3x2/ mat3x2 uniform.
+    Float3x3,       //!< float3x3/ mat3 uniform.
     Float3x4,       //!< float3x4/ mat3x4 uniform.
     Float4x2,       //!< float4x2/ mat4x2 uniform.
     Float4x3,       //!< float4x3/ mat4x3 uniform.
+    Float4x4,       //!< float4x4/ mat4 uniform.
     Double2x2,      //!< double2x2/ dmat2 uniform.
-    Double3x3,      //!< double3x3/ dmat3 uniform.
-    Double4x4,      //!< double4x4/ dmat4 uniform.
     Double2x3,      //!< double2x3/ dmat2x3 uniform.
     Double2x4,      //!< double2x4/ dmat2x4 uniform.
     Double3x2,      //!< double3x2/ dmat3x2 uniform.
+    Double3x3,      //!< double3x3/ dmat3 uniform.
     Double3x4,      //!< double3x4/ dmat3x4 uniform.
     Double4x2,      //!< double4x2/ dmat4x2 uniform.
     Double4x3,      //!< double4x3/ dmat4x3 uniform.
+    Double4x4,      //!< double4x4/ dmat4 uniform.
 
     /* ----- Resources ----- */
     Sampler,        //!< Sampler uniform (e.g. "sampler2D").

@@ -84,18 +84,19 @@ void ReleaseRenderStateObject(
     const std::function<void(T*)>&      callback,
     std::shared_ptr<T>&&                renderState)
 {
-    if (renderState.use_count() == 2)
+    if (renderState && renderState.use_count() == 2)
     {
         /* Reset render state */
         auto objectRef = renderState.get();
         renderState.reset();
 
-        /* Remove entry from list */
+        /* Retrieve entry index in container to remove entry */
         std::size_t entryIndex = 0;
         if (FindCompatibleStateObject(container, *objectRef, entryIndex) != nullptr)
         {
             /* Notify via callback and erase from container */
-            callback(objectRef);
+            if (callback)
+                callback(objectRef);
             container.erase(container.begin() + entryIndex);
         }
     }
@@ -117,6 +118,7 @@ void GLStatePool::Clear()
     depthStencilStates_.clear();
     rasterizerStates_.clear();
     blendStates_.clear();
+    shaderBindingLayouts_.clear();
 }
 
 GLDepthStencilStateSPtr GLStatePool::CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc)
@@ -158,6 +160,20 @@ void GLStatePool::ReleaseBlendState(GLBlendStateSPtr&& blendState)
         blendStates_,
         std::bind(&GLStateManager::NotifyBlendStateRelease, GLStateManager::active, std::placeholders::_1),
         std::forward<GLBlendStateSPtr>(blendState)
+    );
+}
+
+GLShaderBindingLayoutSPtr GLStatePool::CreateShaderBindingLayout(const GLPipelineLayout& pipelineLayout)
+{
+    return CreateRenderStateObject(shaderBindingLayouts_, pipelineLayout);
+}
+
+void GLStatePool::ReleaseShaderBindingLayout(GLShaderBindingLayoutSPtr&& shaderBindingLayout)
+{
+    ReleaseRenderStateObject<GLShaderBindingLayout>(
+        shaderBindingLayouts_,
+        nullptr,
+        std::forward<GLShaderBindingLayoutSPtr>(shaderBindingLayout)
     );
 }
 

@@ -218,6 +218,8 @@ class GLStateManager
 
         void NotifyShaderProgramRelease(GLuint program);
 
+        GLuint GetBoundShaderProgram() const;
+
         /* ----- Render pass ----- */
 
         void BindRenderPass(

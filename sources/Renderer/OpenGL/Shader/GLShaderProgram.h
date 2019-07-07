@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+class GLShaderBindingLayout;
+
 class GLShaderProgram final : public ShaderProgram
 {
 
@@ -43,6 +45,12 @@ class GLShaderProgram final : public ShaderProgram
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
 
     public:
+
+        /*
+        Updates all uniform/storage block bindings and resources by the specified binding layout.
+        This shader program must already be bound with the GLStateManager.
+        */
+        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) const;
 
         // Returns the shader program ID.
         inline GLuint GetID() const
@@ -82,6 +90,11 @@ class GLShaderProgram final : public ShaderProgram
         GLuint              id_                 = 0;
         GLShaderUniform     uniform_;
         StreamOutputFormat  streamOutputFormat_;
+
+    private:
+
+        // Reference to active binding layout is mutable since it's only to track state changes
+        mutable const GLShaderBindingLayout* bindingLayout_ = nullptr;
 
 };
 

@@ -22,12 +22,32 @@ namespace LLGL
 {
 
 
+// Returns true if the specified pipeline layout contains any names in the descriptor.
+static bool AnyNamesInPipelineLayout(const GLPipelineLayout& pipelineLayout)
+{
+    for (const auto& binding : pipelineLayout.GetBindings())
+    {
+        if (!binding.name.empty())
+            return true;
+    }
+    return false;
+}
+
 GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits)
 {
     /* Convert shader state */
     shaderProgram_ = LLGL_CAST(const GLShaderProgram*, desc.shaderProgram);
     if (!shaderProgram_)
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
+
+    /* Create shader binding layout by binding descriptor */
+    if (desc.pipelineLayout)
+    {
+        /* Ignore pipeline layout if there are no names specified, because no valid binding layout can be created then */
+        auto pipelineLayoutGL = LLGL_CAST(const GLPipelineLayout*, desc.pipelineLayout);
+        if (AnyNamesInPipelineLayout(*pipelineLayoutGL))
+            shaderBindingLayout_ = GLStatePool::Instance().CreateShaderBindingLayout(*pipelineLayoutGL);
+    }
 
     /* Convert input-assembler state */
     drawMode_ = GLTypes::Map(desc.primitiveTopology);
@@ -74,12 +94,17 @@ GLGraphicsPipeline::~GLGraphicsPipeline()
     GLStatePool::Instance().ReleaseDepthStencilState(std::move(depthStencilState_));
     GLStatePool::Instance().ReleaseRasterizerState(std::move(rasterizerState_));
     GLStatePool::Instance().ReleaseBlendState(std::move(blendState_));
+    GLStatePool::Instance().ReleaseShaderBindingLayout(std::move(shaderBindingLayout_));
 }
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 {
     /* Bind shader program and discard rasterizer if there is no fragment shader */
     stateMngr.BindShaderProgram(shaderProgram_->GetID());
+
+    /* Update resource slots in shader program (if necessary) */
+    if (shaderBindingLayout_)
+        shaderProgram_->BindResourceSlots(*shaderBindingLayout_);
 
     /* Set input-assembler state */
     if (patchVertices_ > 0)

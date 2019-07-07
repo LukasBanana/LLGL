@@ -7,6 +7,7 @@
 
 #include "GLShaderProgram.h"
 #include "GLShader.h"
+#include "GLShaderBindingLayout.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
@@ -152,6 +153,21 @@ bool GLShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
     }
     #endif // /GL_ARB_compute_shader
     return false;
+}
+
+
+/*
+ * ======= Internal: =======
+ */
+
+void GLShaderProgram::BindResourceSlots(const GLShaderBindingLayout& bindingLayout) const
+{
+    /* Keep track of state change with mutable reference to binding layout */
+    if (bindingLayout_ != &bindingLayout)
+    {
+        bindingLayout.BindResourceSlots(GetID());
+        bindingLayout_ = &bindingLayout;
+    }
 }
 
 
@@ -351,14 +367,6 @@ static std::pair<Format, std::uint32_t> UnmapAttribType(GLenum type)
     return { Format::R32Float, 0 };
 }
 
-struct GLVertexAttribute
-{
-    std::string     name;
-    Format          format;
-    std::uint32_t   semanticIndex;
-    std::uint32_t   location;
-};
-
 static SystemValue FindSystemValue(const std::string& name)
 {
     const std::pair<const char*, SystemValue> glslSystemValues[] =
@@ -386,6 +394,15 @@ static SystemValue FindSystemValue(const std::string& name)
 
     return SystemValue::Undefined;
 }
+
+// Internal struct for QueryVertexAttributes function
+struct GLVertexAttribute
+{
+    std::string     name;
+    Format          format;
+    std::uint32_t   semanticIndex;
+    std::uint32_t   location;
+};
 
 void GLShaderProgram::QueryVertexAttributes(ShaderReflectionDescriptor& reflection) const
 {

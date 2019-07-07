@@ -1110,6 +1110,11 @@ void GLStateManager::NotifyShaderProgramRelease(GLuint program)
     InvalidateBoundGLObject(shaderState_.boundProgram, program);
 }
 
+GLuint GLStateManager::GetBoundShaderProgram() const
+{
+    return shaderState_.boundProgram;
+}
+
 /* ----- Render pass ----- */
 
 void GLStateManager::BindRenderPass(
