@@ -17,6 +17,9 @@ namespace LLGL
 {
 
 
+// Sets the data of the specified uniform in the active shader program.
+void GLSetUniforms(UniformType type, GLint location, GLsizei count, const void* data);
+
 class GLShaderUniform final : public ShaderUniform
 {
 

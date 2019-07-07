@@ -363,6 +363,38 @@ void GLImmediateCommandBuffer::SetComputePipeline(ComputePipeline& computePipeli
     computePipelineGL.Bind(*stateMngr_);
 }
 
+void GLImmediateCommandBuffer::SetUniform(
+    UniformLocation location,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    GLImmediateCommandBuffer::SetUniforms(location, 1, data, dataSize);
+}
+
+void GLImmediateCommandBuffer::SetUniforms(
+    UniformLocation location,
+    std::uint32_t   count,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    /* Data size must be a multiple of 4 bytes */
+    if (dataSize == 0 || dataSize % 4 != 0)
+        return;
+
+    /* Determine type of uniform */
+    GLuint program  = stateMngr_->GetBoundShaderProgram();
+    GLenum type     = 0;
+
+    glGetActiveUniform(program, static_cast<GLuint>(location), 0, nullptr, nullptr, &type, nullptr);
+
+    /* Submit data to respective uniform type */
+    GLint       uniformLocation = static_cast<GLint>(location);
+    GLsizei     uniformCount    = static_cast<GLsizei>(count);
+    UniformType uniformType     = GLTypes::UnmapUniformType(type);
+
+    GLSetUniforms(uniformType, uniformLocation, uniformCount, data);
+}
+
 /* ----- Queries ----- */
 
 void GLImmediateCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
