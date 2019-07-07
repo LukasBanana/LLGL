@@ -39,6 +39,12 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         // Binds this graphics pipeline state with the specified GL state manager.
         void Bind(GLStateManager& stateMngr);
 
+        // Returns the shader program used for this graphics pipeline.
+        inline const GLShaderProgram* GetShaderProgram() const
+        {
+            return shaderProgram_;
+        }
+
         // Returns the GL mode for drawing commands (GL_TRIANGLES, GL_TRIANGLE_STRIP, etc.).
         inline GLenum GetDrawMode() const
         {

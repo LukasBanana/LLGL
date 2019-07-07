@@ -381,19 +381,12 @@ void GLImmediateCommandBuffer::SetUniforms(
     if (dataSize == 0 || dataSize % 4 != 0)
         return;
 
-    /* Determine type of uniform */
-    GLuint program  = stateMngr_->GetBoundShaderProgram();
-    GLenum type     = 0;
-    GLint  size     = 0;
-
-    glGetActiveUniform(program, static_cast<GLuint>(location), 0, nullptr, &size, &type, nullptr);
-
-    /* Submit data to respective uniform type */
-    GLint       uniformLocation = static_cast<GLint>(location);
-    GLsizei     uniformCount    = static_cast<GLsizei>(count);
-    UniformType uniformType     = GLTypes::UnmapUniformType(type);
-
-    GLSetUniforms(uniformType, uniformLocation, uniformCount, data);
+    GLSetUniformsByLocation(
+        stateMngr_->GetBoundShaderProgram(),
+        static_cast<GLint>(location),
+        static_cast<GLsizei>(count),
+        data
+    );
 }
 
 /* ----- Queries ----- */

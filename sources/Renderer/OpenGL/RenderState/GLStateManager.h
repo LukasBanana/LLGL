@@ -403,8 +403,7 @@ class GLStateManager
 
         struct GLShaderState
         {
-            GLuint              boundProgram = 0;
-            std::stack<GLuint>  boundProgramStack;
+            GLuint boundProgram = 0;
         };
 
         struct GLSamplerState

@@ -615,6 +615,23 @@ void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
     vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, computePipelineVK.GetVkPipeline());
 }
 
+void VKCommandBuffer::SetUniform(
+    UniformLocation location,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    VKCommandBuffer::SetUniforms(location, 1, data, dataSize);
+}
+
+void VKCommandBuffer::SetUniforms(
+    UniformLocation location,
+    std::uint32_t   count,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    //TODO
+}
+
 /* ----- Queries ----- */
 
 void VKCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)

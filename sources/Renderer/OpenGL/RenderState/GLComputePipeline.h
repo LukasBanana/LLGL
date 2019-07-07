@@ -28,6 +28,12 @@ class GLComputePipeline final : public ComputePipeline
 
         void Bind(GLStateManager& stateMngr);
 
+        // Returns the shader program used for this graphics pipeline.
+        inline const GLShaderProgram* GetShaderProgram() const
+        {
+            return shaderProgram_;
+        }
+
     private:
 
         const GLShaderProgram* shaderProgram_ = nullptr;

@@ -46,7 +46,11 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
         /* Ignore pipeline layout if there are no names specified, because no valid binding layout can be created then */
         auto pipelineLayoutGL = LLGL_CAST(const GLPipelineLayout*, desc.pipelineLayout);
         if (AnyNamesInPipelineLayout(*pipelineLayoutGL))
+        {
             shaderBindingLayout_ = GLStatePool::Instance().CreateShaderBindingLayout(*pipelineLayoutGL);
+            if (!shaderBindingLayout_->HasBindings())
+                GLStatePool::Instance().ReleaseShaderBindingLayout(std::move(shaderBindingLayout_));
+        }
     }
 
     /* Convert input-assembler state */

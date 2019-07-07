@@ -44,6 +44,7 @@ enum GLOpcode : std::uint8_t
     GLOpcodeBindRenderPass,
     GLOpcodeBindGraphicsPipeline,
     GLOpcodeBindComputePipeline,
+    GLOpcodeSetUniforms,
     GLOpcodeBeginQuery,
     GLOpcodeEndQuery,
     GLOpcodeBeginConditionalRender,

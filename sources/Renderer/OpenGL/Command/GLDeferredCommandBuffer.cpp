@@ -62,25 +62,26 @@ void GLDeferredCommandBuffer::Begin()
 {
     /* Reset internal command buffer */
     buffer_.clear();
-    
+    boundShaderProgram_ = 0;
+
     #ifdef LLGL_ENABLE_JIT_COMPILER
-    
+
     /* Reset states relevant to the GL command assembler */
     executable_.reset();
     maxNumViewports_ = 0;
     maxNumScissors_  = 0;
-    
+
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
 void GLDeferredCommandBuffer::End()
 {
     #ifdef LLGL_ENABLE_JIT_COMPILER
-    
+
     /* Generate native assembly only if command buffer will be submitted multiple times */
     if ((GetFlags() & CommandBufferFlags::MultiSubmit) != 0)
         executable_ = AssembleGLDeferredCommandBuffer(*this);
-    
+
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
@@ -144,7 +145,7 @@ void GLDeferredCommandBuffer::SetViewport(const Viewport& viewport)
     #ifdef LLGL_ENABLE_JIT_COMPILER
     maxNumViewports_ = std::max(maxNumViewports_, 1u);
     #endif // /LLGL_ENABLE_JIT_COMPILER
-    
+
     auto cmd = AllocCommand<GLCmdViewport>(GLOpcodeViewport);
     {
         cmd->viewport   = GLViewport{ viewport.x, viewport.y, viewport.width, viewport.height };
@@ -156,11 +157,11 @@ void GLDeferredCommandBuffer::SetViewports(std::uint32_t numViewports, const Vie
 {
     /* Clamp number of viewports to limit */
     numViewports = std::min(numViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
-    
+
     #ifdef LLGL_ENABLE_JIT_COMPILER
     maxNumViewports_ = std::max(maxNumViewports_, numViewports);
     #endif // /LLGL_ENABLE_JIT_COMPILER
-    
+
     /* Encode GL command */
     auto cmd = AllocCommand<GLCmdViewportArray>(GLOpcodeViewportArray, sizeof(GLViewport)*numViewports);
     {
@@ -190,7 +191,7 @@ void GLDeferredCommandBuffer::SetScissor(const Scissor& scissor)
     #ifdef LLGL_ENABLE_JIT_COMPILER
     maxNumScissors_ = std::max(maxNumScissors_, 1u);
     #endif // /LLGL_ENABLE_JIT_COMPILER
-    
+
     auto cmd = AllocCommand<GLCmdScissor>(GLOpcodeScissor);
     cmd->scissor = GLScissor{ scissor.x, scissor.y, scissor.width, scissor.height };
 }
@@ -199,11 +200,11 @@ void GLDeferredCommandBuffer::SetScissors(std::uint32_t numScissors, const Sciss
 {
     /* Clamp number of scissors to limit */
     numScissors = std::min(numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
-    
+
     #ifdef LLGL_ENABLE_JIT_COMPILER
     maxNumScissors_ = std::max(maxNumScissors_, numScissors);
     #endif // /LLGL_ENABLE_JIT_COMPILER
-    
+
     /* Encode GL command */
     auto cmd = AllocCommand<GLCmdScissorArray>(GLOpcodeScissorArray, sizeof(GLScissor)*numScissors);
     {
@@ -432,13 +433,45 @@ void GLDeferredCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipe
 {
     auto cmd = AllocCommand<GLCmdBindGraphicsPipeline>(GLOpcodeBindGraphicsPipeline);
     cmd->graphicsPipeline = LLGL_CAST(GLGraphicsPipeline*, &graphicsPipeline);
+
     renderState_.drawMode = cmd->graphicsPipeline->GetDrawMode();
+    boundShaderProgram_ = cmd->graphicsPipeline->GetShaderProgram()->GetID();
 }
 
 void GLDeferredCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
     auto cmd = AllocCommand<GLCmdBindComputePipeline>(GLOpcodeBindComputePipeline);
     cmd->computePipeline = LLGL_CAST(GLComputePipeline*, &computePipeline);
+    boundShaderProgram_ = cmd->computePipeline->GetShaderProgram()->GetID();
+}
+
+void GLDeferredCommandBuffer::SetUniform(
+    UniformLocation location,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    GLDeferredCommandBuffer::SetUniforms(location, 1, data, dataSize);
+}
+
+void GLDeferredCommandBuffer::SetUniforms(
+    UniformLocation location,
+    std::uint32_t   count,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    /* Data size must be a multiple of 4 bytes */
+    if (dataSize == 0 || dataSize % 4 != 0)
+        return;
+
+    /* Allocate GL command and copy data buffer */
+    auto cmd = AllocCommand<GLCmdSetUniforms>(GLOpcodeSetUniforms, dataSize);
+    {
+        cmd->program    = boundShaderProgram_;
+        cmd->location   = static_cast<GLint>(location);
+        cmd->count      = static_cast<GLsizei>(count);
+        cmd->size       = static_cast<GLsizeiptr>(dataSize);
+        ::memcpy(cmd + 1, data, dataSize);
+    }
 }
 
 /* ----- Queries ----- */

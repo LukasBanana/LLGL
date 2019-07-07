@@ -6,6 +6,7 @@
  */
 
 #include "GLShaderUniform.h"
+#include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
 
@@ -183,7 +184,7 @@ static void GLSetUniformsDouble(UniformType type, GLint location, GLsizei count,
 }
 
 
-void GLSetUniforms(UniformType type, GLint location, GLsizei count, const void* data)
+void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const void* data)
 {
     switch (type)
     {
@@ -261,6 +262,18 @@ void GLSetUniforms(UniformType type, GLint location, GLsizei count, const void* 
             GLSetUniformsInt(type, location, count, reinterpret_cast<const GLint*>(data));
             break;
     }
+}
+
+void GLSetUniformsByLocation(GLuint program, GLint location, GLsizei count, const void* data)
+{
+    /* Determine type of uniform */
+    GLenum type = 0;
+    GLint size = 0;
+    glGetActiveUniform(program, static_cast<GLuint>(location), 0, nullptr, &size, &type, nullptr);
+
+    /* Submit data to respective uniform type */
+    UniformType uniformType = GLTypes::UnmapUniformType(type);
+    GLSetUniformsByType(uniformType, location, count, data);
 }
 
 

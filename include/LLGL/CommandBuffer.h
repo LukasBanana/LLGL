@@ -447,7 +447,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void SetBlendFactor(const ColorRGBAf& color) = 0;
         #endif
 
-        #if 1//TODO: enable this
         /**
         \brief Sets the value of a single uniform (a.k.a. shader constant) in the shader program that is currently bound.
         \param[in] location Specifies the location of the uniform.
@@ -464,7 +463,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             UniformLocation location,
             const void*     data,
             std::uint32_t   dataSize
-        ){}// = 0;
+        ) = 0;
 
         /**
         \brief Sets the value of multiple uniforms (a.k.a. shader constants) in the shader program that is currently bound.
@@ -485,8 +484,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             std::uint32_t   count,
             const void*     data,
             std::uint32_t   dataSize
-        ){}// = 0;
-        #endif
+        ) = 0;
 
         /* ----- Queries ----- */
 
@@ -682,9 +680,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see DispatchIndirectArguments
         */
         virtual void DispatchIndirect(Buffer& buffer, std::uint64_t offset) = 0;
-    
+
         /* ----- Debugging ----- */
-    
+
         /**
         \brief Pushes the specified name onto a stack of group strings that is used for debug reports.
         \param[in] name Pointer to a null terminated string that specifies the name. Must not be null!
@@ -696,7 +694,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         // render shadow map ...
         myCmdBuffer->EndRenderPass();
         myCmdBuffer->PopDebugGroup();
-        
+
         myCmdBuffer->PushDebugGroup("Final Scene Pass");
         myCmdBuffer->BeginRenderPass(...);
         // render final scene ...
@@ -708,7 +706,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see RenderSystemChild::SetDebugName
         */
         virtual void PushDebugGroup(const char* name) = 0;
-    
+
         //! \see PushDebugGroup
         virtual void PopDebugGroup() = 0;
 
