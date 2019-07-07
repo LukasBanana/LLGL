@@ -172,8 +172,9 @@ LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDe
     - <code>texture</code> for textures (i.e. ResourceType::Texture and BindFlags::SampleBuffer).
     - <code>rwtexture</code> for read/write textures (i.e. ResourceType::Texture and BindFlags::RWStorageBuffer).
     - <code>sampler</code> for sampler states (i.e. ResourceType::Sampler).
-- The slot of each binding point (i.e. BindingDescriptor::slot) is specified as an integral number within brackets (e.g. <code>"texture(1)"</code>).
-- The array size of each binding point (i.e. BindingDescriptor::arraySize) can be optionally specified right after the slot within squared brackets (e.g. <code>"texture(1[2])"</code>).
+- Optionally, the resource <b>name</b> is specified as an arbitrary identifier followed by the at-sign (e.g. <code>"texture(myColorMap@1)"</code>).
+- The <b>slot</b> of each binding point (i.e. BindingDescriptor::slot) is specified as an integral number within brackets (e.g. <code>"texture(1)"</code>).
+- The <b>array size</b> of each binding point (i.e. BindingDescriptor::arraySize) can be optionally specified right after the slot within squared brackets (e.g. <code>"texture(1[2])"</code>).
 - Optionally, multiple slots can be specified within the brackets if separated by commas (e.g. <code>"texture(1[2],3)"</code>).
 - Each binding point is separated by a comma, the last comma being optional (e.g. <code>"texture(1),sampler(2),"</code> or <code>"texture(1),sampler(2)"</code>).
 - The stage flags (i.e. BindingDescriptor::stageFlags) can be specified after each binding point with a preceding colon using the following identifiers:
@@ -192,18 +193,18 @@ LLGL::PipelineLayoutDescriptor myLayoutDescStd;
 {
     myLayoutDescStd.bindings =
     {
-        LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
-        LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 1 },
-        LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 2 },
-        LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage,                                 3 },
+        LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0u,     "Scene"    },
+        LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 1u                 },
+        LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 2u, 4u, "TexArray" },
+        LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage,                                 3u                 },
     };
 }
 auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescStd);
 
 // Abbreviated way of declaring a pipeline layout using the utility function:
 auto myLayoutDescUtil = LLGL::PipelineLayoutDesc(
-    "cbuffer(0):frag:vert,"
-    "texture(1,2):frag,"
+    "cbuffer(Scene@0):frag:vert,"
+    "texture(1, TexArray@2[4]):frag,"
     "sampler(3):frag,"
 );
 auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescUtil);

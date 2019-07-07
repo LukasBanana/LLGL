@@ -1092,7 +1092,7 @@ void GLStateManager::BindShaderProgram(GLuint program)
     }
 }
 
-#if 1 // TODO: remove this
+#if 0 // TODO: remove this
 void GLStateManager::PushShaderProgram()
 {
     shaderState_.boundProgramStack.push(shaderState_.boundProgram);

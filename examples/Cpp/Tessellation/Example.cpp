@@ -147,9 +147,6 @@ public:
                 { vertexFormat }
             );
         }
-
-        // Bind constant buffer location to the index we use later with the render context
-        shaderProgram->BindConstantBuffer("Settings", constantBufferIndex);
     }
 
     #ifdef ENABLE_RENDER_PASS
@@ -179,7 +176,7 @@ public:
             {
                 LLGL::BindingDescriptor
                 {
-                    LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::AllTessStages, constantBufferIndex
+                    LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::AllTessStages, constantBufferIndex, 1u, "Settings"
                 }
             };
         }

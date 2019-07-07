@@ -369,7 +369,7 @@ private:
             commands->PushDebugGroup("Shadow Map Pass");
             RenderShadowMap();
             commands->PopDebugGroup();
-            
+
             commands->PushDebugGroup("Scene Pass");
             RenderScene();
             commands->PopDebugGroup();

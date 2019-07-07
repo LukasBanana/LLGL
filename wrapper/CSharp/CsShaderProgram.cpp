@@ -40,16 +40,6 @@ ShaderReflectionDescriptor^ ShaderProgram::QueryReflectionDesc()
 }
 #endif
 
-void ShaderProgram::BindConstantBuffer(String^ name, unsigned int bindingIndex)
-{
-    native_->BindConstantBuffer(ToStdString(name), bindingIndex);
-}
-
-void ShaderProgram::BindStorageBuffer(String^ name, unsigned int bindingIndex)
-{
-    native_->BindStorageBuffer(ToStdString(name), bindingIndex);
-}
-
 
 } // /namespace SharpLLGL
 

@@ -35,12 +35,6 @@ class D3D12ShaderProgram final : public ShaderProgram
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
         UniformLocation QueryUniformLocation(const char* name) const override;
 
-        void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-        void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-
-        ShaderUniform* LockShaderUniform() override;
-        void UnlockShaderUniform() override;
-
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
 

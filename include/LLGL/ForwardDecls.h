@@ -34,7 +34,6 @@ class ResourceHeap;
 class Sampler;
 class Shader;
 class ShaderProgram;
-class ShaderUniform;
 class Surface;
 class Texture;
 class Timer;

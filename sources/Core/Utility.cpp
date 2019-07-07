@@ -381,7 +381,7 @@ static void ParseLayoutSignatureResourceType(const char*& s, ResourceType& type,
     IgnoreWhiteSpaces(s);
 
     auto token = s;
-    while (std::isalpha(*s))
+    while (std::isalpha(static_cast<unsigned char>(*s)))
         ++s;
     auto tokenLen = static_cast<std::size_t>(s - token);
 
@@ -448,7 +448,7 @@ static long ParseLayoutSignatureStageFlag(const char*& s)
     IgnoreWhiteSpaces(s);
 
     auto token = s;
-    while (std::isalpha(*s))
+    while (std::isalpha(static_cast<unsigned char>(*s)))
         ++s;
     auto tokenLen = static_cast<std::size_t>(s - token);
 
@@ -496,6 +496,15 @@ static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, con
 
     for (;;)
     {
+        /* Parse optional name */
+        if (std::isalpha(static_cast<unsigned char>(*s)) || *s == '_')
+        {
+            for (; std::isalnum(static_cast<unsigned char>(*s)) || *s == '_'; ++s)
+                bindingDesc.name += *s;
+            IgnoreWhiteSpaces(s);
+            AcceptChar(s, '@');
+        }
+
         /* Parse slot number */
         bindingDesc.slot = ParseUInt32(s);
         IgnoreWhiteSpaces(s);

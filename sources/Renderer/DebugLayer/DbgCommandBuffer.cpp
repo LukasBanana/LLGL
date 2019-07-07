@@ -530,6 +530,23 @@ void DbgCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
     profile_.computePipelineBindings++;
 }
 
+void DbgCommandBuffer::SetUniform(
+    UniformLocation location,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    instance.SetUniform(location, data, dataSize);
+}
+
+void DbgCommandBuffer::SetUniforms(
+    UniformLocation location,
+    std::uint32_t   count,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    instance.SetUniforms(location, count, data, dataSize);
+}
+
 /* ----- Queries ----- */
 
 void DbgCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)

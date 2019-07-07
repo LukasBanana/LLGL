@@ -25,8 +25,7 @@ namespace LLGL
 
 
 GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
-    id_      { glCreateProgram() },
-    uniform_ { id_               }
+    id_ { glCreateProgram() }
 {
     Attach(desc.vertexShader);
     Attach(desc.tessControlShader);
@@ -93,42 +92,6 @@ UniformLocation GLShaderProgram::QueryUniformLocation(const char* name) const
         return static_cast<UniformLocation>(glGetUniformLocation(id_, name));
     else
         return -1;
-}
-
-void GLShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    /* Query uniform block index and bind it to the specified binding index */
-    auto blockIndex = glGetUniformBlockIndex(id_, name.c_str());
-    if (blockIndex != GL_INVALID_INDEX)
-        glUniformBlockBinding(id_, blockIndex, bindingIndex);
-    else
-        throw std::invalid_argument("failed to bind constant buffer due to invalid uniform block name: " + name);
-}
-
-void GLShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    #ifndef __APPLE__
-    /* Query shader storage block index and bind it to the specified binding index */
-    auto blockIndex = glGetProgramResourceIndex(id_, GL_SHADER_STORAGE_BLOCK, name.c_str());
-    if (blockIndex != GL_INVALID_INDEX)
-        glShaderStorageBlockBinding(id_, blockIndex, bindingIndex);
-    else
-        throw std::invalid_argument("failed to bind storage buffer due to invalid storage block name: " + name);
-    #else
-    throw std::runtime_error("storage buffers not supported on this platform");
-    #endif
-}
-
-ShaderUniform* GLShaderProgram::LockShaderUniform()
-{
-    GLStateManager::active->PushShaderProgram();
-    GLStateManager::active->BindShaderProgram(id_);
-    return (&uniform_);
-}
-
-void GLShaderProgram::UnlockShaderUniform()
-{
-    GLStateManager::active->PopShaderProgram();
 }
 
 bool GLShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
@@ -766,7 +729,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
         else
         {
             /* Append default uniform */
-            UniformDescriptor uniform;
+            ShaderReflectionDescriptor::Uniform uniform;
             {
                 uniform.name        = std::string(uniformName.data());
                 uniform.type        = uniformType;

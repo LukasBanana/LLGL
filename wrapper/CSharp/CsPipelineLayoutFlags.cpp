@@ -19,25 +19,41 @@ namespace SharpLLGL
 BindingDescriptor::BindingDescriptor()
 {
     Type        = ResourceType::Undefined;
+    BindFlags   = SharpLLGL::BindFlags::None;
     StageFlags  = SharpLLGL::StageFlags::None;
     Slot        = 0;
     ArraySize   = 1;
+    Name        = gcnew String("");
 }
 
-BindingDescriptor::BindingDescriptor(ResourceType type, SharpLLGL::StageFlags stageFlags, unsigned int slot)
+BindingDescriptor::BindingDescriptor(ResourceType type, SharpLLGL::BindFlags bindFlags, SharpLLGL::StageFlags stageFlags, unsigned int slot)
 {
     Type        = type;
+    BindFlags   = bindFlags;
     StageFlags  = stageFlags;
     Slot        = slot;
     ArraySize   = 1;
+    Name        = gcnew String("");
 }
 
-BindingDescriptor::BindingDescriptor(ResourceType type, SharpLLGL::StageFlags stageFlags, unsigned int slot, unsigned int arraySize)
+BindingDescriptor::BindingDescriptor(ResourceType type, SharpLLGL::BindFlags bindFlags, SharpLLGL::StageFlags stageFlags, unsigned int slot, unsigned int arraySize)
 {
     Type        = type;
+    BindFlags   = bindFlags;
     StageFlags  = stageFlags;
     Slot        = slot;
     ArraySize   = arraySize;
+    Name        = gcnew String("");
+}
+
+BindingDescriptor::BindingDescriptor(ResourceType type, SharpLLGL::BindFlags bindFlags, SharpLLGL::StageFlags stageFlags, unsigned int slot, unsigned int arraySize, String^ name)
+{
+    Type        = type;
+    BindFlags   = bindFlags;
+    StageFlags  = stageFlags;
+    Slot        = slot;
+    ArraySize   = arraySize;
+    Name        = name;
 }
 
 

@@ -154,16 +154,6 @@ private:
                 { vertexFormat }
             );
         }
-
-        //TODO: must be replace by "PipelineLayout" internally
-        // Bind resources
-        shaderProgram->BindConstantBuffer("Settings", 3);
-
-        if (auto uniforms = shaderProgram->LockShaderUniform())
-        {
-            uniforms->SetUniform1i("colorMap", 1);
-            shaderProgram->UnlockShaderUniform();
-        }
     }
 
     void CreatePipelines()
@@ -175,10 +165,10 @@ private:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,   LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 3                           },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,  0,                               LLGL::StageFlags::FragmentStage,                                 1                           },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u) },
-              //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 3                           },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,   LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 3,                           1u, "Settings"   },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,  0,                               LLGL::StageFlags::FragmentStage,                                 1                                             },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u), 1u, "colorMap"   },
+              //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,  LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 3,                           1u, "colorMapMS" },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

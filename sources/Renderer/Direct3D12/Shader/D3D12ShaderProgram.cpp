@@ -73,26 +73,6 @@ UniformLocation D3D12ShaderProgram::QueryUniformLocation(const char* name) const
     return -1; // TODO
 }
 
-void D3D12ShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    // dummy
-}
-
-void D3D12ShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    // dummy
-}
-
-ShaderUniform* D3D12ShaderProgram::LockShaderUniform()
-{
-    return nullptr; // dummy
-}
-
-void D3D12ShaderProgram::UnlockShaderUniform()
-{
-    // dummy
-}
-
 bool D3D12ShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
 {
     return false; // dummy

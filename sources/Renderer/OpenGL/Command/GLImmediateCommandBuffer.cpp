@@ -384,8 +384,9 @@ void GLImmediateCommandBuffer::SetUniforms(
     /* Determine type of uniform */
     GLuint program  = stateMngr_->GetBoundShaderProgram();
     GLenum type     = 0;
+    GLint  size     = 0;
 
-    glGetActiveUniform(program, static_cast<GLuint>(location), 0, nullptr, nullptr, &type, nullptr);
+    glGetActiveUniform(program, static_cast<GLuint>(location), 0, nullptr, &size, &type, nullptr);
 
     /* Submit data to respective uniform type */
     GLint       uniformLocation = static_cast<GLint>(location);

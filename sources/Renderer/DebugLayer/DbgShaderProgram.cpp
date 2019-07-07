@@ -66,26 +66,6 @@ UniformLocation DbgShaderProgram::QueryUniformLocation(const char* name) const
     return instance.QueryUniformLocation(name);
 }
 
-void DbgShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    instance.BindConstantBuffer(name, bindingIndex);
-}
-
-void DbgShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    instance.BindStorageBuffer(name, bindingIndex);
-}
-
-ShaderUniform* DbgShaderProgram::LockShaderUniform()
-{
-    return instance.LockShaderUniform();
-}
-
-void DbgShaderProgram::UnlockShaderUniform()
-{
-    return instance.UnlockShaderUniform();
-}
-
 bool DbgShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
 {
     return instance.SetWorkGroupSize(workGroupSize);

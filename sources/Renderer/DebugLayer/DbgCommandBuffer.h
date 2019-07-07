@@ -112,6 +112,19 @@ class DbgCommandBuffer : public CommandBufferExt
         void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
         void SetComputePipeline(ComputePipeline& computePipeline) override;
 
+        void SetUniform(
+            UniformLocation location,
+            const void*     data,
+            std::uint32_t   dataSize
+        ) override;
+
+        void SetUniforms(
+            UniformLocation location,
+            std::uint32_t   count,
+            const void*     data,
+            std::uint32_t   dataSize
+        ) override;
+
         /* ----- Queries ----- */
 
         void BeginQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;

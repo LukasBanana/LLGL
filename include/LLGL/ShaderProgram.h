@@ -11,7 +11,6 @@
 
 #include "RenderSystemChild.h"
 #include "ShaderProgramFlags.h"
-#include "ShaderUniform.h"
 
 
 namespace LLGL
@@ -74,54 +73,6 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
         */
         virtual UniformLocation QueryUniformLocation(const char* name) const = 0;
-
-        /**
-        \brief Binds the specified constant buffer to this shader.
-        \param[in] name Specifies the name of the constant buffer within this shader.
-        \param[in] bindingIndex Specifies the binding index. This index must match the index which will be used for "RenderContext::BindConstantBuffer".
-        \remarks This function is only necessary if the binding index does not match the default binding index of the constant buffer within the shader.
-        \see QueryConstantBuffers
-        \see RenderContext::BindConstantBuffer
-        \todo Replace this by PipelineLayout
-        \todo Replace std::string by char* here
-        */
-        virtual void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) = 0;
-
-        /**
-        \brief Binds the specified storage buffer to this shader.
-        \param[in] name Specifies the name of the storage buffer within this shader.
-        \param[in] bindingIndex Specifies the binding index. This index must match the index which will be used for "RenderContext::BindStorageBuffer".
-        \remarks This function is only necessary if the binding index does not match the default binding index of the storage buffer within the shader.
-        \see RenderContext::BindStorageBuffer
-        \todo Replace this by PipelineLayout
-        \todo Replace std::string by char* here
-        */
-        virtual void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) = 0;
-
-        #if 1//TODO: remove this
-        /**
-        \brief Locks the shader uniform handler.
-        \return Pointer to the shader uniform handler or null if the render system does not support individual shader uniforms.
-        \remarks This must be called to set individual shader uniforms.
-        \code
-        if (auto myUniformHandler = myShaderProgram->LockShaderUniform()) {
-            myUniformHandler->SetUniform1i("mySampler1", 0);
-            myUniformHandler->SetUniform1i("mySampler2", 1);
-            myUniformHandler->SetUniform4x4fv("projection", &myProjectionMatrix[0]);
-            myShaderProgram->UnlockShaderUniform();
-        }
-        \endcode
-        \note Only supported with: OpenGL.
-        \see UnlockShaderUniform
-        */
-        virtual ShaderUniform* LockShaderUniform() = 0;
-
-        /**
-        \brief Unlocks the shader uniform handler.
-        \see LockShaderUniform
-        */
-        virtual void UnlockShaderUniform() = 0;
-        #endif // /TODO
 
         /**
         \brief Sets the work group size of a compute shader, i.e. the number of threads per thread-group. By default (1, 1, 1).

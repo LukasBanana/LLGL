@@ -35,12 +35,6 @@ class GLShaderProgram final : public ShaderProgram
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
         UniformLocation QueryUniformLocation(const char* name) const override;
 
-        void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-        void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-
-        ShaderUniform* LockShaderUniform() override;
-        void UnlockShaderUniform() override;
-
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
 
@@ -88,7 +82,6 @@ class GLShaderProgram final : public ShaderProgram
     private:
 
         GLuint              id_                 = 0;
-        GLShaderUniform     uniform_;
         StreamOutputFormat  streamOutputFormat_;
 
     private:
