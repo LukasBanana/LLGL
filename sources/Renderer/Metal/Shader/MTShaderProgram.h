@@ -33,6 +33,7 @@ class MTShaderProgram : public ShaderProgram
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
+        UniformHandle QueryUniformLocation(const char* name) const override;
 
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
         void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;

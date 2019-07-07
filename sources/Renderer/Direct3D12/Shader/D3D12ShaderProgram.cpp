@@ -67,6 +67,10 @@ ShaderReflectionDescriptor D3D12ShaderProgram::QueryReflectionDesc() const
 
     return reflection;
 }
+UniformHandle D3D12ShaderProgram::QueryUniformLocation(const char* name) const
+{
+    return {};
+}
 
 void D3D12ShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {

@@ -66,6 +66,16 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         virtual ShaderReflectionDescriptor QueryReflectionDesc() const = 0;
 
         /**
+        \brief Returns the location of a single shader uniform by its name.
+        \returns Uniform UniformHandle of the specified uniform, or invalid UniformHandle if there is no such uniform in the shader program.
+        \remarks This is a helper function when only one or a few number of uniform locations are meant to be determined.
+        If more uniforms are involved, use the QueryReflectionDesc function.
+        \see QueryReflectionDesc
+        \note Only supported with: OpenGL, Vulkan, Direct3D 12.
+        */
+        virtual UniformHandle QueryUniformLocation(const char* name) const = 0;
+
+        /**
         \brief Binds the specified constant buffer to this shader.
         \param[in] name Specifies the name of the constant buffer within this shader.
         \param[in] bindingIndex Specifies the binding index. This index must match the index which will be used for "RenderContext::BindConstantBuffer".

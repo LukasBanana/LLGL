@@ -68,6 +68,10 @@ ShaderReflectionDescriptor D3D11ShaderProgram::QueryReflectionDesc() const
 
     return reflection;
 }
+UniformHandle D3D11ShaderProgram::QueryUniformLocation(const char* name) const
+{
+    return {};
+}
 
 static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 {

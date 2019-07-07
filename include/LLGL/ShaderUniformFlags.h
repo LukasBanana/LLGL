@@ -94,6 +94,27 @@ struct UniformDescriptor
     std::uint32_t   size        = 0;
 };
 
+//not using UniformLocation directly since we want to store some metadata about uniform 
+struct UniformHandle
+{
+    UniformLocation location = -1;
+
+    //! Data type of the uniform. By default UniformType::Undefined.
+    UniformType     type = UniformType::Undefined;
+
+    UniformHandle() = default;
+
+    inline UniformHandle(const UniformDescriptor& desc)
+        :location{desc.location}
+        ,type{desc.type}
+    {
+    }
+    inline operator bool() const
+    {
+        return location >= 0;
+    }
+};
+
 
 } // /namespace LLGL
 

@@ -108,6 +108,9 @@ class VKCommandBuffer final : public CommandBuffer
         void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
         void SetComputePipeline(ComputePipeline& computePipeline) override;
 
+        void SetUniformValue( const UniformHandle& location, const void* data, std::uint32_t dataSize ) override;
+        void SetUniformValue( const UniformHandle& location, std::uint32_t count, const void* data, std::uint32_t dataSize ) override;
+
         /* ----- Queries ----- */
 
         void BeginQuery(QueryHeap& queryHeap, std::uint32_t query = 0) override;

@@ -62,6 +62,11 @@ ShaderReflectionDescriptor MTShaderProgram::QueryReflectionDesc() const
     return reflection;
 }
 
+UniformHandle MTShaderProgram::QueryUniformLocation(const char* name) const override
+{
+    return {}
+}
+
 void MTShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     // dummy
