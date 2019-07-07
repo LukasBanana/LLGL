@@ -33,12 +33,7 @@ class MTShaderProgram : public ShaderProgram
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
-
-        void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-        void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-
-        ShaderUniform* LockShaderUniform() override;
-        void UnlockShaderUniform() override;
+        UniformLocation QueryUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;

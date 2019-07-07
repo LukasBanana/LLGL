@@ -366,6 +366,23 @@ void MTCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
         numThreadsPerGroup_ = &g_defaultNumThreadsPerGroup;
 }
 
+void MTCommandBuffer::SetUniform(
+    UniformLocation location,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    // dummy
+}
+
+void MTCommandBuffer::SetUniforms(
+    UniformLocation location,
+    std::uint32_t   count,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    // dummy
+}
+
 /* ----- Queries ----- */
 
 void MTCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)

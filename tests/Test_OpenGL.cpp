@@ -208,12 +208,6 @@ int main()
 
         auto reflectionDesc = shaderProgram.QueryReflectionDesc();
 
-        // Set shader uniforms
-        auto projection = Gs::ProjectionMatrix4f::Planar(
-            static_cast<Gs::Real>(contextDesc.videoMode.resolution.width),
-            static_cast<Gs::Real>(contextDesc.videoMode.resolution.height)
-        );
-
         #if 0
         // Create constant buffer
         LLGL::Buffer* projectionBuffer = nullptr;
