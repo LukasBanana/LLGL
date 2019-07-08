@@ -84,11 +84,11 @@ struct BindingDescriptor
 
     /**
     \brief Optional name for shading languages that do not support binding slots within the shader.
-    \remarks This is only used for the OpenGL backend, when GLSL version does not support explicit uniform locations.
-    If GLSL 430 or later is supported, this can be ignored and the binding slots can be specified like this:
+    \remarks This is only used for the OpenGL backend, when the GLSL version does not support <a href="https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)#Binding_points">explicit binding points</a>.
+    If GLSL 420 or later is supported, this can be ignored and the binding points can be specified like this:
     \code
-    #version 430
-    layout(location = 1) uniform sampler2D mySampler;
+    #version 420
+    layout(binding = 1) uniform sampler2D mySampler;
     \endcode
     Otherwise, the name of the resource must be included in this binding descriptor, e.g. <code>"mySampler"</code>.
     \note Only supported for: OpenGL.

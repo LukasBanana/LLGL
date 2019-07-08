@@ -225,8 +225,11 @@ void GLShaderProgram::Link()
 }
 
 bool GLShaderProgram::QueryActiveAttribs(
-    GLenum attribCountType, GLenum attribNameLengthType,
-    GLint& numAttribs, GLint& maxNameLength, std::vector<char>& nameBuffer) const
+    GLenum              attribCountType,
+    GLenum              attribNameLengthType,
+    GLint&              numAttribs,
+    GLint&              maxNameLength,
+    std::vector<char>&  nameBuffer) const
 {
     /* Query number of active attributes */
     glGetProgramiv(id_, attribCountType, &numAttribs);

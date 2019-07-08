@@ -248,29 +248,29 @@ enum class CullMode
 /**
 \brief Logical pixel operation enumeration.
 \remarks These logical pixel operations are bitwise operations.
-In the following documentation, 'src' denotes the source color and 'dst' denotes the destination color.
+In the following documentation, \c src denotes the source color and \c dst denotes the destination color.
 \note Only supported with: OpenGL, Vulkan, Direct3D 11.1+, Direct3D 12.0.
 \see BlendDescriptor::logicOp
 */
 enum class LogicOp
 {
     Disabled,       //!< No logical pixel operation.
-    Clear,          //!< Resulting operation: 0.
-    Set,            //!< Resulting operation: 1.
-    Copy,           //!< Resulting operation: src.
-    CopyInverted,   //!< Resulting operation: ~src.
-    NoOp,           //!< Resulting operation: dst.
-    Invert,         //!< Resulting operation: ~dst.
-    AND,            //!< Resulting operation: src & dst.
-    ANDReverse,     //!< Resulting operation: src & ~dst.
-    ANDInverted,    //!< Resulting operation: ~src & dst.
-    NAND,           //!< Resulting operation: ~(src & dst).
-    OR,             //!< Resulting operation: src | dst.
-    ORReverse,      //!< Resulting operation: src | ~dst.
-    ORInverted,     //!< Resulting operation: ~src | dst.
-    NOR,            //!< Resulting operation: ~(src | dst).
-    XOR,            //!< Resulting operation: src ^ dst.
-    Equiv,          //!< Resulting operation: ~(src ^ dst).
+    Clear,          //!< Resulting operation: <code>0</code>.
+    Set,            //!< Resulting operation: <code>1</code>.
+    Copy,           //!< Resulting operation: <code>src</code>.
+    CopyInverted,   //!< Resulting operation: <code>~src</code>.
+    NoOp,           //!< Resulting operation: <code>dst</code>.
+    Invert,         //!< Resulting operation: <code>~dst</code>.
+    AND,            //!< Resulting operation: <code>src & dst</code>.
+    ANDReverse,     //!< Resulting operation: <code>src & ~dst</code>.
+    ANDInverted,    //!< Resulting operation: <code>~src & dst</code>.
+    NAND,           //!< Resulting operation: <code>~(src & dst)</code>.
+    OR,             //!< Resulting operation: <code>src | dst</code>.
+    ORReverse,      //!< Resulting operation: <code>src | ~dst</code>.
+    ORInverted,     //!< Resulting operation: <code>~src | dst</code>.
+    NOR,            //!< Resulting operation: <code>~(src | dst)</code>.
+    XOR,            //!< Resulting operation: <code>src ^ dst</code>.
+    Equiv,          //!< Resulting operation: <code>~(src ^ dst)</code>.
 };
 
 

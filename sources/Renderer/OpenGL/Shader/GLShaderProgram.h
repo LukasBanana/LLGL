@@ -59,8 +59,11 @@ class GLShaderProgram final : public ShaderProgram
         void Link();
 
         bool QueryActiveAttribs(
-            GLenum attribCountType, GLenum attribNameLengthType,
-            GLint& numAttribs, GLint& maxNameLength, std::vector<char>& nameBuffer
+            GLenum              attribCountType,
+            GLenum              attribNameLengthType,
+            GLint&              numAttribs,
+            GLint&              maxNameLength,
+            std::vector<char>&  nameBuffer
         ) const;
 
         void BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes);
