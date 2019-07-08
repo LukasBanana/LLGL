@@ -29,16 +29,16 @@ namespace MTTypes
 {
 
 
-MTLDataType         	    ToMTLDataType               ( const DataType            dataType          );
-MTLPixelFormat      	    ToMTLPixelFormat            ( const Format              format            );
-MTLVertexFormat     	    ToMTLVertexFormat           ( const Format              format            );
+MTLDataType                 ToMTLDataType               ( const DataType            dataType          );
+MTLPixelFormat              ToMTLPixelFormat            ( const Format              format            );
+MTLVertexFormat             ToMTLVertexFormat           ( const Format              format            );
 MTLTextureType              ToMTLTextureType            ( const TextureType         textureType       );
 MTLPrimitiveType            ToMTLPrimitiveType          ( const PrimitiveTopology   primitiveTopology );
 MTLPrimitiveTopologyClass   ToMTLPrimitiveTopologyClass ( const PrimitiveTopology   primitiveTopology );
 MTLCullMode                 ToMTLCullMode               ( const CullMode            cullMode          );
 MTLCompareFunction          ToMTLCompareFunction        ( const CompareOp           compareOp         );
 MTLSamplerAddressMode       ToMTLSamplerAddressMode     ( const SamplerAddressMode  addressMode       );
-MTLSamplerMinMagFilter  	ToMTLSamplerMinMagFilter    ( const SamplerFilter       filter            );
+MTLSamplerMinMagFilter      ToMTLSamplerMinMagFilter    ( const SamplerFilter       filter            );
 MTLSamplerMipFilter         ToMTLSamplerMipFilter       ( const SamplerFilter       filter            );
 MTLTriangleFillMode         ToMTLTriangleFillMode       ( const PolygonMode         polygonMode       );
 MTLStencilOperation         ToMTLStencilOperation       ( const StencilOp           stencilOp         );

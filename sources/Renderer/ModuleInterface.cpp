@@ -14,12 +14,12 @@ namespace LLGL
 {
     
 #ifdef LLGL_HAS_MODULE_DX11
-	namespace detail_dx11
-	{
-		extern int RenderModuleID();
-		extern const char* RenderModuleName();
-		extern void* RenderModuleCreate(const LLGL::RenderSystemDescriptor* desc);
-	}
+    namespace detail_dx11
+    {
+        extern int RenderModuleID();
+        extern const char* RenderModuleName();
+        extern void* RenderModuleCreate(const LLGL::RenderSystemDescriptor* desc);
+    }
 #endif
 
 #ifdef LLGL_HAS_MODULE_DX12
@@ -94,10 +94,10 @@ namespace LLGL
 //when static linking we load all rederers from here
 extern "C"
 {
-	LLGL_EXPORT int LLGL_RenderSystem_BuildID()
-	{
-	    return LLGL_BUILD_ID;
-	}
+    LLGL_EXPORT int LLGL_RenderSystem_BuildID()
+    {
+        return LLGL_BUILD_ID;
+    }
 
     LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* renderSystemDesc)
     {
@@ -106,9 +106,9 @@ extern "C"
         return desc->moduleName.c_str();
     }
 
-	LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* renderSystemDesc)
-	{
-	    const auto* desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
+    LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* renderSystemDesc)
+    {
+        const auto* desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
 #ifdef LLGL_HAS_MODULE_DX11
         if (desc->moduleName == LLGL::detail_dx11::RenderModuleName()) return LLGL::detail_dx11::RenderModuleID();
 #endif
@@ -128,11 +128,11 @@ extern "C"
         if (desc->moduleName == LLGL::detail_metal::RenderModuleName()) return LLGL::detail_metal::RenderModuleID();
 #endif
         return -1;
-	}
+    }
 
-	LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
-	{
-	    const auto* desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
+    LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
+    {
+        const auto* desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
 #ifdef LLGL_HAS_MODULE_DX11
         if (desc->moduleName == LLGL::detail_dx11::RenderModuleName()) return LLGL::detail_dx11::RenderModuleCreate(desc);
 #endif
@@ -152,7 +152,7 @@ extern "C"
         if (desc->moduleName == LLGL::detail_metal::RenderModuleName()) return LLGL::detail_metal::RenderModuleCreate(desc);
 #endif
         return nullptr;
-	}
+    }
 
 } // /extern "C"
 

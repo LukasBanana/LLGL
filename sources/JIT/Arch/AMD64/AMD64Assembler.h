@@ -142,7 +142,7 @@ class AMD64Assembler final : public JITCompiler
 
     private:
 
-        std::uint32_t           	localStackSize_ = 0;
+        std::uint32_t               localStackSize_ = 0;
         std::uint16_t               paramStackSize_ = 0;
         Displacement                argStackBase_;
 

@@ -86,7 +86,7 @@ class MTShaderProgram : public ShaderProgram
     
         id<MTLDevice>           device_             = nil;
     
-        MTLVertexDescriptor*    vertexDesc_     	= nullptr;
+        MTLVertexDescriptor*    vertexDesc_         = nullptr;
         id<MTLFunction>         vertexFunc_         = nil;
         id<MTLFunction>         fragmentFunc_       = nil;
         id<MTLFunction>         kernelFunc_         = nil;

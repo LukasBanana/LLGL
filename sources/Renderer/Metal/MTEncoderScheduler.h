@@ -107,7 +107,7 @@ class MTEncoderScheduler
     
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
     
-        id<MTLRenderCommandEncoder>     renderEncoder_  	    = nil;
+        id<MTLRenderCommandEncoder>     renderEncoder_          = nil;
         id<MTLComputeCommandEncoder>    computeEncoder_         = nil;
         id<MTLBlitCommandEncoder>       blitEncoder_            = nil;
     
