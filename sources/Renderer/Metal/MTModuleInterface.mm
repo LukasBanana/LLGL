@@ -11,7 +11,7 @@
 
 namespace LLGL
 {
-	namespace detail_metal
+	namespace ModuleMetal
 	{
 		int RenderModuleID()
 		{
@@ -42,17 +42,17 @@ extern "C"
 
 	LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
 	{
-	    return LLGL::detail_metal::RenderModuleID();
+	    return LLGL::ModuleMetal::RenderModuleID();
 	}
 
 	LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
 	{
-	    return LLGL::detail_metal::RenderModuleName();
+	    return LLGL::ModuleMetal::RenderModuleName();
 	}
 
 	LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
 	{
-	    return LLGL::detail_metal::RenderModuleCreate(nullptr);
+	    return LLGL::ModuleMetal::RenderModuleCreate(nullptr);
 	}
 
 #endif

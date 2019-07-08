@@ -11,7 +11,7 @@
 
 namespace LLGL
 {
-    namespace detail_dx11
+    namespace ModuleD3D11
     {
         LLGL_EXPORT int RenderModuleID()
         {
@@ -43,17 +43,17 @@ extern "C"
 
     LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_dx11::RenderModuleID();
+        return LLGL::ModuleD3D11::RenderModuleID();
     }
 
     LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_dx11::RenderModuleName();
+        return LLGL::ModuleD3D11::RenderModuleName();
     }
 
     LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_dx11::RenderModuleCreate(nullptr);
+        return LLGL::ModuleD3D11::RenderModuleCreate(nullptr);
     }
 
 #endif

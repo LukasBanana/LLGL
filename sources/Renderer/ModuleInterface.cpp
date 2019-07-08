@@ -14,7 +14,7 @@ namespace LLGL
 {
     
 #ifdef LLGL_HAS_MODULE_DX11
-    namespace detail_dx11
+    namespace ModuleD3D11
     {
         extern int RenderModuleID();
         extern const char* RenderModuleName();
@@ -23,7 +23,7 @@ namespace LLGL
 #endif
 
 #ifdef LLGL_HAS_MODULE_DX12
-    namespace detail_dx12
+    namespace ModuleD3D12
     {
         extern int RenderModuleID();
         extern const char* RenderModuleName();
@@ -32,7 +32,7 @@ namespace LLGL
 #endif
 
 #ifdef LLGL_HAS_MODULE_OPENGL
-    namespace detail_opengl
+    namespace ModuleOpengl
     {
         extern int RenderModuleID();
         extern const char* RenderModuleName();
@@ -41,7 +41,7 @@ namespace LLGL
 #endif
 
 #ifdef LLGL_HAS_MODULE_OPENGLES3
-    namespace detail_opengles3
+    namespace ModuleOpenglES3
     {
         extern int RenderModuleID();
         extern const char* RenderModuleName();
@@ -50,7 +50,7 @@ namespace LLGL
 #endif
 
 #ifdef LLGL_HAS_MODULE_VULKAN
-    namespace detail_vulkan
+    namespace ModuleVulkan
     {
         extern int RenderModuleID();
         extern const char* RenderModuleName();
@@ -59,7 +59,7 @@ namespace LLGL
 #endif
     
 #ifdef LLGL_HAS_MODULE_METAL
-    namespace detail_metal
+    namespace ModuleMetal
     {
         extern int RenderModuleID();
         extern const char* RenderModuleName();
@@ -70,22 +70,22 @@ namespace LLGL
     void GetStaticModules(std::vector<std::string> & out)
     {
 #ifdef LLGL_HAS_MODULE_DX11
-        out.push_back(LLGL::detail_dx11::RenderModuleName());
+        out.push_back(LLGL::ModuleD3D11::RenderModuleName());
 #endif
 #ifdef LLGL_HAS_MODULE_DX12
-        out.push_back(LLGL::detail_dx12::RenderModuleName());
+        out.push_back(LLGL::ModuleD3D12::RenderModuleName());
 #endif
 #ifdef LLGL_HAS_MODULE_OPENGL
-        out.push_back(LLGL::detail_opengl::RenderModuleName());
+        out.push_back(LLGL::ModuleOpengl::RenderModuleName());
 #endif
 #ifdef LLGL_HAS_MODULE_OPENGLES3
-        out.push_back(LLGL::detail_opengles3::RenderModuleName());
+        out.push_back(LLGL::ModuleOpenglES3::RenderModuleName());
 #endif
 #ifdef LLGL_HAS_MODULE_VULKAN
-        out.push_back(LLGL::detail_vulkan::RenderModuleName());
+        out.push_back(LLGL::ModuleVulkan::RenderModuleName());
 #endif
 #ifdef LLGL_HAS_MODULE_METAL
-        out.push_back(LLGL::detail_metal::RenderModuleName());
+        out.push_back(LLGL::ModuleMetal::RenderModuleName());
 #endif
     }
 
@@ -110,22 +110,22 @@ extern "C"
     {
         const auto* desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
 #ifdef LLGL_HAS_MODULE_DX11
-        if (desc->moduleName == LLGL::detail_dx11::RenderModuleName()) return LLGL::detail_dx11::RenderModuleID();
+        if (desc->moduleName == LLGL::ModuleD3D11::RenderModuleName()) return LLGL::ModuleD3D11::RenderModuleID();
 #endif
 #ifdef LLGL_HAS_MODULE_DX12
-        if (desc->moduleName == LLGL::detail_dx12::RenderModuleName()) return LLGL::detail_dx12::RenderModuleID();
+        if (desc->moduleName == LLGL::ModuleD3D12::RenderModuleName()) return LLGL::ModuleD3D12::RenderModuleID();
 #endif
 #ifdef LLGL_HAS_MODULE_OPENGL
-        if (desc->moduleName == LLGL::detail_opengl::RenderModuleName()) return LLGL::detail_opengl::RenderModuleID();
+        if (desc->moduleName == LLGL::ModuleOpengl::RenderModuleName()) return LLGL::ModuleOpengl::RenderModuleID();
 #endif
 #ifdef LLGL_HAS_MODULE_OPENGLES3
-        if (desc->moduleName == LLGL::detail_opengles3::RenderModuleName()) return LLGL::detail_opengles3::RenderModuleID();
+        if (desc->moduleName == LLGL::ModuleOpenglES3::RenderModuleName()) return LLGL::ModuleOpenglES3::RenderModuleID();
 #endif
 #ifdef LLGL_HAS_MODULE_VULKAN
-        if (desc->moduleName == LLGL::detail_vulkan::RenderModuleName()) return LLGL::detail_vulkan::RenderModuleID();
+        if (desc->moduleName == LLGL::ModuleVulkan::RenderModuleName()) return LLGL::ModuleVulkan::RenderModuleID();
 #endif
 #ifdef LLGL_HAS_MODULE_METAL
-        if (desc->moduleName == LLGL::detail_metal::RenderModuleName()) return LLGL::detail_metal::RenderModuleID();
+        if (desc->moduleName == LLGL::ModuleMetal::RenderModuleName()) return LLGL::ModuleMetal::RenderModuleID();
 #endif
         return -1;
     }
@@ -134,22 +134,22 @@ extern "C"
     {
         const auto* desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
 #ifdef LLGL_HAS_MODULE_DX11
-        if (desc->moduleName == LLGL::detail_dx11::RenderModuleName()) return LLGL::detail_dx11::RenderModuleCreate(desc);
+        if (desc->moduleName == LLGL::ModuleD3D11::RenderModuleName()) return LLGL::ModuleD3D11::RenderModuleCreate(desc);
 #endif
 #ifdef LLGL_HAS_MODULE_DX12
-        if (desc->moduleName == LLGL::detail_dx12::RenderModuleName()) return LLGL::detail_dx12::RenderModuleCreate(desc);
+        if (desc->moduleName == LLGL::ModuleD3D12::RenderModuleName()) return LLGL::ModuleD3D12::RenderModuleCreate(desc);
 #endif
 #ifdef LLGL_HAS_MODULE_OPENGL
-        if (desc->moduleName == LLGL::detail_opengl::RenderModuleName()) return LLGL::detail_opengl::RenderModuleCreate(desc);
+        if (desc->moduleName == LLGL::ModuleOpengl::RenderModuleName()) return LLGL::ModuleOpengl::RenderModuleCreate(desc);
 #endif
 #ifdef LLGL_HAS_MODULE_OPENGLES3
-        if (desc->moduleName == LLGL::detail_opengles3::RenderModuleName()) return LLGL::detail_opengles3::RenderModuleCreate(desc);
+        if (desc->moduleName == LLGL::ModuleOpenglES3::RenderModuleName()) return LLGL::ModuleOpenglES3::RenderModuleCreate(desc);
 #endif
 #ifdef LLGL_HAS_MODULE_VULKAN
-        if (desc->moduleName == LLGL::detail_vulkan::RenderModuleName()) return LLGL::detail_vulkan::RenderModuleCreate(desc);
+        if (desc->moduleName == LLGL::ModuleVulkan::RenderModuleName()) return LLGL::ModuleVulkan::RenderModuleCreate(desc);
 #endif
 #ifdef LLGL_HAS_MODULE_METAL
-        if (desc->moduleName == LLGL::detail_metal::RenderModuleName()) return LLGL::detail_metal::RenderModuleCreate(desc);
+        if (desc->moduleName == LLGL::ModuleMetal::RenderModuleName()) return LLGL::ModuleMetal::RenderModuleCreate(desc);
 #endif
         return nullptr;
     }

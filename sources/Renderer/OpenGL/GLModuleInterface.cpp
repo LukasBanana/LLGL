@@ -10,7 +10,7 @@
 
 namespace LLGL
 {
-    namespace detail_opengl
+    namespace ModuleOpengl
     {
         int RenderModuleID()
         {
@@ -40,17 +40,17 @@ extern "C"
 
     LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_opengl::RenderModuleID();
+        return LLGL::ModuleOpengl::RenderModuleID();
     }
 
     LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_opengl::RenderModuleName();
+        return LLGL::ModuleOpengl::RenderModuleName();
     }
 
     LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_opengl::RenderModuleCreate(nullptr);
+        return LLGL::ModuleOpengl::RenderModuleCreate(nullptr);
     }
 
 #endif

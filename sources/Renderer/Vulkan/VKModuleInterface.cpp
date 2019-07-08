@@ -11,7 +11,7 @@
 
 namespace LLGL
 {
-    namespace detail_vulkan
+    namespace ModuleVulkan
     {
         int RenderModuleID()
         {
@@ -42,18 +42,18 @@ extern "C"
 
     LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_vulkan::RenderModuleID();
+        return LLGL::ModuleVulkan::RenderModuleID();
     }
 
     LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_vulkan::RenderModuleName();
+        return LLGL::ModuleVulkan::RenderModuleName();
     }
 
     LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
     {
         auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
-        return LLGL::detail_vulkan::RenderModuleCreate(desc);
+        return LLGL::ModuleVulkan::RenderModuleCreate(desc);
     }
 
 #endif

@@ -11,7 +11,7 @@
 
 namespace LLGL
 {
-    namespace detail_opengles3
+    namespace ModuleOpenglES3
     {
         int RenderModuleID()
         {
@@ -41,17 +41,17 @@ extern "C"
 
     LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_opengles3::RenderModuleID();
+        return LLGL::ModuleOpenglES3::RenderModuleID();
     }
 
     LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_opengles3::RenderModuleName();
+        return LLGL::ModuleOpenglES3::RenderModuleName();
     }
 
     LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
     {
-        return LLGL::detail_opengles3::RenderModuleCreate(nullptr);
+        return LLGL::ModuleOpenglES3::RenderModuleCreate(nullptr);
     }
 
 #endif
