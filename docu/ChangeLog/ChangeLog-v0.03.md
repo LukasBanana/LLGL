@@ -7,6 +7,7 @@
 - [Index buffer format](#index-buffer-format)
 - [Storage buffer binding](#storage-buffer-binding)
 - [Event listener interface](#event-listener-interface)
+- [`ShaderUniform` interface](#shaderuniform-interface)
 
 
 ## `BufferDescriptor` interface
@@ -133,6 +134,65 @@ bool OnQuit(Window& sender);
 After:
 ```cpp
 void OnQuit(Window& sender, bool& veto);
+```
+
+
+## `ShaderUniform` interface
+
+The `ShaderUniform` interface has been replaced by `SetUniform` and `SetUniforms` functions in the `CommandBuffer` interface.
+Originally, the `ShaderUniform` interface was only intended to set binding points for the OpenGL backend when the GLSL version does not support [explicit binding points](https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)#Binding_points).
+To avoid setting these binding points in each render pass over and over again, a `name` property has been added to the `BindingDescriptor` structure.
+This member is only required for OpenGL before version 4.2, or when the GLSL version does not support explicit binding points.
+The resource name in conjunction with the pipeline layout will tell the OpenGL backend how to initialize the respective uniforms.
+All other uniforms (matrices and other parameters for instances) must be set with the new `SetUniform`/`SetUniforms` functions each time a graphics pipeline is bound.
+Also the syntax of the utility function `PipelineLayoutDesc` has been extended to support this optional property.
+
+Before:
+```cpp
+// Interface:
+class           ShaderUniform;
+ShaderUniform*  ShaderProgram::LockShaderUniform();
+void            ShaderProgram::UnlockShaderUniform();
+void            ShaderProgram::BindConstantBuffer(const std::string& name,
+                                                  std::uint32_t      bindingIndex);
+void            ShaderProgram::BindStorageBuffer(const std::string& name,
+                                                 std::uint32_t      bindingIndex);
+
+// Usage:
+float myProjectionMatrix[16] = /* ... */;
+myShaderProgram->BindConstantBuffer("mySceneParams", 1);
+if (LLGL::ShaderUniform* myUniformHandler = myShaderProgram->LockShaderUniform()) {
+    myUniformHandler->SetUniform1i("myColorMap", 2);
+    myUniformHandler->SetUniform4x4fv("myProjection", &myProjectionMatrix[0]);
+    myShaderProgram->UnlockShaderUniform();
+}
+```
+
+After:
+```cpp
+// Inteface:
+std::string BindingDescriptor::name;
+void CommandBuffer::SetUniform(UniformLocation location,
+                               const void*     data,
+                               std::uint32_t   dataSize);
+void CommandBuffer::SetUniforms(UniformLocation location,
+                                std::uint32_t   count,
+                                const void*     data,
+                                std::uint32_t   dataSize);
+
+// Usage:
+LLGL::PipelineLayoutDescriptor myLayoutDesc = LLGL::PipelineLayoutDesc(
+    "cbuffer(mySceneParams@1):frag,"
+    "texture(myColorMap@2):frag,"
+);
+LLGL::PipelineLayout* myLayout = myRenderer->CreatePipelineLayout(myLayoutDesc);
+LLGL::UniformLocation myProjectionUniform = myShaderProgram->QueryUniformLocation("myProjection");
+
+/* ... */
+
+myCmdBuffer->SetGraphicsPipeline(myGfxPipeline);
+float myProjectionMatrix[16] = /* ... */;
+myCmdBuffer->SetUniform(myProjectionUniform, &myProjectionMatrix[0], sizeof(myProjectionMatrix));
 ```
 
 

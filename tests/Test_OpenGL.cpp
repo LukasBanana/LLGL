@@ -208,19 +208,6 @@ int main()
 
         auto reflectionDesc = shaderProgram.QueryReflectionDesc();
 
-        // Set shader uniforms
-        auto projection = Gs::ProjectionMatrix4f::Planar(
-            static_cast<Gs::Real>(contextDesc.videoMode.resolution.width),
-            static_cast<Gs::Real>(contextDesc.videoMode.resolution.height)
-        );
-
-        if (auto uniformSetter = shaderProgram.LockShaderUniform())
-        {
-            uniformSetter->SetUniform4x4fv("projection", projection.Ptr());
-            uniformSetter->SetUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
-            shaderProgram.UnlockShaderUniform();
-        }
-
         #if 0
         // Create constant buffer
         LLGL::Buffer* projectionBuffer = nullptr;
@@ -383,19 +370,17 @@ int main()
                     commands->SetClearColor({ 0.3f, 0.3f, 1 });
                     commands->Clear(LLGL::ClearFlags::Color);
 
-                    auto uniformSetter = shaderProgram.LockShaderUniform();
-                    if (uniformSetter)
-                    {
-                        auto projection = Gs::ProjectionMatrix4f::Planar(
-                            static_cast<Gs::Real>(context->GetVideoMode().resolution.width),
-                            static_cast<Gs::Real>(context->GetVideoMode().resolution.height)
-                        );
-                        uniformSetter->SetUniform4x4fv("projection", projection.Ptr());
-                    }
-                    shaderProgram.UnlockShaderUniform();
-
                     commands->SetGraphicsPipeline(pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
+
+                    auto projection = Gs::ProjectionMatrix4f::Planar(
+                        static_cast<Gs::Real>(context->GetVideoMode().resolution.width),
+                        static_cast<Gs::Real>(context->GetVideoMode().resolution.height)
+                    );
+                    commands->SetUniform(shaderProgram.QueryUniformLocation("projection"), projection.Ptr(), sizeof(projection));
+
+                    const LLGL::ColorRGBAf color{ 1.0f, 1.0f, 1.0f, 1.0f };
+                    commands->SetUniform(shaderProgram.QueryUniformLocation("color"), &color, sizeof(color));
 
                     if (renderTarget && renderTargetTex)
                     {

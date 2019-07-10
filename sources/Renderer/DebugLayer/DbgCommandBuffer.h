@@ -11,10 +11,8 @@
 
 #include <LLGL/CommandBufferExt.h>
 #include <LLGL/RenderingProfiler.h>
-
 #include "DbgGraphicsPipeline.h"
 #include "DbgQueryHeap.h"
-
 #include <cstdint>
 #include <string>
 #include <stack>
@@ -114,8 +112,18 @@ class DbgCommandBuffer : public CommandBufferExt
         void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
         void SetComputePipeline(ComputePipeline& computePipeline) override;
 
-        void SetUniformValue(const UniformHandle& location, const void* data, std::uint32_t dataSize) override;
-        void SetUniformValue(const UniformHandle& location, std::uint32_t count, const void* data, std::uint32_t dataSize) override;
+        void SetUniform(
+            UniformLocation location,
+            const void*     data,
+            std::uint32_t   dataSize
+        ) override;
+
+        void SetUniforms(
+            UniformLocation location,
+            std::uint32_t   count,
+            const void*     data,
+            std::uint32_t   dataSize
+        ) override;
 
         /* ----- Queries ----- */
 

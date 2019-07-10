@@ -345,9 +345,16 @@ void D3D11RenderSystem::QueryVideoAdapters()
 
 void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
 {
-    /* Use default adapter (null) and try all feature levels */
-    auto    featureLevels   = DXGetFeatureLevels(D3D_FEATURE_LEVEL_11_1);
-    HRESULT hr              = 0;
+    /* Find list of feature levels to select from, and statically determine maximal feature level */
+    auto featureLevels = DXGetFeatureLevels(
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+        D3D_FEATURE_LEVEL_11_1
+        #else
+        D3D_FEATURE_LEVEL_11_0
+        #endif
+    );
+
+    HRESULT hr = 0;
 
     #ifdef LLGL_DEBUG
 
@@ -398,11 +405,9 @@ bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::
             &featureLevel_,                             // Output feature level
             context_.ReleaseAndGetAddressOf()           // Output device context
         );
-
         if (SUCCEEDED(hr))
             return true;
     }
-
     return false;
 }
 

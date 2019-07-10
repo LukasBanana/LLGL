@@ -232,25 +232,6 @@ public:
                 }
             );
         }
-
-        // Set shader uniforms (only required for GLSL until 4.10)
-        shaderProgramScene->BindConstantBuffer("SceneSettings", 1);
-        shaderProgramFinal->BindConstantBuffer("SceneSettings", 1);
-        shaderProgramBlur->BindConstantBuffer("BlurSettings", 2);
-
-        if (auto uniforms = shaderProgramBlur->LockShaderUniform())
-        {
-            uniforms->SetUniform1i("colorMap", 3);
-            uniforms->SetUniform1i("glossMap", 4);
-            shaderProgramBlur->UnlockShaderUniform();
-        }
-
-        if (auto uniforms = shaderProgramFinal->LockShaderUniform())
-        {
-            uniforms->SetUniform1i("colorMap", 3);
-            uniforms->SetUniform1i("glossMap", 4);
-            shaderProgramFinal->UnlockShaderUniform();
-        }
     }
 
     void CreateSamplers()
@@ -328,19 +309,19 @@ public:
         bool combinedSampler = IsOpenGL();
 
         // Create pipeline layout for scene rendering
-        layoutScene = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):vert:frag"));
+        layoutScene = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(SceneSettings@1):vert:frag"));
 
         // Create pipeline layout for blur post-processor
         if (combinedSampler)
-            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(2):frag, texture(4):frag, sampler(4):frag"));
+            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(BlurSettings@2):frag, texture(glossMap@4):frag, sampler(4):frag"));
         else
-            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(2):frag, texture(4):frag, sampler(6):frag"));
+            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(BlurSettings@2):frag, texture(glossMap@4):frag, sampler(6):frag"));
 
         // Create pipeline layout for final post-processor
         if (combinedSampler)
-            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3,4):frag, sampler(3,4):frag"));
+            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(SceneSettings@1):frag, texture(colorMap@3,glossMap@4):frag, sampler(3,4):frag"));
         else
-            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3,4):frag, sampler(5,6):frag"));
+            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(SceneSettings@1):frag, texture(colorMap@3,glossMap@4):frag, sampler(5,6):frag"));
     }
 
     void CreatePipelines()

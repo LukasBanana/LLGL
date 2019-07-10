@@ -722,9 +722,11 @@ static void Convert(LLGL::BindingDescriptor& dst, BindingDescriptor^ src)
     if (src)
     {
         dst.type        = static_cast<LLGL::ResourceType>(src->Type);
+        dst.bindFlags   = static_cast<long>(src->BindFlags);
         dst.stageFlags  = static_cast<long>(src->StageFlags);
         dst.slot        = src->Slot;
         dst.arraySize   = src->ArraySize;
+        dst.name        = ToStdString(src->Name);
     }
 }
 

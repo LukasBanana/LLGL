@@ -357,6 +357,23 @@ void D3D11CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
     computePipelineD3D.Bind(*stateMngr_);
 }
 
+void D3D11CommandBuffer::SetUniform(
+    UniformLocation location,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    // dummy
+}
+
+void D3D11CommandBuffer::SetUniforms(
+    UniformLocation location,
+    std::uint32_t   count,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    // dummy
+}
+
 /* ----- Queries ----- */
 
 void D3D11CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)

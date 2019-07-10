@@ -363,13 +363,30 @@ void GLImmediateCommandBuffer::SetComputePipeline(ComputePipeline& computePipeli
     computePipelineGL.Bind(*stateMngr_);
 }
 
-void GLImmediateCommandBuffer::SetUniformValue( const UniformHandle& location, const void* data, std::uint32_t dataSize )
+void GLImmediateCommandBuffer::SetUniform(
+    UniformLocation location,
+    const void*     data,
+    std::uint32_t   dataSize)
 {
-    //TODO
+    GLImmediateCommandBuffer::SetUniforms(location, 1, data, dataSize);
 }
-void GLImmediateCommandBuffer::SetUniformValue( const UniformHandle& location, std::uint32_t count, const void* data, std::uint32_t dataSize )
+
+void GLImmediateCommandBuffer::SetUniforms(
+    UniformLocation location,
+    std::uint32_t   count,
+    const void*     data,
+    std::uint32_t   dataSize)
 {
-    //TODO
+    /* Data size must be a multiple of 4 bytes */
+    if (dataSize == 0 || dataSize % 4 != 0)
+        return;
+
+    GLSetUniformsByLocation(
+        stateMngr_->GetBoundShaderProgram(),
+        static_cast<GLint>(location),
+        static_cast<GLsizei>(count),
+        data
+    );
 }
 
 /* ----- Queries ----- */

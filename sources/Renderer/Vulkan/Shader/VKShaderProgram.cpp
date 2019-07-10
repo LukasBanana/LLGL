@@ -53,24 +53,9 @@ UniformHandle VKShaderProgram::QueryUniformLocation(const char* name) const
     return {}
 }
 
-void VKShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
+UniformLocation VKShaderProgram::QueryUniformLocation(const char* name) const
 {
-    //todo
-}
-
-void VKShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    //todo
-}
-
-ShaderUniform* VKShaderProgram::LockShaderUniform()
-{
-    return nullptr; // dummy
-}
-
-void VKShaderProgram::UnlockShaderUniform()
-{
-    // dummy
+    return -1; //TODO
 }
 
 bool VKShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)

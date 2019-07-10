@@ -27,13 +27,16 @@ public ref class BindingDescriptor
     public:
 
         BindingDescriptor();
-        BindingDescriptor(ResourceType type, StageFlags stageFlags, unsigned int slot);
-        BindingDescriptor(ResourceType type, StageFlags stageFlags, unsigned int slot, unsigned int arraySize);
+        BindingDescriptor(ResourceType type, BindFlags bindFlags, StageFlags stageFlags, unsigned int slot);
+        BindingDescriptor(ResourceType type, BindFlags bindFlags, StageFlags stageFlags, unsigned int slot, unsigned int arraySize);
+        BindingDescriptor(ResourceType type, BindFlags bindFlags, StageFlags stageFlags, unsigned int slot, unsigned int arraySize, String^ name);
 
         property ResourceType   Type;
+        property BindFlags      BindFlags;
         property StageFlags     StageFlags;
         property unsigned int   Slot;
         property unsigned int   ArraySize;
+        property String^        Name;
 
 };
 

@@ -13,6 +13,8 @@
 #include "GLDepthStencilState.h"
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
+#include "GLPipelineLayout.h"
+#include "../Shader/GLShaderBindingLayout.h"
 #include <vector>
 
 
@@ -53,16 +55,21 @@ class GLStatePool
         GLBlendStateSPtr CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments);
         void ReleaseBlendState(GLBlendStateSPtr&& blendState);
 
+        /* ----- Shader binding layouts ----- */
+
+        GLShaderBindingLayoutSPtr CreateShaderBindingLayout(const GLPipelineLayout& pipelineLayout);
+        void ReleaseShaderBindingLayout(GLShaderBindingLayoutSPtr&& shaderBindingLayout);
 
     private:
 
         GLStatePool() = default;
-    
+
     private:
 
         std::vector<GLDepthStencilStateSPtr>    depthStencilStates_;
         std::vector<GLRasterizerStateSPtr>      rasterizerStates_;
         std::vector<GLBlendStateSPtr>           blendStates_;
+        std::vector<GLShaderBindingLayoutSPtr>  shaderBindingLayouts_;
 
 };
 

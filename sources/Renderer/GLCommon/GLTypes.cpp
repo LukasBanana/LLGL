@@ -615,23 +615,23 @@ UniformType UnmapUniformType(const GLenum uniformType)
 
         /* ----- Matrices ----- */
         case GL_FLOAT_MAT2:         return UniformType::Float2x2;
-        case GL_FLOAT_MAT3:         return UniformType::Float3x3;
-        case GL_FLOAT_MAT4:         return UniformType::Float4x4;
         case GL_FLOAT_MAT2x3:       return UniformType::Float2x3;
         case GL_FLOAT_MAT2x4:       return UniformType::Float2x4;
         case GL_FLOAT_MAT3x2:       return UniformType::Float3x2;
+        case GL_FLOAT_MAT3:         return UniformType::Float3x3;
         case GL_FLOAT_MAT3x4:       return UniformType::Float3x4;
         case GL_FLOAT_MAT4x2:       return UniformType::Float4x2;
         case GL_FLOAT_MAT4x3:       return UniformType::Float4x3;
+        case GL_FLOAT_MAT4:         return UniformType::Float4x4;
         case GL_DOUBLE_MAT2:        return UniformType::Double2x2;
-        case GL_DOUBLE_MAT3:        return UniformType::Double3x3;
-        case GL_DOUBLE_MAT4:        return UniformType::Double4x4;
         case GL_DOUBLE_MAT2x3:      return UniformType::Double2x3;
         case GL_DOUBLE_MAT2x4:      return UniformType::Double2x4;
         case GL_DOUBLE_MAT3x2:      return UniformType::Double3x2;
+        case GL_DOUBLE_MAT3:        return UniformType::Double3x3;
         case GL_DOUBLE_MAT3x4:      return UniformType::Double3x4;
         case GL_DOUBLE_MAT4x2:      return UniformType::Double4x2;
         case GL_DOUBLE_MAT4x3:      return UniformType::Double4x3;
+        case GL_DOUBLE_MAT4:        return UniformType::Double4x4;
 
         /* ----- Samplers ----- */
         case GL_SAMPLER_1D:

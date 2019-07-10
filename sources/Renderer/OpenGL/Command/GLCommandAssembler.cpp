@@ -23,6 +23,7 @@
 #include "../../../Core/Assertion.h"
 
 #include "../Shader/GLShaderProgram.h"
+#include "../Shader/GLShaderUniform.h"
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
@@ -49,7 +50,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
 {
     /* Declare index of variadic argument of entry point */
     static const JITVarArg g_stateMngrArg{ 0 };
-    
+
     /* Generate native CPU opcodes for emulated GLOpcode */
     switch (opcode)
     {
@@ -57,7 +58,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         {
             auto cmd = reinterpret_cast<const GLCmdUpdateBuffer*>(pc);
             compiler.CallMember(&GLBuffer::BufferSubData, cmd->buffer, cmd->offset, cmd->size, (cmd + 1));
-            return sizeof(*cmd) + cmd->size;
+            return (sizeof(*cmd) + cmd->size);
         }
         case GLOpcodeCopyBuffer:
         {
@@ -228,6 +229,12 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             auto cmd = reinterpret_cast<const GLCmdBindComputePipeline*>(pc);
             compiler.CallMember(&GLComputePipeline::Bind, cmd->computePipeline, g_stateMngrArg);
             return sizeof(*cmd);
+        }
+        case GLOpcodeSetUniforms:
+        {
+            auto cmd = reinterpret_cast<const GLCmdSetUniforms*>(pc);
+            compiler.Call(GLSetUniformsByLocation, cmd->program, cmd->location, cmd->count, (cmd + 1));
+            return (sizeof(*cmd) + cmd->size);
         }
         case GLOpcodeBeginQuery:
         {

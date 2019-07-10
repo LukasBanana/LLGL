@@ -103,8 +103,18 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
         void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
         void SetComputePipeline(ComputePipeline& computePipeline) override;
 
-        void SetUniformValue( const UniformHandle& location, const void* data, std::uint32_t dataSize ) override;
-        void SetUniformValue( const UniformHandle& location, std::uint32_t count, const void* data, std::uint32_t dataSize ) override;
+        void SetUniform(
+            UniformLocation location,
+            const void*     data,
+            std::uint32_t   dataSize
+        ) override;
+
+        void SetUniforms(
+            UniformLocation location,
+            std::uint32_t   count,
+            const void*     data,
+            std::uint32_t   dataSize
+        ) override;
 
         /* ----- Queries ----- */
 
@@ -138,9 +148,9 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
-    
+
         /* ----- Debugging ----- */
-    
+
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 

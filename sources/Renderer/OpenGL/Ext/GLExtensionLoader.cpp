@@ -264,6 +264,44 @@ static bool Load_GL_ARB_shader_objects(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_shader_objects_21(bool usePlaceholder)
+{
+    LOAD_GLPROC( glUniformMatrix2x3fv );
+    LOAD_GLPROC( glUniformMatrix2x4fv );
+    LOAD_GLPROC( glUniformMatrix3x2fv );
+    LOAD_GLPROC( glUniformMatrix3x4fv );
+    LOAD_GLPROC( glUniformMatrix4x2fv );
+    LOAD_GLPROC( glUniformMatrix4x3fv );
+    return true;
+}
+
+static bool Load_GL_ARB_shader_objects_30(bool usePlaceholder)
+{
+    LOAD_GLPROC( glUniform1uiv );
+    LOAD_GLPROC( glUniform2uiv );
+    LOAD_GLPROC( glUniform3uiv );
+    LOAD_GLPROC( glUniform4uiv );
+    return true;
+}
+
+static bool Load_GL_ARB_shader_objects_40(bool usePlaceholder)
+{
+    LOAD_GLPROC( glUniform1dv         );
+    LOAD_GLPROC( glUniform2dv         );
+    LOAD_GLPROC( glUniform3dv         );
+    LOAD_GLPROC( glUniform4dv         );
+    LOAD_GLPROC( glUniformMatrix2dv   );
+    LOAD_GLPROC( glUniformMatrix3dv   );
+    LOAD_GLPROC( glUniformMatrix4dv   );
+    LOAD_GLPROC( glUniformMatrix2x3dv );
+    LOAD_GLPROC( glUniformMatrix2x4dv );
+    LOAD_GLPROC( glUniformMatrix3x2dv );
+    LOAD_GLPROC( glUniformMatrix3x4dv );
+    LOAD_GLPROC( glUniformMatrix4x2dv );
+    LOAD_GLPROC( glUniformMatrix4x3dv );
+    return true;
+}
+
 static bool Load_GL_ARB_instanced_arrays(bool usePlaceholder)
 {
     LOAD_GLPROC( glVertexAttribDivisor );
@@ -900,6 +938,8 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     if (coreProfile)
     {
         extensions[ "GL_ARB_shader_objects"       ] = false;
+        extensions[ "GL_ARB_shader_objects_21"    ] = false;
+        extensions[ "GL_ARB_shader_objects_30"    ] = false;
         extensions[ "GL_ARB_vertex_buffer_object" ] = false;
         extensions[ "GL_ARB_vertex_shader"        ] = false;
         extensions[ "GL_EXT_texture3D"            ] = false;
@@ -920,6 +960,9 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
 
     /* Load shader extensions */
     LOAD_GLEXT( ARB_shader_objects               );
+    LOAD_GLEXT( ARB_shader_objects_21            ); //TODO: load if GL version is high enough
+    LOAD_GLEXT( ARB_shader_objects_30            ); //TODO: load if GL version is high enough
+    LOAD_GLEXT( ARB_shader_objects_40            ); //TODO: load if GL version is high enough
     LOAD_GLEXT( ARB_instanced_arrays             );
     LOAD_GLEXT( ARB_tessellation_shader          );
     LOAD_GLEXT( ARB_compute_shader               );

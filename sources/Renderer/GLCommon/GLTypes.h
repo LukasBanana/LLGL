@@ -17,8 +17,8 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/SamplerFlags.h>
-#include <LLGL/ShaderUniform.h>
 #include <LLGL/ShaderFlags.h>
+#include <LLGL/ShaderProgramFlags.h>
 
 
 namespace LLGL

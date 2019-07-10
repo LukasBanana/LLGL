@@ -19,6 +19,7 @@
 #include "../../../Core/Assertion.h"
 
 #include "../Shader/GLShaderProgram.h"
+#include "../Shader/GLShaderUniform.h"
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
@@ -54,7 +55,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdUpdateBuffer*>(pc);
             cmd->buffer->BufferSubData(cmd->offset, cmd->size, cmd + 1);
-            return sizeof(*cmd) + cmd->size;
+            return (sizeof(*cmd) + cmd->size);
         }
         case GLOpcodeCopyBuffer:
         {
@@ -234,6 +235,12 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             auto cmd = reinterpret_cast<const GLCmdBindComputePipeline*>(pc);
             cmd->computePipeline->Bind(stateMngr);
             return sizeof(*cmd);
+        }
+        case GLOpcodeSetUniforms:
+        {
+            auto cmd = reinterpret_cast<const GLCmdSetUniforms*>(pc);
+            GLSetUniformsByLocation(cmd->program, cmd->location, cmd->count, (cmd + 1));
+            return (sizeof(*cmd) + cmd->size);
         }
         case GLOpcodeBeginQuery:
         {

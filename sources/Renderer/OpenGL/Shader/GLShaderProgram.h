@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+class GLShaderBindingLayout;
+
 class GLShaderProgram final : public ShaderProgram
 {
 
@@ -31,18 +33,18 @@ class GLShaderProgram final : public ShaderProgram
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
-        UniformHandle QueryUniformLocation(const char* name) const override;
-
-        void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-        void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-
-        ShaderUniform* LockShaderUniform() override;
-        void UnlockShaderUniform() override;
+        UniformLocation QueryUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
-        
+
     public:
+
+        /*
+        Updates all uniform/storage block bindings and resources by the specified binding layout.
+        This shader program must already be bound with the GLStateManager.
+        */
+        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) const;
 
         // Returns the shader program ID.
         inline GLuint GetID() const
@@ -57,8 +59,11 @@ class GLShaderProgram final : public ShaderProgram
         void Link();
 
         bool QueryActiveAttribs(
-            GLenum attribCountType, GLenum attribNameLengthType,
-            GLint& numAttribs, GLint& maxNameLength, std::vector<char>& nameBuffer
+            GLenum              attribCountType,
+            GLenum              attribNameLengthType,
+            GLint&              numAttribs,
+            GLint&              maxNameLength,
+            std::vector<char>&  nameBuffer
         ) const;
 
         void BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes);
@@ -80,8 +85,12 @@ class GLShaderProgram final : public ShaderProgram
     private:
 
         GLuint              id_                 = 0;
-        GLShaderUniform     uniform_;
         StreamOutputFormat  streamOutputFormat_;
+
+    private:
+
+        // Reference to active binding layout is mutable since it's only to track state changes
+        mutable const GLShaderBindingLayout* bindingLayout_ = nullptr;
 
 };
 

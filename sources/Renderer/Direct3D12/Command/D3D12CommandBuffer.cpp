@@ -366,7 +366,24 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
 void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
-    //todo
+    //TODO
+}
+
+void D3D12CommandBuffer::SetUniform(
+    UniformLocation location,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    D3D12CommandBuffer::SetUniforms(location, 1, data, dataSize);
+}
+
+void D3D12CommandBuffer::SetUniforms(
+    UniformLocation location,
+    std::uint32_t   count,
+    const void*     data,
+    std::uint32_t   dataSize)
+{
+    //TODO
 }
 
 void D3D12CommandBuffer::SetUniformValue( const UniformHandle& location, const void* data, std::uint32_t dataSize )

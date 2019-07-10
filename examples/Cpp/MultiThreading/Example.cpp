@@ -150,15 +150,12 @@ private:
     {
         // Load shader program
         shaderProgram = LoadStandardShaderProgram({ vertexFormat });
-
-        // Bind constant buffer binding
-        shaderProgram->BindConstantBuffer("Scene", 1);
     }
 
     void CreatePipelines()
     {
         // Create pipeline layout
-        pipelineLayout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):vert"));
+        pipelineLayout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(Scene@1):vert"));
 
         // Create resource view heap
         for (auto& bdl : bundle)

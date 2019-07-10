@@ -73,6 +73,11 @@ UniformHandle D3D11ShaderProgram::QueryUniformLocation(const char* name) const
     return {};
 }
 
+UniformLocation D3D11ShaderProgram::QueryUniformLocation(const char* name) const
+{
+    return -1; // dummy
+}
+
 static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 {
     try
@@ -83,26 +88,6 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     {
         throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: \"" + attrib.name + "\"");
     }
-}
-
-void D3D11ShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    // dummy
-}
-
-void D3D11ShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    // dummy
-}
-
-ShaderUniform* D3D11ShaderProgram::LockShaderUniform()
-{
-    return nullptr; // dummy
-}
-
-void D3D11ShaderProgram::UnlockShaderUniform()
-{
-    // dummy
 }
 
 bool D3D11ShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)

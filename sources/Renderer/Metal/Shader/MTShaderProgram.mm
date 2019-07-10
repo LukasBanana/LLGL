@@ -62,29 +62,9 @@ ShaderReflectionDescriptor MTShaderProgram::QueryReflectionDesc() const
     return reflection;
 }
 
-UniformHandle MTShaderProgram::QueryUniformLocation(const char* name) const override
+UniformLocation MTShaderProgram::QueryUniformLocation(const char* /*name*/) const
 {
-    return {}
-}
-
-void MTShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    // dummy
-}
-
-void MTShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    // dummy
-}
-
-ShaderUniform* MTShaderProgram::LockShaderUniform()
-{
-    return nullptr; // dummy
-}
-
-void MTShaderProgram::UnlockShaderUniform()
-{
-    // dummy
+    return -1; // dummy
 }
 
 bool MTShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)

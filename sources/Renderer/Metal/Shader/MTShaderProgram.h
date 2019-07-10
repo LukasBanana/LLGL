@@ -33,13 +33,7 @@ class MTShaderProgram : public ShaderProgram
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
-        UniformHandle QueryUniformLocation(const char* name) const override;
-
-        void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-        void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-
-        ShaderUniform* LockShaderUniform() override;
-        void UnlockShaderUniform() override;
+        UniformLocation QueryUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
@@ -86,7 +80,7 @@ class MTShaderProgram : public ShaderProgram
     
         id<MTLDevice>           device_             = nil;
     
-        MTLVertexDescriptor*    vertexDesc_         = nullptr;
+        MTLVertexDescriptor*    vertexDesc_     	= nullptr;
         id<MTLFunction>         vertexFunc_         = nil;
         id<MTLFunction>         fragmentFunc_       = nil;
         id<MTLFunction>         kernelFunc_         = nil;

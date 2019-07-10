@@ -42,14 +42,6 @@ public ref class ShaderProgram
         ShaderReflectionDescriptor^ QueryReflectionDesc();
         #endif
 
-        void BindConstantBuffer(String^ name, unsigned int bindingIndex);
-        void BindStorageBuffer(String^ name, unsigned int bindingIndex);
-
-        #if 0
-        ShaderUniform^ LockShaderUniform();
-        void UnlockShaderUniform();
-        #endif
-
     private:
 
         LLGL::ShaderProgram* native_ = nullptr;

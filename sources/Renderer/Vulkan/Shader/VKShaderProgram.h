@@ -33,17 +33,11 @@ class VKShaderProgram final : public ShaderProgram
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
-        UniformHandle QueryUniformLocation(const char* name) const override;
-
-        void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-        void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
-
-        ShaderUniform* LockShaderUniform() override;
-        void UnlockShaderUniform() override;
+        UniformLocation QueryUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
-        
+
     public:
 
         //TODO: replace by "FillShaderStageCreateInfos" to avoid std::vector
@@ -57,6 +51,8 @@ class VKShaderProgram final : public ShaderProgram
         void Attach(Shader* shader);
         void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
         void Link();
+
+    private:
 
         std::vector<VKShader*>                          shaders_;
 

@@ -1092,20 +1092,14 @@ void GLStateManager::BindShaderProgram(GLuint program)
     }
 }
 
-void GLStateManager::PushShaderProgram()
-{
-    shaderState_.boundProgramStack.push(shaderState_.boundProgram);
-}
-
-void GLStateManager::PopShaderProgram()
-{
-    BindShaderProgram(shaderState_.boundProgramStack.top());
-    shaderState_.boundProgramStack.pop();
-}
-
 void GLStateManager::NotifyShaderProgramRelease(GLuint program)
 {
     InvalidateBoundGLObject(shaderState_.boundProgram, program);
+}
+
+GLuint GLStateManager::GetBoundShaderProgram() const
+{
+    return shaderState_.boundProgram;
 }
 
 /* ----- Render pass ----- */

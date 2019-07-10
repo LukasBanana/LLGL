@@ -52,7 +52,7 @@ struct CommandBufferFlags
         \see CommandBuffer::Execute
         */
         DeferredSubmit  = (1 << 0),
-        
+
         /**
         \brief Specifies that the encoded command buffer can be submitted multiple times.
         \remarks If this is not specified, the command buffer must be encoded again after it has been submitted to the command queue.

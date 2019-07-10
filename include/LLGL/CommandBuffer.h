@@ -451,17 +451,17 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Sets the value of a single uniform (a.k.a. shader constant) in the shader program that is currently bound.
         \param[in] location Specifies the location of the uniform.
         \param[in] data Raw pointer to the data that is to be copied to the uniform.
-        \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data.
-        \remarks This must only be used after a graphics or compute pipeline has been set.
+        \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data. This must be a multiple of 4.
+        \remarks This function must only be called after a graphics or compute pipeline has been set.
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
         \see ShaderProgram::QueryUniformLocation
         \see ShaderProgram::QueryReflectionDesc
         \see SetGraphicsPipeline
         \see SetComputePipeline
         */
-        virtual void SetUniformValue(
-            const UniformHandle& location,
-            const void* data,
+        virtual void SetUniform(
+            UniformLocation location,
+            const void*     data,
             std::uint32_t   dataSize
         ) = 0;
 
@@ -470,8 +470,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] location Specifies the location of the first uniform.
         \param[in] count Specifies the number of uniforms that are meant to be updated.
         \param[in] data Raw pointer to the data that is to be copied to the uniforms.
-        \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data.
-        \remarks This must only be used after a graphics or compute pipeline has been set.
+        \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data. This must be a multiple of 4.
+        \remarks This function must only be called after a graphics or compute pipeline has been set.
         The order of uniforms that come after the first one can be determined by the ShaderReflectionDescriptor::uniform container returned by ShaderProgram::QueryReflectionDesc.
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
         \see ShaderProgram::QueryUniformLocation
@@ -479,15 +479,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see SetGraphicsPipeline
         \see SetComputePipeline
         */
-        virtual void SetUniformValue(
-            const UniformHandle& location,
+        virtual void SetUniforms(
+            UniformLocation location,
             std::uint32_t   count,
-            const void* data,
+            const void*     data,
             std::uint32_t   dataSize
         ) = 0;
 
         /* ----- Queries ----- */
-
 
         /**
         \brief Begins a query of the specified query heap.
@@ -681,9 +680,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see DispatchIndirectArguments
         */
         virtual void DispatchIndirect(Buffer& buffer, std::uint64_t offset) = 0;
-    
+
         /* ----- Debugging ----- */
-    
+
         /**
         \brief Pushes the specified name onto a stack of group strings that is used for debug reports.
         \param[in] name Pointer to a null terminated string that specifies the name. Must not be null!
@@ -695,7 +694,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         // render shadow map ...
         myCmdBuffer->EndRenderPass();
         myCmdBuffer->PopDebugGroup();
-        
+
         myCmdBuffer->PushDebugGroup("Final Scene Pass");
         myCmdBuffer->BeginRenderPass(...);
         // render final scene ...
@@ -707,7 +706,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see RenderSystemChild::SetDebugName
         */
         virtual void PushDebugGroup(const char* name) = 0;
-    
+
         //! \see PushDebugGroup
         virtual void PopDebugGroup() = 0;
 

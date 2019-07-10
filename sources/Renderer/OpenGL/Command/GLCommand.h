@@ -180,6 +180,15 @@ struct GLCmdBindComputePipeline
     GLComputePipeline* computePipeline;
 };
 
+struct GLCmdSetUniforms
+{
+    GLuint      program;
+    GLint       location;
+    GLsizei     count;
+    GLsizeiptr  size;
+//  GLuint      buffer[size];
+};
+
 struct GLCmdBeginQuery
 {
     GLQueryHeap*    queryHeap;

@@ -211,10 +211,9 @@ class GLStateManager
 
         void BindShaderProgram(GLuint program);
 
-        void PushShaderProgram();
-        void PopShaderProgram();
-
         void NotifyShaderProgramRelease(GLuint program);
+
+        GLuint GetBoundShaderProgram() const;
 
         /* ----- Render pass ----- */
 
@@ -404,8 +403,7 @@ class GLStateManager
 
         struct GLShaderState
         {
-            GLuint              boundProgram = 0;
-            std::stack<GLuint>  boundProgramStack;
+            GLuint boundProgram = 0;
         };
 
         struct GLSamplerState

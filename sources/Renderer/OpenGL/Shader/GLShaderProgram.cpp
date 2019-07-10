@@ -7,6 +7,7 @@
 
 #include "GLShaderProgram.h"
 #include "GLShader.h"
+#include "GLShaderBindingLayout.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
@@ -24,8 +25,7 @@ namespace LLGL
 
 
 GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
-    id_      { glCreateProgram() },
-    uniform_ { id_               }
+    id_ { glCreateProgram() }
 {
     Attach(desc.vertexShader);
     Attach(desc.tessControlShader);
@@ -86,45 +86,12 @@ ShaderReflectionDescriptor GLShaderProgram::QueryReflectionDesc() const
     return reflection;
 }
 
-UniformHandle GLShaderProgram::QueryUniformLocation(const char* name) const
+UniformLocation GLShaderProgram::QueryUniformLocation(const char* name) const
 {
-    return {};
-}
-
-void GLShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    /* Query uniform block index and bind it to the specified binding index */
-    auto blockIndex = glGetUniformBlockIndex(id_, name.c_str());
-    if (blockIndex != GL_INVALID_INDEX)
-        glUniformBlockBinding(id_, blockIndex, bindingIndex);
+    if (id_ != 0)
+        return static_cast<UniformLocation>(glGetUniformLocation(id_, name));
     else
-        throw std::invalid_argument("failed to bind constant buffer due to invalid uniform block name: " + name);
-}
-
-void GLShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    #ifndef __APPLE__
-    /* Query shader storage block index and bind it to the specified binding index */
-    auto blockIndex = glGetProgramResourceIndex(id_, GL_SHADER_STORAGE_BLOCK, name.c_str());
-    if (blockIndex != GL_INVALID_INDEX)
-        glShaderStorageBlockBinding(id_, blockIndex, bindingIndex);
-    else
-        throw std::invalid_argument("failed to bind storage buffer due to invalid storage block name: " + name);
-    #else
-    throw std::runtime_error("storage buffers not supported on this platform");
-    #endif
-}
-
-ShaderUniform* GLShaderProgram::LockShaderUniform()
-{
-    GLStateManager::active->PushShaderProgram();
-    GLStateManager::active->BindShaderProgram(id_);
-    return (&uniform_);
-}
-
-void GLShaderProgram::UnlockShaderUniform()
-{
-    GLStateManager::active->PopShaderProgram();
+        return -1;
 }
 
 bool GLShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
@@ -149,6 +116,21 @@ bool GLShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
     }
     #endif // /GL_ARB_compute_shader
     return false;
+}
+
+
+/*
+ * ======= Internal: =======
+ */
+
+void GLShaderProgram::BindResourceSlots(const GLShaderBindingLayout& bindingLayout) const
+{
+    /* Keep track of state change with mutable reference to binding layout */
+    if (bindingLayout_ != &bindingLayout)
+    {
+        bindingLayout.BindResourceSlots(GetID());
+        bindingLayout_ = &bindingLayout;
+    }
 }
 
 
@@ -243,8 +225,11 @@ void GLShaderProgram::Link()
 }
 
 bool GLShaderProgram::QueryActiveAttribs(
-    GLenum attribCountType, GLenum attribNameLengthType,
-    GLint& numAttribs, GLint& maxNameLength, std::vector<char>& nameBuffer) const
+    GLenum              attribCountType,
+    GLenum              attribNameLengthType,
+    GLint&              numAttribs,
+    GLint&              maxNameLength,
+    std::vector<char>&  nameBuffer) const
 {
     /* Query number of active attributes */
     glGetProgramiv(id_, attribCountType, &numAttribs);
@@ -348,14 +333,6 @@ static std::pair<Format, std::uint32_t> UnmapAttribType(GLenum type)
     return { Format::R32Float, 0 };
 }
 
-struct GLVertexAttribute
-{
-    std::string     name;
-    Format          format;
-    std::uint32_t   semanticIndex;
-    std::uint32_t   location;
-};
-
 static SystemValue FindSystemValue(const std::string& name)
 {
     const std::pair<const char*, SystemValue> glslSystemValues[] =
@@ -383,6 +360,15 @@ static SystemValue FindSystemValue(const std::string& name)
 
     return SystemValue::Undefined;
 }
+
+// Internal struct for QueryVertexAttributes function
+struct GLVertexAttribute
+{
+    std::string     name;
+    Format          format;
+    std::uint32_t   semanticIndex;
+    std::uint32_t   location;
+};
 
 void GLShaderProgram::QueryVertexAttributes(ShaderReflectionDescriptor& reflection) const
 {
@@ -746,7 +732,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
         else
         {
             /* Append default uniform */
-            UniformDescriptor uniform;
+            ShaderReflectionDescriptor::Uniform uniform;
             {
                 uniform.name        = std::string(uniformName.data());
                 uniform.type        = uniformType;

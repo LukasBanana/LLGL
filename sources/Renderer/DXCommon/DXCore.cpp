@@ -330,7 +330,7 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
 
 std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLevel)
 {
-    std::vector<D3D_FEATURE_LEVEL> featureLeves =
+    std::vector<D3D_FEATURE_LEVEL> featureLevels =
     {
         #ifdef LLGL_DX_ENABLE_D3D12
         D3D_FEATURE_LEVEL_12_1,
@@ -346,15 +346,15 @@ std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLe
     };
 
     auto it = std::remove_if(
-        featureLeves.begin(), featureLeves.end(),
+        featureLevels.begin(), featureLevels.end(),
         [maxFeatureLevel](D3D_FEATURE_LEVEL entry)
         {
             return (entry > maxFeatureLevel);
         }
     );
-    featureLeves.erase(it, featureLeves.end());
+    featureLevels.erase(it, featureLevels.end());
 
-    return featureLeves;
+    return featureLevels;
 }
 
 const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
