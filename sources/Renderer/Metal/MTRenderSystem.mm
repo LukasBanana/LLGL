@@ -11,6 +11,7 @@
 #include "../../Core/Vendor.h"
 #include "MTFeatureSet.h"
 #include <LLGL/ImageFlags.h>
+#include <AvailabilityMacros.h>
 
 
 namespace LLGL
@@ -320,26 +321,41 @@ void MTRenderSystem::QueryRenderingCaps()
 
 const char* MTRenderSystem::QueryMetalVersion() const
 {
+    #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_11
     switch (QueryHighestFeatureSet())
     {
+        #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
         case MTLFeatureSet_macOS_GPUFamily2_v1: return "2.1";
         case MTLFeatureSet_macOS_GPUFamily1_v4: return "1.4";
+        #endif
+        #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_13
         case MTLFeatureSet_macOS_GPUFamily1_v3: return "1.3";
+        #endif
+        #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
         case MTLFeatureSet_macOS_GPUFamily1_v2: return "1.2";
+        #endif
         case MTLFeatureSet_macOS_GPUFamily1_v1: return "1.1";
-        default:                                return "1.0";
+        default:                                break;
     }
+    #endif
+    return "1.0";
 }
 
 MTLFeatureSet MTRenderSystem::QueryHighestFeatureSet() const
 {
     static const MTLFeatureSet g_potentialFeatureSets[] =
     {
+        #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
         MTLFeatureSet_macOS_ReadWriteTextureTier2,
         MTLFeatureSet_macOS_GPUFamily2_v1,
         MTLFeatureSet_macOS_GPUFamily1_v4,
+        #endif
+        #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_13
         MTLFeatureSet_macOS_GPUFamily1_v3,
+        #endif
+        #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
         MTLFeatureSet_macOS_GPUFamily1_v2,
+        #endif
         MTLFeatureSet_macOS_GPUFamily1_v1,
     };
 
