@@ -1,0 +1,15 @@
+dist: trusty
+language: cpp
+os:
+  - linux
+  - osx
+addos:
+  apt:
+    packages:
+      - libx11-dev
+      - libxxf86vm-dev
+      - libxrandr-dev
+before_script:
+  - git clone https://github.com/LukasBanana/GaussianLib.git
+  - cmake -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S .
+script: make
