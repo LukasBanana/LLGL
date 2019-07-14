@@ -1,4 +1,7 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl)
+<p align="center">
+    <a href="https://ci.appveyor.com/project/LukasBanana/llgl"><img src="https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true" /></a>
+    <a href="https://travis-ci.org/LukasBanana/LLGL"><img src="https://api.travis-ci.org/LukasBanana/LLGL.svg" /></a>
+</p>
 
 # Low Level Graphics Library (LLGL)
 
