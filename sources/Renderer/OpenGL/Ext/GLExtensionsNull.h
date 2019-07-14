@@ -452,9 +452,13 @@ DECL_GLPROC(void, glTexStorage3DMultisample, (GLenum, GLsizei, GLenum, GLsizei, 
 
 DECL_GLPROC(void, glBufferStorage, (GLenum, GLsizeiptr, const void*, GLbitfield));
 
-/* ARB_copy_buffer */
+/* GL_ARB_copy_buffer */
 
 DECL_GLPROC(void, glCopyBufferSubData, (GLenum, GLenum, GLintptr, GLintptr, GLsizeiptr));
+
+/* GL_ARB_copy_image */
+
+DECL_GLPROC(void, glCopyImageSubData, (GLuint, GLenum, GLint, GLint, GLint, GLint, GLuint, GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei));
 
 /* GL_ARB_polygon_offset_clamp */
 

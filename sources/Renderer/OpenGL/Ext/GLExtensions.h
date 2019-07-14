@@ -425,9 +425,13 @@ extern PFNGLTEXSTORAGE3DMULTISAMPLEPROC                     glTexStorage3DMultis
 
 extern PFNGLBUFFERSTORAGEPROC                               glBufferStorage;
 
-/* ARB_copy_buffer */
+/* GL_ARB_copy_buffer */
 
 extern PFNGLCOPYBUFFERSUBDATAPROC                           glCopyBufferSubData;
+
+/* GL_ARB_copy_image */
+
+extern PFNGLCOPYIMAGESUBDATAPROC                            glCopyImageSubData;
 
 /* GL_ARB_polygon_offset_clamp */
 

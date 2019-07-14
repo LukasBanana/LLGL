@@ -610,6 +610,12 @@ static bool Load_GL_ARB_copy_buffer(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_copy_image(bool usePlaceholder)
+{
+    LOAD_GLPROC( glCopyImageSubData );
+    return true;
+}
+
 static bool Load_GL_ARB_polygon_offset_clamp(bool usePlaceholder)
 {
     LOAD_GLPROC( glPolygonOffsetClamp );
@@ -1007,6 +1013,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_texture_storage_multisample  );
     LOAD_GLEXT( ARB_buffer_storage               );
     LOAD_GLEXT( ARB_copy_buffer                  );
+    LOAD_GLEXT( ARB_copy_image                   );
     LOAD_GLEXT( ARB_polygon_offset_clamp         );
     LOAD_GLEXT( ARB_texture_view                 );
     LOAD_GLEXT( ARB_shader_image_load_store      );

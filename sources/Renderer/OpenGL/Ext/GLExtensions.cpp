@@ -422,9 +422,13 @@ PFNGLTEXSTORAGE3DMULTISAMPLEPROC                        glTexStorage3DMultisampl
 
 PFNGLBUFFERSTORAGEPROC                                  glBufferStorage                                 = nullptr;
 
-/* ARB_copy_buffer */
+/* GL_ARB_copy_buffer */
 
 PFNGLCOPYBUFFERSUBDATAPROC                              glCopyBufferSubData                             = nullptr;
+
+/* GL_ARB_copy_image */
+
+PFNGLCOPYIMAGESUBDATAPROC                               glCopyImageSubData                              = nullptr;
 
 /* GL_ARB_polygon_offset_clamp */
 
