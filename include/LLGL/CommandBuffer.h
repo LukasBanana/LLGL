@@ -75,10 +75,15 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This is limited to 2^16 = 65536 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
         \remarks To update buffers larger than 65536 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
-        It is recommended to call this outside of a render pass.
-        Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
+        For performance reasons, it is recommended to encode this command outside of a render pass.
+        Otherwise, render pass interruptions might be inserted by LLGL.
         */
-        virtual void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) = 0;
+        virtual void UpdateBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            const void*     data,
+            std::uint16_t   dataSize
+        ) = 0;
 
         /**
         \brief Encodes a buffer copy command for the specified buffer region.
@@ -89,15 +94,40 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] srcOffset Specifies teh source offset (in bytes) at which the source buffer is to be read from.
         This offset plus the size (i.e. <code>srcOffset + size</code>) must be less than or equal to the size of the source buffer.
         \param[in] size Specifies the size of the buffer region to copy.
-        \remarks It is recommended to call this outside of a render pass.
-        Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
+        \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
+        Otherwise, render pass interruptions might be inserted by LLGL.
         */
-        virtual void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) = 0;
+        virtual void CopyBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            Buffer&         srcBuffer,
+            std::uint64_t   srcOffset,
+            std::uint64_t   size
+        ) = 0;
+
+        /**
+        \brief Encodes a texture copy command for the specified texture regions.
+        \param[in] dstTexture Specifies the destination texture whose data is to be updated.
+        \param[in] dstLocation Specifies the destination location, including MIP-map level and offset.
+        Its offset plus the extent (i.e. <code>dstLocation.offset + extent</code>) must be less than or equal to the size of the destination texture.
+        \param[in] srcTexture Specifies the source texture whose data is to be read from.
+        \param[in] srcLocation Specifies the source location, including MIP-map level and offset.
+        Its offset plus the extent (i.e. <code>srcLocation.offset + extent</code>) must be less than or equal to the size of the source texture.
+        \param[in] extent Specifies the extent of the texture region to copy (see TextureDescriptor::extent).
+        \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
+        Otherwise, render pass interruptions might be inserted by LLGL.
+        */
+        virtual void CopyTexture(
+            Texture&                dstTexture,
+            const TextureLocation&  dstLocation,
+            Texture&                srcTexture,
+            const TextureLocation&  srcLocation,
+            const Extent3D&         extent
+        ) = 0;
 
         #if 0
         virtual void FillBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, std::uint64_t size, std::uint32_t data) = 0;
         virtual void FillTexture(Texture& dstTexture, [...]) = 0;
-        virtual void CopyTexture(Texture& dstTexture, const TextureRegion& dstRegion, Texture& srcTexture, const TextureRegion& srcRegion) = 0;
         virtual void BlitTexture(Texture& dstTexture, Texture& srcTexture, [...], Filter filter) = 0;
         #endif
 

@@ -60,17 +60,53 @@ void D3D12CommandBuffer::End()
     numBoundScissorRects_ = 0;
 }
 
-void D3D12CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void D3D12CommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
     dstBufferD3D.UpdateDynamicSubresource(commandContext_, data, static_cast<UINT64>(dataSize), dstOffset);
 }
 
-void D3D12CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+//TODO: resource transition and barrieres
+void D3D12CommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
     auto& srcBufferD3D = LLGL_CAST(D3D12Buffer&, srcBuffer);
     commandList_->CopyBufferRegion(dstBufferD3D.GetNative(), dstOffset, srcBufferD3D.GetNative(), srcOffset, size);
+}
+
+//TODO: resource transition and barrieres
+void D3D12CommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    auto& dstTextureD3D = LLGL_CAST(D3D12Texture&, dstTexture);
+    auto& srcTextureD3D = LLGL_CAST(D3D12Texture&, srcTexture);
+
+    const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = dstTextureD3D.CalcCopyLocation(dstLocation);
+    const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = dstTextureD3D.CalcCopyLocation(dstLocation);
+
+    const D3D12_BOX srcBox = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
+
+    commandList_->CopyTextureRegion(
+        &dstLocationD3D,                            // pDst
+        static_cast<UINT>(dstLocation.offset.x),    // DstX
+        static_cast<UINT>(dstLocation.offset.y),    // DstY
+        static_cast<UINT>(dstLocation.offset.z),    // DstZ
+        &srcLocationD3D,                            // pSrc
+        &srcBox                                     // pSrcBox
+    );
 }
 
 void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)

@@ -159,23 +159,68 @@ struct TextureDescriptor
 };
 
 /**
-\brief Texture region structure.
-\remarks This is used to write (or partially write) the image data of a texture MIP-map level.
-\see RenderSystem::WriteTexture
+\brief Texture location structure: MIP-map level and offset.
+\remarks This is used to specifiy the source and destination location of a texture copy operation.
+\see CommandBuffer::CopyTexture
+\see TextureRegion
 */
-struct TextureRegion
+struct TextureLocation
 {
+    TextureLocation() = default;
+    TextureLocation(const TextureLocation&) = default;
+
+    //! Constructor to initialize all attributes.
+    inline TextureLocation(const Offset3D& offset, std::uint32_t mipLevel = 0) :
+        mipLevel { mipLevel },
+        offset   { offset   }
+    {
+    }
+
     //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
     std::uint32_t   mipLevel    = 0;
 
     /**
     \brief Sub-texture offset. By default (0, 0, 0).
+    \remarks The sub members of this field must not be negative.
     \remarks For array textures, the Z component specifies the array layer.
     For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
     The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayers member.
     Negative values of this member are not allowed and result in undefined behavior.
     */
-    Offset3D        offset      = { 0, 0, 0 };
+    Offset3D        offset;
+};
+
+/**
+\brief Texture region structure: MIP-map level, offset, and extent.
+\remarks This is used to write (or partially write) the image data of a texture MIP-map level.
+\see RenderSystem::WriteTexture
+\see TextureLocation
+*/
+struct TextureRegion
+{
+    TextureRegion() = default;
+    TextureRegion(const TextureRegion&) = default;
+
+    //! Constructor to initialize all attributes.
+    inline TextureRegion(const Offset3D& offset, const Extent3D& extent = { 1, 1, 1 }, std::uint32_t mipLevel = 0) :
+        mipLevel { mipLevel },
+        offset   { offset   },
+        extent   { extent   }
+    {
+    }
+
+    //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    std::uint32_t   mipLevel    = 0;
+
+    /**
+    \brief Sub-texture offset. By default (0, 0, 0).
+    \remarks The sub members of this field must not be negative.
+    \remarks For array textures, the Z component specifies the array layer.
+    For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
+    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayers member.
+    Negative values of this member are not allowed and result in undefined behavior.
+    */
+    Offset3D        offset;
 
     /**
     \brief Sub-texture extent. By default (1, 1, 1).

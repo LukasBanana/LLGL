@@ -157,7 +157,7 @@ void D3D12Texture::UpdateSubresource(
     for (UINT arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
     {
         /* Update subresource for current array layer */
-        UINT subresourceIndex = D3D12CalcSubresource(0, firstArrayLayer + arrayLayer, 0, numMipLevels_, numArrayLayers_);
+        UINT subresourceIndex = CalcSubresource(0, firstArrayLayer + arrayLayer);
 
         UpdateSubresources(
             commandList,            // pCmdList
@@ -257,6 +257,76 @@ void D3D12Texture::CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR
         }
     }
     device->CreateShaderResourceView(resource_.native.Get(), &srvDesc, cpuDescriptorHandle);
+}
+
+UINT D3D12Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer) const
+{
+    return D3D12CalcSubresource(mipLevel, arrayLayer, /*planeSlice: */0, numMipLevels_, numArrayLayers_);
+}
+
+UINT D3D12Texture::CalcSubresource(const TextureLocation& location) const
+{
+    /* Only include array layer in subresource calculation for array and cube texture types */
+    switch (GetType())
+    {
+        case TextureType::Texture1DArray:
+            return CalcSubresource(location.mipLevel, static_cast<UINT>(location.offset.y));
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::Texture2DMSArray:
+        case TextureType::TextureCubeArray:
+            return CalcSubresource(location.mipLevel, static_cast<UINT>(location.offset.z));
+        default:
+            return CalcSubresource(location.mipLevel, 0);
+    }
+}
+
+D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(const TextureLocation& location) const
+{
+    D3D12_TEXTURE_COPY_LOCATION copyDesc;
+    {
+        copyDesc.pResource          = GetNative();
+        copyDesc.Type               = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        copyDesc.SubresourceIndex   = CalcSubresource(location);
+    }
+    return copyDesc;
+}
+
+D3D12_BOX D3D12Texture::CalcRegion(const Offset3D& offset, const Extent3D& extent) const
+{
+    /* Ignore sub components of offset and extent if it's handled by the subresource index */
+    switch (GetType())
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            return CD3DX12_BOX(
+                offset.x,
+                offset.x + static_cast<LONG>(extent.width)
+            );
+        case TextureType::Texture2D:
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            return CD3DX12_BOX(
+                offset.x,
+                offset.y,
+                offset.x + static_cast<LONG>(extent.width),
+                offset.y + static_cast<LONG>(extent.height)
+            );
+        case TextureType::Texture3D:
+            return CD3DX12_BOX(
+                offset.x,
+                offset.y,
+                offset.z,
+                offset.x + static_cast<LONG>(extent.width),
+                offset.y + static_cast<LONG>(extent.height),
+                offset.z + static_cast<LONG>(extent.depth)
+            );
+        default:
+            return CD3DX12_BOX(0,0,0 , 0,0,0);
+    }
 }
 
 

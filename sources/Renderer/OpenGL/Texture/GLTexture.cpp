@@ -127,6 +127,63 @@ TextureDescriptor GLTexture::QueryDesc() const
     return texDesc;
 }
 
+void GLTexture::CopyImageSubData(
+    GLint               dstLevel,
+    const Offset3D&     dstOffset,
+    const GLTexture&    srcTexture,
+    GLint               srcLevel,
+    const Offset3D&     srcOffset,
+    const Extent3D&     extent)
+{
+    #ifdef GL_ARB_copy_image
+    if (HasExtension(GLExt::ARB_copy_buffer))
+    {
+        /* Copy raw data of texture directly (GL 4.3+) */
+        glCopyImageSubData(
+            srcTexture.GetID(),
+            GLGetTextureParamTarget(srcTexture.GetType()),
+            srcLevel,
+            srcOffset.x,
+            srcOffset.y,
+            srcOffset.z,
+            this->GetID(),
+            GLGetTextureParamTarget(this->GetType()),
+            dstLevel,
+            dstOffset.x,
+            dstOffset.y,
+            dstOffset.z,
+            static_cast<GLsizei>(extent.width),
+            static_cast<GLsizei>(extent.height),
+            static_cast<GLsizei>(extent.depth)
+        );
+    }
+    else
+    #endif // /GL_ARB_copy_image
+    if (this->GetType() == srcTexture.GetType())
+    {
+        #if 0 // TODO
+        /* Copy source texture from GL_READ_BUFFER into destination texture */
+        const GLTextureTarget texTarget = GLStateManager::GetTextureTarget(GetType());
+        GLStateManager::active->PushBoundTexture(texTarget);
+        GLStateManager::active->BindTexture(texTarget, this->GetID());
+        {
+            switch (GetType())
+            {
+
+            }
+        }
+        GLStateManager::active->PopBoundTexture();
+        #endif
+    }
+    else
+    {
+        /* If texture types are different, data must be retreived into local memory space and uploaded with a different function */
+
+        //TODO...
+
+    }
+}
+
 GLenum GLTexture::QueryGLInternalFormat() const
 {
     /* Query hardware texture format */

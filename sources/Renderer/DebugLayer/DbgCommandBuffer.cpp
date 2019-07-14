@@ -65,7 +65,11 @@ void DbgCommandBuffer::End()
     instance.End();
 }
 
-void DbgCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void DbgCommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
     auto& dstBufferDbg = LLGL_CAST(DbgBuffer&, dstBuffer);
 
@@ -80,7 +84,12 @@ void DbgCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, 
     profile_.bufferUpdates++;
 }
 
-void DbgCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+void DbgCommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
     auto& dstBufferDbg = LLGL_CAST(DbgBuffer&, dstBuffer);
     auto& srcBufferDbg = LLGL_CAST(DbgBuffer&, srcBuffer);
@@ -94,6 +103,27 @@ void DbgCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Bu
     instance.CopyBuffer(dstBufferDbg.instance, dstOffset, srcBufferDbg.instance, srcOffset, size);
 
     profile_.bufferCopies++;
+}
+
+void DbgCommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    auto& dstTextureDbg = LLGL_CAST(DbgTexture&, dstTexture);
+    auto& srcTextureDbg = LLGL_CAST(DbgTexture&, srcTexture);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+    }
+
+    instance.CopyTexture(dstTextureDbg.instance, dstLocation, srcTextureDbg.instance, srcLocation, extent);
+
+    profile_.textureCopies++;
 }
 
 void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -844,10 +874,10 @@ void DbgCommandBuffer::PushDebugGroup(const char* name)
         AssertNullPointer(name, "name");
         debugger_->SetDebugGroup(name);
     }
-    
+
     if (!name)
         name = "<null pointer>";
-    
+
     debugGroups_.push(name);
     instance.PushDebugGroup(name);
 }
@@ -856,7 +886,7 @@ void DbgCommandBuffer::PopDebugGroup()
 {
     instance.PopDebugGroup();
     debugGroups_.pop();
-    
+
     if (debugger_)
     {
         if (debugGroups_.empty())

@@ -51,16 +51,22 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
 {
     switch (opcode)
     {
-        case GLOpcodeUpdateBuffer:
+        case GLOpcodeBufferSubData:
         {
-            auto cmd = reinterpret_cast<const GLCmdUpdateBuffer*>(pc);
+            auto cmd = reinterpret_cast<const GLCmdBufferSubData*>(pc);
             cmd->buffer->BufferSubData(cmd->offset, cmd->size, cmd + 1);
             return (sizeof(*cmd) + cmd->size);
         }
-        case GLOpcodeCopyBuffer:
+        case GLOpcodeCopyBufferSubData:
         {
-            auto cmd = reinterpret_cast<const GLCmdCopyBuffer*>(pc);
+            auto cmd = reinterpret_cast<const GLCmdCopyBufferSubData*>(pc);
             cmd->writeBuffer->CopyBufferSubData(*(cmd->readBuffer), cmd->readOffset, cmd->writeOffset, cmd->size);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeCopyImageSubData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyImageSubData*>(pc);
+            cmd->dstTexture->CopyImageSubData(cmd->dstLevel, cmd->dstOffset, *(cmd->srcTexture), cmd->srcLevel, cmd->srcOffset, cmd->extent);
             return sizeof(*cmd);
         }
         case GLOpcodeExecute:

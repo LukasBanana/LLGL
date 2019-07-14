@@ -61,13 +61,22 @@ void GLImmediateCommandBuffer::End()
     // dummy
 }
 
-void GLImmediateCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void GLImmediateCommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
     auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
     dstBufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data);
 }
 
-void GLImmediateCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+void GLImmediateCommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
     auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
     auto& srcBufferGL = LLGL_CAST(GLBuffer&, srcBuffer);
@@ -76,6 +85,25 @@ void GLImmediateCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOf
         static_cast<GLintptr>(srcOffset),
         static_cast<GLintptr>(dstOffset),
         static_cast<GLsizeiptr>(size)
+    );
+}
+
+void GLImmediateCommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    auto& dstTextureGL = LLGL_CAST(GLTexture&, dstTexture);
+    auto& srcTextureGL = LLGL_CAST(GLTexture&, srcTexture);
+    dstTextureGL.CopyImageSubData(
+        static_cast<GLint>(dstLocation.mipLevel),
+        dstLocation.offset,
+        srcTextureGL,
+        static_cast<GLint>(srcLocation.mipLevel),
+        srcLocation.offset,
+        extent
     );
 }
 

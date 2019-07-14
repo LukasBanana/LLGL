@@ -60,16 +60,20 @@ void MTCommandBuffer::End()
     PresentDrawables();
 }
 
-void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void MTCommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
     auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
-    
+
     /* Copy data to staging buffer */
     id<MTLBuffer> srcBuffer = nil;
     NSUInteger srcOffset = 0;
-    
+
     stagingBufferPool_.Write(data, static_cast<NSUInteger>(dataSize), srcBuffer, srcOffset);
-    
+
     /* Encode blit command to copy staging buffer region to destination buffer */
     encoderScheduler_.PauseRenderEncoder();
 
@@ -85,7 +89,12 @@ void MTCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, c
     encoderScheduler_.ResumeRenderEncoder();
 }
 
-void MTCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+void MTCommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
     auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
     auto& srcBufferMT = LLGL_CAST(MTBuffer&, srcBuffer);
@@ -102,6 +111,16 @@ void MTCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
     ];
 
     encoderScheduler_.ResumeRenderEncoder();
+}
+
+void MTCommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    //TODO
 }
 
 void MTCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -171,25 +190,25 @@ void MTCommandBuffer::Clear(long flags)
     {
         /* Make new render pass descriptor with current clear values */
         auto renderPassDesc = encoderScheduler_.CopyRenderPassDesc();
-        
+
         if ((flags & ClearFlags::Color) != 0)
         {
             renderPassDesc.colorAttachments[0].loadAction   = MTLLoadActionClear;
             renderPassDesc.colorAttachments[0].clearColor   = clearValue_.color;
         }
-        
+
         if ((flags & ClearFlags::Depth) != 0)
         {
             renderPassDesc.depthAttachment.loadAction       = MTLLoadActionClear;
             renderPassDesc.depthAttachment.clearDepth       = clearValue_.depth;
         }
-        
+
         if ((flags & ClearFlags::Stencil) != 0)
         {
             renderPassDesc.stencilAttachment.loadAction     = MTLLoadActionClear;
             renderPassDesc.stencilAttachment.clearStencil   = clearValue_.stencil;
         }
-        
+
         /* Begin with new render pass to clear buffers */
         encoderScheduler_.BindRenderEncoder(renderPassDesc);
         [renderPassDesc release];
@@ -226,10 +245,10 @@ void MTCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
     {
         /* Make new render pass descriptor with current clear values */
         auto renderPassDesc = encoderScheduler_.CopyRenderPassDesc();
-        
+
         for (std::uint32_t i = 0; i < numAttachments; ++i)
             FillMTRenderPassDesc(renderPassDesc, attachments[i]);
-        
+
         /* Begin with new render pass to clear buffers */
         encoderScheduler_.BindRenderEncoder(renderPassDesc);
         [renderPassDesc release];
@@ -321,7 +340,7 @@ void MTCommandBuffer::BeginRenderPass(
         /* Put current drawable into queue */
         auto& renderContextMT = LLGL_CAST(MTRenderContext&, renderTarget);
         QueueDrawable(renderContextMT.GetMTKView().currentDrawable);
-        
+
         /* Get next render pass descriptor from MetalKit view */
         MTKView* view = renderContextMT.GetMTKView();
         encoderScheduler_.BindRenderEncoder(view.currentRenderPassDescriptor, true);
@@ -862,10 +881,10 @@ void MTCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stag
 {
     /* Get native MTLSamplerState object */
     auto& samplerMT = LLGL_CAST(MTSampler&, sampler);
-    
+
     auto samplerState   = samplerMT.GetNative();
     auto index          = static_cast<NSUInteger>(slot);
-    
+
     auto renderEncoder  = encoderScheduler_.GetRenderEncoder();
 
     if ((stageFlags & StageFlags::VertexStage) != 0)

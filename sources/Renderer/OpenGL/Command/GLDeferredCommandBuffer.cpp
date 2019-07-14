@@ -85,9 +85,13 @@ void GLDeferredCommandBuffer::End()
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
-void GLDeferredCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void GLDeferredCommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
-    auto cmd = AllocCommand<GLCmdUpdateBuffer>(GLOpcodeUpdateBuffer, dataSize);
+    auto cmd = AllocCommand<GLCmdBufferSubData>(GLOpcodeBufferSubData, dataSize);
     {
         cmd->buffer = LLGL_CAST(GLBuffer*, &dstBuffer);
         cmd->offset = static_cast<GLintptr>(dstOffset);
@@ -96,15 +100,39 @@ void GLDeferredCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstO
     }
 }
 
-void GLDeferredCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+void GLDeferredCommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
-    auto cmd = AllocCommand<GLCmdCopyBuffer>(GLOpcodeCopyBuffer);
+    auto cmd = AllocCommand<GLCmdCopyBufferSubData>(GLOpcodeCopyBufferSubData);
     {
         cmd->writeBuffer    = LLGL_CAST(GLBuffer*, &dstBuffer);
         cmd->readBuffer     = LLGL_CAST(GLBuffer*, &srcBuffer);
         cmd->readOffset     = static_cast<GLintptr>(srcOffset);
         cmd->writeOffset    = static_cast<GLintptr>(dstOffset);
         cmd->size           = static_cast<GLsizeiptr>(size);
+    }
+}
+
+void GLDeferredCommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    auto cmd = AllocCommand<GLCmdCopyImageSubData>(GLOpcodeCopyImageSubData);
+    {
+        cmd->dstTexture = LLGL_CAST(GLTexture*, &dstTexture);
+        cmd->dstLevel   = static_cast<GLint>(dstLocation.mipLevel);
+        cmd->dstOffset  = dstLocation.offset;
+        cmd->srcTexture = LLGL_CAST(GLTexture*, &srcTexture);
+        cmd->srcLevel   = static_cast<GLint>(srcLocation.mipLevel);
+        cmd->srcOffset  = srcLocation.offset;
+        cmd->extent     = extent;
     }
 }
 

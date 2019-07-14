@@ -27,6 +27,7 @@ union D3D11NativeTexture
     }
     ~D3D11NativeTexture()
     {
+        // dummy
     }
 
     ComPtr<ID3D11Resource>  resource;
@@ -46,6 +47,8 @@ class D3D11Texture final : public Texture
         Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
+
+    public:
 
         /* ----- Extended internal functions ---- */
 
@@ -110,6 +113,15 @@ class D3D11Texture final : public Texture
             UINT                        numArrayLayers
         );
 
+        // Returns the subresource index for the specified MIP-map level and array layer.
+        UINT CalcSubresource(UINT mipLevel, UINT arrayLayer) const;
+
+        // Returns the subresource index for the specified texture location with respect to the type of this texture (i.e. whether or not array layers are included).
+        UINT CalcSubresource(const TextureLocation& location) const;
+
+        // Returns the texture region for the specified offset and extent with respect to the type of this texture (i.e. whether or not array layers are handled by the subresource index).
+        D3D11_BOX CalcRegion(const Offset3D& offset, const Extent3D& extent) const;
+
         /* ----- Hardware texture objects ----- */
 
         // Returns the native D3D texture object.
@@ -163,6 +175,8 @@ class D3D11Texture final : public Texture
         void CreateDefaultUAV(ID3D11Device* device, const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc = nullptr);
 
         void SetResourceParams(DXGI_FORMAT format, const Extent3D& extent, UINT mipLevels, UINT arraySize);
+
+    private:
 
         D3D11NativeTexture                  native_;
 

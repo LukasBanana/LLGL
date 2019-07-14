@@ -89,7 +89,10 @@ class GLShaderProgram final : public ShaderProgram
 
     private:
 
-        // Reference to active binding layout is mutable since it's only to track state changes
+        /*
+        Reference to active binding layout is mutable since it's only to track state changes
+        TODO: try to avoid <mutable> keyword, maybe there's a better way for the purpose of this member
+        */
         mutable const GLShaderBindingLayout* bindingLayout_ = nullptr;
 
 };

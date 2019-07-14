@@ -54,16 +54,22 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
     /* Generate native CPU opcodes for emulated GLOpcode */
     switch (opcode)
     {
-        case GLOpcodeUpdateBuffer:
+        case GLOpcodeBufferSubData:
         {
-            auto cmd = reinterpret_cast<const GLCmdUpdateBuffer*>(pc);
+            auto cmd = reinterpret_cast<const GLCmdBufferSubData*>(pc);
             compiler.CallMember(&GLBuffer::BufferSubData, cmd->buffer, cmd->offset, cmd->size, (cmd + 1));
             return (sizeof(*cmd) + cmd->size);
         }
-        case GLOpcodeCopyBuffer:
+        case GLOpcodeCopyBufferSubData:
         {
-            auto cmd = reinterpret_cast<const GLCmdCopyBuffer*>(pc);
+            auto cmd = reinterpret_cast<const GLCmdCopyBufferSubData*>(pc);
             compiler.CallMember(&GLBuffer::CopyBufferSubData, cmd->writeBuffer, cmd->readBuffer, cmd->readOffset, cmd->writeOffset, cmd->size);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeCopyImageSubData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyImageSubData*>(pc);
+            compiler.CallMember(&GLTexture::CopyImageSubData, cmd->dstTexture, cmd->dstLevel, &(cmd->dstOffset), cmd->srcTexture, cmd->srcLevel, &(cmd->srcOffset), &(cmd->extent));
             return sizeof(*cmd);
         }
         case GLOpcodeExecute:

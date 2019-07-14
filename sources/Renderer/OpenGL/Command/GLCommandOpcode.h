@@ -18,8 +18,9 @@ namespace LLGL
 
 enum GLOpcode : std::uint8_t
 {
-    GLOpcodeUpdateBuffer = 1,
-    GLOpcodeCopyBuffer,
+    GLOpcodeBufferSubData = 1,
+    GLOpcodeCopyBufferSubData,
+    GLOpcodeCopyImageSubData,
     GLOpcodeSetAPIDepState,
     GLOpcodeExecute,
     GLOpcodeViewport,
