@@ -14,6 +14,7 @@
 #include "../../StaticLimits.h"
 #include "GLState.h"
 #include <memory>
+#include <limits>
 
 
 namespace LLGL

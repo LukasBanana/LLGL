@@ -13,6 +13,7 @@
 #include "../OpenGL.h"
 #include "../../StaticLimits.h"
 #include <memory>
+#include <limits>
 
 
 namespace LLGL
