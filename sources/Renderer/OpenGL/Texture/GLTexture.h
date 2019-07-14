@@ -33,12 +33,12 @@ class GLTexture final : public Texture
 
         // Copies the specified source texture into this texture.
         void CopyImageSubData(
-            GLint               dstLevel,
-            const Offset3D&     dstOffset,
-            const GLTexture&    srcTexture,
-            GLint               srcLevel,
-            const Offset3D&     srcOffset,
-            const Extent3D&     extent
+            GLint           dstLevel,
+            const Offset3D& dstOffset,
+            GLTexture&      srcTexture,
+            GLint           srcLevel,
+            const Offset3D& srcOffset,
+            const Extent3D& extent
         );
 
         // Queries the GL_TEXTURE_INTERNAL_FORMAT parameter of this texture.

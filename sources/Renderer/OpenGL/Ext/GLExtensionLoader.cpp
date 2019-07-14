@@ -364,6 +364,12 @@ static bool Load_GL_EXT_texture3D(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_EXT_copy_texture(bool usePlaceholder)
+{
+    LOAD_GLPROC( glCopyTexSubImage3D );
+    return true;
+}
+
 static bool Load_GL_ARB_clear_texture(bool usePlaceholder)
 {
     LOAD_GLPROC( glClearTexImage    );
@@ -863,6 +869,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     /* Enable texture extensions */
     ENABLE_GLEXT( ARB_multitexture                 );
     ENABLE_GLEXT( EXT_texture3D                    );
+    ENABLE_GLEXT( EXT_copy_texture                 );
     ENABLE_GLEXT( ARB_clear_texture                );
     ENABLE_GLEXT( ARB_texture_compression          );
     ENABLE_GLEXT( ARB_texture_multisample          );
@@ -949,6 +956,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
         extensions[ "GL_ARB_vertex_buffer_object" ] = false;
         extensions[ "GL_ARB_vertex_shader"        ] = false;
         extensions[ "GL_EXT_texture3D"            ] = false;
+        extensions[ "GL_EXT_copy_texture"         ] = false;
     }
 
     /* Load hardware buffer extensions */
@@ -979,6 +987,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     /* Load texture extensions */
     LOAD_GLEXT( ARB_multitexture                 );
     LOAD_GLEXT( EXT_texture3D                    );
+    LOAD_GLEXT( EXT_copy_texture                 );
     LOAD_GLEXT( ARB_clear_texture                );
     LOAD_GLEXT( ARB_texture_compression          );
     LOAD_GLEXT( ARB_texture_multisample          );

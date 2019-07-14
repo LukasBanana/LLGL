@@ -84,6 +84,10 @@ PFNGLACTIVETEXTUREPROC                                  glActiveTexture         
 PFNGLTEXIMAGE3DPROC                                     glTexImage3D                                    = nullptr;
 PFNGLTEXSUBIMAGE3DPROC                                  glTexSubImage3D                                 = nullptr;
 
+/* GL_EXT_copy_texture */
+
+PFNGLCOPYTEXSUBIMAGE3DPROC                              glCopyTexSubImage3D                             = nullptr;
+
 /* GL_ARB_clear_texture */
 
 PFNGLCLEARTEXIMAGEPROC                                  glClearTexImage                                 = nullptr;

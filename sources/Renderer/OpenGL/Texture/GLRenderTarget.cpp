@@ -358,32 +358,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor&
     auto attachment = MakeFramebufferAttachment(attachmentDesc.type);
 
     /* Attach texture to framebuffer */
-    switch (texture.GetType())
-    {
-        case TextureType::Texture1D:
-            GLFramebuffer::AttachTexture1D(attachment, GL_TEXTURE_1D, textureID, static_cast<GLint>(mipLevel));
-            break;
-        case TextureType::Texture2D:
-            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D, textureID, static_cast<GLint>(mipLevel));
-            break;
-        case TextureType::Texture3D:
-            GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_3D, textureID, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
-            break;
-        case TextureType::TextureCube:
-            GLFramebuffer::AttachTexture2D(attachment, GLTypes::ToTextureCubeMap(attachmentDesc.arrayLayer), textureID, static_cast<GLint>(mipLevel));
-            break;
-        case TextureType::Texture1DArray:
-        case TextureType::Texture2DArray:
-        case TextureType::TextureCubeArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
-            break;
-        case TextureType::Texture2DMS:
-            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D_MULTISAMPLE, textureID, 0);
-            break;
-        case TextureType::Texture2DMSArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, 0, static_cast<GLint>(attachmentDesc.arrayLayer));
-            break;
-    }
+    GLFramebuffer::AttachTexture(textureGL, attachment, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
 }
 
 void GLRenderTarget::CreateRenderbuffersMS(const GLenum* internalFormats)

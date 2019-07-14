@@ -25,7 +25,8 @@ enum class GLExt
     EXT_draw_buffers2,
     ARB_draw_buffers_blend,
     ARB_multitexture,
-    EXT_texture3D,
+    EXT_texture3D,                      // GL 1.2
+    EXT_copy_texture,                   // GL 1.2
     ARB_clear_texture,
     ARB_texture_compression,
     ARB_texture_multisample,

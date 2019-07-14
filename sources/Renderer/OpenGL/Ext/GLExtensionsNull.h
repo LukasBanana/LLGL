@@ -114,6 +114,10 @@ DECL_GLPROC(void, glActiveTexture, (GLenum));
 DECL_GLPROC(void, glTexImage3D, (GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*));
 DECL_GLPROC(void, glTexSubImage3D, (GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const void*));
 
+/* GL_EXT_copy_texture */
+
+DECL_GLPROC(void, glCopyTexSubImage3D, (GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei));
+
 /* GL_ARB_clear_texture */
 
 DECL_GLPROC(void, glClearTexImage, (GLuint, GLint, GLenum, GLenum, const void*));

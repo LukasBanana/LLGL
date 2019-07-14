@@ -6,6 +6,8 @@
  */
 
 #include "GLFramebuffer.h"
+#include "GLTexture.h"
+#include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
@@ -53,34 +55,72 @@ void GLFramebuffer::DeleteFramebuffer()
     }
 }
 
-void GLFramebuffer::Bind(const GLFramebufferTarget target) const
+void GLFramebuffer::Bind(GLFramebufferTarget target) const
 {
     GLStateManager::active->BindFramebuffer(target, GetID());
 }
 
-void GLFramebuffer::Unbind(const GLFramebufferTarget target) const
+void GLFramebuffer::Unbind(GLFramebufferTarget target) const
 {
     GLStateManager::active->BindFramebuffer(target, 0);
 }
 
-void GLFramebuffer::AttachTexture1D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel)
+bool GLFramebuffer::FramebufferParameters(
+    GLint width,
+    GLint height,
+    GLint layers,
+    GLint samples,
+    GLint fixedSampleLocations)
 {
-    glFramebufferTexture1D(GL_FRAMEBUFFER, attachment, textureTarget, textureID, mipLevel);
+    #ifdef GL_ARB_framebuffer_no_attachments
+    if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
+    {
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, GetID());
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, layers);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, samples);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, fixedSampleLocations);
+        return true;
+    }
+    #endif // /GL_ARB_framebuffer_no_attachments
+    return false;
 }
 
-void GLFramebuffer::AttachTexture2D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel)
+void GLFramebuffer::AttachTexture(
+    const GLTexture&    texture,
+    GLenum              attachment,
+    GLint               mipLevel,
+    GLint               arrayLayer,
+    GLenum              target)
 {
-    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, textureTarget, textureID, mipLevel);
-}
-
-void GLFramebuffer::AttachTexture3D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel, GLint zOffset)
-{
-    glFramebufferTexture3D(GL_FRAMEBUFFER, attachment, textureTarget, textureID, mipLevel, zOffset);
-}
-
-void GLFramebuffer::AttachTextureLayer(GLenum attachment, GLuint textureID, GLint mipLevel, GLint layer)
-{
-    glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, textureID, mipLevel, layer);
+    GLuint texID = texture.GetID();
+    switch (texture.GetType())
+    {
+        case TextureType::Texture1D:
+            glFramebufferTexture1D(target, attachment, GL_TEXTURE_1D, texID, mipLevel);
+            break;
+        case TextureType::Texture2D:
+            glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texID, mipLevel);
+            break;
+        case TextureType::Texture3D:
+            glFramebufferTexture3D(target, attachment, GL_TEXTURE_3D, texID, mipLevel, arrayLayer);
+            break;
+        case TextureType::TextureCube:
+            glFramebufferTexture2D(target, attachment, GLTypes::ToTextureCubeMap(static_cast<std::uint32_t>(arrayLayer)), texID, mipLevel);
+            break;
+        case TextureType::Texture1DArray:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+            glFramebufferTextureLayer(target, attachment, texID, mipLevel, arrayLayer);
+            break;
+        case TextureType::Texture2DMS:
+            glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D_MULTISAMPLE, texID, 0);
+            break;
+        case TextureType::Texture2DMSArray:
+            glFramebufferTextureLayer(target, attachment, texID, 0, arrayLayer);
+            break;
+    }
 }
 
 void GLFramebuffer::AttachRenderbuffer(GLenum attachment, GLuint renderbufferID)
@@ -110,28 +150,6 @@ void GLFramebuffer::Blit(
         destPos0.x, destPos0.y, destPos1.x, destPos1.y,
         mask, filter
     );
-}
-
-bool GLFramebuffer::FramebufferParameters(
-    GLint width,
-    GLint height,
-    GLint layers,
-    GLint samples,
-    GLint fixedSampleLocations)
-{
-    #ifdef GL_ARB_framebuffer_no_attachments
-    if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
-    {
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, GetID());
-        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
-        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
-        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, layers);
-        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, samples);
-        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, fixedSampleLocations);
-        return true;
-    }
-    #endif // /GL_ARB_framebuffer_no_attachments
-    return false;
 }
 
 

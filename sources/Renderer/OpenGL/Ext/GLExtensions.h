@@ -87,6 +87,10 @@ extern PFNGLACTIVETEXTUREPROC                               glActiveTexture;
 extern PFNGLTEXIMAGE3DPROC                                  glTexImage3D;
 extern PFNGLTEXSUBIMAGE3DPROC                               glTexSubImage3D;
 
+/* GL_EXT_copy_texture */
+
+extern PFNGLCOPYTEXSUBIMAGE3DPROC                           glCopyTexSubImage3D;
+
 /* GL_ARB_clear_texture */
 
 extern PFNGLCLEARTEXIMAGEPROC                               glClearTexImage;
