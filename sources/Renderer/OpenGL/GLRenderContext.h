@@ -43,6 +43,8 @@ class GLRenderContext final : public RenderContext
 
         const RenderPass* GetRenderPass() const override;
 
+    public:
+
         /* ----- GLRenderContext specific functions ----- */
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);
@@ -61,6 +63,8 @@ class GLRenderContext final : public RenderContext
             GLintptr    indexBufferStride   = 4;
         };
 
+    private:
+
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
@@ -68,11 +72,13 @@ class GLRenderContext final : public RenderContext
 
         #ifdef __linux__
         void GetNativeContextHandle(
-            NativeContextHandle& windowContext,
-            const VideoModeDescriptor& videoModeDesc,
-            const MultiSamplingDescriptor& multiSamplingDesc
+            NativeContextHandle&            windowContext,
+            const VideoModeDescriptor&      videoModeDesc,
+            const MultiSamplingDescriptor&  multiSamplingDesc
         );
         #endif
+
+    private:
 
         std::unique_ptr<GLContext>      context_;
 

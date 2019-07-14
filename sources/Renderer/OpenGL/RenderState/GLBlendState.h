@@ -58,6 +58,8 @@ class GLBlendState
             GLboolean   colorMask[4]    = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
         };
 
+    private:
+
         void BindDrawBufferStates(GLStateManager& stateMngr);
         void BindDrawBufferColorMasks(GLStateManager& stateMngr);
 
@@ -66,6 +68,8 @@ class GLBlendState
 
         void BindDrawBufferColorMask(const GLDrawBufferState& state);
         void BindIndexedDrawBufferColorMask(const GLDrawBufferState& state, GLuint index);
+
+    private:
 
         GLfloat             blendColor_[4]                                  = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool                sampleAlphaToCoverage_                          = false;

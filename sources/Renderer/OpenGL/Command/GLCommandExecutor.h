@@ -17,6 +17,10 @@ class GLStateManager;
 class GLCommandBuffer;
 class GLDeferredCommandBuffer;
 
+/*
+Executes all GL commands that have been recorded in the specified command buffer.
+GL render states are tracked with the specified state manager.
+*/
 void ExecuteGLDeferredCommandBuffer(const GLDeferredCommandBuffer& cmdbuffer, GLStateManager& stateMngr);
 void ExecuteGLCommandBuffer(const GLCommandBuffer& cmdbuffer, GLStateManager& stateMngr);
 

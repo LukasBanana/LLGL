@@ -19,6 +19,7 @@ namespace LLGL
 {
 
 
+// Implementation of the GLContext interface for Win32 and wrapper for a WGL context.
 class Win32GLContext : public GLContext
 {
 
@@ -51,6 +52,8 @@ class Win32GLContext : public GLContext
         void CopyPixelFormat(Win32GLContext& sourceContext);
 
         void RecreateWindow();
+
+    private:
 
         static const UINT       maxNumPixelFormatsMS_   = 8;
 

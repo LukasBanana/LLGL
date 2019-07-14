@@ -19,7 +19,7 @@ namespace LLGL
 {
 
 
-// Base wrapper class for an GL context.
+// Base wrapper class for a GL context.
 class GLContext
 {
 
