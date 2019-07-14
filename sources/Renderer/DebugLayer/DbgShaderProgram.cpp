@@ -60,10 +60,6 @@ ShaderReflectionDescriptor DbgShaderProgram::QueryReflectionDesc() const
 {
     return instance.QueryReflectionDesc();
 }
-UniformHandle DbgShaderProgram::QueryUniformLocation(const char* name) const
-{
-    return instance.QueryUniformLocation(name);
-}
 
 UniformLocation DbgShaderProgram::QueryUniformLocation(const char* name) const
 {

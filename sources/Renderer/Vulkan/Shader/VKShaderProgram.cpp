@@ -48,10 +48,6 @@ ShaderReflectionDescriptor VKShaderProgram::QueryReflectionDesc() const
 {
     return {}; //TODO
 }
-UniformHandle VKShaderProgram::QueryUniformLocation(const char* name) const
-{
-    return {}
-}
 
 UniformLocation VKShaderProgram::QueryUniformLocation(const char* name) const
 {

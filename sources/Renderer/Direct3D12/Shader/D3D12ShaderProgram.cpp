@@ -67,10 +67,6 @@ ShaderReflectionDescriptor D3D12ShaderProgram::QueryReflectionDesc() const
 
     return reflection;
 }
-UniformHandle D3D12ShaderProgram::QueryUniformLocation(const char* name) const
-{
-    return {};
-}
 
 UniformLocation D3D12ShaderProgram::QueryUniformLocation(const char* name) const
 {

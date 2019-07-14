@@ -308,14 +308,6 @@ void D3D11CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std:
     resourceHeapD3D.BindForComputePipeline(context_.Get());
 }
 
-void D3D11CommandBuffer::SetUniformValue( const UniformHandle& location, const void* data, std::uint32_t dataSize )
-{
-    // dummy
-}
-void D3D11CommandBuffer::SetUniformValue( const UniformHandle& location, std::uint32_t count, const void* data, std::uint32_t dataSize )
-{
-    // dummy
-}
 /* ----- Render Passes ----- */
 
 void D3D11CommandBuffer::BeginRenderPass(

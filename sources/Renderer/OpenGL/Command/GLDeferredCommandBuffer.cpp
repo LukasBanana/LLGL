@@ -474,15 +474,6 @@ void GLDeferredCommandBuffer::SetUniforms(
     }
 }
 
-void GLDeferredCommandBuffer::SetUniformValue( const UniformHandle& location, const void* data, std::uint32_t dataSize )
-{
-    //TODO
-}
-void GLDeferredCommandBuffer::SetUniformValue( const UniformHandle& location, std::uint32_t count, const void* data, std::uint32_t dataSize )
-{
-    //TODO
-}
-
 /* ----- Queries ----- */
 
 void GLDeferredCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)

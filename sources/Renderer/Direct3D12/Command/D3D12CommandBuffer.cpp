@@ -386,15 +386,6 @@ void D3D12CommandBuffer::SetUniforms(
     //TODO
 }
 
-void D3D12CommandBuffer::SetUniformValue( const UniformHandle& location, const void* data, std::uint32_t dataSize )
-{
-    // dummy
-}
-void D3D12CommandBuffer::SetUniformValue( const UniformHandle& location, std::uint32_t count, const void* data, std::uint32_t dataSize )
-{
-    // dummy
-}
-
 /* ----- Queries ----- */
 
 void D3D12CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
