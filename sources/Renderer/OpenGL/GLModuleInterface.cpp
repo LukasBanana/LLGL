@@ -8,29 +8,52 @@
 #include "../ModuleInterface.h"
 #include "GLRenderSystem.h"
 
+namespace LLGL
+{
+    namespace ModuleOpengl
+    {
+        int RenderModuleID()
+        {
+            return LLGL::RendererID::OpenGL;
+        }
+
+        const char* RenderModuleName()
+        {
+            return "OpenGL";
+        }
+
+        void* RenderModuleCreate(const LLGL::RenderSystemDescriptor* desc)
+        {
+            return new LLGL::GLRenderSystem();
+        }
+    }
+}
 
 extern "C"
 {
+#ifndef LLGL_BUILD_STATIC_LIB
 
-LLGL_EXPORT int LLGL_RenderSystem_BuildID()
-{
-    return LLGL_BUILD_ID;
-}
+    LLGL_EXPORT int LLGL_RenderSystem_BuildID()
+    {
+        return LLGL_BUILD_ID;
+    }
 
-LLGL_EXPORT int LLGL_RenderSystem_RendererID()
-{
-    return LLGL::RendererID::OpenGL;
-}
+    LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
+    {
+        return LLGL::ModuleOpengl::RenderModuleID();
+    }
 
-LLGL_EXPORT const char* LLGL_RenderSystem_Name()
-{
-    return "OpenGL";
-}
+    LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
+    {
+        return LLGL::ModuleOpengl::RenderModuleName();
+    }
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
-{
-    return new LLGL::GLRenderSystem();
-}
+    LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
+    {
+        return LLGL::ModuleOpengl::RenderModuleCreate(nullptr);
+    }
+
+#endif
 
 } // /extern "C"
 
