@@ -1,16 +1,24 @@
-dist: trusty
 language: cpp
-os:
-  - linux
-  - osx
-addos:
-  apt:
-    packages:
-      - libx11-dev
-      - libxxf86vm-dev
-      - libxrandr-dev
-      - libvulkan-dev
-before_script:
-  - git clone https://github.com/LukasBanana/GaussianLib.git
-  - cmake -DLLGL_BUILD_RENDERER_METAL=ON -DLLGL_BUILD_RENDERER_VULKAN=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S .
-script: make
+dist: xenial
+sudo: required
+matrix:
+  include:
+    # Linux
+    - os: linux
+      before_install:
+      - git clone https://github.com/LukasBanana/GaussianLib.git
+      - sudo apt-get install libx11-dev libxxf86vm-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libvulkan1 mesa-vulkan-drivers vulkan-utils
+      before_script:
+      - cmake -DLLGL_BUILD_RENDERER_VULKAN=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S .
+      script:
+      - cmake --build .
+
+    # MacOS
+    - os: osx
+      osx_image: xcode11
+      before_install:
+      - git clone https://github.com/LukasBanana/GaussianLib.git
+      before_script:
+      - cmake -DLLGL_BUILD_RENDERER_METAL=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S .
+      script:
+      - cmake --build .
