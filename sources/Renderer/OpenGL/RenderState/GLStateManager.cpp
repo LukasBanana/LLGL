@@ -535,7 +535,7 @@ void GLStateManager::NotifyDepthStencilStateRelease(GLDepthStencilState* depthSt
         boundDepthStencilState_ = nullptr;
 }
 
-void GLStateManager::SetDepthStencilState(GLDepthStencilState* depthStencilState)
+void GLStateManager::BindDepthStencilState(GLDepthStencilState* depthStencilState)
 {
     if (depthStencilState != nullptr && depthStencilState != boundDepthStencilState_)
     {
@@ -570,7 +570,7 @@ void GLStateManager::NotifyRasterizerStateRelease(GLRasterizerState* rasterizerS
         boundRasterizerState_ = nullptr;
 }
 
-void GLStateManager::SetRasterizerState(GLRasterizerState* rasterizerState)
+void GLStateManager::BindRasterizerState(GLRasterizerState* rasterizerState)
 {
     if (rasterizerState != nullptr && rasterizerState != boundRasterizerState_)
     {
@@ -1293,12 +1293,14 @@ void GLStateManager::DetermineVendorSpecificExtensions()
 
 void GLStateManager::PushDepthMaskAndEnable()
 {
-    SetDepthMask(GL_TRUE);
+    /* Cache current depth mask, then enable it */
     commonState_.cachedDepthMask = commonState_.depthMask;
+    SetDepthMask(GL_TRUE);
 }
 
 void GLStateManager::PopDepthMask()
 {
+    /* Restore cached depth mask */
     SetDepthMask(commonState_.cachedDepthMask);
 }
 

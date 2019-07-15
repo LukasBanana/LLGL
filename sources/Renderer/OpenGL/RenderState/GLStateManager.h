@@ -112,7 +112,7 @@ class GLStateManager
 
         void NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState);
 
-        void SetDepthStencilState(GLDepthStencilState* depthStencilState);
+        void BindDepthStencilState(GLDepthStencilState* depthStencilState);
 
         void SetDepthFunc(GLenum func);
         void SetDepthMask(GLboolean flag);
@@ -121,7 +121,7 @@ class GLStateManager
 
         void NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState);
 
-        void SetRasterizerState(GLRasterizerState* rasterizerState);
+        void BindRasterizerState(GLRasterizerState* rasterizerState);
 
         /* ----- Blend states ----- */
 

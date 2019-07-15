@@ -114,13 +114,9 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     if (patchVertices_ > 0)
         stateMngr.SetPatchVertices(patchVertices_);
 
-    /* Set depth states */
-    stateMngr.SetDepthStencilState(depthStencilState_.get());
-
-    /* Set rasterizer state */
-    stateMngr.SetRasterizerState(rasterizerState_.get());
-
-    /* Set blend state */
+    /* Bind depth-stencil, rasterizer, and blend states */
+    stateMngr.BindDepthStencilState(depthStencilState_.get());
+    stateMngr.BindRasterizerState(rasterizerState_.get());
     stateMngr.BindBlendState(blendState_.get());
 
     /* Set static viewports and scissors */

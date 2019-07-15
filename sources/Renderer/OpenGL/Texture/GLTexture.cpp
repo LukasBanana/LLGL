@@ -186,7 +186,7 @@ static void GLCopyTexSubImage(
         {
             case TextureType::Texture1D:
             {
-                readFBO.Attach(dstTexture, srcLevel, srcOffset);
+                readFBO.Attach(srcTexture, srcLevel, srcOffset);
                 glCopyTexSubImage1D(
                     targetGL,
                     dstLevel,
@@ -202,7 +202,7 @@ static void GLCopyTexSubImage(
             case TextureType::Texture2D:
             case TextureType::Texture2DMS:
             {
-                readFBO.Attach(dstTexture, srcLevel, srcOffset);
+                readFBO.Attach(srcTexture, srcLevel, srcOffset);
                 glCopyTexSubImage2D(
                     targetGL,
                     dstLevel,
@@ -224,7 +224,7 @@ static void GLCopyTexSubImage(
             {
                 for (decltype(extent.depth) i = 0; i < extent.depth; ++i)
                 {
-                    readFBO.Attach(dstTexture, srcLevel, srcOffset);
+                    readFBO.Attach(srcTexture, srcLevel, srcOffset);
                     glCopyTexSubImage3D(
                         targetGL,
                         dstLevel,

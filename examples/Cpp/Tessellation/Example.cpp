@@ -44,7 +44,7 @@ class Example_Tessellation : public ExampleBase
 
     std::uint32_t           constantBufferIndex = 0;
 
-    bool                    showWireframe       = false;
+    bool                    showWireframe       = true;
 
     struct Settings
     {
