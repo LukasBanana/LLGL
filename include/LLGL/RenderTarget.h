@@ -34,12 +34,8 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
 
     public:
 
-        /**
-        \brief Returns true if this render target is an instance of RenderContext. By default false.
-        \remarks Do not override this function. Only the sub class RenderContext is supposed to override it.
-        \see RenderContext::IsRenderContext
-        */
-        virtual bool IsRenderContext() const;
+        //! Returns true if this render target is an instance of RenderContext.
+        bool IsRenderContext() const;
 
         /**
         \brief Returns the render target resolution.
@@ -99,6 +95,14 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \see ValidateResolution
         */
         void ValidateMipResolution(const Texture& texture, std::uint32_t mipLevel);
+
+    private:
+
+        // Only RenderContext is supposed to override "OnIsRenderContext".
+        friend class RenderContext;
+
+        // Returns true if this render target is an instance of RenderContext. By default false.
+        virtual bool OnIsRenderContext() const;
 
 };
 

@@ -48,9 +48,6 @@ class LLGL_EXPORT RenderContext : public RenderTarget
 
         /* ----- Render Target ----- */
 
-        //! Returns true.
-        bool IsRenderContext() const final;
-
         /**
         \brief Returns the resolution of the current video mode.
         \see GetVideoMode
@@ -209,10 +206,14 @@ class LLGL_EXPORT RenderContext : public RenderTarget
 
     private:
 
+        bool OnIsRenderContext() const override final;
+
         bool SetVideoModePrimary(const VideoModeDescriptor& videoModeDesc);
 
         void StoreSurfacePosition();
         void RestoreSurfacePosition();
+
+    private:
 
         std::shared_ptr<Surface>    surface_;
 
