@@ -30,6 +30,7 @@ enum class GLExt
     ARB_clear_texture,
     ARB_texture_compression,
     ARB_texture_multisample,
+    ARB_texture_view,                   // GL 4.3
     ARB_sampler_objects,                // GL 3.2
     ARB_multi_bind,                     // GL 4.3
     ARB_vertex_buffer_object,
@@ -72,7 +73,6 @@ enum class GLExt
     ARB_copy_buffer,                    // GL 3.1
     ARB_copy_image,                     // GL 4.3
     ARB_polygon_offset_clamp,
-    ARB_texture_view,
     ARB_shader_image_load_store,
     ARB_framebuffer_no_attachments,
     ARB_clear_buffer_object,

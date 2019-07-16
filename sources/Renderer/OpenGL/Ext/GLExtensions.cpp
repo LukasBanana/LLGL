@@ -110,6 +110,10 @@ PFNGLTEXIMAGE3DMULTISAMPLEPROC                          glTexImage3DMultisample 
 PFNGLGETMULTISAMPLEFVPROC                               glGetMultisamplefv                              = nullptr;
 PFNGLSAMPLEMASKIPROC                                    glSampleMaski                                   = nullptr;
 
+/* GL_ARB_texture_view */
+
+PFNGLTEXTUREVIEWPROC                                    glTextureView                                   = nullptr;
+
 /* GL_ARB_sampler_objects */
 
 PFNGLGENSAMPLERSPROC                                    glGenSamplers                                   = nullptr;
@@ -437,10 +441,6 @@ PFNGLCOPYIMAGESUBDATAPROC                               glCopyImageSubData      
 /* GL_ARB_polygon_offset_clamp */
 
 PFNGLPOLYGONOFFSETCLAMPPROC                             glPolygonOffsetClamp                            = nullptr;
-
-/* GL_ARB_texture_view */
-
-PFNGLTEXTUREVIEWPROC                                    glTextureView                                   = nullptr;
 
 /* GL_ARB_shader_image_load_store */
 

@@ -140,6 +140,10 @@ DECL_GLPROC(void, glTexImage3DMultisample, (GLenum, GLsizei, GLenum, GLsizei, GL
 DECL_GLPROC(void, glGetMultisamplefv, (GLenum, GLuint, GLfloat*));
 DECL_GLPROC(void, glSampleMaski, (GLuint, GLbitfield));
 
+/* GL_ARB_texture_view */
+
+DECL_GLPROC(void, glTextureView, (GLuint, GLenum, GLuint, GLenum, GLuint, GLuint, GLuint, GLuint));
+
 /* GL_ARB_sampler_objects */
 
 DECL_GLPROC(void, glGenSamplers, (GLsizei, GLuint*));
@@ -467,10 +471,6 @@ DECL_GLPROC(void, glCopyImageSubData, (GLuint, GLenum, GLint, GLint, GLint, GLin
 /* GL_ARB_polygon_offset_clamp */
 
 DECL_GLPROC(void, glPolygonOffsetClamp, (GLfloat, GLfloat, GLfloat));
-
-/* GL_ARB_texture_view */
-
-DECL_GLPROC(void, glTextureView, (GLuint, GLenum, GLuint, GLenum, GLuint, GLuint, GLuint, GLuint));
 
 /* GL_ARB_shader_image_load_store */
 
