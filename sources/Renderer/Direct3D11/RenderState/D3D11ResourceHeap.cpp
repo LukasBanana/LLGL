@@ -414,7 +414,10 @@ void D3D11ResourceHeap::BuildAllSegments(
     }
 }
 
-void D3D11ResourceHeap::BuildAllSegmentsType1(const std::vector<D3DResourceBinding>& resourceBindings, long affectedStage, std::uint8_t& numSegments)
+void D3D11ResourceHeap::BuildAllSegmentsType1(
+    const std::vector<D3DResourceBinding>&  resourceBindings,
+    long                                    affectedStage,
+    std::uint8_t&                           numSegments)
 {
     BuildAllSegments(
         resourceBindings,
@@ -424,7 +427,10 @@ void D3D11ResourceHeap::BuildAllSegmentsType1(const std::vector<D3DResourceBindi
     );
 }
 
-void D3D11ResourceHeap::BuildAllSegmentsType2(const std::vector<D3DResourceBinding>& resourceBindings, long affectedStage, std::uint8_t& numSegments)
+void D3D11ResourceHeap::BuildAllSegmentsType2(
+    const std::vector<D3DResourceBinding>&  resourceBindings,
+    long                                    affectedStage,
+    std::uint8_t&                           numSegments)
 {
     BuildAllSegments(
         resourceBindings,

@@ -192,12 +192,12 @@ static void GLTexSubImageCube(
 static void GLTexSubImage1DArray(
     std::uint32_t               mipLevel,
     std::int32_t                x,
-    std::int32_t                firstLayer,
+    std::uint32_t               firstLayer,
     std::uint32_t               width,
     std::uint32_t               numLayers,
     const SrcImageDescriptor&   imageDesc)
 {
-    GLTexSubImage2DBase(GL_TEXTURE_1D_ARRAY, mipLevel, x, firstLayer, width, numLayers, imageDesc);
+    GLTexSubImage2DBase(GL_TEXTURE_1D_ARRAY, mipLevel, x, static_cast<std::int32_t>(firstLayer), width, numLayers, imageDesc);
 }
 
 #endif
@@ -206,13 +206,13 @@ static void GLTexSubImage2DArray(
     std::uint32_t               mipLevel,
     std::int32_t                x,
     std::int32_t                y,
-    std::int32_t                firstLayer,
+    std::uint32_t               firstLayer,
     std::uint32_t               width,
     std::uint32_t               height,
     std::uint32_t               numLayers,
     const SrcImageDescriptor&   imageDesc)
 {
-    GLTexSubImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevel, x, y, firstLayer, width, height, numLayers, imageDesc);
+    GLTexSubImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevel, x, y, static_cast<std::int32_t>(firstLayer), width, height, numLayers, imageDesc);
 }
 
 #ifdef LLGL_OPENGL
@@ -221,19 +221,19 @@ static void GLTexSubImageCubeArray(
     std::uint32_t               mipLevel,
     std::int32_t                x,
     std::int32_t                y,
-    std::int32_t                firstLayer,
+    std::uint32_t               firstLayer,
     std::uint32_t               width,
     std::uint32_t               height,
     std::uint32_t               numLayers,
     const SrcImageDescriptor&   imageDesc)
 {
-    GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, firstLayer, width, height, numLayers, imageDesc);
+    GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, static_cast<std::int32_t>(firstLayer), width, height, numLayers, imageDesc);
 }
 
 void GLTexSubImage1D(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage1D(
-        region.mipLevel,
+        region.baseMipLevel,
         region.offset.x,
         region.extent.width,
         imageDesc
@@ -245,7 +245,7 @@ void GLTexSubImage1D(const TextureRegion& region, const SrcImageDescriptor& imag
 void GLTexSubImage2D(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage2D(
-        region.mipLevel,
+        region.baseMipLevel,
         region.offset.x,
         region.offset.y,
         region.extent.width,
@@ -257,7 +257,7 @@ void GLTexSubImage2D(const TextureRegion& region, const SrcImageDescriptor& imag
 void GLTexSubImage3D(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage3D(
-        region.mipLevel,
+        region.baseMipLevel,
         region.offset.x,
         region.offset.y,
         region.offset.z,
@@ -271,12 +271,12 @@ void GLTexSubImage3D(const TextureRegion& region, const SrcImageDescriptor& imag
 void GLTexSubImageCube(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImageCube(
-        region.mipLevel,
+        region.baseMipLevel,
         region.offset.x,
         region.offset.y,
         region.extent.width,
         region.extent.height,
-        static_cast<std::uint32_t>(region.offset.z),
+        region.baseArrayLayer,
         imageDesc
     );
 }
@@ -286,11 +286,11 @@ void GLTexSubImageCube(const TextureRegion& region, const SrcImageDescriptor& im
 void GLTexSubImage1DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage1DArray(
-        region.mipLevel,
+        region.baseMipLevel,
         region.offset.x,
-        region.offset.y,
+        region.baseArrayLayer,
         region.extent.width,
-        region.extent.height,
+        region.numArrayLayers,
         imageDesc
     );
 }
@@ -300,13 +300,13 @@ void GLTexSubImage1DArray(const TextureRegion& region, const SrcImageDescriptor&
 void GLTexSubImage2DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage2DArray(
-        region.mipLevel,
+        region.baseMipLevel,
         region.offset.x,
         region.offset.y,
-        region.offset.z,
+        region.baseArrayLayer,
         region.extent.width,
         region.extent.height,
-        region.extent.depth,
+        region.numArrayLayers,
         imageDesc
     );
 }
@@ -316,13 +316,13 @@ void GLTexSubImage2DArray(const TextureRegion& region, const SrcImageDescriptor&
 void GLTexSubImageCubeArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImageCubeArray(
-        region.mipLevel,
+        region.baseMipLevel,
         region.offset.x,
         region.offset.y,
-        region.offset.z,
+        region.baseArrayLayer,
         region.extent.width,
         region.extent.height,
-        region.extent.depth,
+        region.numArrayLayers,
         imageDesc
     );
 }

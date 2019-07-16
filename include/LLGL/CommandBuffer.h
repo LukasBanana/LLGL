@@ -114,6 +114,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] srcLocation Specifies the source location, including MIP-map level and offset.
         Its offset plus the extent (i.e. <code>srcLocation.offset + extent</code>) must be less than or equal to the size of the source texture.
         \param[in] extent Specifies the extent of the texture region to copy (see TextureDescriptor::extent).
+        For this function, the extent also includes the array layers, i.e. \c y component for 1D arrays (TextureType::Texture1DArray),
+        and \c z component for 2D and cube arrays (TextureType::Texture2DArray and TextureType::TextureCubeArray).
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
         */

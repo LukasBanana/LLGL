@@ -533,26 +533,33 @@ void D3D11Texture::CreateSubresourceDSV(
     DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView",  "for texture subresource");
 }
 
-UINT D3D11Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer) const
+// Returns true if the specified texture type contains an array layer for D3D11 textures
+static bool HasArrayLayer(const TextureType type)
 {
-    return D3D11CalcSubresource(mipLevel, arrayLayer, numMipLevels_);
-}
-
-UINT D3D11Texture::CalcSubresource(const TextureLocation& location) const
-{
-    /* Only include array layer in subresource calculation for array and cube texture types */
-    switch (GetType())
+    switch (type)
     {
         case TextureType::Texture1DArray:
-            return CalcSubresource(location.mipLevel, static_cast<UINT>(location.offset.y));
         case TextureType::TextureCube:
         case TextureType::Texture2DArray:
         case TextureType::Texture2DMSArray:
         case TextureType::TextureCubeArray:
-            return CalcSubresource(location.mipLevel, static_cast<UINT>(location.offset.z));
+            return true;
         default:
-            return CalcSubresource(location.mipLevel, 0);
+            return false;
     }
+}
+
+UINT D3D11Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer) const
+{
+    if (HasArrayLayer(GetType()))
+        return D3D11CalcSubresource(mipLevel, arrayLayer, numMipLevels_);
+    else
+        return D3D11CalcSubresource(mipLevel, 0, numMipLevels_);
+}
+
+UINT D3D11Texture::CalcSubresource(const TextureLocation& location) const
+{
+    return CalcSubresource(location.mipLevel, location.arrayLayer);
 }
 
 D3D11_BOX D3D11Texture::CalcRegion(const Offset3D& offset, const Extent3D& extent) const

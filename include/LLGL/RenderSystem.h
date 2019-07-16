@@ -296,7 +296,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         /**
         \brief Updates the image data of the specified texture.
         \param[in] texture Specifies the texture whose data is to be updated.
-        \param[in] textureRegion Specifies the texture region where the texture is to be updated.
+        \param[in] textureRegion Specifies the texture region where the texture is to be updated. The field TextureRegion::numMipLevels \b must be 1.
         \param[in] imageDesc Specifies the image data descriptor. Its \c data member must not be null!
         \remarks This function can only be used for non-multi-sample textures, i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray.
         */
@@ -360,6 +360,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
         \see GenerateMips(Texture&)
         \see NumMipLevels
+        \todo Replace by primary GenerateMips functions in conjunction with texture views.
         */
         virtual void GenerateMips(
             Texture&        texture,

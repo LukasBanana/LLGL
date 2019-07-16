@@ -56,10 +56,16 @@ class D3D11ResourceHeap final : public ResourceHeap
         );
 
         void BuildAllSegmentsType1(
-            const std::vector<D3DResourceBinding>& resourceBindings,
-            long affectedStage,
-            std::uint8_t& numSegments);
-        void BuildAllSegmentsType2(const std::vector<D3DResourceBinding>& resourceBindings, long affectedStage, std::uint8_t& numSegments);
+            const std::vector<D3DResourceBinding>&  resourceBindings,
+            long                                    affectedStage,
+            std::uint8_t&                           numSegments
+        );
+
+        void BuildAllSegmentsType2(
+            const std::vector<D3DResourceBinding>&  resourceBindings,
+            long                                    affectedStage,
+            std::uint8_t&                           numSegments
+        );
 
         void BuildSegment1(D3DResourceBindingIter it, UINT count);
         void BuildSegment2(D3DResourceBindingIter it, UINT count);
@@ -72,6 +78,8 @@ class D3D11ResourceHeap final : public ResourceHeap
         void BindGSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
         void BindPSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
         void BindCSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
+
+    private:
 
         /*
         Header structure to describe all segments within the raw buffer.
@@ -114,6 +122,8 @@ class D3D11ResourceHeap final : public ResourceHeap
             std::uint8_t numCSSamplerSegments               : 5;
             std::uint8_t numCSShaderResourceViewSegments;
         };
+
+    private:
 
         SegmentationHeader          segmentationHeader_;
         std::uint16_t               bufferOffsetCS_         = 0;

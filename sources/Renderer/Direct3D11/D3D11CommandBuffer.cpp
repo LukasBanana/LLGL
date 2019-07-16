@@ -11,6 +11,7 @@
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
+#include "../TextureUtils.h"
 #include <algorithm>
 
 #include "RenderState/D3D11StateManager.h"
@@ -124,14 +125,15 @@ void D3D11CommandBuffer::CopyTexture(
     auto& dstTextureD3D = LLGL_CAST(D3D11Texture&, dstTexture);
     auto& srcTextureD3D = LLGL_CAST(D3D11Texture&, srcTexture);
 
-    const D3D11_BOX srcBox = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
+    const Offset3D  dstOffset   = CalcTextureOffset(dstTexture.GetType(), dstLocation.offset, dstLocation.arrayLayer);
+    const D3D11_BOX srcBox      = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
 
     context_->CopySubresourceRegion(
         dstTextureD3D.GetNative().resource.Get(),   // pDstResource
         dstTextureD3D.CalcSubresource(dstLocation), // DstSubresource
-        static_cast<UINT>(dstLocation.offset.x),    // DstX
-        static_cast<UINT>(dstLocation.offset.y),    // DstY
-        static_cast<UINT>(dstLocation.offset.z),    // DstZ
+        static_cast<UINT>(dstOffset.x),             // DstX
+        static_cast<UINT>(dstOffset.y),             // DstY
+        static_cast<UINT>(dstOffset.z),             // DstZ
         srcTextureD3D.GetNative().resource.Get(),   // pSrcResource
         srcTextureD3D.CalcSubresource(srcLocation), // SrcSubresource
         &srcBox                                     // pSrcBox

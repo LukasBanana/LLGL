@@ -9,6 +9,7 @@
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommandExecutor.h"
 
+#include "../../TextureUtils.h"
 #include "../GLRenderContext.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
@@ -99,10 +100,10 @@ void GLImmediateCommandBuffer::CopyTexture(
     auto& srcTextureGL = LLGL_CAST(GLTexture&, srcTexture);
     dstTextureGL.CopyImageSubData(
         static_cast<GLint>(dstLocation.mipLevel),
-        dstLocation.offset,
+        CalcTextureOffset(dstTexture.GetType(), dstLocation.offset, dstLocation.arrayLayer),
         srcTextureGL,
         static_cast<GLint>(srcLocation.mipLevel),
-        srcLocation.offset,
+        CalcTextureOffset(srcTexture.GetType(), srcLocation.offset, srcLocation.arrayLayer),
         extent
     );
 }

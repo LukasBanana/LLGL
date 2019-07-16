@@ -59,39 +59,66 @@ void D3D11RenderSystem::Release(Texture& texture)
 
 void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
-    if (texture.GetType() == TextureType::Texture3D)
+    switch (texture.GetType())
     {
-        UpdateGenericTexture(
-            texture,
-            textureRegion.mipLevel,
-            0,
-            CD3D11_BOX(
-                textureRegion.offset.x,
-                textureRegion.offset.y,
-                textureRegion.offset.z,
-                textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
-                textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
-                textureRegion.offset.z + static_cast<LONG>(textureRegion.extent.depth)
-            ),
-            imageDesc
-        );
-    }
-    else
-    {
-        UpdateGenericTexture(
-            texture,
-            textureRegion.mipLevel,
-            static_cast<std::uint32_t>(textureRegion.offset.z),
-            CD3D11_BOX(
-                textureRegion.offset.x,
-                textureRegion.offset.y,
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            UpdateGenericTexture(
+                texture,
+                textureRegion.baseMipLevel,
+                textureRegion.baseArrayLayer,
+                CD3D11_BOX(
+                    textureRegion.offset.x,
+                    0,
+                    0,
+                    textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
+                    static_cast<LONG>(textureRegion.numArrayLayers),
+                    1
+                ),
+                imageDesc
+            );
+            break;
+
+        case TextureType::Texture2D:
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+            UpdateGenericTexture(
+                texture,
+                textureRegion.baseMipLevel,
+                textureRegion.baseArrayLayer,
+                CD3D11_BOX(
+                    textureRegion.offset.x,
+                    textureRegion.offset.y,
+                    0,
+                    textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
+                    textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
+                    static_cast<LONG>(textureRegion.numArrayLayers)
+                ),
+                imageDesc
+            );
+            break;
+
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            break;
+
+        case TextureType::Texture3D:
+            UpdateGenericTexture(
+                texture,
+                textureRegion.baseMipLevel,
                 0,
-                textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
-                textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
-                1
-            ),
-            imageDesc
-        );
+                CD3D11_BOX(
+                    textureRegion.offset.x,
+                    textureRegion.offset.y,
+                    textureRegion.offset.z,
+                    textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
+                    textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
+                    textureRegion.offset.z + static_cast<LONG>(textureRegion.extent.depth)
+                ),
+                imageDesc
+            );
+            break;
     }
 }
 

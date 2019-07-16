@@ -114,17 +114,16 @@ struct TextureDescriptor
     \remarks The \c depth component is only used for 3D textures (i.e. TextureType::Texture3D).
     \remarks The \c width and \c height components must be equal for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
     \see IsCubeTexture
-    \see arrayLayers
     */
     Extent3D        extent          = { 1, 1, 1 };
 
     /**
     \brief Number of array layers. By default 1.
-    \remarks This can be greater than 1 for array textures and cube textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
-    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
-    For cube textures, this must be a multiple of 6 (one array layer for each cube face).
-    For all other texture types, this must be 1.
-    The index offsets for each cube face are as follows:
+    \remarks For array textures and cube textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
+    TextureType::TextureCube, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray), this \b must be greater than or equal to 1.
+    \remarks For cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray), this \b must be a multiple of 6 and greater than zero (one array layer for each cube face).
+    \remarks For all other texture types, this \b must be 1.
+    \remarks The index offsets for each cube face are as follows:
     - <code>X+</code> direction has index offset 0.
     - <code>X-</code> direction has index offset 1.
     - <code>Y+</code> direction has index offset 2.
@@ -134,7 +133,6 @@ struct TextureDescriptor
     \see IsArrayTexture
     \see IsCubeTexture
     \see RenderingLimits::maxTextureArrayLayers
-    \see extent
     */
     std::uint32_t   arrayLayers     = 1;
 
@@ -170,24 +168,33 @@ struct TextureLocation
     TextureLocation(const TextureLocation&) = default;
 
     //! Constructor to initialize all attributes.
-    inline TextureLocation(const Offset3D& offset, std::uint32_t mipLevel = 0) :
-        mipLevel { mipLevel },
-        offset   { offset   }
+    inline TextureLocation(const Offset3D& offset, std::uint32_t arrayLayer = 0, std::uint32_t mipLevel = 0) :
+        offset     { offset     },
+        mipLevel   { mipLevel   },
+        arrayLayer { arrayLayer }
     {
     }
 
-    //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
-    std::uint32_t   mipLevel    = 0;
-
     /**
-    \brief Sub-texture offset. By default (0, 0, 0).
-    \remarks The sub members of this field must not be negative.
-    \remarks For array textures, the Z component specifies the array layer.
-    For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
-    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayers member.
-    Negative values of this member are not allowed and result in undefined behavior.
+    \brief Zero-based offset within the texture data.
+    \remarks Any component of this field that is not meant for the respective texture type is ignored.
+    All other components must be greater than or equal to zero.
     */
     Offset3D        offset;
+
+    /**
+    \brief Zero-based array layer index.
+    \remarks Only used by array texture types (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
+    \remarks This field is ignored by all other texture types.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t   arrayLayer  = 0;
+
+    /**
+    \brief MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t   mipLevel    = 0;
 };
 
 /**
@@ -201,33 +208,53 @@ struct TextureRegion
     TextureRegion() = default;
     TextureRegion(const TextureRegion&) = default;
 
-    //! Constructor to initialize all attributes.
-    inline TextureRegion(const Offset3D& offset, const Extent3D& extent = { 1, 1, 1 }, std::uint32_t mipLevel = 0) :
-        mipLevel { mipLevel },
-        offset   { offset   },
-        extent   { extent   }
+    //! Constructor to initialize offset and extent only.
+    inline TextureRegion(const Offset3D& offset, const Extent3D& extent) :
+        offset { offset },
+        extent { extent }
     {
     }
 
-    //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
-    std::uint32_t   mipLevel    = 0;
-
     /**
-    \brief Sub-texture offset. By default (0, 0, 0).
-    \remarks The sub members of this field must not be negative.
-    \remarks For array textures, the Z component specifies the array layer.
-    For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
-    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayers member.
-    Negative values of this member are not allowed and result in undefined behavior.
+    \brief Zero-based offset within the texture data.
+    \remarks Any component of this field that is not meant for the respective texture type is ignored.
+    All other components must be greater than or equal to zero.
     */
     Offset3D        offset;
 
     /**
-    \brief Sub-texture extent. By default (1, 1, 1).
-    \remarks For array textures, the depth component specifies the number of array layers (for 1D-array textures it's the height component).
-    For cube textures, the depth component specifies the number of array layers and cube faces (where each cube has 6 faces).
+    \brief Extent of the sub texture region.
+    \see TextureDescriptor::extent
     */
-    Extent3D        extent      = { 1, 1, 1 };
+    Extent3D        extent;
+
+    /**
+    \brief Zero-based index of the first array layer. By default 0.
+    \remarks Only used by array texture types (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
+    \remarks This field is ignored by all other texture types.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t   baseArrayLayer  = 0;
+
+    /**
+    \brief Number of array layers. By default 1.
+    \remarks \b Must be greater than zero.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t   numArrayLayers  = 1;
+
+    /**
+    \brief MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t   baseMipLevel    = 0;
+
+    /**
+    \brief Number of MIP-map levels. By default 1.
+    \remarks \b Must be greater than zero.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t   numMipLevels    = 1;
 };
 
 

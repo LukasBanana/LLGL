@@ -58,6 +58,8 @@ class GLResourceHeap final : public ResourceHeap
         void BuildSegment1(GLResourceBindingIter it, GLsizei count);
         void BuildSegment2(GLResourceBindingIter it, GLsizei count);
 
+    private:
+
         // Header structure to describe all segments within the raw buffer.
         struct SegmentationHeader
         {
@@ -66,6 +68,8 @@ class GLResourceHeap final : public ResourceHeap
             std::uint8_t numTextureSegments         = 0;
             std::uint8_t numSamplerSegments         = 0;
         };
+
+    private:
 
         SegmentationHeader          segmentationHeader_;
         std::vector<std::int8_t>    buffer_;

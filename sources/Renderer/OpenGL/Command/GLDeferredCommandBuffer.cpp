@@ -8,6 +8,7 @@
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommand.h"
 
+#include "../../TextureUtils.h"
 #include "../GLRenderContext.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLCore.h"
@@ -128,10 +129,10 @@ void GLDeferredCommandBuffer::CopyTexture(
     {
         cmd->dstTexture = LLGL_CAST(GLTexture*, &dstTexture);
         cmd->dstLevel   = static_cast<GLint>(dstLocation.mipLevel);
-        cmd->dstOffset  = dstLocation.offset;
+        cmd->dstOffset  = CalcTextureOffset(dstTexture.GetType(), dstLocation.offset, dstLocation.arrayLayer);
         cmd->srcTexture = LLGL_CAST(GLTexture*, &srcTexture);
         cmd->srcLevel   = static_cast<GLint>(srcLocation.mipLevel);
-        cmd->srcOffset  = srcLocation.offset;
+        cmd->srcOffset  = CalcTextureOffset(srcTexture.GetType(), srcLocation.offset, srcLocation.arrayLayer);
         cmd->extent     = extent;
     }
 }
