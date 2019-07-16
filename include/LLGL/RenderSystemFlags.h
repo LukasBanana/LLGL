@@ -409,6 +409,15 @@ struct RenderingFeatures
     */
     bool hasMultiSampleTextures         = false;
 
+    #if 0//TODO: enable with "TextureView" feature
+    /**
+    \brief Specifies whether texture views are supported.
+    \remarks Texture views can share their image data with another texture resource.
+    \see RenderSystem::CreateTextureView
+    */
+    bool hasTextureViews                = false;
+    #endif
+
     //! Specifies whether samplers are supported.
     bool hasSamplers                    = false;
 
@@ -426,19 +435,29 @@ struct RenderingFeatures
     bool hasStorageBuffers              = false;
 
     /**
-    \brief Specifies whether individual shader uniforms are supported (typically only for OpenGL 2.0+).
-    \see ShaderProgram::LockShaderUniform
+    \brief Specifies whether individual shader uniforms are supported.
+    \note Only supported with: OpenGL.
+    \see CommandBuffer::SetUniform
+    \see CommandBuffer::SetUniforms
     */
     bool hasUniforms                    = false;
 
-    //! Specifies whether geometry shaders are supported.
+    /**
+    \brief Specifies whether geometry shaders are supported.
+    \see ShaderType::Geometry
+    */
     bool hasGeometryShaders             = false;
 
-    //! Specifies whether tessellation shaders are supported.
+    /**
+    \brief Specifies whether tessellation shaders are supported.
+    \see ShaderType::TessControl
+    \see ShaderType::TessEvaluation
+    */
     bool hasTessellationShaders         = false;
 
     /**
     \brief Specifies whether compute shaders are supported.
+    \see ShaderType::Compute
     \see CommandBuffer::Dispatch
     \see CommandBuffer::DispatchIndirect
     */

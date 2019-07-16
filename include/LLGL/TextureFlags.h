@@ -37,7 +37,7 @@ enum class TextureType
     Texture2DMSArray,   //!< 2-Dimensional multi-sample array texture.
 };
 
-#if 0//TODO: currently unused
+#if 0//TODO: enable with TextureViewDescriptor
 /**
 \brief Texture component swizzle enumeration.
 \remarks Can be used to change the order of texel components independently of a shader.
@@ -57,10 +57,11 @@ enum class TextureSwizzle
 
 /* ----- Structures ----- */
 
-#if 0//TODO: currently unused
+#if 0//TODO: enable with TextureViewDescriptor
 /**
 \brief Texture component swizzle structure for red, green, blue, and alpha components.
 \remarks Can be used to change the order of texel components independently of a shader.
+\see TextureViewDescriptor::swizzle
 */
 struct TextureSwizzleRGBA
 {
@@ -70,91 +71,6 @@ struct TextureSwizzleRGBA
     TextureSwizzle a = TextureSwizzle::Alpha;   //!< Alpha component swizzle. By default TextureSwizzle::Alpha.
 };
 #endif
-
-/**
-\brief Texture descriptor structure.
-\remarks This is used to specifiy the dimensions of a texture which is to be created.
-\see RenderSystem::CreateTexture
-*/
-struct TextureDescriptor
-{
-    //! Hardware texture type. By default TextureType::Texture1D.
-    TextureType     type            = TextureType::Texture1D;
-
-    /**
-    \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default BindFlags::SampleBuffer and BindFlags::ColorAttachment.
-    \remarks When the texture will be bound as a color attachment to a render target for instance, the BindFlags::ColorAttachment flag is required.
-    \see BindFlags
-    */
-    long            bindFlags       = (BindFlags::SampleBuffer | BindFlags::ColorAttachment);
-
-    /**
-    \brief CPU read/write access flags. By default 0.
-    \remarks If this is 0 the texture cannot be mapped from GPU memory space into CPU memory space and vice versa.
-    \see CPUAccessFlags
-    \see RenderSystem::MapTexture
-    \todo Not supported yet.
-    */
-    long            cpuAccessFlags  = 0;
-
-    /**
-    \brief Miscellaneous texture flags. By default MiscFlags::FixedSamples.
-    \remarks This can be used as a hint for the renderer how frequently the texture will be updated, or whether a multi-sampled texture has fixed sample locations.
-    \see MiscFlags
-    */
-    long            miscFlags       = MiscFlags::FixedSamples;
-
-    //! Hardware texture format. By default Format::RGBA8UNorm.
-    Format          format          = Format::RGBA8UNorm;
-
-    /**
-    \brief Size of the texture (excluding the number of array layers). By default (1, 1, 1).
-    \remarks The \c height component is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
-    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, and TextureType::Texture2DMSArray).
-    \remarks The \c depth component is only used for 3D textures (i.e. TextureType::Texture3D).
-    \remarks The \c width and \c height components must be equal for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
-    \see IsCubeTexture
-    */
-    Extent3D        extent          = { 1, 1, 1 };
-
-    /**
-    \brief Number of array layers. By default 1.
-    \remarks For array textures and cube textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
-    TextureType::TextureCube, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray), this \b must be greater than or equal to 1.
-    \remarks For cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray), this \b must be a multiple of 6 and greater than zero (one array layer for each cube face).
-    \remarks For all other texture types, this \b must be 1.
-    \remarks The index offsets for each cube face are as follows:
-    - <code>X+</code> direction has index offset 0.
-    - <code>X-</code> direction has index offset 1.
-    - <code>Y+</code> direction has index offset 2.
-    - <code>Y-</code> direction has index offset 3.
-    - <code>Z+</code> direction has index offset 4.
-    - <code>Z-</code> direction has index offset 5.
-    \see IsArrayTexture
-    \see IsCubeTexture
-    \see RenderingLimits::maxTextureArrayLayers
-    */
-    std::uint32_t   arrayLayers     = 1;
-
-    /**
-    \brief Number of MIP-map levels. By default 0.
-    \remarks If this is 0, the full MIP-chain will be generated.
-    If this is 1, no MIP-mapping is used for this texture and it has only a single MIP-map level.
-    This field is ignored for multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray),
-    since these texture types only have a single MIP-map level.
-    \see NumMipLevels
-    \see RenderSystem::GenerateMips
-    */
-    std::uint32_t   mipLevels       = 0;
-
-    /**
-    \brief Number of samples per texel. By default 1.
-    \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
-    The equivalent member for graphics pipeline states is MultiSamplingDescriptor::samples.
-    \see IsMultiSampleTexture
-    */
-    std::uint32_t   samples         = 1;
-};
 
 /**
 \brief Texture location structure: MIP-map level and offset.
@@ -256,6 +172,142 @@ struct TextureRegion
     */
     std::uint32_t   numMipLevels    = 1;
 };
+
+/**
+\brief Texture descriptor structure.
+\remarks Contains all information about type, format, and dimension to create a texture resource.
+\see RenderSystem::CreateTexture
+*/
+struct TextureDescriptor
+{
+    //! Hardware texture type. By default TextureType::Texture1D.
+    TextureType     type            = TextureType::Texture1D;
+
+    /**
+    \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default BindFlags::SampleBuffer and BindFlags::ColorAttachment.
+    \remarks When the texture will be bound as a color attachment to a render target for instance, the BindFlags::ColorAttachment flag is required.
+    \see BindFlags
+    */
+    long            bindFlags       = (BindFlags::SampleBuffer | BindFlags::ColorAttachment);
+
+    /**
+    \brief CPU read/write access flags. By default 0.
+    \remarks If this is 0 the texture cannot be mapped from GPU memory space into CPU memory space and vice versa.
+    \see CPUAccessFlags
+    \see RenderSystem::MapTexture
+    \todo Not supported yet.
+    */
+    long            cpuAccessFlags  = 0;
+
+    /**
+    \brief Miscellaneous texture flags. By default MiscFlags::FixedSamples.
+    \remarks This can be used as a hint for the renderer how frequently the texture will be updated, or whether a multi-sampled texture has fixed sample locations.
+    \see MiscFlags
+    */
+    long            miscFlags       = MiscFlags::FixedSamples;
+
+    //! Hardware texture format. By default Format::RGBA8UNorm.
+    Format          format          = Format::RGBA8UNorm;
+
+    /**
+    \brief Size of the texture (excluding the number of array layers). By default (1, 1, 1).
+    \remarks The \c height component is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
+    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, and TextureType::Texture2DMSArray).
+    \remarks The \c depth component is only used for 3D textures (i.e. TextureType::Texture3D).
+    \remarks The \c width and \c height components must be equal for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
+    \see IsCubeTexture
+    */
+    Extent3D        extent          = { 1, 1, 1 };
+
+    /**
+    \brief Number of array layers. By default 1.
+    \remarks For array textures and cube textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
+    TextureType::TextureCube, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray), this \b must be greater than or equal to 1.
+    \remarks For cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray), this \b must be a multiple of 6 and greater than zero (one array layer for each cube face).
+    \remarks For all other texture types, this \b must be 1.
+    \remarks The index offsets for each cube face are as follows:
+    - <code>X+</code> direction has index offset 0.
+    - <code>X-</code> direction has index offset 1.
+    - <code>Y+</code> direction has index offset 2.
+    - <code>Y-</code> direction has index offset 3.
+    - <code>Z+</code> direction has index offset 4.
+    - <code>Z-</code> direction has index offset 5.
+    \see IsArrayTexture
+    \see IsCubeTexture
+    \see RenderingLimits::maxTextureArrayLayers
+    */
+    std::uint32_t   arrayLayers     = 1;
+
+    /**
+    \brief Number of MIP-map levels. By default 0.
+    \remarks If this is 0, the full MIP-chain will be generated.
+    If this is 1, no MIP-mapping is used for this texture and it has only a single MIP-map level.
+    This field is ignored for multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray),
+    since these texture types only have a single MIP-map level.
+    \see NumMipLevels
+    \see RenderSystem::GenerateMips
+    */
+    std::uint32_t   mipLevels       = 0;
+
+    /**
+    \brief Number of samples per texel. By default 1.
+    \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
+    The equivalent member for graphics pipeline states is MultiSamplingDescriptor::samples.
+    \see IsMultiSampleTexture
+    */
+    std::uint32_t   samples         = 1;
+};
+
+#if 0//TODO: enable with "TextureView" feature
+/**
+\brief Texture view descriptor structure.
+\remarks Contains all information about type, format, and dimension to create a texture view that shares the image data of another texture.
+\see RenderSystem::CreateTextureView
+\see RenderingFeatures::hasTextureViews
+*/
+struct TextureViewDescriptor
+{
+    //! Hardware texture type. By default TextureType::Texture1D.
+    TextureType         type            = TextureType::Texture1D;
+
+    //! Hardware texture format. By default Format::RGBA8UNorm.
+    Format              format          = Format::RGBA8UNorm;
+
+    /**
+    \brief Zero-based index of the first array layer. By default 0.
+    \remarks Only used by array texture types (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
+    \remarks This field is ignored by all other texture types.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t       baseArrayLayer  = 0;
+
+    /**
+    \brief Number of array layers. By default 1.
+    \remarks \b Must be greater than zero.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t       numArrayLayers  = 1;
+
+    /**
+    \brief MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t       baseMipLevel    = 0;
+
+    /**
+    \brief Number of MIP-map levels. By default 1.
+    \remarks \b Must be greater than zero.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t       numMipLevels    = 1;
+
+    /**
+    \brief Specifies the color component mapping.
+    \remarks Each component is mapped to its identity by default.
+    */
+    TextureSwizzleRGBA  swizzle;
+};
+#endif
 
 
 /* ----- Functions ----- */
