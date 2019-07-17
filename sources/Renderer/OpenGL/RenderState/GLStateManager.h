@@ -43,13 +43,22 @@ class GLStateManager
 
     public:
 
+        // GL limitations required for validation of state parameters
+        struct GLLimits
+        {
+            GLint       maxViewports        = 0;                // Maximum number of viewports (minimum value is 16).
+            GLfloat     lineWidthRange[2]   = { 1.0f, 1.0f };   // Minimal range of both <aliased> and <smooth> line width range.
+            GLint       maxDebugNameLength  = 0;                // Maximal length of names for debug groups (minimum value is 1).
+            GLint       maxDebugStackDepth  = 0;                // Maximal depth of the debug group stack (minimum value is 64).
+            GLint       maxLabelLength      = 0;                // Maximal length of debug labels (minimum value is 256).
+        };
+
+    public:
+
         /* ----- Common ----- */
 
         GLStateManager();
         ~GLStateManager();
-
-        // Active state manager. Each GL context has its own states, thus its own state manager.
-        static GLStateManager* active;
 
         // Queries all supported and available GL extensions and limitations, then stores it internally (must be called once a GL context has been created).
         void DetermineExtensionsAndLimits();
@@ -228,6 +237,26 @@ class GLStateManager
         void Clear(long flags);
         void ClearBuffers(std::uint32_t numAttachments, const AttachmentClear* attachments);
 
+        /* ----- Feedback ----- */
+
+        // Returns the limitations for this GL context.
+        inline const GLLimits& GetLimits() const
+        {
+            return limits_;
+        }
+
+        // Returns the common denominator of limitations for all GL contexts.
+        static inline const GLLimits& GetCommonLimits()
+        {
+            return commonLimits_;
+        }
+
+    public:
+
+        //TODO: replace by "static GLStateManager* Get()" function
+        // Active state manager. Each GL context has its own states, thus its own state manager.
+        static GLStateManager* active;
+
     private:
 
         void AdjustViewport(GLViewport& viewport);
@@ -288,13 +317,6 @@ class GLStateManager
         #endif
 
     private:
-
-        // GL limitations required for validation of state parameters
-        struct GLLimits
-        {
-            GLint       maxViewports        = 16;               // must be at least 16
-            GLfloat     lineWidthRange[2]   = { 1.0f, 1.0f };   // minimal range of both <aliased> and <smooth> line width range
-        };
 
         // Common GL states
         struct GLCommonState
@@ -413,7 +435,8 @@ class GLStateManager
 
     private:
 
-        GLLimits                        limits_;
+        GLLimits                        limits_;                // Limitations of this GL context
+        static GLLimits                 commonLimits_;          // Common denominator of limitations for all GL contexts
 
         OpenGLDependentStateDescriptor  apiDependentState_;
 

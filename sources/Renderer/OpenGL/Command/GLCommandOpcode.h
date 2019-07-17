@@ -67,6 +67,8 @@ enum GLOpcode : std::uint8_t
     GLOpcodeBindTexture,
     GLOpcodeBindSampler,
     GLOpcodeUnbindResources,
+    GLOpcodePushDebugGroup,
+    GLOpcodePopDebugGroup,
 };
 
 

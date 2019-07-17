@@ -372,6 +372,16 @@ struct GLCmdUnbindResources
     };
 };
 
+struct GLCmdPushDebugGroup
+{
+    GLenum      source;
+    GLuint      id;
+    GLsizei     length;
+//  GLchar      name[length];
+};
+
+//struct GLCmdPopDebugGroup {};
+
 
 } // /namespace LLGL
 

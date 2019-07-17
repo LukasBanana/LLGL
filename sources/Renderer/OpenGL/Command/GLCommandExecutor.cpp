@@ -410,6 +410,19 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
                 stateMngr.UnbindSamplers(cmd->first, cmd->count);
             return sizeof(*cmd);
         }
+        #ifdef GL_KHR_debug
+        case GLOpcodePushDebugGroup:
+        {
+            auto cmd = reinterpret_cast<const GLCmdPushDebugGroup*>(pc);
+            glPushDebugGroup(cmd->source, cmd->id, cmd->length, reinterpret_cast<const GLchar*>(cmd + 1));
+            return (sizeof(*cmd) + cmd->length + 1);
+        }
+        case GLOpcodePopDebugGroup:
+        {
+            glPopDebugGroup();
+            return 0;
+        }
+        #endif // /GL_KHR_debug
         default:
             return 0;
     }

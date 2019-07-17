@@ -771,12 +771,32 @@ void GLDeferredCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t off
 
 void GLDeferredCommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+    {
+        /* Push debug group name into command stream with default ID no. */
+        const GLint         maxLength       = GLStateManager::active->GetLimits().maxDebugNameLength;
+        const GLuint        id              = 0;
+        const std::size_t   actualLength    = std::strlen(name);
+        const std::size_t   croppedLength   = std::min(actualLength, static_cast<std::size_t>(maxLength));
+
+        auto cmd = AllocCommand<GLCmdPushDebugGroup>(GLOpcodePushDebugGroup, croppedLength + 1);
+        {
+            cmd->source = GL_DEBUG_SOURCE_APPLICATION;
+            cmd->id     = id;
+            cmd->length = static_cast<GLsizei>(croppedLength);
+            ::memcpy(cmd + 1, name, croppedLength + 1);
+        }
+    }
+    #endif // /GL_KHR_debug
 }
 
 void GLDeferredCommandBuffer::PopDebugGroup()
 {
-    //TODO
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+        AllocOpCode(GLOpcodePopDebugGroup);
+    #endif // /GL_KHR_debug
 }
 
 /* ----- Direct Resource Access ------ */

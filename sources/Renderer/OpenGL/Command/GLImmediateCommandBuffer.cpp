@@ -672,12 +672,26 @@ void GLImmediateCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t of
 
 void GLImmediateCommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+    {
+        /* Push debug group name into command stream with default ID no. */
+        const GLint         maxLength       = stateMngr_->GetLimits().maxDebugNameLength;
+        const GLuint        id              = 0;
+        const std::size_t   actualLength    = std::strlen(name);
+        const std::size_t   croppedLength   = std::min(actualLength, static_cast<std::size_t>(maxLength));
+
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, static_cast<GLsizei>(croppedLength), name);
+    }
+    #endif // /GL_KHR_debug
 }
 
 void GLImmediateCommandBuffer::PopDebugGroup()
 {
-    //TODO
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+        glPopDebugGroup();
+    #endif // /GL_KHR_debug
 }
 
 /* ----- Direct Resource Access ------ */
