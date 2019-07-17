@@ -36,6 +36,7 @@
 
 #include <algorithm>
 #include <string.h>
+#include <cstring> // std::strlen
 
 #ifdef LLGL_ENABLE_JIT_COMPILER
 #   include "GLCommandAssembler.h"

@@ -35,6 +35,8 @@
 #include "../RenderState/GLRenderPass.h"
 #include "../RenderState/GLQueryHeap.h"
 
+#include <cstring> // std::strlen
+
 
 namespace LLGL
 {
