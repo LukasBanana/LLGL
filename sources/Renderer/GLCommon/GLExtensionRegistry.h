@@ -66,7 +66,7 @@ enum class GLExt
     ARB_internalformat_query,
     ARB_internalformat_query2,
     ARB_ES2_compatibility,
-    ARB_gl_spirv,
+    ARB_gl_spirv,                       // GL 4.6
     ARB_texture_storage,
     ARB_texture_storage_multisample,
     ARB_buffer_storage,

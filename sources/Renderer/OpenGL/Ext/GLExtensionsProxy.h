@@ -1,15 +1,13 @@
 /*
- * GLExtensions.h
+ * GLExtensionsProxy.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_GL_EXTENSIONS_H
-#define LLGL_GL_EXTENSIONS_H
+#ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
 
 
-#include <LLGL/Platform/Platform.h>
 #include "../OpenGL.h"
 
 
@@ -17,14 +15,18 @@ namespace LLGL
 {
 
 
-// Include inline header for object declarations
+#define LLGL_DECL_GL_PROXY_PROCS
+
+// Include inline header for proxy function declarations
 #include "GLExtensionsDecl.inl"
+
+#undef LLGL_DECL_GL_PROXY_PROCS
 
 
 } // /namespace LLGL
 
 
-#endif
+#endif // /LLGL_GL_ENABLE_EXT_PLACEHOLDERS
 
 
 

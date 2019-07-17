@@ -1,5 +1,5 @@
 /*
- * GLExtensionsNull.cpp
+ * GLExtensionsProxy.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -8,19 +8,29 @@
 #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
 
 
+#include "../OpenGL.h"
 #include "../../GLCommon/GLCore.h"
 #include <stdexcept>
 #include <string>
 
 
-#define LLGL_DEF_GL_DUMMY_PROCS
 
-#include "GLExtensionsNull.h"
-
-#undef LLGL_DEF_GL_DUMMY_PROCS
+namespace LLGL
+{
 
 
-#endif
+#define LLGL_DEF_GL_PROXY_PROCS
+
+// Include inline header for proxy function definitions
+#include "GLExtensionsDecl.inl"
+
+#undef LLGL_DEF_GL_PROXY_PROCS
+
+
+} // /namespace LLGL
+
+
+#endif // /LLGL_GL_ENABLE_EXT_PLACEHOLDERS
 
 
 

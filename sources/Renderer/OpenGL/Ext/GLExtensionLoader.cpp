@@ -7,7 +7,7 @@
 
 #include "GLExtensionLoader.h"
 #include "GLExtensions.h"
-#include "GLExtensionsNull.h"
+#include "GLExtensionsProxy.h"
 #include <LLGL/Log.h>
 #include <functional>
 
@@ -68,7 +68,7 @@ static void ExtractExtensionsFromString(GLExtensionList& extensions, const std::
 
 #define LOAD_GLPROC(NAME)               \
     if (usePlaceholder)                 \
-        NAME = Dummy_##NAME;            \
+        NAME = Proxy_##NAME;            \
     else if (!LoadGLProc(NAME, #NAME))  \
         return false
 
@@ -507,7 +507,17 @@ static bool Load_GL_EXT_stencil_two_side(bool usePlaceholder)
 
 static bool Load_GL_KHR_debug(bool usePlaceholder)
 {
+    LOAD_GLPROC( glDebugMessageControl  );
+    LOAD_GLPROC( glDebugMessageInsert   );
     LOAD_GLPROC( glDebugMessageCallback );
+    LOAD_GLPROC( glGetDebugMessageLog   );
+  //LOAD_GLPROC( glGetPointerv          );
+    LOAD_GLPROC( glPushDebugGroup       );
+    LOAD_GLPROC( glPopDebugGroup        );
+    LOAD_GLPROC( glObjectLabel          );
+    LOAD_GLPROC( glGetObjectLabel       );
+    LOAD_GLPROC( glObjectPtrLabel       );
+    LOAD_GLPROC( glGetObjectPtrLabel    );
     return true;
 }
 
