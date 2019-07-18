@@ -15,6 +15,7 @@
 #include "Display.h"
 #include "Input.h"
 #include "Timer.h"
+#include "TypeInfo.h"
 #include "ColorRGB.h"
 #include "ColorRGBA.h"
 #include "RenderSystem.h"

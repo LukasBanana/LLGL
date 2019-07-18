@@ -37,7 +37,6 @@ enum class TextureType
     Texture2DMSArray,   //!< 2-Dimensional multi-sample array texture.
 };
 
-#if 0//TODO: enable with TextureViewDescriptor
 /**
 \brief Texture component swizzle enumeration.
 \remarks Can be used to change the order of texel components independently of a shader.
@@ -52,12 +51,10 @@ enum class TextureSwizzle
     Blue,   //!< The component is replaced by blue component.
     Alpha   //!< The component is replaced by alpha component.
 };
-#endif
 
 
 /* ----- Structures ----- */
 
-#if 0//TODO: enable with TextureViewDescriptor
 /**
 \brief Texture component swizzle structure for red, green, blue, and alpha components.
 \remarks Can be used to change the order of texel components independently of a shader.
@@ -70,7 +67,6 @@ struct TextureSwizzleRGBA
     TextureSwizzle b = TextureSwizzle::Blue;    //!< Blue component swizzle. By default TextureSwizzle::Blue.
     TextureSwizzle a = TextureSwizzle::Alpha;   //!< Alpha component swizzle. By default TextureSwizzle::Alpha.
 };
-#endif
 
 /**
 \brief Texture location structure: MIP-map level and offset.
@@ -258,7 +254,6 @@ struct TextureDescriptor
     std::uint32_t   samples         = 1;
 };
 
-#if 0//TODO: enable with "TextureView" feature
 /**
 \brief Texture view descriptor structure.
 \remarks Contains all information about type, format, and dimension to create a texture view that shares the image data of another texture.
@@ -307,7 +302,6 @@ struct TextureViewDescriptor
     */
     TextureSwizzleRGBA  swizzle;
 };
-#endif
 
 
 /* ----- Functions ----- */

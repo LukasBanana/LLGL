@@ -24,7 +24,10 @@ It is used to tell the driver the various segments of a frame and which render t
 \see CommandBuffer::BeginRenderPass
 \see CommandBuffer::EndRenderPass
 */
-class LLGL_EXPORT RenderPass : public RenderSystemChild { };
+class LLGL_EXPORT RenderPass : public RenderSystemChild
+{
+    LLGL_DECLARE_INTERFACE( InterfaceID::RenderPass );
+};
 
 
 } // /namespace LLGL

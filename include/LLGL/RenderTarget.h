@@ -32,9 +32,14 @@ The only interface that inherits from this interface is RenderContext, a special
 class LLGL_EXPORT RenderTarget : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::RenderTarget );
+
     public:
 
-        //! Returns true if this render target is an instance of RenderContext.
+        /**
+        \brief Returns true if this render target is an instance of RenderContext.
+        \todo Replace by IsInstanceOf
+        */
         bool IsRenderContext() const;
 
         /**

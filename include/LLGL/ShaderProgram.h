@@ -27,6 +27,8 @@ struct Extent3D;
 class LLGL_EXPORT ShaderProgram : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::ShaderProgram );
+
     public:
 
         /**

@@ -409,14 +409,12 @@ struct RenderingFeatures
     */
     bool hasMultiSampleTextures         = false;
 
-    #if 0//TODO: enable with "TextureView" feature
     /**
     \brief Specifies whether texture views are supported.
     \remarks Texture views can share their image data with another texture resource.
     \see RenderSystem::CreateTextureView
     */
     bool hasTextureViews                = false;
-    #endif
 
     //! Specifies whether samplers are supported.
     bool hasSamplers                    = false;

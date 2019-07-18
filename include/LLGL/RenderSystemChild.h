@@ -9,7 +9,7 @@
 #define LLGL_RENDER_SYSTEM_CHILD_H
 
 
-#include "NonCopyable.h"
+#include "Interface.h"
 
 
 namespace LLGL
@@ -17,29 +17,28 @@ namespace LLGL
 
 
 //! Base class for all interfaces whoes instances are owned by the RenderSystem.
-class LLGL_EXPORT RenderSystemChild : public NonCopyable { };
-
-#if 0
-class LLGL_EXPORT RenderSystemChild : public NonCopyable
+class LLGL_EXPORT RenderSystemChild : public Interface
 {
+
+        LLGL_DECLARE_INTERFACE( InterfaceID::RenderSystemChild );
 
     public:
 
-        #if 0//TODO
-        //! Returns the interface enumeration entry this class instance is associated with.
-        virtual Interface QueryInterface() const = 0;
-        #endif
-
         /**
         \brief Sets the name of this class instance for debugging purposes.
-        \param[in] name Pointer to a null terminated string that specifies the name. Must not be null!
-        \note Only supported in debug mode or when the debug layer is enabled. Otherwise, the function has no effect.
+        \param[in] name Pointer to a null terminated string that specifies the new name of this instance.
+        Specifying a null pointer is equivalent of setting an empty string, effectively resetting the name to the default.
+        \remarks This is used for debugging purposes only and the implementation is undefined,
+        i.e. if the respective render system does not support debug labels this function call will be ignored silently.
+        \remarks This function is especially useful in conjunction with diagnistoc tools (such as <a href="https://renderdoc.org">RenderDoc</a>) to better identify objects in the event history.
         \see CommandBuffer::PushDebugGroup
+        \see CommandBuffer::PopDebugGroup
+        \see RenderContextDescriptor::debugCallback
         */
-        virtual void SetDebugName(const char* name) = 0;
+        //virtual void SetName(const char* name) = 0;
+        virtual void SetName(const char* name) {};
 
 };
-#endif
 
 
 } // /namespace LLGL

@@ -24,6 +24,8 @@ namespace LLGL
 class LLGL_EXPORT Shader : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::Shader );
+
     public:
 
         /**

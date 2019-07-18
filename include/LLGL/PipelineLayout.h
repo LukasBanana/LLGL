@@ -24,7 +24,10 @@ or descriptor heaps (as called in Direct3D 12) for graphics and compute pipeline
 \see GraphicsPipelineDescriptor::pipelineLayout
 \see ResourceHeapDescriptor::pipelineLayout
 */
-class LLGL_EXPORT PipelineLayout : public RenderSystemChild { };
+class LLGL_EXPORT PipelineLayout : public RenderSystemChild
+{
+    LLGL_DECLARE_INTERFACE( InterfaceID::PipelineLayout );
+};
 
 
 } // /namespace LLGL

@@ -29,15 +29,15 @@ The couterpart is the Window interface for desktop platforms.
 class LLGL_EXPORT Canvas : public Surface
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::Canvas );
+
     public:
 
         //! Interface for all canvas event listeners.
-        class LLGL_EXPORT EventListener
+        class LLGL_EXPORT EventListener : public Interface
         {
 
-            public:
-
-                virtual ~EventListener() = default;
+                LLGL_DECLARE_INTERFACE( InterfaceID::Canvas_EventListener );
 
             protected:
 

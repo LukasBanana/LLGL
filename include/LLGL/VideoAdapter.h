@@ -20,6 +20,8 @@ namespace LLGL
 {
 
 
+//TODO: this header is currently only included by internal classes
+
 /* ----- Structures ----- */
 
 /**

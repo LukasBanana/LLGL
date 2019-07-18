@@ -24,6 +24,8 @@ namespace LLGL
 class LLGL_EXPORT Sampler : public Resource
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::Sampler );
+
     public:
 
         //! Returns ResourceType::Sampler.

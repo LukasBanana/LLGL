@@ -283,7 +283,7 @@ ExampleBase::ExampleBase(
     #ifdef LLGL_MOBILE_PLATFORM
 
     // Set canvas title
-    auto& canvas = static_cast<LLGL::Canvas&>(context->GetSurface());
+    auto& canvas = LLGL::CastTo<LLGL::Canvas>(context->GetSurface());
 
     auto rendererName = renderer->GetName();
     canvas.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
@@ -291,7 +291,7 @@ ExampleBase::ExampleBase(
     #else // LLGL_MOBILE_PLATFORM
 
     // Set window title
-    auto& window = static_cast<LLGL::Window&>(context->GetSurface());
+    auto& window = LLGL::CastTo<LLGL::Window>(context->GetSurface());
 
     auto rendererName = renderer->GetName();
     window.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");

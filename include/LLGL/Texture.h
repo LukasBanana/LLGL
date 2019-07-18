@@ -29,6 +29,8 @@ namespace LLGL
 class LLGL_EXPORT Texture : public Resource
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::Texture );
+
     public:
 
         //! Returns ResourceType::Texture.
@@ -39,6 +41,14 @@ class LLGL_EXPORT Texture : public Resource
         {
             return type_;
         }
+
+        #if 0//TODO: enable
+        /**
+        \brief Returns true if this texture is a texture view.
+        \see RenderSystem::CreateTextureView
+        */
+        virtual bool IsTextureView() const = 0;
+        #endif
 
         /**
         \brief Queries a descriptor of this texture (including type, format, and size).

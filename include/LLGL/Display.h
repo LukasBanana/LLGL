@@ -9,7 +9,7 @@
 #define LLGL_DISPLAY_H
 
 
-#include "NonCopyable.h"
+#include "Interface.h"
 #include "DisplayFlags.h"
 #include <vector>
 #include <memory>
@@ -37,8 +37,10 @@ for (const auto& myDisplay : myDisplayList) {
 }
 \endcode
 */
-class LLGL_EXPORT Display : public NonCopyable
+class LLGL_EXPORT Display : public Interface
 {
+
+        LLGL_DECLARE_INTERFACE( InterfaceID::Display );
 
     public:
 

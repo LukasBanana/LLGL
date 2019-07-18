@@ -9,7 +9,7 @@
 #define LLGL_RENDER_SYSTEM_H
 
 
-#include "NonCopyable.h"
+#include "Interface.h"
 #include "RenderContext.h"
 #include "CommandQueue.h"
 #include "CommandBufferExt.h"
@@ -62,8 +62,10 @@ renderSystem->WriteBuffer(*buffer, modificationData, ...);
 renderSystem->Release(*buffer);
 \endcode
 */
-class LLGL_EXPORT RenderSystem : public NonCopyable
+class LLGL_EXPORT RenderSystem : public Interface
 {
+
+        LLGL_DECLARE_INTERFACE( InterfaceID::RenderSystem );
 
     public:
 
@@ -289,6 +291,17 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \see RenderSystemConfiguration::imageInitialization
         */
         virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) = 0;
+
+        #if 0
+        /**
+        \brief Creates a new texture view that shares the image data of the specified shared texture.
+        \param[in] sharedTexture Specifies the texture whose image data is to be shared with the new texture view.
+        This must not be a texture view itself, i.e. a texture view cannot be created from another texture view.
+        \param[in] textireViewDesc Specifies the texture view descriptor.
+        \see Texture::IsTextureView
+        */
+        virtual Texture* CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc) = 0;
+        #endif
 
         //! Releases the specified texture object. After this call, the specified object must no longer be used.
         virtual void Release(Texture& texture) = 0;

@@ -45,6 +45,8 @@ Before any command can be encoded, the command buffer must be set into encode mo
 class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::CommandBuffer );
+
     public:
 
         /* ----- Encoding ----- */
@@ -735,7 +737,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \endcode
         \note Only supported in debug mode or when the debug layer is enabled. Otherwise, the function has no effect.
         \see PopDebugGroup
-        \see RenderSystemChild::SetDebugName
+        \see RenderSystemChild::SetName
         */
         virtual void PushDebugGroup(const char* name) = 0;
 

@@ -9,7 +9,7 @@
 #define LLGL_SURFACE_H
 
 
-#include "NonCopyable.h"
+#include "Interface.h"
 #include "Types.h"
 #include "RenderContextFlags.h"
 
@@ -27,8 +27,10 @@ and the ability to adapt for a new video mode or an updated pixel format.
 \see Window
 \see Canvas
 */
-class LLGL_EXPORT Surface : public NonCopyable
+class LLGL_EXPORT Surface : public Interface
 {
+
+        LLGL_DECLARE_INTERFACE( InterfaceID::Surface );
 
     public:
 

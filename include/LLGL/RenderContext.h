@@ -44,6 +44,8 @@ class Display;
 class LLGL_EXPORT RenderContext : public RenderTarget
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::RenderContext );
+
     public:
 
         /* ----- Render Target ----- */

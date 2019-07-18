@@ -28,6 +28,7 @@ namespace LLGL
 \param[in] message Specifies the debug output message.
 \remarks This output is renderer dependent.
 \ingroup group_callbacks
+\see RenderContextDescriptor::debugCallback
 */
 using DebugCallback = std::function<void(const std::string& type, const std::string& message)>;
 
@@ -150,7 +151,10 @@ struct ProfileOpenGLDescriptor
     int                     minorVersion    = -1;
 };
 
-//! Render context descriptor structure.
+/**
+\brief Render context descriptor structure.
+\see RenderSystem::CreateRenderContext
+*/
 struct RenderContextDescriptor
 {
     //! Vertical-synchronization (Vsync) descriptor.

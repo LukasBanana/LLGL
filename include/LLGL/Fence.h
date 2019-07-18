@@ -22,7 +22,10 @@ namespace LLGL
 \see CommandQueue::Submit(Fence&)
 \see CommandQueue::WaitFence
 */
-class LLGL_EXPORT Fence : public RenderSystemChild { };
+class LLGL_EXPORT Fence : public RenderSystemChild
+{
+    LLGL_DECLARE_INTERFACE( InterfaceID::Fence );
+};
 
 
 } // /namespace LLGL
