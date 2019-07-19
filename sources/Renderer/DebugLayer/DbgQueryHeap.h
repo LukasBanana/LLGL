@@ -11,6 +11,7 @@
 
 #include <LLGL/QueryHeap.h>
 #include <vector>
+#include <string>
 
 
 namespace LLGL
