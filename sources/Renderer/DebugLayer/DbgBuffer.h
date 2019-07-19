@@ -21,14 +21,17 @@ class DbgBuffer : public Buffer
 
     public:
 
-        DbgBuffer(Buffer& instance, long bindFlags) :
-            Buffer   { bindFlags },
-            instance { instance  }
-        {
-        }
+        void SetName(const char* name) override;
+
+    public:
+
+        DbgBuffer(Buffer& instance, long bindFlags);
+
+    public:
 
         Buffer&             instance;
         BufferDescriptor    desc;
+        std::string         label;
         std::uint64_t       elements    = 0;
         bool                initialized = false;
         bool                mapped      = false;

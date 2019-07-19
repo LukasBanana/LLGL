@@ -6,6 +6,7 @@
  */
 
 #include "GLQueryHeap.h"
+#include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
@@ -86,6 +87,21 @@ GLQueryHeap::GLQueryHeap(const QueryHeapDescriptor& desc) :
 GLQueryHeap::~GLQueryHeap()
 {
     glDeleteQueries(static_cast<GLsizei>(ids_.size()), ids_.data());
+}
+
+void GLQueryHeap::SetName(const char* name)
+{
+    if (groupSize_ == 1)
+    {
+        /* Set label for a single query object */
+        GLSetObjectLabel(GL_QUERY, GetID(0), name);
+    }
+    else
+    {
+        /* Reset labels for each query object */
+        for (std::uint32_t i = 0, n = static_cast<std::uint32_t>(GetIDs().size()); i < n; ++i)
+            GLSetObjectLabelIndexed(GL_QUERY, GetID(i), name, i);
+    }
 }
 
 void GLQueryHeap::Begin(std::uint32_t query)

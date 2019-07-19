@@ -528,7 +528,7 @@ void GLDeferredCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::ui
 {
     auto cmd = AllocCommand<GLCmdBeginConditionalRender>(GLOpcodeBeginConditionalRender);
     {
-        cmd->id     = LLGL_CAST(const GLQueryHeap&, queryHeap).GetFirstID(query);
+        cmd->id     = LLGL_CAST(const GLQueryHeap&, queryHeap).GetID(query);
         cmd->mode   = GLTypes::Map(mode);
     }
 }

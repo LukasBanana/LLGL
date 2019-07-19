@@ -22,7 +22,7 @@ class DbgShader : public Shader
 
     public:
 
-        DbgShader(Shader& instance, const ShaderType type, RenderingDebugger* debugger);
+        void SetName(const char* name) override;
 
         bool HasErrors() const override;
 
@@ -30,12 +30,19 @@ class DbgShader : public Shader
 
         std::string QueryInfoLog() override;
 
+    public:
+
+        DbgShader(Shader& instance, const ShaderType type, RenderingDebugger* debugger);
+
         inline bool IsCompiled() const
         {
             return !instance.HasErrors();
         }
 
-        Shader& instance;
+    public:
+
+        Shader&     instance;
+        std::string label;
 
     private:
 

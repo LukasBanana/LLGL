@@ -7,6 +7,7 @@
 
 #include "GLTexture.h"
 #include "GLReadTextureFBO.h"
+#include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
@@ -38,6 +39,11 @@ GLTexture::~GLTexture()
 {
     glDeleteTextures(1, &id_);
     GLStateManager::active->NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
+}
+
+void GLTexture::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_TEXTURE, GetID(), name);
 }
 
 static GLenum GLGetTextureParamTarget(const TextureType type)

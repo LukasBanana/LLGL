@@ -8,6 +8,7 @@
 #include "GLShaderProgram.h"
 #include "GLShader.h"
 #include "GLShaderBindingLayout.h"
+#include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
@@ -41,6 +42,11 @@ GLShaderProgram::~GLShaderProgram()
 {
     glDeleteProgram(id_);
     GLStateManager::active->NotifyShaderProgramRelease(id_);
+}
+
+void GLShaderProgram::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_PROGRAM, GetID(), name);
 }
 
 bool GLShaderProgram::HasErrors() const

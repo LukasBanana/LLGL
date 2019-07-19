@@ -23,14 +23,18 @@ class GLQueryHeap final : public QueryHeap
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         GLQueryHeap(const QueryHeapDescriptor& desc);
         ~GLQueryHeap();
 
         void Begin(std::uint32_t query);
         void End(std::uint32_t query);
 
-        // Returns the first ID.
-        inline GLuint GetFirstID(std::uint32_t query) const
+        // Returns the the specified query ID.
+        inline GLuint GetID(std::uint32_t query) const
         {
             return ids_[query * GetGroupSize()];
         }

@@ -21,6 +21,11 @@ DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debu
 {
 }
 
+void DbgRenderTarget::SetName(const char* name)
+{
+    DbgSetObjectName(*this, name);
+}
+
 Extent2D DbgRenderTarget::GetResolution() const
 {
     return instance.GetResolution();

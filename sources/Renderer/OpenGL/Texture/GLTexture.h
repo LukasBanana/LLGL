@@ -22,14 +22,16 @@ class GLTexture final : public Texture
 
     public:
 
-        GLTexture(const TextureType type);
-        ~GLTexture();
+        void SetName(const char* name) override;
 
         Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
 
     public:
+
+        GLTexture(const TextureType type);
+        ~GLTexture();
 
         // Copies the specified source texture into this texture.
         void CopyImageSubData(

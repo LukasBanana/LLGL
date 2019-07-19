@@ -63,6 +63,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \see VertexAttribute::instanceDivisor
         \see VertexAttribute::offset
         \throws std::runtime_error If shader reflection failed.
+        \todo Refactor to <code>void Reflect(ShaderReflection& reflection)</code>
         */
         virtual ShaderReflectionDescriptor QueryReflectionDesc() const = 0;
 

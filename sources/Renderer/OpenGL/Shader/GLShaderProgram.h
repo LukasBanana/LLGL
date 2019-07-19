@@ -25,8 +25,7 @@ class GLShaderProgram final : public ShaderProgram
 
     public:
 
-        GLShaderProgram(const ShaderProgramDescriptor& desc);
-        ~GLShaderProgram();
+        void SetName(const char* name) override;
 
         bool HasErrors() const override;
 
@@ -39,6 +38,9 @@ class GLShaderProgram final : public ShaderProgram
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
 
     public:
+
+        GLShaderProgram(const ShaderProgramDescriptor& desc);
+        ~GLShaderProgram();
 
         /*
         Updates all uniform/storage block bindings and resources by the specified binding layout.

@@ -6,9 +6,10 @@
  */
 
 #include "GLSampler.h"
+#include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
-#include "../../GLCommon/GLTypes.h"
 #include "../RenderState/GLStateManager.h"
+#include "../../GLCommon/GLTypes.h"
 
 
 namespace LLGL
@@ -24,6 +25,11 @@ GLSampler::~GLSampler()
 {
     glDeleteSamplers(1, &id_);
     GLStateManager::active->NotifySamplerRelease(id_);
+}
+
+void GLSampler::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_SAMPLER, GetID(), name);
 }
 
 static GLenum GetGLSamplerMinFilter(const SamplerDescriptor& desc)

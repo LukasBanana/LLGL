@@ -6,6 +6,7 @@
  */
 
 #include "GLRenderTarget.h"
+#include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
@@ -82,6 +83,11 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
 GLRenderTarget::~GLRenderTarget()
 {
     GLStateManager::active->NotifyGLRenderTargetRelease(this);
+}
+
+void GLRenderTarget::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_FRAMEBUFFER, framebuffer_.GetID(), name);
 }
 
 Extent2D GLRenderTarget::GetResolution() const

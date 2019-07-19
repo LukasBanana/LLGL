@@ -65,6 +65,16 @@ public:
 
         commands->SetClearColor(defaultClearColor);
 
+        // Label objects for debugging
+        vertexBuffer->SetName("Buffer.Vertices");
+        constantBuffer->SetName("Buffer.Constants");
+
+        shaderProgramShadowMap->SetName("ShadowMap.ShaderProgram");
+        shaderProgramScene->SetName("Scene.ShaderProgram");
+
+        shadowMap->SetName("ShadowMap.Texture");
+        shadowMapRenderTarget->SetName("ShadowMap.RenderTarget");
+
         #if 0
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;

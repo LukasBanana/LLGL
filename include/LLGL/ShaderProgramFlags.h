@@ -155,6 +155,7 @@ struct ShaderProgramDescriptor
 \brief Shader reflection descriptor structure.
 \remarks Contains all information of resources and attributes that can be queried from a shader program.
 \see ShaderProgram::QueryReflectionDesc
+\todo Rename to ShaderReflection
 */
 struct ShaderReflectionDescriptor
 {

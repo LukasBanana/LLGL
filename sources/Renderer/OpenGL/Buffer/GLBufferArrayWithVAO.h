@@ -23,6 +23,10 @@ class GLBufferArrayWithVAO final : public GLBufferArray
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         GLBufferArrayWithVAO(long bindFlags);
 
         void BuildVertexArray(std::uint32_t numBuffers, Buffer* const * bufferArray);

@@ -20,6 +20,11 @@ DbgShader::DbgShader(Shader& instance, const ShaderType type, RenderingDebugger*
 {
 }
 
+void DbgShader::SetName(const char* name)
+{
+    DbgSetObjectName(*this, name);
+}
+
 bool DbgShader::HasErrors() const
 {
     return instance.HasErrors();

@@ -48,6 +48,20 @@ inline void DbgPostWarning(RenderingDebugger* debugger, WarningType type, const 
         debugger->PostWarning(type, message);
 }
 
+// Sets the name of the specified debug layer object.
+template <typename T>
+inline void DbgSetObjectName(T& obj, const char* name)
+{
+    /* Set or clear label */
+    if (name != nullptr)
+        obj.label = name;
+    else
+        obj.label.clear();
+
+    /* Forward call to instance */
+    obj.instance.SetName(name);
+}
+
 
 } // /namespace LLGL
 

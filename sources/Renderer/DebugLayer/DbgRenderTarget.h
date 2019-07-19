@@ -23,13 +23,19 @@ class DbgRenderTarget : public RenderTarget
 
     public:
 
-        DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc);
+        void SetName(const char* name) override;
 
         Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
+
         bool HasDepthAttachment() const override;
         bool HasStencilAttachment() const override;
+
         const RenderPass* GetRenderPass() const override;
+
+    public:
+
+        DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc);
 
         // Returns the render target descriptor of this debug layer object.
         inline const RenderTargetDescriptor& GetDesc() const
@@ -37,7 +43,10 @@ class DbgRenderTarget : public RenderTarget
             return desc_;
         }
 
-        RenderTarget&           instance;
+    public:
+
+        RenderTarget&   instance;
+        std::string     label;
 
     private:
 

@@ -6,6 +6,7 @@
  */
 
 #include "DbgTexture.h"
+#include "DbgCore.h"
 
 
 namespace LLGL
@@ -18,6 +19,20 @@ DbgTexture::DbgTexture(Texture& instance, const TextureDescriptor& desc) :
     desc      { desc               },
     mipLevels { NumMipLevels(desc) }
 {
+}
+
+/*DbgTexture::DbgTexture(Texture& instance, DbgTexture& sharedTexture, const TextureViewDescriptor& desc) :
+    Texture       { desc.type          },
+    instance      { instance           },
+    viewDesc      { desc               },
+    mipLevels     { NumMipLevels(desc) },
+    sharedTexture { &sharedTexture     }
+{
+}*/
+
+void DbgTexture::SetName(const char* name)
+{
+    DbgSetObjectName(*this, name);
 }
 
 Extent3D DbgTexture::QueryMipExtent(std::uint32_t mipLevel) const

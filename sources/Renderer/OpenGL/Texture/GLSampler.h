@@ -22,6 +22,10 @@ class GLSampler final : public Sampler
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         GLSampler();
         ~GLSampler();
 

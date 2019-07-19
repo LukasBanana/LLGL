@@ -23,6 +23,11 @@ bool Interface::IsInstanceOf(int id) const
     return (id == InterfaceID::Interface);
 }
 
+void RenderSystemChild::SetName(const char* name)
+{
+    // dummy
+}
+
 // Implement bases functions of all sub classes of <Interface> here:
 
 LLGL_IMPLEMENT_INTERFACE( RenderSystem,             Interface               )

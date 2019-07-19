@@ -236,6 +236,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasCubeTextures                = HasExtension(GLExt::ARB_texture_cube_map);
     features.hasArrayTextures               = HasExtension(GLExt::EXT_texture_array);
     features.hasCubeArrayTextures           = HasExtension(GLExt::ARB_texture_cube_map_array);
+    features.hasTextureViews                = HasExtension(GLExt::ARB_texture_view);
     features.hasMultiSampleTextures         = HasExtension(GLExt::ARB_texture_multisample);
     features.hasSamplers                    = HasExtension(GLExt::ARB_sampler_objects);
     features.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);

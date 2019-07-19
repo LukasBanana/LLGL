@@ -439,7 +439,7 @@ void GLImmediateCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t quer
 void GLImmediateCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
-    glBeginConditionalRender(queryHeapGL.GetFirstID(query), GLTypes::Map(mode));
+    glBeginConditionalRender(queryHeapGL.GetID(query), GLTypes::Map(mode));
 }
 
 void GLImmediateCommandBuffer::EndRenderCondition()

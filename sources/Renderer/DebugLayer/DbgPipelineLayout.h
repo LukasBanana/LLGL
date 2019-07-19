@@ -22,14 +22,17 @@ class DbgPipelineLayout : public PipelineLayout
 
     public:
 
-        DbgPipelineLayout(PipelineLayout& instance, const PipelineLayoutDescriptor& desc) :
-            instance { instance },
-            desc     { desc     }
-        {
-        }
+        void SetName(const char* name) override;
+
+    public:
+
+        DbgPipelineLayout(PipelineLayout& instance, const PipelineLayoutDescriptor& desc);
+
+    public:
 
         PipelineLayout&             instance;
         PipelineLayoutDescriptor    desc;
+        std::string                 label;
 
 };
 

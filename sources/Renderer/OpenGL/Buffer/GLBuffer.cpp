@@ -6,6 +6,7 @@
  */
 
 #include "GLBuffer.h"
+#include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
@@ -33,6 +34,11 @@ static GLBufferTarget FindPrimaryBufferTarget(long bindFlags)
     if ((bindFlags & BindFlags::IndirectBuffer) != 0)
         return GLBufferTarget::DRAW_INDIRECT_BUFFER;
     return GLBufferTarget::ARRAY_BUFFER;
+}
+
+void GLBuffer::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_BUFFER, GetID(), name);
 }
 
 GLBuffer::GLBuffer(long bindFlags) :
