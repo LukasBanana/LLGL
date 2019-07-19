@@ -82,7 +82,7 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
 
 GLRenderTarget::~GLRenderTarget()
 {
-    GLStateManager::active->NotifyGLRenderTargetRelease(this);
+    GLStateManager::Get().NotifyGLRenderTargetRelease(this);
 }
 
 void GLRenderTarget::SetName(const char* name)
@@ -158,14 +158,14 @@ void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
 {
     if (colorAttachmentIndex < colorAttachments_.size())
     {
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFramebuffer().GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFramebuffer().GetID());
         {
             glReadBuffer(colorAttachments_[colorAttachmentIndex]);
             glDrawBuffer(GL_BACK);
             BlitFramebuffer();
         }
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
     }
 }
 
@@ -207,7 +207,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
     colorAttachments_.reserve(numColorAttachments);
 
     /* Bind primary FBO */
-    GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
+    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
     {
         if (framebufferMS_)
         {
@@ -230,7 +230,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
     if (framebufferMS_)
     {
         /* Bind multi-sampled FBO */
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebufferMS_.GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebufferMS_.GetID());
         {
             /* Create depth-stencil attachmnets */
             AttachAllDepthStencilBuffers(desc.attachments);
@@ -259,7 +259,7 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescri
     #endif // /GL_ARB_framebuffer_no_attachments
     {
         /* Bind primary FBO */
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
 
         /* Create dummy renderbuffer attachment */
         renderbuffer_.GenRenderbuffer();
@@ -341,7 +341,7 @@ static GLint GetTexInternalFormat(const GLTexture& textureGL)
 {
     GLint internalFormat = GL_RGBA;
     {
-        GLStateManager::active->BindGLTexture(textureGL);
+        GLStateManager::Get().BindGLTexture(textureGL);
         glGetTexLevelParameteriv(GLTypes::Map(textureGL.GetType()), 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
     }
     return internalFormat;

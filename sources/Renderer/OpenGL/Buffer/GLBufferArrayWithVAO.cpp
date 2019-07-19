@@ -65,7 +65,7 @@ static void ThrowNoVertexBufferErr()
 void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     /* Bind VAO */
-    GLStateManager::active->BindVertexArray(GetVaoID());
+    GLStateManager::Get().BindVertexArray(GetVaoID());
     {
         for (std::uint32_t i = 0; numBuffers > 0; --numBuffers)
         {
@@ -75,7 +75,7 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
                 const auto& vertexFormat = vertexBufferGL->GetVertexFormat();
 
                 /* Bind VBO */
-                GLStateManager::active->BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBufferGL->GetID());
+                GLStateManager::Get().BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBufferGL->GetID());
 
                 /* Build each vertex attribute */
                 for (std::uint32_t j = 0, n = static_cast<std::uint32_t>(vertexFormat.attributes.size()); j < n; ++j, ++i)
@@ -91,7 +91,7 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
                 ThrowNoVertexBufferErr();
         }
     }
-    GLStateManager::active->BindVertexArray(0);
+    GLStateManager::Get().BindVertexArray(0);
 }
 
 #ifdef LLGL_GL_ENABLE_OPENGL2X

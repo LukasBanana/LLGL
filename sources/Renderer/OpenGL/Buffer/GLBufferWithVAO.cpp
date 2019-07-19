@@ -46,10 +46,10 @@ void GLBufferWithVAO::BuildVertexArray(const VertexFormat& vertexFormat)
 void GLBufferWithVAO::BuildVertexArrayWithVAO()
 {
     /* Bind VAO */
-    GLStateManager::active->BindVertexArray(GetVaoID());
+    GLStateManager::Get().BindVertexArray(GetVaoID());
     {
         /* Bind VBO */
-        GLStateManager::active->BindBuffer(GLBufferTarget::ARRAY_BUFFER, GetID());
+        GLStateManager::Get().BindBuffer(GLBufferTarget::ARRAY_BUFFER, GetID());
 
         /* Build each vertex attribute */
         for (GLuint i = 0, n = static_cast<GLuint>(vertexFormat_.attributes.size()); i < n; ++i)
@@ -61,7 +61,7 @@ void GLBufferWithVAO::BuildVertexArrayWithVAO()
             );
         }
     }
-    GLStateManager::active->BindVertexArray(0);
+    GLStateManager::Get().BindVertexArray(0);
 }
 
 #ifdef LLGL_GL_ENABLE_OPENGL2X

@@ -45,6 +45,7 @@ class GLContext
         // Resizes the GL context. This is called after the context surface has been resized.
         virtual void Resize(const Extent2D& resolution) = 0;
 
+        // Returns the state manager that is associated with this context.
         inline const std::shared_ptr<GLStateManager>& GetStateManager() const
         {
             return stateMngr_;

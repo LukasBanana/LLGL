@@ -130,7 +130,7 @@ void GLStatePool::ReleaseDepthStencilState(GLDepthStencilStateSPtr&& depthStenci
 {
     ReleaseRenderStateObject<GLDepthStencilState>(
         depthStencilStates_,
-        std::bind(&GLStateManager::NotifyDepthStencilStateRelease, GLStateManager::active, std::placeholders::_1),
+        std::bind(&GLStateManager::NotifyDepthStencilStateRelease, &(GLStateManager::Get()), std::placeholders::_1),
         std::forward<GLDepthStencilStateSPtr>(depthStencilState)
     );
 }
@@ -144,7 +144,7 @@ void GLStatePool::ReleaseRasterizerState(GLRasterizerStateSPtr&& rasterizerState
 {
     ReleaseRenderStateObject<GLRasterizerState>(
         rasterizerStates_,
-        std::bind(&GLStateManager::NotifyRasterizerStateRelease, GLStateManager::active, std::placeholders::_1),
+        std::bind(&GLStateManager::NotifyRasterizerStateRelease, &(GLStateManager::Get()), std::placeholders::_1),
         std::forward<GLRasterizerStateSPtr>(rasterizerState)
     );
 }
@@ -158,7 +158,7 @@ void GLStatePool::ReleaseBlendState(GLBlendStateSPtr&& blendState)
 {
     ReleaseRenderStateObject<GLBlendState>(
         blendStates_,
-        std::bind(&GLStateManager::NotifyBlendStateRelease, GLStateManager::active, std::placeholders::_1),
+        std::bind(&GLStateManager::NotifyBlendStateRelease, &(GLStateManager::Get()), std::placeholders::_1),
         std::forward<GLBlendStateSPtr>(blendState)
     );
 }

@@ -77,7 +77,7 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
     {
         /* Make OpenGL context of the specified render contex current and notify the state manager */
         auto result = GLContext::MakeCurrent(renderContext->context_.get());
-        GLStateManager::active->NotifyRenderTargetHeight(renderContext->contextHeight_);
+        GLStateManager::Get().NotifyRenderTargetHeight(renderContext->contextHeight_);
         return result;
     }
     else

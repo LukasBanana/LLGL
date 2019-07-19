@@ -41,7 +41,7 @@ GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
 GLShaderProgram::~GLShaderProgram()
 {
     glDeleteProgram(id_);
-    GLStateManager::active->NotifyShaderProgramRelease(id_);
+    GLStateManager::Get().NotifyShaderProgramRelease(id_);
 }
 
 void GLShaderProgram::SetName(const char* name)

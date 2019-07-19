@@ -275,8 +275,8 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
         CreateGLContextDependentDevices(*renderContext, desc);
 
     /* Use uniform clipping space */
-    GLStateManager::active->DetermineExtensionsAndLimits();
-    GLStateManager::active->SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
+    GLStateManager::Get().DetermineExtensionsAndLimits();
+    GLStateManager::Get().SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
 
     /* Take ownership and return raw pointer */
     return TakeOwnership(renderContexts_, std::move(renderContext));
@@ -292,7 +292,7 @@ void GLRenderSystem::CreateGLContextDependentDevices(GLRenderContext& renderCont
     /* Load all OpenGL extensions */
     LoadGLExtensions(desc.profileOpenGL);
     SetDebugCallback(desc.debugCallback);
-    
+
     /* Create command queue instance */
     commandQueue_ = MakeUnique<GLCommandQueue>(renderContext.GetStateManager());
 }
@@ -343,14 +343,14 @@ void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
 
     if (debugCallback_)
     {
-        GLStateManager::active->Enable(GLState::DEBUG_OUTPUT);
-        GLStateManager::active->Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+        GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT);
+        GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
         glDebugMessageCallback(GLDebugCallback, &debugCallback_);
     }
     else
     {
-        GLStateManager::active->Disable(GLState::DEBUG_OUTPUT);
-        GLStateManager::active->Disable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+        GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT);
+        GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
         glDebugMessageCallback(nullptr, nullptr);
     }
 

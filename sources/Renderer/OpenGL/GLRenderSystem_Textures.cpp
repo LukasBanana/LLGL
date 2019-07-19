@@ -34,7 +34,7 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     auto texture = MakeUnique<GLTexture>(textureDesc.type);
 
     /* Bind texture */
-    GLStateManager::active->BindGLTexture(*texture);
+    GLStateManager::Get().BindGLTexture(*texture);
 
     /* Initialize texture parameters for the first time */
     auto target = GLTypes::Map(textureDesc.type);
@@ -107,7 +107,7 @@ void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
 {
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindGLTexture(textureGL);
+    GLStateManager::Get().BindGLTexture(textureGL);
 
     /* Write data into specific texture type */
     switch (texture.GetType())
@@ -173,7 +173,7 @@ void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
     #endif
     {
         /* Bind texture and read image data from texture */
-        GLStateManager::active->BindGLTexture(textureGL);
+        GLStateManager::Get().BindGLTexture(textureGL);
         glGetTexImage(
             GLTypes::Map(textureGL.GetType()),
             static_cast<GLint>(mipLevel),
@@ -262,13 +262,13 @@ void GLRenderSystem::GenerateMipsPrimary(GLuint texID, const TextureType texType
     {
         /* Restore previously bound texture on active layer */
         auto texTarget = GLStateManager::GetTextureTarget(texType);
-        GLStateManager::active->PushBoundTexture(texTarget);
+        GLStateManager::Get().PushBoundTexture(texTarget);
         {
             /* Bind texture and generate MIP-maps */
-            GLStateManager::active->BindTexture(texTarget, texID);
+            GLStateManager::Get().BindTexture(texTarget, texID);
             glGenerateMipmap(GLTypes::Map(texType));
         }
-        GLStateManager::active->PopBoundTexture();
+        GLStateManager::Get().PopBoundTexture();
     }
 }
 
@@ -364,12 +364,12 @@ void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D
 
     mipGenerationFBOPair_.CreateFBOs();
 
-    GLStateManager::active->PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
-    GLStateManager::active->PushBoundFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER);
+    GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
+    GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER);
     {
         /* Bind read framebuffer for <current> MIP level, and draw framebuffer for <next> MIP level */
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, mipGenerationFBOPair_.fbos[0]);
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, mipGenerationFBOPair_.fbos[1]);
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, mipGenerationFBOPair_.fbos[0]);
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, mipGenerationFBOPair_.fbos[1]);
 
         switch (texType)
         {
@@ -430,8 +430,8 @@ void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D
             break;
         }
     }
-    GLStateManager::active->PopBoundFramebuffer();
-    GLStateManager::active->PopBoundFramebuffer();
+    GLStateManager::Get().PopBoundFramebuffer();
+    GLStateManager::Get().PopBoundFramebuffer();
 }
 
 #else

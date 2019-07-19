@@ -38,7 +38,7 @@ GLTexture::GLTexture(const TextureType type) :
 GLTexture::~GLTexture()
 {
     glDeleteTextures(1, &id_);
-    GLStateManager::active->NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
+    GLStateManager::Get().NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
 }
 
 void GLTexture::SetName(const char* name)
@@ -80,16 +80,16 @@ Extent3D GLTexture::QueryMipExtent(std::uint32_t mipLevel) const
     #endif
     {
         /* Push currently bound texture onto stack to restore it after query */
-        GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
+        GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
         {
             /* Bind texture and query attributes */
-            GLStateManager::active->BindGLTexture(*this);
+            GLStateManager::Get().BindGLTexture(*this);
             auto target = GLGetTextureParamTarget(GetType());
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH,  &texSize[0]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &texSize[1]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH,  &texSize[2]);
         }
-        GLStateManager::active->PopBoundTexture();
+        GLStateManager::Get().PopBoundTexture();
     }
 
     /* Adjust depth value for cube texture to be uniform with D3D */
@@ -181,12 +181,12 @@ static void GLCopyTexSubImage(
     const GLenum            targetGL    = GLGetTextureParamTarget(type);
 
     /* Store bound texture and framebuffer */
-    GLStateManager::active->PushBoundTexture(target);
-    GLStateManager::active->PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
+    GLStateManager::Get().PushBoundTexture(target);
+    GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
     {
         /* Create temporary FBO for source texture to read from GL_READ_FRAMEBUFFER in copy texture operator */
         GLReadTextureFBO readFBO;
-        GLStateManager::active->BindTexture(target, dstTexture.GetID());
+        GLStateManager::Get().BindTexture(target, dstTexture.GetID());
 
         switch (type)
         {
@@ -249,8 +249,8 @@ static void GLCopyTexSubImage(
         }
     }
     /* Restore previous bound texture and framebuffer */
-    GLStateManager::active->PopBoundFramebuffer();
-    GLStateManager::active->PopBoundTexture();
+    GLStateManager::Get().PopBoundFramebuffer();
+    GLStateManager::Get().PopBoundTexture();
 }
 
 void GLTexture::CopyImageSubData(
@@ -308,10 +308,10 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
     #endif
     {
         /* Push currently bound texture onto stack to restore it after query */
-        GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
+        GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
         {
             /* Bind texture and query attributes */
-            GLStateManager::active->BindGLTexture(*this);
+            GLStateManager::Get().BindGLTexture(*this);
             auto target = GLGetTextureParamTarget(GetType());
 
             if (internalFormat)
@@ -324,7 +324,7 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH,  &extent[2]);
             }
         }
-        GLStateManager::active->PopBoundTexture();
+        GLStateManager::Get().PopBoundTexture();
     }
 }
 

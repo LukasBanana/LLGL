@@ -29,7 +29,7 @@ GLVertexArrayObject::~GLVertexArrayObject()
     if (HasExtension(GLExt::ARB_vertex_array_object))
     {
         glDeleteVertexArrays(1, &id_);
-        GLStateManager::active->NotifyVertexArrayRelease(id_);
+        GLStateManager::Get().NotifyVertexArrayRelease(id_);
     }
 }
 

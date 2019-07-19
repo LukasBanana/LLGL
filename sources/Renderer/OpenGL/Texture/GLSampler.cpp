@@ -24,7 +24,7 @@ GLSampler::GLSampler()
 GLSampler::~GLSampler()
 {
     glDeleteSamplers(1, &id_);
-    GLStateManager::active->NotifySamplerRelease(id_);
+    GLStateManager::Get().NotifySamplerRelease(id_);
 }
 
 void GLSampler::SetName(const char* name)

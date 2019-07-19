@@ -141,7 +141,7 @@ static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObject
 
 static std::vector<GLStateManager*> g_GLStateManagerList;
 
-GLStateManager*             GLStateManager::active          = nullptr;
+GLStateManager*             GLStateManager::active_;
 GLStateManager::GLLimits    GLStateManager::commonLimits_;
 
 GLStateManager::GLStateManager()
@@ -157,8 +157,9 @@ GLStateManager::GLStateManager()
 
     SetActiveTextureLayer(0);
 
-    /* Make this to the active state manager */
-    GLStateManager::active = this;
+    /* Make this the active state manager if there is no previous one */
+    if (GLStateManager::active_ == nullptr)
+        GLStateManager::active_ = this;
 
     /* Store state manager in global list */
     g_GLStateManagerList.push_back(this);

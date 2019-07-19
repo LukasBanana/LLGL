@@ -776,7 +776,7 @@ void GLDeferredCommandBuffer::PushDebugGroup(const char* name)
     if (HasExtension(GLExt::KHR_debug))
     {
         /* Push debug group name into command stream with default ID no. */
-        const GLint         maxLength       = GLStateManager::active->GetLimits().maxDebugNameLength;
+        const GLint         maxLength       = GLStateManager::Get().GetLimits().maxDebugNameLength;
         const GLuint        id              = 0;
         const std::size_t   actualLength    = std::strlen(name);
         const std::size_t   croppedLength   = std::min(actualLength, static_cast<std::size_t>(maxLength));

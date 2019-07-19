@@ -50,19 +50,19 @@ void GLFramebuffer::DeleteFramebuffer()
     if (id_ != 0)
     {
         glDeleteFramebuffers(1, &id_);
-        GLStateManager::active->NotifyFramebufferRelease(id_);
+        GLStateManager::Get().NotifyFramebufferRelease(id_);
         id_ = 0;
     }
 }
 
 void GLFramebuffer::Bind(GLFramebufferTarget target) const
 {
-    GLStateManager::active->BindFramebuffer(target, GetID());
+    GLStateManager::Get().BindFramebuffer(target, GetID());
 }
 
 void GLFramebuffer::Unbind(GLFramebufferTarget target) const
 {
-    GLStateManager::active->BindFramebuffer(target, 0);
+    GLStateManager::Get().BindFramebuffer(target, 0);
 }
 
 bool GLFramebuffer::FramebufferParameters(
@@ -75,7 +75,7 @@ bool GLFramebuffer::FramebufferParameters(
     #ifdef GL_ARB_framebuffer_no_attachments
     if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
     {
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, GetID());
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, layers);

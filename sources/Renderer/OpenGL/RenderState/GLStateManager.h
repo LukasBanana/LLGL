@@ -60,6 +60,12 @@ class GLStateManager
         GLStateManager();
         ~GLStateManager();
 
+        // Returns the active GL state manager.
+        static inline GLStateManager& Get()
+        {
+            return *active_;
+        }
+
         // Queries all supported and available GL extensions and limitations, then stores it internally (must be called once a GL context has been created).
         void DetermineExtensionsAndLimits();
 
@@ -251,12 +257,6 @@ class GLStateManager
             return commonLimits_;
         }
 
-    public:
-
-        //TODO: replace by "static GLStateManager* Get()" function
-        // Active state manager. Each GL context has its own states, thus its own state manager.
-        static GLStateManager* active;
-
     private:
 
         void AdjustViewport(GLViewport& viewport);
@@ -435,8 +435,12 @@ class GLStateManager
 
     private:
 
-        GLLimits                        limits_;                // Limitations of this GL context
+        friend class GLContext;
+
+        static GLStateManager*          active_;
         static GLLimits                 commonLimits_;          // Common denominator of limitations for all GL contexts
+
+        GLLimits                        limits_;                // Limitations of this GL context
 
         OpenGLDependentStateDescriptor  apiDependentState_;
 
