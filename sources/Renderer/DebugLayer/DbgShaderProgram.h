@@ -21,7 +21,7 @@ namespace LLGL
 
 class DbgShader;
 
-class DbgShaderProgram : public ShaderProgram
+class DbgShaderProgram final : public ShaderProgram
 {
 
     public:

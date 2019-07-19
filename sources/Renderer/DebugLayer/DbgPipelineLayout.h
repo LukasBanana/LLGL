@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class DbgPipelineLayout : public PipelineLayout
+class DbgPipelineLayout final : public PipelineLayout
 {
 
     public:
@@ -30,9 +30,9 @@ class DbgPipelineLayout : public PipelineLayout
 
     public:
 
-        PipelineLayout&             instance;
-        PipelineLayoutDescriptor    desc;
-        std::string                 label;
+        PipelineLayout&                 instance;
+        const PipelineLayoutDescriptor  desc;
+        std::string                     label;
 
 };
 

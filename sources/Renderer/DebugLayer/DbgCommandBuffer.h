@@ -29,7 +29,7 @@ class DbgComputePipeline;
 class DbgShaderProgram;
 class RenderingDebugger;
 
-class DbgCommandBuffer : public CommandBufferExt
+class DbgCommandBuffer final : public CommandBufferExt
 {
 
     public:
@@ -177,9 +177,9 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
-    
+
         /* ----- Debugging ----- */
-    
+
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
@@ -199,6 +199,8 @@ class DbgCommandBuffer : public CommandBufferExt
             long                stageFlags      = StageFlags::AllStages
         ) override;
 
+    public:
+
         /* ----- Extended functions ----- */
 
         void EnableRecording(bool enable);
@@ -209,9 +211,9 @@ class DbgCommandBuffer : public CommandBufferExt
 
         /* ----- Debugging members ----- */
 
-        CommandBuffer&          instance;
-        CommandBufferExt*       instanceExt = nullptr;
-        CommandBufferDescriptor desc;
+        CommandBuffer&                  instance;
+        CommandBufferExt*               instanceExt = nullptr;
+        const CommandBufferDescriptor   desc;
 
     private:
 
@@ -221,7 +223,7 @@ class DbgCommandBuffer : public CommandBufferExt
         void ValidateAttachmentClear(const AttachmentClear& attachment);
 
         void ValidateVertexLayout();
-        void ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer** vertexBuffers, std::uint32_t numVertexBuffers);
+        void ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers);
 
         void ValidateNumVertices(std::uint32_t numVertices);
         void ValidateNumInstances(std::uint32_t numInstances);
@@ -255,7 +257,7 @@ class DbgCommandBuffer : public CommandBufferExt
         void AssertInstancingSupported();
         void AssertOffsetInstancingSupported();
         void AssertIndirectDrawingSupported();
-    
+
         void AssertNullPointer(const void* ptr, const char* name);
 
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
@@ -270,7 +272,7 @@ class DbgCommandBuffer : public CommandBufferExt
 
         const RenderingFeatures&        features_;
         const RenderingLimits&          limits_;
-    
+
         std::stack<std::string>         debugGroups_;
 
         /* ----- Render states ----- */
@@ -284,7 +286,7 @@ class DbgCommandBuffer : public CommandBufferExt
             DbgRenderContext*       renderContext           = nullptr;
             DbgRenderTarget*        renderTarget            = nullptr;
             DbgBuffer*              vertexBufferStore[1]    = { nullptr };
-            DbgBuffer**             vertexBuffers           = nullptr;
+            DbgBuffer* const *      vertexBuffers           = nullptr;
             std::uint32_t           numVertexBuffers        = 0;
             bool                    anyNonEmptyVertexBuffer = false;
             bool                    anyShaderAttributes     = false;

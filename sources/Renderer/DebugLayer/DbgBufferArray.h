@@ -16,21 +16,19 @@ namespace LLGL
 {
 
 
-class Buffer;
+class DbgBuffer;
 
-class DbgBufferArray : public BufferArray
+class DbgBufferArray final : public BufferArray
 {
 
     public:
 
-        DbgBufferArray(BufferArray& instance, long bindFlags) :
-            BufferArray { bindFlags },
-            instance    { instance  }
-        {
-        }
+        DbgBufferArray(BufferArray& instance, long bindFlags, std::vector<DbgBuffer*>&& buffers);
 
-        BufferArray&            instance;
-        std::vector<DbgBuffer*> buffers;
+    public:
+
+        BufferArray&                    instance;
+        const std::vector<DbgBuffer*>   buffers;
 
 };
 

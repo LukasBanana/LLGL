@@ -32,7 +32,7 @@ namespace LLGL
 {
 
 
-class DbgRenderSystem : public RenderSystem
+class DbgRenderSystem final : public RenderSystem
 {
 
     public:

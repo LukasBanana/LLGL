@@ -18,6 +18,7 @@ namespace LLGL
 {
 
 
+struct ComputePipelineDescriptor;
 class D3D11StateManager;
 
 class D3D11ComputePipeline final : public ComputePipeline

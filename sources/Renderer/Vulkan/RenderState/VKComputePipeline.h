@@ -18,6 +18,7 @@ namespace LLGL
 {
 
 
+struct ComputePipelineDescriptor;
 class VKShaderProgram;
 
 class VKComputePipeline final : public ComputePipeline

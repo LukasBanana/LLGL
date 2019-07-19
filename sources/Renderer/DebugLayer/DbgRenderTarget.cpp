@@ -17,7 +17,7 @@ namespace LLGL
 
 DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc) :
     instance { instance },
-    desc_    { desc     }
+    desc     { desc     }
 {
 }
 

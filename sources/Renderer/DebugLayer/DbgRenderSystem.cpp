@@ -121,10 +121,9 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
     }
 
     /* Create buffer object */
-    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(desc, initialData), desc.bindFlags);
+    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(desc, initialData), desc);
 
     /* Store settings */
-    bufferDbg->desc         = desc;
     bufferDbg->elements     = (formatSize > 0 ? desc.size / formatSize : 0);
     bufferDbg->initialized  = (initialData != nullptr);
 
@@ -150,10 +149,7 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
 
     /* Create native buffer and debug buffer */
     auto bufferArrayInstance    = instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
-    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, bindFlags);
-
-    /* Store buffer references */
-    bufferArrayDbg->buffers = std::move(bufferDbgArray);
+    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, bindFlags, std::move(bufferDbgArray));
 
     return TakeOwnership(bufferArrays_, std::move(bufferArrayDbg));
 }

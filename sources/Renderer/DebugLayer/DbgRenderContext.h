@@ -18,14 +18,10 @@ namespace LLGL
 
 class DbgBuffer;
 
-class DbgRenderContext : public RenderContext
+class DbgRenderContext final : public RenderContext
 {
 
     public:
-
-        /* ----- Common ----- */
-
-        DbgRenderContext(RenderContext& instance);
 
         void Present() override;
 
@@ -34,7 +30,11 @@ class DbgRenderContext : public RenderContext
 
         const RenderPass* GetRenderPass() const override;
 
-        /* ----- Debugging members ----- */
+    public:
+
+        DbgRenderContext(RenderContext& instance);
+
+    public:
 
         RenderContext& instance;
 

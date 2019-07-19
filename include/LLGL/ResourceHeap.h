@@ -10,7 +10,7 @@
 
 
 #include "RenderSystemChild.h"
-#include "ResourceHeapFlags.h"
+#include "ResourceHeapFlags.h" //TODO: remove this header here
 
 
 namespace LLGL

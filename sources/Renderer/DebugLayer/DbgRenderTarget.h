@@ -18,7 +18,7 @@ namespace LLGL
 
 class RenderingDebugger;
 
-class DbgRenderTarget : public RenderTarget
+class DbgRenderTarget final : public RenderTarget
 {
 
     public:
@@ -37,20 +37,11 @@ class DbgRenderTarget : public RenderTarget
 
         DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc);
 
-        // Returns the render target descriptor of this debug layer object.
-        inline const RenderTargetDescriptor& GetDesc() const
-        {
-            return desc_;
-        }
-
     public:
 
-        RenderTarget&   instance;
-        std::string     label;
-
-    private:
-
-        RenderTargetDescriptor  desc_;
+        RenderTarget&                   instance;
+        const RenderTargetDescriptor    desc;
+        std::string                     label;
 
 };
 

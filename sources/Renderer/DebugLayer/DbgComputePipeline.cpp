@@ -1,11 +1,11 @@
 /*
- * DbgBuffer.cpp
+ * DbgComputePipeline.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "DbgBuffer.h"
+#include "DbgComputePipeline.h"
 #include "DbgCore.h"
 
 
@@ -13,14 +13,13 @@ namespace LLGL
 {
 
 
-DbgBuffer::DbgBuffer(Buffer& instance, const BufferDescriptor& desc) :
-    Buffer   { desc.bindFlags },
-    instance { instance       },
-    desc     { desc           }
+DbgComputePipeline::DbgComputePipeline(ComputePipeline& instance, const ComputePipelineDescriptor& desc) :
+    instance { instance },
+    desc     { desc     }
 {
 }
 
-void DbgBuffer::SetName(const char* name)
+void DbgComputePipeline::SetName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }

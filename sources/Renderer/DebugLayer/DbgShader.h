@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class DbgShader : public Shader
+class DbgShader final : public Shader
 {
 
     public:
@@ -27,7 +27,6 @@ class DbgShader : public Shader
         bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
-
         std::string QueryInfoLog() override;
 
     public:

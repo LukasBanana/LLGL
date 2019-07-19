@@ -11,6 +11,7 @@
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
+#include <LLGL/ComputePipelineFlags.h>
 #include <cstddef>
 
 

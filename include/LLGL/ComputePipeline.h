@@ -10,7 +10,6 @@
 
 
 #include "RenderSystemChild.h"
-#include "ComputePipelineFlags.h"
 
 
 namespace LLGL

@@ -16,6 +16,7 @@ namespace LLGL
 {
 
 
+struct ComputePipelineDescriptor;
 class GLShaderProgram;
 class GLStateManager;
 

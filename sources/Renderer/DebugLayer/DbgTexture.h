@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class DbgTexture : public Texture
+class DbgTexture final : public Texture
 {
 
     public:
@@ -36,7 +36,7 @@ class DbgTexture : public Texture
     public:
 
         Texture&                    instance;
-        TextureDescriptor           desc;
+        const TextureDescriptor     desc;
         TextureViewDescriptor       viewDesc;
         std::uint32_t               mipLevels           = 1;
         std::string                 label;

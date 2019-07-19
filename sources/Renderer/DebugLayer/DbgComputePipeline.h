@@ -10,25 +10,30 @@
 
 
 #include <LLGL/ComputePipeline.h>
+#include <LLGL/ComputePipelineFlags.h>
+#include <string>
 
 
 namespace LLGL
 {
 
 
-class DbgComputePipeline : public ComputePipeline
+class DbgComputePipeline final : public ComputePipeline
 {
 
     public:
 
-        DbgComputePipeline(ComputePipeline& instance, const ComputePipelineDescriptor& desc) :
-            instance { instance },
-            desc     { desc     }
-        {
-        }
+        void SetName(const char* name) override;
+
+    public:
+
+        DbgComputePipeline(ComputePipeline& instance, const ComputePipelineDescriptor& desc);
+
+    public:
 
         ComputePipeline&                instance;
         const ComputePipelineDescriptor desc;
+        std::string                     label;
 
 };
 

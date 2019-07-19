@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class DbgQueryHeap : public QueryHeap
+class DbgQueryHeap final : public QueryHeap
 {
 
     public:
@@ -39,10 +39,10 @@ class DbgQueryHeap : public QueryHeap
 
     public:
 
-        QueryHeap&          instance;
-        QueryHeapDescriptor desc;
-        std::string         label;
-        std::vector<State>  states;
+        QueryHeap&                  instance;
+        const QueryHeapDescriptor   desc;
+        std::string                 label;
+        std::vector<State>          states;
 
 };
 

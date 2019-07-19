@@ -9,6 +9,7 @@
 #include "GLStateManager.h"
 #include "../Shader/GLShaderProgram.h"
 #include "../../CheckedCast.h"
+#include <LLGL/ComputePipelineFlags.h>
 
 
 namespace LLGL

@@ -1113,7 +1113,7 @@ void DbgCommandBuffer::ValidateVertexLayout()
     }
 }
 
-void DbgCommandBuffer::ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer** vertexBuffers, std::uint32_t numVertexBuffers)
+void DbgCommandBuffer::ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers)
 {
     /* Check if all vertex attributes are served by active vertex buffer(s) */
     std::size_t attribIndex = 0;
