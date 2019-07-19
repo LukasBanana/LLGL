@@ -464,8 +464,17 @@ private:
         commands->Begin();
         {
             // Draw scene into texture, then draw scene onto screen
-            DrawSceneIntoTexture();
-            DrawSceneOntoScreen();
+            commands->PushDebugGroup("RenderTexture");
+            {
+                DrawSceneIntoTexture();
+            }
+            commands->PopDebugGroup();
+
+            commands->PushDebugGroup("RenderScene");
+            {
+                DrawSceneOntoScreen();
+            }
+            commands->PopDebugGroup();
         }
         commands->End();
         commandQueue->Submit(*commands);

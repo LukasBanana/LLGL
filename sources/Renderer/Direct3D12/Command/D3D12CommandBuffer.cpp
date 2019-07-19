@@ -24,7 +24,10 @@
 #include "../RenderState/D3D12QueryHeap.h"
 
 #include "../D3DX12/d3dx12.h"
+#include <pix.h>
+
 #include <algorithm>
+#include <codecvt>
 
 
 namespace LLGL
@@ -561,12 +564,14 @@ void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void D3D12CommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    std::wstring nameWStr = converter.from_bytes(name);
+    PIXBeginEvent(commandList_.Get(), 0, nameWStr.c_str());
 }
 
 void D3D12CommandBuffer::PopDebugGroup()
 {
-    //TODO
+    PIXEndEvent(commandList_.Get());
 }
 
 

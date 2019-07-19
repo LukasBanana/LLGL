@@ -551,7 +551,7 @@ void D3D11CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void D3D11CommandBuffer::PushDebugGroup(const char* name)
 {
-    if (annotation_ && name != nullptr)
+    if (annotation_)
     {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         std::wstring nameWStr = converter.from_bytes(name);
