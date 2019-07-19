@@ -10,6 +10,7 @@
 #include "RenderState/GLStateManager.h"
 #include "../GLCommon/GLExtensionRegistry.h"
 #include <string>
+#include <cstring> // std::strlen
 
 
 namespace LLGL
