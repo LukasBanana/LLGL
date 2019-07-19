@@ -13,6 +13,7 @@
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/RenderingDebugger.h>
 #include <vector>
+#include <string>
 
 
 namespace LLGL

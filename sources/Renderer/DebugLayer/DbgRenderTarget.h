@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderTarget.h>
+#include <string>
 
 
 namespace LLGL

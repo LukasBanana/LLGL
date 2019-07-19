@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Buffer.h>
+#include <string>
 
 
 namespace LLGL

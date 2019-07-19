@@ -11,6 +11,7 @@
 
 #include <LLGL/Texture.h>
 #include <vector>
+#include <string>
 
 
 namespace LLGL

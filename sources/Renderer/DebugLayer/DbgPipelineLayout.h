@@ -11,6 +11,7 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <string>
 
 
 namespace LLGL
