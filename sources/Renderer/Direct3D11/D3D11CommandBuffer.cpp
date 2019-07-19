@@ -551,18 +551,22 @@ void D3D11CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void D3D11CommandBuffer::PushDebugGroup(const char* name)
 {
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     if (annotation_)
     {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         std::wstring nameWStr = converter.from_bytes(name);
         annotation_->BeginEvent(nameWStr.c_str());
     }
+    #endif
 }
 
 void D3D11CommandBuffer::PopDebugGroup()
 {
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     if (annotation_)
         annotation_->EndEvent();
+    #endif
 }
 
 /* ----- Direct Resource Access ------ */
