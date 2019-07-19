@@ -26,7 +26,7 @@ class D3D11ShaderProgram final : public ShaderProgram
 
     public:
 
-        D3D11ShaderProgram(ID3D11Device* device, const ShaderProgramDescriptor& desc);
+        void SetName(const char* name) override;
 
         bool HasErrors() const override;
 
@@ -39,6 +39,8 @@ class D3D11ShaderProgram final : public ShaderProgram
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
 
     public:
+
+        D3D11ShaderProgram(ID3D11Device* device, const ShaderProgramDescriptor& desc);
 
         inline const ComPtr<ID3D11InputLayout>& GetInputLayout() const
         {

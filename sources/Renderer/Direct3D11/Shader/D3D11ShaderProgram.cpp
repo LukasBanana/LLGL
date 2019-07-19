@@ -8,6 +8,7 @@
 #include "D3D11ShaderProgram.h"
 #include "D3D11Shader.h"
 #include "../D3D11Types.h"
+#include "../D3D11ObjectUtils.h"
 #include "../../CheckedCast.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Helper.h"
@@ -37,6 +38,11 @@ D3D11ShaderProgram::D3D11ShaderProgram(ID3D11Device* device, const ShaderProgram
     Attach(cs_, desc.computeShader);
     BuildInputLayout(device, desc.vertexFormats.size(), desc.vertexFormats.data());
     Link();
+}
+
+void D3D11ShaderProgram::SetName(const char* name)
+{
+    D3D11SetObjectName(inputLayout_.Get(), name);
 }
 
 bool D3D11ShaderProgram::HasErrors() const

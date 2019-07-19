@@ -13,6 +13,7 @@
 #include "../../Core/Helper.h"
 #include "../TextureUtils.h"
 #include <algorithm>
+#include <codecvt>
 
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11GraphicsPipelineBase.h"
@@ -62,6 +63,10 @@ D3D11CommandBuffer::D3D11CommandBuffer(
     /* Store information whether the command buffer has an immediate or deferred context */
     if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
         hasDeferredContext_ = true;
+
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    context_->QueryInterface(IID_PPV_ARGS(&annotation_));
+    #endif
 }
 
 /* ----- Encoding ----- */
@@ -546,12 +551,18 @@ void D3D11CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void D3D11CommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    if (annotation_ && name != nullptr)
+    {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        std::wstring nameWStr = converter.from_bytes(name);
+        annotation_->BeginEvent(nameWStr.c_str());
+    }
 }
 
 void D3D11CommandBuffer::PopDebugGroup()
 {
-    //TODO
+    if (annotation_)
+        annotation_->EndEvent();
 }
 
 /* ----- Direct Resource Access ------ */

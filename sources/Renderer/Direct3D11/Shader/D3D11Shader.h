@@ -48,15 +48,16 @@ class D3D11Shader final : public Shader
 
     public:
 
-        D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc);
+        void SetName(const char* name) override;
 
         bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
-
         std::string QueryInfoLog() override;
 
-        /* ----- Extended internal functions ---- */
+    public:
+
+        D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc);
 
         void Reflect(ShaderReflectionDescriptor& reflectionDesc) const;
 
@@ -85,6 +86,8 @@ class D3D11Shader final : public Shader
         );
 
         void ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const;
+
+    private:
 
         D3D11NativeShader   native_;
 

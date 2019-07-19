@@ -10,12 +10,12 @@
 
 
 #include <LLGL/CommandBufferExt.h>
-#include <cstddef>
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
-#include <vector>
-#include <d3d11.h>
+#include "Direct3D11.h"
 #include <dxgi.h>
+#include <vector>
+#include <cstddef>
 
 
 namespace LLGL
@@ -173,9 +173,9 @@ class D3D11CommandBuffer final : public CommandBufferExt
 
         void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
-    
+
         /* ----- Debugging ----- */
-    
+
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
@@ -240,6 +240,10 @@ class D3D11CommandBuffer final : public CommandBufferExt
         ComPtr<ID3D11DeviceContext>         context_;
         bool                                hasDeferredContext_ = false;
         ComPtr<ID3D11CommandList>           commandList_;
+
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+        ComPtr<ID3DUserDefinedAnnotation>   annotation_;
+        #endif
 
         std::shared_ptr<D3D11StateManager>  stateMngr_;
 

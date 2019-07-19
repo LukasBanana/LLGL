@@ -22,6 +22,10 @@ class D3D11BufferWithRV final : public D3D11Buffer
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
         // Returns the native SRV object.

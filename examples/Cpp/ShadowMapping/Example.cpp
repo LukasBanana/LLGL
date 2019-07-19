@@ -66,6 +66,8 @@ public:
         commands->SetClearColor(defaultClearColor);
 
         // Label objects for debugging
+        context->SetName("BackBuffer");
+
         vertexBuffer->SetName("Buffer.Vertices");
         constantBuffer->SetName("Buffer.Constants");
 

@@ -72,7 +72,7 @@ void GLSetObjectLabel(GLenum identifier, GLuint name, const char* label);
 void GLSetObjectLabelSubscript(GLenum identifier, GLuint name, const char* label, const char* subscript);
 
 // Sets the label for the specified GL object <name> with an altered name with an indexed subscript (see GLSetObjectLabel).
-void GLSetObjectLabelIndexed(GLenum identifier, GLuint name, const char* label, std::uint32_t idx);
+void GLSetObjectLabelIndexed(GLenum identifier, GLuint name, const char* label, std::uint32_t index);
 
 
 } // /namespace LLGL

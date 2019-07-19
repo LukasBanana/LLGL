@@ -7,10 +7,11 @@
 
 #include "D3D11RenderContext.h"
 #include "D3D11RenderSystem.h"
+#include "D3D11ObjectUtils.h"
+#include "../DXCommon/DXTypes.h"
+#include "../../Core/Helper.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
-#include "../../Core/Helper.h"
-#include "../DXCommon/DXTypes.h"
 
 
 namespace LLGL
@@ -37,6 +38,26 @@ D3D11RenderContext::D3D11RenderContext(
 
     /* Initialize v-sync */
     OnSetVsync(desc.vsync);
+}
+
+void D3D11RenderContext::SetName(const char* name)
+{
+    if (name != nullptr)
+    {
+        /* Set label for each back-buffer object */
+        D3D11SetObjectName(backBuffer_.colorBuffer.Get(), name);
+        D3D11SetObjectNameSubscript(backBuffer_.rtv.Get(), name, ".RTV");
+        D3D11SetObjectNameSubscript(backBuffer_.depthStencil.Get(), name, ".DS");
+        D3D11SetObjectNameSubscript(backBuffer_.dsv.Get(), name, ".DSV");
+    }
+    else
+    {
+        /* Reset all back-buffer labels */
+        D3D11SetObjectName(backBuffer_.colorBuffer.Get(), nullptr);
+        D3D11SetObjectName(backBuffer_.rtv.Get(), nullptr);
+        D3D11SetObjectName(backBuffer_.depthStencil.Get(), nullptr);
+        D3D11SetObjectName(backBuffer_.dsv.Get(), nullptr);
+    }
 }
 
 void D3D11RenderContext::Present()

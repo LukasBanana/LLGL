@@ -42,13 +42,15 @@ class D3D11Texture final : public Texture
 
     public:
 
-        D3D11Texture(const TextureType type);
+        void SetName(const char* name) override;
 
         Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
 
     public:
+
+        D3D11Texture(const TextureType type);
 
         /* ----- Extended internal functions ---- */
 

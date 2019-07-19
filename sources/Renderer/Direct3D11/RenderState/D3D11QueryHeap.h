@@ -51,6 +51,10 @@ class D3D11QueryHeap final : public QueryHeap
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D11QueryHeap(ID3D11Device* device, const QueryHeapDescriptor& desc);
 
         // Returns the native D3D11_QUERY type.

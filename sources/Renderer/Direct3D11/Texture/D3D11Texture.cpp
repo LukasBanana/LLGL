@@ -7,6 +7,7 @@
 
 #include "D3D11Texture.h"
 #include "../D3D11Types.h"
+#include "../D3D11ObjectUtils.h"
 #include "../D3D11ResourceFlags.h"
 #include "../../DXCommon/DXCore.h"
 
@@ -18,6 +19,15 @@ namespace LLGL
 D3D11Texture::D3D11Texture(const TextureType type) :
     Texture { type }
 {
+}
+
+void D3D11Texture::SetName(const char* name)
+{
+    D3D11SetObjectName(GetNative().resource.Get(), name);
+    if (srv_)
+        D3D11SetObjectNameSubscript(srv_.Get(), name, ".SRV");
+    if (uav_)
+        D3D11SetObjectNameSubscript(uav_.Get(), name, ".UAV");
 }
 
 Extent3D D3D11Texture::QueryMipExtent(std::uint32_t mipLevel) const

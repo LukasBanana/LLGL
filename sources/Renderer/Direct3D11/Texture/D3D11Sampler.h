@@ -23,17 +23,21 @@ class D3D11Sampler final : public Sampler
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D11Sampler(ID3D11Device* device, const SamplerDescriptor& desc);
 
         // Returns the native ID3D11SamplerState object.
         inline ID3D11SamplerState* GetNative() const
         {
-            return samplerState_.Get();
+            return native_.Get();
         }
 
     private:
 
-        ComPtr<ID3D11SamplerState> samplerState_;
+        ComPtr<ID3D11SamplerState> native_;
 
 };
 

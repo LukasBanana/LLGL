@@ -93,12 +93,12 @@ void GLQueryHeap::SetName(const char* name)
 {
     if (groupSize_ == 1)
     {
-        /* Set label for a single query object */
+        /* Set label for a single native query object */
         GLSetObjectLabel(GL_QUERY, GetID(0), name);
     }
     else
     {
-        /* Reset labels for each query object */
+        /* Set label for each native query object */
         for (std::uint32_t i = 0, n = static_cast<std::uint32_t>(GetIDs().size()); i < n; ++i)
             GLSetObjectLabelIndexed(GL_QUERY, GetID(i), name, i);
     }

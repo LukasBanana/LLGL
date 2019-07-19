@@ -7,6 +7,7 @@
 
 #include "D3D11BufferWithRV.h"
 #include "../D3D11Types.h"
+#include "../D3D11ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
@@ -59,6 +60,15 @@ D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescripto
 
     if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
         CreateNativeUAV(device, format, 0, numElements, GetUAVFlags(desc.storageBuffer));
+}
+
+void D3D11BufferWithRV::SetName(const char* name)
+{
+    D3D11Buffer::SetName(name);
+    if (srv_)
+        D3D11SetObjectNameSubscript(srv_.Get(), name, ".SRV");
+    if (uav_)
+        D3D11SetObjectNameSubscript(uav_.Get(), name, ".UAV");
 }
 
 

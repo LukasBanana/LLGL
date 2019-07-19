@@ -56,12 +56,12 @@ void GLSetObjectLabelSubscript(GLenum identifier, GLuint name, const char* label
         GLSetObjectLabel(identifier, name, nullptr);
 }
 
-void GLSetObjectLabelIndexed(GLenum identifier, GLuint name, const char* label, std::uint32_t idx)
+void GLSetObjectLabelIndexed(GLenum identifier, GLuint name, const char* label, std::uint32_t index)
 {
     if (label != nullptr)
     {
         /* Append subscript to label */
-        std::string subscript = std::to_string(idx);
+        std::string subscript = std::to_string(index);
         GLSetObjectLabelSubscript(identifier, name, label, subscript.c_str());
     }
     else

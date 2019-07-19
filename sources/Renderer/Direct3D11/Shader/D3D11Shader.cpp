@@ -6,6 +6,7 @@
  */
 
 #include "D3D11Shader.h"
+#include "../D3D11ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/Helper.h"
@@ -24,6 +25,12 @@ D3D11Shader::D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc) :
 {
     if (!Build(device, desc))
         hasErrors_ = true;
+}
+
+void D3D11Shader::SetName(const char* name)
+{
+    /* Always use vertex shader from union structure */
+    D3D11SetObjectName(static_cast<ID3D11DeviceChild*>(native_.vs.Get()), name);
 }
 
 bool D3D11Shader::HasErrors() const
