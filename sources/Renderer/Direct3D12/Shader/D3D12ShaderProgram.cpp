@@ -124,21 +124,23 @@ void D3D12ShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Ve
     inputElements_.clear();
     inputElements_.reserve(numElements);
 
-    inputElementNames_.clear();
-    inputElementNames_.reserve(numElements);
+    /* Reserve memory for the input element names */
+    inputElementNames_.Clear();
+    for (std::size_t i = 0; i < numVertexFormats; ++i)
+    {
+        for (const auto& attrib : vertexFormats[i].attributes)
+            inputElementNames_.Reserve(attrib.name.size());
+    }
 
     /* Build input element descriptors */
     for (std::size_t i = 0; i < numVertexFormats; ++i)
     {
         for (const auto& attrib : vertexFormats[i].attributes)
         {
-            /* Copy attribute name to hold a valid string pointer */
-            inputElementNames_.push_back(attrib.name);
-
-            /* Build next input element */
+            /* Build next input element and copy attribute names, because their pointers need to stay valid for later use */
             D3D12_INPUT_ELEMENT_DESC elementDesc;
             {
-                elementDesc.SemanticName            = inputElementNames_.back().c_str();
+                elementDesc.SemanticName            = inputElementNames_.CopyString(attrib.name);
                 elementDesc.SemanticIndex           = attrib.semanticIndex;
                 elementDesc.Format                  = GetInputElementFormat(attrib);
                 elementDesc.InputSlot               = vertexFormats[i].inputSlot;
