@@ -126,11 +126,6 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
         );
     }
 
-    #ifdef LLGL_DEBUG
-    std::wstring debugName = L"LLGL::D3D12RenderSystem::buffers[" + std::to_wstring(buffers_.size()) + L"]";
-    bufferD3D->GetNative()->SetName(debugName.c_str());
-    #endif // /LLGL_DEBUG
-
     /* Execute upload commands and wait for GPU to finish execution */
     ExecuteCommandList();
     SyncGPU();

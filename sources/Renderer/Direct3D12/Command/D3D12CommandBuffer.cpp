@@ -607,10 +607,6 @@ void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem, const Co
     {
         auto& cmdAlloc = cmdAllocators_[i];
         cmdAlloc = device.CreateDXCommandAllocator(listType);
-        #ifdef LLGL_DEBUG
-        std::wstring name = L"LLGL::D3D12CommandBuffer::commandAllocator[" + std::to_wstring(i) + L"]";
-        cmdAlloc->SetName(name.c_str());
-        #endif
     }
 
     /* Create graphics command list and close it (they are created in recording mode) */

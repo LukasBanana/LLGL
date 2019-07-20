@@ -33,13 +33,7 @@ class D3D12RenderContext final : public RenderContext
 
     public:
 
-        D3D12RenderContext(
-            D3D12RenderSystem&              renderSystem,
-            const RenderContextDescriptor&  desc,
-            const std::shared_ptr<Surface>& surface
-        );
-
-        ~D3D12RenderContext();
+        void SetName(const char* name) override;
 
         void Present() override;
 
@@ -49,6 +43,14 @@ class D3D12RenderContext final : public RenderContext
         const RenderPass* GetRenderPass() const override;
 
     public:
+
+        D3D12RenderContext(
+            D3D12RenderSystem&              renderSystem,
+            const RenderContextDescriptor&  desc,
+            const std::shared_ptr<Surface>& surface
+        );
+
+        ~D3D12RenderContext();
 
         // Returns the native color buffer resource from the swap-chain that is currently being used.
         D3D12Resource& GetCurrentColorBuffer();
@@ -65,8 +67,6 @@ class D3D12RenderContext final : public RenderContext
 
     private:
 
-        static const UINT g_maxSwapChainSize = 3;
-
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
@@ -78,6 +78,8 @@ class D3D12RenderContext final : public RenderContext
         void MoveToNextFrame();
 
     private:
+
+        static const UINT g_maxSwapChainSize = 3;
 
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
 

@@ -82,10 +82,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeCbvSrvUav(ID3D12Dev
         auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heapTypeCbvSrvUav_.ReleaseAndGetAddressOf()));
         DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap of type D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV");
 
-        #ifdef LLGL_DEBUG
-        heapTypeCbvSrvUav_->SetName(L"LLGL::D3D12ResourceHeap::heapTypeCbvSrvUav");
-        #endif
-
         /* Store in array for quick access */
         AppendDescriptorHeapToArray(heapTypeCbvSrvUav_.Get());
 
@@ -124,10 +120,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeSampler(ID3D12Devic
         }
         auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heapTypeSampler_.ReleaseAndGetAddressOf()));
         DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap of type D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER");
-
-        #ifdef LLGL_DEBUG
-        heapTypeSampler_->SetName(L"LLGL::D3D12ResourceHeap::heapTypeSampler");
-        #endif
 
         /* Store in array for quick access */
         AppendDescriptorHeapToArray(heapTypeSampler_.Get());

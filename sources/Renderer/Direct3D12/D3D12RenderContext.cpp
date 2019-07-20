@@ -8,6 +8,7 @@
 #include "D3D12RenderContext.h"
 #include "D3D12RenderSystem.h"
 #include "D3D12Types.h"
+#include "D3D12ObjectUtils.h"
 #include "Command/D3D12CommandContext.h"
 #include "Buffer/D3D12Buffer.h"
 #include "../CheckedCast.h"
@@ -23,12 +24,6 @@
 namespace LLGL
 {
 
-
-#ifdef LLGL_DEBUG
-#   define LLGL_D3D12_SET_NAME(OBJ, NAME) (OBJ)->SetName(L"LLGL::D3D12RenderContext::" NAME)
-#else
-#   define LLGL_D3D12_SET_NAME(OBJ, NAME)
-#endif
 
 D3D12RenderContext::D3D12RenderContext(
     D3D12RenderSystem&              renderSystem,
@@ -53,6 +48,24 @@ D3D12RenderContext::~D3D12RenderContext()
 {
     /* Ensure the GPU is no longer referencing resources that are about to be released */
     MoveToNextFrame();
+}
+
+void D3D12RenderContext::SetName(const char* name)
+{
+    D3D12SetObjectNameSubscript(rtvDescHeap_.Get(), name, ".RTV");
+    D3D12SetObjectNameSubscript(dsvDescHeap_.Get(), name, ".DSV");
+
+    std::string subscript;
+    for (UINT i = 0; i < g_maxSwapChainSize; ++i)
+    {
+        subscript = (".BackBuffer" + std::to_string(i));
+        D3D12SetObjectNameSubscript(colorBuffers_[i].Get(), name, subscript.c_str());
+
+        subscript = (".BackBufferMS" + std::to_string(i));
+        D3D12SetObjectNameSubscript(colorBuffersMS_[i].Get(), name, subscript.c_str());
+    }
+
+    D3D12SetObjectNameSubscript(depthStencil_.Get(), name, ".DS");
 }
 
 void D3D12RenderContext::Present()
@@ -267,8 +280,6 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
     }
     rtvDescHeap_ = renderSystem_.GetDevice().CreateDXDescriptorHeap(descHeapDesc);
 
-    LLGL_D3D12_SET_NAME(rtvDescHeap_, L"rtvDescHeap");
-
     /* Create color buffers */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescHandle(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
 
@@ -284,11 +295,6 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
         device->CreateRenderTargetView(colorBuffers_[i].native.Get(), nullptr, rtvDescHandle);
 
         rtvDescHandle.Offset(1, rtvDescSize_);
-
-        #ifdef LLGL_DEBUG
-        std::wstring debugName = L"LLGL::D3D12RenderContext::colorBuffer[" + std::to_wstring(i) + L"]";
-        colorBuffers_[i].native->SetName(debugName.c_str());
-        #endif
     }
 
     /* Find suitable multi-samples for color format */
@@ -340,11 +346,6 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
             device->CreateRenderTargetView(colorBuffersMS_[i].native.Get(), nullptr, rtvDescHandle);
 
             rtvDescHandle.Offset(1, rtvDescSize_);
-
-            #ifdef LLGL_DEBUG
-            std::wstring debugName = L"LLGL::D3D12RenderContext::colorBufferMS[" + std::to_wstring(i) + L"]";
-            colorBuffersMS_[i].native->SetName(debugName.c_str());
-            #endif
         }
     }
 }
@@ -366,8 +367,6 @@ void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoMode
     }
     dsvDescHeap_ = renderSystem_.GetDevice().CreateDXDescriptorHeap(descHeapDesc);
 
-    LLGL_D3D12_SET_NAME(dsvDescHeap_, L"dsvDescHeap");
-
     /* Create depth-stencil buffer */
     auto tex2DDesc = CD3DX12_RESOURCE_DESC::Tex2D(
         depthStencilFormat_,
@@ -388,8 +387,6 @@ void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoMode
         &CD3DX12_CLEAR_VALUE(depthStencilFormat_, 1.0f, 0),
         IID_PPV_ARGS(depthStencil_.native.ReleaseAndGetAddressOf())
     );
-
-    LLGL_D3D12_SET_NAME(depthStencil_.native, L"depthStencil");
 
     /* Create depth-stencil view (DSV) */
     device->CreateDepthStencilView(depthStencil_.native.Get(), nullptr, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
@@ -416,8 +413,6 @@ void D3D12RenderContext::MoveToNextFrame()
     /* Set fence value for next frame */
     fenceValues_[currentFrame_] = currentFenceValue + 1;
 }
-
-#undef LLGL_D3D12_SET_NAME
 
 
 } // /namespace LLGL
