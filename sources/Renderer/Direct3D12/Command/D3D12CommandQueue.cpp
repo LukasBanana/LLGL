@@ -7,6 +7,7 @@
 
 #include "D3D12CommandQueue.h"
 #include "D3D12CommandBuffer.h"
+#include "../D3D12ObjectUtils.h"
 #include "../D3D12RenderSystem.h"
 #include "../RenderState/D3D12Fence.h"
 #include "../RenderState/D3D12QueryHeap.h"
@@ -22,6 +23,11 @@ D3D12CommandQueue::D3D12CommandQueue(ID3D12Device* device, ID3D12CommandQueue* q
     native_            { queue     },
     intermediateFence_ { device, 0 }
 {
+}
+
+void D3D12CommandQueue::SetName(const char* name)
+{
+    D3D12SetObjectName(native_, name);
 }
 
 /* ----- Command Buffers ----- */

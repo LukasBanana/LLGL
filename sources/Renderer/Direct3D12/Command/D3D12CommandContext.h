@@ -47,6 +47,8 @@ class D3D12CommandContext
 
         D3D12_RESOURCE_BARRIER& NextResourceBarrier();
 
+    private:
+
         static const UINT g_maxNumResourceBarrieres = 16;
 
         ID3D12GraphicsCommandList*  commandList_                                    = nullptr;

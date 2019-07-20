@@ -7,6 +7,7 @@
 
 #include "D3D12CommandBuffer.h"
 #include "D3D12CommandSignaturePool.h"
+#include "../D3D12ObjectUtils.h"
 #include "../D3D12RenderContext.h"
 #include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
@@ -38,6 +39,11 @@ D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const Co
     commandSignaturePool_ { &(renderSystem.GetCommandSignaturePool()) }
 {
     CreateDevices(renderSystem, desc);
+}
+
+void D3D12CommandBuffer::SetName(const char* name)
+{
+    D3D12SetObjectName(commandList_.Get(), name);
 }
 
 /* ----- Encoding ----- */

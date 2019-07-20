@@ -8,6 +8,7 @@
 #include "D3D12Buffer.h"
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12Types.h"
+#include "../D3D12ObjectUtils.h"
 #include "../Command/D3D12CommandContext.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Assertion.h"
@@ -25,6 +26,12 @@ D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
     InitMemory(vertexBufferView_);
     InitMemory(indexBufferView_);
     CreateNativeBuffer(device, desc);
+}
+
+void D3D12Buffer::SetName(const char* name)
+{
+    D3D12SetObjectName(resource_.Get(), name);
+    D3D12SetObjectNameSubscript(uploadResource_.Get(), name, ".Staging");
 }
 
 void D3D12Buffer::UpdateStaticSubresource(

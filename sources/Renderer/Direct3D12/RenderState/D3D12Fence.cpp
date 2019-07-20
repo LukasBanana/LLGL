@@ -6,6 +6,7 @@
  */
 
 #include "D3D12Fence.h"
+#include "../D3D12ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 
 
@@ -27,6 +28,11 @@ D3D12Fence::D3D12Fence(ID3D12Device* device, UINT64 initialValue) :
 D3D12Fence::~D3D12Fence()
 {
     CloseHandle(event_);
+}
+
+void D3D12Fence::SetName(const char* name)
+{
+    D3D12SetObjectName(fence_.Get(), name);
 }
 
 UINT64 D3D12Fence::NextValue()

@@ -29,6 +29,10 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D12GraphicsPipeline(
             D3D12Device&                        device,
             ID3D12RootSignature*                defaultRootSignature,
@@ -59,6 +63,8 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
         void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
         void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
         void SetStaticViewportsAndScissors(ID3D12GraphicsCommandList* commandList);
+
+    private:
 
         ComPtr<ID3D12PipelineState> pipelineState_;
         ID3D12RootSignature*        rootSignature_      = nullptr;

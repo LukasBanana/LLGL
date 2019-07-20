@@ -18,6 +18,7 @@ namespace LLGL
 {
 
 
+// Helper struct to store a D3D12 resource with its usage state and transition state.
 struct D3D12Resource
 {
     D3D12Resource() = default;
@@ -29,10 +30,17 @@ struct D3D12Resource
     {
     }
 
+    // Sets both the current usage and the transition states to the specified initial state.
     inline void SetInitialState(D3D12_RESOURCE_STATES initialState)
     {
         usageState      = initialState;
         transitionState = initialState;
+    }
+
+    // Returns the natvie resource object.
+    inline ID3D12Resource* Get() const
+    {
+        return native.Get();
     }
 
     ComPtr<ID3D12Resource>  native;

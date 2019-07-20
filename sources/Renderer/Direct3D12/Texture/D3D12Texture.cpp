@@ -6,6 +6,7 @@
  */
 
 #include "D3D12Texture.h"
+#include "../D3D12ObjectUtils.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
 #include "../D3D12Types.h"
@@ -29,6 +30,11 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     numArrayLayers_ { desc.arrayLayers             }
 {
     CreateNativeTexture(device, desc);
+}
+
+void D3D12Texture::SetName(const char* name)
+{
+    D3D12SetObjectName(resource_.Get(), name);
 }
 
 Extent3D D3D12Texture::QueryMipExtent(std::uint32_t mipLevel) const

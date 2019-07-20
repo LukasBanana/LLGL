@@ -22,13 +22,15 @@ class D3D12Texture final : public Texture
 
     public:
 
-        D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc);
+        void SetName(const char* name) override;
 
         Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
 
     public:
+
+        D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc);
 
         void UpdateSubresource(
             ID3D12Device*               device,

@@ -131,7 +131,9 @@ struct VideoModeDescriptor
 /**
 \brief OpenGL profile descriptor structure.
 \note On MacOS the only supported OpenGL profiles are compatibility profile (for lagecy OpenGL before 3.0), 3.2 core profile, or 4.1 core profile.
-\todo Move this into RenderSystemDescriptor, and make GL context creation part of GLRenderSystem instead of each GLRenderContext instance.
+\todo Move this into RenderSystemDescriptor.
+\todo Make GL context creation part of GLRenderSystem instead of each GLRenderContext instance.
+\todo Rename to OpenGLConfiguration (together with VulkanRendererConfiguration).
 */
 struct ProfileOpenGLDescriptor
 {
@@ -140,13 +142,13 @@ struct ProfileOpenGLDescriptor
 
     /**
     \brief Specifies the requested OpenGL context major version. By default -1 to indicate to use the highest version possible.
-    \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
+    \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
     int                     majorVersion    = -1;
 
     /**
     \brief Specifies the requested OpenGL context minor version. By default -1 to indicate to use the highest version possible.
-    \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
+    \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
     int                     minorVersion    = -1;
 };

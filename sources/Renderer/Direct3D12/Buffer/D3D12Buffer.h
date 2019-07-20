@@ -26,6 +26,10 @@ class D3D12Buffer : public Buffer
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc);
 
         void UpdateStaticSubresource(
@@ -93,6 +97,8 @@ class D3D12Buffer : public Buffer
     private:
 
         void CreateUploadBuffer(ID3D12Device* device, const BufferDescriptor& desc);
+
+    private:
 
         D3D12Resource               resource_;
         ComPtr<ID3D12Resource>      uploadResource_;

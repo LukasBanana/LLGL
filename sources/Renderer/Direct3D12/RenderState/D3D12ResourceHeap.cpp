@@ -7,6 +7,7 @@
 
 #include "D3D12ResourceHeap.h"
 //#include "D3D12PipelineLayout.h"
+#include "../D3D12ObjectUtils.h"
 #include "../Buffer/D3D12Buffer.h"
 #include "../Texture/D3D12Sampler.h"
 #include "../Texture/D3D12Texture.h"
@@ -32,6 +33,12 @@ D3D12ResourceHeap::D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDes
     CreateShaderResourceViews(device, cpuDescHandleCbvSrvUav, desc);
     CreateUnorderedAccessViews(device, cpuDescHandleCbvSrvUav, desc);
     CreateSamplers(device, cpuDescHandleSampler, desc);
+}
+
+void D3D12ResourceHeap::SetName(const char* name)
+{
+    D3D12SetObjectNameSubscript(heapTypeCbvSrvUav_.Get(), name, ".CbvSrvUav");
+    D3D12SetObjectNameSubscript(heapTypeSampler_.Get(), name, ".Sampler");
 }
 
 

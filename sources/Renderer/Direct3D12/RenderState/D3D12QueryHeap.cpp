@@ -7,6 +7,7 @@
 
 #include "D3D12QueryHeap.h"
 #include "../D3D12Types.h"
+#include "../D3D12ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 #include "../D3D12Device.h"
 #include "../D3DX12/d3dx12.h"
@@ -76,6 +77,12 @@ D3D12QueryHeap::D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& d
         );
         resultResource_->SetName(L"LLGL::D3D12QueryHeap::CPUResultResource");
     }
+}
+
+void D3D12QueryHeap::SetName(const char* name)
+{
+    D3D12SetObjectName(GetNative(), name);
+    D3D12SetObjectNameSubscript(GetResultResource(), name, ".Result");
 }
 
 void D3D12QueryHeap::ResolveData(ID3D12GraphicsCommandList* commandList, UINT firstQuery, UINT numQueries)

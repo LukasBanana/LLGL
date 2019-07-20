@@ -255,6 +255,7 @@ struct ApplicationDescriptor
 \brief Structure for a Vulkan renderer specific configuration.
 \remarks The nomenclature here is "Renderer" instead of "RenderSystem" since the configuration is renderer specific
 and does not denote a configuration of the entire system.
+\todo Rename to VulkanConfiguration (together with ProfileOpenGLDescriptor).
 */
 struct VulkanRendererConfiguration
 {

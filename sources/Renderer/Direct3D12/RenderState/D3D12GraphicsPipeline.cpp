@@ -8,6 +8,7 @@
 #include "D3D12GraphicsPipeline.h"
 #include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
+#include "../D3D12ObjectUtils.h"
 #include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
 #include "D3D12RenderPass.h"
@@ -62,6 +63,11 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())
         BuildStaticStateBuffer(desc);
+}
+
+void D3D12GraphicsPipeline::SetName(const char* name)
+{
+    D3D12SetObjectName(pipelineState_.Get(), name);
 }
 
 void D3D12GraphicsPipeline::Bind(ID3D12GraphicsCommandList* commandList)
