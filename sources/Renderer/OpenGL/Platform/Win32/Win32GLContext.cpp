@@ -379,17 +379,16 @@ void Win32GLContext::SelectPixelFormat()
     }
 
     /* Try to find suitable pixel format */
-    const bool wantAntiAliasFormat = (desc_.multiSampling.enabled && !pixelFormatsMS_.empty());
+    const bool wantAntiAliasFormat = (desc_.multiSampling.enabled && pixelFormatsMSCount_ > 0);
 
-    std::size_t msPixelFormatIndex = 0;
     bool wasStandardFormatUsed = false;
 
-    while (true)
+    for (UINT pixelFormatMSIndex = 0;;)
     {
-        if (wantAntiAliasFormat && msPixelFormatIndex < Win32GLContext::maxNumPixelFormatsMS_)
+        if (wantAntiAliasFormat && pixelFormatMSIndex < Win32GLContext::maxPixelFormatsMS)
         {
             /* Choose anti-aliasing pixel format */
-            pixelFormat_ = pixelFormatsMS_[msPixelFormatIndex++];
+            pixelFormat_ = pixelFormatsMS_[pixelFormatMSIndex++];
         }
 
         if (!pixelFormat_)
@@ -438,9 +437,9 @@ bool Win32GLContext::SetupAntiAliasing()
 
     while (desc_.multiSampling.samples > 0)
     {
-        float attribsFlt[] = { 0.0f, 0.0f };
+        const float attribsFlt[] = { 0.0f, 0.0f };
 
-        int attribsInt[] =
+        const int attribsInt[] =
         {
             WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
             WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
@@ -456,22 +455,16 @@ bool Win32GLContext::SetupAntiAliasing()
         };
 
         /* Choose new pixel format with anti-aliasing */
-        UINT numFormats = 0;
-
-        pixelFormatsMS_.resize(Win32GLContext::maxNumPixelFormatsMS_);
-
-        int result = wglChoosePixelFormatARB(
+        BOOL result = wglChoosePixelFormatARB(
             hDC_,
             attribsInt,
             attribsFlt,
-            Win32GLContext::maxNumPixelFormatsMS_,
-            pixelFormatsMS_.data(),
-            &numFormats
+            Win32GLContext::maxPixelFormatsMS,
+            pixelFormatsMS_,
+            &pixelFormatsMSCount_
         );
 
-        pixelFormatsMS_.resize(numFormats);
-
-        if (!result || numFormats < 1)
+        if (!result || pixelFormatsMSCount_ < 1)
         {
             if (desc_.multiSampling.samples <= 0)
             {
@@ -512,8 +505,10 @@ bool Win32GLContext::SetupAntiAliasing()
 
 void Win32GLContext::CopyPixelFormat(Win32GLContext& sourceContext)
 {
-    pixelFormat_    = sourceContext.pixelFormat_;
-    pixelFormatsMS_ = sourceContext.pixelFormatsMS_;
+    /* Copy pixel format and array of multi-sampled pixel formats */
+    pixelFormat_            = sourceContext.pixelFormat_;
+    pixelFormatsMSCount_    = sourceContext.pixelFormatsMSCount_;
+    ::memcpy(pixelFormatsMS_, sourceContext.pixelFormatsMS_, sizeof(pixelFormatsMS_));
 }
 
 void Win32GLContext::RecreateWindow()

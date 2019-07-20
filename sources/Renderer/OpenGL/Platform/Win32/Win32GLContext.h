@@ -20,7 +20,7 @@ namespace LLGL
 
 
 // Implementation of the GLContext interface for Win32 and wrapper for a WGL context.
-class Win32GLContext : public GLContext
+class Win32GLContext final : public GLContext
 {
 
     public:
@@ -55,18 +55,19 @@ class Win32GLContext : public GLContext
 
     private:
 
-        static const UINT       maxNumPixelFormatsMS_   = 8;
+        static const UINT       maxPixelFormatsMS                   = 8;
 
-        int                     pixelFormat_            = 0;    //!< Standard pixel format.
-        std::vector<int>        pixelFormatsMS_;                 //!< Multi-sampled pixel formats.
+        int                     pixelFormat_                        = 0;        // Standard pixel format.
+        int                     pixelFormatsMS_[maxPixelFormatsMS]  = { 0 };    // Multi-sampled pixel formats.
+        UINT                    pixelFormatsMSCount_                = 0;
 
-        HDC                     hDC_                    = 0;    //!< Device context handle.
-        HGLRC                   hGLRC_                  = 0;    //!< OpenGL render context handle.
+        HDC                     hDC_                                = 0;        // Device context handle.
+        HGLRC                   hGLRC_                              = 0;        // OpenGL render context handle.
 
         RenderContextDescriptor desc_;
         Surface&                surface_;
 
-        bool                    hasSharedContext_       = false;
+        bool                    hasSharedContext_                   = false;
 
 };
 

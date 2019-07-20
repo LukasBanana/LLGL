@@ -16,6 +16,7 @@ namespace LLGL
 {
 
 
+// Primary callback for Win32 window events.
 LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 

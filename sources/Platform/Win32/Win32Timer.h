@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class Win32Timer : public Timer
+class Win32Timer final : public Timer
 {
 
     public:
@@ -32,7 +32,7 @@ class Win32Timer : public Timer
         bool IsRunning() const override;
 
     private:
-        
+
         LARGE_INTEGER   clockFrequency_;
         LARGE_INTEGER   t0_;
         LARGE_INTEGER   t1_;

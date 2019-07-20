@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class Win32Window : public Window
+class Win32Window final : public Window
 {
 
     public:
@@ -53,10 +53,10 @@ class Win32Window : public Window
 
         HWND CreateWindowHandle(const WindowDescriptor& desc);
 
+    private:
+
         WindowDescriptor    desc_;
-
         NativeContextHandle contextHandle_;             // Must be initialized before "wnd_" member!
-
         HWND                wnd_            = nullptr;
 
 };

@@ -314,8 +314,6 @@ void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc
     }
 }
 
-#ifdef LLGL_DEBUG
-
 void APIENTRY GLDebugCallback(
     GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
@@ -329,32 +327,30 @@ void APIENTRY GLDebugCallback(
         << GLDebugSeverityToStr(severity) << ")";
 
     /* Call debug callback */
-    auto& debugCallback = *reinterpret_cast<const DebugCallback*>(userParam);
-    debugCallback(typeStr.str(), message);
+    auto debugCallback = reinterpret_cast<const DebugCallback*>(userParam);
+    (*debugCallback)(typeStr.str(), message);
 }
-
-#endif
 
 void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
 {
-    #if defined(LLGL_DEBUG) && !defined(__APPLE__)
-
-    debugCallback_ = debugCallback;
-
-    if (debugCallback_)
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
     {
-        GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT);
-        GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(GLDebugCallback, &debugCallback_);
+        debugCallback_ = debugCallback;
+        if (debugCallback_)
+        {
+            GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT);
+            GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+            glDebugMessageCallback(GLDebugCallback, &debugCallback_);
+        }
+        else
+        {
+            GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT);
+            GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+            glDebugMessageCallback(nullptr, nullptr);
+        }
     }
-    else
-    {
-        GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT);
-        GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(nullptr, nullptr);
-    }
-
-    #endif
+    #endif // /GL_KHR_debug
 }
 
 static std::string GLGetString(GLenum name)
