@@ -64,6 +64,20 @@ public:
         CreatePipelines();
         const auto caps = renderer->GetRenderingCaps();
 
+        // Set debugging names
+        shaderProgram->SetName("ShaderProgram");
+        arrayTexture->SetName("SceneTexture");
+        vertexBuffers[0]->SetName("Vertices");
+        vertexBuffers[1]->SetName("Instances");
+        constantBuffer->SetName("Constants");
+        pipeline[0]->SetName("PSO.Default");
+        pipeline[1]->SetName("PSO.AlphaToCoverage");
+        pipelineLayout->SetName("PipelineLayout");
+        samplers[0]->SetName("LinearSampler");
+        samplers[1]->SetName("ClampedSampler");
+        resourceHeaps[0]->SetName("LinearSampler.ResourceHeap");
+        resourceHeaps[1]->SetName("ClampedSampler.ResourceHeap");
+
         // Show info
         std::cout << "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene" << std::endl;
         std::cout << "press R KEY to reload the shader program" << std::endl;

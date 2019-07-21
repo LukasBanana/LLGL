@@ -144,6 +144,7 @@ static void CreateRasterizerState(
     const VKGraphicsPipelineLimits&         limits,
     VkPipelineRasterizationStateCreateInfo& createInfo)
 {
+    const auto& depthBias = desc.rasterizer.depthBias;
     auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
 
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -158,10 +159,10 @@ static void CreateRasterizerState(
     #else
     createInfo.frontFace                = (desc.rasterizer.frontCCW ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE);
     #endif
-    createInfo.depthBiasEnable          = VKBoolean(desc.rasterizer.depthBias.clamp != 0.0f);
-    createInfo.depthBiasConstantFactor  = desc.rasterizer.depthBias.constantFactor;
-    createInfo.depthBiasClamp           = desc.rasterizer.depthBias.clamp;
-    createInfo.depthBiasSlopeFactor     = desc.rasterizer.depthBias.slopeFactor;
+    createInfo.depthBiasEnable          = VKBoolean(depthBias.constantFactor != 0.0f || depthBias.slopeFactor != 0.0f || depthBias.clamp != 0.0f);
+    createInfo.depthBiasConstantFactor  = depthBias.constantFactor;
+    createInfo.depthBiasClamp           = depthBias.clamp;
+    createInfo.depthBiasSlopeFactor     = depthBias.slopeFactor;
     createInfo.lineWidth                = std::max(limits.lineWidthRange[0], std::min(desc.rasterizer.lineWidth, limits.lineWidthRange[1]));
 }
 

@@ -21,6 +21,11 @@ echo ####### RenderTarget #######
 glslang -V -S vert -o RenderTarget/Example.450core.vert.spv RenderTarget/Example.450core.vert
 glslang -V -S frag -o RenderTarget/Example.450core.frag.spv RenderTarget/Example.450core.frag
 
+echo ####### ShadowMapping #######
+glslang -V -S vert -o ShadowMapping/ShadowMap.450core.vert.spv ShadowMapping/ShadowMap.450core.vert
+glslang -V -S vert -o ShadowMapping/Scene.450core.vert.spv ShadowMapping/Scene.450core.vert
+glslang -V -S frag -o ShadowMapping/Scene.450core.frag.spv ShadowMapping/Scene.450core.frag
+
 echo ####### MultiContext #######
 glslang -V -S vert -o MultiContext/Example.450core.vert.spv MultiContext/Example.450core.vert
 glslang -V -S geom -o MultiContext/Example.450core.geom.spv MultiContext/Example.450core.geom

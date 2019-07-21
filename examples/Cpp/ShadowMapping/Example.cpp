@@ -128,6 +128,22 @@ private:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            shaderProgramShadowMap = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "ShadowMap.450core.vert.spv" }
+                },
+                { vertexFormat }
+            );
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" },
+                    { LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" },
+                },
+                { vertexFormat }
+            );
+        }
         else if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             shaderProgramShadowMap = LoadShaderProgram(
@@ -240,6 +256,7 @@ private:
                 pipelineDesc.rasterizer.depthBias.constantFactor    = 4.0f;
                 pipelineDesc.rasterizer.depthBias.slopeFactor       = 4.0f;
                 pipelineDesc.blend.targets[0].colorMask             = { false, false, false, false };
+                pipelineDesc.viewports                              = { shadowMapResolution };
             }
             pipelineShadowMap = renderer->CreateGraphicsPipeline(pipelineDesc);
         }
@@ -342,7 +359,6 @@ private:
         commands->BeginRenderPass(*shadowMapRenderTarget);
         {
             commands->Clear(LLGL::ClearFlags::Depth);
-            commands->SetViewport(shadowMapResolution);
             commands->SetGraphicsPipeline(*pipelineShadowMap);
             commands->SetGraphicsResourceHeap(*resourceHeapShadowMap);
             RenderAllMeshes();
