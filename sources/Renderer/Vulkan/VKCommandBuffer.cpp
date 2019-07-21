@@ -9,6 +9,8 @@
 #include "VKPhysicalDevice.h"
 #include "VKRenderContext.h"
 #include "VKTypes.h"
+#include "Ext/VKExtensionRegistry.h"
+#include "Ext/VKExtensions.h"
 #include "RenderState/VKRenderPass.h"
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"
@@ -800,12 +802,26 @@ void VKCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void VKCommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    if (HasExtension(VKExt::EXT_debug_marker))
+    {
+        VkDebugMarkerMarkerInfoEXT markerInfo;
+        {
+            markerInfo.sType        = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
+            markerInfo.pNext        = nullptr;
+            markerInfo.pMarkerName  = name;
+            markerInfo.color[0]     = 0.0f;
+            markerInfo.color[1]     = 0.0f;
+            markerInfo.color[2]     = 0.0f;
+            markerInfo.color[3]     = 0.0f;
+        }
+        vkCmdDebugMarkerBeginEXT(commandBuffer_, &markerInfo);
+    }
 }
 
 void VKCommandBuffer::PopDebugGroup()
 {
-    //TODO
+    if (HasExtension(VKExt::EXT_debug_marker))
+        vkCmdDebugMarkerEndEXT(commandBuffer_);
 }
 
 /* ----- Extended functions ----- */

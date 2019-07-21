@@ -12,6 +12,7 @@
 #include "Vulkan.h"
 #include "VKDevice.h"
 #include <LLGL/RenderSystemFlags.h>
+#include <vector>
 
 
 namespace LLGL
@@ -65,11 +66,21 @@ class VKPhysicalDevice
             return features_;
         }
 
+        // Returns the list of supported extensions names.
+        inline const std::vector<const char*>& GetSupportedExtensionNames() const
+        {
+            return supportedExtensionNames_;
+        }
+
     private:
 
         void QueryDeviceProperties();
 
-        VkPhysicalDevice                    physicalDevice_     = VK_NULL_HANDLE;
+    private:
+
+        VkPhysicalDevice                    physicalDevice_             = VK_NULL_HANDLE;
+        std::vector<VkExtensionProperties>  supportedExtensions_;
+        std::vector<const char*>            supportedExtensionNames_;
 
         VkPhysicalDeviceMemoryProperties    memoryProperties_;
         VkPhysicalDeviceFeatures            features_;

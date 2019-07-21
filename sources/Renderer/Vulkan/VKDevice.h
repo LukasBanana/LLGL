@@ -31,7 +31,12 @@ class VKDevice
 
         VKDevice& operator = (VKDevice&& device);
 
-        void CreateLogicalDevice(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceFeatures* features);
+        void CreateLogicalDevice(
+            VkPhysicalDevice                physicalDevice,
+            const VkPhysicalDeviceFeatures* features,
+            const char* const*              extensions,
+            std::uint32_t                   numExtensions
+        );
 
         // Blocks until the VkDevice becomes idle.
         void WaitIdle();

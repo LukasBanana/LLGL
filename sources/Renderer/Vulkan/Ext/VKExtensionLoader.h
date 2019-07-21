@@ -10,25 +10,18 @@
 
 
 #include "../Vulkan.h"
+#include <vector>
 
 
 namespace LLGL
 {
 
 
-/* --- Common extension loading functions --- */
+// Loads all Vulkan extensions via the specified VkInstance handle.
+bool VKLoadInstanceExtensions(VkInstance instance);
 
-/**
-Loads all available extensions and prints errors if an extension is available,
-but their respective functions could not be loaded.
-\param[in,out] extensions Specifies the extension map. This can be queried by the "QueryExtensions" function.
-The respective entry will be set to true if all its functions have been loaded successfully.
-\see QueryExtensions
-*/
-void LoadAllExtensions(VkInstance instance);
-
-//! Returns true if all available extensions have been loaded.
-bool AreExtensionsLoaded();
+// Loads all Vulkan extensions via the specified VkDevice handle.
+bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& supportedExtensions);
 
 
 } // /namespace LLGL

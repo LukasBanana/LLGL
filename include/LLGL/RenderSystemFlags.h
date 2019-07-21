@@ -266,10 +266,17 @@ struct VulkanRendererConfiguration
     ApplicationDescriptor       application;
 
     /**
+    \brief List of Vulkan layers to enable. The ones that are not supported, will be ignored.
+    \remarks For example, the layer \c "VK_LAYER_KHRONOS_validation" can be used for a stronger validation.
+    */
+    std::vector<std::string>    enabledLayers;
+
+    /**
     \brief Minimal allocation size for a device memory chunk. By default 1024*1024, i.e. 1 MB of VRAM.
     \remarks Vulkan only allows a limited set of device memory objects (e.g. 4096 on a GPU with 8 GB of VRAM).
     This member specifies the minimum size used for hardware memory allocation of such a memory chunk.
     The Vulkan render system automatically manages sub-region allocation and defragmentation.
+    \todo Remove this as soon as Vulkan memory manage has been improved.
     */
     std::uint64_t               minDeviceMemoryAllocationSize   = 1024*1024;
 
@@ -278,22 +285,9 @@ struct VulkanRendererConfiguration
     \remarks If this is true, each buffer and image allocation first tries to find a reusable device memory block
     within a single VkDeviceMemory chunk (which might be potentially slower).
     Whenever a VkDeviceMemory chunk is full, the memory manager tries to reduce fragmentation anyways.
+    \todo Remove this as soon as Vulkan memory manage has been improved.
     */
     bool                        reduceDeviceMemoryFragmentation = false;
-
-    #if 0//TODO: integrate them into the Vulkan renderer
-    /**
-    \brief List of enabled Vulkan extensions.
-    \remarks For example, the extension "VK_EXT_debug_report" can be used to enable debug output from the Vulkan API.
-    */
-    std::vector<std::string>    enabledExtensions;// = { "VK_EXT_debug_report" };
-
-    /**
-    \brief List of enabled Vulkan layers.
-    \remarks For example, the layer "VK_LAYER_LUNARG_core_validation" can be used for a robust validation.
-    */
-    std::vector<std::string>    enabledLayers;// = { "VK_LAYER_LUNARG_core_validation" };
-    #endif
 };
 
 /**

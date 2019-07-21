@@ -11,18 +11,13 @@
 namespace LLGL
 {
 
-    
-/* Platform specific VL extensions */
 
-#if defined(LLGL_OS_WIN32)
+#define LLGL_DEF_VK_EXT_PROCS
 
-PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR = nullptr;
+// Include inline header for object definitions
+#include "VKExtensionsDecl.inl"
 
-#elif defined(LLGL_OS_LINUX)
-
-//???
-
-#endif
+#undef LLGL_DEF_VK_EXT_PROCS
 
 
 } // /namespace LLGL

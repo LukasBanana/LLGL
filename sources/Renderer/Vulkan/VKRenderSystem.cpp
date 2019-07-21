@@ -73,8 +73,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     #endif
 
     /* Create Vulkan instance and device objects */
-    CreateInstance(rendererConfigVK != nullptr ? &(rendererConfigVK->application) : nullptr);
-    LoadExtensions();
+    CreateInstance(rendererConfigVK);
     PickPhysicalDevice();
     CreateLogicalDevice();
 
@@ -626,7 +625,11 @@ void VKRenderSystem::Release(Fence& fence)
  * ======= Private: =======
  */
 
-void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc)
+#ifndef VK_LAYER_KHRONOS_VALIDATION_NAME
+#define VK_LAYER_KHRONOS_VALIDATION_NAME "VK_LAYER_KHRONOS_validation"
+#endif
+
+void VKRenderSystem::CreateInstance(const VulkanRendererConfiguration* config)
 {
     /* Query instance layer properties */
     auto layerProperties = VKQueryInstanceLayerProperties();
@@ -634,7 +637,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
 
     for (const auto& prop : layerProperties)
     {
-        if (IsLayerRequired(prop.layerName))
+        if (IsLayerRequired(prop.layerName, config))
             layerNames.push_back(prop.layerName);
     }
 
@@ -656,16 +659,17 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
     instanceInfo.pNext                          = nullptr;
     instanceInfo.flags                          = 0;
 
-    if (applicationDesc)
+    /* Specify application descriptor */
+    if (config != nullptr)
     {
         /* Initialize application information struct */
         {
             appInfo.sType                       = VK_STRUCTURE_TYPE_APPLICATION_INFO;
             appInfo.pNext                       = nullptr;
-            appInfo.pApplicationName            = applicationDesc->applicationName.c_str();
-            appInfo.applicationVersion          = applicationDesc->applicationVersion;
-            appInfo.pEngineName                 = applicationDesc->engineName.c_str();
-            appInfo.engineVersion               = applicationDesc->engineVersion;
+            appInfo.pApplicationName            = config->application.applicationName.c_str();
+            appInfo.applicationVersion          = config->application.applicationVersion;
+            appInfo.pEngineName                 = config->application.engineName.c_str();
+            appInfo.engineVersion               = config->application.engineVersion;
             appInfo.apiVersion                  = VK_API_VERSION_1_0;
         }
         instanceInfo.pApplicationInfo           = (&appInfo);
@@ -673,6 +677,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
     else
         instanceInfo.pApplicationInfo           = nullptr;
 
+    /* Specify layers to enable  */
     if (layerNames.empty())
     {
         instanceInfo.enabledLayerCount          = 0;
@@ -684,6 +689,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
         instanceInfo.ppEnabledLayerNames        = layerNames.data();
     }
 
+    /* Specify extensions to enable */
     if (extensionNames.empty())
     {
         instanceInfo.enabledExtensionCount      = 0;
@@ -701,6 +707,9 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
 
     if (debugLayerEnabled_)
         CreateDebugReportCallback();
+
+    /* Load Vulkan instance extensions */
+    VKLoadInstanceExtensions(instance_);
 }
 
 static Log::ReportType ToReportType(VkDebugReportFlagsEXT flags)
@@ -753,11 +762,6 @@ void VKRenderSystem::CreateDebugReportCallback()
     VKThrowIfFailed(result, "failed to create Vulkan debug report callback");
 }
 
-void VKRenderSystem::LoadExtensions()
-{
-    LoadAllExtensions(instance_);
-}
-
 void VKRenderSystem::PickPhysicalDevice()
 {
     /* Pick physical device with Vulkan support */
@@ -781,6 +785,9 @@ void VKRenderSystem::CreateLogicalDevice()
 
     /* Create command queue interface */
     commandQueue_ = MakeUnique<VKCommandQueue>(device_, device_.GetVkQueue());
+
+    /* Load Vulkan device extensions */
+    VKLoadDeviceExtensions(device_, physicalDevice_.GetSupportedExtensionNames());
 }
 
 void VKRenderSystem::CreateDefaultPipelineLayout()
@@ -793,13 +800,23 @@ void VKRenderSystem::CreateDefaultPipelineLayout()
     VKThrowIfFailed(result, "failed to create Vulkan default pipeline layout");
 }
 
-bool VKRenderSystem::IsLayerRequired(const std::string& name) const
+bool VKRenderSystem::IsLayerRequired(const char* name, const VulkanRendererConfiguration* config) const
 {
-    //TODO: make this statically optional
-    #ifdef LLGL_DEBUG
-    if (name == "VK_LAYER_LUNARG_core_validation")
-        return true;
-    #endif
+    if (config != nullptr)
+    {
+        for (const auto& layer : config->enabledLayers)
+        {
+            if (std::strcmp(layer.c_str(), name) == 0)
+                return true;
+        }
+    }
+
+    if (debugLayerEnabled_)
+    {
+        if (std::strcmp(name, VK_LAYER_KHRONOS_VALIDATION_NAME) == 0)
+            return true;
+    }
+
     return false;
 }
 

@@ -204,8 +204,9 @@ ExampleBase::ExampleBase(
     const LLGL::Extent2D&   resolution,
     std::uint32_t           multiSampling,
     bool                    vsync,
-    bool                    debugger
-) : profilerObj_ { new LLGL::RenderingProfiler() },
+    bool                    debugger)
+:
+    profilerObj_ { new LLGL::RenderingProfiler() },
     debuggerObj_ { new LLGL::RenderingDebugger() },
     timer        { LLGL::Timer::Create()         },
     profiler     { *profilerObj_                 }

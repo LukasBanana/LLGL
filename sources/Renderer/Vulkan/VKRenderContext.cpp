@@ -26,22 +26,23 @@ static const std::vector<const char*> g_deviceExtensions
 };
 
 VKRenderContext::VKRenderContext(
-    const VKPtr<VkInstance>& instance,
-    VkPhysicalDevice physicalDevice,
-    const VKPtr<VkDevice>& device,
-    VKDeviceMemoryManager& deviceMemoryMngr,
-    RenderContextDescriptor desc,
-    const std::shared_ptr<Surface>& surface) :
-        RenderContext        { desc.videoMode, desc.vsync    },
-        instance_            { instance                      },
-        physicalDevice_      { physicalDevice                },
-        device_              { device                        },
-        deviceMemoryMngr_    { deviceMemoryMngr              },
-        surface_             { instance, vkDestroySurfaceKHR },
-        swapChain_           { device, vkDestroySwapchainKHR },
-        swapChainRenderPass_ { device                        },
-        secondaryRenderPass_ { device                        },
-        depthStencilBuffer_  { device                        }
+    const VKPtr<VkInstance>&        instance,
+    VkPhysicalDevice                physicalDevice,
+    const VKPtr<VkDevice>&          device,
+    VKDeviceMemoryManager&          deviceMemoryMngr,
+    RenderContextDescriptor         desc,
+    const std::shared_ptr<Surface>& surface)
+:
+    RenderContext        { desc.videoMode, desc.vsync    },
+    instance_            { instance                      },
+    physicalDevice_      { physicalDevice                },
+    device_              { device                        },
+    deviceMemoryMngr_    { deviceMemoryMngr              },
+    surface_             { instance, vkDestroySurfaceKHR },
+    swapChain_           { device, vkDestroySwapchainKHR },
+    swapChainRenderPass_ { device                        },
+    secondaryRenderPass_ { device                        },
+    depthStencilBuffer_  { device                        }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
     desc.videoMode = GetVideoMode();

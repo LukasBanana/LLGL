@@ -17,30 +17,51 @@ namespace LLGL
 {
 
 
-static bool CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice, const std::vector<const char*>& extensionNames)
+static bool CheckDeviceExtensionSupport(
+    VkPhysicalDevice                    physicalDevice,
+    const char* const*                  requiredExtensions,
+    std::size_t                         numRequiredExtensions,
+    std::vector<VkExtensionProperties>& supportedExtensions)
 {
     /* Check if device supports all required extensions */
-    auto availableExtensions = VKQueryDeviceExtensionProperties(physicalDevice);
+    supportedExtensions = VKQueryDeviceExtensionProperties(physicalDevice);
+    std::set<std::string> unsupported(requiredExtensions, requiredExtensions + numRequiredExtensions);
 
-    std::set<std::string> requiredExtensions(extensionNames.begin(), extensionNames.end());
+    for (const auto& ext : supportedExtensions)
+    {
+        if (unsupported.empty())
+            break;
+        else
+            unsupported.erase(ext.extensionName);
+    }
 
-    for (const auto& ext : availableExtensions)
-        requiredExtensions.erase(ext.extensionName);
-
-    return requiredExtensions.empty();
+    /* No required extensions must remain */
+    return unsupported.empty();
 }
 
-static bool IsPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice)
+static bool IsPhysicalDeviceSuitable(
+    VkPhysicalDevice                    physicalDevice,
+    std::vector<VkExtensionProperties>& supportedExtensions)
 {
-    static const std::vector<const char*> g_deviceExtensions
+    /* Check if physical devices supports at least these extensions */
+    const char* requiredExtensions[] =
     {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_KHR_MAINTENANCE1_EXTENSION_NAME,
     };
 
-    if (CheckDeviceExtensionSupport(physicalDevice, g_deviceExtensions))
+    std::vector<VkExtensionProperties> extensions;
+    bool suitable = CheckDeviceExtensionSupport(
+        physicalDevice,
+        requiredExtensions,
+        sizeof(requiredExtensions) / sizeof(requiredExtensions[0]),
+        extensions
+    );
+
+    if (suitable)
     {
-        //TODO...
+        /* Store all supported extensions */
+        supportedExtensions = std::move(extensions);
         return true;
     }
 
@@ -52,13 +73,19 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance)
     /* Query all physical devices and pick suitable */
     auto physicalDevices = VKQueryPhysicalDevices(instance);
 
-    for (auto device : physicalDevices)
+    for (const auto& device : physicalDevices)
     {
-        if (IsPhysicalDeviceSuitable(device))
+        if (IsPhysicalDeviceSuitable(device, supportedExtensions_))
         {
+            /* Store reference to all extension names */
+            supportedExtensionNames_.reserve(supportedExtensions_.size());
+            for (const auto& extension : supportedExtensions_)
+                supportedExtensionNames_.push_back(extension.extensionName);
+
             /* Store device and store properties */
             physicalDevice_ = device;
             QueryDeviceProperties();
+
             return true;
         }
     }
@@ -146,7 +173,12 @@ void VKPhysicalDevice::QueryDeviceProperties(
 VKDevice VKPhysicalDevice::CreateLogicalDevice()
 {
     VKDevice device;
-    device.CreateLogicalDevice(physicalDevice_, &features_);
+    device.CreateLogicalDevice(
+        physicalDevice_,
+        &features_,
+        supportedExtensionNames_.data(),
+        static_cast<std::uint32_t>(supportedExtensionNames_.size())
+    );
     return device;
 }
 
