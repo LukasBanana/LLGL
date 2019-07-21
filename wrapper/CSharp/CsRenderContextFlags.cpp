@@ -29,7 +29,7 @@ VideoModeDescriptor::VideoModeDescriptor()
     SwapChainSize   = 2;
 }
 
-ProfileOpenGLDescriptor::ProfileOpenGLDescriptor()
+RendererConfigurationOpenGL::RendererConfigurationOpenGL()
 {
     ContextProfile  = OpenGLContextProfile::CompatibilityProfile;
     MajorVersion    = -1;
@@ -41,7 +41,6 @@ RenderContextDescriptor::RenderContextDescriptor()
     Vsync           = gcnew VsyncDescriptor();
     MultiSampling   = gcnew MultiSamplingDescriptor();
     VideoMode       = gcnew VideoModeDescriptor();
-    ProfileOpenGL   = gcnew ProfileOpenGLDescriptor();
 }
 
 

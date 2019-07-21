@@ -28,7 +28,12 @@ class GLContext
         virtual ~GLContext();
 
         // Creates a platform specific GLContext instance.
-        static std::unique_ptr<GLContext> Create(const RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext);
+        static std::unique_ptr<GLContext> Create(
+            const RenderContextDescriptor&      desc,
+            const RendererConfigurationOpenGL&  config,
+            Surface&                            surface,
+            GLContext*                          sharedContext
+        );
 
         // Makes the specified GLContext current. If null, the current context will be deactivated.
         static bool MakeCurrent(GLContext* context);

@@ -24,23 +24,22 @@ using GLExtensionList = std::map<std::string, bool>;
 
 /* --- Common extension loading functions --- */
 
-/**
+/*
 Returns a hash-map with all supported OpenGL extensions.
 The hash-map can be used for faster single-extension queries.
-\param[in] coreProfile Specifies whether the extension are to be loaded via GL core profile or not.
+Parameter <coreProfile> specifies whether the extension are to be loaded via GL core profile or not.
 */
 GLExtensionList QueryExtensions(bool coreProfile);
 
-/**
+/*
 Loads all available extensions and prints errors if an extension is available,
 but their respective functions could not be loaded.
-\param[in,out] extensions Specifies the extension map. This can be queried by the "QueryExtensions" function.
+Parameter <extensions> specifies the extension map. This can be queried by the "QueryExtensions" function.
 The respective entry will be set to true if all its functions have been loaded successfully.
-\see QueryExtensions
 */
 void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile);
 
-//! Returns true if all available extensions have been loaded.
+// Returns true if all available extensions have been loaded.
 bool AreExtensionsLoaded();
 
 /* --- Common GL extensions --- */

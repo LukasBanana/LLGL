@@ -21,14 +21,23 @@ int main()
     try
     {
         // Load render system module
+        LLGL::RendererConfigurationOpenGL rendererConfig;
+        {
+            rendererConfig.contextProfile = LLGL::OpenGLContextProfile::CoreProfile;
+        }
+        LLGL::RenderSystemDescriptor rendererDesc;
+        {
+            rendererDesc.moduleName         = "OpenGL";
+            rendererDesc.rendererConfig     = &rendererConfig;
+            rendererDesc.rendererConfigSize = sizeof(rendererConfig);
+        }
         auto renderer = LLGL::RenderSystem::Load("OpenGL");
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
 
-        contextDesc.videoMode.resolution            = { 800, 600 };
-        contextDesc.vsync.enabled                   = true;
-        contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
+        contextDesc.videoMode.resolution    = { 800, 600 };
+        contextDesc.vsync.enabled           = true;
 
         auto context = renderer->CreateRenderContext(contextDesc);
 

@@ -215,9 +215,38 @@ ExampleBase::ExampleBase(
     LLGL::Log::SetReportCallbackStd();
     LLGL::Log::SetReportLimit(10);
 
+    // Set up renderer descriptor
+    LLGL::RenderSystemDescriptor rendererDesc = rendererModule_;
+    LLGL::RendererConfigurationOpenGL configOpenGL;
+
+    #if defined _DEBUG && 0
+    rendererDesc.debugCallback = [](const std::string& type, const std::string& message)
+    {
+        std::cerr << type << ": " << message << std::endl;
+    };
+    #endif
+
+    if (rendererDesc.moduleName == "OpenGL")
+    {
+        #if defined _WIN32
+        configOpenGL.contextProfile = LLGL::OpenGLContextProfile::CoreProfile;
+        #elif defined __APPLE__
+        configOpenGL.contextProfile = LLGL::OpenGLContextProfile::CoreProfile;
+        configOpenGL.majorVersion   = 4;
+        configOpenGL.minorVersion   = 1;
+        #elif defined __linux__
+        /*configOpenGL.contextProfile = LLGL::OpenGLContextProfile::CoreProfile;
+        configOpenGL.majorVersion   = 3;
+        configOpenGL.minorVersion   = 3;*/
+        #endif
+
+        rendererDesc.rendererConfig     = &configOpenGL;
+        rendererDesc.rendererConfigSize = sizeof(configOpenGL);
+    }
+
     // Create render system
     renderer = LLGL::RenderSystem::Load(
-        rendererModule_,
+        rendererDesc,
         #ifdef LLGL_DEBUG//_DEBUG
         (debugger ? profilerObj_.get() : nullptr),
         (debugger ? debuggerObj_.get() : nullptr)
@@ -233,27 +262,6 @@ ExampleBase::ExampleBase(
         contextDesc.vsync.enabled                   = vsync;
         contextDesc.multiSampling.enabled           = (multiSampling > 1);
         contextDesc.multiSampling.samples           = multiSampling;
-
-        #if defined _DEBUG && 0
-        contextDesc.debugCallback = [](const std::string& type, const std::string& message)
-        {
-            std::cerr << type << ": " << message << std::endl;
-        };
-        #endif
-
-        #if defined _WIN32
-        contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
-        #elif defined __APPLE__
-        contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
-        contextDesc.profileOpenGL.majorVersion      = 4;
-        contextDesc.profileOpenGL.minorVersion      = 1;
-        #elif defined __linux__
-        /*contextDesc.multiSampling.enabled           = false;
-        contextDesc.multiSampling.samples           = 1;*/
-        /*contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
-        contextDesc.profileOpenGL.majorVersion      = 3;
-        contextDesc.profileOpenGL.minorVersion      = 3;*/
-        #endif
     }
     context = renderer->CreateRenderContext(contextDesc);
 

@@ -57,12 +57,12 @@ public ref class VideoModeDescriptor
 
 };
 
-public ref class ProfileOpenGLDescriptor
+public ref class RendererConfigurationOpenGL
 {
 
     public:
 
-        ProfileOpenGLDescriptor();
+        RendererConfigurationOpenGL();
 
         property OpenGLContextProfile   ContextProfile;
         property int                    MajorVersion;
@@ -80,8 +80,6 @@ public ref class RenderContextDescriptor
         VsyncDescriptor^            Vsync;
         MultiSamplingDescriptor^    MultiSampling;
         VideoModeDescriptor^        VideoMode;
-        ProfileOpenGLDescriptor^    ProfileOpenGL;
-        //DebugCallback^              DebugCallback;
 
 };
 

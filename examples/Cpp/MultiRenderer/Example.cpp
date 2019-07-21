@@ -89,9 +89,8 @@ MyRenderer::MyRenderer(
     // Create render context with viewport size
     LLGL::RenderContextDescriptor contextDesc;
     {
-        contextDesc.videoMode.resolution            = windowDesc.size;
-        contextDesc.multiSampling                   = multiSampling;
-        contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
+        contextDesc.videoMode.resolution    = windowDesc.size;
+        contextDesc.multiSampling           = multiSampling;
     }
     context = renderer->CreateRenderContext(contextDesc, subWindow);
 }

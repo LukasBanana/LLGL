@@ -8,6 +8,7 @@
 #include "GLRenderSystem.h"
 #include "Ext/GLExtensions.h"
 #include "RenderState/GLStatePool.h"
+#include "../RenderSystemUtils.h"
 #include "../GLCommon/GLTypes.h"
 #include "../GLCommon/GLCore.h"
 #include "../GLCommon/Texture/GLTexImage.h"
@@ -24,6 +25,13 @@ namespace LLGL
 
 
 /* ----- Common ----- */
+
+GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
+{
+    /* Extract optional renderer configuartion */
+    if (auto rendererConfigGL = GetRendererConfiguration<RendererConfigurationOpenGL>(renderSystemDesc))
+        config_ = *rendererConfigGL;
+}
 
 GLRenderSystem::~GLRenderSystem()
 {
@@ -47,7 +55,7 @@ GLRenderContext* GLRenderSystem::GetSharedRenderContext() const
 
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return AddRenderContext(MakeUnique<GLRenderContext>(desc, surface, GetSharedRenderContext()), desc);
+    return AddRenderContext(MakeUnique<GLRenderContext>(desc, config_, surface, GetSharedRenderContext()));
 }
 
 void GLRenderSystem::Release(RenderContext& renderContext)
@@ -268,11 +276,11 @@ void GLRenderSystem::Release(Fence& fence)
  * ======= Protected: =======
  */
 
-RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc)
+RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext)
 {
     /* Create devices that require an active GL context */
     if (renderContexts_.empty())
-        CreateGLContextDependentDevices(*renderContext, desc);
+        CreateGLContextDependentDevices(*renderContext);
 
     /* Use uniform clipping space */
     GLStateManager::Get().DetermineExtensionsAndLimits();
@@ -287,26 +295,29 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
  * ======= Private: =======
  */
 
-void GLRenderSystem::CreateGLContextDependentDevices(GLRenderContext& renderContext, const RenderContextDescriptor& desc)
+void GLRenderSystem::CreateGLContextDependentDevices(GLRenderContext& renderContext)
 {
+    const bool hasGLCoreProfile = (config_.contextProfile == OpenGLContextProfile::CoreProfile);
+
     /* Load all OpenGL extensions */
-    LoadGLExtensions(desc.profileOpenGL);
-    SetDebugCallback(desc.debugCallback);
+    LoadGLExtensions(hasGLCoreProfile);
+
+    /* Enable debug callback function */
+    if (debugCallback_)
+        SetDebugCallback(debugCallback_);
 
     /* Create command queue instance */
     commandQueue_ = MakeUnique<GLCommandQueue>(renderContext.GetStateManager());
 }
 
-void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc)
+void GLRenderSystem::LoadGLExtensions(bool hasGLCoreProfile)
 {
     /* Load OpenGL extensions if not already done */
     if (!AreExtensionsLoaded())
     {
-        auto coreProfile = (profileDesc.contextProfile == OpenGLContextProfile::CoreProfile);
-
         /* Query extensions and load all of them */
-        auto extensions = QueryExtensions(coreProfile);
-        LoadAllExtensions(extensions, coreProfile);
+        auto extensions = QueryExtensions(hasGLCoreProfile);
+        LoadAllExtensions(extensions, hasGLCoreProfile);
 
         /* Query and store all renderer information and capabilities */
         QueryRendererInfo();

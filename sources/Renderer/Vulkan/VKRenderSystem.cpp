@@ -10,6 +10,7 @@
 #include "Ext/VKExtensionLoader.h"
 #include "Ext/VKExtensions.h"
 #include "Memory/VKDeviceMemory.h"
+#include "../RenderSystemUtils.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
@@ -58,15 +59,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
 {
     /* Extract optional renderer configuartion */
-    const VulkanRendererConfiguration* rendererConfigVK= nullptr;
-
-    if (renderSystemDesc.rendererConfig != nullptr && renderSystemDesc.rendererConfigSize > 0)
-    {
-        if (renderSystemDesc.rendererConfigSize == sizeof(VulkanRendererConfiguration))
-            rendererConfigVK = reinterpret_cast<const VulkanRendererConfiguration*>(renderSystemDesc.rendererConfig);
-        else
-            throw std::invalid_argument("invalid renderer configuration structure (expected size of 'VulkanRendererConfiguration' structure)");
-    }
+    auto rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);
 
     #ifdef LLGL_DEBUG
     debugLayerEnabled_ = true;
@@ -629,7 +622,7 @@ void VKRenderSystem::Release(Fence& fence)
 #define VK_LAYER_KHRONOS_VALIDATION_NAME "VK_LAYER_KHRONOS_validation"
 #endif
 
-void VKRenderSystem::CreateInstance(const VulkanRendererConfiguration* config)
+void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
 {
     /* Query instance layer properties */
     auto layerProperties = VKQueryInstanceLayerProperties();
@@ -800,7 +793,7 @@ void VKRenderSystem::CreateDefaultPipelineLayout()
     VKThrowIfFailed(result, "failed to create Vulkan default pipeline layout");
 }
 
-bool VKRenderSystem::IsLayerRequired(const char* name, const VulkanRendererConfiguration* config) const
+bool VKRenderSystem::IsLayerRequired(const char* name, const RendererConfigurationVulkan* config) const
 {
     if (config != nullptr)
     {

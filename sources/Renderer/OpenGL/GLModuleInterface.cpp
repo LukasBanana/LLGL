@@ -27,9 +27,10 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name()
     return "OpenGL";
 }
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
 {
-    return new LLGL::GLRenderSystem();
+    auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
+    return new LLGL::GLRenderSystem(*desc);
 }
 
 } // /extern "C"

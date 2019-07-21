@@ -288,7 +288,7 @@ static void Convert(LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
     }
 }
 
-static void Convert(LLGL::ProfileOpenGLDescriptor& dst, ProfileOpenGLDescriptor^ src)
+static void Convert(LLGL::RendererConfigurationOpenGL& dst, RendererConfigurationOpenGL^ src)
 {
     if (src)
     {
@@ -305,8 +305,6 @@ static void Convert(LLGL::RenderContextDescriptor& dst, RenderContextDescriptor^
         Convert(dst.vsync, src->Vsync);
         Convert(dst.multiSampling, src->MultiSampling);
         Convert(dst.videoMode, src->VideoMode);
-        Convert(dst.profileOpenGL, src->ProfileOpenGL);
-        //Convert(dst.debugCallback, src->DebugCallback);
     }
 }
 

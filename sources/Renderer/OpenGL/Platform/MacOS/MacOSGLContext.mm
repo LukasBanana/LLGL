@@ -17,16 +17,25 @@ namespace LLGL
 {
 
 
-std::unique_ptr<GLContext> GLContext::Create(const RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
+std::unique_ptr<GLContext> GLContext::Create(
+    const RenderContextDescriptor&      desc,
+    const RendererConfigurationOpenGL&  config,
+    Surface&                            surface,
+    GLContext*                          sharedContext)
 {
     MacOSGLContext* sharedContextGLNS = (sharedContext != nullptr ? LLGL_CAST(MacOSGLContext*, sharedContext) : nullptr);
-    return MakeUnique<MacOSGLContext>(desc, surface, sharedContextGLNS);
+    return MakeUnique<MacOSGLContext>(desc, config, surface, sharedContextGLNS);
 }
 
-MacOSGLContext::MacOSGLContext(const RenderContextDescriptor& desc, Surface& surface, MacOSGLContext* sharedContext) :
+MacOSGLContext::MacOSGLContext(
+    const RenderContextDescriptor&      desc,
+    const RendererConfigurationOpenGL&  config,
+    Surface&                            surface,
+    MacOSGLContext*                     sharedContext)
+:
     LLGL::GLContext { sharedContext }
 {
-    CreatePixelFormat(desc);
+    CreatePixelFormat(desc, config);
 
     NativeHandle nativeHandle;
     surface.GetNativeHandle(&nativeHandle);
@@ -69,41 +78,41 @@ bool MacOSGLContext::Activate(bool activate)
 {
     /* Make context current */
     [ctx_ makeCurrentContext];
-    
+
     /* 'setView' is deprecated since macOS 10.14 together with OpenGL in general, so suppress this deprecation warning */
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    
+
     [ctx_ setView:[wnd_ contentView]];
-    
+
     #pragma clang diagnostic pop
-    
+
     [ctx_ update];
-    
+
     return true;
 }
 
-static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const ProfileOpenGLDescriptor& profile)
+static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const RendererConfigurationOpenGL& config)
 {
-    if (profile.contextProfile == OpenGLContextProfile::CompatibilityProfile)
+    if (config.contextProfile == OpenGLContextProfile::CompatibilityProfile)
         return NSOpenGLProfileVersionLegacy;
-    if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
+    if (config.contextProfile == OpenGLContextProfile::CoreProfile)
     {
-        if (profile.majorVersion < 0 || profile.minorVersion < 0 || (profile.majorVersion == 4 && profile.minorVersion == 1))
+        if (config.majorVersion < 0 || config.minorVersion < 0 || (config.majorVersion == 4 && config.minorVersion == 1))
             return NSOpenGLProfileVersion4_1Core;
-        if (profile.majorVersion == 3 && profile.minorVersion == 2)
+        if (config.majorVersion == 3 && config.minorVersion == 2)
             return NSOpenGLProfileVersion3_2Core;
     }
     throw std::runtime_error("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)");
 }
 
-void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
+void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc, const RendererConfigurationOpenGL& config)
 {
     NSOpenGLPixelFormatAttribute attribs[] =
     {
         NSOpenGLPFAAccelerated,
         NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFAOpenGLProfile,   TranslateNSOpenGLProfile(desc.profileOpenGL),
+        NSOpenGLPFAOpenGLProfile,   TranslateNSOpenGLProfile(config),
         NSOpenGLPFADepthSize,       static_cast<std::uint32_t>(desc.videoMode.depthBits),
         NSOpenGLPFAStencilSize,     static_cast<std::uint32_t>(desc.videoMode.stencilBits),
         NSOpenGLPFAColorSize,       24,
