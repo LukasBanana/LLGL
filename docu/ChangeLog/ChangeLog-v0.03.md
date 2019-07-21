@@ -8,6 +8,7 @@
 - [Storage buffer binding](#storage-buffer-binding)
 - [Event listener interface](#event-listener-interface)
 - [`ShaderUniform` interface](#shaderuniform-interface)
+- [Renderer configuration](#renderer-configuration)
 
 
 ## `BufferDescriptor` interface
@@ -193,6 +194,44 @@ LLGL::UniformLocation myProjectionUniform = myShaderProgram->QueryUniformLocatio
 myCmdBuffer->SetGraphicsPipeline(myGfxPipeline);
 float myProjectionMatrix[16] = /* ... */;
 myCmdBuffer->SetUniform(myProjectionUniform, &myProjectionMatrix[0], sizeof(myProjectionMatrix));
+```
+
+
+## Renderer configuration
+
+Renderer configuration between Vulkan and OpenGL has been unified.
+The OpenGL context profile is no longer configured with each `RenderContext` but the entire `RenderSystem` instead.
+Same for the debug callback.
+
+Before:
+```cpp
+// Usage:
+LLGL::RenderSystemDescriptor myRendererDesc;
+myRendererDesc.moduleName                   = "OpenGL";
+LLGL::RenderSystem* myRenderer = LLGL::RenderSystem::Load(myRendererDesc);
+
+LLGL::RenderContextDescriptor myContextDesc;
+myContextDesc.videoMode.resolution          = { 800, 600 };
+myContextDesc.debugCallback                 = myDebugCallbackProc;
+myContextDesc.profileOpenGL.contextProfile  = LLGL::OpenGLContextProfile::CoreProfile;
+LLGL::RenderContext* myContext = myRenderer->CreateRenderContext(myContextDesc);
+```
+
+After:
+```cpp
+LLGL::RendererConfigurationOpenGL myRendererConfig;
+myRendererConfig.contextProfile     = LLGL::OpenGLContextProfile::CoreProfile;
+
+LLGL::RenderSystemDescriptor myRendererDesc;
+myRendererDesc.moduleName           = "OpenGL";
+myRendererDesc.debugCallback        = myDebugCallbackProc;
+myRendererDesc.rendererConfig       = &myRendererConfig;
+myRendererDesc.rendererConfigSize   = sizeof(myRendererConfig);
+LLGL::RenderSystem* myRenderer = LLGL::RenderSystem::Load(myRendererDesc);
+
+LLGL::RenderContextDescriptor myContextDesc;
+myContextDesc.videoMode.resolution  = { 800, 600 };
+LLGL::RenderContext* myContext = myRenderer->CreateRenderContext(myContextDesc);
 ```
 
 
