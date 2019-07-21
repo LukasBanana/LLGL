@@ -224,17 +224,12 @@ HGLRC Win32GLContext::CreateGLContext(bool useExtProfile, Win32GLContext* shared
     /* Create hardware render context */
     HGLRC renderContext = 0;
 
-    if (!sharedContext || !sharedContext->hGLRC_ /* || createOwnHardwareContext == true*/)
+    if (!sharedContext || !sharedContext->hGLRC_)
     {
         /* Create own hardware context */
         hasSharedContext_ = false;
-
         if (useExtProfile)
-        {
-            renderContext = CreateExtContextProfile(
-                (sharedContext != nullptr ? sharedContext->hGLRC_ : nullptr)
-            );
-        }
+            renderContext = CreateExtContextProfile(sharedContext != nullptr ? sharedContext->hGLRC_ : nullptr);
         else
             renderContext = CreateStdContextProfile();
     }
@@ -291,14 +286,19 @@ HGLRC Win32GLContext::CreateExtContextProfile(HGLRC sharedGLRC)
         glGetIntegerv(GL_MINOR_VERSION, &(desc_.profileOpenGL.minorVersion));
     }
 
-    /* Setup extended attributes to select the OpenGL profile */
+    /* Set up context flags */
+    int contextFlags = 0;
+
+    #ifdef LLGL_DEBUG
+    contextFlags |= WGL_CONTEXT_DEBUG_BIT_ARB;
+    #endif
+
+    /* Set up extended attributes to select the OpenGL profile */
     const int attribList[] =
     {
         WGL_CONTEXT_MAJOR_VERSION_ARB,  desc_.profileOpenGL.majorVersion,
         WGL_CONTEXT_MINOR_VERSION_ARB,  desc_.profileOpenGL.minorVersion,
-        #ifdef LLGL_DEBUG
-        WGL_CONTEXT_FLAGS_ARB,          WGL_CONTEXT_DEBUG_BIT_ARB /*| WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB*/,
-        #endif
+        WGL_CONTEXT_FLAGS_ARB,          contextFlags,
         WGL_CONTEXT_PROFILE_MASK_ARB,   GLContextProfileToBitmask(desc_.profileOpenGL.contextProfile),
         0, 0
     };

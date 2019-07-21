@@ -9,6 +9,7 @@
 #define LLGL_LINEAR_STRING_CONTAINER_H
 
 
+#include "Helper.h"
 #include <vector>
 #include <string>
 
@@ -41,7 +42,7 @@ class LinearStringContainerBase
         // Copy the specified string into this container and return its pointer.
         const T* CopyString(const T* str)
         {
-            return CopyStringPrimary(str,  std::strlen(str));
+            return CopyStringPrimary(str,  StrLength(str));
         }
 
         // Copy the specified string into this container and return its pointer.

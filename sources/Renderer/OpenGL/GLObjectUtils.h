@@ -74,6 +74,9 @@ void GLSetObjectLabelSubscript(GLenum identifier, GLuint name, const char* label
 // Sets the label for the specified GL object <name> with an altered name with an indexed subscript (see GLSetObjectLabel).
 void GLSetObjectLabelIndexed(GLenum identifier, GLuint name, const char* label, std::uint32_t index);
 
+// Sets the label for a GL sync object.
+void GLSetObjectPtrLabel(void* ptr, const char* label);
+
 
 } // /namespace LLGL
 

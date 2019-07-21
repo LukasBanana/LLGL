@@ -17,24 +17,24 @@ namespace LLGL
 {
 
 
+// Returns the length of the specified label with a maximum length determined by GL_MAX_LABEL_LENGTH
+static GLsizei GetCroppedLength(const char* label)
+{
+    const GLint         maxLength       = GLStateManager::GetCommonLimits().maxLabelLength;
+    const std::size_t   actualLength    = std::strlen(label);
+    const std::size_t   croppedLength   = std::min(actualLength, static_cast<std::size_t>(maxLength));
+    return static_cast<GLsizei>(croppedLength);
+}
+
 void GLSetObjectLabel(GLenum identifier, GLuint name, const char* label)
 {
     #ifdef GL_KHR_debug
     if (HasExtension(GLExt::KHR_debug))
     {
         if (label != nullptr)
-        {
-            /* Set new label */
-            const GLint         maxLength       = GLStateManager::GetCommonLimits().maxLabelLength;
-            const std::size_t   actualLength    = std::strlen(label);
-            const std::size_t   croppedLength   = std::min(actualLength, static_cast<std::size_t>(maxLength));
-            glObjectLabel(identifier, name, croppedLength, label);
-        }
+            glObjectLabel(identifier, name, GetCroppedLength(label), label);
         else
-        {
-            /* Reset label */
             glObjectLabel(identifier, name, 0, nullptr);
-        }
     }
     #endif // /GL_KHR_debug
 }
@@ -66,6 +66,19 @@ void GLSetObjectLabelIndexed(GLenum identifier, GLuint name, const char* label, 
     }
     else
         GLSetObjectLabel(identifier, name, nullptr);
+}
+
+void GLSetObjectPtrLabel(void* ptr, const char* label)
+{
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+    {
+        if (label != nullptr)
+            glObjectPtrLabel(ptr, GetCroppedLength(label), label);
+        else
+            glObjectPtrLabel(ptr, 0, nullptr);
+    }
+    #endif // /GL_KHR_debug
 }
 
 
