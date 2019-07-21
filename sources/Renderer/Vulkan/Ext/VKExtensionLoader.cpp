@@ -77,6 +77,13 @@ static bool Load_VK_EXT_debug_marker(VkDevice handle)
     return true;
 }
 
+static bool Load_VK_EXT_conditional_rendering(VkDevice handle)
+{
+    LOAD_VKPROC( vkCmdBeginConditionalRenderingEXT );
+    LOAD_VKPROC( vkCmdEndConditionalRenderingEXT   );
+    return true;
+}
+
 #undef LOAD_VKPROC
 
 
@@ -109,6 +116,8 @@ bool VKLoadInstanceExtensions(VkInstance instance)
 
 bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& supportedExtensions)
 {
+    #if LLGL_VK_ENABLE_EXT
+
     auto IsSupported = [&supportedExtensions](const char* extName) -> bool
     {
         for (auto extension : supportedExtensions)
@@ -136,9 +145,12 @@ bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& sup
         LoadExtension(VKExt::##NAME, "VK_" #NAME, Load_VK_##NAME)
 
     /* Multi-vendor extensions */
-    LOAD_VKEXT( EXT_debug_marker );
+    LOAD_VKEXT( EXT_debug_marker          );
+    LOAD_VKEXT( EXT_conditional_rendering );
 
     #undef LOAD_VKEXT
+
+    #endif // /LLGL_VK_ENABLE_EXT
 
     return true;
 }

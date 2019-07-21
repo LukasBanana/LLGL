@@ -677,7 +677,12 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    /*#ifdef LLGL_VK_ENABLE_EXT
+    #if 0//TODO
+    /* Ensure "VK_EXT_conditional_rendering" is supported */
+    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
+
+    /* Begin conditional rendering block */
+    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
     VkConditionalRenderingBeginInfoEXT beginInfo;
     {
         beginInfo.sType     = VK_STRUCTURE_TYPE_CONDITIONAL_RENDERING_BEGIN_INFO_EXT;
@@ -687,18 +692,18 @@ void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t q
         beginInfo.flags     = (mode >= RenderConditionMode::WaitInverted ? VK_CONDITIONAL_RENDERING_INVERTED_BIT_EXT : 0);
     }
     vkCmdBeginConditionalRenderingEXT(commandBuffer_, &beginInfo);
-    //#else
-    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_conditional_rendering");
-    #endif*/
+    #endif
 }
 
 void VKCommandBuffer::EndRenderCondition()
 {
-    /*#ifdef LLGL_VK_ENABLE_EXT
+    #if 0//TODO
+    /* Ensure "VK_EXT_conditional_rendering" is supported */
+    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
+
+    /* End conditional rendering block */
     vkCmdEndConditionalRenderingEXT(commandBuffer_);
-    #else
-    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_conditional_rendering");
-    #endif*/
+    #endif
 }
 
 /* ----- Drawing ----- */

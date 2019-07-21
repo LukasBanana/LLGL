@@ -39,6 +39,8 @@ DECL_VKPROC( vkCreateWin32SurfaceKHR );
 
 #endif
 
+#ifdef LLGL_VK_ENABLE_EXT
+
 /* VK_EXT_debug_marker */
 
 DECL_VKPROC( vkDebugMarkerSetObjectTagEXT  );
@@ -46,6 +48,13 @@ DECL_VKPROC( vkDebugMarkerSetObjectNameEXT );
 DECL_VKPROC( vkCmdDebugMarkerBeginEXT      );
 DECL_VKPROC( vkCmdDebugMarkerEndEXT        );
 DECL_VKPROC( vkCmdDebugMarkerInsertEXT     );
+
+/* VK_EXT_conditional_rendering */
+
+DECL_VKPROC( vkCmdBeginConditionalRenderingEXT );
+DECL_VKPROC( vkCmdEndConditionalRenderingEXT   );
+
+#endif // /LLGL_VK_ENABLE_EXT
 
 #undef DECL_VKPROC
 
