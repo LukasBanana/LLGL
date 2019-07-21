@@ -11,6 +11,7 @@
 
 #include "../GLContext.h"
 #include "../../OpenGL.h"
+#include <LLGL/RendererConfiguration.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include <X11/Xlib.h>
 
