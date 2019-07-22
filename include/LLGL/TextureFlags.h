@@ -176,8 +176,8 @@ struct TextureRegion
 */
 struct TextureDescriptor
 {
-    //! Hardware texture type. By default TextureType::Texture1D.
-    TextureType     type            = TextureType::Texture1D;
+    //! Hardware texture type. By default TextureType::Texture2D.
+    TextureType     type            = TextureType::Texture2D;
 
     /**
     \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default BindFlags::SampleBuffer and BindFlags::ColorAttachment.
@@ -262,8 +262,24 @@ struct TextureDescriptor
 */
 struct TextureViewDescriptor
 {
-    //! Hardware texture type. By default TextureType::Texture1D.
-    TextureType         type            = TextureType::Texture1D;
+    /**
+    \brief Hardware texture type. By default TextureType::Texture2D.
+    \remarks The types of a shared texture can be mapped to the following type of texture-views:
+    <table>
+    <caption>Texture-view type mapping</caption>
+    <tr><th>Shared texture type</th><th>Compatible texture view types</th></tr>
+    <tr><td>TextureType::Texture1D</td><td>TextureType::Texture1D, TextureType::Texture1DArray</td></tr>
+    <tr><td>TextureType::Texture2D</td><td>TextureType::Texture2D, TextureType::Texture2DArray</td></tr>
+    <tr><td>TextureType::Texture3D</td><td>TextureType::Texture3D</td></tr>
+    <tr><td>TextureType::TextureCube</td><td>TextureType::Texture2D, TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray</td></tr>
+    <tr><td>TextureType::Texture1DArray</td><td>TextureType::Texture1D, TextureType::Texture1DArray</td></tr>
+    <tr><td>TextureType::Texture2DArray</td><td>TextureType::Texture2D, TextureType::Texture2DArray</td></tr>
+    <tr><td>TextureType::TextureCubeArray</td><td>TextureType::Texture2D, TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray</td></tr>
+    <tr><td>TextureType::Texture2DMS</td><td>TextureType::Texture2DMS, TextureType::Texture2DMSArray</td></tr>
+    <tr><td>TextureType::Texture2DMSArray</td><td>TextureType::Texture2DMS, TextureType::Texture2DMSArray</td></tr>
+    </table>
+    */
+    TextureType         type            = TextureType::Texture2D;
 
     //! Hardware texture format. By default Format::RGBA8UNorm.
     Format              format          = Format::RGBA8UNorm;
@@ -297,8 +313,11 @@ struct TextureViewDescriptor
     std::uint32_t       numMipLevels    = 1;
 
     /**
-    \brief Specifies the color component mapping.
-    \remarks Each component is mapped to its identity by default.
+    \brief Specifies the color component mapping. Each component is mapped to its identity by default.
+    \remarks If texture swizzling is not supported, this must be equal to the default value.
+    \note Only supported with: OpenGL, Vulkan, Metal, Direct3D 12.
+    \see RenderingFeatures::hasTextureViewSwizzle
+    \see IsTextureSwizzleIdentity
     */
     TextureSwizzleRGBA  swizzle;
 };
@@ -373,6 +392,17 @@ LLGL_EXPORT bool IsMultiSampleTexture(const TextureType type);
 \return True if \c type is either TextureType::TextureCube or TextureType::TextureCubeArray.
 */
 LLGL_EXPORT bool IsCubeTexture(const TextureType type);
+
+/**
+\brief Returns true if the specified texture swizzling is equal to the identity mapping.
+\return True if the components are mapped as follows:
+- \c r equals TextureSwizzle::Red
+- \c g equals TextureSwizzle::Green
+- \c b equals TextureSwizzle::Blue
+- \c a equals TextureSwizzle::Alpha
+\see TextureSwizzle
+*/
+LLGL_EXPORT bool IsTextureSwizzleIdentity(const TextureSwizzleRGBA& swizzle);
 
 /** @} */
 

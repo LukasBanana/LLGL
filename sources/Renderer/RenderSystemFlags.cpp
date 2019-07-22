@@ -82,6 +82,8 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     LLGL_VALIDATE_FEATURE( hasArrayTextures,             "array textures"             );
     LLGL_VALIDATE_FEATURE( hasCubeArrayTextures,         "cube array textures"        );
     LLGL_VALIDATE_FEATURE( hasMultiSampleTextures,       "multi-sample textures"      );
+    LLGL_VALIDATE_FEATURE( hasTextureViews,              "texture views"              );
+    LLGL_VALIDATE_FEATURE( hasTextureViewSwizzle,        "texture view swizzle"       );
     LLGL_VALIDATE_FEATURE( hasSamplers,                  "sampler states"             );
     LLGL_VALIDATE_FEATURE( hasConstantBuffers,           "constant buffers"           );
     LLGL_VALIDATE_FEATURE( hasStorageBuffers,            "storage buffers"            );

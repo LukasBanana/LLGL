@@ -582,6 +582,7 @@ void D3D12RenderSystem::QueryRenderingCaps()
 
         /* Set extended attributes */
         caps.features.hasConservativeRasterization  = (GetFeatureLevel() >= D3D_FEATURE_LEVEL_12_0);
+        caps.features.hasTextureViewSwizzle         = true;
 
         caps.limits.maxViewports                    = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
         caps.limits.maxViewportSize[0]              = D3D12_VIEWPORT_BOUNDS_MAX;

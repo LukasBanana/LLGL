@@ -148,13 +148,13 @@ static void GLCopyImageSubData(
     /* Copy raw data of texture directly (GL 4.3+) */
     glCopyImageSubData(
         srcTexture.GetID(),
-        GLGetTextureParamTarget(srcTexture.GetType()),
+        GLTypes::Map(srcTexture.GetType()),
         srcLevel,
         srcOffset.x,
         srcOffset.y,
         srcOffset.z,
         dstTexture.GetID(),
-        GLGetTextureParamTarget(dstTexture.GetType()),
+        GLTypes::Map(dstTexture.GetType()),
         dstLevel,
         dstOffset.x,
         dstOffset.y,
@@ -178,7 +178,7 @@ static void GLCopyTexSubImage(
 {
     const TextureType       type        = dstTexture.GetType();
     const GLTextureTarget   target      = GLStateManager::GetTextureTarget(type);
-    const GLenum            targetGL    = GLGetTextureParamTarget(type);
+    const GLenum            targetGL    = GLTypes::Map(type);
 
     /* Store bound texture and framebuffer */
     GLStateManager::Get().PushBoundTexture(target);
@@ -273,6 +273,26 @@ void GLTexture::CopyImageSubData(
         /* Copy source texture from GL_READ_BUFFER into destination texture */
         GLCopyTexSubImage(*this, dstLevel, dstOffset, srcTexture, srcLevel, srcOffset, extent);
     }
+}
+
+void GLTexture::TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc)
+{
+    #ifdef GL_ARB_texture_view
+    if (HasExtension(GLExt::ARB_texture_view))
+    {
+        /* Initialize texture with texture-view description */
+        glTextureView(
+            GetID(),
+            GLTypes::Map(textureViewDesc.type),
+            sharedTexture.GetID(),
+            GLTypes::Map(textureViewDesc.format),
+            textureViewDesc.baseMipLevel,
+            textureViewDesc.numMipLevels,
+            textureViewDesc.baseArrayLayer,
+            textureViewDesc.numArrayLayers
+        );
+    }
+    #endif // /GL_ARB_texture_view
 }
 
 GLenum GLTexture::QueryGLInternalFormat() const

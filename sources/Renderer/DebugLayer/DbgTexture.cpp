@@ -21,14 +21,25 @@ DbgTexture::DbgTexture(Texture& instance, const TextureDescriptor& desc) :
 {
 }
 
-/*DbgTexture::DbgTexture(Texture& instance, DbgTexture& sharedTexture, const TextureViewDescriptor& desc) :
-    Texture       { desc.type          },
-    instance      { instance           },
-    viewDesc      { desc               },
-    mipLevels     { NumMipLevels(desc) },
-    sharedTexture { &sharedTexture     }
+DbgTexture::DbgTexture(Texture& instance, DbgTexture* sharedTexture, const TextureViewDescriptor& desc) :
+    Texture        { desc.type         },
+    instance       { instance          },
+    viewDesc       { desc              },
+    mipLevels      { desc.numMipLevels },
+    isTextureView  { true              },
+    sharedTexture_ { sharedTexture     }
 {
-}*/
+    sharedTexture->sharedTextureViews_.insert(this);
+}
+
+DbgTexture::~DbgTexture()
+{
+    /* Remove references between shared texture and texture views */
+    if (sharedTexture_)
+        sharedTexture_->sharedTextureViews_.erase(this);
+    for (auto textureView : sharedTextureViews_)
+        textureView->sharedTexture_ = nullptr;
+}
 
 void DbgTexture::SetName(const char* name)
 {

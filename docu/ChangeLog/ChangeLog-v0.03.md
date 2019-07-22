@@ -9,6 +9,7 @@
 - [Event listener interface](#event-listener-interface)
 - [`ShaderUniform` interface](#shaderuniform-interface)
 - [Renderer configuration](#renderer-configuration)
+- [Default values](#default-values)
 
 
 ## `BufferDescriptor` interface
@@ -234,6 +235,18 @@ myContextDesc.videoMode.resolution  = { 800, 600 };
 LLGL::RenderContext* myContext = myRenderer->CreateRenderContext(myContextDesc);
 ```
 
+
+## Default values
+
+Before:
+```cpp
+LLGL::TextureDescriptor::type = LLGL::TextureType::Texture1D;
+```
+
+After:
+```cpp
+LLGL::TextureDescriptor::type = LLGL::TextureType::Texture2D;
+```
 
 
 

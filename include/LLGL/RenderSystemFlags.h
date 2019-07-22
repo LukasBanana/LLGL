@@ -375,6 +375,13 @@ struct RenderingFeatures
     */
     bool hasTextureViews                = false;
 
+    /**
+    \brief Specifies whether texture views can have swizzling (a.k.a. component mapping).
+    \remarks This feature implies that \c hasTextureViews is true.
+    \see TextureViewDescriptor::swizzle
+    */
+    bool hasTextureViewSwizzle          = false;
+
     //! Specifies whether samplers are supported.
     bool hasSamplers                    = false;
 
@@ -387,7 +394,7 @@ struct RenderingFeatures
     /**
     \brief Specifies whether storage buffers (also "read/write buffers") are supported.
     \see BindFlags::SampleBuffer
-    \see BindFlags::RWStorateBuffer
+    \see BindFlags::RWStorageBuffer
     */
     bool hasStorageBuffers              = false;
 
@@ -663,14 +670,14 @@ If this is null the validation process breaks with the first attribute that did 
 \code
 // Initialize the requirements
 LLGL::RenderingCapabilities myRequirements;
-myRequirements.features.hasStorageBuffers = true;
-myRequirements.features.hasComputeShaders = true;
-myRequirements.limits.maxComputeShaderWorkGroups[0] = 1024;
-myRequirements.limits.maxComputeShaderWorkGroups[1] = 1024;
-myRequirements.limits.maxComputeShaderWorkGroups[2] = 1;
-myRequirements.limits.maxComputeShaderWorkGroupSize[0] = 8;
-myRequirements.limits.maxComputeShaderWorkGroupSize[1] = 8;
-myRequirements.limits.maxComputeShaderWorkGroupSize[2] = 8;
+myRequirements.features.hasStorageBuffers               = true;
+myRequirements.features.hasComputeShaders               = true;
+myRequirements.limits.maxComputeShaderWorkGroups[0]     = 1024;
+myRequirements.limits.maxComputeShaderWorkGroups[1]     = 1024;
+myRequirements.limits.maxComputeShaderWorkGroups[2]     = 1;
+myRequirements.limits.maxComputeShaderWorkGroupSize[0]  = 8;
+myRequirements.limits.maxComputeShaderWorkGroupSize[1]  = 8;
+myRequirements.limits.maxComputeShaderWorkGroupSize[2]  = 8;
 
 // Validate rendering capabilities supported by the render system
 LLGL::ValidateRenderingCaps(

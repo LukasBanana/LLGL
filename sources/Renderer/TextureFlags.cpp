@@ -84,6 +84,17 @@ LLGL_EXPORT bool IsCubeTexture(const TextureType type)
     return (type == TextureType::TextureCube || type == TextureType::TextureCubeArray);
 }
 
+LLGL_EXPORT bool IsTextureSwizzleIdentity(const TextureSwizzleRGBA& swizzle)
+{
+    return
+    (
+        swizzle.r == TextureSwizzle::Red    &&
+        swizzle.g == TextureSwizzle::Green  &&
+        swizzle.b == TextureSwizzle::Blue   &&
+        swizzle.a == TextureSwizzle::Alpha
+    );
+}
+
 
 } // /namespace LLGL
 

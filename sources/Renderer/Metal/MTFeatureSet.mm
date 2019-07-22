@@ -46,7 +46,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     auto& limits = caps.limits;
 
     const int version = FeatureSetToVersion(fset);
-    
+
     /* Specify supported shading languages */
     caps.shadingLanguages = { ShadingLanguage::Metal, ShadingLanguage::Metal_1_0 };
 
@@ -68,6 +68,8 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasArrayTextures               = true;
     features.hasCubeArrayTextures           = (version >= 101);
     features.hasMultiSampleTextures         = true;
+    features.hasTextureViews                = true;
+    features.hasTextureViewSwizzle          = true;
     features.hasSamplers                    = true;
     features.hasConstantBuffers             = true;
     features.hasStorageBuffers              = true;
@@ -83,7 +85,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasStreamOutputs               = false;
     features.hasLogicOp                     = false;
     features.hasIndirectDrawing             = (version >= 102);
-    
+
     /* Specify limits */
     limits.maxBufferSize                    = [device maxBufferLength];
     limits.maxConstantBufferSize            = 65536u;

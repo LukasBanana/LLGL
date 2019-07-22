@@ -293,10 +293,12 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     caps.features.hasArrayTextures                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasCubeArrayTextures              = (featureLevel >= D3D_FEATURE_LEVEL_10_1);
     caps.features.hasMultiSampleTextures            = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.features.hasTextureViews                   = true;
+    caps.features.hasTextureViewSwizzle             = false; // not supported by D3D11
     caps.features.hasSamplers                       = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasConstantBuffers                = true;
     caps.features.hasStorageBuffers                 = true;
-    caps.features.hasUniforms                       = false;
+    caps.features.hasUniforms                       = false; // not supported by D3D11
     caps.features.hasGeometryShaders                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasTessellationShaders            = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
     caps.features.hasComputeShaders                 = (featureLevel >= D3D_FEATURE_LEVEL_10_0);

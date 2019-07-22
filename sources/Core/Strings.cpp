@@ -209,6 +209,24 @@ LLGL_EXPORT const char* ToString(const Format t)
     return nullptr;
 }
 
+LLGL_EXPORT const char* ToString(const TextureType t)
+{
+    using T = TextureType;
+    switch (t)
+    {
+        case T::Texture1D:          return "Texture1D";
+        case T::Texture2D:          return "Texture2D";
+        case T::Texture3D:          return "Texture3D";
+        case T::TextureCube:        return "TextureCube";
+        case T::Texture1DArray:     return "Texture1DArray";
+        case T::Texture2DArray:     return "Texture2DArray";
+        case T::TextureCubeArray:   return "TextureCubeArray";
+        case T::Texture2DMS:        return "Texture2DMS";
+        case T::Texture2DMSArray:   return "Texture2DMSArray";
+    }
+    return nullptr;
+}
+
 
 } // /namespace LLGL
 

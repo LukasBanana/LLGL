@@ -43,6 +43,9 @@ class GLTexture final : public Texture
             const Extent3D& extent
         );
 
+        // Initializes this texture as a texture-view.
+        void TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc);
+
         // Queries the GL_TEXTURE_INTERNAL_FORMAT parameter of this texture.
         GLenum QueryGLInternalFormat() const;
 

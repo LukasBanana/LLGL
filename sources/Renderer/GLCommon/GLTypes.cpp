@@ -246,6 +246,20 @@ GLenum Map(const TextureType textureType)
     MapFailed("TextureType");
 }
 
+GLenum Map(const TextureSwizzle textureSwizzle)
+{
+    switch (textureSwizzle)
+    {
+        case TextureSwizzle::Zero:  return GL_ZERO;
+        case TextureSwizzle::One:   return GL_ONE;
+        case TextureSwizzle::Red:   return GL_RED;
+        case TextureSwizzle::Green: return GL_GREEN;
+        case TextureSwizzle::Blue:  return GL_BLUE;
+        case TextureSwizzle::Alpha: return GL_ALPHA;
+    }
+    MapFailed("TextureSwizzle");
+}
+
 GLenum Map(const Format textureFormat)
 {
     if (auto result = MapOrZero(textureFormat))
