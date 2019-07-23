@@ -956,13 +956,13 @@ LLGL_EXPORT int LLGL_RenderSystem_BuildID()
 }
 
 // Here you can return your own renderer ID or one of the pre-defined values
-LLGL_EXPORT int LLGL_RenderSystem_RendererID()
+LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* renderSystemDesc)
 {
 	return LLGL::RendererID::OpenGL;
 }
 
 // Here you can return the name of your renderer
-LLGL_EXPORT const char* LLGL_RenderSystem_Name()
+LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* renderSystemDesc)
 {
 	return "Custom OpenGL";
 }

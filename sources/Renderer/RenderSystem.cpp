@@ -33,6 +33,20 @@ namespace LLGL
 
 static std::map<RenderSystem*, std::unique_ptr<Module>> g_renderSystemModules;
 
+#ifdef LLGL_BUILD_STATIC_LIB
+
+//implemented in ModuleInterface.cpp
+extern void GetStaticModules(std::vector<std::string> & out);
+
+std::vector<std::string> RenderSystem::FindModules()
+{
+    std::vector<std::string> result;
+    GetStaticModules(result);
+    return result;
+}
+    
+#else
+
 std::vector<std::string> RenderSystem::FindModules()
 {
     /* Iterate over all known modules and return those that are available on the current platform */
@@ -68,8 +82,6 @@ std::vector<std::string> RenderSystem::FindModules()
     return modules;
 }
 
-#ifndef LLGL_BUILD_STATIC_LIB
-
 static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFilename)
 {
     /* Load "LLGL_RenderSystem_BuildID" procedure */
@@ -82,25 +94,25 @@ static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFil
     return (RenderSystem_BuildID() == LLGL_BUILD_ID);
 }
 
-static int LoadRenderSystemRendererID(Module& module)
+static int LoadRenderSystemRendererID(Module& module, const RenderSystemDescriptor& renderSystemDesc)
 {
     /* Load "LLGL_RenderSystem_RendererID" procedure */
-    LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_RENDERERID, (void));
+    LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_RENDERERID, (const void*));
 
     auto RenderSystem_RendererID = reinterpret_cast<PFN_RENDERSYSTEM_RENDERERID>(module.LoadProcedure("LLGL_RenderSystem_RendererID"));
     if (RenderSystem_RendererID)
-        return RenderSystem_RendererID();
+        return RenderSystem_RendererID(&renderSystemDesc);
 
     return RendererID::Undefined;
 }
 
-static std::string LoadRenderSystemName(Module& module)
+static std::string LoadRenderSystemName(Module& module, const RenderSystemDescriptor& renderSystemDesc)
 {
     /* Load "LLGL_RenderSystem_Name" procedure */
-    LLGL_PROC_INTERFACE(const char*, PFN_RENDERSYSTEM_NAME, (void));
+    LLGL_PROC_INTERFACE(const char*, PFN_RENDERSYSTEM_NAME, (const void*));
 
     if (auto RenderSystem_Name = reinterpret_cast<PFN_RENDERSYSTEM_NAME>(module.LoadProcedure("LLGL_RenderSystem_Name")))
-        return RenderSystem_Name();
+        return RenderSystem_Name(&renderSystemDesc);
     else
         return "";
 }
@@ -129,7 +141,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     RenderingProfiler*              profiler,
     RenderingDebugger*              debugger)
 {
-    #ifdef LLGL_BUILD_STATIC_LIB
+#ifdef LLGL_BUILD_STATIC_LIB
 
     /* Allocate render system */
     auto renderSystem = std::unique_ptr<RenderSystem>(
@@ -150,13 +162,13 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
         #endif // /LLGL_ENABLE_DEBUG_LAYER
     }
 
-    renderSystem->name_         = LLGL_RenderSystem_Name();
-    renderSystem->rendererID_   = LLGL_RenderSystem_RendererID();
+    renderSystem->name_         = LLGL_RenderSystem_Name(&renderSystemDesc);
+    renderSystem->rendererID_   = LLGL_RenderSystem_RendererID(&renderSystemDesc);
 
     /* Return new render system and unique pointer */
     return renderSystem;
 
-    #else
+#else
 
     /* Load render system module */
     auto moduleFilename = Module::GetModuleFilename(renderSystemDesc.moduleName.c_str());
@@ -188,8 +200,8 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
             #endif // /LLGL_ENABLE_DEBUG_LAYER
         }
 
-        renderSystem->name_         = LoadRenderSystemName(*module);
-        renderSystem->rendererID_   = LoadRenderSystemRendererID(*module);
+        renderSystem->name_         = LoadRenderSystemName(*module,renderSystemDesc);
+        renderSystem->rendererID_   = LoadRenderSystemRendererID(*module,renderSystemDesc);
 
         /* Store new module inside internal map */
         g_renderSystemModules[renderSystem.get()] = std::move(module);
@@ -203,7 +215,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
         throw std::runtime_error(e.what());
     }
 
-    #endif // /LLGL_BUILD_STATIC_LIB
+#endif // /LLGL_BUILD_STATIC_LIB
 }
 
 void RenderSystem::Unload(std::unique_ptr<RenderSystem>&& renderSystem)
