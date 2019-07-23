@@ -11,6 +11,7 @@
 
 #include <LLGL/ShaderProgram.h>
 #include "../../DXCommon/ComPtr.h"
+#include "../../../Core/LinearStringContainer.h"
 #include <vector>
 #include <d3d12.h>
 
@@ -32,7 +33,7 @@ class D3D12ShaderProgram final : public ShaderProgram
 
         std::string QueryInfoLog() override;
 
-        ShaderReflectionDescriptor QueryReflectionDesc() const override;
+        ShaderReflection QueryReflection() const override;
         UniformLocation QueryUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
@@ -57,7 +58,7 @@ class D3D12ShaderProgram final : public ShaderProgram
     private:
 
         std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
-        std::vector<std::string>                inputElementNames_; // custom string container to hold valid string pointers.
+        LinearStringContainer                   inputElementNames_; // custom string container to hold valid string pointers.
 
         union
         {

@@ -53,14 +53,12 @@ std::uint32_t VKRenderTarget::GetNumColorAttachments() const
 
 bool VKRenderTarget::HasDepthAttachment() const
 {
-    auto format = depthStencilBuffer_.GetVkFormat();
-    return (format == VK_FORMAT_D32_SFLOAT || format == VK_FORMAT_D24_UNORM_S8_UINT);
+    return (depthStencilFormat_ == VK_FORMAT_D32_SFLOAT || depthStencilFormat_ == VK_FORMAT_D24_UNORM_S8_UINT);
 }
 
 bool VKRenderTarget::HasStencilAttachment() const
 {
-    auto format = depthStencilBuffer_.GetVkFormat();
-    return (format == VK_FORMAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT);
+    return (depthStencilFormat_ == VK_FORMAT_S8_UINT || depthStencilFormat_ == VK_FORMAT_D24_UNORM_S8_UINT);
 }
 
 const RenderPass* VKRenderTarget::GetRenderPass() const
@@ -163,7 +161,9 @@ static void CreateRenderPass(
                 sampleCountFlags,
                 loadContent
             );
-            ++numColorAttachments;
+
+            if (attachment.type == AttachmentType::Color)
+                ++numColorAttachments;
         }
         else
         {
@@ -193,9 +193,11 @@ void VKRenderTarget::CreateSecondaryRenderPass(VkDevice device, const RenderTarg
 
 void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc)
 {
+    depthStencilFormat_     = VK_FORMAT_UNDEFINED;
+    numColorAttachments_    = 0;
+
     /* Create image view for each attachment */
-    std::uint32_t numAttachments        = static_cast<std::uint32_t>(desc.attachments.size());
-    std::uint32_t numColorAttachments   = 0;
+    std::uint32_t numAttachments = static_cast<std::uint32_t>(desc.attachments.size());
 
     if (numAttachments == 0)
         throw std::runtime_error("cannot create render target without attachments");
@@ -222,15 +224,22 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
                 );
 
                 /* Add image view to attachments */
-                imageViewRefs[numColorAttachments] = imageView;
+                if (attachment.type == AttachmentType::Color)
+                {
+                    /* Next color attachment index */
+                    imageViewRefs[numColorAttachments_++] = imageView;
+                }
+                else
+                {
+                    /* Store depth-stencil format */
+                    imageViewRefs[numAttachments - 1] = imageView;
+                    depthStencilFormat_ = textureVK->GetVkFormat();
+                }
             }
             imageViews_.emplace_back(std::move(imageView));
 
             /* Validate texture resolution to render target (to validate correlation between attachments) */
             ValidateMipResolution(*textureVK, attachment.mipLevel);
-
-            /* Next attachment index */
-            ++numColorAttachments;
         }
         else
         {
@@ -239,10 +248,11 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
 
             /* Add depth-stencil image view to attachments */
             imageViewRefs[numAttachments - 1] = depthStencilBuffer_.GetVkImageView();
+
+            /* Store depth-stencil format */
+            depthStencilFormat_ = depthStencilBuffer_.GetVkFormat();
         }
     }
-
-    numColorAttachments_ = numColorAttachments;
 
     /* Create framebuffer object */
     VkFramebufferCreateInfo createInfo;

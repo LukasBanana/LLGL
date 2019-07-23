@@ -8,6 +8,7 @@
 #include "D3D11Buffer.h"
 #include "../D3D11Types.h"
 #include "../D3D11ResourceFlags.h"
+#include "../D3D11ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
@@ -26,6 +27,13 @@ D3D11Buffer::D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, con
     Buffer { desc.bindFlags }
 {
     CreateNativeBuffer(device, desc, initialData);
+}
+
+void D3D11Buffer::SetName(const char* name)
+{
+    D3D11SetObjectName(GetNative(), name);
+    if (cpuAccessBuffer_)
+        D3D11SetObjectNameSubscript(cpuAccessBuffer_.Get(), name, ".CPUAccessBuffer");
 }
 
 static D3D11_MAP GetD3DMapWrite(bool mapPartial)

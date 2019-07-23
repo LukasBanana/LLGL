@@ -25,20 +25,22 @@ class GLShaderProgram final : public ShaderProgram
 
     public:
 
-        GLShaderProgram(const ShaderProgramDescriptor& desc);
-        ~GLShaderProgram();
+        void SetName(const char* name) override;
 
         bool HasErrors() const override;
 
         std::string QueryInfoLog() override;
 
-        ShaderReflectionDescriptor QueryReflectionDesc() const override;
+        ShaderReflection QueryReflection() const override;
         UniformLocation QueryUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
 
     public:
+
+        GLShaderProgram(const ShaderProgramDescriptor& desc);
+        ~GLShaderProgram();
 
         /*
         Updates all uniform/storage block bindings and resources by the specified binding layout.
@@ -71,15 +73,15 @@ class GLShaderProgram final : public ShaderProgram
         void BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes);
         #endif
 
-        void Reflect(ShaderReflectionDescriptor& reflection) const;
-        void QueryVertexAttributes(ShaderReflectionDescriptor& reflection) const;
-        void QueryStreamOutputAttributes(ShaderReflectionDescriptor& reflection) const;
-        void QueryConstantBuffers(ShaderReflectionDescriptor& reflection) const;
-        void QueryStorageBuffers(ShaderReflectionDescriptor& reflection) const;
-        void QueryUniforms(ShaderReflectionDescriptor& reflection) const;
+        void Reflect(ShaderReflection& reflection) const;
+        void QueryVertexAttributes(ShaderReflection& reflection) const;
+        void QueryStreamOutputAttributes(ShaderReflection& reflection) const;
+        void QueryConstantBuffers(ShaderReflection& reflection) const;
+        void QueryStorageBuffers(ShaderReflection& reflection) const;
+        void QueryUniforms(ShaderReflection& reflection) const;
 
         #ifdef GL_ARB_program_interface_query
-        void QueryBufferProperties(ShaderReflectionDescriptor::ResourceView& resourceView, GLenum programInterface, GLuint resourceIndex) const;
+        void QueryBufferProperties(ShaderResource& resource, GLenum programInterface, GLuint resourceIndex) const;
         #endif // /GL_ARB_program_interface_query
 
     private:
@@ -89,7 +91,10 @@ class GLShaderProgram final : public ShaderProgram
 
     private:
 
-        // Reference to active binding layout is mutable since it's only to track state changes
+        /*
+        Reference to active binding layout is mutable since it's only to track state changes
+        TODO: try to avoid <mutable> keyword, maybe there's a better way for the purpose of this member
+        */
         mutable const GLShaderBindingLayout* bindingLayout_ = nullptr;
 
 };

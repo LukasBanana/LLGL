@@ -8,6 +8,7 @@
 #include "D3D11RenderTarget.h"
 #include "../D3D11RenderSystem.h"
 #include "../D3D11Types.h"
+#include "../D3D11ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
@@ -35,6 +36,46 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
         /* Initialize all attachments */
         for (const auto& attachment : desc.attachments)
             Attach(attachment);
+    }
+}
+
+void D3D11RenderTarget::SetName(const char* name)
+{
+    if (name != nullptr)
+    {
+        /* Set label for each RTV */
+        std::uint32_t rtvIndex = 0;
+        for (const auto& rtv : GetRenderTargetViews())
+        {
+            const std::string subscript = ".RTV[" + std::to_string(rtvIndex++) + "]";
+            D3D11SetObjectNameSubscript(rtv, name, subscript.c_str());
+        }
+
+        /* Set labels for DS and DSV */
+        if (depthStencil_)
+            D3D11SetObjectNameSubscript(depthStencil_.Get(), name, ".DS");
+        if (depthStencilView_)
+            D3D11SetObjectNameSubscript(depthStencilView_.Get(), name, ".DSV");
+
+        /* Set label for each multi-sampled texture */
+        std::uint32_t attachmentIndex = 0;
+        for (const auto& attachment : multiSampledAttachments_)
+        {
+            const std::string subscript = ".MS[" + std::to_string(attachmentIndex++) + "]";
+            D3D11SetObjectNameSubscript(attachment.texture2DMS.Get(), name, subscript.c_str());
+        }
+    }
+    else
+    {
+        /* Reset all labels */
+        for (auto rtv : GetRenderTargetViews())
+            D3D11SetObjectName(rtv, nullptr);
+
+        D3D11SetObjectName(depthStencil_.Get(), nullptr);
+        D3D11SetObjectName(depthStencilView_.Get(), nullptr);
+
+        for (const auto& attachment : multiSampledAttachments_)
+            D3D11SetObjectName(attachment.texture2DMS.Get(), nullptr);
     }
 }
 

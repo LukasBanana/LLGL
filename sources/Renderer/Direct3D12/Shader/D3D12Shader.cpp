@@ -59,10 +59,10 @@ D3D12_SHADER_BYTECODE D3D12Shader::GetByteCode() const
     return byteCode;
 }
 
-void D3D12Shader::Reflect(ShaderReflectionDescriptor& reflectionDesc) const
+void D3D12Shader::Reflect(ShaderReflection& reflection) const
 {
     if (!byteCode_.empty())
-        ReflectShaderByteCode(reflectionDesc);
+        ReflectShaderByteCode(reflection);
 }
 
 
@@ -151,40 +151,44 @@ Most of this code for shader reflection is 1:1 copied from the D3D11 renderer.
 However, all descriptors have the "D3D12" prefix, so a generalization (without macros) is tricky.
 */
 
-static ShaderReflectionDescriptor::ResourceView* FetchOrInsertResource(
-    ShaderReflectionDescriptor& reflectionDesc,
-    const char*                 name,
-    const ResourceType          type,
-    std::uint32_t               slot)
+static ShaderResource* FetchOrInsertResource(
+    ShaderReflection&   reflection,
+    const char*         name,
+    const ResourceType  type,
+    std::uint32_t       slot)
 {
     /* Fetch resource from list */
-    for (auto& resource : reflectionDesc.resourceViews)
+    for (auto& resource : reflection.resources)
     {
-        if (resource.type == type && resource.slot == slot && resource.name.compare(name) == 0)
+        if (resource.binding.type == type &&
+            resource.binding.slot == slot &&
+            resource.binding.name.compare(name) == 0)
+        {
             return (&resource);
+        }
     }
 
     /* Allocate new resource and initialize parameters */
-    reflectionDesc.resourceViews.resize(reflectionDesc.resourceViews.size() + 1);
-    auto ref = &(reflectionDesc.resourceViews.back());
+    reflection.resources.resize(reflection.resources.size() + 1);
+    auto ref = &(reflection.resources.back());
     {
-        ref->name = std::string(name);
-        ref->type = type;
-        ref->slot = slot;
+        ref->binding.name = std::string(name);
+        ref->binding.type = type;
+        ref->binding.slot = slot;
     }
     return ref;
 }
 
 static void ReflectShaderVertexAttributes(
-    ID3D12ShaderReflection*     reflection,
+    ID3D12ShaderReflection*     reflectionObject,
     const D3D12_SHADER_DESC&    shaderDesc,
-    ShaderReflectionDescriptor& reflectionDesc)
+    ShaderReflection&           reflection)
 {
     for (UINT i = 0; i < shaderDesc.InputParameters; ++i)
     {
         /* Get signature parameter descriptor */
         D3D12_SIGNATURE_PARAMETER_DESC paramDesc;
-        auto hr = reflection->GetInputParameterDesc(i, &paramDesc);
+        auto hr = reflectionObject->GetInputParameterDesc(i, &paramDesc);
 
         if (FAILED(hr))
         {
@@ -200,48 +204,48 @@ static void ReflectShaderVertexAttributes(
             vertexAttrib.semanticIndex  = paramDesc.SemanticIndex;
             vertexAttrib.systemValue    = DXTypes::Unmap(paramDesc.SystemValueType);
         }
-        reflectionDesc.vertexAttributes.push_back(vertexAttrib);
+        reflection.vertexAttributes.push_back(vertexAttrib);
     }
 }
 
 static void ReflectShaderResourceGeneric(
     const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc,
-    ShaderReflectionDescriptor&         reflectionDesc,
+    ShaderReflection&                   reflection,
     const ResourceType                  resourceType,
     long                                bindFlags,
     long                                stageFlags,
     const StorageBufferType             storageBufferType   = StorageBufferType::Undefined)
 {
     /* Initialize resource view descriptor for a generic resource (texture, sampler, storage buffer etc.) */
-    auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, resourceType, inputBindDesc.BindPoint);
+    auto resource = FetchOrInsertResource(reflection, inputBindDesc.Name, resourceType, inputBindDesc.BindPoint);
     {
-        resourceView->bindFlags         |= bindFlags;
-        resourceView->stageFlags        |= stageFlags;
-        resourceView->arraySize         = inputBindDesc.BindCount;
-        resourceView->storageBufferType = storageBufferType;
+        resource->binding.bindFlags     |= bindFlags;
+        resource->binding.stageFlags    |= stageFlags;
+        resource->binding.arraySize     = inputBindDesc.BindCount;
+        resource->storageBufferType     = storageBufferType;
     }
 }
 
 static void ReflectShaderConstantBuffer(
-    ID3D12ShaderReflection*             reflection,
-    ShaderReflectionDescriptor&         reflectionDesc,
+    ID3D12ShaderReflection*             reflectionObject,
+    ShaderReflection&                   reflection,
     const D3D12_SHADER_DESC&            shaderDesc,
     const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc,
     long                                stageFlags,
     UINT&                               cbufferIdx)
 {
     /* Initialize resource view descriptor for constant buffer */
-    auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, ResourceType::Buffer, inputBindDesc.BindPoint);
+    auto resource = FetchOrInsertResource(reflection, inputBindDesc.Name, ResourceType::Buffer, inputBindDesc.BindPoint);
     {
-        resourceView->bindFlags     |= BindFlags::ConstantBuffer;
-        resourceView->stageFlags    |= stageFlags;
-        resourceView->arraySize     = inputBindDesc.BindCount;
+        resource->binding.bindFlags     |= BindFlags::ConstantBuffer;
+        resource->binding.stageFlags    |= stageFlags;
+        resource->binding.arraySize     = inputBindDesc.BindCount;
     }
 
     /* Determine constant buffer size */
     if (cbufferIdx < shaderDesc.ConstantBuffers)
     {
-        auto cbufferReflection = reflection->GetConstantBufferByIndex(cbufferIdx++);
+        auto cbufferReflection = reflectionObject->GetConstantBufferByIndex(cbufferIdx++);
 
         D3D12_SHADER_BUFFER_DESC shaderBufferDesc;
         auto hr = cbufferReflection->GetDesc(&shaderBufferDesc);
@@ -250,7 +254,7 @@ static void ReflectShaderConstantBuffer(
         if (shaderBufferDesc.Type == D3D_CT_CBUFFER)
         {
             /* Store constant buffer size in output descriptor */
-            resourceView->constantBufferSize = shaderBufferDesc.Size;
+            resource->constantBufferSize = shaderBufferDesc.Size;
         }
         else
         {
@@ -272,10 +276,10 @@ static void ReflectShaderConstantBuffer(
 }
 
 static void ReflectShaderInputBindings(
-    ID3D12ShaderReflection*     reflection,
+    ID3D12ShaderReflection*     reflectionObject,
     const D3D12_SHADER_DESC&    shaderDesc,
     long                        stageFlags,
-    ShaderReflectionDescriptor& reflectionDesc)
+    ShaderReflection&           reflection)
 {
     UINT cbufferIdx = 0;
 
@@ -283,28 +287,28 @@ static void ReflectShaderInputBindings(
     {
         /* Get shader input resource descriptor */
         D3D12_SHADER_INPUT_BIND_DESC inputBindDesc;
-        auto hr = reflection->GetResourceBindingDesc(i, &inputBindDesc);
+        auto hr = reflectionObject->GetResourceBindingDesc(i, &inputBindDesc);
         DXThrowIfFailed(hr, "failed to retrieve D3D12 shader input binding descriptor");
 
         /* Reflect shader resource view */
         switch (inputBindDesc.Type)
         {
             case D3D_SIT_CBUFFER:
-                ReflectShaderConstantBuffer(reflection, reflectionDesc, shaderDesc, inputBindDesc, stageFlags, cbufferIdx);
+                ReflectShaderConstantBuffer(reflectionObject, reflection, shaderDesc, inputBindDesc, stageFlags, cbufferIdx);
                 break;
 
             case D3D_SIT_TBUFFER:
             case D3D_SIT_TEXTURE:
-                ReflectShaderResourceGeneric(inputBindDesc, reflectionDesc, ResourceType::Texture, BindFlags::SampleBuffer, stageFlags);
+                ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Texture, BindFlags::SampleBuffer, stageFlags);
                 break;
 
             case D3D_SIT_SAMPLER:
-                ReflectShaderResourceGeneric(inputBindDesc, reflectionDesc, ResourceType::Sampler, 0, stageFlags);
+                ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Sampler, 0, stageFlags);
                 break;
 
             case D3D_SIT_STRUCTURED:
             case D3D_SIT_BYTEADDRESS:
-                ReflectShaderResourceGeneric(inputBindDesc, reflectionDesc, ResourceType::Buffer, BindFlags::SampleBuffer, stageFlags);
+                ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Buffer, BindFlags::SampleBuffer, stageFlags);
                 break;
 
             case D3D_SIT_UAV_RWTYPED:
@@ -313,7 +317,7 @@ static void ReflectShaderInputBindings(
             case D3D_SIT_UAV_APPEND_STRUCTURED:
             case D3D_SIT_UAV_CONSUME_STRUCTURED:
             case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-                ReflectShaderResourceGeneric(inputBindDesc, reflectionDesc, ResourceType::Buffer, BindFlags::RWStorageBuffer, stageFlags);
+                ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Buffer, BindFlags::RWStorageBuffer, stageFlags);
                 break;
 
             default:
@@ -322,25 +326,25 @@ static void ReflectShaderInputBindings(
     }
 }
 
-void D3D12Shader::ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const
+void D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
 {
     HRESULT hr = 0;
 
     /* Get shader reflection */
-    ComPtr<ID3D12ShaderReflection> reflection;
-    hr = D3DReflect(byteCode_.data(), byteCode_.size(), IID_PPV_ARGS(reflection.ReleaseAndGetAddressOf()));
+    ComPtr<ID3D12ShaderReflection> reflectionObject;
+    hr = D3DReflect(byteCode_.data(), byteCode_.size(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to retrieve D3D12 shader reflection");
 
     D3D12_SHADER_DESC shaderDesc;
-    hr = reflection->GetDesc(&shaderDesc);
+    hr = reflectionObject->GetDesc(&shaderDesc);
     DXThrowIfFailed(hr, "failed to retrieve D3D12 shader descriptor");
 
     /* Get input parameter descriptors */
     if (GetType() == ShaderType::Vertex)
-        ReflectShaderVertexAttributes(reflection.Get(), shaderDesc, reflectionDesc);
+        ReflectShaderVertexAttributes(reflectionObject.Get(), shaderDesc, reflection);
 
     /* Get input bindings */
-    ReflectShaderInputBindings(reflection.Get(), shaderDesc, GetStageFlags(), reflectionDesc);
+    ReflectShaderInputBindings(reflectionObject.Get(), shaderDesc, GetStageFlags(), reflection);
 }
 
 

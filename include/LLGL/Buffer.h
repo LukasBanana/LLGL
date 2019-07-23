@@ -24,6 +24,8 @@ namespace LLGL
 class LLGL_EXPORT Buffer : public Resource
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::Buffer );
+
     public:
 
         //! Returns ResourceType::Buffer.

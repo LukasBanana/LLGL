@@ -20,7 +20,7 @@ class RenderingProfiler;
 class RenderingDebugger;
 class DbgQueryHeap;
 
-class DbgCommandQueue : public CommandQueue
+class DbgCommandQueue final : public CommandQueue
 {
 
     public:
@@ -54,6 +54,8 @@ class DbgCommandQueue : public CommandQueue
         bool WaitFence(Fence& fence, std::uint64_t timeout) override;
         void WaitIdle() override;
 
+    public:
+
         /* ----- Debugging members ----- */
 
         CommandQueue& instance;
@@ -67,6 +69,8 @@ class DbgCommandQueue : public CommandQueue
             void*           data,
             std::size_t     dataSize
         );
+
+    private:
 
         RenderingProfiler* profiler_ = nullptr;
         RenderingDebugger* debugger_ = nullptr;

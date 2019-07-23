@@ -11,6 +11,7 @@
 
 #include "../GLContext.h"
 #include "../../OpenGL.h"
+#include <LLGL/RendererConfiguration.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include <X11/Xlib.h>
 
@@ -24,7 +25,12 @@ class LinuxGLContext : public GLContext
 
     public:
 
-        LinuxGLContext(const RenderContextDescriptor& desc, Surface& surface, LinuxGLContext* sharedContext);
+        LinuxGLContext(
+            const RenderContextDescriptor&      desc,
+            const RendererConfigurationOpenGL&  config,
+            Surface&                            surface,
+            LinuxGLContext*                     sharedContext
+        );
         ~LinuxGLContext();
 
         bool SetSwapInterval(int interval) override;
@@ -35,16 +41,21 @@ class LinuxGLContext : public GLContext
 
         bool Activate(bool activate) override;
 
-        void CreateContext(const RenderContextDescriptor& contextDesc, const NativeHandle& nativeHandle, LinuxGLContext* sharedContext);
+        void CreateContext(
+            const RenderContextDescriptor&      contextDesc,
+            const RendererConfigurationOpenGL&  config,
+            const NativeHandle&                 nativeHandle,
+            LinuxGLContext*                     sharedContext
+        );
         void DeleteContext();
 
         GLXContext CreateContextCoreProfile(GLXContext glcShared, int major, int minor);
         GLXContext CreateContextCompatibilityProfile(GLXContext glcShared);
 
         bool QueryGLVersion(GLint& major, GLint& minor);
-        
+
     private:
-    
+
         ::Display*      display_    = nullptr;
         ::Window        wnd_        = 0;
         XVisualInfo*    visual_     = nullptr;

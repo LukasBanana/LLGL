@@ -169,7 +169,7 @@ struct FrameProfile
 
             /**
             \brief Counter for all texture copies during command encoding.
-            \todo Not available yet.
+            \see CommandBuffer::CopyTexture.
             */
             std::uint32_t textureCopies;
 
@@ -282,6 +282,8 @@ class LLGL_EXPORT RenderingProfiler
         \see FrameProfile::Accumulate
         */
         void Accumulate(const FrameProfile& profile);
+
+    public:
 
         //! Current frame profile with all counter values.
         FrameProfile frameProfile;

@@ -8,6 +8,7 @@
 #include "GLRenderSystem.h"
 #include "Ext/GLExtensions.h"
 #include "RenderState/GLStatePool.h"
+#include "../RenderSystemUtils.h"
 #include "../GLCommon/GLTypes.h"
 #include "../GLCommon/GLCore.h"
 #include "../GLCommon/Texture/GLTexImage.h"
@@ -24,6 +25,13 @@ namespace LLGL
 
 
 /* ----- Common ----- */
+
+GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
+{
+    /* Extract optional renderer configuartion */
+    if (auto rendererConfigGL = GetRendererConfiguration<RendererConfigurationOpenGL>(renderSystemDesc))
+        config_ = *rendererConfigGL;
+}
 
 GLRenderSystem::~GLRenderSystem()
 {
@@ -47,7 +55,7 @@ GLRenderContext* GLRenderSystem::GetSharedRenderContext() const
 
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return AddRenderContext(MakeUnique<GLRenderContext>(desc, surface, GetSharedRenderContext()), desc);
+    return AddRenderContext(MakeUnique<GLRenderContext>(desc, config_, surface, GetSharedRenderContext()));
 }
 
 void GLRenderSystem::Release(RenderContext& renderContext)
@@ -268,15 +276,15 @@ void GLRenderSystem::Release(Fence& fence)
  * ======= Protected: =======
  */
 
-RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc)
+RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext)
 {
     /* Create devices that require an active GL context */
     if (renderContexts_.empty())
-        CreateGLContextDependentDevices(*renderContext, desc);
+        CreateGLContextDependentDevices(*renderContext);
 
     /* Use uniform clipping space */
-    GLStateManager::active->DetermineExtensionsAndLimits();
-    GLStateManager::active->SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
+    GLStateManager::Get().DetermineExtensionsAndLimits();
+    GLStateManager::Get().SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
 
     /* Take ownership and return raw pointer */
     return TakeOwnership(renderContexts_, std::move(renderContext));
@@ -287,34 +295,35 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
  * ======= Private: =======
  */
 
-void GLRenderSystem::CreateGLContextDependentDevices(GLRenderContext& renderContext, const RenderContextDescriptor& desc)
+void GLRenderSystem::CreateGLContextDependentDevices(GLRenderContext& renderContext)
 {
+    const bool hasGLCoreProfile = (config_.contextProfile == OpenGLContextProfile::CoreProfile);
+
     /* Load all OpenGL extensions */
-    LoadGLExtensions(desc.profileOpenGL);
-    SetDebugCallback(desc.debugCallback);
-    
+    LoadGLExtensions(hasGLCoreProfile);
+
+    /* Enable debug callback function */
+    if (debugCallback_)
+        SetDebugCallback(debugCallback_);
+
     /* Create command queue instance */
     commandQueue_ = MakeUnique<GLCommandQueue>(renderContext.GetStateManager());
 }
 
-void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc)
+void GLRenderSystem::LoadGLExtensions(bool hasGLCoreProfile)
 {
     /* Load OpenGL extensions if not already done */
     if (!AreExtensionsLoaded())
     {
-        auto coreProfile = (profileDesc.contextProfile == OpenGLContextProfile::CoreProfile);
-
         /* Query extensions and load all of them */
-        auto extensions = QueryExtensions(coreProfile);
-        LoadAllExtensions(extensions, coreProfile);
+        auto extensions = QueryExtensions(hasGLCoreProfile);
+        LoadAllExtensions(extensions, hasGLCoreProfile);
 
         /* Query and store all renderer information and capabilities */
         QueryRendererInfo();
         QueryRenderingCaps();
     }
 }
-
-#ifdef LLGL_DEBUG
 
 void APIENTRY GLDebugCallback(
     GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
@@ -329,32 +338,30 @@ void APIENTRY GLDebugCallback(
         << GLDebugSeverityToStr(severity) << ")";
 
     /* Call debug callback */
-    auto& debugCallback = *reinterpret_cast<const DebugCallback*>(userParam);
-    debugCallback(typeStr.str(), message);
+    auto debugCallback = reinterpret_cast<const DebugCallback*>(userParam);
+    (*debugCallback)(typeStr.str(), message);
 }
-
-#endif
 
 void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
 {
-    #if defined(LLGL_DEBUG) && !defined(__APPLE__)
-
-    debugCallback_ = debugCallback;
-
-    if (debugCallback_)
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
     {
-        GLStateManager::active->Enable(GLState::DEBUG_OUTPUT);
-        GLStateManager::active->Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(GLDebugCallback, &debugCallback_);
+        debugCallback_ = debugCallback;
+        if (debugCallback_)
+        {
+            GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT);
+            GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+            glDebugMessageCallback(GLDebugCallback, &debugCallback_);
+        }
+        else
+        {
+            GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT);
+            GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+            glDebugMessageCallback(nullptr, nullptr);
+        }
     }
-    else
-    {
-        GLStateManager::active->Disable(GLState::DEBUG_OUTPUT);
-        GLStateManager::active->Disable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(nullptr, nullptr);
-    }
-
-    #endif
+    #endif // /GL_KHR_debug
 }
 
 static std::string GLGetString(GLenum name)

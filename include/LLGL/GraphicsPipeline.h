@@ -21,7 +21,10 @@ namespace LLGL
 \see RenderSystem::CreateGraphicsPipeline
 \see CommandBuffer::SetGraphicsPipeline
 */
-class LLGL_EXPORT GraphicsPipeline : public RenderSystemChild { };
+class LLGL_EXPORT GraphicsPipeline : public RenderSystemChild
+{
+    LLGL_DECLARE_INTERFACE( InterfaceID::GraphicsPipeline );
+};
 
 
 } // /namespace LLGL

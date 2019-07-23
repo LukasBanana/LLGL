@@ -141,7 +141,8 @@ static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObject
 
 static std::vector<GLStateManager*> g_GLStateManagerList;
 
-GLStateManager* GLStateManager::active = nullptr;
+GLStateManager*             GLStateManager::active_;
+GLStateManager::GLLimits    GLStateManager::commonLimits_;
 
 GLStateManager::GLStateManager()
 {
@@ -156,8 +157,9 @@ GLStateManager::GLStateManager()
 
     SetActiveTextureLayer(0);
 
-    /* Make this to the active state manager */
-    GLStateManager::active = this;
+    /* Make this the active state manager if there is no previous one */
+    if (GLStateManager::active_ == nullptr)
+        GLStateManager::active_ = this;
 
     /* Store state manager in global list */
     g_GLStateManagerList.push_back(this);
@@ -535,7 +537,7 @@ void GLStateManager::NotifyDepthStencilStateRelease(GLDepthStencilState* depthSt
         boundDepthStencilState_ = nullptr;
 }
 
-void GLStateManager::SetDepthStencilState(GLDepthStencilState* depthStencilState)
+void GLStateManager::BindDepthStencilState(GLDepthStencilState* depthStencilState)
 {
     if (depthStencilState != nullptr && depthStencilState != boundDepthStencilState_)
     {
@@ -570,7 +572,7 @@ void GLStateManager::NotifyRasterizerStateRelease(GLRasterizerState* rasterizerS
         boundRasterizerState_ = nullptr;
 }
 
-void GLStateManager::SetRasterizerState(GLRasterizerState* rasterizerState)
+void GLStateManager::BindRasterizerState(GLRasterizerState* rasterizerState)
 {
     if (rasterizerState != nullptr && rasterizerState != boundRasterizerState_)
     {
@@ -1241,8 +1243,28 @@ void GLStateManager::SetActiveTextureLayer(std::uint32_t layer)
     textureState_.activeLayerRef    = &(textureState_.layers[textureState_.activeTexture]);
 }
 
+static void AccumCommonGLLimits(GLStateManager::GLLimits& dst, const GLStateManager::GLLimits& src)
+{
+    if (dst.maxViewports == 0)
+    {
+        /* Initialize destination with a copy of source */
+        dst = src;
+    }
+    else
+    {
+        /* Find smallest limits */
+        dst.maxViewports        = std::min(dst.maxViewports, src.maxViewports);
+        dst.lineWidthRange[0]   = std::min(dst.lineWidthRange[0], src.lineWidthRange[0]);
+        dst.lineWidthRange[1]   = std::min(dst.lineWidthRange[1], src.lineWidthRange[1]);
+        dst.maxDebugNameLength  = std::min(dst.maxDebugNameLength, src.maxDebugNameLength);
+        dst.maxDebugStackDepth  = std::min(dst.maxDebugStackDepth, src.maxDebugStackDepth);
+        dst.maxLabelLength      = std::min(dst.maxLabelLength, src.maxLabelLength);
+    }
+}
+
 void GLStateManager::DetermineLimits()
 {
+    /* Get integral limits */
     glGetIntegerv(GL_MAX_VIEWPORTS, &limits_.maxViewports);
 
     /* Determine minimal line width range for both aliased and smooth lines */
@@ -1254,6 +1276,19 @@ void GLStateManager::DetermineLimits()
 
     limits_.lineWidthRange[0] = std::min(aliasedLineRange[0], smoothLineRange[0]);
     limits_.lineWidthRange[1] = std::min(aliasedLineRange[1], smoothLineRange[1]);
+
+    /* Get extension specific limits */
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+    {
+        glGetIntegerv(GL_MAX_DEBUG_MESSAGE_LENGTH, &limits_.maxDebugNameLength);
+        glGetIntegerv(GL_MAX_DEBUG_GROUP_STACK_DEPTH, &limits_.maxDebugStackDepth);
+        glGetIntegerv(GL_MAX_LABEL_LENGTH, &limits_.maxLabelLength);
+    }
+    #endif
+
+    /* Accumulate common limitations */
+    AccumCommonGLLimits(GLStateManager::commonLimits_, limits_);
 }
 
 #ifdef LLGL_GL_ENABLE_VENDOR_EXT
@@ -1293,12 +1328,14 @@ void GLStateManager::DetermineVendorSpecificExtensions()
 
 void GLStateManager::PushDepthMaskAndEnable()
 {
-    SetDepthMask(GL_TRUE);
+    /* Cache current depth mask, then enable it */
     commonState_.cachedDepthMask = commonState_.depthMask;
+    SetDepthMask(GL_TRUE);
 }
 
 void GLStateManager::PopDepthMask()
 {
+    /* Restore cached depth mask */
     SetDepthMask(commonState_.cachedDepthMask);
 }
 

@@ -8,6 +8,7 @@
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommand.h"
 
+#include "../../TextureUtils.h"
 #include "../GLRenderContext.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLCore.h"
@@ -35,6 +36,7 @@
 
 #include <algorithm>
 #include <string.h>
+#include <cstring> // std::strlen
 
 #ifdef LLGL_ENABLE_JIT_COMPILER
 #   include "GLCommandAssembler.h"
@@ -85,9 +87,13 @@ void GLDeferredCommandBuffer::End()
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
-void GLDeferredCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void GLDeferredCommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
-    auto cmd = AllocCommand<GLCmdUpdateBuffer>(GLOpcodeUpdateBuffer, dataSize);
+    auto cmd = AllocCommand<GLCmdBufferSubData>(GLOpcodeBufferSubData, dataSize);
     {
         cmd->buffer = LLGL_CAST(GLBuffer*, &dstBuffer);
         cmd->offset = static_cast<GLintptr>(dstOffset);
@@ -96,15 +102,39 @@ void GLDeferredCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstO
     }
 }
 
-void GLDeferredCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+void GLDeferredCommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
-    auto cmd = AllocCommand<GLCmdCopyBuffer>(GLOpcodeCopyBuffer);
+    auto cmd = AllocCommand<GLCmdCopyBufferSubData>(GLOpcodeCopyBufferSubData);
     {
         cmd->writeBuffer    = LLGL_CAST(GLBuffer*, &dstBuffer);
         cmd->readBuffer     = LLGL_CAST(GLBuffer*, &srcBuffer);
         cmd->readOffset     = static_cast<GLintptr>(srcOffset);
         cmd->writeOffset    = static_cast<GLintptr>(dstOffset);
         cmd->size           = static_cast<GLsizeiptr>(size);
+    }
+}
+
+void GLDeferredCommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    auto cmd = AllocCommand<GLCmdCopyImageSubData>(GLOpcodeCopyImageSubData);
+    {
+        cmd->dstTexture = LLGL_CAST(GLTexture*, &dstTexture);
+        cmd->dstLevel   = static_cast<GLint>(dstLocation.mipLevel);
+        cmd->dstOffset  = CalcTextureOffset(dstTexture.GetType(), dstLocation.offset, dstLocation.arrayLayer);
+        cmd->srcTexture = LLGL_CAST(GLTexture*, &srcTexture);
+        cmd->srcLevel   = static_cast<GLint>(srcLocation.mipLevel);
+        cmd->srcOffset  = CalcTextureOffset(srcTexture.GetType(), srcLocation.offset, srcLocation.arrayLayer);
+        cmd->extent     = extent;
     }
 }
 
@@ -498,7 +528,7 @@ void GLDeferredCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::ui
 {
     auto cmd = AllocCommand<GLCmdBeginConditionalRender>(GLOpcodeBeginConditionalRender);
     {
-        cmd->id     = LLGL_CAST(const GLQueryHeap&, queryHeap).GetFirstID(query);
+        cmd->id     = LLGL_CAST(const GLQueryHeap&, queryHeap).GetID(query);
         cmd->mode   = GLTypes::Map(mode);
     }
 }
@@ -742,12 +772,32 @@ void GLDeferredCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t off
 
 void GLDeferredCommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+    {
+        /* Push debug group name into command stream with default ID no. */
+        const GLint         maxLength       = GLStateManager::Get().GetLimits().maxDebugNameLength;
+        const GLuint        id              = 0;
+        const std::size_t   actualLength    = std::strlen(name);
+        const std::size_t   croppedLength   = std::min(actualLength, static_cast<std::size_t>(maxLength));
+
+        auto cmd = AllocCommand<GLCmdPushDebugGroup>(GLOpcodePushDebugGroup, croppedLength + 1);
+        {
+            cmd->source = GL_DEBUG_SOURCE_APPLICATION;
+            cmd->id     = id;
+            cmd->length = static_cast<GLsizei>(croppedLength);
+            ::memcpy(cmd + 1, name, croppedLength + 1);
+        }
+    }
+    #endif // /GL_KHR_debug
 }
 
 void GLDeferredCommandBuffer::PopDebugGroup()
 {
-    //TODO
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+        AllocOpCode(GLOpcodePopDebugGroup);
+    #endif // /GL_KHR_debug
 }
 
 /* ----- Direct Resource Access ------ */

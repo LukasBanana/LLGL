@@ -72,6 +72,8 @@ class VKRenderTarget final : public RenderTarget
 
         VkSampleCountFlagBits GetSampleCountFlags() const;
 
+    private:
+
         Extent2D                        resolution_;
 
         VKPtr<VkFramebuffer>            framebuffer_;
@@ -82,6 +84,7 @@ class VKRenderTarget final : public RenderTarget
         std::vector<VKPtr<VkImageView>> imageViews_;
 
         VKDepthStencilBuffer            depthStencilBuffer_;
+        VkFormat                        depthStencilFormat_     = VK_FORMAT_UNDEFINED;  // Format either from internal depth-stencil buffer or attachmed texture.
 
         std::uint32_t                   numColorAttachments_    = 0;
 

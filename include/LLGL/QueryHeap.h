@@ -27,6 +27,8 @@ namespace LLGL
 class LLGL_EXPORT QueryHeap : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::QueryHeap );
+
     public:
 
         //! Returns the type of queries within this heap.

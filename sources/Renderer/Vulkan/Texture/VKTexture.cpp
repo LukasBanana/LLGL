@@ -126,7 +126,7 @@ void VKTexture::CreateImageView(
         device,
         VKTypes::Map(GetType()),
         format_,
-        VK_IMAGE_ASPECT_COLOR_BIT,
+        GetAspectFlags(),
         baseMipLevel,
         numMipLevels,
         baseArrayLayer,
@@ -149,10 +149,19 @@ static VkImageCreateFlags GetVkImageCreateFlags(const TextureDescriptor& desc)
 {
     VkImageCreateFlags createFlags = 0;
 
-    if (IsCubeTexture(desc.type))
-        createFlags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-    if (desc.type == TextureType::Texture2DArray || desc.type == TextureType::Texture2DMSArray)
-        createFlags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT_KHR;
+    switch (desc.type)
+    {
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+            createFlags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+            break;
+        case TextureType::Texture2DArray:
+        case TextureType::Texture2DMSArray:
+            createFlags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+            break;
+        default:
+            break;
+    }
 
     return createFlags;
 }
@@ -293,6 +302,30 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
         GetVkImageSampleCountFlags(desc),
         GetVkImageUsageFlags(desc)
     );
+}
+
+static VkImageAspectFlags GetAspectFlagsByFormat(VkFormat format)
+{
+    switch (format)
+    {
+        case VK_FORMAT_D16_UNORM:
+        case VK_FORMAT_X8_D24_UNORM_PACK32:
+        case VK_FORMAT_D32_SFLOAT:
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+        case VK_FORMAT_S8_UINT:
+            return VK_IMAGE_ASPECT_STENCIL_BIT;
+        case VK_FORMAT_D16_UNORM_S8_UINT:
+        case VK_FORMAT_D24_UNORM_S8_UINT:
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+            return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+        default:
+            return VK_IMAGE_ASPECT_COLOR_BIT;
+    }
+}
+
+VkImageAspectFlags VKTexture::GetAspectFlags() const
+{
+    return GetAspectFlagsByFormat(format_);
 }
 
 

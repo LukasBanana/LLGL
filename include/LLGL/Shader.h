@@ -24,6 +24,8 @@ namespace LLGL
 class LLGL_EXPORT Shader : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::Shader );
+
     public:
 
         /**
@@ -39,10 +41,15 @@ class LLGL_EXPORT Shader : public RenderSystemChild
         \param[in] flags Specifies optional disassemble flags. This can be a bitwise OR combination of the 'ShaderDisassembleFlags' enumeration entries. By default 0.
         \return Disassembled assembler code or an empty string if disassembling was not possible.
         \note Only supported with: Direct3D 11, Direct3D 12.
+        \todo Change return value to std::unique_ptr<LLGL::Blob>
         */
         virtual std::string Disassemble(int flags = 0) = 0;
 
-        //! Returns the information log after the shader compilation.
+        /**
+        \brief Returns the information log after the shader compilation.
+        \todo Change return value to std::unique_ptr<LLGL::Blob>
+        \todo Rename to QueryReport
+        */
         virtual std::string QueryInfoLog() = 0;
 
         /**

@@ -160,14 +160,13 @@ class VKRenderSystem final : public RenderSystem
 
     private:
 
-        void CreateInstance(const ApplicationDescriptor* applicationDesc);
+        void CreateInstance(const RendererConfigurationVulkan* config);
         void CreateDebugReportCallback();
-        void LoadExtensions();
         void PickPhysicalDevice();
         void CreateLogicalDevice();
         void CreateDefaultPipelineLayout();
 
-        bool IsLayerRequired(const std::string& name) const;
+        bool IsLayerRequired(const char* name, const RendererConfigurationVulkan* config) const;
         bool IsExtensionRequired(const std::string& name) const;
 
         VKDeviceBuffer CreateStagingBuffer(const VkBufferCreateInfo& createInfo);

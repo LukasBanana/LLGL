@@ -28,7 +28,7 @@ class D3D12RenderTarget final : public RenderTarget
 
     public:
 
-        D3D12RenderTarget(D3D12Device& device, const RenderTargetDescriptor& desc);
+        void SetName(const char* name) override;
 
         Extent2D GetResolution() const override;
 
@@ -40,6 +40,8 @@ class D3D12RenderTarget final : public RenderTarget
         const RenderPass* GetRenderPass() const override;
 
     public:
+
+        D3D12RenderTarget(D3D12Device& device, const RenderTargetDescriptor& desc);
 
         void TransitionToOutputMerger(D3D12CommandContext& commandContext);
         void ResolveRenderTarget(D3D12CommandContext& commandContext);

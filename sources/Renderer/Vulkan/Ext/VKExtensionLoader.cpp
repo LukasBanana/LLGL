@@ -7,6 +7,7 @@
 
 #include "VKExtensionLoader.h"
 #include "VKExtensions.h"
+#include "VKExtensionRegistry.h"
 #include <LLGL/Log.h>
 #include <functional>
 #include <string>
@@ -27,7 +28,23 @@ bool LoadVKProc(VkInstance instance, T& procAddr, const char* procName)
     /* Check for errors */
     if (!procAddr)
     {
-        Log::PostReport(Log::ReportType::Error, "failed to load Vulkan procedure: " + std::string(procName));
+        Log::PostReport(Log::ReportType::Error, "failed to load Vulkan instance procedure: " + std::string(procName));
+        return false;
+    }
+
+    return true;
+}
+
+template <typename T>
+bool LoadVKProc(VkDevice device, T& procAddr, const char* procName)
+{
+    /* Load Vulkan procedure address */
+    procAddr = reinterpret_cast<T>(vkGetDeviceProcAddr(device, procName));
+
+    /* Check for errors */
+    if (!procAddr)
+    {
+        Log::PostReport(Log::ReportType::Error, "failed to load Vulkan device procedure: " + std::string(procName));
         return false;
     }
 
@@ -37,12 +54,12 @@ bool LoadVKProc(VkInstance instance, T& procAddr, const char* procName)
 /* --- Hardware buffer extensions --- */
 
 #define LOAD_VKPROC(NAME)                   \
-    if (!LoadVKProc(instance, NAME, #NAME)) \
+    if (!LoadVKProc(handle, NAME, #NAME))   \
         return false
 
 #ifdef LLGL_OS_WIN32
 
-static bool Load_VK_KHR_win32_surface(VkInstance instance)
+static bool Load_VK_KHR_win32_surface(VkInstance handle)
 {
     LOAD_VKPROC( vkCreateWin32SurfaceKHR );
     return true;
@@ -50,23 +67,33 @@ static bool Load_VK_KHR_win32_surface(VkInstance instance)
 
 #endif // /LLGL_OS_WIN32
 
+static bool Load_VK_EXT_debug_marker(VkDevice handle)
+{
+    LOAD_VKPROC( vkDebugMarkerSetObjectTagEXT  );
+    LOAD_VKPROC( vkDebugMarkerSetObjectNameEXT );
+    LOAD_VKPROC( vkCmdDebugMarkerBeginEXT      );
+    LOAD_VKPROC( vkCmdDebugMarkerEndEXT        );
+    LOAD_VKPROC( vkCmdDebugMarkerInsertEXT     );
+    return true;
+}
+
+static bool Load_VK_EXT_conditional_rendering(VkDevice handle)
+{
+    LOAD_VKPROC( vkCmdBeginConditionalRenderingEXT );
+    LOAD_VKPROC( vkCmdEndConditionalRenderingEXT   );
+    return true;
+}
+
 #undef LOAD_VKPROC
 
 
 /* --- Common extension loading functions --- */
 
-// Global member to store if the extension have already been loaded
-static bool g_extAlreadyLoaded = false;
-
-void LoadAllExtensions(VkInstance instance)
+bool VKLoadInstanceExtensions(VkInstance instance)
 {
-    /* Only load GL extensions once */
-    if (g_extAlreadyLoaded)
-        return;
-
     auto LoadExtension = [&](const std::string& extName, const std::function<bool(VkInstance)>& extLoadingProc) -> void
     {
-        /* Try to load OpenGL extension */
+        /* Try to load Vulkan extension */
         if (!extLoadingProc(instance))
         {
             /* Loading extension failed */
@@ -84,12 +111,48 @@ void LoadAllExtensions(VkInstance instance)
 
     #undef LOAD_VKEXT
 
-    g_extAlreadyLoaded = true;
+    return true;
 }
 
-bool AreExtensionsLoaded()
+bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& supportedExtensions)
 {
-    return g_extAlreadyLoaded;
+    #if LLGL_VK_ENABLE_EXT
+
+    auto IsSupported = [&supportedExtensions](const char* extName) -> bool
+    {
+        for (auto extension : supportedExtensions)
+        {
+            if (std::strcmp(extName, extension) == 0)
+                return true;
+        }
+        return false;
+    };
+
+    auto LoadExtension = [&](const VKExt extensionID, const char* extName, const std::function<bool(VkDevice)>& extLoadingProc) -> void
+    {
+        /* Check if extensions is included in the list of supported extension names */
+        if (IsSupported(extName))
+        {
+            /* Try to load Vulkan extension */
+            if (extLoadingProc(device))
+                RegisterExtension(extensionID);
+            else
+                Log::PostReport(Log::ReportType::Error, "failed to load Vulkan extension: " + std::string(extName));
+        }
+    };
+
+    #define LOAD_VKEXT(NAME) \
+        LoadExtension(VKExt::##NAME, "VK_" #NAME, Load_VK_##NAME)
+
+    /* Multi-vendor extensions */
+    LOAD_VKEXT( EXT_debug_marker          );
+    LOAD_VKEXT( EXT_conditional_rendering );
+
+    #undef LOAD_VKEXT
+
+    #endif // /LLGL_VK_ENABLE_EXT
+
+    return true;
 }
 
 

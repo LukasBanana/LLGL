@@ -49,14 +49,12 @@ void VKDevice::WaitIdle()
 
 // Device-only layers are deprecated -> set 'enabledLayerCount' and 'ppEnabledLayerNames' members to zero during device creation.
 // see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#extended-functionality-device-layer-deprecation
-void VKDevice::CreateLogicalDevice(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceFeatures* features)
+void VKDevice::CreateLogicalDevice(
+    VkPhysicalDevice                physicalDevice,
+    const VkPhysicalDeviceFeatures* features,
+    const char* const*              extensions,
+    std::uint32_t                   numExtensions)
 {
-    const char* g_deviceExtensions[] =
-    {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-    };
-
     /* Initialize queue create description */
     queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
 
@@ -88,8 +86,8 @@ void VKDevice::CreateLogicalDevice(VkPhysicalDevice physicalDevice, const VkPhys
         createInfo.pQueueCreateInfos        = queueCreateInfos.data();
         createInfo.enabledLayerCount        = 0;        // deprecated and ignored
         createInfo.ppEnabledLayerNames      = nullptr;  // deprecated and ignored
-        createInfo.enabledExtensionCount    = (sizeof(g_deviceExtensions) / sizeof(g_deviceExtensions[0]));
-        createInfo.ppEnabledExtensionNames  = g_deviceExtensions;
+        createInfo.enabledExtensionCount    = numExtensions;
+        createInfo.ppEnabledExtensionNames  = extensions;
         createInfo.pEnabledFeatures         = features;
     }
     auto result = vkCreateDevice(physicalDevice, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());

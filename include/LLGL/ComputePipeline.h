@@ -10,7 +10,6 @@
 
 
 #include "RenderSystemChild.h"
-#include "ComputePipelineFlags.h"
 
 
 namespace LLGL
@@ -18,7 +17,10 @@ namespace LLGL
 
 
 //! Compute pipeline interface.
-class LLGL_EXPORT ComputePipeline : public RenderSystemChild { };
+class LLGL_EXPORT ComputePipeline : public RenderSystemChild
+{
+    LLGL_DECLARE_INTERFACE( InterfaceID::ComputePipeline );
+};
 
 
 } // /namespace LLGL

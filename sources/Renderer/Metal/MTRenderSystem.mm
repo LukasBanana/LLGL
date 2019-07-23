@@ -113,10 +113,15 @@ void MTRenderSystem::UnmapBuffer(Buffer& buffer)
 Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     auto textureMT = MakeUnique<MTTexture>(device_, textureDesc);
-    
+
     if (imageDesc)
-        textureMT->Write(*imageDesc, { 0, 0, 0 }, textureMT->QueryMipExtent(0));
-    
+    {
+        textureMT->Write(
+            TextureRegion{ Offset3D{ 0, 0, 0 }, textureMT->QueryMipExtent(0) },
+            *imageDesc
+        );
+    }
+
     return TakeOwnership(textures_, std::move(textureMT));
 }
 
@@ -128,7 +133,7 @@ void MTRenderSystem::Release(Texture& texture)
 void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
-    textureMT.Write(imageDesc, textureRegion.offset, textureRegion.extent);
+    textureMT.Write(textureRegion, imageDesc);
 }
 
 void MTRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
@@ -139,7 +144,7 @@ void MTRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
 void MTRenderSystem::GenerateMips(Texture& texture)
 {
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
-    
+
     id<MTLCommandBuffer> cmdBuffer = [commandQueue_->GetNative() commandBuffer];
     {
         id<MTLBlitCommandEncoder> blitCmdEncoder = [cmdBuffer blitCommandEncoder];

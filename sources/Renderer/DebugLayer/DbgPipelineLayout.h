@@ -11,25 +11,29 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <string>
 
 
 namespace LLGL
 {
 
 
-class DbgPipelineLayout : public PipelineLayout
+class DbgPipelineLayout final : public PipelineLayout
 {
 
     public:
 
-        DbgPipelineLayout(PipelineLayout& instance, const PipelineLayoutDescriptor& desc) :
-            instance { instance },
-            desc     { desc     }
-        {
-        }
+        void SetName(const char* name) override;
 
-        PipelineLayout&             instance;
-        PipelineLayoutDescriptor    desc;
+    public:
+
+        DbgPipelineLayout(PipelineLayout& instance, const PipelineLayoutDescriptor& desc);
+
+    public:
+
+        PipelineLayout&                 instance;
+        const PipelineLayoutDescriptor  desc;
+        std::string                     label;
 
 };
 

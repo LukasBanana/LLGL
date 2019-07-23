@@ -145,14 +145,14 @@ int main()
             std::cout << "Constant Buffers: " << shaderProgram->QueryConstantBuffers().size() << std::endl;
         #endif
 
-        auto reflectionDesc = shaderProgram->QueryReflectionDesc();
+        auto reflection = shaderProgram->QueryReflection();
 
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, 0 }
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, 0 }
             };
         }
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

@@ -10,6 +10,7 @@
 #include "../Shader/D3D11ShaderProgram.h"
 #include "../Shader/D3D11Shader.h"
 #include "../../CheckedCast.h"
+#include <LLGL/ComputePipelineFlags.h>
 
 
 namespace LLGL

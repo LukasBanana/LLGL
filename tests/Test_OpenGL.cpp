@@ -206,7 +206,7 @@ int main()
         if (shaderProgram.HasErrors())
             std::cerr << shaderProgram.QueryInfoLog() << std::endl;
 
-        auto reflectionDesc = shaderProgram.QueryReflectionDesc();
+        auto reflection = shaderProgram.QueryReflection();
 
         #if 0
         // Create constant buffer
@@ -230,7 +230,7 @@ int main()
         }
         #endif
 
-        for (const auto& uniform : reflectionDesc.uniforms)
+        for (const auto& uniform : reflection.uniforms)
         {
             std::cout << "uniform: name = \"" << uniform.name << "\", location = " << uniform.location << ", size = " << uniform.size << std::endl;
         }
@@ -266,11 +266,14 @@ int main()
 
         LLGL::TextureRegion subTexDesc;
         {
-            subTexDesc.mipLevel         = 0;
-            subTexDesc.offset.x         = 0;
-            subTexDesc.offset.y         = 1;
-            subTexDesc.extent.width     = 2;
-            subTexDesc.extent.height    = 1;
+            subTexDesc.offset.x                     = 0;
+            subTexDesc.offset.y                     = 1;
+            subTexDesc.extent.width                 = 2;
+            subTexDesc.extent.height                = 1;
+            subTexDesc.subresource.baseArrayLayer   = 0;
+            subTexDesc.subresource.numArrayLayers   = 1;
+            subTexDesc.subresource.baseMipLevel     = 0;
+            subTexDesc.subresource.numMipLevels     = 1;
         }
         //renderer->WriteTexture(texture, subTexDesc, imageDesc); // update 2D texture
 

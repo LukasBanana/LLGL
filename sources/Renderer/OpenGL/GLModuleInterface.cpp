@@ -24,7 +24,7 @@ namespace LLGL
 
         void* RenderModuleCreate(const LLGL::RenderSystemDescriptor* desc)
         {
-            return new LLGL::GLRenderSystem();
+            return new LLGL::GLRenderSystem(*desc);
         }
     }
 }
@@ -33,10 +33,6 @@ extern "C"
 {
 #ifndef LLGL_BUILD_STATIC_LIB
 
-    LLGL_EXPORT int LLGL_RenderSystem_BuildID()
-    {
-        return LLGL_BUILD_ID;
-    }
 
     LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
     {
@@ -48,9 +44,10 @@ extern "C"
         return LLGL::ModuleOpengl::RenderModuleName();
     }
 
-    LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
+    LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
     {
-        return LLGL::ModuleOpengl::RenderModuleCreate(nullptr);
+        auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
+        return LLGL::ModuleOpengl::RenderModuleCreate(desc);
     }
 
 #endif

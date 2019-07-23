@@ -56,9 +56,9 @@ std::string DbgShaderProgram::QueryInfoLog()
     return instance.QueryInfoLog();
 }
 
-ShaderReflectionDescriptor DbgShaderProgram::QueryReflectionDesc() const
+ShaderReflection DbgShaderProgram::QueryReflection() const
 {
-    return instance.QueryReflectionDesc();
+    return instance.QueryReflection();
 }
 
 UniformLocation DbgShaderProgram::QueryUniformLocation(const char* name) const
@@ -149,7 +149,7 @@ void DbgShaderProgram::QueryInstanceAndVertexIDs(const RenderingCapabilities& ca
 {
     try
     {
-        auto reflect = instance.QueryReflectionDesc();
+        auto reflect = instance.QueryReflection();
 
         for (const auto& attr : reflect.vertexAttributes)
         {

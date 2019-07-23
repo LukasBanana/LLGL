@@ -12,6 +12,7 @@
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/OpenGL.h>
 
+#include <LLGL/RendererConfiguration.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include "../GLContext.h"
 
@@ -25,7 +26,12 @@ class MacOSGLContext : public GLContext
 
     public:
 
-        MacOSGLContext(const RenderContextDescriptor& desc, Surface& surface, MacOSGLContext* sharedContext);
+        MacOSGLContext(
+            const RenderContextDescriptor&      desc,
+            const RendererConfigurationOpenGL&  config,
+            Surface&                            surface,
+            MacOSGLContext*                     sharedContext
+        );
         ~MacOSGLContext();
 
         bool SetSwapInterval(int interval) override;
@@ -36,10 +42,12 @@ class MacOSGLContext : public GLContext
 
         bool Activate(bool activate) override;
 
-        void CreatePixelFormat(const RenderContextDescriptor& desc);
+        void CreatePixelFormat(const RenderContextDescriptor& desc, const RendererConfigurationOpenGL& config);
 
         void CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext);
         void DeleteNSGLContext();
+
+    private:
 
         NSOpenGLPixelFormat*    pixelFormat_    = nullptr;
         NSOpenGLContext*        ctx_            = nullptr;

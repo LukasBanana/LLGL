@@ -54,16 +54,22 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
     /* Generate native CPU opcodes for emulated GLOpcode */
     switch (opcode)
     {
-        case GLOpcodeUpdateBuffer:
+        case GLOpcodeBufferSubData:
         {
-            auto cmd = reinterpret_cast<const GLCmdUpdateBuffer*>(pc);
+            auto cmd = reinterpret_cast<const GLCmdBufferSubData*>(pc);
             compiler.CallMember(&GLBuffer::BufferSubData, cmd->buffer, cmd->offset, cmd->size, (cmd + 1));
             return (sizeof(*cmd) + cmd->size);
         }
-        case GLOpcodeCopyBuffer:
+        case GLOpcodeCopyBufferSubData:
         {
-            auto cmd = reinterpret_cast<const GLCmdCopyBuffer*>(pc);
+            auto cmd = reinterpret_cast<const GLCmdCopyBufferSubData*>(pc);
             compiler.CallMember(&GLBuffer::CopyBufferSubData, cmd->writeBuffer, cmd->readBuffer, cmd->readOffset, cmd->writeOffset, cmd->size);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeCopyImageSubData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyImageSubData*>(pc);
+            compiler.CallMember(&GLTexture::CopyImageSubData, cmd->dstTexture, cmd->dstLevel, &(cmd->dstOffset), cmd->srcTexture, cmd->srcLevel, &(cmd->srcOffset), &(cmd->extent));
             return sizeof(*cmd);
         }
         case GLOpcodeExecute:
@@ -402,6 +408,19 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
                 compiler.CallMember(&GLStateManager::UnbindSamplers, g_stateMngrArg, cmd->first, cmd->count);
             return sizeof(*cmd);
         }
+        #ifdef GL_KHR_debug
+        case GLOpcodePushDebugGroup:
+        {
+            auto cmd = reinterpret_cast<const GLCmdPushDebugGroup*>(pc);
+            compiler.Call(glPushDebugGroup, cmd->source, cmd->id, cmd->length, reinterpret_cast<const GLchar*>(cmd + 1));
+            return (sizeof(*cmd) + cmd->length + 1);
+        }
+        case GLOpcodePopDebugGroup:
+        {
+            compiler.Call(glPopDebugGroup);
+            return 0;
+        }
+        #endif // /GL_KHR_debug
         default:
             return 0;
     }
@@ -411,7 +430,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
 static std::size_t RequiredLocalStackSize(const GLDeferredCommandBuffer& cmdBuffer)
 {
     std::size_t maxSize = 0;
-    
+
     maxSize = cmdBuffer.GetMaxNumViewports() * sizeof(GLViewport);
     maxSize = std::max(maxSize, cmdBuffer.GetMaxNumViewports() * sizeof(GLDepthRange));
     maxSize = std::max(maxSize, cmdBuffer.GetMaxNumScissors() * sizeof(GLScissor));
@@ -426,15 +445,15 @@ std::unique_ptr<JITProgram> AssembleGLDeferredCommandBuffer(const GLDeferredComm
     {
         /* Initialize program counter to execute virtual GL commands */
         const auto& rawBuffer = cmdBuffer.GetRawBuffer();
-        
+
         auto pc     = rawBuffer.data();
         auto pcEnd  = rawBuffer.data() + rawBuffer.size();
 
         GLOpcode opcode;
-        
+
         /* Declare variadic arguments for entry point of JIT program */
         compiler->EntryPointVarArgs({ JIT::ArgType::Ptr });
-        
+
         /* Declare stack allocation for temporary storage (viewports and scissors) */
         auto stackSize = static_cast<std::uint32_t>(RequiredLocalStackSize(cmdBuffer));
         if (stackSize > 0)
@@ -442,7 +461,7 @@ std::unique_ptr<JITProgram> AssembleGLDeferredCommandBuffer(const GLDeferredComm
 
         /* Assemble GL commands into JIT program */
         compiler->Begin();
-        
+
         while (pc < pcEnd)
         {
             /* Read opcode */
@@ -452,9 +471,9 @@ std::unique_ptr<JITProgram> AssembleGLDeferredCommandBuffer(const GLDeferredComm
             /* Execute command and increment program counter */
             pc += AssembleGLCommand(opcode, pc, *compiler);
         }
-        
+
         compiler->End();
-        
+
         /* Build final program */
         return compiler->FlushProgram();
     }

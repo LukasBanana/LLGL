@@ -17,8 +17,13 @@ namespace LLGL
 
 DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc) :
     instance { instance },
-    desc_    { desc     }
+    desc     { desc     }
 {
+}
+
+void DbgRenderTarget::SetName(const char* name)
+{
+    DbgSetObjectName(*this, name);
 }
 
 Extent2D DbgRenderTarget::GetResolution() const

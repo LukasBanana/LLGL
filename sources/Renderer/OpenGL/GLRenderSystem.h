@@ -55,7 +55,7 @@ class GLRenderSystem final : public RenderSystem
 
         /* ----- Common ----- */
 
-        GLRenderSystem() = default;
+        GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~GLRenderSystem();
 
         void SetConfiguration(const RenderSystemConfiguration& config) override;
@@ -162,13 +162,13 @@ class GLRenderSystem final : public RenderSystem
 
     protected:
 
-        RenderContext* AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc);
+        RenderContext* AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext);
 
     private:
 
-        void CreateGLContextDependentDevices(GLRenderContext& renderContext, const RenderContextDescriptor& desc);
+        void CreateGLContextDependentDevices(GLRenderContext& renderContext);
 
-        void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
+        void LoadGLExtensions(bool hasGLCoreProfile);
         void SetDebugCallback(const DebugCallback& debugCallback);
 
         void QueryRendererInfo();
@@ -218,6 +218,7 @@ class GLRenderSystem final : public RenderSystem
         HWObjectContainer<GLQueryHeap>          queryHeaps_;
         HWObjectContainer<GLFence>              fences_;
 
+        RendererConfigurationOpenGL             config_;
         DebugCallback                           debugCallback_;
 
         #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN

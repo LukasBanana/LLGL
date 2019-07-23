@@ -25,6 +25,10 @@ class D3D12QueryHeap final : public QueryHeap
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& desc);
 
         void ResolveData(ID3D12GraphicsCommandList* commandList, UINT firstQuery, UINT numQueries);
@@ -72,6 +76,8 @@ class D3D12QueryHeap final : public QueryHeap
             UINT                        firstQuery,
             UINT                        numQueries
         );
+
+    private:
 
         D3D12_QUERY_TYPE        nativeType_         = D3D12_QUERY_TYPE_OCCLUSION;
         ComPtr<ID3D12QueryHeap> native_;

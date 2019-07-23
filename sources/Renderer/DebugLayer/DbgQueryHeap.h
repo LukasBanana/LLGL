@@ -10,14 +10,24 @@
 
 
 #include <LLGL/QueryHeap.h>
+#include <vector>
+#include <string>
 
 
 namespace LLGL
 {
 
 
-class DbgQueryHeap : public QueryHeap
+class DbgQueryHeap final : public QueryHeap
 {
+
+    public:
+
+        void SetName(const char* name) override;
+
+    public:
+
+        DbgQueryHeap(QueryHeap& instance, const QueryHeapDescriptor& desc);
 
     public:
 
@@ -28,17 +38,12 @@ class DbgQueryHeap : public QueryHeap
             Ready,
         };
 
-        DbgQueryHeap(QueryHeap& instance, const QueryHeapDescriptor& desc) :
-            QueryHeap        { desc.type            },
-            instance         { instance             },
-            desc             { desc                 }
-        {
-            states.resize(desc.numQueries, State::Uninitialized);
-        }
+    public:
 
-        QueryHeap&          instance;
-        QueryHeapDescriptor desc;
-        std::vector<State>  states;
+        QueryHeap&                  instance;
+        const QueryHeapDescriptor   desc;
+        std::string                 label;
+        std::vector<State>          states;
 
 };
 

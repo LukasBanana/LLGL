@@ -9,6 +9,8 @@
 #include "VKPhysicalDevice.h"
 #include "VKRenderContext.h"
 #include "VKTypes.h"
+#include "Ext/VKExtensionRegistry.h"
+#include "Ext/VKExtensions.h"
 #include "RenderState/VKRenderPass.h"
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"
@@ -115,7 +117,11 @@ void VKCommandBuffer::End()
     recordState_ = RecordState::ReadyForSubmit;
 }
 
-void VKCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void VKCommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
     auto& dstBufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
 
@@ -132,7 +138,12 @@ void VKCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, c
         vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
 }
 
-void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+void VKCommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
     auto& dstBufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
     auto& srcBufferVK = LLGL_CAST(VKBuffer&, srcBuffer);
@@ -152,6 +163,16 @@ void VKCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buf
     }
     else
         vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
+}
+
+void VKCommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    //TODO
 }
 
 void VKCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -656,7 +677,12 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    /*#ifdef LLGL_VK_ENABLE_EXT
+    #if 0//TODO
+    /* Ensure "VK_EXT_conditional_rendering" is supported */
+    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
+
+    /* Begin conditional rendering block */
+    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
     VkConditionalRenderingBeginInfoEXT beginInfo;
     {
         beginInfo.sType     = VK_STRUCTURE_TYPE_CONDITIONAL_RENDERING_BEGIN_INFO_EXT;
@@ -666,18 +692,18 @@ void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t q
         beginInfo.flags     = (mode >= RenderConditionMode::WaitInverted ? VK_CONDITIONAL_RENDERING_INVERTED_BIT_EXT : 0);
     }
     vkCmdBeginConditionalRenderingEXT(commandBuffer_, &beginInfo);
-    //#else
-    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_conditional_rendering");
-    #endif*/
+    #endif
 }
 
 void VKCommandBuffer::EndRenderCondition()
 {
-    /*#ifdef LLGL_VK_ENABLE_EXT
+    #if 0//TODO
+    /* Ensure "VK_EXT_conditional_rendering" is supported */
+    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
+
+    /* End conditional rendering block */
     vkCmdEndConditionalRenderingEXT(commandBuffer_);
-    #else
-    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_conditional_rendering");
-    #endif*/
+    #endif
 }
 
 /* ----- Drawing ----- */
@@ -781,12 +807,26 @@ void VKCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void VKCommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    if (HasExtension(VKExt::EXT_debug_marker))
+    {
+        VkDebugMarkerMarkerInfoEXT markerInfo;
+        {
+            markerInfo.sType        = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
+            markerInfo.pNext        = nullptr;
+            markerInfo.pMarkerName  = name;
+            markerInfo.color[0]     = 0.0f;
+            markerInfo.color[1]     = 0.0f;
+            markerInfo.color[2]     = 0.0f;
+            markerInfo.color[3]     = 0.0f;
+        }
+        vkCmdDebugMarkerBeginEXT(commandBuffer_, &markerInfo);
+    }
 }
 
 void VKCommandBuffer::PopDebugGroup()
 {
-    //TODO
+    if (HasExtension(VKExt::EXT_debug_marker))
+        vkCmdDebugMarkerEndEXT(commandBuffer_);
 }
 
 /* ----- Extended functions ----- */

@@ -35,6 +35,7 @@ GLenum Map( const DataType              dataType            );
 GLenum Map( const PrimitiveType         primitiveType       );
 GLenum Map( const PrimitiveTopology     primitiveTopology   );
 GLenum Map( const TextureType           textureType         );
+GLenum Map( const TextureSwizzle        textureSwizzle      );
 GLenum Map( const Format                format              );
 GLenum Map( const ImageFormat           imageFormat         );
 //GLenum Map( const ImageFormat           imageFormat, bool integerFormat );

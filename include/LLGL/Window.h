@@ -31,6 +31,8 @@ The couterpart is the Canvas interface for mobile platforms.
 class LLGL_EXPORT Window : public Surface
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::Window );
+
     public:
 
         /**
@@ -39,12 +41,10 @@ class LLGL_EXPORT Window : public Surface
         This is because there is no hidden implementation, so copying an instance of this interface is allowed.
         \see Input
         */
-        class LLGL_EXPORT EventListener
+        class LLGL_EXPORT EventListener : public Interface
         {
 
-            public:
-
-                virtual ~EventListener() = default;
+                LLGL_DECLARE_INTERFACE( InterfaceID::Window_EventListener );
 
             protected:
 

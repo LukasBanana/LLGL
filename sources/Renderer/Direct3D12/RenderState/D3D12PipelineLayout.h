@@ -27,6 +27,10 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D12PipelineLayout() = default;
         D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
 
@@ -53,6 +57,8 @@ class D3D12PipelineLayout final : public PipelineLayout
             D3D12_ROOT_SIGNATURE_FLAGS&     signatureFlags,
             const PipelineLayoutDescriptor& layoutDesc
         );
+
+    private:
 
         ComPtr<ID3D12RootSignature> rootSignature_;
 

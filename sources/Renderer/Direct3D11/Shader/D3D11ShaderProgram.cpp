@@ -8,6 +8,7 @@
 #include "D3D11ShaderProgram.h"
 #include "D3D11Shader.h"
 #include "../D3D11Types.h"
+#include "../D3D11ObjectUtils.h"
 #include "../../CheckedCast.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Helper.h"
@@ -39,6 +40,11 @@ D3D11ShaderProgram::D3D11ShaderProgram(ID3D11Device* device, const ShaderProgram
     Link();
 }
 
+void D3D11ShaderProgram::SetName(const char* name)
+{
+    D3D11SetObjectName(inputLayout_.Get(), name);
+}
+
 bool D3D11ShaderProgram::HasErrors() const
 {
     return (linkError_ != LinkError::NoError);
@@ -52,9 +58,9 @@ std::string D3D11ShaderProgram::QueryInfoLog()
         return "";
 }
 
-ShaderReflectionDescriptor D3D11ShaderProgram::QueryReflectionDesc() const
+ShaderReflection D3D11ShaderProgram::QueryReflection() const
 {
-    ShaderReflectionDescriptor reflection;
+    ShaderReflection reflection;
 
     /* Reflect all shaders */
     for (auto shader : shaders_)

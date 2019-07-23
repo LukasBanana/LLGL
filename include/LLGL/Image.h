@@ -290,6 +290,8 @@ class LLGL_EXPORT Image
 
         void ClampRegion(Offset3D& offset, Extent3D& extent) const;
 
+    private:
+
         Extent3D    extent_;
         ImageFormat format_     = ImageFormat::RGBA;
         DataType    dataType_   = DataType::UInt8;

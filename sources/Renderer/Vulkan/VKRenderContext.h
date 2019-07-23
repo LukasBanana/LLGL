@@ -34,11 +34,11 @@ class VKRenderContext final : public RenderContext
         /* ----- Common ----- */
 
         VKRenderContext(
-            const VKPtr<VkInstance>& instance,
-            VkPhysicalDevice physicalDevice,
-            const VKPtr<VkDevice>& device,
-            VKDeviceMemoryManager& deviceMemoryMngr,
-            RenderContextDescriptor desc,
+            const VKPtr<VkInstance>&        instance,
+            VkPhysicalDevice                physicalDevice,
+            const VKPtr<VkDevice>&          device,
+            VKDeviceMemoryManager&          deviceMemoryMngr,
+            RenderContextDescriptor         desc,
             const std::shared_ptr<Surface>& surface
         );
 
@@ -108,7 +108,7 @@ class VKRenderContext final : public RenderContext
 
         void AcquireNextPresentImage();
 
-        /* ----- Common objects ----- */
+    private:
 
         VkInstance                          instance_                   = VK_NULL_HANDLE;
         VkPhysicalDevice                    physicalDevice_             = VK_NULL_HANDLE;

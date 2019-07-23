@@ -9,6 +9,7 @@
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommandExecutor.h"
 
+#include "../../TextureUtils.h"
 #include "../GLRenderContext.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
@@ -33,6 +34,8 @@
 #include "../RenderState/GLResourceHeap.h"
 #include "../RenderState/GLRenderPass.h"
 #include "../RenderState/GLQueryHeap.h"
+
+#include <cstring> // std::strlen
 
 
 namespace LLGL
@@ -61,13 +64,22 @@ void GLImmediateCommandBuffer::End()
     // dummy
 }
 
-void GLImmediateCommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void GLImmediateCommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
     auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
     dstBufferGL.BufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(dataSize), data);
 }
 
-void GLImmediateCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+void GLImmediateCommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
     auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
     auto& srcBufferGL = LLGL_CAST(GLBuffer&, srcBuffer);
@@ -76,6 +88,25 @@ void GLImmediateCommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOf
         static_cast<GLintptr>(srcOffset),
         static_cast<GLintptr>(dstOffset),
         static_cast<GLsizeiptr>(size)
+    );
+}
+
+void GLImmediateCommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    auto& dstTextureGL = LLGL_CAST(GLTexture&, dstTexture);
+    auto& srcTextureGL = LLGL_CAST(GLTexture&, srcTexture);
+    dstTextureGL.CopyImageSubData(
+        static_cast<GLint>(dstLocation.mipLevel),
+        CalcTextureOffset(dstTexture.GetType(), dstLocation.offset, dstLocation.arrayLayer),
+        srcTextureGL,
+        static_cast<GLint>(srcLocation.mipLevel),
+        CalcTextureOffset(srcTexture.GetType(), srcLocation.offset, srcLocation.arrayLayer),
+        extent
     );
 }
 
@@ -408,7 +439,7 @@ void GLImmediateCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t quer
 void GLImmediateCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
-    glBeginConditionalRender(queryHeapGL.GetFirstID(query), GLTypes::Map(mode));
+    glBeginConditionalRender(queryHeapGL.GetID(query), GLTypes::Map(mode));
 }
 
 void GLImmediateCommandBuffer::EndRenderCondition()
@@ -643,12 +674,26 @@ void GLImmediateCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t of
 
 void GLImmediateCommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+    {
+        /* Push debug group name into command stream with default ID no. */
+        const GLint         maxLength       = stateMngr_->GetLimits().maxDebugNameLength;
+        const GLuint        id              = 0;
+        const std::size_t   actualLength    = std::strlen(name);
+        const std::size_t   croppedLength   = std::min(actualLength, static_cast<std::size_t>(maxLength));
+
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, static_cast<GLsizei>(croppedLength), name);
+    }
+    #endif // /GL_KHR_debug
 }
 
 void GLImmediateCommandBuffer::PopDebugGroup()
 {
-    //TODO
+    #ifdef GL_KHR_debug
+    if (HasExtension(GLExt::KHR_debug))
+        glPopDebugGroup();
+    #endif // /GL_KHR_debug
 }
 
 /* ----- Direct Resource Access ------ */

@@ -7,6 +7,7 @@
 
 #include "D3D12CommandBuffer.h"
 #include "D3D12CommandSignaturePool.h"
+#include "../D3D12ObjectUtils.h"
 #include "../D3D12RenderContext.h"
 #include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
@@ -24,7 +25,10 @@
 #include "../RenderState/D3D12QueryHeap.h"
 
 #include "../D3DX12/d3dx12.h"
+#include <pix.h>
+
 #include <algorithm>
+#include <codecvt>
 
 
 namespace LLGL
@@ -35,6 +39,11 @@ D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const Co
     commandSignaturePool_ { &(renderSystem.GetCommandSignaturePool()) }
 {
     CreateDevices(renderSystem, desc);
+}
+
+void D3D12CommandBuffer::SetName(const char* name)
+{
+    D3D12SetObjectName(commandList_.Get(), name);
 }
 
 /* ----- Encoding ----- */
@@ -60,17 +69,53 @@ void D3D12CommandBuffer::End()
     numBoundScissorRects_ = 0;
 }
 
-void D3D12CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void D3D12CommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
     dstBufferD3D.UpdateDynamicSubresource(commandContext_, data, static_cast<UINT64>(dataSize), dstOffset);
 }
 
-void D3D12CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+//TODO: resource transition and barrieres
+void D3D12CommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
     auto& srcBufferD3D = LLGL_CAST(D3D12Buffer&, srcBuffer);
     commandList_->CopyBufferRegion(dstBufferD3D.GetNative(), dstOffset, srcBufferD3D.GetNative(), srcOffset, size);
+}
+
+//TODO: resource transition and barrieres
+void D3D12CommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    auto& dstTextureD3D = LLGL_CAST(D3D12Texture&, dstTexture);
+    auto& srcTextureD3D = LLGL_CAST(D3D12Texture&, srcTexture);
+
+    const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = dstTextureD3D.CalcCopyLocation(dstLocation);
+    const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = dstTextureD3D.CalcCopyLocation(dstLocation);
+
+    const D3D12_BOX srcBox = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
+
+    commandList_->CopyTextureRegion(
+        &dstLocationD3D,                            // pDst
+        static_cast<UINT>(dstLocation.offset.x),    // DstX
+        static_cast<UINT>(dstLocation.offset.y),    // DstY
+        static_cast<UINT>(dstLocation.offset.z),    // DstZ
+        &srcLocationD3D,                            // pSrc
+        &srcBox                                     // pSrcBox
+    );
 }
 
 void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -525,12 +570,14 @@ void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void D3D12CommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    std::wstring nameWStr = converter.from_bytes(name);
+    PIXBeginEvent(commandList_.Get(), 0, nameWStr.c_str());
 }
 
 void D3D12CommandBuffer::PopDebugGroup()
 {
-    //TODO
+    PIXEndEvent(commandList_.Get());
 }
 
 
@@ -560,10 +607,6 @@ void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem, const Co
     {
         auto& cmdAlloc = cmdAllocators_[i];
         cmdAlloc = device.CreateDXCommandAllocator(listType);
-        #ifdef LLGL_DEBUG
-        std::wstring name = L"LLGL::D3D12CommandBuffer::commandAllocator[" + std::to_wstring(i) + L"]";
-        cmdAlloc->SetName(name.c_str());
-        #endif
     }
 
     /* Create graphics command list and close it (they are created in recording mode) */

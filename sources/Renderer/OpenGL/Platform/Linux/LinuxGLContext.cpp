@@ -34,10 +34,14 @@ typedef GLXContext (*GXLCREATECONTEXTATTRIBARBPROC)(Display*, GLXFBConfig, GLXCo
  * GLContext class
  */
 
-std::unique_ptr<GLContext> GLContext::Create(const RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
+std::unique_ptr<GLContext> GLContext::Create(
+    const RenderContextDescriptor&      desc,
+    const RendererConfigurationOpenGL&  config,
+    Surface&                            surface,
+    GLContext*                          sharedContext)
 {
     LinuxGLContext* sharedContextGLX = (sharedContext != nullptr ? LLGL_CAST(LinuxGLContext*, sharedContext) : nullptr);
-    return MakeUnique<LinuxGLContext>(desc, surface, sharedContextGLX);
+    return MakeUnique<LinuxGLContext>(desc, config, surface, sharedContextGLX);
 }
 
 
@@ -45,12 +49,17 @@ std::unique_ptr<GLContext> GLContext::Create(const RenderContextDescriptor& desc
  * LinuxGLContext class
  */
 
-LinuxGLContext::LinuxGLContext(const RenderContextDescriptor& desc, Surface& surface, LinuxGLContext* sharedContext) :
+LinuxGLContext::LinuxGLContext(
+    const RenderContextDescriptor&      desc,
+    const RendererConfigurationOpenGL&  config,
+    Surface&                            surface,
+    LinuxGLContext*                     sharedContext)
+:
     GLContext { sharedContext }
 {
     NativeHandle nativeHandle;
     surface.GetNativeHandle(&nativeHandle);
-    CreateContext(desc, nativeHandle, sharedContext);
+    CreateContext(desc, config, nativeHandle, sharedContext);
 }
 
 LinuxGLContext::~LinuxGLContext()
@@ -92,9 +101,10 @@ bool LinuxGLContext::Activate(bool activate)
 }
 
 void LinuxGLContext::CreateContext(
-    const RenderContextDescriptor&  contextDesc,
-    const NativeHandle&             nativeHandle,
-    LinuxGLContext*                 sharedContext)
+    const RenderContextDescriptor&      contextDesc,
+    const RendererConfigurationOpenGL&  config,
+    const NativeHandle&                 nativeHandle,
+    LinuxGLContext*                     sharedContext)
 {
     GLXContext glcShared = (sharedContext != nullptr ? sharedContext->glc_ : nullptr);
 
@@ -107,12 +117,10 @@ void LinuxGLContext::CreateContext(
         throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
 
     /* Create OpenGL context with X11 lib */
-    const auto& profileDesc = contextDesc.profileOpenGL;
-
-    if (profileDesc.contextProfile == OpenGLContextProfile::CoreProfile)
+    if (config.contextProfile == OpenGLContextProfile::CoreProfile)
     {
         /* Create core profile */
-        glc_ = CreateContextCoreProfile(glcShared, profileDesc.majorVersion, profileDesc.minorVersion);
+        glc_ = CreateContextCoreProfile(glcShared, config.majorVersion, config.minorVersion);
     }
 
     if (!glc_)
@@ -140,7 +148,7 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
         major = 3;
         minor = 2;
     }
-    
+
     /* Query supported GL versions */
     GLint majorGL = 1, minorGL = 1;
     QueryGLVersion(majorGL, minorGL);

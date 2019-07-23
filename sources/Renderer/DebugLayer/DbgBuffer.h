@@ -10,28 +10,32 @@
 
 
 #include <LLGL/Buffer.h>
+#include <string>
 
 
 namespace LLGL
 {
 
 
-class DbgBuffer : public Buffer
+class DbgBuffer final : public Buffer
 {
 
     public:
 
-        DbgBuffer(Buffer& instance, long bindFlags) :
-            Buffer   { bindFlags },
-            instance { instance  }
-        {
-        }
+        void SetName(const char* name) override;
 
-        Buffer&             instance;
-        BufferDescriptor    desc;
-        std::uint64_t       elements    = 0;
-        bool                initialized = false;
-        bool                mapped      = false;
+    public:
+
+        DbgBuffer(Buffer& instance, const BufferDescriptor& desc);
+
+    public:
+
+        Buffer&                 instance;
+        const BufferDescriptor  desc;
+        std::string             label;
+        std::uint64_t           elements    = 0;
+        bool                    initialized = false;
+        bool                    mapped      = false;
 
 };
 

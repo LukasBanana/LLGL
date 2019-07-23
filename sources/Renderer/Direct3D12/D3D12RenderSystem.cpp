@@ -126,11 +126,6 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
         );
     }
 
-    #ifdef LLGL_DEBUG
-    std::wstring debugName = L"LLGL::D3D12RenderSystem::buffers[" + std::to_wstring(buffers_.size()) + L"]";
-    bufferD3D->GetNative()->SetName(debugName.c_str());
-    #endif // /LLGL_DEBUG
-
     /* Execute upload commands and wait for GPU to finish execution */
     ExecuteCommandList();
     SyncGPU();
@@ -587,6 +582,7 @@ void D3D12RenderSystem::QueryRenderingCaps()
 
         /* Set extended attributes */
         caps.features.hasConservativeRasterization  = (GetFeatureLevel() >= D3D_FEATURE_LEVEL_12_0);
+        caps.features.hasTextureViewSwizzle         = true;
 
         caps.limits.maxViewports                    = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
         caps.limits.maxViewportSize[0]              = D3D12_VIEWPORT_BOUNDS_MAX;

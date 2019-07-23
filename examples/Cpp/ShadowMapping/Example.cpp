@@ -65,6 +65,18 @@ public:
 
         commands->SetClearColor(defaultClearColor);
 
+        // Label objects for debugging
+        context->SetName("BackBuffer");
+
+        vertexBuffer->SetName("Buffer.Vertices");
+        constantBuffer->SetName("Buffer.Constants");
+
+        shaderProgramShadowMap->SetName("ShadowMap.ShaderProgram");
+        shaderProgramScene->SetName("Scene.ShaderProgram");
+
+        shadowMap->SetName("ShadowMap.Texture");
+        shadowMapRenderTarget->SetName("ShadowMap.RenderTarget");
+
         #if 0
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
@@ -112,6 +124,22 @@ private:
                 {
                     { LLGL::ShaderType::Vertex,   "Scene.vert" },
                     { LLGL::ShaderType::Fragment, "Scene.frag" },
+                },
+                { vertexFormat }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            shaderProgramShadowMap = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "ShadowMap.450core.vert.spv" }
+                },
+                { vertexFormat }
+            );
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" },
+                    { LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" },
                 },
                 { vertexFormat }
             );
@@ -228,6 +256,7 @@ private:
                 pipelineDesc.rasterizer.depthBias.constantFactor    = 4.0f;
                 pipelineDesc.rasterizer.depthBias.slopeFactor       = 4.0f;
                 pipelineDesc.blend.targets[0].colorMask             = { false, false, false, false };
+                pipelineDesc.viewports                              = { shadowMapResolution };
             }
             pipelineShadowMap = renderer->CreateGraphicsPipeline(pipelineDesc);
         }
@@ -330,7 +359,6 @@ private:
         commands->BeginRenderPass(*shadowMapRenderTarget);
         {
             commands->Clear(LLGL::ClearFlags::Depth);
-            commands->SetViewport(shadowMapResolution);
             commands->SetGraphicsPipeline(*pipelineShadowMap);
             commands->SetGraphicsResourceHeap(*resourceHeapShadowMap);
             RenderAllMeshes();

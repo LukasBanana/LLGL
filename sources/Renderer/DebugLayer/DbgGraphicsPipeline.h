@@ -10,25 +10,30 @@
 
 
 #include <LLGL/GraphicsPipeline.h>
+#include <LLGL/GraphicsPipelineFlags.h>
+#include <string>
 
 
 namespace LLGL
 {
 
 
-class DbgGraphicsPipeline : public GraphicsPipeline
+class DbgGraphicsPipeline final : public GraphicsPipeline
 {
 
     public:
 
-        DbgGraphicsPipeline(GraphicsPipeline& instance, const GraphicsPipelineDescriptor& desc) :
-            instance { instance },
-            desc     { desc     }
-        {
-        }
+        void SetName(const char* name) override;
+
+    public:
+
+        DbgGraphicsPipeline(GraphicsPipeline& instance, const GraphicsPipelineDescriptor& desc);
+
+    public:
 
         GraphicsPipeline&                   instance;
         const GraphicsPipelineDescriptor    desc;
+        std::string                         label;
 
 };
 

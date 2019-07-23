@@ -160,7 +160,7 @@ LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>
 Some rendering APIs, such as OpenGL 2.0, do not provide sufficient functionality for shader reflection.
 Hence, this utility function cannot be used in conjunction with all renderer versions.
 */
-LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDescriptor& reflectionDesc);
+LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflection& reflection);
 
 /**
 \brief Generates a pipeline layout descriptor by parsing the specified string.
@@ -190,17 +190,18 @@ LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDe
 \code
 // Standard way of declaring a pipeline layout:
 LLGL::PipelineLayoutDescriptor myLayoutDescStd;
-{
-    myLayoutDescStd.bindings =
-    {
-        LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0u,     "Scene"    },
-        LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 1u                 },
-        LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 2u, 4u, "TexArray" },
-        LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage,                                 3u                 },
-    };
-}
-auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescStd);
 
+myLayoutDescStd.bindings = {
+    LLGL::BindingDescriptor{ "Scene",    LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0u,     },
+    LLGL::BindingDescriptor{             LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 1u      },
+    LLGL::BindingDescriptor{ "TexArray", LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 2u, 4u, },
+    LLGL::BindingDescriptor{             LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage,                                 3u      },
+};
+
+auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescStd);
+\endcode
+The same pipeline layout can be created with the following usage of this utility function:
+\code
 // Abbreviated way of declaring a pipeline layout using the utility function:
 auto myLayoutDescUtil = LLGL::PipelineLayoutDesc(
     "cbuffer(Scene@0):frag:vert,"

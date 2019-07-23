@@ -17,6 +17,8 @@ namespace LLGL
 {
 
 
+class GLTexture;
+
 // Wrapper class for GL framebuffer objects (FBOs).
 class GLFramebuffer
 {
@@ -35,26 +37,8 @@ class GLFramebuffer
         void GenFramebuffer();
         void DeleteFramebuffer();
 
-        void Bind(const GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
-        void Unbind(const GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
-
-        static void AttachTexture1D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel);
-        static void AttachTexture2D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel);
-        static void AttachTexture3D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel, GLint zOffset);
-        static void AttachTextureLayer(GLenum attachment, GLuint textureID, GLint mipLevel, GLint layer);
-
-        static void AttachRenderbuffer(GLenum attachment, GLuint renderbufferID);
-
-        static void Blit(GLint width, GLint height, GLenum mask);
-
-        static void Blit(
-            const Offset2D& srcPos0,
-            const Offset2D& srcPos1,
-            const Offset2D& destPos0,
-            const Offset2D& destPos1,
-            GLenum          mask,
-            GLenum          filter
-        );
+        void Bind(GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
+        void Unbind(GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
 
         // Sets the default framebuffer parameters and return true on success, otherwise the "GL_ARB_framebuffer_no_attachments" extension is not supported.
         bool FramebufferParameters(
@@ -82,6 +66,29 @@ class GLFramebuffer
         {
             return Valid();
         }
+
+    public:
+
+        static void AttachTexture(
+            const GLTexture&    texture,
+            GLenum              attachment,
+            GLint               mipLevel,
+            GLint               arrayLayer,
+            GLenum              target = GL_FRAMEBUFFER
+        );
+
+        static void AttachRenderbuffer(GLenum attachment, GLuint renderbufferID);
+
+        static void Blit(GLint width, GLint height, GLenum mask);
+
+        static void Blit(
+            const Offset2D& srcPos0,
+            const Offset2D& srcPos1,
+            const Offset2D& destPos0,
+            const Offset2D& destPos1,
+            GLenum          mask,
+            GLenum          filter
+        );
 
     private:
 

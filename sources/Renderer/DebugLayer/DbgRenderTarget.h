@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderTarget.h>
+#include <string>
 
 
 namespace LLGL
@@ -18,30 +19,30 @@ namespace LLGL
 
 class RenderingDebugger;
 
-class DbgRenderTarget : public RenderTarget
+class DbgRenderTarget final : public RenderTarget
 {
+
+    public:
+
+        void SetName(const char* name) override;
+
+        Extent2D GetResolution() const override;
+        std::uint32_t GetNumColorAttachments() const override;
+
+        bool HasDepthAttachment() const override;
+        bool HasStencilAttachment() const override;
+
+        const RenderPass* GetRenderPass() const override;
 
     public:
 
         DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc);
 
-        Extent2D GetResolution() const override;
-        std::uint32_t GetNumColorAttachments() const override;
-        bool HasDepthAttachment() const override;
-        bool HasStencilAttachment() const override;
-        const RenderPass* GetRenderPass() const override;
+    public:
 
-        // Returns the render target descriptor of this debug layer object.
-        inline const RenderTargetDescriptor& GetDesc() const
-        {
-            return desc_;
-        }
-
-        RenderTarget&           instance;
-
-    private:
-
-        RenderTargetDescriptor  desc_;
+        RenderTarget&                   instance;
+        const RenderTargetDescriptor    desc;
+        std::string                     label;
 
 };
 

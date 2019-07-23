@@ -54,7 +54,6 @@ enum class ResourceType
 \see BufferDescriptor::bindFlags
 \see TextureDescriptor::bindFlags
 \see BindingDescriptor::bindFlags
-\see ShaderReflectionDescriptor::ResourceView::bindFlags
 */
 struct BindFlags
 {
@@ -84,7 +83,7 @@ struct BindFlags
         \brief The resource can be used to bind a buffer for read access.
         \remarks This can be used for Buffer resources (e.g. \c samplerBuffer in GLSL, or \c StructuredBuffer in HLSL) and
         Texture resources (e.g. \c sampler2D in GLSL, or \c Texture2D in HLSL).
-        \todo Maybe rename to SRV.
+        \todo Maybe rename to \c SRV or \c ShaderRead.
         */
         SampleBuffer            = (1 << 3),
 
@@ -92,7 +91,7 @@ struct BindFlags
         \brief The resource can be used to bind a storage for unordered read/write access.
         \remarks This can be used for Buffer resources (e.g. \c buffer in GLSL, or \c RWStructuredBuffer in HLSL) and
         Texture resources (e.g. \c image2D in GLSL, or \c RWTexture2D in HLSL).
-        \todo Maybe rename to UAV.
+        \todo Maybe rename to \c UAV or \c ShaderWrite.
         */
         RWStorageBuffer         = (1 << 4),
 
@@ -118,7 +117,7 @@ struct BindFlags
         \note This cannot be used together with the BindFlags::DepthStencilAttachment flag.
         \see AttachmentDescriptor::texture
         \see AttachmentType::Color
-        \todo Maybe rename to RTV
+        \todo Maybe rename to \c RTV.
         */
         ColorAttachment         = (1 << 7),
 
@@ -128,7 +127,7 @@ struct BindFlags
         \note This cannot be used together with the BindFlags::ColorAttachment flag.
         \see AttachmentDescriptor::texture
         \see AttachmentType::DepthStencil
-        \todo Maybe rename to DSV
+        \todo Maybe rename to \c DSV.
         */
         DepthStencilAttachment  = (1 << 8),
     };
@@ -188,6 +187,16 @@ struct MiscFlags
         \remarks This can only be used with multi-sampled Texture resources (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray).
         */
         FixedSamples = (1 << 1),
+
+        /**
+        \brief Generates MIP-maps at texture creation time with the initial image data (if specified).
+        \remarks This can be used to generate all MIP-maps when a new texture is created without explicitly encoding the CommandBuffer::GenerateMips function.
+        The number of MIP-maps being generated depends on the \c mipLevels attribute in TextureDescriptor.
+        \see RenderSystem::CreateTexture
+        \see TextureDescriptor::mipLevels
+        \todo Not implemented yet.
+        */
+        GenerateMips = (1 << 2),
     };
 };
 

@@ -7,6 +7,7 @@
 
 #include "D3D11Texture.h"
 #include "../D3D11Types.h"
+#include "../D3D11ObjectUtils.h"
 #include "../D3D11ResourceFlags.h"
 #include "../../DXCommon/DXCore.h"
 
@@ -18,6 +19,15 @@ namespace LLGL
 D3D11Texture::D3D11Texture(const TextureType type) :
     Texture { type }
 {
+}
+
+void D3D11Texture::SetName(const char* name)
+{
+    D3D11SetObjectName(GetNative().resource.Get(), name);
+    if (srv_)
+        D3D11SetObjectNameSubscript(srv_.Get(), name, ".SRV");
+    if (uav_)
+        D3D11SetObjectNameSubscript(uav_.Get(), name, ".UAV");
 }
 
 Extent3D D3D11Texture::QueryMipExtent(std::uint32_t mipLevel) const
@@ -264,7 +274,7 @@ void D3D11Texture::UpdateSubresource(
     std::size_t                 threadCount)
 {
     /* Get destination subresource index */
-    auto dstSubresource = D3D11CalcSubresource(mipLevel, arrayLayer, numMipLevels_);
+    auto dstSubresource = CalcSubresource(mipLevel, arrayLayer);
     auto srcPitch       = DataTypeSize(imageDesc.dataType) * ImageFormatSize(imageDesc.format);
 
     /* Check if source image must be converted */
@@ -394,7 +404,7 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
         0,
         0, 0, 0, // DstX, DstY, DstZ
         native_.resource.Get(),
-        D3D11CalcSubresource(mipLevel, 0, numMipLevels_),
+        CalcSubresource(mipLevel, 0),
         nullptr
     );
 }
@@ -531,6 +541,78 @@ void D3D11Texture::CreateSubresourceDSV(
     }
     auto hr = device->CreateDepthStencilView(native_.resource.Get(), &dsvDesc, dsvOutput);
     DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView",  "for texture subresource");
+}
+
+// Returns true if the specified texture type contains an array layer for D3D11 textures
+static bool HasArrayLayer(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1DArray:
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::Texture2DMSArray:
+        case TextureType::TextureCubeArray:
+            return true;
+        default:
+            return false;
+    }
+}
+
+UINT D3D11Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer) const
+{
+    if (HasArrayLayer(GetType()))
+        return D3D11CalcSubresource(mipLevel, arrayLayer, numMipLevels_);
+    else
+        return D3D11CalcSubresource(mipLevel, 0, numMipLevels_);
+}
+
+UINT D3D11Texture::CalcSubresource(const TextureLocation& location) const
+{
+    return CalcSubresource(location.mipLevel, location.arrayLayer);
+}
+
+D3D11_BOX D3D11Texture::CalcRegion(const Offset3D& offset, const Extent3D& extent) const
+{
+    /* Ignore sub components of offset and extent if it's handled by the subresource index */
+    switch (GetType())
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            return CD3D11_BOX(
+                offset.x,
+                0,
+                0,
+                offset.x + static_cast<LONG>(extent.width),
+                1,
+                1
+            );
+        case TextureType::Texture2D:
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            return CD3D11_BOX(
+                offset.x,
+                offset.y,
+                0,
+                offset.x + static_cast<LONG>(extent.width),
+                offset.y + static_cast<LONG>(extent.height),
+                1
+            );
+        case TextureType::Texture3D:
+            return CD3D11_BOX(
+                offset.x,
+                offset.y,
+                offset.z,
+                offset.x + static_cast<LONG>(extent.width),
+                offset.y + static_cast<LONG>(extent.height),
+                offset.z + static_cast<LONG>(extent.depth)
+            );
+        default:
+            return CD3D11_BOX(0,0,0 , 0,0,0);
+    }
 }
 
 

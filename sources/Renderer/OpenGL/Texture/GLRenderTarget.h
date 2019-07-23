@@ -27,8 +27,7 @@ class GLRenderTarget final : public RenderTarget
 
     public:
 
-        GLRenderTarget(const RenderTargetDescriptor& desc);
-        ~GLRenderTarget();
+        void SetName(const char* name) override;
 
         Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
@@ -38,7 +37,10 @@ class GLRenderTarget final : public RenderTarget
 
         const RenderPass* GetRenderPass() const override;
 
-        /* ----- Extended Internal Functions ----- */
+    public:
+
+        GLRenderTarget(const RenderTargetDescriptor& desc);
+        ~GLRenderTarget();
 
         // Blits the multi-sample framebuffer onto the default framebuffer.
         void BlitOntoFramebuffer();
@@ -82,7 +84,7 @@ class GLRenderTarget final : public RenderTarget
 
         void BlitFramebuffer();
 
-        /* === Members === */
+    private:
 
         Extent2D                    resolution_;
 

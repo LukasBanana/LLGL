@@ -25,6 +25,8 @@ namespace LLGL
 class LLGL_EXPORT CommandBufferExt : public CommandBuffer
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::CommandBufferExt );
+
     public:
 
         /* ----- Direct Resource Access ------ */

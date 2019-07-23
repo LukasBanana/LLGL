@@ -6,6 +6,7 @@
  */
 
 #include "GLRenderTarget.h"
+#include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
@@ -81,7 +82,12 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
 
 GLRenderTarget::~GLRenderTarget()
 {
-    GLStateManager::active->NotifyGLRenderTargetRelease(this);
+    GLStateManager::Get().NotifyGLRenderTargetRelease(this);
+}
+
+void GLRenderTarget::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_FRAMEBUFFER, framebuffer_.GetID(), name);
 }
 
 Extent2D GLRenderTarget::GetResolution() const
@@ -152,14 +158,14 @@ void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
 {
     if (colorAttachmentIndex < colorAttachments_.size())
     {
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFramebuffer().GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFramebuffer().GetID());
         {
             glReadBuffer(colorAttachments_[colorAttachmentIndex]);
             glDrawBuffer(GL_BACK);
             BlitFramebuffer();
         }
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
     }
 }
 
@@ -201,7 +207,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
     colorAttachments_.reserve(numColorAttachments);
 
     /* Bind primary FBO */
-    GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
+    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
     {
         if (framebufferMS_)
         {
@@ -224,7 +230,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
     if (framebufferMS_)
     {
         /* Bind multi-sampled FBO */
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebufferMS_.GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebufferMS_.GetID());
         {
             /* Create depth-stencil attachmnets */
             AttachAllDepthStencilBuffers(desc.attachments);
@@ -253,7 +259,7 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescri
     #endif // /GL_ARB_framebuffer_no_attachments
     {
         /* Bind primary FBO */
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
 
         /* Create dummy renderbuffer attachment */
         renderbuffer_.GenRenderbuffer();
@@ -335,7 +341,7 @@ static GLint GetTexInternalFormat(const GLTexture& textureGL)
 {
     GLint internalFormat = GL_RGBA;
     {
-        GLStateManager::active->BindGLTexture(textureGL);
+        GLStateManager::Get().BindGLTexture(textureGL);
         glGetTexLevelParameteriv(GLTypes::Map(textureGL.GetType()), 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
     }
     return internalFormat;
@@ -358,32 +364,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor&
     auto attachment = MakeFramebufferAttachment(attachmentDesc.type);
 
     /* Attach texture to framebuffer */
-    switch (texture.GetType())
-    {
-        case TextureType::Texture1D:
-            GLFramebuffer::AttachTexture1D(attachment, GL_TEXTURE_1D, textureID, static_cast<GLint>(mipLevel));
-            break;
-        case TextureType::Texture2D:
-            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D, textureID, static_cast<GLint>(mipLevel));
-            break;
-        case TextureType::Texture3D:
-            GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_3D, textureID, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
-            break;
-        case TextureType::TextureCube:
-            GLFramebuffer::AttachTexture2D(attachment, GLTypes::ToTextureCubeMap(attachmentDesc.arrayLayer), textureID, static_cast<GLint>(mipLevel));
-            break;
-        case TextureType::Texture1DArray:
-        case TextureType::Texture2DArray:
-        case TextureType::TextureCubeArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
-            break;
-        case TextureType::Texture2DMS:
-            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D_MULTISAMPLE, textureID, 0);
-            break;
-        case TextureType::Texture2DMSArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, 0, static_cast<GLint>(attachmentDesc.arrayLayer));
-            break;
-    }
+    GLFramebuffer::AttachTexture(textureGL, attachment, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
 }
 
 void GLRenderTarget::CreateRenderbuffersMS(const GLenum* internalFormats)

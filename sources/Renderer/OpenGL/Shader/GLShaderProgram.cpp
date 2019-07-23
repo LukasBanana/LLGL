@@ -8,6 +8,7 @@
 #include "GLShaderProgram.h"
 #include "GLShader.h"
 #include "GLShaderBindingLayout.h"
+#include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
@@ -40,7 +41,12 @@ GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
 GLShaderProgram::~GLShaderProgram()
 {
     glDeleteProgram(id_);
-    GLStateManager::active->NotifyShaderProgramRelease(id_);
+    GLStateManager::Get().NotifyShaderProgramRelease(id_);
+}
+
+void GLShaderProgram::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_PROGRAM, GetID(), name);
 }
 
 bool GLShaderProgram::HasErrors() const
@@ -73,9 +79,9 @@ std::string GLShaderProgram::QueryInfoLog()
     return "";
 }
 
-ShaderReflectionDescriptor GLShaderProgram::QueryReflectionDesc() const
+ShaderReflection GLShaderProgram::QueryReflection() const
 {
-    ShaderReflectionDescriptor reflection;
+    ShaderReflection reflection;
 
     /* Reflect shader program */
     Reflect(reflection);
@@ -281,7 +287,7 @@ void GLShaderProgram::BuildTransformFeedbackVaryingsNV(const std::vector<StreamO
 
 #endif
 
-void GLShaderProgram::Reflect(ShaderReflectionDescriptor& reflection) const
+void GLShaderProgram::Reflect(ShaderReflection& reflection) const
 {
     QueryVertexAttributes(reflection);
     QueryStreamOutputAttributes(reflection);
@@ -370,7 +376,7 @@ struct GLVertexAttribute
     std::uint32_t   location;
 };
 
-void GLShaderProgram::QueryVertexAttributes(ShaderReflectionDescriptor& reflection) const
+void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
 {
     /* Query active vertex attributes */
     std::vector<char> attribName;
@@ -435,7 +441,7 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflectionDescriptor& reflecti
     }
 }
 
-void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflectionDescriptor& reflection) const
+void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) const
 {
     StreamOutputFormat streamOutputFormat;
     StreamOutputAttribute soAttrib;
@@ -571,7 +577,7 @@ static long GetStageFlagsFromResourceProperties(GLsizei count, const GLenum* pro
 
 #endif // /GL_ARB_program_interface_query
 
-void GLShaderProgram::QueryConstantBuffers(ShaderReflectionDescriptor& reflection) const
+void GLShaderProgram::QueryConstantBuffers(ShaderReflection& reflection) const
 {
     /* Query active uniform blocks */
     std::vector<char> blockName;
@@ -582,37 +588,37 @@ void GLShaderProgram::QueryConstantBuffers(ShaderReflectionDescriptor& reflectio
     /* Iterate over all uniform blocks */
     for (GLuint i = 0; i < static_cast<GLuint>(numUniformBlocks); ++i)
     {
-        ShaderReflectionDescriptor::ResourceView resourceView;
+        ShaderResource resource;
         {
             /* Initialize resource view descriptor */
-            resourceView.type           = ResourceType::Buffer;
-            resourceView.stageFlags     = StageFlags::AllStages;
-            resourceView.bindFlags      = BindFlags::ConstantBuffer;
+            resource.binding.type           = ResourceType::Buffer;
+            resource.binding.stageFlags     = StageFlags::AllStages;
+            resource.binding.bindFlags      = BindFlags::ConstantBuffer;
 
             /* Query uniform block name */
             GLsizei nameLength = 0;
             glGetActiveUniformBlockName(id_, i, maxNameLength, &nameLength, blockName.data());
-            resourceView.name = std::string(blockName.data());
+            resource.binding.name = std::string(blockName.data());
 
             /* Query uniform block size */
             GLint blockSize = 0;
             glGetActiveUniformBlockiv(id_, i, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
-            resourceView.constantBufferSize = static_cast<std::uint32_t>(blockSize);
+            resource.constantBufferSize = static_cast<std::uint32_t>(blockSize);
 
             #ifdef GL_ARB_program_interface_query
             /* Query resource view properties */
-            QueryBufferProperties(resourceView, GL_UNIFORM_BLOCK, i);
+            QueryBufferProperties(resource, GL_UNIFORM_BLOCK, i);
             #else
             /* Set binding slot to invalid index */
-            resourceView.stageFlags = StageFlags::AllStages;
-            resourceView.slot       = Constants::invalidSlot;
+            resource.binding.stageFlags = StageFlags::AllStages;
+            resource.binding.slot       = Constants::invalidSlot;
             #endif
         }
-        reflection.resourceViews.push_back(resourceView);
+        reflection.resources.push_back(resource);
     }
 }
 
-void GLShaderProgram::QueryStorageBuffers(ShaderReflectionDescriptor& reflection) const
+void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
 {
     #ifndef __APPLE__
 
@@ -635,27 +641,27 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflectionDescriptor& reflection
     /* Iterate over all shader storage blocks */
     for (GLuint i = 0; i < static_cast<GLuint>(numStorageBlocks); ++i)
     {
-        ShaderReflectionDescriptor::ResourceView resourceView;
+        ShaderResource resource;
         {
             /* Initialize resource view descriptor */
-            resourceView.type       = ResourceType::Buffer;
-            resourceView.bindFlags  = BindFlags::RWStorageBuffer;
+            resource.binding.type       = ResourceType::Buffer;
+            resource.binding.bindFlags  = BindFlags::RWStorageBuffer;
 
             /* Query shader storage block name */
             GLsizei nameLength = 0;
             glGetProgramResourceName(id_, GL_SHADER_STORAGE_BLOCK, i, maxNameLength, &nameLength, blockName.data());
-            resourceView.name = std::string(blockName.data());
+            resource.binding.name = std::string(blockName.data());
 
             /* Query resource view properties */
-            QueryBufferProperties(resourceView, GL_SHADER_STORAGE_BLOCK, i);
+            QueryBufferProperties(resource, GL_SHADER_STORAGE_BLOCK, i);
         }
-        reflection.resourceViews.push_back(resourceView);
+        reflection.resources.push_back(resource);
     }
 
     #endif
 }
 
-void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) const
+void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
 {
     /* Query active uniforms */
     std::vector<char> uniformName;
@@ -679,12 +685,12 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
         if (uniformType == UniformType::Sampler || uniformType == UniformType::Image)
         {
             /* Append GLSL compiled texture-sampler as both texture and sampler resource */
-            ShaderReflectionDescriptor::ResourceView resourceView;
+            ShaderResource resource;
             {
-                /* Initiaöize name, type, and binding flags for resource view */
-                resourceView.name       = std::string(uniformName.data());
-                resourceView.type       = ResourceType::Texture;
-                resourceView.bindFlags  = (uniformType == UniformType::Image ? BindFlags::RWStorageBuffer : BindFlags::SampleBuffer);
+                /* Initialize name, type, and binding flags for resource view */
+                resource.binding.name       = std::string(uniformName.data());
+                resource.binding.type       = ResourceType::Texture;
+                resource.binding.bindFlags  = (uniformType == UniformType::Image ? BindFlags::RWStorageBuffer : BindFlags::SampleBuffer);
 
                 /* Get binding slot from uniform value */
                 GLint uniformValue      = 0;
@@ -692,7 +698,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
 
                 glGetUniformiv(id_, uniformLocation, &uniformValue);
 
-                resourceView.slot = static_cast<std::uint32_t>(uniformValue);
+                resource.binding.slot = static_cast<std::uint32_t>(uniformValue);
 
                 #ifdef GL_ARB_program_interface_query
                 /* Query resource properties */
@@ -711,28 +717,28 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
                 if (GLGetProgramResourceProperties(id_, GL_UNIFORM, i, 7, props, params))
                 {
                     /* Determine stage flags by program resource properties */
-                    resourceView.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
-                    resourceView.arraySize  = static_cast<std::uint32_t>(params[6]);
+                    resource.binding.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
+                    resource.binding.arraySize  = static_cast<std::uint32_t>(params[6]);
                 }
                 else
                 #endif // /GL_ARB_program_interface_query
                 {
                     /* Set binding slot to invalid index */
-                    resourceView.stageFlags = StageFlags::AllStages;
-                    resourceView.arraySize  = 1;
+                    resource.binding.stageFlags = StageFlags::AllStages;
+                    resource.binding.arraySize  = 1;
                 }
             }
-            reflection.resourceViews.push_back(resourceView);
+            reflection.resources.push_back(resource);
             {
-                resourceView.type       = ResourceType::Sampler;
-                resourceView.bindFlags  = 0;
+                resource.binding.type       = ResourceType::Sampler;
+                resource.binding.bindFlags  = 0;
             }
-            reflection.resourceViews.push_back(resourceView);
+            reflection.resources.push_back(resource);
         }
         else
         {
             /* Append default uniform */
-            ShaderReflectionDescriptor::Uniform uniform;
+            ShaderUniform uniform;
             {
                 uniform.name        = std::string(uniformName.data());
                 uniform.type        = uniformType;
@@ -746,7 +752,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
 
 #ifdef GL_ARB_program_interface_query
 
-void GLShaderProgram::QueryBufferProperties(ShaderReflectionDescriptor::ResourceView& resourceView, GLenum programInterface, GLuint resourceIndex) const
+void GLShaderProgram::QueryBufferProperties(ShaderResource& resource, GLenum programInterface, GLuint resourceIndex) const
 {
     const GLenum props[] =
     {
@@ -762,14 +768,14 @@ void GLShaderProgram::QueryBufferProperties(ShaderReflectionDescriptor::Resource
 
     if (GLGetProgramResourceProperties(id_, programInterface, resourceIndex, 7, props, params))
     {
-        resourceView.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
-        resourceView.slot       = static_cast<std::uint32_t>(params[6]);
+        resource.binding.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
+        resource.binding.slot       = static_cast<std::uint32_t>(params[6]);
     }
     else
     {
         /* Set binding slot to invalid index */
-        resourceView.stageFlags = StageFlags::AllStages;
-        resourceView.slot       = Constants::invalidSlot;
+        resource.binding.stageFlags = StageFlags::AllStages;
+        resource.binding.slot       = Constants::invalidSlot;
     }
 }
 

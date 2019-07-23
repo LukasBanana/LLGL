@@ -121,10 +121,9 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
     }
 
     /* Create buffer object */
-    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(desc, initialData), desc.bindFlags);
+    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(desc, initialData), desc);
 
     /* Store settings */
-    bufferDbg->desc         = desc;
     bufferDbg->elements     = (formatSize > 0 ? desc.size / formatSize : 0);
     bufferDbg->initialized  = (initialData != nullptr);
 
@@ -150,10 +149,7 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
 
     /* Create native buffer and debug buffer */
     auto bufferArrayInstance    = instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
-    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, bindFlags);
-
-    /* Store buffer references */
-    bufferArrayDbg->buffers = std::move(bufferDbgArray);
+    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, bindFlags, std::move(bufferDbgArray));
 
     return TakeOwnership(bufferArrays_, std::move(bufferArrayDbg));
 }
@@ -255,7 +251,7 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateMipLevelLimit(textureRegion.mipLevel, textureDbg.mipLevels);
+        ValidateMipLevelLimit(textureRegion.subresource.baseMipLevel, textureRegion.subresource.numMipLevels, textureDbg.mipLevels);
         ValidateTextureRegion(textureDbg, textureRegion);
     }
 
@@ -274,7 +270,7 @@ void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel
         LLGL_DBG_SOURCE;
 
         /* Validate MIP-level */
-        ValidateMipLevelLimit(mipLevel, textureDbg.mipLevels);
+        ValidateMipLevelLimit(mipLevel, 1, textureDbg.mipLevels);
 
         /* Validate output data size */
         const auto requiredDataSize =
@@ -963,14 +959,14 @@ void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::ui
     }
 }
 
-void DbgRenderSystem::ValidateMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount)
+void DbgRenderSystem::ValidateMipLevelLimit(std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t maxNumMipLevels)
 {
-    if (mipLevel >= mipLevelCount)
+    if (baseMipLevel + numMipLevels > maxNumMipLevels)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "mip level out of bounds (" + std::to_string(mipLevel) +
-            " specified but limit is " + std::to_string(mipLevelCount > 0 ? mipLevelCount - 1 : 0) + ")"
+            "mip level out of bounds (" + std::to_string(baseMipLevel + numMipLevels) +
+            " exceeded limit of " + std::to_string(numMipLevels) + ")"
         );
     }
 }

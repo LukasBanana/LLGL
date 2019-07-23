@@ -39,6 +39,8 @@ while (myWindow->ProcessEvents()) {
 class LLGL_EXPORT Input : public Window::EventListener
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::Input );
+
     public:
 
         Input();

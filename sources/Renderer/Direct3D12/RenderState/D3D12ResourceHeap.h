@@ -23,6 +23,10 @@ class D3D12ResourceHeap final : public ResourceHeap
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDescriptor& desc);
 
         inline ID3D12DescriptorHeap* const* GetDescriptorHeaps() const
@@ -46,6 +50,8 @@ class D3D12ResourceHeap final : public ResourceHeap
         void CreateSamplers(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc);
 
         void AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap);
+
+    private:
 
         ComPtr<ID3D12DescriptorHeap>    heapTypeCbvSrvUav_;
         ComPtr<ID3D12DescriptorHeap>    heapTypeSampler_;

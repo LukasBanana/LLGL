@@ -31,7 +31,7 @@ class Win32WindowClass
         const wchar_t* GetName() const;
 
     private:
-        
+
         Win32WindowClass();
 
 };

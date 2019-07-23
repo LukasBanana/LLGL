@@ -7,7 +7,7 @@
 
 #include "GLExtensionLoader.h"
 #include "GLExtensions.h"
-#include "GLExtensionsNull.h"
+#include "GLExtensionsProxy.h"
 #include <LLGL/Log.h>
 #include <functional>
 
@@ -68,7 +68,7 @@ static void ExtractExtensionsFromString(GLExtensionList& extensions, const std::
 
 #define LOAD_GLPROC(NAME)               \
     if (usePlaceholder)                 \
-        NAME = Dummy_##NAME;            \
+        NAME = Proxy_##NAME;            \
     else if (!LoadGLProc(NAME, #NAME))  \
         return false
 
@@ -364,6 +364,12 @@ static bool Load_GL_EXT_texture3D(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_EXT_copy_texture(bool usePlaceholder)
+{
+    LOAD_GLPROC( glCopyTexSubImage3D );
+    return true;
+}
+
 static bool Load_GL_ARB_clear_texture(bool usePlaceholder)
 {
     LOAD_GLPROC( glClearTexImage    );
@@ -389,6 +395,12 @@ static bool Load_GL_ARB_texture_multisample(bool usePlaceholder)
     LOAD_GLPROC( glTexImage3DMultisample );
     LOAD_GLPROC( glGetMultisamplefv      );
     LOAD_GLPROC( glSampleMaski           );
+    return true;
+}
+
+static bool Load_GL_ARB_texture_view(bool usePlaceholder)
+{
+    LOAD_GLPROC( glTextureView );
     return true;
 }
 
@@ -495,7 +507,17 @@ static bool Load_GL_EXT_stencil_two_side(bool usePlaceholder)
 
 static bool Load_GL_KHR_debug(bool usePlaceholder)
 {
+    LOAD_GLPROC( glDebugMessageControl  );
+    LOAD_GLPROC( glDebugMessageInsert   );
     LOAD_GLPROC( glDebugMessageCallback );
+    LOAD_GLPROC( glGetDebugMessageLog   );
+  //LOAD_GLPROC( glGetPointerv          );
+    LOAD_GLPROC( glPushDebugGroup       );
+    LOAD_GLPROC( glPopDebugGroup        );
+    LOAD_GLPROC( glObjectLabel          );
+    LOAD_GLPROC( glGetObjectLabel       );
+    LOAD_GLPROC( glObjectPtrLabel       );
+    LOAD_GLPROC( glGetObjectPtrLabel    );
     return true;
 }
 
@@ -610,15 +632,15 @@ static bool Load_GL_ARB_copy_buffer(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_polygon_offset_clamp(bool usePlaceholder)
+static bool Load_GL_ARB_copy_image(bool usePlaceholder)
 {
-    LOAD_GLPROC( glPolygonOffsetClamp );
+    LOAD_GLPROC( glCopyImageSubData );
     return true;
 }
 
-static bool Load_GL_ARB_texture_view(bool usePlaceholder)
+static bool Load_GL_ARB_polygon_offset_clamp(bool usePlaceholder)
 {
-    LOAD_GLPROC( glTextureView );
+    LOAD_GLPROC( glPolygonOffsetClamp );
     return true;
 }
 
@@ -857,6 +879,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     /* Enable texture extensions */
     ENABLE_GLEXT( ARB_multitexture                 );
     ENABLE_GLEXT( EXT_texture3D                    );
+    ENABLE_GLEXT( EXT_copy_texture                 );
     ENABLE_GLEXT( ARB_clear_texture                );
     ENABLE_GLEXT( ARB_texture_compression          );
     ENABLE_GLEXT( ARB_texture_multisample          );
@@ -943,6 +966,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
         extensions[ "GL_ARB_vertex_buffer_object" ] = false;
         extensions[ "GL_ARB_vertex_shader"        ] = false;
         extensions[ "GL_EXT_texture3D"            ] = false;
+        extensions[ "GL_EXT_copy_texture"         ] = false;
     }
 
     /* Load hardware buffer extensions */
@@ -973,9 +997,11 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     /* Load texture extensions */
     LOAD_GLEXT( ARB_multitexture                 );
     LOAD_GLEXT( EXT_texture3D                    );
+    LOAD_GLEXT( EXT_copy_texture                 );
     LOAD_GLEXT( ARB_clear_texture                );
     LOAD_GLEXT( ARB_texture_compression          );
     LOAD_GLEXT( ARB_texture_multisample          );
+    LOAD_GLEXT( ARB_texture_view                 );
     LOAD_GLEXT( ARB_sampler_objects              );
 
     /* Load blending extensions */
@@ -1007,8 +1033,8 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_texture_storage_multisample  );
     LOAD_GLEXT( ARB_buffer_storage               );
     LOAD_GLEXT( ARB_copy_buffer                  );
+    LOAD_GLEXT( ARB_copy_image                   );
     LOAD_GLEXT( ARB_polygon_offset_clamp         );
-    LOAD_GLEXT( ARB_texture_view                 );
     LOAD_GLEXT( ARB_shader_image_load_store      );
     LOAD_GLEXT( ARB_framebuffer_no_attachments   );
     LOAD_GLEXT( ARB_clear_buffer_object          );

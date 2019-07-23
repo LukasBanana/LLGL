@@ -40,8 +40,28 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
         void Begin() override;
         void End() override;
 
-        void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) override;
-        void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) override;
+        void UpdateBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            const void*     data,
+            std::uint16_t   dataSize
+        ) override;
+
+        void CopyBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            Buffer&         srcBuffer,
+            std::uint64_t   srcOffset,
+            std::uint64_t   size
+        ) override;
+
+        void CopyTexture(
+            Texture&                dstTexture,
+            const TextureLocation&  dstLocation,
+            Texture&                srcTexture,
+            const TextureLocation&  srcLocation,
+            const Extent3D&         extent
+        ) override;
 
         void Execute(CommandBuffer& deferredCommandBuffer) override;
 

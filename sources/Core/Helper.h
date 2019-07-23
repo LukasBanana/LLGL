@@ -218,6 +218,30 @@ const void* GetMemberFuncPtr(T pfn)
     return ptr.addr;
 }
 
+// Returns the length of the specified null-terminated string.
+template <typename T>
+inline std::size_t StrLength(const T* s)
+{
+    std::size_t len = 0;
+    while (*s++ != 0)
+        ++len;
+    return len;
+}
+
+// Specialization of StrLength template for ANSI strings.
+template <>
+inline std::size_t StrLength<char>(const char* s)
+{
+    return std::strlen(s);
+}
+
+// Specialization of StrLength template for Unicode strings.
+template <>
+inline std::size_t StrLength<wchar_t>(const wchar_t* s)
+{
+    return std::wcslen(s);
+}
+
 
 /* ----- Functions ----- */
 

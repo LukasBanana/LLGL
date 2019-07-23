@@ -32,7 +32,7 @@ namespace LLGL
 {
 
 
-class DbgRenderSystem : public RenderSystem
+class DbgRenderSystem final : public RenderSystem
 {
 
     public:
@@ -166,7 +166,7 @@ class DbgRenderSystem : public RenderSystem
         void Validate3DTextureSize(std::uint32_t size);
         void ValidateCubeTextureSize(std::uint32_t width, std::uint32_t height);
         void ValidateArrayTextureLayers(const TextureType type, std::uint32_t layers);
-        void ValidateMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount);
+        void ValidateMipLevelLimit(std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t maxNumMipLevels);
         void ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize);
         bool ValidateTextureMips(const DbgTexture& textureDbg);
         void ValidateTextureMipRange(const DbgTexture& textureDbg, std::uint32_t baseMipLevel, std::uint32_t numMipLevels);
@@ -193,6 +193,8 @@ class DbgRenderSystem : public RenderSystem
 
         template <typename T, typename TBase>
         void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
+
+    private:
 
         /* ----- Common objects ----- */
 

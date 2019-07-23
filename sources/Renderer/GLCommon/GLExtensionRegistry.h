@@ -25,10 +25,12 @@ enum class GLExt
     EXT_draw_buffers2,
     ARB_draw_buffers_blend,
     ARB_multitexture,
-    EXT_texture3D,
+    EXT_texture3D,                      // GL 1.2
+    EXT_copy_texture,                   // GL 1.2
     ARB_clear_texture,
     ARB_texture_compression,
     ARB_texture_multisample,
+    ARB_texture_view,                   // GL 4.3
     ARB_sampler_objects,                // GL 3.2
     ARB_multi_bind,                     // GL 4.3
     ARB_vertex_buffer_object,
@@ -64,19 +66,19 @@ enum class GLExt
     ARB_internalformat_query,
     ARB_internalformat_query2,
     ARB_ES2_compatibility,
-    ARB_gl_spirv,
+    ARB_gl_spirv,                       // GL 4.6
     ARB_texture_storage,
     ARB_texture_storage_multisample,
     ARB_buffer_storage,
-    ARB_copy_buffer,
+    ARB_copy_buffer,                    // GL 3.1
+    ARB_copy_image,                     // GL 4.3
     ARB_polygon_offset_clamp,
-    ARB_texture_view,
     ARB_shader_image_load_store,
     ARB_framebuffer_no_attachments,
     ARB_clear_buffer_object,
     ARB_draw_indirect,
     ARB_multi_draw_indirect,
-    ARB_direct_state_access,
+    ARB_direct_state_access,            // GL 4.5
 
     /* Extensions without procedures */
     ARB_texture_cube_map,

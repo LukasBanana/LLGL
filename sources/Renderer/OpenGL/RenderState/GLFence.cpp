@@ -6,6 +6,7 @@
  */
 
 #include "GLFence.h"
+#include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 
@@ -14,18 +15,39 @@ namespace LLGL
 {
 
 
-// NOTE: <glDeleteSync> will silently ignore a <sync> value of zero
 GLFence::~GLFence()
 {
+    /* Always call glDeleteSync, it will silently ignore a <sync> value of zero */
     glDeleteSync(sync_);
+}
+
+void GLFence::SetName(const char* name)
+{
+    #ifdef LLGL_DEBUG
+    /* Only store name in fence object in debug mode, otherwise we want to keep fence objects as lightweight as possible */
+    name_ = name;
+    #endif
 }
 
 void GLFence::Submit()
 {
     if (HasExtension(GLExt::ARB_sync))
     {
+        #ifdef LLGL_DEBUG
+        /* Re-assign debug name after new sync object is created */
+        if (name_ && sync_)
+            GLSetObjectPtrLabel(sync_, nullptr);
+        #endif
+
+        /* Generate new sync object */
         glDeleteSync(sync_);
         sync_ = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+
+        #ifdef LLGL_DEBUG
+        /* Re-assign debug name after new sync object is created */
+        if (name_)
+            GLSetObjectPtrLabel(sync_, name_);
+        #endif
     }
 }
 

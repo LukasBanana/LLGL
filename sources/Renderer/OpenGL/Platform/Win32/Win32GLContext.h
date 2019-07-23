@@ -11,6 +11,7 @@
 
 #include "../GLContext.h"
 #include "../../OpenGL.h"
+#include <LLGL/RendererConfiguration.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include <vector>
 
@@ -20,12 +21,17 @@ namespace LLGL
 
 
 // Implementation of the GLContext interface for Win32 and wrapper for a WGL context.
-class Win32GLContext : public GLContext
+class Win32GLContext final : public GLContext
 {
 
     public:
 
-        Win32GLContext(const RenderContextDescriptor& desc, Surface& surface, Win32GLContext* sharedContext);
+        Win32GLContext(
+            const RenderContextDescriptor&      desc,
+            const RendererConfigurationOpenGL&  config,
+            Surface&                            surface,
+            Win32GLContext*                     sharedContext
+        );
         ~Win32GLContext();
 
         bool SetSwapInterval(int interval) override;
@@ -55,18 +61,20 @@ class Win32GLContext : public GLContext
 
     private:
 
-        static const UINT       maxNumPixelFormatsMS_   = 8;
+        static const UINT           maxPixelFormatsMS                   = 8;
 
-        int                     pixelFormat_            = 0;    //!< Standard pixel format.
-        std::vector<int>        pixelFormatsMS_;                 //!< Multi-sampled pixel formats.
+        int                         pixelFormat_                        = 0;        // Standard pixel format.
+        int                         pixelFormatsMS_[maxPixelFormatsMS]  = { 0 };    // Multi-sampled pixel formats.
+        UINT                        pixelFormatsMSCount_                = 0;
 
-        HDC                     hDC_                    = 0;    //!< Device context handle.
-        HGLRC                   hGLRC_                  = 0;    //!< OpenGL render context handle.
+        HDC                         hDC_                                = 0;        // Device context handle.
+        HGLRC                       hGLRC_                              = 0;        // OpenGL render context handle.
 
-        RenderContextDescriptor desc_;
-        Surface&                surface_;
+        RenderContextDescriptor     desc_;
+        RendererConfigurationOpenGL config_;
+        Surface&                    surface_;
 
-        bool                    hasSharedContext_       = false;
+        bool                        hasSharedContext_                   = false;
 
 };
 

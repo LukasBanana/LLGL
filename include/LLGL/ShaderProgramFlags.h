@@ -14,6 +14,7 @@
 #include "StreamOutputFormat.h"
 #include "ResourceFlags.h"
 #include "BufferFlags.h"
+#include "PipelineLayoutFlags.h"
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -152,100 +153,61 @@ struct ShaderProgramDescriptor
 };
 
 /**
-\brief Shader reflection descriptor structure.
-\remarks Contains all information of resources and attributes that can be queried from a shader program.
-\see ShaderProgram::QueryReflectionDesc
+\brief Shader reflection resource structure.
+\see ShaderReflection::resources
+\see BindingDescriptor
 */
-struct ShaderReflectionDescriptor
+struct ShaderResource
 {
     /**
-    \brief Shader reflection resource view structure.
-    \remarks A mapping between this structure and a binding descriptor may look like this:
-    \code
-    auto myShaderReflectionDesc = myShaderProgram->QueryReflectionDesc();
-    LLGL::PipelineLayoutDescriptor myPipelineLayoutDesc;
-    for (const auto& myResourceView : myShaderReflectionDesc) {
-        BindingDescriptor myBindingDesc;
-        myBindingDesc.type          = myResourceView.type;
-        myBindingDesc.stageFlags    = myResourceView.stageFlags;
-        myBindingDesc.slot          = myResourceView.slot;
-        myBindingDesc.arraySize     = myResourceView.arraySize;
-        myPipelineLayoutDesc.bindings.push_back(myBindingDesc);
-    }
-    \endcode
-    \see ShaderReflectionDescriptor::resourceViews
-    \see BindingDescriptor
+    \brief Binding descriptor with resource name, binding slot, flags, and array size.
+    \remarks Although the \c name attribute in the BindingDescriptor structure is optional for pipeline layouts,
+    the shader reflection always queries this attribute as well.
     */
-    struct ResourceView
-    {
-        //! Name of the shader resource, i.e. the identifier used in the shader.
-        std::string         name;
-
-        //! Resource view type for this layout binding. By default ResourceType::Undefined.
-        ResourceType        type                = ResourceType::Undefined;
-
-        /**
-        \brief Specifies to which kind of resource slot the resource is bound. By default 0.
-        \remarks For a constant buffer for instance, the flags will contain the BindFlags::ConstantBuffer flag.
-        For a 2D texture for instance, the flags will contain the BindFlags::SampleBuffer flag.
-        \see BindFlags
-        */
-        long                bindFlags           = 0;
-
-        /**
-        \brief Specifies in which shader stages the resource is located. By default 0.
-        \remarks This can be a bitwise OR combination of the StageFlags bitmasks.
-        \see StageFlags
-        */
-        long                stageFlags          = 0;
-
-        /**
-        \brief Specifies the zero-based binding slot. By default 0.
-        \remarks If the binding slot could be not queried by the shader reflection, the value is Constants::invalidSlot.
-        \see Constants::invalidSlot
-        */
-        std::uint32_t       slot                = 0;
-
-        /**
-        \brief Specifies the number of binding slots for an array resource. By default 1.
-        \note For Vulkan, this number specifies the size of an array of resources (e.g. an array of uniform buffers).
-        */
-        std::uint32_t       arraySize           = 1;
-
-        /**
-        \brief Specifies the size (in bytes) for a constant buffer resource.
-        \remarks Additional attribute exclusively used for constant buffer resources.
-        For all other resources, i.e. when 'type' is not equal to 'ResourceType::ConstantBuffer', this attribute is zero.
-        \see ResourceType::ConstantBuffer
-        */
-        std::uint32_t       constantBufferSize  = 0;
-
-        /**
-        \brief Specifies the sub-type of a storage buffer resource.
-        \remarks Additional attribute exclusively used for storage buffer resources.
-        */
-        StorageBufferType   storageBufferType   = StorageBufferType::Undefined;
-    };
+    BindingDescriptor   binding;
 
     /**
-    \brief Shader uniform descriptor structure.
-    \see ShaderReflectionDescriptor::uniforms
+    \brief Specifies the size (in bytes) for a constant buffer resource.
+    \remarks Additional attribute exclusively used for constant buffer resources.
+    For all other resources, i.e. when 'type' is not equal to 'ResourceType::ConstantBuffer', this attribute is zero.
+    \see ResourceType::ConstantBuffer
     */
-    struct Uniform
-    {
-        //! Name of the uniform inside the shader.
-        std::string     name;
+    std::uint32_t       constantBufferSize  = 0;
 
-        //! Data type of the uniform. By default UniformType::Undefined.
-        UniformType     type        = UniformType::Undefined;
+    /**
+    \brief Specifies the sub-type of a storage buffer resource.
+    \remarks Additional attribute exclusively used for storage buffer resources.
+    */
+    StorageBufferType   storageBufferType   = StorageBufferType::Undefined;
+};
 
-        //! Internal location of the uniform within a shader program.
-        UniformLocation location    = 0;
+/**
+\brief Shader reflection uniform structure.
+\see ShaderReflection::uniforms
+*/
+struct ShaderUniform
+{
+    //! Name of the uniform inside the shader.
+    std::string     name;
 
-        //! Array size of the uniform.
-        std::uint32_t   size        = 0;
-    };
+    //! Data type of the uniform. By default UniformType::Undefined.
+    UniformType     type        = UniformType::Undefined;
 
+    //! Internal location of the uniform within a shader program.
+    UniformLocation location    = 0;
+
+    //! Array size of the uniform.
+    std::uint32_t   size        = 0;
+};
+
+/**
+\brief Shader reflection structure.
+\remarks Contains all information of resources and attributes that can be queried from a shader program.
+This is not a "descriptor", because it is only used as output from an interface rather than a description to create something.
+\see ShaderProgram::QueryReflection
+*/
+struct ShaderReflection
+{
     //! List of all vertex attributes.
     std::vector<VertexAttribute>        vertexAttributes;
 
@@ -253,13 +215,13 @@ struct ShaderReflectionDescriptor
     std::vector<StreamOutputAttribute>  streamOutputAttributes;
 
     //! List of all shader reflection resource views.
-    std::vector<ResourceView>           resourceViews;
+    std::vector<ShaderResource>         resources;
 
     /**
     \brief List of all uniforms (a.k.a. shader constants).
     \note Only supported with: OpenGL, Vulkan.
     */
-    std::vector<Uniform>                uniforms;
+    std::vector<ShaderUniform>          uniforms;
 };
 
 

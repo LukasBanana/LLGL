@@ -13,6 +13,7 @@
 #include "CommandBufferFlags.h"
 #include "TextureFlags.h"
 #include "Constants.h"
+#include "RendererConfiguration.h"
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -22,6 +23,21 @@
 
 namespace LLGL
 {
+
+
+/* ----- Types ----- */
+
+/**
+\brief Debug callback function interface.
+\param[in] type Descriptive type of the message.
+\param[in] message Specifies the debug output message.
+\remarks This output is renderer dependent.
+\ingroup group_callbacks
+\note Only supported with: OpenGL, Vulkan, Metal.
+\note For Direct3D, debug output will be reported in the output log of the IDE.
+\see RenderSystemDescriptor::debugCallback
+*/
+using DebugCallback = std::function<void(const std::string& type, const std::string& message)>;
 
 
 /* ----- Enumerations ----- */
@@ -232,70 +248,6 @@ struct RendererInfo
 };
 
 /**
-\brief Application descriptor structure.
-\note Only supported with: Vulkan.
-\see VulkanRendererConfiguration::application
-*/
-struct ApplicationDescriptor
-{
-    //! Descriptive string of the application.
-    std::string     applicationName;
-
-    //! Version number of the application.
-    std::uint32_t   applicationVersion;
-
-    //! Descriptive string of the engine or middleware.
-    std::string     engineName;
-
-    //! Version number of the engine or middleware.
-    std::uint32_t   engineVersion;
-};
-
-/**
-\brief Structure for a Vulkan renderer specific configuration.
-\remarks The nomenclature here is "Renderer" instead of "RenderSystem" since the configuration is renderer specific
-and does not denote a configuration of the entire system.
-*/
-struct VulkanRendererConfiguration
-{
-    /**
-    \brief Application descriptor used when a Vulkan debug or validation layer is enabled.
-    \see ApplicationDescriptor
-    */
-    ApplicationDescriptor       application;
-
-    /**
-    \brief Minimal allocation size for a device memory chunk. By default 1024*1024, i.e. 1 MB of VRAM.
-    \remarks Vulkan only allows a limited set of device memory objects (e.g. 4096 on a GPU with 8 GB of VRAM).
-    This member specifies the minimum size used for hardware memory allocation of such a memory chunk.
-    The Vulkan render system automatically manages sub-region allocation and defragmentation.
-    */
-    std::uint64_t               minDeviceMemoryAllocationSize   = 1024*1024;
-
-    /**
-    \brief Specifies whether fragmentation of the device memory blocks shall be kept low. By default false.
-    \remarks If this is true, each buffer and image allocation first tries to find a reusable device memory block
-    within a single VkDeviceMemory chunk (which might be potentially slower).
-    Whenever a VkDeviceMemory chunk is full, the memory manager tries to reduce fragmentation anyways.
-    */
-    bool                        reduceDeviceMemoryFragmentation = false;
-
-    #if 0//TODO: integrate them into the Vulkan renderer
-    /**
-    \brief List of enabled Vulkan extensions.
-    \remarks For example, the extension "VK_EXT_debug_report" can be used to enable debug output from the Vulkan API.
-    */
-    std::vector<std::string>    enabledExtensions;// = { "VK_EXT_debug_report" };
-
-    /**
-    \brief List of enabled Vulkan layers.
-    \remarks For example, the layer "VK_LAYER_LUNARG_core_validation" can be used for a robust validation.
-    */
-    std::vector<std::string>    enabledLayers;// = { "VK_LAYER_LUNARG_core_validation" };
-    #endif
-};
-
-/**
 \brief Render system descriptor structure.
 \remarks This can be used for some refinements of a specific renderer, e.g. to configure the Vulkan device memory manager.
 \see RenderSystem::Load
@@ -327,7 +279,13 @@ struct RenderSystemDescriptor
     translated to "LLGL_OpenGLD.dll", if compiled on Windows in Debug mode.
     If LLGL was built with the \c LLGL_BUILD_STATIC_LIB option, this member is ignored.
     */
-    std::string moduleName;
+    std::string     moduleName;
+
+    /**
+    \brief Debuging callback function object.
+    \todo Move to RenderSystemDescriptor struct.
+    */
+    DebugCallback   debugCallback;
 
     /**
     \brief Optional raw pointer to a renderer specific configuration structure.
@@ -335,7 +293,7 @@ struct RenderSystemDescriptor
     Example usage (for Vulkan renderer):
     \code
     // Initialize Vulkan specific configurations (e.g. always allocate at least 1GB of VRAM for each device memory chunk).
-    LLGL::VulkanRendererConfiguration config;
+    LLGL::RendererConfigurationVulkan config;
     config.minDeviceMemoryAllocationSize = 1024*1024*1024;
 
     // Initialize render system descriptor
@@ -348,16 +306,17 @@ struct RenderSystemDescriptor
     auto renderer = LLGL::RenderSystem::Load(rendererDesc);
     \endcode
     \see rendererConfigSize
-    \see VulkanRendererConfiguration
+    \see RendererConfigurationVulkan
+    \see RendererConfigurationOpenGL
     */
-    const void* rendererConfig      = nullptr;
+    const void*     rendererConfig      = nullptr;
 
     /**
     \brief Specifies the size (in bytes) of the structure where the 'rendererConfig' member points to (use 'sizeof' with the respective structure). By default 0.
     \remarks If 'rendererConfig' is null then this member is ignored.
     \see rendererConfig
     */
-    std::size_t rendererConfigSize  = 0;
+    std::size_t     rendererConfigSize  = 0;
 };
 
 /**
@@ -409,6 +368,20 @@ struct RenderingFeatures
     */
     bool hasMultiSampleTextures         = false;
 
+    /**
+    \brief Specifies whether texture views are supported.
+    \remarks Texture views can share their image data with another texture resource.
+    \see RenderSystem::CreateTextureView
+    */
+    bool hasTextureViews                = false;
+
+    /**
+    \brief Specifies whether texture views can have swizzling (a.k.a. component mapping).
+    \remarks This feature implies that \c hasTextureViews is true.
+    \see TextureViewDescriptor::swizzle
+    */
+    bool hasTextureViewSwizzle          = false;
+
     //! Specifies whether samplers are supported.
     bool hasSamplers                    = false;
 
@@ -421,24 +394,34 @@ struct RenderingFeatures
     /**
     \brief Specifies whether storage buffers (also "read/write buffers") are supported.
     \see BindFlags::SampleBuffer
-    \see BindFlags::RWStorateBuffer
+    \see BindFlags::RWStorageBuffer
     */
     bool hasStorageBuffers              = false;
 
     /**
-    \brief Specifies whether individual shader uniforms are supported (typically only for OpenGL 2.0+).
-    \see ShaderProgram::LockShaderUniform
+    \brief Specifies whether individual shader uniforms are supported.
+    \note Only supported with: OpenGL.
+    \see CommandBuffer::SetUniform
+    \see CommandBuffer::SetUniforms
     */
     bool hasUniforms                    = false;
 
-    //! Specifies whether geometry shaders are supported.
+    /**
+    \brief Specifies whether geometry shaders are supported.
+    \see ShaderType::Geometry
+    */
     bool hasGeometryShaders             = false;
 
-    //! Specifies whether tessellation shaders are supported.
+    /**
+    \brief Specifies whether tessellation shaders are supported.
+    \see ShaderType::TessControl
+    \see ShaderType::TessEvaluation
+    */
     bool hasTessellationShaders         = false;
 
     /**
     \brief Specifies whether compute shaders are supported.
+    \see ShaderType::Compute
     \see CommandBuffer::Dispatch
     \see CommandBuffer::DispatchIndirect
     */
@@ -687,14 +670,14 @@ If this is null the validation process breaks with the first attribute that did 
 \code
 // Initialize the requirements
 LLGL::RenderingCapabilities myRequirements;
-myRequirements.features.hasStorageBuffers = true;
-myRequirements.features.hasComputeShaders = true;
-myRequirements.limits.maxComputeShaderWorkGroups[0] = 1024;
-myRequirements.limits.maxComputeShaderWorkGroups[1] = 1024;
-myRequirements.limits.maxComputeShaderWorkGroups[2] = 1;
-myRequirements.limits.maxComputeShaderWorkGroupSize[0] = 8;
-myRequirements.limits.maxComputeShaderWorkGroupSize[1] = 8;
-myRequirements.limits.maxComputeShaderWorkGroupSize[2] = 8;
+myRequirements.features.hasStorageBuffers               = true;
+myRequirements.features.hasComputeShaders               = true;
+myRequirements.limits.maxComputeShaderWorkGroups[0]     = 1024;
+myRequirements.limits.maxComputeShaderWorkGroups[1]     = 1024;
+myRequirements.limits.maxComputeShaderWorkGroups[2]     = 1;
+myRequirements.limits.maxComputeShaderWorkGroupSize[0]  = 8;
+myRequirements.limits.maxComputeShaderWorkGroupSize[1]  = 8;
+myRequirements.limits.maxComputeShaderWorkGroupSize[2]  = 8;
 
 // Validate rendering capabilities supported by the render system
 LLGL::ValidateRenderingCaps(

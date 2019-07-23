@@ -23,6 +23,10 @@ class D3D12Fence final : public Fence
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D12Fence(ID3D12Device* device, UINT64 initialValue);
         ~D3D12Fence();
 

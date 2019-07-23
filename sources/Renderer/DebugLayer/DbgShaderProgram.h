@@ -13,6 +13,7 @@
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/RenderingDebugger.h>
 #include <vector>
+#include <string>
 
 
 namespace LLGL
@@ -21,7 +22,7 @@ namespace LLGL
 
 class DbgShader;
 
-class DbgShaderProgram : public ShaderProgram
+class DbgShaderProgram final : public ShaderProgram
 {
 
     public:
@@ -43,7 +44,7 @@ class DbgShaderProgram : public ShaderProgram
 
         std::string QueryInfoLog() override;
 
-        ShaderReflectionDescriptor QueryReflectionDesc() const override;
+        ShaderReflection QueryReflection() const override;
         UniformLocation QueryUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;

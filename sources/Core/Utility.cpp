@@ -290,22 +290,13 @@ LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>
 
 /* ----- PipelineLayoutDescriptor utility functions ----- */
 
-static void Convert(BindingDescriptor& dst, const ShaderReflectionDescriptor::ResourceView& src)
-{
-    dst.type        = src.type;
-    dst.bindFlags   = src.bindFlags;
-    dst.stageFlags  = src.stageFlags;
-    dst.slot        = src.slot;
-    dst.arraySize   = src.arraySize;
-}
-
-LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDescriptor& reflectionDesc)
+LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflection& reflection)
 {
     PipelineLayoutDescriptor desc;
     {
-        desc.bindings.resize(reflectionDesc.resourceViews.size());
+        desc.bindings.resize(reflection.resources.size());
         for (std::size_t i = 0; i < desc.bindings.size(); ++i)
-            Convert(desc.bindings[i], reflectionDesc.resourceViews[i]);
+            desc.bindings[i] = reflection.resources[i].binding;
     }
     return desc;
 }

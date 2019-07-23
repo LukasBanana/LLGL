@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class Win32Module : public Module
+class Win32Module final : public Module
 {
 
     public:

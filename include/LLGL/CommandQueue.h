@@ -29,6 +29,8 @@ It also provides the functionality to submit small sized objects such as fences 
 class LLGL_EXPORT CommandQueue : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::CommandQueue );
+
     public:
 
         /* ----- Command Buffers ----- */

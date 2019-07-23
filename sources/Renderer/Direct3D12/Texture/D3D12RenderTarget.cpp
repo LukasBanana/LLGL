@@ -7,6 +7,7 @@
 
 #include "D3D12RenderTarget.h"
 #include "D3D12Texture.h"
+#include "../D3D12ObjectUtils.h"
 #include "../D3D12Device.h"
 #include "../D3D12Types.h"
 #include "../Command/D3D12CommandContext.h"
@@ -23,6 +24,12 @@ D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDesc
 {
     CreateDescriptorHeaps(device, desc);
     CreateAttachments(device.GetNative(), desc);
+}
+
+void D3D12RenderTarget::SetName(const char* name)
+{
+    D3D12SetObjectNameSubscript(rtvDescHeap_.Get(), name, ".RTV");
+    D3D12SetObjectNameSubscript(dsvDescHeap_.Get(), name, ".DSV");
 }
 
 Extent2D D3D12RenderTarget::GetResolution() const
@@ -61,6 +68,7 @@ void D3D12RenderTarget::TransitionToOutputMerger(D3D12CommandContext& commandCon
     commandContext.FlushResourceBarrieres();
 }
 
+//TODO: incomplete
 void D3D12RenderTarget::ResolveRenderTarget(D3D12CommandContext& commandContext)
 {
     for (auto& resource : colorBuffers_)
@@ -275,7 +283,7 @@ void D3D12RenderTarget::CreateSubresourceRTV(
     }
 
     /* Create RTV and store reference to resource */
-    device->CreateRenderTargetView(resource.native.Get(), &rtvDesc, cpuDescHandle);
+    device->CreateRenderTargetView(resource.Get(), &rtvDesc, cpuDescHandle);
     colorBuffers_.push_back(&resource);
 }
 
@@ -333,7 +341,7 @@ void D3D12RenderTarget::CreateSubresourceDSV(
     }
 
     /* Create DSV and store reference to resource */
-    device->CreateDepthStencilView(resource.native.Get(), &dsvDesc, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
+    device->CreateDepthStencilView(resource.Get(), &dsvDesc, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
     depthStencil_ = &resource;
 }
 

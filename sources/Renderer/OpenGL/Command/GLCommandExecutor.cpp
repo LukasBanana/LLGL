@@ -51,16 +51,22 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
 {
     switch (opcode)
     {
-        case GLOpcodeUpdateBuffer:
+        case GLOpcodeBufferSubData:
         {
-            auto cmd = reinterpret_cast<const GLCmdUpdateBuffer*>(pc);
+            auto cmd = reinterpret_cast<const GLCmdBufferSubData*>(pc);
             cmd->buffer->BufferSubData(cmd->offset, cmd->size, cmd + 1);
             return (sizeof(*cmd) + cmd->size);
         }
-        case GLOpcodeCopyBuffer:
+        case GLOpcodeCopyBufferSubData:
         {
-            auto cmd = reinterpret_cast<const GLCmdCopyBuffer*>(pc);
+            auto cmd = reinterpret_cast<const GLCmdCopyBufferSubData*>(pc);
             cmd->writeBuffer->CopyBufferSubData(*(cmd->readBuffer), cmd->readOffset, cmd->writeOffset, cmd->size);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeCopyImageSubData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyImageSubData*>(pc);
+            cmd->dstTexture->CopyImageSubData(cmd->dstLevel, cmd->dstOffset, *(cmd->srcTexture), cmd->srcLevel, cmd->srcOffset, cmd->extent);
             return sizeof(*cmd);
         }
         case GLOpcodeExecute:
@@ -404,6 +410,19 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
                 stateMngr.UnbindSamplers(cmd->first, cmd->count);
             return sizeof(*cmd);
         }
+        #ifdef GL_KHR_debug
+        case GLOpcodePushDebugGroup:
+        {
+            auto cmd = reinterpret_cast<const GLCmdPushDebugGroup*>(pc);
+            glPushDebugGroup(cmd->source, cmd->id, cmd->length, reinterpret_cast<const GLchar*>(cmd + 1));
+            return (sizeof(*cmd) + cmd->length + 1);
+        }
+        case GLOpcodePopDebugGroup:
+        {
+            glPopDebugGroup();
+            return 0;
+        }
+        #endif // /GL_KHR_debug
         default:
             return 0;
     }

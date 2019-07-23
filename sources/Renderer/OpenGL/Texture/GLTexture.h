@@ -22,12 +22,29 @@ class GLTexture final : public Texture
 
     public:
 
-        GLTexture(const TextureType type);
-        ~GLTexture();
+        void SetName(const char* name) override;
 
         Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
+
+    public:
+
+        GLTexture(const TextureType type);
+        ~GLTexture();
+
+        // Copies the specified source texture into this texture.
+        void CopyImageSubData(
+            GLint           dstLevel,
+            const Offset3D& dstOffset,
+            GLTexture&      srcTexture,
+            GLint           srcLevel,
+            const Offset3D& srcOffset,
+            const Extent3D& extent
+        );
+
+        // Initializes this texture as a texture-view.
+        void TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc);
 
         // Queries the GL_TEXTURE_INTERNAL_FORMAT parameter of this texture.
         GLenum QueryGLInternalFormat() const;
@@ -41,6 +58,8 @@ class GLTexture final : public Texture
     private:
 
         void QueryTexParams(GLint* internalFormat, GLint* extent) const;
+
+    private:
 
         GLuint id_ = 0;
 

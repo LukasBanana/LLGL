@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class Win32Display : public Display
+class Win32Display final : public Display
 {
 
     public:
@@ -41,6 +41,8 @@ class Win32Display : public Display
 
         void GetInfo(MONITORINFO& info) const;
         void GetInfo(MONITORINFOEX& info) const;
+
+    private:
 
         HMONITOR monitor_ = nullptr;
 

@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandBufferFlags.h>
+#include <LLGL/Types.h>
 #include "../RenderState/GLState.h"
 #include "../OpenGL.h"
 #include <cstdint>
@@ -33,7 +34,7 @@ class GLDeferredCommandBuffer;
 class GL2XVertexArray;
 
 
-struct GLCmdUpdateBuffer
+struct GLCmdBufferSubData
 {
     GLBuffer*       buffer;
     GLintptr        offset;
@@ -41,13 +42,24 @@ struct GLCmdUpdateBuffer
 //  std::int8_t     data[dataSize];
 };
 
-struct GLCmdCopyBuffer
+struct GLCmdCopyBufferSubData
 {
     GLBuffer*   writeBuffer;
     GLBuffer*   readBuffer;
     GLintptr    readOffset;
     GLintptr    writeOffset;
     GLsizeiptr  size;
+};
+
+struct GLCmdCopyImageSubData
+{
+    GLTexture*  dstTexture;
+    GLint       dstLevel;
+    Offset3D    dstOffset;
+    GLTexture*  srcTexture;
+    GLint       srcLevel;
+    Offset3D    srcOffset;
+    Extent3D    extent;
 };
 
 struct GLCmdExecute
@@ -359,6 +371,16 @@ struct GLCmdUnbindResources
         };
     };
 };
+
+struct GLCmdPushDebugGroup
+{
+    GLenum      source;
+    GLuint      id;
+    GLsizei     length;
+//  GLchar      name[length];
+};
+
+//struct GLCmdPopDebugGroup {};
 
 
 } // /namespace LLGL

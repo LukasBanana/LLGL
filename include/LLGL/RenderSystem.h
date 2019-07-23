@@ -9,7 +9,7 @@
 #define LLGL_RENDER_SYSTEM_H
 
 
-#include "NonCopyable.h"
+#include "Interface.h"
 #include "RenderContext.h"
 #include "CommandQueue.h"
 #include "CommandBufferExt.h"
@@ -18,19 +18,29 @@
 #include "RenderingDebugger.h"
 
 #include "Buffer.h"
+#include "BufferFlags.h"
 #include "BufferArray.h"
 #include "Texture.h"
+#include "TextureFlags.h"
 #include "Sampler.h"
+#include "SamplerFlags.h"
 #include "ResourceHeap.h"
+#include "ResourceHeapFlags.h"
 
 #include "RenderPass.h"
 #include "RenderPassFlags.h"
 #include "RenderTarget.h"
+#include "RenderTargetFlags.h"
 #include "Shader.h"
+#include "ShaderFlags.h"
 #include "ShaderProgram.h"
+#include "ShaderProgramFlags.h"
 #include "PipelineLayout.h"
+#include "PipelineLayoutFlags.h"
 #include "GraphicsPipeline.h"
+#include "GraphicsPipelineFlags.h"
 #include "ComputePipeline.h"
+#include "ComputePipelineFlags.h"
 #include "QueryHeap.h"
 #include "Fence.h"
 
@@ -62,8 +72,10 @@ renderSystem->WriteBuffer(*buffer, modificationData, ...);
 renderSystem->Release(*buffer);
 \endcode
 */
-class LLGL_EXPORT RenderSystem : public NonCopyable
+class LLGL_EXPORT RenderSystem : public Interface
 {
+
+        LLGL_DECLARE_INTERFACE( InterfaceID::RenderSystem );
 
     public:
 
@@ -290,13 +302,24 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         */
         virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) = 0;
 
+        #if 0
+        /**
+        \brief Creates a new texture view that shares the image data of the specified shared texture.
+        \param[in] sharedTexture Specifies the texture whose image data is to be shared with the new texture view.
+        This must not be a texture view itself, i.e. a texture view cannot be created from another texture view.
+        \param[in] textireViewDesc Specifies the texture view descriptor.
+        \see Texture::IsTextureView
+        */
+        virtual Texture* CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc) = 0;
+        #endif
+
         //! Releases the specified texture object. After this call, the specified object must no longer be used.
         virtual void Release(Texture& texture) = 0;
 
         /**
         \brief Updates the image data of the specified texture.
         \param[in] texture Specifies the texture whose data is to be updated.
-        \param[in] textureRegion Specifies the texture region where the texture is to be updated.
+        \param[in] textureRegion Specifies the texture region where the texture is to be updated. The field TextureRegion::numMipLevels \b must be 1.
         \param[in] imageDesc Specifies the image data descriptor. Its \c data member must not be null!
         \remarks This function can only be used for non-multi-sample textures, i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray.
         */
@@ -360,6 +383,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
         \see GenerateMips(Texture&)
         \see NumMipLevels
+        \todo Replace by primary GenerateMips functions in conjunction with texture views.
         */
         virtual void GenerateMips(
             Texture&        texture,

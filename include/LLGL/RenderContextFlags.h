@@ -12,43 +12,11 @@
 #include "Export.h"
 #include "Types.h"
 #include "GraphicsPipelineFlags.h"
-#include <functional>
 #include <cstdint>
 
 
 namespace LLGL
 {
-
-
-/* ----- Types ----- */
-
-/**
-\brief Debug callback function interface.
-\param[in] type Descriptive type of the message.
-\param[in] message Specifies the debug output message.
-\remarks This output is renderer dependent.
-\ingroup group_callbacks
-*/
-using DebugCallback = std::function<void(const std::string& type, const std::string& message)>;
-
-
-/* ----- Enumerations ----- */
-
-/**
-\brief OpenGL context profile enumeration.
-\remarks Can be used to specify a specific OpenGL profile other than the default (i.e. compatibility profile).
-*/
-enum class OpenGLContextProfile
-{
-    //! OpenGL compatibility profile. This is the default.
-    CompatibilityProfile,
-
-    //! OpenGL core profile.
-    CoreProfile,
-
-    //! OpenGL ES profile. \todo This is incomplete, do not use!
-    ESProfile,
-};
 
 
 /* ----- Structures ----- */
@@ -128,29 +96,9 @@ struct VideoModeDescriptor
 };
 
 /**
-\brief OpenGL profile descriptor structure.
-\note On MacOS the only supported OpenGL profiles are compatibility profile (for lagecy OpenGL before 3.0), 3.2 core profile, or 4.1 core profile.
-\todo Move this into RenderSystemDescriptor, and make GL context creation part of GLRenderSystem instead of each GLRenderContext instance.
+\brief Render context descriptor structure.
+\see RenderSystem::CreateRenderContext
 */
-struct ProfileOpenGLDescriptor
-{
-    //! Specifies the requested OpenGL context profile. By default OpenGLContextProfile::CompatibilityProfile.
-    OpenGLContextProfile    contextProfile  = OpenGLContextProfile::CompatibilityProfile;
-
-    /**
-    \brief Specifies the requested OpenGL context major version. By default -1 to indicate to use the highest version possible.
-    \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
-    */
-    int                     majorVersion    = -1;
-
-    /**
-    \brief Specifies the requested OpenGL context minor version. By default -1 to indicate to use the highest version possible.
-    \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
-    */
-    int                     minorVersion    = -1;
-};
-
-//! Render context descriptor structure.
 struct RenderContextDescriptor
 {
     //! Vertical-synchronization (Vsync) descriptor.
@@ -161,12 +109,6 @@ struct RenderContextDescriptor
 
     //! Video mode descriptor.
     VideoModeDescriptor     videoMode;
-
-    //! OpenGL profile descriptor (to switch between compatability or core profile).
-    ProfileOpenGLDescriptor profileOpenGL;
-
-    //! Debuging callback function object.
-    DebugCallback           debugCallback;
 };
 
 

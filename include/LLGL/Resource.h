@@ -26,12 +26,15 @@ namespace LLGL
 class LLGL_EXPORT Resource : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::Resource );
+
     public:
 
         /**
         \brief Returns the type of this resource object.
         \remarks This is queried by a virtual function call, so the resource type does not need to be stored per instance.
         \see ResourceType
+        \todo Replace by IstInstanceOf
         */
         virtual ResourceType QueryResourceType() const = 0;
 

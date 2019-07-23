@@ -47,7 +47,7 @@ void GLRenderbuffer::DeleteRenderbuffer()
     if (id_ != 0)
     {
         glDeleteRenderbuffers(1, &id_);
-        GLStateManager::active->NotifyRenderbufferRelease(id_);
+        GLStateManager::Get().NotifyRenderbufferRelease(id_);
         id_ = 0;
     }
 }
@@ -55,7 +55,7 @@ void GLRenderbuffer::DeleteRenderbuffer()
 void GLRenderbuffer::Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
 {
     /* Bind renderbuffer */
-    GLStateManager::active->BindRenderbuffer(id_);
+    GLStateManager::Get().BindRenderbuffer(id_);
 
     /* Initialize renderbuffer storage */
     if (samples > 1)

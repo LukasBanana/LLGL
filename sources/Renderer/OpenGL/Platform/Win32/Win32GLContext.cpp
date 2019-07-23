@@ -23,10 +23,14 @@ namespace LLGL
  * GLContext class
  */
 
-std::unique_ptr<GLContext> GLContext::Create(const RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
+std::unique_ptr<GLContext> GLContext::Create(
+    const RenderContextDescriptor&      desc,
+    const RendererConfigurationOpenGL&  config,
+    Surface&                            surface,
+    GLContext*                          sharedContext)
 {
     Win32GLContext* sharedContextWGL = (sharedContext != nullptr ? LLGL_CAST(Win32GLContext*, sharedContext) : nullptr);
-    return MakeUnique<Win32GLContext>(desc, surface, sharedContextWGL);
+    return MakeUnique<Win32GLContext>(desc, config, surface, sharedContextWGL);
 }
 
 
@@ -34,9 +38,15 @@ std::unique_ptr<GLContext> GLContext::Create(const RenderContextDescriptor& desc
  * Win32GLContext class
  */
 
-Win32GLContext::Win32GLContext(const RenderContextDescriptor& desc, Surface& surface, Win32GLContext* sharedContext) :
+Win32GLContext::Win32GLContext(
+    const RenderContextDescriptor&      desc,
+    const RendererConfigurationOpenGL&  config,
+    Surface&                            surface,
+    Win32GLContext*                     sharedContext)
+:
     GLContext { sharedContext },
     desc_     { desc          },
+    config_   { config        },
     surface_  { surface       }
 {
     if (sharedContext)
@@ -145,7 +155,7 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
     hGLRC_ = stdRenderContext;
 
     /* Check for extended render context */
-    if (desc_.profileOpenGL.contextProfile != OpenGLContextProfile::CompatibilityProfile && !hasSharedContext_)
+    if (config_.contextProfile != OpenGLContextProfile::CompatibilityProfile && !hasSharedContext_)
     {
         /*
         Load profile selection extension (wglCreateContextAttribsARB) via current context,
@@ -165,14 +175,14 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
             {
                 /* Print warning and disbale profile selection */
                 Log::PostReport(Log::ReportType::Error, "failed to create extended OpenGL profile");
-                desc_.profileOpenGL.contextProfile = OpenGLContextProfile::CompatibilityProfile;
+                config_.contextProfile = OpenGLContextProfile::CompatibilityProfile;
             }
         }
         else
         {
             /* Print warning and disable profile settings */
             Log::PostReport(Log::ReportType::Error, "failed to select OpenGL profile");
-            desc_.profileOpenGL.contextProfile = OpenGLContextProfile::CompatibilityProfile;
+            config_.contextProfile = OpenGLContextProfile::CompatibilityProfile;
         }
     }
 
@@ -188,7 +198,7 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
     -> Only do this, if this context has its own GL hardware context (hasSharedContext_ == false),
        but a shared render context was passed (sharedContext != null).
     */
-    if (sharedContext && !hasSharedContext_ && desc_.profileOpenGL.contextProfile == OpenGLContextProfile::CompatibilityProfile)
+    if (sharedContext && !hasSharedContext_ && config_.contextProfile == OpenGLContextProfile::CompatibilityProfile)
     {
         if (!wglShareLists(sharedContext->hGLRC_, hGLRC_))
             throw std::runtime_error("failed to share resources from OpenGL render context");
@@ -224,17 +234,12 @@ HGLRC Win32GLContext::CreateGLContext(bool useExtProfile, Win32GLContext* shared
     /* Create hardware render context */
     HGLRC renderContext = 0;
 
-    if (!sharedContext || !sharedContext->hGLRC_ /* || createOwnHardwareContext == true*/)
+    if (!sharedContext || !sharedContext->hGLRC_)
     {
         /* Create own hardware context */
         hasSharedContext_ = false;
-
         if (useExtProfile)
-        {
-            renderContext = CreateExtContextProfile(
-                (sharedContext != nullptr ? sharedContext->hGLRC_ : nullptr)
-            );
-        }
+            renderContext = CreateExtContextProfile(sharedContext != nullptr ? sharedContext->hGLRC_ : nullptr);
         else
             renderContext = CreateStdContextProfile();
     }
@@ -285,21 +290,26 @@ static int GLContextProfileToBitmask(const OpenGLContextProfile profile)
 HGLRC Win32GLContext::CreateExtContextProfile(HGLRC sharedGLRC)
 {
     /* Check if highest version possible shall be used */
-    if (desc_.profileOpenGL.majorVersion < 0 || desc_.profileOpenGL.minorVersion < 0)
+    if (config_.majorVersion < 0 || config_.minorVersion < 0)
     {
-        glGetIntegerv(GL_MAJOR_VERSION, &(desc_.profileOpenGL.majorVersion));
-        glGetIntegerv(GL_MINOR_VERSION, &(desc_.profileOpenGL.minorVersion));
+        glGetIntegerv(GL_MAJOR_VERSION, &(config_.majorVersion));
+        glGetIntegerv(GL_MINOR_VERSION, &(config_.minorVersion));
     }
 
-    /* Setup extended attributes to select the OpenGL profile */
+    /* Set up context flags */
+    int contextFlags = 0;
+
+    #ifdef LLGL_DEBUG
+    contextFlags |= WGL_CONTEXT_DEBUG_BIT_ARB;
+    #endif
+
+    /* Set up extended attributes to select the OpenGL profile */
     const int attribList[] =
     {
-        WGL_CONTEXT_MAJOR_VERSION_ARB,  desc_.profileOpenGL.majorVersion,
-        WGL_CONTEXT_MINOR_VERSION_ARB,  desc_.profileOpenGL.minorVersion,
-        #ifdef LLGL_DEBUG
-        WGL_CONTEXT_FLAGS_ARB,          WGL_CONTEXT_DEBUG_BIT_ARB /*| WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB*/,
-        #endif
-        WGL_CONTEXT_PROFILE_MASK_ARB,   GLContextProfileToBitmask(desc_.profileOpenGL.contextProfile),
+        WGL_CONTEXT_MAJOR_VERSION_ARB,  config_.majorVersion,
+        WGL_CONTEXT_MINOR_VERSION_ARB,  config_.minorVersion,
+        WGL_CONTEXT_FLAGS_ARB,          contextFlags,
+        WGL_CONTEXT_PROFILE_MASK_ARB,   GLContextProfileToBitmask(config_.contextProfile),
         0, 0
     };
 
@@ -379,17 +389,16 @@ void Win32GLContext::SelectPixelFormat()
     }
 
     /* Try to find suitable pixel format */
-    const bool wantAntiAliasFormat = (desc_.multiSampling.enabled && !pixelFormatsMS_.empty());
+    const bool wantAntiAliasFormat = (desc_.multiSampling.enabled && pixelFormatsMSCount_ > 0);
 
-    std::size_t msPixelFormatIndex = 0;
     bool wasStandardFormatUsed = false;
 
-    while (true)
+    for (UINT pixelFormatMSIndex = 0;;)
     {
-        if (wantAntiAliasFormat && msPixelFormatIndex < Win32GLContext::maxNumPixelFormatsMS_)
+        if (wantAntiAliasFormat && pixelFormatMSIndex < Win32GLContext::maxPixelFormatsMS)
         {
             /* Choose anti-aliasing pixel format */
-            pixelFormat_ = pixelFormatsMS_[msPixelFormatIndex++];
+            pixelFormat_ = pixelFormatsMS_[pixelFormatMSIndex++];
         }
 
         if (!pixelFormat_)
@@ -438,9 +447,9 @@ bool Win32GLContext::SetupAntiAliasing()
 
     while (desc_.multiSampling.samples > 0)
     {
-        float attribsFlt[] = { 0.0f, 0.0f };
+        const float attribsFlt[] = { 0.0f, 0.0f };
 
-        int attribsInt[] =
+        const int attribsInt[] =
         {
             WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
             WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
@@ -456,22 +465,16 @@ bool Win32GLContext::SetupAntiAliasing()
         };
 
         /* Choose new pixel format with anti-aliasing */
-        UINT numFormats = 0;
-
-        pixelFormatsMS_.resize(Win32GLContext::maxNumPixelFormatsMS_);
-
-        int result = wglChoosePixelFormatARB(
+        BOOL result = wglChoosePixelFormatARB(
             hDC_,
             attribsInt,
             attribsFlt,
-            Win32GLContext::maxNumPixelFormatsMS_,
-            pixelFormatsMS_.data(),
-            &numFormats
+            Win32GLContext::maxPixelFormatsMS,
+            pixelFormatsMS_,
+            &pixelFormatsMSCount_
         );
 
-        pixelFormatsMS_.resize(numFormats);
-
-        if (!result || numFormats < 1)
+        if (!result || pixelFormatsMSCount_ < 1)
         {
             if (desc_.multiSampling.samples <= 0)
             {
@@ -512,8 +515,10 @@ bool Win32GLContext::SetupAntiAliasing()
 
 void Win32GLContext::CopyPixelFormat(Win32GLContext& sourceContext)
 {
-    pixelFormat_    = sourceContext.pixelFormat_;
-    pixelFormatsMS_ = sourceContext.pixelFormatsMS_;
+    /* Copy pixel format and array of multi-sampled pixel formats */
+    pixelFormat_            = sourceContext.pixelFormat_;
+    pixelFormatsMSCount_    = sourceContext.pixelFormatsMSCount_;
+    ::memcpy(pixelFormatsMS_, sourceContext.pixelFormatsMS_, sizeof(pixelFormatsMS_));
 }
 
 void Win32GLContext::RecreateWindow()

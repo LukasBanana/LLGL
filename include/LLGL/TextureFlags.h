@@ -37,7 +37,6 @@ enum class TextureType
     Texture2DMSArray,   //!< 2-Dimensional multi-sample array texture.
 };
 
-#if 0//TODO: currently unused
 /**
 \brief Texture component swizzle enumeration.
 \remarks Can be used to change the order of texel components independently of a shader.
@@ -52,15 +51,14 @@ enum class TextureSwizzle
     Blue,   //!< The component is replaced by blue component.
     Alpha   //!< The component is replaced by alpha component.
 };
-#endif
 
 
 /* ----- Structures ----- */
 
-#if 0//TODO: currently unused
 /**
 \brief Texture component swizzle structure for red, green, blue, and alpha components.
 \remarks Can be used to change the order of texel components independently of a shader.
+\see TextureViewDescriptor::swizzle
 */
 struct TextureSwizzleRGBA
 {
@@ -69,17 +67,147 @@ struct TextureSwizzleRGBA
     TextureSwizzle b = TextureSwizzle::Blue;    //!< Blue component swizzle. By default TextureSwizzle::Blue.
     TextureSwizzle a = TextureSwizzle::Alpha;   //!< Alpha component swizzle. By default TextureSwizzle::Alpha.
 };
-#endif
+
+/**
+\brief Texture subresource descriptor which specifies the MIP-map level and array layer range of a texture resource.
+\see TextureRegion::subresource
+\see TextureViewDescriptor::subresource
+*/
+struct TextureSubresource
+{
+    TextureSubresource() = default;
+    TextureSubresource(const TextureSubresource&) = default;
+
+    //! Constructor to initialize base MIP-map level and base array layer only.
+    inline TextureSubresource(std::uint32_t baseArrayLayer, std::uint32_t baseMipLevel) :
+        baseArrayLayer { baseArrayLayer },
+        baseMipLevel   { baseMipLevel   }
+    {
+    }
+
+    //! Constructor to initialize all attributes.
+    inline TextureSubresource(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t baseMipLevel, std::uint32_t numMipLevels) :
+        baseArrayLayer { baseArrayLayer },
+        numArrayLayers { numArrayLayers },
+        baseMipLevel   { baseMipLevel   },
+        numMipLevels   { numMipLevels   }
+    {
+    }
+
+    /**
+    \brief Zero-based index of the first array layer. By default 0.
+    \remarks Only used by array texture types (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
+    \remarks This field is ignored by all other texture types.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t   baseArrayLayer  = 0;
+
+    /**
+    \brief Number of array layers. By default 1.
+    \remarks \b Must be greater than zero.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t   numArrayLayers  = 1;
+
+    /**
+    \brief MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t   baseMipLevel    = 0;
+
+    /**
+    \brief Number of MIP-map levels. By default 1.
+    \remarks \b Must be greater than zero.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t   numMipLevels    = 1;
+};
+
+/**
+\brief Texture location structure: MIP-map level and offset.
+\remarks This is used to specifiy the source and destination location of a texture copy operation.
+\see CommandBuffer::CopyTexture
+\see TextureRegion
+*/
+struct TextureLocation
+{
+    TextureLocation() = default;
+    TextureLocation(const TextureLocation&) = default;
+
+    //! Constructor to initialize all attributes.
+    inline TextureLocation(const Offset3D& offset, std::uint32_t arrayLayer = 0, std::uint32_t mipLevel = 0) :
+        offset     { offset     },
+        mipLevel   { mipLevel   },
+        arrayLayer { arrayLayer }
+    {
+    }
+
+    /**
+    \brief Zero-based offset within the texture data.
+    \remarks Any component of this field that is not meant for the respective texture type is ignored.
+    All other components must be greater than or equal to zero.
+    */
+    Offset3D        offset;
+
+    /**
+    \brief Zero-based array layer index.
+    \remarks Only used by array texture types (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
+    \remarks This field is ignored by all other texture types.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t   arrayLayer  = 0;
+
+    /**
+    \brief MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t   mipLevel    = 0;
+};
+
+/**
+\brief Texture region structure: MIP-map level, offset, and extent.
+\remarks This is used to write (or partially write) the image data of a texture MIP-map level.
+\see RenderSystem::WriteTexture
+\see TextureLocation
+*/
+struct TextureRegion
+{
+    TextureRegion() = default;
+    TextureRegion(const TextureRegion&) = default;
+
+    //! Constructor to initialize offset and extent only.
+    inline TextureRegion(const Offset3D& offset, const Extent3D& extent) :
+        offset { offset },
+        extent { extent }
+    {
+    }
+
+    //! Specifies the texture subresource, i.e. MIP-map level and array layer range. By default only the first MIP-map level and first array layer is addressed.
+    TextureSubresource  subresource;
+
+    /**
+    \brief Zero-based offset within the texture data.
+    \remarks Any component of this field that is not meant for the respective texture type is ignored.
+    All other components must be greater than or equal to zero.
+    */
+    Offset3D            offset;
+
+    /**
+    \brief Extent of the sub texture region.
+    \see TextureDescriptor::extent
+    */
+    Extent3D            extent;
+};
 
 /**
 \brief Texture descriptor structure.
-\remarks This is used to specifiy the dimensions of a texture which is to be created.
+\remarks Contains all information about type, format, and dimension to create a texture resource.
 \see RenderSystem::CreateTexture
 */
 struct TextureDescriptor
 {
-    //! Hardware texture type. By default TextureType::Texture1D.
-    TextureType     type            = TextureType::Texture1D;
+    //! Hardware texture type. By default TextureType::Texture2D.
+    TextureType     type            = TextureType::Texture2D;
 
     /**
     \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default BindFlags::SampleBuffer and BindFlags::ColorAttachment.
@@ -98,11 +226,11 @@ struct TextureDescriptor
     long            cpuAccessFlags  = 0;
 
     /**
-    \brief Miscellaneous texture flags. By default MiscFlags::FixedSamples.
+    \brief Miscellaneous texture flags. By default MiscFlags::FixedSamples and MiscFlags::GenerateMips.
     \remarks This can be used as a hint for the renderer how frequently the texture will be updated, or whether a multi-sampled texture has fixed sample locations.
     \see MiscFlags
     */
-    long            miscFlags       = MiscFlags::FixedSamples;
+    long            miscFlags       = (MiscFlags::FixedSamples | MiscFlags::GenerateMips);
 
     //! Hardware texture format. By default Format::RGBA8UNorm.
     Format          format          = Format::RGBA8UNorm;
@@ -114,17 +242,16 @@ struct TextureDescriptor
     \remarks The \c depth component is only used for 3D textures (i.e. TextureType::Texture3D).
     \remarks The \c width and \c height components must be equal for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
     \see IsCubeTexture
-    \see arrayLayers
     */
     Extent3D        extent          = { 1, 1, 1 };
 
     /**
     \brief Number of array layers. By default 1.
-    \remarks This can be greater than 1 for array textures and cube textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
-    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
-    For cube textures, this must be a multiple of 6 (one array layer for each cube face).
-    For all other texture types, this must be 1.
-    The index offsets for each cube face are as follows:
+    \remarks For array textures and cube textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
+    TextureType::TextureCube, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray), this \b must be greater than or equal to 1.
+    \remarks For cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray), this \b must be a multiple of 6 and greater than zero (one array layer for each cube face).
+    \remarks For all other texture types, this \b must be 1.
+    \remarks The index offsets for each cube face are as follows:
     - <code>X+</code> direction has index offset 0.
     - <code>X-</code> direction has index offset 1.
     - <code>Y+</code> direction has index offset 2.
@@ -134,7 +261,6 @@ struct TextureDescriptor
     \see IsArrayTexture
     \see IsCubeTexture
     \see RenderingLimits::maxTextureArrayLayers
-    \see extent
     */
     std::uint32_t   arrayLayers     = 1;
 
@@ -159,30 +285,61 @@ struct TextureDescriptor
 };
 
 /**
-\brief Texture region structure.
-\remarks This is used to write (or partially write) the image data of a texture MIP-map level.
-\see RenderSystem::WriteTexture
+\brief Texture view descriptor structure.
+\remarks Contains all information about type, format, and dimension to create a texture view that shares the image data of another texture.
+\see RenderSystem::CreateTextureView
+\see RenderingFeatures::hasTextureViews
 */
-struct TextureRegion
+struct TextureViewDescriptor
 {
-    //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
-    std::uint32_t   mipLevel    = 0;
+    /**
+    \brief Hardware texture type. By default TextureType::Texture2D.
+    \remarks The types of a shared texture can be mapped to the following type of texture-views:
+    <table>
+    <caption>Texture-view type mapping</caption>
+    <tr><th>Shared texture type</th><th>Compatible texture view types</th></tr>
+    <tr><td>TextureType::Texture1D</td><td>TextureType::Texture1D, TextureType::Texture1DArray</td></tr>
+    <tr><td>TextureType::Texture2D</td><td>TextureType::Texture2D, TextureType::Texture2DArray</td></tr>
+    <tr><td>TextureType::Texture3D</td><td>TextureType::Texture3D</td></tr>
+    <tr><td>TextureType::TextureCube</td><td>TextureType::Texture2D, TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray</td></tr>
+    <tr><td>TextureType::Texture1DArray</td><td>TextureType::Texture1D, TextureType::Texture1DArray</td></tr>
+    <tr><td>TextureType::Texture2DArray</td><td>TextureType::Texture2D, TextureType::Texture2DArray</td></tr>
+    <tr><td>TextureType::TextureCubeArray</td><td>TextureType::Texture2D, TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray</td></tr>
+    <tr><td>TextureType::Texture2DMS</td><td>TextureType::Texture2DMS, TextureType::Texture2DMSArray</td></tr>
+    <tr><td>TextureType::Texture2DMSArray</td><td>TextureType::Texture2DMS, TextureType::Texture2DMSArray</td></tr>
+    </table>
+    */
+    TextureType         type            = TextureType::Texture2D;
 
     /**
-    \brief Sub-texture offset. By default (0, 0, 0).
-    \remarks For array textures, the Z component specifies the array layer.
-    For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
-    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayers member.
-    Negative values of this member are not allowed and result in undefined behavior.
+    \brief Hardware texture format. By default Format::RGBA8UNorm.
+    \remarks The format of the shared texture and the texture-view must be in the same format class:
+    <table>
+    <caption>Texture format classes</caption>
+    <tr><th>Class</th><th>Compatible texture formats</th></tr>
+    <tr><td>128 Bits</td><td>Format::RGBA32UInt, Format::RGBA32SInt, Format::RGBA32Float</td></tr>
+    <tr><td>96 Bits</td><td>Format::RGB32UInt, Format::RGB32SInt, Format::RGB32Float</td></tr>
+    <tr><td>64 Bits</td><td>Format::RG32UInt, Format::RG32SInt, Format::RG32Float, Format::RGBA16UNorm, Format::RGBA16SNorm, Format::RGBA16UInt, Format::RGBA16SInt, Format::RGBA16Float</td></tr>
+    <tr><td>48 Bits</td><td>Format::RGB16UNorm, Format::RGB16SNorm, Format::RGB16UInt, Format::RGB16SInt, Format::RGB16Float</td></tr>
+    <tr><td>32 Bits</td><td>Format::RG16UNorm, Format::RG16SNorm, Format::RG16UInt, Format::RG16SInt, Format::RG16Float, Format::RGBA8UNorm, Format::RGBA8SNorm, Format::RGBA8UInt, Format::RGBA8SInt</td></tr>
+    <tr><td>24 Bits</td><td>Format::RGB8UNorm, Format::RGB8SNorm, Format::RGB8UInt, Format::RGB8SInt</td></tr>
+    <tr><td>16 Bits</td><td>Format::R16UNorm, Format::R16SNorm, Format::R16UInt, Format::R16SInt, Format::R16Float, Format::RG8UNorm, Format::RG8SNorm, Format::RG8UInt, Format::RG8SInt</td></tr>
+    <tr><td>8 Bits</td><td>Format::R8UNorm, Format::R8SNorm, Format::R8UInt, Format::R8SInt</td></tr>
+    </table>
     */
-    Offset3D        offset      = { 0, 0, 0 };
+    Format              format          = Format::RGBA8UNorm;
+
+    //! Specifies the texture subresource, i.e. MIP-map level and array layer range. By default only the first MIP-map level and first array layer is addressed.
+    TextureSubresource  subresource;
 
     /**
-    \brief Sub-texture extent. By default (1, 1, 1).
-    \remarks For array textures, the depth component specifies the number of array layers (for 1D-array textures it's the height component).
-    For cube textures, the depth component specifies the number of array layers and cube faces (where each cube has 6 faces).
+    \brief Specifies the color component mapping. Each component is mapped to its identity by default.
+    \remarks If texture swizzling is not supported, this must be equal to the default value.
+    \note Only supported with: OpenGL, Vulkan, Metal, Direct3D 12.
+    \see RenderingFeatures::hasTextureViewSwizzle
+    \see IsTextureSwizzleIdentity
     */
-    Extent3D        extent      = { 1, 1, 1 };
+    TextureSwizzleRGBA  swizzle;
 };
 
 
@@ -200,7 +357,7 @@ struct TextureRegion
 \param[in] height Specifies the texture height or number of layers for 1D array textures. By default 1 (if 1D textures are used).
 \param[in] depth Specifies the texture depth or number of layers for 2D array textures. By default 1 (if 1D or 2D textures are used).
 \remarks The height and depth are optional parameters, so this function can be easily used for 1D, 2D, and 3D textures.
-\return 1 + floor(log2(max{ width, height, depth })).
+\return <code>1 + floor(log2(max{ width, height, depth }))</code>.
 */
 LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height = 1, std::uint32_t depth = 1);
 
@@ -255,6 +412,17 @@ LLGL_EXPORT bool IsMultiSampleTexture(const TextureType type);
 \return True if \c type is either TextureType::TextureCube or TextureType::TextureCubeArray.
 */
 LLGL_EXPORT bool IsCubeTexture(const TextureType type);
+
+/**
+\brief Returns true if the specified texture swizzling is equal to the identity mapping.
+\return True if the components are mapped as follows:
+- \c r equals TextureSwizzle::Red
+- \c g equals TextureSwizzle::Green
+- \c b equals TextureSwizzle::Blue
+- \c a equals TextureSwizzle::Alpha
+\see TextureSwizzle
+*/
+LLGL_EXPORT bool IsTextureSwizzleIdentity(const TextureSwizzleRGBA& swizzle);
 
 /** @} */
 

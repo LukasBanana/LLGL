@@ -28,7 +28,12 @@ class GLContext
         virtual ~GLContext();
 
         // Creates a platform specific GLContext instance.
-        static std::unique_ptr<GLContext> Create(const RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext);
+        static std::unique_ptr<GLContext> Create(
+            const RenderContextDescriptor&      desc,
+            const RendererConfigurationOpenGL&  config,
+            Surface&                            surface,
+            GLContext*                          sharedContext
+        );
 
         // Makes the specified GLContext current. If null, the current context will be deactivated.
         static bool MakeCurrent(GLContext* context);
@@ -45,6 +50,7 @@ class GLContext
         // Resizes the GL context. This is called after the context surface has been resized.
         virtual void Resize(const Extent2D& resolution) = 0;
 
+        // Returns the state manager that is associated with this context.
         inline const std::shared_ptr<GLStateManager>& GetStateManager() const
         {
             return stateMngr_;

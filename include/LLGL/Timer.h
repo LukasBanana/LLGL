@@ -9,7 +9,7 @@
 #define LLGL_TIMER_H
 
 
-#include "NonCopyable.h"
+#include "Interface.h"
 #include <memory>
 #include <cstdint>
 
@@ -22,8 +22,10 @@ namespace LLGL
 \brief Interface for a Timer class.
 \remarks This basic class is also designed as interface, since the native timer is platform specific.
 */
-class LLGL_EXPORT Timer : public NonCopyable
+class LLGL_EXPORT Timer : public Interface
 {
+
+        LLGL_DECLARE_INTERFACE( InterfaceID::Timer );
 
     public:
 

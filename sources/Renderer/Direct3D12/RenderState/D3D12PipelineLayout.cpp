@@ -8,6 +8,7 @@
 #include "D3D12PipelineLayout.h"
 #include "../Shader/D3D12RootSignature.h"
 #include "../D3DX12/d3dx12.h"
+#include "../D3D12ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 
 
@@ -18,6 +19,11 @@ namespace LLGL
 D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
     CreateRootSignature(device, desc);
+}
+
+void D3D12PipelineLayout::SetName(const char* name)
+{
+    D3D12SetObjectName(rootSignature_.Get(), name);
 }
 
 void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc)

@@ -44,7 +44,7 @@ class Example_Tessellation : public ExampleBase
 
     std::uint32_t           constantBufferIndex = 0;
 
-    bool                    showWireframe       = false;
+    bool                    showWireframe       = true;
 
     struct Settings
     {
@@ -176,7 +176,7 @@ public:
             {
                 LLGL::BindingDescriptor
                 {
-                    LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::AllTessStages, constantBufferIndex, 1u, "Settings"
+                    "Settings", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::AllTessStages, constantBufferIndex
                 }
             };
         }

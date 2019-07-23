@@ -27,26 +27,26 @@ static NSUInteger GetTextureLayers(const TextureDescriptor& desc)
 static MTLTextureUsage GetTextureUsage(const TextureDescriptor& desc)
 {
     MTLTextureUsage usage = 0;
-    
+
     if ((desc.bindFlags & BindFlags::SampleBuffer) != 0)
         usage |= MTLTextureUsageShaderRead;
     if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
         usage |= MTLTextureUsageShaderWrite;
     if ((desc.bindFlags & (BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment)) != 0)
         usage |= MTLTextureUsageRenderTarget;
-    
+
     return usage;
 }
 
 static MTLResourceOptions GetResourceOptions(const TextureDescriptor& desc)
 {
     MTLResourceOptions opt = 0;
-    
+
     if (IsDepthStencilFormat(desc.format))
         opt |= MTLResourceStorageModePrivate;
     else
         opt |= MTLResourceStorageModeManaged;
-    
+
     return opt;
 }
 
@@ -84,7 +84,7 @@ Extent3D MTTexture::QueryMipExtent(std::uint32_t mipLevel) const
     auto h = static_cast<std::uint32_t>([native_ height]);
     auto d = static_cast<std::uint32_t>([native_ depth]);
     auto a = static_cast<std::uint32_t>([native_ arrayLength]);
-    
+
     switch (GetType())
     {
         case TextureType::Texture1D:
@@ -135,24 +135,20 @@ TextureDescriptor MTTexture::QueryDesc() const
     texDesc.extent.depth    = static_cast<std::uint32_t>([native_ depth]);
     texDesc.arrayLayers     = static_cast<std::uint32_t>([native_ arrayLength]);
     texDesc.samples         = static_cast<std::uint32_t>([native_ sampleCount]);
-    
+
     if (IsCubeTexture(GetType()))
         texDesc.arrayLayers *= 6;
 
     return texDesc;
 }
 
-void MTTexture::Write(
-    SrcImageDescriptor  imageDesc,
-    const Offset3D&     offset,
-    const Extent3D&     extent,
-    std::uint32_t       mipLevel)
+void MTTexture::Write(const TextureRegion& textureRegion, SrcImageDescriptor imageDesc)
 {
     /* Convert region to MTLRegion */
     MTLRegion region;
-    MTTypes::Convert(region.origin, offset);
-    MTTypes::Convert(region.size, extent);
-    
+    MTTypes::Convert(region.origin, textureRegion.offset);
+    MTTypes::Convert(region.size, textureRegion.extent);
+
     /* Get dimensions */
     auto        format          = MTTypes::ToFormat([native_ pixelFormat]);
     NSUInteger  bytesPerRow     = ([native_ width] * FormatBitSize(format) / 8);
@@ -173,7 +169,7 @@ void MTTexture::Write(
             imageDesc.data = tempImageBuffer.get();
         }
     }
-    
+
     /* Replace region of native texture with source image data */
     if (GetType() == TextureType::Texture3D)
     {
@@ -186,21 +182,14 @@ void MTTexture::Write(
     }
     else
     {
-        /* Take z and depth components as array layer range */
-        auto firstArrayLayer    = region.origin.z;
-        auto numArrayLayers     = region.size.depth;
-        
-        region.origin.z         = 0;
-        region.size.depth       = 1;
-        
         auto byteAlignedData = reinterpret_cast<const std::int8_t*>(imageDesc.data);
-        
-        for (NSUInteger arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
+
+        for (NSUInteger arrayLayer = 0; arrayLayer < textureRegion.subresource.numArrayLayers; ++arrayLayer)
         {
             [native_
                 replaceRegion:  region
-                mipmapLevel:    static_cast<NSUInteger>(mipLevel)
-                slice:          (firstArrayLayer + arrayLayer)
+                mipmapLevel:    static_cast<NSUInteger>(textureRegion.subresource.baseMipLevel)
+                slice:          (textureRegion.subresource.baseArrayLayer + arrayLayer)
                 withBytes:      byteAlignedData
                 bytesPerRow:    bytesPerRow
                 bytesPerImage:  bytesPerSlice

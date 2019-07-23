@@ -22,9 +22,14 @@ namespace LLGL
 /**
 \brief Texture interface.
 \see RenderSystem::CreateTexture
+\see TextureDescriptor
+\see TextureLocation
+\see TextureRegion
 */
 class LLGL_EXPORT Texture : public Resource
 {
+
+        LLGL_DECLARE_INTERFACE( InterfaceID::Texture );
 
     public:
 

@@ -45,8 +45,28 @@ class VKCommandBuffer final : public CommandBuffer
         void Begin() override;
         void End() override;
 
-        void UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize) override;
-        void CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size) override;
+        void UpdateBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            const void*     data,
+            std::uint16_t   dataSize
+        ) override;
+
+        void CopyBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            Buffer&         srcBuffer,
+            std::uint64_t   srcOffset,
+            std::uint64_t   size
+        ) override;
+
+        void CopyTexture(
+            Texture&                dstTexture,
+            const TextureLocation&  dstLocation,
+            Texture&                srcTexture,
+            const TextureLocation&  srcLocation,
+            const Extent3D&         extent
+        ) override;
 
         void Execute(CommandBuffer& deferredCommandBuffer) override;
 
@@ -153,9 +173,9 @@ class VKCommandBuffer final : public CommandBuffer
 
         void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) override;
         void DispatchIndirect(Buffer& buffer, std::uint64_t offset) override;
-    
+
         /* ----- Debugging ----- */
-    
+
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 

@@ -11,31 +11,38 @@
 
 #include <LLGL/Shader.h>
 #include <LLGL/RenderingDebugger.h>
+#include <string>
 
 
 namespace LLGL
 {
 
 
-class DbgShader : public Shader
+class DbgShader final : public Shader
 {
 
     public:
 
-        DbgShader(Shader& instance, const ShaderType type, RenderingDebugger* debugger);
+        void SetName(const char* name) override;
 
         bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
-
         std::string QueryInfoLog() override;
+
+    public:
+
+        DbgShader(Shader& instance, const ShaderType type, RenderingDebugger* debugger);
 
         inline bool IsCompiled() const
         {
             return !instance.HasErrors();
         }
 
-        Shader& instance;
+    public:
+
+        Shader&     instance;
+        std::string label;
 
     private:
 

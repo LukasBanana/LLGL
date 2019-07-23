@@ -7,6 +7,7 @@
 
 #include "D3D11Sampler.h"
 #include "../D3D11Types.h"
+#include "../D3D11ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 
 
@@ -42,8 +43,13 @@ D3D11Sampler::D3D11Sampler(ID3D11Device* device, const SamplerDescriptor& desc)
             samplerDesc.MaxLOD = 0.0f;
         }
     }
-    auto hr = device->CreateSamplerState(&samplerDesc, &samplerState_);
+    auto hr = device->CreateSamplerState(&samplerDesc, native_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 sampler state");
+}
+
+void D3D11Sampler::SetName(const char* name)
+{
+    D3D11SetObjectName(native_.Get(), name);
 }
 
 

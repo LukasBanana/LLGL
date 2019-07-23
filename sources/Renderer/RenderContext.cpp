@@ -25,11 +25,6 @@ RenderContext::RenderContext(const VideoModeDescriptor& initialVideoMode, const 
 
 /* ----- Render Target ----- */
 
-bool RenderContext::IsRenderContext() const
-{
-    return true;
-}
-
 Extent2D RenderContext::GetResolution() const
 {
     return GetVideoMode().resolution;
@@ -171,6 +166,11 @@ bool RenderContext::SwitchFullscreenMode(const VideoModeDescriptor& videoModeDes
 /*
  * ======= Private: =======
  */
+
+bool RenderContext::OnIsRenderContext() const
+{
+    return true;
+}
 
 bool RenderContext::SetVideoModePrimary(const VideoModeDescriptor& videoModeDesc)
 {

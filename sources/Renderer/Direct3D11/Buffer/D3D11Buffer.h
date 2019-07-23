@@ -23,6 +23,10 @@ class D3D11Buffer : public Buffer
 
     public:
 
+        void SetName(const char* name) override;
+
+    public:
+
         D3D11Buffer(long bindFlags);
         D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
@@ -69,6 +73,8 @@ class D3D11Buffer : public Buffer
     private:
 
         void CreateCPUAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc);
+
+    private:
 
         ComPtr<ID3D11Buffer>    buffer_;
         ComPtr<ID3D11Buffer>    cpuAccessBuffer_;

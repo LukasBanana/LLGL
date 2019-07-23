@@ -7,6 +7,7 @@
 
 #include "D3D12ResourceHeap.h"
 //#include "D3D12PipelineLayout.h"
+#include "../D3D12ObjectUtils.h"
 #include "../Buffer/D3D12Buffer.h"
 #include "../Texture/D3D12Sampler.h"
 #include "../Texture/D3D12Texture.h"
@@ -32,6 +33,12 @@ D3D12ResourceHeap::D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDes
     CreateShaderResourceViews(device, cpuDescHandleCbvSrvUav, desc);
     CreateUnorderedAccessViews(device, cpuDescHandleCbvSrvUav, desc);
     CreateSamplers(device, cpuDescHandleSampler, desc);
+}
+
+void D3D12ResourceHeap::SetName(const char* name)
+{
+    D3D12SetObjectNameSubscript(heapTypeCbvSrvUav_.Get(), name, ".CbvSrvUav");
+    D3D12SetObjectNameSubscript(heapTypeSampler_.Get(), name, ".Sampler");
 }
 
 
@@ -75,10 +82,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeCbvSrvUav(ID3D12Dev
         auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heapTypeCbvSrvUav_.ReleaseAndGetAddressOf()));
         DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap of type D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV");
 
-        #ifdef LLGL_DEBUG
-        heapTypeCbvSrvUav_->SetName(L"LLGL::D3D12ResourceHeap::heapTypeCbvSrvUav");
-        #endif
-
         /* Store in array for quick access */
         AppendDescriptorHeapToArray(heapTypeCbvSrvUav_.Get());
 
@@ -117,10 +120,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeSampler(ID3D12Devic
         }
         auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heapTypeSampler_.ReleaseAndGetAddressOf()));
         DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap of type D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER");
-
-        #ifdef LLGL_DEBUG
-        heapTypeSampler_->SetName(L"LLGL::D3D12ResourceHeap::heapTypeSampler");
-        #endif
 
         /* Store in array for quick access */
         AppendDescriptorHeapToArray(heapTypeSampler_.Get());

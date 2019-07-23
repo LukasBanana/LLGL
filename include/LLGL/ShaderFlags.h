@@ -97,7 +97,7 @@ struct StageFlags
         //! Specifies the geometry shader stage.
         GeometryStage       = (1 << 3),
 
-        //! Specifies the fragment shader stage (also "Pixel Shader").
+        //! Specifies the fragment shader stage (also referred to as "Pixel Shader").
         FragmentStage       = (1 << 4),
 
         //! Specifies the compute shader stage.
@@ -140,12 +140,13 @@ struct ShaderDescriptor
         const char*         source,
         const char*         entryPoint,
         const char*         profile,
-        long                flags = 0) :
-            type       { type       },
-            source     { source     },
-            entryPoint { entryPoint },
-            profile    { profile    },
-            flags      { flags      }
+        long                flags = 0)
+    :
+        type       { type       },
+        source     { source     },
+        entryPoint { entryPoint },
+        profile    { profile    },
+        flags      { flags      }
     {
     }
 
@@ -156,7 +157,7 @@ struct ShaderDescriptor
     };
 
     //! Specifies the type of the shader, i.e. if it is either a vertex or fragment shader or the like. By default ShaderType::Undefined.
-    ShaderType          type        = ShaderType::Undefined;
+    ShaderType          type            = ShaderType::Undefined;
 
     /**
     \brief Pointer to the shader source. This is either a null terminated string or a raw byte buffer (depending on the 'sourceType' member).
@@ -165,7 +166,7 @@ struct ShaderDescriptor
     \see sourceSize
     \see sourceType
     */
-    const char*         source      = nullptr;
+    const char*         source          = nullptr;
 
     /**
     \brief Specifies the size of the shader source (excluding the null terminator).
@@ -173,7 +174,7 @@ struct ShaderDescriptor
     For the binrary buffer source type (i.e. ShaderSourceType::BinaryBuffer), this must not be zero!
     \see source
     */
-    std::size_t         sourceSize  = 0;
+    std::size_t         sourceSize      = 0;
 
     /**
     \brief Specifies the type of the shader source. By default ShaderSourceType::CodeFile.

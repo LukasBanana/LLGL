@@ -44,6 +44,8 @@ class D3D11RenderContext final : public RenderContext
             const std::shared_ptr<Surface>& surface
         );
 
+        void SetName(const char* name) override;
+
         void Present() override;
 
         Format QueryColorFormat() const override;
@@ -66,6 +68,8 @@ class D3D11RenderContext final : public RenderContext
         void CreateSwapChain(IDXGIFactory* factory);
         void CreateBackBuffer(const VideoModeDescriptor& videoModeDesc);
         void ResizeBackBuffer(const VideoModeDescriptor& videoModeDesc);
+
+    private:
 
         ComPtr<ID3D11Device>        device_;
         ComPtr<ID3D11DeviceContext> context_;

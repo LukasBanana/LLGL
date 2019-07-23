@@ -6,6 +6,7 @@
  */
 
 #include "GLShader.h"
+#include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
@@ -30,6 +31,11 @@ GLShader::GLShader(const ShaderDescriptor& desc) :
 GLShader::~GLShader()
 {
     glDeleteShader(id_);
+}
+
+void GLShader::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_SHADER, GetID(), name);
 }
 
 bool GLShader::HasErrors() const

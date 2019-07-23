@@ -96,6 +96,8 @@ class VKTexture final : public Texture
 
         void CreateImage(VkDevice device, const TextureDescriptor& desc);
 
+        VkImageAspectFlags GetAspectFlags() const;
+
     private:
 
         VKDeviceImage       imageWrapper_;

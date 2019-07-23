@@ -25,6 +25,10 @@ class GLBuffer : public Buffer
 
     public:
 
+        void SetName(const char* name) override final;
+
+    public:
+
         GLBuffer(long bindFlags);
         ~GLBuffer();
 

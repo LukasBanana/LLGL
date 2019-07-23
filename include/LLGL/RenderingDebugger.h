@@ -54,7 +54,7 @@ class LLGL_EXPORT RenderingDebugger
         \note This function only stores the pointer. Hence, the pointer must be valid until a new pointer or a null pointer is set.
         */
         void SetSource(const char* source);
-    
+
         /**
         \brief Sets the new debug group name.
         \param[in] name Pointer to a null terminated string that specifies the name. If this is null, the debug group is disabled.
@@ -100,7 +100,7 @@ class LLGL_EXPORT RenderingDebugger
 
                 //! Blocks further occurrences of this message after the specified amount of messages have been occurred.
                 void BlockAfter(std::size_t occurrences);
-            
+
                 /**
                 \brief Returns a report string for this message.
                 \param[in] reportTypeName Specifies the name of the report type (e.g. "ERROR").
@@ -119,7 +119,7 @@ class LLGL_EXPORT RenderingDebugger
                 {
                     return source_;
                 }
-            
+
                 //! Returns the debug group name where this message occured.
                 inline const std::string& GetGroupName() const
                 {
@@ -155,7 +155,7 @@ class LLGL_EXPORT RenderingDebugger
         };
 
     protected:
-    
+
         /**
         \brief Callback function when an error was posted.
         \remarks Use the 'message' parameter to block further occurences of this error if you like.

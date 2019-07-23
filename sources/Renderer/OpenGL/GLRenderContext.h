@@ -11,6 +11,7 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
+#include <LLGL/RendererConfiguration.h>
 #include "OpenGL.h"
 #include "RenderState/GLStateManager.h"
 #include "Platform/GLContext.h"
@@ -34,7 +35,12 @@ class GLRenderContext final : public RenderContext
 
         /* ----- Common ----- */
 
-        GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface, GLRenderContext* sharedRenderContext);
+        GLRenderContext(
+            RenderContextDescriptor             desc,
+            const RendererConfigurationOpenGL&  config,
+            const std::shared_ptr<Surface>&     surface,
+            GLRenderContext*                    sharedRenderContext
+        );
 
         void Present() override;
 

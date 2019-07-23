@@ -30,6 +30,8 @@ class D3D12CommandQueue final : public CommandQueue
 
         D3D12CommandQueue(ID3D12Device* device, ID3D12CommandQueue* queue);
 
+        void SetName(const char* name) override;
+
         /* ----- Command Buffers ----- */
 
         void Submit(CommandBuffer& commandBuffer) override;

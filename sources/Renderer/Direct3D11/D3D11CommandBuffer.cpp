@@ -11,7 +11,9 @@
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
+#include "../TextureUtils.h"
 #include <algorithm>
+#include <codecvt>
 
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11GraphicsPipelineBase.h"
@@ -61,6 +63,10 @@ D3D11CommandBuffer::D3D11CommandBuffer(
     /* Store information whether the command buffer has an immediate or deferred context */
     if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
         hasDeferredContext_ = true;
+
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    context_->QueryInterface(IID_PPV_ARGS(&annotation_));
+    #endif
 }
 
 /* ----- Encoding ----- */
@@ -79,29 +85,63 @@ void D3D11CommandBuffer::End()
     }
 }
 
-void D3D11CommandBuffer::UpdateBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint16_t dataSize)
+void D3D11CommandBuffer::UpdateBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    const void*     data,
+    std::uint16_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
     dstBufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
 }
 
-void D3D11CommandBuffer::CopyBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, Buffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+void D3D11CommandBuffer::CopyBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    Buffer&         srcBuffer,
+    std::uint64_t   srcOffset,
+    std::uint64_t   size)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
     auto& srcBufferD3D = LLGL_CAST(D3D11Buffer&, srcBuffer);
 
     context_->CopySubresourceRegion(
-        dstBufferD3D.GetNative(),                               // pDstResource
-        0,                                                      // DstSubresource
-        static_cast<UINT>(dstOffset),                           // DstX
-        0,                                                      // DstY
-        0,                                                      // DstZ
-        srcBufferD3D.GetNative(),                               // pSrcResource
-        0,                                                      // SrcSubresource
-        &CD3D11_BOX(                                            // pSrcBox
+        dstBufferD3D.GetNative(),                       // pDstResource
+        0,                                              // DstSubresource
+        static_cast<UINT>(dstOffset),                   // DstX
+        0,                                              // DstY
+        0,                                              // DstZ
+        srcBufferD3D.GetNative(),                       // pSrcResource
+        0,                                              // SrcSubresource
+        &CD3D11_BOX(                                    // pSrcBox
             static_cast<LONG>(srcOffset), 0, 0,
             static_cast<LONG>(srcOffset + size), 1, 1
         )
+    );
+}
+
+void D3D11CommandBuffer::CopyTexture(
+    Texture&                dstTexture,
+    const TextureLocation&  dstLocation,
+    Texture&                srcTexture,
+    const TextureLocation&  srcLocation,
+    const Extent3D&         extent)
+{
+    auto& dstTextureD3D = LLGL_CAST(D3D11Texture&, dstTexture);
+    auto& srcTextureD3D = LLGL_CAST(D3D11Texture&, srcTexture);
+
+    const Offset3D  dstOffset   = CalcTextureOffset(dstTexture.GetType(), dstLocation.offset, dstLocation.arrayLayer);
+    const D3D11_BOX srcBox      = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
+
+    context_->CopySubresourceRegion(
+        dstTextureD3D.GetNative().resource.Get(),   // pDstResource
+        dstTextureD3D.CalcSubresource(dstLocation), // DstSubresource
+        static_cast<UINT>(dstOffset.x),             // DstX
+        static_cast<UINT>(dstOffset.y),             // DstY
+        static_cast<UINT>(dstOffset.z),             // DstZ
+        srcTextureD3D.GetNative().resource.Get(),   // pSrcResource
+        srcTextureD3D.CalcSubresource(srcLocation), // SrcSubresource
+        &srcBox                                     // pSrcBox
     );
 }
 
@@ -511,12 +551,22 @@ void D3D11CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void D3D11CommandBuffer::PushDebugGroup(const char* name)
 {
-    //TODO
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    if (annotation_)
+    {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        std::wstring nameWStr = converter.from_bytes(name);
+        annotation_->BeginEvent(nameWStr.c_str());
+    }
+    #endif
 }
 
 void D3D11CommandBuffer::PopDebugGroup()
 {
-    //TODO
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    if (annotation_)
+        annotation_->EndEvent();
+    #endif
 }
 
 /* ----- Direct Resource Access ------ */

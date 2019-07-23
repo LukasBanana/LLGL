@@ -12,7 +12,12 @@ namespace LLGL
 {
 
 
-GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface, GLRenderContext* sharedRenderContext) :
+GLRenderContext::GLRenderContext(
+    RenderContextDescriptor             desc,
+    const RendererConfigurationOpenGL&  config,
+    const std::shared_ptr<Surface>&     surface,
+    GLRenderContext*                    sharedRenderContext)
+:
     RenderContext  { desc.videoMode, desc.vsync                           },
     contextHeight_ { static_cast<GLint>(desc.videoMode.resolution.height) }
 {
@@ -35,7 +40,7 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
 
     /* Create platform dependent OpenGL context */
     GLContext* sharedGLContext = (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr);
-    context_ = GLContext::Create(desc, GetSurface(), sharedGLContext);
+    context_ = GLContext::Create(desc, config, GetSurface(), sharedGLContext);
 
     /* Setup swap interval (for v-sync) */
     OnSetVsync(desc.vsync);
@@ -77,7 +82,7 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
     {
         /* Make OpenGL context of the specified render contex current and notify the state manager */
         auto result = GLContext::MakeCurrent(renderContext->context_.get());
-        GLStateManager::active->NotifyRenderTargetHeight(renderContext->contextHeight_);
+        GLStateManager::Get().NotifyRenderTargetHeight(renderContext->contextHeight_);
         return result;
     }
     else

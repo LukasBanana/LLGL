@@ -6,6 +6,8 @@
  */
 
 #include "GLTexture.h"
+#include "GLReadTextureFBO.h"
+#include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
@@ -36,7 +38,12 @@ GLTexture::GLTexture(const TextureType type) :
 GLTexture::~GLTexture()
 {
     glDeleteTextures(1, &id_);
-    GLStateManager::active->NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
+    GLStateManager::Get().NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
+}
+
+void GLTexture::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_TEXTURE, GetID(), name);
 }
 
 static GLenum GLGetTextureParamTarget(const TextureType type)
@@ -73,16 +80,16 @@ Extent3D GLTexture::QueryMipExtent(std::uint32_t mipLevel) const
     #endif
     {
         /* Push currently bound texture onto stack to restore it after query */
-        GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
+        GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
         {
             /* Bind texture and query attributes */
-            GLStateManager::active->BindGLTexture(*this);
+            GLStateManager::Get().BindGLTexture(*this);
             auto target = GLGetTextureParamTarget(GetType());
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH,  &texSize[0]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &texSize[1]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH,  &texSize[2]);
         }
-        GLStateManager::active->PopBoundTexture();
+        GLStateManager::Get().PopBoundTexture();
     }
 
     /* Adjust depth value for cube texture to be uniform with D3D */
@@ -127,6 +134,167 @@ TextureDescriptor GLTexture::QueryDesc() const
     return texDesc;
 }
 
+#ifdef GL_ARB_copy_image
+
+static void GLCopyImageSubData(
+    GLTexture&      dstTexture,
+    GLint           dstLevel,
+    const Offset3D& dstOffset,
+    GLTexture&      srcTexture,
+    GLint           srcLevel,
+    const Offset3D& srcOffset,
+    const Extent3D& extent)
+{
+    /* Copy raw data of texture directly (GL 4.3+) */
+    glCopyImageSubData(
+        srcTexture.GetID(),
+        GLTypes::Map(srcTexture.GetType()),
+        srcLevel,
+        srcOffset.x,
+        srcOffset.y,
+        srcOffset.z,
+        dstTexture.GetID(),
+        GLTypes::Map(dstTexture.GetType()),
+        dstLevel,
+        dstOffset.x,
+        dstOffset.y,
+        dstOffset.z,
+        static_cast<GLsizei>(extent.width),
+        static_cast<GLsizei>(extent.height),
+        static_cast<GLsizei>(extent.depth)
+    );
+}
+
+#endif // /GL_ARB_copy_image
+
+static void GLCopyTexSubImage(
+    GLTexture&      dstTexture,
+    GLint           dstLevel,
+    const Offset3D& dstOffset,
+    GLTexture&      srcTexture,
+    GLint           srcLevel,
+    Offset3D        srcOffset,
+    const Extent3D& extent)
+{
+    const TextureType       type        = dstTexture.GetType();
+    const GLTextureTarget   target      = GLStateManager::GetTextureTarget(type);
+    const GLenum            targetGL    = GLTypes::Map(type);
+
+    /* Store bound texture and framebuffer */
+    GLStateManager::Get().PushBoundTexture(target);
+    GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
+    {
+        /* Create temporary FBO for source texture to read from GL_READ_FRAMEBUFFER in copy texture operator */
+        GLReadTextureFBO readFBO;
+        GLStateManager::Get().BindTexture(target, dstTexture.GetID());
+
+        switch (type)
+        {
+            case TextureType::Texture1D:
+            {
+                readFBO.Attach(srcTexture, srcLevel, srcOffset);
+                glCopyTexSubImage1D(
+                    targetGL,
+                    dstLevel,
+                    dstOffset.x,
+                    srcOffset.x,
+                    0,
+                    static_cast<GLsizei>(extent.width)
+                );
+            }
+            break;
+
+            case TextureType::Texture1DArray:
+            case TextureType::Texture2D:
+            case TextureType::Texture2DMS:
+            {
+                readFBO.Attach(srcTexture, srcLevel, srcOffset);
+                glCopyTexSubImage2D(
+                    targetGL,
+                    dstLevel,
+                    dstOffset.x,
+                    dstOffset.y,
+                    srcOffset.x,
+                    srcOffset.y,
+                    static_cast<GLsizei>(extent.width),
+                    static_cast<GLsizei>(extent.height)
+                );
+            }
+            break;
+
+            case TextureType::Texture3D:
+            case TextureType::Texture2DArray:
+            case TextureType::Texture2DMSArray:
+            case TextureType::TextureCube:
+            case TextureType::TextureCubeArray:
+            {
+                for (decltype(extent.depth) i = 0; i < extent.depth; ++i)
+                {
+                    readFBO.Attach(srcTexture, srcLevel, srcOffset);
+                    glCopyTexSubImage3D(
+                        targetGL,
+                        dstLevel,
+                        dstOffset.x,
+                        dstOffset.y,
+                        dstOffset.z + i,
+                        srcOffset.x,
+                        srcOffset.y,
+                        static_cast<GLsizei>(extent.width),
+                        static_cast<GLsizei>(extent.height)
+                    );
+                    srcOffset.z++;
+                }
+            }
+            break;
+        }
+    }
+    /* Restore previous bound texture and framebuffer */
+    GLStateManager::Get().PopBoundFramebuffer();
+    GLStateManager::Get().PopBoundTexture();
+}
+
+void GLTexture::CopyImageSubData(
+    GLint           dstLevel,
+    const Offset3D& dstOffset,
+    GLTexture&      srcTexture,
+    GLint           srcLevel,
+    const Offset3D& srcOffset,
+    const Extent3D& extent)
+{
+    #ifdef GL_ARB_copy_image
+    if (HasExtension(GLExt::ARB_copy_image))
+    {
+        /* Copy raw data of texture directly (GL 4.3+) */
+        GLCopyImageSubData(*this, dstLevel, dstOffset, srcTexture, srcLevel, srcOffset, extent);
+    }
+    else
+    #endif // /GL_ARB_copy_image
+    {
+        /* Copy source texture from GL_READ_BUFFER into destination texture */
+        GLCopyTexSubImage(*this, dstLevel, dstOffset, srcTexture, srcLevel, srcOffset, extent);
+    }
+}
+
+void GLTexture::TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc)
+{
+    #ifdef GL_ARB_texture_view
+    if (HasExtension(GLExt::ARB_texture_view))
+    {
+        /* Initialize texture with texture-view description */
+        glTextureView(
+            GetID(),
+            GLTypes::Map(textureViewDesc.type),
+            sharedTexture.GetID(),
+            GLTypes::Map(textureViewDesc.format),
+            textureViewDesc.subresource.baseMipLevel,
+            textureViewDesc.subresource.numMipLevels,
+            textureViewDesc.subresource.baseArrayLayer,
+            textureViewDesc.subresource.numArrayLayers
+        );
+    }
+    #endif // /GL_ARB_texture_view
+}
+
 GLenum GLTexture::QueryGLInternalFormat() const
 {
     /* Query hardware texture format */
@@ -160,10 +328,10 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
     #endif
     {
         /* Push currently bound texture onto stack to restore it after query */
-        GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
+        GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
         {
             /* Bind texture and query attributes */
-            GLStateManager::active->BindGLTexture(*this);
+            GLStateManager::Get().BindGLTexture(*this);
             auto target = GLGetTextureParamTarget(GetType());
 
             if (internalFormat)
@@ -176,7 +344,7 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH,  &extent[2]);
             }
         }
-        GLStateManager::active->PopBoundTexture();
+        GLStateManager::Get().PopBoundTexture();
     }
 }
 

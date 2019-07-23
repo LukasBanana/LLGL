@@ -28,7 +28,7 @@ class D3D11RenderTarget final : public RenderTarget
 
     public:
 
-        D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc);
+        void SetName(const char* name) override;
 
         Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
@@ -39,6 +39,8 @@ class D3D11RenderTarget final : public RenderTarget
         const RenderPass* GetRenderPass() const override;
 
     public:
+
+        D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc);
 
         // Resolves all multi-sampled subresources.
         void ResolveSubresources(ID3D11DeviceContext* context);

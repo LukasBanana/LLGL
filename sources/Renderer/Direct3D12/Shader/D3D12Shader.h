@@ -35,11 +35,11 @@ class D3D12Shader final : public Shader
 
         std::string QueryInfoLog() override;
 
-        /* ----- Extended internal functions ---- */
+    public:
 
         D3D12_SHADER_BYTECODE GetByteCode() const;
 
-        void Reflect(ShaderReflectionDescriptor& reflectionDesc) const;
+        void Reflect(ShaderReflection& reflection) const;
 
     private:
 
@@ -47,7 +47,9 @@ class D3D12Shader final : public Shader
         bool CompileSource(const ShaderDescriptor& shaderDesc);
         bool LoadBinary(const ShaderDescriptor& shaderDesc);
 
-        void ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const;
+        void ReflectShaderByteCode(ShaderReflection& reflection) const;
+
+    private:
 
         std::vector<char>   byteCode_;
         ComPtr<ID3DBlob>    errors_;

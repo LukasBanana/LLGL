@@ -32,14 +32,15 @@ The only interface that inherits from this interface is RenderContext, a special
 class LLGL_EXPORT RenderTarget : public RenderSystemChild
 {
 
+        LLGL_DECLARE_INTERFACE( InterfaceID::RenderTarget );
+
     public:
 
         /**
-        \brief Returns true if this render target is an instance of RenderContext. By default false.
-        \remarks Do not override this function. Only the sub class RenderContext is supposed to override it.
-        \see RenderContext::IsRenderContext
+        \brief Returns true if this render target is an instance of RenderContext.
+        \todo Replace by IsInstanceOf
         */
-        virtual bool IsRenderContext() const;
+        bool IsRenderContext() const;
 
         /**
         \brief Returns the render target resolution.
@@ -99,6 +100,14 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \see ValidateResolution
         */
         void ValidateMipResolution(const Texture& texture, std::uint32_t mipLevel);
+
+    private:
+
+        // Only RenderContext is supposed to override "OnIsRenderContext".
+        friend class RenderContext;
+
+        // Returns true if this render target is an instance of RenderContext. By default false.
+        virtual bool OnIsRenderContext() const;
 
 };
 
