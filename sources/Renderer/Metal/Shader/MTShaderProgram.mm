@@ -46,9 +46,9 @@ std::string MTShaderProgram::QueryInfoLog()
 }
 
 //TODO
-ShaderReflectionDescriptor MTShaderProgram::QueryReflectionDesc() const
+ShaderReflection MTShaderProgram::QueryReflection() const
 {
-    ShaderReflectionDescriptor reflection;
+    ShaderReflection reflection;
 
     /* Reflect shader program */
     if (kernelFunc_ != nil)
@@ -103,7 +103,7 @@ void MTShaderProgram::Attach(Shader* shader)
         /* Get native shader function */
         auto* shaderMT = LLGL_CAST(MTShader*, shader);
         id<MTLFunction> shaderFunc = shaderMT->GetNative();
-        
+
         /* Check for errors */
         if (shaderMT->HasError())
         {
@@ -144,18 +144,18 @@ void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
 {
     if (numVertexFormats == 0 || vertexFormats == nullptr)
         return;
-    
+
     /* Allocate new vertex descriptor */
     ReleaseVertexDesc();
     vertexDesc_ = [[MTLVertexDescriptor alloc] init];
-    
+
     for (std::size_t i = 0, attribIdx = 0; i < numVertexFormats; ++i)
     {
         auto inputSlot = vertexFormats[i].inputSlot;
-    
+
         /* Convert vertex layout */
         MTLVertexBufferLayoutDescriptor* layoutDesc = vertexDesc_.layouts[inputSlot];
-        
+
         //TODO: per-instance data by attribute (not by vertex format!)
         layoutDesc.stepFunction = MTLVertexStepFunctionPerVertex;
         layoutDesc.stepRate     = 1;
@@ -163,7 +163,7 @@ void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
 
         /* Convert attributes */
         const auto& attribs = vertexFormats[i].attributes;
-        
+
         #if 1//TODO
         if (!attribs.empty() && attribs.front().instanceDivisor > 0)
         {
@@ -171,11 +171,11 @@ void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
             layoutDesc.stepRate     = static_cast<NSUInteger>(attribs.front().instanceDivisor);
         }
         #endif
-        
+
         for (std::size_t j = 0; j < attribs.size(); ++j)
         {
             MTLVertexAttributeDescriptor* attribDesc = vertexDesc_.attributes[attribIdx++];
-            
+
             attribDesc.format       = MTTypes::ToMTLVertexFormat(attribs[j].format);
             attribDesc.offset       = static_cast<NSUInteger>(attribs[j].offset);
             attribDesc.bufferIndex  = inputSlot;
@@ -203,25 +203,25 @@ static ResourceType ToResourceType(MTLArgumentType type)
     }
 }
 
-static void ReflectShaderArgument(MTLArgument* arg, ShaderReflectionDescriptor& reflection)
+static void ReflectShaderArgument(MTLArgument* arg, ShaderReflection& reflection)
 {
     auto resourceType = ToResourceType(arg.type);
     if (resourceType != ResourceType::Undefined)
     {
-        ShaderReflectionDescriptor::ResourceView resourceView;
+        ShaderResource resource;
         {
-            resourceView.name       = [arg.name UTF8String];
-            resourceView.type       = resourceType;
-            resourceView.slot       = arg.index;
-            resourceView.arraySize  = arg.arrayLength;
+            resource.binding.name       = [arg.name UTF8String];
+            resource.binding.type       = resourceType;
+            resource.binding.slot       = arg.index;
+            resource.binding.arraySize  = arg.arrayLength;
             if (resourceType == ResourceType::Buffer)
-                resourceView.constantBufferSize = arg.bufferDataSize;
+                resource.constantBufferSize = arg.bufferDataSize;
         }
-        reflection.resourceViews.push_back(resourceView);
+        reflection.resources.push_back(resource);
     }
 }
 
-void MTShaderProgram::ReflectRenderPipeline(ShaderReflectionDescriptor& reflection) const
+void MTShaderProgram::ReflectRenderPipeline(ShaderReflection& reflection) const
 {
     //TODO: get pixel formats from render target or render context
     /* Create render pipeline state */
@@ -239,29 +239,29 @@ void MTShaderProgram::ReflectRenderPipeline(ShaderReflectionDescriptor& reflecti
         pipelineDesc.rasterizationEnabled               = (GetFragmentMTLFunction() != nil);
         pipelineDesc.sampleCount                        = 1;
     }
-    
+
     MTLRenderPipelineReflection* psoReflect = nullptr;
     MTLPipelineOption opt = (MTLPipelineOptionArgumentInfo | MTLPipelineOptionBufferTypeInfo);
     NSError* error = nullptr;
-    
+
     id<MTLRenderPipelineState> pso = [device_
         newRenderPipelineStateWithDescriptor:   pipelineDesc
         options:                                opt
         reflection:                             &psoReflect
         error:                                  &error
     ];
-    
+
     [pipelineDesc release];
- 
+
     for (MTLArgument* arg in psoReflect.vertexArguments)
         ReflectShaderArgument(arg, reflection);
     for (MTLArgument* arg in psoReflect.fragmentArguments)
         ReflectShaderArgument(arg, reflection);
-    
+
     [pso release];
 }
 
-void MTShaderProgram::ReflectComputePipeline(ShaderReflectionDescriptor& reflection) const
+void MTShaderProgram::ReflectComputePipeline(ShaderReflection& reflection) const
 {
     //TODO
 }

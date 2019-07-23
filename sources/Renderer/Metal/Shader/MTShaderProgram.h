@@ -27,12 +27,12 @@ class MTShaderProgram : public ShaderProgram
 
         MTShaderProgram(id<MTLDevice> device, const ShaderProgramDescriptor& desc);
         ~MTShaderProgram();
-    
+
         bool HasErrors() const override;
 
         std::string QueryInfoLog() override;
 
-        ShaderReflectionDescriptor QueryReflectionDesc() const override;
+        ShaderReflection QueryReflection() const override;
         UniformLocation QueryUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
@@ -50,12 +50,12 @@ class MTShaderProgram : public ShaderProgram
         {
             return vertexFunc_;
         }
-    
+
         inline id<MTLFunction> GetFragmentMTLFunction() const
         {
             return fragmentFunc_;
         }
-        
+
         inline id<MTLFunction> GetKernelMTLFunction() const
         {
             return kernelFunc_;
@@ -66,25 +66,25 @@ class MTShaderProgram : public ShaderProgram
         {
             return numThreadsPerGroup_;
         }
-    
+
     private:
-    
+
         void Attach(Shader* shader);
         void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
         void ReleaseVertexDesc();
-    
-        void ReflectRenderPipeline(ShaderReflectionDescriptor& reflection) const;
-        void ReflectComputePipeline(ShaderReflectionDescriptor& reflection) const;
+
+        void ReflectRenderPipeline(ShaderReflection& reflection) const;
+        void ReflectComputePipeline(ShaderReflection& reflection) const;
 
     private:
-    
+
         id<MTLDevice>           device_             = nil;
-    
+
         MTLVertexDescriptor*    vertexDesc_     	= nullptr;
         id<MTLFunction>         vertexFunc_         = nil;
         id<MTLFunction>         fragmentFunc_       = nil;
         id<MTLFunction>         kernelFunc_         = nil;
-    
+
         MTShader*               shaderWithError_    = nullptr;
         MTLSize                 numThreadsPerGroup_ = { 1, 1, 1 };
 

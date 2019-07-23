@@ -44,7 +44,7 @@ std::string VKShaderProgram::QueryInfoLog()
         return "";
 }
 
-ShaderReflectionDescriptor VKShaderProgram::QueryReflectionDesc() const
+ShaderReflection VKShaderProgram::QueryReflection() const
 {
     return {}; //TODO
 }

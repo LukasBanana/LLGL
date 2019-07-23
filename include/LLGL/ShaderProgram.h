@@ -44,35 +44,35 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
 
         /**
         \brief Returns a descriptor of the shader pipeline layout with all required shader resources.
-        \remarks The list of resource views in the output descriptor (i.e. 'resourceViews' attribute) is always sorted in the following manner:
+        \remarks The list of resource views in the output descriptor (i.e. 'resources' attribute) is always sorted in the following manner:
         First sorting criterion is the resource type (in ascending order),
         second sorting criterion is the binding flags (in ascending order),
         third sorting criterion is the binding slot (in ascending order).
         Here is an example of such a sorted list (pseudocode):
         \code{.txt}
-        resourceViews[0] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 0 }
-        resourceViews[1] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 2 }
-        resourceViews[2] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 0 }
-        resourceViews[3] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 1 }
-        resourceViews[4] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 2 }
-        resourceViews[5] = { type: ResourceType::Sampler, bindFlags: 0,                         slot: 2 }
+        resources[0] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 0 }
+        resources[1] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 2 }
+        resources[2] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 0 }
+        resources[3] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 1 }
+        resources[4] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 2 }
+        resources[5] = { type: ResourceType::Sampler, bindFlags: 0,                         slot: 2 }
         \endcode
         The \c instanceDivisor and \c offset members of the vertex attributes are ignored by this function.
-        \see ShaderReflectionDescriptor::resourceViews
-        \see ShaderReflectionDescriptor::vertexAttributes
+        \see ShaderReflection::resources
+        \see ShaderReflection::vertexAttributes
         \see VertexAttribute::instanceDivisor
         \see VertexAttribute::offset
         \throws std::runtime_error If shader reflection failed.
         \todo Refactor to <code>void Reflect(ShaderReflection& reflection)</code>
         */
-        virtual ShaderReflectionDescriptor QueryReflectionDesc() const = 0;
+        virtual ShaderReflection QueryReflection() const = 0;
 
         /**
         \brief Returns the location of a single shader uniform by its name.
         \returns Uniform location of the specified uniform, or -1 if there is no such uniform in the shader program.
         \remarks This is a helper function when only one or a few number of uniform locations are meant to be determined.
-        If more uniforms are involved, use the QueryReflectionDesc function.
-        \see QueryReflectionDesc
+        If more uniforms are involved, use the QueryReflection function.
+        \see QueryReflection
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
         */
         virtual UniformLocation QueryUniformLocation(const char* name) const = 0;
@@ -127,10 +127,10 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         static bool ValidateShaderComposition(Shader* const * shaders, std::size_t numShaders);
 
         /**
-        \brief Sorts the resource views of the specified shader reflection descriptor as described in the QueryReflectionDesc function.
-        \see QueryReflectionDesc
+        \brief Sorts the resource views of the specified shader reflection descriptor as described in the QueryReflection function.
+        \see QueryReflection
         */
-        static void FinalizeShaderReflection(ShaderReflectionDescriptor& reflectionDesc);
+        static void FinalizeShaderReflection(ShaderReflection& reflection);
 
         //! Returns a string representation for the specified shader linker error, or null if the no error is entered (i.e. LinkError::NoError).
         static const char* LinkErrorToString(const LinkError errorCode);

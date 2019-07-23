@@ -31,7 +31,7 @@ class GLShaderProgram final : public ShaderProgram
 
         std::string QueryInfoLog() override;
 
-        ShaderReflectionDescriptor QueryReflectionDesc() const override;
+        ShaderReflection QueryReflection() const override;
         UniformLocation QueryUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
@@ -73,15 +73,15 @@ class GLShaderProgram final : public ShaderProgram
         void BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes);
         #endif
 
-        void Reflect(ShaderReflectionDescriptor& reflection) const;
-        void QueryVertexAttributes(ShaderReflectionDescriptor& reflection) const;
-        void QueryStreamOutputAttributes(ShaderReflectionDescriptor& reflection) const;
-        void QueryConstantBuffers(ShaderReflectionDescriptor& reflection) const;
-        void QueryStorageBuffers(ShaderReflectionDescriptor& reflection) const;
-        void QueryUniforms(ShaderReflectionDescriptor& reflection) const;
+        void Reflect(ShaderReflection& reflection) const;
+        void QueryVertexAttributes(ShaderReflection& reflection) const;
+        void QueryStreamOutputAttributes(ShaderReflection& reflection) const;
+        void QueryConstantBuffers(ShaderReflection& reflection) const;
+        void QueryStorageBuffers(ShaderReflection& reflection) const;
+        void QueryUniforms(ShaderReflection& reflection) const;
 
         #ifdef GL_ARB_program_interface_query
-        void QueryBufferProperties(ShaderReflectionDescriptor::ResourceView& resourceView, GLenum programInterface, GLuint resourceIndex) const;
+        void QueryBufferProperties(ShaderResource& resource, GLenum programInterface, GLuint resourceIndex) const;
         #endif // /GL_ARB_program_interface_query
 
     private:

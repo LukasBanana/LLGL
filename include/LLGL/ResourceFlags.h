@@ -54,7 +54,6 @@ enum class ResourceType
 \see BufferDescriptor::bindFlags
 \see TextureDescriptor::bindFlags
 \see BindingDescriptor::bindFlags
-\see ShaderReflectionDescriptor::ResourceView::bindFlags
 */
 struct BindFlags
 {

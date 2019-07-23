@@ -23,13 +23,15 @@ class VKShader final : public Shader
 
     public:
 
-        VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc);
-
         bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
 
         std::string QueryInfoLog() override;
+
+    public:
+
+        VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc);
 
         void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
 
@@ -50,9 +52,13 @@ class VKShader final : public Shader
             ReflectFailed,
         };
 
+    private:
+
         bool Build(const ShaderDescriptor& shaderDesc);
         bool CompileSource(const ShaderDescriptor& shaderDesc);
         bool LoadBinary(const ShaderDescriptor& shaderDesc);
+
+    private:
 
         VkDevice                device_             = VK_NULL_HANDLE;
         VKPtr<VkShaderModule>   shaderModule_;

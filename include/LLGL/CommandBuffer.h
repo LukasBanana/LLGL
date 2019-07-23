@@ -489,7 +489,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks This function must only be called after a graphics or compute pipeline has been set.
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
         \see ShaderProgram::QueryUniformLocation
-        \see ShaderProgram::QueryReflectionDesc
+        \see ShaderProgram::QueryReflection
         \see SetGraphicsPipeline
         \see SetComputePipeline
         */
@@ -506,10 +506,10 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] data Raw pointer to the data that is to be copied to the uniforms.
         \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data. This must be a multiple of 4.
         \remarks This function must only be called after a graphics or compute pipeline has been set.
-        The order of uniforms that come after the first one can be determined by the ShaderReflectionDescriptor::uniform container returned by ShaderProgram::QueryReflectionDesc.
+        The order of uniforms that come after the first one can be determined by the ShaderReflection::uniform container returned by ShaderProgram::QueryReflection.
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
         \see ShaderProgram::QueryUniformLocation
-        \see ShaderProgram::QueryReflectionDesc
+        \see ShaderProgram::QueryReflection
         \see SetGraphicsPipeline
         \see SetComputePipeline
         */

@@ -36,7 +36,7 @@ static const std::uint32_t  ignoreOffset    = ~0u;
 
 /**
 \brief Specifies an invalid binding slot for shader resources.
-\see ShaderReflectionDescriptor::ResourceView::slot
+\see ShaderResource::slot
 */
 static const std::uint32_t  invalidSlot     = ~0u;
 

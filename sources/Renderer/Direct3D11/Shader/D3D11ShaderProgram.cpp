@@ -58,9 +58,9 @@ std::string D3D11ShaderProgram::QueryInfoLog()
         return "";
 }
 
-ShaderReflectionDescriptor D3D11ShaderProgram::QueryReflectionDesc() const
+ShaderReflection D3D11ShaderProgram::QueryReflection() const
 {
-    ShaderReflectionDescriptor reflection;
+    ShaderReflection reflection;
 
     /* Reflect all shaders */
     for (auto shader : shaders_)

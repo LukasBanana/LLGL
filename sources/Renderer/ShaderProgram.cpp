@@ -66,20 +66,20 @@ bool ShaderProgram::ValidateShaderComposition(Shader* const * shaders, std::size
     return false;
 }
 
-static int CompareResourceViewSWO(const ShaderReflectionDescriptor::ResourceView& lhs, const ShaderReflectionDescriptor::ResourceView& rhs)
+static int CompareResourceViewSWO(const ShaderResource& lhs, const ShaderResource& rhs)
 {
-    LLGL_COMPARE_MEMBER_SWO(type     );
-    LLGL_COMPARE_MEMBER_SWO(bindFlags);
-    LLGL_COMPARE_MEMBER_SWO(slot     );
+    LLGL_COMPARE_MEMBER_SWO(binding.type     );
+    LLGL_COMPARE_MEMBER_SWO(binding.bindFlags);
+    LLGL_COMPARE_MEMBER_SWO(binding.slot     );
     return 0;
 }
 
-void ShaderProgram::FinalizeShaderReflection(ShaderReflectionDescriptor& reflectionDesc)
+void ShaderProgram::FinalizeShaderReflection(ShaderReflection& reflection)
 {
     std::sort(
-        reflectionDesc.resourceViews.begin(),
-        reflectionDesc.resourceViews.end(),
-        [](const ShaderReflectionDescriptor::ResourceView& lhs, const ShaderReflectionDescriptor::ResourceView& rhs)
+        reflection.resources.begin(),
+        reflection.resources.end(),
+        [](const ShaderResource& lhs, const ShaderResource& rhs)
         {
             return (CompareResourceViewSWO(lhs, rhs) < 0);
         }

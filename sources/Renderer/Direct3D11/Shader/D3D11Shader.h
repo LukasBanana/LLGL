@@ -59,7 +59,7 @@ class D3D11Shader final : public Shader
 
         D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc);
 
-        void Reflect(ShaderReflectionDescriptor& reflectionDesc) const;
+        void Reflect(ShaderReflection& reflection) const;
 
         // Returns the native D3D shader object.
         inline const D3D11NativeShader& GetNative() const
@@ -85,7 +85,7 @@ class D3D11Shader final : public Shader
             ID3D11ClassLinkage*                     classLinkage
         );
 
-        void ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const;
+        void ReflectShaderByteCode(ShaderReflection& reflection) const;
 
     private:
 

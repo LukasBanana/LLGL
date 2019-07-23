@@ -206,7 +206,7 @@ int main()
         if (shaderProgram.HasErrors())
             std::cerr << shaderProgram.QueryInfoLog() << std::endl;
 
-        auto reflectionDesc = shaderProgram.QueryReflectionDesc();
+        auto reflection = shaderProgram.QueryReflection();
 
         #if 0
         // Create constant buffer
@@ -230,7 +230,7 @@ int main()
         }
         #endif
 
-        for (const auto& uniform : reflectionDesc.uniforms)
+        for (const auto& uniform : reflection.uniforms)
         {
             std::cout << "uniform: name = \"" << uniform.name << "\", location = " << uniform.location << ", size = " << uniform.size << std::endl;
         }

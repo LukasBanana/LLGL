@@ -176,7 +176,7 @@ public:
             {
                 LLGL::BindingDescriptor
                 {
-                    LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::AllTessStages, constantBufferIndex, 1u, "Settings"
+                    "Settings", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::AllTessStages, constantBufferIndex
                 }
             };
         }

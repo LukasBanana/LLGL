@@ -68,6 +68,7 @@ void D3D12RenderTarget::TransitionToOutputMerger(D3D12CommandContext& commandCon
     commandContext.FlushResourceBarrieres();
 }
 
+//TODO: incomplete
 void D3D12RenderTarget::ResolveRenderTarget(D3D12CommandContext& commandContext)
 {
     for (auto& resource : colorBuffers_)
