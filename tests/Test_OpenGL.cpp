@@ -266,14 +266,14 @@ int main()
 
         LLGL::TextureRegion subTexDesc;
         {
-            subTexDesc.offset.x         = 0;
-            subTexDesc.offset.y         = 1;
-            subTexDesc.extent.width     = 2;
-            subTexDesc.extent.height    = 1;
-            subTexDesc.baseArrayLayer   = 0;
-            subTexDesc.numArrayLayers   = 1;
-            subTexDesc.baseMipLevel     = 0;
-            subTexDesc.numMipLevels     = 1;
+            subTexDesc.offset.x                     = 0;
+            subTexDesc.offset.y                     = 1;
+            subTexDesc.extent.width                 = 2;
+            subTexDesc.extent.height                = 1;
+            subTexDesc.subresource.baseArrayLayer   = 0;
+            subTexDesc.subresource.numArrayLayers   = 1;
+            subTexDesc.subresource.baseMipLevel     = 0;
+            subTexDesc.subresource.numMipLevels     = 1;
         }
         //renderer->WriteTexture(texture, subTexDesc, imageDesc); // update 2D texture
 

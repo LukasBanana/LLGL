@@ -43,12 +43,12 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         virtual std::string QueryInfoLog() = 0;
 
         /**
-        \brief Returns a descriptor of the shader pipeline layout with all required shader resources.
-        \remarks The list of resource views in the output descriptor (i.e. 'resources' attribute) is always sorted in the following manner:
-        First sorting criterion is the resource type (in ascending order),
-        second sorting criterion is the binding flags (in ascending order),
-        third sorting criterion is the binding slot (in ascending order).
-        Here is an example of such a sorted list (pseudocode):
+        \brief Returns a reflection of the shader pipeline layout with all required shader resources.
+        \remarks The list of resources in the reflection output is always sorted by the following attributes (lower number means higher priority for sorting):
+        -# Resource type in ascending order (see BindingDescriptor::type).
+        -# Binding flags in ascending order (see BindingDescriptor::bindFlags).
+        -# Binding slot in ascending order (see BindingDescriptor::slot).
+        \remarks Here is an example of such a sorted list (pseudocode):
         \code{.txt}
         resources[0] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 0 }
         resources[1] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 2 }
@@ -63,7 +63,6 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \see VertexAttribute::instanceDivisor
         \see VertexAttribute::offset
         \throws std::runtime_error If shader reflection failed.
-        \todo Refactor to <code>void Reflect(ShaderReflection& reflection)</code>
         */
         virtual ShaderReflection QueryReflection() const = 0;
 

@@ -22,12 +22,12 @@ DbgTexture::DbgTexture(Texture& instance, const TextureDescriptor& desc) :
 }
 
 DbgTexture::DbgTexture(Texture& instance, DbgTexture* sharedTexture, const TextureViewDescriptor& desc) :
-    Texture        { desc.type         },
-    instance       { instance          },
-    viewDesc       { desc              },
-    mipLevels      { desc.numMipLevels },
-    isTextureView  { true              },
-    sharedTexture_ { sharedTexture     }
+    Texture        { desc.type                     },
+    instance       { instance                      },
+    viewDesc       { desc                          },
+    mipLevels      { desc.subresource.numMipLevels },
+    isTextureView  { true                          },
+    sharedTexture_ { sharedTexture                 }
 {
     sharedTexture->sharedTextureViews_.insert(this);
 }

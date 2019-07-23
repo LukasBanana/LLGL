@@ -69,6 +69,61 @@ struct TextureSwizzleRGBA
 };
 
 /**
+\brief Texture subresource descriptor which specifies the MIP-map level and array layer range of a texture resource.
+\see TextureRegion::subresource
+\see TextureViewDescriptor::subresource
+*/
+struct TextureSubresource
+{
+    TextureSubresource() = default;
+    TextureSubresource(const TextureSubresource&) = default;
+
+    //! Constructor to initialize base MIP-map level and base array layer only.
+    inline TextureSubresource(std::uint32_t baseArrayLayer, std::uint32_t baseMipLevel) :
+        baseArrayLayer { baseArrayLayer },
+        baseMipLevel   { baseMipLevel   }
+    {
+    }
+
+    //! Constructor to initialize all attributes.
+    inline TextureSubresource(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t baseMipLevel, std::uint32_t numMipLevels) :
+        baseArrayLayer { baseArrayLayer },
+        numArrayLayers { numArrayLayers },
+        baseMipLevel   { baseMipLevel   },
+        numMipLevels   { numMipLevels   }
+    {
+    }
+
+    /**
+    \brief Zero-based index of the first array layer. By default 0.
+    \remarks Only used by array texture types (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
+    \remarks This field is ignored by all other texture types.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t   baseArrayLayer  = 0;
+
+    /**
+    \brief Number of array layers. By default 1.
+    \remarks \b Must be greater than zero.
+    \see TextureDescriptor::arrayLayers
+    */
+    std::uint32_t   numArrayLayers  = 1;
+
+    /**
+    \brief MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t   baseMipLevel    = 0;
+
+    /**
+    \brief Number of MIP-map levels. By default 1.
+    \remarks \b Must be greater than zero.
+    \see TextureDescriptor::mipLevels
+    */
+    std::uint32_t   numMipLevels    = 1;
+};
+
+/**
 \brief Texture location structure: MIP-map level and offset.
 \remarks This is used to specifiy the source and destination location of a texture copy operation.
 \see CommandBuffer::CopyTexture
@@ -127,46 +182,21 @@ struct TextureRegion
     {
     }
 
+    //! Specifies the texture subresource, i.e. MIP-map level and array layer range. By default only the first MIP-map level and first array layer is addressed.
+    TextureSubresource  subresource;
+
     /**
     \brief Zero-based offset within the texture data.
     \remarks Any component of this field that is not meant for the respective texture type is ignored.
     All other components must be greater than or equal to zero.
     */
-    Offset3D        offset;
+    Offset3D            offset;
 
     /**
     \brief Extent of the sub texture region.
     \see TextureDescriptor::extent
     */
-    Extent3D        extent;
-
-    /**
-    \brief Zero-based index of the first array layer. By default 0.
-    \remarks Only used by array texture types (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
-    \remarks This field is ignored by all other texture types.
-    \see TextureDescriptor::arrayLayers
-    */
-    std::uint32_t   baseArrayLayer  = 0;
-
-    /**
-    \brief Number of array layers. By default 1.
-    \remarks \b Must be greater than zero.
-    \see TextureDescriptor::arrayLayers
-    */
-    std::uint32_t   numArrayLayers  = 1;
-
-    /**
-    \brief MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
-    \see TextureDescriptor::mipLevels
-    */
-    std::uint32_t   baseMipLevel    = 0;
-
-    /**
-    \brief Number of MIP-map levels. By default 1.
-    \remarks \b Must be greater than zero.
-    \see TextureDescriptor::mipLevels
-    */
-    std::uint32_t   numMipLevels    = 1;
+    Extent3D            extent;
 };
 
 /**
@@ -196,11 +226,11 @@ struct TextureDescriptor
     long            cpuAccessFlags  = 0;
 
     /**
-    \brief Miscellaneous texture flags. By default MiscFlags::FixedSamples.
+    \brief Miscellaneous texture flags. By default MiscFlags::FixedSamples and MiscFlags::GenerateMips.
     \remarks This can be used as a hint for the renderer how frequently the texture will be updated, or whether a multi-sampled texture has fixed sample locations.
     \see MiscFlags
     */
-    long            miscFlags       = MiscFlags::FixedSamples;
+    long            miscFlags       = (MiscFlags::FixedSamples | MiscFlags::GenerateMips);
 
     //! Hardware texture format. By default Format::RGBA8UNorm.
     Format          format          = Format::RGBA8UNorm;
@@ -281,36 +311,26 @@ struct TextureViewDescriptor
     */
     TextureType         type            = TextureType::Texture2D;
 
-    //! Hardware texture format. By default Format::RGBA8UNorm.
+    /**
+    \brief Hardware texture format. By default Format::RGBA8UNorm.
+    \remarks The format of the shared texture and the texture-view must be in the same format class:
+    <table>
+    <caption>Texture format classes</caption>
+    <tr><th>Class</th><th>Compatible texture formats</th></tr>
+    <tr><td>128 Bits</td><td>Format::RGBA32UInt, Format::RGBA32SInt, Format::RGBA32Float</td></tr>
+    <tr><td>96 Bits</td><td>Format::RGB32UInt, Format::RGB32SInt, Format::RGB32Float</td></tr>
+    <tr><td>64 Bits</td><td>Format::RG32UInt, Format::RG32SInt, Format::RG32Float, Format::RGBA16UNorm, Format::RGBA16SNorm, Format::RGBA16UInt, Format::RGBA16SInt, Format::RGBA16Float</td></tr>
+    <tr><td>48 Bits</td><td>Format::RGB16UNorm, Format::RGB16SNorm, Format::RGB16UInt, Format::RGB16SInt, Format::RGB16Float</td></tr>
+    <tr><td>32 Bits</td><td>Format::RG16UNorm, Format::RG16SNorm, Format::RG16UInt, Format::RG16SInt, Format::RG16Float, Format::RGBA8UNorm, Format::RGBA8SNorm, Format::RGBA8UInt, Format::RGBA8SInt</td></tr>
+    <tr><td>24 Bits</td><td>Format::RGB8UNorm, Format::RGB8SNorm, Format::RGB8UInt, Format::RGB8SInt</td></tr>
+    <tr><td>16 Bits</td><td>Format::R16UNorm, Format::R16SNorm, Format::R16UInt, Format::R16SInt, Format::R16Float, Format::RG8UNorm, Format::RG8SNorm, Format::RG8UInt, Format::RG8SInt</td></tr>
+    <tr><td>8 Bits</td><td>Format::R8UNorm, Format::R8SNorm, Format::R8UInt, Format::R8SInt</td></tr>
+    </table>
+    */
     Format              format          = Format::RGBA8UNorm;
 
-    /**
-    \brief Zero-based index of the first array layer. By default 0.
-    \remarks Only used by array texture types (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
-    \remarks This field is ignored by all other texture types.
-    \see TextureDescriptor::arrayLayers
-    */
-    std::uint32_t       baseArrayLayer  = 0;
-
-    /**
-    \brief Number of array layers. By default 1.
-    \remarks \b Must be greater than zero.
-    \see TextureDescriptor::arrayLayers
-    */
-    std::uint32_t       numArrayLayers  = 1;
-
-    /**
-    \brief MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
-    \see TextureDescriptor::mipLevels
-    */
-    std::uint32_t       baseMipLevel    = 0;
-
-    /**
-    \brief Number of MIP-map levels. By default 1.
-    \remarks \b Must be greater than zero.
-    \see TextureDescriptor::mipLevels
-    */
-    std::uint32_t       numMipLevels    = 1;
+    //! Specifies the texture subresource, i.e. MIP-map level and array layer range. By default only the first MIP-map level and first array layer is addressed.
+    TextureSubresource  subresource;
 
     /**
     \brief Specifies the color component mapping. Each component is mapped to its identity by default.
@@ -337,7 +357,7 @@ struct TextureViewDescriptor
 \param[in] height Specifies the texture height or number of layers for 1D array textures. By default 1 (if 1D textures are used).
 \param[in] depth Specifies the texture depth or number of layers for 2D array textures. By default 1 (if 1D or 2D textures are used).
 \remarks The height and depth are optional parameters, so this function can be easily used for 1D, 2D, and 3D textures.
-\return 1 + floor(log2(max{ width, height, depth })).
+\return <code>1 + floor(log2(max{ width, height, depth }))</code>.
 */
 LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height = 1, std::uint32_t depth = 1);
 

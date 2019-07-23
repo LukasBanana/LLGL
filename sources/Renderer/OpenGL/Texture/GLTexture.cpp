@@ -286,10 +286,10 @@ void GLTexture::TextureView(GLTexture& sharedTexture, const TextureViewDescripto
             GLTypes::Map(textureViewDesc.type),
             sharedTexture.GetID(),
             GLTypes::Map(textureViewDesc.format),
-            textureViewDesc.baseMipLevel,
-            textureViewDesc.numMipLevels,
-            textureViewDesc.baseArrayLayer,
-            textureViewDesc.numArrayLayers
+            textureViewDesc.subresource.baseMipLevel,
+            textureViewDesc.subresource.numMipLevels,
+            textureViewDesc.subresource.baseArrayLayer,
+            textureViewDesc.subresource.numArrayLayers
         );
     }
     #endif // /GL_ARB_texture_view

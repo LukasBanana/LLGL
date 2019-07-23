@@ -251,7 +251,7 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateMipLevelLimit(textureRegion.baseMipLevel, textureRegion.numMipLevels, textureDbg.mipLevels);
+        ValidateMipLevelLimit(textureRegion.subresource.baseMipLevel, textureRegion.subresource.numMipLevels, textureDbg.mipLevels);
         ValidateTextureRegion(textureDbg, textureRegion);
     }
 

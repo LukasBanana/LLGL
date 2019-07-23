@@ -23,10 +23,10 @@ class PipelineLayout;
 
 /* ----- Structures ----- */
 
-//TODO: remove this descriptor
 /**
 \brief Resource view descriptor structure.
 \see ResourceHeapDescriptor::resourceViews
+\todo Remove this descriptor
 */
 struct ResourceViewDescriptor
 {
@@ -67,6 +67,7 @@ struct ResourceHeapDescriptor
     \brief List of all resource view descriptors.
     \remarks These resources must be specified in the same order as they were specified when the pipeline layout was created.
     \see PipelineLayoutDescriptor::bindings
+    \todo Refactor to <code>std::vector<Resource*> resources</code>.
     */
     std::vector<ResourceViewDescriptor> resourceViews;
 };

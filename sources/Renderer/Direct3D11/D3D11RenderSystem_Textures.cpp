@@ -65,14 +65,14 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
         case TextureType::Texture1DArray:
             UpdateGenericTexture(
                 texture,
-                textureRegion.baseMipLevel,
-                textureRegion.baseArrayLayer,
+                textureRegion.subresource.baseMipLevel,
+                textureRegion.subresource.baseArrayLayer,
                 CD3D11_BOX(
                     textureRegion.offset.x,
                     0,
                     0,
                     textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
-                    static_cast<LONG>(textureRegion.numArrayLayers),
+                    static_cast<LONG>(textureRegion.subresource.numArrayLayers),
                     1
                 ),
                 imageDesc
@@ -85,15 +85,15 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
         case TextureType::TextureCubeArray:
             UpdateGenericTexture(
                 texture,
-                textureRegion.baseMipLevel,
-                textureRegion.baseArrayLayer,
+                textureRegion.subresource.baseMipLevel,
+                textureRegion.subresource.baseArrayLayer,
                 CD3D11_BOX(
                     textureRegion.offset.x,
                     textureRegion.offset.y,
                     0,
                     textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
                     textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
-                    static_cast<LONG>(textureRegion.numArrayLayers)
+                    static_cast<LONG>(textureRegion.subresource.numArrayLayers)
                 ),
                 imageDesc
             );
@@ -106,7 +106,7 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
         case TextureType::Texture3D:
             UpdateGenericTexture(
                 texture,
-                textureRegion.baseMipLevel,
+                textureRegion.subresource.baseMipLevel,
                 0,
                 CD3D11_BOX(
                     textureRegion.offset.x,

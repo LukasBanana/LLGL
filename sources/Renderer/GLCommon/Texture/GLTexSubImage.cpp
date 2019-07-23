@@ -233,7 +233,7 @@ static void GLTexSubImageCubeArray(
 void GLTexSubImage1D(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage1D(
-        region.baseMipLevel,
+        region.subresource.baseMipLevel,
         region.offset.x,
         region.extent.width,
         imageDesc
@@ -245,7 +245,7 @@ void GLTexSubImage1D(const TextureRegion& region, const SrcImageDescriptor& imag
 void GLTexSubImage2D(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage2D(
-        region.baseMipLevel,
+        region.subresource.baseMipLevel,
         region.offset.x,
         region.offset.y,
         region.extent.width,
@@ -257,7 +257,7 @@ void GLTexSubImage2D(const TextureRegion& region, const SrcImageDescriptor& imag
 void GLTexSubImage3D(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage3D(
-        region.baseMipLevel,
+        region.subresource.baseMipLevel,
         region.offset.x,
         region.offset.y,
         region.offset.z,
@@ -271,12 +271,12 @@ void GLTexSubImage3D(const TextureRegion& region, const SrcImageDescriptor& imag
 void GLTexSubImageCube(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImageCube(
-        region.baseMipLevel,
+        region.subresource.baseMipLevel,
         region.offset.x,
         region.offset.y,
         region.extent.width,
         region.extent.height,
-        region.baseArrayLayer,
+        region.subresource.baseArrayLayer,
         imageDesc
     );
 }
@@ -286,11 +286,11 @@ void GLTexSubImageCube(const TextureRegion& region, const SrcImageDescriptor& im
 void GLTexSubImage1DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage1DArray(
-        region.baseMipLevel,
+        region.subresource.baseMipLevel,
         region.offset.x,
-        region.baseArrayLayer,
+        region.subresource.baseArrayLayer,
         region.extent.width,
-        region.numArrayLayers,
+        region.subresource.numArrayLayers,
         imageDesc
     );
 }
@@ -300,13 +300,13 @@ void GLTexSubImage1DArray(const TextureRegion& region, const SrcImageDescriptor&
 void GLTexSubImage2DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage2DArray(
-        region.baseMipLevel,
+        region.subresource.baseMipLevel,
         region.offset.x,
         region.offset.y,
-        region.baseArrayLayer,
+        region.subresource.baseArrayLayer,
         region.extent.width,
         region.extent.height,
-        region.numArrayLayers,
+        region.subresource.numArrayLayers,
         imageDesc
     );
 }
@@ -316,13 +316,13 @@ void GLTexSubImage2DArray(const TextureRegion& region, const SrcImageDescriptor&
 void GLTexSubImageCubeArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImageCubeArray(
-        region.baseMipLevel,
+        region.subresource.baseMipLevel,
         region.offset.x,
         region.offset.y,
-        region.baseArrayLayer,
+        region.subresource.baseArrayLayer,
         region.extent.width,
         region.extent.height,
-        region.numArrayLayers,
+        region.subresource.numArrayLayers,
         imageDesc
     );
 }

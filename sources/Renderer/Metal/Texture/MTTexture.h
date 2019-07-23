@@ -25,19 +25,16 @@ class MTTexture : public Texture
 
     public:
 
-        MTTexture(id<MTLDevice> device, const TextureDescriptor& desc);
-        ~MTTexture();
-
         Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
 
-        void Write(
-            SrcImageDescriptor  imageDesc,
-            const Offset3D&     offset,
-            const Extent3D&     extent,
-            std::uint32_t       mipLevel = 0
-        );
+    public:
+
+        MTTexture(id<MTLDevice> device, const TextureDescriptor& desc);
+        ~MTTexture();
+
+        void Write(const TextureRegion& textureRegion, SrcImageDescriptor imageDesc);
 
         // Returns the native MTLTexture object.
         inline id<MTLTexture> GetNative() const
