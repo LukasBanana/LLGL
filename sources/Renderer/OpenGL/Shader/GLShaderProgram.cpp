@@ -610,8 +610,8 @@ void GLShaderProgram::QueryConstantBuffers(ShaderReflection& reflection) const
             QueryBufferProperties(resource, GL_UNIFORM_BLOCK, i);
             #else
             /* Set binding slot to invalid index */
-            resourceView.stageFlags = StageFlags::AllStages;
-            resourceView.slot       = Constants::invalidSlot;
+            resource.binding.stageFlags = StageFlags::AllStages;
+            resource.binding.slot       = Constants::invalidSlot;
             #endif
         }
         reflection.resources.push_back(resource);
