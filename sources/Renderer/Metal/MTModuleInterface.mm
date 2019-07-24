@@ -11,53 +11,62 @@
 
 namespace LLGL
 {
-    namespace ModuleMetal
+
+
+namespace ModuleMetal
+{
+    int GetRendererID()
     {
-        int RenderModuleID()
-        {
-            return LLGL::RendererID::Metal;
-        }
-
-        const char* RenderModuleName()
-        {
-            return "Metal";
-        }
-
-        void* RenderModuleCreate(const LLGL::RenderSystemDescriptor* desc)
-        {
-            return new LLGL::MTRenderSystem();
-        }
+        return RendererID::Metal;
     }
-}
+
+    const char* GetModuleName()
+    {
+        return "Metal";
+    }
+
+    const char* GetRendererName()
+    {
+        return "Metal";
+    }
+
+    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* /*renderSystemDesc*/)
+    {
+        return new MTRenderSystem();
+    }
+};
+
+
+} // /namespace LLGL
+
+#ifndef LLGL_BUILD_STATIC_LIB
 
 extern "C"
 {
-    
-#ifndef LLGL_BUILD_STATIC_LIB
 
-    LLGL_EXPORT int LLGL_RenderSystem_BuildID()
-    {
-        return LLGL_BUILD_ID;
-    }
+LLGL_EXPORT int LLGL_RenderSystem_BuildID()
+{
+    return LLGL_BUILD_ID;
+}
 
-    LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleMetal::RenderModuleID();
-    }
+LLGL_EXPORT int LLGL_RenderSystem_RendererID()
+{
+    return LLGL::ModuleMetal::GetRendererID();
+}
 
-    LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleMetal::RenderModuleName();
-    }
+LLGL_EXPORT const char* LLGL_RenderSystem_Name()
+{
+    return LLGL::ModuleMetal::GetRendererName();
+}
 
-    LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleMetal::RenderModuleCreate(nullptr);
-    }
-
-#endif
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
+{
+    return LLGL::ModuleMetal::AllocRenderSystem(nullptr);
+}
 
 } // /extern "C"
+
+#endif
 
 
 

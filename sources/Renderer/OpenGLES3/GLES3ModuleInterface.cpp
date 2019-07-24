@@ -1,61 +1,73 @@
 /*
  * GLES3ModuleInterface.h
  * 
- * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "../ModuleInterface.h"
 //#include "GLES3RenderSystem.h"
-#include <LLGL/RenderSystemFlags.h>
+
 
 namespace LLGL
 {
-    namespace ModuleOpenglES3
+
+
+namespace ModuleOpenGLES3
+{
+    int GetRendererID()
     {
-        int RenderModuleID()
-        {
-            return LLGL::RendererID::OpenGLES3;
-        }
-
-        const char* RenderModuleName()
-        {
-            return "OpenGL ES3";
-        }
-
-        void* RenderModuleCreate(const LLGL::RenderSystemDescriptor* desc)
-        {
-            return nullptr;//TODO; could try angle to emulate gles3
-        }
+        return RendererID::OpenGLES3;
     }
-}
+
+    const char* GetModuleName()
+    {
+        return "OpenGLES3";
+    }
+
+    const char* GetRendererName()
+    {
+        return "OpenGL ES 3";
+    }
+
+    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* /*renderSystemDesc*/)
+    {
+        return nullptr;//new GLES3RenderSystem();
+    }
+};
+
+
+} // /namespace LLGL
+
+#ifndef LLGL_BUILD_STATIC_LIB
 
 extern "C"
 {
-#ifndef LLGL_BUILD_STATIC_LIB
 
-    LLGL_EXPORT int LLGL_RenderSystem_BuildID()
-    {
-        return LLGL_BUILD_ID;
-    }
+LLGL_EXPORT int LLGL_RenderSystem_BuildID()
+{
+    return LLGL_BUILD_ID;
+}
 
-    LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleOpenglES3::RenderModuleID();
-    }
+LLGL_EXPORT int LLGL_RenderSystem_RendererID()
+{
+    return LLGL::ModuleOpenGLES3::GetRendererID();
+}
 
-    LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleOpenglES3::RenderModuleName();
-    }
+LLGL_EXPORT const char* LLGL_RenderSystem_Name()
+{
+    return LLGL::ModuleOpenGLES3::GetRendererName();
+}
 
-    LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleOpenglES3::RenderModuleCreate(nullptr);
-    }
-
-#endif
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
+{
+    return LLGL::ModuleOpenGLES3::AllocRenderSystem(nullptr);
+}
 
 } // /extern "C"
+
+#endif // /LLGL_BUILD_STATIC_LIB
+
+
 
 // ================================================================================

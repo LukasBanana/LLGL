@@ -236,7 +236,7 @@ int main()
             commands->End();
             commandQueue->Submit(*commands);
 
-			context->Present();
+            context->Present();
         }
     }
     catch (const std::exception& e)

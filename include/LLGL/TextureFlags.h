@@ -69,7 +69,8 @@ struct TextureSwizzleRGBA
 };
 
 /**
-\brief Texture subresource descriptor which specifies the MIP-map level and array layer range of a texture resource.
+\brief Texture subresource descriptor which specifies the array layer and MIP-map level range of a texture resource.
+\remarks The default values refer to the first array layer and the first MIP-map level.
 \see TextureRegion::subresource
 \see TextureViewDescriptor::subresource
 */

@@ -8,51 +8,66 @@
 #include "../ModuleInterface.h"
 #include "GLRenderSystem.h"
 
+
 namespace LLGL
 {
-    namespace ModuleOpengl
+
+
+namespace ModuleOpenGL
+{
+    int GetRendererID()
     {
-        int RenderModuleID()
-        {
-            return LLGL::RendererID::OpenGL;
-        }
-
-        const char* RenderModuleName()
-        {
-            return "OpenGL";
-        }
-
-        void* RenderModuleCreate(const LLGL::RenderSystemDescriptor* desc)
-        {
-            return new LLGL::GLRenderSystem(*desc);
-        }
+        return RendererID::OpenGL;
     }
-}
+
+    const char* GetModuleName()
+    {
+        return "OpenGL";
+    }
+
+    const char* GetRendererName()
+    {
+        return "OpenGL";
+    }
+
+    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)
+    {
+        return new GLRenderSystem(*renderSystemDesc);
+    }
+};
+
+
+} // /namespace LLGL
+
+#ifndef LLGL_BUILD_STATIC_LIB
 
 extern "C"
 {
-#ifndef LLGL_BUILD_STATIC_LIB
 
+LLGL_EXPORT int LLGL_RenderSystem_BuildID()
+{
+    return LLGL_BUILD_ID;
+}
 
-    LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleOpengl::RenderModuleID();
-    }
+LLGL_EXPORT int LLGL_RenderSystem_RendererID()
+{
+    return LLGL::ModuleOpenGL::GetRendererID();
+}
 
-    LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleOpengl::RenderModuleName();
-    }
+LLGL_EXPORT const char* LLGL_RenderSystem_Name()
+{
+    return LLGL::ModuleOpenGL::GetRendererName();
+}
 
-    LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
-    {
-        auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
-        return LLGL::ModuleOpengl::RenderModuleCreate(desc);
-    }
-
-#endif
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
+{
+    auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
+    return LLGL::ModuleOpenGL::AllocRenderSystem(desc);
+}
 
 } // /extern "C"
+
+#endif // /LLGL_BUILD_STATIC_LIB
 
 
 

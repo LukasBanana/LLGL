@@ -26,6 +26,6 @@ add_library(LLGL_CSharp SHARED ${FilesWrapperCSharp})
 set_target_properties(LLGL_CSharp PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(LLGL_CSharp PROPERTIES COMPILE_FLAGS "/CLR")
 set_target_properties(LLGL_CSharp PROPERTIES OUTPUT_NAME "SharpLLGL")
-target_link_libraries(LLGL_CSharp LLGL)
+target_link_libraries(LLGL_CSharp ${LLGL_DEPENDENCIES})
 target_compile_features(LLGL_CSharp PRIVATE cxx_range_for)
 

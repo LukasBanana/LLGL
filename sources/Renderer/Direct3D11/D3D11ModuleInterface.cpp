@@ -11,54 +11,62 @@
 
 namespace LLGL
 {
-    namespace ModuleD3D11
+
+
+namespace ModuleDirect3D11
+{
+    int GetRendererID()
     {
-        LLGL_EXPORT int RenderModuleID()
-        {
-            return LLGL::RendererID::Direct3D11;
-        }
-
-        LLGL_EXPORT const char* RenderModuleName()
-        {
-            return "Direct3D 11";
-        }
-
-        LLGL_EXPORT void* RenderModuleCreate(const LLGL::RenderSystemDescriptor* desc)
-        {
-            return new LLGL::D3D11RenderSystem();
-        }
+        return RendererID::Direct3D11;
     }
-}
 
+    const char* GetModuleName()
+    {
+        return "Direct3D11";
+    }
+
+    const char* GetRendererName()
+    {
+        return "Direct3D 11";
+    }
+
+    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* /*renderSystemDesc*/)
+    {
+        return new D3D11RenderSystem();
+    }
+};
+
+
+} // /namespace LLGL
+
+#ifndef LLGL_BUILD_STATIC_LIB
 
 extern "C"
 {
-    
-#ifndef LLGL_BUILD_STATIC_LIB
 
-    LLGL_EXPORT int LLGL_RenderSystem_BuildID()
-    {
+LLGL_EXPORT int LLGL_RenderSystem_BuildID()
+{
     return LLGL_BUILD_ID;
-    }
+}
 
-    LLGL_EXPORT int LLGL_RenderSystem_RendererID(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleD3D11::RenderModuleID();
-    }
+LLGL_EXPORT int LLGL_RenderSystem_RendererID()
+{
+    return LLGL::ModuleDirect3D11::GetRendererID();
+}
 
-    LLGL_EXPORT const char* LLGL_RenderSystem_Name(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleD3D11::RenderModuleName();
-    }
+LLGL_EXPORT const char* LLGL_RenderSystem_Name()
+{
+    return LLGL::ModuleDirect3D11::GetRendererName();
+}
 
-    LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
-    {
-        return LLGL::ModuleD3D11::RenderModuleCreate(nullptr);
-    }
-
-#endif
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
+{
+    return LLGL::ModuleDirect3D11::AllocRenderSystem(nullptr);
+}
 
 } // /extern "C"
+
+#endif // /LLGL_BUILD_STATIC_LIB
 
 
 

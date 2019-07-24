@@ -20,9 +20,7 @@
 #   include "DebugLayer/DbgRenderSystem.h"
 #endif
 
-#ifdef LLGL_BUILD_STATIC_LIB
-#   include "ModuleInterface.h"
-#endif
+#include "ModuleInterface.h"
 
 
 namespace LLGL
@@ -35,17 +33,12 @@ static std::map<RenderSystem*, std::unique_ptr<Module>> g_renderSystemModules;
 
 #ifdef LLGL_BUILD_STATIC_LIB
 
-//implemented in ModuleInterface.cpp
-extern void GetStaticModules(std::vector<std::string> & out);
-
 std::vector<std::string> RenderSystem::FindModules()
 {
-    std::vector<std::string> result;
-    GetStaticModules(result);
-    return result;
+    return StaticModule::GetStaticModules();
 }
-    
-#else
+
+#else // LLGL_BUILD_STATIC_LIB
 
 std::vector<std::string> RenderSystem::FindModules()
 {
@@ -141,11 +134,11 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     RenderingProfiler*              profiler,
     RenderingDebugger*              debugger)
 {
-#ifdef LLGL_BUILD_STATIC_LIB
+    #ifdef LLGL_BUILD_STATIC_LIB
 
     /* Allocate render system */
     auto renderSystem = std::unique_ptr<RenderSystem>(
-        reinterpret_cast<RenderSystem*>(LLGL_RenderSystem_Alloc(&renderSystemDesc))
+        reinterpret_cast<RenderSystem*>(StaticModule::AllocRenderSystem(renderSystemDesc))
     );
 
     if (profiler != nullptr || debugger != nullptr)
@@ -162,13 +155,13 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
         #endif // /LLGL_ENABLE_DEBUG_LAYER
     }
 
-    renderSystem->name_         = LLGL_RenderSystem_Name(&renderSystemDesc);
-    renderSystem->rendererID_   = LLGL_RenderSystem_RendererID(&renderSystemDesc);
+    renderSystem->name_         = StaticModule::GetRendererName(renderSystemDesc.moduleName);
+    renderSystem->rendererID_   = StaticModule::GetRendererID(renderSystemDesc.moduleName);
 
     /* Return new render system and unique pointer */
     return renderSystem;
 
-#else
+    #else // LLGL_BUILD_STATIC_LIB
 
     /* Load render system module */
     auto moduleFilename = Module::GetModuleFilename(renderSystemDesc.moduleName.c_str());
@@ -215,7 +208,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
         throw std::runtime_error(e.what());
     }
 
-#endif // /LLGL_BUILD_STATIC_LIB
+    #endif // /LLGL_BUILD_STATIC_LIB
 }
 
 void RenderSystem::Unload(std::unique_ptr<RenderSystem>&& renderSystem)
