@@ -40,6 +40,9 @@ class VKPhysicalDevice
 
         std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
 
+        // Returns true if the specified Vulkan extension is supported bny this physical device.
+        bool SupportsExtension(const char* extension) const;
+
         /* ----- Handles ----- */
 
         // Returns the native VkPhysicalDevice handle.

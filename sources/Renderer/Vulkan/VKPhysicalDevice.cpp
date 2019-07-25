@@ -137,11 +137,11 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.features.hasOffsetInstancing               = true;
     caps.features.hasIndirectDrawing                = (features_.drawIndirectFirstInstance != VK_FALSE);
     caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
-    caps.features.hasConservativeRasterization      = false;
-    caps.features.hasStreamOutputs                  = false;
+    caps.features.hasConservativeRasterization      = SupportsExtension(VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME);
+    caps.features.hasStreamOutputs                  = SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
     caps.features.hasLogicOp                        = (features_.logicOp != VK_FALSE);
     caps.features.hasPipelineStatistics             = (features_.pipelineStatisticsQuery != VK_FALSE);
-    caps.features.hasRenderCondition                = false;
+    caps.features.hasRenderCondition                = SupportsExtension(VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
@@ -187,6 +187,19 @@ VKDevice VKPhysicalDevice::CreateLogicalDevice()
 std::uint32_t VKPhysicalDevice::FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const
 {
     return VKFindMemoryType(memoryProperties_, memoryTypeBits, properties);
+}
+
+bool VKPhysicalDevice::SupportsExtension(const char* extension) const
+{
+    auto it = std::find_if(
+        supportedExtensionNames_.begin(),
+        supportedExtensionNames_.end(),
+        [extension](const char* entry)
+        {
+            return (std::strcmp(extension, entry) == 0);
+        }
+    );
+    return (it != supportedExtensionNames_.end());
 }
 
 
