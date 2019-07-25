@@ -34,7 +34,7 @@ namespace ModuleOpenGL
     {
         return new GLRenderSystem(*renderSystemDesc);
     }
-};
+} // /namespace ModuleOpenGL
 
 
 } // /namespace LLGL

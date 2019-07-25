@@ -34,7 +34,7 @@ namespace ModuleDirect3D11
     {
         return new D3D11RenderSystem();
     }
-};
+} // /namespace ModuleDirect3D11
 
 
 } // /namespace LLGL

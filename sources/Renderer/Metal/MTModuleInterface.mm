@@ -34,7 +34,7 @@ namespace ModuleMetal
     {
         return new MTRenderSystem();
     }
-};
+} // /namespace ModuleMetal
 
 
 } // /namespace LLGL

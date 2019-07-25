@@ -34,7 +34,7 @@ namespace ModuleOpenGLES3
     {
         return nullptr;//new GLES3RenderSystem();
     }
-};
+} // /namespace ModuleOpenGLES3
 
 
 } // /namespace LLGL

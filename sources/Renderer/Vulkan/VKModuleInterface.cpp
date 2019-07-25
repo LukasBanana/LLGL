@@ -34,7 +34,7 @@ namespace ModuleVulkan
     {
         return new VKRenderSystem(*renderSystemDesc);
     }
-};
+} // /namespace ModuleVulkan
 
 
 } // /namespace LLGL
