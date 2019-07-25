@@ -18,8 +18,6 @@ namespace LLGL
 {
 
 
-void GLTexImageInitialization(const ImageInitialization& imageInitialization);
-
 #ifdef LLGL_OPENGL
 
 void GLTexImage1D       (const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);

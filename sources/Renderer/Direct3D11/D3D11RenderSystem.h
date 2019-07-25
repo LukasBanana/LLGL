@@ -200,25 +200,24 @@ class D3D11RenderSystem final : public RenderSystem
 
         void InitializeGpuTexture(
             D3D11Texture&               textureD3D,
-            const Format                format,
-            const SrcImageDescriptor*   imageDesc,
-            const Extent3D&             extent,
-            std::uint32_t               arrayLayers
+            const TextureDescriptor&    textureDesc,
+            const SrcImageDescriptor*   imageDesc
         );
 
         void InitializeGpuTextureWithImage(
             D3D11Texture&       textureD3D,
             const Format        format,
-            SrcImageDescriptor  imageDesc,
             const Extent3D&     extent,
-            std::uint32_t       arrayLayers
+            std::uint32_t       arrayLayers,
+            SrcImageDescriptor  imageDesc
         );
 
-        void InitializeGpuTextureWithDefault(
-            D3D11Texture&   textureD3D,
-            const Format    format,
-            const Extent3D& extent,
-            std::uint32_t   arrayLayers
+        void InitializeGpuTextureWithClearValue(
+            D3D11Texture&       textureD3D,
+            const Format        format,
+            const Extent3D&     extent,
+            std::uint32_t       arrayLayers,
+            const ClearValue&   clearValue
         );
 
         void GenerateMipsWithSubresourceSRV(

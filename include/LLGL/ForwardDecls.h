@@ -58,7 +58,6 @@ struct DrawIndexedIndirectArguments;
 struct DrawIndirectArguments;
 struct DstImageDescriptor;
 struct GraphicsPipelineDescriptor;
-struct ImageInitialization;
 struct MultiSamplingDescriptor;
 struct OpenGLDependentStateDescriptor;
 struct PipelineLayoutDescriptor;

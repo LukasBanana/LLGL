@@ -180,13 +180,13 @@ struct MiscFlags
         \see RenderSystem::WriteTexture
         \todo Restriction required to support deferred context in D3D11. This must no longer be just a "hint", it must be a strictly defined attribute for a buffer.
         */
-        DynamicUsage = (1 << 0),
+        DynamicUsage    = (1 << 0),
 
         /**
         \brief Multi-sampled Texture resource has fixed sample locations.
         \remarks This can only be used with multi-sampled Texture resources (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray).
         */
-        FixedSamples = (1 << 1),
+        FixedSamples    = (1 << 1),
 
         /**
         \brief Generates MIP-maps at texture creation time with the initial image data (if specified).
@@ -196,7 +196,13 @@ struct MiscFlags
         \see TextureDescriptor::mipLevels
         \todo Not implemented yet.
         */
-        GenerateMips = (1 << 2),
+        GenerateMips    = (1 << 2),
+
+        /**
+        \brief Specifies to ignore resource data initialization.
+        \remarks If this is specified, a texture or buffer resource will stay uninitialized during creation and the content is undefined.
+        */
+        NoInitialData   = (1 << 3),
     };
 };
 

@@ -58,8 +58,6 @@ class GLRenderSystem final : public RenderSystem
         GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~GLRenderSystem();
 
-        void SetConfiguration(const RenderSystemConfiguration& config) override;
-
         /* ----- Render Context ----- */
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;

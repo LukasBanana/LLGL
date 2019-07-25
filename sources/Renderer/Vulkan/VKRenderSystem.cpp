@@ -330,7 +330,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             initialData = imageDesc->data;
         }
     }
-    else if (cfg.imageInitialization.enabled)
+    else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) == 0)
     {
         /* Allocate default image data */
         ImageFormat imageFormat = ImageFormat::RGBA;
@@ -338,7 +338,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
         if (FindSuitableImageFormat(textureDesc.format, imageFormat, imageDataType))
         {
-            const ColorRGBAd fillColor { cfg.imageInitialization.clearValue.color.Cast<double>() };
+            const ColorRGBAd fillColor { textureDesc.clearValue.color.Cast<double>() };
             tempImageBuffer = GenerateImageBuffer(imageFormat, imageDataType, imageSize, fillColor);
         }
         else

@@ -227,21 +227,21 @@ void D3D11RenderSystem::CreateAndInitializeGpuTexture1D(D3D11Texture& textureD3D
 {
     /* Create native texture and initialize with image data */
     textureD3D.CreateTexture1D(device_.Get(), desc);
-    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, desc.arrayLayers);
+    InitializeGpuTexture(textureD3D, desc, imageDesc);
 }
 
 void D3D11RenderSystem::CreateAndInitializeGpuTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     /* Create native texture and initialize with image data */
     textureD3D.CreateTexture2D(device_.Get(), desc);
-    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, desc.arrayLayers);
+    InitializeGpuTexture(textureD3D, desc, imageDesc);
 }
 
 void D3D11RenderSystem::CreateAndInitializeGpuTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     /* Create native texture and initialize with image data */
     textureD3D.CreateTexture3D(device_.Get(), desc);
-    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, 1);
+    InitializeGpuTexture(textureD3D, desc, imageDesc);
 }
 
 void D3D11RenderSystem::CreateAndInitializeGpuTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc)
@@ -271,29 +271,39 @@ void D3D11RenderSystem::UpdateGenericTexture(
 
 void D3D11RenderSystem::InitializeGpuTexture(
     D3D11Texture&               textureD3D,
-    const Format                format,
-    const SrcImageDescriptor*   imageDesc,
-    const Extent3D&             extent,
-    std::uint32_t               arrayLayers)
+    const TextureDescriptor&    textureDesc,
+    const SrcImageDescriptor*   imageDesc)
 {
     if (imageDesc)
     {
         /* Initialize texture with specified image descriptor */
-        InitializeGpuTextureWithImage(textureD3D, format, *imageDesc, extent, arrayLayers);
+        InitializeGpuTextureWithImage(
+            textureD3D,
+            textureDesc.format,
+            textureDesc.extent,
+            textureDesc.arrayLayers,
+            *imageDesc
+        );
     }
-    else if (GetConfiguration().imageInitialization.enabled && !IsDepthStencilFormat(format))
+    else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) == 0)
     {
         /* Initialize texture with default image data */
-        InitializeGpuTextureWithDefault(textureD3D, format, extent, arrayLayers);
+        InitializeGpuTextureWithClearValue(
+            textureD3D,
+            textureDesc.format,
+            textureDesc.extent,
+            textureDesc.arrayLayers,
+            textureDesc.clearValue
+        );
     }
 }
 
 void D3D11RenderSystem::InitializeGpuTextureWithImage(
     D3D11Texture&       textureD3D,
     const Format        format,
-    SrcImageDescriptor  imageDesc,
     const Extent3D&     extent,
-    std::uint32_t       arrayLayers)
+    std::uint32_t       arrayLayers,
+    SrcImageDescriptor  imageDesc)
 {
     /* Update only the first MIP-map level for each array layer */
     const auto bytesPerLayer =
@@ -328,37 +338,43 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
     }
 }
 
-void D3D11RenderSystem::InitializeGpuTextureWithDefault(
-    D3D11Texture&   textureD3D,
-    const Format    format,
-    const Extent3D& extent,
-    std::uint32_t   arrayLayers)
+void D3D11RenderSystem::InitializeGpuTextureWithClearValue(
+    D3D11Texture&       textureD3D,
+    const Format        format,
+    const Extent3D&     extent,
+    std::uint32_t       arrayLayers,
+    const ClearValue&   clearValue)
 {
-    /* Find suitable image format for texture hardware format */
-    SrcImageDescriptor imageDescDefault;
-    if (FindSuitableImageFormat(format, imageDescDefault.format, imageDescDefault.dataType))
+    if (IsDepthStencilFormat(format))
     {
-        const auto& cfg = GetConfiguration();
-
-        /* Generate default image buffer */
-        const auto fillColor = cfg.imageInitialization.clearValue.color.Cast<double>();
-        const auto imageSize = extent.width * extent.height * extent.depth;
-
-        auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, fillColor);
-
-        /* Update only the first MIP-map level for each array slice */
-        imageDescDefault.data = imageBuffer.get();
-
-        for (std::uint32_t layer = 0; layer < arrayLayers; ++layer)
+        //TODO
+    }
+    else
+    {
+        /* Find suitable image format for texture hardware format */
+        SrcImageDescriptor imageDescDefault;
+        if (FindSuitableImageFormat(format, imageDescDefault.format, imageDescDefault.dataType))
         {
-            textureD3D.UpdateSubresource(
-                context_.Get(),
-                0,
-                layer,
-                CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
-                imageDescDefault,
-                cfg.threadCount
-            );
+            /* Generate default image buffer */
+            const auto fillColor = clearValue.color.Cast<double>();
+            const auto imageSize = extent.width * extent.height * extent.depth;
+
+            auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, fillColor);
+
+            /* Update only the first MIP-map level for each array slice */
+            imageDescDefault.data = imageBuffer.get();
+
+            for (std::uint32_t layer = 0; layer < arrayLayers; ++layer)
+            {
+                textureD3D.UpdateSubresource(
+                    context_.Get(),
+                    0,
+                    layer,
+                    CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
+                    imageDescDefault,
+                    GetConfiguration().threadCount
+                );
+            }
         }
     }
 }

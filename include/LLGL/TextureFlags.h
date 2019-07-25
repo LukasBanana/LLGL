@@ -13,6 +13,7 @@
 #include "Types.h"
 #include "Format.h"
 #include "ResourceFlags.h"
+#include "CommandBufferFlags.h"
 #include <cstddef>
 #include <cstdint>
 
@@ -283,6 +284,13 @@ struct TextureDescriptor
     \see IsMultiSampleTexture
     */
     std::uint32_t   samples         = 1;
+
+    /**
+    \brief Specifies a clear value to initialize the texture with, if no initial image data is provided.
+    \remarks If the \c imageDesc parameter of RenderSystem::CreateTexture is \b not null, this attribute is ignored.
+    \see RenderSystem::CreateTexture
+    */
+    ClearValue      clearValue;
 };
 
 /**

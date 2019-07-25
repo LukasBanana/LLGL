@@ -86,7 +86,7 @@ struct ClearFlags
 /**
 \brief Clear value structure for color, depth, and stencil clear operations.
 \see AttachmentClear::clearValue
-\see ImageInitialization::clearValue
+\see TextureDescriptor::clearValue
 */
 struct ClearValue
 {

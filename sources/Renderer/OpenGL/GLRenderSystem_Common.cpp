@@ -39,12 +39,6 @@ GLRenderSystem::~GLRenderSystem()
     GLStatePool::Instance().Clear();
 }
 
-void GLRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
-{
-    RenderSystem::SetConfiguration(config);
-    GLTexImageInitialization(config.imageInitialization);
-}
-
 /* ----- Render Context ----- */
 
 // private

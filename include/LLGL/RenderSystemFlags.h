@@ -170,40 +170,19 @@ enum class CPUAccess
 
 /* ----- Structures ----- */
 
-//! Structure of image initialization for textures without initial image data.
-struct ImageInitialization
-{
-    /**
-    \brief Enables or disables the default initialization of texture images. By default true.
-    \remarks This will be used when a texture is created and no initial image data is specified.
-    If this is false and a texture is created without initial image data, the texture remains uninitialized.
-    \remarks Reading or sampling uninitialized textures is undefined behavior.
-    */
-    bool        enabled     = true;
-
-    /**
-    \brief Specifies the default value to clear uninitialized textures.
-    \todo Currently only supports initialization of color and depth. Default initialization of stencil values is not supported yet.
-    */
-    ClearValue  clearValue;
-};
-
 /**
 \brief Render system configuration structure.
 \see RenderSystem::SetConfiguration
 */
 struct RenderSystemConfiguration
 {
-    //! Image initialization for textures without initial image data.
-    ImageInitialization imageInitialization;
-
     /**
     \brief Specifies the number of threads that will be used internally by the render system. By default Constants::maxThreadCount.
     \remarks This is mainly used by the Direct3D render systems, e.g. inside the "CreateTexture" and "WriteTexture" functions
     to convert the image data into the respective hardware texture format. OpenGL does this automatically.
     \see Constants::maxThreadCount
     */
-    std::size_t         threadCount         = Constants::maxThreadCount;
+    std::size_t threadCount = Constants::maxThreadCount;
 };
 
 /**
