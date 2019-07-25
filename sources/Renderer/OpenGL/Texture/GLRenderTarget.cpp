@@ -351,7 +351,6 @@ void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor&
 {
     /* Get OpenGL texture object */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    auto textureID = textureGL.GetID();
 
     /* Validate resolution for MIP-map level */
     auto mipLevel = attachmentDesc.mipLevel;

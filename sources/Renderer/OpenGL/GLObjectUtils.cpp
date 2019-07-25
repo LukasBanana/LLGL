@@ -17,6 +17,8 @@ namespace LLGL
 {
 
 
+#ifdef GL_KHR_debug
+
 // Returns the length of the specified label with a maximum length determined by GL_MAX_LABEL_LENGTH
 static GLsizei GetCroppedLength(const char* label)
 {
@@ -25,6 +27,8 @@ static GLsizei GetCroppedLength(const char* label)
     const std::size_t   croppedLength   = std::min(actualLength, static_cast<std::size_t>(maxLength));
     return static_cast<GLsizei>(croppedLength);
 }
+
+#endif // /GL_KHR_debug
 
 void GLSetObjectLabel(GLenum identifier, GLuint name, const char* label)
 {

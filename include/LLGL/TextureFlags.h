@@ -138,8 +138,8 @@ struct TextureLocation
     //! Constructor to initialize all attributes.
     inline TextureLocation(const Offset3D& offset, std::uint32_t arrayLayer = 0, std::uint32_t mipLevel = 0) :
         offset     { offset     },
-        mipLevel   { mipLevel   },
-        arrayLayer { arrayLayer }
+        arrayLayer { arrayLayer },
+        mipLevel   { mipLevel   }
     {
     }
 

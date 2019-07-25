@@ -83,9 +83,9 @@ bool MTShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
 {
     if (kernelFunc_ != nil)
     {
-        workGroupSize.width  = numThreadsPerGroup_.width;
-        workGroupSize.height = numThreadsPerGroup_.height;
-        workGroupSize.depth  = numThreadsPerGroup_.depth;
+        workGroupSize.width  = static_cast<std::uint32_t>(numThreadsPerGroup_.width);
+        workGroupSize.height = static_cast<std::uint32_t>(numThreadsPerGroup_.height);
+        workGroupSize.depth  = static_cast<std::uint32_t>(numThreadsPerGroup_.depth);
         return true;
     }
     return false;
@@ -212,10 +212,10 @@ static void ReflectShaderArgument(MTLArgument* arg, ShaderReflection& reflection
         {
             resource.binding.name       = [arg.name UTF8String];
             resource.binding.type       = resourceType;
-            resource.binding.slot       = arg.index;
-            resource.binding.arraySize  = arg.arrayLength;
+            resource.binding.slot       = static_cast<std::uint32_t>(arg.index);
+            resource.binding.arraySize  = static_cast<std::uint32_t>(arg.arrayLength);
             if (resourceType == ResourceType::Buffer)
-                resource.constantBufferSize = arg.bufferDataSize;
+                resource.constantBufferSize = static_cast<std::uint32_t>(arg.bufferDataSize);
         }
         reflection.resources.push_back(resource);
     }
