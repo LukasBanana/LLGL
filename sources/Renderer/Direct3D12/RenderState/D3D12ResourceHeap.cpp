@@ -174,7 +174,7 @@ void D3D12ResourceHeap::CreateShaderResourceViews(ID3D12Device* device, D3D12_CP
         [&](Resource& resource)
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
-            textureD3D.CreateResourceView(device, cpuDescHandle);
+            textureD3D.CreateShaderResourceView(device, cpuDescHandle);
             cpuDescHandle.ptr += cpuDescStride;
         }
     );

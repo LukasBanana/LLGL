@@ -190,79 +190,110 @@ void D3D12Texture::UpdateSubresource(
     commandList->ResourceBarrier(1, &resourceBarrier);
 }
 
-void D3D12Texture::CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle)
+void D3D12Texture::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
 {
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    CreateShaderResourceViewPrimary(
+        device,
+        D3D12Types::MapSrvDimension(GetType()),
+        format_,
+        D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+        TextureSubresource{ 0, numArrayLayers_, 0, numMipLevels_ },
+        cpuDescHandle
+    );
+}
+
+void D3D12Texture::CreateShaderResourceView(ID3D12Device* device, const TextureViewDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+{
+    CreateShaderResourceViewPrimary(
+        device,
+        D3D12Types::MapSrvDimension(desc.type),
+        D3D12Types::Map(desc.format),
+        D3D12Types::Map(desc.swizzle),
+        desc.subresource,
+        cpuDescHandle
+    );
+}
+
+//private
+void D3D12Texture::CreateShaderResourceViewPrimary(
+    ID3D12Device*               device,
+    D3D12_SRV_DIMENSION         dimension,
+    DXGI_FORMAT                 format,
+    UINT                        componentMapping,
+    const TextureSubresource&   subresource,
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+    srvDesc.Format                  = format;
+    srvDesc.ViewDimension           = dimension;
+    srvDesc.Shader4ComponentMapping = componentMapping;
+
+    switch (srvDesc.ViewDimension)
     {
-        srvDesc.Format                  = format_;
-        srvDesc.ViewDimension           = D3D12Types::MapSrvDimension(GetType());
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        case D3D12_SRV_DIMENSION_TEXTURE1D:
+            srvDesc.Texture1D.MostDetailedMip               = subresource.baseMipLevel;
+            srvDesc.Texture1D.MipLevels                     = subresource.numMipLevels;
+            srvDesc.Texture1D.ResourceMinLODClamp           = 0.0f;
+            break;
 
-        switch (srvDesc.ViewDimension)
-        {
-            case D3D12_SRV_DIMENSION_TEXTURE1D:
-                srvDesc.Texture1D.MostDetailedMip               = 0;
-                srvDesc.Texture1D.MipLevels                     = numMipLevels_;
-                srvDesc.Texture1D.ResourceMinLODClamp           = 0.0f;
-                break;
+        case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
+            srvDesc.Texture1DArray.MostDetailedMip          = subresource.baseMipLevel;
+            srvDesc.Texture1DArray.MipLevels                = subresource.numMipLevels;
+            srvDesc.Texture1DArray.FirstArraySlice          = subresource.baseArrayLayer;
+            srvDesc.Texture1DArray.ArraySize                = subresource.numArrayLayers;
+            srvDesc.Texture1DArray.ResourceMinLODClamp      = 0.0f;
+            break;
 
-            case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
-                srvDesc.Texture1DArray.MostDetailedMip          = 0;
-                srvDesc.Texture1DArray.MipLevels                = numMipLevels_;
-                srvDesc.Texture1DArray.FirstArraySlice          = 0;
-                srvDesc.Texture1DArray.ArraySize                = numArrayLayers_;
-                srvDesc.Texture1DArray.ResourceMinLODClamp      = 0.0f;
-                break;
+        case D3D12_SRV_DIMENSION_TEXTURE2D:
+            srvDesc.Texture2D.MostDetailedMip               = subresource.baseMipLevel;
+            srvDesc.Texture2D.MipLevels                     = subresource.numMipLevels;
+            srvDesc.Texture2D.PlaneSlice                    = 0;
+            srvDesc.Texture2D.ResourceMinLODClamp           = 0.0f;
+            break;
 
-            case D3D12_SRV_DIMENSION_TEXTURE2D:
-                srvDesc.Texture2D.MostDetailedMip               = 0;
-                srvDesc.Texture2D.MipLevels                     = numMipLevels_;
-                srvDesc.Texture2D.PlaneSlice                    = 0;
-                srvDesc.Texture2D.ResourceMinLODClamp           = 0.0f;
-                break;
+        case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
+            srvDesc.Texture2DArray.MostDetailedMip          = subresource.baseMipLevel;
+            srvDesc.Texture2DArray.MipLevels                = subresource.numMipLevels;
+            srvDesc.Texture2DArray.FirstArraySlice          = subresource.baseArrayLayer;
+            srvDesc.Texture2DArray.ArraySize                = subresource.numArrayLayers;
+            srvDesc.Texture2DArray.PlaneSlice               = 0;
+            srvDesc.Texture2DArray.ResourceMinLODClamp      = 0.0f;
+            break;
 
-            case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
-                srvDesc.Texture2DArray.MostDetailedMip          = 0;
-                srvDesc.Texture2DArray.MipLevels                = numMipLevels_;
-                srvDesc.Texture2DArray.FirstArraySlice          = 0;
-                srvDesc.Texture2DArray.ArraySize                = numArrayLayers_;
-                srvDesc.Texture2DArray.PlaneSlice               = 0;
-                srvDesc.Texture2DArray.ResourceMinLODClamp      = 0.0f;
-                break;
+        case D3D12_SRV_DIMENSION_TEXTURE2DMS:
+            break;
 
-            case D3D12_SRV_DIMENSION_TEXTURE2DMS:
-                break;
+        case D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY:
+            srvDesc.Texture2DMSArray.FirstArraySlice        = subresource.baseArrayLayer;
+            srvDesc.Texture2DMSArray.ArraySize              = subresource.numArrayLayers;
+            break;
 
-            case D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY:
-                srvDesc.Texture2DMSArray.FirstArraySlice        = 0;
-                srvDesc.Texture2DMSArray.ArraySize              = numArrayLayers_;
-                break;
+        case D3D12_SRV_DIMENSION_TEXTURE3D:
+            srvDesc.Texture3D.MostDetailedMip               = subresource.baseMipLevel;
+            srvDesc.Texture3D.MipLevels                     = subresource.numMipLevels;
+            srvDesc.Texture3D.ResourceMinLODClamp           = 0.0f;
+            break;
 
-            case D3D12_SRV_DIMENSION_TEXTURE3D:
-                srvDesc.Texture3D.MostDetailedMip               = 0;
-                srvDesc.Texture3D.MipLevels                     = numMipLevels_;
-                srvDesc.Texture3D.ResourceMinLODClamp           = 0.0f;
-                break;
+        case D3D12_SRV_DIMENSION_TEXTURECUBE:
+            srvDesc.TextureCube.MostDetailedMip             = subresource.baseMipLevel;
+            srvDesc.TextureCube.MipLevels                   = subresource.numMipLevels;
+            srvDesc.TextureCube.ResourceMinLODClamp         = 0.0f;
+            break;
 
-            case D3D12_SRV_DIMENSION_TEXTURECUBE:
-                srvDesc.TextureCube.MostDetailedMip             = 0;
-                srvDesc.TextureCube.MipLevels                   = numMipLevels_;
-                srvDesc.TextureCube.ResourceMinLODClamp         = 0.0f;
-                break;
+        case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
+            srvDesc.TextureCubeArray.MostDetailedMip        = subresource.baseMipLevel;
+            srvDesc.TextureCubeArray.MipLevels              = subresource.numMipLevels;
+            srvDesc.TextureCubeArray.First2DArrayFace       = subresource.baseArrayLayer;
+            srvDesc.TextureCubeArray.NumCubes               = subresource.numArrayLayers / 6;
+            srvDesc.TextureCubeArray.ResourceMinLODClamp    = 0.0f;
+            break;
 
-            case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
-                srvDesc.TextureCubeArray.MostDetailedMip        = 0;
-                srvDesc.TextureCubeArray.MipLevels              = numMipLevels_;
-                srvDesc.TextureCubeArray.First2DArrayFace       = 0;
-                srvDesc.TextureCubeArray.NumCubes               = numArrayLayers_;
-                srvDesc.TextureCubeArray.ResourceMinLODClamp    = 0.0f;
-                break;
-
-            default:
-                break;
-        }
+        default:
+            break;
     }
-    device->CreateShaderResourceView(resource_.native.Get(), &srvDesc, cpuDescriptorHandle);
+
+    device->CreateShaderResourceView(resource_.native.Get(), &srvDesc, cpuDescHandle);
 }
 
 UINT D3D12Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer) const

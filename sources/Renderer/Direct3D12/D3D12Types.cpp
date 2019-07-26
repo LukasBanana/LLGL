@@ -231,6 +231,30 @@ D3D12_LOGIC_OP Map(const LogicOp logicOp)
     DXTypes::MapFailed("LogicOp", "D3D12_LOGIC_OP");
 }
 
+D3D12_SHADER_COMPONENT_MAPPING Map(const TextureSwizzle textureSwizzle)
+{
+    switch (textureSwizzle)
+    {
+        case TextureSwizzle::Zero:  return D3D12_SHADER_COMPONENT_MAPPING_FORCE_VALUE_0;
+        case TextureSwizzle::One:   return D3D12_SHADER_COMPONENT_MAPPING_FORCE_VALUE_1;
+        case TextureSwizzle::Red:   return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_0;
+        case TextureSwizzle::Green: return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_1;
+        case TextureSwizzle::Blue:  return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_2;
+        case TextureSwizzle::Alpha: return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_3;
+    }
+    DXTypes::MapFailed("TextureSwizzle", "D3D12_SHADER_COMPONENT_MAPPING");
+}
+
+UINT Map(const TextureSwizzleRGBA& textureSwizzle)
+{
+    return D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(
+        Map(textureSwizzle.r),
+        Map(textureSwizzle.g),
+        Map(textureSwizzle.b),
+        Map(textureSwizzle.a)
+    );
+}
+
 D3D12_SRV_DIMENSION MapSrvDimension(const TextureType textureType)
 {
     switch (textureType)

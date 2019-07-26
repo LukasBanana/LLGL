@@ -111,29 +111,29 @@ void D3D12Buffer::UpdateDynamicSubresource(
     commandContext.TransitionResource(resource_, resource_.usageState);
 }
 
-void D3D12Buffer::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle)
+void D3D12Buffer::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
 {
     D3D12_CONSTANT_BUFFER_VIEW_DESC viewDesc;
     {
         viewDesc.BufferLocation = GetNative()->GetGPUVirtualAddress();
         viewDesc.SizeInBytes    = static_cast<UINT>(GetBufferSize());
     }
-    device->CreateConstantBufferView(&viewDesc, cpuDescriptorHandle);
+    device->CreateConstantBufferView(&viewDesc, cpuDescHandle);
 }
 
-void D3D12Buffer::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle)
+void D3D12Buffer::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc;
     {
         viewDesc.Format                         = DXGI_FORMAT_UNKNOWN;
         viewDesc.ViewDimension                  = D3D12_UAV_DIMENSION_BUFFER;
         viewDesc.Buffer.FirstElement            = 0;
-        viewDesc.Buffer.NumElements             = bufferSize_ / structStride_;
+        viewDesc.Buffer.NumElements             = static_cast<UINT>(bufferSize_ / structStride_);
         viewDesc.Buffer.StructureByteStride     = structStride_;
         viewDesc.Buffer.CounterOffsetInBytes    = 0;
         viewDesc.Buffer.Flags                   = D3D12_BUFFER_UAV_FLAG_NONE;
     }
-    device->CreateUnorderedAccessView(GetNative(), nullptr, &viewDesc, cpuDescriptorHandle);
+    device->CreateUnorderedAccessView(GetNative(), nullptr, &viewDesc, cpuDescHandle);
 }
 
 

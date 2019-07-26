@@ -41,7 +41,9 @@ class D3D12Texture final : public Texture
             UINT                        numArrayLayers  = ~0
         );
 
-        void CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);
+        // Creates either the default SRV for the entire resource or a subresource.
+        void CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
+        void CreateShaderResourceView(ID3D12Device* device, const TextureViewDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
 
         // Returns the subresource index for the specified MIP-map level and array layer.
         UINT CalcSubresource(UINT mipLevel, UINT arrayLayer) const;
@@ -94,6 +96,15 @@ class D3D12Texture final : public Texture
     private:
 
         void CreateNativeTexture(ID3D12Device* device, const TextureDescriptor& desc);
+
+        void CreateShaderResourceViewPrimary(
+            ID3D12Device*               device,
+            D3D12_SRV_DIMENSION         dimension,
+            DXGI_FORMAT                 format,
+            UINT                        componentMapping,
+            const TextureSubresource&   subresource,
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle
+        );
 
     private:
 
