@@ -48,8 +48,9 @@ class D3D12Buffer : public Buffer
             UINT64                  offset = 0
         );
 
-        // Creates a constant buffer view (CBV) within the native buffer object.
+        // Creates a resource views within the native buffer object:
         void CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);
+        void CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);
 
         // Returns the resource wrapper.
         inline D3D12Resource& GetResource()
@@ -104,6 +105,7 @@ class D3D12Buffer : public Buffer
         ComPtr<ID3D12Resource>      uploadResource_;
 
         UINT64                      bufferSize_         = 0;
+        UINT                        structStride_       = 1;
         D3D12_HEAP_TYPE             heapType_           = D3D12_HEAP_TYPE_DEFAULT;
         D3D12_VERTEX_BUFFER_VIEW    vertexBufferView_;
         D3D12_INDEX_BUFFER_VIEW     indexBufferView_;

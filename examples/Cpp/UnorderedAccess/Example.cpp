@@ -37,10 +37,9 @@ public:
         // Validate that required rendering capabilities are present
         LLGL::RenderingCapabilities caps;
 
-        caps.features.hasSamplers           = true;
-        caps.features.hasComputeShaders     = true;
-        caps.features.hasStorageBuffers     = true;
-        caps.features.hasCommandBufferExt   = true;
+        caps.features.hasSamplers       = true;
+        caps.features.hasComputeShaders = true;
+        caps.features.hasStorageBuffers = true;
 
         LLGL::ValidateRenderingCaps(
             renderer->GetRenderingCaps(), caps,
@@ -226,7 +225,8 @@ private:
             commands->Dispatch(textureSize.width, textureSize.height, textureSize.depth);
 
             // Reset texture from shader output binding point
-            commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage);
+            if (commandsExt)
+                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage);
 
             // Set graphics resources
             commands->SetVertexBuffer(*vertexBuffer);
@@ -243,7 +243,8 @@ private:
             commands->EndRenderPass();
 
             // Reset texture from shader input binding point
-            commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::SampleBuffer, LLGL::StageFlags::FragmentStage);
+            if (commandsExt)
+                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::SampleBuffer, LLGL::StageFlags::FragmentStage);
         }
         commands->End();
         commandQueue->Submit(*commands);

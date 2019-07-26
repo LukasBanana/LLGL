@@ -26,6 +26,7 @@
 
 #include "RenderState/D3D12Fence.h"
 #include "RenderState/D3D12GraphicsPipeline.h"
+#include "RenderState/D3D12ComputePipeline.h"
 #include "RenderState/D3D12PipelineLayout.h"
 #include "RenderState/D3D12ResourceHeap.h"
 #include "RenderState/D3D12RenderPass.h"
@@ -255,6 +256,7 @@ class D3D12RenderSystem final : public RenderSystem
         HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
         HWObjectContainer<D3D12PipelineLayout>      pipelineLayouts_;
         HWObjectContainer<D3D12GraphicsPipeline>    graphicsPipelines_;
+        HWObjectContainer<D3D12ComputePipeline>     computePipelines_;
         HWObjectContainer<D3D12ResourceHeap>        resourceHeaps_;
         HWObjectContainer<D3D12QueryHeap>           queryHeaps_;
         HWObjectContainer<D3D12Fence>               fences_;

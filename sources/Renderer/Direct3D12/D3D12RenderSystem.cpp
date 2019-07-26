@@ -348,7 +348,10 @@ GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipeli
 
 ComputePipeline* D3D12RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
 {
-    return nullptr;//todo...
+    return TakeOwnership(
+        computePipelines_,
+        MakeUnique<D3D12ComputePipeline>(device_, defaultPipelineLayout_.GetRootSignature(), desc)
+    );
 }
 
 void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)

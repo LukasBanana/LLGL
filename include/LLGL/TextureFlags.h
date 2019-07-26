@@ -287,8 +287,11 @@ struct TextureDescriptor
 
     /**
     \brief Specifies a clear value to initialize the texture with, if no initial image data is provided.
-    \remarks If the \c imageDesc parameter of RenderSystem::CreateTexture is \b not null, this attribute is ignored.
+    \remarks The initial texture data is only determined by this attribute if the \c imageDesc parameter of RenderSystem::CreateTexture is null
+    and the MiscFlags::NoInitialData bit is \b not set in the \c miscFlags attribute.
+    In either case, this value may be used by the renderer API as a hint which clear value the resource is optimized for (especially for Direct3D 12).
     \see RenderSystem::CreateTexture
+    \see TextureDescriptor::miscFlags
     */
     ClearValue      clearValue;
 };

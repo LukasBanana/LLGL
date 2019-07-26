@@ -28,12 +28,13 @@ class D3D12Device
 
         bool CreateDXDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels);
 
-        ComPtr<ID3D12CommandQueue>          CreateDXCommandQueue    ();
-        ComPtr<ID3D12CommandAllocator>      CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
-        ComPtr<ID3D12GraphicsCommandList>   CreateDXCommandList     (D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* commandAllocator);
-        ComPtr<ID3D12PipelineState>         CreateDXPipelineState   (const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
-        ComPtr<ID3D12DescriptorHeap>        CreateDXDescriptorHeap  (const D3D12_DESCRIPTOR_HEAP_DESC& desc);
-        ComPtr<ID3D12QueryHeap>             CreateDXQueryHeap       (const D3D12_QUERY_HEAP_DESC& desc);
+        ComPtr<ID3D12CommandQueue>          CreateDXCommandQueue            ();
+        ComPtr<ID3D12CommandAllocator>      CreateDXCommandAllocator        (D3D12_COMMAND_LIST_TYPE type);
+        ComPtr<ID3D12GraphicsCommandList>   CreateDXCommandList             (D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* commandAllocator);
+        ComPtr<ID3D12PipelineState>         CreateDXGraphicsPipelineState   (const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
+        ComPtr<ID3D12PipelineState>         CreateDXComputePipelineState    (const D3D12_COMPUTE_PIPELINE_STATE_DESC& desc);
+        ComPtr<ID3D12DescriptorHeap>        CreateDXDescriptorHeap          (const D3D12_DESCRIPTOR_HEAP_DESC& desc);
+        ComPtr<ID3D12QueryHeap>             CreateDXQueryHeap               (const D3D12_QUERY_HEAP_DESC& desc);
 
         /* ----- Device and queue ----- */
 

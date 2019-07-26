@@ -121,6 +121,21 @@ void D3D12Buffer::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCR
     device->CreateConstantBufferView(&viewDesc, cpuDescriptorHandle);
 }
 
+void D3D12Buffer::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle)
+{
+    D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc;
+    {
+        viewDesc.Format                         = DXGI_FORMAT_UNKNOWN;
+        viewDesc.ViewDimension                  = D3D12_UAV_DIMENSION_BUFFER;
+        viewDesc.Buffer.FirstElement            = 0;
+        viewDesc.Buffer.NumElements             = bufferSize_ / structStride_;
+        viewDesc.Buffer.StructureByteStride     = structStride_;
+        viewDesc.Buffer.CounterOffsetInBytes    = 0;
+        viewDesc.Buffer.Flags                   = D3D12_BUFFER_UAV_FLAG_NONE;
+    }
+    device->CreateUnorderedAccessView(GetNative(), nullptr, &viewDesc, cpuDescriptorHandle);
+}
+
 
 /*
  * ======= Protected: =======
@@ -158,7 +173,8 @@ static D3D12_RESOURCE_STATES GetD3DUsageState(long bindFlags)
 void D3D12Buffer::CreateNativeBuffer(ID3D12Device* device, const BufferDescriptor& desc)
 {
     /* Store buffer attributes */
-    bufferSize_ = desc.size;
+    bufferSize_     = desc.size;
+    structStride_   = std::max(1u, desc.storageBuffer.stride);
 
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
     {

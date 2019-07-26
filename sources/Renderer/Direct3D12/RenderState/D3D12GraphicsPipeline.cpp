@@ -325,7 +325,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.SampleDesc.Count      = device.FintSuitableMultisamples(stateDesc.RTVFormats[0], desc.rasterizer.multiSampling.SampleCount());
 
     /* Create graphics pipeline state and graphics command list */
-    pipelineState_ = device.CreateDXPipelineState(stateDesc);
+    pipelineState_ = device.CreateDXGraphicsPipelineState(stateDesc);
 }
 
 void D3D12GraphicsPipeline::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc)

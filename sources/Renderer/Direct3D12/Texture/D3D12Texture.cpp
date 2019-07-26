@@ -414,13 +414,32 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     D3D12_RESOURCE_DESC descD3D;
     Convert(descD3D, desc);
 
+    /* Get optimal clear value (if specified) */
+    bool useClearValue = ((desc.bindFlags & (BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment)) != 0);
+
+    D3D12_CLEAR_VALUE optClearValue;
+    if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
+    {
+        optClearValue.Format    = descD3D.Format;
+        optClearValue.Color[0]  = desc.clearValue.color.r;
+        optClearValue.Color[1]  = desc.clearValue.color.g;
+        optClearValue.Color[2]  = desc.clearValue.color.b;
+        optClearValue.Color[3]  = desc.clearValue.color.a;
+    }
+    else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
+    {
+        optClearValue.Format    = descD3D.Format;
+        optClearValue.DepthStencil.Depth    = desc.clearValue.depth;
+        optClearValue.DepthStencil.Stencil  = static_cast<UINT8>(desc.clearValue.stencil);
+    }
+
     /* Create hardware resource for the texture */
     auto hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &descD3D,
         D3D12_RESOURCE_STATE_COPY_DEST,
-        nullptr,
+        (useClearValue ? &optClearValue : nullptr),
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware texture");

@@ -166,7 +166,7 @@ void D3D12ResourceHeap::CreateConstantBufferViews(ID3D12Device* device, D3D12_CP
 
 void D3D12ResourceHeap::CreateShaderResourceViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc)
 {
-    UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    const UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     ForEachResourceViewOfType(
         desc,
@@ -182,12 +182,26 @@ void D3D12ResourceHeap::CreateShaderResourceViews(ID3D12Device* device, D3D12_CP
 
 void D3D12ResourceHeap::CreateUnorderedAccessViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc)
 {
-    //TODO
+    const UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    ForEachResourceViewOfType(
+        desc,
+        ResourceType::Buffer,
+        [&](Resource& resource)
+        {
+            auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
+            if ((bufferD3D.GetBindFlags() & BindFlags::RWStorageBuffer) != 0)
+            {
+                bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle);
+                cpuDescHandle.ptr += cpuDescStride;
+            }
+        }
+    );
 }
 
 void D3D12ResourceHeap::CreateSamplers(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc)
 {
-    UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    const UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
     ForEachResourceViewOfType(
         desc,
