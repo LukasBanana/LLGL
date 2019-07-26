@@ -101,6 +101,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
     /* Get parameter from union */
     const char* entry   = shaderDesc.entryPoint;
     const char* target  = (shaderDesc.profile != nullptr ? shaderDesc.profile : "");
+    auto        defines = reinterpret_cast<const D3D_SHADER_MACRO*>(shaderDesc.defines);
     auto        flags   = shaderDesc.flags;
 
     /* Compile shader code */
@@ -110,7 +111,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         sourceCode,
         sourceLength,
         nullptr,                            // LPCSTR               pSourceName
-        nullptr,                            // D3D_SHADER_MACRO*    pDefines
+        defines,                            // D3D_SHADER_MACRO*    pDefines
         nullptr,                            // ID3DInclude*         pInclude
         entry,                              // LPCSTR               pEntrypoint
         target,                             // LPCSTR               pTarget

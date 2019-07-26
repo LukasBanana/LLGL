@@ -62,13 +62,13 @@ std::string MTShader::Disassemble(int flags)
 std::string MTShader::QueryInfoLog()
 {
     std::string s;
-    
+
     if (error_ != nullptr)
     {
         NSString* errorMsg = [error_ localizedDescription];
         s = [errorMsg cStringUsingEncoding:NSUTF8StringEncoding];
     }
-    
+
     return s;
 }
 
@@ -105,7 +105,7 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
 {
     /* Get source */
     NSString* sourceString = nil;
-    
+
     if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
     {
         NSString* filePath = [[NSString alloc] initWithUTF8String:shaderDesc.source];
@@ -114,7 +114,7 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
     }
     else
         sourceString = [[NSString alloc] initWithUTF8String:shaderDesc.source];
-    
+
     if (sourceString == nil)
         throw std::runtime_error("cannot compile Metal shader without source");
 
@@ -124,7 +124,7 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
     /* Load shader library */
     ReleaseError();
     error_ = [NSError alloc];
-    
+
     library_ = [device
         newLibraryWithSource:   sourceString
         options:                opt

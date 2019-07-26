@@ -118,6 +118,30 @@ struct StageFlags
 /* ----- Structures ----- */
 
 /**
+\brief Shader macro structure with name and optional body definition.
+\see ShaderDescriptor::defines
+*/
+struct ShaderMacro
+{
+    ShaderMacro() = default;
+    ShaderMacro(const ShaderMacro&) = default;
+    ShaderMacro& operator = (const ShaderMacro&) = default;
+
+    //! Constructor to initialize the shader macro with a name and an optional body definition.
+    inline ShaderMacro(const char* name, const char* definition = nullptr) :
+        name       { name       },
+        definition { definition }
+    {
+    }
+
+    //! Specifies the name of the macro. This must not be null.
+    const char* name        = nullptr;
+
+    //! Specifies the macro definition. If this is null, the macro has no body definition.
+    const char* definition  = nullptr;
+};
+
+/**
 \brief Shader source and binary code descriptor structure.
 \see RenderSystem::CreateShader
 */
@@ -188,21 +212,43 @@ struct ShaderDescriptor
 
     /**
     \brief Shader entry point (shader main function). If this is null, the empty string is used. By default null.
-    \note Only supported with: HLSL, SPIR-V.
+    \note Only supported with: HLSL, SPIR-V, Metal.
     */
     const char*         entryPoint      = nullptr;
 
-    /*
-    \brief Shader target profile (e.g. "vs_5_0" for vertex shader model 5.0). If this is null, the empty string is used. By default null.
-    \note Only supported with: Direct3D 11, Direct3D 12.
+    /**
+    \brief Shader target profile. If this is null, the empty string is used. By default null.
+    \remarks This is renderer API dependent and is forwarded to the respective shader compiler.
+    \remarks Here are a few examples:
+    - For HLSL: \c "vs_5_0" specifies vertex shader model 5.0.
+    - For Metal: \c "2.1" specifies shader version 2.1.
+    \note Only supported with: HLSL, Metal.
     \see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx
     */
     const char*         profile         = nullptr;
 
     /**
+    \brief Optional array of macro definitions. By default null.
+    \remarks This must either be null or a null-terminated array of ShaderMacro entries.
+    For those shader compilers that provide a mechanism to add external macro definitions, this can be used to generate multiple shader permutations.
+    \remarks Here is a brief example how to use:
+    \code
+    const LLGL::ShaderMacro myDefines[] = {
+        { "ENABLE_SHADER_PASS_FOO", "1" }, // first macro
+        { "ENABLE_SHADER_PASS_BAR", "0" }, // second macro
+        { nullptr, nullptr },              // terminate array
+    };
+    LLGL::ShaderDescriptor myShaderDesc;
+    myShaderDesc.defines = myDefines;
+    \endcode
+    \note Only supported with: HLSL, Metal.
+    */
+    const ShaderMacro*  defines         = nullptr;
+
+    /**
     \brief Optional compilation flags. By default 0.
-    \remarks This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries.
-    \note Only supported with: Direct3D 11, Direct3D 12.
+    \remarks This can be a bitwise OR combination of the ShaderCompileFlags enumeration entries.
+    \note Only supported with: HLSL.
     \see ShaderCompileFlags
     */
     long                flags           = 0;
