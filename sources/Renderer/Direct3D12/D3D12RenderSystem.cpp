@@ -65,6 +65,10 @@ D3D12RenderSystem::~D3D12RenderSystem()
     */
     renderContexts_.clear();
 
+    /* Clear shaders explicitly to release all ComPtr<ID3DBlob> objects */
+    shaders_.clear();
+    shaderPrograms_.clear();
+
     CloseHandle(fenceEvent_);
 }
 

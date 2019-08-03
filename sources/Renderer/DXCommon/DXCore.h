@@ -13,6 +13,7 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/VideoAdapter.h>
 #include <LLGL/ImageFlags.h>
+#include "ComPtr.h"
 #include <dxgi.h>
 #include <string>
 #include <vector>
@@ -36,6 +37,9 @@ struct D3DTextureFormatDescriptor
 
 /* ----- Functions ----- */
 
+// Returns the DLL instance handle of this module.
+HINSTANCE DXGetDllHandle();
+
 // Throws an std::runtime_error exception if 'hr' is not S_OK.
 void DXThrowIfFailed(const HRESULT hr, const char* info);
 
@@ -53,6 +57,15 @@ std::string DXGetBlobString(ID3DBlob* blob);
 
 // Returns the blob data as char vector.
 std::vector<char> DXGetBlobData(ID3DBlob* blob);
+
+// Returns a blob and copies the specified data into the blob.
+ComPtr<ID3DBlob> DXCreateBlob(const void* data, std::size_t size);
+
+// Returns a blob and copies the specified data into the blob.
+ComPtr<ID3DBlob> DXCreateBlob(const std::vector<char>& data);
+
+// Returns a blob that was created from a resource (*.rc files).
+ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID);
 
 // Returns the rendering capabilites of the specified Direct3D feature level.
 void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLevel);

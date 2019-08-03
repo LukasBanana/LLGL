@@ -15,10 +15,44 @@
 #include <algorithm>
 #include <d3dcompiler.h>
 
+#include "../Direct3D12//Shader/Builtin/D3D12Builtin.h"
+
+
+#ifndef LLGL_BUILD_STATIC_LIB
+
+static HINSTANCE g_moduleHandleDll;
+
+BOOL WINAPI DllMain(
+    _In_ HINSTANCE  hInstance,
+    _In_ DWORD      reason,
+    _In_ LPVOID     /*reserved*/)
+{
+    switch (reason)
+    {
+        case DLL_PROCESS_ATTACH:
+            g_moduleHandleDll = hInstance;
+            break;
+        case DLL_PROCESS_DETACH:
+            g_moduleHandleDll = nullptr;
+            break;
+    }
+    return TRUE;
+}
+
+#endif // /LLGL_BUILD_STATIC_LIB
 
 namespace LLGL
 {
 
+
+HINSTANCE DXGetDllHandle()
+{
+    #ifndef LLGL_BUILD_STATIC_LIB
+    return g_moduleHandleDll;
+    #else
+    return GetModuleHandle(nullptr);
+    #endif
+}
 
 static const char* DXErrorToStr(const HRESULT hr)
 {
@@ -176,6 +210,49 @@ std::string DXGetBlobString(ID3DBlob* blob)
 std::vector<char> DXGetBlobData(ID3DBlob* blob)
 {
     return GetBlobDataTmpl<std::vector<char>>(blob);
+}
+
+ComPtr<ID3DBlob> DXCreateBlob(const void* data, std::size_t size)
+{
+    ComPtr<ID3DBlob> blob;
+    if (data != nullptr && size > 0)
+    {
+        D3DCreateBlob(size, &blob);
+        ::memcpy(blob->GetBufferPointer(), data, size);
+    }
+    return blob;
+}
+
+ComPtr<ID3DBlob> DXCreateBlob(const std::vector<char>& data)
+{
+    return DXCreateBlob(data.data(), data.size());
+}
+
+ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID)
+{
+    ComPtr<ID3DBlob> blob;
+
+    /* Get module handle */
+    HINSTANCE moduleHandle = DXGetDllHandle();
+
+    /* Load resource from binary data (*.rc file) */
+    if (HRSRC resource = FindResource(moduleHandle, MAKEINTRESOURCE(resourceID), RT_RCDATA))
+    {
+        if (HGLOBAL resourceData = LoadResource(moduleHandle, resource))
+        {
+            /*
+            Lock resource data; According to the docs, unlocking is not necessary
+            see https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-lockresource
+            */
+            if (void* data = LockResource(resourceData))
+            {
+                /* Create blob from locked resource data */
+                blob = DXCreateBlob(data, static_cast<std::size_t>(SizeofResource(moduleHandle, resource)));
+            }
+        }
+    }
+
+    return blob;
 }
 
 static std::uint32_t GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)

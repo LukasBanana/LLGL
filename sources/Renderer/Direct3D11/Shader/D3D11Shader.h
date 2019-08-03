@@ -68,9 +68,9 @@ class D3D11Shader final : public Shader
         }
 
         // Returns the shader byte code container.
-        inline const std::vector<char>& GetByteCode() const
+        inline ID3DBlob* GetByteCode() const
         {
-            return byteCode_;
+            return byteCode_.Get();
         }
 
     private:
@@ -90,8 +90,7 @@ class D3D11Shader final : public Shader
     private:
 
         D3D11NativeShader   native_;
-
-        std::vector<char>   byteCode_;
+        ComPtr<ID3DBlob>    byteCode_;
         ComPtr<ID3DBlob>    errors_;
         bool                hasErrors_  = false;
 

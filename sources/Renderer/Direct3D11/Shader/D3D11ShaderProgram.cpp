@@ -121,7 +121,7 @@ void D3D11ShaderProgram::BuildInputLayout(ID3D11Device* device, std::size_t numV
         return;
 
     /* Check if input layout is allowed */
-    if (!vs_ || vs_->GetByteCode().empty())
+    if (!vs_ || vs_->GetByteCode() == nullptr)
         throw std::runtime_error("cannot build input layout without valid vertex shader");
 
     /* Setup input element descriptors */
@@ -149,8 +149,8 @@ void D3D11ShaderProgram::BuildInputLayout(ID3D11Device* device, std::size_t numV
     auto hr = device->CreateInputLayout(
         inputElements.data(),
         numElements,
-        vs_->GetByteCode().data(),
-        vs_->GetByteCode().size(),
+        vs_->GetByteCode()->GetBufferPointer(),
+        vs_->GetByteCode()->GetBufferSize(),
         inputLayout_.ReleaseAndGetAddressOf()
     );
     DXThrowIfFailed(hr, "failed to create D3D11 input layout");

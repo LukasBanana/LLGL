@@ -40,11 +40,11 @@ bool D3D11Shader::HasErrors() const
 
 std::string D3D11Shader::Disassemble(int flags)
 {
-    if (!byteCode_.empty())
+    if (byteCode_)
     {
         ComPtr<ID3DBlob> disasm;
 
-        auto hr = D3DDisassemble(byteCode_.data(), byteCode_.size(), DXGetDisassemblerFlags(flags), nullptr, disasm.ReleaseAndGetAddressOf());
+        auto hr = D3DDisassemble(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), DXGetDisassemblerFlags(flags), nullptr, disasm.ReleaseAndGetAddressOf());
         DXThrowIfFailed(hr, "failed to disassemble D3D11 shader byte code");
 
         return DXGetBlobString(disasm.Get());
@@ -59,7 +59,7 @@ std::string D3D11Shader::QueryInfoLog()
 
 void D3D11Shader::Reflect(ShaderReflection& reflection) const
 {
-    if (!byteCode_.empty())
+    if (byteCode_)
         ReflectShaderByteCode(reflection);
 }
 
@@ -103,8 +103,6 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
     auto        flags   = shaderDesc.flags;
 
     /* Compile shader code */
-    ComPtr<ID3DBlob> code;
-
     auto hr = D3DCompile(
         sourceCode,
         sourceLength,
@@ -115,16 +113,13 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         target,                             // LPCSTR               pTarget
         DXGetCompilerFlags(flags),          // UINT                 Flags1
         0,                                  // UINT                 Flags2 (recommended to always be 0)
-        code.ReleaseAndGetAddressOf(),      // ID3DBlob**           ppCode
+        byteCode_.ReleaseAndGetAddressOf(), // ID3DBlob**           ppCode
         errors_.ReleaseAndGetAddressOf()    // ID3DBlob**           ppErrorMsgs
     );
 
     /* Get byte code from blob */
-    if (code)
-    {
-        byteCode_ = DXGetBlobData(code.Get());
+    if (byteCode_)
         CreateNativeShader(device, shaderDesc.streamOutput, nullptr);
-    }
 
     /* Store if compilation was successful */
     return !FAILED(hr);
@@ -135,16 +130,15 @@ bool D3D11Shader::LoadBinary(ID3D11Device* device, const ShaderDescriptor& shade
     if (shaderDesc.sourceType == ShaderSourceType::BinaryFile)
     {
         /* Load binary code from file */
-        byteCode_ = ReadFileBuffer(shaderDesc.source);
+        byteCode_ = DXCreateBlob(ReadFileBuffer(shaderDesc.source));
     }
     else
     {
         /* Copy binary code into container and create native shader */
-        byteCode_.resize(shaderDesc.sourceSize);
-        std::copy(shaderDesc.source, shaderDesc.source + shaderDesc.sourceSize, byteCode_.begin());
+        byteCode_ = DXCreateBlob(shaderDesc.source, shaderDesc.sourceSize);
     }
 
-    if (!byteCode_.empty())
+    if (byteCode_.Get() != nullptr && byteCode_->GetBufferSize() > 0)
     {
         /* Create native shader object */
         CreateNativeShader(device, shaderDesc.streamOutput, nullptr);
@@ -169,21 +163,21 @@ void D3D11Shader::CreateNativeShader(
         {
             case ShaderType::Vertex:
             {
-                hr = device->CreateVertexShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.vs.ReleaseAndGetAddressOf());
+                hr = device->CreateVertexShader(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), classLinkage, native_.vs.ReleaseAndGetAddressOf());
                 DXThrowIfFailed(hr, "failed to create D3D11 vertex shader");
             }
             break;
 
             case ShaderType::TessControl:
             {
-                hr = device->CreateHullShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.hs.ReleaseAndGetAddressOf());
+                hr = device->CreateHullShader(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), classLinkage, native_.hs.ReleaseAndGetAddressOf());
                 DXThrowIfFailed(hr, "failed to create D3D11 hull shader");
             }
             break;
 
             case ShaderType::TessEvaluation:
             {
-                hr = device->CreateDomainShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.ds.ReleaseAndGetAddressOf());
+                hr = device->CreateDomainShader(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), classLinkage, native_.ds.ReleaseAndGetAddressOf());
                 DXThrowIfFailed(hr, "failed to create D3D11 domain shader");
             }
             break;
@@ -213,8 +207,8 @@ void D3D11Shader::CreateNativeShader(
 
                     /* Create geometry shader with stream-output declaration */
                     hr = device->CreateGeometryShaderWithStreamOutput(
-                        byteCode_.data(),
-                        byteCode_.size(),
+                        byteCode_->GetBufferPointer(),
+                        byteCode_->GetBufferSize(),
                         outputElements.data(),
                         static_cast<UINT>(outputElements.size()),
                         nullptr,
@@ -225,7 +219,7 @@ void D3D11Shader::CreateNativeShader(
                     );
                 }
                 else
-                    hr = device->CreateGeometryShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.gs.ReleaseAndGetAddressOf());
+                    hr = device->CreateGeometryShader(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), classLinkage, native_.gs.ReleaseAndGetAddressOf());
 
                 DXThrowIfFailed(hr, "failed to create D3D11 geometry shader");
             }
@@ -233,14 +227,14 @@ void D3D11Shader::CreateNativeShader(
 
             case ShaderType::Fragment:
             {
-                hr = device->CreatePixelShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.ps.ReleaseAndGetAddressOf());
+                hr = device->CreatePixelShader(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), classLinkage, native_.ps.ReleaseAndGetAddressOf());
                 DXThrowIfFailed(hr, "failed to create D3D11 pixel shader");
             }
             break;
 
             case ShaderType::Compute:
             {
-                hr = device->CreateComputeShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.cs.ReleaseAndGetAddressOf());
+                hr = device->CreateComputeShader(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), classLinkage, native_.cs.ReleaseAndGetAddressOf());
                 DXThrowIfFailed(hr, "failed to create D3D11 compute shader");
             }
             break;
@@ -434,7 +428,7 @@ void D3D11Shader::ReflectShaderByteCode(ShaderReflection& reflectionDesc) const
 
     /* Get shader reflection */
     ComPtr<ID3D11ShaderReflection> reflectionObject;
-    hr = D3DReflect(byteCode_.data(), byteCode_.size(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
+    hr = D3DReflect(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to retrieve D3D11 shader reflection");
 
     D3D11_SHADER_DESC shaderDesc;
