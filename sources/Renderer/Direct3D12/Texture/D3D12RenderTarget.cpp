@@ -13,6 +13,7 @@
 #include "../Command/D3D12CommandContext.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
+#include "../D3DX12/d3dx12.h"
 
 
 namespace LLGL
@@ -90,9 +91,9 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderTarget::GetCPUDescriptorHandleForRTV() co
 
 D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderTarget::GetCPUDescriptorHandleForDSV() const
 {
-    /*if (dsvDescHeap_)
+    if (dsvDescHeap_)
         return dsvDescHeap_->GetCPUDescriptorHandleForHeapStart();
-    else*/
+    else
         return {};
 }
 
@@ -215,7 +216,15 @@ void D3D12RenderTarget::CreateAttachments(ID3D12Device* device, const RenderTarg
         }
         else
         {
-            //TODO...
+            CreateDepthStencil(device, depthStencilFormat_);
+            CreateSubresourceDSV(
+                device,
+                depthStencilBuffer_,
+                depthStencilFormat_,
+                TextureType::Texture2D,
+                attachment.mipLevel,
+                attachment.arrayLayer
+            );
         }
     }
 }
@@ -343,6 +352,30 @@ void D3D12RenderTarget::CreateSubresourceDSV(
     /* Create DSV and store reference to resource */
     device->CreateDepthStencilView(resource.Get(), &dsvDesc, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
     depthStencil_ = &resource;
+}
+
+void D3D12RenderTarget::CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT format)
+{
+    /* Create depth-stencil buffer */
+    auto tex2DDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+        depthStencilFormat_,
+        resolution_.width,
+        resolution_.height,
+        1, // arraySize
+        1, // mipLevels
+        1, // sampleCount
+        0,
+        (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
+    );
+
+    auto hr = device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &tex2DDesc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &CD3DX12_CLEAR_VALUE(depthStencilFormat_, 1.0f, 0),
+        IID_PPV_ARGS(depthStencilBuffer_.native.ReleaseAndGetAddressOf())
+    );
 }
 
 

@@ -88,7 +88,7 @@ struct AttachmentDescriptor
 
     /**
     \brief Pointer to the texture which is to be used as target output. By default null.
-    \remarks If this is null, the attribute \c type must not be AttachmentType::Color.
+    \remarks If this is null, the attribute \c type <b>must not</b> be AttachmentType::Color.
     The texture must also have been created either with the binding flag BindFlags::ColorAttachment or BindFlags::DepthStencilAttachment.
     \see AttachmentDescriptor::type
     \see TextureDescriptor::bindFlags
@@ -98,8 +98,8 @@ struct AttachmentDescriptor
     /**
     \brief Specifies the MIP-map level which is to be attached to a render target.
     \remarks This is only used for non-multi-sample textures.
-    All multi-sample textures will always use the first MIP-map level
-    (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
+    All multi-sample textures will always use the first MIP-map level (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
+    \remarks If \c texture is null, this attribute is ignored.
     */
     std::uint32_t   mipLevel    = 0;
 
@@ -107,8 +107,9 @@ struct AttachmentDescriptor
     \brief Specifies the array texture layer which is to be used as render target attachment.
     \remarks This is only used for array textures and cube textures (i.e. TextureType::Texture1DArray,
     TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
-    For cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray), each cube has its own 6 array layers.
+    \remarks For cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray), each cube has its own 6 array layers.
     The layer index for the respective cube faces is described at the TextureDescriptor::arrayLayers member.
+    \remarks If \c texture is null, this attribute is ignored.
     \see TextureDescriptor::arrayLayers
     */
     std::uint32_t   arrayLayer  = 0;

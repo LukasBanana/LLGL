@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderTarget.h>
+#include "../D3D12Resource.h"
 #include <d3d12.h>
 #include "../../DXCommon/ComPtr.h"
 
@@ -18,7 +19,6 @@ namespace LLGL
 {
 
 
-struct D3D12Resource;
 class D3D12Device;
 class D3D12Texture;
 class D3D12CommandContext;
@@ -76,17 +76,22 @@ class D3D12RenderTarget final : public RenderTarget
             UINT                arrayLayer
         );
 
+        void CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT format);
+
     private:
 
         Extent2D                        resolution_;
 
+        // Objects:
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
         UINT                            rtvDescSize_        = 0;
         std::vector<DXGI_FORMAT>        colorFormats_;
 
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
+        D3D12Resource                   depthStencilBuffer_;
         DXGI_FORMAT                     depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
 
+        // References:
         std::vector<D3D12Resource*>     colorBuffers_;
         D3D12Resource*                  depthStencil_       = nullptr;
 

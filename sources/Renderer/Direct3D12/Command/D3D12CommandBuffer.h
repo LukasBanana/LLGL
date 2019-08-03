@@ -232,7 +232,9 @@ class D3D12CommandBuffer final : public CommandBuffer
         const D3D12CommandSignaturePool*    commandSignaturePool_               = nullptr;
 
         D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_                      = {};
+        UINT                                rtvDescSize_                        = 0;
         D3D12_CPU_DESCRIPTOR_HANDLE         dsvDescHandle_                      = {};
+        UINT                                dsvDescSize_                        = 0;
 
         ClearValue                          clearValue_;
 

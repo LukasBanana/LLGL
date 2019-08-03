@@ -262,9 +262,37 @@ void D3D12CommandBuffer::Clear(long flags)
 
 void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    //TODO...
-    //CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescHandle_, targetIndex, rtvDescHandleSize_);
-    //commandList_->ClearRenderTargetView(rtvDescHandle_, clearState_.color.Ptr(), 0, nullptr);
+    for (std::uint32_t i = 0; i < numAttachments; ++i)
+    {
+        const auto& clearOp = attachments[i];
+
+        if (rtvDescHandle_.ptr != 0)
+        {
+            /* Clear color buffers */
+            if ((clearOp.flags & ClearFlags::Color) != 0)
+            {
+                auto rtvDescHandle = rtvDescHandle_;
+                rtvDescHandle.ptr += (rtvDescSize_ * clearOp.colorAttachment);
+                commandList_->ClearRenderTargetView(rtvDescHandle, clearOp.clearValue.color.Ptr(), 0, nullptr);
+            }
+        }
+
+        if (dsvDescHandle_.ptr != 0)
+        {
+            /* Clear depth-stencil buffer */
+            if (auto clearFlagsDSV = GetClearFlagsDSV(clearOp.flags))
+            {
+                commandList_->ClearDepthStencilView(
+                    dsvDescHandle_,
+                    clearFlagsDSV,
+                    clearOp.clearValue.depth,
+                    static_cast<UINT8>(clearOp.clearValue.stencil),
+                    0,
+                    nullptr
+                );
+            }
+        }
+    }
 }
 
 /* ----- Buffers ------ */
@@ -631,6 +659,10 @@ void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem, const Co
 
     /* Initialize command context */
     commandContext_.SetCommandList(commandList_.Get());
+
+    /* Store increment size for descriptor heaps */
+    rtvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    dsvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 }
 
 void D3D12CommandBuffer::NextCommandAllocator()
