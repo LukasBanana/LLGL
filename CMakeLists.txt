@@ -316,6 +316,12 @@ file(GLOB FilesRendererD3D12RenderState     ${PROJECT_SOURCE_DIR}/sources/Render
 file(GLOB FilesRendererD3D12Shader          ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/*.*)
 file(GLOB FilesRendererD3D12Texture         ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Texture/*.*)
 
+set(
+    FilesRendererD3D12ShaderBuiltin
+    ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/Builtin/D3D12Builtin.h
+    ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/Builtin/D3D12Builtin.rc
+)
+
 # Direct3D11 renderer files
 file(GLOB FilesRendererD3D11                ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/*.*)
 file(GLOB FilesRendererD3D11Buffer          ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Buffer/*.*)
@@ -421,6 +427,7 @@ source_group("Sources\\Direct3D12\\Buffer" FILES ${FilesRendererD3D12Buffer})
 source_group("Sources\\Direct3D12\\Command" FILES ${FilesRendererD3D12Command})
 source_group("Sources\\Direct3D12\\RenderState" FILES ${FilesRendererD3D12RenderState})
 source_group("Sources\\Direct3D12\\Shader" FILES ${FilesRendererD3D12Shader})
+source_group("Sources\\Direct3D12\\Shader\\Builtin" FILES ${FilesRendererD3D12ShaderBuiltin})
 source_group("Sources\\Direct3D12\\Texture" FILES ${FilesRendererD3D12Texture})
 
 source_group("Sources" FILES ${FilesExampleBase})
@@ -516,6 +523,7 @@ set(
     ${FilesRendererD3D12Buffer}
     ${FilesRendererD3D12Command}
     ${FilesRendererD3D12Shader}
+    ${FilesRendererD3D12ShaderBuiltin}
     ${FilesRendererD3D12RenderState}
     ${FilesRendererD3D12Texture}
     ${FilesRendererDXCommon}

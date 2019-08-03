@@ -1,0 +1,22 @@
+/*
+ * D3D12Builtin.h
+ * 
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#include "D3D12Builtin.h"
+
+
+LLGL_IDR_GENERATEMIPS_CS            RCDATA "GenerateMipsCS.cso"
+LLGL_IDR_GENERATEMIPS_CS_ODDX       RCDATA "GenerateMipsCS.OddX.cso"
+LLGL_IDR_GENERATEMIPS_CS_ODDY       RCDATA "GenerateMipsCS.OddY.cso"
+LLGL_IDR_GENERATEMIPS_CS_ODDXY      RCDATA "GenerateMipsCS.OddXY.cso"
+LLGL_IDR_GENERATEMIPS_CS_SRGB       RCDATA "GenerateMipsCS.sRGB.cso"
+LLGL_IDR_GENERATEMIPS_CS_SRGB_ODDX  RCDATA "GenerateMipsCS.sRGB.OddX.cso"
+LLGL_IDR_GENERATEMIPS_CS_SRGB_ODDY  RCDATA "GenerateMipsCS.sRGB.OddY.cso"
+LLGL_IDR_GENERATEMIPS_CS_SRGB_ODDXY RCDATA "GenerateMipsCS.sRGB.OddXY.cso"
+
+
+
+// ================================================================================
