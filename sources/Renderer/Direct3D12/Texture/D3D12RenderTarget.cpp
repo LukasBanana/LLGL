@@ -306,7 +306,7 @@ void D3D12RenderTarget::CreateSubresourceDSV(
 {
     /* Initialize D3D12 RTV descriptor */
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-    dsvDesc.Format  = format;
+    dsvDesc.Format  = D3D12Types::ToDXGIFormatDSV(format);
     dsvDesc.Flags   = D3D12_DSV_FLAG_NONE;
 
     switch (type)

@@ -225,7 +225,7 @@ void D3D12Texture::CreateShaderResourceViewPrimary(
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-    srvDesc.Format                  = format;
+    srvDesc.Format                  = D3D12Types::ToDXGIFormatSRV(format);
     srvDesc.ViewDimension           = dimension;
     srvDesc.Shader4ComponentMapping = componentMapping;
 
@@ -376,13 +376,12 @@ static D3D12_RESOURCE_FLAGS GetD3DTextureResourceFlags(const TextureDescriptor& 
 {
     D3D12_RESOURCE_FLAGS flagsD3D = D3D12_RESOURCE_FLAG_NONE;
 
-    if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
+    if ((desc.bindFlags & BindFlags::SampleBuffer) == 0)
+        flagsD3D |= (D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+    else if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
         flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
     else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
-        flagsD3D |= (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
-
-    if ((desc.bindFlags & BindFlags::SampleBuffer) == 0)
-        flagsD3D |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+        flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
     if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
         flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
@@ -399,7 +398,7 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     #else
     dst.MipLevels           = 1;
     #endif
-    dst.Format              = D3D12Types::Map(src.format);
+    dst.Format              = D3D12Types::ToDXGIFormatDSV(D3D12Types::Map(src.format));
     dst.SampleDesc.Count    = 1;
     dst.SampleDesc.Quality  = 0;
     dst.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
@@ -459,7 +458,7 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     }
     else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
     {
-        optClearValue.Format    = descD3D.Format;
+        optClearValue.Format                = descD3D.Format;
         optClearValue.DepthStencil.Depth    = desc.clearValue.depth;
         optClearValue.DepthStencil.Stencil  = static_cast<UINT8>(desc.clearValue.stencil);
     }
