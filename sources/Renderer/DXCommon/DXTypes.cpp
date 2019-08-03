@@ -316,6 +316,28 @@ SystemValue Unmap(const D3D_NAME name)
     }
 }
 
+ResourceType Unmap(const D3D_SRV_DIMENSION dimension)
+{
+    switch (dimension)
+    {
+        case D3D_SRV_DIMENSION_BUFFER:
+        case D3D_SRV_DIMENSION_BUFFEREX:
+            return ResourceType::Buffer;
+        case D3D_SRV_DIMENSION_TEXTURE1D:
+        case D3D_SRV_DIMENSION_TEXTURE1DARRAY:
+        case D3D_SRV_DIMENSION_TEXTURE2D:
+        case D3D_SRV_DIMENSION_TEXTURE2DARRAY:
+        case D3D_SRV_DIMENSION_TEXTURE2DMS:
+        case D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
+        case D3D_SRV_DIMENSION_TEXTURE3D:
+        case D3D_SRV_DIMENSION_TEXTURECUBE:
+        case D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
+            return ResourceType::Texture;
+        default:
+            return ResourceType::Undefined;
+    }
+}
+
 DXGI_FORMAT ToDXGIFormatDSV(const DXGI_FORMAT format)
 {
     switch (format)
