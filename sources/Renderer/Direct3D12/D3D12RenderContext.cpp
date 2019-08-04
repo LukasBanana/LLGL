@@ -325,7 +325,7 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
             D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
         );
 
-        const FLOAT optimizedClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        //const FLOAT optimizedClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
         for (UINT i = 0; i < numFrames_; ++i)
         {

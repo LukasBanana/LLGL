@@ -12,6 +12,7 @@
 #include "../D3D12Types.h"
 #include "../Command/D3D12CommandContext.h"
 #include "../../DXCommon/DXTypes.h"
+#include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
 #include "../D3DX12/d3dx12.h"
 
@@ -21,7 +22,8 @@ namespace LLGL
 
 
 D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDescriptor& desc) :
-    resolution_ { desc.resolution }
+    resolution_ { desc.resolution                  },
+    samples_    { desc.multiSampling.SampleCount() }
 {
     CreateDescriptorHeaps(device, desc);
     CreateAttachments(device.GetNative(), desc);
@@ -72,8 +74,24 @@ void D3D12RenderTarget::TransitionToOutputMerger(D3D12CommandContext& commandCon
 //TODO: incomplete
 void D3D12RenderTarget::ResolveRenderTarget(D3D12CommandContext& commandContext)
 {
-    for (auto& resource : colorBuffers_)
-        commandContext.TransitionResource(*resource, resource->usageState, false);
+    if (HasMultiSampling())
+    {
+        for (std::size_t i = 0; i < colorBuffersMS_.size(); ++i)
+        {
+            commandContext.ResolveRenderTarget(
+                *colorBuffers_[i],
+                colorBuffersMS_[i].dstSubresource,
+                colorBuffersMS_[i].resource,
+                0,
+                colorFormats_[i]
+            );
+        }
+    }
+    else
+    {
+        for (auto& resource : colorBuffers_)
+            commandContext.TransitionResource(*resource, resource->usageState, false);
+    }
 
     if (depthStencil_ != nullptr)
         commandContext.TransitionResource(*depthStencil_, depthStencil_->usageState, false);
@@ -99,7 +117,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderTarget::GetCPUDescriptorHandleForDSV() co
 
 bool D3D12RenderTarget::HasMultiSampling() const
 {
-    return false; //TODO
+    return (samples_ > 1);
 }
 
 
@@ -183,50 +201,129 @@ void D3D12RenderTarget::CreateAttachments(ID3D12Device* device, const RenderTarg
         rtvDescSize_    = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     }
 
+    /* Create multi-sampled texture resources first */
+    if (HasMultiSampling())
+        CreateColorBuffersMS(device, desc, cpuDescHandle);
+
     /* Create all attachments */
     for (const auto& attachment : desc.attachments)
     {
         if (auto texture = attachment.texture)
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
-            if (attachment.type == AttachmentType::Color)
-            {
-                CreateSubresourceRTV(
-                    device,
-                    textureD3D.GetResource(),
-                    textureD3D.GetFormat(),
-                    textureD3D.GetType(),
-                    attachment.mipLevel,
-                    attachment.arrayLayer,
-                    cpuDescHandle
-                );
-                cpuDescHandle.ptr += rtvDescSize_;
-            }
-            else
-            {
-                CreateSubresourceDSV(
-                    device,
-                    textureD3D.GetResource(),
-                    textureD3D.GetFormat(),
-                    textureD3D.GetType(),
-                    attachment.mipLevel,
-                    attachment.arrayLayer
-                );
-            }
+            CreateSubresource(
+                device,
+                attachment.type,
+                textureD3D.GetResource(),
+                textureD3D.GetFormat(),
+                textureD3D.GetType(),
+                attachment.mipLevel,
+                attachment.arrayLayer,
+                cpuDescHandle
+            );
         }
         else
         {
+            /* Create internal depth-stencil buffer and default DSV */
             CreateDepthStencil(device, depthStencilFormat_);
-            CreateSubresourceDSV(
-                device,
-                depthStencilBuffer_,
-                depthStencilFormat_,
-                TextureType::Texture2D,
-                attachment.mipLevel,
-                attachment.arrayLayer
-            );
+            device->CreateDepthStencilView(depthStencilBuffer_.Get(), nullptr, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
+            depthStencil_ = &depthStencilBuffer_;
         }
     }
+}
+
+void D3D12RenderTarget::CreateColorBuffersMS(ID3D12Device* device, const RenderTargetDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle)
+{
+    colorBuffersMS_.resize(colorFormats_.size());
+
+    std::size_t idx = 0;
+
+    for (const auto& attachment : desc.attachments)
+    {
+        if (attachment.type != AttachmentType::Color || attachment.texture == nullptr)
+            continue;
+
+        auto&   colorBufferMS   = colorBuffersMS_[idx];
+        auto    format          = colorFormats_[idx];
+        auto    textureD3D      = LLGL_CAST(const D3D12Texture*, attachment.texture);
+
+        /* Create multi-sampled render targets */
+        auto tex2DMSDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+            format,
+            resolution_.width,
+            resolution_.height,
+            1, // arraySize
+            1, // mipLevels
+            samples_,
+            0,
+            D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+        );
+
+        /* Create render target resource */
+        auto hr = device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &tex2DMSDesc,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            nullptr,
+            IID_PPV_ARGS(colorBufferMS.resource.native.ReleaseAndGetAddressOf())
+        );
+        DXThrowIfCreateFailed(hr, "ID3D12Resource", "for multi-sampled render-target");
+
+        colorBufferMS.resource.SetInitialState(D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        /* Store level and layer to resolve multi-sampled color buffer into destination texture */
+        colorBufferMS.dstSubresource = textureD3D->CalcSubresource(attachment.mipLevel, attachment.arrayLayer);
+
+        /* Create RTV subresource */
+        device->CreateRenderTargetView(colorBufferMS.resource.native.Get(), nullptr, cpuDescHandle);
+        cpuDescHandle.ptr += rtvDescSize_;
+
+        ++idx;
+    }
+}
+
+void D3D12RenderTarget::CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT format)
+{
+    /* Create depth-stencil buffer */
+    auto tex2DDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+        depthStencilFormat_,
+        resolution_.width,
+        resolution_.height,
+        1, // arraySize
+        1, // mipLevels
+        samples_,
+        0,
+        (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
+    );
+
+    auto hr = device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &tex2DDesc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &CD3DX12_CLEAR_VALUE(depthStencilFormat_, 1.0f, 0),
+        IID_PPV_ARGS(depthStencilBuffer_.native.ReleaseAndGetAddressOf())
+    );
+}
+
+void D3D12RenderTarget::CreateSubresource(
+    ID3D12Device*                   device,
+    const AttachmentType            attachmentType,
+    D3D12Resource&                  resource,
+    DXGI_FORMAT                     format,
+    const TextureType               textureType,
+    UINT                            mipLevel,
+    UINT                            arrayLayer,
+    D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle)
+{
+    if (attachmentType == AttachmentType::Color)
+    {
+        CreateSubresourceRTV(device, resource, format, textureType, mipLevel, arrayLayer, cpuDescHandle);
+        cpuDescHandle.ptr += rtvDescSize_;
+    }
+    else
+        CreateSubresourceDSV(device, resource, format, textureType, mipLevel, arrayLayer);
 }
 
 void D3D12RenderTarget::CreateSubresourceRTV(
@@ -352,30 +449,6 @@ void D3D12RenderTarget::CreateSubresourceDSV(
     /* Create DSV and store reference to resource */
     device->CreateDepthStencilView(resource.Get(), &dsvDesc, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
     depthStencil_ = &resource;
-}
-
-void D3D12RenderTarget::CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT format)
-{
-    /* Create depth-stencil buffer */
-    auto tex2DDesc = CD3DX12_RESOURCE_DESC::Tex2D(
-        depthStencilFormat_,
-        resolution_.width,
-        resolution_.height,
-        1, // arraySize
-        1, // mipLevels
-        1, // sampleCount
-        0,
-        (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
-    );
-
-    auto hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-        D3D12_HEAP_FLAG_NONE,
-        &tex2DDesc,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &CD3DX12_CLEAR_VALUE(depthStencilFormat_, 1.0f, 0),
-        IID_PPV_ARGS(depthStencilBuffer_.native.ReleaseAndGetAddressOf())
-    );
 }
 
 

@@ -54,8 +54,20 @@ class D3D12RenderTarget final : public RenderTarget
     private:
 
         void CreateDescriptorHeaps(D3D12Device& device, const RenderTargetDescriptor& desc);
-
         void CreateAttachments(ID3D12Device* device, const RenderTargetDescriptor& desc);
+        void CreateColorBuffersMS(ID3D12Device* device, const RenderTargetDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle);
+        void CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT format);
+
+        void CreateSubresource(
+            ID3D12Device*                   device,
+            const AttachmentType            attachmentType,
+            D3D12Resource&                  resource,
+            DXGI_FORMAT                     format,
+            const TextureType               textureType,
+            UINT                            mipLevel,
+            UINT                            arrayLayer,
+            D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle
+        );
 
         void CreateSubresourceRTV(
             ID3D12Device*                       device,
@@ -76,23 +88,31 @@ class D3D12RenderTarget final : public RenderTarget
             UINT                arrayLayer
         );
 
-        void CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT format);
+    private:
+
+        struct ColorBufferMS
+        {
+            D3D12Resource   resource;
+            UINT            dstSubresource;
+        };
 
     private:
 
         Extent2D                        resolution_;
+        UINT                            samples_            = 0;
 
         // Objects:
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
         UINT                            rtvDescSize_        = 0;
-        std::vector<DXGI_FORMAT>        colorFormats_;
 
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
         D3D12Resource                   depthStencilBuffer_;
         DXGI_FORMAT                     depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
 
-        // References:
+        // Containers and references:
+        std::vector<DXGI_FORMAT>        colorFormats_;
         std::vector<D3D12Resource*>     colorBuffers_;
+        std::vector<ColorBufferMS>      colorBuffersMS_;
         D3D12Resource*                  depthStencil_       = nullptr;
 
 };

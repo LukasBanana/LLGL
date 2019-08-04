@@ -175,6 +175,7 @@ static void SetBlendDescToLogicOp(D3D12_RENDER_TARGET_BLEND_DESC& dst, D3D12_LOG
     dst.RenderTargetWriteMask   = D3D12_COLOR_WRITE_ENABLE_ALL;
 }
 
+//TODO: consider RTV color formats
 static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], const BlendDescriptor& src, UINT numAttachments)
 {
     dst.AlphaToCoverageEnable = DXBoolean(src.alphaToCoverageEnabled);

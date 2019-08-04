@@ -31,8 +31,8 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 |----------|:--------:|---------|
 | OpenGL | ~90% | |
 | Direct3D 11 | ~90% | |
-| Direct3D 12 | ~30% | Experimental state |
-| Vulkan | ~30% | Experimental state |
+| Direct3D 12 | ~40% | Experimental state |
+| Vulkan | ~50% | Experimental state |
 | Metal | ~50% | Experimental state |
 
 | Platform | Progress | Remarks |
