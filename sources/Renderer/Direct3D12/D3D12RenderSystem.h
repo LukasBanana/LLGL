@@ -23,6 +23,7 @@
 #include "Texture/D3D12Texture.h"
 #include "Texture/D3D12Sampler.h"
 #include "Texture/D3D12RenderTarget.h"
+#include "Texture/D3D12MipGenerator.h"
 
 #include "RenderState/D3D12Fence.h"
 #include "RenderState/D3D12GraphicsPipeline.h"
@@ -197,6 +198,11 @@ class D3D12RenderSystem final : public RenderSystem
             return commandSignaturePool_;
         }
 
+        inline const D3D12MipGenerator& GetMipGenerator() const
+        {
+            return mipGenerator_;
+        }
+
     private:
 
         #ifdef LLGL_DEBUG
@@ -235,6 +241,7 @@ class D3D12RenderSystem final : public RenderSystem
         D3D12PipelineLayout                         defaultPipelineLayout_;
         D3D12CommandSignaturePool                   commandSignaturePool_;
         D3D12CommandContext                         commandContext_;
+        D3D12MipGenerator                           mipGenerator_;
 
         #ifdef LLGL_DEBUG
         //ComPtr<ID3D12Debug>                         debugDevice_;

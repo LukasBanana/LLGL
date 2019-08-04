@@ -49,6 +49,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
     commandSignaturePool_.CreateDefaultSignatures(device_.GetNative());
     commandContext_.SetCommandList(graphicsCmdList_.Get());
+    mipGenerator_.CreateRootSignature(device_.GetNative());
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -189,11 +190,11 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 {
     auto textureD3D = MakeUnique<D3D12Texture>(device_.GetNative(), textureDesc);
 
-    /* Upload image data */
-    ComPtr<ID3D12Resource> uploadBuffer;
-
     if (imageDesc)
     {
+        /* Upload image data */
+        ComPtr<ID3D12Resource> uploadBuffer;
+
         /* Get texture dimensions */
         auto texWidth   = textureDesc.extent.width;
         auto texHeight  = textureDesc.extent.height;
@@ -222,11 +223,11 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
             subresourceData.SlicePitch  = subresourceData.RowPitch * texHeight;
         }
         textureD3D->UpdateSubresource(device_.GetNative(), graphicsCmdList_.Get(), uploadBuffer, subresourceData);
-    }
 
-    /* Execute upload commands and wait for GPU to finish execution */
-    ExecuteCommandList();
-    SyncGPU();
+        /* Execute upload commands and wait for GPU to finish execution */
+        ExecuteCommandList();
+        SyncGPU();
+    }
 
     return TakeOwnership(textures_, std::move(textureD3D));
 }
@@ -514,11 +515,7 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
     DXThrowIfFailed(hr, "failed to create D3D12 fence");
 
     /* Create Win32 event */
-    #if 0
-    fenceEvent_ = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-    #else
     fenceEvent_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    #endif
     if (!fenceEvent_)
         DXThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()), "failed to create Win32 event object");
 }
