@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <codecvt>
+#include <limits.h>
 
 
 namespace LLGL
@@ -36,7 +37,8 @@ namespace LLGL
 
 
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
-    commandSignaturePool_ { &(renderSystem.GetCommandSignaturePool()) }
+    commandSignaturePool_ { &(renderSystem.GetCommandSignaturePool())       },
+    stagingBufferPool_    { renderSystem.GetDevice().GetNative(), USHRT_MAX }
 {
     CreateDevices(renderSystem, desc);
 }
@@ -52,8 +54,11 @@ void D3D12CommandBuffer::Begin()
 {
     /* Reset command list using the next command allocator */
     NextCommandAllocator();
+
     auto hr = commandList_->Reset(GetCommandAllocator(), nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
+
+    stagingBufferPool_.Reset();
 }
 
 void D3D12CommandBuffer::End()
@@ -76,7 +81,8 @@ void D3D12CommandBuffer::UpdateBuffer(
     std::uint16_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
-    dstBufferD3D.UpdateDynamicSubresource(commandContext_, data, static_cast<UINT64>(dataSize), dstOffset);
+    //dstBufferD3D.UpdateDynamicSubresource(commandContext_, data, static_cast<UINT64>(dataSize), dstOffset);
+    stagingBufferPool_.Write(commandContext_, dstBufferD3D.GetResource(), dstOffset, data, dataSize);
 }
 
 //TODO: resource transition and barrieres

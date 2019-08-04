@@ -55,10 +55,6 @@ void D3D12Buffer::UpdateStaticSubresource(
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for intermediate upload buffer");
 
-    #ifdef LLGL_DEBUG
-    uploadBuffer->SetName(L"D3D12Buffer::UpdateStaticSubresource(uploadBuffer)");
-    #endif
-
     /* Copy data into upload buffer, then copy upload buffer into destination resource */
     D3D12_SUBRESOURCE_DATA subresourceData;
     {
@@ -227,7 +223,7 @@ void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
  * ======= Private: =======
  */
 
-void D3D12Buffer::CreateUploadBuffer(ID3D12Device* device, const BufferDescriptor& desc)
+void D3D12Buffer::CreateUploadBuffer(ID3D12Device* device, const BufferDescriptor& /*desc*/)
 {
     auto hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),

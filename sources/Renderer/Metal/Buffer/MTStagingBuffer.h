@@ -25,33 +25,34 @@ class MTStagingBuffer
 
         MTStagingBuffer(id<MTLDevice> device, NSUInteger size);
         ~MTStagingBuffer();
-    
+
         MTStagingBuffer(MTStagingBuffer&& rhs);
         MTStagingBuffer& operator = (MTStagingBuffer&& rhs);
-    
+
         MTStagingBuffer(const MTStagingBuffer&) = delete;
         MTStagingBuffer& operator = (const MTStagingBuffer&) = delete;
-        
+
         // Resets the writing offset.
         void Reset();
-    
+
+        // Returns true if the remaining buffer size can fit the specified data size.
         bool Capacity(NSUInteger dataSize) const;
-    
-        // Writes the specified data to the native Metal buffer and returns true on success.
+
+        // Writes the specified data to the native Metal buffer.
         void Write(const void* data, NSUInteger dataSize);
-    
+
         // Returns the native MTLBuffer object.
         inline id<MTLBuffer> GetNative() const
         {
             return native_;
         }
-    
+
         // Returns the size of the native Metal buffer.
         inline NSUInteger GetSize() const
         {
             return size_;
         }
-    
+
         // Returns the current writing offset.
         inline NSUInteger GetOffset() const
         {

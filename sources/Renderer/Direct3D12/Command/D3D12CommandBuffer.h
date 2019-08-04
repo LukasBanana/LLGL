@@ -12,6 +12,7 @@
 #include <LLGL/CommandBuffer.h>
 #include <cstddef>
 #include "D3D12CommandContext.h"
+#include "../Buffer/D3D12StagingBufferPool.h"
 #include "../../DXCommon/ComPtr.h"
 #include "../../DXCommon/DXCore.h"
 
@@ -230,6 +231,8 @@ class D3D12CommandBuffer final : public CommandBuffer
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
         D3D12CommandContext                 commandContext_;
         const D3D12CommandSignaturePool*    commandSignaturePool_               = nullptr;
+
+        D3D12StagingBufferPool              stagingBufferPool_;
 
         D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_                      = {};
         UINT                                rtvDescSize_                        = 0;

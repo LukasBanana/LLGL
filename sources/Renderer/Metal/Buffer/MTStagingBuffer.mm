@@ -40,12 +40,12 @@ MTStagingBuffer& MTStagingBuffer::operator = (MTStagingBuffer&& rhs)
         /* Release previous native buffer */
         if (native_ != nil)
             [native_ release];
-        
+
         /* Copy data */
         native_ = rhs.native_;
         size_   = rhs.size_;
         offset_ = rhs.offset_;
-        
+
         /* Drop reference from argument buffer */
         rhs.native_ = nil;
     }
