@@ -460,10 +460,7 @@ struct MultiSamplingDescriptor
 */
 struct DepthDescriptor
 {
-    /**
-    \brief Specifies whether the depth test is enabled or disabled. By default disabled.
-    \remarks If no pixel shader is used in the graphics pipeline, the depth test must be disabled.
-    */
+    //! Specifies whether the depth test is enabled or disabled. By default disabled.
     bool        testEnabled     = false;
 
     //! Specifies whether writing to the depth buffer is enabled or disabled. By default disabled.
@@ -480,16 +477,16 @@ struct DepthDescriptor
 */
 struct StencilFaceDescriptor
 {
-    //! Specifies the operation to take when the stencil test fails.
+    //! Specifies the operation to take when the stencil test fails. By default StencilOp::Keep.
     StencilOp       stencilFailOp   = StencilOp::Keep;
 
-    //! Specifies the operation to take when the stencil test passes but the depth test fails.
+    //! Specifies the operation to take when the stencil test passes but the depth test fails. By default StencilOp::Keep.
     StencilOp       depthFailOp     = StencilOp::Keep;
 
-    //! Specifies the operation to take when both the stencil test and the depth test pass.
+    //! Specifies the operation to take when both the stencil test and the depth test pass. By default StencilOp::Keep.
     StencilOp       depthPassOp     = StencilOp::Keep;
 
-    //! Specifies the stencil compare operation.
+    //! Specifies the stencil compare operation. By default CompareOp::Less.
     CompareOp       compareOp       = CompareOp::Less;
 
     /**
@@ -507,7 +504,7 @@ struct StencilFaceDescriptor
     std::uint32_t   writeMask       = ~0u;
 
     /**
-    \brief Specifies the stencil reference value.
+    \brief Specifies the stencil reference value. By default 0.
     \remarks This value will be used when the stencil operation is StencilOp::Replace.
     \note For Direct3D 11, Direct3D 12, and Metal, only the stencil reference value of the front face will be used.
     \see StencilDescriptor::front
@@ -521,10 +518,7 @@ struct StencilFaceDescriptor
 */
 struct StencilDescriptor
 {
-    /**
-    \brief Specifies whether the stencil test is enabled or disabled.
-    \remarks If no pixel shader is used in the graphics pipeline, the stencil test must be disabled.
-    */
+    //! Specifies whether the stencil test is enabled or disabled. By default disabled.
     bool                    testEnabled  = false;
 
     /**

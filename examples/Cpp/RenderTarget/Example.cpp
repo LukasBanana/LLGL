@@ -239,7 +239,7 @@ private:
     {
         // Initialize multisampling
         #ifdef ENABLE_MULTISAMPLING
-        LLGL::MultiSamplingDescriptor multiSamplingDesc { 8 };
+        const LLGL::MultiSamplingDescriptor multiSamplingDesc{ 8 };
         #endif
 
         // Create empty render-target texture
@@ -291,11 +291,11 @@ private:
             renderTargetDesc.attachments =
             {
                 #ifdef ENABLE_DEPTH_TEXTURE
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetDepthTex },
+                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth, renderTargetDepthTex },
                 #else
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth },
+                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth },
                 #endif
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
+                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, renderTargetTex }
             };
         }
         renderTarget = renderer->CreateRenderTarget(renderTargetDesc);

@@ -98,7 +98,10 @@ enum class ShadingLanguage
     VersionBitmask  = 0x0000ffff,       //!< Bitmask for the version number of each shading language enumeration entry.
 };
 
-//! Screen coordinate system origin enumeration.
+/**
+\brief Screen coordinate system origin enumeration.
+\see RenderingCapabilities::screenOrigin
+*/
 enum class ScreenOrigin
 {
     /**
@@ -114,7 +117,10 @@ enum class ScreenOrigin
     UpperLeft,
 };
 
-//! Clipping depth range enumeration.
+/**
+\brief Clipping depth range enumeration.
+\see RenderingCapabilities::clippingRange
+*/
 enum class ClippingRange
 {
     /**
@@ -300,7 +306,7 @@ struct RenderSystemDescriptor
 
 /**
 \brief Contains the attributes for all supported rendering features.
-\see RenderingCapabilities
+\see RenderingCapabilities::features
 */
 struct RenderingFeatures
 {
@@ -471,7 +477,7 @@ struct RenderingFeatures
 
 /**
 \brief Contains all rendering limitations such as maximum buffer size, maximum texture resolution etc.
-\see RenderingCapabilities
+\see RenderingCapabilities::limits
 */
 struct RenderingLimits
 {

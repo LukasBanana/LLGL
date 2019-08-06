@@ -97,4 +97,11 @@ Practical example of standard shadow-mapping technique.
 <p align="center"><img src="ShadowMapping/Example.png" width="400" height="300"/></p>
 
 
+### [Stencil Buffer](StencilBuffer)
+
+Rendering a portal using the stencil buffer.
+
+<p align="center"><img src="StencilBuffer/Example.png" width="400" height="300"/></p>
+
+
 
