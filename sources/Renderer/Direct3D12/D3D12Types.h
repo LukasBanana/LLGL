@@ -41,6 +41,7 @@ D3D12_SHADER_COMPONENT_MAPPING  Map( const TextureSwizzle       textureSwizzle  
 UINT                            Map( const TextureSwizzleRGBA&  textureSwizzle  );
 
 D3D12_SRV_DIMENSION             MapSrvDimension     ( const TextureType textureType );
+D3D12_UAV_DIMENSION             MapUavDimension     ( const TextureType textureType );
 D3D12_RESOURCE_DIMENSION        MapResourceDimension( const TextureType textureType );
 
 D3D12_QUERY_TYPE                MapQueryType        ( const QueryType   queryType   );

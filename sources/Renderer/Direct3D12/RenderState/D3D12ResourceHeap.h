@@ -29,11 +29,13 @@ class D3D12ResourceHeap final : public ResourceHeap
 
         D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDescriptor& desc);
 
+        // Returns the array of D3D descriptor heaps.
         inline ID3D12DescriptorHeap* const* GetDescriptorHeaps() const
         {
             return descriptorHeaps_;
         }
 
+        // Returns the number of D3D descriptor heap (either 1 or 2).
         inline UINT GetNumDescriptorHeaps() const
         {
             return numDescriptorHeaps_;
@@ -44,10 +46,32 @@ class D3D12ResourceHeap final : public ResourceHeap
         D3D12_CPU_DESCRIPTOR_HANDLE CreateHeapTypeCbvSrvUav(ID3D12Device* device, const ResourceHeapDescriptor& desc);
         D3D12_CPU_DESCRIPTOR_HANDLE CreateHeapTypeSampler(ID3D12Device* device, const ResourceHeapDescriptor& desc);
 
-        void CreateConstantBufferViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc);
-        void CreateShaderResourceViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc);
-        void CreateUnorderedAccessViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc);
-        void CreateSamplers(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc);
+        void CreateConstantBufferViews(
+            ID3D12Device*                   device,
+            const ResourceHeapDescriptor&   desc,
+            D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
+            std::size_t&                    bindingIndex
+        );
+
+        void CreateShaderResourceViews(
+            ID3D12Device*                   device,
+            const ResourceHeapDescriptor&   desc,
+            D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
+            std::size_t&                    bindingIndex
+        );
+
+        void CreateUnorderedAccessViews(
+            ID3D12Device*                   device,
+            const ResourceHeapDescriptor&   desc,
+            D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
+            std::size_t&                    bindingIndex
+        );
+
+        void CreateSamplers(
+            ID3D12Device*                   device,
+            const ResourceHeapDescriptor&   desc,
+            D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle
+        );
 
         void AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap);
 

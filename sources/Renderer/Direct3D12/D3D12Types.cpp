@@ -272,6 +272,23 @@ D3D12_SRV_DIMENSION MapSrvDimension(const TextureType textureType)
     DXTypes::MapFailed("TextureType", "D3D12_SRV_DIMENSION");
 }
 
+D3D12_UAV_DIMENSION MapUavDimension(const TextureType textureType)
+{
+    switch (textureType)
+    {
+        case TextureType::Texture1D:        return D3D12_UAV_DIMENSION_TEXTURE1D;
+        case TextureType::Texture2D:        return D3D12_UAV_DIMENSION_TEXTURE2D;
+        case TextureType::Texture3D:        return D3D12_UAV_DIMENSION_TEXTURE3D;
+        case TextureType::TextureCube:      return D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+        case TextureType::Texture1DArray:   return D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+        case TextureType::Texture2DArray:   return D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+        case TextureType::TextureCubeArray: return D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+        case TextureType::Texture2DMS:      break;
+        case TextureType::Texture2DMSArray: break;
+    }
+    DXTypes::MapFailed("TextureType", "D3D12_UAV_DIMENSION");
+}
+
 D3D12_RESOURCE_DIMENSION MapResourceDimension(const TextureType textureType)
 {
     switch (textureType)

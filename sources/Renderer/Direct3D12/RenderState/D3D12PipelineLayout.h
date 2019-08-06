@@ -37,6 +37,9 @@ class D3D12PipelineLayout final : public PipelineLayout
         void CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
         void ReleaseRootSignature();
 
+        // Returns the binding flags for the specified resource index; this is not necessarily the binding slot!
+        long GetBindFlagsByIndex(std::size_t idx) const;
+
         // Returns the native ID3D12RootSignature object.
         inline ID3D12RootSignature* GetRootSignature() const
         {
@@ -61,6 +64,7 @@ class D3D12PipelineLayout final : public PipelineLayout
     private:
 
         ComPtr<ID3D12RootSignature> rootSignature_;
+        std::vector<long>           bindFlags_;
 
 };
 

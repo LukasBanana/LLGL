@@ -18,6 +18,7 @@ namespace LLGL
 
 D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
+    bindFlags_.reserve(desc.bindings.size());
     CreateRootSignature(device, desc);
 }
 
@@ -52,6 +53,11 @@ void D3D12PipelineLayout::ReleaseRootSignature()
     rootSignature_.Reset();
 }
 
+long D3D12PipelineLayout::GetBindFlagsByIndex(std::size_t idx) const
+{
+    return (idx < bindFlags_.size() ? bindFlags_[idx] : 0);
+}
+
 
 /*
  * ======= Private: =======
@@ -80,6 +86,9 @@ void D3D12PipelineLayout::BuildRootParameter(
                 rootParam->InitAsDescriptorTable(static_cast<UINT>(layoutDesc.bindings.size()));
                 rootParam->AppendDescriptorTableRange(descRangeType, binding.slot, binding.arraySize);
             }
+
+            /* Cache binding flags in the same order root parameters are build */
+            bindFlags_.push_back(binding.bindFlags);
         }
     }
 }

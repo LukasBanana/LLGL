@@ -45,6 +45,10 @@ class D3D12Texture final : public Texture
         void CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
         void CreateShaderResourceView(ID3D12Device* device, const TextureViewDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
 
+        // Creates either the default UAV for the entire resource or a subresource.
+        void CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
+        void CreateUnorderedAccessView(ID3D12Device* device, const TextureViewDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
+
         // Returns the subresource index for the specified MIP-map level and array layer.
         UINT CalcSubresource(UINT mipLevel, UINT arrayLayer) const;
 
@@ -93,6 +97,12 @@ class D3D12Texture final : public Texture
             return numArrayLayers_;
         }
 
+        // Returns the binding flags this texture was created with.
+        inline long GetBindFlags() const
+        {
+            return bindFlags_;
+        }
+
     private:
 
         void CreateNativeTexture(ID3D12Device* device, const TextureDescriptor& desc);
@@ -106,6 +116,14 @@ class D3D12Texture final : public Texture
             D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle
         );
 
+        void CreateUnorderedAccessViewPrimary(
+            ID3D12Device*               device,
+            D3D12_UAV_DIMENSION         dimension,
+            DXGI_FORMAT                 format,
+            const TextureSubresource&   subresource,
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle
+        );
+
     private:
 
         D3D12Resource   resource_;
@@ -113,6 +131,7 @@ class D3D12Texture final : public Texture
         DXGI_FORMAT     format_         = DXGI_FORMAT_UNKNOWN;
         UINT            numMipLevels_   = 0;
         UINT            numArrayLayers_ = 0;
+        long            bindFlags_      = 0;
 
 };
 

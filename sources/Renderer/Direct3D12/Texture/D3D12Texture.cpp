@@ -27,7 +27,8 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     #else
     numMipLevels_   { 1                            },
     #endif
-    numArrayLayers_ { desc.arrayLayers             }
+    numArrayLayers_ { desc.arrayLayers             },
+    bindFlags_      { desc.bindFlags               }
 {
     CreateNativeTexture(device, desc);
 }
@@ -294,6 +295,78 @@ void D3D12Texture::CreateShaderResourceViewPrimary(
     }
 
     device->CreateShaderResourceView(resource_.native.Get(), &srvDesc, cpuDescHandle);
+}
+
+void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+{
+    CreateUnorderedAccessViewPrimary(
+        device,
+        D3D12Types::MapUavDimension(GetType()),
+        format_,
+        TextureSubresource{ 0, numArrayLayers_, 0, 1 },
+        cpuDescHandle
+    );
+}
+
+void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, const TextureViewDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+{
+    CreateUnorderedAccessViewPrimary(
+        device,
+        D3D12Types::MapUavDimension(desc.type),
+        D3D12Types::Map(desc.format),
+        desc.subresource,
+        cpuDescHandle
+    );
+}
+
+//private
+void D3D12Texture::CreateUnorderedAccessViewPrimary(
+    ID3D12Device*               device,
+    D3D12_UAV_DIMENSION         dimension,
+    DXGI_FORMAT                 format,
+    const TextureSubresource&   subresource,
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+{
+    D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+
+    uavDesc.Format          = D3D12Types::ToDXGIFormatSRV(format);
+    uavDesc.ViewDimension   = dimension;
+
+    switch (uavDesc.ViewDimension)
+    {
+        case D3D12_UAV_DIMENSION_TEXTURE1D:
+            uavDesc.Texture1D.MipSlice              = subresource.baseMipLevel;
+            break;
+
+        case D3D12_UAV_DIMENSION_TEXTURE1DARRAY:
+            uavDesc.Texture1DArray.MipSlice         = subresource.baseMipLevel;
+            uavDesc.Texture1DArray.FirstArraySlice  = subresource.baseArrayLayer;
+            uavDesc.Texture1DArray.ArraySize        = subresource.numArrayLayers;
+            break;
+
+        case D3D12_UAV_DIMENSION_TEXTURE2D:
+            uavDesc.Texture2D.MipSlice              = subresource.baseMipLevel;
+            uavDesc.Texture2D.PlaneSlice            = 0;
+            break;
+
+        case D3D12_UAV_DIMENSION_TEXTURE2DARRAY:
+            uavDesc.Texture2DArray.MipSlice         = subresource.baseMipLevel;
+            uavDesc.Texture2DArray.FirstArraySlice  = subresource.baseArrayLayer;
+            uavDesc.Texture2DArray.ArraySize        = subresource.numArrayLayers;
+            uavDesc.Texture2DArray.PlaneSlice       = 0;
+            break;
+
+        case D3D12_UAV_DIMENSION_TEXTURE3D:
+            uavDesc.Texture3D.MipSlice              = subresource.baseMipLevel;
+            uavDesc.Texture3D.FirstWSlice           = subresource.baseArrayLayer;
+            uavDesc.Texture3D.WSize                 = subresource.numArrayLayers;
+            break;
+
+        default:
+            break;
+    }
+
+    device->CreateUnorderedAccessView(resource_.native.Get(), nullptr, &uavDesc, cpuDescHandle);
 }
 
 UINT D3D12Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer) const
