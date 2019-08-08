@@ -112,6 +112,38 @@ private:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        {
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Scene.vert" },
+                    { LLGL::ShaderType::Fragment, "Scene.frag" },
+                },
+                { vertexFormat }
+            );
+            shaderProgramStencil = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "Stencil.vert" }
+                },
+                { vertexFormat }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" },
+                    { LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" },
+                },
+                { vertexFormat }
+            );
+            shaderProgramStencil = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "Stencil.450core.vert.spv" }
+                },
+                { vertexFormat }
+            );
+        }
         else
             throw std::runtime_error("shaders not supported for active renderer");
     }
@@ -120,7 +152,7 @@ private:
     {
         // Create pipeline layouts for shadow-map and scene rendering
         pipelineLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(1):frag:vert")
+            LLGL::PipelineLayoutDesc("cbuffer(Settings@1):frag:vert")
         );
     }
 

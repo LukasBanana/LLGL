@@ -51,4 +51,9 @@ glslang -V -S vert -o PostProcessing/PostProcess.450core.vert.spv PostProcessing
 glslang -V -S frag -o PostProcessing/Final.450core.frag.spv PostProcessing/Final.450core.frag
 glslang -V -S frag -o PostProcessing/Blur.450core.frag.spv PostProcessing/Blur.450core.frag
 
+echo ####### StencilBuffer #######
+glslang -V -S vert -o StencilBuffer/Stencil.450core.vert.spv StencilBuffer/Stencil.450core.vert
+glslang -V -S vert -o StencilBuffer/Scene.450core.vert.spv StencilBuffer/Scene.450core.vert
+glslang -V -S frag -o StencilBuffer/Scene.450core.frag.spv StencilBuffer/Scene.450core.frag
+
 pause
