@@ -65,6 +65,10 @@ void MTGraphicsPipeline::Bind(id<MTLRenderCommandEncoder> renderEncoder)
     [renderEncoder setTriangleFillMode:fillMode_];
     [renderEncoder setDepthClipMode:clipMode_];
     [renderEncoder setDepthBias:depthBias_ slopeScale:depthSlope_ clamp:depthClamp_];
+    if (stencilFrontRef_ == stencilBackRef_)
+        [renderEncoder setStencilFrontReferenceValue:stencilFrontRef_ backReferenceValue:stencilBackRef_];
+    else
+        [renderEncoder setStencilReferenceValue:stencilFrontRef_];
 }
 
 
@@ -190,7 +194,10 @@ void MTGraphicsPipeline::CreateDepthStencilState(id<MTLDevice> device, const Gra
             FillDefaultMTStencilDesc(depthStencilDesc.frontFaceStencil);
             FillDefaultMTStencilDesc(depthStencilDesc.backFaceStencil);
         }
-        stencilRef_ = desc.stencil.front.reference;
+
+        /* Store stencil reference values */
+        stencilFrontRef_    = desc.stencil.front.reference;
+        stencilBackRef_     = desc.stencil.back.reference;
     }
     depthStencilState_ = [device newDepthStencilStateWithDescriptor:depthStencilDesc];
     [depthStencilDesc release];

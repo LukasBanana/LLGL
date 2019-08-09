@@ -53,7 +53,8 @@ class MTGraphicsPipeline : public GraphicsPipeline
         float                       depthBias_              = 0.0f;
         float                       depthSlope_             = 0.0f;
         float                       depthClamp_             = 0.0f;
-        std::uint32_t               stencilRef_             = 0;
+        std::uint32_t               stencilFrontRef_        = 0;
+        std::uint32_t               stencilBackRef_         = 0;
 
 };
 

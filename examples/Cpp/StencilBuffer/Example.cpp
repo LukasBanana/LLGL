@@ -144,6 +144,22 @@ private:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" },
+                    { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" },
+                },
+                { vertexFormat }
+            );
+            shaderProgramStencil = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "Example.metal", "VStencil", "1.1" }
+                },
+                { vertexFormat }
+            );
+        }
         else
             throw std::runtime_error("shaders not supported for active renderer");
     }
