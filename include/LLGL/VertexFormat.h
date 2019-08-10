@@ -43,7 +43,7 @@ struct LLGL_EXPORT VertexFormat
 
     /**
     \brief Specifies the list of vertex attributes.
-    \remarks Use "AppendAttribute" or "AppendAttributes" to append new attributes.
+    \see AppendAttribute
     */
     std::vector<VertexAttribute>    attributes;
 

@@ -55,6 +55,8 @@ class SPIRVReflect : public SPIRVParser
 
         void AssertIdBound(spv::Id id) const;
 
+    private:
+
         std::uint32_t               idBound_    = 0;
         std::vector<const char*>    names_;
 

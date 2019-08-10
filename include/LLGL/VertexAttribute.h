@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "Format.h"
+#include "SystemValue.h"
 #include <string>
 #include <cstdint>
 
@@ -19,98 +20,12 @@ namespace LLGL
 {
 
 
-/* ----- Enumerations ----- */
-
-/**
-\brief Enumeration of system values available in a shader program.
-\remarks This is only used for shader code reflection.
-\see VertexAttribute::systemValue
-*/
-enum class SystemValue
-{
-    //! Undefined system value.
-    Undefined,
-
-    /**
-    \brief Forward-compatible mechanism for vertex clipping.
-    \remarks HLSL: \c SV_ClipDistance, GLSL and SPIR-V: \c gl_ClipDistance, Metal: <code>[[clip_distance]]</code>.
-    */
-    ClipDistance,
-
-    /**
-    \brief Mechanism for controlling user culling.
-    \remarks HLSL: \c SV_CullDistance, GLSL and SPIR-V: \c gl_CullDistance.
-    */
-    CullDistance,
-
-    /**
-    \brief Indicates whether a primitive is front or back facing.
-    \remarks HLSL: \c SV_IsFrontFace, GLSL and SPIR-V: \c gl_FrontFacing, Metal: <code>[[front_facing]]</code>.
-    */
-    FrontFacing,
-
-    /**
-    \brief Index of the input instance.
-    \remarks HLSL: \c SV_InstanceID, GLSL: \c gl_InstanceID, SPIR-V: \c gl_InstanceIndex, Metal: <code>[[instance_id]]</code>.
-    \note This value behalves differently between Direct3D and OpenGL.
-    \see CommandBuffer::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
-    */
-    InstanceID,
-
-    /**
-    \brief Vertex or fragment position.
-    \remarks HLSL: \c SV_Position,
-    GLSL and SPIR-V in a vertex shader: \c gl_Position,
-    GLSL and SPIR-V in a fragment shader: \c gl_FragCoord,
-    Metal: <code>[[position]]</code>.
-    */
-    Position,
-
-    /**
-    \brief Index of the geometry primitive.
-    \remarks HLSL: \c SV_PrimitiveID, GLSL and SPIR-V: \c gl_PrimitiveID.
-    */
-    PrimitiveID,
-
-    /**
-    \brief Index of the render target layer.
-    \remarks HLSL: \c SV_RenderTargetArrayIndex, GLSL and SPIR-V: \c gl_Layer, Metal: <code>[[render_target_array_index]]</code>.
-    */
-    RenderTargetIndex,
-
-    /**
-    \brief Index of the input sample.
-    \remarks HLSL: \c SV_SampleIndex, GLSL and SPIR-V: \c gl_SampleID, Metal: <code>[[sample_id]]</code>.
-    */
-    SampleID,
-
-    /**
-    \brief Render target output value.
-    \remarks HLSL: \c SV_Target, GLSL and SPIR-V: N/A.
-    */
-    Target,
-
-    /**
-    \brief Index of the input vertex.
-    \remarks HLSL: \c SV_VertexID, GLSL: \c gl_VertexID, SPIR-V: \c gl_VertexIndex, Metal: <code>[[vertex_id]]</code>.
-    \note This value behalves differently between Direct3D and OpenGL.
-    \see CommandBuffer::Draw
-    */
-    VertexID,
-
-    /**
-    \brief Index of the viewport array.
-    \remarks HLSL: \c SV_ViewportArrayIndex, GLSL and SPIR-V: \c gl_ViewportIndex, Metal: <code>[[viewport_array_index]]</code>.
-    */
-    ViewportIndex,
-};
-
-
 /* ----- Structures ----- */
 
 /**
-\brief Vertex attribute structure.
+\brief Vertex input attribute structure.
 \see VertexFormat::attributes
+\see ShaderReflection::vertexAttributes
 */
 struct LLGL_EXPORT VertexAttribute
 {
@@ -207,13 +122,15 @@ struct LLGL_EXPORT VertexAttribute
     \brief Specifies the system value type for this vertex attribute or SystemValue::Undefined if this attribute is not a system value. By default SystemValue::Undefined.
     \remarks System value semantics must not be specified to create a shader program.
     Instead, they are used only for shader code reflection. Examples of system value semantics are:
-    - Vertex ID: \c SV_VertexID (HLSL), \c gl_VertexID (GLSL), \c gl_VertexIndex (SPIR-V).
-    - Instance ID: \c SV_InstanceID (HLSL), \c gl_InstanceID (GLSL), \c gl_InstanceIndex (SPIR-V).
+    - Vertex ID: \c SV_VertexID (HLSL), \c gl_VertexID (GLSL), \c gl_VertexIndex (SPIR-V), <code>[[vertex_id]]</code> (Metal).
+    - Instance ID: \c SV_InstanceID (HLSL), \c gl_InstanceID (GLSL), \c gl_InstanceIndex (SPIR-V), <code>[[instance_id]]</code> (Metal).
     \see ShaderProgram::QueryReflection
     */
     SystemValue     systemValue     = SystemValue::Undefined;
 };
 
+
+/* ----- Operator ----- */
 
 //! Compares the two VertexAttribute types for equality (including their names and all other members).
 LLGL_EXPORT bool operator == (const VertexAttribute& lhs, const VertexAttribute& rhs);

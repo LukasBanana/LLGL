@@ -302,14 +302,19 @@ SystemValue Unmap(const D3D_NAME name)
     switch (name)
     {
         case D3D_NAME_CLIP_DISTANCE:                return SystemValue::ClipDistance;
+        case D3D_NAME_TARGET:                       return SystemValue::Color;
         case D3D_NAME_CULL_DISTANCE:                return SystemValue::CullDistance;
+        case D3D_NAME_DEPTH:                        return SystemValue::Depth;
+        case D3D_NAME_DEPTH_GREATER_EQUAL:          return SystemValue::DepthGreater;
+        case D3D_NAME_DEPTH_LESS_EQUAL:             return SystemValue::DepthLess;
         case D3D_NAME_IS_FRONT_FACE:                return SystemValue::FrontFacing;
         case D3D_NAME_INSTANCE_ID:                  return SystemValue::InstanceID;
         case D3D_NAME_POSITION:                     return SystemValue::Position;
         case D3D_NAME_PRIMITIVE_ID:                 return SystemValue::PrimitiveID;
         case D3D_NAME_RENDER_TARGET_ARRAY_INDEX:    return SystemValue::RenderTargetIndex;
+        case D3D_NAME_COVERAGE:                     return SystemValue::SampleMask;
         case D3D_NAME_SAMPLE_INDEX:                 return SystemValue::SampleID;
-        case D3D_NAME_TARGET:                       return SystemValue::Target;
+        case D3D_NAME_STENCIL_REF:                  return SystemValue::Stencil;
         case D3D_NAME_VERTEX_ID:                    return SystemValue::VertexID;
         case D3D_NAME_VIEWPORT_ARRAY_INDEX:         return SystemValue::ViewportIndex;
         default:                                    return SystemValue::Undefined;

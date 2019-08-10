@@ -345,6 +345,7 @@ static SystemValue FindSystemValue(const std::string& name)
     {
         { "gl_ClipDistance",    SystemValue::ClipDistance       },
         { "gl_CullDistance",    SystemValue::CullDistance       },
+        { "gl_FragDepth",       SystemValue::Depth              },
         { "gl_FrontFacing",     SystemValue::FrontFacing        },
         { "gl_InstanceID",      SystemValue::InstanceID         }, // GLSL
         { "gl_InstanceIndex",   SystemValue::InstanceID         }, // SPIR-V
@@ -352,6 +353,7 @@ static SystemValue FindSystemValue(const std::string& name)
         { "gl_FragCoord",       SystemValue::Position           },
         { "gl_PrimitiveID",     SystemValue::PrimitiveID        },
         { "gl_Layer",           SystemValue::RenderTargetIndex  },
+        { "gl_SampleMask",      SystemValue::SampleMask         },
         { "gl_SampleID",        SystemValue::SampleID           },
         { "gl_VertexID",        SystemValue::VertexID           }, // GLSL
         { "gl_VertexIndex",     SystemValue::VertexID           }, // SPIR-V
