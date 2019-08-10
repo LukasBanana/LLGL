@@ -90,7 +90,10 @@ enum class SystemValue
     //! Index of the input sample.
     SampleID,
 
-    //! Fragment stencil value.
+    /**
+    \brief Fragment stencil value.
+    \note Only supported with: Direct3D 11.3, Direct3D 12, Metal.
+    */
     Stencil,
 
     /**
