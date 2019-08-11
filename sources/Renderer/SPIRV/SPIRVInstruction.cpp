@@ -20,15 +20,15 @@ static void ErrOperandIndexOutOfRange()
     throw std::out_of_range("operand index in SPIR-V instruction out of range");
 }
 
-SPIRVInstruction::SPIRVInstruction(spv::Op opCode, spv::Id type, spv::Id result) :
-    opCode { opCode },
+SPIRVInstruction::SPIRVInstruction(spv::Op opcode, spv::Id type, spv::Id result) :
+    opcode { opcode },
     type   { type   },
     result { result }
 {
 }
 
-SPIRVInstruction::SPIRVInstruction(spv::Op opCode, spv::Id type, spv::Id result, std::uint32_t numOperands, const spv::Id* operands) :
-    opCode      { opCode      },
+SPIRVInstruction::SPIRVInstruction(spv::Op opcode, spv::Id type, spv::Id result, std::uint32_t numOperands, const spv::Id* operands) :
+    opcode      { opcode      },
     type        { type        },
     result      { result      },
     numOperands { numOperands },

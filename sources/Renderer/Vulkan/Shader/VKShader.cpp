@@ -9,6 +9,7 @@
 #include "../VKCore.h"
 #include "../VKTypes.h"
 #include "../../../Core/Helper.h"
+#include <LLGL/ShaderProgramFlags.h>
 #include <LLGL/Strings.h>
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
@@ -73,6 +74,88 @@ void VKShader::FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& create
     createInfo.pSpecializationInfo  = nullptr;
 }
 
+static const char* GetOptString(const char* s)
+{
+    return (s != nullptr ? s : "");
+}
+
+static long ShaderTypeToStageFlags(const ShaderType type)
+{
+    switch (type)
+    {
+        case ShaderType::Vertex:            return StageFlags::VertexStage;
+        case ShaderType::TessControl:       return StageFlags::TessControlStage;
+        case ShaderType::TessEvaluation:    return StageFlags::TessEvaluationStage;
+        case ShaderType::Geometry:          return StageFlags::GeometryStage;
+        case ShaderType::Fragment:          return StageFlags::FragmentStage;
+        case ShaderType::Compute:           return StageFlags::ComputeStage;
+        default:                            return 0;
+    }
+}
+
+static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, const SPIRVReflect::SpvUniform& var)
+{
+    /* Check if there already is a resource at the specified binding slot */
+    for (auto& resource : reflection.resources)
+    {
+        if (resource.binding.slot == var.binding)
+            return &resource;
+    }
+
+    /* Append new resource entry */
+    ShaderResource resource;
+    {
+        resource.binding.name = GetOptString(var.name);
+        resource.binding.slot = var.binding;
+
+        if (auto varType = var.type)
+        {
+            if (varType->opcode == spv::Op::OpTypeArray)
+                resource.binding.arraySize = var.type->elements;
+
+            if (varType->storage == spv::StorageClass::Uniform && varType->DereferenceStructPtr() != nullptr)
+                resource.constantBufferSize = var.size;
+        }
+    }
+    reflection.resources.push_back(resource);
+
+    return &(reflection.resources.back());
+}
+
+void VKShader::Reflect(ShaderReflection& reflection) const
+{
+    #ifdef LLGL_ENABLE_SPIRV_REFLECT
+
+    /* Parse shader module */
+    SPIRVReflect spvReflect;
+    spvReflect.Parse(shaderModuleData_.data(), shaderModuleData_.size());
+
+    /* Gather input/output attributes */
+    for (const auto& it : spvReflect.GetVaryings())
+    {
+        const auto& var = it.second;
+        if (var.input && GetType() == ShaderType::Vertex)
+        {
+            VertexAttribute attrib;
+            {
+                attrib.name     = GetOptString(var.name);
+                //attrib.format   = ;
+            }
+            reflection.vertexAttributes.push_back(attrib);
+        }
+    }
+
+    /* Gather resources */
+    for (const auto& it : spvReflect.GetUniforms())
+    {
+        const auto& var = it.second;
+        if (auto resource = FindOrAppendShaderResource(reflection, var))
+            resource->binding.stageFlags |= ShaderTypeToStageFlags(GetType());
+    }
+
+    #endif
+}
+
 
 /*
  * ======= Private: =======
@@ -112,37 +195,15 @@ bool VKShader::LoadBinary(const ShaderDescriptor& shaderDesc)
         binaryLength = shaderDesc.sourceSize;
     }
 
-    #ifdef LLGL_ENABLE_SPIRV_REFLECT
-
-    /* Reflect SPIR-V shader module */
-    errorLog_.clear();
-
-    try
-    {
-        /* Parse shader module */
-        SPIRVReflect reflect;
-        reflect.Parse(binaryBuffer, binaryLength);
-
-        /* Store reflection data */
-        //TODO...
-    }
-    catch (const std::exception& e)
-    {
-        errorLog_ = e.what();
-        loadBinaryResult_ = LoadBinaryResult::ReflectFailed;
-        return false;
-    }
-
-    #else
-
-    /* Validate code size */
+    /* Validate code size and store data */
     if (binaryBuffer == nullptr || binaryLength % 4 != 0)
     {
         loadBinaryResult_ = LoadBinaryResult::InvalidCodeSize;
+        shaderModuleData_.clear();
         return false;
     }
-
-    #endif
+    else
+        shaderModuleData_ = std::vector<char>(binaryBuffer, binaryBuffer + binaryLength);
 
     /* Store shader entry point (by default "main" for GLSL) */
     if (shaderDesc.entryPoint == nullptr || *shaderDesc.entryPoint == '\0')

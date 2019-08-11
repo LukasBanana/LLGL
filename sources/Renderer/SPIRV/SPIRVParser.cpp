@@ -50,11 +50,11 @@ void SPIRVParser::Parse(const void* byteCode, std::size_t byteCodeSize)
             auto firstWord = words[i++];
 
             auto wordCount  = (firstWord >> spv::WordCountShift);
-            instr.opCode    = static_cast<spv::Op>(firstWord & spv::OpCodeMask);
+            instr.opcode    = static_cast<spv::Op>(firstWord & spv::OpCodeMask);
 
             --wordCount;
 
-            auto lookup = GetSPIRVLookup(instr.opCode);
+            auto lookup = GetSPIRVLookup(instr.opcode);
 
             /* Read type (if used) */
             if (wordCount > 0 && lookup.hasType)

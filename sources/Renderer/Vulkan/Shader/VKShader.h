@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+struct ShaderReflection;
+
 class VKShader final : public Shader
 {
 
@@ -34,6 +36,8 @@ class VKShader final : public Shader
         VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc);
 
         void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
+
+        void Reflect(ShaderReflection& reflection) const;
 
         // Returns the Vulkan shader module.
         inline const VKPtr<VkShaderModule>& GetShaderModule() const
@@ -62,6 +66,7 @@ class VKShader final : public Shader
 
         VkDevice                device_             = VK_NULL_HANDLE;
         VKPtr<VkShaderModule>   shaderModule_;
+        std::vector<char>       shaderModuleData_;
         LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Undefined;
 
         std::string             entryPoint_;

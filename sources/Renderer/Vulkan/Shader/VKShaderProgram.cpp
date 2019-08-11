@@ -46,7 +46,13 @@ std::string VKShaderProgram::QueryInfoLog()
 
 ShaderReflection VKShaderProgram::QueryReflection() const
 {
-    return {}; //TODO
+    ShaderReflection reflection;
+    {
+        for (auto shader : shaders_)
+            shader->Reflect(reflection);
+        FinalizeShaderReflection(reflection);
+    }
+    return reflection;
 }
 
 UniformLocation VKShaderProgram::QueryUniformLocation(const char* name) const

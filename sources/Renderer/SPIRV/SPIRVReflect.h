@@ -22,21 +22,67 @@ namespace LLGL
 class SPIRVReflect : public SPIRVParser
 {
 
-    protected:
+    public:
 
-        struct Uniform
+        // General purpose structure for all SPIR-V module types.
+        struct SpvType
         {
-            const char*     name            = nullptr;
-            std::uint32_t   bindingPoint    = 0;
-            std::uint32_t   descriptorSet   = 0;
+            const SpvType* DereferenceStructPtr() const;
+
+            spv::Op                     opcode      = spv::Op::OpNop;           // Opcode for this type (e.g. spv::Op::OpTypeFloat).
+            spv::Id                     result      = 0;                        // Result ID of this type.
+            spv::StorageClass           storage     = spv::StorageClass::Max;   // Storage class of this type. By default spv::StorageClass::Max.
+            const char*                 name        = nullptr;                  // Name of this type (only for structures).
+            const SpvType*              baseType    = nullptr;                  // Reference to the base type, or null if there is no base type.
+            std::uint32_t               elements    = 0;                        // Number of elements for the base type, or 0 if there is no base type.
+            std::uint32_t               size        = 0;                        // Size (in bytes) of this type, or 0 if this is an OpTypeVoid type.
+            bool                        sign        = false;                    // Specifies whether or not this is a signed type (only for OpTypeInt).
+            std::vector<const SpvType*> fieldTypes;                             // List of types of each record field.
         };
 
-        struct Varying
+        // SPIR-V structures (a.k.a. records).
+        struct SpvRecord
+        {
+            const char*     name    = nullptr;
+            std::uint32_t   size    = 0;
+            std::uint32_t   padding = 0;
+        };
+
+        // Global uniform objects.
+        struct SpvUniform
+        {
+            const char*     name    = nullptr;
+            const SpvType*  type    = nullptr;
+            std::uint32_t   set     = 0;        // Descriptor set
+            std::uint32_t   binding = 0;        // Binding point
+            std::uint32_t   size    = 0;        // Size (in bytes) of the uniform.
+        };
+
+        // Module varyings, i.e. either input or output attributes.
+        struct SpvVarying
         {
             const char*     name        = nullptr;
+            const SpvType*  type        = nullptr;
             std::uint32_t   location    = 0;
             bool            input       = false;
         };
+
+    public:
+
+        inline const std::map<spv::Id, SpvRecord>& GetRecords() const
+        {
+            return records_;
+        }
+
+        inline const std::map<spv::Id, SpvUniform>& GetUniforms() const
+        {
+            return uniforms_;
+        }
+
+        inline const std::map<spv::Id, SpvVarying>& GetVaryings() const
+        {
+            return varyings_;
+        }
 
     private:
 
@@ -49,19 +95,42 @@ class SPIRVReflect : public SPIRVParser
         void OpDecorate(const Instr& instr);
         void OpDecorateBinding(const Instr& instr);
         void OpDecorateLocation(const Instr& instr);
+        void OpType(const Instr& instr);
+        void OpTypeVoid(const Instr& instr, SpvType& type);
+        void OpTypeBool(const Instr& instr, SpvType& type);
+        void OpTypeInt(const Instr& instr, SpvType& type);
+        void OpTypeFloat(const Instr& instr, SpvType& type);
+        void OpTypeVector(const Instr& instr, SpvType& type);
+        void OpTypeMatrix(const Instr& instr, SpvType& type);
+        void OpTypeImage(const Instr& instr, SpvType& type);
+        void OpTypeSampler(const Instr& instr, SpvType& type);
+        void OpTypeSampledImage(const Instr& instr, SpvType& type);
+        void OpTypeArray(const Instr& instr, SpvType& type);
+        void OpTypeRuntimeArray(const Instr& instr, SpvType& type);
+        void OpTypeStruct(const Instr& instr, SpvType& type);
+        void OpTypeOpaque(const Instr& instr, SpvType& type);
+        void OpTypePointer(const Instr& instr, SpvType& type);
+        void OpTypeFunction(const Instr& instr, SpvType& type);
+        void OpVariable(const Instr& instr);
+
+    private:
 
         void SetName(spv::Id id, const char* name);
         const char* GetName(spv::Id id) const;
 
         void AssertIdBound(spv::Id id) const;
 
+        const SpvType* FindType(spv::Id id) const;
+
     private:
 
-        std::uint32_t               idBound_    = 0;
-        std::vector<const char*>    names_;
+        std::uint32_t                   idBound_    = 0;
+        std::vector<const char*>        names_;
 
-        std::map<spv::Id, Uniform>  uniforms_;
-        std::map<spv::Id, Varying>  varyings_;
+        std::map<spv::Id, SpvType>      types_;
+        std::map<spv::Id, SpvRecord>    records_;
+        std::map<spv::Id, SpvUniform>   uniforms_;
+        std::map<spv::Id, SpvVarying>   varyings_;
 
 };
 
