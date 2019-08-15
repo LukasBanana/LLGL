@@ -113,7 +113,7 @@ private:
         std::vector<TexturedVertex> vertices;
         meshStairsTop       = LoadObjModel(vertices, "../../Media/Models/PenroseStairs-Top.obj");
         meshStairsBottom    = LoadObjModel(vertices, "../../Media/Models/PenroseStairs-Bottom.obj");
-        meshBall            = LoadObjModel(vertices, "../../Media/Models/UVSphere.obj");
+        meshBall            = LoadObjModel(vertices, "../../Media/Models/IcoSphere.obj");
 
         meshStairsTop.color     = { 1.0f, 1.0f, 1.0f, 1.0f };
         meshStairsBottom.color  = { 1.0f, 1.0f, 0.0f, 0.0f };
