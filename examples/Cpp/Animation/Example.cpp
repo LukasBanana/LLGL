@@ -38,18 +38,21 @@ class Example_Animation : public ExampleBase
     {
         Gs::Matrix4f            wMatrix;
         Gs::Matrix4f            vpMatrix;
-        Gs::Vector3f            lightDir                = Gs::Vector3f(-0.25f, -1.0f, 0.5f).Normalized();
-        float                   _pad1;
-        LLGL::ColorRGBAf        diffuse                 = { 1.0f, 1.0f, 1.0f, 1.0f };
+        Gs::Vector3f            lightDir                = Gs::Vector3f(-0.25f, -0.7f, 1.25f).Normalized();
+        float                   shininess               = 90.0f;                        // Blinn-phong specular power factor
+        Gs::Vector3f            viewPos;                                                // World-space camera position
+        float                   pad1;
+        LLGL::ColorRGBAf        albedo                  = { 1.0f, 1.0f, 1.0f, 1.0f };   // Albedo material color
     }
     settings;
 
     struct Ball
     {
-        Gs::Vector3f    position;
-        Gs::Vector3f    scale;
-        float           animation   = 0.0f;
-        std::size_t     frame       = 0u;
+        Gs::Vector3f            position;
+        Gs::Vector3f            scale;
+        LLGL::ColorRGBf         color;
+        std::size_t             frame               = 0u;
+        float                   frameInterpolator   = 0.0f;
     };
 
     std::vector<Ball>           balls;
@@ -90,10 +93,9 @@ public:
         commands->SetClearColor(defaultClearColor);
 
         // Add balls to scene
-        AddBall(0);
-        AddBall(3);
-        AddBall(6);
-        AddBall(9);
+        AddBall(LLGL::ColorRGBf{ 1, 0, 0 });
+        AddBall(LLGL::ColorRGBf{ 0, 1, 0 }, 5, 0.33f);
+        AddBall(LLGL::ColorRGBf{ 0, 0, 1 }, 10, 0.66f);
     }
 
 private:
@@ -113,9 +115,8 @@ private:
         meshStairsBottom    = LoadObjModel(vertices, "../../Media/Models/PenroseStairs-Bottom.obj");
         meshBall            = LoadObjModel(vertices, "../../Media/Models/UVSphere.obj");
 
-        meshStairsTop.color     = { 1.3f, 1.3f, 1.6f, 1.0f };
-        meshStairsBottom.color  = { 1.4f, 1.3f, 0.2f, 0.0f };
-        meshBall.color          = { 1.6f, 0.0f, 0.0f, 0.0f };
+        meshStairsTop.color     = { 1.0f, 1.0f, 1.0f, 1.0f };
+        meshStairsBottom.color  = { 1.0f, 1.0f, 0.0f, 0.0f };
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
@@ -127,7 +128,7 @@ private:
     void CreateTextures()
     {
         // Load color map texture
-        colorMap = LoadTexture("../../Media/Textures/PBR/Tiles26/Tiles26_col.jpg");
+        colorMap = LoadTexture("../../Media/Textures/TilesGray512.jpg");
     }
 
     void CreateSamplers()
@@ -192,38 +193,26 @@ private:
         };
     }
 
-    void AddBall(std::size_t initialFrame)
+    void AddBall(const LLGL::ColorRGBf& color, std::size_t initialFrame = 0, float t = 0.0f)
     {
         Ball ball;
         {
-            ball.frame      = initialFrame;
-            ball.position   = GetGridPos(initialFrame);
+            ball.position           = GetGridPos(initialFrame);
+            ball.color              = color;
+            ball.frame              = initialFrame;
+            ball.frameInterpolator  = t;
         }
         balls.push_back(ball);
     }
 
     void UpdateBallAnimation(Ball& ball, float dt)
     {
-        ball.animation -= dt * 2.0f;
-        if (ball.animation > 0.0f)
-        {
-            // Interpolate between current and next frame
-            float t     = ball.animation;
-            float ts    = Gs::SmoothStep(t);
+        // Update frame interpolation
+        ball.frameInterpolator += dt * 2.0f;
 
-            float s = 0.0f;
-            if (ts <= 0.1f)
-                s = std::cos((ts * 5.0f) * Gs::pi);
-            else if (ts >= 0.9f)
-                s = std::sin(((ts - 0.9f) * 5.0f) * Gs::pi);
-
-            ball.position = Gs::Lerp(GetGridPos(ball.frame + 1), GetGridPos(ball.frame), t);
-            ball.position.y += std::sin(t * Gs::pi) * ballJumpHeight;
-            ball.scale = Gs::Vector3f{ 1.0f + s*0.1f, 1.0f - s*0.3f, 1.0f + s*0.1f };
-        }
-        else
+        while (ball.frameInterpolator > 1.0f)
         {
-            ball.animation = 1.0f;
+            ball.frameInterpolator -= 1.0f;
             ball.frame++;
 
             if (ball.frame + 1 >= gridPosFrames.size())
@@ -232,6 +221,21 @@ private:
                 ball.frame      = 0;
             }
         }
+
+        float t     = ball.frameInterpolator;
+        float ts    = Gs::SmoothStep(t);
+
+        // Add scaling to animate bouncing
+        float s = 0.0f;
+        if (ts <= 0.1f)
+            s = std::cos((ts * 5.0f) * Gs::pi);
+        else if (ts >= 0.9f)
+            s = std::sin(((ts - 0.9f) * 5.0f) * Gs::pi);
+
+        // Interpolate transformation between current and next frame
+        ball.position = Gs::Lerp(GetGridPos(ball.frame), GetGridPos(ball.frame + 1), t);
+        ball.position.y += std::sin(t * Gs::pi) * ballJumpHeight;
+        ball.scale = Gs::Vector3f{ 1.0f + s*0.1f, 1.0f - s*0.3f, 1.0f + s*0.1f };
     }
 
     void UpdateScene(float dt)
@@ -270,6 +274,7 @@ private:
         Gs::RotateFree(settings.vpMatrix, { 0, 1, 0 }, Gs::Deg2Rad(viewRotation.y));
         Gs::RotateFree(settings.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(viewRotation.x));
         Gs::Translate(settings.vpMatrix, { 0, 0, -viewDistanceToCenter });
+        settings.viewPos = Gs::TransformVector(settings.vpMatrix, Gs::Vector3f{ 0, 0, 0 });
         settings.vpMatrix.MakeInverse();
         settings.vpMatrix = projection * settings.vpMatrix;
 
@@ -281,28 +286,36 @@ private:
     void RenderMesh(const TriangleMesh& mesh)
     {
         settings.wMatrix = mesh.transform;
-        settings.diffuse = mesh.color;
+        settings.albedo = mesh.color;
         UpdateBuffer(constantBuffer, settings, true);
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 
     void RenderBall(const Ball& ball)
     {
-        settings.diffuse = meshBall.color;
+        // Set ball color
+        settings.albedo = LLGL::ColorRGBAf{ ball.color.r, ball.color.g, ball.color.b, 0.0f };
+
+        // Update model-to-world transformation matrix
         settings.wMatrix.LoadIdentity();
         Gs::Translate(settings.wMatrix, ball.position);
         Gs::Scale(settings.wMatrix, ball.scale*0.3f);
+
+        // Submit data to constant buffer
         UpdateBuffer(constantBuffer, settings, true);
+
+        // Draw ball
         commands->Draw(meshBall.numVertices, meshBall.firstVertex);
     }
 
     void RenderScene()
     {
-        // Clear entire framebuffer
         commands->SetGraphicsPipeline(*pipelineScene);
         commands->SetGraphicsResourceHeap(*resourceHeap);
+
         RenderMesh(meshStairsBottom);
         RenderMesh(meshStairsTop);
+
         for (const auto& ball : balls)
             RenderBall(ball);
     }
@@ -310,7 +323,8 @@ private:
     void OnDrawFrame() override
     {
         // Update scene by user input
-        UpdateScene(1.0f / 60.0f);
+        timer->MeasureTime();
+        UpdateScene(static_cast<float>(timer->GetDeltaTime()));
 
         commands->Begin();
         {

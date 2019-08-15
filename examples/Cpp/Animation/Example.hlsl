@@ -4,8 +4,10 @@ cbuffer Settings : register(b1)
 {
     float4x4    wMatrix;
     float4x4    vpMatrix;
-    float4      lightDir;
-    float4      diffuse;
+    float3      lightDir;
+    float       shininess;
+    float4      viewPos;
+    float4      albedo;
 };
 
 
@@ -21,13 +23,15 @@ struct VIn
 struct VOut
 {
 	float4 position : SV_Position;
+    float4 worldPos : WORLDPOS;
 	float4 normal   : NORMAL;
     float2 texCoord : TEXCOORD;
 };
 
 void VS(VIn inp, out VOut outp)
 {
-	outp.position	= mul(vpMatrix, mul(wMatrix, float4(inp.position, 1)));
+    outp.worldPos   = mul(wMatrix, float4(inp.position, 1));
+	outp.position	= mul(vpMatrix, outp.worldPos);
 	outp.normal		= mul(wMatrix, float4(inp.normal, 0));
     outp.texCoord   = inp.texCoord;
 }
@@ -40,15 +44,23 @@ SamplerState linearSampler : register(s3);
 
 float4 PS(VOut inp) : SV_Target
 {
-    // Compute lighting
-    float3 normal = normalize(inp.normal.xyz);
-    float NdotL = max(0.2, dot(normal, -lightDir.xyz));
+    // Diffuse lighting
+    float3  lightVec    = -lightDir.xyz;
+    float3  normal      = normalize(inp.normal.xyz);
+    float   NdotL       = lerp(0.2, 1.0, max(0.0, dot(normal, lightVec)));
+    float3  diffuse     = albedo.rgb * NdotL;
+
+    // Specular lighting
+    float3  viewDir     = normalize(viewPos.xyz - inp.worldPos.xyz);
+    float3  halfVec     = normalize(viewDir + lightVec);
+    float   NdotH       = dot(normal, halfVec);
+    float3  specular    = (float3)pow(max(0.0, NdotH), shininess);
 
     // Sample texture
     float4 color = colorMap.Sample(linearSampler, inp.texCoord);
 
     // Set final output color
-    return lerp((float4)1, color, diffuse.a) * float4(diffuse.rgb * NdotL, 1.0);
+    return lerp((float4)1, color, albedo.a) * float4(diffuse + specular, 1.0);
 }
 
 
