@@ -108,7 +108,7 @@ Rendering a portal using the stencil buffer.
 
 Small animation example with orthogonal projection.
 
-<p align="center"><img src="Animation/Example.png" width="400" height="300"/></p>
+<p align="center"><img src="Animation/Example.gif" width="400" height="300"/></p>
 
 
 
