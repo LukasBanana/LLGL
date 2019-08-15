@@ -238,8 +238,11 @@ protected:
     // Used by the window resize handler
     bool IsLoadingDone() const;
 
-    // Returns a projection with the specified parameters for the respective renderer.
+    // Returns a perspective projection with the specified parameters for the respective renderer.
     Gs::Matrix4f PerspectiveProjection(float aspectRatio, float near, float far, float fov);
+
+    // Returns an orthogonal projection with the speciifed parameters for the respective renderer.
+    Gs::Matrix4f OrthogonalProjection(float width, float height, float near, float far);
 
     // Returns true if the specified shading language is supported.
     bool Supported(const LLGL::ShadingLanguage shadingLanguage) const;

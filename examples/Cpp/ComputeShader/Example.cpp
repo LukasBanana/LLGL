@@ -65,6 +65,19 @@ public:
         CreateBuffers();
         CreateComputePipeline();
         CreateGraphicsPipeline();
+
+        // Add debugging names
+        commands->SetName("Commands");
+        vertexBuffer->SetName("Vertices");
+        instanceBuffer->SetName("Instances");
+        inputBuffer->SetName("Input");
+        indirectArgBuffer->SetName("IndirectArguments");
+        computeShader->SetName("Compute.Shader");
+        computeLayout->SetName("Compute.Layout");
+        computePipeline->SetName("Compute.Pipeline");
+        computeResourceHeap->SetName("Compute.ResourceHeap");
+        graphicsShader->SetName("Graphics.Shader");
+        graphicsPipeline->SetName("Graphics.Pipeline");
     }
 
     void CreateBuffers()
