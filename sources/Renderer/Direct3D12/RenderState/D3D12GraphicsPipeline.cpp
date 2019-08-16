@@ -222,7 +222,6 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
     }
 }
 
-//TODO: MultisampleEnable does not what it seems to (see https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_rasterizer_desc)
 static void Convert(D3D12_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
 {
     dst.FillMode                = D3D12Types::Map(src.polygonMode);
@@ -232,7 +231,7 @@ static void Convert(D3D12_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
     dst.DepthBiasClamp          = src.depthBias.clamp;
     dst.SlopeScaledDepthBias    = src.depthBias.slopeFactor;
     dst.DepthClipEnable         = DXBoolean(!src.depthClampEnabled);
-    dst.MultisampleEnable       = false;//DXBoolean(src.multiSampling.enabled); //TODO: "quadrilateral or alpha line anti-aliasing algorithm"
+    dst.MultisampleEnable       = DXBoolean(src.multiSampling.enabled);
     dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
     dst.ForcedSampleCount       = 0; // no forced sample count
     dst.ConservativeRaster      = GetConservativeRaster(src.conservativeRasterization);

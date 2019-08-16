@@ -311,7 +311,6 @@ void Convert(D3D11_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, con
     Convert(dst.BackFace, srcStencil.back);
 }
 
-//TODO: MultisampleEnable does not what it seems to (see https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_rasterizer_desc)
 void Convert(D3D11_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
 {
     if (src.conservativeRasterization)
@@ -325,7 +324,7 @@ void Convert(D3D11_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
     dst.SlopeScaledDepthBias    = src.depthBias.slopeFactor;
     dst.DepthClipEnable         = DXBoolean(!src.depthClampEnabled);
     dst.ScissorEnable           = DXBoolean(src.scissorTestEnabled);
-    dst.MultisampleEnable       = false;//DXBoolean(src.multiSampling.enabled); //TODO: "quadrilateral or alpha line anti-aliasing algorithm"
+    dst.MultisampleEnable       = DXBoolean(src.multiSampling.enabled);
     dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
 }
 
@@ -342,7 +341,7 @@ void Convert(D3D11_RASTERIZER_DESC2& dst, const RasterizerDescriptor& src)
     dst.SlopeScaledDepthBias    = src.depthBias.slopeFactor;
     dst.DepthClipEnable         = DXBoolean(!src.depthClampEnabled);
     dst.ScissorEnable           = DXBoolean(src.scissorTestEnabled);
-    dst.MultisampleEnable       = false;//DXBoolean(src.multiSampling.enabled); //TODO: "quadrilateral or alpha line anti-aliasing algorithm"
+    dst.MultisampleEnable       = DXBoolean(src.multiSampling.enabled);
     dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
     dst.ForcedSampleCount       = 0;
     dst.ConservativeRaster      = (src.conservativeRasterization ? D3D11_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D11_CONSERVATIVE_RASTERIZATION_MODE_OFF);
