@@ -14,11 +14,11 @@
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
-#include "../GLCommon/GLTypes.h"
 #include "VKCore.h"
 #include "VKTypes.h"
 #include "VKInitializers.h"
 #include <LLGL/Log.h>
+#include <LLGL/ImageFlags.h>
 
 
 namespace LLGL

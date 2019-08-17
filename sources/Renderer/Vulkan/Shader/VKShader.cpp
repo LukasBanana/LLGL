@@ -93,6 +93,8 @@ static long ShaderTypeToStageFlags(const ShaderType type)
     }
 }
 
+#ifdef LLGL_ENABLE_SPIRV_REFLECT
+
 static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, const SPIRVReflect::SpvUniform& var)
 {
     /* Check if there already is a resource at the specified binding slot */
@@ -124,8 +126,6 @@ static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, 
 
 void VKShader::Reflect(ShaderReflection& reflection) const
 {
-    #ifdef LLGL_ENABLE_SPIRV_REFLECT
-
     /* Parse shader module */
     SPIRVReflect spvReflect;
     spvReflect.Parse(shaderModuleData_.data(), shaderModuleData_.size());
@@ -152,9 +152,16 @@ void VKShader::Reflect(ShaderReflection& reflection) const
         if (auto resource = FindOrAppendShaderResource(reflection, var))
             resource->binding.stageFlags |= ShaderTypeToStageFlags(GetType());
     }
-
-    #endif
 }
+
+#else
+
+void VKShader::Reflect(ShaderReflection& /*reflection*/) const
+{
+    // dummy
+}
+
+#endif // /LLGL_ENABLE_SPIRV_REFLECT
 
 
 /*

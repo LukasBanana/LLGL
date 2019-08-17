@@ -67,6 +67,8 @@ static bool Load_VK_KHR_win32_surface(VkInstance handle)
 
 #endif // /LLGL_OS_WIN32
 
+#ifdef LLGL_VK_ENABLE_EXT
+
 static bool Load_VK_EXT_debug_marker(VkDevice handle)
 {
     LOAD_VKPROC( vkDebugMarkerSetObjectTagEXT  );
@@ -83,6 +85,8 @@ static bool Load_VK_EXT_conditional_rendering(VkDevice handle)
     LOAD_VKPROC( vkCmdEndConditionalRenderingEXT   );
     return true;
 }
+
+#endif // /LLGL_VK_ENABLE_EXT
 
 #undef LOAD_VKPROC
 
@@ -116,7 +120,7 @@ bool VKLoadInstanceExtensions(VkInstance instance)
 
 bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& supportedExtensions)
 {
-    #if LLGL_VK_ENABLE_EXT
+    #ifdef LLGL_VK_ENABLE_EXT
 
     auto IsSupported = [&supportedExtensions](const char* extName) -> bool
     {

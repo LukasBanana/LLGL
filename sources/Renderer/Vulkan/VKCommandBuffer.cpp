@@ -807,6 +807,7 @@ void VKCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void VKCommandBuffer::PushDebugGroup(const char* name)
 {
+    #ifdef LLGL_VK_ENABLE_EXT
     if (HasExtension(VKExt::EXT_debug_marker))
     {
         VkDebugMarkerMarkerInfoEXT markerInfo;
@@ -821,12 +822,15 @@ void VKCommandBuffer::PushDebugGroup(const char* name)
         }
         vkCmdDebugMarkerBeginEXT(commandBuffer_, &markerInfo);
     }
+    #endif // /LLGL_VK_ENABLE_EXT
 }
 
 void VKCommandBuffer::PopDebugGroup()
 {
+    #ifdef LLGL_VK_ENABLE_EXT
     if (HasExtension(VKExt::EXT_debug_marker))
         vkCmdDebugMarkerEndEXT(commandBuffer_);
+    #endif // /LLGL_VK_ENABLE_EXT
 }
 
 /* ----- Extended functions ----- */
