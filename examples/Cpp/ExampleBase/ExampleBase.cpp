@@ -186,10 +186,23 @@ void ExampleBase::SelectRendererModule(int argc, char* argv[])
 
 void ExampleBase::Run()
 {
+    LLGL::Extent2D resolution = context->GetResolution();
+
     while (context->GetSurface().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
     {
+        // Update profiler
         profilerObj_->NextProfile();
+
+        // Draw current frame
         OnDrawFrame();
+
+        // Check if resolution has changed
+        auto currentResolution = context->GetResolution();
+        if (resolution != currentResolution)
+        {
+            OnResize(currentResolution);
+            resolution = currentResolution;
+        }
     }
 }
 
@@ -327,6 +340,11 @@ ExampleBase::ExampleBase(
 
     // Store information that loading is done
     loadingDone_ = true;
+}
+
+void ExampleBase::OnResize(const LLGL::Extent2D& resoluion)
+{
+    // dummy
 }
 
 LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(

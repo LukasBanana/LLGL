@@ -15,6 +15,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <random>
 #include <map>
 #include <type_traits>
 #include "GeometryUtility.h"
@@ -42,6 +43,43 @@ LLGL::Texture* LoadTextureWithRenderer(
 
 // Save texture image to a PNG file.
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);
+
+
+/*
+ * Randomizer class
+ */
+
+class Randomizer
+{
+
+    public:
+
+        // Constructs the randomizer with a lower and upper bound of random numbers between [0, 1].
+        inline Randomizer() :
+            Randomizer { 0.0f, 1.0f }
+        {
+        }
+
+        // Constructs the randomizer with the lower and upper bound of random numbers.
+        inline Randomizer(float min, float max) :
+            generator_    { device_() },
+            distribution_ { min, max  }
+        {
+        }
+
+        // Returns the next random number.
+        inline float Next()
+        {
+            return distribution_(generator_);
+        }
+
+    private:
+
+        std::random_device                      device_;  //Will be used to obtain a seed for the random number engine
+        std::mt19937                            generator_; //Standard mersenne_twister_engine seeded with rd()
+        std::uniform_real_distribution<float>   distribution_;
+
+};
 
 
 /*
@@ -109,6 +147,8 @@ private:
         LLGL::StreamOutputFormat                streamOutputFormat;
     };
 
+private:
+
     std::unique_ptr<LLGL::RenderingProfiler>    profilerObj_;
     std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
 
@@ -157,7 +197,11 @@ protected:
         bool                    debugger    = true
     );
 
+    // Callback to draw each frame
     virtual void OnDrawFrame() = 0;
+
+    // Callback when the window has been resized. Can also be detected by using a custom window event listener.
+    virtual void OnResize(const LLGL::Extent2D& resoluion);
 
     // Creats a shader program and loads all specified shaders from file.
     LLGL::ShaderProgram* LoadShaderProgram(
