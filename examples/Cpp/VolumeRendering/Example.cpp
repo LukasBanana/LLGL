@@ -59,7 +59,7 @@ class Example_VolumeRendering : public ExampleBase
 public:
 
     Example_VolumeRendering() :
-        ExampleBase { L"LLGL Example: VolumeRendering" }
+        ExampleBase { L"LLGL Example: VolumeRendering", { 800, 600 }, 0 }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -98,8 +98,7 @@ private:
 
     void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
-        // Load shader for Z-pre pass
-        // Load shader program
+        // Load shader programs
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             shaderProgramDepthOnly = LoadShaderProgram(
@@ -112,6 +111,22 @@ private:
                 {
                     { LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" },
+                },
+                { vertexFormat }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            shaderProgramDepthOnly = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" },
+                },
+                { vertexFormat }
+            );
+            shaderProgramFinalPass = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" },
+                    { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" },
                 },
                 { vertexFormat }
             );
@@ -151,7 +166,7 @@ private:
         LLGL::RenderTargetDescriptor rtDesc;
         {
             rtDesc.resolution       = resolution;
-            rtDesc.multiSampling    = GetMultiSampleDesc();
+            //rtDesc.multiSampling    = GetMultiSampleDesc();
             rtDesc.attachments      =
             {
                 LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth, depthRangeTexture }
@@ -232,7 +247,7 @@ private:
                 pipelineDesc.depth.writeEnabled         = true;
                 pipelineDesc.depth.compareOp            = LLGL::CompareOp::Greater;
                 pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Front;
-                pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+                //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
             }
             pipelineRangePass = renderer->CreateGraphicsPipeline(pipelineDesc);
         }
@@ -248,7 +263,7 @@ private:
                 pipelineDesc.depth.writeEnabled         = true;
                 pipelineDesc.depth.compareOp            = LLGL::CompareOp::Less;
                 pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+                //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
             }
             pipelineZPrePass = renderer->CreateGraphicsPipeline(pipelineDesc);
         }
@@ -264,7 +279,7 @@ private:
                 pipelineDesc.depth.writeEnabled         = false;
                 pipelineDesc.depth.compareOp            = LLGL::CompareOp::Equal;
                 pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+                //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
 
                 auto& blendTarget = pipelineDesc.blend.targets[0];
                 blendTarget.blendEnabled                = true;

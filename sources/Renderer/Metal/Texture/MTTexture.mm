@@ -171,31 +171,19 @@ void MTTexture::Write(const TextureRegion& textureRegion, SrcImageDescriptor ima
     }
 
     /* Replace region of native texture with source image data */
-    if (GetType() == TextureType::Texture3D)
+    auto byteAlignedData = reinterpret_cast<const std::int8_t*>(imageDesc.data);
+
+    for (NSUInteger arrayLayer = 0; arrayLayer < textureRegion.subresource.numArrayLayers; ++arrayLayer)
     {
         [native_
             replaceRegion:  region
-            mipmapLevel:    0
-            withBytes:      imageDesc.data
+            mipmapLevel:    static_cast<NSUInteger>(textureRegion.subresource.baseMipLevel)
+            slice:          (textureRegion.subresource.baseArrayLayer + arrayLayer)
+            withBytes:      byteAlignedData
             bytesPerRow:    bytesPerRow
+            bytesPerImage:  bytesPerSlice
         ];
-    }
-    else
-    {
-        auto byteAlignedData = reinterpret_cast<const std::int8_t*>(imageDesc.data);
-
-        for (NSUInteger arrayLayer = 0; arrayLayer < textureRegion.subresource.numArrayLayers; ++arrayLayer)
-        {
-            [native_
-                replaceRegion:  region
-                mipmapLevel:    static_cast<NSUInteger>(textureRegion.subresource.baseMipLevel)
-                slice:          (textureRegion.subresource.baseArrayLayer + arrayLayer)
-                withBytes:      byteAlignedData
-                bytesPerRow:    bytesPerRow
-                bytesPerImage:  bytesPerSlice
-            ];
-            byteAlignedData += bytesPerSlice;
-        }
+        byteAlignedData += bytesPerSlice;
     }
 }
 
