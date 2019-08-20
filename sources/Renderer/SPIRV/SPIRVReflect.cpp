@@ -87,6 +87,9 @@ void SPIRVReflect::OpDecorate(const Instr& instr)
         case spv::Decoration::Location:
             OpDecorateLocation(instr);
             break;
+        case spv::Decoration::BuiltIn:
+            OpDecorateBuiltin(instr);
+            break;
         default:
             break;
     }
@@ -108,6 +111,15 @@ void SPIRVReflect::OpDecorateLocation(const Instr& instr)
 
     variable.name       = GetName(id);
     variable.location   = instr.GetUInt32(2);
+}
+
+void SPIRVReflect::OpDecorateBuiltin(const Instr& instr)
+{
+    auto id         = instr.GetUInt32(0);
+    auto& variable  = varyings_[id];
+
+    variable.name       = GetName(id);
+    variable.builtin    = static_cast<spv::BuiltIn>(instr.GetUInt32(2));
 }
 
 void SPIRVReflect::OpType(const Instr& instr)

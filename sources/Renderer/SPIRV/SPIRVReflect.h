@@ -19,7 +19,7 @@ namespace LLGL
 
 
 // SPIR-V shader module parser.
-class SPIRVReflect : public SPIRVParser
+class SPIRVReflect final : public SPIRVParser
 {
 
     public:
@@ -29,7 +29,7 @@ class SPIRVReflect : public SPIRVParser
         {
             const SpvType* DereferenceStructPtr() const;
 
-            spv::Op                     opcode      = spv::Op::OpNop;           // Opcode for this type (e.g. spv::Op::OpTypeFloat).
+            spv::Op                     opcode      = spv::Op::Max;             // Opcode for this type (e.g. spv::Op::OpTypeFloat).
             spv::Id                     result      = 0;                        // Result ID of this type.
             spv::StorageClass           storage     = spv::StorageClass::Max;   // Storage class of this type. By default spv::StorageClass::Max.
             const char*                 name        = nullptr;                  // Name of this type (only for structures).
@@ -62,6 +62,7 @@ class SPIRVReflect : public SPIRVParser
         struct SpvVarying
         {
             const char*     name        = nullptr;
+            spv::BuiltIn    builtin     = spv::BuiltIn::Max;    // Optional built-in type
             const SpvType*  type        = nullptr;
             std::uint32_t   location    = 0;
             bool            input       = false;
@@ -95,6 +96,7 @@ class SPIRVReflect : public SPIRVParser
         void OpDecorate(const Instr& instr);
         void OpDecorateBinding(const Instr& instr);
         void OpDecorateLocation(const Instr& instr);
+        void OpDecorateBuiltin(const Instr& instr);
         void OpType(const Instr& instr);
         void OpTypeVoid(const Instr& instr, SpvType& type);
         void OpTypeBool(const Instr& instr, SpvType& type);

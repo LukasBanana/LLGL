@@ -17,6 +17,8 @@ namespace LLGL
 
 void SPIRVParser::Parse(const void* byteCode, std::size_t byteCodeSize)
 {
+    finished_ = false;
+
     if (!byteCode)
         throw std::invalid_argument("SPIR-V shader byte code must not be a null pointer");
     if (byteCodeSize % 4 != 0)
@@ -41,7 +43,7 @@ void SPIRVParser::Parse(const void* byteCode, std::size_t byteCodeSize)
     OnParseHeader(header);
 
     /* Parse instructions */
-    for (std::uint32_t i = 5; i < numWords;)
+    for (std::uint32_t i = 5; i < numWords && !finished_;)
     {
         /* Parse next instruction */
         SPIRVInstruction instr;
@@ -80,12 +82,24 @@ void SPIRVParser::Parse(const void* byteCode, std::size_t byteCodeSize)
         }
         OnParseInstruction(instr);
     }
+
+    finished_ = true;
 }
 
 
 /*
  * ======= Protected: =======
  */
+
+void SPIRVParser::Finish()
+{
+    finished_ = true;
+}
+
+bool SPIRVParser::HasFinished() const
+{
+    return finished_;
+}
 
 void SPIRVParser::OnParseHeader(const SPIRVHeader& header)
 {

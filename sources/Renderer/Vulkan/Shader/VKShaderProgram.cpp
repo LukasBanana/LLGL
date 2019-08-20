@@ -67,7 +67,12 @@ bool VKShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
 
 bool VKShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
 {
-    return false; //TODO
+    for (auto shader : shaders_)
+    {
+        if (shader->ReflectLocalSize(workGroupSize))
+            return true;
+    }
+    return false;
 }
 
 /* --- Extended functions --- */

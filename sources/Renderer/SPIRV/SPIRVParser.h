@@ -40,11 +40,23 @@ class SPIRVParser
 
     protected:
 
+        // Finishes the parsing process.
+        void Finish();
+
+        // Returns true if the parsing process has finished.
+        bool HasFinished() const;
+
+    protected:
+
         // Callback function for the SPIR-V shader module header.
         virtual void OnParseHeader(const SPIRVHeader& header);
 
         // Callback function for each instruction within the SPIR-V shader module.
         virtual void OnParseInstruction(const SPIRVInstruction& instr);
+
+    private:
+
+        bool finished_ = false;
 
 };
 

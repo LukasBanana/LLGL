@@ -14,6 +14,7 @@
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
 #   include "../../SPIRV/SPIRVReflect.h"
+#   include "../../SPIRV/SPIRVReflectExecutionMode.h"
 #endif
 
 
@@ -95,6 +96,130 @@ static long ShaderTypeToStageFlags(const ShaderType type)
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
 
+static Format SpvVectorTypeToFormat(const SPIRVReflect::SpvType* type, std::uint32_t count)
+{
+    if (type->opcode == spv::Op::OpTypeFloat)
+    {
+        if (type->size == 16)
+        {
+            switch (count)
+            {
+                case 1: return Format::R16Float;
+                case 2: return Format::RG16Float;
+                case 3: return Format::RGB16Float;
+                case 4: return Format::RGBA16Float;
+            }
+        }
+        else if (type->size == 32)
+        {
+            switch (count)
+            {
+                case 1: return Format::R32Float;
+                case 2: return Format::RG32Float;
+                case 3: return Format::RGB32Float;
+                case 4: return Format::RGBA32Float;
+            }
+        }
+        else if (type->size == 64)
+        {
+            switch (count)
+            {
+                case 1: return Format::R64Float;
+                case 2: return Format::RG64Float;
+                case 3: return Format::RGB64Float;
+                case 4: return Format::RGBA64Float;
+            }
+        }
+    }
+    else if (type->opcode == spv::Op::OpTypeInt)
+    {
+        if (type->sign)
+        {
+            switch (count)
+            {
+                case 1: return Format::R32SInt;
+                case 2: return Format::RG32SInt;
+                case 3: return Format::RGB32SInt;
+                case 4: return Format::RGBA32SInt;
+            }
+        }
+        else
+        {
+            switch (count)
+            {
+                case 1: return Format::R32UInt;
+                case 2: return Format::RG32UInt;
+                case 3: return Format::RGB32UInt;
+                case 4: return Format::RGBA32UInt;
+            }
+        }
+    }
+    return Format::Undefined;
+}
+
+static Format SpvTypeToFormat(const SPIRVReflect::SpvType* type, std::uint32_t* count = nullptr)
+{
+    /* Return number of semantics to default value of 1 element */
+    if (count != nullptr)
+        *count = 1;
+
+    if (type != nullptr)
+    {
+        if (type->opcode == spv::Op::OpTypePointer)
+        {
+            /* Dereference pointer type */
+            return SpvTypeToFormat(type->baseType, count);
+        }
+        else if (type->opcode == spv::Op::OpTypeFloat || type->opcode == spv::Op::OpTypeInt)
+        {
+            /* Return format as scalar type */
+            return SpvVectorTypeToFormat(type, 1);
+        }
+        else if (type->opcode == spv::Op::OpTypeVector)
+        {
+            /* Return format as vector type */
+            if (type->baseType)
+                return SpvVectorTypeToFormat(type->baseType, type->elements);
+        }
+        else if (type->opcode == spv::Op::OpTypeMatrix)
+        {
+            /* Return format as vector and return number of vectors */
+            if (count != nullptr)
+                *count = type->elements;
+            return SpvTypeToFormat(type->baseType);
+        }
+    }
+
+    return Format::Undefined;
+}
+
+static SystemValue SpvBuiltinToSystemValue(spv::BuiltIn type)
+{
+    switch (type)
+    {
+        case spv::BuiltIn::ClipDistance:        return SystemValue::ClipDistance;
+        case spv::BuiltIn::CullDistance:        return SystemValue::CullDistance;
+        //                                      return SystemValue::Color;
+        case spv::BuiltIn::FragDepth:           return SystemValue::Depth;
+        //                                      return SystemValue::DepthGreater;
+        //                                      return SystemValue::DepthLess;
+        case spv::BuiltIn::FrontFacing:         return SystemValue::FrontFacing;
+        case spv::BuiltIn::InstanceId:          return SystemValue::InstanceID;
+        case spv::BuiltIn::InstanceIndex:       return SystemValue::InstanceID;
+        case spv::BuiltIn::Position:            return SystemValue::Position;
+        case spv::BuiltIn::FragCoord:           return SystemValue::Position;
+        case spv::BuiltIn::PrimitiveId:         return SystemValue::PrimitiveID;
+        case spv::BuiltIn::Layer:               return SystemValue::RenderTargetIndex;
+        case spv::BuiltIn::SampleMask:          return SystemValue::SampleMask;
+        case spv::BuiltIn::SampleId:            return SystemValue::SampleID;
+        case spv::BuiltIn::FragStencilRefEXT:   return SystemValue::Stencil;
+        case spv::BuiltIn::VertexId:            return SystemValue::VertexID;
+        case spv::BuiltIn::VertexIndex:         return SystemValue::VertexID;
+        case spv::BuiltIn::ViewportIndex:       return SystemValue::ViewportIndex;
+        default:                                return SystemValue::Undefined;
+    }
+}
+
 static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, const SPIRVReflect::SpvUniform& var)
 {
     /* Check if there already is a resource at the specified binding slot */
@@ -112,11 +237,21 @@ static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, 
 
         if (auto varType = var.type)
         {
+            /* Dereference pointer type */
+            //if (varType->opcode == spv::Op::OpTypePointer && varType->baseType)
+            //    varType = varType->baseType;
+
             if (varType->opcode == spv::Op::OpTypeArray)
                 resource.binding.arraySize = var.type->elements;
+            else if (varType->opcode == spv::Op::OpTypeImage)
+                resource.binding.type = ResourceType::Texture;
 
             if (varType->storage == spv::StorageClass::Uniform && varType->DereferenceStructPtr() != nullptr)
+            {
                 resource.constantBufferSize = var.size;
+                resource.binding.type       = ResourceType::Buffer;
+                resource.binding.bindFlags  |= BindFlags::ConstantBuffer;
+            }
         }
     }
     reflection.resources.push_back(resource);
@@ -136,12 +271,22 @@ void VKShader::Reflect(ShaderReflection& reflection) const
         const auto& var = it.second;
         if (var.input && GetType() == ShaderType::Vertex)
         {
+            std::uint32_t numVectors = 1;
+
+            /* Determine vertex attribute data */
             VertexAttribute attrib;
             {
-                attrib.name     = GetOptString(var.name);
-                //attrib.format   = ;
+                attrib.name         = GetOptString(var.name);
+                attrib.format       = SpvTypeToFormat(var.type, &numVectors);
+                attrib.systemValue  = SpvBuiltinToSystemValue(var.builtin);
             }
-            reflection.vertexAttributes.push_back(attrib);
+
+            /* Append vertex attributes for each semantic index */
+            for (std::uint32_t i = 0; i < numVectors; ++i)
+            {
+                attrib.semanticIndex = i;
+                reflection.vertexAttributes.push_back(attrib);
+            }
         }
     }
 
@@ -154,11 +299,35 @@ void VKShader::Reflect(ShaderReflection& reflection) const
     }
 }
 
+bool VKShader::ReflectLocalSize(Extent3D& workGroupSize) const
+{
+    if (GetType() == ShaderType::Compute)
+    {
+        /* Parse shader module */
+        SPIRVReflectExecutionMode spvReflect;
+        spvReflect.Parse(shaderModuleData_.data(), shaderModuleData_.size());
+
+        /* Return local work group size */
+        const auto& mode = spvReflect.GetMode();
+        workGroupSize.width     = mode.localSizeX;
+        workGroupSize.height    = mode.localSizeY;
+        workGroupSize.depth     = mode.localSizeZ;
+
+        return true;
+    }
+    return false;
+}
+
 #else
 
 void VKShader::Reflect(ShaderReflection& /*reflection*/) const
 {
     // dummy
+}
+
+bool VKShader::ReflectLocalSize(Extent3D& workGroupSize) const
+{
+    return false; // dummy
 }
 
 #endif // /LLGL_ENABLE_SPIRV_REFLECT

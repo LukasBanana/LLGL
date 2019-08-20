@@ -17,6 +17,12 @@ namespace LLGL
 {
 
 
+static const char* g_requiredVulkanExtensions[] =
+{
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+};
+
 static bool CheckDeviceExtensionSupport(
     VkPhysicalDevice                    physicalDevice,
     const char* const*                  requiredExtensions,
@@ -44,17 +50,11 @@ static bool IsPhysicalDeviceSuitable(
     std::vector<VkExtensionProperties>& supportedExtensions)
 {
     /* Check if physical devices supports at least these extensions */
-    const char* requiredExtensions[] =
-    {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-    };
-
     std::vector<VkExtensionProperties> extensions;
     bool suitable = CheckDeviceExtensionSupport(
         physicalDevice,
-        requiredExtensions,
-        sizeof(requiredExtensions) / sizeof(requiredExtensions[0]),
+        g_requiredVulkanExtensions,
+        sizeof(g_requiredVulkanExtensions) / sizeof(g_requiredVulkanExtensions[0]),
         extensions
     );
 
@@ -174,8 +174,13 @@ VKDevice VKPhysicalDevice::CreateLogicalDevice()
     device.CreateLogicalDevice(
         physicalDevice_,
         &features_,
+        #if 1
         supportedExtensionNames_.data(),
         static_cast<std::uint32_t>(supportedExtensionNames_.size())
+        #else
+        g_requiredVulkanExtensions,
+        sizeof(g_requiredVulkanExtensions) / sizeof(g_requiredVulkanExtensions[0])
+        #endif
     );
     return device;
 }
