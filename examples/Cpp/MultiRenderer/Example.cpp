@@ -37,6 +37,7 @@ class MyRenderer
 
     const LLGL::MultiSamplingDescriptor multiSampling;
     const LLGL::Viewport                viewport;
+    const std::string                   rendererModule;
 
 public:
 
@@ -52,7 +53,11 @@ public:
         const std::vector<std::uint32_t>&   indices
     );
 
+    // Renders the scene from the specified view.
     void Render(const Gs::Matrix4f& wvpMatrix);
+
+    // Builds a perspective projection matrix for this renderer.
+    Gs::Matrix4f BuildPerspectiveProjection(float aspectRatio, float nearPlane, float farPlane, float fieldOfView) const;
 
 };
 
@@ -61,8 +66,9 @@ MyRenderer::MyRenderer(
     LLGL::Window&           mainWindow,
     const LLGL::Offset2D&   subWindowOffset,
     const LLGL::Viewport&   viewport)
-:   viewport      { viewport },
-    multiSampling { 8u       }
+:   viewport       { viewport       },
+    multiSampling  { 8u             },
+    rendererModule { rendererModule }
 {
     // Load render system module
     renderer = LLGL::RenderSystem::Load(rendererModule);
@@ -79,7 +85,7 @@ MyRenderer::MyRenderer(
     LLGL::WindowDescriptor windowDesc;
     {
         windowDesc.position         = subWindowOffset;
-        windowDesc.size             = { static_cast<std::uint32_t>(viewport.width)/2, static_cast<std::uint32_t>(viewport.height) };
+        windowDesc.size             = { static_cast<std::uint32_t>(viewport.width)/2, static_cast<std::uint32_t>(viewport.height)/2 };
         windowDesc.borderless       = true;
         windowDesc.visible          = true;
         windowDesc.windowContext    = (&mainWindowContextHandle);
@@ -121,7 +127,7 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
     const std::string texturePath = "../../Media/Textures/";
     texture = LoadTextureWithRenderer(
         *renderer,
-        texturePath + (renderer->GetRendererID() == LLGL::RendererID::OpenGL ? "Logo_OpenGL.png" : "Logo_Direct3D.png")
+        (texturePath + "Logo_" + rendererModule + ".png")
     );
 
     // Create samplers
@@ -139,14 +145,21 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
 
     if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
     {
-        vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0" });
-        fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0" });
+        vertShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0"));
+        fragShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0"));
+    }
+    else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
+    {
+        vertShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.vert"));
+        fragShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.frag"));
+    }
+    else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
+    {
+        vertShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv"));
+        fragShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv"));
     }
     else
-    {
-        vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.vert" });
-        fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.frag" });
-    }
+        throw std::runtime_error("shaders not supported for active renderer");
 
     // Print info log (warnings and errors)
     for (auto shader : { vertShader, fragShader })
@@ -204,10 +217,10 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
 void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
 {
     // Update constant buffer
-    renderer->WriteBuffer(*constantBuffer, 0, &wvpMatrix, sizeof(wvpMatrix));
-
     cmdBuffer->Begin();
     {
+        cmdBuffer->UpdateBuffer(*constantBuffer, 0, &wvpMatrix, sizeof(wvpMatrix));
+
         cmdBuffer->SetVertexBuffer(*vertexBuffer);
         cmdBuffer->SetIndexBuffer(*indexBuffer);
 
@@ -236,6 +249,16 @@ void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
     context->Present();
 }
 
+Gs::Matrix4f MyRenderer::BuildPerspectiveProjection(float aspectRatio, float nearPlane, float farPlane, float fieldOfView) const
+{
+    int flags = 0;
+
+    if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
+        flags |= Gs::ProjectionFlags::UnitCube;
+
+    return Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fieldOfView), flags).ToMatrix4();
+}
+
 
 /*
  * Main function
@@ -257,10 +280,13 @@ int main(int argc, char* argv[])
         auto mainWindow = LLGL::Window::Create(mainWindowDesc);
 
         // Create renderers
-        const int halfWidth = static_cast<int>(resolution.width/2);
+        const int halfWidth     = static_cast<int>(resolution.width/2);
+        const int halfHeight    = static_cast<int>(resolution.height/2);
 
-        MyRenderer myGLRenderer{ "OpenGL", *mainWindow, { 0, 0 }, resolution };
-        MyRenderer myD3DRenderer{ "Direct3D11", *mainWindow, { halfWidth, 0 }, LLGL::Viewport{ { -halfWidth, 0 }, resolution } };
+        MyRenderer myRenderer0{ "Vulkan",       *mainWindow, { 0,         0          }, LLGL::Viewport{ { 0,          0           }, resolution } };
+        MyRenderer myRenderer1{ "OpenGL",       *mainWindow, { halfWidth, 0          }, LLGL::Viewport{ { -halfWidth, 0           }, resolution } };
+        MyRenderer myRenderer2{ "Direct3D11",   *mainWindow, { 0,         halfHeight }, LLGL::Viewport{ { 0,          -halfHeight }, resolution } };
+        MyRenderer myRenderer3{ "Direct3D12",   *mainWindow, { halfWidth, halfHeight }, LLGL::Viewport{ { -halfWidth, -halfHeight }, resolution } };
 
         mainWindow->Show();
 
@@ -268,33 +294,40 @@ int main(int argc, char* argv[])
         auto cubeVertices = GenerateTexturedCubeVertices();
         auto cubeIndices = GenerateTexturedCubeTriangleIndices();
 
-        myGLRenderer.CreateResources(cubeVertices, cubeIndices);
-        myD3DRenderer.CreateResources(cubeVertices, cubeIndices);
+        myRenderer0.CreateResources(cubeVertices, cubeIndices);
+        myRenderer1.CreateResources(cubeVertices, cubeIndices);
+        myRenderer2.CreateResources(cubeVertices, cubeIndices);
+        myRenderer3.CreateResources(cubeVertices, cubeIndices);
+
+        auto timer = LLGL::Timer::Create();
 
         // Initialize matrices (OpenGL needs a unit-cube NDC-space)
-        Gs::Matrix4f projMatrixGL, projMatrixD3D, viewMatrix, worldMatrix;
-
         const float aspectRatio = static_cast<float>(mainWindowDesc.size.width) / static_cast<float>(mainWindowDesc.size.height);
         const float nearPlane   = 0.1f;
         const float farPlane    = 100.0f;
         const float fieldOfView = 45.0f;
 
-        projMatrixGL  = Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fieldOfView), Gs::ProjectionFlags::UnitCube).ToMatrix4();
-        projMatrixD3D = Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fieldOfView)).ToMatrix4();
+        auto projMatrix0 = myRenderer0.BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
+        auto projMatrix1 = myRenderer1.BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
+        auto projMatrix2 = myRenderer2.BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
+        auto projMatrix3 = myRenderer3.BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
 
+        Gs::Matrix4f viewMatrix, worldMatrix;
         Gs::Translate(viewMatrix, Gs::Vector3f(0, 0, 5));
 
         // Enter main loop
         while (mainWindow->ProcessEvents())
         {
             // Update scene transformation
-            Gs::RotateFree(worldMatrix, Gs::Vector3f(0, 1, 0), Gs::Deg2Rad(0.005f));
+            timer->MeasureTime();
+            auto dt = static_cast<float>(timer->GetDeltaTime());
+            Gs::RotateFree(worldMatrix, Gs::Vector3f(0, 1, 0), Gs::Deg2Rad(dt * 20.0f));
 
-            // Draw scene for OpenGL
-            myGLRenderer.Render(projMatrixGL * viewMatrix * worldMatrix);
-
-            // Draw scene for Direct3D
-            myD3DRenderer.Render(projMatrixD3D * viewMatrix * worldMatrix);
+            // Draw scene for all renderers
+            myRenderer0.Render(projMatrix0 * viewMatrix * worldMatrix);
+            myRenderer1.Render(projMatrix1 * viewMatrix * worldMatrix);
+            myRenderer2.Render(projMatrix2 * viewMatrix * worldMatrix);
+            myRenderer3.Render(projMatrix3 * viewMatrix * worldMatrix);
         }
     }
     catch (const std::exception& e)

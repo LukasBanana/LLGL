@@ -31,6 +31,10 @@ glslang -V -S vert -o MultiContext/Example.450core.vert.spv MultiContext/Example
 glslang -V -S geom -o MultiContext/Example.450core.geom.spv MultiContext/Example.450core.geom
 glslang -V -S frag -o MultiContext/Example.450core.frag.spv MultiContext/Example.450core.frag
 
+echo ####### MultiRenderer #######
+glslang -V -S vert -o MultiRenderer/Example.450core.vert.spv MultiRenderer/Example.450core.vert
+glslang -V -S frag -o MultiRenderer/Example.450core.frag.spv MultiRenderer/Example.450core.frag
+
 echo ####### BufferArray #######
 glslang -V -S vert -o BufferArray/Example.450core.vert.spv BufferArray/Example.450core.vert
 glslang -V -S frag -o BufferArray/Example.450core.frag.spv BufferArray/Example.450core.frag
