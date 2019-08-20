@@ -115,6 +115,38 @@ private:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        {
+            shaderProgramDepthOnly = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.vert" },
+                },
+                { vertexFormat }
+            );
+            shaderProgramFinalPass = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.vert" },
+                    { LLGL::ShaderType::Fragment, "Example.frag" },
+                },
+                { vertexFormat }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            shaderProgramDepthOnly = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" },
+                },
+                { vertexFormat }
+            );
+            shaderProgramFinalPass = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" },
+                    { LLGL::ShaderType::Fragment, "Example.450core.frag.spv" },
+                },
+                { vertexFormat }
+            );
+        }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             shaderProgramDepthOnly = LoadShaderProgram(
@@ -248,6 +280,7 @@ private:
                 pipelineDesc.depth.compareOp            = LLGL::CompareOp::Greater;
                 pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Front;
                 //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+                pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
             }
             pipelineRangePass = renderer->CreateGraphicsPipeline(pipelineDesc);
         }
@@ -264,6 +297,7 @@ private:
                 pipelineDesc.depth.compareOp            = LLGL::CompareOp::Less;
                 pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
                 //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+                pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
             }
             pipelineZPrePass = renderer->CreateGraphicsPipeline(pipelineDesc);
         }

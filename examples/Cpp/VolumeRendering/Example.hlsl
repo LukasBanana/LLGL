@@ -106,8 +106,10 @@ float4 PScene(VSceneOut inp) : SV_Target
     float   diffuse     = DiffuseShading(normal, lightVec);
     float   specular    = SpecularShading(normal, lightVec, viewVec) * reflectance;
 
+    #if 1
     // Sample noise texture and apply glitter
     specular += Glitter(normal, lightVec, viewVec, inp.worldPos.xyz);
+    #endif
 
     // Project depth back into scene
     float2  screenPos   = inp.ndc.xy;
@@ -116,26 +118,23 @@ float4 PScene(VSceneOut inp) : SV_Target
     float4  maxDepthPos = float4(screenPos.x, screenPos.y, maxDepth, 1.0);
     UnprojectDepth(maxDepthPos);
 
-    // Sample volume density
+    // Integrate volume density
     int     numIterations   = 64;
     float   stride          = 1.0 / (float)numIterations;
     float   trace           = 0.0;
     float   density         = 0.0;
+    float   depthRange      = distance(inp.worldPos.xyz, maxDepthPos.xyz);
+    float   dt              = depthRange * stride * 5.0;
 
     for (int i = 0; i < numIterations; ++i)
     {
         float3 tracePos = lerp(inp.worldPos.xyz, maxDepthPos.xyz, trace);
-        density += SampleVolumeInBoundary(tracePos) * stride;
+        density += SampleVolumeInBoundary(tracePos) * dt;
         trace += stride;
     }
 
-    #if 0
-    // Apply density damping on the edges
-    float depthRange = distance(inp.worldPos.xyz, maxDepthPos.xyz);
-    if (depthRange > 5.0)
-        return 1.0;
-    //density *= smoothstep(0.1, 0.2, depthRange);
-    #endif
+    // Apply density attenuation, i.e. rescale range [0, +inf) to [0, 1).
+    density = 1.0 - exp(-density*0.5);
 
     // Put everything together
     return float4(albedo.rgb * diffuse * lerp(0.35, 1.5, density) + (float3)specular, 1.0);

@@ -60,4 +60,8 @@ glslang -V -S vert -o StencilBuffer/Stencil.450core.vert.spv StencilBuffer/Stenc
 glslang -V -S vert -o StencilBuffer/Scene.450core.vert.spv StencilBuffer/Scene.450core.vert
 glslang -V -S frag -o StencilBuffer/Scene.450core.frag.spv StencilBuffer/Scene.450core.frag
 
+echo ####### VolumeRendering #######
+glslang -V -S vert -o VolumeRendering/Example.450core.vert.spv VolumeRendering/Example.450core.vert
+glslang -V -S frag -o VolumeRendering/Example.450core.frag.spv VolumeRendering/Example.450core.frag
+
 pause
