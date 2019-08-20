@@ -52,9 +52,16 @@ class DbgShaderProgram final : public ShaderProgram
 
     public:
 
+        // Returns the vertex layout meta data.
         inline const VertexLayout& GetVertexLayout() const
         {
             return vertexLayout_;
+        }
+
+        // Returns true if this shader program contains a fragment shader.
+        inline bool HasFragmentShader() const
+        {
+            return hasFragmentShader_;
         }
 
         // Returns the name of the vertex ID if the shader program makes use of the SV_VertexID, gl_VertexID, or gl_VertexIndex semantics. Returns null otherwise.
@@ -69,7 +76,7 @@ class DbgShaderProgram final : public ShaderProgram
 
     private:
 
-        void ValidateShaderAttachment(Shader* shader);
+        void ValidateShaderAttachment(Shader* shader, const ShaderType type);
         void ValidateShaderComposition();
         void QueryInstanceAndVertexIDs(const RenderingCapabilities& caps);
 
@@ -77,6 +84,7 @@ class DbgShaderProgram final : public ShaderProgram
 
         RenderingDebugger*      debugger_               = nullptr;
         int                     shaderAttachmentMask_   = 0;
+        bool                    hasFragmentShader_      = false;
 
         std::vector<ShaderType> shaderTypes_;
         VertexLayout            vertexLayout_;

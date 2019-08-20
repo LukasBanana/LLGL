@@ -641,7 +641,11 @@ struct BlendTargetDescriptor
     //! Alpha blending arithmetic. By default BlendArithmetic::Add.
     BlendArithmetic alphaArithmetic = BlendArithmetic::Add;
 
-    //! Specifies which color components are enabled for writing. By default (true, true, true, true).
+    /**
+    \brief Specifies which color components are enabled for writing. By default <code>(true, true, true, true)</code>.
+    \remarks If no pixel shader is used in the graphics pipeline,
+    the color mask \b must be set to \c false for all components. Otherwise, the behavior is undefined.
+    */
     ColorRGBAb      colorMask       = { true, true, true, true };
 };
 
@@ -690,7 +694,7 @@ struct BlendDescriptor
 
     /**
     \brief Render-target blend states for the respective color attachments. A maximum of 8 targets is supported.
-    \remarks If \c independentBlendEnabled is set to false, only the first entry is used,
+    \remarks If \c independentBlendEnabled is set to \c false, only the first entry is used,
     i.e. <code>targets[0]</code> and all remaining entries <code>targets[1..7]</code> are ignored.
     \see independentBlendEnabled
     */

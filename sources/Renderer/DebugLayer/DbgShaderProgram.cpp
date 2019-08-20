@@ -9,6 +9,7 @@
 #include "DbgShader.h"
 #include "DbgCore.h"
 #include "../CheckedCast.h"
+#include <LLGL/Strings.h>
 
 
 namespace LLGL
@@ -27,12 +28,12 @@ DbgShaderProgram::DbgShaderProgram(
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateShaderAttachment(desc.vertexShader);
-        ValidateShaderAttachment(desc.tessControlShader);
-        ValidateShaderAttachment(desc.tessEvaluationShader);
-        ValidateShaderAttachment(desc.geometryShader);
-        ValidateShaderAttachment(desc.fragmentShader);
-        ValidateShaderAttachment(desc.computeShader);
+        ValidateShaderAttachment(desc.vertexShader, ShaderType::Vertex);
+        ValidateShaderAttachment(desc.tessControlShader, ShaderType::TessControl);
+        ValidateShaderAttachment(desc.tessEvaluationShader, ShaderType::TessEvaluation);
+        ValidateShaderAttachment(desc.geometryShader, ShaderType::Geometry);
+        ValidateShaderAttachment(desc.fragmentShader, ShaderType::Fragment);
+        ValidateShaderAttachment(desc.computeShader, ShaderType::Compute);
         ValidateShaderComposition();
         QueryInstanceAndVertexIDs(caps);
     }
@@ -44,6 +45,9 @@ DbgShaderProgram::DbgShaderProgram(
             vertexLayout_.attributes.push_back(attrib);
     }
     vertexLayout_.bound = true;
+
+    /* Store information whether this shader program contains a fragment shader */
+    hasFragmentShader_ = (desc.fragmentShader != nullptr && desc.fragmentShader->GetType() == ShaderType::Fragment);
 }
 
 bool DbgShaderProgram::HasErrors() const
@@ -99,7 +103,7 @@ const char* DbgShaderProgram::GetInstanceID() const
 #define LLGL_GS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Geometry)
 #define LLGL_CS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Compute)
 
-void DbgShaderProgram::ValidateShaderAttachment(Shader* shader)
+void DbgShaderProgram::ValidateShaderAttachment(Shader* shader, const ShaderType type)
 {
     if (shader != nullptr)
     {
@@ -110,10 +114,13 @@ void DbgShaderProgram::ValidateShaderAttachment(Shader* shader)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to attach uncompiled shader to shader program");
 
         /* Check if shader type already has been attached */
-        for (auto other : shaderTypes_)
+        if (shaderDbg.GetType() != type)
         {
-            if (other == shaderDbg.GetType())
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "duplicate shader type attachments in shader program");
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "mismatch between shader type (" + std::string(ToString(shaderDbg.GetType())) +
+                ") and shader program attachment (" + std::string(ToString(type)) + ")"
+            );
         }
 
         /* Add shader type to list */
