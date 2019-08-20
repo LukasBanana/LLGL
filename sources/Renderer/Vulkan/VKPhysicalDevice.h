@@ -57,16 +57,22 @@ class VKPhysicalDevice
             return physicalDevice_;
         }
 
+        // Returns the Vulkan specific features of the physical device.
+        inline const VkPhysicalDeviceFeatures& GetFeatures() const
+        {
+            return features_;
+        }
+
+        // Returns the Vulkan specific limits of the physical device.
+        inline const VkPhysicalDeviceProperties& GetProperties() const
+        {
+            return properties_;
+        }
+
         // Returns the memory properties of the physical device.
         inline const VkPhysicalDeviceMemoryProperties& GetMemoryProperties() const
         {
             return memoryProperties_;
-        }
-
-        // Returns the features of the physical device.
-        inline const VkPhysicalDeviceFeatures& GetFeatures() const
-        {
-            return features_;
         }
 
         // Returns the list of supported extensions names.
@@ -85,8 +91,9 @@ class VKPhysicalDevice
         std::vector<VkExtensionProperties>  supportedExtensions_;
         std::vector<const char*>            supportedExtensionNames_;
 
-        VkPhysicalDeviceMemoryProperties    memoryProperties_;
         VkPhysicalDeviceFeatures            features_;
+        VkPhysicalDeviceProperties          properties_;
+        VkPhysicalDeviceMemoryProperties    memoryProperties_;
 
 };
 

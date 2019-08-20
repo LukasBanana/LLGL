@@ -32,9 +32,12 @@ namespace LLGL
 
 static const std::uint32_t g_maxNumViewportsPerBatch = 16;
 
-static bool MustEmulateMultiDrawIndirect(const VKPhysicalDevice& physicalDevice)
+static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDevice)
 {
-    return (physicalDevice.GetFeatures().multiDrawIndirect != VK_FALSE);
+    if (physicalDevice.GetFeatures().multiDrawIndirect != VK_FALSE)
+        return physicalDevice.GetProperties().limits.maxDrawIndirectCount;
+    else
+        return 1;
 }
 
 VKCommandBuffer::VKCommandBuffer(
@@ -42,11 +45,12 @@ VKCommandBuffer::VKCommandBuffer(
     const VKPtr<VkDevice>&          device,
     VkQueue                         graphicsQueue,
     const QueueFamilyIndices&       queueFamilyIndices,
-    const CommandBufferDescriptor&  desc) :
-        device_                   { device                                       },
-        commandPool_              { device, vkDestroyCommandPool                 },
-        queuePresentFamily_       { queueFamilyIndices.presentFamily             },
-        emulateMultiDrawIndirect_ { MustEmulateMultiDrawIndirect(physicalDevice) }
+    const CommandBufferDescriptor&  desc)
+:
+    device_               { device                                  },
+    commandPool_          { device, vkDestroyCommandPool            },
+    queuePresentFamily_   { queueFamilyIndices.presentFamily        },
+    maxDrawIndirectCount_ { GetMaxDrawIndirectCount(physicalDevice) }
 {
     std::size_t bufferCount = std::max(1u, desc.numNativeBuffers);
 
@@ -757,11 +761,13 @@ void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-    if (emulateMultiDrawIndirect_)
+    if (maxDrawIndirectCount_ < numCommands)
     {
-        while (numCommands-- > 0)
+        while (numCommands > 0)
         {
-            vkCmdDrawIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, 1, 0);
+            std::uint32_t drawCount = (numCommands % maxDrawIndirectCount_);
+            vkCmdDrawIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, drawCount, stride);
+            numCommands -= drawCount;
             offset += stride;
         }
     }
@@ -778,11 +784,13 @@ void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-    if (emulateMultiDrawIndirect_)
+    if (maxDrawIndirectCount_ < numCommands)
     {
-        while (numCommands-- > 0)
+        while (numCommands > 0)
         {
-            vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, 1, 0);
+            std::uint32_t drawCount = (numCommands % maxDrawIndirectCount_);
+            vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, drawCount, 0);
+            numCommands -= drawCount;
             offset += stride;
         }
     }

@@ -98,18 +98,14 @@ void VKPhysicalDevice::QueryDeviceProperties(
     RenderingCapabilities&      caps,
     VKGraphicsPipelineLimits&   pipelineLimits)
 {
-    /* Query properties of selected physical device */
-    VkPhysicalDeviceProperties properties;
-    vkGetPhysicalDeviceProperties(physicalDevice_, &properties);
-
     /* Map properties to output renderer info */
-    info.rendererName           = ("Vulkan " + VKApiVersionToString(properties.apiVersion));
-    info.deviceName             = properties.deviceName;
-    info.vendorName             = GetVendorByID(properties.vendorID);
+    info.rendererName           = ("Vulkan " + VKApiVersionToString(properties_.apiVersion));
+    info.deviceName             = properties_.deviceName;
+    info.vendorName             = GetVendorByID(properties_.vendorID);
     info.shadingLanguageName    = "SPIR-V";
 
     /* Map limits to output rendering capabilites */
-    const auto& limits = properties.limits;
+    const auto& limits = properties_.limits;
 
     /* Query common attributes */
     caps.screenOrigin                               = ScreenOrigin::UpperLeft;
@@ -210,8 +206,9 @@ bool VKPhysicalDevice::SupportsExtension(const char* extension) const
 void VKPhysicalDevice::QueryDeviceProperties()
 {
     /* Query physical device features and memory propertiers */
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
     vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
+    vkGetPhysicalDeviceProperties(physicalDevice_, &properties_);
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
 }
 
 

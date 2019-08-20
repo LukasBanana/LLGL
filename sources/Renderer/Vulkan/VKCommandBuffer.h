@@ -268,7 +268,7 @@ class VKCommandBuffer final : public CommandBuffer
         bool                            scissorEnabled_             = false;
         bool                            scissorRectInvalidated_     = true;
 
-        bool                            emulateMultiDrawIndirect_   = false;
+        std::uint32_t                   maxDrawIndirectCount_       = 0;
 
         #if 1//TODO: optimize usage of query pools
         std::vector<VkQueryPool>        queryPoolsInFlight_;

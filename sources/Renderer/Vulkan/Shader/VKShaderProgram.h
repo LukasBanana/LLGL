@@ -40,10 +40,10 @@ class VKShaderProgram final : public ShaderProgram
 
     public:
 
-        //TODO: replace by "FillShaderStageCreateInfos" to avoid std::vector
-        std::vector<VkPipelineShaderStageCreateInfo> GetShaderStageCreateInfos() const;
-        //void FillShaderStageCreateInfos(std::size_t maxNumCreateInfos, VkPipelineShaderStageCreateInfo* createInfos) const;
+        // Fills the specified array of create-info structures with the shader stages and returns the number of stages that have been written.
+        void FillShaderStageCreateInfos(VkPipelineShaderStageCreateInfo* createInfos, std::uint32_t& stageCount) const;
 
+        // Fills the specified create-info structure with the vertex input layout.
         void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
 
     private:

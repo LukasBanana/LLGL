@@ -49,8 +49,11 @@ void VKComputePipeline::CreateComputePipeline(const ComputePipelineDescriptor& d
         throw std::invalid_argument("failed to create compute pipeline due to missing shader program");
 
     /* Get shader stages */
-    auto shaderStageCreateInfos = shaderProgramVK->GetShaderStageCreateInfos();
-    if (shaderStageCreateInfos.size() != 1)
+    std::uint32_t shaderStageCount = 1;
+    VkPipelineShaderStageCreateInfo shaderStageCreateInfo;
+    shaderProgramVK->FillShaderStageCreateInfos(&shaderStageCreateInfo, shaderStageCount);
+
+    if (shaderStageCount != 1)
         throw std::invalid_argument("invalid number of shader stages for Vulkan compute pipeline");
 
     /* Create graphics pipeline state object */
@@ -59,7 +62,7 @@ void VKComputePipeline::CreateComputePipeline(const ComputePipelineDescriptor& d
         createInfo.sType                = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
         createInfo.pNext                = nullptr;
         createInfo.flags                = 0;
-        createInfo.stage                = shaderStageCreateInfos.front();
+        createInfo.stage                = shaderStageCreateInfo;
         createInfo.layout               = pipelineLayout_;
         createInfo.basePipelineHandle   = VK_NULL_HANDLE;
         createInfo.basePipelineIndex    = 0;

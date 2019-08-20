@@ -72,15 +72,17 @@ bool VKShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
 
 /* --- Extended functions --- */
 
-std::vector<VkPipelineShaderStageCreateInfo> VKShaderProgram::GetShaderStageCreateInfos() const
+void VKShaderProgram::FillShaderStageCreateInfos(VkPipelineShaderStageCreateInfo* createInfos, std::uint32_t& stageCount) const
 {
-    auto shaderCount = shaders_.size();
-    std::vector<VkPipelineShaderStageCreateInfo> createInfos(shaderCount);
-
-    for (std::size_t i = 0; i < shaderCount; ++i)
-        shaders_[i]->FillShaderStageCreateInfo(createInfos[i]);
-
-    return createInfos;
+    auto shaderCount = static_cast<std::uint32_t>(shaders_.size());
+    if (shaderCount <= stageCount)
+    {
+        for (std::size_t i = 0; i < shaderCount; ++i)
+            shaders_[i]->FillShaderStageCreateInfo(createInfos[i]);
+        stageCount = shaderCount;
+    }
+    else
+        stageCount = 0;
 }
 
 void VKShaderProgram::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const

@@ -326,7 +326,9 @@ void VKGraphicsPipeline::CreateVkGraphicsPipeline(
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
 
     /* Get shader stages */
-    auto shaderStageCreateInfos = shaderProgramVK->GetShaderStageCreateInfos();
+    std::uint32_t shaderStateCount = 5;
+    VkPipelineShaderStageCreateInfo shaderStageCreateInfos[5];
+    shaderProgramVK->FillShaderStageCreateInfos(shaderStageCreateInfos, shaderStateCount);
 
     /* Initialize vertex input descriptor */
     VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo;
@@ -374,8 +376,8 @@ void VKGraphicsPipeline::CreateVkGraphicsPipeline(
         createInfo.sType                        = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         createInfo.pNext                        = nullptr;
         createInfo.flags                        = 0;
-        createInfo.stageCount                   = static_cast<std::uint32_t>(shaderStageCreateInfos.size());
-        createInfo.pStages                      = shaderStageCreateInfos.data();
+        createInfo.stageCount                   = shaderStateCount;
+        createInfo.pStages                      = shaderStageCreateInfos;
         createInfo.pVertexInputState            = (&vertexInputCreateInfo);
         createInfo.pInputAssemblyState          = (&inputAssembly);
         createInfo.pTessellationState           = (inputAssembly.topology == VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ? &tessellationState : nullptr);
