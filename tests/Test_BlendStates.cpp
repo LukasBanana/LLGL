@@ -1,5 +1,5 @@
 /*
- * Test9_Metal.cpp
+ * Test_BlendStates.cpp
  *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -84,8 +84,8 @@ int main()
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
             shaderProgramDesc.vertexFormats     = { vertexBufferDesc.vertexBuffer.format };
-            shaderProgramDesc.vertexShader      = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "BlendTest.vert" });
-            shaderProgramDesc.fragmentShader    = renderer->CreateShader({ LLGL::ShaderType::Fragment, "BlendTest.frag" });
+            shaderProgramDesc.vertexShader      = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" });
+            shaderProgramDesc.fragmentShader    = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Shaders/BlendTest.frag" });
         }
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 

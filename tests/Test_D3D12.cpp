@@ -1,5 +1,5 @@
 /*
- * Test3_Direct3D12.cpp
+ * Test_Direct3D12.cpp
  *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -104,8 +104,8 @@ int main()
         auto constantBuffer = renderer->CreateBuffer(constantBufferDesc, &matrices);
 
         // Load shader
-        auto vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "TestShader.hlsl", "VS", "vs_5_0" });
-        auto fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "TestShader.hlsl", "PS", "ps_5_0" });
+        auto vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Shaders/TestShader.hlsl", "VS", "vs_5_0" });
+        auto fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Shaders/TestShader.hlsl", "PS", "ps_5_0" });
 
         #ifdef TEST_PRINT_SHADER_INFO
         std::cout << "VERTEX OUTPUT:" << std::endl;

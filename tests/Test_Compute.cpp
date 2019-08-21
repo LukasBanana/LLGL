@@ -1,5 +1,5 @@
 /*
- * Test4_Compute.cpp
+ * Test_Compute.cpp
  *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -44,12 +44,6 @@ int main()
         if (!commands)
             throw std::runtime_error("failed to create extended command buffer");
 
-        // Change window title
-        auto title = "LLGL Test 4: Compute ( " + renderer->GetName() + " )";
-
-        auto& window = static_cast<LLGL::Window&>(context->GetSurface());
-        window.SetTitle(std::wstring(title.begin(), title.end()));
-
         // Quit if compute shaders are not supported
         const auto& renderCaps = renderer->GetRenderingCaps();
         if (!renderCaps.features.hasComputeShaders)
@@ -69,7 +63,7 @@ int main()
         auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, vec.data());
 
         // Load shader
-        auto computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "ComputeShader.glsl" });
+        auto computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "Shaders/ComputeShader.glsl" });
 
         if (computeShader->HasErrors())
             std::cerr << computeShader->QueryInfoLog() << std::endl;

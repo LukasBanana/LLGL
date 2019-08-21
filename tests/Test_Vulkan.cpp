@@ -1,5 +1,5 @@
 /*
- * Test5_Vulkan.cpp
+ * Test_Vulkan.cpp
  *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -128,8 +128,8 @@ int main()
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
             shaderProgramDesc.vertexFormats     = { vertexFormat };
-            shaderProgramDesc.vertexShader      = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Triangle.vert.spv"));
-            shaderProgramDesc.fragmentShader    = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Triangle.frag.spv"));
+            shaderProgramDesc.vertexShader      = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Shaders/Triangle.vert.spv"));
+            shaderProgramDesc.fragmentShader    = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Shaders/Triangle.frag.spv"));
         }
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
@@ -173,7 +173,7 @@ int main()
         auto sampler = renderer->CreateSampler(samplerDesc);
 
         // Create texture
-        std::string texFilename = "../tutorial/Media/Textures/Logo_Vulkan.png";
+        std::string texFilename = "../examples/Media/Textures/Logo_Vulkan.png";
         int texWidth = 0, texHeight = 0, texComponents = 0;
 
         auto imageBuffer = stbi_load(texFilename.c_str(), &texWidth, &texHeight, &texComponents, 4);

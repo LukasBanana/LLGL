@@ -343,6 +343,7 @@ set(FilesTest_Display ${TestProjectsPath}/Test_Display.cpp)
 set(FilesTest_Image ${TestProjectsPath}/Test_Image.cpp)
 set(FilesTest_BlendStates ${TestProjectsPath}/Test_BlendStates.cpp)
 set(FilesTest_JIT ${TestProjectsPath}/Test_JIT.cpp)
+set(FilesTest_ShaderReflect ${TestProjectsPath}/Test_ShaderReflect.cpp)
 
 # Example project files
 file(GLOB FilesExampleBase ${EXAMPLE_PROJECTS_DIR}/ExampleBase/*.*)
@@ -720,6 +721,7 @@ if(GaussLib_INCLUDE_DIR)
         ADD_TEST_PROJECT(Test_BlendStates "${FilesTest_BlendStates}" "${LLGL_DEPENDENCIES}")
         ADD_TEST_PROJECT(Test_Window "${FilesTest_Window}" "${LLGL_DEPENDENCIES}")
         ADD_TEST_PROJECT(Test_JIT "${FilesTest_JIT}" "${LLGL_DEPENDENCIES}")
+        ADD_TEST_PROJECT(Test_ShaderReflect "${FilesTest_ShaderReflect}" "${LLGL_DEPENDENCIES}")
     endif()
 
     # Example Projects

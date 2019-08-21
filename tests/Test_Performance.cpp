@@ -1,5 +1,5 @@
 /*
- * Test6_Performance.cpp
+ * Test_Performance.cpp
  *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -159,7 +159,6 @@ class PerformanceTest
 
             // Load renderer
             renderer = LLGL::RenderSystem::Load(rendererModule);
-            commandQueue = renderer->GetCommandQueue();
 
             // Create render context
             LLGL::RenderContextDescriptor contextDesc;
@@ -170,6 +169,7 @@ class PerformanceTest
 
             // Create command buffer
             commands = renderer->CreateCommandBuffer();
+            commandQueue = renderer->GetCommandQueue();
 
             // Create timer query
             LLGL::QueryHeapDescriptor queryDesc;
