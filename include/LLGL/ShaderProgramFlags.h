@@ -119,14 +119,14 @@ struct ShaderProgramDescriptor
 
     /**
     \brief Specifies the tessellation-control shader (also referred to as "Hull Shader").
-    \remarks If this is used, the counter part must also be specified (i.e. <code>tessEvaluationShader</code>).
+    \remarks If this is used, the counter part must also be specified (i.e. \c tessEvaluationShader).
     \see tessEvaluationShader
     */
     Shader*                     tessControlShader       = nullptr;
 
     /**
     \brief Specifies the tessellation-evaluation shader (also referred to as "Domain Shader").
-    \remarks If this is used, the counter part must also be specified (i.e. <code>tessControlShader</code>).
+    \remarks If this is used, the counter part must also be specified (i.e. \c tessControlShader).
     \see tessControlShader
     */
     Shader*                     tessEvaluationShader    = nullptr;
@@ -208,11 +208,16 @@ This is not a "descriptor", because it is only used as output from an interface 
 */
 struct ShaderReflection
 {
-    //! List of all vertex attributes.
+    //! List of all vertex input attributes.
     std::vector<VertexAttribute>        vertexAttributes;
 
     //! List of all stream-output attributes.
     std::vector<StreamOutputAttribute>  streamOutputAttributes;
+
+    #if 0//TODO: enable this
+    //! List of all fragment output attributes.
+    std::vector<FragmentAttribute>      fragmentAttributes;
+    #endif
 
     //! List of all shader reflection resource views.
     std::vector<ShaderResource>         resources;

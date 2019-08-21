@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-const SPIRVReflect::SpvType* SPIRVReflect::SpvType::DereferenceStructPtr() const
+const SPIRVReflect::SpvType* SPIRVReflect::SpvType::DereferencePtr() const
 {
     auto type = this;
 
@@ -26,7 +26,20 @@ const SPIRVReflect::SpvType* SPIRVReflect::SpvType::DereferenceStructPtr() const
             return nullptr;
     }
 
-    return (type->opcode == spv::Op::OpTypeStruct ? type : nullptr);
+    return type;
+}
+
+const SPIRVReflect::SpvType* SPIRVReflect::SpvType::DereferencePtr(const spv::Op opcodeType) const
+{
+    if (auto type = DereferencePtr())
+        return (type->opcode == opcodeType ? type : nullptr);
+    else
+        return nullptr;
+}
+
+bool SPIRVReflect::SpvType::RefersToType(const spv::Op opcodeType) const
+{
+    return (DereferencePtr(opcodeType) != nullptr);
 }
 
 void SPIRVReflect::OnParseHeader(const SPIRVHeader& header)
@@ -65,6 +78,9 @@ void SPIRVReflect::OnParseInstruction(const SPIRVInstruction& instr)
             break;
         case spv::Op::OpVariable:
             OpVariable(instr);
+            break;
+        case spv::Op::OpConstant:
+            OpConstant(instr);
             break;
         default:
             break;
@@ -211,6 +227,9 @@ void SPIRVReflect::OpTypeSampledImage(const Instr& instr, SpvType& type)
 
 void SPIRVReflect::OpTypeArray(const Instr& instr, SpvType& type)
 {
+    type.baseType = FindType(instr.GetUInt32(0));
+    auto arrayVal = FindConstant(instr.GetUInt32(1));
+    type.elements = arrayVal->i32;
 }
 
 void SPIRVReflect::OpTypeRuntimeArray(const Instr& instr, SpvType& type)
@@ -269,11 +288,12 @@ void SPIRVReflect::OpVariable(const Instr& instr)
     switch (storage)
     {
         case spv::StorageClass::Uniform:
+        case spv::StorageClass::UniformConstant:
         {
             auto& var = uniforms_[instr.result];
             {
                 var.type = FindType(instr.type);
-                if (auto structType = var.type->DereferenceStructPtr())
+                if (auto structType = var.type->DereferencePtr(spv::Op::OpTypeStruct))
                 {
                     if (var.name == nullptr || *var.name == '\0')
                         var.name = structType->name;
@@ -310,6 +330,31 @@ void SPIRVReflect::OpVariable(const Instr& instr)
     }
 }
 
+void SPIRVReflect::OpConstant(const Instr& instr)
+{
+    auto& val = constants_[instr.result];
+    {
+        val.type = FindType(instr.type);
+
+        if (val.type->opcode == spv::Op::OpTypeInt)
+        {
+            if (val.type->size == 2 || val.type->size == 4)
+                val.u32 = instr.GetUInt32(0);
+            else if (val.type->size == 8)
+                val.u64 = instr.GetUInt64(0);
+        }
+        else if (val.type->opcode == spv::Op::OpTypeFloat)
+        {
+            if (val.type->size == 2)
+                val.f32 = instr.GetFloat16(0);
+            else if (val.type->size == 4)
+                val.f32 = instr.GetFloat32(0);
+            else if (val.type->size == 8)
+                val.f64 = instr.GetFloat64(0);
+        }
+    }
+}
+
 void SPIRVReflect::SetName(spv::Id id, const char* name)
 {
     AssertIdBound(id);
@@ -337,7 +382,15 @@ const SPIRVReflect::SpvType* SPIRVReflect::FindType(spv::Id id) const
 {
     auto it = types_.find(id);
     if (it == types_.end())
-        throw std::runtime_error("cannot find SPIR-V type with ID %" + std::to_string(id));
+        throw std::runtime_error("cannot find SPIR-V OpType* instruction with result ID %" + std::to_string(id));
+    return &(it->second);
+}
+
+const SPIRVReflect::SpvConstant* SPIRVReflect::FindConstant(spv::Id id) const
+{
+    auto it = constants_.find(id);
+    if (it == constants_.end())
+        throw std::runtime_error("cannot find SPIR-V OpConstant instruction with with result ID %" + std::to_string(id));
     return &(it->second);
 }
 

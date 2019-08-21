@@ -220,6 +220,47 @@ static SystemValue SpvBuiltinToSystemValue(spv::BuiltIn type)
     }
 }
 
+// Reflects the SPIR-V type to the output binding descriptor and returns the dereferenced type
+static const SPIRVReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding, const SPIRVReflect::SpvType* varType)
+{
+    if (varType != nullptr)
+    {
+        if (auto derefType = varType->DereferencePtr())
+        {
+            switch (derefType->opcode)
+            {
+                case spv::Op::OpTypeArray:
+                    /* Multiply array in case of multiple interleaved arrays, e.g. MultiArray[4][3] is equivalent to LinearArray[4*3] */
+                    binding.arraySize *= derefType->elements;
+                    return ReflectSpvBinding(binding, derefType->baseType);
+
+                case spv::Op::OpTypeImage:
+                    binding.type       = ResourceType::Texture;
+                    binding.bindFlags  |= BindFlags::SampleBuffer;
+                    return derefType;
+
+                case spv::Op::OpTypeSampler:
+                    binding.type       = ResourceType::Sampler;
+                    return derefType;
+
+                case spv::Op::OpTypeSampledImage:
+                    binding.type       = ResourceType::Texture;
+                    binding.bindFlags  |= BindFlags::SampleBuffer;
+                    return derefType;
+
+                case spv::Op::OpTypeStruct:
+                    binding.type       = ResourceType::Buffer;
+                    binding.bindFlags  |= BindFlags::ConstantBuffer;
+                    return derefType;
+
+                default:
+                    break;
+            }
+        }
+    }
+    return nullptr;
+}
+
 static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, const SPIRVReflect::SpvUniform& var)
 {
     /* Check if there already is a resource at the specified binding slot */
@@ -237,20 +278,17 @@ static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, 
 
         if (auto varType = var.type)
         {
-            /* Dereference pointer type */
-            //if (varType->opcode == spv::Op::OpTypePointer && varType->baseType)
-            //    varType = varType->baseType;
+            //if (varType->opcode == spv::Op::OpTypeArray)
+            //    resource.binding.arraySize = varType->elements;
 
-            if (varType->opcode == spv::Op::OpTypeArray)
-                resource.binding.arraySize = var.type->elements;
-            else if (varType->opcode == spv::Op::OpTypeImage)
-                resource.binding.type = ResourceType::Texture;
-
-            if (varType->storage == spv::StorageClass::Uniform && varType->DereferenceStructPtr() != nullptr)
+            if (varType->storage == spv::StorageClass::Uniform ||
+                varType->storage == spv::StorageClass::UniformConstant)
             {
-                resource.constantBufferSize = var.size;
-                resource.binding.type       = ResourceType::Buffer;
-                resource.binding.bindFlags  |= BindFlags::ConstantBuffer;
+                if (auto derefType = ReflectSpvBinding(resource.binding, varType))
+                {
+                    if (derefType->opcode == spv::Op::OpTypeStruct)
+                        resource.constantBufferSize = var.size;
+                }
             }
         }
     }

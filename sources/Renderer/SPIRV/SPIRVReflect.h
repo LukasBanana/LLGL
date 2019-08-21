@@ -27,7 +27,9 @@ class SPIRVReflect final : public SPIRVParser
         // General purpose structure for all SPIR-V module types.
         struct SpvType
         {
-            const SpvType* DereferenceStructPtr() const;
+            const SpvType* DereferencePtr() const;
+            const SpvType* DereferencePtr(const spv::Op opcodeType) const;
+            bool RefersToType(const spv::Op opcodeType) const;
 
             spv::Op                     opcode      = spv::Op::Max;             // Opcode for this type (e.g. spv::Op::OpTypeFloat).
             spv::Id                     result      = 0;                        // Result ID of this type.
@@ -38,6 +40,21 @@ class SPIRVReflect final : public SPIRVParser
             std::uint32_t               size        = 0;                        // Size (in bytes) of this type, or 0 if this is an OpTypeVoid type.
             bool                        sign        = false;                    // Specifies whether or not this is a signed type (only for OpTypeInt).
             std::vector<const SpvType*> fieldTypes;                             // List of types of each record field.
+        };
+
+        // SPIRV-V scalar constants.
+        struct SpvConstant
+        {
+            const SpvType*      type    = nullptr;
+            union
+            {
+                float           f32;
+                double          f64;
+                std::uint32_t   u32;
+                std::uint64_t   u64;
+                std::int32_t    i32;
+                std::int64_t    i64;
+            };
         };
 
         // SPIR-V structures (a.k.a. records).
@@ -114,6 +131,7 @@ class SPIRVReflect final : public SPIRVParser
         void OpTypePointer(const Instr& instr, SpvType& type);
         void OpTypeFunction(const Instr& instr, SpvType& type);
         void OpVariable(const Instr& instr);
+        void OpConstant(const Instr& instr);
 
     private:
 
@@ -123,6 +141,7 @@ class SPIRVReflect final : public SPIRVParser
         void AssertIdBound(spv::Id id) const;
 
         const SpvType* FindType(spv::Id id) const;
+        const SpvConstant* FindConstant(spv::Id id) const;
 
     private:
 
@@ -130,6 +149,7 @@ class SPIRVReflect final : public SPIRVParser
         std::vector<const char*>        names_;
 
         std::map<spv::Id, SpvType>      types_;
+        std::map<spv::Id, SpvConstant>  constants_;
         std::map<spv::Id, SpvRecord>    records_;
         std::map<spv::Id, SpvUniform>   uniforms_;
         std::map<spv::Id, SpvVarying>   varyings_;

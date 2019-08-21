@@ -93,7 +93,10 @@ enum class SamplerFilter
 
 /* ----- Structures ----- */
 
-//! Texture sampler descriptor structure.
+/**
+\brief Texture sampler descriptor structure.
+\see RenderSystem::CreateSampler
+*/
 struct LLGL_EXPORT SamplerDescriptor
 {
     //! Sampler address mode in U direction (also X axis). By default SamplerAddressMode::Repeat.

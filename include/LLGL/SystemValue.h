@@ -16,7 +16,7 @@ namespace LLGL
 /* ----- Enumerations ----- */
 
 /**
-\brief Enumeration of system values available in a shader program.
+\brief Enumeration of system values for vertex input or fragment output attributes.
 \remarks This is only used for shader code reflection.
 \remarks Here is an overview of all supported system values and their mapping to the respective shading language:
 <table>
