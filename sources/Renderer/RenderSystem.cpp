@@ -258,8 +258,8 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_
         BindFlags::VertexBuffer         |
         BindFlags::IndexBuffer          |
         BindFlags::ConstantBuffer       |
-        BindFlags::SampleBuffer         |
-        BindFlags::RWStorageBuffer      |
+        BindFlags::Sampled              |
+        BindFlags::Storage              |
         BindFlags::StreamOutputBuffer   |
         BindFlags::IndirectBuffer
     );

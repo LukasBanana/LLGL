@@ -46,7 +46,9 @@ int main()
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
 
         // Reflect shader
+        LLGL::Extent3D workGroupSize;
         auto reflect = shaderProgram->QueryReflection();
+        shaderProgram->GetWorkGroupSize(workGroupSize);
 
         for (const LLGL::VertexAttribute& attr : reflect.vertexAttributes)
         {

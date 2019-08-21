@@ -52,9 +52,9 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \code{.txt}
         resources[0] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 0 }
         resources[1] = { type: ResourceType::Buffer,  bindFlags: BindFlags::ConstantBuffer, slot: 2 }
-        resources[2] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 0 }
-        resources[3] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 1 }
-        resources[4] = { type: ResourceType::Texture, bindFlags: BindFlags::SampleBuffer,   slot: 2 }
+        resources[2] = { type: ResourceType::Texture, bindFlags: BindFlags::Sampled,        slot: 0 }
+        resources[3] = { type: ResourceType::Texture, bindFlags: BindFlags::Sampled,        slot: 1 }
+        resources[4] = { type: ResourceType::Texture, bindFlags: BindFlags::Sampled,        slot: 2 }
         resources[5] = { type: ResourceType::Sampler, bindFlags: 0,                         slot: 2 }
         \endcode
         The \c instanceDivisor and \c offset members of the vertex attributes are ignored by this function.

@@ -226,7 +226,7 @@ void GLResourceHeap::BuildStorageBufferSegments(ResourceBindingIterator& resourc
 {
     BuildBufferSegments(
         resourceIterator,
-        (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer),
+        (BindFlags::Sampled | BindFlags::Storage),
         segmentationHeader_.numStorageBufferSegments
     );
 }

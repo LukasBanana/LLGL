@@ -76,6 +76,9 @@ class DbgRenderSystem final : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
+        #if 0//TODO
+        Texture* CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc) override;
+        #endif
 
         void Release(Texture& texture) override;
 
@@ -173,6 +176,8 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers);
         void ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit);
         void ValidateTextureRegion(const DbgTexture& textureDbg, const TextureRegion& textureRegion);
+        void ValidateTextureView(const DbgTexture& sharedTextureDbg, const TextureViewDescriptor& desc);
+        void ValidateTextureViewType(const TextureType sharedTextureType, const TextureType textureViewType, const std::initializer_list<TextureType>& validTypes);
 
         void ValidateAttachmentDesc(const AttachmentDescriptor& desc);
 
@@ -181,7 +186,8 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc);
         void ValidateTextureForBinding(const DbgTexture& textureDbg, const BindingDescriptor& bindingDesc);
 
-        void ValidateBlendDescriptor(const BlendDescriptor& desc);
+        void ValidateColorMaskIsDisabled(const BlendTargetDescriptor& desc, std::size_t idx);
+        void ValidateBlendDescriptor(const BlendDescriptor& desc, bool hasFragmentShader);
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc);
         void ValidatePrimitiveTopology(const PrimitiveTopology primitiveTopology);
 

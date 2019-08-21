@@ -129,7 +129,7 @@ public:
         LLGL::BufferDescriptor instanceBufferDesc;
         {
             instanceBufferDesc.size                         = sizeof(SceneObject)*maxNumSceneObjects;
-            instanceBufferDesc.bindFlags                    = LLGL::BindFlags::RWStorageBuffer | LLGL::BindFlags::VertexBuffer;
+            instanceBufferDesc.bindFlags                    = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
             instanceBufferDesc.vertexBuffer.format          = vertexFormat[1];
             instanceBufferDesc.storageBuffer.storageType    = LLGL::StorageBufferType::RWBuffer;
             instanceBufferDesc.storageBuffer.format         = LLGL::Format::R32Float;
@@ -153,7 +153,7 @@ public:
         LLGL::BufferDescriptor argBufferDesc;
         {
             argBufferDesc.size                      = sizeof(LLGL::DrawIndirectArguments)*2;
-            argBufferDesc.bindFlags                 = LLGL::BindFlags::RWStorageBuffer | LLGL::BindFlags::IndirectBuffer;
+            argBufferDesc.bindFlags                 = LLGL::BindFlags::IndirectBuffer | LLGL::BindFlags::Storage;
             argBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWBuffer;
             argBufferDesc.storageBuffer.format      = LLGL::Format::R32UInt;
             argBufferDesc.storageBuffer.stride      = sizeof(std::uint32_t);
@@ -299,7 +299,7 @@ private:
             commands->Dispatch(sceneState.numSceneObjects, 1, 1);
 
             if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage);
+                commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
 
             // Draw scene
             commands->BeginRenderPass(*context);

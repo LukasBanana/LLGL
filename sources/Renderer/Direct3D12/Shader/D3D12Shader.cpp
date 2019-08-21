@@ -304,7 +304,7 @@ static void ReflectShaderInputBindings(
 
             case D3D_SIT_TBUFFER:
             case D3D_SIT_TEXTURE:
-                ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Texture, BindFlags::SampleBuffer, stageFlags);
+                ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Texture, BindFlags::Sampled, stageFlags);
                 break;
 
             case D3D_SIT_SAMPLER:
@@ -313,7 +313,7 @@ static void ReflectShaderInputBindings(
 
             case D3D_SIT_STRUCTURED:
             case D3D_SIT_BYTEADDRESS:
-                ReflectShaderResourceGeneric(inputBindDesc, reflection, DXTypes::Unmap(inputBindDesc.Dimension), BindFlags::SampleBuffer, stageFlags);
+                ReflectShaderResourceGeneric(inputBindDesc, reflection, DXTypes::Unmap(inputBindDesc.Dimension), BindFlags::Sampled, stageFlags);
                 break;
 
             case D3D_SIT_UAV_RWTYPED:
@@ -322,7 +322,7 @@ static void ReflectShaderInputBindings(
             case D3D_SIT_UAV_APPEND_STRUCTURED:
             case D3D_SIT_UAV_CONSUME_STRUCTURED:
             case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-                ReflectShaderResourceGeneric(inputBindDesc, reflection, DXTypes::Unmap(inputBindDesc.Dimension), BindFlags::RWStorageBuffer, stageFlags);
+                ReflectShaderResourceGeneric(inputBindDesc, reflection, DXTypes::Unmap(inputBindDesc.Dimension), BindFlags::Storage, stageFlags);
                 break;
 
             default:

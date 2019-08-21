@@ -24,7 +24,7 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
         flags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
         flags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    if ((desc.bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+    if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
         flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     if ((desc.bindFlags & BindFlags::IndirectBuffer) != 0)
         flags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;

@@ -786,7 +786,7 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
         NotifyBufferRelease(id, GLBufferTarget::UNIFORM_BUFFER);
     if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
         NotifyBufferRelease(id, GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER);
-    if ((bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+    if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
         NotifyBufferRelease(id, GLBufferTarget::SHADER_STORAGE_BUFFER);
     if ((bindFlags & BindFlags::IndirectBuffer) != 0)
     {

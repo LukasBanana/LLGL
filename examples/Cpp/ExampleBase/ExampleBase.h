@@ -38,7 +38,7 @@ std::vector<char> ReadFileBuffer(const std::string& filename);
 LLGL::Texture* LoadTextureWithRenderer(
     LLGL::RenderSystem& renderSys,
     const std::string&  filename,
-    long                bindFlags = (LLGL::BindFlags::SampleBuffer | LLGL::BindFlags::ColorAttachment)
+    long                bindFlags = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment)
 );
 
 // Save texture image to a PNG file.
@@ -219,7 +219,7 @@ protected:
 protected:
 
     // Load image from file, create texture, upload image into texture, and generate MIP-maps.
-    LLGL::Texture* LoadTexture(const std::string& filename, long bindFlags = (LLGL::BindFlags::SampleBuffer | LLGL::BindFlags::ColorAttachment));
+    LLGL::Texture* LoadTexture(const std::string& filename, long bindFlags = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment));
 
     // Save texture image to a PNG file.
     bool SaveTexture(LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);

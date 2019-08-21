@@ -186,7 +186,7 @@ private:
         LLGL::TextureDescriptor texDesc;
         {
             texDesc.type        = LLGL::TextureType::Texture2D;
-            texDesc.bindFlags   = LLGL::BindFlags::DepthStencilAttachment | LLGL::BindFlags::SampleBuffer;
+            texDesc.bindFlags   = LLGL::BindFlags::DepthStencilAttachment | LLGL::BindFlags::Sampled;
             texDesc.miscFlags   = LLGL::MiscFlags::NoInitialData;
             texDesc.format      = LLGL::Format::D32Float;
             texDesc.extent      = { resolution.width, resolution.height, 1 };
@@ -439,7 +439,7 @@ private:
             commands->EndRenderPass();
 
             if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::SampleBuffer, LLGL::StageFlags::FragmentStage);
+                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
 
             // Render everything directly into the render context
             commands->BeginRenderPass(*context);
@@ -469,7 +469,7 @@ private:
             commands->EndRenderPass();
 
             if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::SampleBuffer, LLGL::StageFlags::FragmentStage);
+                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
         }
         commands->End();
         commandQueue->Submit(*commands);

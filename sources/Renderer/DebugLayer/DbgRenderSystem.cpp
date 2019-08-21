@@ -239,6 +239,22 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc));
 }
 
+#if 0//TODO
+Texture* DbgRenderSystem::CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc)
+{
+    auto& sharedTextureDbg = LLGL_CAST(DbgTexture&, sharedTexture);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateTextureView(sharedTextureDbg, textureViewDesc);
+    }
+
+    auto textureViewInstance = instance_->CreateTextureView(sharedTextureDbg.instance, textureViewDesc);
+    return TakeOwnership(textures_, MakeUnique<DbgTexture>(*textureViewInstance, &sharedTextureDbg, textureViewDesc));
+}
+#endif
+
 void DbgRenderSystem::Release(Texture& texture)
 {
     ReleaseDbg(textures_, texture);
@@ -588,8 +604,8 @@ void DbgRenderSystem::ValidateBindFlags(long flags)
     (
         bufferOnlyFlags                     |
         textureOnlyFlags                    |
-        BindFlags::SampleBuffer             |
-        BindFlags::RWStorageBuffer
+        BindFlags::Sampled                  |
+        BindFlags::Storage
     );
 
     /* Check for unknown flags */
@@ -654,7 +670,7 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
     /* Validate flags */
     ValidateBindFlags(desc.bindFlags);
     ValidateCPUAccessFlags(desc.cpuAccessFlags, CPUAccessFlags::ReadWrite, "buffer");
-    ValidateMiscFlags(desc.miscFlags, MiscFlags::DynamicUsage, "buffer");
+    ValidateMiscFlags(desc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::NoInitialData), "buffer");
 
     /* Validate (constant-) buffer size */
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
@@ -823,7 +839,7 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
     ValidateArrayTextureLayers(desc.type, desc.arrayLayers);
     ValidateBindFlags(desc.bindFlags);
     ValidateCPUAccessFlags(desc.cpuAccessFlags, CPUAccessFlags::ReadWrite, "texture");
-    ValidateMiscFlags(desc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::FixedSamples), "texture");
+    ValidateMiscFlags(desc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::FixedSamples | MiscFlags::GenerateMips | MiscFlags::NoInitialData), "texture");
 }
 
 void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& desc)
@@ -1053,6 +1069,78 @@ void DbgRenderSystem::ValidateTextureRegion(const DbgTexture& textureDbg, const 
     }
 }
 
+void DbgRenderSystem::ValidateTextureView(const DbgTexture& sharedTextureDbg, const TextureViewDescriptor& desc)
+{
+    /* Validate texture-view features are supported */
+    if (!GetRenderingCaps().features.hasTextureViews)
+        LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "texture views not supported");
+    if (!GetRenderingCaps().features.hasTextureViewSwizzle && !IsTextureSwizzleIdentity(desc.swizzle))
+        LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "texture view swizzle not supported, but mapping is not equal to identity");
+
+    /* Validate attributes of shared texture against texture-view descriptor */
+    if (sharedTextureDbg.isTextureView)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture view cannot be shared with another texture view");
+
+    const auto mipLevelUpperBound = desc.subresource.baseMipLevel + desc.subresource.numMipLevels;
+    if (mipLevelUpperBound > sharedTextureDbg.mipLevels)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "texture-view exceeded number of MIP-map levels (" +
+            std::to_string(mipLevelUpperBound) + " specified but limit is " + std::to_string(sharedTextureDbg.mipLevels) + ")"
+        );
+    }
+
+    /* Validate type mapping for texture-view */
+    const auto srcType = sharedTextureDbg.GetType();
+    const auto dstType = desc.type;
+
+    using T = TextureType;
+
+    switch (srcType)
+    {
+        case T::Texture1D:
+            ValidateTextureViewType(srcType, dstType, { T::Texture1D, T::Texture1DArray });
+            break;
+        case T::Texture2D:
+            ValidateTextureViewType(srcType, dstType, { T::Texture2D, T::Texture2DArray });
+            break;
+        case T::Texture3D:
+            ValidateTextureViewType(srcType, dstType, { T::Texture3D });
+            break;
+        case T::TextureCube:
+            ValidateTextureViewType(srcType, dstType, { T::Texture2D, T::Texture2DArray, T::TextureCube, T::TextureCubeArray });
+            break;
+        case T::Texture1DArray:
+            ValidateTextureViewType(srcType, dstType, { T::Texture1D, T::Texture1DArray });
+            break;
+        case T::Texture2DArray:
+            ValidateTextureViewType(srcType, dstType, { T::Texture2D, T::Texture2DArray });
+            break;
+        case T::TextureCubeArray:
+            ValidateTextureViewType(srcType, dstType, { T::Texture2D, T::Texture2DArray, T::TextureCube, T::TextureCubeArray });
+            break;
+        case T::Texture2DMS:
+            ValidateTextureViewType(srcType, dstType, { T::Texture2DMS, T::Texture2DMSArray });
+            break;
+        case T::Texture2DMSArray:
+            ValidateTextureViewType(srcType, dstType, { T::Texture2DMS, T::Texture2DMSArray });
+            break;
+    }
+}
+
+void DbgRenderSystem::ValidateTextureViewType(const TextureType sharedTextureType, const TextureType textureViewType, const std::initializer_list<TextureType>& validTypes)
+{
+    if (std::find(validTypes.begin(), validTypes.end(), textureViewType) == validTypes.end())
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot share texture of type <" + std::string(ToString(sharedTextureType)) +
+            "> with texture-view of type <" + std::string(ToString(textureViewType)) + ">"
+        );
+    }
+}
+
 void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& desc)
 {
     if (auto texture = desc.texture)
@@ -1190,8 +1278,34 @@ void DbgRenderSystem::ValidateTextureForBinding(const DbgTexture& textureDbg, co
     }
 }
 
-void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& desc)
+// Converts the specified color mask into a string representation (e.g. "RGBA" or "R_G_").
+static std::string ColorMaskToString(const ColorRGBAb& color)
 {
+    std::string s;
+
+    s += (color.r ? 'R' : '_');
+    s += (color.g ? 'G' : '_');
+    s += (color.b ? 'B' : '_');
+    s += (color.a ? 'A' : '_');
+
+    return s;
+}
+
+void DbgRenderSystem::ValidateColorMaskIsDisabled(const BlendTargetDescriptor& desc, std::size_t idx)
+{
+    if (desc.colorMask.r || desc.colorMask.g || desc.colorMask.b || desc.colorMask.a)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot use color mask <" + ColorMaskToString(desc.colorMask) +
+            "> of blend target <" + std::to_string(idx) + "> without a fragment shader"
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& desc, bool hasFragmentShader)
+{
+    /* Validate proper use of logic pixel operations */
     if (desc.logicOp != LogicOp::Disabled)
     {
         if (!GetRenderingCaps().features.hasLogicOp)
@@ -1216,13 +1330,34 @@ void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& desc)
             }
         }
     }
+
+    /* Validate color masks are disabled when there is no fragment shader */
+    if (!hasFragmentShader)
+    {
+        if (desc.independentBlendEnabled)
+        {
+            for (std::size_t i = 0; i < sizeof(desc.targets)/sizeof(desc.targets[0]); ++i)
+                ValidateColorMaskIsDisabled(desc.targets[i], i);
+        }
+        else
+            ValidateColorMaskIsDisabled(desc.targets[0], 0);
+    }
 }
 
 void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc)
 {
     if (desc.rasterizer.conservativeRasterization && !features_.hasConservativeRasterization)
         LLGL_DBG_ERROR_NOT_SUPPORTED("conservative rasterization");
-    ValidateBlendDescriptor(desc.blend);
+
+    /* Determine if the shader program contains a fragment shader */
+    bool hasFragmentShader = false;
+    if (desc.shaderProgram)
+    {
+        auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram);
+        hasFragmentShader = shaderProgramDbg->HasFragmentShader();
+    }
+
+    ValidateBlendDescriptor(desc.blend, hasFragmentShader);
     ValidatePrimitiveTopology(desc.primitiveTopology);
 }
 

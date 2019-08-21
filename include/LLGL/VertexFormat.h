@@ -25,6 +25,7 @@ namespace LLGL
 \remarks A vertex format is required to describe how the vertex attributes are layed out inside a vertex buffer.
 \see BufferDescriptor::VertexBuffer::format
 \see ShaderProgramDescriptor::vertexFormats
+\todo Remove this struct and move both \c stride and \c inputSlot into \c VertexAttribute.
 */
 struct LLGL_EXPORT VertexFormat
 {

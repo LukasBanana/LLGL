@@ -703,12 +703,12 @@ void GLImmediateCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t s
     SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
 }
 
-void GLImmediateCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+void GLImmediateCommandBuffer::SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
 }
 
-void GLImmediateCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+void GLImmediateCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
 }
@@ -747,7 +747,7 @@ void GLImmediateCommandBuffer::ResetResourceSlots(
             {
                 if ((bindFlags & BindFlags::ConstantBuffer) != 0)
                     stateMngr_->UnbindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, first, count);
-                if ((bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+                if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
                     stateMngr_->UnbindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, first, count);
                 if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
                     stateMngr_->UnbindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, first, count);
@@ -756,10 +756,10 @@ void GLImmediateCommandBuffer::ResetResourceSlots(
 
             case ResourceType::Texture:
             {
-                if ((bindFlags & BindFlags::SampleBuffer) != 0)
+                if ((bindFlags & BindFlags::Sampled) != 0)
                     stateMngr_->UnbindTextures(first, count);
                 #if 0//TODO
-                if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
+                if ((bindFlags & BindFlags::Storage) != 0)
                     stateMngr_->UnbindImages(first, count);
                 #endif
             }

@@ -43,12 +43,13 @@ public enum class BindFlags
     VertexBuffer            = (1 << 0),
     IndexBuffer             = (1 << 1),
     ConstantBuffer          = (1 << 2),
-    SampleBuffer            = (1 << 3),
-    RWStorageBuffer         = (1 << 4),
-    StreamOutputBuffer      = (1 << 5),
-    IndirectBuffer          = (1 << 6),
+    StreamOutputBuffer      = (1 << 3),
+    IndirectBuffer          = (1 << 4),
+    Sampled                 = (1 << 5),
+    Storage                 = (1 << 6),
     ColorAttachment         = (1 << 7),
     DepthStencilAttachment  = (1 << 8),
+    CombinedTextureSampler  = (1 << 9),
 };
 
 [Flags]

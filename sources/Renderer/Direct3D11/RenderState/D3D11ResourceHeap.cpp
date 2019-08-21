@@ -228,7 +228,7 @@ void D3D11ResourceHeap::BuildShaderResourceViewSegments(ResourceBindingIterator&
     auto textureBindings = CollectD3DResourceBindings(
         resourceIterator,
         ResourceType::Texture,
-        BindFlags::SampleBuffer,
+        BindFlags::Sampled,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
@@ -248,12 +248,12 @@ void D3D11ResourceHeap::BuildShaderResourceViewSegments(ResourceBindingIterator&
     auto bufferBindings = CollectD3DResourceBindings(
         resourceIterator,
         ResourceType::Buffer,
-        BindFlags::SampleBuffer,
+        BindFlags::Sampled,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
             auto bufferD3D = LLGL_CAST(D3D11Buffer*, resource);
-            if ((bufferD3D->GetBindFlags() & BindFlags::SampleBuffer) != 0)
+            if ((bufferD3D->GetBindFlags() & BindFlags::Sampled) != 0)
             {
                 auto bufferWithRVD3D = LLGL_CAST(D3D11BufferWithRV*, bufferD3D);
                 if (auto srv = bufferWithRVD3D->GetSRV())
@@ -290,7 +290,7 @@ void D3D11ResourceHeap::BuildUnorderedAccessViewSegments(ResourceBindingIterator
     auto textureBindings = CollectD3DResourceBindings(
         resourceIterator,
         ResourceType::Texture,
-        BindFlags::RWStorageBuffer,
+        BindFlags::Storage,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
@@ -311,12 +311,12 @@ void D3D11ResourceHeap::BuildUnorderedAccessViewSegments(ResourceBindingIterator
     auto bufferBindings = CollectD3DResourceBindings(
         resourceIterator,
         ResourceType::Buffer,
-        BindFlags::RWStorageBuffer,
+        BindFlags::Storage,
         stage,
         [](D3DResourceBinding& binding, Resource* resource, std::uint32_t slot, long stageFlags) -> bool
         {
             auto bufferD3D = LLGL_CAST(D3D11Buffer*, resource);
-            if ((bufferD3D->GetBindFlags() & BindFlags::RWStorageBuffer) != 0)
+            if ((bufferD3D->GetBindFlags() & BindFlags::Storage) != 0)
             {
                 auto bufferWithRVD3D = LLGL_CAST(D3D11BufferWithRV*, bufferD3D);
                 if (auto uav = bufferWithRVD3D->GetUAV())

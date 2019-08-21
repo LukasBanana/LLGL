@@ -20,7 +20,7 @@ namespace LLGL
 /**
 \brief Extended command buffer interface with dynamic state access for shader resources (i.e. Constant Buffers, Storage Buffers, Textures, and Samplers).
 \remarks This is an extended command interface for the legacy graphics APIs such as OpenGL and Direct3D 11 to dynamically change bounded shader resources.
-\note Only supported with: OpenGL, Direct3D 11.
+\note Only supported with: OpenGL, Direct3D 11, Metal.
 */
 class LLGL_EXPORT CommandBufferExt : public CommandBuffer
 {
@@ -40,26 +40,29 @@ class LLGL_EXPORT CommandBufferExt : public CommandBuffer
         \param[in] stageFlags Specifies at which shader stages the constant buffer is to be set. By default all shader stages are affected.
         \see RenderSystem::WriteBuffer
         \see StageFlags
+        \todo Replace with \c SetBuffer function.
         */
         virtual void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
 
         /**
-        \brief Sets the active sample buffer of the specified slot index for subsequent drawing and compute operations.
-        \param[in] buffer Specifies the sample buffer to set. This buffer must have been created with the BindFlags::SampleBuffer binding flag.
+        \brief Sets the active sampled buffer of the specified slot index for subsequent drawing and compute operations.
+        \param[in] buffer Specifies the sample buffer to set. This buffer must have been created with the BindFlags::Sampled binding flag.
         \param[in] slot Specifies the slot index where to put the storage buffer.
         \param[in] stageFlags Specifies at which shader stages the storage buffer is to be set and which resource views are to be set.
         By default all shader stages and all resource views are affected.
+        \todo Replace with \c SetBuffer function.
         */
-        virtual void SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
+        virtual void SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active read/write storage buffer of the specified slot index for subsequent drawing and compute operations.
-        \param[in] buffer Specifies the storage buffer to set. This buffer must have been created with the BindFlags::RWStorageBuffer binding flag.
+        \param[in] buffer Specifies the storage buffer to set. This buffer must have been created with the BindFlags::Storage binding flag.
         \param[in] slot Specifies the slot index where to put the storage buffer.
         \param[in] stageFlags Specifies at which shader stages the storage buffer is to be set and which resource views are to be set.
         By default all shader stages and all resource views are affected.
+        \todo Replace with \c SetBuffer function.
         */
-        virtual void SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
+        virtual void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active texture of the specified slot index for subsequent drawing and compute operations.

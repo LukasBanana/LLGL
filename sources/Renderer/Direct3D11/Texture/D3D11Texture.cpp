@@ -626,9 +626,9 @@ void D3D11Texture::CreateDefaultResourceViews(
     const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc,
     long                                    bindFlags)
 {
-    if ((bindFlags & BindFlags::SampleBuffer) != 0)
+    if ((bindFlags & BindFlags::Sampled) != 0)
         CreateDefaultSRV(device, srvDesc);
-    if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((bindFlags & BindFlags::Storage) != 0)
         CreateDefaultUAV(device, uavDesc);
 }
 

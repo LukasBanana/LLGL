@@ -647,7 +647,7 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
         {
             /* Initialize resource view descriptor */
             resource.binding.type       = ResourceType::Buffer;
-            resource.binding.bindFlags  = BindFlags::RWStorageBuffer;
+            resource.binding.bindFlags  = BindFlags::Storage;
 
             /* Query shader storage block name */
             GLsizei nameLength = 0;
@@ -690,9 +690,13 @@ void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
             ShaderResource resource;
             {
                 /* Initialize name, type, and binding flags for resource view */
-                resource.binding.name       = std::string(uniformName.data());
-                resource.binding.type       = ResourceType::Texture;
-                resource.binding.bindFlags  = (uniformType == UniformType::Image ? BindFlags::RWStorageBuffer : BindFlags::SampleBuffer);
+                resource.binding.name = std::string(uniformName.data());
+                resource.binding.type = ResourceType::Texture;
+
+                if (uniformType == UniformType::Image)
+                    resource.binding.bindFlags = BindFlags::Storage;
+                else
+                    resource.binding.bindFlags = BindFlags::Sampled | BindFlags::CombinedTextureSampler;
 
                 /* Get binding slot from uniform value */
                 GLint uniformValue      = 0;

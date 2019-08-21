@@ -807,12 +807,12 @@ void GLDeferredCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t sl
     SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
 }
 
-void GLDeferredCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+void GLDeferredCommandBuffer::SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
 }
 
-void GLDeferredCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
+void GLDeferredCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
 }
@@ -860,7 +860,7 @@ void GLDeferredCommandBuffer::ResetResourceSlots(
             {
                 if ((bindFlags & BindFlags::ConstantBuffer) != 0)
                     cmd.resetUBO = 1;
-                if ((bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+                if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
                     cmd.resetSSAO = 1;
                 if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
                     cmd.resetTransformFeedback = 1;
@@ -869,9 +869,9 @@ void GLDeferredCommandBuffer::ResetResourceSlots(
 
             case ResourceType::Texture:
             {
-                if ((bindFlags & BindFlags::SampleBuffer) != 0)
+                if ((bindFlags & BindFlags::Sampled) != 0)
                     cmd.resetTextures = 1;
-                if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
+                if ((bindFlags & BindFlags::Storage) != 0)
                     cmd.resetImages = 1;
             }
             break;

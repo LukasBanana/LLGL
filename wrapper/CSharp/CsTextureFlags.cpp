@@ -15,7 +15,7 @@ namespace SharpLLGL
 TextureDescriptor::TextureDescriptor()
 {
     Type            = TextureType::Texture1D;
-    BindFlags       = SharpLLGL::BindFlags::SampleBuffer | SharpLLGL::BindFlags::ColorAttachment;
+    BindFlags       = SharpLLGL::BindFlags::Sampled | SharpLLGL::BindFlags::ColorAttachment;
     CPUAccessFlags  = SharpLLGL::CPUAccessFlags::None;
     MiscFlags       = SharpLLGL::MiscFlags::FixedSamples;
     Format          = SharpLLGL::Format::RGBA8UNorm;

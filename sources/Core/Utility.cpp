@@ -189,7 +189,7 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const Storage
     BufferDescriptor desc;
     {
         desc.size                       = size;
-        desc.bindFlags                  = BindFlags::RWStorageBuffer;
+        desc.bindFlags                  = BindFlags::Storage;
         desc.cpuAccessFlags             = cpuAccessFlags;
         desc.storageBuffer.storageType  = storageType;
         desc.storageBuffer.stride       = stride;
@@ -360,12 +360,12 @@ static void ParseLayoutSignatureResourceType(const char*& s, ResourceType& type,
     };
     const ResourceTypeIdent g_resources[] =
     {
-        { "cbuffer",   ResourceType::Buffer,  BindFlags::ConstantBuffer  },
-        { "sbuffer",   ResourceType::Buffer,  BindFlags::SampleBuffer    },
-        { "rwbuffer",  ResourceType::Buffer,  BindFlags::RWStorageBuffer },
-        { "texture",   ResourceType::Texture, BindFlags::SampleBuffer    },
-        { "rwtexture", ResourceType::Texture, BindFlags::RWStorageBuffer },
-        { "sampler",   ResourceType::Sampler, 0                          },
+        { "cbuffer",   ResourceType::Buffer,  BindFlags::ConstantBuffer },
+        { "buffer",    ResourceType::Buffer,  BindFlags::Sampled        },
+        { "rwbuffer",  ResourceType::Buffer,  BindFlags::Storage        },
+        { "texture",   ResourceType::Texture, BindFlags::Sampled        },
+        { "rwtexture", ResourceType::Texture, BindFlags::Storage        },
+        { "sampler",   ResourceType::Sampler, 0                         },
     };
 
     /* Parse identifier (find end of alphabetic characters) */

@@ -48,7 +48,7 @@ GLShaderBindingLayout::GLShaderBindingLayout(const GLPipelineLayout& pipelineLay
     {
         if (!binding.name.empty())
         {
-            if (binding.type == ResourceType::Buffer && (binding.bindFlags & (BindFlags::RWStorageBuffer | BindFlags::SampleBuffer)) != 0)
+            if (binding.type == ResourceType::Buffer && (binding.bindFlags & (BindFlags::Storage | BindFlags::Sampled)) != 0)
             {
                 bindings_.push_back({ binding.name, binding.slot });
                 ++numShaderStorageBindings_;

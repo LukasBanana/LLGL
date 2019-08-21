@@ -29,9 +29,9 @@ UINT DXGetBufferBindFlags(long bindFlags)
         flagsD3D |= D3D11_BIND_CONSTANT_BUFFER;
     if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
         flagsD3D |= D3D11_BIND_STREAM_OUTPUT;
-    if ((bindFlags & BindFlags::SampleBuffer) != 0)
+    if ((bindFlags & BindFlags::Sampled) != 0)
         flagsD3D |= D3D11_BIND_SHADER_RESOURCE;
-    if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((bindFlags & BindFlags::Storage) != 0)
         flagsD3D |= D3D11_BIND_UNORDERED_ACCESS;
 
     return flagsD3D;
@@ -48,10 +48,10 @@ UINT DXGetTextureBindFlags(const TextureDescriptor& desc)
     else if (hasMipMaps || (desc.bindFlags & BindFlags::ColorAttachment) != 0)
         flagsD3D |= D3D11_BIND_RENDER_TARGET;
 
-    if (hasMipMaps || (desc.bindFlags & BindFlags::SampleBuffer) != 0)
+    if (hasMipMaps || (desc.bindFlags & BindFlags::Sampled) != 0)
         flagsD3D |= D3D11_BIND_SHADER_RESOURCE;
 
-    if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::Storage) != 0)
         flagsD3D |= D3D11_BIND_UNORDERED_ACCESS;
 
     return flagsD3D;
@@ -96,7 +96,7 @@ UINT DXGetBufferMiscFlags(const BufferDescriptor& desc)
     if ((desc.bindFlags & BindFlags::IndirectBuffer) != 0)
         flagsD3D |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
 
-    if ((desc.bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+    if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
     {
         if (IsStructuredBuffer(desc.storageBuffer.storageType))
             flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
@@ -127,7 +127,7 @@ UINT DXGetTextureMiscFlags(const TextureDescriptor& desc)
 
 D3D11_USAGE DXGetBufferUsage(const BufferDescriptor& desc)
 {
-    if ((desc.bindFlags & BindFlags::RWStorageBuffer) == 0)
+    if ((desc.bindFlags & BindFlags::Storage) == 0)
     {
         if ((desc.miscFlags & MiscFlags::DynamicUsage) != 0)
             return D3D11_USAGE_DYNAMIC;

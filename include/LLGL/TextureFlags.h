@@ -212,11 +212,11 @@ struct TextureDescriptor
     TextureType     type            = TextureType::Texture2D;
 
     /**
-    \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default BindFlags::SampleBuffer and BindFlags::ColorAttachment.
+    \brief These flags describe to which resource slots and render target attachments the texture can be bound. By default BindFlags::Sampled and BindFlags::ColorAttachment.
     \remarks When the texture will be bound as a color attachment to a render target for instance, the BindFlags::ColorAttachment flag is required.
     \see BindFlags
     */
-    long            bindFlags       = (BindFlags::SampleBuffer | BindFlags::ColorAttachment);
+    long            bindFlags       = (BindFlags::Sampled | BindFlags::ColorAttachment);
 
     /**
     \brief CPU read/write access flags. By default 0.

@@ -47,7 +47,7 @@ static VkDescriptorType GetVkDescriptorType(const BindingDescriptor& desc)
         case ResourceType::Buffer:
             if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
                 return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            if ((desc.bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+            if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
                 return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             break;
         default:

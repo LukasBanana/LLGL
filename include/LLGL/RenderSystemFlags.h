@@ -378,8 +378,8 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether storage buffers (also "read/write buffers") are supported.
-    \see BindFlags::SampleBuffer
-    \see BindFlags::RWStorageBuffer
+    \see BindFlags::Sampled
+    \see BindFlags::Storage
     */
     bool hasStorageBuffers              = false;
 

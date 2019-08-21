@@ -26,6 +26,7 @@ namespace LLGL
 /**
 \brief Storage buffer type enumeration.
 \note Only supported with: Direct3D 11, Direct3D 12.
+\see BufferDescriptor::StorageBuffer::storageType
 */
 enum class StorageBufferType
 {
@@ -115,7 +116,7 @@ struct BufferDescriptor
 
         /**
         \brief Specifies the stride (in bytes) of each element in a storage buffer. By default 0.
-        \remarks If the buffer has the BindFlags::SampleBuffer or BindFlags::RWStorageBuffer flag, then \c stride must not be zero.
+        \remarks If the buffer has the BindFlags::Sampled or BindFlags::Storage flag, then \c stride must not be zero.
         \see BufferDescriptor::bindFlags
         */
         std::uint32_t       stride      = 0;
@@ -123,7 +124,7 @@ struct BufferDescriptor
 
     /**
     \brief Buffer size (in bytes). This must not be larger than RenderingLimits::maxBufferSize. By default 0.
-    \remarks If the buffer has the BindFlags::SampleBuffer or BindFlags::RWStorageBuffer flag, then \c size must be a multiple of <code>storageBuffer.stride</code>.
+    \remarks If the buffer has the BindFlags::Sampled or BindFlags::Storage flag, then \c size must be a multiple of <code>storageBuffer.stride</code>.
     \see RenderingLimits::maxBufferSize
     \see bindFlags
     \see StorageBuffer::stride

@@ -211,7 +211,7 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
         [&](Resource& resource)
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
-            if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::SampleBuffer, bindingIndex))
+            if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
             {
                 bufferD3D.CreateShaderResourceView(device, cpuDescHandle);
                 cpuDescHandle.ptr += cpuDescStride;
@@ -226,7 +226,7 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
         [&](Resource& resource)
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
-            if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::SampleBuffer, bindingIndex))
+            if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
             {
                 textureD3D.CreateShaderResourceView(device, cpuDescHandle);
                 cpuDescHandle.ptr += cpuDescStride;
@@ -252,7 +252,7 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
         [&](Resource& resource)
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
-            if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::RWStorageBuffer, bindingIndex))
+            if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
             {
                 bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle);
                 cpuDescHandle.ptr += cpuDescStride;
@@ -267,7 +267,7 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
         [&](Resource& resource)
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
-            if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::RWStorageBuffer, bindingIndex))
+            if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
             {
                 textureD3D.CreateUnorderedAccessView(device, cpuDescHandle);
                 cpuDescHandle.ptr += cpuDescStride;

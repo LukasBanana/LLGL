@@ -46,55 +46,55 @@ class Sampler;
 \brief Returns a TextureDescriptor structure with the TextureType::Texture1D type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture1DDesc(Format format, std::uint32_t width, long bindFlags = (BindFlags::ColorAttachment | BindFlags::SampleBuffer));
+LLGL_EXPORT TextureDescriptor Texture1DDesc(Format format, std::uint32_t width, long bindFlags = (BindFlags::ColorAttachment | BindFlags::Sampled));
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2D type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture2DDesc(Format format, std::uint32_t width, std::uint32_t height, long bindFlags = (BindFlags::ColorAttachment | BindFlags::SampleBuffer));
+LLGL_EXPORT TextureDescriptor Texture2DDesc(Format format, std::uint32_t width, std::uint32_t height, long bindFlags = (BindFlags::ColorAttachment | BindFlags::Sampled));
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture3D type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture3DDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t depth, long bindFlags = (BindFlags::ColorAttachment | BindFlags::SampleBuffer));
+LLGL_EXPORT TextureDescriptor Texture3DDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t depth, long bindFlags = (BindFlags::ColorAttachment | BindFlags::Sampled));
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::TextureCube type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width, std::uint32_t height, long bindFlags = (BindFlags::ColorAttachment | BindFlags::SampleBuffer));
+LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width, std::uint32_t height, long bindFlags = (BindFlags::ColorAttachment | BindFlags::Sampled));
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture1DArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t arrayLayers, long bindFlags = (BindFlags::ColorAttachment | BindFlags::SampleBuffer));
+LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t arrayLayers, long bindFlags = (BindFlags::ColorAttachment | BindFlags::Sampled));
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2DArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long bindFlags = (BindFlags::ColorAttachment | BindFlags::SampleBuffer));
+LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long bindFlags = (BindFlags::ColorAttachment | BindFlags::Sampled));
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::TextureCubeArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long bindFlags = (BindFlags::ColorAttachment | BindFlags::SampleBuffer));
+LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long bindFlags = (BindFlags::ColorAttachment | BindFlags::Sampled));
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2DMS type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t samples, long bindFlags = (BindFlags::ColorAttachment | BindFlags::SampleBuffer));
+LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t samples, long bindFlags = (BindFlags::ColorAttachment | BindFlags::Sampled));
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2DMSArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, std::uint32_t samples, long bindFlags = (BindFlags::ColorAttachment | BindFlags::SampleBuffer));
+LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, std::uint32_t samples, long bindFlags = (BindFlags::ColorAttachment | BindFlags::Sampled));
 
 /* ----- BufferDescriptor utility functions ----- */
 
@@ -167,10 +167,10 @@ LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflection& 
 \param[in] layoutSignature Specifies the string for the layout signature. This string must not be null. The syntax for this string is as follows:
 - Each pair of binding point type (i.e. BindingDescriptor::type) and binding flags (i.e. BindingDescriptor::bindFlags) is specified by one of the following identifiers:
     - <code>cbuffer</code> for constant buffers (i.e. ResourceType::Buffer and BindFlags::ConstantBuffer).
-    - <code>sbuffer</code> for sample buffers (i.e. ResourceType::Buffer and BindFlags::SampleBuffer).
-    - <code>rwbuffer</code> for read/write storage buffers (i.e. ResourceType::Buffer and BindFlags::RWStorageBuffer).
-    - <code>texture</code> for textures (i.e. ResourceType::Texture and BindFlags::SampleBuffer).
-    - <code>rwtexture</code> for read/write textures (i.e. ResourceType::Texture and BindFlags::RWStorageBuffer).
+    - <code>buffer</code> for sampled buffers (i.e. ResourceType::Buffer and BindFlags::Sampled).
+    - <code>rwbuffer</code> for read/write storage buffers (i.e. ResourceType::Buffer and BindFlags::Storage).
+    - <code>texture</code> for textures (i.e. ResourceType::Texture and BindFlags::Sampled).
+    - <code>rwtexture</code> for read/write textures (i.e. ResourceType::Texture and BindFlags::Storage).
     - <code>sampler</code> for sampler states (i.e. ResourceType::Sampler).
 - Optionally, the resource <b>name</b> is specified as an arbitrary identifier followed by the at-sign (e.g. <code>"texture(myColorMap@1)"</code>).
 - The <b>slot</b> of each binding point (i.e. BindingDescriptor::slot) is specified as an integral number within brackets (e.g. <code>"texture(1)"</code>).
@@ -193,8 +193,8 @@ LLGL::PipelineLayoutDescriptor myLayoutDescStd;
 
 myLayoutDescStd.bindings = {
     LLGL::BindingDescriptor{ "Scene",    LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0u,     },
-    LLGL::BindingDescriptor{             LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 1u      },
-    LLGL::BindingDescriptor{ "TexArray", LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,   LLGL::StageFlags::FragmentStage,                                 2u, 4u, },
+    LLGL::BindingDescriptor{             LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 1u      },
+    LLGL::BindingDescriptor{ "TexArray", LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 2u, 4u, },
     LLGL::BindingDescriptor{             LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage,                                 3u      },
 };
 

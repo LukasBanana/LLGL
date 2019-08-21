@@ -298,19 +298,18 @@ class LLGL_EXPORT RenderSystem : public Interface
         If this is non-null, it is used to initialize the texture data.
         This parameter will be ignored if the texture type is a multi-sampled texture (i.e. TextureType::Texture2DMS or TextureType::Texture2DMSArray).
         \see WriteTexture
-        \see RenderSystemConfiguration::imageInitialization
         */
         virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) = 0;
 
-        #if 0
+        #if 0//TODO
         /**
         \brief Creates a new texture view that shares the image data of the specified shared texture.
         \param[in] sharedTexture Specifies the texture whose image data is to be shared with the new texture view.
         This must not be a texture view itself, i.e. a texture view cannot be created from another texture view.
-        \param[in] textireViewDesc Specifies the texture view descriptor.
-        \see Texture::IsTextureView
+        \param[in] textureViewDesc Specifies the texture view descriptor.
+        \remarks If the shared texture object (specified by \c sharedTexture) is deleted, this texture view must no longer be used either.
         */
-        virtual Texture* CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc) = 0;
+        virtual Texture* CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc) { return nullptr; }// = 0; //TODO: remove default implementation
         #endif
 
         //! Releases the specified texture object. After this call, the specified object must no longer be used.

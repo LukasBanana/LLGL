@@ -449,14 +449,14 @@ static D3D12_RESOURCE_FLAGS GetD3DTextureResourceFlags(const TextureDescriptor& 
 {
     D3D12_RESOURCE_FLAGS flagsD3D = D3D12_RESOURCE_FLAG_NONE;
 
-    if ((desc.bindFlags & BindFlags::SampleBuffer) == 0)
+    if ((desc.bindFlags & BindFlags::Sampled) == 0)
         flagsD3D |= (D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
     else if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
         flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
     else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
         flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-    if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::Storage) != 0)
         flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
     return flagsD3D;

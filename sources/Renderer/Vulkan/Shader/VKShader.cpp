@@ -236,7 +236,7 @@ static const SPIRVReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding
 
                 case spv::Op::OpTypeImage:
                     binding.type       = ResourceType::Texture;
-                    binding.bindFlags  |= BindFlags::SampleBuffer;
+                    binding.bindFlags  |= BindFlags::Sampled;
                     return derefType;
 
                 case spv::Op::OpTypeSampler:
@@ -245,7 +245,7 @@ static const SPIRVReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding
 
                 case spv::Op::OpTypeSampledImage:
                     binding.type       = ResourceType::Texture;
-                    binding.bindFlags  |= BindFlags::SampleBuffer;
+                    binding.bindFlags  |= (BindFlags::Sampled | BindFlags::CombinedTextureSampler);
                     return derefType;
 
                 case spv::Op::OpTypeStruct:

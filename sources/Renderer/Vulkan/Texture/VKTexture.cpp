@@ -262,16 +262,16 @@ static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
         usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
     /* Enable sampling the image */
-    if ((desc.bindFlags & BindFlags::SampleBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::Sampled) != 0)
         usageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
     /* Enable load/store operations on the image */
-    if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::Storage) != 0)
         usageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
 
     #if 0//???
     /* Enable input attachment bit when used for reading AND as attachment */
-    if ( (desc.bindFlags & (BindFlags::SampleBuffer    | BindFlags::RWStorageBuffer       )) != 0 &&
+    if ( (desc.bindFlags & (BindFlags::Sampled         | BindFlags::Storage               )) != 0 &&
          (desc.bindFlags & (BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment)) != 0 )
     {
         usageFlags |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;

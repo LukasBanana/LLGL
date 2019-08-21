@@ -105,7 +105,7 @@ void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
 
 static bool NeedsBufferResourceViews(long bindFlags)
 {
-    return ((bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0);
+    return ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0);
 }
 
 static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)

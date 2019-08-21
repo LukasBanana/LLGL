@@ -186,7 +186,7 @@ private:
         LLGL::TextureDescriptor textureDesc;
         {
             textureDesc.type            = LLGL::TextureType::Texture2D;
-            textureDesc.bindFlags       = LLGL::BindFlags::DepthStencilAttachment | LLGL::BindFlags::SampleBuffer;
+            textureDesc.bindFlags       = LLGL::BindFlags::DepthStencilAttachment | LLGL::BindFlags::Sampled;
             textureDesc.format          = LLGL::Format::D32Float;
             textureDesc.extent.width    = shadowMapResolution.width;
             textureDesc.extent.height   = shadowMapResolution.height;

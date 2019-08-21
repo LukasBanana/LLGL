@@ -275,7 +275,7 @@ private:
             texDesc.extent.height   = static_cast<std::uint32_t>(texHeight);
             texDesc.extent.depth    = 1;
             texDesc.arrayLayers     = static_cast<std::uint32_t>(texFilenames.size());
-            texDesc.bindFlags       = LLGL::BindFlags::SampleBuffer;
+            texDesc.bindFlags       = LLGL::BindFlags::Sampled;
         }
         auto tex = renderer->CreateTexture(texDesc, &srcImageDesc);
 

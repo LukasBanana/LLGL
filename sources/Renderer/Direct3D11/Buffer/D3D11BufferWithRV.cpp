@@ -55,10 +55,10 @@ D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescripto
     auto format         = GetD3DResourceViewFormat(desc.storageBuffer);
     auto numElements    = static_cast<UINT>(desc.size) / desc.storageBuffer.stride;
 
-    if ((desc.bindFlags & BindFlags::SampleBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::Sampled) != 0)
         CreateNativeSRV(device, format, 0, numElements);
 
-    if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::Storage) != 0)
         CreateNativeUAV(device, format, 0, numElements, GetUAVFlags(desc.storageBuffer));
 }
 

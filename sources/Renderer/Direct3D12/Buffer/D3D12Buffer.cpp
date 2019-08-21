@@ -161,7 +161,7 @@ static D3D12_RESOURCE_FLAGS GetD3DResourceFlags(const BufferDescriptor& desc)
 {
     UINT flags = 0;
 
-    if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::Storage) != 0)
         flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
     return static_cast<D3D12_RESOURCE_FLAGS>(flags);
@@ -175,7 +175,7 @@ static D3D12_RESOURCE_STATES GetD3DUsageState(long bindFlags)
         flagsD3D |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
     if ((bindFlags & BindFlags::IndexBuffer) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
-    if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((bindFlags & BindFlags::Storage) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
     if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_STREAM_OUT;

@@ -917,7 +917,7 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, lon
     profile_.constantBufferBindings++;
 }
 
-void DbgCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+void DbgCommandBuffer::SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
@@ -927,16 +927,16 @@ void DbgCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long 
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::SampleBuffer, "BindFlags::SampleBuffer");
+        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::Sampled, "BindFlags::Sampled");
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
-    instanceExt->SetSampleBuffer(bufferDbg.instance, slot, stageFlags);
+    instanceExt->SetSampledBuffer(bufferDbg.instance, slot, stageFlags);
 
-    profile_.sampleBufferBindings++;
+    profile_.sampledBufferBindings++;
 }
 
-void DbgCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
@@ -946,13 +946,13 @@ void DbgCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, lo
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::RWStorageBuffer, "BindFlags::RWStorageBuffer");
+        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::Storage, "BindFlags::Storage");
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
-    instanceExt->SetRWStorageBuffer(bufferDbg.instance, slot, stageFlags);
+    instanceExt->SetStorageBuffer(bufferDbg.instance, slot, stageFlags);
 
-    profile_.rwStorageBufferBindings++;
+    profile_.storageBufferBindings++;
 }
 
 void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)

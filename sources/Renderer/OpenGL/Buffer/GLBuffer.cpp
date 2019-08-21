@@ -29,7 +29,7 @@ static GLBufferTarget FindPrimaryBufferTarget(long bindFlags)
         return GLBufferTarget::UNIFORM_BUFFER;
     if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
         return GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER;
-    if ((bindFlags & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0)
+    if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
         return GLBufferTarget::SHADER_STORAGE_BUFFER;
     if ((bindFlags & BindFlags::IndirectBuffer) != 0)
         return GLBufferTarget::DRAW_INDIRECT_BUFFER;

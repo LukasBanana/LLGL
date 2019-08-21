@@ -49,7 +49,7 @@ static UINT     g_zeroCounters[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT]       
 
 static bool HasBufferResourceViews(const Buffer& buffer)
 {
-    return ((buffer.GetBindFlags() & (BindFlags::SampleBuffer | BindFlags::RWStorageBuffer)) != 0);
+    return ((buffer.GetBindFlags() & (BindFlags::Sampled | BindFlags::Storage)) != 0);
 }
 
 
@@ -579,7 +579,7 @@ void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, l
     SetConstantBuffersOnStages(slot, 1, &resource, stageFlags);
 }
 
-void D3D11CommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+void D3D11CommandBuffer::SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     if (HasBufferResourceViews(buffer))
     {
@@ -590,7 +590,7 @@ void D3D11CommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, lon
     }
 }
 
-void D3D11CommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     if (HasBufferResourceViews(buffer))
     {
@@ -763,22 +763,22 @@ void D3D11CommandBuffer::ResetBufferResourceSlots(std::uint32_t firstSlot, std::
     }
 
     /* Reset sample buffer slots */
-    if ((bindFlags & BindFlags::SampleBuffer) != 0)
+    if ((bindFlags & BindFlags::Sampled) != 0)
         ResetResourceSlotsSRV(firstSlot, numSlots, stageFlags);
 
     /* Reset read/write storage buffer slots */
-    if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((bindFlags & BindFlags::Storage) != 0)
         ResetResourceSlotsUAV(firstSlot, numSlots, stageFlags);
 }
 
 void D3D11CommandBuffer::ResetTextureResourceSlots(std::uint32_t firstSlot, std::uint32_t numSlots, long bindFlags, long stageFlags)
 {
     /* Reset sample buffer slots */
-    if ((bindFlags & BindFlags::SampleBuffer) != 0)
+    if ((bindFlags & BindFlags::Sampled) != 0)
         ResetResourceSlotsSRV(firstSlot, numSlots, stageFlags);
 
     /* Reset read/write storage buffer slots */
-    if ((bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((bindFlags & BindFlags::Storage) != 0)
         ResetResourceSlotsUAV(firstSlot, numSlots, stageFlags);
 }
 

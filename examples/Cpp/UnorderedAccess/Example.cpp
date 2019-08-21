@@ -131,8 +131,8 @@ public:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer,    LLGL::StageFlags::ComputeStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage, 0 },
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::ComputeStage, 0 },
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage, 0 },
             };
         }
         computePipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -149,8 +149,8 @@ public:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::BindFlags::SampleBuffer, LLGL::StageFlags::FragmentStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                             LLGL::StageFlags::FragmentStage, 0 },
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, 0 },
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Sampler, 0,                        LLGL::StageFlags::FragmentStage, 0 },
             };
         }
         graphicsPipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -173,7 +173,7 @@ public:
         // Create texture with unordered access
         LLGL::TextureDescriptor outputTextureDesc = inputTexture->QueryDesc();
         {
-            outputTextureDesc.bindFlags = LLGL::BindFlags::SampleBuffer | LLGL::BindFlags::RWStorageBuffer;
+            outputTextureDesc.bindFlags = LLGL::BindFlags::Sampled | LLGL::BindFlags::Storage;
             outputTextureDesc.mipLevels = 1;
         }
         outputTexture = renderer->CreateTexture(outputTextureDesc);
@@ -226,7 +226,7 @@ private:
 
             // Reset texture from shader output binding point
             if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::RWStorageBuffer, LLGL::StageFlags::ComputeStage);
+                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
 
             // Set graphics resources
             commands->SetVertexBuffer(*vertexBuffer);
@@ -244,7 +244,7 @@ private:
 
             // Reset texture from shader input binding point
             if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::SampleBuffer, LLGL::StageFlags::FragmentStage);
+                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
         }
         commands->End();
         commandQueue->Submit(*commands);
