@@ -17,7 +17,7 @@ static MTLResourceOptions GetMTLResourceOptions(const BufferDescriptor& desc)
 {
     if ((desc.miscFlags & MiscFlags::DynamicUsage) != 0)
         return MTLResourceStorageModeShared;
-    //else if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
+    //else if ((desc.bindFlags & BindFlags::Storage) != 0)
     //    return MTLResourceStorageModePrivate;
     else
         return MTLResourceStorageModeManaged;

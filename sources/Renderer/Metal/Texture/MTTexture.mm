@@ -28,9 +28,9 @@ static MTLTextureUsage GetTextureUsage(const TextureDescriptor& desc)
 {
     MTLTextureUsage usage = 0;
 
-    if ((desc.bindFlags & BindFlags::SampleBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::Sampled) != 0)
         usage |= MTLTextureUsageShaderRead;
-    if ((desc.bindFlags & BindFlags::RWStorageBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::Storage) != 0)
         usage |= MTLTextureUsageShaderWrite;
     if ((desc.bindFlags & (BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment)) != 0)
         usage |= MTLTextureUsageRenderTarget;

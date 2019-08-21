@@ -847,12 +847,12 @@ void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long
     }
 }
 
-void MTCommandBuffer::SetSampleBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+void MTCommandBuffer::SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     //todo
 }
 
-void MTCommandBuffer::SetRWStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+void MTCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     //todo
 }
