@@ -80,7 +80,10 @@ bool D3D12ShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
 
 bool D3D12ShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
 {
-    return false; //TODO
+    if (cs_ != nullptr)
+        return cs_->ReflectNumThreads(workGroupSize);
+    else
+        return false;
 }
 
 D3D12_INPUT_LAYOUT_DESC D3D12ShaderProgram::GetInputLayoutDesc() const

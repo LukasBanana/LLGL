@@ -63,6 +63,14 @@ void D3D11Shader::Reflect(ShaderReflection& reflection) const
         ReflectShaderByteCode(reflection);
 }
 
+bool D3D11Shader::ReflectNumThreads(Extent3D& numThreads) const
+{
+    if (byteCode_)
+        return SUCCEEDED(ReflectShaderByteCodeNumThreads(numThreads));
+    else
+        return false;
+}
+
 
 /*
  * ======= Private: =======
@@ -441,6 +449,24 @@ void D3D11Shader::ReflectShaderByteCode(ShaderReflection& reflectionDesc) const
 
     /* Get input bindings */
     ReflectShaderInputBindings(reflectionObject.Get(), shaderDesc, GetStageFlags(), reflectionDesc);
+}
+
+HRESULT D3D11Shader::ReflectShaderByteCodeNumThreads(Extent3D& numThreads) const
+{
+    /* Get shader reflection */
+    ComPtr<ID3D11ShaderReflection> reflectionObject;
+    auto hr = D3DReflect(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
+
+    if (SUCCEEDED(hr))
+    {
+        reflectionObject->GetThreadGroupSize(
+            &(numThreads.width),
+            &(numThreads.height),
+            &(numThreads.depth)
+        );
+    }
+
+    return hr;
 }
 
 

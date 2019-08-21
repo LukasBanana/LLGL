@@ -39,7 +39,7 @@ class VKShader final : public Shader
         void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
 
         void Reflect(ShaderReflection& reflection) const;
-        bool ReflectLocalSize(Extent3D& workGroupSize) const;
+        bool ReflectLocalSize(Extent3D& localSize) const;
 
         // Returns the Vulkan shader module.
         inline const VKPtr<VkShaderModule>& GetShaderModule() const

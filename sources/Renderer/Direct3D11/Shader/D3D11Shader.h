@@ -60,6 +60,7 @@ class D3D11Shader final : public Shader
         D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc);
 
         void Reflect(ShaderReflection& reflection) const;
+        bool ReflectNumThreads(Extent3D& numThreads) const;
 
         // Returns the native D3D shader object.
         inline const D3D11NativeShader& GetNative() const
@@ -86,6 +87,7 @@ class D3D11Shader final : public Shader
         );
 
         void ReflectShaderByteCode(ShaderReflection& reflection) const;
+        HRESULT ReflectShaderByteCodeNumThreads(Extent3D& numThreads) const;
 
     private:
 

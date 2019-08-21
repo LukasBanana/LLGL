@@ -337,7 +337,7 @@ void VKShader::Reflect(ShaderReflection& reflection) const
     }
 }
 
-bool VKShader::ReflectLocalSize(Extent3D& workGroupSize) const
+bool VKShader::ReflectLocalSize(Extent3D& localSize) const
 {
     if (GetType() == ShaderType::Compute)
     {
@@ -347,9 +347,9 @@ bool VKShader::ReflectLocalSize(Extent3D& workGroupSize) const
 
         /* Return local work group size */
         const auto& mode = spvReflect.GetMode();
-        workGroupSize.width     = mode.localSizeX;
-        workGroupSize.height    = mode.localSizeY;
-        workGroupSize.depth     = mode.localSizeZ;
+        localSize.width     = mode.localSizeX;
+        localSize.height    = mode.localSizeY;
+        localSize.depth     = mode.localSizeZ;
 
         return true;
     }

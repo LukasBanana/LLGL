@@ -99,7 +99,10 @@ bool D3D11ShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
 
 bool D3D11ShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
 {
-    return false; //TODO
+    if (cs_ != nullptr)
+        return cs_->ReflectNumThreads(workGroupSize);
+    else
+        return false;
 }
 
 
