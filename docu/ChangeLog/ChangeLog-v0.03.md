@@ -11,6 +11,8 @@
 - [Renderer configuration](#renderer-configuration)
 - [Shader reflection](#shader-reflection)
 - [Default values](#default-values)
+- [Renamed identifiers](#renamed-identifiers)
+- [`PipelineLayoutDesc` syntax](#pipelinelayoutdesc-syntax)
 
 
 ## `BufferDescriptor` interface
@@ -284,6 +286,24 @@ After:
 ```cpp
 LLGL::TextureDescriptor::type = LLGL::TextureType::Texture2D;
 ```
+
+## Renamed identifiers
+
+Before/After:
+```cpp
+BindFlags::SampleBuffer               --> BindFlags::Sampled
+BindFlags::RWStorageBuffer            --> BindFlags::Storage
+CommandBuffer::SetSampleBuffer        --> CommandBuffer::SetSampledBuffer
+CommandBuffer::SetRWStorageBuffer     --> CommandBuffer::SetStorageBuffer
+FrameProfile::sampleBufferBindings    --> FrameProfile::sampledBufferBindings
+FrameProfile::rwStorageBufferBindings --> FrameProfile::storageBufferBindings
+```
+
+
+## `PipelineLayoutDesc` syntax
+
+Besides additions to the syntax of the `PipelineLayoutDesc` utility function, the following breaking change has been made:
+The identifier `"sbuffer"` was renamed to `"buffer"`.
 
 
 
