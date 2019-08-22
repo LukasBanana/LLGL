@@ -351,11 +351,13 @@ static void CopyTypedVariant(DataType dataType, VariantBuffer& dstBuffer, std::s
 }
 
 template <typename TBuf, typename TVar>
-void TransferRGBAFormattedVariantColor(
-    ImageFormat format, DataType dataType, TBuf& buffer, std::size_t idx, TVar& value)
+void TransferRGBAFormattedVariantColor(ImageFormat format, DataType dataType, TBuf& buffer, std::size_t idx, TVar& value)
 {
     switch (format)
     {
+        case ImageFormat::Alpha:
+            CopyTypedVariant(dataType, buffer, idx    , value.a);
+            break;
         case ImageFormat::R:
             CopyTypedVariant(dataType, buffer, idx    , value.r);
             break;
@@ -537,6 +539,7 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
+        case ImageFormat::Alpha:            return 1;
         case ImageFormat::R:                return 1;
         case ImageFormat::RG:               return 2;
         case ImageFormat::RGB:              return 3;
@@ -575,7 +578,10 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
     {
         case Format::Undefined:         break;
 
-        /* --- Color formats --- */
+        /* --- Alpha channel color formats --- */
+        case Format::A8UNorm:           return T{ ImageFormat::Alpha, DataType::UInt8 };
+
+        /* --- Red channel color formats --- */
         case Format::R8UNorm:           return T{ ImageFormat::R, DataType::UInt8 };
         case Format::R8SNorm:           return T{ ImageFormat::R, DataType::Int8 };
         case Format::R8UInt:            return T{ ImageFormat::R, DataType::UInt8 };
@@ -591,6 +597,9 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::R32SInt:           return T{ ImageFormat::R, DataType::Int32 };
         case Format::R32Float:          return T{ ImageFormat::R, DataType::Float32 };
 
+        case Format::R64Float:          return T{ ImageFormat::R, DataType::Float64 };
+
+        /* --- RG channel color formats --- */
         case Format::RG8UNorm:          return T{ ImageFormat::RG, DataType::UInt8 };
         case Format::RG8SNorm:          return T{ ImageFormat::RG, DataType::Int8 };
         case Format::RG8UInt:           return T{ ImageFormat::RG, DataType::UInt8 };
@@ -606,7 +615,11 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::RG32SInt:          return T{ ImageFormat::RG, DataType::Int32 };
         case Format::RG32Float:         return T{ ImageFormat::RG, DataType::Float32 };
 
+        case Format::RG64Float:         return T{ ImageFormat::RG, DataType::Float64 };
+
+        /* --- RGB color formats --- */
         case Format::RGB8UNorm:         return T{ ImageFormat::RGB, DataType::UInt8 };
+        case Format::RGB8UNorm_sRGB:    return T{ ImageFormat::RGB, DataType::UInt8 };
         case Format::RGB8SNorm:         return T{ ImageFormat::RGB, DataType::Int8 };
         case Format::RGB8UInt:          return T{ ImageFormat::RGB, DataType::UInt8 };
         case Format::RGB8SInt:          return T{ ImageFormat::RGB, DataType::Int8 };
@@ -621,7 +634,11 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::RGB32SInt:         return T{ ImageFormat::RGB, DataType::Int32 };
         case Format::RGB32Float:        return T{ ImageFormat::RGB, DataType::Float32 };
 
+        case Format::RGB64Float:        return T{ ImageFormat::RGB, DataType::Float64 };
+
+        /* --- RGBA color formats --- */
         case Format::RGBA8UNorm:        return T{ ImageFormat::RGBA, DataType::UInt8 };
+        case Format::RGBA8UNorm_sRGB:   return T{ ImageFormat::RGBA, DataType::UInt8 };
         case Format::RGBA8SNorm:        return T{ ImageFormat::RGBA, DataType::Int8 };
         case Format::RGBA8UInt:         return T{ ImageFormat::RGBA, DataType::UInt8 };
         case Format::RGBA8SInt:         return T{ ImageFormat::RGBA, DataType::Int8 };
@@ -636,18 +653,14 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::RGBA32SInt:        return T{ ImageFormat::RGBA, DataType::Int32 };
         case Format::RGBA32Float:       return T{ ImageFormat::RGBA, DataType::Float32 };
 
-        /* --- Extended color formats --- */
-        case Format::R64Float:          return T{ ImageFormat::R, DataType::Float64 };
-        case Format::RG64Float:         return T{ ImageFormat::RG, DataType::Float64 };
-        case Format::RGB64Float:        return T{ ImageFormat::RGB, DataType::Float64 };
         case Format::RGBA64Float:       return T{ ImageFormat::RGBA, DataType::Float64 };
 
-        /* --- Reversed color formats --- */
+        /* --- BGRA color formats --- */
         case Format::BGRA8UNorm:        return T{ ImageFormat::BGRA, DataType::UInt8 };
+        case Format::BGRA8UNorm_sRGB:   return T{ ImageFormat::BGRA, DataType::UInt8 };
         case Format::BGRA8SNorm:        return T{ ImageFormat::BGRA, DataType::Int8 };
         case Format::BGRA8UInt:         return T{ ImageFormat::BGRA, DataType::UInt8 };
         case Format::BGRA8SInt:         return T{ ImageFormat::BGRA, DataType::Int8 };
-        case Format::BGRA8sRGB:         return T{ ImageFormat::BGRA, DataType::UInt8 };
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return T{ ImageFormat::Depth, DataType::UInt16 };

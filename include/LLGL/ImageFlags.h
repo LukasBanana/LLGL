@@ -45,6 +45,7 @@ using ByteBuffer = std::unique_ptr<char[]>;
 enum class ImageFormat
 {
     /* Color formats */
+    Alpha,          //!< Single color component: Alpha.
     R,              //!< Single color component: Red.
     RG,             //!< Two color components: Red, Green.
     RGB,            //!< Three color components: Red, Green, Blue.

@@ -45,7 +45,10 @@ VkFormat Map(const Format format)
     {
         case Format::Undefined:         break;
 
-        /* --- Color formats --- */
+        /* --- Alpha channel color formats --- */
+        case Format::A8UNorm:           break;
+
+        /* --- Red channel color formats --- */
         case Format::R8UNorm:           return VK_FORMAT_R8_UNORM;
         case Format::R8SNorm:           return VK_FORMAT_R8_SNORM;
         case Format::R8UInt:            return VK_FORMAT_R8_UINT;
@@ -61,6 +64,9 @@ VkFormat Map(const Format format)
         case Format::R32SInt:           return VK_FORMAT_R32_SINT;
         case Format::R32Float:          return VK_FORMAT_R32_SFLOAT;
 
+        case Format::R64Float:          return VK_FORMAT_R64_SFLOAT;
+
+        /* --- RG channel color formats --- */
         case Format::RG8UNorm:          return VK_FORMAT_R8G8_UNORM;
         case Format::RG8SNorm:          return VK_FORMAT_R8G8_SNORM;
         case Format::RG8UInt:           return VK_FORMAT_R8G8_UINT;
@@ -76,7 +82,11 @@ VkFormat Map(const Format format)
         case Format::RG32SInt:          return VK_FORMAT_R32G32_SINT;
         case Format::RG32Float:         return VK_FORMAT_R32G32_SFLOAT;
 
+        case Format::RG64Float:         return VK_FORMAT_R64G64_SFLOAT;
+
+        /* --- RGB color formats --- */
         case Format::RGB8UNorm:         return VK_FORMAT_R8G8B8_UNORM;
+        case Format::RGB8UNorm_sRGB:    return VK_FORMAT_R8G8B8_SRGB;
         case Format::RGB8SNorm:         return VK_FORMAT_R8G8B8_SNORM;
         case Format::RGB8UInt:          return VK_FORMAT_R8G8B8_UINT;
         case Format::RGB8SInt:          return VK_FORMAT_R8G8B8_SINT;
@@ -91,7 +101,11 @@ VkFormat Map(const Format format)
         case Format::RGB32SInt:         return VK_FORMAT_R32G32B32_SINT;
         case Format::RGB32Float:        return VK_FORMAT_R32G32B32_SFLOAT;
 
+        case Format::RGB64Float:        return VK_FORMAT_R64G64B64_SFLOAT;
+
+        /* --- RGBA color formats --- */
         case Format::RGBA8UNorm:        return VK_FORMAT_R8G8B8A8_UNORM;
+        case Format::RGBA8UNorm_sRGB:   return VK_FORMAT_R8G8B8A8_SRGB;
         case Format::RGBA8SNorm:        return VK_FORMAT_R8G8B8A8_SNORM;
         case Format::RGBA8UInt:         return VK_FORMAT_R8G8B8A8_UINT;
         case Format::RGBA8SInt:         return VK_FORMAT_R8G8B8A8_SINT;
@@ -106,18 +120,14 @@ VkFormat Map(const Format format)
         case Format::RGBA32SInt:        return VK_FORMAT_R32G32B32A32_SINT;
         case Format::RGBA32Float:       return VK_FORMAT_R32G32B32A32_SFLOAT;
 
-        /* --- Extended color formats --- */
-        case Format::R64Float:          return VK_FORMAT_R64_SFLOAT;
-        case Format::RG64Float:         return VK_FORMAT_R64G64_SFLOAT;
-        case Format::RGB64Float:        return VK_FORMAT_R64G64B64_SFLOAT;
         case Format::RGBA64Float:       return VK_FORMAT_R64G64B64A64_SFLOAT;
 
-        /* --- Reversed color formats --- */
+        /* --- BGRA color formats --- */
         case Format::BGRA8UNorm:        return VK_FORMAT_B8G8R8A8_UNORM;
+        case Format::BGRA8UNorm_sRGB:   return VK_FORMAT_B8G8R8A8_SRGB;
         case Format::BGRA8SNorm:        return VK_FORMAT_B8G8R8A8_SNORM;
         case Format::BGRA8UInt:         return VK_FORMAT_B8G8R8A8_UINT;
         case Format::BGRA8SInt:         return VK_FORMAT_B8G8R8A8_SINT;
-        case Format::BGRA8sRGB:         return VK_FORMAT_B8G8R8A8_SRGB;
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return VK_FORMAT_D16_UNORM;
@@ -355,7 +365,7 @@ Format Unmap(const VkFormat format)
 {
     switch (format)
     {
-        /* --- Color formats --- */
+        /* --- Red channel color formats --- */
         case VK_FORMAT_R8_UNORM:                return Format::R8UNorm;
         case VK_FORMAT_R8_SNORM:                return Format::R8SNorm;
         case VK_FORMAT_R8_UINT:                 return Format::R8UInt;
@@ -371,6 +381,9 @@ Format Unmap(const VkFormat format)
         case VK_FORMAT_R32_SINT:                return Format::R32SInt;
         case VK_FORMAT_R32_SFLOAT:              return Format::R32Float;
 
+        case VK_FORMAT_R64_SFLOAT:              return Format::R64Float;
+
+        /* --- RG channel color formats --- */
         case VK_FORMAT_R8G8_UNORM:              return Format::RG8UNorm;
         case VK_FORMAT_R8G8_SNORM:              return Format::RG8SNorm;
         case VK_FORMAT_R8G8_UINT:               return Format::RG8UInt;
@@ -386,7 +399,11 @@ Format Unmap(const VkFormat format)
         case VK_FORMAT_R32G32_SINT:             return Format::RG32SInt;
         case VK_FORMAT_R32G32_SFLOAT:           return Format::RG32Float;
 
+        case VK_FORMAT_R64G64_SFLOAT:           return Format::RG64Float;
+
+        /* --- RGB color formats --- */
         case VK_FORMAT_R8G8B8_UNORM:            return Format::RGB8UNorm;
+        case VK_FORMAT_R8G8B8_SRGB:             return Format::RGB8UNorm_sRGB;
         case VK_FORMAT_R8G8B8_SNORM:            return Format::RGB8SNorm;
         case VK_FORMAT_R8G8B8_UINT:             return Format::RGB8UInt;
         case VK_FORMAT_R8G8B8_SINT:             return Format::RGB8SInt;
@@ -401,7 +418,11 @@ Format Unmap(const VkFormat format)
         case VK_FORMAT_R32G32B32_SINT:          return Format::RGB32SInt;
         case VK_FORMAT_R32G32B32_SFLOAT:        return Format::RGB32Float;
 
+        case VK_FORMAT_R64G64B64_SFLOAT:        return Format::RGB64Float;
+
+        /* --- RGBA color formats --- */
         case VK_FORMAT_R8G8B8A8_UNORM:          return Format::RGBA8UNorm;
+        case VK_FORMAT_R8G8B8A8_SRGB:           return Format::RGBA8UNorm_sRGB;
         case VK_FORMAT_R8G8B8A8_SNORM:          return Format::RGBA8SNorm;
         case VK_FORMAT_R8G8B8A8_UINT:           return Format::RGBA8UInt;
         case VK_FORMAT_R8G8B8A8_SINT:           return Format::RGBA8SInt;
@@ -416,18 +437,14 @@ Format Unmap(const VkFormat format)
         case VK_FORMAT_R32G32B32A32_SINT:       return Format::RGBA32SInt;
         case VK_FORMAT_R32G32B32A32_SFLOAT:     return Format::RGBA32Float;
 
-        /* --- Extended color formats --- */
-        case VK_FORMAT_R64_SFLOAT:              return Format::R64Float;
-        case VK_FORMAT_R64G64_SFLOAT:           return Format::RG64Float;
-        case VK_FORMAT_R64G64B64_SFLOAT:        return Format::RGB64Float;
         case VK_FORMAT_R64G64B64A64_SFLOAT:     return Format::RGBA64Float;
 
-        /* --- Reversed color formats --- */
+        /* --- BGRA color formats --- */
         case VK_FORMAT_B8G8R8A8_UNORM:          return Format::BGRA8UNorm;
+        case VK_FORMAT_B8G8R8A8_SRGB:           return Format::BGRA8UNorm_sRGB;
         case VK_FORMAT_B8G8R8A8_SNORM:          return Format::BGRA8SNorm;
         case VK_FORMAT_B8G8R8A8_UINT:           return Format::BGRA8UInt;
         case VK_FORMAT_B8G8R8A8_SINT:           return Format::BGRA8SInt;
-        case VK_FORMAT_B8G8R8A8_SRGB:           return Format::BGRA8sRGB;
 
         /* --- Depth-stencil formats --- */
         case VK_FORMAT_D16_UNORM:               return Format::D16UNorm;

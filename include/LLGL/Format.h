@@ -34,7 +34,10 @@ enum class Format
 {
     Undefined,          //!< Undefined format.
 
-    /* --- Color formats --- */
+    /* --- Alpha channel color formats --- */
+    A8UNorm,            //!< Alpha channel format: alpha 8-bit normalized unsigned integer component.
+
+    /* --- Red channel color formats --- */
     R8UNorm,            //!< Color format: red 8-bit normalized unsigned integer component.
     R8SNorm,            //!< Color format: red 8-bit normalized signed integer component.
     R8UInt,             //!< Color format: red 8-bit unsigned integer component.
@@ -50,6 +53,9 @@ enum class Format
     R32SInt,            //!< Color format: red 32-bit signed interger component.
     R32Float,           //!< Color format: red 32-bit floating point component.
 
+    R64Float,           //!< Color format: red 64-bit floating point component. \note Only supported with: Vulkan.
+
+    /* --- RG channel color formats --- */
     RG8UNorm,           //!< Color format: red, green 8-bit normalized unsigned integer components.
     RG8SNorm,           //!< Color format: red, green 8-bit normalized signed integer components.
     RG8UInt,            //!< Color format: red, green 8-bit unsigned integer components.
@@ -65,7 +71,11 @@ enum class Format
     RG32SInt,           //!< Color format: red, green 32-bit signed interger components.
     RG32Float,          //!< Color format: red, green 32-bit floating point components.
 
+    RG64Float,          //!< Color format: red, green 64-bit floating point components. \note Only supported with: Vulkan.
+
+    /* --- RGB color formats --- */
     RGB8UNorm,          //!< Color format: red, green, blue 8-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan.
+    RGB8UNorm_sRGB,     //!< Color format: red, green, blue 8-bit normalized unsigned integer components in sRGB non-linear color space. \note Only supported with: OpenGL, Vulkan.
     RGB8SNorm,          //!< Color format: red, green, blue 8-bit normalized signed integer components. \note Only supported with: OpenGL, Vulkan.
     RGB8UInt,           //!< Color format: red, green, blue 8-bit unsigned integer components. \note Only supported with: OpenGL, Vulkan.
     RGB8SInt,           //!< Color format: red, green, blue 8-bit signed integer components. \note Only supported with: OpenGL, Vulkan.
@@ -76,11 +86,15 @@ enum class Format
     RGB16SInt,          //!< Color format: red, green, blue 16-bit signed interger components. \note Only supported with: OpenGL, Vulkan.
     RGB16Float,         //!< Color format: red, green, blue 16-bit floating point components. \note Only supported with: OpenGL, Vulkan.
 
-    RGB32UInt,          //!< Color format: red, green, blue 32-bit unsigned interger components.
-    RGB32SInt,          //!< Color format: red, green, blue 32-bit signed interger components.
-    RGB32Float,         //!< Color format: red, green, blue 32-bit floating point components.
+    RGB32UInt,          //!< Color format: red, green, blue 32-bit unsigned interger components. \note As texture format only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    RGB32SInt,          //!< Color format: red, green, blue 32-bit signed interger components. \note As texture format only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    RGB32Float,         //!< Color format: red, green, blue 32-bit floating point components. \note As texture format only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
 
+    RGB64Float,         //!< Color format: red, green, blue 64-bit floating point components. \note Only supported with: Vulkan.
+
+    /* --- RGBA color formats --- */
     RGBA8UNorm,         //!< Color format: red, green, blue, alpha 8-bit normalized unsigned integer components.
+    RGBA8UNorm_sRGB,    //!< Color format: red, green, blue, alpha 8-bit normalized unsigned integer components in sRGB non-linear color space.
     RGBA8SNorm,         //!< Color format: red, green, blue, alpha 8-bit normalized signed integer components.
     RGBA8UInt,          //!< Color format: red, green, blue, alpha 8-bit unsigned integer components.
     RGBA8SInt,          //!< Color format: red, green, blue, alpha 8-bit signed integer components.
@@ -95,18 +109,14 @@ enum class Format
     RGBA32SInt,         //!< Color format: red, green, blue, alpha 32-bit signed interger components.
     RGBA32Float,        //!< Color format: red, green, blue, alpha 32-bit floating point components.
 
-    /* --- Extended color formats --- */
-    R64Float,           //!< Color format: red 64-bit floating point component. \note Only supported with: OpenGL, Vulkan.
-    RG64Float,          //!< Color format: red, green 64-bit floating point components. \note Only supported with: OpenGL, Vulkan.
-    RGB64Float,         //!< Color format: red, green, blue 64-bit floating point components. \note Only supported with: OpenGL, Vulkan.
-    RGBA64Float,        //!< Color format: red, green, blue, alpha 64-bit floating point components. \note Only supported with: OpenGL, Vulkan.
+    RGBA64Float,        //!< Color format: red, green, blue, alpha 64-bit floating point components. \note Only supported with: Vulkan.
 
-    /* --- Reversed color formats --- */
-    BGRA8UNorm,         //!< Color format: blue, green, red, alpha 8-bit normalized unsigned integer components. \note Only supported with: Vulkan, Direct3D 11, Direct3D 12, Metal.
+    /* --- BGRA color formats --- */
+    BGRA8UNorm,         //!< Color format: blue, green, red, alpha 8-bit normalized unsigned integer components.
+    BGRA8UNorm_sRGB,    //!< Color format: blue, green, red, alpha 8-bit normalized unsigned integer components in sRGB non-linear color space.
     BGRA8SNorm,         //!< Color format: blue, green, red, alpha 8-bit normalized signed integer components. \note Only supported with: Vulkan.
     BGRA8UInt,          //!< Color format: blue, green, red, alpha 8-bit unsigned integer components. \note Only supported with: Vulkan.
     BGRA8SInt,          //!< Color format: blue, green, red, alpha 8-bit signed integer components. \note Only supported with: Vulkan.
-    BGRA8sRGB,          //!< Color format: blue, green, red, alpha 8-bit normalized unsigned integer components in sRGB non-linear color space. \note Only supported with: Vulkan, Direct3D 11, Direct3D 12, Metal.
 
     /* --- Depth-stencil formats --- */
     D16UNorm,           //!< Depth-stencil format: depth 16-bit normalized unsigned integer component.

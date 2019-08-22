@@ -64,7 +64,10 @@ DXGI_FORMAT Map(const Format format)
     {
         case Format::Undefined:         break;
 
-        /* --- Color formats --- */
+        /* --- Alpha channel color formats --- */
+        case Format::A8UNorm:           return DXGI_FORMAT_A8_UNORM;
+
+        /* --- Red channel color formats --- */
         case Format::R8UNorm:           return DXGI_FORMAT_R8_UNORM;
         case Format::R8SNorm:           return DXGI_FORMAT_R8_SNORM;
         case Format::R8UInt:            return DXGI_FORMAT_R8_UINT;
@@ -80,6 +83,9 @@ DXGI_FORMAT Map(const Format format)
         case Format::R32SInt:           return DXGI_FORMAT_R32_SINT;
         case Format::R32Float:          return DXGI_FORMAT_R32_FLOAT;
 
+        case Format::R64Float:          break;
+
+        /* --- RG channel color formats --- */
         case Format::RG8UNorm:          return DXGI_FORMAT_R8G8_UNORM;
         case Format::RG8SNorm:          return DXGI_FORMAT_R8G8_SNORM;
         case Format::RG8UInt:           return DXGI_FORMAT_R8G8_UINT;
@@ -95,7 +101,11 @@ DXGI_FORMAT Map(const Format format)
         case Format::RG32SInt:          return DXGI_FORMAT_R32G32_SINT;
         case Format::RG32Float:         return DXGI_FORMAT_R32G32_FLOAT;
 
+        case Format::RG64Float:         break;
+
+        /* --- RGB color formats --- */
         case Format::RGB8UNorm:         break;
+        case Format::RGB8UNorm_sRGB:    break;
         case Format::RGB8SNorm:         break;
         case Format::RGB8UInt:          break;
         case Format::RGB8SInt:          break;
@@ -110,7 +120,11 @@ DXGI_FORMAT Map(const Format format)
         case Format::RGB32SInt:         return DXGI_FORMAT_R32G32B32_SINT;
         case Format::RGB32Float:        return DXGI_FORMAT_R32G32B32_FLOAT;
 
+        case Format::RGB64Float:        break;
+
+        /* --- RGBA color formats --- */
         case Format::RGBA8UNorm:        return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case Format::RGBA8UNorm_sRGB:   return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
         case Format::RGBA8SNorm:        return DXGI_FORMAT_R8G8B8A8_SNORM;
         case Format::RGBA8UInt:         return DXGI_FORMAT_R8G8B8A8_UINT;
         case Format::RGBA8SInt:         return DXGI_FORMAT_R8G8B8A8_SINT;
@@ -125,18 +139,14 @@ DXGI_FORMAT Map(const Format format)
         case Format::RGBA32SInt:        return DXGI_FORMAT_R32G32B32A32_SINT;
         case Format::RGBA32Float:       return DXGI_FORMAT_R32G32B32A32_FLOAT;
 
-        /* --- Extended color formats --- */
-        case Format::R64Float:          break;
-        case Format::RG64Float:         break;
-        case Format::RGB64Float:        break;
         case Format::RGBA64Float:       break;
 
-        /* --- Reversed color formats --- */
+        /* --- BGRA color formats --- */
         case Format::BGRA8UNorm:        return DXGI_FORMAT_B8G8R8A8_UNORM;
+        case Format::BGRA8UNorm_sRGB:   return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
         case Format::BGRA8SNorm:        break;
         case Format::BGRA8UInt:         break;
         case Format::BGRA8SInt:         break;
-        case Format::BGRA8sRGB:         return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return DXGI_FORMAT_R16_TYPELESS;
@@ -208,7 +218,10 @@ Format Unmap(const DXGI_FORMAT format)
 {
     switch (format)
     {
-        /* --- Color formats --- */
+        /* --- Alpha channel color formats --- */
+        case DXGI_FORMAT_A8_UNORM:                  return Format::A8UNorm;
+
+        /* --- Red channel color formats --- */
         case DXGI_FORMAT_R8_UNORM:                  return Format::R8UNorm;
         case DXGI_FORMAT_R8_SNORM:                  return Format::R8SNorm;
         case DXGI_FORMAT_R8_UINT:                   return Format::R8UInt;
@@ -224,6 +237,7 @@ Format Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_R32_SINT:                  return Format::R32SInt;
         case DXGI_FORMAT_R32_FLOAT:                 return Format::R32Float;
 
+        /* --- RG channel color formats --- */
         case DXGI_FORMAT_R8G8_UNORM:                return Format::RG8UNorm;
         case DXGI_FORMAT_R8G8_SNORM:                return Format::RG8SNorm;
         case DXGI_FORMAT_R8G8_UINT:                 return Format::RG8UInt;
@@ -239,10 +253,12 @@ Format Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_R32G32_SINT:               return Format::RG32SInt;
         case DXGI_FORMAT_R32G32_FLOAT:              return Format::RG32Float;
 
+        /* --- RGB color formats --- */
         case DXGI_FORMAT_R32G32B32_UINT:            return Format::RGB32UInt;
         case DXGI_FORMAT_R32G32B32_SINT:            return Format::RGB32SInt;
         case DXGI_FORMAT_R32G32B32_FLOAT:           return Format::RGB32Float;
 
+        /* --- RGBA color formats --- */
         case DXGI_FORMAT_R8G8B8A8_UNORM:            return Format::RGBA8UNorm;
         case DXGI_FORMAT_R8G8B8A8_SNORM:            return Format::RGBA8SNorm;
         case DXGI_FORMAT_R8G8B8A8_UINT:             return Format::RGBA8UInt;
@@ -258,9 +274,9 @@ Format Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_R32G32B32A32_SINT:         return Format::RGBA32SInt;
         case DXGI_FORMAT_R32G32B32A32_FLOAT:        return Format::RGBA32Float;
 
-        /* --- Reversed color formats --- */
+        /* --- BGRA color formats --- */
         case DXGI_FORMAT_B8G8R8A8_UNORM:            return Format::BGRA8UNorm;
-        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:       return Format::BGRA8sRGB;
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:       return Format::BGRA8UNorm_sRGB;
 
         /* --- Depth-stencil formats --- */
         case DXGI_FORMAT_R16_TYPELESS:              /* pass */

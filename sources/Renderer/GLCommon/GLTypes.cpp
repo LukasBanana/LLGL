@@ -41,7 +41,10 @@ GLenum MapOrZero(const Format format)
     {
         case Format::Undefined:         return 0;
 
-        /* --- Color formats --- */
+        /* --- Alpha channel color formats --- */
+        case Format::A8UNorm:           return 0;
+
+        /* --- Red channel color formats --- */
         case Format::R8UNorm:           return GL_R8;
         case Format::R8SNorm:           return GL_R8_SNORM;
         case Format::R8UInt:            return GL_R8UI;
@@ -59,6 +62,9 @@ GLenum MapOrZero(const Format format)
         case Format::R32SInt:           return GL_R32UI;
         case Format::R32Float:          return GL_R32F;
 
+        case Format::R64Float:          return 0;
+
+        /* --- RG channel color formats --- */
         case Format::RG8UNorm:          return GL_RG8;
         case Format::RG8SNorm:          return GL_RG8_SNORM;
         case Format::RG8UInt:           return GL_RG8UI;
@@ -76,7 +82,11 @@ GLenum MapOrZero(const Format format)
         case Format::RG32SInt:          return GL_RG32I;
         case Format::RG32Float:         return GL_RG32F;
 
+        case Format::RG64Float:         return 0;
+
+        /* --- RGB color formats --- */
         case Format::RGB8UNorm:         return GL_RGB8;
+        case Format::RGB8UNorm_sRGB:    return GL_SRGB8;
         case Format::RGB8SNorm:         return GL_RGB8_SNORM;
         case Format::RGB8UInt:          return GL_RGB8UI;
         case Format::RGB8SInt:          return GL_RGB8I;
@@ -93,7 +103,11 @@ GLenum MapOrZero(const Format format)
         case Format::RGB32SInt:         return GL_RGB32I;
         case Format::RGB32Float:        return GL_RGB32F;
 
+        case Format::RGB64Float:        return 0;
+
+        /* --- RGBA color formats --- */
         case Format::RGBA8UNorm:        return GL_RGBA8;
+        case Format::RGBA8UNorm_sRGB:   return GL_SRGB8_ALPHA8;
         case Format::RGBA8SNorm:        return GL_RGBA8_SNORM;
         case Format::RGBA8UInt:         return GL_RGBA8UI;
         case Format::RGBA8SInt:         return GL_RGBA8I;
@@ -110,18 +124,14 @@ GLenum MapOrZero(const Format format)
         case Format::RGBA32SInt:        return GL_RGBA32I;
         case Format::RGBA32Float:       return GL_RGBA32F;
 
-        /* --- Extended color formats --- */
-        case Format::R64Float:          return 0;
-        case Format::RG64Float:         return 0;
-        case Format::RGB64Float:        return 0;
         case Format::RGBA64Float:       return 0;
 
-        /* --- Reversed color formats --- */
+        /* --- BGRA color formats --- */
         case Format::BGRA8UNorm:        return 0;
+        case Format::BGRA8UNorm_sRGB:   return 0;
         case Format::BGRA8SNorm:        return 0;
         case Format::BGRA8UInt:         return 0;
         case Format::BGRA8SInt:         return 0;
-        case Format::BGRA8sRGB:         return 0;
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return GL_DEPTH_COMPONENT16;
@@ -767,13 +777,9 @@ Format UnmapFormat(const GLenum internalFormat)
 {
     switch (internalFormat)
     {
-        /* --- Base internal formats --- */
+        /* --- Red channel color formats --- */
         case GL_RED:                            return Format::R8UNorm;
-        case GL_RG:                             return Format::RG8UNorm;
-        case GL_RGB:                            return Format::RGB8UNorm;
-        case GL_RGBA:                           return Format::RGBA8UNorm;
 
-        /* --- Color formats --- */
         case GL_R8:                             return Format::R8UNorm;
         case GL_R8_SNORM:                       return Format::R8SNorm;
         case GL_R8UI:                           return Format::R8UInt;
@@ -790,6 +796,9 @@ Format UnmapFormat(const GLenum internalFormat)
         case GL_R32I:                           return Format::R32UInt;
         case GL_R32UI:                          return Format::R32SInt;
         case GL_R32F:                           return Format::R32Float;
+
+        /* --- RG channel color formats --- */
+        case GL_RG:                             return Format::RG8UNorm;
 
         case GL_RG8:                            return Format::RG8UNorm;
         case GL_RG8_SNORM:                      return Format::RG8SNorm;
@@ -808,6 +817,9 @@ Format UnmapFormat(const GLenum internalFormat)
         case GL_RG32I:                          return Format::RG32SInt;
         case GL_RG32F:                          return Format::RG32Float;
 
+        /* --- RGB color formats --- */
+        case GL_RGB:                            return Format::RGB8UNorm;
+
         case GL_RGB8:                           return Format::RGB8UNorm;
         case GL_RGB8_SNORM:                     return Format::RGB8SNorm;
         case GL_RGB8UI:                         return Format::RGB8UInt;
@@ -824,6 +836,9 @@ Format UnmapFormat(const GLenum internalFormat)
         case GL_RGB32UI:                        return Format::RGB32UInt;
         case GL_RGB32I:                         return Format::RGB32SInt;
         case GL_RGB32F:                         return Format::RGB32Float;
+
+        /* --- RGBA color formats --- */
+        case GL_RGBA:                           return Format::RGBA8UNorm;
 
         case GL_RGBA8:                          return Format::RGBA8UNorm;
         case GL_RGBA8_SNORM:                    return Format::RGBA8SNorm;
