@@ -64,7 +64,7 @@ GLenum MapOrZero(const Format format)
 
         case Format::R64Float:          return 0;
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case Format::RG8UNorm:          return GL_RG8;
         case Format::RG8SNorm:          return GL_RG8_SNORM;
         case Format::RG8UInt:           return GL_RG8UI;
@@ -797,7 +797,7 @@ Format UnmapFormat(const GLenum internalFormat)
         case GL_R32UI:                          return Format::R32SInt;
         case GL_R32F:                           return Format::R32Float;
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case GL_RG:                             return Format::RG8UNorm;
 
         case GL_RG8:                            return Format::RG8UNorm;

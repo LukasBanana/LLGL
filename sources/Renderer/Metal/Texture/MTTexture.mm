@@ -151,18 +151,18 @@ void MTTexture::Write(const TextureRegion& textureRegion, SrcImageDescriptor ima
 
     /* Get dimensions */
     auto        format          = MTTypes::ToFormat([native_ pixelFormat]);
-    NSUInteger  bytesPerRow     = ([native_ width] * FormatBitSize(format) / 8);
+    const auto& formatDesc      = GetFormatDesc(format);
+    const auto  blockSize       = formatDesc.blockWidth * formatDesc.blockHeight;
+    NSUInteger  bytesPerRow     = ([native_ width] * formatDesc.bitSize / blockSize / 8);
     NSUInteger  bytesPerSlice   = ([native_ height] * bytesPerRow);
 
     /* Check if image data must be converted */
-    ImageFormat dstFormat       = ImageFormat::RGBA;
-    DataType    dstDataType     = DataType::Int8;
-    ByteBuffer  tempImageBuffer = nullptr;
+    ByteBuffer tempImageBuffer = nullptr;
 
-    if (FindSuitableImageFormat(format, dstFormat, dstDataType))
+    if (formatDesc.bitSize > 0)
     {
         /* Convert image format (will be null if no conversion is necessary) */
-        tempImageBuffer = ConvertImageBuffer(imageDesc, dstFormat, dstDataType, /*cfg.threadCount*/0);
+        tempImageBuffer = ConvertImageBuffer(imageDesc, formatDesc.format, formatDesc.dataType, /*cfg.threadCount*/0);
         if (tempImageBuffer)
         {
             /* User converted tempoary buffer as image source */

@@ -700,7 +700,7 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
         }
 
         /* Validate buffer size for specified index format */
-        formatSize = FormatBitSize(desc.indexBuffer.format) / 8;
+        formatSize = GetFormatDesc(desc.indexBuffer.format).bitSize / 8;
         if (formatSize > 0 && desc.size % formatSize != 0)
         {
             LLGL_DBG_WARN(

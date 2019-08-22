@@ -46,25 +46,20 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
         glVertexAttribDivisor(index, attribute.instanceDivisor);
 
     /* Get data type and components of vector type */
-    DataType        dataType    = DataType::Float32;
-    std::uint32_t   components  = 0;
-    SplitFormat(attribute.format, dataType, components);
-
-    auto isNormalizedFormat = IsNormalizedFormat(attribute.format);
-    auto isFloatFormat      = IsFloatFormat(attribute.format);
+    const auto& formatDesc = GetFormatDesc(attribute.format);
 
     /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
     const GLsizeiptr offsetPtrSized = attribute.offset;
 
     /* Use currently bound VBO for VertexAttribPointer functions */
-    if (!isNormalizedFormat && !isFloatFormat)
+    if (!formatDesc.normalized && !IsFloatFormat(attribute.format))
     {
         if (HasExtension(GLExt::EXT_gpu_shader4))
         {
             glVertexAttribIPointer(
                 index,
-                components,
-                GLTypes::Map(dataType),
+                static_cast<GLint>(formatDesc.components),
+                GLTypes::Map(formatDesc.dataType),
                 stride,
                 reinterpret_cast<const void*>(offsetPtrSized)
             );
@@ -76,9 +71,9 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
     {
         glVertexAttribPointer(
             index,
-            components,
-            GLTypes::Map(dataType),
-            GLBoolean(isNormalizedFormat),
+            static_cast<GLint>(formatDesc.components),
+            GLTypes::Map(formatDesc.dataType),
+            GLBoolean(formatDesc.normalized),
             stride,
             reinterpret_cast<const void*>(offsetPtrSized)
         );

@@ -34,37 +34,6 @@ Therefore, the byte buffer type is an std::unique_ptr<char[]>.
 using ByteBuffer = std::unique_ptr<char[]>;
 
 
-/* ----- Enumerations ----- */
-
-/**
-\brief Image format enumeration that applies to each pixel of an image.
-\see SrcImageDescriptor::format
-\see ImageFormatSize
-\todo Maybe replace \c DataType and \c ImageFormat by LLGL::Format.
-*/
-enum class ImageFormat
-{
-    /* Color formats */
-    Alpha,          //!< Single color component: Alpha.
-    R,              //!< Single color component: Red.
-    RG,             //!< Two color components: Red, Green.
-    RGB,            //!< Three color components: Red, Green, Blue.
-    BGR,            //!< Three color components: Blue, Green, Red.
-    RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
-    BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
-    ARGB,           //!< Four color components: Alpha, Red, Green, Blue. Old format, mainly used in Direct3D 9.
-    ABGR,           //!< Four color components: Alpha, Blue, Green, Red. Old format, mainly used in Direct3D 9.
-
-    /* Depth-stencil formats */
-    Depth,          //!< Depth component.
-    DepthStencil,   //!< Depth component and stencil index.
-
-    /* Compressed formats */
-    CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.
-    CompressedRGBA, //!< Generic compressed format with four color components: Red, Green, Blue, Alpha.
-};
-
-
 /* ----- Structures ----- */
 
 /**
@@ -179,16 +148,6 @@ i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
 \see ImageFormat
 */
 LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat);
-
-/**
-\brief Finds a suitable image format for the specified texture hardware format.
-\param[in] textureFormat Specifies the input texture format.
-\param[out] imageFormat Specifies the output image format.
-\param[out] dataType Specifies the output image data type.
-\return True if a suitable image format has been found. Otherwise, the output parameter 'imageFormat' and 'dataType' have not been modified.
-\remarks Texture formats that cannot be converted to an image format are all 16-bit floating-point types, and Format::Undefined.
-*/
-LLGL_EXPORT bool FindSuitableImageFormat(const Format format, ImageFormat& imageFormat, DataType& dataType);
 
 /**
 \brief Converts the image format and data type of the source image (only uncompressed color formats).

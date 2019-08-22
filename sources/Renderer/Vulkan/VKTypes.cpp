@@ -66,7 +66,7 @@ VkFormat Map(const Format format)
 
         case Format::R64Float:          return VK_FORMAT_R64_SFLOAT;
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case Format::RG8UNorm:          return VK_FORMAT_R8G8_UNORM;
         case Format::RG8SNorm:          return VK_FORMAT_R8G8_SNORM;
         case Format::RG8UInt:           return VK_FORMAT_R8G8_UINT;
@@ -383,7 +383,7 @@ Format Unmap(const VkFormat format)
 
         case VK_FORMAT_R64_SFLOAT:              return Format::R64Float;
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case VK_FORMAT_R8G8_UNORM:              return Format::RG8UNorm;
         case VK_FORMAT_R8G8_SNORM:              return Format::RG8SNorm;
         case VK_FORMAT_R8G8_UINT:               return Format::RG8UInt;

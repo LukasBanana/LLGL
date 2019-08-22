@@ -588,7 +588,7 @@ D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format)
         case DXGI_FORMAT_R16_FLOAT:             return { ImageFormat::R,                DataType::Float16 };
         case DXGI_FORMAT_R32_FLOAT:             return { ImageFormat::R,                DataType::Float32 };
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case DXGI_FORMAT_R8G8_UNORM:            return { ImageFormat::RG,               DataType::UInt8   };
         case DXGI_FORMAT_R8G8_SNORM:            return { ImageFormat::RG,               DataType::Int8    };
         case DXGI_FORMAT_R16G16_UNORM:          return { ImageFormat::RG,               DataType::UInt16  };

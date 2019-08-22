@@ -353,8 +353,14 @@ void D3D11RenderSystem::InitializeGpuTextureWithClearValue(
     {
         /* Find suitable image format for texture hardware format */
         SrcImageDescriptor imageDescDefault;
-        if (FindSuitableImageFormat(format, imageDescDefault.format, imageDescDefault.dataType))
+
+        const auto& formatDesc = GetFormatDesc(format);
+        if (formatDesc.bitSize > 0)
         {
+            /* Copy image format and data type from descriptor */
+            imageDescDefault.format     = formatDesc.format;
+            imageDescDefault.dataType   = formatDesc.dataType;
+
             /* Generate default image buffer */
             const auto fillColor = clearValue.color.Cast<double>();
             const auto imageSize = extent.width * extent.height * extent.depth;

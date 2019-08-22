@@ -76,7 +76,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
 
         case Format::R64Float:          break;
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case Format::RG8UNorm:       	return MTLPixelFormatRG8Unorm;
         case Format::RG8SNorm:       	return MTLPixelFormatRG8Snorm;
         case Format::RG8UInt:       	return MTLPixelFormatRG8Uint;
@@ -158,7 +158,7 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
 {
     switch (format)
     {
-        /* --- Color formats --- */
+        /* --- Red channel color formats --- */
         case Format::R8UNorm:       return MTLVertexFormatUCharNormalized;
         case Format::R8SNorm:       return MTLVertexFormatCharNormalized;
         case Format::R8UInt:        return MTLVertexFormatUChar;
@@ -174,6 +174,7 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
         case Format::R32SInt:       return MTLVertexFormatInt;
         case Format::R32Float:      return MTLVertexFormatFloat;
 
+        /* --- RG color formats --- */
         case Format::RG8UNorm:      return MTLVertexFormatUChar2Normalized;
         case Format::RG8SNorm:      return MTLVertexFormatChar2Normalized;
         case Format::RG8UInt:       return MTLVertexFormatUChar2;
@@ -189,6 +190,7 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
         case Format::RG32SInt:      return MTLVertexFormatInt2;
         case Format::RG32Float:     return MTLVertexFormatFloat2;
 
+        /* --- RGB color formats --- */
         case Format::RGB8UNorm:     return MTLVertexFormatUChar3Normalized;
         case Format::RGB8SNorm:     return MTLVertexFormatChar3Normalized;
         case Format::RGB8UInt:      return MTLVertexFormatUChar3;
@@ -204,6 +206,7 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
         case Format::RGB32SInt:     return MTLVertexFormatInt3;
         case Format::RGB32Float:    return MTLVertexFormatFloat3;
 
+        /* --- RGBA color formats --- */
         case Format::RGBA8UNorm:    return MTLVertexFormatUChar4Normalized;
         case Format::RGBA8SNorm:    return MTLVertexFormatChar4Normalized;
         case Format::RGBA8UInt:     return MTLVertexFormatUChar4;
@@ -438,7 +441,7 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatR32Sint:           		return Format::R32SInt;
         case MTLPixelFormatR32Float:          		return Format::R32Float;
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case MTLPixelFormatRG8Unorm:           		return Format::RG8UNorm;
         case MTLPixelFormatRG8Snorm:           		return Format::RG8SNorm;
         case MTLPixelFormatRG8Uint:           		return Format::RG8UInt;

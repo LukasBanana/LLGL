@@ -301,13 +301,11 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     if (imageDesc)
     {
         /* Check if image data must be converted */
-        ImageFormat dstFormat   = ImageFormat::RGBA;
-        DataType    dstDataType = DataType::Int8;
-
-        if (FindSuitableImageFormat(textureDesc.format, dstFormat, dstDataType))
+        const auto& formatDesc = GetFormatDesc(textureDesc.format);
+        if (formatDesc.bitSize > 0)
         {
             /* Convert image format (will be null if no conversion is necessary) */
-            tempImageBuffer = ConvertImageBuffer(*imageDesc, dstFormat, dstDataType, cfg.threadCount);
+            tempImageBuffer = ConvertImageBuffer(*imageDesc, formatDesc.format, formatDesc.dataType, cfg.threadCount);
         }
 
         if (tempImageBuffer)
@@ -333,13 +331,11 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) == 0)
     {
         /* Allocate default image data */
-        ImageFormat imageFormat = ImageFormat::RGBA;
-        DataType imageDataType = DataType::Float64;
-
-        if (FindSuitableImageFormat(textureDesc.format, imageFormat, imageDataType))
+        const auto& formatDesc = GetFormatDesc(textureDesc.format);
+        if (formatDesc.bitSize > 0)
         {
             const ColorRGBAd fillColor { textureDesc.clearValue.color.Cast<double>() };
-            tempImageBuffer = GenerateImageBuffer(imageFormat, imageDataType, imageSize, fillColor);
+            tempImageBuffer = GenerateImageBuffer(formatDesc.format, formatDesc.dataType, imageSize, fillColor);
         }
         else
             tempImageBuffer = GenerateEmptyByteBuffer(static_cast<std::size_t>(initialDataSize));

@@ -30,7 +30,11 @@ VertexAttribute::VertexAttribute(
 
 std::uint32_t VertexAttribute::GetSize() const
 {
-    return (FormatBitSize(format) / 8);
+    const auto& formatDesc = GetFormatDesc(format);
+    if (formatDesc.compressed || formatDesc.sRGB || formatDesc.depth || formatDesc.stencil)
+        return 0;
+    else
+        return (formatDesc.bitSize / 8);
 }
 
 

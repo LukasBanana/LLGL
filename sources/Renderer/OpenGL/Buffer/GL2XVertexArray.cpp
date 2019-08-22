@@ -31,10 +31,8 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
         ThrowNotSupportedExcept(__FUNCTION__, "integral vertex attributes");
 
     /* Get data type and components of vector type */
-    DataType        dataType    = DataType::Float32;
-    std::uint32_t   components  = 0;
-
-    if (!SplitFormat(attribute.format, dataType, components))
+    const auto& formatDesc = GetFormatDesc(attribute.format);
+    if (formatDesc.bitSize == 0)
         ThrowNotSupportedExcept(__FUNCTION__, "specified vertex attribute");
 
     /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
@@ -44,8 +42,8 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
         {
             bufferID,
             index,
-            static_cast<GLint>(components),
-            GLTypes::Map(dataType),
+            static_cast<GLint>(formatDesc.components),
+            GLTypes::Map(formatDesc.dataType),
             GLBoolean(isNormalizedFormat),
             stride,
             reinterpret_cast<const GLvoid*>(offsetPtrSized)

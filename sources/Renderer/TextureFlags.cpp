@@ -43,7 +43,12 @@ LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
 
 std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)
 {
-    return ((FormatBitSize(format) * numTexels) / 8);
+    const auto& formatDesc = GetFormatDesc(format);
+    const auto blockSize = formatDesc.blockWidth * formatDesc.blockHeight;
+    if (blockSize > 0 && numTexels % blockSize == 0)
+        return ((numTexels / blockSize * formatDesc.bitSize) / 8);
+    else
+        return 0;
 }
 
 LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc)

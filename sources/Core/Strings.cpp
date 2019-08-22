@@ -140,7 +140,7 @@ LLGL_EXPORT const char* ToString(const Format t)
 
         case T::R64Float:           return "R64Float";
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case T::RG8UNorm:           return "RG8UNorm";
         case T::RG8SNorm:           return "RG8SNorm";
         case T::RG8UInt:            return "RG8UInt";

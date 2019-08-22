@@ -13,302 +13,149 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT std::uint32_t FormatBitSize(const Format format)
+// Declaration of all hardware format descriptors
+static const FormatDescriptor g_formatDescs[] =
 {
-    switch (format)
-    {
-        /* --- Alpha channel color formats --- */
-        case Format::A8UNorm:
-            return 8;
+//   bits  w  h  c  format                       dataType           sRGB   compr  depth  stncl  norm
+    {   0, 0, 0, 0, ImageFormat::R,              DataType::Int8,    false, false, false, false, false }, // Undefined
 
-        /* --- Red channel color formats --- */
-        case Format::R8UNorm:
-        case Format::R8SNorm:
-        case Format::R8UInt:
-        case Format::R8SInt:
-            return 8;
+    /* --- Alpha channel color formats --- */
+//   bits  w  h  c  format                       dataType           sRGB   compr  depth  stncl  norm
+    {   8, 1, 1, 1, ImageFormat::Alpha,          DataType::UInt8,   false, false, false, false, true  }, // A8UNorm
 
-        case Format::R16UNorm:
-        case Format::R16SNorm:
-        case Format::R16UInt:
-        case Format::R16SInt:
-        case Format::R16Float:
-            return 16;
+    /* --- Red channel color formats --- */
+//   bits  w  h  c  format                       dataType           sRGB   compr  depth  stncl  norm
+    {   8, 1, 1, 1, ImageFormat::R,              DataType::UInt8,   false, false, false, false, true  }, // R8UNorm
+    {   8, 1, 1, 1, ImageFormat::R,              DataType::Int8,    false, false, false, false, true  }, // R8SNorm
+    {   8, 1, 1, 1, ImageFormat::R,              DataType::UInt8,   false, false, false, false, false }, // R8UInt
+    {   8, 1, 1, 1, ImageFormat::R,              DataType::Int8,    false, false, false, false, false }, // R8SInt
 
-        case Format::R32UInt:
-        case Format::R32SInt:
-        case Format::R32Float:
-            return 32;
+    {  16, 1, 1, 1, ImageFormat::R,              DataType::UInt16,  false, false, false, false, true  }, // R16UNorm
+    {  16, 1, 1, 1, ImageFormat::R,              DataType::Int16,   false, false, false, false, true  }, // R16SNorm
+    {  16, 1, 1, 1, ImageFormat::R,              DataType::UInt16,  false, false, false, false, false }, // R16UInt
+    {  16, 1, 1, 1, ImageFormat::R,              DataType::Int16,   false, false, false, false, false }, // R16SInt
+    {  16, 1, 1, 1, ImageFormat::R,              DataType::Float16, false, false, false, false, false }, // R16Float
 
-        case Format::R64Float:
-            return 64;
+    {  32, 1, 1, 1, ImageFormat::R,              DataType::UInt32,  false, false, false, false, false }, // R32UInt
+    {  32, 1, 1, 1, ImageFormat::R,              DataType::Int32,   false, false, false, false, false }, // R32SInt
+    {  32, 1, 1, 1, ImageFormat::R,              DataType::Float32, false, false, false, false, false }, // R32Float
 
-        /* --- RG channel color formats --- */
-        case Format::RG8UNorm:
-        case Format::RG8SNorm:
-        case Format::RG8UInt:
-        case Format::RG8SInt:
-            return 16;
+    {  64, 1, 1, 1, ImageFormat::R,              DataType::Float64, false, false, false, false, false }, // R64Float
 
-        case Format::RG16UNorm:
-        case Format::RG16SNorm:
-        case Format::RG16UInt:
-        case Format::RG16SInt:
-        case Format::RG16Float:
-            return 32;
+    /* --- RG color formats --- */
+//   bits  w  h  c  format                       dataType           sRGB   compr  depth  stncl  norm
+    {  16, 1, 1, 2, ImageFormat::RG,             DataType::UInt8,   false, false, false, false, true  }, // RG8UNorm
+    {  16, 1, 1, 2, ImageFormat::RG,             DataType::Int8,    false, false, false, false, true  }, // RG8SNorm
+    {  16, 1, 1, 2, ImageFormat::RG,             DataType::UInt8,   false, false, false, false, false }, // RG8UInt
+    {  16, 1, 1, 2, ImageFormat::RG,             DataType::Int8,    false, false, false, false, false }, // RG8SInt
 
-        case Format::RG32UInt:
-        case Format::RG32SInt:
-        case Format::RG32Float:
-            return 64;
+    {  32, 1, 1, 2, ImageFormat::RG,             DataType::UInt16,  false, false, false, false, true  }, // RG16UNorm
+    {  32, 1, 1, 2, ImageFormat::RG,             DataType::Int16,   false, false, false, false, true  }, // RG16SNorm
+    {  32, 1, 1, 2, ImageFormat::RG,             DataType::UInt16,  false, false, false, false, false }, // RG16UInt
+    {  32, 1, 1, 2, ImageFormat::RG,             DataType::Int16,   false, false, false, false, false }, // RG16SInt
+    {  32, 1, 1, 2, ImageFormat::RG,             DataType::Float16, false, false, false, false, false }, // RG16Float
 
-        case Format::RG64Float:
-            return 128;
+    {  64, 1, 1, 2, ImageFormat::RG,             DataType::UInt32,  false, false, false, false, false }, // RG32UInt
+    {  64, 1, 1, 2, ImageFormat::RG,             DataType::Int32,   false, false, false, false, false }, // RG32SInt
+    {  64, 1, 1, 2, ImageFormat::RG,             DataType::Float32, false, false, false, false, false }, // RG32Float
 
-        /* --- RGB color formats --- */
-        case Format::RGB8UNorm:
-        case Format::RGB8UNorm_sRGB:
-        case Format::RGB8SNorm:
-        case Format::RGB8UInt:
-        case Format::RGB8SInt:
-            return 24;
+    { 128, 1, 1, 2, ImageFormat::RG,             DataType::Float64, false, false, false, false, false }, // RG64Float
 
-        case Format::RGB16UNorm:
-        case Format::RGB16SNorm:
-        case Format::RGB16UInt:
-        case Format::RGB16SInt:
-        case Format::RGB16Float:
-            return 48;
+    /* --- RGB color formats --- */
+//   bits  w  h  c  format                       dataType           sRGB   compr  depth  stncl  norm
+    {  24, 1, 1, 3, ImageFormat::RGB,            DataType::UInt8,   false, false, false, false, true  }, // RGB8UNorm
+    {  24, 1, 1, 3, ImageFormat::RGB,            DataType::UInt8,   true,  false, false, false, true  }, // RGB8UNorm_sRGB
+    {  24, 1, 1, 3, ImageFormat::RGB,            DataType::Int8,    false, false, false, false, true  }, // RGB8SNorm
+    {  24, 1, 1, 3, ImageFormat::RGB,            DataType::UInt8,   false, false, false, false, false }, // RGB8UInt
+    {  24, 1, 1, 3, ImageFormat::RGB,            DataType::Int8,    false, false, false, false, false }, // RGB8SInt
 
-        case Format::RGB32UInt:
-        case Format::RGB32SInt:
-        case Format::RGB32Float:
-            return 96;
+    {  48, 1, 1, 3, ImageFormat::RGB,            DataType::UInt16,  false, false, false, false, true  }, // RGB16UNorm
+    {  48, 1, 1, 3, ImageFormat::RGB,            DataType::Int16,   false, false, false, false, true  }, // RGB16SNorm
+    {  48, 1, 1, 3, ImageFormat::RGB,            DataType::UInt16,  false, false, false, false, false }, // RGB16UInt
+    {  48, 1, 1, 3, ImageFormat::RGB,            DataType::Int16,   false, false, false, false, false }, // RGB16SInt
+    {  48, 1, 1, 3, ImageFormat::RGB,            DataType::Float16, false, false, false, false, false }, // RGB16Float
 
-        case Format::RGB64Float:
-            return 192;
+    {  96, 1, 1, 3, ImageFormat::RGB,            DataType::UInt32,  false, false, false, false, false }, // RGB32UInt
+    {  96, 1, 1, 3, ImageFormat::RGB,            DataType::Int32,   false, false, false, false, false }, // RGB32SInt
+    {  96, 1, 1, 3, ImageFormat::RGB,            DataType::Float32, false, false, false, false, false }, // RGB32Float
 
-        /* --- RGBA color formats --- */
-        case Format::RGBA8UNorm:
-        case Format::RGBA8UNorm_sRGB:
-        case Format::RGBA8SNorm:
-        case Format::RGBA8UInt:
-        case Format::RGBA8SInt:
-            return 32;
+    { 192, 1, 1, 3, ImageFormat::RGB,            DataType::Float64, false, false, false, false, false }, // RGB64Float
 
-        case Format::RGBA16UNorm:
-        case Format::RGBA16SNorm:
-        case Format::RGBA16UInt:
-        case Format::RGBA16SInt:
-        case Format::RGBA16Float:
-            return 64;
+    /* --- RGBA color formats --- */
+//   bits  w  h  c  format                       dataType           sRGB   compr  depth  stncl  norm
+    {  32, 1, 1, 4, ImageFormat::RGBA,           DataType::UInt8,   false, false, false, false, true  }, // RGBA8UNorm
+    {  32, 1, 1, 4, ImageFormat::RGBA,           DataType::UInt8,   true,  false, false, false, true  }, // RGBA8UNorm_sRGB
+    {  32, 1, 1, 4, ImageFormat::RGBA,           DataType::Int8,    false, false, false, false, true  }, // RGBA8SNorm
+    {  32, 1, 1, 4, ImageFormat::RGBA,           DataType::UInt8,   false, false, false, false, false }, // RGBA8UInt
+    {  32, 1, 1, 4, ImageFormat::RGBA,           DataType::Int8,    false, false, false, false, false }, // RGBA8SInt
 
-        case Format::RGBA32UInt:
-        case Format::RGBA32SInt:
-        case Format::RGBA32Float:
-            return 128;
+    {  64, 1, 1, 4, ImageFormat::RGBA,           DataType::UInt16,  false, false, false, false, true  }, // RGBA16UNorm
+    {  64, 1, 1, 4, ImageFormat::RGBA,           DataType::Int16,   false, false, false, false, true  }, // RGBA16SNorm
+    {  64, 1, 1, 4, ImageFormat::RGBA,           DataType::UInt16,  false, false, false, false, false }, // RGBA16UInt
+    {  64, 1, 1, 4, ImageFormat::RGBA,           DataType::Int16,   false, false, false, false, false }, // RGBA16SInt
+    {  64, 1, 1, 4, ImageFormat::RGBA,           DataType::Float16, false, false, false, false, false }, // RGBA16Float
 
-        case Format::RGBA64Float:
-            return 256;
+    { 128, 1, 1, 4, ImageFormat::RGBA,           DataType::UInt32,  false, false, false, false, false }, // RGBA32UInt
+    { 128, 1, 1, 4, ImageFormat::RGBA,           DataType::Int32,   false, false, false, false, false }, // RGBA32SInt
+    { 128, 1, 1, 4, ImageFormat::RGBA,           DataType::Float32, false, false, false, false, false }, // RGBA32Float
 
-        /* --- BGRA color formats --- */
-        case Format::BGRA8UNorm:
-        case Format::BGRA8UNorm_sRGB:
-        case Format::BGRA8SNorm:
-        case Format::BGRA8UInt:
-        case Format::BGRA8SInt:
-            return 32;
+    { 256, 1, 1, 4, ImageFormat::RGBA,           DataType::Float64, false, false, false, false, false }, // RGBA64Float
 
-        /* --- Depth-stencil formats --- */
-        case Format::D16UNorm:          return 16;  // 16-bit depth
-        case Format::D32Float:          return 32;  // 32-bit depth
-        case Format::D24UNormS8UInt:    return 32;  // 24-bit depth, 8-bit stencil
-        case Format::D32FloatS8X24UInt: return 64;  // 32-bit depth, 8-bit stencil, 24-bit unused
+    /* --- BGRA color formats --- */
+//   bits  w  h  c  format                       dataType           sRGB   compr  depth  stncl  norm
+    {  32, 1, 1, 4, ImageFormat::BGRA,           DataType::UInt8,   false, false, false, false, true  }, // BGRA8UNorm
+    {  32, 1, 1, 4, ImageFormat::BGRA,           DataType::UInt8,   true,  false, false, false, true  }, // BGRA8UNorm_sRGB
+    {  32, 1, 1, 4, ImageFormat::BGRA,           DataType::Int8,    false, false, false, false, true  }, // BGRA8SNorm
+    {  32, 1, 1, 4, ImageFormat::BGRA,           DataType::UInt8,   false, false, false, false, false }, // BGRA8UInt
+    {  32, 1, 1, 4, ImageFormat::BGRA,           DataType::Int8,    false, false, false, false, false }, // BGRA8SInt
 
-        /* --- Compressed color formats --- */
-        case Format::BC1RGB:            return 4;   // 64-bit per 4x4 block
-        case Format::BC1RGBA:           return 4;   // 64-bit per 4x4 block
-        case Format::BC2RGBA:           return 8;   // 128-bit per 4x4 block
-        case Format::BC3RGBA:           return 8;   // 128-bit per 4x4 block
+    /* --- Depth-stencil formats --- */
+//   bits  w  h  c  format                       dataType           sRGB   compr  depth  stncl  norm
+    {  16, 1, 1, 1, ImageFormat::Depth,          DataType::UInt16,  false, false, true,  false, true  }, // D16UNorm
+    {  32, 1, 1, 2, ImageFormat::DepthStencil,   DataType::UInt16,  false, false, true,  true,  true  }, // D24UNormS8UInt
+    {  32, 1, 1, 1, ImageFormat::Depth,          DataType::Float32, false, false, true,  false, false }, // D32Float
+    {  64, 1, 1, 2, ImageFormat::DepthStencil,   DataType::Float32, false, false, true,  true,  false }, // D32FloatS8X24UInt
 
-        default:                        return 0;
-    }
-}
+    /* --- Compressed color formats --- */
+    {  64, 4, 4, 3, ImageFormat::CompressedRGB,  DataType::Int8,    false, true,  false, false, false }, // BC1RGB
+    {  64, 4, 4, 4, ImageFormat::CompressedRGBA, DataType::Int8,    false, true,  false, false, false }, // BC1RGBA
+    { 128, 4, 4, 4, ImageFormat::CompressedRGBA, DataType::Int8,    false, true,  false, false, false }, // BC2RGBA
+    { 128, 4, 4, 4, ImageFormat::CompressedRGBA, DataType::Int8,    false, true,  false, false, false }, // BC3RGBA
+};
 
-static std::tuple<DataType, std::uint32_t> SplitFormatPrimary(const Format format)
+LLGL_EXPORT const FormatDescriptor& GetFormatDesc(const Format format)
 {
-    using T = std::tuple<DataType, std::uint32_t>;
-    switch (format)
-    {
-        case Format::Undefined:         break;
-
-        /* --- Alpha channel color formats --- */
-        case Format::A8UNorm:           return T{ DataType::UInt8,   1 };
-
-        /* --- Red channel color formats --- */
-        case Format::R8UNorm:           return T{ DataType::UInt8,   1 };
-        case Format::R8SNorm:           return T{ DataType::Int8,    1 };
-        case Format::R8UInt:            return T{ DataType::UInt8,   1 };
-        case Format::R8SInt:            return T{ DataType::Int8,    1 };
-
-        case Format::R16UNorm:          return T{ DataType::UInt16,  1 };
-        case Format::R16SNorm:          return T{ DataType::Int16,   1 };
-        case Format::R16UInt:           return T{ DataType::UInt16,  1 };
-        case Format::R16SInt:           return T{ DataType::Int16,   1 };
-        case Format::R16Float:          return T{ DataType::Float16, 1 };
-
-        case Format::R32UInt:           return T{ DataType::UInt32,  1 };
-        case Format::R32SInt:           return T{ DataType::Int32,   1 };
-        case Format::R32Float:          return T{ DataType::Float32, 1 };
-
-        case Format::R64Float:          return T{ DataType::Float64, 1 };
-
-        /* --- RG channel color formats --- */
-        case Format::RG8UNorm:          return T{ DataType::UInt8,   2 };
-        case Format::RG8SNorm:          return T{ DataType::Int8,    2 };
-        case Format::RG8UInt:           return T{ DataType::UInt8,   2 };
-        case Format::RG8SInt:           return T{ DataType::Int8,    2 };
-
-        case Format::RG16UNorm:         return T{ DataType::UInt16,  2 };
-        case Format::RG16SNorm:         return T{ DataType::Int16,   2 };
-        case Format::RG16UInt:          return T{ DataType::UInt16,  2 };
-        case Format::RG16SInt:          return T{ DataType::Int16,   2 };
-        case Format::RG16Float:         return T{ DataType::Float16, 2 };
-
-        case Format::RG32UInt:          return T{ DataType::UInt32,  2 };
-        case Format::RG32SInt:          return T{ DataType::Int32,   2 };
-        case Format::RG32Float:         return T{ DataType::Float32, 2 };
-
-        case Format::RG64Float:         return T{ DataType::Float64, 2 };
-
-        /* --- RGB color formats --- */
-        case Format::RGB8UNorm:         return T{ DataType::UInt8,   3 };
-        case Format::RGB8UNorm_sRGB:    return T{ DataType::UInt8,   3 };
-        case Format::RGB8SNorm:         return T{ DataType::Int8,    3 };
-        case Format::RGB8UInt:          return T{ DataType::UInt8,   3 };
-        case Format::RGB8SInt:          return T{ DataType::Int8,    3 };
-
-        case Format::RGB16UNorm:        return T{ DataType::UInt16,  3 };
-        case Format::RGB16SNorm:        return T{ DataType::Int16,   3 };
-        case Format::RGB16UInt:         return T{ DataType::UInt16,  3 };
-        case Format::RGB16SInt:         return T{ DataType::Int16,   3 };
-        case Format::RGB16Float:        return T{ DataType::Float16, 3 };
-
-        case Format::RGB32UInt:         return T{ DataType::UInt32,  3 };
-        case Format::RGB32SInt:         return T{ DataType::Int32,   3 };
-        case Format::RGB32Float:        return T{ DataType::Float32, 3 };
-
-        case Format::RGB64Float:        return T{ DataType::Float64, 3 };
-
-        /* --- RGBA color formats --- */
-        case Format::RGBA8UNorm:        return T{ DataType::UInt8,   4 };
-        case Format::RGBA8UNorm_sRGB:   return T{ DataType::UInt8,   4 };
-        case Format::RGBA8SNorm:        return T{ DataType::Int8,    4 };
-        case Format::RGBA8UInt:         return T{ DataType::UInt8,   4 };
-        case Format::RGBA8SInt:         return T{ DataType::Int8,    4 };
-
-        case Format::RGBA16UNorm:       return T{ DataType::UInt16,  4 };
-        case Format::RGBA16SNorm:       return T{ DataType::Int16,   4 };
-        case Format::RGBA16UInt:        return T{ DataType::UInt16,  4 };
-        case Format::RGBA16SInt:        return T{ DataType::Int16,   4 };
-        case Format::RGBA16Float:       return T{ DataType::Float16, 4 };
-
-        case Format::RGBA32UInt:        return T{ DataType::UInt32,  4 };
-        case Format::RGBA32SInt:        return T{ DataType::Int32,   4 };
-        case Format::RGBA32Float:       return T{ DataType::Float32, 4 };
-
-        case Format::RGBA64Float:       return T{ DataType::Float64, 4 };
-
-        /* --- BGRA color formats --- */
-        case Format::BGRA8UNorm:        return T{ DataType::UInt8,   4 };
-        case Format::BGRA8UNorm_sRGB:   return T{ DataType::UInt8,   4 };
-        case Format::BGRA8SNorm:        return T{ DataType::Int8,    4 };
-        case Format::BGRA8UInt:         return T{ DataType::UInt8,   4 };
-        case Format::BGRA8SInt:         return T{ DataType::Int8,    4 };
-
-        /* --- Depth-stencil formats --- */
-        case Format::D16UNorm:          break;
-        case Format::D32Float:          break;
-        case Format::D24UNormS8UInt:    break;
-        case Format::D32FloatS8X24UInt: break;
-
-        /* --- Compressed color formats --- */
-        case Format::BC1RGB:            break;
-        case Format::BC1RGBA:           break;
-        case Format::BC2RGBA:           break;
-        case Format::BC3RGBA:           break;
-    }
-
-    /* Return an invalid image format */
-    return T{ DataType::UInt8, 0 };
-}
-
-LLGL_EXPORT bool SplitFormat(const Format format, DataType& dataType, std::uint32_t& components)
-{
-    /* Find suitable format and check for invalid output */
-    DataType dataTypeTmp;
-    std::uint32_t componentsTmp;
-
-    std::tie(dataTypeTmp, componentsTmp) = SplitFormatPrimary(format);
-
-    if (componentsTmp > 0)
-    {
-        dataType    = dataTypeTmp;
-        components  = componentsTmp;
-        return true;
-    }
-
-    return false;
+    auto idx = static_cast<std::size_t>(format);
+    if (idx < sizeof(g_formatDescs)/sizeof(g_formatDescs[0]))
+        return g_formatDescs[idx];
+    else
+        return g_formatDescs[0];
 }
 
 LLGL_EXPORT bool IsCompressedFormat(const Format format)
 {
-    return (format >= Format::BC1RGB && format <= Format::BC3RGBA);
+    return GetFormatDesc(format).compressed;
 }
 
 LLGL_EXPORT bool IsDepthStencilFormat(const Format format)
 {
-    return (format >= Format::D16UNorm && format <= Format::D32FloatS8X24UInt);
+    const auto& formatDesc = GetFormatDesc(format);
+    return (formatDesc.depth || formatDesc.stencil);
 }
 
 LLGL_EXPORT bool IsDepthFormat(const Format format)
 {
-    return (format >= Format::D16UNorm && format <= Format::D32FloatS8X24UInt);
+    return GetFormatDesc(format).depth;
 }
 
 LLGL_EXPORT bool IsStencilFormat(const Format format)
 {
-    return (format == Format::D24UNormS8UInt || format == Format::D32FloatS8X24UInt);
+    return GetFormatDesc(format).stencil;
 }
 
 LLGL_EXPORT bool IsNormalizedFormat(const Format format)
 {
-    switch (format)
-    {
-        case Format::R8UNorm:
-        case Format::R8SNorm:
-        case Format::R16UNorm:
-        case Format::R16SNorm:
-        case Format::RG8UNorm:
-        case Format::RG8SNorm:
-        case Format::RG16UNorm:
-        case Format::RG16SNorm:
-        case Format::RGB8UNorm:
-        case Format::RGB8UNorm_sRGB:
-        case Format::RGB8SNorm:
-        case Format::RGB16UNorm:
-        case Format::RGB16SNorm:
-        case Format::RGBA8UNorm:
-        case Format::RGBA8UNorm_sRGB:
-        case Format::RGBA8SNorm:
-        case Format::RGBA16UNorm:
-        case Format::RGBA16SNorm:
-        case Format::BGRA8UNorm:
-        case Format::BGRA8UNorm_sRGB:
-            return true;
-        default:
-            return false;
-    }
+    return GetFormatDesc(format).normalized;
 }
 
 LLGL_EXPORT bool IsIntegralFormat(const Format format)

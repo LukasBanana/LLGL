@@ -85,7 +85,7 @@ DXGI_FORMAT Map(const Format format)
 
         case Format::R64Float:          break;
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case Format::RG8UNorm:          return DXGI_FORMAT_R8G8_UNORM;
         case Format::RG8SNorm:          return DXGI_FORMAT_R8G8_SNORM;
         case Format::RG8UInt:           return DXGI_FORMAT_R8G8_UINT;
@@ -237,7 +237,7 @@ Format Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_R32_SINT:                  return Format::R32SInt;
         case DXGI_FORMAT_R32_FLOAT:                 return Format::R32Float;
 
-        /* --- RG channel color formats --- */
+        /* --- RG color formats --- */
         case DXGI_FORMAT_R8G8_UNORM:                return Format::RG8UNorm;
         case DXGI_FORMAT_R8G8_SNORM:                return Format::RG8SNorm;
         case DXGI_FORMAT_R8G8_UINT:                 return Format::RG8UInt;

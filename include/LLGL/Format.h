@@ -21,7 +21,7 @@ namespace LLGL
 
 /**
 \brief Texture and vertex attribute format enumeration used for GPU side operations.
-\remarks The counterpart of this enumeration for CPU side operations is LLGL::DataType.
+\remarks The counterpart of this enumeration for CPU side operations are LLGL::ImageFormat and LLGL::DataType.
 \see TextureDescriptor::format
 \see VertexAttribute::format
 \see RenderingCapabilities::textureFormats
@@ -55,7 +55,7 @@ enum class Format
 
     R64Float,           //!< Color format: red 64-bit floating point component. \note Only supported with: Vulkan.
 
-    /* --- RG channel color formats --- */
+    /* --- RG color formats --- */
     RG8UNorm,           //!< Color format: red, green 8-bit normalized unsigned integer components.
     RG8SNorm,           //!< Color format: red, green 8-bit normalized signed integer components.
     RG8UInt,            //!< Color format: red, green 8-bit unsigned integer components.
@@ -132,6 +132,35 @@ enum class Format
 };
 
 /**
+\brief Image format enumeration that applies to each pixel of an image.
+\see SrcImageDescriptor::format
+\see DstImageDescriptor::format
+\see ImageFormatSize
+\todo Maybe replace \c DataType and \c ImageFormat by LLGL::Format.
+*/
+enum class ImageFormat
+{
+    /* Color formats */
+    Alpha,          //!< Single color component: Alpha.
+    R,              //!< Single color component: Red.
+    RG,             //!< Two color components: Red, Green.
+    RGB,            //!< Three color components: Red, Green, Blue.
+    BGR,            //!< Three color components: Blue, Green, Red.
+    RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
+    BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
+    ARGB,           //!< Four color components: Alpha, Red, Green, Blue. Old format, mainly used in Direct3D 9.
+    ABGR,           //!< Four color components: Alpha, Blue, Green, Red. Old format, mainly used in Direct3D 9.
+
+    /* Depth-stencil formats */
+    Depth,          //!< Depth component.
+    DepthStencil,   //!< Depth component and stencil index.
+
+    /* Compressed formats */
+    CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.
+    CompressedRGBA, //!< Generic compressed format with four color components: Red, Green, Blue, Alpha.
+};
+
+/**
 \brief Data types enumeration used for CPU side operations.
 \remarks The counterpart of this enumeration for GPU side operations is LLGL::Format.
 \see SrcImageDescriptor::dataType
@@ -155,6 +184,54 @@ enum class DataType
 };
 
 
+/* ----- Structures ----- */
+
+/**
+\brief Vertex and texture format descriptor structure.
+\remarks Describes all attributes of a hardware format, e.g. bit size, color components, compression etc.
+\note This descriptor structure has no default initializers to fulfill the requirements of a plain-old-data (POD) structure.
+\see GetFormatDesc
+*/
+struct FormatDescriptor
+{
+    //! Size (in bits) of the a pixel block or vertex attribute. This is 0 for invalid formats.
+    std::uint16_t   bitSize;
+
+    //! Width of a pixel block. This is 1 for all non-compressed formats. This is 0 for invalid formats.
+    std::uint8_t    blockWidth;
+
+    //! Height of a pixel block. This is 1 for all non-compressed formats. This is 0 for invalid formats.
+    std::uint8_t    blockHeight;
+
+    //! Number of components. This is either 1, 2, 3, or 4. This is 0 for invalid formats.
+    std::uint8_t    components;
+
+    //! Image pixel format. This is ignored for depth-stencil and compressed formats.
+    ImageFormat     format;
+
+    /**
+    \brief Color component data type. This is ignored for depth-stencil and compressed formats.
+    \remarks For depth-stencil formats, this data type always refers to the depth component, because stencil components are always in 8-bit unsigned integer format.
+    */
+    DataType        dataType;
+
+    //! Specifies whether the format is a color format in non-linear sRGB space (e.g. Format::RGBA8UNorm_sRGB).
+    bool            sRGB;
+
+    //! Specifies whether the format is a compressed color format (e.g. Format::BC1RGBA).
+    bool            compressed;
+
+    //! Specifies whether the format is a depth or depth-stencil format (e.g. Format::D16UNorm).
+    bool            depth;
+
+    //! Specifies whether the format is a stencil or depth-stencil format (e.g. Format::D24UNormS8UInt).
+    bool            stencil;
+
+    //! Specifies whether the format is a normalized component format (e.g. Format::R8UNorm or Format::D16UNorm).
+    bool            normalized;
+};
+
+
 /* ----- Functions ----- */
 
 /**
@@ -164,19 +241,11 @@ enum class DataType
 */
 
 /**
-\brief Returns the bit size of the specified hardware format.
-\return Number of bits for one vector of the specified hardware format.
-\remarks This function does not return the size in bytes because some compressed block formats require less than one byte for a single color vector.
+\brief Returns the descriptor for the specified hardware format or a zero-initialized descriptor in case of an invalid argument.
+\see FormatDescriptor
 \see Format
 */
-LLGL_EXPORT std::uint32_t FormatBitSize(const Format format);
-
-/**
-\brief Splits the specified hardware format into a data type and the number of components.
-\see DataType
-\see Format
-*/
-LLGL_EXPORT bool SplitFormat(const Format format, DataType& dataType, std::uint32_t& components);
+LLGL_EXPORT const FormatDescriptor& GetFormatDesc(const Format format);
 
 /**
 \brief Returns true if the specified hardware format is a compressed format,

@@ -13,6 +13,7 @@
 - [Default values](#default-values)
 - [Renamed identifiers](#renamed-identifiers)
 - [`PipelineLayoutDesc` syntax](#pipelinelayoutdesc-syntax)
+- [`Format` information](#format-information)
 
 
 ## `BufferDescriptor` interface
@@ -306,5 +307,38 @@ Besides additions to the syntax of the `PipelineLayoutDesc` utility function, th
 The identifier `"sbuffer"` was renamed to `"buffer"`.
 
 
+## `Format` information
+
+Various functions to get meta data from a `Format` enumeration entry have been combined into a single function named `GetFormatDesc`.
+
+Before:
+```cpp
+// Interface:
+std::uint32_t FormatBitSize(const Format format);
+bool SplitFormat(const Format   format,
+                 DataType&      dataType,
+                 std::uint32_t& components);
+bool FindSuitableImageFormat(const Format format,
+                             ImageFormat& imageFormat,
+                             DataType&    dataType);
+
+// Usage:
+myTextureByteSize = myTexturePixelCount * LLGL::FormatBitSize(myFormat) / 8;
+LLGL::SplitFormat(myFormat, myDataType, myFormatComponents);
+LLGL::FindSuitableImageFormat(myFormat, myImageFormat, myDataType);
+```
+
+After:
+```
+// Interface:
+const LLGL::FormatDescriptor& GetFormatDesc(const LLGL::Format format);
+
+// Usage:
+const auto& myFormatDesc = LLGL::GetFormatDesc(myFormat);
+myTextureByteSize  = myTexturePixelCount * myFormatDesc.bitSize / myFormatDesc.blockWidth / myFormatDesc.blockHeight / 8;
+myFormatComponents = myFormatDesc.components;
+myImageFormat      = myFormatDesc.format;
+myDataType         = myFormatDesc.dataType;
+```
 
 
