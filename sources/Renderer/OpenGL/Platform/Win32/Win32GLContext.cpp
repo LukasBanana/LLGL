@@ -290,7 +290,7 @@ static int GLContextProfileToBitmask(const OpenGLContextProfile profile)
 HGLRC Win32GLContext::CreateExtContextProfile(HGLRC sharedGLRC)
 {
     /* Check if highest version possible shall be used */
-    if (config_.majorVersion < 0 || config_.minorVersion < 0)
+    if (config_.majorVersion == 0 && config_.minorVersion == 0)
     {
         glGetIntegerv(GL_MAJOR_VERSION, &(config_.majorVersion));
         glGetIntegerv(GL_MINOR_VERSION, &(config_.minorVersion));

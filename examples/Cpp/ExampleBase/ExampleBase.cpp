@@ -233,24 +233,6 @@ ExampleBase::ExampleBase(
     };
     #endif
 
-    if (rendererDesc.moduleName == "OpenGL")
-    {
-        #if defined _WIN32
-        configOpenGL.contextProfile = LLGL::OpenGLContextProfile::CoreProfile;
-        #elif defined __APPLE__
-        configOpenGL.contextProfile = LLGL::OpenGLContextProfile::CoreProfile;
-        configOpenGL.majorVersion   = 4;
-        configOpenGL.minorVersion   = 1;
-        #elif defined __linux__
-        /*configOpenGL.contextProfile = LLGL::OpenGLContextProfile::CoreProfile;
-        configOpenGL.majorVersion   = 3;
-        configOpenGL.minorVersion   = 3;*/
-        #endif
-
-        rendererDesc.rendererConfig     = &configOpenGL;
-        rendererDesc.rendererConfigSize = sizeof(configOpenGL);
-    }
-
     // Create render system
     renderer = LLGL::RenderSystem::Load(
         rendererDesc,

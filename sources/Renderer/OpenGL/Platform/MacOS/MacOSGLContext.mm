@@ -95,13 +95,23 @@ bool MacOSGLContext::Activate(bool activate)
 static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const RendererConfigurationOpenGL& config)
 {
     if (config.contextProfile == OpenGLContextProfile::CompatibilityProfile)
+    {
+        /* Choose OpenGL compatibility profile */
         return NSOpenGLProfileVersionLegacy;
+    }
     if (config.contextProfile == OpenGLContextProfile::CoreProfile)
     {
-        if (config.majorVersion < 0 || config.minorVersion < 0 || (config.majorVersion == 4 && config.minorVersion == 1))
+        if ((config.majorVersion == 0 && config.minorVersion == 0) ||
+            (config.majorVersion == 4 && config.minorVersion == 1))
+        {
+            /* Choose OpenGL 4.1 core profile (default) */
             return NSOpenGLProfileVersion4_1Core;
+        }
         if (config.majorVersion == 3 && config.minorVersion == 2)
+        {
+            /* Choose OpenGL 3.2 core profile */
             return NSOpenGLProfileVersion3_2Core;
+        }
     }
     throw std::runtime_error("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)");
 }

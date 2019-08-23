@@ -22,18 +22,20 @@ namespace LLGL
 
 /**
 \brief OpenGL context profile enumeration.
-\remarks Can be used to specify a specific OpenGL profile other than the default (i.e. compatibility profile).
 \see RendererConfigurationOpenGL::contextProfile
 */
 enum class OpenGLContextProfile
 {
-    //! OpenGL compatibility profile. This is the default.
+    //! OpenGL compatibility profile.
     CompatibilityProfile,
 
     //! OpenGL core profile.
     CoreProfile,
 
-    //! OpenGL ES profile. \todo This is incomplete, do not use!
+    /**
+    \brief OpenGL ES profile.
+    \todo Not supported yet
+    */
     ESProfile,
 };
 
@@ -101,26 +103,25 @@ struct RendererConfigurationVulkan
 /**
 \brief OpenGL profile descriptor structure.
 \note On MacOS the only supported OpenGL profiles are compatibility profile (for lagecy OpenGL before 3.0), 3.2 core profile, or 4.1 core profile.
-\todo Move this into RenderSystemDescriptor.
-\todo Make GL context creation part of GLRenderSystem instead of each GLRenderContext instance.
-\todo Rename to RendererConfigurationOpenGL (together with RendererConfigurationVulkan).
 */
 struct RendererConfigurationOpenGL
 {
-    //! Specifies the requested OpenGL context profile. By default OpenGLContextProfile::CompatibilityProfile.
-    OpenGLContextProfile    contextProfile  = OpenGLContextProfile::CompatibilityProfile;
+    //! Specifies the requested OpenGL context profile. By default OpenGLContextProfile::CoreProfile.
+    OpenGLContextProfile    contextProfile  = OpenGLContextProfile::CoreProfile;
 
     /**
-    \brief Specifies the requested OpenGL context major version. By default -1 to indicate to use the highest version possible.
+    \brief Specifies the requested OpenGL context major version. By default 0.
+    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is availabel on the host system will be choosen.
     \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
-    int                     majorVersion    = -1;
+    int                     majorVersion    = 0;
 
     /**
-    \brief Specifies the requested OpenGL context minor version. By default -1 to indicate to use the highest version possible.
+    \brief Specifies the requested OpenGL context minor version. By default 0.
+    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is availabel on the host system will be choosen.
     \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
-    int                     minorVersion    = -1;
+    int                     minorVersion    = 0;
 };
 
 

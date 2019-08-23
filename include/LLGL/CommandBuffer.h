@@ -377,7 +377,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] resource Specifies the resource to set.
         \param[in] slot Specifies the slot index where to put the resource.
         \param[in] bindFlags Specifies to types of binding points for this resource.
-        \param[in] stageFlags Specifies at which shader stages the resource is to be set. By default StageFlags::AllStages.
+        This can be a bitwise OR combinations of the BindFlags entries.
+        \param[in] stageFlags Specifies at which shader stages the resource is to be set.
+        This can be a bitwise OR combinations of the StageFlags entries. By default StageFlags::AllStages.
         \remarks This function is only supported with the older graphics APIs and only available for convenience.
         For best performance and complete renderer independence use SetGraphicsResourceHeap and SetComputeResourceHeap.
         \remarks The following example binds a constant buffer and texture resource to the fragment shader stage:
@@ -398,8 +400,11 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] firstSlot Specifies the first binding slot beginning with zero.
         This must be zero for the following resource types: ResourceType::IndexBuffer, ResourceType::StreamOutputBuffer.
         \param[in] numSlots Specifies the number of binding slots to reset. If this is zero, the function has no effect.
-        \param[in] bindFlags Specifies which kind of binding slots to reset. To reset a vertex buffer slot for instance, it must contain the BindFlags::VertexBuffer flag.
-        \param[in] stageFlags Specifies which shader stages are affected. This can be a bitwise OR combination of the StageFlags entries. By default StageFlags::AllStages.
+        \param[in] bindFlags Specifies which kind of binding slots to reset.
+        This can be a bitwise OR combinations of the BindFlags entries.
+        To reset a vertex buffer slot for instance, it must contain the BindFlags::VertexBuffer flag.
+        \param[in] stageFlags Specifies which shader stages are affected.
+        This can be a bitwise OR combination of the StageFlags entries. By default StageFlags::AllStages.
         \remarks If direct resource binding is not supported by the render system, this function has no effect.
         \note Only supported with: OpenGL, Direct3D 11, Metal.
         \see BindFlags

@@ -34,22 +34,22 @@ void GS(triangle OutputVS inp[3], inout TriangleStream<OutputGS> streamOut)
 {
 	OutputGS outp;
 	int i;
-	
+
 	// Write vertices to 1st viewport
 	outp.viewport = 0;
-	
+
 	for (i = 0; i < 3; ++i)
 	{
 		outp.position = inp[i].position;
 		outp.color = inp[i].color;
 		streamOut.Append(outp);
 	}
-	
+
 	streamOut.RestartStrip();
-	
+
 	// Write vertices to 2nd viewport
 	outp.viewport = 1;
-	
+
 	for (i = 0; i < 3; ++i)
 	{
 		outp.position = inp[i].position;
@@ -57,7 +57,7 @@ void GS(triangle OutputVS inp[3], inout TriangleStream<OutputGS> streamOut)
 		outp.color = inp[i].color;
 		streamOut.Append(outp);
 	}
-	
+
 	streamOut.RestartStrip();
 }
 

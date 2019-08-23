@@ -66,7 +66,6 @@ class LLGL_EXPORT RenderingDebugger
         \brief Posts an error message.
         \param[in] type Specifies the type of error.
         \param[in] message Specifies the string which describes the failure.
-        \param[in] source Specifies the string which describes the source (typically the function where the failure happend).
         */
         void PostError(const ErrorType type, const std::string& message);
 
@@ -74,7 +73,6 @@ class LLGL_EXPORT RenderingDebugger
         \brief Posts a warning message.
         \param[in] type Specifies the type of error.
         \param[in] message Specifies the string which describes the warning.
-        \param[in] source Specifies the string which describes the source (typically the function where the failure happend).
         */
         void PostWarning(const WarningType type, const std::string& message);
 
