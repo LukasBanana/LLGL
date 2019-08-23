@@ -57,11 +57,6 @@ CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
     return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(device_, commandQueue_->GetNative()));
 }
 
-CommandBufferExt* MTRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
-{
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(device_, commandQueue_->GetNative()));
-}
-
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)
 {
     RemoveFromUniqueSet(commandBuffers_, &commandBuffer);

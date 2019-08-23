@@ -224,7 +224,6 @@ ExampleBase::ExampleBase(
 
     // Set up renderer descriptor
     LLGL::RenderSystemDescriptor rendererDesc = rendererModule_;
-    LLGL::RendererConfigurationOpenGL configOpenGL;
 
     #if defined _DEBUG && 0
     rendererDesc.debugCallback = [](const std::string& type, const std::string& message)

@@ -11,7 +11,7 @@
 
 #import <MetalKit/MetalKit.h>
 
-#include <LLGL/CommandBufferExt.h>
+#include <LLGL/CommandBuffer.h>
 #include "../StaticLimits.h"
 #include "Buffer/MTStagingBufferPool.h"
 #include "MTEncoderScheduler.h"
@@ -22,9 +22,12 @@ namespace LLGL
 {
 
 
+class MTBuffer;
+class MTTexture;
+class MTSampler;
 class MTRenderTarget;
 
-class MTCommandBuffer : public CommandBufferExt
+class MTCommandBuffer : public CommandBuffer
 {
 
     public:
@@ -183,22 +186,6 @@ class MTCommandBuffer : public CommandBufferExt
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
-        /* ----- Direct Resource Access ------ */
-
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
-        void ResetResourceSlots(
-            const ResourceType  resourceType,
-            std::uint32_t       firstSlot,
-            std::uint32_t       numSlots,
-            long                bindFlags,
-            long                stageFlags      = StageFlags::AllStages
-        ) override;
-
     public:
 
         // Returns the native MTLCommandBuffer object.
@@ -212,6 +199,10 @@ class MTCommandBuffer : public CommandBufferExt
         void SetIndexType(bool indexType16Bits);
         void QueueDrawable(id<MTLDrawable> drawable);
         void PresentDrawables();
+
+        void SetBuffer(MTBuffer& bufferMT, std::uint32_t slot, long stageFlags);
+        void SetTexture(MTTexture& textureMT, std::uint32_t slot, long stageFlags);
+        void SetSampler(MTSampler& samplerMT, std::uint32_t slot, long stageFlags);
 
     private:
 
