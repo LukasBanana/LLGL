@@ -32,7 +32,7 @@ OutputVS VS(InputVS inp)
 void GS(triangle OutputVS inp[3], inout TriangleStream<OutputVS> stream)
 {
 	OutputVS outp;
-	
+
 	// Generate 3 instances
 	for (int i = 0; i < 3; ++i)
 	{
@@ -44,7 +44,7 @@ void GS(triangle OutputVS inp[3], inout TriangleStream<OutputVS> stream)
 			outp.position.w = 8.0;
 			stream.Append(outp);
 		}
-		
+
 		stream.RestartStrip();
 	}
 }

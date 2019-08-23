@@ -31,7 +31,6 @@ struct InterfaceID
         Buffer,                 //!< \see Buffer
         BufferArray,            //!< \see BufferArray
         CommandBuffer,          //!< \see CommandBuffer
-        CommandBufferExt,       //!< \see CommandBufferExt
         CommandQueue,           //!< \see CommandQueue
         ComputePipeline,        //!< \see ComputePipeline
         Fence,                  //!< \see Fence

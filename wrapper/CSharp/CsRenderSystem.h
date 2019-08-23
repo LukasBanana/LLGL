@@ -131,10 +131,6 @@ public ref class RenderSystem
 
         CommandBuffer^ CreateCommandBuffer();
 
-        #if 0
-        CommandBufferExt^ CreateCommandBufferExt();
-        #endif
-
         void Release(CommandBuffer^ commandBuffer);
 
         /* ----- Buffers ------ */

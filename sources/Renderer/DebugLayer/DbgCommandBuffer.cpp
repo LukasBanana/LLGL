@@ -29,18 +29,25 @@ namespace LLGL
 {
 
 
+static const char* GetLabelOrDefault(const std::string& label, const char* defaultLabel)
+{
+    if (label.empty())
+        return defaultLabel;
+    else
+        return label.c_str();
+}
+
 DbgCommandBuffer::DbgCommandBuffer(
     CommandBuffer&                  instance,
-    CommandBufferExt*               instanceExt,
     RenderingDebugger*              debugger,
     const CommandBufferDescriptor&  desc,
-    const RenderingCapabilities&    caps) :
-        instance      { instance      },
-        instanceExt   { instanceExt   },
-        desc          { desc          },
-        debugger_     { debugger      },
-        features_     { caps.features },
-        limits_       { caps.limits   }
+    const RenderingCapabilities&    caps)
+:
+    instance      { instance      },
+    desc          { desc          },
+    debugger_     { debugger      },
+    features_     { caps.features },
+    limits_       { caps.limits   }
 {
 }
 
@@ -137,11 +144,11 @@ void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
         if (&deferredCommandBuffer == this)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "command buffer tried to execute itself");
 
-        ValidateResourceFlag(
+        ValidateBindFlags(
             commandBufferDbg.desc.flags,
             CommandBufferFlags::DeferredSubmit,
-            "CommandBufferFlags::DeferredSubmit",
-            "CommandBuffer"
+            CommandBufferFlags::DeferredSubmit,
+            "LLGL::CommandBuffer"
         );
     }
 
@@ -272,17 +279,14 @@ void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Atta
 
 void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::VertexBuffer, "BindFlags::VertexBuffer");
-    }
-
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
     if (debugger_)
     {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateBindBufferFlags(bufferDbg, BindFlags::VertexBuffer);
+
         bindings_.vertexBufferStore[0]      = (&bufferDbg);
         bindings_.vertexBuffers             = bindings_.vertexBufferStore;
         bindings_.numVertexBuffers          = 1;
@@ -302,7 +306,7 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateResourceFlag(bufferArrayDbg.GetBindFlags(), BindFlags::VertexBuffer, "BindFlags::VertexBuffer");
+        ValidateBindFlags(bufferArrayDbg.GetBindFlags(), BindFlags::VertexBuffer, BindFlags::VertexBuffer, "LLGL::BufferArray");
 
         bindings_.vertexBuffers         = bufferArrayDbg.buffers.data();
         bindings_.numVertexBuffers      = static_cast<std::uint32_t>(bufferArrayDbg.buffers.size());
@@ -332,7 +336,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateResourceFlag(bufferDbg.desc.bindFlags, BindFlags::IndexBuffer, "BindFlags::IndexBuffer");
+        ValidateBindBufferFlags(bufferDbg, BindFlags::IndexBuffer);
         bindings_.indexBuffer = (&bufferDbg);
     }
 
@@ -350,7 +354,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateResourceFlag(bufferDbg.desc.bindFlags, BindFlags::IndexBuffer, "BindFlags::IndexBuffer");
+        ValidateBindBufferFlags(bufferDbg, BindFlags::IndexBuffer);
         ValidateIndexType(format);
         bindings_.indexBuffer = (&bufferDbg);
     }
@@ -370,7 +374,7 @@ void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::StreamOutputBuffer, "BindFlags::StreamOutputBuffer");
+        ValidateBindBufferFlags(bufferDbg, BindFlags::StreamOutputBuffer);
         bindings_.streamOutput = (&bufferDbg);
     }
 
@@ -385,7 +389,7 @@ void DbgCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateResourceFlag(bufferArray.GetBindFlags(), BindFlags::StreamOutputBuffer, "BindFlags::StreamOutputBuffer");
+        ValidateBindFlags(bufferArray.GetBindFlags(), BindFlags::StreamOutputBuffer, BindFlags::StreamOutputBuffer, "LLGL::BufferArray");
     }
 
     instance.SetStreamOutputBufferArray(bufferArray);
@@ -425,7 +429,7 @@ void DbgCommandBuffer::EndStreamOutput()
     instance.EndStreamOutput();
 }
 
-/* ----- Resource View Heaps ----- */
+/* ----- Resources ----- */
 
 //TODO: record bindings
 void DbgCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
@@ -447,6 +451,104 @@ void DbgCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::u
     instance.SetComputeResourceHeap(resourceHeap, firstSet);
 
     profile_.computeResourceHeapBindings++;
+}
+
+void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+
+        if (!features_.hasDirectResourceBinding)
+            LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "direct resource binding not supported");
+
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
+    }
+
+    switch (resource.QueryResourceType())
+    {
+        case ResourceType::Undefined:
+        break;
+
+        case ResourceType::Buffer:
+        {
+            /* Forward buffer resource to wrapped instance */
+            auto& bufferDbg = LLGL_CAST(DbgBuffer&, resource);
+
+            ValidateBindFlags(
+                bufferDbg.desc.bindFlags,
+                bindFlags,
+                (BindFlags::ConstantBuffer | BindFlags::Sampled | BindFlags::Storage),
+                GetLabelOrDefault(bufferDbg.label, "LLGL::Buffer")
+            );
+
+            instance.SetResource(bufferDbg.instance, slot, bindFlags, stageFlags);
+
+            /* Record binding for profiling */
+            if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+                profile_.constantBufferBindings++;
+            if ((bindFlags & BindFlags::Sampled) != 0)
+                profile_.sampledBufferBindings++;
+            if ((bindFlags & BindFlags::Storage) != 0)
+                profile_.storageBufferBindings++;
+        }
+        break;
+
+        case ResourceType::Texture:
+        {
+            /* Forward texture resource to wrapped instance */
+            auto& textureDbg = LLGL_CAST(DbgTexture&, resource);
+
+            ValidateBindFlags(
+                textureDbg.desc.bindFlags,
+                bindFlags,
+                (BindFlags::Sampled | BindFlags::Storage | BindFlags::CombinedTextureSampler),
+                GetLabelOrDefault(textureDbg.label, "LLGL::Buffer")
+            );
+
+            instance.SetResource(textureDbg.instance, slot, bindFlags, stageFlags);
+
+            /* Record binding for profiling */
+            if ((bindFlags & BindFlags::Sampled) != 0)
+                profile_.sampledTextureBindings++;
+            if ((bindFlags & BindFlags::Storage) != 0)
+                profile_.storageTextureBindings++;
+        }
+        break;
+
+        case ResourceType::Sampler:
+        {
+            /* No bind flags allowed for samplers */
+            //TODO: use DbgSampler
+            ValidateBindFlags(0, bindFlags, 0, "LLGL::Sampler");
+
+            /* Forward sampler resource to wrapped instance */
+            instance.SetResource(resource, slot, bindFlags, stageFlags);
+
+            /* Record binding for profiling */
+            profile_.samplerBindings++;
+        }
+        break;
+    }
+}
+
+void DbgCommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                bindFlags,
+    long                stageFlags)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        if (numSlots == 0)
+            LLGL_DBG_WARN(WarningType::PointlessOperation, "no slots are specified to reset");
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
+    }
+
+    instance.ResetResourceSlots(resourceType, firstSlot, numSlots, bindFlags, stageFlags);
 }
 
 /* ----- Render Passes ----- */
@@ -759,7 +861,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
     {
         LLGL_DBG_SOURCE;
         AssertIndirectDrawingSupported();
-        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
+        ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
     }
@@ -777,7 +879,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::u
     {
         LLGL_DBG_SOURCE;
         AssertIndirectDrawingSupported();
-        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
+        ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, stride*numCommands);
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
         ValidateAddressAlignment(stride, 4, "<stride> parameter");
@@ -796,7 +898,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
     {
         LLGL_DBG_SOURCE;
         AssertIndirectDrawingSupported();
-        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
+        ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndexedIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
     }
@@ -814,7 +916,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset,
     {
         LLGL_DBG_SOURCE;
         AssertIndirectDrawingSupported();
-        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
+        ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, stride*numCommands);
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
         ValidateAddressAlignment(stride, 4, "<stride> parameter");
@@ -854,7 +956,7 @@ void DbgCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateResourceFlag(bufferDbg.GetBindFlags(), BindFlags::IndirectBuffer, "BindFlags::IndirectBuffer");
+        ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, sizeof(DispatchIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
     }
@@ -896,119 +998,6 @@ void DbgCommandBuffer::PopDebugGroup()
     }
 }
 
-/* ----- Direct Resource Access ------ */
-
-void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::ConstantBuffer, "BindFlags::ConstantBuffer");
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetConstantBuffer(bufferDbg.instance, slot, stageFlags);
-
-    profile_.constantBufferBindings++;
-}
-
-void DbgCommandBuffer::SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::Sampled, "BindFlags::Sampled");
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetSampledBuffer(bufferDbg.instance, slot, stageFlags);
-
-    profile_.sampledBufferBindings++;
-}
-
-void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateResourceFlag(buffer.GetBindFlags(), BindFlags::Storage, "BindFlags::Storage");
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetStorageBuffer(bufferDbg.instance, slot, stageFlags);
-
-    profile_.storageBufferBindings++;
-}
-
-void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetTexture(textureDbg.instance, slot, stageFlags);
-
-    profile_.textureBindings++;
-}
-
-void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetSampler(sampler, slot, stageFlags);
-
-    profile_.samplerBindings++;
-}
-
-void DbgCommandBuffer::ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        if (numSlots == 0)
-            LLGL_DBG_WARN(WarningType::PointlessOperation, "no slots are specified to reset");
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->ResetResourceSlots(resourceType, firstSlot, numSlots, bindFlags, stageFlags);
-}
-
 /* ----- Extended functions ----- */
 
 void DbgCommandBuffer::EnableRecording(bool enable)
@@ -1037,12 +1026,6 @@ void DbgCommandBuffer::NextProfile(FrameProfile& outputProfile)
 /*
  * ======= Private: =======
  */
-
-void DbgCommandBuffer::AssertCommandBufferExt(const char* funcName)
-{
-    if (!instanceExt)
-        throw std::runtime_error("illegal function call for a non-extended command buffer: " + std::string(funcName));
-}
 
 void DbgCommandBuffer::ValidateViewport(const Viewport& viewport)
 {
@@ -1318,16 +1301,81 @@ void DbgCommandBuffer::ValidateAttachmentLimit(std::uint32_t attachmentIndex, st
     }
 }
 
-void DbgCommandBuffer::ValidateResourceFlag(long resourceFlags, long requiredFlag, const char* flagName, const char* resourceName)
+static const char* BindFlagToString(long bindFlag)
 {
-    if ((resourceFlags & requiredFlag) != requiredFlag)
+    switch (bindFlag)
+    {
+        case BindFlags::VertexBuffer:           return "VertexBuffer";
+        case BindFlags::IndexBuffer:            return "IndexBuffer";
+        case BindFlags::ConstantBuffer:         return "ConstantBuffer";
+        case BindFlags::StreamOutputBuffer:     return "StreamOutputBuffer";
+        case BindFlags::IndirectBuffer:         return "IndirectBuffer";
+        case BindFlags::Sampled:                return "Sampled";
+        case BindFlags::Storage:                return "Storage";
+        case BindFlags::ColorAttachment:        return "ColorAttachment";
+        case BindFlags::DepthStencilAttachment: return "DepthStencilAttachment";
+        case BindFlags::CombinedTextureSampler: return "CombinedTextureSampler";
+        default:                                return nullptr;
+    }
+}
+
+static std::string BindFlagsToStringList(long bindFlags)
+{
+    std::string s;
+
+    for (long i = 0; i < sizeof(bindFlags)*8; ++i)
+    {
+        if (((bindFlags >> i) & 0x1) != 0)
+        {
+            /* Append comma for list representation */
+            if (!s.empty())
+                s += ", ";
+
+            const long bitmask = (bindFlags & (0x1u << i));
+            if (auto flagStr = BindFlagToString(bitmask))
+            {
+                s += "LLGL::BindFlags::";
+                s += flagStr;
+            }
+            else
+            {
+                s += "0x";
+                s += ToHex(bitmask);
+            }
+        }
+    }
+
+    return s;
+}
+
+void DbgCommandBuffer::ValidateBindFlags(long resourceFlags, long bindFlags, long validFlags, const char* resourceName)
+{
+    /* Determine invalid and missing bit flags */
+    const long invalidFlags = (bindFlags & ~validFlags);
+    const long missingFlags = ((resourceFlags & bindFlags) ^ bindFlags) & (~invalidFlags);
+
+    if (invalidFlags != 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot bind " + std::string(resourceName != nullptr ? resourceName : "resource") +
+            " with the following bind flags: " + BindFlagsToStringList(missingFlags)
+        );
+    }
+
+    if (missingFlags != 0)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             std::string(resourceName != nullptr ? resourceName : "resource") +
-            " was not created with the 'LLGL::" + std::string(flagName) + "' flag enabled"
+            " was not created with the the following bind flags: " + BindFlagsToStringList(missingFlags)
         );
     }
+}
+
+void DbgCommandBuffer::ValidateBindBufferFlags(DbgBuffer& bufferDbg, long bindFlags)
+{
+    ValidateBindFlags(bufferDbg.desc.bindFlags, bindFlags, bindFlags, GetLabelOrDefault(bufferDbg.label, "LLGL::Buffer"));
 }
 
 void DbgCommandBuffer::ValidateIndexType(const Format format)

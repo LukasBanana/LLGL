@@ -438,8 +438,7 @@ private:
             }
             commands->EndRenderPass();
 
-            if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
+            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
 
             // Render everything directly into the render context
             commands->BeginRenderPass(*context);
@@ -468,8 +467,7 @@ private:
             }
             commands->EndRenderPass();
 
-            if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
+            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
         }
         commands->End();
         commandQueue->Submit(*commands);

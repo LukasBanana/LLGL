@@ -175,7 +175,6 @@ protected:
 
     // Main command buffer
     LLGL::CommandBuffer*                        commands        = nullptr;
-    LLGL::CommandBufferExt*                     commandsExt     = nullptr;
 
     // Command queue
     LLGL::CommandQueue*                         commandQueue    = nullptr;

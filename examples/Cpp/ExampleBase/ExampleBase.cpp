@@ -275,11 +275,7 @@ ExampleBase::ExampleBase(
     multiSampleDesc_ = contextDesc.multiSampling;
 
     // Create command buffer
-    commandsExt = renderer->CreateCommandBufferExt();
-    if (commandsExt)
-        commands = commandsExt;
-    else
-        commands = renderer->CreateCommandBuffer();
+    commands = renderer->CreateCommandBuffer();
 
     // Get command queue
     commandQueue = renderer->GetCommandQueue();

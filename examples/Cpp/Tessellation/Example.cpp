@@ -17,9 +17,6 @@
 // Use render pass to optimize attachment clearing
 #define ENABLE_RENDER_PASS
 
-// Test constant buffer array
-//#define _TEST_BUFFER_ARRAY_
-
 
 class Example_Tessellation : public ExampleBase
 {
@@ -36,10 +33,6 @@ class Example_Tessellation : public ExampleBase
 
     #ifdef ENABLE_RENDER_PASS
     LLGL::RenderPass*       renderPass          = nullptr;
-    #endif
-
-    #ifdef _TEST_BUFFER_ARRAY_
-    LLGL::BufferArray*      constantBufferArray = nullptr;
     #endif
 
     std::uint32_t           constantBufferIndex = 0;
@@ -98,13 +91,6 @@ public:
         indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::Format::R32UInt);
         constantBuffer = CreateConstantBuffer(settings);
 
-        #ifdef _TEST_BUFFER_ARRAY_
-
-        // Create constant buffer array
-        constantBufferArray = renderer->CreateBufferArray(1, &constantBuffer);
-
-        #endif
-
         return vertexFormat;
     }
 
@@ -156,11 +142,11 @@ public:
         {
             renderPassDesc.colorAttachments =
             {
-                LLGL::AttachmentFormatDescriptor { context->QueryColorFormat(), LLGL::AttachmentLoadOp::Clear },
+                LLGL::AttachmentFormatDescriptor{ context->QueryColorFormat(), LLGL::AttachmentLoadOp::Clear },
             };
             renderPassDesc.depthAttachment =
             (
-                LLGL::AttachmentFormatDescriptor { context->QueryDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear }
+                LLGL::AttachmentFormatDescriptor{ context->QueryDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear }
             );
         }
         renderPass = renderer->CreateRenderPass(renderPassDesc);
@@ -296,8 +282,7 @@ private:
             #endif
             {
                 // Set viewport
-                const auto resolution = context->GetVideoMode().resolution;
-                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
+                commands->SetViewport(context->GetVideoMode().resolution);
 
                 // Set graphics pipeline with the shader
                 commands->SetGraphicsPipeline(*pipeline[showWireframe ? 1 : 0]);
@@ -310,11 +295,7 @@ private:
                 else
                 {
                     // Set constant buffer only to tessellation shader stages
-                    #ifdef _TEST_BUFFER_ARRAY_
-                    commands->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::StageFlags::AllTessStages);
-                    #else
-                    commandsExt->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::StageFlags::AllTessStages);
-                    #endif
+                    commands->SetResource(*constantBuffer, constantBufferIndex, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::AllTessStages);
                 }
 
                 // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points

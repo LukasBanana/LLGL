@@ -40,9 +40,7 @@ int main()
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();
-        auto commands = renderer->CreateCommandBufferExt();
-        if (!commands)
-            throw std::runtime_error("failed to create extended command buffer");
+        auto commands = renderer->CreateCommandBuffer();
 
         // Quit if compute shaders are not supported
         const auto& renderCaps = renderer->GetRenderingCaps();
@@ -95,7 +93,7 @@ int main()
         // Set resources
         commands->Begin();
         {
-            commands->SetStorageBuffer(*storageBuffer, 0);
+            commands->SetResource(*storageBuffer, 0, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
             commands->SetComputePipeline(*pipeline);
 
             // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query

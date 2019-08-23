@@ -76,32 +76,38 @@ struct FrameProfile
             std::uint32_t streamOutputBufferBindings;
 
             /**
-            \brief Counter for all individual constant buffer bindings (i.e. without a ResourceHeap).
-            \see CommandBufferExt::SetConstantBuffer
+            \brief Counter for all individual constant buffer bindings.
+            \see CommandBuffer::SetResource
             */
             std::uint32_t constantBufferBindings;
 
             /**
-            \brief Counter for all individual sample buffer bindings (i.e. without a ResourceHeap).
-            \see CommandBufferExt::SetSampledBuffer
+            \brief Counter for all sampled buffer bindings (i.e. with BindFlags::Sampled flag).
+            \see CommandBuffer::SetResource
             */
             std::uint32_t sampledBufferBindings;
 
             /**
-            \brief Counter for all individual read/write storage buffer bindings (i.e. without a ResourceHeap).
-            \see CommandBufferExt::SetStorageBuffer
+            \brief Counter for all storage buffer bindings (i.e. with BindFlags::Storage flag).
+            \see CommandBuffer::SetResource
             */
             std::uint32_t storageBufferBindings;
 
             /**
-            \brief Counter for all individual texture bindings (i.e. without a ResourceHeap).
-            \see CommandBufferExt::SetTexture
+            \brief Counter for all sampled texture bindings (i.e. with BindFlags::Sampled flag).
+            \see CommandBuffer::SetResource
             */
-            std::uint32_t textureBindings;
+            std::uint32_t sampledTextureBindings;
 
             /**
-            \brief Counter for all individual sampler bindings (i.e. without a ResourceHeap).
-            \see CommandBufferExt::SetSampler
+            \brief Counter for all sampled texture bindings (i.e. with BindFlags::Storage flag).
+            \see CommandBuffer::SetResource
+            */
+            std::uint32_t storageTextureBindings;
+
+            /**
+            \brief Counter for all sampler-state bindings.
+            \see CommandBuffer::SetResource
             */
             std::uint32_t samplerBindings;
 
@@ -256,7 +262,7 @@ struct FrameProfile
         };
 
         //! All proflile values as linear array.
-        std::uint32_t values[32];
+        std::uint32_t values[33];
     };
 };
 

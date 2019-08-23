@@ -17,7 +17,6 @@ class Buffer;
 class BufferArray;
 class Canvas;
 class CommandBuffer;
-class CommandBufferExt;
 class CommandQueue;
 class ComputePipeline;
 class Fence;

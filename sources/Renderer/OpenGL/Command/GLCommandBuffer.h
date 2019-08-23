@@ -9,7 +9,7 @@
 #define LLGL_GL_COMMAND_BUFFER_H
 
 
-#include <LLGL/CommandBufferExt.h>
+#include <LLGL/CommandBuffer.h>
 
 
 namespace LLGL
@@ -18,7 +18,7 @@ namespace LLGL
 
 struct GLRenderState;
 
-class GLCommandBuffer : public CommandBufferExt
+class GLCommandBuffer : public CommandBuffer
 {
 
     public:

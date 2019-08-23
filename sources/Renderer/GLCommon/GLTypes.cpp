@@ -42,7 +42,7 @@ GLenum MapOrZero(const Format format)
         case Format::Undefined:         return 0;
 
         /* --- Alpha channel color formats --- */
-        case Format::A8UNorm:           return 0;
+        case Format::A8UNorm:           return 0;//GL_R8; // texture swizzle
 
         /* --- Red channel color formats --- */
         case Format::R8UNorm:           return GL_R8;
@@ -127,11 +127,11 @@ GLenum MapOrZero(const Format format)
         case Format::RGBA64Float:       return 0;
 
         /* --- BGRA color formats --- */
-        case Format::BGRA8UNorm:        return 0;
-        case Format::BGRA8UNorm_sRGB:   return 0;
-        case Format::BGRA8SNorm:        return 0;
-        case Format::BGRA8UInt:         return 0;
-        case Format::BGRA8SInt:         return 0;
+        case Format::BGRA8UNorm:        return 0;//GL_RGBA8; // texture swizzle
+        case Format::BGRA8UNorm_sRGB:   return 0;//GL_SRGB8_ALPHA8; // texture swizzle
+        case Format::BGRA8SNorm:        return 0;//GL_RGBA8_SNORM; // texture swizzle
+        case Format::BGRA8UInt:         return 0;//GL_RGBA8UI; // texture swizzle
+        case Format::BGRA8SInt:         return 0;//GL_RGBA8I; // texture swizzle
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return GL_DEPTH_COMPONENT16;

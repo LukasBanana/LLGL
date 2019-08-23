@@ -338,12 +338,6 @@ CommandBuffer^ RenderSystem::CreateCommandBuffer()
     return gcnew CommandBuffer(native_->CreateCommandBuffer());
 }
 
-#if 0
-CommandBufferExt^ RenderSystem::CreateCommandBufferExt()
-{
-}
-#endif
-
 void RenderSystem::Release(CommandBuffer^ commandBuffer)
 {
     native_->Release(*commandBuffer->Native);

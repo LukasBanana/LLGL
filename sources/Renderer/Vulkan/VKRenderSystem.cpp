@@ -119,12 +119,6 @@ CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
     );
 }
 
-CommandBufferExt* VKRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
-{
-    /* Extended command buffers are not spported */
-    return nullptr;
-}
-
 void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 {
     RemoveFromUniqueSet(commandBuffers_, &commandBuffer);

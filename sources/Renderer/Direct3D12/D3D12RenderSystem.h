@@ -69,7 +69,6 @@ class D3D12RenderSystem final : public RenderSystem
         /* ----- Command buffers ----- */
 
         CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
-        CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 

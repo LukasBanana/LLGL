@@ -78,7 +78,7 @@ int main()
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();
-        auto commands = renderer->CreateCommandBufferExt();
+        auto commands = renderer->CreateCommandBuffer();
 
         //const auto& renderCaps = renderer->GetRenderingCaps();
 
@@ -363,7 +363,7 @@ int main()
             commands->Begin();
             {
                 //#ifndef __linux__
-                commands->SetSampler(sampler, 0);
+                commands->SetResource(sampler, 0, 0);
                 //#endif
 
                 commands->SetViewport(LLGL::Viewport{ {}, context->GetResolution() });
@@ -424,7 +424,7 @@ int main()
 
                     #endif
 
-                    commands->SetTexture(texture, 0);
+                    commands->SetResource(texture, 0, LLGL::BindFlags::Sampled);
                     commands->Draw(4, 0);
 
                     #ifdef TEST_STORAGE_BUFFER
@@ -472,7 +472,7 @@ int main()
                     {
                         commands->EndRenderPass();
                         commands->BeginRenderPass(*context);
-                        commands->SetTexture(*renderTargetTex, 0);
+                        commands->SetResource(*renderTargetTex, 0, LLGL::BindFlags::Sampled);
                         commands->Draw(4, 0);
                     }
                 }

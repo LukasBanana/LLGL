@@ -9,7 +9,7 @@
 #define LLGL_D3D11_COMMAND_BUFFER_H
 
 
-#include <LLGL/CommandBufferExt.h>
+#include <LLGL/CommandBuffer.h>
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
 #include "Direct3D11.h"
@@ -27,7 +27,7 @@ class D3D11RenderTarget;
 class D3D11RenderContext;
 class D3D11RenderPass;
 
-class D3D11CommandBuffer final : public CommandBufferExt
+class D3D11CommandBuffer final : public CommandBuffer
 {
 
     public:
@@ -107,10 +107,20 @@ class D3D11CommandBuffer final : public CommandBufferExt
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
 
-        /* ----- Resource Heaps ----- */
+        /* ----- Resources ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
+
+        void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) override;
+
+        void ResetResourceSlots(
+            const ResourceType  resourceType,
+            std::uint32_t       firstSlot,
+            std::uint32_t       numSlots,
+            long                bindFlags,
+            long                stageFlags      = StageFlags::AllStages
+        ) override;
 
         /* ----- Render Passes ----- */
 
@@ -179,23 +189,11 @@ class D3D11CommandBuffer final : public CommandBufferExt
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
-        /* ----- Direct Resource Access ------ */
-
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
-        void ResetResourceSlots(
-            const ResourceType  resourceType,
-            std::uint32_t       firstSlot,
-            std::uint32_t       numSlots,
-            long                bindFlags,
-            long                stageFlags      = StageFlags::AllStages
-        ) override;
-
     private:
+
+        void SetBuffer(Buffer& buffer, std::uint32_t slot, long bindFlags, long stageFlags);
+        void SetTexture(Texture& texture, std::uint32_t slot, long bindFlags, long stageFlags);
+        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags);
 
         void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long stageFlags);
         void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long stageFlags);

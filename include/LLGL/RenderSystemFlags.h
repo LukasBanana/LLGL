@@ -311,12 +311,12 @@ struct RenderSystemDescriptor
 struct RenderingFeatures
 {
     /**
-    \brief Specifies whether the render system supports extended command buffers with dynamic state access for shader resources.
-    \remarks This is only supported by older graphics APIs such as OpenGL and Direct3D 11.
-    \see RenderSystem::CreateCommandBufferExt
-    \see CommandBufferExt
+    \brief Specifies whether the render system supports binding individual resources directly instead of a resource heap.
+    This does not exclude support of resource heaps, because these are always supported.
+    \see CommandBuffer::SetResource
+    \see CommandBuffer::ResetResourceSlots
     */
-    bool hasCommandBufferExt            = false;
+    bool hasDirectResourceBinding       = false;
 
     //! Specifies whether render targets (also "framebuffer objects") are supported.
     bool hasRenderTargets               = false;

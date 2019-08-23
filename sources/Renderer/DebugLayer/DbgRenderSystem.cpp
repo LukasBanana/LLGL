@@ -83,23 +83,9 @@ CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescripto
     return TakeOwnership(
         commandBuffers_,
         MakeUnique<DbgCommandBuffer>(
-            *instance_->CreateCommandBuffer(desc), nullptr, debugger_, desc, GetRenderingCaps()
+            *instance_->CreateCommandBuffer(desc), debugger_, desc, GetRenderingCaps()
         )
     );
-}
-
-CommandBufferExt* DbgRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& desc)
-{
-    if (auto instance = instance_->CreateCommandBufferExt(desc))
-    {
-        return TakeOwnership(
-            commandBuffers_,
-            MakeUnique<DbgCommandBuffer>(
-                *instance, instance, debugger_, desc, GetRenderingCaps()
-            )
-        );
-    }
-    return nullptr;
 }
 
 void DbgRenderSystem::Release(CommandBuffer& commandBuffer)

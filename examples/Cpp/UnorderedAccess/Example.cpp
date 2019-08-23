@@ -225,8 +225,7 @@ private:
             commands->Dispatch(textureSize.width, textureSize.height, textureSize.depth);
 
             // Reset texture from shader output binding point
-            if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
+            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
 
             // Set graphics resources
             commands->SetVertexBuffer(*vertexBuffer);
@@ -243,8 +242,7 @@ private:
             commands->EndRenderPass();
 
             // Reset texture from shader input binding point
-            if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
+            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
         }
         commands->End();
         commandQueue->Submit(*commands);

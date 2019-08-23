@@ -334,7 +334,7 @@ void D3D11CommandBuffer::EndStreamOutput()
     // dummy
 }
 
-/* ----- Resource Heaps ----- */
+/* ----- Resources ----- */
 
 void D3D11CommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*firstSet*/)
 {
@@ -346,6 +346,51 @@ void D3D11CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std:
 {
     auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
     resourceHeapD3D.BindForComputePipeline(context_.Get());
+}
+
+void D3D11CommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
+{
+    switch (resource.QueryResourceType())
+    {
+        case ResourceType::Undefined:
+            break;
+        case ResourceType::Buffer:
+            SetBuffer(LLGL_CAST(Buffer&, resource), slot, bindFlags, stageFlags);
+            break;
+        case ResourceType::Texture:
+            SetTexture(LLGL_CAST(Texture&, resource), slot, bindFlags, stageFlags);
+            break;
+        case ResourceType::Sampler:
+            SetSampler(LLGL_CAST(Sampler&, resource), slot, stageFlags);
+            break;
+    }
+}
+
+void D3D11CommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                bindFlags,
+    long                stageFlags)
+{
+    if (numSlots > 0)
+    {
+        /* Reset resource binding slots */
+        switch (resourceType)
+        {
+            case ResourceType::Undefined:
+                break;
+            case ResourceType::Buffer:
+                ResetBufferResourceSlots(firstSlot, numSlots, bindFlags, stageFlags);
+                break;
+            case ResourceType::Texture:
+                ResetTextureResourceSlots(firstSlot, numSlots, bindFlags, stageFlags);
+                break;
+            case ResourceType::Sampler:
+                ResetSamplerResourceSlots(firstSlot, numSlots, bindFlags, stageFlags);
+                break;
+        }
+    }
 }
 
 /* ----- Render Passes ----- */
@@ -569,86 +614,80 @@ void D3D11CommandBuffer::PopDebugGroup()
     #endif
 }
 
-/* ----- Direct Resource Access ------ */
 
-void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    /* Set constant buffer resource to all shader stages */
-    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    auto resource = bufferD3D.GetNative();
-    SetConstantBuffersOnStages(slot, 1, &resource, stageFlags);
-}
+/*
+ * ======= Private: =======
+ */
 
-void D3D11CommandBuffer::SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+void D3D11CommandBuffer::SetBuffer(Buffer& buffer, std::uint32_t slot, long bindFlags, long stageFlags)
 {
     if (HasBufferResourceViews(buffer))
     {
+        auto& bufferD3D = LLGL_CAST(D3D11BufferWithRV&, buffer);
+
+        /* Set constant buffer resource to all shader stages */
+        if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+        {
+            ID3D11Buffer* cbv[] = { bufferD3D.GetNative() };
+            SetConstantBuffersOnStages(slot, 1, cbv, stageFlags);
+        }
+
         /* Set SRVs to specified shader stages */
-        auto& bufferD3D = LLGL_CAST(D3D11BufferWithRV&, buffer);
-        ID3D11ShaderResourceView* srvList[] = { bufferD3D.GetSRV() };
-        SetShaderResourcesOnStages(slot, 1, srvList, stageFlags);
-    }
-}
+        if ((bindFlags & BindFlags::Sampled) != 0)
+        {
+            ID3D11ShaderResourceView* srv[] = { bufferD3D.GetSRV() };
+            SetShaderResourcesOnStages(slot, 1, srv, stageFlags);
+        }
 
-void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    if (HasBufferResourceViews(buffer))
-    {
         /* Set UAVs to specified shader stages */
-        auto& bufferD3D = LLGL_CAST(D3D11BufferWithRV&, buffer);
-        ID3D11UnorderedAccessView* uavList[] = { bufferD3D.GetUAV() };
-        UINT auvCounts[] = { bufferD3D.GetInitialCount() };
-        SetUnorderedAccessViewsOnStages(slot, 1, uavList, auvCounts, stageFlags);
+        if ((bindFlags & BindFlags::Storage) != 0)
+        {
+            ID3D11UnorderedAccessView* uav[] = { bufferD3D.GetUAV() };
+            UINT auvCounts[] = { bufferD3D.GetInitialCount() };
+            SetUnorderedAccessViewsOnStages(slot, 1, uav, auvCounts, stageFlags);
+        }
+    }
+    else
+    {
+        auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+
+        /* Set constant buffer resource to all shader stages */
+        if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+        {
+            ID3D11Buffer* cbv[] = { bufferD3D.GetNative() };
+            SetConstantBuffersOnStages(slot, 1, cbv, stageFlags);
+        }
     }
 }
 
-void D3D11CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
+void D3D11CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long bindFlags, long stageFlags)
 {
-    /* Set texture resource to all shader stages */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    auto resource = textureD3D.GetSRV();
-    SetShaderResourcesOnStages(slot, 1, &resource, stageFlags);
+
+    /* Set texture SRV to all shader stages */
+    if ((bindFlags & BindFlags::Sampled) != 0)
+    {
+        ID3D11ShaderResourceView* srv[] = { textureD3D.GetSRV() };
+        SetShaderResourcesOnStages(slot, 1, srv, stageFlags);
+    }
+
+    /* Set texture UAV to all shader stages */
+    if ((bindFlags & BindFlags::Storage) != 0)
+    {
+        ID3D11UnorderedAccessView* uav[] = { textureD3D.GetUAV() };
+        UINT auvCounts[] = { 0 };
+        SetUnorderedAccessViewsOnStages(slot, 1, uav, auvCounts, stageFlags);
+    }
 }
 
 void D3D11CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
 {
     /* Set sampler state object to all shader stages */
     auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
-    auto resource = samplerD3D.GetNative();
-    SetSamplersOnStages(slot, 1, &resource, stageFlags);
+
+    ID3D11SamplerState* samplerStates[] = { samplerD3D.GetNative() };
+    SetSamplersOnStages(slot, 1, samplerStates, stageFlags);
 }
-
-void D3D11CommandBuffer::ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags)
-{
-    if (numSlots > 0)
-    {
-        /* Reset resource binding slots */
-        switch (resourceType)
-        {
-            case ResourceType::Undefined:
-                break;
-            case ResourceType::Buffer:
-                ResetBufferResourceSlots(firstSlot, numSlots, bindFlags, stageFlags);
-                break;
-            case ResourceType::Texture:
-                ResetTextureResourceSlots(firstSlot, numSlots, bindFlags, stageFlags);
-                break;
-            case ResourceType::Sampler:
-                ResetSamplerResourceSlots(firstSlot, numSlots, bindFlags, stageFlags);
-                break;
-        }
-    }
-}
-
-
-/*
- * ======= Private: =======
- */
 
 void D3D11CommandBuffer::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long stageFlags)
 {

@@ -311,7 +311,7 @@ void MTCommandBuffer::EndStreamOutput()
     //todo
 }
 
-/* ----- Resource Heaps ----- */
+/* ----- Resources ----- */
 
 void MTCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
@@ -324,6 +324,21 @@ void MTCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::ui
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
     encoderScheduler_.BindComputeEncoder();
     resourceHeapMT.BindComputeResources(encoderScheduler_.GetComputeEncoder());
+}
+
+void MTCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
+{
+    //todo
+}
+
+void MTCommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                bindFlags,
+    long                stageFlags)
+{
+    //todo
 }
 
 /* ----- Render Passes ----- */

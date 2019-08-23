@@ -73,7 +73,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
         \param[in] dstOffset Specifies the destination offset (in bytes) at which the buffer is to be updated.
         This offset plus the data block size (i.e. <code>dstOffset + dataSize</code>) must be less than or equal to the size of the buffer.
-        \param[in] data Raw pointer to the data with which the buffer is to be updated. This must not be null!
+        \param[in] data Raw pointer to the data with which the buffer is to be updated. This <b>must not</b> be null!
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This is limited to 2^16 = 65536 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
         \remarks To update buffers larger than 65536 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
@@ -189,7 +189,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Sets an array of viewports.
         \param[in] numViewports Specifies the number of viewports to set. Most render system have a limit of 16 viewports.
-        \param[in] viewports Pointer to the array of viewports. This must not be null!
+        \param[in] viewports Pointer to the array of viewports. This <b>must not</b> be null!
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each viewport is on the upper-left (like for all other render systems).
@@ -210,11 +210,11 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Sets an array of scissor rectangles, but only if the scissor test was enabled in the previously set graphics pipeline (otherwise, this function has no effect).
         \param[in] numScissors Specifies the number of scissor rectangles to set.
-        \param[in] scissors Pointer to the array of scissor rectangles. This must not be null!
+        \param[in] scissors Pointer to the array of scissor rectangles. This <b>must not</b> be null!
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
-        with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
+        with the \c SetGraphicsAPIDependentState function. If <code>stateOpenGL.screenSpaceOriginLowerLeft</code> is \c false,
         the origin of each scissor rectangle is on the upper-left (like for all other render systems).
-        If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each scissor rectangle is on the lower-left.
+        If <code>stateOpenGL.screenSpaceOriginLowerLeft</code> is \c true, the origin of each scissor rectangle is on the lower-left.
         \see SetGraphicsAPIDependentState
         \see RasterizerDescriptor::scissorTestEnabled
         */
@@ -268,7 +268,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Clears the specified attachments of the active render target.
         \param[in] numAttachments Specifies the number of attachments to clear.
-        \param[in] attachments Pointer to the array of attachment clear commands. This must not be null!
+        \param[in] attachments Pointer to the array of attachment clear commands. This <b>must not</b> be null!
         \remarks To clear all color buffers with the same value, use the \c Clear function.
         Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
         For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
@@ -283,7 +283,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the specified vertex buffer for subsequent drawing operations.
-        \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content must not be uninitialized.
+        \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the binding flag BindFlags::VertexBuffer and its content <b>must not</b> be uninitialized.
         \see RenderSystem::CreateBuffer
         \see RenderSystem::WriteBuffer
         \see SetVertexBufferArray
@@ -300,7 +300,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the active index buffer for subsequent drawing operations.
-        \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the binding flag BindFlags::IndexBuffer and its content must not be uninitialized.
+        \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the binding flag BindFlags::IndexBuffer and its content <b>must not</b> be uninitialized.
         \remarks An index buffer is only required for any \c DrawIndexed or \c DrawIndexedInstanced draw call.
         \see RenderSystem::CreateBuffer
         \see RenderSystem::WriteBuffer
@@ -311,7 +311,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the active index buffer for subsequent drawing operations with a dynamic format and optional buffer offset.
-        \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the binding flag BindFlags::IndexBuffer and its content must not be uninitialized.
+        \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the binding flag BindFlags::IndexBuffer and its content <b>must not</b> be uninitialized.
         \param[in] format Specifies the format of each index in the buffer. This must be either Format::R16UInt or Format::R32UInt.
         \param[in] offset Specifies an optional offset (in bytes) where to start reading the index buffer. By default 0.
         This has the same effect as setting the \c firstIndex argument in any \c DrawIndexed or \c DrawIndexedInstanced function, except that this offset is byte aligned.
@@ -352,7 +352,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void EndStreamOutput() = 0;
 
-        /* ----- Resource Heaps ----- */
+        /* ----- Resources ----- */
 
         /**
         \brief Binds the specified resource heap to the graphics pipeline.
@@ -371,6 +371,48 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \note Parameter 'firstSet' is only supported with: Vulkan.
         */
         virtual void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) = 0;
+
+        /**
+        \brief Sets the specified resource to a binding slot.
+        \param[in] resource Specifies the resource to set.
+        \param[in] slot Specifies the slot index where to put the resource.
+        \param[in] bindFlags Specifies to types of binding points for this resource.
+        \param[in] stageFlags Specifies at which shader stages the resource is to be set. By default StageFlags::AllStages.
+        \remarks This function is only supported with the older graphics APIs and only available for convenience.
+        For best performance and complete renderer independence use SetGraphicsResourceHeap and SetComputeResourceHeap.
+        \remarks The following example binds a constant buffer and texture resource to the fragment shader stage:
+        \code
+        myCmdBuffer->SetResource(*myConstantBuffer, 1, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage);
+        myCmdBuffer->SetResource(*myTexture,        2, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage);
+        \endcode
+        \remarks If direct resource binding is not supported by the render system, this function has no effect.
+        \note Only supported with: OpenGL, Direct3D 11, Metal.
+        \see RenderingFeatures::hasDirectResourceBinding
+        */
+        virtual void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) = 0;
+
+        /**
+        \brief Resets the binding slots for the specified resources.
+        \remarks This should be called when a resource is currently bound as shader output and will be bound as shader input for the next draw or compute commands.
+        \param[in] resourceType Specifies the type of resources to unbind.
+        \param[in] firstSlot Specifies the first binding slot beginning with zero.
+        This must be zero for the following resource types: ResourceType::IndexBuffer, ResourceType::StreamOutputBuffer.
+        \param[in] numSlots Specifies the number of binding slots to reset. If this is zero, the function has no effect.
+        \param[in] bindFlags Specifies which kind of binding slots to reset. To reset a vertex buffer slot for instance, it must contain the BindFlags::VertexBuffer flag.
+        \param[in] stageFlags Specifies which shader stages are affected. This can be a bitwise OR combination of the StageFlags entries. By default StageFlags::AllStages.
+        \remarks If direct resource binding is not supported by the render system, this function has no effect.
+        \note Only supported with: OpenGL, Direct3D 11, Metal.
+        \see BindFlags
+        \see StageFlags
+        \see RenderingFeatures::hasDirectResourceBinding
+        */
+        virtual void ResetResourceSlots(
+            const ResourceType  resourceType,
+            std::uint32_t       firstSlot,
+            std::uint32_t       numSlots,
+            long                bindFlags,
+            long                stageFlags      = StageFlags::AllStages
+        ) = 0;
 
         /* ----- Render Passes ----- */
 
@@ -719,7 +761,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Pushes the specified name onto a stack of group strings that is used for debug reports.
-        \param[in] name Pointer to a null terminated string that specifies the name. Must not be null!
+        \param[in] name Pointer to a null terminated string that specifies the name. This <b>must not</b> be null!
         \remarks
         Here is a usage example:
         \code

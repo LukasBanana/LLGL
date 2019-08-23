@@ -388,9 +388,10 @@ private:
             }
             else
             {
-                commandsExt->SetConstantBuffer(*constantBuffer, 0, shaderStages);
-                commandsExt->SetTexture(*colorMap, 0, shaderStages);
-                commandsExt->SetSampler(*samplerState, 0, shaderStages);
+                // Set resource directly
+                commands->SetResource(*constantBuffer, 3, LLGL::BindFlags::ConstantBuffer, shaderStages);
+                commands->SetResource(*colorMap, 2, LLGL::BindFlags::Sampled, shaderStages);
+                commands->SetResource(*samplerState, 1, 0, shaderStages);
             }
 
             // Draw scene
@@ -440,12 +441,12 @@ private:
                 #ifdef ENABLE_CUSTOM_MULTISAMPLING
 
                 // Set multi-sample render-target texture
-                commandsExt->SetTexture(*renderTargetTex, 1, shaderStages);
+                commands->SetResource(*renderTargetTex, 1, LLGL::BindFlags::Sampled, shaderStages);
 
                 #else
 
                 // Set render-target texture
-                commandsExt->SetTexture(*renderTargetTex, 0, shaderStages);
+                commands->SetResource(*renderTargetTex, 2, LLGL::BindFlags::Sampled, shaderStages);
 
                 #endif // /ENABLE_CUSTOM_MULTISAMPLING
             }

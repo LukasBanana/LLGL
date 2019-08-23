@@ -9,7 +9,7 @@
 #define LLGL_DBG_COMMAND_BUFFER_H
 
 
-#include <LLGL/CommandBufferExt.h>
+#include <LLGL/CommandBuffer.h>
 #include <LLGL/RenderingProfiler.h>
 #include "DbgGraphicsPipeline.h"
 #include "DbgQueryHeap.h"
@@ -29,7 +29,7 @@ class DbgComputePipeline;
 class DbgShaderProgram;
 class RenderingDebugger;
 
-class DbgCommandBuffer final : public CommandBufferExt
+class DbgCommandBuffer final : public CommandBuffer
 {
 
     public:
@@ -38,7 +38,6 @@ class DbgCommandBuffer final : public CommandBufferExt
 
         DbgCommandBuffer(
             CommandBuffer&                  instance,
-            CommandBufferExt*               instanceExt,
             RenderingDebugger*              debugger,
             const CommandBufferDescriptor&  desc,
             const RenderingCapabilities&    caps
@@ -111,10 +110,20 @@ class DbgCommandBuffer final : public CommandBufferExt
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
 
-        /* ----- Resource View Heaps ----- */
+        /* ----- Resources ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
+
+        void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) override;
+
+        void ResetResourceSlots(
+            const ResourceType  resourceType,
+            std::uint32_t       firstSlot,
+            std::uint32_t       numSlots,
+            long                bindFlags,
+            long                stageFlags      = StageFlags::AllStages
+        ) override;
 
         /* ----- Render Passes ----- */
 
@@ -183,22 +192,6 @@ class DbgCommandBuffer final : public CommandBufferExt
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
-        /* ----- Direct Resource Access ------ */
-
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-
-        void ResetResourceSlots(
-            const ResourceType  resourceType,
-            std::uint32_t       firstSlot,
-            std::uint32_t       numSlots,
-            long                bindFlags,
-            long                stageFlags      = StageFlags::AllStages
-        ) override;
-
     public:
 
         /* ----- Extended functions ----- */
@@ -212,12 +205,9 @@ class DbgCommandBuffer final : public CommandBufferExt
         /* ----- Debugging members ----- */
 
         CommandBuffer&                  instance;
-        CommandBufferExt*               instanceExt = nullptr;
         const CommandBufferDescriptor   desc;
 
     private:
-
-        void AssertCommandBufferExt(const char* funcName);
 
         void ValidateViewport(const Viewport& viewport);
         void ValidateAttachmentClear(const AttachmentClear& attachment);
@@ -237,7 +227,8 @@ class DbgCommandBuffer final : public CommandBufferExt
         void ValidateThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
         void ValidateAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound);
 
-        void ValidateResourceFlag(long resourceFlags, long requiredFlag, const char* flagName, const char* resourceName = nullptr);
+        void ValidateBindFlags(long resourceFlags, long bindFlags, long validFlags, const char* resourceName = nullptr);
+        void ValidateBindBufferFlags(DbgBuffer& bufferDbg, long bindFlags);
         void ValidateIndexType(const Format format);
 
         void ValidateStageFlags(long stageFlags, long validFlags);

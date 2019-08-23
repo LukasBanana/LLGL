@@ -109,10 +109,20 @@ class D3D12CommandBuffer final : public CommandBuffer
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
 
-        /* ----- Resource Heaps ----- */
+        /* ----- Resources ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
+
+        void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) override;
+
+        void ResetResourceSlots(
+            const ResourceType  resourceType,
+            std::uint32_t       firstSlot,
+            std::uint32_t       numSlots,
+            long                bindFlags,
+            long                stageFlags      = StageFlags::AllStages
+        ) override;
 
         /* ----- Render Passes ----- */
 

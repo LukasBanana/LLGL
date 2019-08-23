@@ -14,6 +14,7 @@
 - [Renamed identifiers](#renamed-identifiers)
 - [`PipelineLayoutDesc` syntax](#pipelinelayoutdesc-syntax)
 - [`Format` information](#format-information)
+- [Direct resource binding](#direct-resource-binding)
 
 
 ## `BufferDescriptor` interface
@@ -292,12 +293,13 @@ LLGL::TextureDescriptor::type = LLGL::TextureType::Texture2D;
 
 Before/After:
 ```cpp
-BindFlags::SampleBuffer               --> BindFlags::Sampled
-BindFlags::RWStorageBuffer            --> BindFlags::Storage
-CommandBuffer::SetSampleBuffer        --> CommandBuffer::SetSampledBuffer
-CommandBuffer::SetRWStorageBuffer     --> CommandBuffer::SetStorageBuffer
-FrameProfile::sampleBufferBindings    --> FrameProfile::sampledBufferBindings
-FrameProfile::rwStorageBufferBindings --> FrameProfile::storageBufferBindings
+BindFlags::SampleBuffer                --> BindFlags::Sampled
+BindFlags::RWStorageBuffer             --> BindFlags::Storage
+CommandBuffer::SetSampleBuffer         --> CommandBuffer::SetSampledBuffer
+CommandBuffer::SetRWStorageBuffer      --> CommandBuffer::SetStorageBuffer
+FrameProfile::sampleBufferBindings     --> FrameProfile::sampledBufferBindings
+FrameProfile::rwStorageBufferBindings  --> FrameProfile::storageBufferBindings
+RenderingFeatures::hasCommandBufferExt --> RenderingFeatures::hasDirectResourceBinding
 ```
 
 
@@ -340,5 +342,39 @@ myFormatComponents = myFormatDesc.components;
 myImageFormat      = myFormatDesc.format;
 myDataType         = myFormatDesc.dataType;
 ```
+
+
+## Direct resource binding
+
+The `CommandBufferExt` interface has been removed and all functions for direct resource binding have been replaced by `CommandBuffer::SetResource`.
+The `ResetResourceSlots` function has been moved into `CommandBuffer` interface.
+
+Before:
+```cpp
+// Interface:
+void CommandBufferExt::SetConstantBuffer(LLGL::Buffer& buffer, std::uint32_t slot, long stageFlags = LLGL::StageFlags::AllStages);
+void CommandBufferExt::SetSampledBuffer(LLGL::Buffer& buffer, std::uint32_t slot, long stageFlags = LLGL::StageFlags::AllStages);
+void CommandBufferExt::SetStorageBuffer(LLGL::Buffer& buffer, std::uint32_t slot, long stageFlags = LLGL::StageFlags::AllStages);
+void CommandBufferExt::SetTexture(LLGL::Texture& texture, std::uint32_t slot, long stageFlags = LLGL::StageFlags::AllStages);
+void CommandBufferExt::SetSampler(LLGL::Sampler& sampler, std::uint32_t slot, long stageFlags = LLGL::StageFlags::AllStages);
+
+// Usage:
+myCmdBufferExt->SetConstantBuffer(*myConstBuffer, 0, LLGL::StageFlags::VertexStage);
+myCmdBufferExt->SetTexture(*myColorMap, 1, LLGL::StageFlags::FragmentStage);
+```
+
+After:
+```cpp
+// Interface:
+void CommandBuffer::SetResource(LLGL::Resource& resource,
+                                std::uint32_t   slot,
+                                long            bindFlags,
+                                long            stageFlags = LLGL::StageFlags::AllStages);
+
+// Usage:
+myCmdBuffer->SetResource(*myConstBuffer, 0, LLGL::BindFlags::ConstantBuffer, LLGL::BindFlags::VertexStage);
+myCmdBuffer->SetResource(*myColorMap, 1, LLGL::BindFlags::Sampled, LLGL::BindFlags::FragmentStage);
+```
+
 
 

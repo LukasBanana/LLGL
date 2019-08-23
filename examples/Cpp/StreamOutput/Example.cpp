@@ -116,9 +116,12 @@ private:
 
     void OnDrawFrame() override
     {
+        timer->MeasureTime();
+
         // Update constant buffer
         static float rotation;
-        rotation += 0.01f;
+        rotation += static_cast<float>(timer->GetDeltaTime()) * 0.5f;
+
         settings.wvpMatrix = projection;
         Gs::Translate(settings.wvpMatrix, { 0, 0, 7 });
         Gs::Scale(settings.wvpMatrix, Gs::Vector3f(0.5f));
@@ -142,7 +145,7 @@ private:
                 commands->SetViewport(context->GetResolution());
 
                 // Set buffers
-                commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
+                commands->SetResource(*constantBuffer, 0, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage);
                 commands->SetStreamOutputBuffer(*streamOutputBuffer);
 
                 // Set graphics pipeline state

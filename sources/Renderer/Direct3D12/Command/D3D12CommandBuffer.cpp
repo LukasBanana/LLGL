@@ -361,7 +361,7 @@ void D3D12CommandBuffer::EndStreamOutput()
     // dummy
 }
 
-/* ----- Resource Heaps ----- */
+/* ----- Resources ----- */
 
 void D3D12CommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
@@ -399,6 +399,21 @@ void D3D12CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std:
         for (UINT i = 0; i < heapCount; ++i)
             commandList_->SetComputeRootDescriptorTable(i, descHeaps[i]->GetGPUDescriptorHandleForHeapStart());
     }
+}
+
+void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
+{
+    // dummy
+}
+
+void D3D12CommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                bindFlags,
+    long                stageFlags)
+{
+    // dummy
 }
 
 /* ----- Render Passes ----- */

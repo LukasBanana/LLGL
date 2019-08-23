@@ -298,8 +298,7 @@ private:
             commands->SetComputeResourceHeap(*computeResourceHeap);
             commands->Dispatch(sceneState.numSceneObjects, 1, 1);
 
-            if (commandsExt)
-                commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
+            commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
 
             // Draw scene
             commands->BeginRenderPass(*context);
@@ -315,8 +314,7 @@ private:
                 commands->SetGraphicsPipeline(*graphicsPipeline);
                 commands->DrawIndirect(*indirectArgBuffer, 0, 2, sizeof(LLGL::DrawIndirectArguments));
 
-                if (commandsExt)
-                    commandsExt->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
+                commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
             }
             commands->EndRenderPass();
         }

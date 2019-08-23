@@ -460,7 +460,7 @@ void VKCommandBuffer::EndStreamOutput()
     ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
 }
 
-/* ----- Resource Heaps ----- */
+/* ----- Resources ----- */
 
 //private
 void VKCommandBuffer::BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet)
@@ -487,6 +487,21 @@ void VKCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::ui
 {
     auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
     BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_COMPUTE, firstSet);
+}
+
+void VKCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
+{
+    // dummy
+}
+
+void VKCommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                bindFlags,
+    long                stageFlags)
+{
+    // dummy
 }
 
 /* ----- Render Passes ----- */

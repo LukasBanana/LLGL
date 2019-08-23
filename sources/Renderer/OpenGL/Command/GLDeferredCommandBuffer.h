@@ -25,6 +25,10 @@ namespace LLGL
 {
 
 
+class GLBuffer;
+class GLBufferArray;
+class GLTexture;
+class GLSampler;
 class GLRenderTarget;
 class GLRenderContext;
 class GLStateManager;
@@ -106,10 +110,20 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
 
-        /* ----- Resource Heaps ----- */
+        /* ----- Resources ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
+
+        void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) override;
+
+        void ResetResourceSlots(
+            const ResourceType  resourceType,
+            std::uint32_t       firstSlot,
+            std::uint32_t       numSlots,
+            long                bindFlags,
+            long                stageFlags      = StageFlags::AllStages
+        ) override;
 
         /* ----- Render Passes ----- */
 
@@ -178,22 +192,6 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
-        /* ----- Direct Resource Access ------ */
-
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetSampledBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetTexture(Texture& texture, std::uint32_t layer, long stageFlags = StageFlags::AllStages) override;
-        void SetSampler(Sampler& sampler, std::uint32_t layer, long stageFlags = StageFlags::AllStages) override;
-
-        void ResetResourceSlots(
-            const ResourceType  resourceType,
-            std::uint32_t       firstSlot,
-            std::uint32_t       numSlots,
-            long                bindFlags,
-            long                stageFlags      = StageFlags::AllStages
-        ) override;
-
     public:
 
         /*  ----- Extended functions ----- */
@@ -237,8 +235,10 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
     private:
 
-        void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot);
-        void SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot);
+        void SetGenericBuffer(const GLBufferTarget bufferTarget, GLBuffer& bufferGL, std::uint32_t slot);
+        void SetGenericBufferArray(const GLBufferTarget bufferTarget, GLBufferArray& bufferArrayGL, std::uint32_t startSlot);
+        void SetTexture(GLTexture& textureGL, std::uint32_t slot);
+        void SetSampler(GLSampler& samplerGL, std::uint32_t slot);
         void SetResourceHeap(ResourceHeap& resourceHeap);
 
         /* Allocates only an opcode for empty commands */

@@ -68,11 +68,6 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    return CreateCommandBufferExt(desc);
-}
-
-CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& desc)
-{
     if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
     {
         /* Create deferred D3D11 device context */
@@ -465,7 +460,7 @@ void D3D11RenderSystem::QueryRenderingCaps()
         /* Set extended attributes */
         const auto minorVersion = GetMinorVersion();
 
-        caps.features.hasCommandBufferExt           = true;
+        caps.features.hasDirectResourceBinding      = true;
         caps.features.hasConservativeRasterization  = (minorVersion >= 3);
 
         caps.limits.maxViewports                    = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
