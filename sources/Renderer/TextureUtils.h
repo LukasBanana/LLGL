@@ -21,6 +21,12 @@ namespace LLGL
 // Calculates the actual 3D dimensional offset for the specified texture type.
 LLGL_EXPORT Offset3D CalcTextureOffset(const TextureType type, const Offset3D& offset, std::uint32_t arrayLayer);
 
+// Returns true if the specified flags for texture creation require MIP-map generation at creation time.
+inline bool FlagsRequireGenerateMips(long miscFlags)
+{
+    return ((miscFlags & (MiscFlags::GenerateMips | MiscFlags::NoInitialData)) == MiscFlags::GenerateMips);
+}
+
 
 } // /namespace LLGL
 

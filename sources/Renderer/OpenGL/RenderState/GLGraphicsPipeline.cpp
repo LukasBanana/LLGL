@@ -47,9 +47,9 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
         auto pipelineLayoutGL = LLGL_CAST(const GLPipelineLayout*, desc.pipelineLayout);
         if (AnyNamesInPipelineLayout(*pipelineLayoutGL))
         {
-            shaderBindingLayout_ = GLStatePool::Instance().CreateShaderBindingLayout(*pipelineLayoutGL);
+            shaderBindingLayout_ = GLStatePool::Get().CreateShaderBindingLayout(*pipelineLayoutGL);
             if (!shaderBindingLayout_->HasBindings())
-                GLStatePool::Instance().ReleaseShaderBindingLayout(std::move(shaderBindingLayout_));
+                GLStatePool::Get().ReleaseShaderBindingLayout(std::move(shaderBindingLayout_));
         }
     }
 
@@ -74,19 +74,19 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
         patchVertices_ = 0;
 
     /* Create depth-stencil state */
-    depthStencilState_ = GLStatePool::Instance().CreateDepthStencilState(desc.depth, desc.stencil);
+    depthStencilState_ = GLStatePool::Get().CreateDepthStencilState(desc.depth, desc.stencil);
 
     /* Create rasterizer state */
-    rasterizerState_ = GLStatePool::Instance().CreateRasterizerState(desc.rasterizer);
+    rasterizerState_ = GLStatePool::Get().CreateRasterizerState(desc.rasterizer);
 
     /* Create blend state */
     if (auto renderPass = desc.renderPass)
     {
         auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
-        blendState_ = GLStatePool::Instance().CreateBlendState(desc.blend, renderPassGL->GetNumColorAttachments());
+        blendState_ = GLStatePool::Get().CreateBlendState(desc.blend, renderPassGL->GetNumColorAttachments());
     }
     else
-        blendState_ = GLStatePool::Instance().CreateBlendState(desc.blend, 1);
+        blendState_ = GLStatePool::Get().CreateBlendState(desc.blend, 1);
 
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())
@@ -95,10 +95,10 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
 
 GLGraphicsPipeline::~GLGraphicsPipeline()
 {
-    GLStatePool::Instance().ReleaseDepthStencilState(std::move(depthStencilState_));
-    GLStatePool::Instance().ReleaseRasterizerState(std::move(rasterizerState_));
-    GLStatePool::Instance().ReleaseBlendState(std::move(blendState_));
-    GLStatePool::Instance().ReleaseShaderBindingLayout(std::move(shaderBindingLayout_));
+    GLStatePool::Get().ReleaseDepthStencilState(std::move(depthStencilState_));
+    GLStatePool::Get().ReleaseRasterizerState(std::move(rasterizerState_));
+    GLStatePool::Get().ReleaseBlendState(std::move(blendState_));
+    GLStatePool::Get().ReleaseShaderBindingLayout(std::move(shaderBindingLayout_));
 }
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)

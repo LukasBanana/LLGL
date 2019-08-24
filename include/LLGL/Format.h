@@ -26,9 +26,10 @@ namespace LLGL
 \see VertexAttribute::format
 \see RenderingCapabilities::textureFormats
 \see OpenGL counterpart: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexImage1D.xhtml#id-1.6.14.1
-\see Vulkan counterpart <code>VkFormat</code>: https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkFormat.html
-\see Direct3D counterpart <code>DXGI_FORMAT</code>: https://msdn.microsoft.com/en-us/library/windows/desktop/bb173059(v=vs.85).aspx
-\see Metal counterpart <code>MTLPixelFormat</code>: https://developer.apple.com/documentation/metal/mtlpixelformat
+\see Vulkan counterpart \c VkFormat: https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkFormat.html
+\see Direct3D counterpart \c DXGI_FORMAT: https://msdn.microsoft.com/en-us/library/windows/desktop/bb173059(v=vs.85).aspx
+\see Metal counterpart for textures \c MTLPixelFormat: https://developer.apple.com/documentation/metal/mtlpixelformat
+\see Metal counterpart for vertices \c MTLVertexFormat: https://developer.apple.com/documentation/metal/mtlvertexformat
 */
 enum class Format
 {

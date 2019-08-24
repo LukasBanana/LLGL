@@ -8,6 +8,7 @@
 #include "D3D12RenderSystem.h"
 #include "D3D12Types.h"
 #include "../DXCommon/DXCore.h"
+#include "../TextureUtils.h"
 #include "../CheckedCast.h"
 #include "../../Core/Vendor.h"
 #include "../../Core/Helper.h"
@@ -184,7 +185,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 {
     auto textureD3D = MakeUnique<D3D12Texture>(device_.GetNative(), textureDesc);
 
-    if (imageDesc)
+    if (imageDesc != nullptr)
     {
         /* Upload image data */
         ComPtr<ID3D12Resource> uploadBuffer;
@@ -218,6 +219,14 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
         }
         textureD3D->UpdateSubresource(device_.GetNative(), graphicsCmdList_.Get(), uploadBuffer, subresourceData);
 
+        #if 0//TODO: GenerateMips
+        /* Generate MIP-maps if enabled */
+        if (FlagsRequireGenerateMips(textureDesc.miscFlags))
+        {
+            //...
+        }
+        #endif
+
         /* Execute upload commands and wait for GPU to finish execution */
         ExecuteCommandList();
         SyncGPU();
@@ -241,15 +250,10 @@ void D3D12RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     //todo
 }
 
-void D3D12RenderSystem::GenerateMips(Texture& texture)
-{
-    //todo
-}
-
-void D3D12RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
-{
-    //todo
-}
+#if 1//TODO: remove this
+void D3D12RenderSystem::GenerateMips(Texture& texture){}
+void D3D12RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers){}
+#endif
 
 /* ----- Sampler States ---- */
 

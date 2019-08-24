@@ -337,10 +337,10 @@ class LLGL_EXPORT RenderSystem : public Interface
         // Read texture data from first MIP-map level (index 0)
         myRenderSystem->ReadTexture(*myTexture, 0, myImageDesc);
         \endcode
-        \note The behavior is undefined if 'imageDesc.data' points to an invalid buffer,
-        or 'imageDesc.data' points to a buffer that is smaller than specified by 'imageDesc.dataSize',
-        or 'imageDesc.dataSize' is less than the required size.
-        \throws std::invalid_argument If 'imageDesc.data' is null.
+        \note The behavior is undefined if <code>imageDesc.data</code> points to an invalid buffer,
+        or <code>imageDesc.data</code> points to a buffer that is smaller than specified by <code>imageDesc.dataSize</code>,
+        or <code>imageDesc.dataSize</code> is less than the required size.
+        \throws std::invalid_argument If <code>imageDesc.data</code> is null.
         \see Texture::QueryDesc
         \see Texture::QueryMipExtent
         \todo Replace \c mipLevel parameter with \c textureRegion just like with the \c WriteTexture function.

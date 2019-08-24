@@ -54,6 +54,7 @@ class D3D11RenderSystem final : public RenderSystem
         /* ----- Common ----- */
 
         D3D11RenderSystem();
+        ~D3D11RenderSystem();
 
         /* ----- Render Context ------ */
 
@@ -217,14 +218,6 @@ class D3D11RenderSystem final : public RenderSystem
             const Extent3D&     extent,
             std::uint32_t       arrayLayers,
             const ClearValue&   clearValue
-        );
-
-        void GenerateMipsWithSubresourceSRV(
-            D3D11Texture& textureD3D,
-            std::uint32_t baseMipLevel,
-            std::uint32_t numMipLevels,
-            std::uint32_t baseArrayLayer,
-            std::uint32_t numArrayLayers
         );
 
     private:

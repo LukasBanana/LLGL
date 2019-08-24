@@ -115,6 +115,18 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             TextureRegion{ Offset3D{ 0, 0, 0 }, textureMT->QueryMipExtent(0) },
             *imageDesc
         );
+
+        /* Generate MIP-maps if enabled */
+        if (FlagsRequireGenerateMips(textureDesc.miscFlags))
+        {
+            id<MTLCommandBuffer> cmdBuffer = [commandQueue_->GetNative() commandBuffer];
+            {
+                id<MTLBlitCommandEncoder> blitCmdEncoder = [cmdBuffer blitCommandEncoder];
+                [blitCmdEncoder generateMipmapsForTexture:textureMT.GetNative()];
+                [blitCmdEncoder endEncoding];
+            }
+            [cmdBuffer commit];
+        }
     }
 
     return TakeOwnership(textures_, std::move(textureMT));
@@ -136,23 +148,10 @@ void MTRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
     //todo
 }
 
-void MTRenderSystem::GenerateMips(Texture& texture)
-{
-    auto& textureMT = LLGL_CAST(MTTexture&, texture);
-
-    id<MTLCommandBuffer> cmdBuffer = [commandQueue_->GetNative() commandBuffer];
-    {
-        id<MTLBlitCommandEncoder> blitCmdEncoder = [cmdBuffer blitCommandEncoder];
-        [blitCmdEncoder generateMipmapsForTexture:textureMT.GetNative()];
-        [blitCmdEncoder endEncoding];
-    }
-    [cmdBuffer commit];
-}
-
-void MTRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
-{
-    //todo
-}
+#if 1//TODO: remove
+void MTRenderSystem::GenerateMips(Texture& texture){}
+void MTRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers){}
+#endif
 
 /* ----- Sampler States ---- */
 

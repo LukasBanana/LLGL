@@ -1,210 +1,65 @@
 /*
- * GLRenderSystem_Textures.cpp
+ * GLMipGenerator.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLRenderSystem.h"
-#include "../GLCommon/GLTypes.h"
-#include "../GLCommon/Texture/GLTexImage.h"
-#include "../GLCommon/Texture/GLTexSubImage.h"
-#include "Ext/GLExtensions.h"
-#include "../CheckedCast.h"
-#include "../../Core/Helper.h"
-#include "../../Core/Assertion.h"
+#include "GLMipGenerator.h"
+#include "GLTexture.h"
+#include "../RenderState/GLStateManager.h"
+#include "../Ext/GLExtensions.h"
+#include "../../GLCommon/GLTypes.h"
+#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../../CheckedCast.h"
 
 
 namespace LLGL
 {
 
 
-/* ----- Textures ----- */
-
-static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
+GLMipGenerator& GLMipGenerator::Get()
 {
-    if (IsMipMappedTexture(textureDesc))
-        return GL_LINEAR_MIPMAP_LINEAR;
-    else
-        return GL_LINEAR;
+    static GLMipGenerator instance;
+    return instance;
 }
 
-Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+void GLMipGenerator::Clear()
 {
-    auto texture = MakeUnique<GLTexture>(textureDesc.type);
-
-    /* Bind texture */
-    GLStateManager::Get().BindGLTexture(*texture);
-
-    /* Initialize texture parameters for the first time */
-    auto target = GLTypes::Map(textureDesc.type);
-
-    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
-    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    /* Build texture storage and upload image dataa */
-    switch (textureDesc.type)
-    {
-        case TextureType::Texture1D:
-            GLTexImage1D(textureDesc, imageDesc);
-            break;
-
-        case TextureType::Texture2D:
-            GLTexImage2D(textureDesc, imageDesc);
-            break;
-
-        case TextureType::Texture3D:
-            LLGL_ASSERT_FEATURE_SUPPORT(has3DTextures);
-            GLTexImage3D(textureDesc, imageDesc);
-            break;
-
-        case TextureType::TextureCube:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeTextures);
-            GLTexImageCube(textureDesc, imageDesc);
-            break;
-
-        case TextureType::Texture1DArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexImage1DArray(textureDesc, imageDesc);
-            break;
-
-        case TextureType::Texture2DArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexImage2DArray(textureDesc, imageDesc);
-            break;
-
-        case TextureType::TextureCubeArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeArrayTextures);
-            GLTexImageCubeArray(textureDesc, imageDesc);
-            break;
-
-        case TextureType::Texture2DMS:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasMultiSampleTextures);
-            GLTexImage2DMS(textureDesc);
-            break;
-
-        case TextureType::Texture2DMSArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasMultiSampleTextures);
-            GLTexImage2DMSArray(textureDesc);
-            break;
-
-        default:
-            throw std::invalid_argument("failed to create texture with invalid texture type");
-            break;
-    }
-
-    return TakeOwnership(textures_, std::move(texture));
-}
-
-void GLRenderSystem::Release(Texture& texture)
-{
-    RemoveFromUniqueSet(textures_, &texture);
-}
-
-/* ----- "WriteTexture..." functions ----- */
-
-void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
-{
-    /* Bind texture and write texture sub data */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::Get().BindGLTexture(textureGL);
-
-    /* Write data into specific texture type */
-    switch (texture.GetType())
-    {
-        case TextureType::Texture1D:
-            GLTexSubImage1D(textureRegion, imageDesc);
-            break;
-
-        case TextureType::Texture2D:
-            GLTexSubImage2D(textureRegion, imageDesc);
-            break;
-
-        case TextureType::Texture3D:
-            LLGL_ASSERT_FEATURE_SUPPORT(has3DTextures);
-            GLTexSubImage3D(textureRegion, imageDesc);
-            break;
-
-        case TextureType::TextureCube:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeTextures);
-            GLTexSubImageCube(textureRegion, imageDesc);
-            break;
-
-        case TextureType::Texture1DArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexSubImage1DArray(textureRegion, imageDesc);
-            break;
-
-        case TextureType::Texture2DArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexSubImage2DArray(textureRegion, imageDesc);
-            break;
-
-        case TextureType::TextureCubeArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeArrayTextures);
-            GLTexSubImageCubeArray(textureRegion, imageDesc);
-            break;
-
-        default:
-            break;
-    }
-}
-
-void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
-{
-    LLGL_ASSERT_PTR(imageDesc.data);
-
-    auto& textureGL = LLGL_CAST(const GLTexture&, texture);
-
-    /* Read image data from texture */
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
-    if (HasExtension(GLExt::ARB_direct_state_access))
-    {
-        glGetTextureImage(
-            textureGL.GetID(),
-            static_cast<GLint>(mipLevel),
-            GLTypes::Map(imageDesc.format),
-            GLTypes::Map(imageDesc.dataType),
-            static_cast<GLsizei>(imageDesc.dataSize),
-            imageDesc.data
-        );
-    }
-    else
+    #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
+    mipGenerationFBOPair_.ReleaseFBOs();
     #endif
-    {
-        /* Bind texture and read image data from texture */
-        GLStateManager::Get().BindGLTexture(textureGL);
-        glGetTexImage(
-            GLTypes::Map(textureGL.GetType()),
-            static_cast<GLint>(mipLevel),
-            GLTypes::Map(imageDesc.format),
-            GLTypes::Map(imageDesc.dataType),
-            imageDesc.data
-        );
-    }
 }
 
-void GLRenderSystem::GenerateMips(Texture& texture)
+void GLMipGenerator::GenerateMips(const TextureType type)
 {
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    glGenerateMipmap(GLTypes::Map(type));
+}
+
+void GLMipGenerator::GenerateMipsForTexture(GLTexture& textureGL)
+{
     GenerateMipsPrimary(textureGL.GetID(), textureGL.GetType());
 }
 
-void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
+void GLMipGenerator::GenerateMipsRangeForTexture(
+    GLTexture&      textureGL,
+    std::uint32_t   baseMipLevel,
+    std::uint32_t   numMipLevels,
+    std::uint32_t   baseArrayLayer,
+    std::uint32_t   numArrayLayers)
 {
     if (numMipLevels > 0 && numArrayLayers > 0)
     {
         #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
-        if (texture.GetType() == TextureType::Texture3D)
+        if (textureGL.GetType() == TextureType::Texture3D)
         {
             /* Generate MIP-maps in default process */
-            GLRenderSystem::GenerateMips(texture);
+            GenerateMipsForTexture(textureGL);
         }
         else
         {
             /* Generate MIP-maps in custom sub generation process */
-            auto& textureGL = LLGL_CAST(GLTexture&, texture);
             auto extent = textureGL.QueryMipExtent(baseMipLevel);
 
             GenerateSubMipsWithFBO(
@@ -223,8 +78,6 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
         if (HasExtension(GLExt::ARB_texture_view))
         {
             /* Generate MIP-maps in GL_ARB_texture_view extension process */
-            auto& textureGL = LLGL_CAST(GLTexture&, texture);
-
             GenerateSubMipsWithTextureView(
                 textureGL,
                 static_cast<GLuint>(baseMipLevel),
@@ -237,7 +90,7 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
         #endif
         {
             /* Generate MIP-maps in default process */
-            GLRenderSystem::GenerateMips(texture);
+            GenerateMipsForTexture(textureGL);
         }
 
         #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
@@ -249,7 +102,7 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
  * ======= Private: =======
  */
 
-void GLRenderSystem::GenerateMipsPrimary(GLuint texID, const TextureType texType)
+void GLMipGenerator::GenerateMipsPrimary(GLuint texID, const TextureType texType)
 {
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
@@ -355,7 +208,7 @@ static void GenerateSubMipsTextureLayer(const Extent3D& extent, GLuint texID, GL
     }
 }
 
-void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers)
+void GLMipGenerator::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers)
 {
     /* Get GL texture ID and texture target */
     auto texID      = textureGL.GetID();
@@ -436,7 +289,7 @@ void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D
 
 #else
 
-void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers)
+void GLMipGenerator::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers)
 {
     // dummy
 }
@@ -445,7 +298,7 @@ void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D
 
 #ifdef GL_ARB_texture_view
 
-void GLRenderSystem::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers)
+void GLMipGenerator::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers)
 {
     /* Get GL texture ID and texture target */
     auto texID          = textureGL.GetID();
@@ -473,12 +326,41 @@ void GLRenderSystem::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint
 
 #else
 
-void GLRenderSystem::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers)
+void GLMipGenerator::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers)
 {
     // dummy
 }
 
 #endif // /GL_ARB_texture_view
+
+#ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
+
+/*
+ * MipGenerationFBOPair structure
+ */
+
+GLMipGenerator::MipGenerationFBOPair::~MipGenerationFBOPair()
+{
+    ReleaseFBOs();
+}
+
+void GLMipGenerator::MipGenerationFBOPair::CreateFBOs()
+{
+    if (!fbos[0])
+        glGenFramebuffers(2, fbos);
+}
+
+void GLMipGenerator::MipGenerationFBOPair::ReleaseFBOs()
+{
+    if (fbos[0])
+    {
+        glDeleteFramebuffers(2, fbos);
+        fbos[0] = 0;
+        fbos[1] = 0;
+    }
+}
+
+#endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 
 } // /namespace LLGL

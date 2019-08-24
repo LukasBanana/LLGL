@@ -196,9 +196,8 @@ struct MiscFlags
         \brief Generates MIP-maps at texture creation time with the initial image data (if specified).
         \remarks This can be used to generate all MIP-maps when a new texture is created without explicitly encoding the CommandBuffer::GenerateMips function.
         The number of MIP-maps being generated depends on the \c mipLevels attribute in TextureDescriptor.
-        \see RenderSystem::CreateTexture
         \see TextureDescriptor::mipLevels
-        \todo Not implemented yet.
+        \see CommandBuffer::GenerateMips
         */
         GenerateMips    = (1 << 2),
 

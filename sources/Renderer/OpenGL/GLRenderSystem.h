@@ -45,9 +45,6 @@ namespace LLGL
 {
 
 
-//TODO: performance tests show that the manual MIP-map generation is almost always slower than the default MIP-map generation
-//#define LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-
 class GLRenderSystem final : public RenderSystem
 {
 
@@ -90,6 +87,9 @@ class GLRenderSystem final : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
+        #if 0//TODO
+        Texture* CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc) override;
+        #endif
 
         void Release(Texture& texture) override;
 
@@ -175,24 +175,6 @@ class GLRenderSystem final : public RenderSystem
 
         GLBuffer* CreateGLBuffer(const BufferDescriptor& desc, const void* initialData);
 
-        void GenerateMipsPrimary(GLuint texID, const TextureType texType);
-        void GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers);
-        void GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers);
-
-    private:
-
-        #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-        struct MipGenerationFBOPair
-        {
-            ~MipGenerationFBOPair();
-
-            void CreateFBOs();
-            void ReleaseFBOs();
-
-            GLuint fbos[2] = { 0, 0 };
-        };
-        #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-
     private:
 
         /* ----- Hardware object containers ----- */
@@ -217,10 +199,6 @@ class GLRenderSystem final : public RenderSystem
 
         RendererConfigurationOpenGL             config_;
         DebugCallback                           debugCallback_;
-
-        #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-        MipGenerationFBOPair                    mipGenerationFBOPair_;
-        #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 };
 

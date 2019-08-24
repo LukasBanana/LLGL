@@ -107,7 +107,7 @@ void ReleaseRenderStateObject(
  * GLStatePool class
  */
 
-GLStatePool& GLStatePool::Instance()
+GLStatePool& GLStatePool::Get()
 {
     static GLStatePool instance;
     return instance;

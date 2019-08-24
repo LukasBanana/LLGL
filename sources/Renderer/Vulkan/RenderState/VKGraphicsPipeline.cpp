@@ -225,7 +225,7 @@ static void CreateDepthStencilState(
     createInfo.depthTestEnable          = VKBoolean(desc.depth.testEnabled);
     createInfo.depthWriteEnable         = VKBoolean(desc.depth.writeEnabled);
     createInfo.depthCompareOp           = VKTypes::Map(desc.depth.compareOp);
-    createInfo.depthBoundsTestEnable    = VKBoolean(!desc.rasterizer.depthClampEnabled);
+    createInfo.depthBoundsTestEnable    = VK_FALSE;
     createInfo.stencilTestEnable        = VKBoolean(desc.stencil.testEnabled);
     CreateStencilOpState(desc.stencil.front, createInfo.front);
     CreateStencilOpState(desc.stencil.back, createInfo.back);

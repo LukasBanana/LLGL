@@ -35,7 +35,7 @@ class GLStatePool
         GLStatePool& operator = (const GLStatePool&) = delete;
 
         // Returns the instance of this pool.
-        static GLStatePool& Instance();
+        static GLStatePool& Get();
 
         // Clear all resource containers of this pool (used by GLRenderSystem).
         void Clear();

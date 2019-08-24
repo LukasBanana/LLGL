@@ -11,6 +11,7 @@
 #include "Ext/VKExtensions.h"
 #include "Memory/VKDeviceMemory.h"
 #include "../RenderSystemUtils.h"
+#include "../TextureUtils.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
@@ -386,6 +387,20 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             mipLevels,
             arrayLayers
         );
+
+        /* Generate MIP-maps if enabled */
+        if (imageDesc != nullptr && FlagsRequireGenerateMips(textureDesc.miscFlags))
+        {
+            device_.GenerateMips(
+                cmdBuffer,
+                textureVK->GetVkImage(),
+                textureVK->GetVkExtent(),
+                0,
+                textureVK->GetNumMipLevels(),
+                0,
+                textureVK->GetNumArrayLayers()
+            );
+        }
     }
     device_.FlushCommandBuffer(cmdBuffer);
 
@@ -416,6 +431,7 @@ void VKRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
     //todo
 }
 
+#if 1//TODO: remove this
 void VKRenderSystem::GenerateMips(Texture& texture)
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
@@ -458,6 +474,7 @@ void VKRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
         device_.FlushCommandBuffer(cmdBuffer);
     }
 }
+#endif
 
 /* ----- Sampler States ---- */
 

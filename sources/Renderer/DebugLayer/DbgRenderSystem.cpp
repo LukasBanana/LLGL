@@ -28,13 +28,14 @@ All the actual render system objects are stored in the members named "instance",
 */
 
 DbgRenderSystem::DbgRenderSystem(
-    const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
-        instance_ { instance           },
-        profiler_ { profiler           },
-        debugger_ { debugger           },
-        caps_     { GetRenderingCaps() },
-        features_ { caps_.features     },
-        limits_   { caps_.limits       }
+    const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger)
+:
+    instance_ { instance           },
+    profiler_ { profiler           },
+    debugger_ { debugger           },
+    caps_     { GetRenderingCaps() },
+    features_ { caps_.features     },
+    limits_   { caps_.limits       }
 {
 }
 
@@ -220,7 +221,7 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateTextureDesc(textureDesc);
+        ValidateTextureDesc(textureDesc, imageDesc);
     }
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc));
 }
@@ -752,7 +753,7 @@ void DbgRenderSystem::ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory
     }
 }
 
-void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
+void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     switch (desc.type)
     {
@@ -826,6 +827,25 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
     ValidateBindFlags(desc.bindFlags);
     ValidateCPUAccessFlags(desc.cpuAccessFlags, CPUAccessFlags::ReadWrite, "texture");
     ValidateMiscFlags(desc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::FixedSamples | MiscFlags::GenerateMips | MiscFlags::NoInitialData), "texture");
+
+    /* Check if MIP-map generation is requested  */
+    if ((desc.miscFlags & MiscFlags::GenerateMips) != 0)
+    {
+        if (imageDesc == nullptr)
+        {
+            LLGL_DBG_WARN(
+                WarningType::ImproperArgument,
+                "cannot generate MIP-maps without initial image data: 'LLGL::MiscFlags::GenerateMips' specified but no initial image data"
+            );
+        }
+        else if ((desc.miscFlags & MiscFlags::NoInitialData) != 0)
+        {
+            LLGL_DBG_WARN(
+                WarningType::ImproperArgument,
+                "cannot generate MIP-maps with initial image data discarded: 'LLGL::MiscFlags::GenerateMips' specified but also 'MiscFlags::NoInitialData'"
+            );
+        }
+    }
 }
 
 void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& desc)
