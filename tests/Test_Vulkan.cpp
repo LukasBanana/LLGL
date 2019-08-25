@@ -187,8 +187,6 @@ int main()
         };
         auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, texWidth, texHeight), &imageDesc);
 
-        renderer->GenerateMips(*texture);
-
         stbi_image_free(imageBuffer);
 
         // Create pipeline layout

@@ -132,13 +132,16 @@ public:
             LLGL::TextureDescriptor texDesc;
             {
                 // Texture type: 2D
-                texDesc.type    = LLGL::TextureType::Texture2D;
+                texDesc.type        = LLGL::TextureType::Texture2D;
 
                 // Texture hardware format: RGBA with normalized 8-bit unsigned char type
-                texDesc.format  = LLGL::Format::RGBA8UNorm;
+                texDesc.format      = LLGL::Format::RGBA8UNorm;//RGBA8UNorm; //BGRA8UNorm
 
                 // Texture size
-                texDesc.extent  = { static_cast<std::uint32_t>(texWidth), static_cast<std::uint32_t>(texHeight), 1u };
+                texDesc.extent      = { static_cast<std::uint32_t>(texWidth), static_cast<std::uint32_t>(texHeight), 1u };
+
+                // Generate all MIP-map levels for this texture
+                texDesc.miscFlags   = LLGL::MiscFlags::GenerateMips;
             }
             #if 0//TEST
             texDesc.type = LLGL::TextureType::TextureCube;
@@ -151,15 +154,6 @@ public:
         }
         auto texCreationTime = static_cast<double>(timer->Stop()) / static_cast<double>(timer->GetFrequency());
         std::cout << "texture creation time: " << (texCreationTime * 1000.0) << " ms" << std::endl;
-
-        // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
-        // see https://developer.valvesoftware.com/wiki/MIP_Mapping
-        // see http://whatis.techtarget.com/definition/MIP-map
-        #if 1
-        renderer->GenerateMips(*colorMap);
-        #else
-        renderer->GenerateMips(*colorMap, 0, 4, 0, 1);
-        #endif
 
         // Release image data
         stbi_image_free(imageBuffer);

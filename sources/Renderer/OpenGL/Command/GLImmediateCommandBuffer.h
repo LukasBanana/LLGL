@@ -33,12 +33,14 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         GLImmediateCommandBuffer(const std::shared_ptr<GLStateManager>& stateManager);
 
-        bool IsImmediateCmdBuffer() const override;
-
         /* ----- Encoding ----- */
 
         void Begin() override;
         void End() override;
+
+        void Execute(CommandBuffer& deferredCommandBuffer) override;
+
+        /* ----- Blitting ----- */
 
         void UpdateBuffer(
             Buffer&         dstBuffer,
@@ -63,11 +65,8 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
             const Extent3D&         extent
         ) override;
 
-        void Execute(CommandBuffer& deferredCommandBuffer) override;
-
-        /* ----- Configuration ----- */
-
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
+        void GenerateMips(Texture& texture) override;
+        void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 
         /* ----- Viewport and Scissor ----- */
 
@@ -183,6 +182,17 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
+
+        /* ----- Extensions ----- */
+
+        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
+
+    public:
+
+        /* ----- Internal ----- */
+
+        // Returns true.
+        bool IsImmediateCmdBuffer() const override;
 
     private:
 

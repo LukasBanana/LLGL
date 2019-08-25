@@ -138,7 +138,7 @@ class PerformanceTest
         {
             for (std::size_t i = 0; i < config.numTextures; ++i)
             {
-                renderer->GenerateMips(*textures[i]);
+                commands->GenerateMips(*textures[i]);
             }
         }
 
@@ -146,7 +146,7 @@ class PerformanceTest
         {
             for (std::size_t i = 0; i < config.numTextures; ++i)
             {
-                renderer->GenerateMips(*textures[config.numTextures + i], 0, config.numMipMaps);
+                commands->GenerateMips(*textures[config.numTextures + i], LLGL::TextureSubresource{ 0, config.numMipMaps });
             }
         }
 
@@ -186,20 +186,21 @@ class PerformanceTest
         {
             std::cout << std::endl << "run performance tests ..." << std::endl;
 
-            //commands->SetRenderTarget(*context);
-
-            MeasureTime(
-                ( "MIP-map generation of " + std::to_string(config.numTextures) + " textures with size " +
-                  std::to_string(config.textureSize) + " and " + std::to_string(config.arrayLayers) + " array layers" ),
-                std::bind(&PerformanceTest::TestMIPMapGeneration, this)
-            );
-            MeasureTime(
-                ( "MIP-map generation of " + std::to_string(config.numTextures) + " textures with size " +
-                  std::to_string(config.textureSize) + " and only first " + std::to_string(config.numMipMaps) + " MIP-maps of first array layer" ),
-                std::bind(&PerformanceTest::TestSubMIPMapGeneration, this)
-            );
-
-            //context->Present();
+            commands->Begin();
+            {
+                MeasureTime(
+                    ( "MIP-map generation of " + std::to_string(config.numTextures) + " textures with size " +
+                      std::to_string(config.textureSize) + " and " + std::to_string(config.arrayLayers) + " array layers" ),
+                    std::bind(&PerformanceTest::TestMIPMapGeneration, this)
+                );
+                MeasureTime(
+                    ( "MIP-map generation of " + std::to_string(config.numTextures) + " textures with size " +
+                      std::to_string(config.textureSize) + " and only first " + std::to_string(config.numMipMaps) + " MIP-maps of first array layer" ),
+                    std::bind(&PerformanceTest::TestSubMIPMapGeneration, this)
+                );
+            }
+            commands->End();
+            commandQueue->Submit(*commands);
         }
 
 };

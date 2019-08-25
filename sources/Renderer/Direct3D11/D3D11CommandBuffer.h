@@ -45,6 +45,10 @@ class D3D11CommandBuffer final : public CommandBuffer
         void Begin() override;
         void End() override;
 
+        void Execute(CommandBuffer& deferredCommandBuffer) override;
+
+        /* ----- Blitting ----- */
+
         void UpdateBuffer(
             Buffer&         dstBuffer,
             std::uint64_t   dstOffset,
@@ -68,11 +72,8 @@ class D3D11CommandBuffer final : public CommandBuffer
             const Extent3D&         extent
         ) override;
 
-        void Execute(CommandBuffer& deferredCommandBuffer) override;
-
-        /* ----- Configuration ----- */
-
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
+        void GenerateMips(Texture& texture) override;
+        void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 
         /* ----- Viewport and Scissor ----- */
 
@@ -188,6 +189,10 @@ class D3D11CommandBuffer final : public CommandBuffer
 
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
+
+        /* ----- Extensions ----- */
+
+        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
 
     private:
 

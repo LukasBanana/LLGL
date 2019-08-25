@@ -292,43 +292,6 @@ void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel
     instance_->ReadTexture(textureDbg.instance, mipLevel, imageDesc);
 }
 
-void DbgRenderSystem::GenerateMips(Texture& texture)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        if (ValidateTextureMips(textureDbg))
-            ValidateTextureMipRange(textureDbg, 0, textureDbg.mipLevels);
-    }
-
-    instance_->GenerateMips(textureDbg.instance);
-
-    if (profiler_)
-        profiler_->frameProfile.mipMapsGenerations++;
-}
-
-void DbgRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        if (ValidateTextureMips(textureDbg))
-        {
-            ValidateTextureMipRange(textureDbg, baseMipLevel, numMipLevels);
-            ValidateTextureArrayRange(textureDbg, baseArrayLayer, numArrayLayers);
-        }
-    }
-
-    instance_->GenerateMips(textureDbg.instance, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
-
-    if (profiler_)
-        profiler_->frameProfile.mipMapsGenerations++;
-}
-
 /* ----- Sampler States ---- */
 
 Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& desc)
@@ -1001,29 +964,6 @@ void DbgRenderSystem::ValidateTextureImageDataSize(std::size_t dataSize, std::si
             ErrorType::InvalidArgument,
             "image data size too small for texture (" + std::to_string(dataSize) +
             " specified but required is " + std::to_string(requiredDataSize) + ")"
-        );
-    }
-}
-
-bool DbgRenderSystem::ValidateTextureMips(const DbgTexture& textureDbg)
-{
-    if (textureDbg.desc.mipLevels == 1)
-    {
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot generate MIP-maps for texture with only one MIP-map level");
-        return false;
-    }
-    return true;
-}
-
-void DbgRenderSystem::ValidateTextureMipRange(const DbgTexture& textureDbg, std::uint32_t baseMipLevel, std::uint32_t numMipLevels)
-{
-    const auto mipLevelRangeEnd = baseMipLevel + numMipLevels;
-    if (mipLevelRangeEnd > textureDbg.mipLevels)
-    {
-        LLGL_DBG_ERROR(
-            ErrorType::InvalidArgument,
-            "MIP level out of range for texture (" + std::to_string(mipLevelRangeEnd) +
-            " specified but limit is " + std::to_string(textureDbg.mipLevels) + ")"
         );
     }
 }

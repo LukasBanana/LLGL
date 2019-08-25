@@ -21,6 +21,7 @@ namespace LLGL
 {
 
 
+class VKDevice;
 class VKPhysicalDevice;
 class VKResourceHeap;
 
@@ -33,7 +34,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         VKCommandBuffer(
             const VKPhysicalDevice&         physicalDevice,
-            const VKPtr<VkDevice>&          device,
+            VKDevice&                       device,
             VkQueue                         graphicsQueue,
             const QueueFamilyIndices&       queueFamilyIndices,
             const CommandBufferDescriptor&  desc
@@ -44,6 +45,10 @@ class VKCommandBuffer final : public CommandBuffer
 
         void Begin() override;
         void End() override;
+
+        void Execute(CommandBuffer& deferredCommandBuffer) override;
+
+        /* ----- Blitting ----- */
 
         void UpdateBuffer(
             Buffer&         dstBuffer,
@@ -68,11 +73,8 @@ class VKCommandBuffer final : public CommandBuffer
             const Extent3D&         extent
         ) override;
 
-        void Execute(CommandBuffer& deferredCommandBuffer) override;
-
-        /* ----- Configuration ----- */
-
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
+        void GenerateMips(Texture& texture) override;
+        void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 
         /* ----- Viewport and Scissor ----- */
 
@@ -189,7 +191,13 @@ class VKCommandBuffer final : public CommandBuffer
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
+        /* ----- Extensions ----- */
+
+        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
+
     public:
+
+        /* ----- Internals ----- */
 
         // Acquires the next native VkCommandBuffer object.
         void AcquireNextBuffer();
@@ -248,7 +256,7 @@ class VKCommandBuffer final : public CommandBuffer
 
     private:
 
-        const VKPtr<VkDevice>&          device_;
+        VKDevice&                       device_;
         VKPtr<VkCommandPool>            commandPool_;
 
         std::vector<VkCommandBuffer>    commandBufferList_;

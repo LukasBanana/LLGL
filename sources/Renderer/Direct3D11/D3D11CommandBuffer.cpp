@@ -29,6 +29,7 @@
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
 #include "Texture/D3D11RenderTarget.h"
+#include "Texture/D3D11MipGenerator.h"
 
 
 namespace LLGL
@@ -84,6 +85,18 @@ void D3D11CommandBuffer::End()
         context_->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
     }
 }
+
+void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, deferredCommandBuffer);
+    if (auto commandList = cmdBufferD3D.commandList_.Get())
+    {
+        /* Execute encoded command list with immediate context */
+        context_->ExecuteCommandList(commandList, TRUE);
+    }
+}
+
+/* ----- Blitting ----- */
 
 void D3D11CommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
@@ -145,21 +158,23 @@ void D3D11CommandBuffer::CopyTexture(
     );
 }
 
-void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void D3D11CommandBuffer::GenerateMips(Texture& texture)
 {
-    auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, deferredCommandBuffer);
-    if (auto commandList = cmdBufferD3D.commandList_.Get())
-    {
-        /* Execute encoded command list with immediate context */
-        context_->ExecuteCommandList(commandList, TRUE);
-    }
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    D3D11MipGenerator::Get().GenerateMips(context_.Get(), textureD3D);
 }
 
-/* ----- Configuration ----- */
-
-void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void D3D11CommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    // dummy
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    D3D11MipGenerator::Get().GenerateMipsRange(
+        context_.Get(),
+        textureD3D,
+        subresource.baseMipLevel,
+        subresource.numMipLevels,
+        subresource.baseArrayLayer,
+        subresource.numArrayLayers
+    );
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -612,6 +627,13 @@ void D3D11CommandBuffer::PopDebugGroup()
     if (annotation_)
         annotation_->EndEvent();
     #endif
+}
+
+/* ----- Extensions ----- */
+
+void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+{
+    // dummy
 }
 
 

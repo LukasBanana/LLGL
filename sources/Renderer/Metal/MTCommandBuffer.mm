@@ -60,6 +60,13 @@ void MTCommandBuffer::End()
     PresentDrawables();
 }
 
+void MTCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    //TODO
+}
+
+/* ----- Blitting ----- */
+
 void MTCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
@@ -76,16 +83,16 @@ void MTCommandBuffer::UpdateBuffer(
 
     /* Encode blit command to copy staging buffer region to destination buffer */
     encoderScheduler_.PauseRenderEncoder();
-
-    auto blitEncoder = encoderScheduler_.BindBlitEncoder();
-    [blitEncoder
-        copyFromBuffer:     srcBuffer
-        sourceOffset:       srcOffset
-        toBuffer:           dstBufferMT.GetNative()
-        destinationOffset:  static_cast<NSUInteger>(dstOffset)
-        size:               static_cast<NSUInteger>(dataSize)
-    ];
-
+    {
+        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+        [blitEncoder
+            copyFromBuffer:     srcBuffer
+            sourceOffset:       srcOffset
+            toBuffer:           dstBufferMT.GetNative()
+            destinationOffset:  static_cast<NSUInteger>(dstOffset)
+            size:               static_cast<NSUInteger>(dataSize)
+        ];
+    }
     encoderScheduler_.ResumeRenderEncoder();
 }
 
@@ -100,16 +107,16 @@ void MTCommandBuffer::CopyBuffer(
     auto& srcBufferMT = LLGL_CAST(MTBuffer&, srcBuffer);
 
     encoderScheduler_.PauseRenderEncoder();
-
-    auto blitEncoder = encoderScheduler_.BindBlitEncoder();
-    [blitEncoder
-        copyFromBuffer:     srcBufferMT.GetNative()
-        sourceOffset:       static_cast<NSUInteger>(srcOffset)
-        toBuffer:           dstBufferMT.GetNative()
-        destinationOffset:  static_cast<NSUInteger>(dstOffset)
-        size:               static_cast<NSUInteger>(size)
-    ];
-
+    {
+        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+        [blitEncoder
+            copyFromBuffer:     srcBufferMT.GetNative()
+            sourceOffset:       static_cast<NSUInteger>(srcOffset)
+            toBuffer:           dstBufferMT.GetNative()
+            destinationOffset:  static_cast<NSUInteger>(dstOffset)
+            size:               static_cast<NSUInteger>(size)
+        ];
+    }
     encoderScheduler_.ResumeRenderEncoder();
 }
 
@@ -123,16 +130,21 @@ void MTCommandBuffer::CopyTexture(
     //TODO
 }
 
-void MTCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void MTCommandBuffer::GenerateMips(Texture& texture)
 {
-    //TODO
+    auto& textureMT = LLGL_CAST(MTTexture&, texture);
+
+    encoderScheduler_.PauseRenderEncoder();
+    {
+        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+        [blitEncoder generateMipmapsForTexture:textureMT.GetNative()];
+    }
+    encoderScheduler_.ResumeRenderEncoder();
 }
 
-/* ----- Configuration ----- */
-
-void MTCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void MTCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    // dummy
+    //TODO...
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -851,6 +863,13 @@ void MTCommandBuffer::PopDebugGroup()
     #ifdef LLGL_DEBUG
     [cmdBuffer_ popDebugGroup];
     #endif // /LLGL_DEBUG
+}
+
+/* ----- Extensions ----- */
+
+void MTCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+{
+    // dummy
 }
 
 

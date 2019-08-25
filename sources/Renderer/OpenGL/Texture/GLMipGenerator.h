@@ -22,6 +22,7 @@ namespace LLGL
 //#define LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 class GLTexture;
+class GLStateManager;
 
 class GLMipGenerator
 {
@@ -46,10 +47,11 @@ class GLMipGenerator
         void GenerateMips(const TextureType type);
 
         // Generates the entire MIP-map chain for the specified OpenGL texture.
-        void GenerateMipsForTexture(GLTexture& textureGL);
+        void GenerateMipsForTexture(GLStateManager& stateMngr, GLTexture& textureGL);
 
         // Generates the specified range of MIP-maps for the specified OpenGL texture.
         void GenerateMipsRangeForTexture(
+            GLStateManager& stateMngr,
             GLTexture&      textureGL,
             std::uint32_t   baseMipLevel,
             std::uint32_t   numMipLevels,
@@ -61,9 +63,26 @@ class GLMipGenerator
 
         GLMipGenerator() = default;
 
-        void GenerateMipsPrimary(GLuint texID, const TextureType texType);
-        void GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers);
-        void GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers);
+        void GenerateMipsPrimary(GLStateManager& stateMngr, GLuint texID, const TextureType texType);
+
+        void GenerateSubMipsWithFBO(
+            GLStateManager& stateMngr,
+            GLTexture&      textureGL,
+            const Extent3D& extent,
+            GLint           baseMipLevel,
+            GLint           numMipLevels,
+            GLint           baseArrayLayer,
+            GLint           numArrayLayers
+        );
+
+        void GenerateSubMipsWithTextureView(
+            GLStateManager& stateMngr,
+            GLTexture&      textureGL,
+            GLuint          baseMipLevel,
+            GLuint          numMipLevels,
+            GLuint          baseArrayLayer,
+            GLuint          numArrayLayers
+        );
 
     private:
 

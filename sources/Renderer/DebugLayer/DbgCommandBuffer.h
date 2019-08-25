@@ -23,6 +23,7 @@ namespace LLGL
 
 
 class DbgBuffer;
+class DbgTexture;
 class DbgRenderContext;
 class DbgRenderTarget;
 class DbgComputePipeline;
@@ -48,6 +49,10 @@ class DbgCommandBuffer final : public CommandBuffer
         void Begin() override;
         void End() override;
 
+        void Execute(CommandBuffer& deferredCommandBuffer) override;
+
+        /* ----- Blitting ----- */
+
         void UpdateBuffer(
             Buffer&         dstBuffer,
             std::uint64_t   dstOffset,
@@ -71,11 +76,8 @@ class DbgCommandBuffer final : public CommandBuffer
             const Extent3D&         extent
         ) override;
 
-        void Execute(CommandBuffer& deferredCommandBuffer) override;
-
-        /* ----- Configuration ----- */
-
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
+        void GenerateMips(Texture& texture) override;
+        void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 
         /* ----- Viewport and Scissor ----- */
 
@@ -192,9 +194,13 @@ class DbgCommandBuffer final : public CommandBuffer
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
+        /* ----- Extensions ----- */
+
+        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
+
     public:
 
-        /* ----- Extended functions ----- */
+        /* ----- Internal ----- */
 
         void EnableRecording(bool enable);
 
@@ -209,6 +215,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
     private:
 
+        void ValidateGenerateMips(DbgTexture& textureDbg, const TextureSubresource* subresource = nullptr);
         void ValidateViewport(const Viewport& viewport);
         void ValidateAttachmentClear(const AttachmentClear& attachment);
 
@@ -235,8 +242,8 @@ class DbgCommandBuffer final : public CommandBuffer
         void ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size);
         void ValidateAddressAlignment(std::uint64_t address, std::uint64_t alignment, const char* addressName);
 
-        bool ValidateQueryIndex(DbgQueryHeap& queryHeap, std::uint32_t query);
-        DbgQueryHeap::State* GetAndValidateQueryState(DbgQueryHeap& queryHeap, std::uint32_t query);
+        bool ValidateQueryIndex(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
+        DbgQueryHeap::State* GetAndValidateQueryState(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
 
         void AssertRecording();
         void AssertInsideRenderPass();

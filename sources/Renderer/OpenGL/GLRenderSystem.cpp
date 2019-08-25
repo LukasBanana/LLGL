@@ -447,11 +447,6 @@ void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
     }
 }
 
-#if 1//TODO: remove this
-void GLRenderSystem::GenerateMips(Texture& texture){}
-void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers){}
-#endif
-
 /* ----- Sampler States ---- */
 
 Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)

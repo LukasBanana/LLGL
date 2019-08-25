@@ -513,11 +513,6 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
         LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, width, height, bindFlags), &imageDesc
     );
 
-    // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
-    // see https://developer.valvesoftware.com/wiki/MIP_Mapping
-    // see http://whatis.techtarget.com/definition/MIP-map
-    renderSys.GenerateMips(*tex);
-
     // Release image data
     stbi_image_free(imageBuffer);
 

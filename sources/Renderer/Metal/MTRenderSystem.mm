@@ -7,6 +7,7 @@
 
 #include "MTRenderSystem.h"
 #include "../CheckedCast.h"
+#include "../TextureUtils.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
 #include "MTFeatureSet.h"
@@ -122,7 +123,7 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             id<MTLCommandBuffer> cmdBuffer = [commandQueue_->GetNative() commandBuffer];
             {
                 id<MTLBlitCommandEncoder> blitCmdEncoder = [cmdBuffer blitCommandEncoder];
-                [blitCmdEncoder generateMipmapsForTexture:textureMT.GetNative()];
+                [blitCmdEncoder generateMipmapsForTexture:textureMT->GetNative()];
                 [blitCmdEncoder endEncoding];
             }
             [cmdBuffer commit];
@@ -147,11 +148,6 @@ void MTRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
 {
     //todo
 }
-
-#if 1//TODO: remove
-void MTRenderSystem::GenerateMips(Texture& texture){}
-void MTRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers){}
-#endif
 
 /* ----- Sampler States ---- */
 

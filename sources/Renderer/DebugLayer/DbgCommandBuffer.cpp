@@ -72,6 +72,30 @@ void DbgCommandBuffer::End()
     instance.End();
 }
 
+void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, deferredCommandBuffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+
+        if (&deferredCommandBuffer == this)
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "command buffer tried to execute itself");
+
+        ValidateBindFlags(
+            commandBufferDbg.desc.flags,
+            CommandBufferFlags::DeferredSubmit,
+            CommandBufferFlags::DeferredSubmit,
+            "LLGL::CommandBuffer"
+        );
+    }
+
+    instance.Execute(commandBufferDbg.instance);
+}
+
+/* ----- Blitting ----- */
+
 void DbgCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
@@ -133,33 +157,36 @@ void DbgCommandBuffer::CopyTexture(
     profile_.textureCopies++;
 }
 
-void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void DbgCommandBuffer::GenerateMips(Texture& texture)
 {
-    auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, deferredCommandBuffer);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-
-        if (&deferredCommandBuffer == this)
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "command buffer tried to execute itself");
-
-        ValidateBindFlags(
-            commandBufferDbg.desc.flags,
-            CommandBufferFlags::DeferredSubmit,
-            CommandBufferFlags::DeferredSubmit,
-            "LLGL::CommandBuffer"
-        );
+        AssertRecording();
+        ValidateGenerateMips(textureDbg);
     }
 
-    instance.Execute(commandBufferDbg.instance);
+    instance.GenerateMips(textureDbg.instance);
+
+    profile_.mipMapsGenerations++;
 }
 
-/* ----- Configuration ----- */
-
-void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void DbgCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    instance.SetGraphicsAPIDependentState(stateDesc, stateDescSize);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateGenerateMips(textureDbg, &subresource);
+    }
+
+    instance.GenerateMips(textureDbg.instance, subresource);
+
+    profile_.mipMapsGenerations++;
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -998,7 +1025,14 @@ void DbgCommandBuffer::PopDebugGroup()
     }
 }
 
-/* ----- Extended functions ----- */
+/* ----- Extensions ----- */
+
+void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+{
+    instance.SetGraphicsAPIDependentState(stateDesc, stateDescSize);
+}
+
+/* ----- Internal ----- */
 
 void DbgCommandBuffer::EnableRecording(bool enable)
 {
@@ -1026,6 +1060,68 @@ void DbgCommandBuffer::NextProfile(FrameProfile& outputProfile)
 /*
  * ======= Private: =======
  */
+
+void DbgCommandBuffer::ValidateGenerateMips(DbgTexture& textureDbg, const TextureSubresource* subresource)
+{
+    if ((textureDbg.desc.bindFlags & BindFlags::ColorAttachment) == 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidState,
+            "cannot generate MIP-maps for texture that was created without 'LLGL::BindFlags::ColorAttachment' flag"
+        );
+    }
+
+    if (subresource != nullptr)
+    {
+        /* Validate for subresource */
+        if (subresource->numMipLevels == 0)
+        {
+            LLGL_DBG_WARN(
+                WarningType::PointlessOperation,
+                "generating a total number of 0 MIP-maps for texture has no effect"
+            );
+        }
+        else if (subresource->baseMipLevel + subresource->numMipLevels > textureDbg.mipLevels)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot generate MIP-maps for texture with subresource being out of bounds: "
+                "MIP-map range is [0, " + std::to_string(textureDbg.mipLevels) +
+                "), but [" + std::to_string(subresource->baseMipLevel) + ", " +
+                std::to_string(subresource->baseMipLevel + subresource->numMipLevels) + ") was specified"
+            );
+        }
+
+        if (subresource->numArrayLayers == 0)
+        {
+            LLGL_DBG_WARN(
+                WarningType::PointlessOperation,
+                "generating MIP-maps with a total number of 0 array layers for texture has no effect"
+            );
+        }
+        else if (subresource->baseArrayLayer + subresource->numArrayLayers > textureDbg.desc.arrayLayers)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot generate MIP-maps for texture with subresource being out of bounds: "
+                "array layer range is [0, " + std::to_string(textureDbg.desc.arrayLayers) +
+                "), but [" + std::to_string(subresource->baseArrayLayer) + ", " +
+                std::to_string(subresource->baseArrayLayer + subresource->numArrayLayers) + ") was specified"
+            );
+        }
+    }
+    else
+    {
+        /* Validate for entire MIP chain */
+        if (textureDbg.mipLevels == 1)
+        {
+            LLGL_DBG_WARN(
+                WarningType::PointlessOperation,
+                "generate MIP-maps for texture with only a single MIP-map has no effect"
+            );
+        }
+    }
+}
 
 void DbgCommandBuffer::ValidateViewport(const Viewport& viewport)
 {
@@ -1420,24 +1516,24 @@ void DbgCommandBuffer::ValidateAddressAlignment(std::uint64_t address, std::uint
     }
 }
 
-bool DbgCommandBuffer::ValidateQueryIndex(DbgQueryHeap& queryHeap, std::uint32_t query)
+bool DbgCommandBuffer::ValidateQueryIndex(DbgQueryHeap& queryHeapDbg, std::uint32_t query)
 {
-    if (query >= queryHeap.states.size())
+    if (query >= queryHeapDbg.states.size())
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "query index out of bounds (" + std::to_string(query) +
-            " specified but upper bound is " + std::to_string(queryHeap.states.size()) + ")"
+            " specified but upper bound is " + std::to_string(queryHeapDbg.states.size()) + ")"
         );
         return false;
     }
     return true;
 }
 
-DbgQueryHeap::State* DbgCommandBuffer::GetAndValidateQueryState(DbgQueryHeap& queryHeap, std::uint32_t query)
+DbgQueryHeap::State* DbgCommandBuffer::GetAndValidateQueryState(DbgQueryHeap& queryHeapDbg, std::uint32_t query)
 {
-    if (ValidateQueryIndex(queryHeap, query))
-        return &(queryHeap.states[query]);
+    if (ValidateQueryIndex(queryHeapDbg, query))
+        return &(queryHeapDbg.states[query]);
     else
         return nullptr;
 }

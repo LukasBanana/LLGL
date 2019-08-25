@@ -74,6 +74,14 @@ void D3D12CommandBuffer::End()
     numBoundScissorRects_ = 0;
 }
 
+void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    auto& cmdBufferD3D = LLGL_CAST(D3D12CommandBuffer&, deferredCommandBuffer);
+    commandList_->ExecuteBundle(cmdBufferD3D.GetNative());
+}
+
+/* ----- Blitting ----- */
+
 void D3D12CommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
@@ -124,17 +132,14 @@ void D3D12CommandBuffer::CopyTexture(
     );
 }
 
-void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void D3D12CommandBuffer::GenerateMips(Texture& texture)
 {
-    auto& cmdBufferD3D = LLGL_CAST(D3D12CommandBuffer&, deferredCommandBuffer);
-    commandList_->ExecuteBundle(cmdBufferD3D.GetNative());
+    //TODO
 }
 
-/* ----- Configuration ----- */
-
-void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void D3D12CommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    // dummy
+    //TODO
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -643,6 +648,13 @@ void D3D12CommandBuffer::PushDebugGroup(const char* name)
 void D3D12CommandBuffer::PopDebugGroup()
 {
     PIXEndEvent(commandList_.Get());
+}
+
+/* ----- Extensions ----- */
+
+void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+{
+    // dummy
 }
 
 

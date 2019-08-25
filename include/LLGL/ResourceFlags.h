@@ -194,6 +194,7 @@ struct MiscFlags
 
         /**
         \brief Generates MIP-maps at texture creation time with the initial image data (if specified).
+        \remarks To generate MIP-maps, the texture must be created with the BindFlags::ColorAttachment flag.
         \remarks This can be used to generate all MIP-maps when a new texture is created without explicitly encoding the CommandBuffer::GenerateMips function.
         The number of MIP-maps being generated depends on the \c mipLevels attribute in TextureDescriptor.
         \see TextureDescriptor::mipLevels

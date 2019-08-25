@@ -431,51 +431,6 @@ void VKRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
     //todo
 }
 
-#if 1//TODO: remove this
-void VKRenderSystem::GenerateMips(Texture& texture)
-{
-    auto& textureVK = LLGL_CAST(VKTexture&, texture);
-    auto cmdBuffer = device_.AllocCommandBuffer();
-    {
-        device_.GenerateMips(
-            cmdBuffer,
-            textureVK.GetVkImage(),
-            textureVK.GetVkExtent(),
-            0,
-            textureVK.GetNumMipLevels(),
-            0,
-            textureVK.GetNumArrayLayers()
-        );
-    }
-    device_.FlushCommandBuffer(cmdBuffer);
-}
-
-void VKRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
-{
-    auto& textureVK = LLGL_CAST(VKTexture&, texture);
-
-    const auto maxNumMipLevels      = textureVK.GetNumMipLevels();
-    const auto maxNumArrayLayers    = std::uint32_t(1u); //TODO...
-
-    if (baseMipLevel < maxNumMipLevels && baseArrayLayer < maxNumArrayLayers && numMipLevels > 0 && numArrayLayers > 0)
-    {
-        auto cmdBuffer = device_.AllocCommandBuffer();
-        {
-            device_.GenerateMips(
-                cmdBuffer,
-                textureVK.GetVkImage(),
-                textureVK.GetVkExtent(),
-                baseMipLevel,
-                std::min(numMipLevels, maxNumMipLevels - baseMipLevel),
-                baseArrayLayer,
-                std::min(numArrayLayers, maxNumArrayLayers - baseArrayLayer)
-            );
-        }
-        device_.FlushCommandBuffer(cmdBuffer);
-    }
-}
-#endif
-
 /* ----- Sampler States ---- */
 
 Sampler* VKRenderSystem::CreateSampler(const SamplerDescriptor& desc)

@@ -250,11 +250,6 @@ void D3D12RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     //todo
 }
 
-#if 1//TODO: remove this
-void D3D12RenderSystem::GenerateMips(Texture& texture){}
-void D3D12RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers){}
-#endif
-
 /* ----- Sampler States ---- */
 
 Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& desc)

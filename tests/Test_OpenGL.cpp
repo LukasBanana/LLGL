@@ -260,10 +260,6 @@ int main()
         }
         auto& texture = *renderer->CreateTexture(textureDesc, &imageDesc);
 
-        #ifndef __linux__
-        renderer->GenerateMips(texture);
-        #endif
-
         LLGL::TextureRegion subTexDesc;
         {
             subTexDesc.offset.x                     = 0;

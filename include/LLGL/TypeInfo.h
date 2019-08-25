@@ -67,10 +67,7 @@ static InterfaceID GetInterfaceID();
 \remarks This template can be used like in the following example:
 \code
 const LLGL::Surface& mySurface = ...
-if (const LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window>(mySurface))
-{
-    ...
-}
+const LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window>(mySurface);
 \endcode
 */
 template <typename T>
@@ -90,10 +87,7 @@ static InterfaceID GetInterfaceID();
 \remarks This template can be used like in the following example:
 \code
 LLGL::Surface& mySurface = ...
-if (LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window&>(mySurface))
-{
-    ...
-}
+LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window&>(mySurface);
 \endcode
 */
 template <typename T>

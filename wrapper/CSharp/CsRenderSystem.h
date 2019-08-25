@@ -169,9 +169,6 @@ public ref class RenderSystem
         void ReadTexture(Texture^ texture, unsigned int mipLevel, DstImageDescriptor<T>^ imageDesc);
         #endif
 
-        void GenerateMips(Texture^ texture);
-        void GenerateMips(Texture^ texture, unsigned int baseMipLevel, unsigned int numMipLevels, unsigned int baseArrayLayer, unsigned int numArrayLayers);
-
         /* ----- Samplers ---- */
 
         Sampler^ CreateSampler(SamplerDescriptor^ desc);

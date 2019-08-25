@@ -515,16 +515,6 @@ void RenderSystem::WriteTexture(Texture^ texture, SubTextureDescriptor^ subTextu
 void RenderSystem::ReadTexture(Texture^ texture, unsigned int mipLevel, DstImageDescriptor^ imageDesc);
 #endif
 
-void RenderSystem::GenerateMips(Texture^ texture)
-{
-    native_->GenerateMips(*texture->NativeSub);
-}
-
-void RenderSystem::GenerateMips(Texture^ texture, unsigned int baseMipLevel, unsigned int numMipLevels, unsigned int baseArrayLayer, unsigned int numArrayLayers)
-{
-    native_->GenerateMips(*texture->NativeSub, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
-}
-
 /* ----- Samplers ---- */
 
 static void Convert(LLGL::SamplerDescriptor& dst, SamplerDescriptor^ src)

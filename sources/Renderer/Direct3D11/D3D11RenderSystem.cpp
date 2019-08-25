@@ -314,7 +314,7 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
 
         /* Convert mapped data into requested format */
         auto tempData = ConvertImageBuffer(
-            SrcImageDescriptor { srcTexFormat.format, srcTexFormat.dataType, mappedSubresource.pData, srcImageSize },
+            SrcImageDescriptor{ srcTexFormat.format, srcTexFormat.dataType, mappedSubresource.pData, srcImageSize },
             imageDesc.format, imageDesc.dataType, GetConfiguration().threadCount
         );
 
@@ -333,11 +333,6 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     /* Unmap resource */
     context_->Unmap(texCopy.resource.Get(), 0);
 }
-
-#if 1//TODO: remove this
-void D3D11RenderSystem::GenerateMips(Texture& texture){}
-void D3D11RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers){}
-#endif
 
 /* ----- Sampler States ---- */
 

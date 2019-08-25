@@ -24,6 +24,7 @@
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
 #include "../Texture/GLRenderTarget.h"
+#include "../Texture/GLMipGenerator.h"
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
@@ -47,11 +48,6 @@ GLImmediateCommandBuffer::GLImmediateCommandBuffer(const std::shared_ptr<GLState
 {
 }
 
-bool GLImmediateCommandBuffer::IsImmediateCmdBuffer() const
-{
-    return true;
-}
-
 /* ----- Encoding ----- */
 
 void GLImmediateCommandBuffer::Begin()
@@ -63,6 +59,14 @@ void GLImmediateCommandBuffer::End()
 {
     // dummy
 }
+
+void GLImmediateCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, deferredCommandBuffer);
+    ExecuteGLCommandBuffer(cmdBufferGL, *stateMngr_);
+}
+
+/* ----- Blitting ----- */
 
 void GLImmediateCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
@@ -110,22 +114,23 @@ void GLImmediateCommandBuffer::CopyTexture(
     );
 }
 
-void GLImmediateCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void GLImmediateCommandBuffer::GenerateMips(Texture& texture)
 {
-    auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, deferredCommandBuffer);
-    ExecuteGLCommandBuffer(cmdBufferGL, *stateMngr_);
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLMipGenerator::Get().GenerateMipsForTexture(*stateMngr_, textureGL);
 }
 
-/* ----- Configuration ----- */
-
-void GLImmediateCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void GLImmediateCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    if (stateDesc != nullptr && stateDescSize == sizeof(OpenGLDependentStateDescriptor))
-    {
-        stateMngr_->SetGraphicsAPIDependentState(
-            *reinterpret_cast<const OpenGLDependentStateDescriptor*>(stateDesc)
-        );
-    }
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLMipGenerator::Get().GenerateMipsRangeForTexture(
+        *stateMngr_,
+        textureGL,
+        subresource.baseMipLevel,
+        subresource.numMipLevels,
+        subresource.baseArrayLayer,
+        subresource.numArrayLayers
+    );
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -788,6 +793,25 @@ void GLImmediateCommandBuffer::PopDebugGroup()
     if (HasExtension(GLExt::KHR_debug))
         glPopDebugGroup();
     #endif // /GL_KHR_debug
+}
+
+/* ----- Extensions ----- */
+
+void GLImmediateCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+{
+    if (stateDesc != nullptr && stateDescSize == sizeof(OpenGLDependentStateDescriptor))
+    {
+        stateMngr_->SetGraphicsAPIDependentState(
+            *reinterpret_cast<const OpenGLDependentStateDescriptor*>(stateDesc)
+        );
+    }
+}
+
+/* ----- Internal ----- */
+
+bool GLImmediateCommandBuffer::IsImmediateCmdBuffer() const
+{
+    return true;
 }
 
 

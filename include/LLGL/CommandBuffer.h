@@ -69,6 +69,18 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void End() = 0;
 
         /**
+        \brief Executes the specified deferred command buffer.
+        \param[in] deferredCommandBuffer Specifies the deferred command buffer which is meant to be executed.
+        This command buffer must have been created with the flag CommandBufferFlags::DeferredSubmit.
+        \remarks This function can only be used by primary command buffers, i.e. command buffers that have not been created with the flag CommandBufferFlags::DeferredSubmit.
+        \see CommandBufferFlags
+        \todo Incomplete for: D3D12, Vulkan, Metal.
+        */
+        virtual void Execute(CommandBuffer& deferredCommandBuffer) = 0;
+
+        /* ----- Blitting ----- */
+
+        /**
         \brief Updates the data of the specified buffer during encoding the command buffer.
         \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
         \param[in] dstOffset Specifies the destination offset (in bytes) at which the buffer is to be updated.
@@ -135,47 +147,31 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void BlitTexture(Texture& dstTexture, Texture& srcTexture, [...], Filter filter) = 0;
         #endif
 
-        #if 0 // TODO: enable this
         /**
         \brief Generates all MIP-maps for the specified texture.
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
-        \remarks To update the MIP levels outside of encoding a command buffer, use RenderSystem::GenerateMips.
-        It is recommended to call this outside of a render pass.
-        Otherwise, LLGL needs to pause and resume the render pass for the Vulkan backend via a secondary render pass object.
-        \see GenerateMips(Texture&, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
+        This texture must have been created with the BindFlags::ColorAttachment flag.
+        \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
+        Otherwise, render pass interruptions might be inserted by LLGL.
+        \see GenerateMips(Texture&, const TextureSubresource&)
         */
         virtual void GenerateMips(Texture& texture) = 0;
-        #endif // /TODO
 
         /**
-        \brief Executes the specified deferred command buffer.
-        \param[in] deferredCommandBuffer Specifies the deferred command buffer which is meant to be executed.
-        This command buffer must have been created with the flag CommandBufferFlags::DeferredSubmit.
-        \remarks This function can only be used by primary command buffers, i.e. command buffers that have not been created with the flag CommandBufferFlags::DeferredSubmit.
-        \see CommandBufferFlags
-        \todo Incomplete for: D3D12, Vulkan, Metal.
+        \brief Generates the specified range of MIP-maps for the specified texture.
+        \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
+        This texture must have been created with the BindFlags::ColorAttachment flag.
+        \param[in] subresource Specifies the texture subresource, i.e. the range of MIP-maps that are to be updated.
+        \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
+        Otherwise, render pass interruptions might be inserted by LLGL.
+        \remarks This function guarantees to generate only the MIP-maps in the specified range (specified by \c subresource).
+        However, this function may introduce a performance penalty compared to generating MIP-maps using a texture view.
+        It is therefore recommended to use this function only if the range of MIP-maps is significantly smaller than the entire MIP chain,
+        e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
+        \see GenerateMips(Texture&)
+        \see RenderSystem::CreateTextureView
         */
-        virtual void Execute(CommandBuffer& deferredCommandBuffer) = 0;
-
-        /* ----- Configuration ----- */
-
-        /**
-        \brief Sets a few low-level graphics API dependent states.
-        \param[in] stateDesc Specifies a pointer to the renderer spcific state descriptor. If this is a null pointer, the function has no effect.
-        \param[in] stateDescSize Specifies the size (in bytes) of the renderer spcific state descriptor structure.
-        If this value is not equal to the state descriptor structure that is required for the respective renderer, the function has no effect.
-        \remarks This can be used to work around several differences between the low-level graphics APIs,
-        e.g. for a uniform render target behavior between OpenGL and Direct3D.
-        Here is a usage example:
-        \code
-        LLGL::OpenGLDependentStateDescriptor myOpenGLStateDesc;
-        myOpenGLStateDesc.invertFrontFace = true;
-        myCmdBuffer->SetGraphicsAPIDependentState(&myOpenGLStateDesc, sizeof(myOpenGLStateDesc));
-        \endcode
-        \note Invalid arguments are ignored by this function silently (except for corrupted pointers).
-        \see OpenGLDependentStateDescriptor
-        */
-        virtual void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) = 0;
+        virtual void GenerateMips(Texture& texture, const TextureSubresource& subresource) = 0;
 
         /* ----- Viewport and Scissor ----- */
 
@@ -790,6 +786,26 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         //! \see PushDebugGroup
         virtual void PopDebugGroup() = 0;
+
+        /* ----- Extensions ----- */
+
+        /**
+        \brief Sets a few low-level graphics API dependent states.
+        \param[in] stateDesc Specifies a pointer to the renderer spcific state descriptor. If this is a null pointer, the function has no effect.
+        \param[in] stateDescSize Specifies the size (in bytes) of the renderer spcific state descriptor structure.
+        If this value is not equal to the state descriptor structure that is required for the respective renderer, the function has no effect.
+        \remarks This can be used to work around several differences between the low-level graphics APIs,
+        e.g. for a uniform render target behavior between OpenGL and Direct3D.
+        Here is a usage example:
+        \code
+        LLGL::OpenGLDependentStateDescriptor myOpenGLStateDesc;
+        myOpenGLStateDesc.invertFrontFace = true;
+        myCmdBuffer->SetGraphicsAPIDependentState(&myOpenGLStateDesc, sizeof(myOpenGLStateDesc));
+        \endcode
+        \note Invalid arguments are ignored by this function silently (except for corrupted pointers).
+        \see OpenGLDependentStateDescriptor
+        */
+        virtual void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) = 0;
 
     protected:
 

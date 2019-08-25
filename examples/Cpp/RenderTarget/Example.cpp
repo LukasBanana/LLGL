@@ -273,9 +273,6 @@ private:
         );
         #endif
 
-        // Generate all MIP-map levels
-        renderer->GenerateMips(*renderTargetTex);
-
         // Create render-target with multi-sampling
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
@@ -413,6 +410,9 @@ private:
         UpdateModelTransform(projection, rotation.x);
         commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
+        // Generate MIP-maps again after texture has been written by the render-target
+        commands->GenerateMips(*renderTargetTex);
+
         // Begin render pass for render context
         commands->BeginRenderPass(*context);
         {
@@ -427,9 +427,6 @@ private:
             // Note: this must be done AFTER the respective graphics pipeline has been set,
             //       since the previous pipeline has no dynamic viewport!
             commands->SetViewport(context->GetResolution());
-
-            // Generate MIP-maps again after texture has been written by the render-target
-            renderer->GenerateMips(*renderTargetTex);
 
             if (resourceHeaps[1])
             {

@@ -41,12 +41,14 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
         GLDeferredCommandBuffer(long flags, std::size_t reservedSize = 0);
 
-        bool IsImmediateCmdBuffer() const override;
-
         /* ----- Encoding ----- */
 
         void Begin() override;
         void End() override;
+
+        void Execute(CommandBuffer& deferredCommandBuffer) override;
+
+        /* ----- Blitting ----- */
 
         void UpdateBuffer(
             Buffer&         dstBuffer,
@@ -71,11 +73,8 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
             const Extent3D&         extent
         ) override;
 
-        void Execute(CommandBuffer& deferredCommandBuffer) override;
-
-        /* ----- Configuration ----- */
-
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
+        void GenerateMips(Texture& texture) override;
+        void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 
         /* ----- Viewport and Scissor ----- */
 
@@ -192,9 +191,16 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
+        /* ----- Extensions ----- */
+
+        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
+
     public:
 
-        /*  ----- Extended functions ----- */
+        /* ----- Internal ----- */
+
+        // Returns false.
+        bool IsImmediateCmdBuffer() const override;
 
         // Returns true if this is a primary command buffer.
         bool IsPrimary() const;

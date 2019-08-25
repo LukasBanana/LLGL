@@ -24,6 +24,7 @@
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
 #include "../Texture/GLRenderTarget.h"
+#include "../Texture/GLMipGenerator.h"
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
@@ -67,6 +68,18 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdCopyImageSubData*>(pc);
             cmd->dstTexture->CopyImageSubData(cmd->dstLevel, cmd->dstOffset, *(cmd->srcTexture), cmd->srcLevel, cmd->srcOffset, cmd->extent);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeGenerateMipmap:
+        {
+            auto cmd = reinterpret_cast<const GLCmdGenerateMipmap*>(pc);
+            GLMipGenerator::Get().GenerateMipsForTexture(stateMngr, *(cmd->texture));
+            return sizeof(*cmd);
+        }
+        case GLOpcodeGenerateMipmapSubresource:
+        {
+            auto cmd = reinterpret_cast<const GLCmdGenerateMipmapSubresource*>(pc);
+            GLMipGenerator::Get().GenerateMipsRangeForTexture(stateMngr, *(cmd->texture), cmd->baseMipLevel, cmd->numMipLevels, cmd->baseArrayLayer, cmd->numArrayLayers);
             return sizeof(*cmd);
         }
         case GLOpcodeExecute:

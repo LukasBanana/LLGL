@@ -62,6 +62,20 @@ struct GLCmdCopyImageSubData
     Extent3D    extent;
 };
 
+struct GLCmdGenerateMipmap
+{
+    GLTexture* texture;
+};
+
+struct GLCmdGenerateMipmapSubresource
+{
+    GLTexture*      texture;
+    std::uint32_t   baseMipLevel;
+    std::uint32_t   numMipLevels;
+    std::uint32_t   baseArrayLayer;
+    std::uint32_t   numArrayLayers;
+};
+
 struct GLCmdExecute
 {
     const GLDeferredCommandBuffer* commandBuffer;

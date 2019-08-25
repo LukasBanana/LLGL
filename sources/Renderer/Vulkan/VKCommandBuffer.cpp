@@ -17,6 +17,7 @@
 #include "RenderState/VKResourceHeap.h"
 #include "RenderState/VKQueryHeap.h"
 #include "Texture/VKSampler.h"
+#include "Texture/VKTexture.h"
 #include "Texture/VKRenderTarget.h"
 #include "Buffer/VKBuffer.h"
 #include "Buffer/VKBufferArray.h"
@@ -42,7 +43,7 @@ static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDev
 
 VKCommandBuffer::VKCommandBuffer(
     const VKPhysicalDevice&         physicalDevice,
-    const VKPtr<VkDevice>&          device,
+    VKDevice&                       device,
     VkQueue                         graphicsQueue,
     const QueueFamilyIndices&       queueFamilyIndices,
     const CommandBufferDescriptor&  desc)
@@ -121,6 +122,15 @@ void VKCommandBuffer::End()
     recordState_ = RecordState::ReadyForSubmit;
 }
 
+void VKCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    auto& cmdBufferVK = LLGL_CAST(VKCommandBuffer&, deferredCommandBuffer);
+    VkCommandBuffer cmdBuffers[] = { cmdBufferVK.GetVkCommandBuffer() };
+    vkCmdExecuteCommands(commandBuffer_, 1, cmdBuffers);
+}
+
+/* ----- Blitting ----- */
+
 void VKCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
@@ -179,18 +189,40 @@ void VKCommandBuffer::CopyTexture(
     //TODO
 }
 
-void VKCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void VKCommandBuffer::GenerateMips(Texture& texture)
 {
-    auto& cmdBufferVK = LLGL_CAST(VKCommandBuffer&, deferredCommandBuffer);
-    VkCommandBuffer cmdBuffers[] = { cmdBufferVK.GetVkCommandBuffer() };
-    vkCmdExecuteCommands(commandBuffer_, 1, cmdBuffers);
+    auto& textureVK = LLGL_CAST(VKTexture&, texture);
+    device_.GenerateMips(
+        commandBuffer_,
+        textureVK.GetVkImage(),
+        textureVK.GetVkExtent(),
+        0,
+        textureVK.GetNumMipLevels(),
+        0,
+        textureVK.GetNumArrayLayers()
+    );
 }
 
-/* ----- Configuration ----- */
-
-void VKCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void VKCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    // dummy
+    auto& textureVK = LLGL_CAST(VKTexture&, texture);
+
+    const auto maxNumMipLevels      = textureVK.GetNumMipLevels();
+    const auto maxNumArrayLayers    = textureVK.GetNumArrayLayers();
+
+    if (subresource.baseMipLevel   < maxNumMipLevels   && subresource.numMipLevels   > 0 &&
+        subresource.baseArrayLayer < maxNumArrayLayers && subresource.numArrayLayers > 0)
+    {
+        device_.GenerateMips(
+            commandBuffer_,
+            textureVK.GetVkImage(),
+            textureVK.GetVkExtent(),
+            subresource.baseMipLevel,
+            std::min(subresource.numMipLevels, maxNumMipLevels - subresource.baseMipLevel),
+            subresource.baseArrayLayer,
+            std::min(subresource.numArrayLayers, maxNumArrayLayers - subresource.baseArrayLayer)
+        );
+    }
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -856,7 +888,14 @@ void VKCommandBuffer::PopDebugGroup()
     #endif // /LLGL_VK_ENABLE_EXT
 }
 
-/* ----- Extended functions ----- */
+/* ----- Extensions ----- */
+
+void VKCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+{
+    // dummy
+}
+
+/* ----- Internals ----- */
 
 void VKCommandBuffer::AcquireNextBuffer()
 {

@@ -96,9 +96,6 @@ class VKRenderSystem final : public RenderSystem
         void WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc) override;
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) override;
 
-        void GenerateMips(Texture& texture) override;
-        void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer = 0, std::uint32_t numArrayLayers = 1) override;
-
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;

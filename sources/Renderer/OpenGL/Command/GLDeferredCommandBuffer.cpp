@@ -53,11 +53,6 @@ GLDeferredCommandBuffer::GLDeferredCommandBuffer(long flags, std::size_t reserve
     buffer_.reserve(reservedSize);
 }
 
-bool GLDeferredCommandBuffer::IsImmediateCmdBuffer() const
-{
-    return false;
-}
-
 /* ----- Encoding ----- */
 
 void GLDeferredCommandBuffer::Begin()
@@ -86,6 +81,27 @@ void GLDeferredCommandBuffer::End()
 
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
+
+void GLDeferredCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+{
+    if (IsPrimary())
+    {
+        /* Is this a secondary command buffer? */
+        auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, deferredCommandBuffer);
+        if (!cmdBufferGL.IsImmediateCmdBuffer())
+        {
+            auto& deferredCmdBufferGL = LLGL_CAST(const GLDeferredCommandBuffer&, cmdBufferGL);
+            if (!deferredCmdBufferGL.IsPrimary())
+            {
+                /* Encode GL command */
+                auto cmd = AllocCommand<GLCmdExecute>(GLOpcodeExecute);
+                cmd->commandBuffer = &deferredCmdBufferGL;
+            }
+        }
+    }
+}
+
+/* ----- Blitting ----- */
 
 void GLDeferredCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
@@ -138,33 +154,23 @@ void GLDeferredCommandBuffer::CopyTexture(
     }
 }
 
-void GLDeferredCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void GLDeferredCommandBuffer::GenerateMips(Texture& texture)
 {
-    if (IsPrimary())
+    auto cmd = AllocCommand<GLCmdGenerateMipmap>(GLOpcodeGenerateMipmap);
     {
-        /* Is this a secondary command buffer? */
-        auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, deferredCommandBuffer);
-        if (!cmdBufferGL.IsImmediateCmdBuffer())
-        {
-            auto& deferredCmdBufferGL = LLGL_CAST(const GLDeferredCommandBuffer&, cmdBufferGL);
-            if (!deferredCmdBufferGL.IsPrimary())
-            {
-                /* Encode GL command */
-                auto cmd = AllocCommand<GLCmdExecute>(GLOpcodeExecute);
-                cmd->commandBuffer = &deferredCmdBufferGL;
-            }
-        }
+        cmd->texture = LLGL_CAST(GLTexture*, &texture);
     }
 }
 
-/* ----- Configuration ----- */
-
-void GLDeferredCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void GLDeferredCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    if (stateDesc != nullptr && stateDescSize == sizeof(OpenGLDependentStateDescriptor))
+    auto cmd = AllocCommand<GLCmdGenerateMipmapSubresource>(GLOpcodeGenerateMipmapSubresource);
     {
-        auto cmd = AllocCommand<GLCmdSetAPIDepState>(GLOpcodeSetAPIDepState);
-        cmd->desc = *reinterpret_cast<const OpenGLDependentStateDescriptor*>(stateDesc);
+        cmd->texture        = LLGL_CAST(GLTexture*, &texture);
+        cmd->baseMipLevel   = subresource.baseMipLevel;
+        cmd->numMipLevels   = subresource.numMipLevels;
+        cmd->baseArrayLayer = subresource.baseArrayLayer;
+        cmd->numArrayLayers = subresource.numArrayLayers;
     }
 }
 
@@ -897,9 +903,23 @@ void GLDeferredCommandBuffer::PopDebugGroup()
     #endif // /GL_KHR_debug
 }
 
-/* ----- Direct Resource Access ------ */
+/* ----- Extensions ----- */
 
-/* ----- Extended functions ----- */
+void GLDeferredCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+{
+    if (stateDesc != nullptr && stateDescSize == sizeof(OpenGLDependentStateDescriptor))
+    {
+        auto cmd = AllocCommand<GLCmdSetAPIDepState>(GLOpcodeSetAPIDepState);
+        cmd->desc = *reinterpret_cast<const OpenGLDependentStateDescriptor*>(stateDesc);
+    }
+}
+
+/* ----- Internal ----- */
+
+bool GLDeferredCommandBuffer::IsImmediateCmdBuffer() const
+{
+    return false;
+}
 
 bool GLDeferredCommandBuffer::IsPrimary() const
 {
