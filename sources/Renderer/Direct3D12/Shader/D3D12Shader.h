@@ -28,7 +28,6 @@ class D3D12Shader final : public Shader
     public:
 
         D3D12Shader(const ShaderDescriptor& desc);
-        D3D12Shader(const ShaderType type, int resourceID);
 
         bool HasErrors() const override;
 

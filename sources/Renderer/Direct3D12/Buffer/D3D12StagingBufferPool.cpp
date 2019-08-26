@@ -46,12 +46,12 @@ void D3D12StagingBufferPool::Write(
     }
 
     /* Write data to current chunk */
-    commandContext.TransitionResource(dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
+    commandContext.TransitionResource(dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST, true);
     {
         auto& chunk = chunks_[chunkIdx_];
         chunk.Write(device_, commandContext.GetCommandList(), dstBuffer.Get(), dstOffset, data, dataSize);
     }
-    commandContext.TransitionResource(dstBuffer, dstBuffer.usageState);
+    commandContext.TransitionResource(dstBuffer, dstBuffer.usageState, true);
 }
 
 

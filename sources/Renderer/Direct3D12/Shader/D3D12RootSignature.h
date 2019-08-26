@@ -31,6 +31,8 @@ class D3D12RootSignature
         D3D12RootParameter* AppendRootParameter();
         D3D12RootParameter* FindCompatibleRootParameter(D3D12_DESCRIPTOR_RANGE_TYPE rangeType);
 
+        D3D12_STATIC_SAMPLER_DESC* AppendStaticSampler();
+
         ComPtr<ID3D12RootSignature> Finalize(ID3D12Device* device, D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
         inline const D3D12RootParameter& operator [] (std::size_t idx) const
@@ -45,8 +47,9 @@ class D3D12RootSignature
 
     private:
 
-        std::vector<D3D12_ROOT_PARAMETER>   nativeRootParams_;
-        std::vector<D3D12RootParameter>     rootParams_;
+        std::vector<D3D12_ROOT_PARAMETER>       nativeRootParams_;
+        std::vector<D3D12RootParameter>         rootParams_;
+        std::vector<D3D12_STATIC_SAMPLER_DESC>  staticSamplers_;
 
 };
 

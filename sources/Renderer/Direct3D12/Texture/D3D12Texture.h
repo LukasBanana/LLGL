@@ -11,6 +11,7 @@
 
 #include <LLGL/Texture.h>
 #include "../D3D12Resource.h"
+#include <vector>
 
 
 namespace LLGL
@@ -61,6 +62,9 @@ class D3D12Texture final : public Texture
         // Returns the texture region for the specified offset and extent with respect to the type of this texture (i.e. whether or not array layers are handled by the subresource index).
         D3D12_BOX CalcRegion(const Offset3D& offset, const Extent3D& extent) const;
 
+        // Returns true if MIP-maps can be generated for this texture .
+        bool SupportsGenerateMips() const;
+
         // Returns the resource wrapper.
         inline D3D12Resource& GetResource()
         {
@@ -103,6 +107,18 @@ class D3D12Texture final : public Texture
             return bindFlags_;
         }
 
+        // Returns the entire texture subresource.
+        inline TextureSubresource GetWholeSubresource() const
+        {
+            return TextureSubresource{ 0, GetNumArrayLayers(), 0, GetNumMipLevels() };
+        }
+
+        // Returns the descriptor heap for the MIP-map chain. Descriptor 0 is SRV of entire MIP-map chain, 1 to N descriptors are for UAVs for MIP-maps 1 to N.
+        inline ID3D12DescriptorHeap* GetMipDescHeap() const
+        {
+            return mipDescHeap_.Get();
+        }
+
     private:
 
         void CreateNativeTexture(ID3D12Device* device, const TextureDescriptor& desc);
@@ -124,14 +140,18 @@ class D3D12Texture final : public Texture
             D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle
         );
 
+        void CreateMipDescHeap(ID3D12Device* device);
+
     private:
 
-        D3D12Resource   resource_;
+        D3D12Resource                   resource_;
 
-        DXGI_FORMAT     format_         = DXGI_FORMAT_UNKNOWN;
-        UINT            numMipLevels_   = 0;
-        UINT            numArrayLayers_ = 0;
-        long            bindFlags_      = 0;
+        DXGI_FORMAT                     format_         = DXGI_FORMAT_UNKNOWN;
+        UINT                            numMipLevels_   = 0;
+        UINT                            numArrayLayers_ = 0;
+        long                            bindFlags_      = 0;
+
+        ComPtr<ID3D12DescriptorHeap>    mipDescHeap_;
 
 };
 

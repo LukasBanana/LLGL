@@ -63,10 +63,10 @@ const RenderPass* D3D12RenderTarget::GetRenderPass() const
 void D3D12RenderTarget::TransitionToOutputMerger(D3D12CommandContext& commandContext)
 {
     for (auto& resource : colorBuffers_)
-        commandContext.TransitionResource(*resource, D3D12_RESOURCE_STATE_RENDER_TARGET, false);
+        commandContext.TransitionResource(*resource, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     if (depthStencil_ != nullptr)
-        commandContext.TransitionResource(*depthStencil_, D3D12_RESOURCE_STATE_DEPTH_WRITE, false);
+        commandContext.TransitionResource(*depthStencil_, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
     commandContext.FlushResourceBarrieres();
 }
@@ -90,11 +90,11 @@ void D3D12RenderTarget::ResolveRenderTarget(D3D12CommandContext& commandContext)
     else
     {
         for (auto& resource : colorBuffers_)
-            commandContext.TransitionResource(*resource, resource->usageState, false);
+            commandContext.TransitionResource(*resource, resource->usageState);
     }
 
     if (depthStencil_ != nullptr)
-        commandContext.TransitionResource(*depthStencil_, depthStencil_->usageState, false);
+        commandContext.TransitionResource(*depthStencil_, depthStencil_->usageState);
 
     commandContext.FlushResourceBarrieres();
 }

@@ -19,6 +19,7 @@
 
 #include "../Texture/D3D12Texture.h"
 #include "../Texture/D3D12RenderTarget.h"
+#include "../Texture/D3D12MipGenerator.h"
 
 #include "../RenderState/D3D12ResourceHeap.h"
 #include "../RenderState/D3D12RenderPass.h"
@@ -134,12 +135,14 @@ void D3D12CommandBuffer::CopyTexture(
 
 void D3D12CommandBuffer::GenerateMips(Texture& texture)
 {
-    //TODO
+    auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
+    D3D12MipGenerator::Get().GenerateMips(commandContext_, textureD3D, textureD3D.GetWholeSubresource());
 }
 
 void D3D12CommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    //TODO
+    auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
+    D3D12MipGenerator::Get().GenerateMips(commandContext_, textureD3D, subresource);
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -754,7 +757,8 @@ void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
     /* Indicate that the back buffer will be used as render target */
     commandContext_.TransitionResource(
         renderContextD3D.GetCurrentColorBuffer(),
-        D3D12_RESOURCE_STATE_RENDER_TARGET
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        true
     );
 
     /* Set current back buffer as RTV and optional DSV */

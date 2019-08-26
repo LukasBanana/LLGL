@@ -63,7 +63,7 @@ void D3D12Buffer::UpdateStaticSubresource(
         subresourceData.SlicePitch  = subresourceData.RowPitch;
     }
 
-    commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST);
+    commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST, true);
 
     ::UpdateSubresources<1>(
         commandContext.GetCommandList(),
@@ -75,7 +75,7 @@ void D3D12Buffer::UpdateStaticSubresource(
         &subresourceData
     );
 
-    commandContext.TransitionResource(resource_, resource_.usageState);
+    commandContext.TransitionResource(resource_, resource_.usageState, true);
 }
 
 void D3D12Buffer::UpdateDynamicSubresource(
@@ -92,7 +92,7 @@ void D3D12Buffer::UpdateDynamicSubresource(
         subresourceData.SlicePitch  = subresourceData.RowPitch;
     }
 
-    commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST);
+    commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST, true);
 
     ::UpdateSubresources<1>(
         commandContext.GetCommandList(),
@@ -104,7 +104,7 @@ void D3D12Buffer::UpdateDynamicSubresource(
         &subresourceData
     );
 
-    commandContext.TransitionResource(resource_, resource_.usageState);
+    commandContext.TransitionResource(resource_, resource_.usageState, true);
 }
 
 void D3D12Buffer::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)

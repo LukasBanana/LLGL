@@ -23,23 +23,56 @@ namespace LLGL
 
 
 class D3D12Texture;
+class D3D12CommandContext;
+struct TextureSubresource;
 
+// Direct3D 12 MIP-map generator singleton.
 class D3D12MipGenerator
 {
 
     public:
 
-        D3D12MipGenerator();
+        // Returns the singleton instance.
+        static D3D12MipGenerator& Get();
 
-        void CreateRootSignature(ID3D12Device* device);
+    public:
 
-        void GenerateMips2D(ID3D12GraphicsCommandList* commandList, D3D12Texture& texture) const;
+        D3D12MipGenerator(const D3D12MipGenerator&) = delete;
+        D3D12MipGenerator& operator = (const D3D12MipGenerator&) = delete;
+
+        D3D12MipGenerator(D3D12MipGenerator&&) = delete;
+        D3D12MipGenerator& operator = (D3D12MipGenerator&&) = delete;
+
+        void InitializeDevice(ID3D12Device* device);
+        void Clear();
+
+        void GenerateMips(
+            D3D12CommandContext&        commandContext,
+            D3D12Texture&               texture,
+            const TextureSubresource&   subresource
+        );
 
     private:
 
+        D3D12MipGenerator() = default;
+
+        void CreateComputePSO(ID3D12Device* device, std::size_t index, int resourceID);
+
+        void GenerateMips2D(
+            D3D12CommandContext&        commandContext,
+            D3D12Texture&               texture,
+            const TextureSubresource&   subresource
+        );
+
+    private:
+
+        ID3D12Device*               device_             = nullptr;
         D3D12SamplerDesc            linearSamplerDesc_;
+
         ComPtr<ID3D12RootSignature> rootSignature_;
-        D3D12Shader                 shaders_[8];
+        ComPtr<ID3D12PipelineState> pipelines_[8];
+        UINT                        descHandleSize_     = 0;
+
 
 };
 

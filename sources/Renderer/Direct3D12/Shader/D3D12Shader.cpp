@@ -25,15 +25,6 @@ D3D12Shader::D3D12Shader(const ShaderDescriptor& desc) :
         hasErrors_ = true;
 }
 
-D3D12Shader::D3D12Shader(const ShaderType type, int resourceID) :
-    Shader { type }
-{
-    if (auto blob = DXCreateBlobFromResource(resourceID))
-        byteCode_ = blob;
-    else
-        hasErrors_ = true;
-}
-
 bool D3D12Shader::HasErrors() const
 {
     return hasErrors_;

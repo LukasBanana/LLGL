@@ -20,6 +20,21 @@ namespace LLGL
 
 struct D3D12Resource;
 
+union D3D12Constant
+{
+    inline D3D12Constant(UINT value) :
+        u32 { value }
+    {
+    }
+    inline D3D12Constant(FLOAT value) :
+        f32 { value }
+    {
+    }
+
+    UINT    u32;
+    FLOAT   f32;
+};
+
 class D3D12CommandContext
 {
 
@@ -32,7 +47,8 @@ class D3D12CommandContext
             return commandList_;
         }
 
-        void TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushBarrieres = true);
+        void TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate = false);
+        void InsertUAVBarrier(D3D12Resource& resource, bool flushImmediate = false);
         void FlushResourceBarrieres();
 
         void ResolveRenderTarget(
@@ -42,6 +58,9 @@ class D3D12CommandContext
             UINT            srcSubresource,
             DXGI_FORMAT     format
         );
+
+        void SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
+        void SetComputeConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
 
     private:
 

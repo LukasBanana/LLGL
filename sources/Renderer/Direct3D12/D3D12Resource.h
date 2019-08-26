@@ -18,6 +18,7 @@ namespace LLGL
 {
 
 
+//TODO: Rename to "D3D12GpuResource" to avoid overlapping terminology with <Resource> interface.
 // Helper struct to store a D3D12 resource with its usage state and transition state.
 struct D3D12Resource
 {

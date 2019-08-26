@@ -28,10 +28,11 @@ namespace LLGL
 D3D12RenderContext::D3D12RenderContext(
     D3D12RenderSystem&              renderSystem,
     const RenderContextDescriptor&  desc,
-    const std::shared_ptr<Surface>& surface) :
-        RenderContext     { desc.videoMode, desc.vsync       },
-        renderSystem_     { renderSystem                     },
-        swapChainSamples_ { desc.multiSampling.SampleCount() }
+    const std::shared_ptr<Surface>& surface)
+:
+    RenderContext     { desc.videoMode, desc.vsync       },
+    renderSystem_     { renderSystem                     },
+    swapChainSamples_ { desc.multiSampling.SampleCount() }
 {
     /* Setup surface for the render context */
     SetOrCreateSurface(surface, GetVideoMode(), nullptr);
@@ -121,7 +122,8 @@ void D3D12RenderContext::ResolveRenderTarget(D3D12CommandContext& commandContext
         /* Prepare color buffer for present */
         commandContext.TransitionResource(
             colorBuffers_[currentFrame_],
-            D3D12_RESOURCE_STATE_PRESENT
+            D3D12_RESOURCE_STATE_PRESENT,
+            true
         );
     }
 }

@@ -18,6 +18,7 @@
 
 #include "Buffer/D3D12Buffer.h"
 #include "Buffer/D3D12BufferArray.h"
+#include "Texture/D3D12MipGenerator.h"
 
 
 namespace LLGL
@@ -50,7 +51,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
     commandSignaturePool_.CreateDefaultSignatures(device_.GetNative());
     commandContext_.SetCommandList(graphicsCmdList_.Get());
-    mipGenerator_.CreateRootSignature(device_.GetNative());
+    D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -70,6 +71,9 @@ D3D12RenderSystem::~D3D12RenderSystem()
     /* Clear shaders explicitly to release all ComPtr<ID3DBlob> objects */
     shaders_.clear();
     shaderPrograms_.clear();
+
+    /* Clear resources of singletons */
+    D3D12MipGenerator::Get().Clear();
 
     CloseHandle(fenceEvent_);
 }
@@ -219,13 +223,9 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
         }
         textureD3D->UpdateSubresource(device_.GetNative(), graphicsCmdList_.Get(), uploadBuffer, subresourceData);
 
-        #if 0//TODO: GenerateMips
         /* Generate MIP-maps if enabled */
         if (FlagsRequireGenerateMips(textureDesc.miscFlags))
-        {
-            //...
-        }
-        #endif
+            D3D12MipGenerator::Get().GenerateMips(commandContext_, *textureD3D, textureD3D->GetWholeSubresource());
 
         /* Execute upload commands and wait for GPU to finish execution */
         ExecuteCommandList();

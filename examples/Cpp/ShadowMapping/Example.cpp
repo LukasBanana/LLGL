@@ -366,7 +366,7 @@ private:
         commands->EndRenderPass();
 
         // Update MIP-maps of shadow-map texture
-        //renderer->GenerateMips(*shadowMap);
+        //commands->GenerateMips(*shadowMap);
     }
 
     void RenderScene()

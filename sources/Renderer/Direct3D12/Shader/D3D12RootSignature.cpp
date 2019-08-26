@@ -7,6 +7,7 @@
 
 #include "D3D12RootSignature.h"
 #include "../../DXCommon/DXCore.h"
+#include <stdint.h>
 
 
 namespace LLGL
@@ -17,6 +18,7 @@ void D3D12RootSignature::Reset(UINT maxNumRootParamters, UINT maxNumStaticSample
 {
     nativeRootParams_.reserve(maxNumRootParamters);
     rootParams_.reserve(maxNumRootParamters);
+    staticSamplers_.reserve(maxNumStaticSamplers);
 }
 
 void D3D12RootSignature::ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
@@ -43,6 +45,28 @@ D3D12RootParameter* D3D12RootSignature::FindCompatibleRootParameter(D3D12_DESCRI
             return &(*it);
     }
     return nullptr;
+}
+
+D3D12_STATIC_SAMPLER_DESC* D3D12RootSignature::AppendStaticSampler()
+{
+    D3D12_STATIC_SAMPLER_DESC samplerDesc;
+    {
+        samplerDesc.Filter              = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        samplerDesc.AddressU            = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplerDesc.AddressV            = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplerDesc.AddressW            = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplerDesc.MipLODBias          = 0.0f;
+        samplerDesc.MaxAnisotropy       = 1;
+        samplerDesc.ComparisonFunc      = D3D12_COMPARISON_FUNC_NEVER;
+        samplerDesc.BorderColor         = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+        samplerDesc.MinLOD              = -FLT_MAX;
+        samplerDesc.MaxLOD              = +FLT_MAX;
+        samplerDesc.ShaderRegister      = 0;
+        samplerDesc.RegisterSpace       = 0;
+        samplerDesc.ShaderVisibility    = D3D12_SHADER_VISIBILITY_ALL;
+    }
+    staticSamplers_.push_back(samplerDesc);
+    return &(staticSamplers_.back());
 }
 
 static ComPtr<ID3DBlob> DXSerializeRootSignature(
@@ -95,11 +119,21 @@ ComPtr<ID3D12RootSignature> D3D12RootSignature::Finalize(ID3D12Device* device, D
 {
     D3D12_ROOT_SIGNATURE_DESC signatureDesc;
     {
-        signatureDesc.NumParameters     = static_cast<UINT>(nativeRootParams_.size());
-        signatureDesc.pParameters       = nativeRootParams_.data();
-        signatureDesc.NumStaticSamplers = 0;
-        signatureDesc.pStaticSamplers   = nullptr;
-        signatureDesc.Flags             = flags;
+        signatureDesc.NumParameters         = static_cast<UINT>(nativeRootParams_.size());
+        signatureDesc.pParameters           = nativeRootParams_.data();
+
+        if (staticSamplers_.empty())
+        {
+            signatureDesc.NumStaticSamplers = 0;
+            signatureDesc.pStaticSamplers   = nullptr;
+        }
+        else
+        {
+            signatureDesc.NumStaticSamplers = static_cast<UINT>(staticSamplers_.size());
+            signatureDesc.pStaticSamplers   = staticSamplers_.data();
+        }
+
+        signatureDesc.Flags                 = flags;
     }
     return DXCreateRootSignature(device, signatureDesc);
 }

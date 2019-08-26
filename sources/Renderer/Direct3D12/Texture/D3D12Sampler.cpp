@@ -28,14 +28,12 @@ D3D12Sampler::D3D12Sampler(const SamplerDescriptor& desc)
     nativeDesc_.BorderColor[2]  = desc.borderColor.b;
     nativeDesc_.BorderColor[3]  = desc.borderColor.a;
 
-    #if 0//TODO: mipmapping is not supported yet
     if (desc.mipMapping)
     {
         nativeDesc_.MinLOD = desc.minLOD;
         nativeDesc_.MaxLOD = desc.maxLOD;
     }
     else
-    #endif
     {
         nativeDesc_.MinLOD = 0.0f;
         nativeDesc_.MaxLOD = 0.0f;

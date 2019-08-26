@@ -183,7 +183,7 @@ void GenerateMipsCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispatc
         float4 srcColor4 = LoadColor(groupIndex + 0x24);
         srcColor1 = 0.25 * (srcColor1 + srcColor2 + srcColor3 + srcColor4);
 
-        dstMipLevel3[threadID.xy / 8] = PackLinearColor(srcColor1);
+        dstMipLevel4[threadID.xy / 8] = PackLinearColor(srcColor1);
         StoreColor(groupIndex, srcColor1);
     }
 }

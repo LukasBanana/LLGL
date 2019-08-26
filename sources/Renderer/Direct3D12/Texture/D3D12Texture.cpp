@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-#define _DEB_DISABLE_MIPS
+//#define _DEB_DISABLE_MIPS
 
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
     Texture         { desc.type                    },
@@ -31,6 +31,8 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     bindFlags_      { desc.bindFlags               }
 {
     CreateNativeTexture(device, desc);
+    if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
+        CreateMipDescHeap(device);
 }
 
 void D3D12Texture::SetName(const char* name)
@@ -439,24 +441,36 @@ D3D12_BOX D3D12Texture::CalcRegion(const Offset3D& offset, const Extent3D& exten
     }
 }
 
+static bool DXTextureSupportsGenerateMips(long bindFlags, UINT numMipLevels)
+{
+    return ((bindFlags & BindFlags::ColorAttachment) != 0 && numMipLevels > 1);
+}
+
+bool D3D12Texture::SupportsGenerateMips() const
+{
+    return DXTextureSupportsGenerateMips(GetBindFlags(), GetNumMipLevels());
+}
+
 
 /*
  * ======= Private: =======
  */
 
 // see https://docs.microsoft.com/en-us/windows/desktop/api/d3d12/ne-d3d12-d3d12_resource_flags
-static D3D12_RESOURCE_FLAGS GetD3DTextureResourceFlags(const TextureDescriptor& desc)
+static D3D12_RESOURCE_FLAGS GetD3DTextureResourceFlags(long bindFlags, UINT numMipLevels)
 {
     D3D12_RESOURCE_FLAGS flagsD3D = D3D12_RESOURCE_FLAG_NONE;
 
-    if ((desc.bindFlags & BindFlags::Sampled) == 0)
+    bool enabledSrvAndUav = DXTextureSupportsGenerateMips(bindFlags, numMipLevels);
+
+    if ((bindFlags & BindFlags::Sampled) == 0 && !enabledSrvAndUav)
         flagsD3D |= (D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-    else if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
+    else if ((bindFlags & BindFlags::ColorAttachment) != 0)
         flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-    else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
+    else if ((bindFlags & BindFlags::DepthStencilAttachment) != 0)
         flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-    if ((desc.bindFlags & BindFlags::Storage) != 0)
+    if ((bindFlags & BindFlags::Storage) != 0 || enabledSrvAndUav)
         flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
     return flagsD3D;
@@ -475,7 +489,7 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     dst.SampleDesc.Count    = 1;
     dst.SampleDesc.Quality  = 0;
     dst.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    dst.Flags               = GetD3DTextureResourceFlags(src);
+    dst.Flags               = GetD3DTextureResourceFlags(src.bindFlags, dst.MipLevels);
 
     switch (src.type)
     {
@@ -549,9 +563,43 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
 
     /* Determine resource usage */
     if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
-        resource_.usageState = D3D12_RESOURCE_STATE_DEPTH_READ;
+        resource_.SetInitialState(D3D12_RESOURCE_STATE_DEPTH_READ);
     else
-        resource_.usageState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        resource_.SetInitialState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+}
+
+void D3D12Texture::CreateMipDescHeap(ID3D12Device* device)
+{
+    /* Create descriptor heap for all MIP-map levels */
+    D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
+    {
+        heapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        heapDesc.NumDescriptors = GetNumMipLevels();
+        heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        heapDesc.NodeMask       = 0;
+    }
+    auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(mipDescHeap_.ReleaseAndGetAddressOf()));
+    DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap for MIP-map chain");
+
+    auto descSize       = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    auto cpuDescHandle  = mipDescHeap_->GetCPUDescriptorHandleForHeapStart();
+
+    /* Create SRV for first MIP-map */
+    CreateShaderResourceView(device, cpuDescHandle);
+    cpuDescHandle.ptr += descSize;
+
+    /* Create UAVs for remaining MIP-maps */
+    for (UINT i = 1; i < GetNumMipLevels(); ++i)
+    {
+        CreateUnorderedAccessViewPrimary(
+            device,
+            D3D12Types::MapUavDimension(GetType()),
+            format_,
+            TextureSubresource{ 0, numArrayLayers_, i, 1 },
+            cpuDescHandle
+        );
+        cpuDescHandle.ptr += descSize;
+    }
 }
 
 

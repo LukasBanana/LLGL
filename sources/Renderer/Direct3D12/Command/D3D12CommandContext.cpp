@@ -23,7 +23,7 @@ void D3D12CommandContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
     }
 }
 
-void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushBarrieres)
+void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
 {
     auto oldState = resource.transitionState;
     if (oldState != newState)
@@ -42,9 +42,21 @@ void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESO
         resource.transitionState = newState;
 
         /* Flush resource barrieres if required */
-        if (flushBarrieres)
+        if (flushImmediate)
             FlushResourceBarrieres();
     }
+}
+
+void D3D12CommandContext::InsertUAVBarrier(D3D12Resource& resource, bool flushImmediate)
+{
+    auto& barrier = NextResourceBarrier();
+
+    barrier.Type            = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+    barrier.Flags           = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrier.UAV.pResource   = resource.native.Get();
+
+    if (flushImmediate)
+        FlushResourceBarrieres();
 }
 
 void D3D12CommandContext::FlushResourceBarrieres()
@@ -64,8 +76,8 @@ void D3D12CommandContext::ResolveRenderTarget(
     DXGI_FORMAT     format)
 {
     /* Transition both resources */
-    TransitionResource(dstResource, D3D12_RESOURCE_STATE_RESOLVE_DEST, false);
-    TransitionResource(srcResource, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+    TransitionResource(dstResource, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+    TransitionResource(srcResource, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, true);
 
     /* Resolve multi-sampled render targets */
     commandList_->ResolveSubresource(
@@ -77,8 +89,18 @@ void D3D12CommandContext::ResolveRenderTarget(
     );
 
     /* Transition both resources */
-    TransitionResource(dstResource, dstResource.usageState, false);
-    TransitionResource(srcResource, srcResource.usageState);
+    TransitionResource(dstResource, dstResource.usageState);
+    TransitionResource(srcResource, srcResource.usageState, true);
+}
+
+void D3D12CommandContext::SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset)
+{
+    commandList_->SetGraphicsRoot32BitConstant(parameterIndex, value.u32, offset);
+}
+
+void D3D12CommandContext::SetComputeConstant(UINT parameterIndex, D3D12Constant value, UINT offset)
+{
+    commandList_->SetComputeRoot32BitConstant(parameterIndex, value.u32, offset);
 }
 
 
