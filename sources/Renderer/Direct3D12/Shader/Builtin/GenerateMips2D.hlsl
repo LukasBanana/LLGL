@@ -1,9 +1,12 @@
 /*
- * GenerateMips.hlsl
+ * GenerateMips2D.hlsl
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
+
+#include "GenerateMips.hlsli"
+
 
 /* Classification of non-power-of-two (NPOT) textures: 0, 1, 2, 3 */
 #define NPOT_TEXTURE_CLASS_XY_EVEN      (0)
@@ -18,13 +21,6 @@
 #define BITMASK_XY_EVEN                 (0x09)
 #define BITMASK_XY_MULTIPLE_OF_4        (0x1B)
 
-/* Next 4 output MIP-map levels and source MIP-map level */
-RWTexture2D<float4> dstMipLevel1        : register(u0);
-RWTexture2D<float4> dstMipLevel2        : register(u1);
-RWTexture2D<float4> dstMipLevel3        : register(u2);
-RWTexture2D<float4> dstMipLevel4        : register(u3);
-Texture2D<float4>   srcMipLevel         : register(t0);
-SamplerState        linearClampSampler  : register(s0);
 
 /* Current MIP-map level configuration */
 cbuffer TextureDescriptor : register(b0)
@@ -34,49 +30,15 @@ cbuffer TextureDescriptor : register(b0)
     float2  texelSize;      // 1.0 / outMipLevel1.extent
 };
 
-/* Separate color channels into different groupshared arrays for better cache utilization */
-groupshared float sharedColorR[64];
-groupshared float sharedColorG[64];
-groupshared float sharedColorB[64];
-groupshared float sharedColorA[64];
 
-/* Utility functions */
-void StoreColor(uint idx, float4 color)
-{
-    sharedColorR[idx] = color.r;
-    sharedColorG[idx] = color.g;
-    sharedColorB[idx] = color.b;
-    sharedColorA[idx] = color.a;
-}
+/* Next 4 output MIP-map levels and source MIP-map level */
+RWTexture2D<float4> dstMipLevel1        : register(u0);
+RWTexture2D<float4> dstMipLevel2        : register(u1);
+RWTexture2D<float4> dstMipLevel3        : register(u2);
+RWTexture2D<float4> dstMipLevel4        : register(u3);
+Texture2D<float4>   srcMipLevel         : register(t0);
+SamplerState        linearClampSampler  : register(s0);
 
-float4 LoadColor(uint idx)
-{
-    return float4(
-        sharedColorR[idx],
-        sharedColorG[idx],
-        sharedColorB[idx],
-        sharedColorA[idx]
-    );
-}
-
-#ifdef LINEAR_TO_SRGB
-
-float3 LinearToSRGB(float3 linearColor)
-{
-    /* Use approximation for sRGB curve */
-    return (linearColor < 0.0031308 ? 12.92 * linearColor : 1.13005 * sqrt(abs(linearColor - 0.00228)) - 0.13448 * linearColor + 0.005719);
-}
-
-#endif // /LINEAR_TO_SRGB
-
-float4 PackLinearColor(float4 linearColor)
-{
-    #ifdef LINEAR_TO_SRGB
-    return float4(LinearToSRGB(linearColor.rgb), linearColor.a);
-    #else
-    return linearColor;
-    #endif // /LINEAR_TO_SRGB
-}
 
 /* Primary compute kernel to up to 4 MIP-map levels at a time */
 [RootSignature(
@@ -93,7 +55,7 @@ float4 PackLinearColor(float4 linearColor)
     ")"
 )]
 [numthreads(8, 8, 1)]
-void GenerateMipsCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_DispatchThreadID)
+void GenerateMips2DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_DispatchThreadID)
 {
     /* Sample source MIP-map level depending on the NPOT texture classification */
     #if NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_XY_EVEN

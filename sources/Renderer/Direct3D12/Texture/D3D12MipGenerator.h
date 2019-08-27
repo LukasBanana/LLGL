@@ -56,7 +56,21 @@ class D3D12MipGenerator
 
         D3D12MipGenerator() = default;
 
-        void CreateComputePSO(ID3D12Device* device, std::size_t index, int resourceID);
+        ComPtr<ID3D12PipelineState> CreateComputePSO(
+            ID3D12Device*           device,
+            ID3D12RootSignature*    rootSignature,
+            int                     resourceID
+        );
+
+        void CreateResourcesFor1DMips(ID3D12Device* device);
+        void CreateResourcesFor2DMips(ID3D12Device* device);
+        void CreateResourcesFor3DMips(ID3D12Device* device);
+
+        void GenerateMips1D(
+            D3D12CommandContext&        commandContext,
+            D3D12Texture&               texture,
+            const TextureSubresource&   subresource
+        );
 
         void GenerateMips2D(
             D3D12CommandContext&        commandContext,
@@ -64,13 +78,28 @@ class D3D12MipGenerator
             const TextureSubresource&   subresource
         );
 
+        #if 0//TODO
+        void GenerateMips3D(
+            D3D12CommandContext&        commandContext,
+            D3D12Texture&               texture,
+            const TextureSubresource&   subresource
+        );
+        #endif
+
     private:
 
         ID3D12Device*               device_             = nullptr;
         D3D12SamplerDesc            linearSamplerDesc_;
 
-        ComPtr<ID3D12RootSignature> rootSignature_;
-        ComPtr<ID3D12PipelineState> pipelines_[8];
+        ComPtr<ID3D12RootSignature> rootSignature1D_;
+        ComPtr<ID3D12PipelineState> pipelines1D_[4];
+
+        ComPtr<ID3D12RootSignature> rootSignature2D_;
+        ComPtr<ID3D12PipelineState> pipelines2D_[8];
+
+        ComPtr<ID3D12RootSignature> rootSignature3D_;
+        ComPtr<ID3D12PipelineState> pipelines3D_[16];
+
         UINT                        descHandleSize_     = 0;
 
 
