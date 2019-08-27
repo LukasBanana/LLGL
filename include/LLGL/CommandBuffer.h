@@ -186,11 +186,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Sets an array of viewports.
         \param[in] numViewports Specifies the number of viewports to set. Most render system have a limit of 16 viewports.
         \param[in] viewports Pointer to the array of viewports. This <b>must not</b> be null!
-        \remarks This function behaves differently on the OpenGL render system, depending on the state configured
-        with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
-        the origin of each viewport is on the upper-left (like for all other render systems).
-        If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each viewport is on the lower-left.
-        \note This state is guaranteed to be persistent.
+        \remarks This function behaves differently on the OpenGL render system, depending on the state configured with the \c SetGraphicsAPIDependentState function.
+        If OpenGLDependentStateDescriptor::originLowerLeft is \c false, the origin of each viewport is on the upper-left (like for all other render systems).
+        If OpenGLDependentStateDescriptor::originLowerLeft is \c true, the origin of each viewport is on the lower-left.
         \see SetGraphicsAPIDependentState
         \see RenderingLimits::maxViewports
         */

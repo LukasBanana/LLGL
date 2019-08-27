@@ -46,6 +46,8 @@ namespace LLGL
 GLImmediateCommandBuffer::GLImmediateCommandBuffer(const std::shared_ptr<GLStateManager>& stateMngr) :
     stateMngr_ { stateMngr }
 {
+    GLCommandBuffer::InitializeGLRenderState(renderState_);
+    GLCommandBuffer::InitializeGLClearValue(clearValue_);
 }
 
 /* ----- Encoding ----- */

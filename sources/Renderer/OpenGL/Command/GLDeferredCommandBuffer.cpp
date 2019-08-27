@@ -51,6 +51,8 @@ GLDeferredCommandBuffer::GLDeferredCommandBuffer(long flags, std::size_t reserve
     flags_ { flags }
 {
     buffer_.reserve(reservedSize);
+    GLCommandBuffer::InitializeGLRenderState(renderState_);
+    GLCommandBuffer::InitializeGLClearValue(clearValue_);
 }
 
 /* ----- Encoding ----- */

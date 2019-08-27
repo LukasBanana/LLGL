@@ -17,6 +17,7 @@ namespace LLGL
 
 
 struct GLRenderState;
+struct GLClearValue;
 
 class GLCommandBuffer : public CommandBuffer
 {
@@ -30,6 +31,12 @@ class GLCommandBuffer : public CommandBuffer
 
         // Configures the attributes of 'renderState' for the type of index buffers.
         void SetIndexFormat(GLRenderState& renderState, bool index16Bits, std::uint64_t offset);
+
+    protected:
+
+        // Initializes POD structures which have no default initialization:
+        static void InitializeGLRenderState(GLRenderState& dst);
+        static void InitializeGLClearValue(GLClearValue& dst);
 
 };
 

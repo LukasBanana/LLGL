@@ -11,7 +11,6 @@
 
 #include "Export.h"
 #include <cstdint>
-#include <type_traits>
 
 
 namespace LLGL
@@ -325,8 +324,6 @@ struct FormatDescriptor
     //! Specifies whether the format is packed (e.g. Format::RGB10A2UNorm or Format::RGB9E5Float).
     bool            packed      : 1;
 };
-
-static_assert(std::is_pod<FormatDescriptor>::value, "LLGL::FormatDescriptor must be a POD struct");
 
 
 /* ----- Functions ----- */

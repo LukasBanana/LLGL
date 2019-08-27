@@ -339,7 +339,7 @@ class GLStateManager
             GLenum      logicOpCode     = GL_COPY;
         };
 
-        struct GLRenderState
+        struct GLCapabilityState
         {
             struct StackEntry
             {
@@ -353,7 +353,7 @@ class GLStateManager
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
-        struct GLRenderStateExt
+        struct GLCapabilityStateExt
         {
             struct ValueEntry
             {
@@ -445,7 +445,7 @@ class GLStateManager
         OpenGLDependentStateDescriptor  apiDependentState_;
 
         GLCommonState                   commonState_;
-        GLRenderState                   renderState_;
+        GLCapabilityState               capabilityState_;
         GLBufferState                   bufferState_;
         GLFramebufferState              framebufferState_;
         GLRenderbufferState             renderbufferState_;
@@ -455,7 +455,7 @@ class GLStateManager
         GLSamplerState                  samplerState_;
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        GLRenderStateExt                renderStateExt_;
+        GLCapabilityStateExt            capabilityStateExt_;
         #endif
 
         bool                            emulateClipControl_     = false;

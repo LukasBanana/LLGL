@@ -147,7 +147,7 @@ GLStateManager::GLLimits    GLStateManager::commonLimits_;
 GLStateManager::GLStateManager()
 {
     /* Initialize all states with zero */
-    Fill(renderState_.values, false);
+    Fill(capabilityState_.values, false);
     Fill(bufferState_.boundBuffers, 0);
     Fill(framebufferState_.boundFramebuffers, 0);
     Fill(samplerState_.boundSamplers, 0);
@@ -209,15 +209,15 @@ void GLStateManager::Reset()
 {
     /* Query all states from OpenGL */
     for (std::size_t i = 0; i < numStates; ++i)
-        renderState_.values[i] = (glIsEnabled(g_stateCapsEnum[i]) != GL_FALSE);
+        capabilityState_.values[i] = (glIsEnabled(g_stateCapsEnum[i]) != GL_FALSE);
 }
 
 void GLStateManager::Set(GLState state, bool value)
 {
     auto idx = static_cast<std::size_t>(state);
-    if (renderState_.values[idx] != value)
+    if (capabilityState_.values[idx] != value)
     {
-        renderState_.values[idx] = value;
+        capabilityState_.values[idx] = value;
         if (value)
             glEnable(g_stateCapsEnum[idx]);
         else
@@ -228,9 +228,9 @@ void GLStateManager::Set(GLState state, bool value)
 void GLStateManager::Enable(GLState state)
 {
     auto idx = static_cast<std::size_t>(state);
-    if (!renderState_.values[idx])
+    if (!capabilityState_.values[idx])
     {
-        renderState_.values[idx] = true;
+        capabilityState_.values[idx] = true;
         glEnable(g_stateCapsEnum[idx]);
     }
 }
@@ -238,9 +238,9 @@ void GLStateManager::Enable(GLState state)
 void GLStateManager::Disable(GLState state)
 {
     auto idx = static_cast<std::size_t>(state);
-    if (renderState_.values[idx])
+    if (capabilityState_.values[idx])
     {
-        renderState_.values[idx] = false;
+        capabilityState_.values[idx] = false;
         glDisable(g_stateCapsEnum[idx]);
     }
 }
@@ -248,26 +248,26 @@ void GLStateManager::Disable(GLState state)
 bool GLStateManager::IsEnabled(GLState state) const
 {
     auto idx = static_cast<std::size_t>(state);
-    return renderState_.values[idx];
+    return capabilityState_.values[idx];
 }
 
 void GLStateManager::PushState(GLState state)
 {
-    renderState_.valueStack.push(
+    capabilityState_.valueStack.push(
         {
             state,
-            renderState_.values[static_cast<std::size_t>(state)]
+            capabilityState_.values[static_cast<std::size_t>(state)]
         }
     );
 }
 
 void GLStateManager::PopState()
 {
-    const auto& state = renderState_.valueStack.top();
+    const auto& state = capabilityState_.valueStack.top();
     {
         Set(state.state, state.enabled);
     }
-    renderState_.valueStack.pop();
+    capabilityState_.valueStack.pop();
 }
 
 void GLStateManager::PopStates(std::size_t count)
@@ -281,7 +281,7 @@ void GLStateManager::PopStates(std::size_t count)
 void GLStateManager::Set(GLStateExt state, bool value)
 {
     auto idx = static_cast<std::size_t>(state);
-    auto& val = renderStateExt_.values[idx];
+    auto& val = capabilityStateExt_.values[idx];
     if (val.cap != 0 && val.enabled != value)
     {
         val.enabled = value;
@@ -295,7 +295,7 @@ void GLStateManager::Set(GLStateExt state, bool value)
 void GLStateManager::Enable(GLStateExt state)
 {
     auto idx = static_cast<std::size_t>(state);
-    auto& val = renderStateExt_.values[idx];
+    auto& val = capabilityStateExt_.values[idx];
     if (val.cap != 0 && !val.enabled)
     {
         val.enabled = true;
@@ -306,7 +306,7 @@ void GLStateManager::Enable(GLStateExt state)
 void GLStateManager::Disable(GLStateExt state)
 {
     auto idx = static_cast<std::size_t>(state);
-    auto& val = renderStateExt_.values[idx];
+    auto& val = capabilityStateExt_.values[idx];
     if (val.cap != 0 && val.enabled)
     {
         val.enabled = false;
@@ -317,7 +317,7 @@ void GLStateManager::Disable(GLStateExt state)
 bool GLStateManager::IsEnabled(GLStateExt state) const
 {
     auto idx = static_cast<std::size_t>(state);
-    return renderStateExt_.values[idx].enabled;
+    return capabilityStateExt_.values[idx].enabled;
 }
 
 #endif
@@ -1301,7 +1301,7 @@ void GLStateManager::DetermineVendorSpecificExtensions()
     auto InitStateExt = [&](GLStateExt state, const GLExt extension, GLenum cap)
     {
         auto idx = static_cast<std::size_t>(state);
-        auto& val = renderStateExt_.values[idx];
+        auto& val = capabilityStateExt_.values[idx];
         if (val.cap == 0 && HasExtension(extension))
         {
             val.cap     = cap;
