@@ -307,37 +307,33 @@ struct TextureViewDescriptor
     /**
     \brief Hardware texture type. By default TextureType::Texture2D.
     \remarks The types of a shared texture can be mapped to the following type of texture-views:
-    <table>
-    <caption>Texture-view type mapping</caption>
-    <tr><th>Shared texture type</th><th>Compatible texture view types</th></tr>
-    <tr><td>TextureType::Texture1D</td><td>TextureType::Texture1D, TextureType::Texture1DArray</td></tr>
-    <tr><td>TextureType::Texture2D</td><td>TextureType::Texture2D, TextureType::Texture2DArray</td></tr>
-    <tr><td>TextureType::Texture3D</td><td>TextureType::Texture3D</td></tr>
-    <tr><td>TextureType::TextureCube</td><td>TextureType::Texture2D, TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray</td></tr>
-    <tr><td>TextureType::Texture1DArray</td><td>TextureType::Texture1D, TextureType::Texture1DArray</td></tr>
-    <tr><td>TextureType::Texture2DArray</td><td>TextureType::Texture2D, TextureType::Texture2DArray</td></tr>
-    <tr><td>TextureType::TextureCubeArray</td><td>TextureType::Texture2D, TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray</td></tr>
-    <tr><td>TextureType::Texture2DMS</td><td>TextureType::Texture2DMS, TextureType::Texture2DMSArray</td></tr>
-    <tr><td>TextureType::Texture2DMSArray</td><td>TextureType::Texture2DMS, TextureType::Texture2DMSArray</td></tr>
-    </table>
+    | Shared texture type | Compatible texture view types |
+    |---------------------|-------------------------------|
+    | TextureType::Texture1D | TextureType::Texture1D, TextureType::Texture1DArray |
+    | TextureType::Texture2D | TextureType::Texture2D, TextureType::Texture2DArray |
+    | TextureType::Texture3D | TextureType::Texture3D |
+    | TextureType::TextureCube | TextureType::Texture2D, TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray |
+    | TextureType::Texture1DArray | TextureType::Texture1D, TextureType::Texture1DArray |
+    | TextureType::Texture2DArray | TextureType::Texture2D, TextureType::Texture2DArray |
+    | TextureType::TextureCubeArray | TextureType::Texture2D, TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray |
+    | TextureType::Texture2DMS | TextureType::Texture2DMS, TextureType::Texture2DMSArray |
+    | TextureType::Texture2DMSArray | TextureType::Texture2DMS, TextureType::Texture2DMSArray |
     */
     TextureType         type            = TextureType::Texture2D;
 
     /**
     \brief Hardware texture format. By default Format::RGBA8UNorm.
     \remarks The format of the shared texture and the texture-view must be in the same format class:
-    <table>
-    <caption>Texture format classes</caption>
-    <tr><th>Class</th><th>Compatible texture formats</th></tr>
-    <tr><td>128 Bits</td><td>Format::RGBA32UInt, Format::RGBA32SInt, Format::RGBA32Float</td></tr>
-    <tr><td>96 Bits</td><td>Format::RGB32UInt, Format::RGB32SInt, Format::RGB32Float</td></tr>
-    <tr><td>64 Bits</td><td>Format::RG32UInt, Format::RG32SInt, Format::RG32Float, Format::RGBA16UNorm, Format::RGBA16SNorm, Format::RGBA16UInt, Format::RGBA16SInt, Format::RGBA16Float</td></tr>
-    <tr><td>48 Bits</td><td>Format::RGB16UNorm, Format::RGB16SNorm, Format::RGB16UInt, Format::RGB16SInt, Format::RGB16Float</td></tr>
-    <tr><td>32 Bits</td><td>Format::RG16UNorm, Format::RG16SNorm, Format::RG16UInt, Format::RG16SInt, Format::RG16Float, Format::RGBA8UNorm, Format::RGBA8SNorm, Format::RGBA8UInt, Format::RGBA8SInt</td></tr>
-    <tr><td>24 Bits</td><td>Format::RGB8UNorm, Format::RGB8SNorm, Format::RGB8UInt, Format::RGB8SInt</td></tr>
-    <tr><td>16 Bits</td><td>Format::R16UNorm, Format::R16SNorm, Format::R16UInt, Format::R16SInt, Format::R16Float, Format::RG8UNorm, Format::RG8SNorm, Format::RG8UInt, Format::RG8SInt</td></tr>
-    <tr><td>8 Bits</td><td>Format::R8UNorm, Format::R8SNorm, Format::R8UInt, Format::R8SInt</td></tr>
-    </table>
+    | Class | Compatible texture formats |
+    |------:|----------------------------|
+    | 128 Bits | Format::RGBA32UInt, Format::RGBA32SInt, Format::RGBA32Float |
+    | 96 Bits | Format::RGB32UInt, Format::RGB32SInt, Format::RGB32Float |
+    | 64 Bits | Format::RG32UInt, Format::RG32SInt, Format::RG32Float, Format::RGBA16UNorm, Format::RGBA16SNorm, Format::RGBA16UInt, Format::RGBA16SInt, Format::RGBA16Float |
+    | 48 Bits | Format::RGB16UNorm, Format::RGB16SNorm, Format::RGB16UInt, Format::RGB16SInt, Format::RGB16Float |
+    | 32 Bits | Format::RG16UNorm, Format::RG16SNorm, Format::RG16UInt, Format::RG16SInt, Format::RG16Float, Format::RGBA8UNorm, Format::RGBA8SNorm, Format::RGBA8UInt, Format::RGBA8SInt |
+    | 24 Bits | Format::RGB8UNorm, Format::RGB8SNorm, Format::RGB8UInt, Format::RGB8SInt |
+    | 16 Bits | Format::R16UNorm, Format::R16SNorm, Format::R16UInt, Format::R16SInt, Format::R16Float, Format::RG8UNorm, Format::RG8SNorm, Format::RG8UInt, Format::RG8SInt |
+    | 8 Bits | Format::R8UNorm, Format::R8SNorm, Format::R8UInt, Format::R8SInt |
     */
     Format              format          = Format::RGBA8UNorm;
 

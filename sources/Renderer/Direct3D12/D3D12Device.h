@@ -42,7 +42,7 @@ class D3D12Device
 
         /* ----- Data queries ----- */
 
-        UINT FintSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount);
+        UINT FindSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount);
 
         /* ----- Native handles ----- */
 

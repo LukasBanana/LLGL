@@ -45,15 +45,16 @@ DXGI_FORMAT Map(const DataType dataType)
 {
     switch (dataType)
     {
-        case DataType::Int8:    return DXGI_FORMAT_R8_SINT;
-        case DataType::UInt8:   return DXGI_FORMAT_R8_UINT;
-        case DataType::Int16:   return DXGI_FORMAT_R16_SINT;
-        case DataType::UInt16:  return DXGI_FORMAT_R16_UINT;
-        case DataType::Int32:   return DXGI_FORMAT_R32_SINT;
-        case DataType::UInt32:  return DXGI_FORMAT_R32_UINT;
-        case DataType::Float16: return DXGI_FORMAT_R16_FLOAT;
-        case DataType::Float32: return DXGI_FORMAT_R32_FLOAT;
-        case DataType::Float64: break;
+        case DataType::Undefined:   break;//return DXGI_FORMAT_UNKNOWN;
+        case DataType::Int8:        return DXGI_FORMAT_R8_SINT;
+        case DataType::UInt8:       return DXGI_FORMAT_R8_UINT;
+        case DataType::Int16:       return DXGI_FORMAT_R16_SINT;
+        case DataType::UInt16:      return DXGI_FORMAT_R16_UINT;
+        case DataType::Int32:       return DXGI_FORMAT_R32_SINT;
+        case DataType::UInt32:      return DXGI_FORMAT_R32_UINT;
+        case DataType::Float16:     return DXGI_FORMAT_R16_FLOAT;
+        case DataType::Float32:     return DXGI_FORMAT_R32_FLOAT;
+        case DataType::Float64:     break;
     }
     MapFailed("DataType", "DXGI_FORMAT");
 }
@@ -62,7 +63,7 @@ DXGI_FORMAT Map(const Format format)
 {
     switch (format)
     {
-        case Format::Undefined:         break;
+        case Format::Undefined:         break;//return DXGI_FORMAT_UNKNOWN;
 
         /* --- Alpha channel color formats --- */
         case Format::A8UNorm:           return DXGI_FORMAT_A8_UNORM;
@@ -148,6 +149,12 @@ DXGI_FORMAT Map(const Format format)
         case Format::BGRA8UInt:         break;
         case Format::BGRA8SInt:         break;
 
+        /* --- Packed formats --- */
+        case Format::RGB10A2UNorm:      return DXGI_FORMAT_R10G10B10A2_UNORM;
+        case Format::RGB10A2UInt:       return DXGI_FORMAT_R10G10B10A2_UINT;
+        case Format::RG11B10Float:      return DXGI_FORMAT_R11G11B10_FLOAT;
+        case Format::RGB9E5Float:       return DXGI_FORMAT_R9G9B9E5_SHAREDEXP;
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return DXGI_FORMAT_R16_TYPELESS;
         case Format::D32Float:          return DXGI_FORMAT_R32_TYPELESS;
@@ -157,8 +164,11 @@ DXGI_FORMAT Map(const Format format)
         /* --- Compressed color formats --- */
         case Format::BC1RGB:            break;
         case Format::BC1RGBA:           return DXGI_FORMAT_BC1_UNORM;
+      //case Format::BC1RGBA_sRGB:      return DXGI_FORMAT_BC1_UNORM_SRGB;
         case Format::BC2RGBA:           return DXGI_FORMAT_BC2_UNORM;
+      //case Format::BC2RGBA_sRGB:      return DXGI_FORMAT_BC2_UNORM_SRGB;
         case Format::BC3RGBA:           return DXGI_FORMAT_BC3_UNORM;
+      //case Format::BC3RGBA_sRGB:      return DXGI_FORMAT_BC3_UNORM_SRGB;
     }
     MapFailed("Format", "DXGI_FORMAT");
 }
@@ -278,6 +288,12 @@ Format Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_B8G8R8A8_UNORM:            return Format::BGRA8UNorm;
         case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:       return Format::BGRA8UNorm_sRGB;
 
+        /* --- Packed formats --- */
+        case DXGI_FORMAT_R10G10B10A2_UNORM:         return Format::RGB10A2UNorm;
+        case DXGI_FORMAT_R10G10B10A2_UINT:          return Format::RGB10A2UInt;
+        case DXGI_FORMAT_R11G11B10_FLOAT:           return Format::RG11B10Float;
+        case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:        return Format::RGB9E5Float;
+
         /* --- Depth-stencil formats --- */
         case DXGI_FORMAT_R16_TYPELESS:              /* pass */
         case DXGI_FORMAT_D16_UNORM:                 return Format::D16UNorm;
@@ -290,8 +306,11 @@ Format Unmap(const DXGI_FORMAT format)
 
         /* --- Compressed color formats --- */
         case DXGI_FORMAT_BC1_UNORM:                 return Format::BC1RGBA;
+      //case DXGI_FORMAT_BC1_UNORM_SRGB:            return Format::BC1RGBA_sRGB;
         case DXGI_FORMAT_BC2_UNORM:                 return Format::BC2RGBA;
+      //case DXGI_FORMAT_BC2_UNORM_SRGB:            return Format::BC2RGBA_sRGB;
         case DXGI_FORMAT_BC3_UNORM:                 return Format::BC3RGBA;
+      //case DXGI_FORMAT_BC3_UNORM_SRGB:            return Format::BC3RGBA_sRGB;
 
         default:                                    return Format::Undefined;
     }
@@ -382,6 +401,20 @@ DXGI_FORMAT ToDXGIFormatSRV(const DXGI_FORMAT format)
         case DXGI_FORMAT_R24G8_TYPELESS:    return DXGI_FORMAT_UNKNOWN;
         case DXGI_FORMAT_R32G8X24_TYPELESS: return DXGI_FORMAT_UNKNOWN;
         default:                            return format;
+    }
+}
+
+DXGI_FORMAT ToDXGIFormatUAV(const DXGI_FORMAT format)
+{
+    switch (format)
+    {
+        case DXGI_FORMAT_R16_TYPELESS:          return DXGI_FORMAT_R16_UNORM;
+        case DXGI_FORMAT_R32_TYPELESS:          return DXGI_FORMAT_R32_FLOAT;
+        case DXGI_FORMAT_R24G8_TYPELESS:        return DXGI_FORMAT_UNKNOWN;
+        case DXGI_FORMAT_R32G8X24_TYPELESS:     return DXGI_FORMAT_UNKNOWN;
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:   return DXGI_FORMAT_R8G8B8A8_UNORM; // UAVs cannot have typed sRGB format
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:   return DXGI_FORMAT_B8G8R8A8_UNORM; // UAVs cannot have typed sRGB format
+        default:                                return format;
     }
 }
 

@@ -133,6 +133,14 @@ GLenum MapOrZero(const Format format)
         case Format::BGRA8UInt:         return 0;//GL_RGBA8UI; // texture swizzle
         case Format::BGRA8SInt:         return 0;//GL_RGBA8I; // texture swizzle
 
+        #ifdef LLGL_OPENGL
+        /* --- Packed formats --- */
+        case Format::RGB10A2UNorm:      return GL_RGB10_A2;
+        case Format::RGB10A2UInt:       return GL_RGB10_A2UI;
+        case Format::RG11B10Float:      return GL_R11F_G11F_B10F;
+        case Format::RGB9E5Float:       return GL_RGB9_E5;
+        #endif
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return GL_DEPTH_COMPONENT16;
         case Format::D32Float:          return GL_DEPTH_COMPONENT32;//GL_DEPTH_COMPONENT;
@@ -856,6 +864,14 @@ Format UnmapFormat(const GLenum internalFormat)
         case GL_RGBA32UI:                       return Format::RGBA32UInt;
         case GL_RGBA32I:                        return Format::RGBA32SInt;
         case GL_RGBA32F:                        return Format::RGBA32Float;
+
+        #ifdef LLGL_OPENGL
+        /* --- Packed formats --- */
+        case GL_RGB10_A2:                       return Format::RGB10A2UNorm;
+        case GL_RGB10_A2UI:                     return Format::RGB10A2UInt;
+        case GL_R11F_G11F_B10F:                 return Format::RG11B10Float;
+        case GL_RGB9_E5:                        return Format::RGB9E5Float;
+        #endif
 
         /* --- Depth-stencil formats --- */
         case GL_DEPTH_COMPONENT16:              return Format::D16UNorm;

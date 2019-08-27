@@ -161,6 +161,7 @@ void D3D12Texture::UpdateSubresource(
         nullptr,
         IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())
     );
+    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for texture upload buffer");
 
     /* Upload subresource for each array layer */
     for (UINT arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
@@ -331,7 +332,7 @@ void D3D12Texture::CreateUnorderedAccessViewPrimary(
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
-    uavDesc.Format          = D3D12Types::ToDXGIFormatSRV(format);
+    uavDesc.Format          = D3D12Types::ToDXGIFormatUAV(format);
     uavDesc.ViewDimension   = dimension;
 
     switch (uavDesc.ViewDimension)

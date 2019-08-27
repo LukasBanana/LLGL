@@ -122,7 +122,7 @@ void D3D12Device::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandL
 
 /* ----- Data queries ----- */
 
-UINT D3D12Device::FintSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount)
+UINT D3D12Device::FindSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount)
 {
     D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS feature;
     feature.Format              = format;

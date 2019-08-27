@@ -329,7 +329,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         const auto& formatDesc = GetFormatDesc(textureDesc.format);
         if (formatDesc.bitSize > 0)
         {
-            const ColorRGBAd fillColor { textureDesc.clearValue.color.Cast<double>() };
+            const ColorRGBAd fillColor{ textureDesc.clearValue.color.Cast<double>() };
             tempImageBuffer = GenerateImageBuffer(formatDesc.format, formatDesc.dataType, imageSize, fillColor);
         }
         else

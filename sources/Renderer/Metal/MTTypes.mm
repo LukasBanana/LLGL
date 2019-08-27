@@ -139,6 +139,12 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::BGRA8UInt:         break;
         case Format::BGRA8SInt:         break;
 
+        /* --- Packed formats --- */
+        case Format::RGB10A2UNorm:      return MTLPixelFormatRGB10A2Unorm;
+        case Format::RGB10A2UInt:       return MTLPixelFormatRGB10A2Uint;
+        case Format::RG11B10Float:      return MTLPixelFormatRG11B10Float;
+        case Format::RGB9E5Float:       return MTLPixelFormatRGB9E5Float;
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return MTLPixelFormatDepth16Unorm;
         case Format::D32Float:          return MTLPixelFormatDepth32Float;
@@ -476,6 +482,12 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         /* --- BGRA color formats --- */
         case MTLPixelFormatBGRA8Unorm:              return Format::BGRA8UNorm;
         case MTLPixelFormatBGRA8Unorm_sRGB:         return Format::BGRA8UNorm_sRGB;
+
+        /* --- Packed formats --- */
+        case MTLPixelFormatRGB10A2Unorm:            return Format::RGB10A2UNorm;
+        case MTLPixelFormatRGB10A2Uint:             return Format::RGB10A2UInt;
+        case MTLPixelFormatRG11B10Float:            return Format::RG11B10Float;
+        case MTLPixelFormatRGB9E5Float:             return Format::RGB9E5Float;
 
         /* --- Depth-stencil formats --- */
         case MTLPixelFormatDepth16Unorm:            return Format::D16UNorm;

@@ -51,6 +51,7 @@ Format                          Unmap( const DXGI_FORMAT format );
 
 DXGI_FORMAT                     ToDXGIFormatDSV(const DXGI_FORMAT format);
 DXGI_FORMAT                     ToDXGIFormatSRV(const DXGI_FORMAT format);
+DXGI_FORMAT                     ToDXGIFormatUAV(const DXGI_FORMAT format);
 
 
 } // /namespace D3D12Types

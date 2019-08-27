@@ -249,14 +249,26 @@ public:
     {
         // Create empty color and gloss map
         auto resolution = context->GetVideoMode().resolution;
-        colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
-        glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
+
+        LLGL::TextureDescriptor texDesc;
+        {
+            texDesc.type            = LLGL::TextureType::Texture2D;
+            texDesc.format          = LLGL::Format::RGBA8UNorm;
+            texDesc.bindFlags       = LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment;
+            texDesc.miscFlags       = LLGL::MiscFlags::NoInitialData;
+            texDesc.extent.width    = resolution.width;
+            texDesc.extent.height   = resolution.height;
+            texDesc.mipLevels       = 1;
+        }
+        colorMap = renderer->CreateTexture(texDesc);
+        glossMap = renderer->CreateTexture(texDesc);
 
         // Create empty blur pass maps (in quarter resolution)
-        resolution.width  /= 4;
-        resolution.height /= 4;
-        glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
-        glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
+        texDesc.extent.width  /= 4;
+        texDesc.extent.height /= 4;
+
+        glossMapBlurX = renderer->CreateTexture(texDesc);
+        glossMapBlurY = renderer->CreateTexture(texDesc);
     }
 
     void CreateRenderTargets()

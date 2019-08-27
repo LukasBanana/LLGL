@@ -300,7 +300,7 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
     }
 
     /* Find suitable multi-samples for color format */
-    auto sampleCount = renderSystem_.GetDevice().FintSuitableMultisamples(colorFormat_, swapChainSamples_);
+    auto sampleCount = renderSystem_.GetDevice().FindSuitableMultisamples(colorFormat_, swapChainSamples_);
     if (swapChainSamples_ != sampleCount)
     {
         Log::PostReport(
