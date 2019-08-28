@@ -26,24 +26,24 @@
 /* Current MIP-map level configuration */
 cbuffer TextureDescriptor : register(b0)
 {
+    float   texelSize;      // 1.0 / outMipLevel1.extent
     uint    baseMipLevel;   // Base MIP-map level of srcMipLevel
     uint    numMipLevels;   // Number of MIP-map levels to write: [1..4]
-    float   texelSize;      // 1.0 / outMipLevel1.extent
-    float   pad0;
+    uint    baseArrayLayer; // Base array layer of srcMipLevel
 };
 
 
 /* Next 4 output MIP-map levels and source MIP-map level */
-RWTexture1D<float4> dstMipLevel1        : register(u0);
-RWTexture1D<float4> dstMipLevel2        : register(u1);
-RWTexture1D<float4> dstMipLevel3        : register(u2);
-RWTexture1D<float4> dstMipLevel4        : register(u3);
-RWTexture1D<float4> dstMipLevel5        : register(u4);
-RWTexture1D<float4> dstMipLevel6        : register(u5);
-RWTexture1D<float4> dstMipLevel7        : register(u6);
-RWTexture1D<float4> dstMipLevel8        : register(u7);
-Texture1D<float4>   srcMipLevel         : register(t0);
-SamplerState        linearClampSampler  : register(s0);
+RWTexture1DArray<float4>    dstMipLevel1        : register(u0);
+RWTexture1DArray<float4>    dstMipLevel2        : register(u1);
+RWTexture1DArray<float4>    dstMipLevel3        : register(u2);
+RWTexture1DArray<float4>    dstMipLevel4        : register(u3);
+RWTexture1DArray<float4>    dstMipLevel5        : register(u4);
+RWTexture1DArray<float4>    dstMipLevel6        : register(u5);
+RWTexture1DArray<float4>    dstMipLevel7        : register(u6);
+RWTexture1DArray<float4>    dstMipLevel8        : register(u7);
+Texture1DArray<float4>      srcMipLevel         : register(t0);
+SamplerState                linearClampSampler  : register(s0);
 
 
 /* Primary compute kernel to up to 8 MIP-map levels at a time */
@@ -57,22 +57,24 @@ SamplerState        linearClampSampler  : register(s0);
         "addressU = TEXTURE_ADDRESS_CLAMP,"
         "addressV = TEXTURE_ADDRESS_CLAMP,"
         "addressW = TEXTURE_ADDRESS_CLAMP,"
-        "filter = FILTER_MIN_MAG_MIP_LINEAR"
+        "filter = FILTER_MIN_MAG_LINEAR_MIP_POINT"
     ")"
 )]
 [numthreads(64, 1, 1)]
 void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_DispatchThreadID)
 {
+    uint arrayLayer = baseArrayLayer + threadID.y;
+
     /* Sample source MIP-map level depending on the NPOT texture classification */
     #if NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_X_EVEN
 
-    float uv1 = texelSize * (threadID.x + 0.5);
+    float2 uv1 = float2(texelSize * (threadID.x + 0.5), (float)arrayLayer);
     float4 srcColor1 = srcMipLevel.SampleLevel(linearClampSampler, uv1, baseMipLevel);
 
     #elif NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_X_ODD
 
-    float uv1 = texelSize * (threadID.x + 0.25);
-    float2 uvOffset = texelSize * 0.5;
+    float2 uv1 = float2(texelSize * (threadID.x + 0.25), (float)arrayLayer);
+    float2 uvOffset = float2(texelSize * 0.5, 0.0);
     float4 srcColor1 = 0.5 * (
         srcMipLevel.SampleLevel(linearClampSampler, uv1,            baseMipLevel) +
         srcMipLevel.SampleLevel(linearClampSampler, uv1 + uvOffset, baseMipLevel)
@@ -81,7 +83,7 @@ void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
     #endif
 
     /* Write 1st output MIP-map level */
-    dstMipLevel1[threadID.x] = PackLinearColor(srcColor1);
+    dstMipLevel1[uint2(threadID.x, arrayLayer)] = PackLinearColor(srcColor1);
 
     if (numMipLevels == 1)
         return;
@@ -95,7 +97,7 @@ void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
         float4 srcColor2 = LoadColor(groupIndex + 0x01);
         srcColor1 = 0.5 * (srcColor1 + srcColor2);
 
-        dstMipLevel2[threadID.x / 2] = PackLinearColor(srcColor1);
+        dstMipLevel2[uint2(threadID.x / 2, arrayLayer)] = PackLinearColor(srcColor1);
         StoreColor(groupIndex, srcColor1);
     }
 
@@ -110,7 +112,7 @@ void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
         float4 srcColor2 = LoadColor(groupIndex + 0x02);
         srcColor1 = 0.5 * (srcColor1 + srcColor2);
 
-        dstMipLevel3[threadID.x / 4] = PackLinearColor(srcColor1);
+        dstMipLevel3[uint2(threadID.x / 4, arrayLayer)] = PackLinearColor(srcColor1);
         StoreColor(groupIndex, srcColor1);
     }
 
@@ -125,7 +127,7 @@ void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
         float4 srcColor2 = LoadColor(groupIndex + 0x04);
         srcColor1 = 0.5 * (srcColor1 + srcColor2);
 
-        dstMipLevel4[threadID.x / 8] = PackLinearColor(srcColor1);
+        dstMipLevel4[uint2(threadID.x / 8, arrayLayer)] = PackLinearColor(srcColor1);
         StoreColor(groupIndex, srcColor1);
     }
 
@@ -140,7 +142,7 @@ void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
         float4 srcColor2 = LoadColor(groupIndex + 0x08);
         srcColor1 = 0.5 * (srcColor1 + srcColor2);
 
-        dstMipLevel5[threadID.x / 16] = PackLinearColor(srcColor1);
+        dstMipLevel5[uint2(threadID.x / 16, arrayLayer)] = PackLinearColor(srcColor1);
         StoreColor(groupIndex, srcColor1);
     }
 
@@ -155,7 +157,7 @@ void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
         float4 srcColor2 = LoadColor(groupIndex + 0x0F);
         srcColor1 = 0.5 * (srcColor1 + srcColor2);
 
-        dstMipLevel6[threadID.x / 32] = PackLinearColor(srcColor1);
+        dstMipLevel6[uint2(threadID.x / 32, arrayLayer)] = PackLinearColor(srcColor1);
         StoreColor(groupIndex, srcColor1);
     }
 
@@ -170,7 +172,7 @@ void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
         float4 srcColor2 = LoadColor(groupIndex + 0x1F);
         srcColor1 = 0.5 * (srcColor1 + srcColor2);
 
-        dstMipLevel7[threadID.x / 64] = PackLinearColor(srcColor1);
+        dstMipLevel7[uint2(threadID.x / 64, arrayLayer)] = PackLinearColor(srcColor1);
         StoreColor(groupIndex, srcColor1);
     }
 }

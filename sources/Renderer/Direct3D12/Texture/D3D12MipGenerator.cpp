@@ -31,14 +31,10 @@ void D3D12MipGenerator::InitializeDevice(ID3D12Device* device)
     device_         = device;
     descHandleSize_ = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    /* Initialize linear sampler */
-    linearSamplerDesc_.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-    linearSamplerDesc_.SetTextureAddressModes(D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
-
     /* Create resources for 1D, 2D, and 3D MIP-map generation */
     CreateResourcesFor1DMips(device);
     CreateResourcesFor2DMips(device);
-    CreateResourcesFor3DMips(device);
+    //CreateResourcesFor3DMips(device);
 }
 
 void D3D12MipGenerator::Clear()
@@ -48,36 +44,65 @@ void D3D12MipGenerator::Clear()
     rootSignature2D_.Reset();
 }
 
-void D3D12MipGenerator::GenerateMips(
+HRESULT D3D12MipGenerator::GenerateMips(
     D3D12CommandContext&        commandContext,
     D3D12Texture&               texture,
     const TextureSubresource&   subresource)
 {
-    if (!texture.SupportsGenerateMips() || subresource.numMipLevels == 0 || subresource.numArrayLayers == 0)
-        return;
+    if (!texture.SupportsGenerateMips())
+    {
+        /* Texture does not support generation of MIP-maps */
+        return E_INVALIDARG;
+    }
+
+    if (subresource.numMipLevels == 0 || subresource.numArrayLayers == 0)
+    {
+        /* Ignore this call, no MIP-map range specified */
+        return S_OK;
+    }
+
+    if (subresource.baseMipLevel + subresource.numMipLevels > texture.GetNumMipLevels() ||
+        subresource.baseArrayLayer + subresource.numArrayLayers > texture.GetNumArrayLayers())
+    {
+        /* Invalid subresource MIP-map level or array layer range */
+        return E_INVALIDARG;
+    }
+
+    auto mipDescHeap = texture.GetMipDescHeap();
+    if (mipDescHeap == nullptr)
+    {
+        /* At this point, the texture should have a valid descriptor heap */
+        return E_FAIL;
+    }
 
     switch (texture.GetType())
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            GenerateMips1D(commandContext, texture, subresource);
-            break;
+            GenerateMips1D(commandContext, texture.GetResource(), mipDescHeap, texture.GetFormat(), subresource);
+            return S_OK;
+
         case TextureType::Texture2D:
         case TextureType::TextureCube:
         case TextureType::Texture2DArray:
         case TextureType::TextureCubeArray:
-            GenerateMips2D(commandContext, texture, subresource);
-            break;
+            GenerateMips2D(commandContext, texture.GetResource(), mipDescHeap, texture.GetFormat(), subresource);
+            return S_OK;
+
         case TextureType::Texture3D:
             #if 0//TODO
-            GenerateMips3D(commandContext, texture, subresource);
+            GenerateMips3D(commandContext, texture.GetResource(), mipDescHeap, texture.GetFormat(), subresource);
             #endif
-            break;
+            return S_OK;
+
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
             // no MIP-maps for multi-sampled textures
             break;
     }
+
+    /* Unknown argument or corrupted data */
+    return E_FAIL;
 }
 
 
@@ -117,7 +142,10 @@ void D3D12MipGenerator::CreateResourcesFor1DMips(ID3D12Device* device)
         rootSignature[0].InitAsConstants(0, 4);
         rootSignature[1].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 1);
         rootSignature[2].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 0, 8);
-        rootSignature.AppendStaticSampler();
+        auto samplerDesc = rootSignature.AppendStaticSampler();
+        {
+            samplerDesc->Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+        }
     }
     rootSignature1D_ = rootSignature.Finalize(device);
 
@@ -134,10 +162,13 @@ void D3D12MipGenerator::CreateResourcesFor2DMips(ID3D12Device* device)
     D3D12RootSignature rootSignature;
     {
         rootSignature.ResetAndAlloc(3, 1);
-        rootSignature[0].InitAsConstants(0, 4);
+        rootSignature[0].InitAsConstants(0, 5);
         rootSignature[1].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 1);
         rootSignature[2].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 0, 4);
-        rootSignature.AppendStaticSampler();
+        auto samplerDesc = rootSignature.AppendStaticSampler();
+        {
+            samplerDesc->Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+        }
     }
     rootSignature2D_ = rootSignature.Finalize(device);
 
@@ -188,17 +219,13 @@ void D3D12MipGenerator::CreateResourcesFor3DMips(ID3D12Device* device)
 
 void D3D12MipGenerator::GenerateMips1D(
     D3D12CommandContext&        commandContext,
-    D3D12Texture&               texture,
+    D3D12Resource&              resource,
+    ID3D12DescriptorHeap*       mipDescHeap,
+    DXGI_FORMAT                 format,
     const TextureSubresource&   subresource)
 {
-    auto mipDescHeap = texture.GetMipDescHeap();
-    if (mipDescHeap == nullptr)
-        return;
-
-    const auto format       = texture.GetFormat();
     const bool isFormatSRGB = DXTypes::IsDXGIFormatSRGB(format);
 
-    auto& resource = texture.GetResource();
     ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
 
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
@@ -236,16 +263,17 @@ void D3D12MipGenerator::GenerateMips1D(
         UINT numMips = (mipLevel + 8 >= mipLevelEnd ? mipLevelEnd - mipLevel : 8);
 
         /* Run compute shader to generate next four MIP-maps */
-        commandContext.SetComputeConstant(0, mipLevel, 0);
-        commandContext.SetComputeConstant(0, numMips, 1);
-        commandContext.SetComputeConstant(0, 1.0f / static_cast<float>(dstWidth), 2);
+        commandContext.SetComputeConstant(0, 1.0f / static_cast<float>(dstWidth), 0);
+        commandContext.SetComputeConstant(0, mipLevel, 1);
+        commandContext.SetComputeConstant(0, numMips, 2);
+        commandContext.SetComputeConstant(0, subresource.baseArrayLayer, 3);
 
         commandList->SetComputeRootDescriptorTable(2, gpuDescHandle);
         gpuDescHandle.ptr += descHandleSize_ * numMips;
 
         commandList->Dispatch(
             std::max(1u, dstWidth  / 64u),
-            1u,
+            subresource.numArrayLayers,
             1u
         );
 
@@ -260,17 +288,13 @@ void D3D12MipGenerator::GenerateMips1D(
 
 void D3D12MipGenerator::GenerateMips2D(
     D3D12CommandContext&        commandContext,
-    D3D12Texture&               texture,
+    D3D12Resource&              resource,
+    ID3D12DescriptorHeap*       mipDescHeap,
+    DXGI_FORMAT                 format,
     const TextureSubresource&   subresource)
 {
-    auto mipDescHeap = texture.GetMipDescHeap();
-    if (mipDescHeap == nullptr)
-        return;
-
-    const auto format       = texture.GetFormat();
     const bool isFormatSRGB = DXTypes::IsDXGIFormatSRGB(format);
 
-    auto& resource = texture.GetResource();
     ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
 
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
@@ -310,10 +334,11 @@ void D3D12MipGenerator::GenerateMips2D(
         UINT numMips = (mipLevel + 4 >= mipLevelEnd ? mipLevelEnd - mipLevel : 4);
 
         /* Run compute shader to generate next four MIP-maps */
-        commandContext.SetComputeConstant(0, mipLevel, 0);
-        commandContext.SetComputeConstant(0, numMips, 1);
-        commandContext.SetComputeConstant(0, 1.0f / static_cast<float>(dstWidth), 2);
-        commandContext.SetComputeConstant(0, 1.0f / static_cast<float>(dstHeight), 3);
+        commandContext.SetComputeConstant(0, 1.0f / static_cast<float>(dstWidth), 0);
+        commandContext.SetComputeConstant(0, 1.0f / static_cast<float>(dstHeight), 1);
+        commandContext.SetComputeConstant(0, mipLevel, 2);
+        commandContext.SetComputeConstant(0, numMips, 3);
+        commandContext.SetComputeConstant(0, subresource.baseArrayLayer, 4);
 
         commandList->SetComputeRootDescriptorTable(2, gpuDescHandle);
         gpuDescHandle.ptr += descHandleSize_ * numMips;
@@ -321,7 +346,7 @@ void D3D12MipGenerator::GenerateMips2D(
         commandList->Dispatch(
             std::max(1u, dstWidth  / 8u),
             std::max(1u, dstHeight / 8u),
-            1u
+            subresource.numArrayLayers
         );
 
         /* Insert UAV barrier and move to next four MIP-maps */

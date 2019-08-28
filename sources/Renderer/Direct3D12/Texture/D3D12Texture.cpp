@@ -17,21 +17,15 @@ namespace LLGL
 {
 
 
-//#define _DEB_DISABLE_MIPS
-
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
     Texture         { desc.type                    },
     format_         { D3D12Types::Map(desc.format) },
-    #ifndef _DEB_DISABLE_MIPS//TODO: mipmapping not supported yet
     numMipLevels_   { NumMipLevels(desc)           },
-    #else
-    numMipLevels_   { 1                            },
-    #endif
     numArrayLayers_ { desc.arrayLayers             },
     bindFlags_      { desc.bindFlags               }
 {
     CreateNativeTexture(device, desc);
-    if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
+    if (SupportsGenerateMips())
         CreateMipDescHeap(device);
 }
 
@@ -100,6 +94,7 @@ TextureDescriptor D3D12Texture::QueryDesc() const
     texDesc.cpuAccessFlags  = 0;
     texDesc.miscFlags       = 0;
     texDesc.format          = D3D12Types::Unmap(desc.Format);
+    texDesc.mipLevels       = desc.MipLevels;
 
     switch (GetType())
     {
@@ -150,7 +145,7 @@ void D3D12Texture::UpdateSubresource(
     numArrayLayers  = std::min(numArrayLayers, numArrayLayers_ - firstArrayLayer);
 
     /* Create the GPU upload buffer */
-    UINT64 uploadBufferSize     = GetRequiredIntermediateSize(resource_.native.Get(), 0, numArrayLayers);
+    UINT64 uploadBufferSize     = GetRequiredIntermediateSize(resource_.native.Get(), 0, 1) * numArrayLayers;
     UINT64 uploadBufferOffset   = 0;
 
     auto hr = device->CreateCommittedResource(
@@ -481,11 +476,7 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 {
     dst.Dimension           = D3D12Types::MapResourceDimension(src.type);
     dst.Alignment           = 0;
-    #ifndef _DEB_DISABLE_MIPS//TODO: mipmapping is not supported yet
     dst.MipLevels           = NumMipLevels(src);
-    #else
-    dst.MipLevels           = 1;
-    #endif
     dst.Format              = D3D12Types::ToDXGIFormatDSV(D3D12Types::Map(src.format));
     dst.SampleDesc.Count    = 1;
     dst.SampleDesc.Quality  = 0;
@@ -569,6 +560,50 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
         resource_.SetInitialState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
+// Determine SRV dimension for descriptor heaps used in D3D12MipGenerator: either 1D array, 2D array, or 3D
+static D3D12_SRV_DIMENSION GetMipChainSRVDimension(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            return D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+        case TextureType::Texture2D:
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+            return D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+        case TextureType::Texture3D:
+            return D3D12_SRV_DIMENSION_TEXTURE3D;
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            break;
+    }
+    return D3D12_SRV_DIMENSION_UNKNOWN;
+}
+
+// Determine UAV dimension for descriptor heaps used in D3D12MipGenerator: either 1D array, 2D array, or 3D
+static D3D12_UAV_DIMENSION GetMipChainUAVDimension(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            return D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+        case TextureType::Texture2D:
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+            return D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+        case TextureType::Texture3D:
+            return D3D12_UAV_DIMENSION_TEXTURE3D;
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            break;
+    }
+    return D3D12_UAV_DIMENSION_UNKNOWN;
+}
+
 void D3D12Texture::CreateMipDescHeap(ID3D12Device* device)
 {
     /* Create descriptor heap for all MIP-map levels */
@@ -586,17 +621,26 @@ void D3D12Texture::CreateMipDescHeap(ID3D12Device* device)
     auto cpuDescHandle  = mipDescHeap_->GetCPUDescriptorHandleForHeapStart();
 
     /* Create SRV for first MIP-map */
-    CreateShaderResourceView(device, cpuDescHandle);
+    CreateShaderResourceViewPrimary(
+        device,
+        GetMipChainSRVDimension(GetType()),
+        format_,
+        D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+        TextureSubresource{ 0, GetNumArrayLayers(), 0, GetNumMipLevels() },
+        cpuDescHandle
+    );
     cpuDescHandle.ptr += descSize;
 
     /* Create UAVs for remaining MIP-maps */
+    auto uavDimension = GetMipChainUAVDimension(GetType());
+
     for (UINT i = 1; i < GetNumMipLevels(); ++i)
     {
         CreateUnorderedAccessViewPrimary(
             device,
-            D3D12Types::MapUavDimension(GetType()),
+            uavDimension,
             format_,
-            TextureSubresource{ 0, numArrayLayers_, i, 1 },
+            TextureSubresource{ 0, GetNumArrayLayers(), i, 1 },
             cpuDescHandle
         );
         cpuDescHandle.ptr += descSize;

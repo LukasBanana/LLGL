@@ -43,9 +43,15 @@ class LLGL_EXPORT Texture : public Resource
         }
 
         /**
-        \brief Queries a descriptor of this texture (including type, format, and size).
-        \remarks All flags members (i.e. TextureDescriptor::bindFlags, TextureDescriptor::cpuAccessFlags, and TextureDescriptor::miscFlags) will always be 0,
-        i.e. the texture flags cannot be retrived after texture creation.
+        \brief Queries a descriptor of this texture.
+        \remarks This function only queries the following attributes:
+        - \c type
+        - \c format
+        - \c extent
+        - \c arrayLayers
+        - \c mipLevels
+        \remarks All other attributes (such as \c bindFlags, \c cpuAccessFlags, \c miscFlags etc.) cannot be queried by this function.
+        Those attributes are either set to zero (for flags) or the default value specified in TextureDescriptor is used.
         \see TextureDescriptor
         */
         virtual TextureDescriptor QueryDesc() const = 0;

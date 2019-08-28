@@ -266,10 +266,7 @@ struct RenderSystemDescriptor
     */
     std::string     moduleName;
 
-    /**
-    \brief Debuging callback function object.
-    \todo Move to RenderSystemDescriptor struct.
-    */
+    //! Debuging callback function object.
     DebugCallback   debugCallback;
 
     /**

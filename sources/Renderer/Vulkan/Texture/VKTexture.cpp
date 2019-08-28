@@ -72,6 +72,7 @@ TextureDescriptor VKTexture::QueryDesc() const
     texDesc.cpuAccessFlags  = 0;
     texDesc.miscFlags       = 0;
     texDesc.format          = VKTypes::Unmap(GetVkFormat());
+    texDesc.mipLevels       = numMipLevels_;
 
     switch (texDesc.type)
     {

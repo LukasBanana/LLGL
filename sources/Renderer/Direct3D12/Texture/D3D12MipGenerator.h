@@ -24,6 +24,7 @@ namespace LLGL
 
 class D3D12Texture;
 class D3D12CommandContext;
+struct D3D12Resource;
 struct TextureSubresource;
 
 // Direct3D 12 MIP-map generator singleton.
@@ -46,7 +47,7 @@ class D3D12MipGenerator
         void InitializeDevice(ID3D12Device* device);
         void Clear();
 
-        void GenerateMips(
+        HRESULT GenerateMips(
             D3D12CommandContext&        commandContext,
             D3D12Texture&               texture,
             const TextureSubresource&   subresource
@@ -68,13 +69,17 @@ class D3D12MipGenerator
 
         void GenerateMips1D(
             D3D12CommandContext&        commandContext,
-            D3D12Texture&               texture,
+            D3D12Resource&              resource,
+            ID3D12DescriptorHeap*       mipDescHeap,
+            DXGI_FORMAT                 format,
             const TextureSubresource&   subresource
         );
 
         void GenerateMips2D(
             D3D12CommandContext&        commandContext,
-            D3D12Texture&               texture,
+            D3D12Resource&              resource,
+            ID3D12DescriptorHeap*       mipDescHeap,
+            DXGI_FORMAT                 format,
             const TextureSubresource&   subresource
         );
 
@@ -89,7 +94,6 @@ class D3D12MipGenerator
     private:
 
         ID3D12Device*               device_             = nullptr;
-        D3D12SamplerDesc            linearSamplerDesc_;
 
         ComPtr<ID3D12RootSignature> rootSignature1D_;
         ComPtr<ID3D12PipelineState> pipelines1D_[4];

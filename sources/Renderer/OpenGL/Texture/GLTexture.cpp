@@ -111,7 +111,7 @@ TextureDescriptor GLTexture::QueryDesc() const
     texDesc.type            = GetType();
     texDesc.bindFlags       = 0;
     texDesc.cpuAccessFlags  = 0;
-    texDesc.mipLevels       = 0;
+    //texDesc.mipLevels       = ; //TODO!!!
 
     /* Query hardware texture format and size */
     GLint internalFormat = 0, extent[3] = { 0 };
