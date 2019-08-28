@@ -633,17 +633,32 @@ void D3D12Texture::CreateMipDescHeap(ID3D12Device* device)
 
     /* Create UAVs for remaining MIP-maps */
     auto uavDimension = GetMipChainUAVDimension(GetType());
+    auto resourceDesc = resource_.native->GetDesc();
 
     for (UINT i = 1; i < GetNumMipLevels(); ++i)
     {
-        CreateUnorderedAccessViewPrimary(
-            device,
-            uavDimension,
-            format_,
-            TextureSubresource{ 0, GetNumArrayLayers(), i, 1 },
-            cpuDescHandle
-        );
-        cpuDescHandle.ptr += descSize;
+        if (resourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D)
+        {
+            CreateUnorderedAccessViewPrimary(
+                device,
+                uavDimension,
+                format_,
+                TextureSubresource{ 0, static_cast<UINT>(resourceDesc.DepthOrArraySize) >> i, i, 1 },
+                cpuDescHandle
+            );
+            cpuDescHandle.ptr += descSize;
+        }
+        else
+        {
+            CreateUnorderedAccessViewPrimary(
+                device,
+                uavDimension,
+                format_,
+                TextureSubresource{ 0, GetNumArrayLayers(), i, 1 },
+                cpuDescHandle
+            );
+            cpuDescHandle.ptr += descSize;
+        }
     }
 }
 

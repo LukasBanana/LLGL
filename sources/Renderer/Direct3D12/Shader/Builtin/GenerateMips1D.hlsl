@@ -8,12 +8,12 @@
 #include "GenerateMips.hlsli"
 
 
-/* Classification of non-power-of-two (NPOT) textures: 0, 1 */
-#define NPOT_TEXTURE_CLASS_X_EVEN   (0)
+/* Classification of non-power-of-two (NPOT) textures: 0...1 */
+#define NPOT_TEXTURE_CLASS_EVEN     (0)
 #define NPOT_TEXTURE_CLASS_X_ODD    (1)
 
 #ifndef NPOT_TEXTURE_CLASS
-#   define NPOT_TEXTURE_CLASS       (NPOT_TEXTURE_CLASS_X_EVEN)
+#   define NPOT_TEXTURE_CLASS       (NPOT_TEXTURE_CLASS_EVEN)
 #endif
 
 #define BITMASK_X_EVEN              (0x01)
@@ -66,7 +66,7 @@ void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
     uint arrayLayer = baseArrayLayer + threadID.y;
 
     /* Sample source MIP-map level depending on the NPOT texture classification */
-    #if NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_X_EVEN
+    #if NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_EVEN
 
     float2 uv1 = float2(texelSize * (threadID.x + 0.5), (float)arrayLayer);
     float4 srcColor1 = srcMipLevel.SampleLevel(linearClampSampler, uv1, baseMipLevel);
@@ -169,11 +169,10 @@ void GenerateMips1DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
 
     if (groupIndex == 0)
     {
-        float4 srcColor2 = LoadColor(groupIndex + 0x1F);
+        float4 srcColor2 = LoadColor(0x1F);
         srcColor1 = 0.5 * (srcColor1 + srcColor2);
 
         dstMipLevel7[uint2(threadID.x / 64, arrayLayer)] = PackLinearColor(srcColor1);
-        StoreColor(groupIndex, srcColor1);
     }
 }
 

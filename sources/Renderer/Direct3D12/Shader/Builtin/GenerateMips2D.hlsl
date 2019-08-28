@@ -8,18 +8,18 @@
 #include "GenerateMips.hlsli"
 
 
-/* Classification of non-power-of-two (NPOT) textures: 0, 1, 2, 3 */
-#define NPOT_TEXTURE_CLASS_XY_EVEN      (0)
-#define NPOT_TEXTURE_CLASS_X_ODD_Y_EVEN (1)
-#define NPOT_TEXTURE_CLASS_X_EVEN_Y_ODD (2)
-#define NPOT_TEXTURE_CLASS_XY_ODD       (3)
+/* Classification of non-power-of-two (NPOT) textures: 0...3 */
+#define NPOT_TEXTURE_CLASS_EVEN     (0)
+#define NPOT_TEXTURE_CLASS_X_ODD    (1)
+#define NPOT_TEXTURE_CLASS_Y_ODD    (2)
+#define NPOT_TEXTURE_CLASS_XY_ODD   (3)
 
 #ifndef NPOT_TEXTURE_CLASS
-#   define NPOT_TEXTURE_CLASS           (NPOT_TEXTURE_CLASS_XY_EVEN)
+#   define NPOT_TEXTURE_CLASS       (NPOT_TEXTURE_CLASS_EVEN)
 #endif
 
-#define BITMASK_XY_EVEN                 (0x09)
-#define BITMASK_XY_MULTIPLE_OF_4        (0x1B)
+#define BITMASK_XY_EVEN             (0x09)
+#define BITMASK_XY_MULTIPLE_OF_4    (0x1B)
 
 
 /* Current MIP-map level configuration */
@@ -61,12 +61,12 @@ void GenerateMips2DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
     uint arrayLayer = baseArrayLayer + threadID.z;
 
     /* Sample source MIP-map level depending on the NPOT texture classification */
-    #if NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_XY_EVEN
+    #if NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_EVEN
 
     float3 uv1 = float3(texelSize * (threadID.xy + 0.5), (float)arrayLayer);
     float4 srcColor1 = srcMipLevel.SampleLevel(linearClampSampler, uv1, baseMipLevel);
 
-    #elif NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_X_ODD_Y_EVEN
+    #elif NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_X_ODD
 
     float3 uv1 = float3(texelSize * (threadID.xy + float2(0.25, 0.5)), (float)arrayLayer);
     float3 uvOffset = float3(texelSize * float2(0.5, 0.0), 0.0);
@@ -75,7 +75,7 @@ void GenerateMips2DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
         srcMipLevel.SampleLevel(linearClampSampler, uv1 + uvOffset, baseMipLevel)
     );
 
-    #elif NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_X_EVEN_Y_ODD
+    #elif NPOT_TEXTURE_CLASS == NPOT_TEXTURE_CLASS_Y_ODD
 
     float3 uv1 = float3(texelSize * (threadID.xy + float2(0.5, 0.25)), (float)arrayLayer);
     float3 uvOffset = float3(texelSize * float2(0.0, 0.5), 0.0);
@@ -143,13 +143,12 @@ void GenerateMips2DCS(uint groupIndex : SV_GroupIndex, uint3 threadID : SV_Dispa
 
     if (groupIndex == 0)
     {
-        float4 srcColor2 = LoadColor(groupIndex + 0x04);
-        float4 srcColor3 = LoadColor(groupIndex + 0x20);
-        float4 srcColor4 = LoadColor(groupIndex + 0x24);
+        float4 srcColor2 = LoadColor(0x04);
+        float4 srcColor3 = LoadColor(0x20);
+        float4 srcColor4 = LoadColor(0x24);
         srcColor1 = 0.25 * (srcColor1 + srcColor2 + srcColor3 + srcColor4);
 
         dstMipLevel4[uint3(threadID.xy / 8, arrayLayer)] = PackLinearColor(srcColor1);
-        StoreColor(groupIndex, srcColor1);
     }
 }
 

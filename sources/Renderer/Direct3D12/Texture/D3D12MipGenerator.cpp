@@ -34,7 +34,7 @@ void D3D12MipGenerator::InitializeDevice(ID3D12Device* device)
     /* Create resources for 1D, 2D, and 3D MIP-map generation */
     CreateResourcesFor1DMips(device);
     CreateResourcesFor2DMips(device);
-    //CreateResourcesFor3DMips(device);
+    CreateResourcesFor3DMips(device);
 }
 
 void D3D12MipGenerator::Clear()
@@ -90,9 +90,7 @@ HRESULT D3D12MipGenerator::GenerateMips(
             return S_OK;
 
         case TextureType::Texture3D:
-            #if 0//TODO
             GenerateMips3D(commandContext, texture.GetResource(), mipDescHeap, texture.GetFormat(), subresource);
-            #endif
             return S_OK;
 
         case TextureType::Texture2DMS:
@@ -185,14 +183,13 @@ void D3D12MipGenerator::CreateResourcesFor2DMips(ID3D12Device* device)
 
 void D3D12MipGenerator::CreateResourcesFor3DMips(ID3D12Device* device)
 {
-    #if 0//TODO
     /* Initialize root signature */
     D3D12RootSignature rootSignature;
     {
         rootSignature.ResetAndAlloc(3, 1);
-        rootSignature[0].InitAsConstants(0, 4);
+        rootSignature[0].InitAsConstants(0, 5);
         rootSignature[1].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 1);
-        rootSignature[2].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 0, 2);
+        rootSignature[2].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 0, 3);
         rootSignature.AppendStaticSampler();
     }
     rootSignature3D_ = rootSignature.Finalize(device);
@@ -201,20 +198,19 @@ void D3D12MipGenerator::CreateResourcesFor3DMips(ID3D12Device* device)
     pipelines3D_[0x0] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS             );
     pipelines3D_[0x1] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDX        );
     pipelines3D_[0x2] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDY        );
-    pipelines3D_[0x3] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDZ        );
-    pipelines3D_[0x4] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXY       );
-    pipelines3D_[0x5] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDYZ       );
-    pipelines3D_[0x6] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXZ       );
+    pipelines3D_[0x3] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXY       );
+    pipelines3D_[0x4] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDZ        );
+    pipelines3D_[0x5] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXZ       );
+    pipelines3D_[0x6] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDYZ       );
     pipelines3D_[0x7] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXYZ      );
     pipelines3D_[0x8] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB        );
     pipelines3D_[0x9] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDX   );
     pipelines3D_[0xA] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDY   );
-    pipelines3D_[0xB] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDZ   );
-    pipelines3D_[0xC] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXY  );
-    pipelines3D_[0xD] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDYZ  );
-    pipelines3D_[0xE] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXZ  );
+    pipelines3D_[0xB] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXY  );
+    pipelines3D_[0xC] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDZ   );
+    pipelines3D_[0xD] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXZ  );
+    pipelines3D_[0xE] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDYZ  );
     pipelines3D_[0xF] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXYZ );
-    #endif
 }
 
 void D3D12MipGenerator::GenerateMips1D(
@@ -246,11 +242,12 @@ void D3D12MipGenerator::GenerateMips1D(
 
     const auto mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels;
 
-    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel < mipLevelEnd;)
+    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel + 1 < mipLevelEnd;)
     {
         /* Determine source and destination extents */
-        UINT srcWidth   = static_cast<UINT>(resourceDesc.Width) >> mipLevel;
-        UINT dstWidth   = std::max(1u, srcWidth >> 1);
+        UINT srcWidth = static_cast<UINT>(resourceDesc.Width) >> mipLevel;
+
+        UINT dstWidth = std::max(1u, srcWidth >> 1);
 
         /* Bind pipeline state depending on power-of-two class */
         UINT nonPowerOfTwo = (srcWidth & 1);
@@ -315,12 +312,13 @@ void D3D12MipGenerator::GenerateMips2D(
 
     const auto mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels;
 
-    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel < mipLevelEnd;)
+    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel + 1 < mipLevelEnd;)
     {
         /* Determine source and destination extents */
-        UINT srcWidth   = static_cast<UINT>(resourceDesc.Width) >> mipLevel;
-        UINT srcHeight  = resourceDesc.Height >> mipLevel;
-        UINT dstWidth   = std::max(1u, srcWidth >> 1);
+        UINT srcWidth   = static_cast<UINT>(resourceDesc.Width)  >> mipLevel;
+        UINT srcHeight  = static_cast<UINT>(resourceDesc.Height) >> mipLevel;
+
+        UINT dstWidth   = std::max(1u, srcWidth  >> 1);
         UINT dstHeight  = std::max(1u, srcHeight >> 1);
 
         /* Bind pipeline state depending on power-of-two class */
@@ -347,6 +345,81 @@ void D3D12MipGenerator::GenerateMips2D(
             std::max(1u, dstWidth  / 8u),
             std::max(1u, dstHeight / 8u),
             subresource.numArrayLayers
+        );
+
+        /* Insert UAV barrier and move to next four MIP-maps */
+        commandContext.InsertUAVBarrier(resource, true);
+
+        mipLevel += numMips;
+    }
+
+    commandContext.TransitionResource(resource, resource.usageState, true);
+}
+
+void D3D12MipGenerator::GenerateMips3D(
+    D3D12CommandContext&        commandContext,
+    D3D12Resource&              resource,
+    ID3D12DescriptorHeap*       mipDescHeap,
+    DXGI_FORMAT                 format,
+    const TextureSubresource&   subresource)
+{
+    const bool isFormatSRGB = DXTypes::IsDXGIFormatSRGB(format);
+
+    ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
+
+    commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
+
+    /* Set root signature and descriptor heap */
+    commandList->SetComputeRootSignature(rootSignature3D_.Get());
+
+    ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
+    commandList->SetDescriptorHeaps(1, descHeaps);
+
+    auto gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
+
+    /* Set SRV to read from entire MIP-map chain */
+    commandList->SetComputeRootDescriptorTable(1, gpuDescHandle);
+    gpuDescHandle.ptr += descHandleSize_;
+
+    D3D12_RESOURCE_DESC resourceDesc = resource.native->GetDesc();
+
+    const auto mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels;
+
+    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel + 1 < mipLevelEnd;)
+    {
+        /* Determine source and destination extents */
+        UINT srcWidth   = static_cast<UINT>(resourceDesc.Width)            >> mipLevel;
+        UINT srcHeight  = static_cast<UINT>(resourceDesc.Height)           >> mipLevel;
+        UINT srcDepth   = static_cast<UINT>(resourceDesc.DepthOrArraySize) >> mipLevel;
+
+        UINT dstWidth   = std::max(1u, srcWidth  >> 1);
+        UINT dstHeight  = std::max(1u, srcHeight >> 1);
+        UINT dstDepth   = std::max(1u, srcDepth  >> 1);
+
+        /* Bind pipeline state depending on power-of-two class */
+        UINT nonPowerOfTwo = ((srcWidth & 1) | ((srcHeight & 1) << 1) | ((srcDepth & 1) << 2));
+        if (isFormatSRGB)
+            commandList->SetPipelineState(pipelines3D_[nonPowerOfTwo + 8].Get());
+        else
+            commandList->SetPipelineState(pipelines3D_[nonPowerOfTwo].Get());
+
+        /* Determine how many MIP-maps can be downsampled at once; must be in [1, 3] */
+        UINT numMips = (mipLevel + 3 >= mipLevelEnd ? mipLevelEnd - mipLevel : 3);
+
+        /* Run compute shader to generate next four MIP-maps */
+        commandContext.SetComputeConstant(0, 1.0f / static_cast<float>(dstWidth), 0);
+        commandContext.SetComputeConstant(0, 1.0f / static_cast<float>(dstHeight), 1);
+        commandContext.SetComputeConstant(0, 1.0f / static_cast<float>(dstDepth), 2);
+        commandContext.SetComputeConstant(0, mipLevel, 3);
+        commandContext.SetComputeConstant(0, numMips, 4);
+
+        commandList->SetComputeRootDescriptorTable(2, gpuDescHandle);
+        gpuDescHandle.ptr += descHandleSize_ * numMips;
+
+        commandList->Dispatch(
+            std::max(1u, dstWidth  / 4u),
+            std::max(1u, dstHeight / 4u),
+            std::max(1u, dstDepth  / 4u)
         );
 
         /* Insert UAV barrier and move to next four MIP-maps */

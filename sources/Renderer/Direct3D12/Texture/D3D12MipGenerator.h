@@ -83,13 +83,13 @@ class D3D12MipGenerator
             const TextureSubresource&   subresource
         );
 
-        #if 0//TODO
         void GenerateMips3D(
             D3D12CommandContext&        commandContext,
-            D3D12Texture&               texture,
+            D3D12Resource&              resource,
+            ID3D12DescriptorHeap*       mipDescHeap,
+            DXGI_FORMAT                 format,
             const TextureSubresource&   subresource
         );
-        #endif
 
     private:
 
