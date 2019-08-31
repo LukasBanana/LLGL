@@ -28,10 +28,9 @@ class GLShaderProgram final : public ShaderProgram
         void SetName(const char* name) override;
 
         bool HasErrors() const override;
-
         std::string GetReport() const override;
 
-        ShaderReflection QueryReflection() const override;
+        bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
@@ -73,7 +72,7 @@ class GLShaderProgram final : public ShaderProgram
         void BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes);
         #endif
 
-        void Reflect(ShaderReflection& reflection) const;
+        void QueryReflection(ShaderReflection& reflection) const;
         void QueryVertexAttributes(ShaderReflection& reflection) const;
         void QueryStreamOutputAttributes(ShaderReflection& reflection) const;
         void QueryConstantBuffers(ShaderReflection& reflection) const;

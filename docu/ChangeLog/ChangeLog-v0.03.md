@@ -212,7 +212,8 @@ LLGL::ShaderReflectionDescriptor                -> LLGL::ShaderReflection
 LLGL::ShaderReflectionDescriptor::ResourceView  -> LLGL::ShaderResource
 LLGL::ShaderReflectionDescriptor::Uniform       -> LLGL::ShaderUniform
 ```
-Moreover, all binding specific attributes in `ShaderResource` have been replaced by the `BindingDescriptor` structure.
+All binding specific attributes in `ShaderResource` have been replaced by the `BindingDescriptor` structure.
+Moreover, the shader reflection does no longer throw exceptions and only returns false on failure.
 
 Before:
 ```cpp
@@ -227,6 +228,17 @@ std::uint32_t           LLGL::ShaderReflectionDescriptor::ResourceView::constant
 LLGL::StorageBufferType LLGL::ShaderReflectionDescriptor::ResourceView::storageBufferType;
 
 LLGL::ShaderReflectionDescriptor ShaderProgram::QueryReflectionDesc() const;
+
+// Usage:
+try
+{
+    LLGL::ShaderReflectionDescriptor reflection = myShaderProgram->QueryReflectionDesc();
+    /* Evaluate ... */
+}
+catch (const std::exception& e)
+{
+    /* Error ... */
+}
 ```
 
 After:
@@ -236,7 +248,18 @@ LLGL::BindingDescriptor LLGL::ShaderResource::binding;
 std::uint32_t           LLGL::ShaderResource::constantBufferSize;
 LLGL::StorageBufferType LLGL::ShaderResource::storageBufferType;
 
-LLGL::ShaderReflection ShaderProgram::QueryReflection() const;
+bool ShaderProgram::Reflect(LLGL::ShaderReflection& reflection) const;
+
+// Usage:
+LLGL::ShaderReflection reflection;
+if (myShaderProgram->Reflect(reflection))
+{
+    /* Evaluate ... */
+}
+else
+{
+    /* Error ... */
+}
 ```
 
 

@@ -123,7 +123,8 @@ int main()
         if (shaderProgram->HasErrors())
             std::cerr << shaderProgram->GetReport() << std::endl;
 
-        auto reflection = shaderProgram->QueryReflection();
+        LLGL::ShaderReflection reflection;
+        shaderProgram->Reflect(reflection);
 
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;

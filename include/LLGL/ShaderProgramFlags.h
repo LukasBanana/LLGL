@@ -204,7 +204,7 @@ struct ShaderUniform
 \brief Shader reflection structure.
 \remarks Contains all information of resources and attributes that can be queried from a shader program.
 This is not a "descriptor", because it is only used as output from an interface rather than a description to create something.
-\see ShaderProgram::QueryReflection
+\see ShaderProgram::Reflect
 */
 struct ShaderReflection
 {

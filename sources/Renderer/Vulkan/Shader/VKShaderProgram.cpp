@@ -44,15 +44,18 @@ std::string VKShaderProgram::GetReport() const
         return "";
 }
 
-ShaderReflection VKShaderProgram::QueryReflection() const
+bool VKShaderProgram::Reflect(ShaderReflection& reflection) const
 {
-    ShaderReflection reflection;
+    ShaderProgram::ClearShaderReflection(reflection);
+
+    for (auto shader : shaders_)
     {
-        for (auto shader : shaders_)
-            shader->Reflect(reflection);
-        FinalizeShaderReflection(reflection);
+        if (!shader->Reflect(reflection))
+            return false;
     }
-    return reflection;
+
+    ShaderProgram::FinalizeShaderReflection(reflection);
+    return true;
 }
 
 UniformLocation VKShaderProgram::FindUniformLocation(const char* name) const

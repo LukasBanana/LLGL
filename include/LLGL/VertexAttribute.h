@@ -125,7 +125,7 @@ struct LLGL_EXPORT VertexAttribute
     Instead, they are used only for shader code reflection. Examples of system value semantics are:
     - Vertex ID: \c SV_VertexID (HLSL), \c gl_VertexID (GLSL), \c gl_VertexIndex (SPIR-V), <code>[[vertex_id]]</code> (Metal).
     - Instance ID: \c SV_InstanceID (HLSL), \c gl_InstanceID (GLSL), \c gl_InstanceIndex (SPIR-V), <code>[[instance_id]]</code> (Metal).
-    \see ShaderProgram::QueryReflection
+    \see ShaderProgram::Reflect
     */
     SystemValue     systemValue     = SystemValue::Undefined;
 };

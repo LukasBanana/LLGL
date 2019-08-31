@@ -37,7 +37,7 @@ class D3D12Shader final : public Shader
 
         D3D12_SHADER_BYTECODE GetByteCode() const;
 
-        void Reflect(ShaderReflection& reflection) const;
+        bool Reflect(ShaderReflection& reflection) const;
         bool ReflectNumThreads(Extent3D& numThreads) const;
 
     private:
@@ -46,8 +46,8 @@ class D3D12Shader final : public Shader
         bool CompileSource(const ShaderDescriptor& shaderDesc);
         bool LoadBinary(const ShaderDescriptor& shaderDesc);
 
-        void ReflectShaderByteCode(ShaderReflection& reflection) const;
-        HRESULT D3D12Shader::ReflectShaderByteCodeNumThreads(Extent3D& numThreads) const;
+        HRESULT ReflectShaderByteCode(ShaderReflection& reflection) const;
+        HRESULT ReflectShaderByteCodeNumThreads(Extent3D& numThreads) const;
 
     private:
 

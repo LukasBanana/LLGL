@@ -29,10 +29,9 @@ class D3D11ShaderProgram final : public ShaderProgram
         void SetName(const char* name) override;
 
         bool HasErrors() const override;
-
         std::string GetReport() const override;
 
-        ShaderReflection QueryReflection() const override;
+        bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;

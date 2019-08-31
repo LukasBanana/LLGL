@@ -45,21 +45,17 @@ std::string MTShaderProgram::GetReport() const
         return "";
 }
 
-//TODO
-ShaderReflection MTShaderProgram::QueryReflection() const
+bool MTShaderProgram::Reflect(ShaderReflection& reflection) const
 {
-    ShaderReflection reflection;
+    ShaderProgram::ClearShaderReflection(reflection);
 
-    /* Reflect shader program */
     if (kernelFunc_ != nil)
         ReflectComputePipeline(reflection);
     else
         ReflectRenderPipeline(reflection);
 
-    /* Sort output to meet the interface requirements */
     ShaderProgram::FinalizeShaderReflection(reflection);
-
-    return reflection;
+    return true;
 }
 
 UniformLocation MTShaderProgram::FindUniformLocation(const char* /*name*/) const

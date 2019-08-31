@@ -79,17 +79,12 @@ std::string GLShaderProgram::GetReport() const
     return "";
 }
 
-ShaderReflection GLShaderProgram::QueryReflection() const
+bool GLShaderProgram::Reflect(ShaderReflection& reflection) const
 {
-    ShaderReflection reflection;
-
-    /* Reflect shader program */
-    Reflect(reflection);
-
-    /* Sort output to meet the interface requirements */
+    ShaderProgram::ClearShaderReflection(reflection);
+    QueryReflection(reflection);
     ShaderProgram::FinalizeShaderReflection(reflection);
-
-    return reflection;
+    return true;
 }
 
 UniformLocation GLShaderProgram::FindUniformLocation(const char* name) const
@@ -287,7 +282,7 @@ void GLShaderProgram::BuildTransformFeedbackVaryingsNV(const std::vector<StreamO
 
 #endif
 
-void GLShaderProgram::Reflect(ShaderReflection& reflection) const
+void GLShaderProgram::QueryReflection(ShaderReflection& reflection) const
 {
     QueryVertexAttributes(reflection);
     QueryStreamOutputAttributes(reflection);

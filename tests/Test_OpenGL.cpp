@@ -206,7 +206,8 @@ int main()
         if (shaderProgram.HasErrors())
             std::cerr << shaderProgram.GetReport() << std::endl;
 
-        auto reflection = shaderProgram.QueryReflection();
+        LLGL::ShaderReflection reflection;
+        shaderProgram.Reflect(reflection);
 
         #if 0
         // Create constant buffer

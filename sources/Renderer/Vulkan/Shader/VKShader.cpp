@@ -292,7 +292,7 @@ static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, 
     return &(reflection.resources.back());
 }
 
-void VKShader::Reflect(ShaderReflection& reflection) const
+bool VKShader::Reflect(ShaderReflection& reflection) const
 {
     /* Parse shader module */
     SPIRVReflect spvReflect;
@@ -330,6 +330,8 @@ void VKShader::Reflect(ShaderReflection& reflection) const
         if (auto resource = FindOrAppendShaderResource(reflection, var))
             resource->binding.stageFlags |= ShaderTypeToStageFlags(GetType());
     }
+
+    return true;
 }
 
 bool VKShader::ReflectLocalSize(Extent3D& localSize) const
@@ -353,9 +355,9 @@ bool VKShader::ReflectLocalSize(Extent3D& localSize) const
 
 #else
 
-void VKShader::Reflect(ShaderReflection& /*reflection*/) const
+bool VKShader::Reflect(ShaderReflection& /*reflection*/) const
 {
-    // dummy
+    return false; // dummy
 }
 
 bool VKShader::ReflectLocalSize(Extent3D& workGroupSize) const

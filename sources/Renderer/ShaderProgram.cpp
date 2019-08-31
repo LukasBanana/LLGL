@@ -74,6 +74,17 @@ static int CompareResourceViewSWO(const ShaderResource& lhs, const ShaderResourc
     return 0;
 }
 
+void ShaderProgram::ClearShaderReflection(ShaderReflection& reflection)
+{
+    reflection.vertexAttributes.clear();
+    reflection.streamOutputAttributes.clear();
+    #if 0//TODO
+    reflection.fragmentAttributes.clear();
+    #endif
+    reflection.resources.clear();
+    reflection.uniforms.clear();
+}
+
 void ShaderProgram::FinalizeShaderReflection(ShaderReflection& reflection)
 {
     std::sort(

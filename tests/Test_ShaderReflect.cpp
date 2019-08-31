@@ -46,7 +46,8 @@ int main()
             std::cerr << shaderProgram->GetReport() << std::endl;
 
         // Reflect shader
-        auto reflect = shaderProgram->QueryReflection();
+        LLGL::ShaderReflection reflect;
+        shaderProgram->Reflect(reflect);
 
         LLGL::Extent3D workGroupSize;
         shaderProgram->GetWorkGroupSize(workGroupSize);

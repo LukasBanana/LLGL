@@ -60,9 +60,9 @@ std::string DbgShaderProgram::GetReport() const
     return instance.GetReport();
 }
 
-ShaderReflection DbgShaderProgram::QueryReflection() const
+bool DbgShaderProgram::Reflect(ShaderReflection& reflection) const
 {
-    return instance.QueryReflection();
+    return instance.Reflect(reflection);
 }
 
 UniformLocation DbgShaderProgram::FindUniformLocation(const char* name) const
@@ -154,10 +154,9 @@ void DbgShaderProgram::ValidateShaderComposition()
 
 void DbgShaderProgram::QueryInstanceAndVertexIDs(const RenderingCapabilities& caps)
 {
-    try
+    ShaderReflection reflect;
+    if (instance.Reflect(reflect))
     {
-        auto reflect = instance.QueryReflection();
-
         for (const auto& attr : reflect.vertexAttributes)
         {
             if (vertexID_.empty())
@@ -173,10 +172,6 @@ void DbgShaderProgram::QueryInstanceAndVertexIDs(const RenderingCapabilities& ca
             if (!vertexID_.empty() && !instanceID_.empty())
                 break;
         }
-    }
-    catch (const std::runtime_error&)
-    {
-        // ignore here
     }
 }
 

@@ -47,6 +47,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
 
         /**
         \brief Returns a reflection of the shader pipeline layout with all required shader resources.
+        \param[out] reflection Specifies the output shader reflection. If the function returns \c false, the content of this parameter is <b>undefined</b>!
         \remarks The list of resources in the reflection output is always sorted by the following attributes (lower number means higher priority for sorting):
         -# Resource type in ascending order (see BindingDescriptor::type).
         -# Binding flags in ascending order (see BindingDescriptor::bindFlags).
@@ -60,21 +61,21 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         resources[4] = { type: ResourceType::Texture, bindFlags: BindFlags::Sampled,        slot: 2 }
         resources[5] = { type: ResourceType::Sampler, bindFlags: 0,                         slot: 2 }
         \endcode
-        The \c instanceDivisor and \c offset members of the vertex attributes are ignored by this function.
+        \remarks The \c instanceDivisor and \c offset members of the vertex attributes are ignored by this function.
+        \return True, if the reflection was successful. Otherwise, the shader reflection failed and the content of the output parameter \c reflection is undefined.
         \see ShaderReflection::resources
         \see ShaderReflection::vertexAttributes
         \see VertexAttribute::instanceDivisor
         \see VertexAttribute::offset
-        \throws std::runtime_error If shader reflection failed.
         */
-        virtual ShaderReflection QueryReflection() const = 0;
+        virtual bool Reflect(ShaderReflection& reflection) const = 0;
 
         /**
         \brief Returns the location of a single shader uniform by its name.
         \returns Uniform location of the specified uniform, or -1 if there is no such uniform in the shader program.
         \remarks This is a helper function when only one or a few number of uniform locations are meant to be determined.
-        If more uniforms are involved, use the QueryReflection function.
-        \see QueryReflection
+        If more uniforms are involved, use the Reflect function.
+        \see Reflect
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
         */
         virtual UniformLocation FindUniformLocation(const char* name) const = 0;
@@ -106,7 +107,10 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
 
     protected:
 
-        //! Linker error codes for internal error checking.
+        /**
+        \brief Linker error codes for internal error checking.
+        \todo Turn this into a global common enumeration for error codes.
+        */
         enum class LinkError
         {
             NoError,
@@ -129,8 +133,26 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         static bool ValidateShaderComposition(Shader* const * shaders, std::size_t numShaders);
 
         /**
-        \brief Sorts the resource views of the specified shader reflection descriptor as described in the QueryReflection function.
-        \see QueryReflection
+        \brief Clears all members in the specified shader reflection.
+        \remarks Use this to start reflecting a shader program as shown in the following example:
+        \code
+        bool MyShaderProgram::Reflect(ShaderReflection& reflection)
+        {
+            ShaderProgram::ClearShaderReflection(reflection);
+            auto succeded = // reflection code here ...
+            FinalizeShaderReflection(reflection);
+            return succeded;
+        }
+        \endcode
+        \see Reflect
+        \see FinalizeShaderReflection
+        */
+        static void ClearShaderReflection(ShaderReflection& reflection);
+
+        /**
+        \brief Sorts the resource views of the specified shader reflection descriptor as described in the Reflect function.
+        \see Reflect
+        \see ClearShaderReflection
         */
         static void FinalizeShaderReflection(ShaderReflection& reflection);
 

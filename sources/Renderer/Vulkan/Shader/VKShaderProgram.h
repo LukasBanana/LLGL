@@ -29,10 +29,9 @@ class VKShaderProgram final : public ShaderProgram
         VKShaderProgram(const ShaderProgramDescriptor& desc);
 
         bool HasErrors() const override;
-
         std::string GetReport() const override;
 
-        ShaderReflection QueryReflection() const override;
+        bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;

@@ -51,21 +51,20 @@ std::string D3D12ShaderProgram::GetReport() const
         return "";
 }
 
-ShaderReflection D3D12ShaderProgram::QueryReflection() const
+bool D3D12ShaderProgram::Reflect(ShaderReflection& reflection) const
 {
-    ShaderReflection reflection;
+    ShaderProgram::ClearShaderReflection(reflection);
 
-    /* Reflect all shaders */
     for (auto shader : shaders_)
     {
         if (shader != nullptr)
-            shader->Reflect(reflection);
+        {
+            if (!shader->Reflect(reflection))
+                return false;
+        }
     }
-
-    /* Sort output to meet the interface requirements */
     ShaderProgram::FinalizeShaderReflection(reflection);
-
-    return reflection;
+    return true;
 }
 
 UniformLocation D3D12ShaderProgram::FindUniformLocation(const char* name) const
