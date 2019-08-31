@@ -159,7 +159,7 @@ DisplayModeDescriptor MacOSDisplay::GetDisplayMode() const
     return displayModeDesc;
 }
 
-std::vector<DisplayModeDescriptor> MacOSDisplay::QuerySupportedDisplayModes() const
+std::vector<DisplayModeDescriptor> MacOSDisplay::GetSupportedDisplayModes() const
 {
     std::vector<DisplayModeDescriptor> displayModeDescs;
 

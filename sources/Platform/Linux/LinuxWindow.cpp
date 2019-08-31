@@ -18,7 +18,7 @@ namespace LLGL
 
 static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 {
-    if (auto display = Display::QueryPrimary())
+    if (auto display = Display::InstantiatePrimary())
     {
         const auto resolution = display->GetDisplayMode().resolution;
         return

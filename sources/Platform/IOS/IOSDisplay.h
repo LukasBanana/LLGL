@@ -24,7 +24,7 @@ class IOSDisplay : public Display
     public:
 
         IOSDisplay() = default;
-        
+
         bool IsPrimary() const override;
 
         std::wstring GetDeviceName() const override;
@@ -35,7 +35,7 @@ class IOSDisplay : public Display
         bool SetDisplayMode(const DisplayModeDescriptor& displayModeDesc) override;
         DisplayModeDescriptor GetDisplayMode() const override;
 
-        std::vector<DisplayModeDescriptor> QuerySupportedDisplayModes() const override;
+        std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const override;
 
 };
 

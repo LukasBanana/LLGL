@@ -13,14 +13,14 @@ namespace LLGL
 {
 
 
-std::vector<std::unique_ptr<Display>> Display::QueryList()
+std::vector<std::unique_ptr<Display>> Display::InstantiateList()
 {
     std::vector<std::unique_ptr<Display>> displayList;
-    displayList.push_back(Display::QueryPrimary());
+    displayList.push_back(Display::InstantiatePrimary());
     return displayList;
 }
 
-std::unique_ptr<Display> Display::QueryPrimary()
+std::unique_ptr<Display> Display::InstantiatePrimary()
 {
     return MakeUnique<IOSDisplay>();
 }
@@ -87,7 +87,7 @@ DisplayModeDescriptor IOSDisplay::GetDisplayMode() const
     return displayModeDesc;
 }
 
-std::vector<DisplayModeDescriptor> IOSDisplay::QuerySupportedDisplayModes() const
+std::vector<DisplayModeDescriptor> IOSDisplay::GetSupportedDisplayModes() const
 {
     std::vector<DisplayModeDescriptor> displayModeDescs;
 

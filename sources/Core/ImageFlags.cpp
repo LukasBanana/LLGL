@@ -107,6 +107,8 @@ static double ReadNormalizedTypedVariant(DataType srcDataType, const VariantCons
 {
     switch (srcDataType)
     {
+        case DataType::Undefined:
+            break;
         case DataType::Int8:
             return ReadNormalizedVariant(srcBuffer.int8[idx]);
         case DataType::UInt8:
@@ -133,6 +135,8 @@ static void WriteNormalizedTypedVariant(DataType dstDataType, VariantBuffer& dst
 {
     switch (dstDataType)
     {
+        case DataType::Undefined:
+            break;
         case DataType::Int8:
             WriteNormalizedVariant(dstBuffer.int8[idx], value);
             break;
@@ -252,6 +256,8 @@ static void SetVariantMinMax(DataType dataType, Variant& var, bool setMin)
 {
     switch (dataType)
     {
+        case DataType::Undefined:
+            break;
         case DataType::Int8:
             var.int8 = (setMin ? std::numeric_limits<std::int8_t>::min() : std::numeric_limits<std::int8_t>::max());
             break;
@@ -286,6 +292,8 @@ static void CopyTypedVariant(DataType dataType, const VariantConstBuffer& srcBuf
 {
     switch (dataType)
     {
+        case DataType::Undefined:
+            break;
         case DataType::Int8:
             dst.int8 = srcBuffer.int8[idx];
             break;
@@ -320,6 +328,8 @@ static void CopyTypedVariant(DataType dataType, VariantBuffer& dstBuffer, std::s
 {
     switch (dataType)
     {
+        case DataType::Undefined:
+            break;
         case DataType::Int8:
             dstBuffer.int8[idx] = src.int8;
             break;
