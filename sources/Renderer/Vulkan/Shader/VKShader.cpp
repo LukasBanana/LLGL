@@ -40,7 +40,7 @@ std::string VKShader::Disassemble(int flags)
     return ""; // dummy
 }
 
-std::string VKShader::GetReport()
+std::string VKShader::GetReport() const
 {
     std::string s;
 

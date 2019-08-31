@@ -25,12 +25,12 @@ class MTShader : public Shader
 
         MTShader(id<MTLDevice> device, const ShaderDescriptor& desc);
         ~MTShader();
-    
+
         bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
 
-        std::string GetReport() override;
+        std::string GetReport() const override;
 
         // Returns the native MTLFunction object.
         inline id<MTLFunction> GetNative() const

@@ -50,7 +50,7 @@ bool D3D11ShaderProgram::HasErrors() const
     return (linkError_ != LinkError::NoError);
 }
 
-std::string D3D11ShaderProgram::GetReport()
+std::string D3D11ShaderProgram::GetReport() const
 {
     if (auto s = ShaderProgram::LinkErrorToString(linkError_))
         return s;

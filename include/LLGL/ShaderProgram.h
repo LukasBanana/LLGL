@@ -40,10 +40,10 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         virtual bool HasErrors() const = 0;
 
         /**
-        \brief Returns the information log after the shader linkage.
+        \brief Returns the report message after the shader linkage or an empty string if there is no report.
         \see Shader::GetReport
         */
-        virtual std::string GetReport() = 0;
+        virtual std::string GetReport() const = 0;
 
         /**
         \brief Returns a reflection of the shader pipeline layout with all required shader resources.

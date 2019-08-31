@@ -30,7 +30,7 @@ class VKShader final : public Shader
 
         std::string Disassemble(int flags = 0) override;
 
-        std::string GetReport() override;
+        std::string GetReport() const override;
 
     public:
 

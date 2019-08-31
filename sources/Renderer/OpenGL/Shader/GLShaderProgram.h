@@ -29,7 +29,7 @@ class GLShaderProgram final : public ShaderProgram
 
         bool HasErrors() const override;
 
-        std::string GetReport() override;
+        std::string GetReport() const override;
 
         ShaderReflection QueryReflection() const override;
         UniformLocation FindUniformLocation(const char* name) const override;

@@ -36,7 +36,7 @@ bool VKShaderProgram::HasErrors() const
     return (linkError_ != LinkError::NoError);
 }
 
-std::string VKShaderProgram::GetReport()
+std::string VKShaderProgram::GetReport() const
 {
     if (auto s = ShaderProgram::LinkErrorToString(linkError_))
         return s;

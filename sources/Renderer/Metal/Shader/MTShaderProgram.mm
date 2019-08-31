@@ -37,7 +37,7 @@ bool MTShaderProgram::HasErrors() const
     return (shaderWithError_ != nullptr);
 }
 
-std::string MTShaderProgram::GetReport()
+std::string MTShaderProgram::GetReport() const
 {
     if (shaderWithError_ != nullptr)
         return shaderWithError_->GetReport();

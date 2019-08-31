@@ -56,7 +56,7 @@ bool GLShaderProgram::HasErrors() const
     return (status == GL_FALSE);
 }
 
-std::string GLShaderProgram::GetReport()
+std::string GLShaderProgram::GetReport() const
 {
     /* Query info log length */
     GLint infoLogLength = 0;

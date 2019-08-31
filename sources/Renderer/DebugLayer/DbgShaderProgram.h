@@ -27,22 +27,9 @@ class DbgShaderProgram final : public ShaderProgram
 
     public:
 
-        struct VertexLayout
-        {
-            std::vector<VertexAttribute>    attributes;
-            bool                            bound       = false;
-        };
-
-        DbgShaderProgram(
-            ShaderProgram&                  instance,
-            RenderingDebugger*              debugger,
-            const ShaderProgramDescriptor&  desc,
-            const RenderingCapabilities&    caps
-        );
-
         bool HasErrors() const override;
 
-        std::string GetReport() override;
+        std::string GetReport() const override;
 
         ShaderReflection QueryReflection() const override;
         UniformLocation FindUniformLocation(const char* name) const override;
@@ -51,6 +38,21 @@ class DbgShaderProgram final : public ShaderProgram
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
 
     public:
+
+        struct VertexLayout
+        {
+            std::vector<VertexAttribute>    attributes;
+            bool                            bound       = false;
+        };
+
+    public:
+
+        DbgShaderProgram(
+            ShaderProgram&                  instance,
+            RenderingDebugger*              debugger,
+            const ShaderProgramDescriptor&  desc,
+            const RenderingCapabilities&    caps
+        );
 
         // Returns the vertex layout meta data.
         inline const VertexLayout& GetVertexLayout() const

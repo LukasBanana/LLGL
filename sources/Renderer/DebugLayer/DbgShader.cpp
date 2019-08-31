@@ -40,7 +40,7 @@ std::string DbgShader::Disassemble(int flags)
     return instance.Disassemble(flags);
 }
 
-std::string DbgShader::GetReport()
+std::string DbgShader::GetReport() const
 {
     return instance.GetReport();
 }

@@ -43,7 +43,7 @@ bool D3D12ShaderProgram::HasErrors() const
     return (linkError_ != LinkError::NoError);
 }
 
-std::string D3D12ShaderProgram::GetReport()
+std::string D3D12ShaderProgram::GetReport() const
 {
     if (auto s = ShaderProgram::LinkErrorToString(linkError_))
         return s;

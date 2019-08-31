@@ -33,7 +33,7 @@ class D3D12Shader final : public Shader
 
         std::string Disassemble(int flags = 0) override;
 
-        std::string GetReport() override;
+        std::string GetReport() const override;
 
     public:
 

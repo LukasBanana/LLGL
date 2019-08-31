@@ -50,7 +50,7 @@ std::string GLShader::Disassemble(int flags)
     return ""; // dummy
 }
 
-std::string GLShader::GetReport()
+std::string GLShader::GetReport() const
 {
     /* Query info log length */
     GLint infoLogLength = 0;

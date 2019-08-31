@@ -55,7 +55,7 @@ bool DbgShaderProgram::HasErrors() const
     return instance.HasErrors();
 }
 
-std::string DbgShaderProgram::GetReport()
+std::string DbgShaderProgram::GetReport() const
 {
     return instance.GetReport();
 }

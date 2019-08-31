@@ -46,12 +46,11 @@ class LLGL_EXPORT Shader : public RenderSystemChild
         virtual std::string Disassemble(int flags = 0) = 0;
 
         /**
-        \brief Returns the information log after the shader compilation.
+        \brief Returns the report message after the shader compilation or an empty string if there is no report.
         \todo Change return value to std::unique_ptr<LLGL::Blob>
-        \todo Rename to QueryReport
         \see ShaderProgram::GetReport
         */
-        virtual std::string GetReport() = 0;
+        virtual std::string GetReport() const = 0;
 
         /**
         \brief Returns the shader stage bitmask for this shader object.
