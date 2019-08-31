@@ -36,7 +36,10 @@ public ref class ShaderProgram
             bool get();
         }
 
-        String^ GetReport();
+        property String^ Report
+        {
+            String^ get();
+        }
 
         #if 0
         ShaderReflectionDescriptor^ QueryReflectionDesc();

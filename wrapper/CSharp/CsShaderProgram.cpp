@@ -28,7 +28,7 @@ bool ShaderProgram::HasErrors::get()
     return native_->HasErrors();
 }
 
-String^ ShaderProgram::GetReport()
+String^ ShaderProgram::Report::get()
 {
     auto info = native_->GetReport();
     return gcnew String(ToManagedString(info));

@@ -35,12 +35,11 @@ namespace LLGLExamples
                 // Create render context
                 var contextDesc = new RenderContextDescriptor();
                 {
-                    contextDesc.VideoMode.Resolution.Width      = 800;
-                    contextDesc.VideoMode.Resolution.Height     = 600;
-                    contextDesc.VideoMode.ColorBits             = 32;
-                    contextDesc.VideoMode.DepthBits             = 24;
-                    contextDesc.VideoMode.StencilBits           = 8;
-                    contextDesc.ProfileOpenGL.ContextProfile    = OpenGLContextProfile.CoreProfile;
+                    contextDesc.VideoMode.Resolution.Width  = 800;
+                    contextDesc.VideoMode.Resolution.Height = 600;
+                    contextDesc.VideoMode.ColorBits         = 32;
+                    contextDesc.VideoMode.DepthBits         = 24;
+                    contextDesc.VideoMode.StencilBits       = 8;
                 }
                 context = renderer.CreateRenderContext(contextDesc);
 
@@ -74,7 +73,7 @@ namespace LLGLExamples
 
                 var vertexBufferDesc = new BufferDescriptor();
                 {
-                    vertexBufferDesc.Type                   = BufferType.Vertex;
+                    vertexBufferDesc.BindFlags              = BindFlags.VertexBuffer;
                     vertexBufferDesc.Size                   = vertexFormat.Stride * (ulong)vertices.Length;
                     vertexBufferDesc.VertexBuffer.Format    = vertexFormat;
                 }
@@ -122,7 +121,7 @@ namespace LLGLExamples
                 var shaderProgram = renderer.CreateShaderProgram(shaderProgramDesc);
 
                 if (shaderProgram.HasErrors)
-                    throw new Exception(shaderProgram.QueryInfoLog());
+                    throw new Exception(shaderProgram.Report);
 
                 // Create graphics pipeline
                 var pipelineDesc = new GraphicsPipelineDescriptor();

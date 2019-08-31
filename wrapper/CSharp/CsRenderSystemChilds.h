@@ -83,6 +83,13 @@ public ref class Buffer : public Resource
             SharpLLGL::BindFlags get();
         }
 
+        #if 0//TODO
+        property BufferDescriptor^ Desc
+        {
+            BufferDescriptor^ get();
+        };
+        #endif
+
     internal:
 
         property LLGL::Buffer* NativeSub
@@ -103,6 +110,15 @@ public ref class Texture : public Resource
         {
             TextureType get();
         };
+
+        #if 0//TODO
+        property TextureDescriptor^ Desc
+        {
+            TextureDescriptor^ get();
+        };
+        #endif
+
+        Extent3D^ GetMipExtent(unsigned int mipLevel);
 
     internal:
 

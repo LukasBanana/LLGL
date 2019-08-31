@@ -48,7 +48,7 @@ LLGL::Buffer* Buffer::NativeSub::get()
 
 BindFlags Buffer::BindFlags::get()
 {
-    return static_cast<SharpLLGL::BindFlags>(reinterpret_cast<LLGL::Buffer*>(Native)->GetBindFlags());
+    return static_cast<SharpLLGL::BindFlags>(NativeSub->GetBindFlags());
 }
 
 
@@ -68,7 +68,13 @@ LLGL::Texture* Texture::NativeSub::get()
 
 TextureType Texture::Type::get()
 {
-    return static_cast<TextureType>(reinterpret_cast<LLGL::Texture*>(Native)->GetType());
+    return static_cast<TextureType>(NativeSub->GetType());
+}
+
+Extent3D^ Texture::GetMipExtent(unsigned int mipLevel)
+{
+    auto nativeExtent = NativeSub->GetMipExtent(mipLevel);
+    return gcnew Extent3D(nativeExtent.width, nativeExtent.height, nativeExtent.depth);
 }
 
 
