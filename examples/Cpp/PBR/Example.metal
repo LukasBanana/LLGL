@@ -213,13 +213,13 @@ fragment float4 PMesh(
     float metallic = metallicMaps.sample(smpl, inp.texCoord, layer).r;
 
     // Compute final normal
-    float3x3 tangnetSpace = float3x3(
+    float3x3 tangentSpace = float3x3(
         normalize(inp.tangent),
         normalize(inp.bitangent),
         normalize(inp.normal)
     );
 
-    normal = normalize(tangnetSpace * (normal * 2.0 - 1.0));
+    normal = normalize(tangentSpace * (normal * 2.0 - 1.0));
 
     // Get view and light directions
     float3 viewPos = (settings.cMatrix * float4(0, 0, 0, 1)).xyz;

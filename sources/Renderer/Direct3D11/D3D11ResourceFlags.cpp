@@ -111,6 +111,7 @@ UINT DXGetTextureMiscFlags(const TextureDescriptor& desc)
 {
     UINT flagsD3D = 0;
 
+    //TODO: consider actual number of MIP-maps (from D3D11_TEXTURE2D_DESC for instance)
     if (IsMipMappedTexture(desc) && (desc.bindFlags & BindFlags::DepthStencilAttachment) == 0)
         flagsD3D |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
 

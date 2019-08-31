@@ -42,10 +42,11 @@ class Example_PBR : public ExampleBase
         Gs::Matrix4f    vpMatrix;
         Gs::Matrix4f    wMatrix;
         Gs::Vector2f    aspectRatio;
-        float           _pad0[2];
+        float           mipCount;
+        float           _pad0;
         Gs::Vector4f    lightDir        = { 0, 0, -1, 0 };
         std::uint32_t   skyboxLayer     = 0;
-        std::uint32_t   materialLayer   = 1;
+        std::uint32_t   materialLayer   = 0;//1;
         std::uint32_t   _pad1[2];
     }
     settings;
@@ -80,7 +81,7 @@ public:
         CreateResourceHeaps();
 
         // Print some information on the standard output
-        //std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
+        std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
     }
 
 private:
@@ -100,13 +101,6 @@ private:
         meshes.push_back(LoadObjModel(vertices, "../../Media/Models/UVSphere.obj"));
         meshes.push_back(LoadObjModel(vertices, "../../Media/Models/WiredBox.obj"));
 
-        // Modify texture-coordinates
-        for (std::size_t i = 0; i < meshes[0].numVertices; ++i)
-        {
-            auto& v = vertices[meshes[0].firstVertex + i];
-            v.texCoord *= Gs::Vector2f{ 4.0f, 2.0f };
-        }
-
         // Create vertex and constant buffer
         vertexBuffer = CreateVertexBuffer(GenerateTangentSpaceVertices(vertices), vertexFormat);
         constantBuffer = CreateConstantBuffer(settings);
@@ -116,23 +110,30 @@ private:
 
     void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
-        // Create skybox shader
-        if (Supported(LLGL::ShadingLanguage::Metal))
+        if (Supported(LLGL::ShadingLanguage::HLSL))
+        {
+            shaderProgramSky = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VSky", "vs_5_0" },
+                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PSky", "ps_5_0" },
+                }
+            );
+            shaderProgramMeshes = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VMesh", "vs_5_0" },
+                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PMesh", "ps_5_0" },
+                },
+                { vertexFormat }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             shaderProgramSky = LoadShaderProgram(
                 {
                     { LLGL::ShaderType::Vertex,   "Example.metal", "VSky", "1.1" },
                     { LLGL::ShaderType::Fragment, "Example.metal", "PSky", "1.1" },
-                },
-                { vertexFormat }
+                }
             );
-        }
-        else
-            throw std::runtime_error("shaders not supported for active renderer");
-
-        // Create mesh shader
-        if (Supported(LLGL::ShadingLanguage::Metal))
-        {
             shaderProgramMeshes = LoadShaderProgram(
                 {
                     { LLGL::ShaderType::Vertex,   "Example.metal", "VMesh", "1.1" },
@@ -236,8 +237,7 @@ private:
         auto offset = imageData.size();
         auto bufSize = static_cast<std::size_t>(texWidth*texHeight*4);
 
-        imageData.resize(offset + bufSize);
-        std::fill(&(imageData[offset]), &(imageData[offset + bufSize]), 0);
+        imageData.resize(offset + bufSize, 0);
     }
 
     // Loads multiple images into one texture array or cube-map array
@@ -299,6 +299,9 @@ private:
                 "mp_alpha/alpha-island_ft.tga", // Z- = front
             }
         );
+
+        // Store number of MIP-maps for environment map
+        settings.mipCount = static_cast<float>(skyboxArray->QueryDesc().mipLevels);
 
         // Load PBR textures
         colorMapArray = LoadTextureArray(

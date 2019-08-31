@@ -260,9 +260,6 @@ private:
             LLGL::Texture2DArrayDesc(LLGL::Format::RGBA8UNorm, width, height, numImages),
             &imageDesc
         );
-
-        // Generate MIP-maps
-        renderer->GenerateMips(*arrayTexture);
     }
 
     void CreateSamplers()

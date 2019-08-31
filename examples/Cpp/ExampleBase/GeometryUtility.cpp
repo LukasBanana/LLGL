@@ -152,31 +152,31 @@ std::vector<VertexPos3Tex2> GenerateTexturedCubeVertices()
         { { -1,  1, -1 }, { 0, 0 } },
         { {  1,  1, -1 }, { 1, 0 } },
         { {  1, -1, -1 }, { 1, 1 } },
-        
+
         // right
         { {  1, -1, -1 }, { 0, 1 } },
         { {  1,  1, -1 }, { 0, 0 } },
         { {  1,  1,  1 }, { 1, 0 } },
         { {  1, -1,  1 }, { 1, 1 } },
-        
+
         // left
         { { -1, -1,  1 }, { 0, 1 } },
         { { -1,  1,  1 }, { 0, 0 } },
         { { -1,  1, -1 }, { 1, 0 } },
         { { -1, -1, -1 }, { 1, 1 } },
-        
+
         // top
         { { -1,  1, -1 }, { 0, 1 } },
         { { -1,  1,  1 }, { 0, 0 } },
         { {  1,  1,  1 }, { 1, 0 } },
         { {  1,  1, -1 }, { 1, 1 } },
-        
+
         // bottom
         { { -1, -1,  1 }, { 0, 1 } },
         { { -1, -1, -1 }, { 0, 0 } },
         { {  1, -1, -1 }, { 1, 0 } },
         { {  1, -1,  1 }, { 1, 1 } },
-        
+
         // back
         { {  1, -1,  1 }, { 0, 1 } },
         { {  1,  1,  1 }, { 0, 0 } },
@@ -236,7 +236,7 @@ std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const std::vector<T
 
     for (std::size_t i = 0, n = outp.size(); i + 3 <= n; i += 3)
     {
-        // Copy position and texture-coordinate
+        // Copy position, normal, and texture-coordinate
         CopyVertex(outp[i    ], vertices[i    ]);
         CopyVertex(outp[i + 1], vertices[i + 1]);
         CopyVertex(outp[i + 2], vertices[i + 2]);
