@@ -17,7 +17,7 @@ Buffer::Buffer(long bindFlags) :
 {
 }
 
-ResourceType Buffer::QueryResourceType() const
+ResourceType Buffer::GetResourceType() const
 {
     return ResourceType::Buffer;
 }

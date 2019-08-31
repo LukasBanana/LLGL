@@ -29,7 +29,7 @@ class LLGL_EXPORT Buffer : public Resource
     public:
 
         //! Returns ResourceType::Buffer.
-        ResourceType QueryResourceType() const override final;
+        ResourceType GetResourceType() const override final;
 
         /**
         \brief Returns the binding flags this buffer was created with.

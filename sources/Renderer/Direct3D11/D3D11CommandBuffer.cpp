@@ -365,7 +365,7 @@ void D3D11CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std:
 
 void D3D11CommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
 {
-    switch (resource.QueryResourceType())
+    switch (resource.GetResourceType())
     {
         case ResourceType::Undefined:
             break;

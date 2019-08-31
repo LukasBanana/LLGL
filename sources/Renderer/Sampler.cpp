@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-ResourceType Sampler::QueryResourceType() const
+ResourceType Sampler::GetResourceType() const
 {
     return ResourceType::Sampler;
 }

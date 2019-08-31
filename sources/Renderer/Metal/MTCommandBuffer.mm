@@ -341,7 +341,7 @@ void MTCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::ui
 void MTCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long /*bindFlags*/, long stageFlags)
 {
     #if 0//TODO: store direct binding in <MTEncoderScheduler>
-    switch (resource.QueryResourceType())
+    switch (resource.GetResourceType())
     {
         case ResourceType::Undefined:
             break;

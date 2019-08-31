@@ -493,7 +493,7 @@ void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long 
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
-    switch (resource.QueryResourceType())
+    switch (resource.GetResourceType())
     {
         case ResourceType::Undefined:
         break;

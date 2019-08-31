@@ -36,7 +36,7 @@ class LLGL_EXPORT Resource : public RenderSystemChild
         \see ResourceType
         \todo (Maybe) replace by IsInstanceOf
         */
-        virtual ResourceType QueryResourceType() const = 0;
+        virtual ResourceType GetResourceType() const = 0;
 
 };
 

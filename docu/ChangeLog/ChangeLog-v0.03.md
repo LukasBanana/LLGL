@@ -300,6 +300,7 @@ CommandBuffer::SetRWStorageBuffer      --> CommandBuffer::SetStorageBuffer
 FrameProfile::sampleBufferBindings     --> FrameProfile::sampledBufferBindings
 FrameProfile::rwStorageBufferBindings  --> FrameProfile::storageBufferBindings
 RenderingFeatures::hasCommandBufferExt --> RenderingFeatures::hasDirectResourceBinding
+Resource::QueryResourceType            --> Resource::GetResourceType
 ```
 
 

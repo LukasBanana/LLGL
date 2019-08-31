@@ -17,7 +17,7 @@ Texture::Texture(const TextureType type) :
 {
 }
 
-ResourceType Texture::QueryResourceType() const
+ResourceType Texture::GetResourceType() const
 {
     return ResourceType::Texture;
 }

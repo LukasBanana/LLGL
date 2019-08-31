@@ -28,7 +28,7 @@ LLGL::Resource* Resource::Native::get()
 
 SharpLLGL::ResourceType Resource::ResourceType::get()
 {
-    return static_cast<SharpLLGL::ResourceType>(native_->QueryResourceType());
+    return static_cast<SharpLLGL::ResourceType>(native_->GetResourceType());
 }
 
 

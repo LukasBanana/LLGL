@@ -325,7 +325,7 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
         {
             if (auto resource = resourceView.resource)
             {
-                switch (resource->QueryResourceType())
+                switch (resource->GetResourceType())
                 {
                     case ResourceType::Buffer:
                         resourceView.resource = &(LLGL_CAST(DbgBuffer*, resourceView.resource)->instance);
@@ -1176,7 +1176,7 @@ void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescripto
     /* Validate resource binding flags */
     if (auto resource = resourceViewDesc.resource)
     {
-        switch (resource->QueryResourceType())
+        switch (resource->GetResourceType())
         {
             case ResourceType::Buffer:
             {

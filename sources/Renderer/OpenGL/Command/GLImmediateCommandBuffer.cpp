@@ -369,7 +369,7 @@ void GLImmediateCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap
 
 void GLImmediateCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long /*stageFlags*/)
 {
-    switch (resource.QueryResourceType())
+    switch (resource.GetResourceType())
     {
         case ResourceType::Undefined:
         break;
