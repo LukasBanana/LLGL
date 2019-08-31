@@ -18,8 +18,9 @@ namespace LLGL
 {
 
 
-GLTexture::GLTexture(const TextureType type) :
-    Texture { type }
+GLTexture::GLTexture(const TextureDescriptor& desc) :
+    Texture       { desc.type                                },
+    numMipLevels_ { static_cast<GLsizei>(NumMipLevels(desc)) }
 {
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
@@ -111,11 +112,11 @@ TextureDescriptor GLTexture::QueryDesc() const
     texDesc.type            = GetType();
     texDesc.bindFlags       = 0;
     texDesc.cpuAccessFlags  = 0;
-    //texDesc.mipLevels       = ; //TODO!!!
+    texDesc.mipLevels       = static_cast<std::uint32_t>(GetNumMipLevels());
 
     /* Query hardware texture format and size */
     GLint internalFormat = 0, extent[3] = { 0 };
-    QueryTexParams(&internalFormat, extent);
+    GetTexParams(&internalFormat, extent);
 
     /*
     Transform data from OpenGL to LLGL
@@ -295,11 +296,11 @@ void GLTexture::TextureView(GLTexture& sharedTexture, const TextureViewDescripto
     #endif // /GL_ARB_texture_view
 }
 
-GLenum GLTexture::QueryGLInternalFormat() const
+GLenum GLTexture::GetInternalFormat() const
 {
     /* Query hardware texture format */
     GLint internalFormat = 0;
-    QueryTexParams(&internalFormat, nullptr);
+    GetTexParams(&internalFormat, nullptr);
     return static_cast<GLenum>(internalFormat);
 }
 
@@ -308,7 +309,7 @@ GLenum GLTexture::QueryGLInternalFormat() const
  * ======= Private: =======
  */
 
-void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
+void GLTexture::GetTexParams(GLint* internalFormat, GLint* extent) const
 {
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))

@@ -235,13 +235,9 @@ static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
         return GL_LINEAR;
 }
 
-/*static void GlTextureSwizzle()
-{
-}*/
-
 Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
-    auto texture = MakeUnique<GLTexture>(textureDesc.type);
+    auto texture = MakeUnique<GLTexture>(textureDesc);
 
     /* Bind texture */
     GLStateManager::Get().BindGLTexture(*texture);

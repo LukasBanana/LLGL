@@ -41,6 +41,7 @@ void GLMipGenerator::GenerateMipsForTexture(GLStateManager& stateMngr, GLTexture
     GenerateMipsPrimary(stateMngr, textureGL.GetID(), textureGL.GetType());
 }
 
+//TODO: support range for 3D textures
 void GLMipGenerator::GenerateMipsRangeForTexture(
     GLStateManager& stateMngr,
     GLTexture&      textureGL,
@@ -51,8 +52,21 @@ void GLMipGenerator::GenerateMipsRangeForTexture(
 {
     if (numMipLevels > 0 && numArrayLayers > 0)
     {
-        #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-
+        #ifdef GL_ARB_texture_view
+        if (HasExtension(GLExt::ARB_texture_view))
+        {
+            /* Generate MIP-maps in GL_ARB_texture_view extension process */
+            GenerateMipsRangeWithTextureView(
+                stateMngr,
+                textureGL,
+                static_cast<GLuint>(baseMipLevel),
+                static_cast<GLuint>(numMipLevels),
+                static_cast<GLuint>(baseArrayLayer),
+                static_cast<GLuint>(numArrayLayers)
+            );
+        }
+        else
+        #endif // /GL_ARB_texture_view
         if (textureGL.GetType() == TextureType::Texture3D)
         {
             /* Generate MIP-maps in default process */
@@ -63,7 +77,7 @@ void GLMipGenerator::GenerateMipsRangeForTexture(
             /* Generate MIP-maps in custom sub generation process */
             auto extent = textureGL.QueryMipExtent(baseMipLevel);
 
-            GenerateSubMipsWithFBO(
+            GenerateMipsRangeWithFBO(
                 stateMngr,
                 textureGL,
                 extent,
@@ -73,30 +87,6 @@ void GLMipGenerator::GenerateMipsRangeForTexture(
                 static_cast<GLint>(numArrayLayers)
             );
         }
-
-        #else
-
-        #ifdef GL_ARB_texture_view
-        if (HasExtension(GLExt::ARB_texture_view))
-        {
-            /* Generate MIP-maps in GL_ARB_texture_view extension process */
-            GenerateSubMipsWithTextureView(
-                stateMngr,
-                textureGL,
-                static_cast<GLuint>(baseMipLevel),
-                static_cast<GLuint>(numMipLevels),
-                static_cast<GLuint>(baseArrayLayer),
-                static_cast<GLuint>(numArrayLayers)
-            );
-        }
-        else
-        #endif
-        {
-            /* Generate MIP-maps in default process */
-            GenerateMipsForTexture(stateMngr, textureGL);
-        }
-
-        #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
     }
 }
 
@@ -128,8 +118,6 @@ void GLMipGenerator::GenerateMipsPrimary(GLStateManager& stateMngr, GLuint texID
     }
 }
 
-#ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-
 static void GetNextMipSize(GLint& s)
 {
     s = std::max(1u, s / 2u);
@@ -140,7 +128,7 @@ static void BlitFramebufferLinear(GLint srcWidth, GLint srcHeight, GLint dstWidt
     glBlitFramebuffer(0, 0, srcWidth, srcHeight, 0, 0, dstWidth, dstHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
-static void GenerateSubMipsTexture1D(const Extent3D& extent, GLuint texID, GLint baseMipLevel, GLint numMipLevels)
+static void GenerateMipsRangeTexture1D(const Extent3D& extent, GLuint texID, GLint baseMipLevel, GLint numMipLevels)
 {
     /* Get extent of base MIP level */
     auto srcWidth = static_cast<GLint>(extent.width);
@@ -161,7 +149,7 @@ static void GenerateSubMipsTexture1D(const Extent3D& extent, GLuint texID, GLint
     }
 }
 
-static void GenerateSubMipsTexture2D(const Extent3D& extent, GLuint texID, GLenum texTarget, GLint baseMipLevel, GLint numMipLevels)
+static void GenerateMipsRangeTexture2D(const Extent3D& extent, GLuint texID, GLenum texTarget, GLint baseMipLevel, GLint numMipLevels)
 {
     /* Get extent of base MIP level */
     auto srcWidth   = static_cast<GLint>(extent.width);
@@ -186,7 +174,7 @@ static void GenerateSubMipsTexture2D(const Extent3D& extent, GLuint texID, GLenu
     }
 }
 
-static void GenerateSubMipsTextureLayer(const Extent3D& extent, GLuint texID, GLint baseMipLevel, GLint numMipLevels, GLint arrayLayer)
+static void GenerateMipsRangeTextureLayer(const Extent3D& extent, GLuint texID, GLint baseMipLevel, GLint numMipLevels, GLint arrayLayer)
 {
     /* Get extent of base MIP level */
     auto srcWidth   = static_cast<GLint>(extent.width);
@@ -211,7 +199,7 @@ static void GenerateSubMipsTextureLayer(const Extent3D& extent, GLuint texID, GL
     }
 }
 
-void GLMipGenerator::GenerateSubMipsWithFBO(
+void GLMipGenerator::GenerateMipsRangeWithFBO(
     GLStateManager& stateMngr,
     GLTexture&      textureGL,
     const Extent3D& extent,
@@ -238,14 +226,13 @@ void GLMipGenerator::GenerateSubMipsWithFBO(
         {
             case TextureType::Texture1D:
             {
-                GenerateSubMipsTexture1D(extent, texID, baseMipLevel, numMipLevels);
+                GenerateMipsRangeTexture1D(extent, texID, baseMipLevel, numMipLevels);
             }
             break;
 
             case TextureType::Texture2D:
-            case TextureType::Texture2DMS:
             {
-                GenerateSubMipsTexture2D(extent, texID, texTarget, baseMipLevel, numMipLevels);
+                GenerateMipsRangeTexture2D(extent, texID, texTarget, baseMipLevel, numMipLevels);
             }
             break;
 
@@ -258,38 +245,30 @@ void GLMipGenerator::GenerateSubMipsWithFBO(
                 static const GLenum g_cubeFaceTexTargets[] =
                 {
                     GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-                    GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-                    GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
                     GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
                     GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
                     GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
                 };
 
                 for (std::size_t i = 0; i < 6; ++i)
-                    GenerateSubMipsTexture2D(extent, texID, g_cubeFaceTexTargets[i], baseMipLevel, numMipLevels);
+                    GenerateMipsRangeTexture2D(extent, texID, g_cubeFaceTexTargets[i], baseMipLevel, numMipLevels);
             }
             break;
 
             case TextureType::Texture1DArray:
             case TextureType::Texture2DArray:
-            case TextureType::Texture2DMSArray:
+            case TextureType::TextureCubeArray:
             {
                 /* Generate MIP-maps for each specified array layer */
                 for (auto arrayLayer = baseArrayLayer; arrayLayer < baseArrayLayer + numArrayLayers; ++arrayLayer)
-                    GenerateSubMipsTextureLayer(extent, texID, baseMipLevel, numMipLevels, arrayLayer);
+                    GenerateMipsRangeTextureLayer(extent, texID, baseMipLevel, numMipLevels, arrayLayer);
             }
             break;
 
-            case TextureType::TextureCubeArray:
-            {
-                /* Generate MIP-maps of all 6 cube faces */
-                baseArrayLayer *= 6;
-                numArrayLayers *= 6;
-
-                /* Generate MIP-maps for each specified array layer */
-                for (auto arrayLayer = baseArrayLayer; arrayLayer < baseArrayLayer + numArrayLayers; ++arrayLayer)
-                    GenerateSubMipsTextureLayer(extent, texID, baseMipLevel, numMipLevels, arrayLayer);
-            }
+            case TextureType::Texture2DMS:
+            case TextureType::Texture2DMSArray:
             break;
         }
     }
@@ -297,25 +276,9 @@ void GLMipGenerator::GenerateSubMipsWithFBO(
     stateMngr.PopBoundFramebuffer();
 }
 
-#else
-
-void GLMipGenerator::GenerateSubMipsWithFBO(
-    GLStateManager& stateMngr,
-    GLTexture&      textureGL,
-    const Extent3D& extent,
-    GLint           baseMipLevel,
-    GLint           numMipLevels,
-    GLint           baseArrayLayer,
-    GLint           numArrayLayers)
-{
-    // dummy
-}
-
-#endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-
 #ifdef GL_ARB_texture_view
 
-void GLMipGenerator::GenerateSubMipsWithTextureView(
+void GLMipGenerator::GenerateMipsRangeWithTextureView(
     GLStateManager& stateMngr,
     GLTexture&      textureGL,
     GLuint          baseMipLevel,
@@ -327,7 +290,7 @@ void GLMipGenerator::GenerateSubMipsWithTextureView(
     auto texID          = textureGL.GetID();
     auto texType        = textureGL.GetType();
     auto texTarget      = GLTypes::Map(texType);
-    auto internalFormat = textureGL.QueryGLInternalFormat();
+    auto internalFormat = textureGL.GetInternalFormat();
 
     /* Generate new texture to be used as view (due to immutable storage) */
     GLuint texViewID = 0;
@@ -347,22 +310,8 @@ void GLMipGenerator::GenerateSubMipsWithTextureView(
     glDeleteTextures(1, &texViewID);
 }
 
-#else
-
-void GLMipGenerator::GenerateSubMipsWithTextureView(
-    GLStateManager& stateMngr,
-    GLTexture&  textureGL,
-    GLuint      baseMipLevel,
-    GLuint      numMipLevels,
-    GLuint      baseArrayLayer,
-    GLuint      numArrayLayers)
-{
-    // dummy
-}
-
 #endif // /GL_ARB_texture_view
 
-#ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 /*
  * MipGenerationFBOPair structure
@@ -388,8 +337,6 @@ void GLMipGenerator::MipGenerationFBOPair::ReleaseFBOs()
         fbos[1] = 0;
     }
 }
-
-#endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 
 } // /namespace LLGL

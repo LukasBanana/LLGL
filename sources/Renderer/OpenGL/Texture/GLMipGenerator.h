@@ -18,9 +18,6 @@ namespace LLGL
 {
 
 
-//TODO: performance tests show that the manual MIP-map generation is almost always slower than the default MIP-map generation
-//#define LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-
 class GLTexture;
 class GLStateManager;
 
@@ -65,7 +62,7 @@ class GLMipGenerator
 
         void GenerateMipsPrimary(GLStateManager& stateMngr, GLuint texID, const TextureType texType);
 
-        void GenerateSubMipsWithFBO(
+        void GenerateMipsRangeWithFBO(
             GLStateManager& stateMngr,
             GLTexture&      textureGL,
             const Extent3D& extent,
@@ -75,7 +72,8 @@ class GLMipGenerator
             GLint           numArrayLayers
         );
 
-        void GenerateSubMipsWithTextureView(
+        #ifdef GL_ARB_texture_view
+        void GenerateMipsRangeWithTextureView(
             GLStateManager& stateMngr,
             GLTexture&      textureGL,
             GLuint          baseMipLevel,
@@ -83,10 +81,10 @@ class GLMipGenerator
             GLuint          baseArrayLayer,
             GLuint          numArrayLayers
         );
+        #endif // /GL_ARB_texture_view
 
     private:
 
-        #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
         struct MipGenerationFBOPair
         {
             ~MipGenerationFBOPair();
@@ -96,13 +94,10 @@ class GLMipGenerator
 
             GLuint fbos[2] = { 0, 0 };
         };
-        #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
     private:
 
-        #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
         MipGenerationFBOPair mipGenerationFBOPair_;
-        #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 };
 

@@ -30,7 +30,7 @@ class GLTexture final : public Texture
 
     public:
 
-        GLTexture(const TextureType type);
+        GLTexture(const TextureDescriptor& desc);
         ~GLTexture();
 
         // Copies the specified source texture into this texture.
@@ -46,8 +46,8 @@ class GLTexture final : public Texture
         // Initializes this texture as a texture-view.
         void TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc);
 
-        // Queries the GL_TEXTURE_INTERNAL_FORMAT parameter of this texture.
-        GLenum QueryGLInternalFormat() const;
+        // Returns the GL_TEXTURE_INTERNAL_FORMAT parameter of this texture.
+        GLenum GetInternalFormat() const;
 
         // Returns the hardware texture ID.
         inline GLuint GetID() const
@@ -55,13 +55,20 @@ class GLTexture final : public Texture
             return id_;
         }
 
+        // Returns the number of MIP-map levels.
+        inline GLsizei GetNumMipLevels() const
+        {
+            return numMipLevels_;
+        }
+
     private:
 
-        void QueryTexParams(GLint* internalFormat, GLint* extent) const;
+        void GetTexParams(GLint* internalFormat, GLint* extent) const;
 
     private:
 
-        GLuint id_ = 0;
+        GLuint  id_             = 0;
+        GLsizei numMipLevels_   = 1;
 
 };
 
