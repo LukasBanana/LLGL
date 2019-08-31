@@ -25,6 +25,8 @@ class D3D11Buffer : public Buffer
 
         void SetName(const char* name) override;
 
+        BufferDescriptor GetDesc() const override;
+
     public:
 
         D3D11Buffer(long bindFlags);

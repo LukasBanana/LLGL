@@ -27,6 +27,8 @@ class GLBuffer : public Buffer
 
         void SetName(const char* name) override final;
 
+        BufferDescriptor GetDesc() const override;
+
     public:
 
         GLBuffer(long bindFlags);
@@ -69,6 +71,10 @@ class GLBuffer : public Buffer
         {
             return indexType16Bits_;
         }
+
+    private:
+
+        void GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) const;
 
     private:
 

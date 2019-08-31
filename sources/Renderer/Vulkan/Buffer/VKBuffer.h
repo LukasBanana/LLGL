@@ -23,6 +23,10 @@ class VKBuffer : public Buffer
 
     public:
 
+        BufferDescriptor GetDesc() const override;
+
+    public:
+
         VKBuffer(const VKPtr<VkDevice>& device, const BufferDescriptor& desc);
 
         void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);

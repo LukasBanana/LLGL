@@ -34,6 +34,23 @@ void D3D12Buffer::SetName(const char* name)
     D3D12SetObjectNameSubscript(uploadResource_.Get(), name, ".Staging");
 }
 
+BufferDescriptor D3D12Buffer::GetDesc() const
+{
+    /* Get native resource descriptor and convert */
+    D3D12_RESOURCE_DESC nativeDesc;
+    nativeDesc = GetResource().native->GetDesc();
+
+    BufferDescriptor bufferDesc;
+    bufferDesc.size             = nativeDesc.Width;
+    bufferDesc.bindFlags        = GetBindFlags();
+    #if 0//TODO
+    bufferDesc.cpuAccessFlags   = 0;
+    bufferDesc.miscFlags        = 0;
+    #endif
+
+    return bufferDesc;
+}
+
 void D3D12Buffer::UpdateStaticSubresource(
     ID3D12Device*               device,
     D3D12CommandContext&        commandContext,

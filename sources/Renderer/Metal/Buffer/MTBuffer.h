@@ -23,9 +23,13 @@ class MTBuffer : public Buffer
 
     public:
 
+        BufferDescriptor GetDesc() const override;
+
+    public:
+
         MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const void* initialData);
         ~MTBuffer();
-    
+
         void Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize);
 
         void* Map(CPUAccess access);
@@ -36,7 +40,7 @@ class MTBuffer : public Buffer
         {
             return native_;
         }
-    
+
         // Returns true if the index buffer format has 16 bit indices.
         inline bool IsIndexType16Bits() const
         {

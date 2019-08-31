@@ -25,6 +25,11 @@ void DbgBuffer::SetName(const char* name)
     DbgSetObjectName(*this, name);
 }
 
+BufferDescriptor DbgBuffer::GetDesc() const
+{
+    return instance.GetDesc();
+}
+
 
 } // /namespace LLGL
 

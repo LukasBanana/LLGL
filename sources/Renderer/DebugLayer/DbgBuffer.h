@@ -24,6 +24,8 @@ class DbgBuffer final : public Buffer
 
         void SetName(const char* name) override;
 
+        BufferDescriptor GetDesc() const override;
+
     public:
 
         DbgBuffer(Buffer& instance, const BufferDescriptor& desc);

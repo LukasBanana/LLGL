@@ -315,10 +315,10 @@ void GLTexture::GetTexParams(GLint* internalFormat, GLint* extent) const
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Query texture attributes directly using DSA */
-        if (internalFormat)
+        if (internalFormat != nullptr)
             glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_INTERNAL_FORMAT, internalFormat);
 
-        if (extent)
+        if (extent != nullptr)
         {
             glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_WIDTH,  &extent[0]);
             glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_HEIGHT, &extent[1]);
@@ -335,10 +335,10 @@ void GLTexture::GetTexParams(GLint* internalFormat, GLint* extent) const
             GLStateManager::Get().BindGLTexture(*this);
             auto target = GLGetTextureParamTarget(GetType());
 
-            if (internalFormat)
+            if (internalFormat != nullptr)
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, internalFormat);
 
-            if (extent)
+            if (extent != nullptr)
             {
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH,  &extent[0]);
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &extent[1]);

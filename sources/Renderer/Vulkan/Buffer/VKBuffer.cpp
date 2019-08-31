@@ -66,6 +66,20 @@ VKBuffer::VKBuffer(const VKPtr<VkDevice>& device, const BufferDescriptor& desc) 
     bufferObj_.CreateVkBuffer(device, createInfo);
 }
 
+BufferDescriptor VKBuffer::GetDesc() const
+{
+    BufferDescriptor bufferDesc;
+
+    bufferDesc.size             = GetSize();
+    bufferDesc.bindFlags        = GetBindFlags();
+    #if 0//TODO
+    bufferDesc.cpuAccessFlags   = 0;
+    bufferDesc.miscFlags        = 0;
+    #endif
+
+    return bufferDesc;
+}
+
 void VKBuffer::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
 {
     bufferObj_.BindMemoryRegion(device, memoryRegion);

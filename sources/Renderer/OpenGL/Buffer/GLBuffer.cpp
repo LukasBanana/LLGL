@@ -36,11 +36,6 @@ static GLBufferTarget FindPrimaryBufferTarget(long bindFlags)
     return GLBufferTarget::ARRAY_BUFFER;
 }
 
-void GLBuffer::SetName(const char* name)
-{
-    GLSetObjectLabel(GL_BUFFER, GetID(), name);
-}
-
 GLBuffer::GLBuffer(long bindFlags) :
     Buffer  { bindFlags                          },
     target_ { FindPrimaryBufferTarget(bindFlags) }
@@ -63,6 +58,44 @@ GLBuffer::~GLBuffer()
 {
     glDeleteBuffers(1, &id_);
     GLStateManager::Get().NotifyBufferRelease(*this);
+}
+
+void GLBuffer::SetName(const char* name)
+{
+    GLSetObjectLabel(GL_BUFFER, GetID(), name);
+}
+
+BufferDescriptor GLBuffer::GetDesc() const
+{
+    /* Get buffer parameters */
+    GLint size = 0, usage = 0, storageFlags = 0;
+    GetBufferParams(&size, &usage, &storageFlags);
+
+    /* Convert to buffer descriptor */
+    BufferDescriptor bufferDesc;
+    bufferDesc.size         = static_cast<std::uint64_t>(size);
+    bufferDesc.bindFlags    = GetBindFlags();
+
+    #ifdef GL_ARB_buffer_storage
+    if (HasExtension(GLExt::ARB_buffer_storage))
+    {
+        /* Convert buffer storage flags */
+        if ((storageFlags & GL_MAP_READ_BIT) != 0)
+            bufferDesc.cpuAccessFlags |= CPUAccessFlags::Read;
+        if ((storageFlags & GL_MAP_WRITE_BIT) != 0)
+            bufferDesc.cpuAccessFlags |= CPUAccessFlags::Write;
+    }
+    else
+    #endif // /GL_ARB_buffer_storage
+    {
+        /* When the buffer was created with <glBufferData>, it can be used for CPU read/write access implicitly */
+        bufferDesc.cpuAccessFlags |= CPUAccessFlags::ReadWrite;
+    }
+
+    if (usage == GL_DYNAMIC_DRAW)
+        bufferDesc.miscFlags |= MiscFlags::DynamicUsage;
+
+    return bufferDesc;
 }
 
 void GLBuffer::BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags, GLenum usage)
@@ -239,6 +272,62 @@ void GLBuffer::UnmapBuffer()
 void GLBuffer::SetIndexType(const Format format)
 {
     indexType16Bits_ = (format == Format::R16UInt);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GLBuffer::GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) const
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        /* Query buffer attributes directly using DSA */
+        if (size != nullptr)
+            glGetNamedBufferParameteriv(GetID(), GL_BUFFER_SIZE, size);
+
+        if (usage != nullptr)
+            glGetNamedBufferParameteriv(GetID(), GL_BUFFER_USAGE, usage);
+
+        if (storageFlags != nullptr)
+            glGetNamedBufferParameteriv(GetID(), GL_BUFFER_STORAGE_FLAGS, storageFlags);
+    }
+    else
+    #endif // /GL_ARB_direct_state_access
+    {
+        /* Push currently bound texture onto stack to restore it after query */
+        GLStateManager::Get().PushBoundBuffer(GetTarget());
+        {
+            /* Bind buffer and query attributes */
+            const GLenum bufferTarget = GetGLTarget();
+            GLStateManager::Get().BindGLBuffer(*this);
+
+            if (size != nullptr)
+                glGetBufferParameteriv(bufferTarget, GL_BUFFER_SIZE, size);
+
+            if (usage != nullptr)
+                glGetBufferParameteriv(bufferTarget, GL_BUFFER_USAGE, usage);
+
+            if (storageFlags != nullptr)
+            {
+                #ifdef GL_ARB_buffer_storage
+                if (HasExtension(GLExt::ARB_buffer_storage))
+                {
+                    /* Query storage flags (GL_MAP_READ_BIT etc.) */
+                    glGetBufferParameteriv(bufferTarget, GL_BUFFER_STORAGE_FLAGS, storageFlags);
+                }
+                else
+                #endif
+                {
+                    /* Reset to output parameter */
+                    *storageFlags = 0;
+                }
+            }
+        }
+        GLStateManager::Get().PopBoundBuffer();
+    }
 }
 
 

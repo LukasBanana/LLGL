@@ -36,6 +36,33 @@ void D3D11Buffer::SetName(const char* name)
         D3D11SetObjectNameSubscript(cpuAccessBuffer_.Get(), name, ".CPUAccessBuffer");
 }
 
+BufferDescriptor D3D11Buffer::GetDesc() const
+{
+    /* Get native buffer descriptor and convert */
+    D3D11_BUFFER_DESC nativeDesc;
+    GetNative()->GetDesc(&nativeDesc);
+
+    BufferDescriptor bufferDesc;
+    bufferDesc.size         = nativeDesc.ByteWidth;
+    bufferDesc.bindFlags    = GetBindFlags();
+
+    if (cpuAccessBuffer_)
+    {
+        /* Convert CPU access flags from secondary buffer */
+        D3D11_BUFFER_DESC cpuAccessDesc;
+        cpuAccessBuffer_->GetDesc(&cpuAccessDesc);
+        if ((cpuAccessDesc.CPUAccessFlags & D3D11_CPU_ACCESS_READ) != 0)
+            bufferDesc.cpuAccessFlags |= CPUAccessFlags::Read;
+        if ((cpuAccessDesc.CPUAccessFlags & D3D11_CPU_ACCESS_WRITE) != 0)
+            bufferDesc.cpuAccessFlags |= CPUAccessFlags::Write;
+    }
+
+    if (nativeDesc.Usage == D3D11_USAGE_DYNAMIC)
+        bufferDesc.miscFlags |= MiscFlags::DynamicUsage;
+
+    return bufferDesc;
+}
+
 static D3D11_MAP GetD3DMapWrite(bool mapPartial)
 {
     return (mapPartial ? D3D11_MAP_WRITE : D3D11_MAP_WRITE_DISCARD);
@@ -195,7 +222,7 @@ void D3D11Buffer::CreateCPUAccessBuffer(ID3D11Device* device, const BufferDescri
     {
         descD3D.ByteWidth           = static_cast<UINT>(desc.size);
         descD3D.Usage               = DXGetCPUAccessBufferUsage(desc);
-        descD3D.BindFlags           = 0;
+        descD3D.BindFlags           = DXGetBufferBindFlags(desc.bindFlags);
         descD3D.CPUAccessFlags      = DXGetCPUAccessFlags(desc.cpuAccessFlags);
         descD3D.MiscFlags           = 0;
         descD3D.StructureByteStride = desc.storageBuffer.stride;

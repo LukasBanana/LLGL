@@ -28,6 +28,8 @@ class D3D12Buffer : public Buffer
 
         void SetName(const char* name) override;
 
+        BufferDescriptor GetDesc() const override;
+
     public:
 
         D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc);
