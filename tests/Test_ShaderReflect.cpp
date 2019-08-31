@@ -51,12 +51,16 @@ int main()
         LLGL::Extent3D workGroupSize;
         shaderProgram->GetWorkGroupSize(workGroupSize);
 
+        std::cout << "Vertex Attributes:" << std::endl;
         for (const LLGL::VertexAttribute& attr : reflect.vertexAttributes)
         {
+            std::cout << "  " << attr.name << "@" << attr.offset << std::endl;
         }
 
+        std::cout << "Resources:" << std::endl;
         for (const LLGL::ShaderResource& resc : reflect.resources)
         {
+            std::cout << "  " << resc.binding.name << "@" << resc.binding.slot << std::endl;
         }
 
         for (const LLGL::ShaderUniform& unif : reflect.uniforms)

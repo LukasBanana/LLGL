@@ -21,6 +21,11 @@ layout(binding = 4, rgba32f) uniform writeonly image2D colorMapOut;
 layout(binding = 5) uniform sampler linearSampler;
 layout(binding = 6) uniform sampler2D combinedTexSamplers[2];
 
+layout(push_constant) uniform pushConstants
+{
+    vec4 diffuseColor;
+};
+
 void main()
 {
     // Get texture coordinate from thread ID
@@ -37,6 +42,6 @@ void main()
     
     // Write output data
     imageStore(colorMapOut, threadID, blendColor);
-    outColors[gl_LocalInvocationIndex] = blendColor;
+    outColors[gl_LocalInvocationIndex] = blendColor * diffuseColor;
 }
 

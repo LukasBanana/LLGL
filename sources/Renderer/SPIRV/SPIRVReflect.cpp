@@ -289,6 +289,7 @@ void SPIRVReflect::OpVariable(const Instr& instr)
     {
         case spv::StorageClass::Uniform:
         case spv::StorageClass::UniformConstant:
+        //case spv::StorageClass::PushConstant:
         {
             auto& var = uniforms_[instr.result];
             {
