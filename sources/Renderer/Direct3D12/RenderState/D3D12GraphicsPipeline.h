@@ -22,6 +22,7 @@ namespace LLGL
 
 class D3D12Device;
 class D3D12ShaderProgram;
+class D3D12CommandContext;
 class ByteBufferIterator;
 
 class D3D12GraphicsPipeline final : public GraphicsPipeline
@@ -39,7 +40,7 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
             const GraphicsPipelineDescriptor&   desc
         );
 
-        void Bind(ID3D12GraphicsCommandList* commandList);
+        void Bind(D3D12CommandContext& commandContext);
 
         // Returns the number of required default scissor rectangles.
         UINT NumDefaultScissorRects() const;

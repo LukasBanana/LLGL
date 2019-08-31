@@ -14,6 +14,11 @@ namespace LLGL
 {
 
 
+D3D12CommandContext::D3D12CommandContext()
+{
+    ClearCache();
+}
+
 void D3D12CommandContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
 {
     if (commandList_ != commandList)
@@ -21,6 +26,32 @@ void D3D12CommandContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
         FlushResourceBarrieres();
         commandList_ = commandList;
     }
+}
+
+void D3D12CommandContext::Reset(ID3D12CommandAllocator* commandAllocator)
+{
+    /* Reset graphics command list */
+    auto hr = commandList_->Reset(commandAllocator, nullptr);
+    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
+
+    /* Invalidate state cache */
+    ClearCache();
+}
+
+void D3D12CommandContext::Close()
+{
+    /* Flush pending resource barriers */
+    FlushResourceBarrieres();
+
+    /* Close native command list */
+    auto hr = commandList_->Close();
+    DXThrowIfFailed(hr, "failed to close D3D12 command list");
+}
+
+void D3D12CommandContext::Execute(ID3D12CommandQueue* commandQueue)
+{
+    ID3D12CommandList* cmdLists[] = { GetCommandList() };
+    commandQueue->ExecuteCommandLists(1, cmdLists);
 }
 
 void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
@@ -93,6 +124,39 @@ void D3D12CommandContext::ResolveRenderTarget(
     TransitionResource(srcResource, srcResource.usageState, true);
 }
 
+void D3D12CommandContext::SetGraphicsRootSignature(ID3D12RootSignature* rootSignature)
+{
+    if (stateCache_.dirtyBits.graphicsRootSignature != 0 || stateCache_.graphicsRootSignature != rootSignature)
+    {
+        /* Bind graphics root signature and cache state */
+        commandList_->SetGraphicsRootSignature(rootSignature);
+        stateCache_.graphicsRootSignature           = rootSignature;
+        stateCache_.dirtyBits.graphicsRootSignature = 0;
+    }
+}
+
+void D3D12CommandContext::SetComputeRootSignature(ID3D12RootSignature* rootSignature)
+{
+    if (stateCache_.dirtyBits.computeRootSignature != 0 || stateCache_.computeRootSignature != rootSignature)
+    {
+        /* Bind graphics root signature and cache state */
+        commandList_->SetComputeRootSignature(rootSignature);
+        stateCache_.computeRootSignature            = rootSignature;
+        stateCache_.dirtyBits.computeRootSignature  = 0;
+    }
+}
+
+void D3D12CommandContext::SetPipelineState(ID3D12PipelineState* pipelineState)
+{
+    if (stateCache_.dirtyBits.pipelineState != 0 || stateCache_.pipelineState != pipelineState)
+    {
+        /* Bind pipeline state to command list and cache state */
+        commandList_->SetPipelineState(pipelineState);
+        stateCache_.pipelineState           = pipelineState;
+        stateCache_.dirtyBits.pipelineState = 0;
+    }
+}
+
 void D3D12CommandContext::SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset)
 {
     commandList_->SetGraphicsRoot32BitConstant(parameterIndex, value.u32, offset);
@@ -113,6 +177,11 @@ D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()
     if (numResourceBarriers_ == g_maxNumResourceBarrieres)
         FlushResourceBarrieres();
     return resourceBarriers_[numResourceBarriers_++];
+}
+
+void D3D12CommandContext::ClearCache()
+{
+    stateCache_.dirtyBits.value = ~0u;
 }
 
 

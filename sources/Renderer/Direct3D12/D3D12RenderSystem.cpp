@@ -593,11 +593,10 @@ void D3D12RenderSystem::QueryRenderingCaps()
 //TODO: also reset allocator!
 void D3D12RenderSystem::ExecuteCommandList()
 {
-    device_.CloseAndExecuteCommandList(graphicsCmdList_.Get());
-
-    /* Reset command list */
-    auto hr = graphicsCmdList_->Reset(graphicsCmdAlloc_.Get(), nullptr);
-    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
+    /* Close graphics command list, execute with command queue, and reset command list */
+    commandContext_.Close();
+    commandContext_.Execute(device_.GetQueue());
+    commandContext_.Reset(graphicsCmdAlloc_.Get());
 }
 
 

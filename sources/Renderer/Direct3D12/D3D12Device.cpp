@@ -107,19 +107,6 @@ ComPtr<ID3D12QueryHeap> D3D12Device::CreateDXQueryHeap(const D3D12_QUERY_HEAP_DE
     return queryHeap;
 }
 
-/* ----- Device and queue ----- */
-
-void D3D12Device::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList)
-{
-    /* Close graphics command list */
-    auto hr = commandList->Close();
-    DXThrowIfInvocationFailed(hr, "ID3D12GraphicsCommandList::Close");
-
-    /* Execute command list */
-    ID3D12CommandList* cmdLists[] = { commandList };
-    queue_->ExecuteCommandLists(1, cmdLists);
-}
-
 /* ----- Data queries ----- */
 
 UINT D3D12Device::FindSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount)

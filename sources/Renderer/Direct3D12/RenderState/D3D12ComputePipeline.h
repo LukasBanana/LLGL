@@ -22,6 +22,7 @@ namespace LLGL
 
 class D3D12Device;
 class D3D12ShaderProgram;
+class D3D12CommandContext;
 
 class D3D12ComputePipeline final : public ComputePipeline
 {
@@ -38,7 +39,7 @@ class D3D12ComputePipeline final : public ComputePipeline
             const ComputePipelineDescriptor&    desc
         );
 
-        void Bind(ID3D12GraphicsCommandList* commandList);
+        void Bind(D3D12CommandContext& commandContext);
 
     private:
 

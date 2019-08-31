@@ -12,6 +12,7 @@
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
 #include <cstddef>
+#include <cstdint>
 
 
 namespace LLGL
@@ -40,7 +41,13 @@ class D3D12CommandContext
 
     public:
 
+        D3D12CommandContext();
+
         void SetCommandList(ID3D12GraphicsCommandList* commandList);
+
+        void Reset(ID3D12CommandAllocator* commandAllocator);
+        void Close();
+        void Execute(ID3D12CommandQueue* commandQueue);
 
         inline ID3D12GraphicsCommandList* GetCommandList() const
         {
@@ -59,12 +66,39 @@ class D3D12CommandContext
             DXGI_FORMAT     format
         );
 
+        void SetGraphicsRootSignature(ID3D12RootSignature* rootSignature);
+        void SetComputeRootSignature(ID3D12RootSignature* rootSignature);
+        void SetPipelineState(ID3D12PipelineState* pipelineState);
+
         void SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
         void SetComputeConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
 
     private:
 
+        struct StateCache
+        {
+            union
+            {
+                struct
+                {
+                    std::uint32_t   pipelineState           : 1;
+                    std::uint32_t   graphicsRootSignature   : 1;
+                    std::uint32_t   computeRootSignature    : 1;
+                };
+                std::uint32_t       value;
+            }
+            dirtyBits;
+
+            ID3D12RootSignature*    graphicsRootSignature   = nullptr;
+            ID3D12RootSignature*    computeRootSignature    = nullptr;
+            ID3D12PipelineState*    pipelineState           = nullptr;
+        };
+
+    private:
+
         D3D12_RESOURCE_BARRIER& NextResourceBarrier();
+
+        void ClearCache();
 
     private:
 
@@ -74,6 +108,8 @@ class D3D12CommandContext
 
         D3D12_RESOURCE_BARRIER      resourceBarriers_[g_maxNumResourceBarrieres];
         UINT                        numResourceBarriers_                            = 0;
+
+        StateCache                  stateCache_;
 
 };
 

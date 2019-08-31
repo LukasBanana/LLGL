@@ -55,23 +55,14 @@ void D3D12CommandBuffer::Begin()
 {
     /* Reset command list using the next command allocator */
     NextCommandAllocator();
-
-    auto hr = commandList_->Reset(GetCommandAllocator(), nullptr);
-    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
-
+    commandContext_.Reset(GetCommandAllocator());
     stagingBufferPool_.Reset();
 }
 
 void D3D12CommandBuffer::End()
 {
-    /* Flush remaining resource barriers */
-    commandContext_.FlushResourceBarrieres();
-
-    /* Close native command list */
-    auto hr = commandList_->Close();
-    DXThrowIfFailed(hr, "failed to close D3D12 command list");
-
-    /* Reset intermediate states */
+    /* Close command context and reset intermediate states */
+    commandContext_.Close();
     numBoundScissorRects_ = 0;
 }
 
@@ -472,7 +463,7 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     /* Set graphics root signature, graphics pipeline state, and primitive topology */
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
-    graphicsPipelineD3D.Bind(commandList_.Get());
+    graphicsPipelineD3D.Bind(commandContext_);
 
     /* Scissor rectangle must be updated (if scissor test is disabled) */
     scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();
@@ -484,7 +475,7 @@ void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
     /* Set compute root signature, graphics pipeline state, and primitive topology */
     auto& computePipelineD3D = LLGL_CAST(D3D12ComputePipeline&, computePipeline);
-    computePipelineD3D.Bind(commandList_.Get());
+    computePipelineD3D.Bind(commandContext_);
 }
 
 void D3D12CommandBuffer::SetUniform(

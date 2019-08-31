@@ -227,7 +227,7 @@ void D3D12MipGenerator::GenerateMips1D(
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
 
     /* Set root signature and descriptor heap */
-    commandList->SetComputeRootSignature(rootSignature1D_.Get());
+    commandContext.SetComputeRootSignature(rootSignature1D_.Get());
 
     ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
     commandList->SetDescriptorHeaps(1, descHeaps);
@@ -252,9 +252,9 @@ void D3D12MipGenerator::GenerateMips1D(
         /* Bind pipeline state depending on power-of-two class */
         UINT nonPowerOfTwo = (srcWidth & 1);
         if (isFormatSRGB)
-            commandList->SetPipelineState(pipelines1D_[nonPowerOfTwo + 2].Get());
+            commandContext.SetPipelineState(pipelines1D_[nonPowerOfTwo + 2].Get());
         else
-            commandList->SetPipelineState(pipelines1D_[nonPowerOfTwo].Get());
+            commandContext.SetPipelineState(pipelines1D_[nonPowerOfTwo].Get());
 
         /* Determine how many MIP-maps can be downsampled at once; must be in [1, 8] */
         UINT numMips = (mipLevel + 8 >= mipLevelEnd ? mipLevelEnd - mipLevel : 8);
@@ -297,7 +297,7 @@ void D3D12MipGenerator::GenerateMips2D(
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
 
     /* Set root signature and descriptor heap */
-    commandList->SetComputeRootSignature(rootSignature2D_.Get());
+    commandContext.SetComputeRootSignature(rootSignature2D_.Get());
 
     ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
     commandList->SetDescriptorHeaps(1, descHeaps);
@@ -324,9 +324,9 @@ void D3D12MipGenerator::GenerateMips2D(
         /* Bind pipeline state depending on power-of-two class */
         UINT nonPowerOfTwo = ((srcWidth & 1) | ((srcHeight & 1) << 1));
         if (isFormatSRGB)
-            commandList->SetPipelineState(pipelines2D_[nonPowerOfTwo + 4].Get());
+            commandContext.SetPipelineState(pipelines2D_[nonPowerOfTwo + 4].Get());
         else
-            commandList->SetPipelineState(pipelines2D_[nonPowerOfTwo].Get());
+            commandContext.SetPipelineState(pipelines2D_[nonPowerOfTwo].Get());
 
         /* Determine how many MIP-maps can be downsampled at once; must be in [1, 4] */
         UINT numMips = (mipLevel + 4 >= mipLevelEnd ? mipLevelEnd - mipLevel : 4);
@@ -370,7 +370,7 @@ void D3D12MipGenerator::GenerateMips3D(
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
 
     /* Set root signature and descriptor heap */
-    commandList->SetComputeRootSignature(rootSignature3D_.Get());
+    commandContext.SetComputeRootSignature(rootSignature3D_.Get());
 
     ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
     commandList->SetDescriptorHeaps(1, descHeaps);
@@ -399,9 +399,9 @@ void D3D12MipGenerator::GenerateMips3D(
         /* Bind pipeline state depending on power-of-two class */
         UINT nonPowerOfTwo = ((srcWidth & 1) | ((srcHeight & 1) << 1) | ((srcDepth & 1) << 2));
         if (isFormatSRGB)
-            commandList->SetPipelineState(pipelines3D_[nonPowerOfTwo + 8].Get());
+            commandContext.SetPipelineState(pipelines3D_[nonPowerOfTwo + 8].Get());
         else
-            commandList->SetPipelineState(pipelines3D_[nonPowerOfTwo].Get());
+            commandContext.SetPipelineState(pipelines3D_[nonPowerOfTwo].Get());
 
         /* Determine how many MIP-maps can be downsampled at once; must be in [1, 3] */
         UINT numMips = (mipLevel + 3 >= mipLevelEnd ? mipLevelEnd - mipLevel : 3);

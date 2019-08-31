@@ -36,10 +36,6 @@ class D3D12Device
         ComPtr<ID3D12DescriptorHeap>        CreateDXDescriptorHeap          (const D3D12_DESCRIPTOR_HEAP_DESC& desc);
         ComPtr<ID3D12QueryHeap>             CreateDXQueryHeap               (const D3D12_QUERY_HEAP_DESC& desc);
 
-        /* ----- Device and queue ----- */
-
-        void CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList);
-
         /* ----- Data queries ----- */
 
         UINT FindSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount);

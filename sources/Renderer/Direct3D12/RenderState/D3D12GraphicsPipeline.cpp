@@ -13,6 +13,7 @@
 #include "../Shader/D3D12Shader.h"
 #include "D3D12RenderPass.h"
 #include "D3D12PipelineLayout.h"
+#include "../Command/D3D12CommandContext.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
@@ -70,13 +71,15 @@ void D3D12GraphicsPipeline::SetName(const char* name)
     D3D12SetObjectName(pipelineState_.Get(), name);
 }
 
-void D3D12GraphicsPipeline::Bind(ID3D12GraphicsCommandList* commandList)
+void D3D12GraphicsPipeline::Bind(D3D12CommandContext& commandContext)
 {
     /* Set root signature and pipeline state */
-    commandList->SetGraphicsRootSignature(rootSignature_);
-    commandList->SetPipelineState(pipelineState_.Get());
+    commandContext.SetGraphicsRootSignature(rootSignature_);
+    commandContext.SetPipelineState(pipelineState_.Get());
 
     /* Set dynamic pipeline states */
+    auto commandList = commandContext.GetCommandList();
+
     commandList->IASetPrimitiveTopology(primitiveTopology_);
     commandList->OMSetBlendFactor(blendFactor_);
     commandList->OMSetStencilRef(stencilRef_);

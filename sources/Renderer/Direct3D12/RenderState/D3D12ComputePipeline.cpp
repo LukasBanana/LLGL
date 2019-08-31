@@ -11,6 +11,7 @@
 #include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
 #include "D3D12PipelineLayout.h"
+#include "../Command/D3D12CommandContext.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/ComputePipelineFlags.h>
@@ -51,11 +52,11 @@ void D3D12ComputePipeline::SetName(const char* name)
     D3D12SetObjectName(pipelineState_.Get(), name);
 }
 
-void D3D12ComputePipeline::Bind(ID3D12GraphicsCommandList* commandList)
+void D3D12ComputePipeline::Bind(D3D12CommandContext& commandContext)
 {
     /* Set root signature and pipeline state */
-    commandList->SetComputeRootSignature(rootSignature_);
-    commandList->SetPipelineState(pipelineState_.Get());
+    commandContext.SetComputeRootSignature(rootSignature_);
+    commandContext.SetPipelineState(pipelineState_.Get());
 }
 
 void D3D12ComputePipeline::CreatePipelineState(
