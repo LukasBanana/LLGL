@@ -36,7 +36,7 @@ int main()
         LLGL::RenderContextDescriptor contextDesc;
         contextDesc.videoMode.resolution = { 800, 600 };
 
-        auto context = renderer->CreateRenderContext(contextDesc);
+        /*auto context = */renderer->CreateRenderContext(contextDesc);
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();

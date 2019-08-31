@@ -33,18 +33,20 @@ MTLDataType ToMTLDataType(const DataType dataType)
 {
     switch (dataType)
     {
-        case DataType::Int8:    return MTLDataTypeChar;
-        case DataType::UInt8:   return MTLDataTypeUChar;
+        case DataType::Undefined:   return MTLDataTypeNone;
 
-        case DataType::Int16:   return MTLDataTypeShort;
-        case DataType::UInt16:  return MTLDataTypeUShort;
+        case DataType::Int8:        return MTLDataTypeChar;
+        case DataType::UInt8:       return MTLDataTypeUChar;
 
-        case DataType::Int32:   return MTLDataTypeInt;
-        case DataType::UInt32:  return MTLDataTypeUInt;
+        case DataType::Int16:       return MTLDataTypeShort;
+        case DataType::UInt16:      return MTLDataTypeUShort;
 
-        case DataType::Float16: return MTLDataTypeHalf;
-        case DataType::Float32: return MTLDataTypeFloat;
-        case DataType::Float64: break;
+        case DataType::Int32:       return MTLDataTypeInt;
+        case DataType::UInt32:      return MTLDataTypeUInt;
+
+        case DataType::Float16:     return MTLDataTypeHalf;
+        case DataType::Float32:     return MTLDataTypeFloat;
+        case DataType::Float64:     break;
     }
     MapFailed("DataType", "MTLDataType");
 }

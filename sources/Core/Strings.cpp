@@ -203,6 +203,12 @@ LLGL_EXPORT const char* ToString(const Format t)
         case T::BGRA8UInt:          return "BGRA8UInt";
         case T::BGRA8SInt:          return "BGRA8SInt";
 
+        /* --- Packed formats --- */
+        case T::RGB10A2UNorm:       return "RGB10A2UNorm";
+        case T::RGB10A2UInt:        return "RGB10A2UInt";
+        case T::RG11B10Float:       return "RG11B10Float";
+        case T::RGB9E5Float:        return "RGB9E5Float";
+
         /* --- Depth-stencil formats --- */
         case T::D16UNorm:           return "D16UNorm";
         case T::D32Float:           return "D32Float";

@@ -31,7 +31,7 @@ class DbgShader final : public Shader
 
     public:
 
-        DbgShader(Shader& instance, const ShaderType type, RenderingDebugger* debugger);
+        DbgShader(Shader& instance, const ShaderType type);
 
         inline bool IsCompiled() const
         {
@@ -42,10 +42,6 @@ class DbgShader final : public Shader
 
         Shader&     instance;
         std::string label;
-
-    private:
-
-        RenderingDebugger* debugger_ = nullptr;
 
 };
 

@@ -383,7 +383,7 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
-    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(desc), desc.type, debugger_));
+    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(desc), desc.type));
 }
 
 static Shader* GetInstanceShader(Shader* shader)

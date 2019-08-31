@@ -13,10 +13,9 @@ namespace LLGL
 {
 
 
-DbgShader::DbgShader(Shader& instance, const ShaderType type, RenderingDebugger* debugger) :
+DbgShader::DbgShader(Shader& instance, const ShaderType type) :
     Shader    { type     },
-    instance  { instance },
-    debugger_ { debugger }
+    instance  { instance }
 {
 }
 

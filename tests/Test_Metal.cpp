@@ -41,7 +41,7 @@ int main()
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();
-        auto commands = renderer->CreateCommandBufferExt();
+        auto commands = renderer->CreateCommandBuffer();
 
         auto& window = static_cast<LLGL::Window&>(context->GetSurface());
         
@@ -103,9 +103,7 @@ int main()
         );
         
         stbi_image_free(imageBuffer);
-        
-        renderer->GenerateMips(*texture);
-        
+
         // Create sampler
         LLGL::SamplerDescriptor samplerDesc;
         {
@@ -131,7 +129,7 @@ int main()
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
         
         if (shaderProgram->HasErrors())
-            throw std::runtime_error(shaderProgram->QueryInfoLog());
+            throw std::runtime_error(shaderProgram->GetReport());
         
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -157,8 +155,8 @@ int main()
                     commands->SetGraphicsPipeline(*pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
                     
-                    commands->SetTexture(*texture, 0, LLGL::StageFlags::FragmentStage);
-                    commands->SetSampler(*sampler, 0, LLGL::StageFlags::FragmentStage);
+                    commands->SetResource(*texture, LLGL::BindFlags::Sampled, 0, LLGL::StageFlags::FragmentStage);
+                    commands->SetResource(*sampler, 0, 0, LLGL::StageFlags::FragmentStage);
 
                     commands->Draw(4, 0);
                 }
