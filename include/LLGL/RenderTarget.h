@@ -54,7 +54,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         /**
         \brief Returns the number of color attachments of this render target. This can also be zero.
         \remarks For a render context, this will always be 1.
-        \see RenderContext::QueryColorFormat
+        \see RenderContext::GetColorFormat
         */
         virtual std::uint32_t GetNumColorAttachments() const = 0;
 
@@ -63,7 +63,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \remarks The return value depends on whether the rendering API supports depth-stencil formats where the depth and stencil components can be strictly separated.
         For example, if the render target was created with only a stencil attachment,
         LLGL may still create a depth-stencil buffer that results in both a depth and stencil component in one attachment.
-        \see RenderContext::QueryDepthStencilFormat
+        \see RenderContext::GetDepthStencilFormat
         */
         virtual bool HasDepthAttachment() const = 0;
 
@@ -72,7 +72,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \remarks The return value depends on whether the rendering API supports depth-stencil formats where the depth and stencil components can be strictly separated.
         For example, if the render target was created with only a stencil attachment,
         LLGL may still create a depth-stencil buffer that results in both a depth and stencil component in one attachment.
-        \see RenderContext::QueryDepthStencilFormat
+        \see RenderContext::GetDepthStencilFormat
         */
         virtual bool HasStencilAttachment() const = 0;
 

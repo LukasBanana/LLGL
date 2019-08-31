@@ -65,12 +65,12 @@ void D3D11RenderContext::Present()
     swapChain_->Present(swapChainInterval_, 0);
 }
 
-Format D3D11RenderContext::QueryColorFormat() const
+Format D3D11RenderContext::GetColorFormat() const
 {
     return DXTypes::Unmap(colorFormat_);
 }
 
-Format D3D11RenderContext::QueryDepthStencilFormat() const
+Format D3D11RenderContext::GetDepthStencilFormat() const
 {
     return DXTypes::Unmap(depthStencilFormat_);
 }

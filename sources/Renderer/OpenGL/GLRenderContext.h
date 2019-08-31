@@ -44,8 +44,8 @@ class GLRenderContext final : public RenderContext
 
         void Present() override;
 
-        Format QueryColorFormat() const override;
-        Format QueryDepthStencilFormat() const override;
+        Format GetColorFormat() const override;
+        Format GetDepthStencilFormat() const override;
 
         const RenderPass* GetRenderPass() const override;
 

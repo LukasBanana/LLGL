@@ -23,14 +23,14 @@ void DbgRenderContext::Present()
     instance.Present();
 }
 
-Format DbgRenderContext::QueryColorFormat() const
+Format DbgRenderContext::GetColorFormat() const
 {
-    return instance.QueryColorFormat();
+    return instance.GetColorFormat();
 }
 
-Format DbgRenderContext::QueryDepthStencilFormat() const
+Format DbgRenderContext::GetDepthStencilFormat() const
 {
-    return instance.QueryDepthStencilFormat();
+    return instance.GetDepthStencilFormat();
 }
 
 const RenderPass* DbgRenderContext::GetRenderPass() const

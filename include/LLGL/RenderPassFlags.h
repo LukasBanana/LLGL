@@ -81,12 +81,12 @@ struct AttachmentFormatDescriptor
 
     /**
     \brief Specifies the render target attachment format. By default Format::Undefined.
-    \remarks If the render pass is used for a render context, the appropriate color format can be determined by the RenderContext::QueryColorFormat function,
-    and the appropriate depth-stencil format can be determined by the RenderContext::QueryDepthStencilFormat function.
+    \remarks If the render pass is used for a render context, the appropriate color format can be determined by the RenderContext::GetColorFormat function,
+    and the appropriate depth-stencil format can be determined by the RenderContext::GetDepthStencilFormat function.
     If the render pass is used for render targets, the format depends on the render target attachments.
     If this is undefined, the corresponding attachment is not used.
-    \see RenderContext::QueryColorFormat
-    \see RenderContext::QueryDepthStencilFormat
+    \see RenderContext::GetColorFormat
+    \see RenderContext::GetDepthStencilFormat
     */
     Format                  format  = Format::Undefined;
 

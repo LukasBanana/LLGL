@@ -142,11 +142,11 @@ public:
         {
             renderPassDesc.colorAttachments =
             {
-                LLGL::AttachmentFormatDescriptor{ context->QueryColorFormat(), LLGL::AttachmentLoadOp::Clear },
+                LLGL::AttachmentFormatDescriptor{ context->GetColorFormat(), LLGL::AttachmentLoadOp::Clear },
             };
             renderPassDesc.depthAttachment =
             (
-                LLGL::AttachmentFormatDescriptor{ context->QueryDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear }
+                LLGL::AttachmentFormatDescriptor{ context->GetDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear }
             );
         }
         renderPass = renderer->CreateRenderPass(renderPassDesc);

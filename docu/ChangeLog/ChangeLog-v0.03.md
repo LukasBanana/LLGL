@@ -306,6 +306,8 @@ Display::QueryPrimary                  --> Display::InstantiatePrimary
 Display::QuerySupportedDisplayModes    --> Display::GetSupportedDisplayModes
 Image::QuerySrcDesc                    --> Display::GetSrcDesc
 Image::QueryDstDesc                    --> Display::GetDstDesc
+RenderContext::QueryColorFormat        --> RenderContext::GetColorFormat
+RenderContext::QueryDepthStencilFormat --> RenderContext::GetDepthStencilFormat
 ```
 
 

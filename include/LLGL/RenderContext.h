@@ -61,14 +61,14 @@ class LLGL_EXPORT RenderContext : public RenderTarget
 
         /**
         \brief Returns true if this render context has a depth format.
-        \see QueryDepthStencilFormat
+        \see GetDepthStencilFormat
         \see IsDepthFormat
         */
         bool HasDepthAttachment() const final;
 
         /**
         \brief Returns true if this render context has a stencil format.
-        \see QueryDepthStencilFormat
+        \see GetDepthStencilFormat
         \see IsStencilFormat
         */
         bool HasStencilAttachment() const final;
@@ -86,7 +86,7 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         \see AttachmentFormatDescriptor::format
         \see Format
         */
-        virtual Format QueryColorFormat() const = 0;
+        virtual Format GetColorFormat() const = 0;
 
         /**
         \brief Returns the depth-stencil format of this render context.
@@ -95,7 +95,7 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         \see AttachmentFormatDescriptor::format
         \see Format
         */
-        virtual Format QueryDepthStencilFormat() const = 0;
+        virtual Format GetDepthStencilFormat() const = 0;
 
         /**
         \brief Returns the surface which is used to present the content on the screen.

@@ -55,19 +55,19 @@ MTRenderContext::MTRenderContext(
 
     NativeHandle nativeHandle = {};
     GetSurface().GetNativeHandle(&nativeHandle);
-    
+
     /* Create MetalKit view */
     NSWindow* wnd = nativeHandle.window;
-    
+
     view_ = [[MTKView alloc] initWithFrame:wnd.frame device:device];
     [wnd setContentView:view_];
     [wnd.contentViewController setView:view_];
-    
+
     /* Initialize color and depth buffer */
     view_.colorPixelFormat          = GetColorMTLPixelFormat(desc.videoMode.colorBits);
     view_.depthStencilPixelFormat   = GetDepthStencilMTLPixelFormat(desc.videoMode.depthBits, desc.videoMode.stencilBits);
     view_.sampleCount               = desc.multiSampling.SampleCount();
-    
+
     if (desc.vsync.enabled)
         view_.preferredFramesPerSecond = static_cast<NSInteger>(desc.vsync.refreshRate);
 }
@@ -77,12 +77,12 @@ void MTRenderContext::Present()
     [view_ draw];
 }
 
-Format MTRenderContext::QueryColorFormat() const
+Format MTRenderContext::GetColorFormat() const
 {
     return MTTypes::ToFormat(view_.colorPixelFormat);
 }
 
-Format MTRenderContext::QueryDepthStencilFormat() const
+Format MTRenderContext::GetDepthStencilFormat() const
 {
     return MTTypes::ToFormat(view_.depthStencilPixelFormat);
 }

@@ -108,12 +108,12 @@ void VKRenderContext::Present()
     AcquireNextPresentImage();
 }
 
-Format VKRenderContext::QueryColorFormat() const
+Format VKRenderContext::GetColorFormat() const
 {
     return VKTypes::Unmap(swapChainFormat_.format);
 }
 
-Format VKRenderContext::QueryDepthStencilFormat() const
+Format VKRenderContext::GetDepthStencilFormat() const
 {
     return VKTypes::Unmap(depthStencilBuffer_.GetVkFormat());
 }
@@ -242,11 +242,11 @@ void VKRenderContext::CreateRenderPass(VKRenderPass& renderPass, bool isSecondar
         /* Specify single color attachment */
         renderPassDesc.colorAttachments =
         {
-            AttachmentFormatDescriptor{ QueryColorFormat(), loadOp, storeOp }
+            AttachmentFormatDescriptor{ GetColorFormat(), loadOp, storeOp }
         };
 
         /* Specify depth-stencil attachment */
-        auto depthStencilFormat = QueryDepthStencilFormat();
+        auto depthStencilFormat = GetDepthStencilFormat();
 
         if (IsDepthFormat(depthStencilFormat))
             renderPassDesc.depthAttachment = AttachmentFormatDescriptor{ depthStencilFormat, loadOp, storeOp };

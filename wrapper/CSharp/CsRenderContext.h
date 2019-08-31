@@ -38,8 +38,8 @@ public ref class RenderContext : public RenderTarget
         void Present();
 
         #if 0
-        Format QueryColorFormat();
-        Format QueryDepthStencilFormat();
+        Format GetColorFormat();
+        Format GetDepthStencilFormat();
         #endif
 
         property Window^ Surface

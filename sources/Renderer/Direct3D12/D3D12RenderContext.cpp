@@ -79,12 +79,12 @@ void D3D12RenderContext::Present()
     MoveToNextFrame();
 }
 
-Format D3D12RenderContext::QueryColorFormat() const
+Format D3D12RenderContext::GetColorFormat() const
 {
     return DXTypes::Unmap(colorFormat_);
 }
 
-Format D3D12RenderContext::QueryDepthStencilFormat() const
+Format D3D12RenderContext::GetDepthStencilFormat() const
 {
     return DXTypes::Unmap(depthStencilFormat_);
 }

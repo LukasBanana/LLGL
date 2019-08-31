@@ -37,12 +37,12 @@ std::uint32_t RenderContext::GetNumColorAttachments() const
 
 bool RenderContext::HasDepthAttachment() const
 {
-    return IsDepthFormat(QueryDepthStencilFormat());
+    return IsDepthFormat(GetDepthStencilFormat());
 }
 
 bool RenderContext::HasStencilAttachment() const
 {
-    return IsStencilFormat(QueryDepthStencilFormat());
+    return IsStencilFormat(GetDepthStencilFormat());
 }
 
 /* ----- Configuration ----- */

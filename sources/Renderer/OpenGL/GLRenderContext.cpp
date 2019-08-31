@@ -59,13 +59,13 @@ void GLRenderContext::Present()
     context_->SwapBuffers();
 }
 
-Format GLRenderContext::QueryColorFormat() const
+Format GLRenderContext::GetColorFormat() const
 {
     /* Return fixed value, not much of control for an OpenGL context */
     return Format::RGBA8UNorm;
 }
 
-Format GLRenderContext::QueryDepthStencilFormat() const
+Format GLRenderContext::GetDepthStencilFormat() const
 {
     /* Return fixed value, not much of control for an OpenGL context */
     return Format::D24UNormS8UInt;
