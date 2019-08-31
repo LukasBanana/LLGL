@@ -341,7 +341,7 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
         auto shader = renderer->CreateShader(shaderDesc);
 
         // Print info log (warnings and errors)
-        std::string log = shader->QueryInfoLog();
+        std::string log = shader->GetReport();
         if (!log.empty())
             std::cerr << log << std::endl;
 
@@ -354,7 +354,7 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
 
     // Link shader program and check for errors
     if (shaderProgram->HasErrors())
-        throw std::runtime_error(shaderProgram->QueryInfoLog());
+        throw std::runtime_error(shaderProgram->GetReport());
 
     // Store information in call
     recall.vertexFormats = vertexFormats;
@@ -393,7 +393,7 @@ bool ExampleBase::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
             auto shader = renderer->CreateShader(shaderDesc);
 
             // Print info log (warnings and errors)
-            std::string log = shader->QueryInfoLog();
+            std::string log = shader->GetReport();
             if (!log.empty())
                 std::cerr << log << std::endl;
 
@@ -408,7 +408,7 @@ bool ExampleBase::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
         if (newShaderProgram->HasErrors())
         {
             // Print errors and release shader program
-            std::cerr << newShaderProgram->QueryInfoLog() << std::endl;
+            std::cerr << newShaderProgram->GetReport() << std::endl;
             renderer->Release(*newShaderProgram);
         }
         else

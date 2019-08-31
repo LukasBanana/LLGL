@@ -112,7 +112,7 @@ int main()
         #endif
 
         if (vertShader->HasErrors())
-            std::cerr << vertShader->QueryInfoLog() << std::endl;
+            std::cerr << vertShader->GetReport() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else
             std::cout << vertShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
@@ -123,7 +123,7 @@ int main()
         #endif
 
         if (fragShader->HasErrors())
-            std::cerr << fragShader->QueryInfoLog() << std::endl;
+            std::cerr << fragShader->GetReport() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else
             std::cout << fragShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
@@ -139,7 +139,7 @@ int main()
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
         if (shaderProgram->HasErrors())
-            std::cerr << shaderProgram->QueryInfoLog() << std::endl;
+            std::cerr << shaderProgram->GetReport() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else
             std::cout << "Constant Buffers: " << shaderProgram->QueryConstantBuffers().size() << std::endl;

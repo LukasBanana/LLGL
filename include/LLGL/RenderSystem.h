@@ -406,9 +406,9 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new and Shader object and compiles the specified source.
-        \remarks To check whether the compilation was successful or not, use the \c HasErrors and \c QueryInfoLog functions of the Shader interface.
+        \remarks To check whether the compilation was successful or not, use the \c HasErrors and \c GetReport functions of the Shader interface.
         \see Shader::HasErrors
-        \see Shader::QueryInfoLog
+        \see Shader::GetReport
         \see ShaderDescriptor
         \see ShaderDescFromFile
         */
@@ -416,9 +416,9 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new shader program and links all specified shaders.
-        \remarks To check whether the linking was successful or not, use the \c HasErrors and \c QueryInfoLog functions of the ShaderProgram interface.
+        \remarks To check whether the linking was successful or not, use the \c HasErrors and \c GetReport functions of the ShaderProgram interface.
         \see ShaderProgram::HasErrors
-        \see ShaderProgram::QueryInfoLog
+        \see ShaderProgram::GetReport
         \see ShaderProgramDescriptor
         \see ShaderProgramDesc
         */

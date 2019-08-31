@@ -59,7 +59,7 @@ std::string MTShader::Disassemble(int flags)
     return ""; // dummy
 }
 
-std::string MTShader::QueryInfoLog()
+std::string MTShader::GetReport()
 {
     std::string s;
 

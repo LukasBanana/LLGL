@@ -310,6 +310,8 @@ RenderContext::QueryColorFormat        --> RenderContext::GetColorFormat
 RenderContext::QueryDepthStencilFormat --> RenderContext::GetDepthStencilFormat
 Texture::QueryDesc                     --> Texture::GetDesc
 Texture::QueryMipExtent                --> Texture::GetMipExtent
+ShaderProgram::QueryUniformLocation    --> ShaderProgram::FindUniformLocation
+ShaderProgram::QueryInfoLog            --> ShaderProgram::GetReport
 ```
 
 

@@ -37,10 +37,10 @@ bool MTShaderProgram::HasErrors() const
     return (shaderWithError_ != nullptr);
 }
 
-std::string MTShaderProgram::QueryInfoLog()
+std::string MTShaderProgram::GetReport()
 {
     if (shaderWithError_ != nullptr)
-        return shaderWithError_->QueryInfoLog();
+        return shaderWithError_->GetReport();
     else
         return "";
 }
@@ -62,7 +62,7 @@ ShaderReflection MTShaderProgram::QueryReflection() const
     return reflection;
 }
 
-UniformLocation MTShaderProgram::QueryUniformLocation(const char* /*name*/) const
+UniformLocation MTShaderProgram::FindUniformLocation(const char* /*name*/) const
 {
     return -1; // dummy
 }

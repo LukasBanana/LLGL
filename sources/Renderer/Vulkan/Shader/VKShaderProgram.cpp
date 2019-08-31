@@ -36,7 +36,7 @@ bool VKShaderProgram::HasErrors() const
     return (linkError_ != LinkError::NoError);
 }
 
-std::string VKShaderProgram::QueryInfoLog()
+std::string VKShaderProgram::GetReport()
 {
     if (auto s = ShaderProgram::LinkErrorToString(linkError_))
         return s;
@@ -55,7 +55,7 @@ ShaderReflection VKShaderProgram::QueryReflection() const
     return reflection;
 }
 
-UniformLocation VKShaderProgram::QueryUniformLocation(const char* name) const
+UniformLocation VKShaderProgram::FindUniformLocation(const char* name) const
 {
     return -1; //TODO
 }

@@ -44,7 +44,7 @@ std::string D3D12Shader::Disassemble(int flags)
     return "";
 }
 
-std::string D3D12Shader::QueryInfoLog()
+std::string D3D12Shader::GetReport()
 {
     return (errors_.Get() != nullptr ? DXGetBlobString(errors_.Get()) : "");
 }

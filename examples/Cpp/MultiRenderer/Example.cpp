@@ -164,7 +164,7 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
     // Print info log (warnings and errors)
     for (auto shader : { vertShader, fragShader })
     {
-        std::string log = shader->QueryInfoLog();
+        std::string log = shader->GetReport();
         if (!log.empty())
             std::cerr << log << std::endl;
     }
@@ -178,7 +178,7 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
     }
     shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
     if (shaderProgram->HasErrors())
-        throw std::runtime_error(shaderProgram->QueryInfoLog());
+        throw std::runtime_error(shaderProgram->GetReport());
 
     // Create pipeline layout
     bool compiledSampler = (renderer->GetRendererID() == LLGL::RendererID::OpenGL);

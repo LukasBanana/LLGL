@@ -55,9 +55,9 @@ bool DbgShaderProgram::HasErrors() const
     return instance.HasErrors();
 }
 
-std::string DbgShaderProgram::QueryInfoLog()
+std::string DbgShaderProgram::GetReport()
 {
-    return instance.QueryInfoLog();
+    return instance.GetReport();
 }
 
 ShaderReflection DbgShaderProgram::QueryReflection() const
@@ -65,9 +65,9 @@ ShaderReflection DbgShaderProgram::QueryReflection() const
     return instance.QueryReflection();
 }
 
-UniformLocation DbgShaderProgram::QueryUniformLocation(const char* name) const
+UniformLocation DbgShaderProgram::FindUniformLocation(const char* name) const
 {
-    return instance.QueryUniformLocation(name);
+    return instance.FindUniformLocation(name);
 }
 
 bool DbgShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)

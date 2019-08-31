@@ -33,7 +33,7 @@ int main()
         auto computeShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Compute, "Shaders/SpirvReflectTest.comp.spv"));
 
         if (computeShader->HasErrors())
-            std::cerr << computeShader->QueryInfoLog() << std::endl;
+            std::cerr << computeShader->GetReport() << std::endl;
 
         // Create shader program
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
@@ -43,7 +43,7 @@ int main()
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
         if (shaderProgram->HasErrors())
-            std::cerr << shaderProgram->QueryInfoLog() << std::endl;
+            std::cerr << shaderProgram->GetReport() << std::endl;
 
         // Reflect shader
         auto reflect = shaderProgram->QueryReflection();

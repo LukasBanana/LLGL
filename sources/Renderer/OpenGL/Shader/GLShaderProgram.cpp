@@ -56,7 +56,7 @@ bool GLShaderProgram::HasErrors() const
     return (status == GL_FALSE);
 }
 
-std::string GLShaderProgram::QueryInfoLog()
+std::string GLShaderProgram::GetReport()
 {
     /* Query info log length */
     GLint infoLogLength = 0;
@@ -92,7 +92,7 @@ ShaderReflection GLShaderProgram::QueryReflection() const
     return reflection;
 }
 
-UniformLocation GLShaderProgram::QueryUniformLocation(const char* name) const
+UniformLocation GLShaderProgram::FindUniformLocation(const char* name) const
 {
     if (id_ != 0)
         return static_cast<UniformLocation>(glGetUniformLocation(id_, name));

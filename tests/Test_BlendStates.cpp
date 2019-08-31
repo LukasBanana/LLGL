@@ -90,7 +90,7 @@ int main()
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
         if (shaderProgram->HasErrors())
-            throw std::runtime_error(shaderProgram->QueryInfoLog());
+            throw std::runtime_error(shaderProgram->GetReport());
 
         // Create graphics pipeline
         static const std::size_t numPipelines = 4;

@@ -28,7 +28,7 @@ class DbgShader final : public Shader
         bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
-        std::string QueryInfoLog() override;
+        std::string GetReport() override;
 
     public:
 

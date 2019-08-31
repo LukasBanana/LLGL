@@ -31,8 +31,8 @@ class LLGL_EXPORT Shader : public RenderSystemChild
         /**
         \brief Returns true if this shader has any errors. Otherwise, the compilation was successful.
         \remarks If the compilation failed, this shader can not be used for a graphics or compute pipeline.
-        However, the details about the failure can be queried by the QueryInfoLog function.
-        \see QueryInfoLog
+        However, the details about the failure can be queried by the GetReport function.
+        \see GetReport
         */
         virtual bool HasErrors() const = 0;
 
@@ -49,8 +49,9 @@ class LLGL_EXPORT Shader : public RenderSystemChild
         \brief Returns the information log after the shader compilation.
         \todo Change return value to std::unique_ptr<LLGL::Blob>
         \todo Rename to QueryReport
+        \see ShaderProgram::GetReport
         */
-        virtual std::string QueryInfoLog() = 0;
+        virtual std::string GetReport() = 0;
 
         /**
         \brief Returns the shader stage bitmask for this shader object.

@@ -168,7 +168,7 @@ int main()
         auto vertShader = renderer->CreateShader(vertShaderDesc);
 
         if (vertShader->HasErrors())
-            std::cerr << vertShader->QueryInfoLog() << std::endl;
+            std::cerr << vertShader->GetReport() << std::endl;
 
         // Create fragment shader
         auto fragShaderSource =
@@ -192,7 +192,7 @@ int main()
         auto fragShader = renderer->CreateShader(fragShaderDesc);
 
         if (fragShader->HasErrors())
-            std::cerr << fragShader->QueryInfoLog() << std::endl;
+            std::cerr << fragShader->GetReport() << std::endl;
 
         // Create shader program
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
@@ -204,7 +204,7 @@ int main()
         auto& shaderProgram = *renderer->CreateShaderProgram(shaderProgramDesc);
 
         if (shaderProgram.HasErrors())
-            std::cerr << shaderProgram.QueryInfoLog() << std::endl;
+            std::cerr << shaderProgram.GetReport() << std::endl;
 
         auto reflection = shaderProgram.QueryReflection();
 
@@ -376,10 +376,10 @@ int main()
                         static_cast<Gs::Real>(context->GetVideoMode().resolution.width),
                         static_cast<Gs::Real>(context->GetVideoMode().resolution.height)
                     );
-                    commands->SetUniform(shaderProgram.QueryUniformLocation("projection"), projection.Ptr(), sizeof(projection));
+                    commands->SetUniform(shaderProgram.FindUniformLocation("projection"), projection.Ptr(), sizeof(projection));
 
                     const LLGL::ColorRGBAf color{ 1.0f, 1.0f, 1.0f, 1.0f };
-                    commands->SetUniform(shaderProgram.QueryUniformLocation("color"), &color, sizeof(color));
+                    commands->SetUniform(shaderProgram.FindUniformLocation("color"), &color, sizeof(color));
 
                     if (renderTarget && renderTargetTex)
                     {

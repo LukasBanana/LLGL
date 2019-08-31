@@ -52,7 +52,7 @@ std::string D3D11Shader::Disassemble(int flags)
     return "";
 }
 
-std::string D3D11Shader::QueryInfoLog()
+std::string D3D11Shader::GetReport()
 {
     return (errors_.Get() != nullptr ? DXGetBlobString(errors_.Get()) : "");
 }

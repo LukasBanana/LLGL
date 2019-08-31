@@ -38,9 +38,9 @@ String^ Shader::Disassemble(int flags)
     return gcnew String(ToManagedString(native_->Disassemble(flags)));
 }
 
-String^ Shader::QueryInfoLog()
+String^ Shader::GetReport()
 {
-    return gcnew String(ToManagedString(native_->QueryInfoLog()));
+    return gcnew String(ToManagedString(native_->GetReport()));
 }
 
 ShaderType Shader::Type::get()

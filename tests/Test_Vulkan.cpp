@@ -134,7 +134,7 @@ int main()
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
         if (shaderProgram->HasErrors())
-            std::cerr << shaderProgram->QueryInfoLog() << std::endl;
+            std::cerr << shaderProgram->GetReport() << std::endl;
 
         // Create constant buffers
         struct Matrices

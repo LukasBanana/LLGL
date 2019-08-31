@@ -50,7 +50,7 @@ bool D3D11ShaderProgram::HasErrors() const
     return (linkError_ != LinkError::NoError);
 }
 
-std::string D3D11ShaderProgram::QueryInfoLog()
+std::string D3D11ShaderProgram::GetReport()
 {
     if (auto s = ShaderProgram::LinkErrorToString(linkError_))
         return s;
@@ -75,7 +75,7 @@ ShaderReflection D3D11ShaderProgram::QueryReflection() const
     return reflection;
 }
 
-UniformLocation D3D11ShaderProgram::QueryUniformLocation(const char* name) const
+UniformLocation D3D11ShaderProgram::FindUniformLocation(const char* name) const
 {
     return -1; // dummy
 }

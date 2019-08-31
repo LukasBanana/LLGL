@@ -30,7 +30,7 @@ class MTShader : public Shader
 
         std::string Disassemble(int flags = 0) override;
 
-        std::string QueryInfoLog() override;
+        std::string GetReport() override;
 
         // Returns the native MTLFunction object.
         inline id<MTLFunction> GetNative() const

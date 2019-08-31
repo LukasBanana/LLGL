@@ -39,7 +39,7 @@ public ref class Shader
         String^ Disassemble();
         String^ Disassemble(int flags);
 
-        String^ QueryInfoLog();
+        String^ GetReport();
 
         property ShaderType Type
         {

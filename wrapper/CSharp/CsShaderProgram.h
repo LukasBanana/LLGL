@@ -36,7 +36,7 @@ public ref class ShaderProgram
             bool get();
         }
 
-        String^ QueryInfoLog();
+        String^ GetReport();
 
         #if 0
         ShaderReflectionDescriptor^ QueryReflectionDesc();

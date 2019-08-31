@@ -42,10 +42,10 @@ class DbgShaderProgram final : public ShaderProgram
 
         bool HasErrors() const override;
 
-        std::string QueryInfoLog() override;
+        std::string GetReport() override;
 
         ShaderReflection QueryReflection() const override;
-        UniformLocation QueryUniformLocation(const char* name) const override;
+        UniformLocation FindUniformLocation(const char* name) const override;
 
         bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
         bool GetWorkGroupSize(Extent3D& workGroupSize) const override;

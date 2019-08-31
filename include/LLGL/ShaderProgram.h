@@ -34,13 +34,16 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         /**
         \brief Returns true if this shader program has any errors. Otherwise, the linking was successful.
         \remarks If the linking failed, this shader program can not be used for a graphics or compute pipeline.
-        However, the details about the failure can be queried by the QueryInfoLog function.
-        \see QueryInfoLog
+        However, the details about the failure can be queried by the GetReport function.
+        \see GetReport
         */
         virtual bool HasErrors() const = 0;
 
-        //! Returns the information log after the shader linkage.
-        virtual std::string QueryInfoLog() = 0;
+        /**
+        \brief Returns the information log after the shader linkage.
+        \see Shader::GetReport
+        */
+        virtual std::string GetReport() = 0;
 
         /**
         \brief Returns a reflection of the shader pipeline layout with all required shader resources.
@@ -74,7 +77,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \see QueryReflection
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
         */
-        virtual UniformLocation QueryUniformLocation(const char* name) const = 0;
+        virtual UniformLocation FindUniformLocation(const char* name) const = 0;
 
         /**
         \brief Sets the work group size of a compute shader, i.e. the number of threads per thread-group. By default (1, 1, 1).

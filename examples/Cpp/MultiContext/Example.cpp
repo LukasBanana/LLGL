@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
         {
             if (shader)
             {
-                std::string log = shader->QueryInfoLog();
+                std::string log = shader->GetReport();
                 if (!log.empty())
                     std::cerr << log << std::endl;
             }
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
         if (shaderProgram->HasErrors())
-            throw std::runtime_error(shaderProgram->QueryInfoLog());
+            throw std::runtime_error(shaderProgram->GetReport());
 
         // Create graphics pipeline
         LLGL::GraphicsPipeline* pipeline[2] = {};
