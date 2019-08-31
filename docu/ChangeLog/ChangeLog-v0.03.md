@@ -304,6 +304,8 @@ Resource::QueryResourceType            --> Resource::GetResourceType
 Display::QueryList                     --> Display::InstantiateList
 Display::QueryPrimary                  --> Display::InstantiatePrimary
 Display::QuerySupportedDisplayModes    --> Display::GetSupportedDisplayModes
+Image::QuerySrcDesc                    --> Display::GetSrcDesc
+Image::QueryDstDesc                    --> Display::GetDstDesc
 ```
 
 

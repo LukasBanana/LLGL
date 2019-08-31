@@ -211,10 +211,10 @@ class LLGL_EXPORT Image
         /* ----- Attributes ----- */
 
         //! Returns a source image descriptor for this image with read-only access to the image data.
-        SrcImageDescriptor QuerySrcDesc() const;
+        SrcImageDescriptor GetSrcDesc() const;
 
         //! Returns a destination image descriptor for this image with read/write access to the image data.
-        DstImageDescriptor QueryDstDesc();
+        DstImageDescriptor GetDstDesc();
 
         //! Returns the extent of the image as 3D vector.
         inline const Extent3D& GetExtent() const

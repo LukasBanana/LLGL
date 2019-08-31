@@ -87,7 +87,7 @@ class PerformanceTest
             for (std::size_t i = 0, n = image.GetNumPixels(); i < n; ++i)
                 imageData[i] = RandColorRGBA();
 
-            auto imageDesc = image.QuerySrcDesc();
+            auto imageDesc = image.GetSrcDesc();
 
             // Create textures
             textures.reserve(numTextures);

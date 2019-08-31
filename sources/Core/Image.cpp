@@ -140,7 +140,7 @@ void Image::Convert(const ImageFormat format, const DataType dataType, std::size
     /* Convert image buffer (if necessary) */
     if (data_)
     {
-        if (auto convertedData = ConvertImageBuffer(QuerySrcDesc(), format, dataType, threadCount))
+        if (auto convertedData = ConvertImageBuffer(GetSrcDesc(), format, dataType, threadCount))
             data_ = std::move(convertedData);
     }
 
@@ -489,7 +489,7 @@ void Image::MirrorXYPlane()
 
 /* ----- Attributes ----- */
 
-SrcImageDescriptor Image::QuerySrcDesc() const
+SrcImageDescriptor Image::GetSrcDesc() const
 {
     SrcImageDescriptor imageDesc;
     {
@@ -501,7 +501,7 @@ SrcImageDescriptor Image::QuerySrcDesc() const
     return imageDesc;
 }
 
-DstImageDescriptor Image::QueryDstDesc()
+DstImageDescriptor Image::GetDstDesc()
 {
     DstImageDescriptor imageDesc;
     {
