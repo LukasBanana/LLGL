@@ -85,7 +85,7 @@ int main()
         }
 
         LLGL::Extent2D desktopSize;
-        if (auto display = LLGL::Display::QueryPrimary())
+        if (auto display = LLGL::Display::InstantiatePrimary())
             desktopSize = display->GetDisplayMode().resolution;
 
         std::wcout << "Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height << std::endl;

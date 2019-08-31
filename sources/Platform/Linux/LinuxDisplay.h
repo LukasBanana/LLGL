@@ -21,22 +21,22 @@ namespace LLGL
 // Helper class to handle a shared X11 display instance
 class LinuxSharedX11Display
 {
-    
+
     public:
-    
+
         LinuxSharedX11Display();
         ~LinuxSharedX11Display();
-        
+
         // Returns the native X11 display.
         inline ::Display* GetNative() const
         {
             return native_;
         }
-        
+
     private:
-    
+
         ::Display* native_ = nullptr;
-    
+
 };
 
 class LinuxDisplay : public Display
@@ -56,13 +56,15 @@ class LinuxDisplay : public Display
         bool SetDisplayMode(const DisplayModeDescriptor& displayModeDesc) override;
         DisplayModeDescriptor GetDisplayMode() const override;
 
-        std::vector<DisplayModeDescriptor> QuerySupportedDisplayModes() const override;
+        std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const override;
 
     private:
 
         // Returns the native X11 display.
         ::Display* GetNative() const;
-        
+
+    private:
+
         std::shared_ptr<LinuxSharedX11Display>  sharedX11Display_;
         int                                     screen_             = 0;
 

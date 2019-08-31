@@ -23,7 +23,7 @@ namespace LLGL
 \brief Display interface to query the attributes of all connected displays/monitors.
 \remarks Here is an example to print the attributes of all displays:
 \code
-auto myDisplayList = LLGL::Display::QueryList();
+auto myDisplayList = LLGL::Display::InstantiateList();
 for (const auto& myDisplay : myDisplayList) {
     auto myDisplayOffset = myDisplay->GetOffset();
     auto myDisplayMode   = myDisplay->GetDisplayMode();
@@ -46,14 +46,14 @@ class LLGL_EXPORT Display : public Interface
 
         /* ----- Global ----- */
 
-        //! Queries the list of all connected displays.
-        static std::vector<std::unique_ptr<Display>> QueryList();
+        //! Instantiates a list of interfaces for all connected displays.
+        static std::vector<std::unique_ptr<Display>> InstantiateList();
 
         /**
-        \brief Queries the primary display.
+        \brief Instantiates an interface for the primary display.
         \return Unique pointer to a Display instance that represents the primary display, or null on failure.
         */
-        static std::unique_ptr<Display> QueryPrimary();
+        static std::unique_ptr<Display> InstantiatePrimary();
 
         /**
         \brief Shows or hides the cursor for the running application from all displays.
@@ -114,13 +114,13 @@ class LLGL_EXPORT Display : public Interface
         To get only the currently active display mode, use GetDisplayMode.
         \see GetDisplayMode
         */
-        virtual std::vector<DisplayModeDescriptor> QuerySupportedDisplayModes() const = 0;
+        virtual std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const = 0;
 
     protected:
 
         /**
-        \brief Sorts the specified list of display modes as described in the QuerySupportedDisplayModes function, and removes duplicate entries.
-        \see QuerySupportedDisplayModes
+        \brief Sorts the specified list of display modes as described in the GetSupportedDisplayModes function, and removes duplicate entries.
+        \see GetSupportedDisplayModes
         */
         static void FinalizeDisplayModes(std::vector<DisplayModeDescriptor>& displayModeDescs);
 

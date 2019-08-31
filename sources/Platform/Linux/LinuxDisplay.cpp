@@ -27,7 +27,7 @@ LinuxSharedX11Display::LinuxSharedX11Display() :
     if (!native_)
         throw std::runtime_error("failed to open connection to X server");
 }
- 
+
 LinuxSharedX11Display::~LinuxSharedX11Display()
 {
     XCloseDisplay(native_);
@@ -38,14 +38,14 @@ LinuxSharedX11Display::~LinuxSharedX11Display()
  * Display class
  */
 
-std::vector<std::unique_ptr<Display>> Display::QueryList()
+std::vector<std::unique_ptr<Display>> Display::InstantiateList()
 {
     std::vector<std::unique_ptr<Display>> displayList;
-    
+
     /* Allocate shared X11 display handler */
     auto sharedX11Display   = std::make_shared<LinuxSharedX11Display>();
     auto dpy                = sharedX11Display->GetNative();
-    
+
     for (int i = 0, n = ScreenCount(dpy); i < n; ++i)
     {
         /* Make new display with current screen index */
@@ -55,12 +55,12 @@ std::vector<std::unique_ptr<Display>> Display::QueryList()
     return displayList;
 }
 
-std::unique_ptr<Display> Display::QueryPrimary()
+std::unique_ptr<Display> Display::InstantiatePrimary()
 {
     /* Allocate single X11 display handler */
     auto sharedX11Display   = std::make_shared<LinuxSharedX11Display>();
     auto dpy                = sharedX11Display->GetNative();
-    
+
     /* Make new display with default screen index */
     return MakeUnique<LinuxDisplay>(sharedX11Display, DefaultScreen(dpy));
 }
@@ -126,16 +126,16 @@ bool LinuxDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
 DisplayModeDescriptor LinuxDisplay::GetDisplayMode() const
 {
     DisplayModeDescriptor modeDesc;
-    
+
     auto dpy = GetNative();
     if (auto scr = ScreenOfDisplay(dpy, screen_))
     {
         auto rootWnd = RootWindow(dpy, screen_);
-        
+
         /* Get screen resolution from X11 screen */
         modeDesc.resolution.width   = static_cast<std::uint32_t>(scr->width);
         modeDesc.resolution.height  = static_cast<std::uint32_t>(scr->height);
-        
+
         /* Get refresh reate from X11 extension Xrandr */
         if (auto scrCfg = XRRGetScreenInfo(dpy, rootWnd))
         {
@@ -143,30 +143,30 @@ DisplayModeDescriptor LinuxDisplay::GetDisplayMode() const
             XRRFreeScreenConfigInfo(scrCfg);
         }
     }
-    
+
     return modeDesc;
 }
 
-std::vector<DisplayModeDescriptor> LinuxDisplay::QuerySupportedDisplayModes() const
+std::vector<DisplayModeDescriptor> LinuxDisplay::GetSupportedDisplayModes() const
 {
     std::vector<DisplayModeDescriptor> displayModeDescs;
-    
+
     DisplayModeDescriptor modeDesc;
-    
+
     /* Get all screen sizes from X11 extension Xrandr */
     int numSizes = 0;
     auto scrSizes = XRRSizes(GetNative(), screen_, &numSizes);
-    
+
     for (int i = 0; i < numSizes; ++i)
     {
         /* Initialize resolution */
         modeDesc.resolution.width   = static_cast<std::uint32_t>(scrSizes[i].width);
         modeDesc.resolution.height  = static_cast<std::uint32_t>(scrSizes[i].height);
-        
+
         /* Add one display mode for each rate */
         int numRates = 0;
         auto rates = XRRRates(GetNative(), screen_, i, &numRates);
-        
+
         for (int j = 0; j < numRates; ++j)
         {
             modeDesc.refreshRate = static_cast<std::uint32_t>(rates[j]);

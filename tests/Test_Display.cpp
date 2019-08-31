@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> utf8converter;
 
-        auto displayList = LLGL::Display::QueryList();
+        auto displayList = LLGL::Display::InstantiateList();
         for (const auto& display : displayList)
         {
             auto displayOffset  = display->GetOffset();
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
             std::cout << "|-Hz      = " << displayMode.refreshRate << std::endl;
 
             std::cout << "`-Settings:" << std::endl;
-            auto supportedModes = display->QuerySupportedDisplayModes();
+            auto supportedModes = display->GetSupportedDisplayModes();
 
             for (std::size_t i = 0, n = supportedModes.size(); i < n; ++i)
             {

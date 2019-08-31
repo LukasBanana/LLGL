@@ -301,6 +301,9 @@ FrameProfile::sampleBufferBindings     --> FrameProfile::sampledBufferBindings
 FrameProfile::rwStorageBufferBindings  --> FrameProfile::storageBufferBindings
 RenderingFeatures::hasCommandBufferExt --> RenderingFeatures::hasDirectResourceBinding
 Resource::QueryResourceType            --> Resource::GetResourceType
+Display::QueryList                     --> Display::InstantiateList
+Display::QueryPrimary                  --> Display::InstantiatePrimary
+Display::QuerySupportedDisplayModes    --> Display::GetSupportedDisplayModes
 ```
 
 

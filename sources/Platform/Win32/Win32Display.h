@@ -35,7 +35,7 @@ class Win32Display final : public Display
         bool SetDisplayMode(const DisplayModeDescriptor& displayModeDesc) override;
         DisplayModeDescriptor GetDisplayMode() const override;
 
-        std::vector<DisplayModeDescriptor> QuerySupportedDisplayModes() const override;
+        std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const override;
 
     private:
 

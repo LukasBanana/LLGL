@@ -40,13 +40,13 @@ static bool MatchDisplayMode(const DisplayModeDescriptor& displayModeDesc, CGDis
  * Display class
  */
 
-std::vector<std::unique_ptr<Display>> Display::QueryList()
+std::vector<std::unique_ptr<Display>> Display::InstantiateList()
 {
     static const std::uint32_t maxNumDisplays = 16;
-    
+
     CGDirectDisplayID displayIDArray[maxNumDisplays] = {};
     std::uint32_t numDisplays = 0;
-    
+
     std::vector<std::unique_ptr<Display>> displayList;
 
     if (CGGetActiveDisplayList(maxNumDisplays, displayIDArray, &numDisplays) == kCGErrorSuccess)
@@ -58,7 +58,7 @@ std::vector<std::unique_ptr<Display>> Display::QueryList()
     return displayList;
 }
 
-std::unique_ptr<Display> Display::QueryPrimary()
+std::unique_ptr<Display> Display::InstantiatePrimary()
 {
     return MakeUnique<MacOSDisplay>(CGMainDisplayID());
 }
@@ -128,14 +128,14 @@ bool MacOSDisplay::ResetDisplayMode()
 bool MacOSDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
 {
     bool result = false;
-    
+
     CFArrayRef modeArrayRef = CGDisplayCopyAllDisplayModes(displayID_, nullptr);
-    
+
     for (CFIndex i = 0, n = CFArrayGetCount(modeArrayRef); i < n; ++i)
     {
         /* Check if current display mode matches the input descriptor */
         CGDisplayModeRef modeRef = (CGDisplayModeRef)CFArrayGetValueAtIndex(modeArrayRef, i);
-        
+
         if (MatchDisplayMode(displayModeDesc, modeRef))
         {
             result = (CGDisplaySetDisplayMode(displayID_, modeRef, nullptr) == kCGErrorSuccess);
@@ -144,7 +144,7 @@ bool MacOSDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
     }
 
     CFRelease(modeArrayRef);
-    
+
     return result;
 }
 
@@ -164,7 +164,7 @@ std::vector<DisplayModeDescriptor> MacOSDisplay::QuerySupportedDisplayModes() co
     std::vector<DisplayModeDescriptor> displayModeDescs;
 
     CFArrayRef modeArrayRef = CGDisplayCopyAllDisplayModes(displayID_, nullptr);
-    
+
     for (CFIndex i = 0, n = CFArrayGetCount(modeArrayRef); i < n; ++i)
     {
         DisplayModeDescriptor modeDesc;

@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
         // Set window positions
         LLGL::Extent2D desktopResolution;
-        if (auto display = LLGL::Display::QueryPrimary())
+        if (auto display = LLGL::Display::InstantiatePrimary())
             desktopResolution = display->GetDisplayMode().resolution;
 
         const LLGL::Offset2D desktopCenter

@@ -19,7 +19,7 @@ namespace LLGL
  * Internals
  */
 
-// Thread local reference to the output list of the Display::QueryList function
+// Thread local reference to the output list of the Display::InstantiateList function
 thread_local static std::vector<std::unique_ptr<Display>>* g_displayListRef;
 
 static void Convert(DisplayModeDescriptor& dst, const DEVMODE& src)
@@ -63,7 +63,7 @@ static bool IsCursorVisible(bool& visible)
  * Display class
  */
 
-std::vector<std::unique_ptr<Display>> Display::QueryList()
+std::vector<std::unique_ptr<Display>> Display::InstantiateList()
 {
     std::vector<std::unique_ptr<Display>> displayList;
 
@@ -76,7 +76,7 @@ std::vector<std::unique_ptr<Display>> Display::QueryList()
     return displayList;
 }
 
-std::unique_ptr<Display> Display::QueryPrimary()
+std::unique_ptr<Display> Display::InstantiatePrimary()
 {
     auto monitor = MonitorFromPoint({}, MONITOR_DEFAULTTOPRIMARY);
     return MakeUnique<Win32Display>(monitor);
@@ -199,7 +199,7 @@ DisplayModeDescriptor Win32Display::GetDisplayMode() const
     return {};
 }
 
-std::vector<DisplayModeDescriptor> Win32Display::QuerySupportedDisplayModes() const
+std::vector<DisplayModeDescriptor> Win32Display::GetSupportedDisplayModes() const
 {
     std::vector<DisplayModeDescriptor> displayModeDescs;
 
