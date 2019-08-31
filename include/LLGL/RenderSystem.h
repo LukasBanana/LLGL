@@ -318,10 +318,10 @@ class LLGL_EXPORT RenderSystem : public Interface
         \param[in] mipLevel Specifies the MIP-level from which to read the texture data.
         \param[out] imageDesc Specifies the destination image descriptor to write the texture data to.
         \remarks The required size for a successful texture read operation depends on the image format, data type, and texture size.
-        The Texture::QueryDesc or Texture::QueryMipExtent functions can be used to determine the texture dimensions.
+        The Texture::GetDesc or Texture::GetMipExtent functions can be used to determine the texture dimensions.
         \code
         // Query texture size attribute
-        auto myTextureExtent = myTexture->QueryMipExtent(0);
+        auto myTextureExtent = myTexture->GetMipExtent(0);
 
         // Allocate image buffer with elements in all dimensions
         std::vector<LLGL::ColorRGBAub> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth);
@@ -341,8 +341,8 @@ class LLGL_EXPORT RenderSystem : public Interface
         or <code>imageDesc.data</code> points to a buffer that is smaller than specified by <code>imageDesc.dataSize</code>,
         or <code>imageDesc.dataSize</code> is less than the required size.
         \throws std::invalid_argument If <code>imageDesc.data</code> is null.
-        \see Texture::QueryDesc
-        \see Texture::QueryMipExtent
+        \see Texture::GetDesc
+        \see Texture::GetMipExtent
         \todo Replace \c mipLevel parameter with \c textureRegion just like with the \c WriteTexture function.
         */
         virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) = 0;

@@ -301,7 +301,7 @@ private:
         );
 
         // Store number of MIP-maps for environment map
-        settings.mipCount = static_cast<float>(skyboxArray->QueryDesc().mipLevels);
+        settings.mipCount = static_cast<float>(skyboxArray->GetDesc().mipLevels);
 
         // Load PBR textures
         colorMapArray = LoadTextureArray(

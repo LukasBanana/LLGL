@@ -25,9 +25,9 @@ class D3D12Texture final : public Texture
 
         void SetName(const char* name) override;
 
-        Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
+        Extent3D GetMipExtent(std::uint32_t mipLevel) const override;
 
-        TextureDescriptor QueryDesc() const override;
+        TextureDescriptor GetDesc() const override;
 
     public:
 

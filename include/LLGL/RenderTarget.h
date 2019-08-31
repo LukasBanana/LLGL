@@ -96,7 +96,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
 
         /**
         \brief Applies the resolution of the texture MIP level.
-        \see Texture::QueryMipExtent
+        \see Texture::GetMipExtent
         \see ValidateResolution
         */
         void ValidateMipResolution(const Texture& texture, std::uint32_t mipLevel);

@@ -54,7 +54,7 @@ class LLGL_EXPORT Texture : public Resource
         Those attributes are either set to zero (for flags) or the default value specified in TextureDescriptor is used.
         \see TextureDescriptor
         */
-        virtual TextureDescriptor QueryDesc() const = 0;
+        virtual TextureDescriptor GetDesc() const = 0;
 
         /**
         \brief Returns the texture extent for the specified MIP-level. This also includes the number of array layers.
@@ -66,9 +66,9 @@ class LLGL_EXPORT Texture : public Resource
         \remarks For cube textures and cube array textures (i.e. texture type TextureType::TextureCube and TextureType::TextureCubeArray), the depth extent will be a multiple of 6.
         This is in contrast to the other handling of cube array layers, because this function determines the actual buffer extent of the hardware texture.
         \see TextureDescriptor::mipLevels
-        \see RenderSystem::GenerateMips
+        \see CommandBuffer::GenerateMips
         */
-        virtual Extent3D QueryMipExtent(std::uint32_t mipLevel) const = 0;
+        virtual Extent3D GetMipExtent(std::uint32_t mipLevel) const = 0;
 
     protected:
 

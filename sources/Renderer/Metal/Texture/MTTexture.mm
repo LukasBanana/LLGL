@@ -78,7 +78,7 @@ MTTexture::~MTTexture()
     [native_ release];
 }
 
-Extent3D MTTexture::QueryMipExtent(std::uint32_t mipLevel) const
+Extent3D MTTexture::GetMipExtent(std::uint32_t mipLevel) const
 {
     auto w = static_cast<std::uint32_t>([native_ width]);
     auto h = static_cast<std::uint32_t>([native_ height]);
@@ -121,7 +121,7 @@ Extent3D MTTexture::QueryMipExtent(std::uint32_t mipLevel) const
     return Extent3D { w, h, d };
 }
 
-TextureDescriptor MTTexture::QueryDesc() const
+TextureDescriptor MTTexture::GetDesc() const
 {
     TextureDescriptor texDesc;
 
@@ -129,6 +129,7 @@ TextureDescriptor MTTexture::QueryDesc() const
     texDesc.bindFlags       = 0;
     texDesc.cpuAccessFlags  = 0;
     texDesc.miscFlags       = 0;
+    texDesc.mipLevels       = static_cast<std::uint32_t>([native_ mipmapLevelCount]);
     texDesc.format          = MTTypes::ToFormat([native_ pixelFormat]);
     texDesc.extent.width    = static_cast<std::uint32_t>([native_ width]);
     texDesc.extent.height   = static_cast<std::uint32_t>([native_ height]);

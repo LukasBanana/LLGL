@@ -46,14 +46,14 @@ void DbgTexture::SetName(const char* name)
     DbgSetObjectName(*this, name);
 }
 
-Extent3D DbgTexture::QueryMipExtent(std::uint32_t mipLevel) const
+Extent3D DbgTexture::GetMipExtent(std::uint32_t mipLevel) const
 {
-    return instance.QueryMipExtent(mipLevel);
+    return instance.GetMipExtent(mipLevel);
 }
 
-TextureDescriptor DbgTexture::QueryDesc() const
+TextureDescriptor DbgTexture::GetDesc() const
 {
-    return instance.QueryDesc();
+    return instance.GetDesc();
 }
 
 

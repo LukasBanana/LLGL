@@ -578,7 +578,7 @@ LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& re
             /* First try to get format from texture */
             auto format = Format::Undefined;
             if (auto texture = attachment.texture)
-                format = texture->QueryDesc().format;
+                format = texture->GetDesc().format;
 
             switch (attachment.type)
             {

@@ -159,8 +159,8 @@ public:
         stbi_image_free(imageBuffer);
 
         // Query texture descriptor to see what is really stored on the GPU
-        //auto textureDesc = colorMap->QueryDesc();
-        //auto textureExtent = colorMap->QueryMipExtent(0);
+        //auto textureDesc = colorMap->GetDesc();
+        //auto textureExtent = colorMap->GetMipExtent(0);
     }
 
     void CreateSamplers()

@@ -295,7 +295,7 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
     /* Query MIP-level size to determine image buffer size */
-    auto size           = texture.QueryMipExtent(mipLevel);
+    auto size           = texture.GetMipExtent(mipLevel);
     auto numTexels      = (size.width * size.height * size.depth);
 
     /* Check if image buffer must be converted */

@@ -64,7 +64,7 @@ static GLenum GLGetTextureParamTarget(const TextureType type)
     return 0;
 }
 
-Extent3D GLTexture::QueryMipExtent(std::uint32_t mipLevel) const
+Extent3D GLTexture::GetMipExtent(std::uint32_t mipLevel) const
 {
     GLint texSize[3] = { 0 };
     GLint level = static_cast<GLint>(mipLevel);
@@ -105,7 +105,7 @@ Extent3D GLTexture::QueryMipExtent(std::uint32_t mipLevel) const
     };
 }
 
-TextureDescriptor GLTexture::QueryDesc() const
+TextureDescriptor GLTexture::GetDesc() const
 {
     TextureDescriptor texDesc;
 

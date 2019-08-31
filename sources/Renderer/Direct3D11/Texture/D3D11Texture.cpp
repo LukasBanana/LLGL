@@ -30,7 +30,7 @@ void D3D11Texture::SetName(const char* name)
         D3D11SetObjectNameSubscript(uav_.Get(), name, ".UAV");
 }
 
-Extent3D D3D11Texture::QueryMipExtent(std::uint32_t mipLevel) const
+Extent3D D3D11Texture::GetMipExtent(std::uint32_t mipLevel) const
 {
     Extent3D size;
 
@@ -91,7 +91,7 @@ Extent3D D3D11Texture::QueryMipExtent(std::uint32_t mipLevel) const
     return size;
 }
 
-TextureDescriptor D3D11Texture::QueryDesc() const
+TextureDescriptor D3D11Texture::GetDesc() const
 {
     /* Get D3D hardware texture resource */
     const auto& hwTex = GetNative();

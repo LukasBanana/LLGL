@@ -308,6 +308,8 @@ Image::QuerySrcDesc                    --> Display::GetSrcDesc
 Image::QueryDstDesc                    --> Display::GetDstDesc
 RenderContext::QueryColorFormat        --> RenderContext::GetColorFormat
 RenderContext::QueryDepthStencilFormat --> RenderContext::GetDepthStencilFormat
+Texture::QueryDesc                     --> Texture::GetDesc
+Texture::QueryMipExtent                --> Texture::GetMipExtent
 ```
 
 

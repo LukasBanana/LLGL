@@ -273,7 +273,7 @@ struct TextureDescriptor
     This field is ignored for multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray),
     since these texture types only have a single MIP-map level.
     \see NumMipLevels
-    \see RenderSystem::GenerateMips
+    \see CommandBuffer::GenerateMips
     */
     std::uint32_t   mipLevels       = 0;
 

@@ -51,7 +51,7 @@ struct FrameProfile
         {
             /**
             \brief Counter for all MIP-map generations.
-            \see RenderSystem::GenerateMips
+            \see CommandBuffer::GenerateMips
             */
             std::uint32_t mipMapsGenerations;
 

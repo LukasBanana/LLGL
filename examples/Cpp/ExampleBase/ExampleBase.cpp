@@ -525,7 +525,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)
 {
     // Get texture dimension
-    auto texSize = texture.QueryMipExtent(0);
+    auto texSize = texture.GetMipExtent(0);
 
     // Read texture image data
     std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.width*texSize.height);

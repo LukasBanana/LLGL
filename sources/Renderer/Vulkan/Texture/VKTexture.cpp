@@ -28,7 +28,7 @@ VKTexture::VKTexture(
     imageWrapper_.AllocateMemoryRegion(deviceMemoryMngr);
 }
 
-Extent3D VKTexture::QueryMipExtent(std::uint32_t mipLevel) const
+Extent3D VKTexture::GetMipExtent(std::uint32_t mipLevel) const
 {
     switch (GetType())
     {
@@ -63,7 +63,7 @@ Extent3D VKTexture::QueryMipExtent(std::uint32_t mipLevel) const
     return { 0u, 0u, 0u };
 }
 
-TextureDescriptor VKTexture::QueryDesc() const
+TextureDescriptor VKTexture::GetDesc() const
 {
     TextureDescriptor texDesc;
 

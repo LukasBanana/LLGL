@@ -171,7 +171,7 @@ public:
         inputTexture = LoadTexture("../../Media/Textures/Crate.jpg");
 
         // Create texture with unordered access
-        LLGL::TextureDescriptor outputTextureDesc = inputTexture->QueryDesc();
+        LLGL::TextureDescriptor outputTextureDesc = inputTexture->GetDesc();
         {
             outputTextureDesc.bindFlags = LLGL::BindFlags::Sampled | LLGL::BindFlags::Storage;
             outputTextureDesc.mipLevels = 1;

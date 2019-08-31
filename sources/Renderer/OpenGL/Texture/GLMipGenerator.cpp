@@ -75,7 +75,7 @@ void GLMipGenerator::GenerateMipsRangeForTexture(
         else
         {
             /* Generate MIP-maps in custom sub generation process */
-            auto extent = textureGL.QueryMipExtent(baseMipLevel);
+            auto extent = textureGL.GetMipExtent(baseMipLevel);
 
             GenerateMipsRangeWithFBO(
                 stateMngr,

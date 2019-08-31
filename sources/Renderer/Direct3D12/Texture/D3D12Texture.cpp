@@ -34,7 +34,7 @@ void D3D12Texture::SetName(const char* name)
     D3D12SetObjectName(resource_.Get(), name);
 }
 
-Extent3D D3D12Texture::QueryMipExtent(std::uint32_t mipLevel) const
+Extent3D D3D12Texture::GetMipExtent(std::uint32_t mipLevel) const
 {
     Extent3D size;
 
@@ -82,7 +82,7 @@ Extent3D D3D12Texture::QueryMipExtent(std::uint32_t mipLevel) const
     return size;
 }
 
-TextureDescriptor D3D12Texture::QueryDesc() const
+TextureDescriptor D3D12Texture::GetDesc() const
 {
     /* Setup texture descriptor */
     TextureDescriptor texDesc;
