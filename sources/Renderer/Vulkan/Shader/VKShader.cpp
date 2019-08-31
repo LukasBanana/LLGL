@@ -35,11 +35,6 @@ bool VKShader::HasErrors() const
     return (loadBinaryResult_ != LoadBinaryResult::Successful);
 }
 
-std::string VKShader::Disassemble(int flags)
-{
-    return ""; // dummy
-}
-
 std::string VKShader::GetReport() const
 {
     std::string s;

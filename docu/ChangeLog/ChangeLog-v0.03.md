@@ -8,13 +8,14 @@
 - [Storage buffer binding](#storage-buffer-binding)
 - [Event listener interface](#event-listener-interface)
 - [`ShaderUniform` interface](#shaderuniform-interface)
-- [Renderer configuration](#renderer-configuration)
 - [Shader reflection](#shader-reflection)
+- [Renderer configuration](#renderer-configuration)
 - [Default values](#default-values)
 - [Renamed identifiers](#renamed-identifiers)
 - [`PipelineLayoutDesc` syntax](#pipelinelayoutdesc-syntax)
 - [`Format` information](#format-information)
 - [Direct resource binding](#direct-resource-binding)
+- [Removed features](#removed-features)
 
 
 ## `BufferDescriptor` interface
@@ -203,6 +204,42 @@ myCmdBuffer->SetUniform(myProjectionUniform, &myProjectionMatrix[0], sizeof(myPr
 ```
 
 
+## Shader reflection
+
+All nested structures in `ShaderReflectionDescriptor` were moved into `LLGL` namespace and renamed as follows:
+```cpp
+LLGL::ShaderReflectionDescriptor                -> LLGL::ShaderReflection
+LLGL::ShaderReflectionDescriptor::ResourceView  -> LLGL::ShaderResource
+LLGL::ShaderReflectionDescriptor::Uniform       -> LLGL::ShaderUniform
+```
+Moreover, all binding specific attributes in `ShaderResource` have been replaced by the `BindingDescriptor` structure.
+
+Before:
+```cpp
+// Interface:
+std::string             LLGL::ShaderReflectionDescriptor::ResourceView::name;
+LLGL::ResourceType      LLGL::ShaderReflectionDescriptor::ResourceView::type;
+long                    LLGL::ShaderReflectionDescriptor::ResourceView::bindFlags;
+long                    LLGL::ShaderReflectionDescriptor::ResourceView::stageFlags;
+std::uint32_t           LLGL::ShaderReflectionDescriptor::ResourceView::slot;
+std::uint32_t           LLGL::ShaderReflectionDescriptor::ResourceView::arraySize;
+std::uint32_t           LLGL::ShaderReflectionDescriptor::ResourceView::constantBufferSize;
+LLGL::StorageBufferType LLGL::ShaderReflectionDescriptor::ResourceView::storageBufferType;
+
+LLGL::ShaderReflectionDescriptor ShaderProgram::QueryReflectionDesc() const;
+```
+
+After:
+```cpp
+// Interface:
+LLGL::BindingDescriptor LLGL::ShaderResource::binding;
+std::uint32_t           LLGL::ShaderResource::constantBufferSize;
+LLGL::StorageBufferType LLGL::ShaderResource::storageBufferType;
+
+LLGL::ShaderReflection ShaderProgram::QueryReflection() const;
+```
+
+
 ## Renderer configuration
 
 Renderer configuration between Vulkan and OpenGL has been unified.
@@ -238,42 +275,6 @@ LLGL::RenderSystem* myRenderer = LLGL::RenderSystem::Load(myRendererDesc);
 LLGL::RenderContextDescriptor myContextDesc;
 myContextDesc.videoMode.resolution  = { 800, 600 };
 LLGL::RenderContext* myContext = myRenderer->CreateRenderContext(myContextDesc);
-```
-
-
-## Shader reflection
-
-All nested structures in `ShaderReflectionDescriptor` were moved into `LLGL` namespace and renamed as follows:
-```cpp
-LLGL::ShaderReflectionDescriptor                -> LLGL::ShaderReflection
-LLGL::ShaderReflectionDescriptor::ResourceView  -> LLGL::ShaderResource
-LLGL::ShaderReflectionDescriptor::Uniform       -> LLGL::ShaderUniform
-```
-Moreover, all binding specific attributes in `ShaderResource` have been replaced by the `BindingDescriptor` structure.
-
-Before:
-```cpp
-// Interface:
-std::string             LLGL::ShaderReflectionDescriptor::ResourceView::name;
-LLGL::ResourceType      LLGL::ShaderReflectionDescriptor::ResourceView::type;
-long                    LLGL::ShaderReflectionDescriptor::ResourceView::bindFlags;
-long                    LLGL::ShaderReflectionDescriptor::ResourceView::stageFlags;
-std::uint32_t           LLGL::ShaderReflectionDescriptor::ResourceView::slot;
-std::uint32_t           LLGL::ShaderReflectionDescriptor::ResourceView::arraySize;
-std::uint32_t           LLGL::ShaderReflectionDescriptor::ResourceView::constantBufferSize;
-LLGL::StorageBufferType LLGL::ShaderReflectionDescriptor::ResourceView::storageBufferType;
-
-LLGL::ShaderReflectionDescriptor ShaderProgram::QueryReflectionDesc() const;
-```
-
-After:
-```cpp
-// Interface:
-LLGL::BindingDescriptor LLGL::ShaderResource::binding;
-std::uint32_t           LLGL::ShaderResource::constantBufferSize;
-LLGL::StorageBufferType LLGL::ShaderResource::storageBufferType;
-
-LLGL::ShaderReflection ShaderProgram::QueryReflection() const;
 ```
 
 
@@ -387,6 +388,13 @@ void CommandBuffer::SetResource(LLGL::Resource& resource,
 myCmdBuffer->SetResource(*myConstBuffer, 0, LLGL::BindFlags::ConstantBuffer, LLGL::BindFlags::VertexStage);
 myCmdBuffer->SetResource(*myColorMap, 1, LLGL::BindFlags::Sampled, LLGL::BindFlags::FragmentStage);
 ```
+
+
+## Removed features
+
+The following features/functions have been removed:
+- The `Shader::Disassemble` function and `ShaderDisassembleFlags` enumeration have been removed. LLGL does not provide shader cross compilation or disassembling.
+
 
 
 

@@ -28,17 +28,7 @@ bool Shader::HasErrors::get()
     return native_->HasErrors();
 }
 
-String^ Shader::Disassemble()
-{
-    return gcnew String(ToManagedString(native_->Disassemble()));
-}
-
-String^ Shader::Disassemble(int flags)
-{
-    return gcnew String(ToManagedString(native_->Disassemble(flags)));
-}
-
-String^ Shader::GetReport()
+String^ Shader::Report::get()
 {
     return gcnew String(ToManagedString(native_->GetReport()));
 }

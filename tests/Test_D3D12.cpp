@@ -7,8 +7,6 @@
 
 #include "Helper.h"
 
-//#define TEST_PRINT_SHADER_INFO
-
 int main()
 {
     try
@@ -107,27 +105,11 @@ int main()
         auto vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Shaders/TestShader.hlsl", "VS", "vs_5_0" });
         auto fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Shaders/TestShader.hlsl", "PS", "ps_5_0" });
 
-        #ifdef TEST_PRINT_SHADER_INFO
-        std::cout << "VERTEX OUTPUT:" << std::endl;
-        #endif
-
         if (vertShader->HasErrors())
             std::cerr << vertShader->GetReport() << std::endl;
-        #ifdef TEST_PRINT_SHADER_INFO
-        else
-            std::cout << vertShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
-        #endif
-
-        #ifdef TEST_PRINT_SHADER_INFO
-        std::cout << "PIXEL OUTPUT:" << std::endl;
-        #endif
 
         if (fragShader->HasErrors())
             std::cerr << fragShader->GetReport() << std::endl;
-        #ifdef TEST_PRINT_SHADER_INFO
-        else
-            std::cout << fragShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
-        #endif
 
         // Create shader program
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
@@ -140,10 +122,6 @@ int main()
 
         if (shaderProgram->HasErrors())
             std::cerr << shaderProgram->GetReport() << std::endl;
-        #ifdef TEST_PRINT_SHADER_INFO
-        else
-            std::cout << "Constant Buffers: " << shaderProgram->QueryConstantBuffers().size() << std::endl;
-        #endif
 
         auto reflection = shaderProgram->QueryReflection();
 

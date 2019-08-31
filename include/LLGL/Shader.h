@@ -37,15 +37,6 @@ class LLGL_EXPORT Shader : public RenderSystemChild
         virtual bool HasErrors() const = 0;
 
         /**
-        \brief Disassembles the previously compiled shader byte code.
-        \param[in] flags Specifies optional disassemble flags. This can be a bitwise OR combination of the 'ShaderDisassembleFlags' enumeration entries. By default 0.
-        \return Disassembled assembler code or an empty string if disassembling was not possible.
-        \note Only supported with: Direct3D 11, Direct3D 12.
-        \todo Change return value to std::unique_ptr<LLGL::Blob>
-        */
-        virtual std::string Disassemble(int flags = 0) = 0;
-
-        /**
         \brief Returns the report message after the shader compilation or an empty string if there is no report.
         \todo Change return value to std::unique_ptr<LLGL::Blob>
         \see ShaderProgram::GetReport

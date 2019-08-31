@@ -30,20 +30,6 @@ bool D3D12Shader::HasErrors() const
     return hasErrors_;
 }
 
-std::string D3D12Shader::Disassemble(int flags)
-{
-    if (byteCode_)
-    {
-        ComPtr<ID3DBlob> disasm;
-
-        auto hr = D3DDisassemble(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), DXGetDisassemblerFlags(flags), nullptr, &disasm);
-        DXThrowIfFailed(hr, "failed to disassemble D3D12 shader byte code");
-
-        return DXGetBlobString(disasm.Get());
-    }
-    return "";
-}
-
 std::string D3D12Shader::GetReport() const
 {
     return (errors_.Get() != nullptr ? DXGetBlobString(errors_.Get()) : "");

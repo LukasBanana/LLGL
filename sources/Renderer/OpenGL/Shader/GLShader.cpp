@@ -45,11 +45,6 @@ bool GLShader::HasErrors() const
     return (status == GL_FALSE);
 }
 
-std::string GLShader::Disassemble(int flags)
-{
-    return ""; // dummy
-}
-
 std::string GLShader::GetReport() const
 {
     /* Query info log length */

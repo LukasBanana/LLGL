@@ -497,17 +497,6 @@ UINT DXGetCompilerFlags(int flags)
     return dxFlags;
 }
 
-// see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607326(v=vs.85).aspx
-UINT DXGetDisassemblerFlags(int flags)
-{
-    UINT dxFlags = 0;
-
-    if ((flags & ShaderDisassembleFlags::InstructionOnly) != 0)
-        dxFlags |= D3D_DISASM_INSTRUCTION_ONLY;
-
-    return dxFlags;
-}
-
 VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)
 {
     ComPtr<IDXGIOutput> output;

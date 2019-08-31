@@ -52,7 +52,6 @@ class D3D11Shader final : public Shader
 
         bool HasErrors() const override;
 
-        std::string Disassemble(int flags = 0) override;
         std::string GetReport() const override;
 
     public:

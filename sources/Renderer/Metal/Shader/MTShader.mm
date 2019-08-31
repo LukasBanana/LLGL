@@ -54,11 +54,6 @@ bool MTShader::HasErrors() const
     return hasErrors_;
 }
 
-std::string MTShader::Disassemble(int flags)
-{
-    return ""; // dummy
-}
-
 std::string MTShader::GetReport() const
 {
     std::string s;

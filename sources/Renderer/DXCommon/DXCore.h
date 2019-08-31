@@ -82,9 +82,6 @@ const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel);
 // Returns the compiler flags for the 'ShaderCompileFlags' enumeration values.
 UINT DXGetCompilerFlags(int flags);
 
-// Returns the disassembler flags for the 'ShaderDisassembleFlags' enumeration values.
-UINT DXGetDisassemblerFlags(int flags);
-
 // Returns the video adapter descriptor from the specified DXGI adapter.
 VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter);
 

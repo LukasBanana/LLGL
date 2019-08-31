@@ -30,16 +30,6 @@ bool DbgShader::HasErrors() const
     return instance.HasErrors();
 }
 
-std::string DbgShader::Disassemble(int flags)
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to disassemble uncompiled shader code");
-    }
-    return instance.Disassemble(flags);
-}
-
 std::string DbgShader::GetReport() const
 {
     return instance.GetReport();

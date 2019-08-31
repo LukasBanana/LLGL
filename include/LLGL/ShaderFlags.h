@@ -67,15 +67,6 @@ struct ShaderCompileFlags
     };
 };
 
-//! Shader disassemble flags enumeration.
-struct ShaderDisassembleFlags
-{
-    enum
-    {
-        InstructionOnly = (1 << 0), //!< Show only instructions in disassembly output.
-    };
-};
-
 /**
 \brief Shader stage flags enumeration.
 \remarks Specifies which shader stages are affected by a state change, e.g. to which shader stages a constant buffer is bound.

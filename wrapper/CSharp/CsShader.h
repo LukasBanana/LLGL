@@ -36,10 +36,10 @@ public ref class Shader
             bool get();
         }
 
-        String^ Disassemble();
-        String^ Disassemble(int flags);
-
-        String^ GetReport();
+        property String^ Report
+        {
+            String^ get();
+        };
 
         property ShaderType Type
         {
