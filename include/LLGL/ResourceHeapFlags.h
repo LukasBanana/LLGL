@@ -10,6 +10,10 @@
 
 
 #include "Export.h"
+#include "Texture.h"
+#include "TextureFlags.h"
+#include "Buffer.h"
+#include "BufferFlags.h"
 #include <vector>
 
 
@@ -17,7 +21,6 @@ namespace LLGL
 {
 
 
-class Resource;
 class PipelineLayout;
 
 
@@ -26,21 +29,55 @@ class PipelineLayout;
 /**
 \brief Resource view descriptor structure.
 \see ResourceHeapDescriptor::resourceViews
-\todo Remove this descriptor
 */
 struct ResourceViewDescriptor
 {
     //! Default constructor to initialize the resource view with a null pointer.
     ResourceViewDescriptor() = default;
 
-    //! Constructor to initialize the descriptor with a Buffer resource view.
+    //! Constructor to initialize the descriptor with a resource. The resource view will access the entire resource.
     inline ResourceViewDescriptor(Resource* resource) :
         resource { resource }
     {
+        /* Invalidate subresource views */
+        textureView.format                      = Format::Undefined;
+        textureView.subresource.baseArrayLayer  = 0;
+        textureView.subresource.numArrayLayers  = 0;
+        textureView.subresource.baseMipLevel    = 0;
+        textureView.subresource.numMipLevels    = 0;
     }
 
+    //! Constructor to initialize a descriptor with a texture subresource view.
+    inline ResourceViewDescriptor(Texture* texture, const TextureViewDescriptor& subresourceDesc) :
+        resource    { texture         },
+        textureView { subresourceDesc }
+    {
+    }
+
+    #if 0//TODO
+    //! Constructor to initialize a descriptor with a buffer subresource view.
+    inline ResourceViewDescriptor(Buffer* buffer, const BufferViewDescriptor& subresourceDesc) :
+        resource   { buffer          },
+        bufferView { subresourceDesc }
+    {
+    }
+    #endif
+
     //! Pointer to the hardware resoudce.
-    Resource*   resource    = nullptr;
+    Resource*               resource    = nullptr;
+
+    /**
+    \brief Optional texture view descriptor.
+    \remarks Can be used to declare a subresource view of a texture resource.
+    \remarks This attribute is ignored if either \c numMipLevels or \c numArrayLayers of the TextureSubresource structure is zero.
+    \todo Not implemented yet.
+    */
+    TextureViewDescriptor   textureView;
+
+    #if 0//TODO
+    //! Optional buffer view descriptor.
+    BufferViewDescriptor    bufferView;
+    #endif
 };
 
 /**
@@ -54,20 +91,10 @@ struct ResourceHeapDescriptor
     //! Reference to the pipeline layout. This must not be null, when a resource heap is created.
     PipelineLayout*                     pipelineLayout = nullptr;
 
-    #if 0//TODO: use list of resources instead of resource views, since there are no more options in <ResourceViewDescriptor>
-    /**
-    \brief List of all resources that are associated with the resource heap.
-    \remarks These resources must be specified in the same order as they were specified when the pipeline layout was created.
-    \see PipelineLayoutDescriptor::bindings
-    */
-    std::vector<Resource*>              resources;
-    #endif
-
     /**
     \brief List of all resource view descriptors.
     \remarks These resources must be specified in the same order as they were specified when the pipeline layout was created.
     \see PipelineLayoutDescriptor::bindings
-    \todo Refactor to <code>std::vector<Resource*> resources</code>.
     */
     std::vector<ResourceViewDescriptor> resourceViews;
 };

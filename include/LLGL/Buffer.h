@@ -10,7 +10,7 @@
 
 
 #include "Resource.h"
-#include "BufferFlags.h"//TODO: replace by "ResourceFlags.h"
+#include "BufferFlags.h"
 
 
 namespace LLGL

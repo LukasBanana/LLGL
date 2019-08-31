@@ -87,9 +87,6 @@ class GLRenderSystem final : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
-        #if 0//TODO
-        Texture* CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc) override;
-        #endif
 
         void Release(Texture& texture) override;
 

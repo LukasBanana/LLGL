@@ -353,7 +353,7 @@ struct RenderingFeatures
     /**
     \brief Specifies whether texture views are supported.
     \remarks Texture views can share their image data with another texture resource.
-    \see RenderSystem::CreateTextureView
+    \see TextureViewDescriptor
     */
     bool hasTextureViews                = false;
 

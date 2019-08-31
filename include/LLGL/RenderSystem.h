@@ -289,17 +289,6 @@ class LLGL_EXPORT RenderSystem : public Interface
         */
         virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) = 0;
 
-        #if 0//TODO
-        /**
-        \brief Creates a new texture view that shares the image data of the specified shared texture.
-        \param[in] sharedTexture Specifies the texture whose image data is to be shared with the new texture view.
-        This must not be a texture view itself, i.e. a texture view cannot be created from another texture view.
-        \param[in] textureViewDesc Specifies the texture view descriptor.
-        \remarks If the shared texture object (specified by \c sharedTexture) is deleted, this texture view must no longer be used either.
-        */
-        virtual Texture* CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc) { return nullptr; }// = 0; //TODO: remove default implementation
-        #endif
-
         //! Releases the specified texture object. After this call, the specified object must no longer be used.
         virtual void Release(Texture& texture) = 0;
 

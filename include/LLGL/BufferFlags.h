@@ -27,6 +27,7 @@ namespace LLGL
 \brief Storage buffer type enumeration.
 \note Only supported with: Direct3D 11, Direct3D 12.
 \see BufferDescriptor::StorageBuffer::storageType
+\todo Replace by BindFlag with different options (e.g. StructuredBuffer and Storage).
 */
 enum class StorageBufferType
 {
@@ -73,7 +74,10 @@ enum class StorageBufferType
 
 /* ----- Structures ----- */
 
-//! Hardware buffer descriptor structure.
+/**
+\brief Hardware buffer descriptor structure.
+\see RenderSystem::CreateBuffer
+*/
 struct BufferDescriptor
 {
     //! Vertex buffer specific descriptor structure.
@@ -97,7 +101,10 @@ struct BufferDescriptor
         Format format = Format::R32UInt;
     };
 
-    //! Storage buffer specific descriptor structure.
+    /**
+    \brief Storage buffer specific descriptor structure.
+    \todo Move this into a BufferViewDescriptor.
+    */
     struct StorageBuffer
     {
         /**

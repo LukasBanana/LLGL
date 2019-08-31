@@ -226,22 +226,6 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc));
 }
 
-#if 0//TODO
-Texture* DbgRenderSystem::CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc)
-{
-    auto& sharedTextureDbg = LLGL_CAST(DbgTexture&, sharedTexture);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        ValidateTextureView(sharedTextureDbg, textureViewDesc);
-    }
-
-    auto textureViewInstance = instance_->CreateTextureView(sharedTextureDbg.instance, textureViewDesc);
-    return TakeOwnership(textures_, MakeUnique<DbgTexture>(*textureViewInstance, &sharedTextureDbg, textureViewDesc));
-}
-#endif
-
 void DbgRenderSystem::Release(Texture& texture)
 {
     ReleaseDbg(textures_, texture);

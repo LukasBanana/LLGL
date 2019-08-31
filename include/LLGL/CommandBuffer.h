@@ -169,7 +169,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         It is therefore recommended to use this function only if the range of MIP-maps is significantly smaller than the entire MIP chain,
         e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
         \see GenerateMips(Texture&)
-        \see RenderSystem::CreateTextureView
         */
         virtual void GenerateMips(Texture& texture, const TextureSubresource& subresource) = 0;
 
