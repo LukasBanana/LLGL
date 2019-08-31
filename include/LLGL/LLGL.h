@@ -43,7 +43,7 @@
  * 
  * - **OpenGL Renderer**: ~90% done
  * - **Direct3D 11 Renderer**: ~90% done
- * - **Direct3D 12 Renderer**: ~40% done
+ * - **Direct3D 12 Renderer**: ~50% done
  * - **Vulkan Renderer**: ~50% done
  * - **Metal enderer**: ~50% done
  * 
