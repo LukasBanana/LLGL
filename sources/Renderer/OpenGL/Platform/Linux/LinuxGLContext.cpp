@@ -116,22 +116,31 @@ void LinuxGLContext::CreateContext(
     if (!display_ || !wnd_ || !visual_)
         throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
 
-    /* Create OpenGL context with X11 lib */
+    /* Create intermediate GL context OpenGL context with X11 lib */
+    GLXContext intermediateGlc = CreateContextCompatibilityProfile(nullptr);
+    if (glXMakeCurrent(display_, wnd_, intermediateGlc) != True)
+        Log::PostReport(Log::ReportType::Error, "glXMakeCurrent failed on GLX compatibility profile");
+
     if (config.contextProfile == OpenGLContextProfile::CoreProfile)
     {
         /* Create core profile */
         glc_ = CreateContextCoreProfile(glcShared, config.majorVersion, config.minorVersion);
     }
 
-    if (!glc_)
+    if (glc_)
     {
-        /* Create compatibility profile */
-        glc_ = CreateContextCompatibilityProfile(glcShared);
-    }
+        /* Make new OpenGL context current */
+        if (glXMakeCurrent(display_, wnd_, glc_) != True)
+            Log::PostReport(Log::ReportType::Error, "glXMakeCurrent failed on GLX core profile");
 
-    /* Make new OpenGL context current */
-    if (glXMakeCurrent(display_, wnd_, glc_) != True)
-        Log::PostReport(Log::ReportType::Error, "failed to make OpenGL render context current (glXMakeCurrent)");
+        /* Valid core profile created, so we can delete the intermediate GLX context */
+        glXDestroyContext(display_, intermediateGlc);
+    }
+    else
+    {
+        /* No core profile created, so we use the intermediate GLX context */
+        glc_ = intermediateGlc;
+    }
 }
 
 void LinuxGLContext::DeleteContext()
@@ -141,25 +150,21 @@ void LinuxGLContext::DeleteContext()
 
 GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int major, int minor)
 {
-    /* Check if highest version possible shall be used */
+    /* Query supported GL versions */
     if (major == 0 && minor == 0)
     {
-        /* Set to fixed value since 'glGetIntegerv' can not be used until a valid GL context has been created */
-        major = 3;
-        minor = 2;
+        /* Query highest possible GL version from intermediate context */
+        glGetIntegerv(GL_MAJOR_VERSION, &major);
+        glGetIntegerv(GL_MINOR_VERSION, &minor);
     }
 
-    /* Query supported GL versions */
-    GLint majorGL = 1, minorGL = 1;
-    QueryGLVersion(majorGL, minorGL);
-
-    if (majorGL < 3)
+    if (major < 3)
     {
         /* Don't try to create a core profile when GL version is below 3.0 */
         Log::PostReport(
             Log::ReportType::Error,
             "cannot create OpenGL core profile with GL version " +
-            std::to_string(majorGL) + '.' + std::to_string(minorGL)
+            std::to_string(major) + '.' + std::to_string(minor)
         );
         return nullptr;
     }
@@ -223,26 +228,6 @@ GLXContext LinuxGLContext::CreateContextCompatibilityProfile(GLXContext glcShare
 {
     /* Create compatibility profile */
     return glXCreateContext(display_, visual_, glcShared, GL_TRUE);
-}
-
-bool LinuxGLContext::QueryGLVersion(GLint& major, GLint& minor)
-{
-    bool result = false;
-
-    /* Create temporary GL context */
-    GLXContext glc = glXCreateContext(display_, visual_, nullptr, GL_TRUE);
-    if (glc)
-    {
-        /* Query GL version from temporary GL context */
-        glXMakeCurrent(display_, wnd_, glc);
-
-        result = GLParseVersionString(glGetString(GL_VERSION), major, minor);
-
-        glXMakeCurrent(display_, 0, nullptr);
-        glXDestroyContext(display_, glc);
-    }
-
-    return result;
 }
 
 
