@@ -11,12 +11,14 @@ int main()
 {
     try
     {
+        LLGL::Log::SetReportCallbackStd();
+
         // Setup profiler and debugger
         std::shared_ptr<LLGL::RenderingProfiler> profiler;
         std::shared_ptr<LLGL::RenderingDebugger> debugger;
 
         //profiler = std::make_shared<LLGL::RenderingProfiler>();
-        //debugger = std::make_shared<TestDebugger>();
+        //debugger = std::make_shared<LLGL::RenderingDebugger>();
 
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("Direct3D12", profiler.get(), debugger.get());
@@ -36,11 +38,11 @@ int main()
 
         auto context = renderer->CreateRenderContext(contextDesc);
 
-        auto window = static_cast<LLGL::Window*>(&(context->GetSurface()));
+        auto& window = LLGL::CastTo<LLGL::Window>(context->GetSurface());
 
         auto title = "LLGL Test 3 ( " + renderer->GetName() + " )";
-        window->SetTitle(std::wstring(title.begin(), title.end()));
-        window->Show();
+        window.SetTitle(std::wstring(title.begin(), title.end()));
+        window.Show();
 
         auto renderCaps = renderer->GetRenderingCaps();
 
@@ -50,7 +52,7 @@ int main()
 
         // Setup input controller
         auto input = std::make_shared<LLGL::Input>();
-        window->AddEventListener(input);
+        window.AddEventListener(input);
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
@@ -100,6 +102,8 @@ int main()
             constantBufferDesc.miscFlags    = LLGL::MiscFlags::DynamicUsage;
         }
         auto constantBuffer = renderer->CreateBuffer(constantBufferDesc, &matrices);
+
+        auto bufDesc = constantBuffer->GetDesc();
 
         // Load shader
         auto vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Shaders/TestShader.hlsl", "VS", "vs_5_0" });
@@ -195,14 +199,14 @@ int main()
         #endif
 
         // Main loop
-        while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
             commands->Begin();
             {
                 commands->BeginRenderPass(*context);
                 {
                     commands->Clear(LLGL::ClearFlags::Color);
-                    commands->SetViewport(LLGL::Viewport { { 0, 0 }, contextDesc.videoMode.resolution });
+                    commands->SetViewport(contextDesc.videoMode.resolution);
 
                     commands->SetGraphicsPipeline(*pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);

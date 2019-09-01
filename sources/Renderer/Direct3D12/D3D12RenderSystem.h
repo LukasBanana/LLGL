@@ -20,6 +20,8 @@
 #include "Command/D3D12CommandSignaturePool.h"
 
 #include "Buffer/D3D12Buffer.h"
+#include "Buffer/D3D12StagingBufferPool.h"
+
 #include "Texture/D3D12Texture.h"
 #include "Texture/D3D12Sampler.h"
 #include "Texture/D3D12RenderTarget.h"
@@ -231,6 +233,7 @@ class D3D12RenderSystem final : public RenderSystem
         D3D12PipelineLayout                         defaultPipelineLayout_;
         D3D12CommandSignaturePool                   commandSignaturePool_;
         D3D12CommandContext                         commandContext_;
+        D3D12StagingBufferPool                      stagingBufferPool_;
 
         #ifdef LLGL_DEBUG
         //ComPtr<ID3D12Debug>                         debugDevice_;

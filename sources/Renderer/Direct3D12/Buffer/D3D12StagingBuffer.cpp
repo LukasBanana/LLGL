@@ -15,18 +15,9 @@ namespace LLGL
 {
 
 
-D3D12StagingBuffer::D3D12StagingBuffer(ID3D12Device* device, UINT64 size) :
-    size_ { size }
+D3D12StagingBuffer::D3D12StagingBuffer(ID3D12Device* device, UINT64 size)
 {
-    auto hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(size),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(native_.ReleaseAndGetAddressOf())
-    );
-    DXThrowIfCreateFailed(hr, "failed to create D3D12 committed resource for upload buffer");
+    Create(device, size);
 }
 
 D3D12StagingBuffer::D3D12StagingBuffer(D3D12StagingBuffer&& rhs) :
@@ -47,6 +38,29 @@ D3D12StagingBuffer& D3D12StagingBuffer::operator = (D3D12StagingBuffer&& rhs)
     return *this;
 }
 
+void D3D12StagingBuffer::Create(ID3D12Device* device, UINT64 size)
+{
+    /* Create GPU upload buffer */
+    auto hr = device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(size),
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(native_.ReleaseAndGetAddressOf())
+    );
+    DXThrowIfCreateFailed(hr, "failed to create D3D12 committed resource for upload buffer");
+
+    /* Store new size and reset write offset */
+    size_   = size;
+    offset_ = 0;
+}
+
+void D3D12StagingBuffer::Release()
+{
+    native_.Reset();
+}
+
 void D3D12StagingBuffer::Reset()
 {
     offset_ = 0;
@@ -58,7 +72,6 @@ bool D3D12StagingBuffer::Capacity(UINT64 dataSize) const
 }
 
 void D3D12StagingBuffer::Write(
-    ID3D12Device*               device,
     ID3D12GraphicsCommandList*  commandList,
     ID3D12Resource*             dstBuffer,
     UINT64                      dstOffset,
@@ -76,8 +89,16 @@ void D3D12StagingBuffer::Write(
 
     /* Encode copy buffer command */
     commandList->CopyBufferRegion(dstBuffer, dstOffset, native_.Get(), offset_, dataSize);
+}
 
-    /* Increase offset for next write operation */
+void D3D12StagingBuffer::WriteAndIncrementOffset(
+    ID3D12GraphicsCommandList*  commandList,
+    ID3D12Resource*             dstBuffer,
+    UINT64                      dstOffset,
+    const void*                 data,
+    UINT64                      dataSize)
+{
+    Write(commandList, dstBuffer, dstOffset, data, dataSize);
     offset_ += dataSize;
 }
 

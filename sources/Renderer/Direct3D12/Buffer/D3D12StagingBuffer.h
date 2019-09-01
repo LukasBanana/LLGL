@@ -26,6 +26,8 @@ class D3D12StagingBuffer
 
     public:
 
+        D3D12StagingBuffer() = default;
+
         // Creates the native D3D upload resource.
         D3D12StagingBuffer(ID3D12Device* device, UINT64 size);
 
@@ -35,6 +37,12 @@ class D3D12StagingBuffer
         D3D12StagingBuffer(const D3D12StagingBuffer&) = delete;
         D3D12StagingBuffer& operator = (const D3D12StagingBuffer&) = delete;
 
+        // Creates a new resource and resets the writing offset.
+        void Create(ID3D12Device* device, UINT64 size);
+
+        // Release the native buffer resource.
+        void Release();
+
         // Resets the writing offset.
         void Reset();
 
@@ -43,7 +51,15 @@ class D3D12StagingBuffer
 
         // Writes the specified data to the native D3D upload buffer.
         void Write(
-            ID3D12Device*               device,
+            ID3D12GraphicsCommandList*  commandList,
+            ID3D12Resource*             dstBuffer,
+            UINT64                      dstOffset,
+            const void*                 data,
+            UINT64                      dataSize
+        );
+
+        // Writes the specified data to the native D3D upload buffer and increments the write offset.
+        void WriteAndIncrementOffset(
             ID3D12GraphicsCommandList*  commandList,
             ID3D12Resource*             dstBuffer,
             UINT64                      dstOffset,

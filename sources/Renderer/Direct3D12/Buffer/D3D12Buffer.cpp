@@ -25,6 +25,11 @@ D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
 {
     InitMemory(vertexBufferView_);
     InitMemory(indexBufferView_);
+
+    /* Constant buffers must be aligned to 256 bytes */
+    if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
+        alignment_ = 256u;
+
     CreateNativeBuffer(device, desc);
 }
 
@@ -49,79 +54,6 @@ BufferDescriptor D3D12Buffer::GetDesc() const
     #endif
 
     return bufferDesc;
-}
-
-void D3D12Buffer::UpdateStaticSubresource(
-    ID3D12Device*               device,
-    D3D12CommandContext&        commandContext,
-    ComPtr<ID3D12Resource>&     uploadBuffer,
-    const void*                 data,
-    UINT64                      bufferSize,
-    UINT64                      offset)
-{
-    LLGL_ASSERT_RANGE(offset + bufferSize, GetBufferSize());
-
-    /* Create resource to upload memory from CPU to GPU */
-    auto hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())
-    );
-    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for intermediate upload buffer");
-
-    /* Copy data into upload buffer, then copy upload buffer into destination resource */
-    D3D12_SUBRESOURCE_DATA subresourceData;
-    {
-        subresourceData.pData       = data;
-        subresourceData.RowPitch    = static_cast<LONG_PTR>(bufferSize);
-        subresourceData.SlicePitch  = subresourceData.RowPitch;
-    }
-
-    commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST, true);
-
-    ::UpdateSubresources<1>(
-        commandContext.GetCommandList(),
-        resource_.native.Get(),
-        uploadBuffer.Get(),
-        offset,
-        0,
-        1,
-        &subresourceData
-    );
-
-    commandContext.TransitionResource(resource_, resource_.usageState, true);
-}
-
-void D3D12Buffer::UpdateDynamicSubresource(
-    D3D12CommandContext&    commandContext,
-    const void*             data,
-    UINT64                  dataSize,
-    UINT64                  offset)
-{
-    /* Copy data into upload buffer, then copy upload buffer into destination resource */
-    D3D12_SUBRESOURCE_DATA subresourceData;
-    {
-        subresourceData.pData       = data;
-        subresourceData.RowPitch    = static_cast<LONG_PTR>(dataSize);
-        subresourceData.SlicePitch  = subresourceData.RowPitch;
-    }
-
-    commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST, true);
-
-    ::UpdateSubresources<1>(
-        commandContext.GetCommandList(),
-        resource_.native.Get(),
-        uploadResource_.Get(),
-        offset,
-        0,
-        1,
-        &subresourceData
-    );
-
-    commandContext.TransitionResource(resource_, resource_.usageState, true);
 }
 
 void D3D12Buffer::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)

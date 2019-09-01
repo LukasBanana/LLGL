@@ -8,6 +8,7 @@
 #include "D3D12StagingBufferPool.h"
 #include "../Command/D3D12CommandContext.h"
 #include "../D3D12Resource.h"
+#include "../../../Core/Helper.h"
 #include <algorithm>
 
 
@@ -21,6 +22,12 @@ D3D12StagingBufferPool::D3D12StagingBufferPool(ID3D12Device* device, UINT64 chun
 {
 }
 
+void D3D12StagingBufferPool::InitializeDevice(ID3D12Device* device, UINT64 chunkSize)
+{
+    device_    = device;
+    chunkSize_ = chunkSize;
+}
+
 void D3D12StagingBufferPool::Reset()
 {
     for (auto& chunk : chunks_)
@@ -28,7 +35,7 @@ void D3D12StagingBufferPool::Reset()
     chunkIdx_ = 0;
 }
 
-void D3D12StagingBufferPool::Write(
+void D3D12StagingBufferPool::WriteStaged(
     D3D12CommandContext&    commandContext,
     D3D12Resource&          dstBuffer,
     UINT64                  dstOffset,
@@ -49,7 +56,36 @@ void D3D12StagingBufferPool::Write(
     commandContext.TransitionResource(dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST, true);
     {
         auto& chunk = chunks_[chunkIdx_];
-        chunk.Write(device_, commandContext.GetCommandList(), dstBuffer.Get(), dstOffset, data, dataSize);
+        chunk.WriteAndIncrementOffset(commandContext.GetCommandList(), dstBuffer.Get(), dstOffset, data, dataSize);
+    }
+    commandContext.TransitionResource(dstBuffer, dstBuffer.usageState, true);
+}
+
+void D3D12StagingBufferPool::WriteImmediate(
+    D3D12CommandContext&    commandContext,
+    D3D12Resource&          dstBuffer,
+    UINT64                  dstOffset,
+    const void*             data,
+    UINT64                  dataSize,
+    UINT64                  alignment)
+{
+    /* Check if global upload buffer must be resized */
+    UINT64 alignedSize = GetAlignedSize(dataSize, alignment);
+    if (!globalUploadBuffer_.Capacity(alignedSize))
+    {
+        /* Use at least a bigger alignment for allocating the global upload buffer to reduce number of reallocations */
+        static const UINT64 g_minAlignment = 4096ull;
+        if (alignment < g_minAlignment)
+            alignedSize = GetAlignedSize(alignedSize, g_minAlignment);
+
+        /* Resize global upload buffer */
+        globalUploadBuffer_.Create(device_, alignedSize);
+    }
+
+    /* Write data to global upload buffer and copy region to destination buffer */
+    commandContext.TransitionResource(dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST, true);
+    {
+        globalUploadBuffer_.Write(commandContext.GetCommandList(), dstBuffer.Get(), dstOffset, data, dataSize);
     }
     commandContext.TransitionResource(dstBuffer, dstBuffer.usageState, true);
 }

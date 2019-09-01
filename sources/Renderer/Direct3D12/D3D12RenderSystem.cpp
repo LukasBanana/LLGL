@@ -18,6 +18,7 @@
 
 #include "Buffer/D3D12Buffer.h"
 #include "Buffer/D3D12BufferArray.h"
+
 #include "Texture/D3D12MipGenerator.h"
 
 
@@ -51,6 +52,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
     commandSignaturePool_.CreateDefaultSignatures(device_.GetNative());
     commandContext_.SetCommandList(graphicsCmdList_.Get());
+    stagingBufferPool_.InitializeDevice(device_.GetNative(), 0);
     D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
 
     /* Initialize renderer information */
@@ -114,25 +116,23 @@ void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 // private
 std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    /* Create buffer and upload data to GPU */
-    ComPtr<ID3D12Resource> uploadBuffer;
-
     auto bufferD3D = MakeUnique<D3D12Buffer>(device_.GetNative(), desc);
 
     if (initialData)
     {
-        bufferD3D->UpdateStaticSubresource(
-            device_.GetNative(),
+        stagingBufferPool_.WriteImmediate(
             commandContext_,
-            uploadBuffer,
+            bufferD3D->GetResource(),
+            0,
             initialData,
-            desc.size
+            desc.size,
+            bufferD3D->GetAlignment()
         );
     }
 
     /* Execute upload commands and wait for GPU to finish execution */
     ExecuteCommandList();
-    SyncGPU();
+    //SyncGPU();
 
     return bufferD3D;
 }
@@ -169,7 +169,7 @@ void D3D12RenderSystem::Release(BufferArray& bufferArray)
 void D3D12RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
-    dstBufferD3D.UpdateDynamicSubresource(commandContext_, data, dataSize, dstOffset);
+    stagingBufferPool_.WriteImmediate(commandContext_, dstBufferD3D.GetResource(), dstOffset, data, dataSize);
     ExecuteCommandList();
 }
 

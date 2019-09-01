@@ -34,22 +34,6 @@ class D3D12Buffer : public Buffer
 
         D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc);
 
-        void UpdateStaticSubresource(
-            ID3D12Device*           device,
-            D3D12CommandContext&    commandContext,
-            ComPtr<ID3D12Resource>& uploadBuffer,
-            const void*             data,
-            UINT64                  dataSize,
-            UINT64                  offset = 0
-        );
-
-        void UpdateDynamicSubresource(
-            D3D12CommandContext&    commandContext,
-            const void*             data,
-            UINT64                  dataSize,
-            UINT64                  offset = 0
-        );
-
         // Creates a resource views within the native buffer object:
         void CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
         void CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
@@ -92,6 +76,12 @@ class D3D12Buffer : public Buffer
             return indexBufferView_;
         }
 
+        // Returns the memory alignment required for this buffer.
+        inline UINT64 GetAlignment() const
+        {
+            return alignment_;
+        }
+
     protected:
 
         void CreateNativeBuffer(ID3D12Device* device, const BufferDescriptor& desc);
@@ -109,6 +99,7 @@ class D3D12Buffer : public Buffer
         ComPtr<ID3D12Resource>      uploadResource_;
 
         UINT64                      bufferSize_         = 0;
+        UINT                        alignment_          = 16;
         UINT                        structStride_       = 1;
         D3D12_HEAP_TYPE             heapType_           = D3D12_HEAP_TYPE_DEFAULT;
         D3D12_VERTEX_BUFFER_VIEW    vertexBufferView_;

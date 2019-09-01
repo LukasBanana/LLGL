@@ -112,9 +112,10 @@ std::vector<char> ReadFileBuffer(const std::string& filename)
 
 ExampleBase::TutorialShaderDescriptor::TutorialShaderDescriptor(
     LLGL::ShaderType    type,
-    const std::string&  filename) :
-        type     { type     },
-        filename { filename }
+    const std::string&  filename)
+:
+    type     { type     },
+    filename { filename }
 {
 }
 
@@ -122,11 +123,12 @@ ExampleBase::TutorialShaderDescriptor::TutorialShaderDescriptor(
     LLGL::ShaderType    type,
     const std::string&  filename,
     const std::string&  entryPoint,
-    const std::string&  profile) :
-        type       { type       },
-        filename   { filename   },
-        entryPoint { entryPoint },
-        profile    { profile    }
+    const std::string&  profile)
+:
+    type       { type       },
+    filename   { filename   },
+    entryPoint { entryPoint },
+    profile    { profile    }
 {
 }
 
@@ -244,10 +246,10 @@ ExampleBase::ExampleBase(
     // Create render context
     LLGL::RenderContextDescriptor contextDesc;
     {
-        contextDesc.videoMode.resolution            = resolution;
-        contextDesc.vsync.enabled                   = vsync;
-        contextDesc.multiSampling.enabled           = (multiSampling > 1);
-        contextDesc.multiSampling.samples           = multiSampling;
+        contextDesc.videoMode.resolution    = resolution;
+        contextDesc.vsync.enabled           = vsync;
+        contextDesc.multiSampling.enabled   = (multiSampling > 1);
+        contextDesc.multiSampling.samples   = multiSampling;
     }
     context = renderer->CreateRenderContext(contextDesc);
 

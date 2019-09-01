@@ -26,18 +26,32 @@ class D3D12StagingBufferPool
 
     public:
 
+        D3D12StagingBufferPool() = default;
         D3D12StagingBufferPool(ID3D12Device* device, UINT64 chunkSize);
+
+        // Initializes the device object and chunk size.
+        void InitializeDevice(ID3D12Device* device, UINT64 chunkSize);
 
         // Resets all chunks in the pool.
         void Reset();
 
-        // Writes the specified data to the destination buffer.
-        void Write(
+        // Writes the specified data to the destination buffer using the staging pool.
+        void WriteStaged(
             D3D12CommandContext&    commandContext,
             D3D12Resource&          dstBuffer,
             UINT64                  dstOffset,
             const void*             data,
             UINT64                  dataSize
+        );
+
+        // Writes the specified data to the destination buffer using the global upload buffer.
+        void WriteImmediate(
+            D3D12CommandContext&    commandContext,
+            D3D12Resource&          dstBuffer,
+            UINT64                  dstOffset,
+            const void*             data,
+            UINT64                  dataSize,
+            UINT64                  alignment   = 256u
         );
 
     private:
@@ -47,10 +61,11 @@ class D3D12StagingBufferPool
 
     private:
 
-        ID3D12Device*                   device_     = nullptr;
+        ID3D12Device*                   device_             = nullptr;
         std::vector<D3D12StagingBuffer> chunks_;
-        std::size_t                     chunkIdx_   = 0;
-        UINT64                          chunkSize_  = 0;
+        std::size_t                     chunkIdx_           = 0;
+        UINT64                          chunkSize_          = 0;
+        D3D12StagingBuffer              globalUploadBuffer_;
 
 };
 
