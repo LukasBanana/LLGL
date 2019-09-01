@@ -8,6 +8,8 @@
 #include <LLGL/LLGL.h>
 
 
+#ifdef LLGL_ENABLE_JIT_COMPILER
+
 namespace LLGL
 {
 LLGL_EXPORT void TestJIT1();
@@ -27,3 +29,13 @@ int main()
 
     return 0;
 }
+
+#else // LLGL_ENABLE_JIT_COMPILER
+
+int main()
+{
+    std::cerr << "LLGL was not compiled with LLGL_ENABLE_JIT_COMPILER" << std::endl;
+    return 0;
+}
+
+#endif // /LLGL_ENABLE_JIT_COMPILER

@@ -58,7 +58,7 @@ class Example_Animation : public ExampleBase
     std::vector<Ball>           balls;
 
     const std::array<Gs::Vector2f, 15> gridPosFrames
-    {
+    {{
         Gs::Vector2f{  0.0f, -3.0f },
         Gs::Vector2f{ +1.0f, -3.0f },
         Gs::Vector2f{ +2.0f, -3.0f },
@@ -74,7 +74,7 @@ class Example_Animation : public ExampleBase
         Gs::Vector2f{ -3.0f, +2.0f },
         Gs::Vector2f{ -3.0f, +1.0f },
         Gs::Vector2f{ -3.0f,  0.0f }
-    };
+    }};
 
 public:
 

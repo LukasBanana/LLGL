@@ -10,6 +10,7 @@
 #include "RenderState/VKGraphicsPipeline.h"
 #include "../../Core/Vendor.h"
 #include <string>
+#include <cstring>
 #include <set>
 
 
