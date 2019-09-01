@@ -36,6 +36,9 @@ class MTTexture : public Texture
 
         void Write(const TextureRegion& textureRegion, SrcImageDescriptor imageDesc);
 
+        // Creats a new MTLTexture object as subresource view from this texture.
+        id<MTLTexture> CreateSubresourceView(const TextureSubresource& subresource);
+
         // Returns the native MTLTexture object.
         inline id<MTLTexture> GetNative() const
         {

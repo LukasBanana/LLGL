@@ -188,10 +188,20 @@ void MTTexture::Write(const TextureRegion& textureRegion, SrcImageDescriptor ima
     }
 }
 
+id<MTLTexture> MTTexture::CreateSubresourceView(const TextureSubresource& subresource)
+{
+    NSUInteger firstLevel   = static_cast<NSUInteger>(subresource.baseMipLevel);
+    NSUInteger numLevels    = static_cast<NSUInteger>(subresource.numMipLevels);
+    NSUInteger firstSlice   = static_cast<NSUInteger>(subresource.baseArrayLayer);
+    NSUInteger numSlices    = static_cast<NSUInteger>(subresource.numArrayLayers);
 
-/*
- * ======= Private: =======
- */
+    return [native_
+        newTextureViewWithPixelFormat:  [native_ pixelFormat]
+        textureType:                    [native_ textureType]
+        levels:                         NSMakeRange(firstLevel, numLevels)
+        slices:                         NSMakeRange(firstSlice, numSlices)
+    ];
+}
 
 
 } // /namespace LLGL

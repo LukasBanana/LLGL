@@ -23,14 +23,12 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
     /* Select renderer module */
     std::string rendererModule;
 
-    #ifndef __APPLE__
     if (argc > 1)
     {
         /* Get renderer module name from command line argument */
         rendererModule = argv[1];
     }
     else
-    #endif // /__APPLE__
     {
         /* Find available modules */
         auto modules = LLGL::RenderSystem::FindModules();

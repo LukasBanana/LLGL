@@ -144,7 +144,19 @@ void MTCommandBuffer::GenerateMips(Texture& texture)
 
 void MTCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    //TODO...
+    auto& textureMT = LLGL_CAST(MTTexture&, texture);
+
+    // Create temporary subresource texture to generate MIP-maps only on that range
+    id<MTLTexture> intermediateTexture = textureMT.CreateSubresourceView(subresource);
+
+    encoderScheduler_.PauseRenderEncoder();
+    {
+        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+        [blitEncoder generateMipmapsForTexture:intermediateTexture];
+    }
+    encoderScheduler_.ResumeRenderEncoder();
+
+    [intermediateTexture release];
 }
 
 /* ----- Viewport and Scissor ----- */
