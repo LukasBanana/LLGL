@@ -60,6 +60,8 @@ class LinuxWindow : public Window
 
         void PostMouseKeyEvent(Key key, bool down);
         
+    private:
+    
         WindowDescriptor    desc_;
 
         ::Display*          display_        = nullptr;

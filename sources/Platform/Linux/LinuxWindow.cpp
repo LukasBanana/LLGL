@@ -68,7 +68,9 @@ Extent2D LinuxWindow::GetContentSize() const
 
 void LinuxWindow::SetPosition(const Offset2D& position)
 {
+    /* Move window and store new position */
     XMoveWindow(display_, wnd_, position.x, position.y);
+    desc_.position = position;
 }
 
 Offset2D LinuxWindow::GetPosition() const
@@ -109,7 +111,11 @@ std::wstring LinuxWindow::GetTitle() const
 void LinuxWindow::Show(bool show)
 {
     if (show)
+    {
+        /* Map window and reset window position */
         XMapWindow(display_, wnd_);
+        XMoveWindow(display_, wnd_, desc_.position.x, desc_.position.y);
+    }
     else
         XUnmapWindow(display_, wnd_);
         
@@ -236,17 +242,15 @@ void LinuxWindow::OpenWindow()
     }
 
     /* Get final window position */
-    auto position = desc_.position;
-
     if (desc_.centered)
-        position = GetScreenCenteredPosition(desc_.size);
+        desc_.position = GetScreenCenteredPosition(desc_.size);
 
     /* Create X11 window */
     wnd_ = XCreateWindow(
         display_,
         rootWnd,
-        position.x,
-        position.y,
+        desc_.position.x,
+        desc_.position.y,
         desc_.size.width,
         desc_.size.height,
         borderSize,
