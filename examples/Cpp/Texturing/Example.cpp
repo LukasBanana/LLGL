@@ -21,7 +21,17 @@ class Example_Texturing : public ExampleBase
     LLGL::Sampler*          sampler[5]          = {};
     LLGL::ResourceHeap*     resourceHeaps[6]    = {};
 
-    int                     resourceIndex   = 0;
+    int                     resourceIndex       = 0;
+
+    std::array<std::string, 6>  resourceLabels
+    {{
+        "format = BC1RGBA",
+        "format = RGBA8UNorm",
+        "mipMapLODBias = 3",
+        "minFilter = Nearest",
+        "addressModeU = MirrorOnce, addressModeV = Border",
+        "addressModeU = Mirror, addressModeV = Mirror",
+    }};
 
 public:
 
@@ -44,6 +54,8 @@ public:
 
         // Print some information on the standard output
         std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
+        std::cout << "texture attributes:\r";
+        std::flush(std::cout);
     }
 
     LLGL::VertexFormat CreateBuffers()
@@ -152,15 +164,48 @@ public:
 
     void LoadCompressedTexture(const std::string& filename)
     {
+        // Load DDS image
         DDSImageReader imageReader;
         imageReader.LoadFromFile(filename);
-        colorMaps[1] = renderer->CreateTexture(imageReader.GetTextureDesc(), &(imageReader.GetImageDesc()));
+
+        auto texDesc    = imageReader.GetTextureDesc();
+        auto imageDesc  = imageReader.GetImageDesc();
+
+        // Create texture with MIP-map level 0
+        imageDesc.dataSize = LLGL::TextureBufferSize(texDesc.format, texDesc.extent.width * texDesc.extent.height * texDesc.extent.depth);
+        colorMaps[1] = renderer->CreateTexture(texDesc, &imageDesc);
+
+        // Write MIP-map levels 1...N
+        const auto& formatDesc = LLGL::GetFormatDesc(texDesc.format);
+
+        for (std::uint32_t mipLevel = 1; mipLevel < texDesc.mipLevels; ++mipLevel)
+        {
+            // Determine texture region for next MIP-map level
+            LLGL::TextureRegion region;
+            region.extent.width             = std::max(texDesc.extent.width  >> mipLevel, 1u);
+            region.extent.height            = std::max(texDesc.extent.height >> mipLevel, 1u);
+            region.extent.depth             = std::max(texDesc.extent.depth  >> mipLevel, 1u);
+            region.subresource.baseMipLevel = mipLevel;
+            region.subresource.numMipLevels = 1;
+
+            // MIP-maps of block compression must be a multiple of the block size, so we cannot go smaller
+            if (region.extent.width  >= formatDesc.blockWidth &&
+                region.extent.height >= formatDesc.blockHeight)
+            {
+                // Update image descriptor for subresource
+                std::size_t mipLevelDataSize    = LLGL::TextureBufferSize(texDesc.format, region.extent.width * region.extent.height * region.extent.depth);
+                imageDesc.data                  = reinterpret_cast<const std::int8_t*>(imageDesc.data) + imageDesc.dataSize;
+                imageDesc.dataSize              = mipLevelDataSize;
+
+                renderer->WriteTexture(*colorMaps[1], region, imageDesc);
+            }
+        }
     }
 
     void CreateTextures()
     {
         LoadUncompressedTexture("../../Media/Textures/Crate.jpg");
-        LoadCompressedTexture("../../Media/Textures/Crate.dds");
+        LoadCompressedTexture("../../Media/Textures/Crate-DXT1-MipMapped.dds");
     }
 
     void CreateSamplers()
@@ -209,7 +254,11 @@ private:
     {
         // Examine user input
         if (input->KeyDown(LLGL::Key::Tab))
+        {
             resourceIndex = (resourceIndex + 1) % 6;
+            std::cout << "texture attributes: " << resourceLabels[resourceIndex] << std::string(30, ' ') << "\r";
+            std::flush(std::cout);
+        }
 
         // Set render target
         commands->Begin();

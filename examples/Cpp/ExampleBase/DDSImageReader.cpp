@@ -8,6 +8,7 @@
 #include "DDSImageReader.h"
 #include <fstream>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <type_traits>
@@ -183,9 +184,9 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     }
 
     // Evaluate ForceCC value
-    auto IsFourCC = [forceCC = header.format.fourCC](const char* value)
+    auto IsFourCC = [&](const char* value)
     {
-        return (forceCC == *reinterpret_cast<const std::int32_t*>(value));
+        return (header.format.fourCC == *reinterpret_cast<const std::int32_t*>(value));
     };
 
     if (IsFourCC("DXT1"))
