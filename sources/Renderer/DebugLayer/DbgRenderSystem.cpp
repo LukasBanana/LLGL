@@ -769,6 +769,7 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc, const S
             break;
     }
 
+    ValidateTextureFormatSupported(desc.format);
     ValidateTextureDescMipLevels(desc);
     ValidateArrayTextureLayers(desc.type, desc.arrayLayers);
     ValidateBindFlags(desc.bindFlags);
@@ -792,6 +793,18 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc, const S
                 "cannot generate MIP-maps with initial image data discarded: 'LLGL::MiscFlags::GenerateMips' specified but also 'MiscFlags::NoInitialData'"
             );
         }
+    }
+}
+
+void DbgRenderSystem::ValidateTextureFormatSupported(const Format format)
+{
+    const auto& supportedFormats = GetRenderingCaps().textureFormats;
+    if (std::find(supportedFormats.begin(), supportedFormats.end(), format) == supportedFormats.end())
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::UnsupportedFeature,
+            "cannot create texture with unsupported format: " + std::string(ToString(format))
+        );
     }
 }
 
