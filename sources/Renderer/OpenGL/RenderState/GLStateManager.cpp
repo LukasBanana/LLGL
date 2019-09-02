@@ -936,7 +936,7 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
         for (GLsizei i = 0; i < count; ++i)
         {
             auto targetIdx = static_cast<std::size_t>(targets[i]);
-            textureState_.layers[i].boundTextures[targetIdx] = textures[i];
+            textureState_.layers[i + first].boundTextures[targetIdx] = textures[i];
         }
 
         /*
@@ -1056,12 +1056,12 @@ void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* sam
     #ifdef GL_ARB_multi_bind
     if (count >= 2 && HasExtension(GLExt::ARB_multi_bind))
     {
-        /* Bind all samplers at once */
-        glBindSamplers(first, count, samplers);
-
         /* Store bound samplers */
         for (GLsizei i = 0; i < count; ++i)
-            samplerState_.boundSamplers[i] = samplers[i];
+            samplerState_.boundSamplers[i + first] = samplers[i];
+
+        /* Bind all samplers at once */
+        glBindSamplers(first, count, samplers);
     }
     else
     #endif
