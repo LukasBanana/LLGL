@@ -133,7 +133,7 @@ void MTCommandBuffer::CopyTexture(
 void MTCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
-    if ([textureMT->GetNative() mipmapLevelCount] > 1)
+    if ([textureMT.GetNative() mipmapLevelCount] > 1)
     {
         encoderScheduler_.PauseRenderEncoder();
         {
