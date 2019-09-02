@@ -208,6 +208,7 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     {
         // Read header extension
         ReadValue(file, headerDX10);
+        hasDX10Header = true;
     }
     else
     {

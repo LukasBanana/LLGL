@@ -13,15 +13,15 @@
 class Example_Texturing : public ExampleBase
 {
 
-    LLGL::ShaderProgram*    shaderProgram       = nullptr;
-    LLGL::PipelineLayout*   pipelineLayout      = nullptr;
-    LLGL::GraphicsPipeline* pipeline            = nullptr;
-    LLGL::Buffer*           vertexBuffer        = nullptr;
-    LLGL::Texture*          colorMaps[2]        = {};
-    LLGL::Sampler*          sampler[5]          = {};
-    LLGL::ResourceHeap*     resourceHeaps[6]    = {};
+    LLGL::ShaderProgram*        shaderProgram       = nullptr;
+    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
+    LLGL::GraphicsPipeline*     pipeline            = nullptr;
+    LLGL::Buffer*               vertexBuffer        = nullptr;
+    LLGL::Texture*              colorMaps[2]        = {};
+    LLGL::Sampler*              sampler[5]          = {};
+    LLGL::ResourceHeap*         resourceHeaps[6]    = {};
 
-    int                     resourceIndex       = 0;
+    int                         resourceIndex       = 0;
 
     std::array<std::string, 6>  resourceLabels
     {{
@@ -54,7 +54,7 @@ public:
 
         // Print some information on the standard output
         std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
-        std::cout << "texture attributes:\r";
+        std::cout << "texture attributes: " << resourceLabels[0] << "\r";
         std::flush(std::cout);
     }
 

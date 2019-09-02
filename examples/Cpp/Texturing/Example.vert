@@ -1,5 +1,5 @@
 // GLSL texturing vertex shader
-#version 130
+#version 140
 
 // Vertex attributes (these names must match out vertex format attributes)
 in vec2 position;
