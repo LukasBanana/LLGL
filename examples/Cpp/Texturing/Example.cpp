@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <DDSImageReader.h>
 #include <stb/stb_image.h>
 
 
@@ -16,11 +17,11 @@ class Example_Texturing : public ExampleBase
     LLGL::PipelineLayout*   pipelineLayout      = nullptr;
     LLGL::GraphicsPipeline* pipeline            = nullptr;
     LLGL::Buffer*           vertexBuffer        = nullptr;
-    LLGL::Texture*          colorMap            = nullptr;
+    LLGL::Texture*          colorMaps[2]        = {};
     LLGL::Sampler*          sampler[5]          = {};
-    LLGL::ResourceHeap*     resourceHeaps[5]    = {};
+    LLGL::ResourceHeap*     resourceHeaps[6]    = {};
 
-    int                     samplerIndex    = 0;
+    int                     resourceIndex   = 0;
 
 public:
 
@@ -81,11 +82,10 @@ public:
             layoutDesc.bindings =
             {
                 LLGL::BindingDescriptor{ LLGL::ResourceType::Sampler, 0,                        LLGL::StageFlags::FragmentStage, 0 },
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, 1 },
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, (IsOpenGL() ? 0u : 1u) },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
-        //shaderProgram->QueryReflectionDesc();
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -98,16 +98,14 @@ public:
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
 
-    void CreateTextures()
+    void LoadUncompressedTexture(const std::string& filename)
     {
-        std::string texFilename = "../../Media/Textures/Crate.jpg";
-
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
         int texWidth = 0, texHeight = 0, texComponents = 0;
 
-        unsigned char* imageBuffer = stbi_load(texFilename.c_str(), &texWidth, &texHeight, &texComponents, 0);
+        unsigned char* imageBuffer = stbi_load(filename.c_str(), &texWidth, &texHeight, &texComponents, 0);
         if (!imageBuffer)
-            throw std::runtime_error("failed to open file: \"" + texFilename + "\"");
+            throw std::runtime_error("failed to load image from file: " + filename);
 
         // Initialize source image descriptor to upload image data onto hardware texture
         LLGL::SrcImageDescriptor imageDesc;
@@ -143,24 +141,26 @@ public:
                 // Generate all MIP-map levels for this texture
                 texDesc.miscFlags   = LLGL::MiscFlags::GenerateMips;
             }
-            #if 0//TEST
-            texDesc.type = LLGL::TextureType::TextureCube;
-            texDesc.textureCube.width = 16;
-            texDesc.textureCube.height = 16;
-            imageDesc.format = LLGL::ImageFormat::RGBA;
-            imageDesc.dataSize = 16*16*4*6;
-            #endif
-            colorMap = renderer->CreateTexture(texDesc, &imageDesc);
+            colorMaps[0] = renderer->CreateTexture(texDesc, &imageDesc);
         }
         auto texCreationTime = static_cast<double>(timer->Stop()) / static_cast<double>(timer->GetFrequency());
         std::cout << "texture creation time: " << (texCreationTime * 1000.0) << " ms" << std::endl;
 
         // Release image data
         stbi_image_free(imageBuffer);
+    }
 
-        // Query texture descriptor to see what is really stored on the GPU
-        //auto textureDesc = colorMap->GetDesc();
-        //auto textureExtent = colorMap->GetMipExtent(0);
+    void LoadCompressedTexture(const std::string& filename)
+    {
+        DDSImageReader imageReader;
+        imageReader.LoadFromFile(filename);
+        colorMaps[1] = renderer->CreateTexture(imageReader.GetTextureDesc(), &(imageReader.GetImageDesc()));
+    }
+
+    void CreateTextures()
+    {
+        LoadUncompressedTexture("../../Media/Textures/Crate.jpg");
+        LoadCompressedTexture("../../Media/Textures/Crate.dds");
     }
 
     void CreateSamplers()
@@ -192,12 +192,12 @@ public:
 
     void CreateResourceHeaps()
     {
-        for (int i = 0; i < 5; ++i)
+        for (int i = 0; i < 6; ++i)
         {
             LLGL::ResourceHeapDescriptor resourceHeapDesc;
             {
                 resourceHeapDesc.pipelineLayout = pipelineLayout;
-                resourceHeapDesc.resourceViews  = { sampler[i], colorMap };
+                resourceHeapDesc.resourceViews  = { sampler[i > 0 ? i - 1 : 0], colorMaps[i == 0 ? 1 : 0] };
             }
             resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
         }
@@ -209,7 +209,7 @@ private:
     {
         // Examine user input
         if (input->KeyDown(LLGL::Key::Tab))
-            samplerIndex = (samplerIndex + 1) % 5;
+            resourceIndex = (resourceIndex + 1) % 6;
 
         // Set render target
         commands->Begin();
@@ -229,7 +229,7 @@ private:
                 commands->SetGraphicsPipeline(*pipeline);
 
                 // Set graphics shader resources
-                commands->SetGraphicsResourceHeap(*resourceHeaps[samplerIndex], 0);
+                commands->SetGraphicsResourceHeap(*resourceHeaps[resourceIndex], 0);
 
                 // Draw fullscreen quad
                 commands->Draw(4, 0);
