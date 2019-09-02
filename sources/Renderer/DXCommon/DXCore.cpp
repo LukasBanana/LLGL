@@ -15,8 +15,6 @@
 #include <algorithm>
 #include <d3dcompiler.h>
 
-#include "../Direct3D12//Shader/Builtin/D3D12Builtin.h"
-
 
 #ifndef LLGL_BUILD_STATIC_LIB
 
@@ -303,6 +301,7 @@ static std::vector<Format> DXGetSupportedTextureFormats()
 {
     return
     {
+        Format::A8UNorm,
         Format::R8UNorm,
         Format::R8SNorm,
         Format::R8UInt,
@@ -331,6 +330,7 @@ static std::vector<Format> DXGetSupportedTextureFormats()
         Format::RGB32SInt,
         Format::RGB32Float,
         Format::RGBA8UNorm,
+        Format::RGBA8UNorm_sRGB,
         Format::RGBA8SNorm,
         Format::RGBA8UInt,
         Format::RGBA8SInt,
@@ -342,6 +342,12 @@ static std::vector<Format> DXGetSupportedTextureFormats()
         Format::RGBA32UInt,
         Format::RGBA32SInt,
         Format::RGBA32Float,
+        Format::BGRA8UNorm,
+        Format::BGRA8UNorm_sRGB,
+        Format::RGB10A2UNorm,
+        Format::RGB10A2UInt,
+        Format::RG11B10Float,
+        Format::RGB9E5Float,
         Format::D16UNorm,
         Format::D32Float,
         Format::D24UNormS8UInt,
@@ -560,69 +566,6 @@ VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)
     return videoAdapterDesc;
 }
 
-D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format)
-{
-    switch (format)
-    {
-        /* --- Alpha channel color formats --- */
-        case DXGI_FORMAT_A8_UNORM:              return { ImageFormat::Alpha,            DataType::UInt8   };
-
-        /* --- Red channel color formats --- */
-        case DXGI_FORMAT_R8_UNORM:              return { ImageFormat::R,                DataType::UInt8   };
-        case DXGI_FORMAT_R8_SNORM:              return { ImageFormat::R,                DataType::Int8    };
-        case DXGI_FORMAT_R16_UNORM:             return { ImageFormat::R,                DataType::UInt16  };
-        case DXGI_FORMAT_R16_SNORM:             return { ImageFormat::R,                DataType::Int16   };
-        case DXGI_FORMAT_R32_UINT:              return { ImageFormat::R,                DataType::UInt32  };
-        case DXGI_FORMAT_R32_SINT:              return { ImageFormat::R,                DataType::Int32   };
-        case DXGI_FORMAT_R16_FLOAT:             return { ImageFormat::R,                DataType::Float16 };
-        case DXGI_FORMAT_R32_FLOAT:             return { ImageFormat::R,                DataType::Float32 };
-
-        /* --- RG color formats --- */
-        case DXGI_FORMAT_R8G8_UNORM:            return { ImageFormat::RG,               DataType::UInt8   };
-        case DXGI_FORMAT_R8G8_SNORM:            return { ImageFormat::RG,               DataType::Int8    };
-        case DXGI_FORMAT_R16G16_UNORM:          return { ImageFormat::RG,               DataType::UInt16  };
-        case DXGI_FORMAT_R16G16_SNORM:          return { ImageFormat::RG,               DataType::Int16   };
-        case DXGI_FORMAT_R32G32_UINT:           return { ImageFormat::RG,               DataType::UInt32  };
-        case DXGI_FORMAT_R32G32_SINT:           return { ImageFormat::RG,               DataType::Int32   };
-        case DXGI_FORMAT_R16G16_FLOAT:          return { ImageFormat::RG,               DataType::Float16 };
-        case DXGI_FORMAT_R32G32_FLOAT:          return { ImageFormat::RG,               DataType::Float32 };
-
-        /* --- RGB color formats --- */
-        case DXGI_FORMAT_R32G32B32_UINT:        return { ImageFormat::RGB,              DataType::UInt32  };
-        case DXGI_FORMAT_R32G32B32_SINT:        return { ImageFormat::RGB,              DataType::Int32   };
-        case DXGI_FORMAT_R32G32B32_FLOAT:       return { ImageFormat::RGB,              DataType::Float32 };
-
-        /* --- RGBA color formats --- */
-        case DXGI_FORMAT_R8G8B8A8_UNORM:        return { ImageFormat::RGBA,             DataType::UInt8   };
-        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:   return { ImageFormat::RGBA,             DataType::UInt8   };
-        case DXGI_FORMAT_R8G8B8A8_SNORM:        return { ImageFormat::RGBA,             DataType::Int8    };
-        case DXGI_FORMAT_R16G16B16A16_UNORM:    return { ImageFormat::RGBA,             DataType::UInt16  };
-        case DXGI_FORMAT_R16G16B16A16_SNORM:    return { ImageFormat::RGBA,             DataType::Int16   };
-        case DXGI_FORMAT_R32G32B32A32_UINT:     return { ImageFormat::RGBA,             DataType::UInt32  };
-        case DXGI_FORMAT_R32G32B32A32_SINT:     return { ImageFormat::RGBA,             DataType::Int32   };
-        case DXGI_FORMAT_R16G16B16A16_FLOAT:    return { ImageFormat::RGBA,             DataType::Float16 };
-        case DXGI_FORMAT_R32G32B32A32_FLOAT:    return { ImageFormat::RGBA,             DataType::Float32 };
-
-        /* --- BGRA color formats --- */
-        case DXGI_FORMAT_B8G8R8A8_UNORM:        return { ImageFormat::BGRA,             DataType::UInt8   };
-        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:   return { ImageFormat::BGRA,             DataType::UInt8   };
-
-        /* --- Depth-stencil formats --- */
-        case DXGI_FORMAT_D16_UNORM:             return { ImageFormat::Depth,            DataType::UInt16  };
-        case DXGI_FORMAT_D32_FLOAT:             return { ImageFormat::Depth,            DataType::Float32 };
-        case DXGI_FORMAT_D24_UNORM_S8_UINT:     return { ImageFormat::DepthStencil,     DataType::Float32 };
-        //case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:  return { ImageFormat::DepthStencil,     DataType::Float32 };
-
-        /* --- Compressed color formats --- */
-        case DXGI_FORMAT_BC1_UNORM:             return { ImageFormat::CompressedRGB,    DataType::UInt8   };
-        case DXGI_FORMAT_BC2_UNORM:             return { ImageFormat::CompressedRGBA,   DataType::UInt8   };
-        case DXGI_FORMAT_BC3_UNORM:             return { ImageFormat::CompressedRGBA,   DataType::UInt8   };
-
-        default:                                break;
-    }
-    throw std::invalid_argument("failed to map hardware texture format into image buffer format");
-}
-
 Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)
 {
     switch (componentType)
@@ -634,7 +577,7 @@ Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BY
                 case 0x01: return Format::R32UInt;
                 case 0x03: return Format::RG32UInt;
                 case 0x07: return Format::RGB32UInt;
-                case 0x0f: return Format::RGBA32UInt;
+                case 0x0F: return Format::RGBA32UInt;
             }
         }
         break;
@@ -646,7 +589,7 @@ Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BY
                 case 0x01: return Format::R32SInt;
                 case 0x03: return Format::RG32SInt;
                 case 0x07: return Format::RGB32SInt;
-                case 0x0f: return Format::RGBA32SInt;
+                case 0x0F: return Format::RGBA32SInt;
             }
         }
         break;
@@ -658,7 +601,7 @@ Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BY
                 case 0x01: return Format::R32Float;
                 case 0x03: return Format::RG32Float;
                 case 0x07: return Format::RGB32Float;
-                case 0x0f: return Format::RGBA32Float;
+                case 0x0F: return Format::RGBA32Float;
             }
         }
         break;

@@ -216,7 +216,7 @@ auto imageBuffer = LLGL::GenerateImageBuffer(
     LLGL::ImageFormat::RGBA,
     LLGL::DataType::UInt8,
     512 * 512,
-    LLGL::ColorRGBAd { 1.0, 1.0, 0.0, 0.5 }
+    LLGL::ColorRGBAd{ 1.0, 1.0, 0.0, 0.5 }
 );
 \endcode
 */

@@ -36,7 +36,6 @@ D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
 void D3D12Buffer::SetName(const char* name)
 {
     D3D12SetObjectName(resource_.Get(), name);
-    D3D12SetObjectNameSubscript(uploadResource_.Get(), name, ".Staging");
 }
 
 BufferDescriptor D3D12Buffer::GetDesc() const
@@ -163,9 +162,6 @@ void D3D12Buffer::CreateNativeBuffer(ID3D12Device* device, const BufferDescripto
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware buffer");
 
-    /* Create upload buffer to dynamic buffers */
-    CreateUploadBuffer(device, desc);
-
     /* Create sub-resource views */
     if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
         CreateVertexBufferView(desc);
@@ -185,24 +181,6 @@ void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
     indexBufferView_.BufferLocation = GetNative()->GetGPUVirtualAddress();
     indexBufferView_.SizeInBytes    = static_cast<UINT>(GetBufferSize());
     indexBufferView_.Format         = D3D12Types::Map(desc.indexBuffer.format);
-}
-
-
-/*
- * ======= Private: =======
- */
-
-void D3D12Buffer::CreateUploadBuffer(ID3D12Device* device, const BufferDescriptor& /*desc*/)
-{
-    auto hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(GetBufferSize()),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(uploadResource_.ReleaseAndGetAddressOf())
-    );
-    DXThrowIfCreateFailed(hr, "failed to create D3D12 committed resource for upload buffer");
 }
 
 

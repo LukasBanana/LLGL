@@ -16,10 +16,24 @@ namespace LLGL
 {
 
 
+/* ----- Structures ----- */
+
+// Subresource data size structure with stride per row, stride per array layer, and whole data size.
+struct SubresourceLayout
+{
+    std::uint32_t rowStride     = 0;
+    std::uint32_t layerStride   = 0;
+    std::uint32_t dataSize      = 0;
+};
+
+
 /* ----- Functions ----- */
 
 // Calculates the actual 3D dimensional offset for the specified texture type.
 LLGL_EXPORT Offset3D CalcTextureOffset(const TextureType type, const Offset3D& offset, std::uint32_t arrayLayer);
+
+// Calculates the size and strides for a subresource of the specified format and extent.
+LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent);
 
 // Returns true if the specified flags for texture creation require MIP-map generation at creation time.
 inline bool FlagsRequireGenerateMips(long miscFlags)

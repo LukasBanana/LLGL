@@ -85,9 +85,6 @@ UINT DXGetCompilerFlags(int flags);
 // Returns the video adapter descriptor from the specified DXGI adapter.
 VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter);
 
-// Returns the LLGL format and data type for the specified DXGI format.
-D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format);
-
 // Returns the format for the specified signature parameter type (by its component type and mask).
 Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask);
 

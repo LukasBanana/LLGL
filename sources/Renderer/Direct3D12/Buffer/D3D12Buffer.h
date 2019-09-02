@@ -91,12 +91,7 @@ class D3D12Buffer : public Buffer
 
     private:
 
-        void CreateUploadBuffer(ID3D12Device* device, const BufferDescriptor& desc);
-
-    private:
-
         D3D12Resource               resource_;
-        ComPtr<ID3D12Resource>      uploadResource_;
 
         UINT64                      bufferSize_         = 0;
         UINT                        alignment_          = 16;

@@ -108,6 +108,7 @@ CommandBuffer* D3D12RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
 
 void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 {
+    SyncGPU();
     RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
 }
 
@@ -132,7 +133,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
 
     /* Execute upload commands and wait for GPU to finish execution */
     ExecuteCommandList();
-    //SyncGPU();
+    SyncGPU();
 
     return bufferD3D;
 }
@@ -157,11 +158,13 @@ BufferArray* D3D12RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buff
 
 void D3D12RenderSystem::Release(Buffer& buffer)
 {
+    SyncGPU();
     RemoveFromUniqueSet(buffers_, &buffer);
 }
 
 void D3D12RenderSystem::Release(BufferArray& bufferArray)
 {
+    SyncGPU();
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
@@ -191,35 +194,39 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 
     if (imageDesc != nullptr)
     {
-        /* Upload image data */
-        ComPtr<ID3D12Resource> uploadBuffer;
-
-        /* Get texture dimensions */
-        auto texWidth   = textureDesc.extent.width;
-        auto texHeight  = textureDesc.extent.height;
-
-        if (textureDesc.type == TextureType::Texture1D || textureDesc.type == TextureType::Texture1DArray)
-            texHeight = 1u;
-
         /* Check if image data conversion is necessary */
-        auto initialData    = imageDesc->data;
-        auto dstTexFormat   = DXGetTextureFormatDesc(textureD3D->GetFormat());
+        const auto& dstTexFormat = GetFormatDesc(textureDesc.format);
+        auto dataLayout = CalcSubresourceLayout(textureDesc.format, textureDesc.extent);
 
-        ByteBuffer tempImageData;
+        ByteBuffer intermediateData;
+        const void* initialData = imageDesc->data;
 
-        if (dstTexFormat.format != imageDesc->format || dstTexFormat.dataType != imageDesc->dataType)
+        if (!dstTexFormat.compressed && (dstTexFormat.format != imageDesc->format || dstTexFormat.dataType != imageDesc->dataType))
         {
-            /* Convert image data (e.g. from RGB to RGBA) */
-            tempImageData = ConvertImageBuffer(*imageDesc, dstTexFormat.format, dstTexFormat.dataType, GetConfiguration().threadCount);
-            initialData = tempImageData.get();
+            /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
+            intermediateData    = ConvertImageBuffer(*imageDesc, dstTexFormat.format, dstTexFormat.dataType, GetConfiguration().threadCount);
+            initialData         = intermediateData.get();
+        }
+        else
+        {
+            /* Validate input data is large enough */
+            if (imageDesc->dataSize < dataLayout.dataSize)
+            {
+                throw std::invalid_argument(
+                    "image data size is too small to update subresource of D3D12 texture (" +
+                    std::to_string(dataLayout.dataSize) + " is required but only " + std::to_string(imageDesc->dataSize) + " was specified)"
+                );
+            }
         }
 
         /* Upload image data to subresource */
+        ComPtr<ID3D12Resource> uploadBuffer;
+
         D3D12_SUBRESOURCE_DATA subresourceData;
         {
             subresourceData.pData       = initialData;
-            subresourceData.RowPitch    = ImageFormatSize(dstTexFormat.format) * DataTypeSize(dstTexFormat.dataType) * texWidth;
-            subresourceData.SlicePitch  = subresourceData.RowPitch * texHeight;
+            subresourceData.RowPitch    = dataLayout.rowStride;
+            subresourceData.SlicePitch  = dataLayout.layerStride;
         }
         textureD3D->UpdateSubresource(device_.GetNative(), graphicsCmdList_.Get(), uploadBuffer, subresourceData);
 
@@ -259,6 +266,7 @@ Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& desc)
 
 void D3D12RenderSystem::Release(Sampler& sampler)
 {
+    SyncGPU();
     RemoveFromUniqueSet(samplers_, &sampler);
 }
 
@@ -271,6 +279,7 @@ ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor
 
 void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
 {
+    SyncGPU();
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
@@ -283,6 +292,7 @@ RenderPass* D3D12RenderSystem::CreateRenderPass(const RenderPassDescriptor& desc
 
 void D3D12RenderSystem::Release(RenderPass& renderPass)
 {
+    SyncGPU();
     RemoveFromUniqueSet(renderPasses_, &renderPass);
 }
 
@@ -295,6 +305,7 @@ RenderTarget* D3D12RenderSystem::CreateRenderTarget(const RenderTargetDescriptor
 
 void D3D12RenderSystem::Release(RenderTarget& renderTarget)
 {
+    SyncGPU();
     RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
@@ -331,6 +342,7 @@ PipelineLayout* D3D12RenderSystem::CreatePipelineLayout(const PipelineLayoutDesc
 
 void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
 {
+    SyncGPU();
     RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
 }
 
@@ -354,12 +366,14 @@ ComputePipeline* D3D12RenderSystem::CreateComputePipeline(const ComputePipelineD
 
 void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 {
+    SyncGPU();
     RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
 }
 
 void D3D12RenderSystem::Release(ComputePipeline& computePipeline)
 {
-    //RemoveFromUniqueSet(computePipelines_, &computePipeline);
+    SyncGPU();
+    RemoveFromUniqueSet(computePipelines_, &computePipeline);
 }
 
 /* ----- Queries ----- */
@@ -371,6 +385,7 @@ QueryHeap* D3D12RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 
 void D3D12RenderSystem::Release(QueryHeap& queryHeap)
 {
+    SyncGPU();
     RemoveFromUniqueSet(queryHeaps_, &queryHeap);
 }
 
@@ -383,6 +398,7 @@ Fence* D3D12RenderSystem::CreateFence()
 
 void D3D12RenderSystem::Release(Fence& fence)
 {
+    SyncGPU();
     RemoveFromUniqueSet(fences_, &fence);
 }
 

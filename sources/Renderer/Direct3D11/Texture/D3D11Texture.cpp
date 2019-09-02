@@ -10,6 +10,7 @@
 #include "../D3D11ObjectUtils.h"
 #include "../D3D11ResourceFlags.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../TextureUtils.h"
 
 
 namespace LLGL
@@ -276,62 +277,52 @@ void D3D11Texture::UpdateSubresource(
     const SrcImageDescriptor&   imageDesc,
     std::size_t                 threadCount)
 {
+    /* Check if source image must be converted */
+    auto format = D3D11Types::Unmap(format_);
+    const auto& dstTexFormat = GetFormatDesc(format);
+
     /* Get destination subresource index */
     auto dstSubresource = CalcSubresource(mipLevel, arrayLayer);
-    auto srcPitch       = DataTypeSize(imageDesc.dataType) * ImageFormatSize(imageDesc.format);
-
-    /* Check if source image must be converted */
-    auto dstTexFormat = DXGetTextureFormatDesc(format_);
-
-    if (dstTexFormat.format != imageDesc.format || dstTexFormat.dataType != imageDesc.dataType)
-    {
-        /* Get source data stride */
-        auto srcRowPitch        = (region.right  - region.left ) * srcPitch;
-        auto srcDepthPitch      = (region.bottom - region.top  ) * srcRowPitch;
-        auto requiredImageSize  = (region.back   - region.front) * srcDepthPitch;
-
-        if (imageDesc.dataSize < requiredImageSize)
+    auto dataLayout     = CalcSubresourceLayout(
+        format,
+        Extent3D
         {
-            throw std::invalid_argument(
-                "image data size is too small to update subresource of D3D11 texture (" +
-                std::to_string(requiredImageSize) + " is required but only " + std::to_string(imageDesc.dataSize) + " was specified)"
-            );
+            region.right - region.left,
+            region.bottom - region.top,
+            region.back - region.front
         }
+    );
 
-        /* Convert image data (e.g. from RGB to RGBA) */
-        auto tempData = ConvertImageBuffer(imageDesc, dstTexFormat.format, dstTexFormat.dataType, threadCount);
+    ByteBuffer intermediateData;
+    const void* initialData = imageDesc.data;
 
-        /* Get new source data stride */
-        srcPitch        = DataTypeSize(dstTexFormat.dataType) * ImageFormatSize(dstTexFormat.format);
-        srcRowPitch     = (region.right  - region.left) * srcPitch;
-        srcDepthPitch   = (region.bottom - region.top ) * srcRowPitch;
-
-        /* Update subresource with specified image data */
-        context->UpdateSubresource(
-            native_.resource.Get(),
-            dstSubresource,
-            &region,
-            tempData.get(),
-            srcRowPitch,
-            srcDepthPitch
-        );
+    if (!dstTexFormat.compressed && (dstTexFormat.format != imageDesc.format || dstTexFormat.dataType != imageDesc.dataType))
+    {
+        /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
+        intermediateData    = ConvertImageBuffer(imageDesc, dstTexFormat.format, dstTexFormat.dataType, threadCount);
+        initialData         = intermediateData.get();
     }
     else
     {
-        /* Get source data stride */
-        auto srcRowPitch    = (region.right  - region.left) * srcPitch;
-        auto srcDepthPitch  = (region.bottom - region.top ) * srcRowPitch;
-
-        /* Update subresource with specified image data */
-        context->UpdateSubresource(
-            native_.resource.Get(),
-            dstSubresource,
-            &region,
-            imageDesc.data,
-            srcRowPitch,
-            srcDepthPitch
-        );
+        /* Validate input data is large enough */
+        if (imageDesc.dataSize < dataLayout.dataSize)
+        {
+            throw std::invalid_argument(
+                "image data size is too small to update subresource of D3D11 texture (" +
+                std::to_string(dataLayout.dataSize) + " is required but only " + std::to_string(imageDesc.dataSize) + " was specified)"
+            );
+        }
     }
+
+    /* Update subresource with specified image data */
+    context->UpdateSubresource(
+        native_.resource.Get(),
+        dstSubresource,
+        &region,
+        initialData,
+        dataLayout.rowStride,
+        dataLayout.layerStride
+    );
 }
 
 void D3D11Texture::CreateSubresourceCopyWithCPUAccess(

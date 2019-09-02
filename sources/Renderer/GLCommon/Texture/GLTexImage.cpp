@@ -98,8 +98,9 @@ static void GLTexImage1DBase(
         /* Initialize highest MIP level */
         if (data != nullptr)
         {
+            /* Use <internalFormat> for the compressed version, and <format> for the uncompressed version */
             if (IsCompressedFormat(textureFormat))
-                glCompressedTexSubImage1D(target, 0, 0, sx, format, static_cast<GLsizei>(dataSize), data);
+                glCompressedTexSubImage1D(target, 0, 0, sx, internalFormat, static_cast<GLsizei>(dataSize), data);
             else
                 glTexSubImage1D(target, 0, 0, sx, format, type, data);
         }
@@ -154,8 +155,9 @@ static void GLTexImage2DBase(
         /* Initialize highest MIP level */
         if (data != nullptr)
         {
+            /* Use <internalFormat> for the compressed version, and <format> for the uncompressed version */
             if (IsCompressedFormat(textureFormat))
-                glCompressedTexSubImage2D(target, 0, 0, 0, sx, sy, format, static_cast<GLsizei>(dataSize), data);
+                glCompressedTexSubImage2D(target, 0, 0, 0, sx, sy, internalFormat, static_cast<GLsizei>(dataSize), data);
             else
                 glTexSubImage2D(target, 0, 0, 0, sx, sy, format, type, data);
         }
@@ -219,8 +221,9 @@ static void GLTexImage3DBase(
         /* Initialize highest MIP level */
         if (data != nullptr)
         {
+            /* Use <internalFormat> for the compressed version, and <format> for the uncompressed version */
             if (IsCompressedFormat(textureFormat))
-                glCompressedTexSubImage3D(target, 0, 0, 0, 0, sx, sy, sz, format, static_cast<GLsizei>(dataSize), data);
+                glCompressedTexSubImage3D(target, 0, 0, 0, 0, sx, sy, sz, internalFormat, static_cast<GLsizei>(dataSize), data);
             else
                 glTexSubImage3D(target, 0, 0, 0, 0, sx, sy, sz, format, type, data);
         }

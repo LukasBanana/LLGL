@@ -299,9 +299,9 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     auto numTexels      = (size.width * size.height * size.depth);
 
     /* Check if image buffer must be converted */
-    auto srcTexFormat   = DXGetTextureFormatDesc(textureD3D.GetFormat());
-    auto srcPitch       = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
-    auto srcImageSize   = (numTexels * srcPitch);
+    const auto& srcTexFormat    = GetFormatDesc(D3D11Types::Unmap(textureD3D.GetFormat()));
+    auto srcPitch               = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
+    auto srcImageSize           = (numTexels * srcPitch);
 
     if (srcTexFormat.format != imageDesc.format || srcTexFormat.dataType != imageDesc.dataType)
     {

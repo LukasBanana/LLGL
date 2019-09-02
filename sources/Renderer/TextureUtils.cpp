@@ -35,6 +35,18 @@ LLGL_EXPORT Offset3D CalcTextureOffset(const TextureType type, const Offset3D& o
     }
 }
 
+LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent)
+{
+    const auto& formatDesc = GetFormatDesc(format);
+    SubresourceLayout layout;
+    {
+        layout.rowStride    = (extent.width * formatDesc.bitSize) / formatDesc.blockWidth / 8;
+        layout.layerStride  = (extent.height * layout.rowStride) / formatDesc.blockHeight;
+        layout.dataSize     = extent.depth * layout.layerStride;
+    }
+    return layout;
+}
+
 
 } // /namespace LLGL
 

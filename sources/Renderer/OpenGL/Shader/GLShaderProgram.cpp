@@ -508,8 +508,6 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
             #endif
         }
     }
-    else
-        ThrowNotSupportedExcept(__FUNCTION__, "stream-outputs");
     #endif
 
     reflection.streamOutputAttributes = std::move(streamOutputFormat.attributes);

@@ -297,7 +297,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     {
         /* Check if image data must be converted */
         const auto& formatDesc = GetFormatDesc(textureDesc.format);
-        if (formatDesc.bitSize > 0)
+        if (formatDesc.bitSize > 0 && !formatDesc.compressed)
         {
             /* Convert image format (will be null if no conversion is necessary) */
             tempImageBuffer = ConvertImageBuffer(*imageDesc, formatDesc.format, formatDesc.dataType, cfg.threadCount);
@@ -327,7 +327,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     {
         /* Allocate default image data */
         const auto& formatDesc = GetFormatDesc(textureDesc.format);
-        if (formatDesc.bitSize > 0)
+        if (formatDesc.bitSize > 0 && !formatDesc.compressed)
         {
             const ColorRGBAd fillColor{ textureDesc.clearValue.color.Cast<double>() };
             tempImageBuffer = GenerateImageBuffer(formatDesc.format, formatDesc.dataType, imageSize, fillColor);
