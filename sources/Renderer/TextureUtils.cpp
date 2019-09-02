@@ -47,6 +47,15 @@ LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const E
     return layout;
 }
 
+LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc)
+{
+    return
+    (
+        NumMipLevels(textureDesc) > 1 &&
+        (textureDesc.miscFlags & (MiscFlags::GenerateMips | MiscFlags::NoInitialData)) == MiscFlags::GenerateMips
+    );
+}
+
 
 } // /namespace LLGL
 

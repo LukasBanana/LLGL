@@ -36,10 +36,7 @@ LLGL_EXPORT Offset3D CalcTextureOffset(const TextureType type, const Offset3D& o
 LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent);
 
 // Returns true if the specified flags for texture creation require MIP-map generation at creation time.
-inline bool FlagsRequireGenerateMips(long miscFlags)
-{
-    return ((miscFlags & (MiscFlags::GenerateMips | MiscFlags::NoInitialData)) == MiscFlags::GenerateMips);
-}
+LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc);
 
 
 } // /namespace LLGL

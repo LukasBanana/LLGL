@@ -150,7 +150,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Generates all MIP-maps for the specified texture.
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
-        This texture must have been created with the BindFlags::ColorAttachment flag.
+        This texture must have been created with the binding flags BindFlags::Sampled and BindFlags::ColorAttachment.
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
         \see GenerateMips(Texture&, const TextureSubresource&)
@@ -160,7 +160,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Generates the specified range of MIP-maps for the specified texture.
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
-        This texture must have been created with the BindFlags::ColorAttachment flag.
+        This texture must have been created with the binding flags BindFlags::Sampled and BindFlags::ColorAttachment.
         \param[in] subresource Specifies the texture subresource, i.e. the range of MIP-maps that are to be updated.
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.

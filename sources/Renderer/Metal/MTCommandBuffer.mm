@@ -133,30 +133,35 @@ void MTCommandBuffer::CopyTexture(
 void MTCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
-
-    encoderScheduler_.PauseRenderEncoder();
+    if ([textureMT->GetNative() mipmapLevelCount] > 1)
     {
-        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
-        [blitEncoder generateMipmapsForTexture:textureMT.GetNative()];
+        encoderScheduler_.PauseRenderEncoder();
+        {
+            auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+            [blitEncoder generateMipmapsForTexture:textureMT.GetNative()];
+        }
+        encoderScheduler_.ResumeRenderEncoder();
     }
-    encoderScheduler_.ResumeRenderEncoder();
 }
 
 void MTCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
-    auto& textureMT = LLGL_CAST(MTTexture&, texture);
-
-    // Create temporary subresource texture to generate MIP-maps only on that range
-    id<MTLTexture> intermediateTexture = textureMT.CreateSubresourceView(subresource);
-
-    encoderScheduler_.PauseRenderEncoder();
+    if (subresource.numMipLevels > 1)
     {
-        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
-        [blitEncoder generateMipmapsForTexture:intermediateTexture];
-    }
-    encoderScheduler_.ResumeRenderEncoder();
+        auto& textureMT = LLGL_CAST(MTTexture&, texture);
 
-    [intermediateTexture release];
+        // Create temporary subresource texture to generate MIP-maps only on that range
+        id<MTLTexture> intermediateTexture = textureMT.CreateSubresourceView(subresource);
+
+        encoderScheduler_.PauseRenderEncoder();
+        {
+            auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+            [blitEncoder generateMipmapsForTexture:intermediateTexture];
+        }
+        encoderScheduler_.ResumeRenderEncoder();
+
+        [intermediateTexture release];
+    }
 }
 
 /* ----- Viewport and Scissor ----- */

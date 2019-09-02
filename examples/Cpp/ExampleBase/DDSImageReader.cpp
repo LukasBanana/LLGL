@@ -145,6 +145,10 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     DDSHeader header;
     ReadValue(file, header);
 
+    DDSHeaderDX10 headerDX10;
+    ::memset(&headerDX10, 0, sizeof(headerDX10));
+
+    bool hasDX10Header  = false;
     bool hasMips        = ((header.flags        & DDSFLAG_MIPMAPS   ) != 0);
     bool hasDepth       = ((header.flags        & DDSFLAG_DEPTH     ) != 0);
     bool hasAlpha       = ((header.format.flags & DDSFLAG_ALPHA     ) != 0);
@@ -199,6 +203,11 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
         // Read image with BC3 compression (DXT4 or DXT5)
         texDesc_.format = LLGL::Format::BC3RGBA;
     }
+    else if (IsFourCC("DX10"))
+    {
+        // Read header extension
+        ReadValue(file, headerDX10);
+    }
     else
     {
         // Print error with FourCC as string
@@ -216,7 +225,16 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     }
 
     // Read image buffer
-    std::uint32_t bufferSize = texDesc_.extent.width * texDesc_.extent.height * texDesc_.extent.depth;
+    LLGL::Extent3D extent = texDesc_.extent;
+    std::uint32_t bufferSize = 0;
+
+    for (std::int32_t mipLevel = 0; mipLevel < header.mipMapCount; ++mipLevel)
+    {
+        bufferSize += extent.width * extent.height * extent.depth;
+        extent.width    = std::max(extent.width  / 2, 1u);
+        extent.height   = std::max(extent.height / 2, 1u);
+        extent.depth    = std::max(extent.depth  / 2, 1u);
+    }
 
     if (texDesc_.format == LLGL::Format::BC1RGBA)
         bufferSize /= 2;

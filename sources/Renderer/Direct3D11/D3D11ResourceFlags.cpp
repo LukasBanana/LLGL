@@ -41,14 +41,12 @@ UINT DXGetTextureBindFlags(const TextureDescriptor& desc)
 {
     UINT flagsD3D = 0;
 
-    bool hasMipMaps = IsMipMappedTexture(desc);
-
     if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
         flagsD3D |= D3D11_BIND_DEPTH_STENCIL;
-    else if (hasMipMaps || (desc.bindFlags & BindFlags::ColorAttachment) != 0)
+    else if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
         flagsD3D |= D3D11_BIND_RENDER_TARGET;
 
-    if (hasMipMaps || (desc.bindFlags & BindFlags::Sampled) != 0)
+    if ((desc.bindFlags & BindFlags::Sampled) != 0)
         flagsD3D |= D3D11_BIND_SHADER_RESOURCE;
 
     if ((desc.bindFlags & BindFlags::Storage) != 0)
@@ -112,8 +110,13 @@ UINT DXGetTextureMiscFlags(const TextureDescriptor& desc)
     UINT flagsD3D = 0;
 
     //TODO: consider actual number of MIP-maps (from D3D11_TEXTURE2D_DESC for instance)
-    if (IsMipMappedTexture(desc) && (desc.bindFlags & BindFlags::DepthStencilAttachment) == 0)
-        flagsD3D |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
+    if (IsMipMappedTexture(desc))
+    {
+        const long requiredFlags    = BindFlags::ColorAttachment | BindFlags::Sampled;
+        const long disallowedFlags  = BindFlags::DepthStencilAttachment;
+        if ((desc.bindFlags & (requiredFlags | disallowedFlags)) == requiredFlags)
+            flagsD3D |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
+    }
 
     if (IsCubeTexture(desc.type))
         flagsD3D |= D3D11_RESOURCE_MISC_TEXTURECUBE;

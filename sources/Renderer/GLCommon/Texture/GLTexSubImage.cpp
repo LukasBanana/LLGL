@@ -19,6 +19,7 @@ namespace LLGL
 
 #ifdef LLGL_OPENGL
 
+//TODO: pass internal format for compressed textures
 static void GLTexSubImage1DBase(
     GLenum                      target,
     std::uint32_t               mipLevel,
@@ -28,12 +29,14 @@ static void GLTexSubImage1DBase(
 {
     if (IsCompressedFormat(imageDesc.format))
     {
+        GLint internalFormat = 0;
+        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
         glCompressedTexSubImage1D(
             target,
             static_cast<GLint>(mipLevel),
             x,
             static_cast<GLsizei>(width),
-            GLTypes::Map(imageDesc.format),
+            internalFormat,
             static_cast<GLsizei>(imageDesc.dataSize),
             imageDesc.data
         );
@@ -54,6 +57,7 @@ static void GLTexSubImage1DBase(
 
 #endif
 
+//TODO: pass internal format for compressed textures
 static void GLTexSubImage2DBase(
     GLenum                      target,
     std::uint32_t               mipLevel,
@@ -65,6 +69,8 @@ static void GLTexSubImage2DBase(
 {
     if (IsCompressedFormat(imageDesc.format))
     {
+        GLint internalFormat = 0;
+        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
         glCompressedTexSubImage2D(
             target,
             static_cast<GLint>(mipLevel),
@@ -72,7 +78,7 @@ static void GLTexSubImage2DBase(
             y,
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
-            GLTypes::Map(imageDesc.format),
+            internalFormat,
             static_cast<GLsizei>(imageDesc.dataSize),
             imageDesc.data
         );
@@ -93,6 +99,7 @@ static void GLTexSubImage2DBase(
     }
 }
 
+//TODO: pass internal format for compressed textures
 static void GLTexSubImage3DBase(
     GLenum                      target,
     std::uint32_t               mipLevel,
@@ -106,6 +113,8 @@ static void GLTexSubImage3DBase(
 {
     if (IsCompressedFormat(imageDesc.format))
     {
+        GLint internalFormat = 0;
+        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
         glCompressedTexSubImage3D(
             target,
             static_cast<GLint>(mipLevel),
@@ -115,7 +124,7 @@ static void GLTexSubImage3DBase(
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
-            GLTypes::Map(imageDesc.format),
+            internalFormat,
             static_cast<GLsizei>(imageDesc.dataSize),
             imageDesc.data
         );

@@ -118,7 +118,7 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         );
 
         /* Generate MIP-maps if enabled */
-        if (FlagsRequireGenerateMips(textureDesc.miscFlags) && [textureMT->GetNative() mipmapLevelCount] > 1)
+        if (MustGenerateMipsOnCreate(textureDesc))
         {
             id<MTLCommandBuffer> cmdBuffer = [commandQueue_->GetNative() commandBuffer];
             {

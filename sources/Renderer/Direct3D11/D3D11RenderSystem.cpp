@@ -198,7 +198,7 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     }
 
     /* Generate MIP-maps if enabled */
-    if (imageDesc != nullptr && FlagsRequireGenerateMips(textureDesc.miscFlags))
+    if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
         D3D11MipGenerator::Get().GenerateMips(context_.Get(), *texture);
 
     return TakeOwnership(textures_, std::move(texture));

@@ -4,6 +4,7 @@
 
 - [`BufferDescriptor` interface](#bufferdescriptor-interface)
 - [`TextureDescriptor` interface](#texturedescriptor-interface)
+- [MIP-map generation](#mip-map-generation)
 - [Index buffer format](#index-buffer-format)
 - [Storage buffer binding](#storage-buffer-binding)
 - [Event listener interface](#event-listener-interface)
@@ -91,10 +92,60 @@ Format      TextureDescriptor::format;
 LLGL::TextureDescriptor myTexDesc;
 myTexDesc.type              = LLGL::TextureType::Texture2DMS;
 myTexDesc.bindFlags         = LLGL::BindFlags::ColorAttachment |
-                              LLGL::BindFlags::SampleBuffer    |
-                              LLGL::BindFlags::RWStorageBuffer;
+                              LLGL::BindFlags::Sampled         |
+                              LLGL::BindFlags::Storage;
 myTexDesc.cpuAccessFlags    = 0;
 myTexDesc.miscFlags         = LLGL::MiscFlags::FixedSamples;
+```
+
+
+## MIP-map generation
+
+The `GenerateMips` function has been moved from `RenderSystem` interface to `CommandBuffer` interface.
+That said, the MIP-map generation at texture creation time has been simplified, by adding the `MiscFlags::GenerateMips` flag to the texture descriptor.
+In order to generate MIP-maps *automatically*, either at texture creation time or during command buffer encoding,
+the texture must be created with the binding flags `BindFlags::ColorAttachment` and `BindFlags::Sampled`.
+Alternatively, the MIP-maps can be written *manually* using the `RenderSystem::WriteTexture` function.
+For compressed texture formats, automatic MIP-map generation is not supported, because they cannot be used as render targets.
+
+Before:
+```cpp
+// At texture creation:
+LLGL::TextureDescriptor myTexDesc;
+/* ... */
+LLGL::Texture* myTexture = myRenderer->CreateTexture(myTexDesc);
+myRenderer->GenerateMips(*myTexDesc);
+
+// During rendering:
+myCmdBuffer->Begin();
+/* 1st part ... */
+myCmdBuffer->End();
+myCmdQueue->Submit(*myCmdBuffer);
+
+myRenderer->GenerateMips(*myTexture);
+
+myCmdBuffer->Begin();
+/* 2nd part ... */
+myCmdBuffer->End();
+myCmdQueue->Submit(*myCmdBuffer);
+```
+
+After:
+```cpp
+// At texture creation:
+LLGL::TextureDescriptor myTexDesc;
+myTexDesc.bindFlags = LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment;
+myTexDesc.miscFlags = LLGL::MiscFlags::GenerateMips;
+/* ... */
+LLGL::Texture* myTexture = myRenderer->CreateTexture(myTexDesc);
+
+// During rendering:
+myCmdBuffer->Begin();
+/* 1st part ... */
+myCmdBuffer->GenerateMips(*myTexture);
+/* 2nd part ... */
+myCmdBuffer->End();
+myCmdQueue->Submit(*myCmdBuffer);
 ```
 
 

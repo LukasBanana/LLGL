@@ -319,7 +319,7 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     }
 
     /* Generate MIP-maps if enabled */
-    if (imageDesc != nullptr && FlagsRequireGenerateMips(textureDesc.miscFlags))
+    if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
         GLMipGenerator::Get().GenerateMips(textureDesc.type);
 
     return TakeOwnership(textures_, std::move(texture));

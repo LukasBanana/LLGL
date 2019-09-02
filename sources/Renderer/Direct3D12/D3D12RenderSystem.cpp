@@ -231,7 +231,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
         textureD3D->UpdateSubresource(device_.GetNative(), graphicsCmdList_.Get(), uploadBuffer, subresourceData);
 
         /* Generate MIP-maps if enabled */
-        if (FlagsRequireGenerateMips(textureDesc.miscFlags))
+        if (MustGenerateMipsOnCreate(textureDesc))
             D3D12MipGenerator::Get().GenerateMips(commandContext_, *textureD3D, textureD3D->GetWholeSubresource());
 
         /* Execute upload commands and wait for GPU to finish execution */

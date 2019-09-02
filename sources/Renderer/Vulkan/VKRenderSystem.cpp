@@ -389,7 +389,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         );
 
         /* Generate MIP-maps if enabled */
-        if (imageDesc != nullptr && FlagsRequireGenerateMips(textureDesc.miscFlags))
+        if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
         {
             device_.GenerateMips(
                 cmdBuffer,
