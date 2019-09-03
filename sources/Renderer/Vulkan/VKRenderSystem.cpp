@@ -360,14 +360,15 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     auto cmdBuffer = device_.AllocCommandBuffer();
     {
+        const TextureSubresource subresource{ 0, arrayLayers, 0, mipLevels };
+
         device_.TransitionImageLayout(
             cmdBuffer,
             image,
             formatVK,
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            mipLevels,
-            arrayLayers
+            subresource
         );
 
         device_.CopyBufferToImage(
@@ -384,8 +385,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             formatVK,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            mipLevels,
-            arrayLayers
+            subresource
         );
 
         /* Generate MIP-maps if enabled */
@@ -395,10 +395,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
                 cmdBuffer,
                 textureVK->GetVkImage(),
                 textureVK->GetVkExtent(),
-                0,
-                textureVK->GetNumMipLevels(),
-                0,
-                textureVK->GetNumArrayLayers()
+                subresource
             );
         }
     }

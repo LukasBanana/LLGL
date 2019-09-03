@@ -147,7 +147,7 @@ void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, co
     /* Allocate local storage for buffer and image descriptors */
     const auto numResourceViewsMax = std::min(desc.resourceViews.size(), bindings.size());
 
-    VKWriteDescriptorContainer container { numResourceViewsMax };
+    VKWriteDescriptorContainer container{ numResourceViewsMax };
 
     for (std::size_t i = 0; i < numResourceViewsMax; ++i)
     {

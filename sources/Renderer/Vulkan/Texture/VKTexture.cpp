@@ -17,11 +17,14 @@ namespace LLGL
 
 
 VKTexture::VKTexture(
-    const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const TextureDescriptor& desc) :
-        Texture       { desc.type                  },
-        imageWrapper_ { device                     },
-        imageView_    { device, vkDestroyImageView },
-        format_       { VKTypes::Map(desc.format)  }
+    const VKPtr<VkDevice>&      device,
+    VKDeviceMemoryManager&      deviceMemoryMngr,
+    const TextureDescriptor&    desc)
+:
+    Texture       { desc.type                  },
+    imageWrapper_ { device                     },
+    imageView_    { device, vkDestroyImageView },
+    format_       { VKTypes::Map(desc.format)  }
 {
     /* Create Vulkan image and allocate memory region */
     CreateImage(device, desc);
@@ -146,19 +149,20 @@ void VKTexture::CreateInternalImageView(VkDevice device)
  * ======= Private: =======
  */
 
+// see https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/vkspec.html#resources-image-views-compatibility
 static VkImageCreateFlags GetVkImageCreateFlags(const TextureDescriptor& desc)
 {
     VkImageCreateFlags createFlags = 0;
 
+    /*
+    We only use VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT at the moment, to support cube maps.
+    VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT is only required to make 3D textures compatible with 2D-array views, which LLGL does not support.
+    */
     switch (desc.type)
     {
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
             createFlags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-            break;
-        case TextureType::Texture2DArray:
-        case TextureType::Texture2DMSArray:
-            createFlags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
             break;
         default:
             break;

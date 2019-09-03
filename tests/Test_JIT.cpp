@@ -8,7 +8,7 @@
 #include <LLGL/LLGL.h>
 
 
-#ifdef LLGL_ENABLE_JIT_COMPILER
+#if defined LLGL_ENABLE_JIT_COMPILER && defined LLGL_DEBUG
 
 namespace LLGL
 {

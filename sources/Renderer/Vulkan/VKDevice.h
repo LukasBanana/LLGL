@@ -9,6 +9,7 @@
 #define LLGL_VK_DEVICE_H
 
 
+#include <LLGL/TextureFlags.h>
 #include "Vulkan.h"
 #include "VKPtr.h"
 #include "VKCore.h"
@@ -53,13 +54,12 @@ class VKDevice
         /* ----- Buffer/Image operatons ----- */
 
         void TransitionImageLayout(
-            VkCommandBuffer commandBuffer,
-            VkImage         image,
-            VkFormat        format,
-            VkImageLayout   oldLayout,
-            VkImageLayout   newLayout,
-            std::uint32_t   numMipLevels,
-            std::uint32_t   numArrayLayers
+            VkCommandBuffer             commandBuffer,
+            VkImage                     image,
+            VkFormat                    format,
+            VkImageLayout               oldLayout,
+            VkImageLayout               newLayout,
+            const TextureSubresource&   subresource
         );
 
         void CopyBuffer(
@@ -88,13 +88,10 @@ class VKDevice
         );
 
         void GenerateMips(
-            VkCommandBuffer     commandBuffer,
-            VkImage             image,
-            const VkExtent3D&   imageExtent,
-            std::uint32_t       baseMipLevel,
-            std::uint32_t       numMipLevels,
-            std::uint32_t       baseArrayLayer,
-            std::uint32_t       numArrayLayers
+            VkCommandBuffer             commandBuffer,
+            VkImage                     image,
+            const VkExtent3D&           imageExtent,
+            const TextureSubresource&   subresource
         );
 
         void WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);

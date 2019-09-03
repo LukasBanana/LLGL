@@ -175,7 +175,7 @@ VKDevice VKPhysicalDevice::CreateLogicalDevice()
     device.CreateLogicalDevice(
         physicalDevice_,
         &features_,
-        #if 1
+        #if 0
         supportedExtensionNames_.data(),
         static_cast<std::uint32_t>(supportedExtensionNames_.size())
         #else

@@ -255,7 +255,10 @@ private:
         // Examine user input
         if (input->KeyDown(LLGL::Key::Tab))
         {
-            resourceIndex = (resourceIndex + 1) % 6;
+            if (input->KeyPressed(LLGL::Key::Shift))
+                resourceIndex = ((resourceIndex - 1) % 6 + 6) % 6;
+            else
+                resourceIndex = (resourceIndex + 1) % 6;
             std::cout << "texture attributes: " << resourceLabels[resourceIndex] << std::string(30, ' ') << "\r";
             std::flush(std::cout);
         }

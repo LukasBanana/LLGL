@@ -196,10 +196,7 @@ void VKCommandBuffer::GenerateMips(Texture& texture)
         commandBuffer_,
         textureVK.GetVkImage(),
         textureVK.GetVkExtent(),
-        0,
-        textureVK.GetNumMipLevels(),
-        0,
-        textureVK.GetNumArrayLayers()
+        TextureSubresource{ 0, textureVK.GetNumArrayLayers(), 0, textureVK.GetNumMipLevels() }
     );
 }
 
@@ -217,10 +214,7 @@ void VKCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& s
             commandBuffer_,
             textureVK.GetVkImage(),
             textureVK.GetVkExtent(),
-            subresource.baseMipLevel,
-            std::min(subresource.numMipLevels, maxNumMipLevels - subresource.baseMipLevel),
-            subresource.baseArrayLayer,
-            std::min(subresource.numArrayLayers, maxNumArrayLayers - subresource.baseArrayLayer)
+            subresource
         );
     }
 }
