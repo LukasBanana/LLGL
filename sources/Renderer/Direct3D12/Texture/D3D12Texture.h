@@ -38,6 +38,7 @@ class D3D12Texture final : public Texture
             ID3D12GraphicsCommandList*  commandList,
             ComPtr<ID3D12Resource>&     uploadBuffer,
             D3D12_SUBRESOURCE_DATA&     subresourceData,
+            UINT                        mipLevel        = 0,
             UINT                        firstArrayLayer = 0,
             UINT                        numArrayLayers  = ~0
         );

@@ -137,6 +137,7 @@ void D3D12Texture::UpdateSubresource(
     ID3D12GraphicsCommandList*  commandList,
     ComPtr<ID3D12Resource>&     uploadBuffer,
     D3D12_SUBRESOURCE_DATA&     subresourceData,
+    UINT                        mipLevel,
     UINT                        firstArrayLayer,
     UINT                        numArrayLayers)
 {
@@ -162,7 +163,7 @@ void D3D12Texture::UpdateSubresource(
     for (UINT arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
     {
         /* Update subresource for current array layer */
-        UINT subresourceIndex = CalcSubresource(0, firstArrayLayer + arrayLayer);
+        UINT subresourceIndex = CalcSubresource(mipLevel, firstArrayLayer + arrayLayer);
 
         UpdateSubresources(
             commandList,            // pCmdList

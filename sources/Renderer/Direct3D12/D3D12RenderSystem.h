@@ -168,6 +168,15 @@ class D3D12RenderSystem final : public RenderSystem
         void SyncGPU(UINT64& fenceValue);
         void SyncGPU();
 
+        // Updates the image data of the specified texture region.
+        void UpdateGpuTexture(
+            D3D12Texture&               textureD3D,
+            const TextureRegion&        region,
+            const SrcImageDescriptor&   imageDesc,
+            ComPtr<ID3D12Resource>&     uploadBuffer
+        );
+
+        // Returns the feature level of the D3D device.
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const
         {
             return device_.GetFeatureLevel();
