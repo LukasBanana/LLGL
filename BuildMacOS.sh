@@ -3,12 +3,13 @@
 SOURCE_DIR=$PWD
 OUTPUT_DIR="build"
 
-# Make output build folder
+# Ensure we are inside the repository folder
 if [ ! -f "CMakeLists.txt" ]; then
     echo "error: file not found: CMakeLists.txt"
     exit 1
 fi
 
+# Make output build folder
 if [ "$#" -eq 1 ]; then
     OUTPUT_DIR=$1
 else
