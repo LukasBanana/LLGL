@@ -10,8 +10,11 @@
 
 
 #include "Export.h"
-#include "StreamOutputFormat.h"
+#include "VertexAttribute.h"
+#include "FragmentAttribute.h"
+#include "StreamOutputFormat.h" //TODO: replace by VertexAttribute
 #include <cstddef>
+#include <vector>
 
 
 namespace LLGL
@@ -133,6 +136,36 @@ struct ShaderMacro
 };
 
 /**
+\brief Vertex (or geometry) shader specific structure.
+\see ShaderDescriptor::vertex
+\see ShaderReflection::vertex
+*/
+struct VertexShaderAttributes
+{
+    //! Vertex shader input attributes.
+    std::vector<VertexAttribute> inputAttribs;
+
+    /**
+    \brief Vertex (or geometry) shader output attributes.
+    \remarks Some rendering APIs need the output stream attributes for the vertex shader and other APIs need them for the geometry shader.
+    To keep the code logic simple, it is valid to declare the output attributes for both the vertex and geometry shader (or even all that will be used in the same shader program).
+    Output attributes are ignored where they cannot be used.
+    */
+    std::vector<VertexAttribute> outputAttribs;
+};
+
+/**
+\brief Fragment shader specific descriptor structure.
+\see ShaderDescriptor::fragment
+\see ShaderReflection::fragment
+*/
+struct FragmentShaderAttributes
+{
+    //! Fragment shader output attributes.
+    std::vector<FragmentAttribute> outputAttribs;
+};
+
+/**
 \brief Shader source and binary code descriptor structure.
 \see RenderSystem::CreateShader
 */
@@ -165,14 +198,16 @@ struct ShaderDescriptor
     {
     }
 
+    #if 1//TODO: replace this by <code>vertex.outputAttribs</code>
     //! Additional descriptor for stream outputs.
     struct StreamOutput
     {
         StreamOutputFormat format;  //!< Stream-output buffer format.
     };
+    #endif
 
     //! Specifies the type of the shader, i.e. if it is either a vertex or fragment shader or the like. By default ShaderType::Undefined.
-    ShaderType          type            = ShaderType::Undefined;
+    ShaderType                  type            = ShaderType::Undefined;
 
     /**
     \brief Pointer to the shader source. This is either a null terminated string or a raw byte buffer (depending on the 'sourceType' member).
@@ -181,7 +216,7 @@ struct ShaderDescriptor
     \see sourceSize
     \see sourceType
     */
-    const char*         source          = nullptr;
+    const char*                 source          = nullptr;
 
     /**
     \brief Specifies the size of the shader source (excluding the null terminator).
@@ -189,7 +224,7 @@ struct ShaderDescriptor
     For the binrary buffer source type (i.e. ShaderSourceType::BinaryBuffer), this must not be zero!
     \see source
     */
-    std::size_t         sourceSize      = 0;
+    std::size_t                 sourceSize      = 0;
 
     /**
     \brief Specifies the type of the shader source. By default ShaderSourceType::CodeFile.
@@ -199,13 +234,13 @@ struct ShaderDescriptor
     \see ShaderSourceType
     \see source
     */
-    ShaderSourceType    sourceType      = ShaderSourceType::CodeFile;
+    ShaderSourceType            sourceType      = ShaderSourceType::CodeFile;
 
     /**
     \brief Shader entry point (shader main function). If this is null, the empty string is used. By default null.
     \note Only supported with: HLSL, SPIR-V, Metal.
     */
-    const char*         entryPoint      = nullptr;
+    const char*                 entryPoint      = nullptr;
 
     /**
     \brief Shader target profile. If this is null, the empty string is used. By default null.
@@ -216,7 +251,7 @@ struct ShaderDescriptor
     \note Only supported with: HLSL, Metal.
     \see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx
     */
-    const char*         profile         = nullptr;
+    const char*                 profile         = nullptr;
 
     /**
     \brief Optional array of macro definitions. By default null.
@@ -234,7 +269,7 @@ struct ShaderDescriptor
     \endcode
     \note Only supported with: HLSL, Metal.
     */
-    const ShaderMacro*  defines         = nullptr;
+    const ShaderMacro*          defines         = nullptr;
 
     /**
     \brief Optional compilation flags. By default 0.
@@ -242,10 +277,22 @@ struct ShaderDescriptor
     \note Only supported with: HLSL.
     \see ShaderCompileFlags
     */
-    long                flags           = 0;
+    long                        flags           = 0;
+
+    #if 1//TODO: replace this by <code>vertex.outputAttribs</code>
 
     //! Optional stream output descriptor for a geometry shader (or a vertex shader when used with OpenGL).
-    StreamOutput        streamOutput;
+    StreamOutput                streamOutput;
+
+    #else
+
+    //! Vertex (or geometry) shader specific attributes.
+    VertexShaderAttributes      vertex;
+
+    //! Fragment shader specific attributes.
+    FragmentShaderAttributes    fragment;
+
+    #endif
 };
 
 

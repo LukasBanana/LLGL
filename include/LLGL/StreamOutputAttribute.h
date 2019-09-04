@@ -19,7 +19,10 @@ namespace LLGL
 {
 
 
-//! Stream-output attribute structure.
+/**
+\brief Stream-output attribute structure.
+\todo Maybe replace this by VertexAttribute
+*/
 struct LLGL_EXPORT StreamOutputAttribute
 {
     StreamOutputAttribute() = default;

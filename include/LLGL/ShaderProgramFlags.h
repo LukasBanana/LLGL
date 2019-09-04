@@ -11,10 +11,11 @@
 
 #include "ForwardDecls.h"
 #include "VertexFormat.h"
-#include "StreamOutputFormat.h"
+#include "StreamOutputFormat.h" //TODO: replace this by VertexAttribute
 #include "ResourceFlags.h"
 #include "BufferFlags.h"
 #include "PipelineLayoutFlags.h"
+#include "ShaderFlags.h"
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -97,15 +98,12 @@ enum class UniformType
 */
 struct ShaderProgramDescriptor
 {
+    #if 1//TODO: replace by ShaderFlags::vertex
     /**
     \brief Vertex format list. This may also be empty, if the vertex shader has no input attributes or only a compute shader is specified.
     \see VertexFormat
     */
     std::vector<VertexFormat>   vertexFormats;
-
-    //TODO: add FragmentFormat structure to provide CPU side fragment binding for OpenGL
-    #if 0
-    FragmentFormat              fragmentFormat;
     #endif
 
     /**
@@ -208,15 +206,22 @@ This is not a "descriptor", because it is only used as output from an interface 
 */
 struct ShaderReflection
 {
+    #if 1//TODO: replace this
+
     //! List of all vertex input attributes.
     std::vector<VertexAttribute>        vertexAttributes;
 
     //! List of all stream-output attributes.
     std::vector<StreamOutputAttribute>  streamOutputAttributes;
 
-    #if 0//TODO: enable this
-    //! List of all fragment output attributes.
-    std::vector<FragmentAttribute>      fragmentAttributes;
+    #else
+
+    //! Reflection data that is specificly for the vertex shader.
+    FragmentShaderAttributes            vertex;
+
+    //! Reflection data that is specificly for the fragment shader.
+    FragmentShaderAttributes            fragment;
+
     #endif
 
     //! List of all shader reflection resource views.
