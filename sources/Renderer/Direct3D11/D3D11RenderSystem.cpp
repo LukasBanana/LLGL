@@ -299,7 +299,7 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     auto numTexels      = (size.width * size.height * size.depth);
 
     /* Check if image buffer must be converted */
-    const auto& srcTexFormat    = GetFormatDesc(D3D11Types::Unmap(textureD3D.GetFormat()));
+    const auto& srcTexFormat    = GetFormatAttribs(D3D11Types::Unmap(textureD3D.GetFormat()));
     auto srcPitch               = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
     auto srcImageSize           = (numTexels * srcPitch);
 
@@ -793,7 +793,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithClearValue(
         /* Find suitable image format for texture hardware format */
         SrcImageDescriptor imageDescDefault;
 
-        const auto& formatDesc = GetFormatDesc(format);
+        const auto& formatDesc = GetFormatAttribs(format);
         if (formatDesc.bitSize > 0)
         {
             /* Copy image format and data type from descriptor */

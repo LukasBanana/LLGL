@@ -280,28 +280,118 @@ enum class DataType
     Float64,    //!< 64-bit real type (double).
 };
 
+/**
+\brief Format attribute flags enumeration.
+\see FormatAttributes::flags
+*/
+struct FormatFlags
+{
+    enum
+    {
+        //! Specifies whether the format has a depth component (e.g. Format::D16UNorm or Format::D24UNormS8UInt).
+        HasDepth                = (1 << 0),
+
+        //! Specifies whether the format has a stencil component (e.g. Format::D24UNormS8UInt).
+        HasStencil              = (1 << 1),
+
+        //! Specifies whether the format is in non-linear sRGB color space (e.g. Format::RGBA8UNorm_sRGB or Format::BC1UNorm_sRGB).
+        IsColorSpace_sRGB       = (1 << 2),
+
+        //! Specifies whether the format is compressed (e.g. Format::BC1UNorm or Format::BC5SNorm).
+        IsCompressed            = (1 << 3),
+
+        //! Specifies whether the format has normalized integer components (e.g. Format::R8UNorm or Format::R8SNorm).
+        IsNormalized            = (1 << 4),
+
+        //! Specifies whether the format is an integer format (e.g. Format::R8UNorm or Format::R8SInt).
+        IsInteger               = (1 << 5),
+
+        //! Specifies whether the format is an unsigned format (e.g. Format::R8UInt or Format::RG11B10Float).
+        IsUnsigned              = (1 << 6),
+
+        //! Specifies whether the format is packed (e.g. Format::RGB10A2UNorm or Format::RGB9E5Float).
+        IsPacked                = (1 << 7),
+
+        /**
+        \brief Specifies whether the format can be used for render targets or rather depth-stencil or color attachments.
+        \see BindFlags::ColorAttachment
+        \see BindFlags::DepthStencilAttachment
+        */
+        SupportsRenderTarget    = (1 << 8),
+
+        /**
+        \brief Specifies whether the format can have more than one MIP-maps.
+        \see TextureDescriptor::mipLevels
+        */
+        SupportsMips            = (1 << 9),
+
+        /**
+        \remarks This implies that the flags \c SupportsMips and \c SupportsRenderTarget are also enabled.
+        \see MiscFlgas::GenerateMips
+        \see CommandBuffer::GenerateMips
+        */
+        SupportsGenerateMips    = (1 << 10),
+
+        /**
+        \brief Specifies whether the format can be used for 1D and 1D-array textures.
+        \remarks For example, block compressions (e.g. Format::BC1UNorm) cannot be used for 1D textures, because they are made out of 4x4 blocks.
+        \see TextureType::Texture1D
+        \see TextureType::Texture1DArray
+        */
+        SupportsTexture1D       = (1 << 11),
+
+        /**
+        \brief Specifies whether the format can be used for 2D and 2D-array textures (both regular and multisampled).
+        \see TextureType::Texture2D
+        \see TextureType::Texture2DArray
+        \see TextureType::Texture2DMS
+        \see TextureType::Texture2DMSArray
+        */
+        SupportsTexture2D       = (1 << 12),
+
+        /**
+        \brief Specifies whether the format can be used for 3D textures.
+        \see TextureType::Texture3D
+        */
+        SupportsTexture3D       = (1 << 13),
+
+        /**
+        \brief Specifies whether the format can be used for cube and cube-array textures.
+        \see TextureType::TextureCube
+        \see TextureType::TextureCubeArray
+        */
+        SupportsTextureCube     = (1 << 14),
+
+        /**
+        \brief Specifies whether the format can be used for vertex attributes.
+        \see VertexAttribute::format
+        */
+        SupportsVertex          = (1 << 15),
+    };
+};
+
 
 /* ----- Structures ----- */
 
 /**
-\brief Vertex and texture format descriptor structure.
+\brief Vertex and texture format attributes structure.
 \remarks Describes all attributes of a hardware format, e.g. bit size, color components, compression etc.
 \note This descriptor structure has no default initializers to fulfill the requirements of a plain-old-data (POD) structure.
-\see GetFormatDesc
+\see GetFormatAttribs
 */
-struct FormatDescriptor
+struct FormatAttributes
 {
     //! Size (in bits) of the a pixel block or vertex attribute. This is 0 for invalid formats.
     std::uint16_t   bitSize;
 
     //! Width of a pixel block. This is 1 for all non-compressed formats. This is 0 for invalid formats.
-    std::uint8_t    blockWidth  : 4;
+    std::uint8_t    blockWidth;
 
     //! Height of a pixel block. This is 1 for all non-compressed formats. This is 0 for invalid formats.
-    std::uint8_t    blockHeight : 4;
+    std::uint8_t    blockHeight;
 
     //! Number of components. This is either 1, 2, 3, or 4. This is 0 for invalid formats.
-    std::uint8_t    components  : 4;
+    std::uint8_t    components;
 
     //! Image pixel format. This is ignored for depth-stencil and compressed formats.
     ImageFormat     format;
@@ -312,23 +402,11 @@ struct FormatDescriptor
     */
     DataType        dataType;
 
-    //! Specifies whether the format is in non-linear sRGB space (e.g. Format::RGBA8UNorm_sRGB).
-    bool            sRGB        : 1;
-
-    //! Specifies whether the format is compressed (e.g. Format::BC1RGBA).
-    bool            compressed  : 1;
-
-    //! Specifies whether the format has a depth component (e.g. Format::D16UNorm).
-    bool            depth       : 1;
-
-    //! Specifies whether the format has a stencil component (e.g. Format::D24UNormS8UInt).
-    bool            stencil     : 1;
-
-    //! Specifies whether the format has normalized components (e.g. Format::R8UNorm or Format::D16UNorm).
-    bool            normalized  : 1;
-
-    //! Specifies whether the format is packed (e.g. Format::RGB10A2UNorm or Format::RGB9E5Float).
-    bool            packed      : 1;
+    /**
+    \brief Specifies the boolean attributes of this format descriptor. This can be bitwise OR combination of the FormatFlags entries.
+    \see FormatFlags
+    */
+    long            flags;
 };
 
 
@@ -341,15 +419,15 @@ struct FormatDescriptor
 */
 
 /**
-\brief Returns the descriptor for the specified hardware format or a zero-initialized descriptor in case of an invalid argument.
-\see FormatDescriptor
+\brief Returns the attributes for the specified hardware format or a zero-initialized structure in case of an invalid argument.
+\see FormatAttributes
 \see Format
 */
-LLGL_EXPORT const FormatDescriptor& GetFormatDesc(const Format format);
+LLGL_EXPORT const FormatAttributes& GetFormatAttribs(const Format format);
 
 /**
 \brief Returns true if the specified hardware format is a compressed format,
-i.e. either Format::BC1RGB, Format::BC1RGBA, Format::BC2RGBA, or Format::BC3RGBA.
+e.g. Format::BC1UNorm, Format::BC2UNorm_sRGB, Format::BC4SNorm, etc.
 \see Format
 */
 LLGL_EXPORT bool IsCompressedFormat(const Format format);

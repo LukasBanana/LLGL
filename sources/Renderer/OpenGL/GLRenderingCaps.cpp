@@ -104,7 +104,7 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
     return languages;
 }
 
-static std::initializer_list<Format> GetDefaultSupportedGLTextureFormats()
+static std::vector<Format> GetDefaultSupportedGLTextureFormats()
 {
     return
     {

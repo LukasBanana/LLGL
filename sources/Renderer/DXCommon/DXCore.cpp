@@ -297,7 +297,7 @@ static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureL
     return languages;
 }
 
-static std::initializer_list<Format> GetDefaultSupportedDXTextureFormats()
+static std::vector<Format> GetDefaultSupportedDXTextureFormats()
 {
     return
     {

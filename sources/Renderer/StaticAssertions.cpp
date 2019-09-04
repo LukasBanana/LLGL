@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-LLGL_ASSERT_POD_STRUCT( FormatDescriptor );
+LLGL_ASSERT_POD_STRUCT( FormatAttributes );
 LLGL_ASSERT_POD_STRUCT( DrawIndirectArguments );
 LLGL_ASSERT_POD_STRUCT( DrawIndexedIndirectArguments );
 LLGL_ASSERT_POD_STRUCT( DrawPatchIndirectArgument );

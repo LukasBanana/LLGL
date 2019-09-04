@@ -60,11 +60,11 @@ VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, Sharp
 
 unsigned int VertexAttribute::Size::get()
 {
-    const auto& formatDesc = LLGL::GetFormatDesc(static_cast<LLGL::Format>(Format));
-    if (formatDesc.compressed || formatDesc.sRGB || formatDesc.depth || formatDesc.stencil)
-        return 0;
+    const auto& formatAttribs = LLGL::GetFormatAttribs(static_cast<LLGL::Format>(Format));
+    if ((formatAttribs.flags & LLGL::FormatFlags::SupportsVertex) != 0)
+        return (formatAttribs.bitSize / 8);
     else
-        return (formatDesc.bitSize / 8);
+        return 0;
 };
 
 

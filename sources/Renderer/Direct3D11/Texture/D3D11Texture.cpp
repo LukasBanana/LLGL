@@ -279,7 +279,7 @@ void D3D11Texture::UpdateSubresource(
 {
     /* Check if source image must be converted */
     auto format = D3D11Types::Unmap(format_);
-    const auto& dstTexFormat = GetFormatDesc(format);
+    const auto& formatAttribs = GetFormatAttribs(format);
 
     /* Get destination subresource index */
     auto dstSubresource = CalcSubresource(mipLevel, arrayLayer);
@@ -296,10 +296,11 @@ void D3D11Texture::UpdateSubresource(
     ByteBuffer intermediateData;
     const void* initialData = imageDesc.data;
 
-    if (!dstTexFormat.compressed && (dstTexFormat.format != imageDesc.format || dstTexFormat.dataType != imageDesc.dataType))
+    if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
+        (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageDesc, dstTexFormat.format, dstTexFormat.dataType, threadCount);
+        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, threadCount);
         initialData         = intermediateData.get();
     }
     else

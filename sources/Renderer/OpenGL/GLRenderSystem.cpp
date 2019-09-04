@@ -250,7 +250,7 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     #if 0//TODO
     /* Configure texture swizzling if format is not supported */
-    const auto& formatDesc = GetFormatDesc(textureDesc.format);
+    const auto& formatDesc = GetFormatAttribs(textureDesc.format);
     if (formatDesc.format == ImageFormat::Alpha)
     {
         glTexParameteri(target, GL_TEXTURE_SWIZZLE_R, GL_ZERO);

@@ -31,7 +31,7 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
         ThrowNotSupportedExcept(__FUNCTION__, "integral vertex attributes");
 
     /* Get data type and components of vector type */
-    const auto& formatDesc = GetFormatDesc(attribute.format);
+    const auto& formatDesc = GetFormatAttribs(attribute.format);
     if (formatDesc.bitSize == 0)
         ThrowNotSupportedExcept(__FUNCTION__, "specified vertex attribute");
 

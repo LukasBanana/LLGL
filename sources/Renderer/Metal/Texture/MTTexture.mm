@@ -152,17 +152,17 @@ void MTTexture::Write(const TextureRegion& textureRegion, SrcImageDescriptor ima
 
     /* Get dimensions */
     auto        format          = MTTypes::ToFormat([native_ pixelFormat]);
-    const auto& formatDesc      = GetFormatDesc(format);
-    NSUInteger  bytesPerRow     = (region.size.width * formatDesc.bitSize) / (formatDesc.blockWidth * 8);
-    NSUInteger  bytesPerSlice   = (region.size.height * bytesPerRow) / formatDesc.blockHeight;
+    const auto& formatAttribs   = GetFormatAttribs(format);
+    NSUInteger  bytesPerRow     = (region.size.width * formatAttribs.bitSize) / (formatAttribs.blockWidth * 8);
+    NSUInteger  bytesPerSlice   = (region.size.height * bytesPerRow) / formatAttribs.blockHeight;
 
     /* Check if image data must be converted */
     ByteBuffer intermediateData;
 
-    if (formatDesc.bitSize > 0 && !formatDesc.compressed)
+    if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
     {
         /* Convert image format (will be null if no conversion is necessary) */
-        intermediateData = ConvertImageBuffer(imageDesc, formatDesc.format, formatDesc.dataType, /*cfg.threadCount*/0);
+        intermediateData = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, /*cfg.threadCount*/0);
         if (intermediateData)
         {
             /* User converted tempoary buffer as image source */

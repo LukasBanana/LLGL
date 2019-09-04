@@ -401,7 +401,7 @@ The identifier `"sbuffer"` was renamed to `"buffer"`.
 
 ## `Format` information
 
-Various functions to get meta data from a `Format` enumeration entry have been combined into a single function named `GetFormatDesc`.
+Various functions to get meta data from a `Format` enumeration entry have been combined into a single function named `GetFormatAttribs`.
 
 Before:
 ```cpp
@@ -423,14 +423,14 @@ LLGL::FindSuitableImageFormat(myFormat, myImageFormat, myDataType);
 After:
 ```
 // Interface:
-const LLGL::FormatDescriptor& GetFormatDesc(const LLGL::Format format);
+const LLGL::FormatAttributes& GetFormatAttribs(const LLGL::Format format);
 
 // Usage:
-const auto& myFormatDesc = LLGL::GetFormatDesc(myFormat);
-myTextureByteSize  = myTexturePixelCount * myFormatDesc.bitSize / myFormatDesc.blockWidth / myFormatDesc.blockHeight / 8;
-myFormatComponents = myFormatDesc.components;
-myImageFormat      = myFormatDesc.format;
-myDataType         = myFormatDesc.dataType;
+const auto& myFormatAttribs = LLGL::GetFormatAttribs(myFormat);
+myTextureByteSize  = myTexturePixelCount * myFormatAttribs.bitSize / myFormatAttribs.blockWidth / myFormatAttribs.blockHeight / 8;
+myFormatComponents = myFormatAttribs.components;
+myImageFormat      = myFormatAttribs.format;
+myDataType         = myFormatAttribs.dataType;
 ```
 
 

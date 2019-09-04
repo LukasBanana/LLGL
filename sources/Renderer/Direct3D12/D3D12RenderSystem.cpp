@@ -206,16 +206,17 @@ void D3D12RenderSystem::UpdateGpuTexture(
     /* Check if image data conversion is necessary */
     auto format = D3D12Types::Unmap(textureD3D.GetFormat());
 
-    const auto& dstTexFormat = GetFormatDesc(format);
+    const auto& formatAttribs = GetFormatAttribs(format);
     auto dataLayout = CalcSubresourceLayout(format, region.extent);
 
     ByteBuffer intermediateData;
     const void* initialData = imageDesc.data;
 
-    if (!dstTexFormat.compressed && (dstTexFormat.format != imageDesc.format || dstTexFormat.dataType != imageDesc.dataType))
+    if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
+        (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageDesc, dstTexFormat.format, dstTexFormat.dataType, GetConfiguration().threadCount);
+        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, GetConfiguration().threadCount);
         initialData         = intermediateData.get();
     }
     else

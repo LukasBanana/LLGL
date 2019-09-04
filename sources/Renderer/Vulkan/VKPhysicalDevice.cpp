@@ -94,7 +94,7 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance)
     return false;
 }
 
-static std::initializer_list<Format> GetDefaultSupportedVKTextureFormats()
+static std::vector<Format> GetDefaultSupportedVKTextureFormats()
 {
     return
     {

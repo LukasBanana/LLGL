@@ -132,6 +132,7 @@ TextureDescriptor D3D12Texture::GetDesc() const
     return texDesc;
 }
 
+//TODO: make use of <D3D12StagingBufferPool> instead of <uploadBuffer>
 void D3D12Texture::UpdateSubresource(
     ID3D12Device*               device,
     ID3D12GraphicsCommandList*  commandList,

@@ -75,7 +75,7 @@ struct LLGL_EXPORT VertexAttribute
 
     /**
     \brief Returns the size (in bytes) which is required for this vertex attribute, or zero if the format is not a valid vertex format.
-    \see FormatDescriptor::bitSize
+    \see FormatAttributes::bitSize
     \see Format
     */
     std::uint32_t GetSize() const;

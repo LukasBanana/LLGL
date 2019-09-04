@@ -14,27 +14,34 @@ namespace LLGL
 
 
 VertexAttribute::VertexAttribute(
-    const std::string& name, const Format format, std::uint32_t instanceDivisor) :
-        VertexAttribute { name, 0, format, instanceDivisor }
+    const std::string&  name,
+    const Format        format,
+    std::uint32_t       instanceDivisor)
+:
+    VertexAttribute { name, 0, format, instanceDivisor }
 {
 }
 
 VertexAttribute::VertexAttribute(
-    const std::string& semanticName, std::uint32_t semanticIndex, const Format format, std::uint32_t instanceDivisor) :
-        name            { semanticName    },
-        format          { format          },
-        instanceDivisor { instanceDivisor },
-        semanticIndex   { semanticIndex   }
+    const std::string&  semanticName,
+    std::uint32_t       semanticIndex,
+    const Format        format,
+    std::uint32_t       instanceDivisor)
+:
+    name            { semanticName    },
+    format          { format          },
+    instanceDivisor { instanceDivisor },
+    semanticIndex   { semanticIndex   }
 {
 }
 
 std::uint32_t VertexAttribute::GetSize() const
 {
-    const auto& formatDesc = GetFormatDesc(format);
-    if (formatDesc.compressed || formatDesc.sRGB || formatDesc.depth || formatDesc.stencil)
-        return 0;
+    const auto& formatAttribs = GetFormatAttribs(format);
+    if ((formatAttribs.flags & FormatFlags::SupportsVertex) != 0)
+        return (formatAttribs.bitSize / 8);
     else
-        return (formatDesc.bitSize / 8);
+        return 0;
 }
 
 

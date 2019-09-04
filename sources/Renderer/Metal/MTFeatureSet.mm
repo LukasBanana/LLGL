@@ -39,7 +39,7 @@ static int FeatureSetToVersion(MTLFeatureSet fset)
     return 100; // 1.0
 }
 
-static std::initializer_list<Format> GetDefaultSupportedMTTextureFormats()
+static std::vector<Format> GetDefaultSupportedMTTextureFormats()
 {
     return
     {

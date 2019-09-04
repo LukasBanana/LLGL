@@ -25,7 +25,7 @@ class Example_Texturing : public ExampleBase
 
     std::array<std::string, 6>  resourceLabels
     {{
-        "format = BC1RGBA",
+        "format = BC1UNorm",
         "format = RGBA8UNorm",
         "mipMapLODBias = 3",
         "minFilter = Nearest",
@@ -176,7 +176,7 @@ public:
         colorMaps[1] = renderer->CreateTexture(texDesc, &imageDesc);
 
         // Write MIP-map levels 1...N
-        const auto& formatDesc = LLGL::GetFormatDesc(texDesc.format);
+        const auto& formatDesc = LLGL::GetFormatAttribs(texDesc.format);
 
         for (std::uint32_t mipLevel = 1; mipLevel < texDesc.mipLevels; ++mipLevel)
         {

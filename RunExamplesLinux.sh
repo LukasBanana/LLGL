@@ -3,9 +3,9 @@ BUILD_DIR="build/build"
 
 if [ "$#" -eq 1 ]; then
     BUILD_DIR=$1
-elif [ -d "build/build/Example_HelloTriangle.app" ]; then
-    BUILD_DIR="build/bulid"
-elif [ -d "bin/x64/Linux/Example_HelloTriangle.app" ]; then
+elif [ -f "build/build/Example_HelloTriangle" ]; then
+    BUILD_DIR="build/build"
+elif [ -f "bin/x64/Linux/Example_HelloTriangle" ]; then
     BUILD_DIR="bin/x64/Linux"
 else
     echo "error: build folder not found: $BUILD_DIR"
