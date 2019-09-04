@@ -83,8 +83,11 @@ class VKDevice
             VkCommandBuffer     commandBuffer,
             VkBuffer            srcBuffer,
             VkImage             dstImage,
+            const VkOffset3D&   offset,
             const VkExtent3D&   extent,
-            std::uint32_t       numLayers
+            std::uint32_t       baseArrayLayer  = 0,
+            std::uint32_t       numArrayLayers  = 1,
+            std::uint32_t       mipLevel        = 0
         );
 
         void GenerateMips(

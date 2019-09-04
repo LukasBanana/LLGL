@@ -264,8 +264,11 @@ void VKDevice::CopyBufferToImage(
     VkCommandBuffer     commandBuffer,
     VkBuffer            srcBuffer,
     VkImage             dstImage,
+    const VkOffset3D&   offset,
     const VkExtent3D&   extent,
-    std::uint32_t       numLayers)
+    std::uint32_t       baseArrayLayer,
+    std::uint32_t       numArrayLayers,
+    std::uint32_t       mipLevel)
 {
     VkBufferImageCopy region;
     {
@@ -273,10 +276,10 @@ void VKDevice::CopyBufferToImage(
         region.bufferRowLength                  = 0;
         region.bufferImageHeight                = 0;
         region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel        = 0;
-        region.imageSubresource.baseArrayLayer  = 0;
-        region.imageSubresource.layerCount      = numLayers;
-        region.imageOffset                      = { 0, 0, 0 };
+        region.imageSubresource.mipLevel        = mipLevel;
+        region.imageSubresource.baseArrayLayer  = baseArrayLayer;
+        region.imageSubresource.layerCount      = numArrayLayers;
+        region.imageOffset                      = offset;
         region.imageExtent                      = extent;
     }
     vkCmdCopyBufferToImage(commandBuffer, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);

@@ -291,7 +291,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Set up initial image data */
     const void* initialData = nullptr;
-    ByteBuffer tempImageBuffer;
+    ByteBuffer intermediateData;
 
     if (imageDesc)
     {
@@ -300,10 +300,10 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
         {
             /* Convert image format (will be null if no conversion is necessary) */
-            tempImageBuffer = ConvertImageBuffer(*imageDesc, formatAttribs.format, formatAttribs.dataType, cfg.threadCount);
+            intermediateData = ConvertImageBuffer(*imageDesc, formatAttribs.format, formatAttribs.dataType, cfg.threadCount);
         }
 
-        if (tempImageBuffer)
+        if (intermediateData)
         {
             /*
             Validate that source image data was large enough so conversion is valid,
@@ -311,7 +311,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             */
             const auto srcImageDataSize = imageSize * ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType);
             AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(srcImageDataSize));
-            initialData = tempImageBuffer.get();
+            initialData = intermediateData.get();
         }
         else
         {
@@ -330,12 +330,12 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
         {
             const ColorRGBAd fillColor{ textureDesc.clearValue.color.Cast<double>() };
-            tempImageBuffer = GenerateImageBuffer(formatAttribs.format, formatAttribs.dataType, imageSize, fillColor);
+            intermediateData = GenerateImageBuffer(formatAttribs.format, formatAttribs.dataType, imageSize, fillColor);
         }
         else
-            tempImageBuffer = GenerateEmptyByteBuffer(static_cast<std::size_t>(initialDataSize));
+            intermediateData = GenerateEmptyByteBuffer(static_cast<std::size_t>(initialDataSize));
 
-        initialData = tempImageBuffer.get();
+        initialData = intermediateData.get();
     }
 
     /* Create staging buffer */
@@ -375,7 +375,9 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             cmdBuffer,
             stagingBuffer.GetVkBuffer(),
             image,
+            VkOffset3D{ 0, 0, 0 },
             GetTextureVkExtent(textureDesc),
+            0,
             GetTextureLayertCount(textureDesc)
         );
 
@@ -420,7 +422,97 @@ void VKRenderSystem::Release(Texture& texture)
 
 void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
-    //todo
+    auto& textureVK = LLGL_CAST(VKTexture&, texture);
+
+    const auto& cfg = GetConfiguration();
+
+    /* Determine size of image for staging buffer */
+    const auto& offset          = textureRegion.offset;
+    const auto& extent          = textureRegion.extent;
+    const auto& subresource     = textureRegion.subresource;
+    const auto  format          = VKTypes::Unmap(textureVK.GetVkFormat());
+
+    auto        image           = textureVK.GetVkImage();
+    const auto  imageSize       = extent.width * extent.height * extent.depth;
+    const void* imageData       = nullptr;
+    const auto  imageDataSize   = static_cast<VkDeviceSize>(TextureBufferSize(format, imageSize));
+
+    /* Check if image data must be converted */
+    ByteBuffer intermediateData;
+
+    const auto& formatAttribs = GetFormatAttribs(format);
+    if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
+    {
+        /* Convert image format (will be null if no conversion is necessary) */
+        intermediateData = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, cfg.threadCount);
+    }
+
+    if (intermediateData)
+    {
+        /*
+        Validate that source image data was large enough so conversion is valid,
+        then use temporary image buffer as source for initial data
+        */
+        const auto srcImageDataSize = imageSize * ImageFormatSize(imageDesc.format) * DataTypeSize(imageDesc.dataType);
+        AssertImageDataSize(imageDesc.dataSize, static_cast<std::size_t>(srcImageDataSize));
+        imageData = intermediateData.get();
+    }
+    else
+    {
+        /*
+        Validate that image data is large enough,
+        then use input data as source for initial data
+        */
+        AssertImageDataSize(imageDesc.dataSize, static_cast<std::size_t>(imageDataSize));
+        imageData = imageDesc.data;
+    }
+
+    /* Create staging buffer */
+    VkBufferCreateInfo stagingCreateInfo;
+    BuildVkBufferCreateInfo(
+        stagingCreateInfo,
+        imageDataSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.cpuAccessFlags)
+    );
+
+    auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, imageData, imageDataSize);
+
+    /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
+    auto cmdBuffer = device_.AllocCommandBuffer();
+    {
+        device_.TransitionImageLayout(
+            cmdBuffer,
+            image,
+            textureVK.GetVkFormat(),
+            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            subresource
+        );
+
+        device_.CopyBufferToImage(
+            cmdBuffer,
+            stagingBuffer.GetVkBuffer(),
+            image,
+            VkOffset3D{ offset.x, offset.y, offset.z },
+            VkExtent3D{ extent.width, extent.height, extent.depth },
+            subresource.baseArrayLayer,
+            subresource.numArrayLayers,
+            subresource.baseMipLevel
+        );
+
+        device_.TransitionImageLayout(
+            cmdBuffer,
+            image,
+            textureVK.GetVkFormat(),
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            subresource
+        );
+    }
+    device_.FlushCommandBuffer(cmdBuffer);
+
+    /* Release staging buffer */
+    stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
 }
 
 void VKRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
@@ -800,15 +892,15 @@ VKDeviceBuffer VKRenderSystem::CreateStagingBuffer(const VkBufferCreateInfo& cre
 
 VKDeviceBuffer VKRenderSystem::CreateStagingBuffer(
     const VkBufferCreateInfo&   createInfo,
-    const void*                 initialData,
-    VkDeviceSize                initialDataSize)
+    const void*                 data,
+    VkDeviceSize                dataSize)
 {
     /* Allocate staging buffer */
     auto stagingBuffer = CreateStagingBuffer(createInfo);
 
     /* Copy initial data to buffer memory */
-    if (initialData != nullptr && initialDataSize > 0)
-        device_.WriteBuffer(stagingBuffer, initialData, initialDataSize);
+    if (data != nullptr && dataSize > 0)
+        device_.WriteBuffer(stagingBuffer, data, dataSize);
 
     return stagingBuffer;
 }
