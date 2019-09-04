@@ -14,23 +14,58 @@ namespace LLGL
 
 
 VertexAttribute::VertexAttribute(
-    const std::string&  name,
+    const char*         name,
     const Format        format,
-    std::uint32_t       instanceDivisor)
+    std::uint32_t       instanceDivisor,
+    const SystemValue   systemValue)
 :
-    VertexAttribute { name, 0, format, instanceDivisor }
+    name            { name            },
+    format          { format          },
+    instanceDivisor { instanceDivisor },
+    systemValue     { systemValue     }
 {
 }
 
 VertexAttribute::VertexAttribute(
-    const std::string&  semanticName,
-    std::uint32_t       semanticIndex,
-    const Format        format,
-    std::uint32_t       instanceDivisor)
+    const char*     semanticName,
+    std::uint32_t   semanticIndex,
+    const Format    format,
+    std::uint32_t   instanceDivisor)
 :
     name            { semanticName    },
     format          { format          },
     instanceDivisor { instanceDivisor },
+    semanticIndex   { semanticIndex   }
+{
+}
+
+VertexAttribute::VertexAttribute(
+    const char*     name,
+    const Format    format,
+    std::uint32_t   offset,
+    std::uint32_t   stride,
+    std::uint32_t   slot,
+    std::uint32_t   instanceDivisor)
+:
+    VertexAttribute { name, 0, format, offset, stride, slot, instanceDivisor }
+{
+}
+
+VertexAttribute::VertexAttribute(
+    const char*     semanticName,
+    std::uint32_t   semanticIndex,
+    const Format    format,
+    std::uint32_t   offset,
+    std::uint32_t   stride,
+    std::uint32_t   slot,
+    std::uint32_t   instanceDivisor)
+:
+    name            { semanticName    },
+    format          { format          },
+    instanceDivisor { instanceDivisor },
+    slot            { slot            },
+    offset          { offset          },
+    stride          { stride          },
     semanticIndex   { semanticIndex   }
 {
 }
@@ -52,7 +87,9 @@ LLGL_EXPORT bool operator == (const VertexAttribute& lhs, const VertexAttribute&
         LLGL_COMPARE_MEMBER_EQ( name            ) &&
         LLGL_COMPARE_MEMBER_EQ( format          ) &&
         LLGL_COMPARE_MEMBER_EQ( instanceDivisor ) &&
+        LLGL_COMPARE_MEMBER_EQ( slot            ) &&
         LLGL_COMPARE_MEMBER_EQ( offset          ) &&
+        LLGL_COMPARE_MEMBER_EQ( stride          ) &&
         LLGL_COMPARE_MEMBER_EQ( semanticIndex   ) &&
         LLGL_COMPARE_MEMBER_EQ( systemValue     )
     );

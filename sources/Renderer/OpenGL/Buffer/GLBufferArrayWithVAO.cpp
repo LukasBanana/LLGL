@@ -67,7 +67,9 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
     /* Bind VAO */
     GLStateManager::Get().BindVertexArray(GetVaoID());
     {
-        for (std::uint32_t i = 0; numBuffers > 0; --numBuffers)
+        GLuint attribIndex = 0;
+
+        while (numBuffers-- > 0)
         {
             if (((*bufferArray)->GetBindFlags() & BindFlags::VertexBuffer) != 0)
             {
@@ -78,14 +80,8 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
                 GLStateManager::Get().BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBufferGL->GetID());
 
                 /* Build each vertex attribute */
-                for (std::uint32_t j = 0, n = static_cast<std::uint32_t>(vertexFormat.attributes.size()); j < n; ++j, ++i)
-                {
-                    vao_.BuildVertexAttribute(
-                        vertexFormat.attributes[j],
-                        static_cast<GLsizei>(vertexFormat.stride),
-                        static_cast<GLuint>(i)
-                    );
-                }
+                for (const auto& attrib : vertexFormat.attributes)
+                    vao_.BuildVertexAttribute(attrib, attribIndex++);
             }
             else
                 ThrowNoVertexBufferErr();
@@ -98,7 +94,9 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
 
 void GLBufferArrayWithVAO::BuildVertexArrayWithEmulator(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    for (std::uint32_t i = 0; numBuffers > 0; --numBuffers)
+    GLuint attribIndex = 0;
+
+    while (numBuffers-- > 0)
     {
         if (((*bufferArray)->GetBindFlags() & BindFlags::VertexBuffer) != 0)
         {
@@ -106,15 +104,8 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithEmulator(std::uint32_t numBuffers
             const auto& vertexFormat = vertexBufferGL->GetVertexFormat();
 
             /* Build each vertex attribute */
-            for (std::uint32_t j = 0, n = static_cast<std::uint32_t>(vertexFormat.attributes.size()); j < n; ++j, ++i)
-            {
-                vertexArrayGL2X_.BuildVertexAttribute(
-                    vertexBufferGL->GetID(),
-                    vertexFormat.attributes[j],
-                    static_cast<GLsizei>(vertexFormat.stride),
-                    static_cast<GLuint>(i)
-                );
-            }
+            for (const auto& attrib : vertexFormat.attributes)
+                vertexArrayGL2X_.BuildVertexAttribute(vertexBufferGL->GetID(), attrib, attribIndex++);
         }
         else
             ThrowNoVertexBufferErr();

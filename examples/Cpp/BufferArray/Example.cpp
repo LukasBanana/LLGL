@@ -33,18 +33,18 @@ public:
     {
         // Specify vertex formats
         LLGL::VertexFormat vertexFormatPositions;
-        vertexFormatPositions.inputSlot = 0;
         vertexFormatPositions.AppendAttribute({ "position", LLGL::Format::RG32Float });
+        vertexFormatPositions.SetSlot(0);
 
         LLGL::VertexFormat vertexFormatColors;
-        vertexFormatColors.inputSlot = 1;
         vertexFormatColors.AppendAttribute({ "color", LLGL::Format::RGB32Float });
+        vertexFormatColors.SetSlot(1);
 
         LLGL::VertexFormat vertexFormatInstanceData;
-        vertexFormatInstanceData.inputSlot = 2;
         vertexFormatInstanceData.AppendAttribute({ "instanceColor",  LLGL::Format::RGB32Float, 1 });
         vertexFormatInstanceData.AppendAttribute({ "instanceOffset", LLGL::Format::RG32Float,  1 });
         vertexFormatInstanceData.AppendAttribute({ "instanceScale",  LLGL::Format::R32Float,   1 });
+        vertexFormatInstanceData.SetSlot(2);
 
         // Initialize buffer data
         Gs::Vector2f vertexPositions[] =

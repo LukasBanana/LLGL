@@ -136,6 +136,7 @@ void MTShaderProgram::Attach(Shader* shader)
     }
 }
 
+//TODO: incomplete
 void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats)
 {
     if (numVertexFormats == 0 || vertexFormats == nullptr)
@@ -147,10 +148,14 @@ void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
 
     for (std::size_t i = 0, attribIdx = 0; i < numVertexFormats; ++i)
     {
-        auto inputSlot = vertexFormats[i].inputSlot;
+        const auto& attribs = vertexFormats[i].attributes;
+        if (attribs.empty())
+            continue;
+
+        const auto& attrib0 = attribs.front();
 
         /* Convert vertex layout */
-        MTLVertexBufferLayoutDescriptor* layoutDesc = vertexDesc_.layouts[inputSlot];
+        MTLVertexBufferLayoutDescriptor* layoutDesc = vertexDesc_.layouts[attrib0.slot];
 
         //TODO: per-instance data by attribute (not by vertex format!)
         layoutDesc.stepFunction = MTLVertexStepFunctionPerVertex;
@@ -158,23 +163,23 @@ void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
         layoutDesc.stride       = static_cast<NSUInteger>(vertexFormats[i].stride);
 
         /* Convert attributes */
-        const auto& attribs = vertexFormats[i].attributes;
-
         #if 1//TODO
         if (!attribs.empty() && attribs.front().instanceDivisor > 0)
         {
             layoutDesc.stepFunction = MTLVertexStepFunctionPerInstance;
-            layoutDesc.stepRate     = static_cast<NSUInteger>(attribs.front().instanceDivisor);
+            layoutDesc.stepRate     = static_cast<NSUInteger>(attrib0.instanceDivisor);
         }
         #endif
 
         for (std::size_t j = 0; j < attribs.size(); ++j)
         {
+            const auto& attrib = attribs[j];
+
             MTLVertexAttributeDescriptor* attribDesc = vertexDesc_.attributes[attribIdx++];
 
-            attribDesc.format       = MTTypes::ToMTLVertexFormat(attribs[j].format);
-            attribDesc.offset       = static_cast<NSUInteger>(attribs[j].offset);
-            attribDesc.bufferIndex  = inputSlot;
+            attribDesc.format       = MTTypes::ToMTLVertexFormat(attrib.format);
+            attribDesc.offset       = static_cast<NSUInteger>(attrib.offset);
+            attribDesc.bufferIndex  = static_cast<NSUInteger>(attrib.slot);
         }
     }
 }

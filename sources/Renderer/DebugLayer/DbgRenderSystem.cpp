@@ -617,7 +617,7 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
     if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Validate buffer size for specified vertex format */
-        formatSize = desc.vertexBuffer.format.stride;
+        formatSize = desc.vertexBuffer.format.GetStride();
         if (formatSize > 0 && desc.size % formatSize != 0)
             LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
     }

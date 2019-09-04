@@ -136,6 +136,7 @@ void VKShaderProgram::Attach(Shader* shader)
     }
 }
 
+//TODO: enhance handling of individual binding slots for vertex attributes
 void VKShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats)
 {
     if (numVertexFormats == 0 || vertexFormats == nullptr)
@@ -148,6 +149,10 @@ void VKShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
     for (std::size_t i = 0; i < numVertexFormats; ++i)
     {
         const auto& attribs = vertexFormats[i].attributes;
+        if (attribs.empty())
+            continue;
+
+        const auto& attrib0 = attribs.front();
 
         /* Initialize vertex input attribute descriptors */
         for (const auto& attr : attribs)
@@ -155,7 +160,7 @@ void VKShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
             VkVertexInputAttributeDescription vertexAttrib;
             {
                 vertexAttrib.location   = location++;
-                vertexAttrib.binding    = vertexFormats[i].inputSlot;
+                vertexAttrib.binding    = attr.slot;
                 vertexAttrib.format     = VKTypes::Map(attr.format);
                 vertexAttrib.offset     = attr.offset;
             }
@@ -165,8 +170,8 @@ void VKShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
         /* Initialize vertex input binding descriptors */
         VkVertexInputBindingDescription inputBinding;
         {
-            inputBinding.binding    = vertexFormats[i].inputSlot;
-            inputBinding.stride     = vertexFormats[i].stride;
+            inputBinding.binding    = attrib0.slot;
+            inputBinding.stride     = attrib0.stride;
             inputBinding.inputRate  = ((!attribs.empty() && attribs.front().instanceDivisor != 0) ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
         }
         vertexBindingDescs_.push_back(inputBinding);

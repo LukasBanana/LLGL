@@ -86,8 +86,8 @@ struct ShaderUniform;
 struct SrcImageDescriptor;
 struct StencilDescriptor;
 struct StencilFaceDescriptor;
-struct StreamOutputAttribute;
-struct StreamOutputFormat;
+struct StreamOutputAttribute;//TODO: remove
+struct StreamOutputFormat;//TODO: remove
 struct TextureDescriptor;
 struct TextureRegion;
 struct VertexAttribute;

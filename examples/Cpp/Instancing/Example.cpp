@@ -96,18 +96,18 @@ private:
     {
         // Specify vertex formats
         LLGL::VertexFormat vertexFormatPerVertex;
-        vertexFormatPerVertex.inputSlot = 0;
         vertexFormatPerVertex.AppendAttribute({ "position", LLGL::Format::RGB32Float });
         vertexFormatPerVertex.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
+        vertexFormatPerVertex.SetSlot(0);
 
         LLGL::VertexFormat vertexFormatPerInstance;
-        vertexFormatPerInstance.inputSlot = 1;
         vertexFormatPerInstance.AppendAttribute({ "color",      LLGL::Format::RGB32Float,  1 });
         vertexFormatPerInstance.AppendAttribute({ "arrayLayer", LLGL::Format::R32Float,    1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 0, LLGL::Format::RGBA32Float, 1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 1, LLGL::Format::RGBA32Float, 1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 2, LLGL::Format::RGBA32Float, 1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 3, LLGL::Format::RGBA32Float, 1 });
+        vertexFormatPerInstance.SetSlot(1);
 
         // Initialize per-vertex data (4 vertices for the plane of each plant)
         static const float grassSize    = 100.0f;

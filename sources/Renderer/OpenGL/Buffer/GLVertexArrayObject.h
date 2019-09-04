@@ -27,7 +27,7 @@ class GLVertexArrayObject
         ~GLVertexArrayObject();
 
         // Builds the specified attribute using a 'glVertexAttrib*Pointer' function.
-        void BuildVertexAttribute(const VertexAttribute& attribute, GLsizei stride, GLuint index);
+        void BuildVertexAttribute(const VertexAttribute& attribute, GLuint attribIndex);
 
         // Returns the ID of the hardware vertex-array-object (VAO)
         inline GLuint GetID() const

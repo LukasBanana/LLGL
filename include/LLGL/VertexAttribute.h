@@ -33,49 +33,47 @@ struct LLGL_EXPORT VertexAttribute
     VertexAttribute(const VertexAttribute&) = default;
     VertexAttribute& operator = (const VertexAttribute&) = default;
 
-    /**
-    \brief Constructs a vertex attribute with a specified name (used for GLSL).
-    \param[in] name Specifies the attribute name (for GLSL).
-    \param[in] format Specifies the attribute format (interpreted as vector format rather than color format).
-    For a 3D-vector type, for example, Format::RGB32Float can be used.
-    \param[in] instanceDivisor Specifies the divisor (or step rate) for instance data.
-    If this is 0, this vertex attribute is considered to be per-vertex. By default 0.
-    \remarks This is equivalent to:
-    \code
-    VertexAttribute(name, 0, dataType, components, instanceDivisor);
-    \endcode
-    \see Format
-    */
+    //! Constructor for minimal vertex attribute information and system value semantics, e.g. \c SV_VertexID (HLSL) or \c gl_VertexID (GLSL).
     VertexAttribute(
-        const std::string&  name,
+        const char*         name,
         const Format        format,
-        std::uint32_t       instanceDivisor = 0
+        std::uint32_t       instanceDivisor = 0,
+        const SystemValue   systemValue     = SystemValue::Undefined
     );
 
-    /**
-    \brief Constructs a vertex attribute with a specified semantic (used for HLSL).
-    \param[in] semanticName Specifies the semantic name (for HLSL).
-    \param[in] semanticIndex Specifies the semantic index (for HLSL).
-    \param[in] format Specifies the attribute format (interpreted as vector format rather than color format).
-    For a 3D-vector type, for example, Format::RGB32Float can be used.
-    \param[in] instanceDivisor Specifies the divisor (or step rate) for instance data.
-    If this is 0, this vertex attribute is considered to be per-vertex. By default 0.
-    \remarks This is equivalent to:
-    \code
-    VertexAttribute(name, 0, dataType, components, instanceDivisor);
-    \endcode
-    \see Format
-    */
+    //! Constructor for basic vertex attribute information.
     VertexAttribute(
-        const std::string&  semanticName,
-        std::uint32_t       semanticIndex,
-        const Format        format,
-        std::uint32_t       instanceDivisor = 0
+        const char*     semanticName,
+        std::uint32_t   semanticIndex,
+        const Format    format,
+        std::uint32_t   instanceDivisor = 0
+    );
+
+    //! Constructor for common vertex attribute information.
+    VertexAttribute(
+        const char*     name,
+        const Format    format,
+        std::uint32_t   offset,
+        std::uint32_t   stride,
+        std::uint32_t   slot            = 0,
+        std::uint32_t   instanceDivisor = 0
+    );
+
+    //! Constructor for the most vertex attribute information, including semantic index.
+    VertexAttribute(
+        const char*     semanticName,
+        std::uint32_t   semanticIndex,
+        const Format    format,
+        std::uint32_t   offset,
+        std::uint32_t   stride,
+        std::uint32_t   slot            = 0,
+        std::uint32_t   instanceDivisor = 0
     );
 
     /**
     \brief Returns the size (in bytes) which is required for this vertex attribute, or zero if the format is not a valid vertex format.
     \see FormatAttributes::bitSize
+    \see FormatFlags::SupportsVertex
     \see Format
     */
     std::uint32_t GetSize() const;
@@ -110,8 +108,19 @@ struct LLGL_EXPORT VertexAttribute
     */
     std::uint32_t   instanceDivisor = 0;
 
+    /**
+    \brief Vertex buffer binding slot. By default 0.
+    \remarks This is used when multiple vertex buffers are used simultaneously.
+    \note Only supported with: Direct3D 11, Direct3D 12, Vulkan, Metal.
+    \note For OpenGL, the vertex binding slots are automatically generated in ascending order and beginning with zero.
+    */
+    std::uint32_t   slot            = 0;
+
     //! Byte offset within each vertex and each buffer. By default 0.
     std::uint32_t   offset          = 0;
+
+    //! Specifies the vertex data stride which describes the byte offset between consecutive vertices.
+    std::uint32_t   stride          = 0;
 
     /**
     \brief Semantic index (for HLSL) or vector index (for GLSL).

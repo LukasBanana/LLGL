@@ -352,7 +352,9 @@ static void Convert(LLGL::VertexAttribute& dst, VertexAttribute^ src)
         dst.name            = ToStdString(src->Name);
         dst.format          = static_cast<LLGL::Format>(src->Format);
         dst.instanceDivisor = src->InstanceDivisor;
+        dst.slot            = src->Slot;
         dst.offset          = src->Offset;
+        dst.stride          = src->Stride;
         dst.semanticIndex   = src->SemanticIndex;
     }
 }
@@ -364,8 +366,6 @@ static void Convert(LLGL::VertexFormat& dst, VertexFormat^ src)
         dst.attributes.resize(static_cast<std::size_t>(src->Attributes->Count));
         for (std::size_t i = 0; i < dst.attributes.size(); ++i)
             Convert(dst.attributes[i], src->Attributes[i]);
-        dst.stride      = src->Stride;
-        dst.inputSlot   = src->InputSlot;
     }
 }
 

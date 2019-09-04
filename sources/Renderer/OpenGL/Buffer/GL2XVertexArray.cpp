@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribute& attribute, GLsizei stride, GLuint index)
+void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribute& attribute, GLuint attribIndex)
 {
     /* Check if instance divisor is used */
     if (attribute.instanceDivisor > 0)
@@ -36,12 +36,13 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
         ThrowNotSupportedExcept(__FUNCTION__, "specified vertex attribute");
 
     /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
-    const GLsizeiptr offsetPtrSized = attribute.offset;
+    const GLsizei       stride          = static_cast<GLsizei>(attribute.stride);
+    const GLsizeiptr    offsetPtrSized  = static_cast<GLsizeiptr>(attribute.offset);
 
     attribs_.push_back(
         {
             bufferID,
-            index,
+            attribIndex,
             static_cast<GLint>(formatDesc.components),
             GLTypes::Map(formatDesc.dataType),
             GLBoolean(isNormalizedFormat),

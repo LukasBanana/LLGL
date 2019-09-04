@@ -43,26 +43,42 @@ struct LLGL_EXPORT VertexFormat
     void AppendAttribute(const VertexAttribute& attrib, std::uint32_t offset = Constants::ignoreOffset);
 
     /**
+    \brief Returns the stride (in bytes) of the first vertex.
+    \remarks It is expected that all vertices with the same buffer binding slot have the same stride.
+    \see VertexAttribute::GetSize
+    */
+    std::uint32_t GetStride() const;
+
+    /**
+    \brief Returns the stride (in bytes) of the first vertex with the specified buffer binding slot.
+    \remarks It is expected that all vertices with the same buffer binding slot have the same stride.
+    \see VertexAttribute::GetSize
+    */
+    std::uint32_t GetStride(std::uint32_t slot) const;
+
+    /**
+    \brief Set the \c stride member for all vertex attributes to the specified value.
+    \see VertexAttribute::stride
+    */
+    void SetStride(std::uint32_t stride);
+
+    /**
+    \brief Set the \c stride member for all vertex attributes with the specified buffer binding slot to the new value specified by \c stride.
+    \see VertexAttribute::stride
+    */
+    void SetStride(std::uint32_t stride, std::uint32_t slot);
+
+    /**
+    \brief Sets the \c slot member for all vertex attributes to the specified value.
+    \see VertexAttribute::slot
+    */
+    void SetSlot(std::uint32_t slot);
+
+    /**
     \brief Specifies the list of vertex attributes.
     \see AppendAttribute
     */
-    std::vector<VertexAttribute>    attributes;
-
-    /**
-    \brief Specifies the vertex data stride (or format size) which describes the byte offset between consecutive vertices.
-    \remarks This is updated automatically everytime \c AppendAttribute is called,
-    but it can also be modified manually. It is commonly the size of all vertex attributes.
-    \see AppendAttribute
-    */
-    std::uint32_t                   stride      = 0;
-
-    /**
-    \brief Vertex buffer input slot. By default 0.
-    \remarks This is used when multiple vertex buffers are used simultaneously.
-    \note Only supported with: Direct3D 11, Direct3D 12, Vulkan.
-    \note For OpenGL, the input slots are automatically generated in ascending order and beginning with zero.
-    */
-    std::uint32_t                   inputSlot   = 0;
+    std::vector<VertexAttribute> attributes;
 };
 
 

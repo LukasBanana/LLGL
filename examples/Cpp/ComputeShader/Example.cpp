@@ -83,22 +83,24 @@ public:
     void CreateBuffers()
     {
         // Specify vertex format
-        vertexFormat[0].AppendAttribute({ "coord", LLGL::Format::RG32Float  });
-        vertexFormat[0].AppendAttribute({ "color", LLGL::Format::RGBA8UNorm });
-
-        vertexFormat[1].AppendAttribute({ "rotation", 0, LLGL::Format::RG32Float, 1 });
-        vertexFormat[1].AppendAttribute({ "rotation", 1, LLGL::Format::RG32Float, 1 });
-        vertexFormat[1].AppendAttribute({ "position",    LLGL::Format::RG32Float, 1 });
-        vertexFormat[1].stride      = sizeof(SceneObject);
-        vertexFormat[1].inputSlot   = 1;
-
-        // Define vertex buffer data
         struct Vertex
         {
             float           x, y;
             std::uint8_t    r, g, b, a;
         };
 
+        vertexFormat[0].AppendAttribute({ "coord", LLGL::Format::RG32Float  });
+        vertexFormat[0].AppendAttribute({ "color", LLGL::Format::RGBA8UNorm });
+        vertexFormat[0].SetStride(sizeof(Vertex));
+        vertexFormat[0].SetSlot(0);
+
+        vertexFormat[1].AppendAttribute({ "rotation", 0, LLGL::Format::RG32Float, 1 });
+        vertexFormat[1].AppendAttribute({ "rotation", 1, LLGL::Format::RG32Float, 1 });
+        vertexFormat[1].AppendAttribute({ "position",    LLGL::Format::RG32Float, 1 });
+        vertexFormat[1].SetStride(sizeof(SceneObject));
+        vertexFormat[1].SetSlot(1);
+
+        // Define vertex buffer data
         auto CircleX = [](float a) { return std::sin(a*Gs::pi/180.0f); };
         auto CircleY = [](float a) { return std::cos(a*Gs::pi/180.0f); };
 

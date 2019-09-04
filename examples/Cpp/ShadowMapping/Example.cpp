@@ -93,7 +93,7 @@ private:
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
         vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
-        vertexFormat.stride = sizeof(TexturedVertex);
+        vertexFormat.SetStride(sizeof(TexturedVertex));
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;

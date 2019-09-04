@@ -70,7 +70,7 @@ int main()
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
         vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
-        vertexFormat.stride = sizeof(Vertex);
+        vertexFormat.SetStride(sizeof(Vertex));
 
         LLGL::BufferDescriptor vertexBufferDesc;
         {

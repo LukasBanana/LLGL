@@ -48,7 +48,10 @@ public ref class VertexAttribute
         VertexAttribute();
         VertexAttribute(String^ name, Format format);
         VertexAttribute(String^ name, Format format, unsigned int instanceDivisor);
-        VertexAttribute(String^ name, unsigned int semanticIndex, Format format, unsigned int instanceDivisor);
+        VertexAttribute(String^ name, Format format, unsigned int instanceDivisor, SystemValue systemValue);
+        VertexAttribute(String^ semanticName, unsigned int semanticIndex, Format format, unsigned int instanceDivisor);
+        VertexAttribute(String^ name, Format format, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor);
+        VertexAttribute(String^ semanticName, unsigned int semanticIndex, Format format, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor);
 
         property unsigned int Size
         {
@@ -58,7 +61,9 @@ public ref class VertexAttribute
         property String^        Name;
         property Format         Format;
         property unsigned int   InstanceDivisor;
+        property unsigned int   Slot;
         property unsigned int   Offset;
+        property unsigned int   Stride;
         property unsigned int   SemanticIndex;
         property SystemValue    SystemValue;
 
@@ -73,9 +78,7 @@ public ref class VertexFormat
 
         void AppendAttribute(VertexAttribute^ attrib);
 
-        property List<VertexAttribute^>^    Attributes;
-        property unsigned int               Stride;
-        property unsigned int               InputSlot;
+        property List<VertexAttribute^>^ Attributes;
 
 };
 

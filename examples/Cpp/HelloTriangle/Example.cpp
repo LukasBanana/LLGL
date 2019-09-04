@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
         vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
 
         // Update stride in case out vertex structure is not 4-byte aligned
-        vertexFormat.stride = sizeof(Vertex);
+        vertexFormat.SetStride(sizeof(Vertex));
 
         // Create vertex buffer
         LLGL::BufferDescriptor vertexBufferDesc;

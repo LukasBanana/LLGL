@@ -8,6 +8,7 @@
 #include "CsVertexFormat.h"
 #include "CsHelper.h"
 #include <LLGL/VertexAttribute.h>
+#include <algorithm>
 
 
 namespace SharpLLGL
@@ -48,6 +49,11 @@ VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigne
     SystemValue     = SharpLLGL::SystemValue::Undefined;
 }
 
+VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int instanceDivisor, SharpLLGL::SystemValue systemValue)
+{
+    //TODO
+}
+
 VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, SharpLLGL::Format format, unsigned int instanceDivisor)
 {
     Name            = name;
@@ -56,6 +62,16 @@ VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, Sharp
     Offset          = 0;
     SemanticIndex   = semanticIndex;
     SystemValue     = SharpLLGL::SystemValue::Undefined;
+}
+
+VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor)
+{
+    //TODO
+}
+
+VertexAttribute::VertexAttribute(String^ semanticName, unsigned int semanticIndex, SharpLLGL::Format format, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor)
+{
+    //TODO
 }
 
 unsigned int VertexAttribute::Size::get()
@@ -74,16 +90,25 @@ unsigned int VertexAttribute::Size::get()
 
 VertexFormat::VertexFormat()
 {
-    Attributes  = gcnew List<VertexAttribute^>();
-    Stride      = 0;
-    InputSlot   = 0;
+    Attributes = gcnew List<VertexAttribute^>();
 }
 
 void VertexFormat::AppendAttribute(VertexAttribute^ attrib)
 {
-    attrib->Offset = Stride;
-    Stride += attrib->Size;
+    /* Set offset to previous offset plus previous format size */
+    if (Attributes->Count > 0)
+        attrib->Offset = Attributes[Attributes->Count - 1]->Stride;
+
+    /* Append new attribute */
     Attributes->Add(attrib);
+
+    /* Update stride for all attributes */
+    unsigned int stride = 0;
+    for (int i = 0; i < Attributes->Count; ++i)
+        stride = std::max(stride, Attributes[i]->Offset + Attributes[i]->Size);
+
+    for (int i = 0; i < Attributes->Count; ++i)
+        Attributes[i]->Stride = stride;
 }
 
 

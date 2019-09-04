@@ -173,7 +173,7 @@ void D3D12Buffer::CreateVertexBufferView(const BufferDescriptor& desc)
 {
     vertexBufferView_.BufferLocation    = GetNative()->GetGPUVirtualAddress();
     vertexBufferView_.SizeInBytes       = static_cast<UINT>(GetBufferSize());
-    vertexBufferView_.StrideInBytes     = desc.vertexBuffer.format.stride;
+    vertexBufferView_.StrideInBytes     = desc.vertexBuffer.format.GetStride();
 }
 
 void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
