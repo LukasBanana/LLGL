@@ -215,11 +215,17 @@ LLGL_EXPORT const char* ToString(const Format t)
         case T::D24UNormS8UInt:     return "D24UNormS8UInt";
         case T::D32FloatS8X24UInt:  return "D32FloatS8X24UInt";
 
-        /* --- Compressed color formats --- */
-        case T::BC1RGB:             return "BC1 RGB";
-        case T::BC1RGBA:            return "BC1 RGBA";
-        case T::BC2RGBA:            return "BC2 RGBA";
-        case T::BC3RGBA:            return "BC3 RGBA";
+        /* --- Block compression (BC) formats --- */
+        case T::BC1UNorm:           return "BC1UNorm";
+        case T::BC1UNorm_sRGB:      return "BC1UNorm_sRGB";
+        case T::BC2UNorm:           return "BC2UNorm";
+        case T::BC2UNorm_sRGB:      return "BC2UNorm_sRGB";
+        case T::BC3UNorm:           return "BC3UNorm";
+        case T::BC3UNorm_sRGB:      return "BC3UNorm_sRGB";
+        case T::BC4UNorm:           return "BC4UNorm";
+        case T::BC4SNorm:           return "BC4SNorm";
+        case T::BC5UNorm:           return "BC5UNorm";
+        case T::BC5SNorm:           return "BC5SNorm";
     }
 
     return nullptr;

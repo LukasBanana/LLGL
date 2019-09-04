@@ -781,10 +781,12 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc, const S
     {
         if (imageDesc == nullptr)
         {
+            #if 0
             LLGL_DBG_WARN(
                 WarningType::ImproperArgument,
                 "cannot generate MIP-maps without initial image data: 'LLGL::MiscFlags::GenerateMips' specified but no initial image data"
             );
+            #endif
         }
         else if ((desc.miscFlags & MiscFlags::NoInitialData) != 0)
         {

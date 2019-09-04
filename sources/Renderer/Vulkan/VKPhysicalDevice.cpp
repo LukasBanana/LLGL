@@ -94,6 +94,45 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance)
     return false;
 }
 
+static std::initializer_list<Format> GetDefaultSupportedVKTextureFormats()
+{
+    return
+    {
+        Format::A8UNorm,
+        Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
+        Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
+        Format::R32UInt,            Format::R32SInt,            Format::R32Float,
+        Format::R64Float,
+        Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
+        Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
+        Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
+        Format::RG64Float,
+        Format::RGB8UNorm,          Format::RGB8UNorm_sRGB,     Format::RGB8SNorm,          Format::RGB8UInt,           Format::RGB8SInt,
+        Format::RGB16UNorm,         Format::RGB16SNorm,         Format::RGB16UInt,          Format::RGB16SInt,          Format::RGB16Float,
+        Format::RGB32UInt,          Format::RGB32SInt,          Format::RGB32Float,
+        Format::RGB64Float,
+        Format::RGBA8UNorm,         Format::RGBA8UNorm_sRGB,    Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
+        Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
+        Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
+        Format::RGBA64Float,
+        Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,    Format::BGRA8SNorm,         Format::BGRA8UInt,          Format::BGRA8SInt,
+        Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,
+        Format::D16UNorm,           Format::D24UNormS8UInt,     Format::D32Float,           Format::D32FloatS8X24UInt,
+    };
+}
+
+static std::initializer_list<Format> GetCompressedVKTextureFormatsS3TC()
+{
+    return
+    {
+        Format::BC1UNorm, Format::BC1UNorm_sRGB,
+        Format::BC2UNorm, Format::BC2UNorm_sRGB,
+        Format::BC3UNorm, Format::BC3UNorm_sRGB,
+        Format::BC4UNorm, Format::BC4SNorm,
+        Format::BC5UNorm, Format::BC5SNorm,
+    };
+}
+
 void VKPhysicalDevice::QueryDeviceProperties(
     RendererInfo&               info,
     RenderingCapabilities&      caps,
@@ -112,7 +151,10 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.screenOrigin                               = ScreenOrigin::UpperLeft;
     caps.clippingRange                              = ClippingRange::ZeroToOne;
     caps.shadingLanguages                           = { ShadingLanguage::SPIRV, ShadingLanguage::SPIRV_100 };
-    //caps.textureFormats                             = ; //???
+    caps.textureFormats                             = GetDefaultSupportedVKTextureFormats();
+
+    if (features_.textureCompressionBC != VK_FALSE)
+        caps.textureFormats.insert(caps.textureFormats.end(), GetCompressedVKTextureFormatsS3TC());
 
     /* Query features */
     caps.features.hasRenderTargets                  = true;

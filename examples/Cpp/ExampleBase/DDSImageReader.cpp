@@ -19,11 +19,11 @@ static const std::uint32_t ddsMagicNumber = 0x20534444;
 enum DDSFourCCTypes
 {
     FOURCC_NONE,
-    FOURCC_DXT1,
-    FOURCC_DXT2,
-    FOURCC_DXT3,
-    FOURCC_DXT4,
-    FOURCC_DXT5,
+    FOURCC_DXT1, // BC1
+    FOURCC_DXT2, // BC2
+    FOURCC_DXT3, // BC2
+    FOURCC_DXT4, // BC3
+    FOURCC_DXT5, // BC3
     FOURCC_DX10,
     FOURCC_BC4U,
     FOURCC_BC4S,
@@ -192,24 +192,27 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     if (IsFourCC("DXT1"))
     {
         // Read image with BC1 compression (DXT1)
-        texDesc_.format = LLGL::Format::BC1RGBA;
+        texDesc_.format     = LLGL::Format::BC1UNorm;
+        imageDesc_.format   = LLGL::ImageFormat::BC1;
     }
     else if (IsFourCC("DXT2") || IsFourCC("DXT3"))
     {
         // Read image with BC2 compression (DXT2 or DXT3)
-        texDesc_.format = LLGL::Format::BC2RGBA;
+        texDesc_.format     = LLGL::Format::BC2UNorm;
+        imageDesc_.format   = LLGL::ImageFormat::BC2;
     }
     else if (IsFourCC("DXT4") || IsFourCC("DXT5"))
     {
         // Read image with BC3 compression (DXT4 or DXT5)
-        texDesc_.format = LLGL::Format::BC3RGBA;
+        texDesc_.format     = LLGL::Format::BC3UNorm;
+        imageDesc_.format   = LLGL::ImageFormat::BC3;
     }
-    else if (IsFourCC("DX10"))
+    /*else if (IsFourCC("DX10"))
     {
         // Read header extension
         ReadValue(file, headerDX10);
         hasDX10Header = true;
-    }
+    }*/
     else
     {
         // Print error with FourCC as string
@@ -238,7 +241,7 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
         extent.depth    = std::max(extent.depth  / 2, 1u);
     }
 
-    if (texDesc_.format == LLGL::Format::BC1RGBA)
+    if (texDesc_.format == LLGL::Format::BC1UNorm)
         bufferSize /= 2;
 
     data_.resize(bufferSize);
@@ -246,7 +249,6 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     file.read(data_.data(), bufferSize);
 
     // Store final image source descriptor
-    imageDesc_.format   = LLGL::ImageFormat::CompressedRGBA;
     imageDesc_.dataType = LLGL::DataType::UInt8;
     imageDesc_.data     = data_.data();
     imageDesc_.dataSize = data_.size();

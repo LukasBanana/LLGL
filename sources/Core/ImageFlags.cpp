@@ -560,8 +560,11 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
         case ImageFormat::ABGR:             return 4;
         case ImageFormat::Depth:            return 1;
         case ImageFormat::DepthStencil:     return 2;
-        case ImageFormat::CompressedRGB:    return 0;
-        case ImageFormat::CompressedRGBA:   return 0;
+        case ImageFormat::BC1:              return 0; // no conversion supported yet
+        case ImageFormat::BC2:              return 0; // no conversion supported yet
+        case ImageFormat::BC3:              return 0; // no conversion supported yet
+        case ImageFormat::BC4:              return 0; // no conversion supported yet
+        case ImageFormat::BC5:              return 0; // no conversion supported yet
     }
     return 0;
 }
@@ -573,7 +576,7 @@ LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat imageFormat, const Dat
 
 LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat)
 {
-    return (imageFormat == ImageFormat::CompressedRGB || imageFormat == ImageFormat::CompressedRGBA);
+    return (imageFormat >= ImageFormat::BC1 && imageFormat <= ImageFormat::BC5);
 }
 
 LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat)

@@ -368,25 +368,28 @@ LLGL::TextureDescriptor::type = LLGL::TextureType::Texture2D;
 
 Before/After:
 ```cpp
-BindFlags::SampleBuffer                --> BindFlags::Sampled
 BindFlags::RWStorageBuffer             --> BindFlags::Storage
-CommandBuffer::SetSampleBuffer         --> CommandBuffer::SetSampledBuffer
+BindFlags::SampleBuffer                --> BindFlags::Sampled
 CommandBuffer::SetRWStorageBuffer      --> CommandBuffer::SetStorageBuffer
-FrameProfile::sampleBufferBindings     --> FrameProfile::sampledBufferBindings
-FrameProfile::rwStorageBufferBindings  --> FrameProfile::storageBufferBindings
-RenderingFeatures::hasCommandBufferExt --> RenderingFeatures::hasDirectResourceBinding
-Resource::QueryResourceType            --> Resource::GetResourceType
+CommandBuffer::SetSampleBuffer         --> CommandBuffer::SetSampledBuffer
 Display::QueryList                     --> Display::InstantiateList
 Display::QueryPrimary                  --> Display::InstantiatePrimary
 Display::QuerySupportedDisplayModes    --> Display::GetSupportedDisplayModes
-Image::QuerySrcDesc                    --> Display::GetSrcDesc
+Format::BC1RGBA                        --> Format::BC1UNorm
+Format::BC2RGBA                        --> Format::BC1UNorm
+Format::BC3RGBA                        --> Format::BC1UNorm
+FrameProfile::rwStorageBufferBindings  --> FrameProfile::storageBufferBindings
+FrameProfile::sampleBufferBindings     --> FrameProfile::sampledBufferBindings
 Image::QueryDstDesc                    --> Display::GetDstDesc
+Image::QuerySrcDesc                    --> Display::GetSrcDesc
+RenderingFeatures::hasCommandBufferExt --> RenderingFeatures::hasDirectResourceBinding
 RenderContext::QueryColorFormat        --> RenderContext::GetColorFormat
 RenderContext::QueryDepthStencilFormat --> RenderContext::GetDepthStencilFormat
+Resource::QueryResourceType            --> Resource::GetResourceType
+ShaderProgram::QueryInfoLog            --> ShaderProgram::GetReport
+ShaderProgram::QueryUniformLocation    --> ShaderProgram::FindUniformLocation
 Texture::QueryDesc                     --> Texture::GetDesc
 Texture::QueryMipExtent                --> Texture::GetMipExtent
-ShaderProgram::QueryUniformLocation    --> ShaderProgram::FindUniformLocation
-ShaderProgram::QueryInfoLog            --> ShaderProgram::GetReport
 ```
 
 
@@ -468,7 +471,7 @@ myCmdBuffer->SetResource(*myColorMap, 1, LLGL::BindFlags::Sampled, LLGL::BindFla
 
 The following features/functions have been removed:
 - The `Shader::Disassemble` function and `ShaderDisassembleFlags` enumeration have been removed. LLGL does not provide shader cross compilation or disassembling.
-
+- The compressed RGB format `Format::BC1RGB`. Use `Format::BC1UNorm` instead (for RGBA).
 
 
 

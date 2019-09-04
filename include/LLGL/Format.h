@@ -210,14 +210,17 @@ enum class Format
     D32FloatS8X24UInt,  //!< Depth-stencil format: depth 32-bit floating point component, and 8-bit unsigned integer stencil components (where the remaining 24 bits are unused).
   //S8UInt,             //!< Stencil only format: 8-bit unsigned integer stencil component. \note Only supported with: OpenGL, Vulkan, Metal.
 
-    /* --- Compressed color formats --- */
-    BC1RGB,             //!< Compressed color format: RGB S3TC DXT1 with 8 bytes per 4x4 block. \note Only supported with: OpenGL, Vulkan.
-    BC1RGBA,            //!< Compressed color format: RGBA S3TC DXT1 with 8 bytes per 4x4 block.
-  //BC1RGBA_sRGB,       //!< Compressed color format: RGBA S3TC DXT1 with 8 bytes per 4x4 block in non-linear sRGB color space.
-    BC2RGBA,            //!< Compressed color format: RGBA S3TC DXT3 with 16 bytes per 4x4 block.
-  //BC2RGBA_sRGB,       //!< Compressed color format: RGBA S3TC DXT3 with 16 bytes per 4x4 block in non-linear sRGB color space.
-    BC3RGBA,            //!< Compressed color format: RGBA S3TC DXT5 with 16 bytes per 4x4 block.
-  //BC3RGBA_sRGB,       //!< Compressed color format: RGBA S3TC DXT5 with 16 bytes per 4x4 block in non-linear sRGB color space.
+    /* --- Block compression (BC) formats --- */
+    BC1UNorm,           //!< Compressed color format: S3TC BC1 compressed RGBA with normalized unsigned integer components in 64-bit per 4x4 block.
+    BC1UNorm_sRGB,      //!< Compressed color format: S3TC BC1 compressed RGBA with normalized unsigned integer components in 64-bit per 4x4 block in non-linear sRGB color space.
+    BC2UNorm,           //!< Compressed color format: S3TC BC2 compressed RGBA with normalized unsigned integer components in 128-bit per 4x4 block.
+    BC2UNorm_sRGB,      //!< Compressed color format: S3TC BC2 compressed RGBA with normalized unsigned integer components in 128-bit per 4x4 block in non-linear sRGB color space.
+    BC3UNorm,           //!< Compressed color format: S3TC BC3 compressed RGBA with normalized unsigned integer components in 128-bit per 4x4 block.
+    BC3UNorm_sRGB,      //!< Compressed color format: S3TC BC3 compressed RGBA with normalized unsigned integer components in 128-bit per 4x4 block in non-linear sRGB color space.
+    BC4UNorm,           //!< Compressed color format: S3TC BC4 compressed red channel with normalized unsigned integer component in 64-bit per 4x4 block.
+    BC4SNorm,           //!< Compressed color format: S3TC BC4 compressed red channel with normalized signed integer component 64-bit per 4x4 block.
+    BC5UNorm,           //!< Compressed color format: S3TC BC5 compressed red and green channels with normalized unsigned integer components in 64-bit per 4x4 block.
+    BC5SNorm,           //!< Compressed color format: S3TC BC5 compressed red and green channels with normalized signed integer components in 128-bit per 4x4 block.
 };
 
 /**
@@ -245,8 +248,11 @@ enum class ImageFormat
     DepthStencil,   //!< Depth component and stencil index.
 
     /* Compressed formats */
-    CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.
-    CompressedRGBA, //!< Generic compressed format with four color components: Red, Green, Blue, Alpha.
+    BC1,            //!< Block compression BC1.
+    BC2,            //!< Block compression BC2.
+    BC3,            //!< Block compression BC3.
+    BC4,            //!< Block compression BC4.
+    BC5,            //!< Block compression BC5.
 };
 
 /**

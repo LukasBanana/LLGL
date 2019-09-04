@@ -141,11 +141,17 @@ VkFormat Map(const Format format)
         case Format::D24UNormS8UInt:    return VK_FORMAT_D24_UNORM_S8_UINT;
         case Format::D32FloatS8X24UInt: return VK_FORMAT_D32_SFLOAT_S8_UINT;
 
-        /* --- Compressed color formats --- */
-        case Format::BC1RGB:            return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
-        case Format::BC1RGBA:           return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
-        case Format::BC2RGBA:           return VK_FORMAT_BC2_UNORM_BLOCK;
-        case Format::BC3RGBA:           return VK_FORMAT_BC3_UNORM_BLOCK;
+        /* --- Block compression (BC) formats --- */
+        case Format::BC1UNorm:          return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+        case Format::BC1UNorm_sRGB:     return VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
+        case Format::BC2UNorm:          return VK_FORMAT_BC2_UNORM_BLOCK;
+        case Format::BC2UNorm_sRGB:     return VK_FORMAT_BC2_SRGB_BLOCK;
+        case Format::BC3UNorm:          return VK_FORMAT_BC3_UNORM_BLOCK;
+        case Format::BC3UNorm_sRGB:     return VK_FORMAT_BC3_SRGB_BLOCK;
+        case Format::BC4UNorm:          return VK_FORMAT_BC4_UNORM_BLOCK;
+        case Format::BC4SNorm:          return VK_FORMAT_BC4_SNORM_BLOCK;
+        case Format::BC5UNorm:          return VK_FORMAT_BC5_UNORM_BLOCK;
+        case Format::BC5SNorm:          return VK_FORMAT_BC5_SNORM_BLOCK;
     }
     MapFailed("Format", "VkFormat");
 }
@@ -464,11 +470,17 @@ Format Unmap(const VkFormat format)
         case VK_FORMAT_D24_UNORM_S8_UINT:           return Format::D24UNormS8UInt;
         case VK_FORMAT_D32_SFLOAT_S8_UINT:          return Format::D32FloatS8X24UInt;
 
-        /* --- Compressed color formats --- */
-        case VK_FORMAT_BC1_RGB_UNORM_BLOCK:         return Format::BC1RGB;
-        case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:        return Format::BC1RGBA;
-        case VK_FORMAT_BC2_UNORM_BLOCK:             return Format::BC2RGBA;
-        case VK_FORMAT_BC3_UNORM_BLOCK:             return Format::BC3RGBA;
+        /* --- Block compression (BC) formats --- */
+        case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:        return Format::BC1UNorm;
+        case VK_FORMAT_BC1_RGBA_SRGB_BLOCK:         return Format::BC1UNorm_sRGB;
+        case VK_FORMAT_BC2_UNORM_BLOCK:             return Format::BC2UNorm;
+        case VK_FORMAT_BC2_SRGB_BLOCK:              return Format::BC2UNorm_sRGB;
+        case VK_FORMAT_BC3_UNORM_BLOCK:             return Format::BC3UNorm;
+        case VK_FORMAT_BC3_SRGB_BLOCK:              return Format::BC3UNorm_sRGB;
+        case VK_FORMAT_BC4_UNORM_BLOCK:             return Format::BC4UNorm;
+        case VK_FORMAT_BC4_SNORM_BLOCK:             return Format::BC4SNorm;
+        case VK_FORMAT_BC5_UNORM_BLOCK:             return Format::BC5UNorm;
+        case VK_FORMAT_BC5_SNORM_BLOCK:             return Format::BC5SNorm;
 
         default:                                    return Format::Undefined;
     }

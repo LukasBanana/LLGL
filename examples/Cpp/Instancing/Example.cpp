@@ -293,6 +293,7 @@ private:
         {
             pipelineLayout = renderer->CreatePipelineLayout(
                 LLGL::PipelineLayoutDesc("cbuffer(2):vert:frag, texture(3):frag, sampler(4):frag")
+                //LLGL::PipelineLayoutDesc("cbuffer(1):vert:frag, texture(3):frag, sampler(4):frag")
             );
         }
 

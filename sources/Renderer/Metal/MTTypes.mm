@@ -154,10 +154,16 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::D32FloatS8X24UInt: return MTLPixelFormatDepth32Float_Stencil8;
 
         /* --- Compressed color formats --- */
-        case Format::BC1RGB:            break;
-        case Format::BC1RGBA:           return MTLPixelFormatBC1_RGBA;
-        case Format::BC2RGBA:           return MTLPixelFormatBC2_RGBA;
-        case Format::BC3RGBA:           return MTLPixelFormatBC3_RGBA;
+        case Format::BC1UNorm:          return MTLPixelFormatBC1_RGBA;
+        case Format::BC1UNorm_sRGB:     return MTLPixelFormatBC1_RGBA_sRGB;
+        case Format::BC2UNorm:          return MTLPixelFormatBC2_RGBA;
+        case Format::BC2UNorm_sRGB:     return MTLPixelFormatBC2_RGBA_sRGB;
+        case Format::BC3UNorm:          return MTLPixelFormatBC3_RGBA;
+        case Format::BC3UNorm_sRGB:     return MTLPixelFormatBC3_RGBA_sRGB;
+        case Format::BC4UNorm:          return MTLPixelFormatBC4_RUnorm;
+        case Format::BC4SNorm:          return MTLPixelFormatBC4_RSnorm;
+        case Format::BC5UNorm:          return MTLPixelFormatBC5_RGUnorm;
+        case Format::BC5SNorm:          return MTLPixelFormatBC5_RGSnorm;
     }
     MapFailed("Format", "MTLPixelFormat");
 }
@@ -498,9 +504,16 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatDepth32Float_Stencil8:   return Format::D32FloatS8X24UInt;
 
         /* --- Compressed color formats --- */
-        case MTLPixelFormatBC1_RGBA:                return Format::BC1RGBA;
-        case MTLPixelFormatBC2_RGBA:                return Format::BC2RGBA;
-        case MTLPixelFormatBC3_RGBA:                return Format::BC3RGBA;
+        case MTLPixelFormatBC1_RGBA:                return Format::BC1UNorm;
+        case MTLPixelFormatBC1_RGBA_sRGB:           return Format::BC1UNorm_sRGB;
+        case MTLPixelFormatBC2_RGBA:                return Format::BC2UNorm;
+        case MTLPixelFormatBC2_RGBA_sRGB:           return Format::BC2UNorm_sRGB;
+        case MTLPixelFormatBC3_RGBA:                return Format::BC3UNorm;
+        case MTLPixelFormatBC3_RGBA_sRGB:           return Format::BC3UNorm_sRGB;
+        case MTLPixelFormatBC4_RUnorm:              return Format::BC4UNorm;
+        case MTLPixelFormatBC4_RSnorm:              return Format::BC4SNorm;
+        case MTLPixelFormatBC5_RGUnorm:             return Format::BC5UNorm;
+        case MTLPixelFormatBC5_RGSnorm:             return Format::BC5SNorm;
 
         default:                                    break;
     }

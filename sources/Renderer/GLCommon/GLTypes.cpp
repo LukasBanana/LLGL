@@ -147,13 +147,25 @@ GLenum MapOrZero(const Format format)
         case Format::D24UNormS8UInt:    return GL_DEPTH24_STENCIL8;//GL_DEPTH_STENCIL;
         case Format::D32FloatS8X24UInt: return GL_DEPTH32F_STENCIL8;
 
+        /* --- Block compression (BC) formats --- */
         #ifdef GL_EXT_texture_compression_s3tc
-        /* --- Compressed color formats --- */
-        case Format::BC1RGB:            return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-        case Format::BC1RGBA:           return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-        case Format::BC2RGBA:           return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-        case Format::BC3RGBA:           return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-        #endif
+        case Format::BC1UNorm:          return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+        case Format::BC2UNorm:          return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+        case Format::BC3UNorm:          return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        #endif // /GL_EXT_texture_compression_s3tc
+
+        #ifdef GL_EXT_texture_sRGB
+        case Format::BC1UNorm_sRGB:     return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
+        case Format::BC2UNorm_sRGB:     return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
+        case Format::BC3UNorm_sRGB:     return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+        #endif // /GL_EXT_texture_sRGB
+
+        #ifdef GL_EXT_texture_compression_rgtc
+        case Format::BC4UNorm:          return GL_COMPRESSED_RED_RGTC1_EXT;
+        case Format::BC4SNorm:          return GL_COMPRESSED_SIGNED_RED_RGTC1_EXT;
+        case Format::BC5UNorm:          return GL_COMPRESSED_RED_GREEN_RGTC2_EXT;
+        case Format::BC5SNorm:          return GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT;
+        #endif // /GL_EXT_texture_compression_rgtc
 
         default:                        return 0;
     }
@@ -301,8 +313,11 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
         case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;
         case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
         #ifdef LLGL_OPENGL
-        case ImageFormat::CompressedRGB:    return GL_COMPRESSED_RGB;
-        case ImageFormat::CompressedRGBA:   return GL_COMPRESSED_RGBA;
+        case ImageFormat::BC1:              return GL_COMPRESSED_RGBA;
+        case ImageFormat::BC2:              return GL_COMPRESSED_RGBA;
+        case ImageFormat::BC3:              return GL_COMPRESSED_RGBA;
+        case ImageFormat::BC4:              return GL_COMPRESSED_RED;
+        case ImageFormat::BC5:              return GL_COMPRESSED_RG;
         #endif
         default:                            break;
     }
@@ -324,8 +339,11 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
         case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;
         case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
         #ifdef LLGL_OPENGL
-        case ImageFormat::CompressedRGB:    return GL_COMPRESSED_RGB;
-        case ImageFormat::CompressedRGBA:   return GL_COMPRESSED_RGBA;
+        case ImageFormat::BC1:              return GL_COMPRESSED_RGBA;
+        case ImageFormat::BC2:              return GL_COMPRESSED_RGBA;
+        case ImageFormat::BC3:              return GL_COMPRESSED_RGBA;
+        case ImageFormat::BC4:              return GL_COMPRESSED_RED;
+        case ImageFormat::BC5:              return GL_COMPRESSED_RG;
         #endif
         default:                            break;
     }
@@ -787,110 +805,122 @@ Format UnmapFormat(const GLenum internalFormat)
     switch (internalFormat)
     {
         /* --- Red channel color formats --- */
-        case GL_RED:                            return Format::R8UNorm;
+        case GL_RED:                                    return Format::R8UNorm;
 
-        case GL_R8:                             return Format::R8UNorm;
-        case GL_R8_SNORM:                       return Format::R8SNorm;
-        case GL_R8UI:                           return Format::R8UInt;
-        case GL_R8I:                            return Format::R8SInt;
+        case GL_R8:                                     return Format::R8UNorm;
+        case GL_R8_SNORM:                               return Format::R8SNorm;
+        case GL_R8UI:                                   return Format::R8UInt;
+        case GL_R8I:                                    return Format::R8SInt;
 
         #ifdef LLGL_OPENGL
-        case GL_R16:                            return Format::R16UNorm;
-        case GL_R16_SNORM:                      return Format::R16SNorm;
+        case GL_R16:                                    return Format::R16UNorm;
+        case GL_R16_SNORM:                              return Format::R16SNorm;
         #endif
-        case GL_R16UI:                          return Format::R16UInt;
-        case GL_R16I:                           return Format::R16SInt;
-        case GL_R16F:                           return Format::R16Float;
+        case GL_R16UI:                                  return Format::R16UInt;
+        case GL_R16I:                                   return Format::R16SInt;
+        case GL_R16F:                                   return Format::R16Float;
 
-        case GL_R32I:                           return Format::R32UInt;
-        case GL_R32UI:                          return Format::R32SInt;
-        case GL_R32F:                           return Format::R32Float;
+        case GL_R32I:                                   return Format::R32UInt;
+        case GL_R32UI:                                  return Format::R32SInt;
+        case GL_R32F:                                   return Format::R32Float;
 
         /* --- RG color formats --- */
-        case GL_RG:                             return Format::RG8UNorm;
+        case GL_RG:                                     return Format::RG8UNorm;
 
-        case GL_RG8:                            return Format::RG8UNorm;
-        case GL_RG8_SNORM:                      return Format::RG8SNorm;
-        case GL_RG8UI:                          return Format::RG8UInt;
-        case GL_RG8I:                           return Format::RG8SInt;
+        case GL_RG8:                                    return Format::RG8UNorm;
+        case GL_RG8_SNORM:                              return Format::RG8SNorm;
+        case GL_RG8UI:                                  return Format::RG8UInt;
+        case GL_RG8I:                                   return Format::RG8SInt;
 
         #ifdef LLGL_OPENGL
-        case GL_RG16:                           return Format::RG16UNorm;
-        case GL_RG16_SNORM:                     return Format::RG16SNorm;
+        case GL_RG16:                                   return Format::RG16UNorm;
+        case GL_RG16_SNORM:                             return Format::RG16SNorm;
         #endif
-        case GL_RG16UI:                         return Format::RG16UInt;
-        case GL_RG16I:                          return Format::RG16SInt;
-        case GL_RG16F:                          return Format::RG16Float;
+        case GL_RG16UI:                                 return Format::RG16UInt;
+        case GL_RG16I:                                  return Format::RG16SInt;
+        case GL_RG16F:                                  return Format::RG16Float;
 
-        case GL_RG32UI:                         return Format::RG32UInt;
-        case GL_RG32I:                          return Format::RG32SInt;
-        case GL_RG32F:                          return Format::RG32Float;
+        case GL_RG32UI:                                 return Format::RG32UInt;
+        case GL_RG32I:                                  return Format::RG32SInt;
+        case GL_RG32F:                                  return Format::RG32Float;
 
         /* --- RGB color formats --- */
-        case GL_RGB:                            return Format::RGB8UNorm;
+        case GL_RGB:                                    return Format::RGB8UNorm;
 
-        case GL_RGB8:                           return Format::RGB8UNorm;
-        case GL_RGB8_SNORM:                     return Format::RGB8SNorm;
-        case GL_RGB8UI:                         return Format::RGB8UInt;
-        case GL_RGB8I:                          return Format::RGB8SInt;
+        case GL_RGB8:                                   return Format::RGB8UNorm;
+        case GL_RGB8_SNORM:                             return Format::RGB8SNorm;
+        case GL_RGB8UI:                                 return Format::RGB8UInt;
+        case GL_RGB8I:                                  return Format::RGB8SInt;
 
         #ifdef LLGL_OPENGL
-        case GL_RGB16:                          return Format::RGB16UNorm;
-        case GL_RGB16_SNORM:                    return Format::RGB16SNorm;
+        case GL_RGB16:                                  return Format::RGB16UNorm;
+        case GL_RGB16_SNORM:                            return Format::RGB16SNorm;
         #endif
-        case GL_RGB16UI:                        return Format::RGB16UInt;
-        case GL_RGB16I:                         return Format::RGB16SInt;
-        case GL_RGB16F:                         return Format::RGB16Float;
+        case GL_RGB16UI:                                return Format::RGB16UInt;
+        case GL_RGB16I:                                 return Format::RGB16SInt;
+        case GL_RGB16F:                                 return Format::RGB16Float;
 
-        case GL_RGB32UI:                        return Format::RGB32UInt;
-        case GL_RGB32I:                         return Format::RGB32SInt;
-        case GL_RGB32F:                         return Format::RGB32Float;
+        case GL_RGB32UI:                                return Format::RGB32UInt;
+        case GL_RGB32I:                                 return Format::RGB32SInt;
+        case GL_RGB32F:                                 return Format::RGB32Float;
 
         /* --- RGBA color formats --- */
-        case GL_RGBA:                           return Format::RGBA8UNorm;
+        case GL_RGBA:                                   return Format::RGBA8UNorm;
 
-        case GL_RGBA8:                          return Format::RGBA8UNorm;
-        case GL_RGBA8_SNORM:                    return Format::RGBA8SNorm;
-        case GL_RGBA8UI:                        return Format::RGBA8UInt;
-        case GL_RGBA8I:                         return Format::RGBA8SInt;
+        case GL_RGBA8:                                  return Format::RGBA8UNorm;
+        case GL_RGBA8_SNORM:                            return Format::RGBA8SNorm;
+        case GL_RGBA8UI:                                return Format::RGBA8UInt;
+        case GL_RGBA8I:                                 return Format::RGBA8SInt;
 
         #ifdef LLGL_OPENGL
-        case GL_RGBA16:                         return Format::RGBA16UNorm;
-        case GL_RGBA16_SNORM:                   return Format::RGBA16SNorm;
+        case GL_RGBA16:                                 return Format::RGBA16UNorm;
+        case GL_RGBA16_SNORM:                           return Format::RGBA16SNorm;
         #endif
-        case GL_RGBA16UI:                       return Format::RGBA16UInt;
-        case GL_RGBA16I:                        return Format::RGBA16SInt;
-        case GL_RGBA16F:                        return Format::RGBA16Float;
+        case GL_RGBA16UI:                               return Format::RGBA16UInt;
+        case GL_RGBA16I:                                return Format::RGBA16SInt;
+        case GL_RGBA16F:                                return Format::RGBA16Float;
 
-        case GL_RGBA32UI:                       return Format::RGBA32UInt;
-        case GL_RGBA32I:                        return Format::RGBA32SInt;
-        case GL_RGBA32F:                        return Format::RGBA32Float;
+        case GL_RGBA32UI:                               return Format::RGBA32UInt;
+        case GL_RGBA32I:                                return Format::RGBA32SInt;
+        case GL_RGBA32F:                                return Format::RGBA32Float;
 
         #ifdef LLGL_OPENGL
         /* --- Packed formats --- */
-        case GL_RGB10_A2:                       return Format::RGB10A2UNorm;
-        case GL_RGB10_A2UI:                     return Format::RGB10A2UInt;
-        case GL_R11F_G11F_B10F:                 return Format::RG11B10Float;
-        case GL_RGB9_E5:                        return Format::RGB9E5Float;
+        case GL_RGB10_A2:                               return Format::RGB10A2UNorm;
+        case GL_RGB10_A2UI:                             return Format::RGB10A2UInt;
+        case GL_R11F_G11F_B10F:                         return Format::RG11B10Float;
+        case GL_RGB9_E5:                                return Format::RGB9E5Float;
         #endif
 
         /* --- Depth-stencil formats --- */
-        case GL_DEPTH_COMPONENT16:              return Format::D16UNorm;
-        case GL_DEPTH_COMPONENT32:              /* pass */
-        case GL_DEPTH_COMPONENT:                return Format::D32Float;
-        case GL_DEPTH24_STENCIL8:               /* pass */
-        case GL_DEPTH_STENCIL:                  return Format::D24UNormS8UInt;
-        case GL_DEPTH32F_STENCIL8:              return Format::D32FloatS8X24UInt;
+        case GL_DEPTH_COMPONENT16:                      return Format::D16UNorm;
+        case GL_DEPTH_COMPONENT32:                      /* pass */
+        case GL_DEPTH_COMPONENT:                        return Format::D32Float;
+        case GL_DEPTH24_STENCIL8:                       /* pass */
+        case GL_DEPTH_STENCIL:                          return Format::D24UNormS8UInt;
+        case GL_DEPTH32F_STENCIL8:                      return Format::D32FloatS8X24UInt;
 
-        #ifdef LLGL_OPENGL
-        /* --- Compressed color formats --- */
-        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:   return Format::BC1RGB;
-        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:  return Format::BC1RGBA;
-        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:  return Format::BC2RGBA;
-        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:  return Format::BC3RGBA;
-        #endif
+        /* --- Block compression (BC) formats --- */
+        #ifdef GL_EXT_texture_compression_s3tc
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:          return Format::BC1UNorm;
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:          return Format::BC2UNorm;
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:          return Format::BC3UNorm;
+        #endif // /GL_EXT_texture_compression_s3tc
 
-        default:                                break;
+        #ifdef GL_EXT_texture_sRGB
+        case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:    return Format::BC1UNorm_sRGB;
+        case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:    return Format::BC2UNorm_sRGB;
+        case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:    return Format::BC3UNorm_sRGB;
+        #endif // /GL_EXT_texture_sRGB
+
+        #ifdef GL_EXT_texture_compression_rgtc
+        case GL_COMPRESSED_RED_RGTC1_EXT:               return Format::BC4UNorm;
+        case GL_COMPRESSED_SIGNED_RED_RGTC1_EXT:        return Format::BC4SNorm;
+        case GL_COMPRESSED_RED_GREEN_RGTC2_EXT:         return Format::BC5UNorm;
+        case GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT:  return Format::BC5SNorm;
+        #endif // /GL_EXT_texture_compression_rgtc
+
+        default:                                        break;
     }
     return Format::Undefined;
 }

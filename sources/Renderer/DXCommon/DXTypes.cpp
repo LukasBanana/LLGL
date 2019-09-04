@@ -161,14 +161,17 @@ DXGI_FORMAT Map(const Format format)
         case Format::D24UNormS8UInt:    return DXGI_FORMAT_R24G8_TYPELESS;
         case Format::D32FloatS8X24UInt: return DXGI_FORMAT_R32G8X24_TYPELESS;
 
-        /* --- Compressed color formats --- */
-        case Format::BC1RGB:            break;
-        case Format::BC1RGBA:           return DXGI_FORMAT_BC1_UNORM;
-      //case Format::BC1RGBA_sRGB:      return DXGI_FORMAT_BC1_UNORM_SRGB;
-        case Format::BC2RGBA:           return DXGI_FORMAT_BC2_UNORM;
-      //case Format::BC2RGBA_sRGB:      return DXGI_FORMAT_BC2_UNORM_SRGB;
-        case Format::BC3RGBA:           return DXGI_FORMAT_BC3_UNORM;
-      //case Format::BC3RGBA_sRGB:      return DXGI_FORMAT_BC3_UNORM_SRGB;
+        /* --- Block compression (BC) formats --- */
+        case Format::BC1UNorm:          return DXGI_FORMAT_BC1_UNORM;
+        case Format::BC1UNorm_sRGB:     return DXGI_FORMAT_BC1_UNORM_SRGB;
+        case Format::BC2UNorm:          return DXGI_FORMAT_BC2_UNORM;
+        case Format::BC2UNorm_sRGB:     return DXGI_FORMAT_BC2_UNORM_SRGB;
+        case Format::BC3UNorm:          return DXGI_FORMAT_BC3_UNORM;
+        case Format::BC3UNorm_sRGB:     return DXGI_FORMAT_BC3_UNORM_SRGB;
+        case Format::BC4UNorm:          return DXGI_FORMAT_BC4_UNORM;
+        case Format::BC4SNorm:          return DXGI_FORMAT_BC4_SNORM;
+        case Format::BC5UNorm:          return DXGI_FORMAT_BC5_UNORM;
+        case Format::BC5SNorm:          return DXGI_FORMAT_BC5_SNORM;
     }
     MapFailed("Format", "DXGI_FORMAT");
 }
@@ -304,13 +307,17 @@ Format Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_R32G8X24_TYPELESS:         /* pass */
         case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:      return Format::D32FloatS8X24UInt;
 
-        /* --- Compressed color formats --- */
-        case DXGI_FORMAT_BC1_UNORM:                 return Format::BC1RGBA;
-      //case DXGI_FORMAT_BC1_UNORM_SRGB:            return Format::BC1RGBA_sRGB;
-        case DXGI_FORMAT_BC2_UNORM:                 return Format::BC2RGBA;
-      //case DXGI_FORMAT_BC2_UNORM_SRGB:            return Format::BC2RGBA_sRGB;
-        case DXGI_FORMAT_BC3_UNORM:                 return Format::BC3RGBA;
-      //case DXGI_FORMAT_BC3_UNORM_SRGB:            return Format::BC3RGBA_sRGB;
+        /* --- Block compression (BC) formats --- */
+        case DXGI_FORMAT_BC1_UNORM:                 return Format::BC1UNorm;
+        case DXGI_FORMAT_BC1_UNORM_SRGB:            return Format::BC1UNorm_sRGB;
+        case DXGI_FORMAT_BC2_UNORM:                 return Format::BC2UNorm;
+        case DXGI_FORMAT_BC2_UNORM_SRGB:            return Format::BC2UNorm_sRGB;
+        case DXGI_FORMAT_BC3_UNORM:                 return Format::BC3UNorm;
+        case DXGI_FORMAT_BC3_UNORM_SRGB:            return Format::BC3UNorm_sRGB;
+        case DXGI_FORMAT_BC4_UNORM:                 return Format::BC4UNorm;
+        case DXGI_FORMAT_BC4_SNORM:                 return Format::BC4SNorm;
+        case DXGI_FORMAT_BC5_UNORM:                 return Format::BC5UNorm;
+        case DXGI_FORMAT_BC5_SNORM:                 return Format::BC5SNorm;
 
         default:                                    return Format::Undefined;
     }
