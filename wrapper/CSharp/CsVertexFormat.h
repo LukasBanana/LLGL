@@ -28,14 +28,19 @@ public enum class SystemValue
 {
     Undefined,
     ClipDistance,
+    Color,
     CullDistance,
+    Depth,
+    DepthGreater,
+    DepthLess,
     FrontFacing,
     InstanceID,
     Position,
     PrimitiveID,
     RenderTargetIndex,
+    SampleMask,
     SampleID,
-    Target,
+    Stencil,
     VertexID,
     ViewportIndex,
 };
@@ -46,12 +51,12 @@ public ref class VertexAttribute
     public:
 
         VertexAttribute();
-        VertexAttribute(String^ name, Format format);
-        VertexAttribute(String^ name, Format format, unsigned int instanceDivisor);
-        VertexAttribute(String^ name, Format format, unsigned int instanceDivisor, SystemValue systemValue);
-        VertexAttribute(String^ semanticName, unsigned int semanticIndex, Format format, unsigned int instanceDivisor);
-        VertexAttribute(String^ name, Format format, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor);
-        VertexAttribute(String^ semanticName, unsigned int semanticIndex, Format format, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor);
+        VertexAttribute(String^ name, Format format, unsigned int location);
+        VertexAttribute(String^ name, Format format, unsigned int location, unsigned int instanceDivisor);
+        VertexAttribute(String^ name, Format format, unsigned int location, unsigned int instanceDivisor, SystemValue systemValue);
+        VertexAttribute(String^ semanticName, unsigned int semanticIndex, Format format, unsigned int location, unsigned int instanceDivisor);
+        VertexAttribute(String^ name, Format format, unsigned int location, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor);
+        VertexAttribute(String^ semanticName, unsigned int semanticIndex, Format format, unsigned int location, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor);
 
         property unsigned int Size
         {
@@ -60,12 +65,13 @@ public ref class VertexAttribute
 
         property String^        Name;
         property Format         Format;
-        property unsigned int   InstanceDivisor;
+        property unsigned int   Location;
+        property unsigned int   SemanticIndex;
+        property SystemValue    SystemValue;
         property unsigned int   Slot;
         property unsigned int   Offset;
         property unsigned int   Stride;
-        property unsigned int   SemanticIndex;
-        property SystemValue    SystemValue;
+        property unsigned int   InstanceDivisor;
 
 };
 

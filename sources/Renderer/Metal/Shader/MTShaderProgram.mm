@@ -146,7 +146,7 @@ void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
     ReleaseVertexDesc();
     vertexDesc_ = [[MTLVertexDescriptor alloc] init];
 
-    for (std::size_t i = 0, attribIdx = 0; i < numVertexFormats; ++i)
+    for (std::size_t i = 0; i < numVertexFormats; ++i)
     {
         const auto& attribs = vertexFormats[i].attributes;
         if (attribs.empty())
@@ -175,7 +175,7 @@ void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
         {
             const auto& attrib = attribs[j];
 
-            MTLVertexAttributeDescriptor* attribDesc = vertexDesc_.attributes[attribIdx++];
+            MTLVertexAttributeDescriptor* attribDesc = vertexDesc_.attributes[attrib.location];
 
             attribDesc.format       = MTTypes::ToMTLVertexFormat(attrib.format);
             attribDesc.offset       = static_cast<NSUInteger>(attrib.offset);

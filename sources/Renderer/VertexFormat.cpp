@@ -26,15 +26,29 @@ static void UpdateStride(VertexFormat& vertexFormat)
     vertexFormat.SetStride(stride);
 }
 
-void VertexFormat::AppendAttribute(const VertexAttribute& attrib, std::uint32_t offset)
+void VertexFormat::AppendAttribute(
+    const VertexAttribute&  attrib,
+    bool                    customLocation,
+    std::uint32_t           customOffset)
 {
     /* Append attribute to the list */
     attributes.push_back(attrib);
-
-    /* Overwrite attribute offset */
     auto& attr = attributes.back();
 
-    if (offset == Constants::ignoreOffset)
+    /* Overwrite attribute location */
+    if (!customLocation && attr.location == 0)
+    {
+        if (attributes.size() > 1)
+        {
+            const auto& prevAttr = attributes[attributes.size() - 2];
+            attr.location = prevAttr.location + 1;
+        }
+        else
+            attr.location = 0;
+    }
+
+    /* Overwrite attribute offset */
+    if (customOffset == Constants::ignoreOffset)
     {
         /* Set offset after the previous attribute */
         if (attributes.size() > 1)
@@ -48,7 +62,7 @@ void VertexFormat::AppendAttribute(const VertexAttribute& attrib, std::uint32_t 
     else
     {
         /* Set custom offset */
-        attr.offset = offset;
+        attr.offset = customOffset;
     }
 
     /* Update vertex stride */

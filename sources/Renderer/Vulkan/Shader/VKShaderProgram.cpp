@@ -136,7 +136,15 @@ void VKShaderProgram::Attach(Shader* shader)
     }
 }
 
-//TODO: enhance handling of individual binding slots for vertex attributes
+// Helper structure to build set of <VkVertexInputBindingDescription> elements
+struct VKCompareVertexBindingDesc
+{
+    inline bool operator () (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const
+    {
+        return (lhs.binding < rhs.binding);
+    }
+};
+
 void VKShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats)
 {
     if (numVertexFormats == 0 || vertexFormats == nullptr)
@@ -144,38 +152,43 @@ void VKShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
 
     vertexBindingDescs_.reserve(static_cast<std::size_t>(numVertexFormats));
 
-    std::uint32_t location = 0;
+    std::set<VkVertexInputBindingDescription, VKCompareVertexBindingDesc> bindingDescSet;
 
     for (std::size_t i = 0; i < numVertexFormats; ++i)
     {
-        const auto& attribs = vertexFormats[i].attributes;
-        if (attribs.empty())
-            continue;
-
-        const auto& attrib0 = attribs.front();
-
-        /* Initialize vertex input attribute descriptors */
-        for (const auto& attr : attribs)
+        for (const auto& attr : vertexFormats[i].attributes)
         {
+            if (attr.instanceDivisor > 1)
+            {
+                throw std::runtime_error(
+                    "vertex instance divisor must be 0 or 1 for Vulkan, but " +
+                    std::to_string(attr.instanceDivisor) + " was specified: " + attr.name
+                );
+            }
+
+            /* Append vertex input attribute descriptor */
             VkVertexInputAttributeDescription vertexAttrib;
             {
-                vertexAttrib.location   = location++;
+                vertexAttrib.location   = attr.location;
                 vertexAttrib.binding    = attr.slot;
                 vertexAttrib.format     = VKTypes::Map(attr.format);
                 vertexAttrib.offset     = attr.offset;
             }
             vertexAttribDescs_.push_back(vertexAttrib);
-        }
 
-        /* Initialize vertex input binding descriptors */
-        VkVertexInputBindingDescription inputBinding;
-        {
-            inputBinding.binding    = attrib0.slot;
-            inputBinding.stride     = attrib0.stride;
-            inputBinding.inputRate  = ((!attribs.empty() && attribs.front().instanceDivisor != 0) ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
+            /* Insert vertex binding descriptor */
+            VkVertexInputBindingDescription inputBinding;
+            {
+                inputBinding.binding    = attr.slot;
+                inputBinding.stride     = attr.stride;
+                inputBinding.inputRate  = (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
+            }
+            bindingDescSet.insert(inputBinding);
         }
-        vertexBindingDescs_.push_back(inputBinding);
     }
+
+    /* Store binding descriptor in vector */
+    vertexBindingDescs_.insert(vertexBindingDescs_.end(), bindingDescSet.begin(), bindingDescSet.end());
 }
 
 void VKShaderProgram::Link()

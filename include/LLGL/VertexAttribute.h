@@ -37,6 +37,7 @@ struct LLGL_EXPORT VertexAttribute
     VertexAttribute(
         const char*         name,
         const Format        format,
+        std::uint32_t       location        = 0,
         std::uint32_t       instanceDivisor = 0,
         const SystemValue   systemValue     = SystemValue::Undefined
     );
@@ -46,6 +47,7 @@ struct LLGL_EXPORT VertexAttribute
         const char*     semanticName,
         std::uint32_t   semanticIndex,
         const Format    format,
+        std::uint32_t   location        = 0,
         std::uint32_t   instanceDivisor = 0
     );
 
@@ -53,6 +55,7 @@ struct LLGL_EXPORT VertexAttribute
     VertexAttribute(
         const char*     name,
         const Format    format,
+        std::uint32_t   location,
         std::uint32_t   offset,
         std::uint32_t   stride,
         std::uint32_t   slot            = 0,
@@ -64,6 +67,7 @@ struct LLGL_EXPORT VertexAttribute
         const char*     semanticName,
         std::uint32_t   semanticIndex,
         const Format    format,
+        std::uint32_t   location,
         std::uint32_t   offset,
         std::uint32_t   stride,
         std::uint32_t   slot            = 0,
@@ -102,11 +106,50 @@ struct LLGL_EXPORT VertexAttribute
     Format          format          = Format::RGBA32Float;
 
     /**
-    \brief Instance data divisor (or instance data step rate).
-    \remarks If this is 0, this attribute is considered to be stored per vertex.
-    If this is greater than 0, this attribute is considered to be stored per every instanceDivisor's instance.
+    \brief Vertex attribute location.
+    \remarks This is only required for OpenGL, Vulkan, and Metal. For Direct3D, this is ignored and instead \c semanticIndex is used.
+    \remarks The following example shows GLSL attribute locations from 0 to 4 inclusive:
+    \code
+    layout(location = 0) in vec4 vertexPosition;   // location 0
+    layout(location = 1) in mat4 projectionMatrix; // location 1...4
+    \endcode
+    \remarks The following example shows Metal attribute locations from 0 to 4 inclusive:
+    \code
+    struct MyVertexInput
+    {
+        float4 vertexPosition    [[attribute(0)]];
+        float4 projectionMatrix0 [[attribute(1)]];
+        float4 projectionMatrix1 [[attribute(2)]];
+        float4 projectionMatrix2 [[attribute(3)]];
+        float4 projectionMatrix3 [[attribute(4)]];
+    };
+    \endcode
     */
-    std::uint32_t   instanceDivisor = 0;
+    std::uint32_t   location        = 0;
+
+    /**
+    \brief Semantic index for HLSL.
+    \remarks This is only required for Direct3D when a semantic name is used multiple times.
+    This happens when a matrix type is distributed over multiple vector attributes.
+    \remarks The following example uses semantic names \c POS0, \c MATRIX0, \c MATRIX1, \c MATRIX2, \c MATRIX3:
+    \code
+    struct MyVertexInput
+    {
+        float4   vertexPosition   : POS;
+        float4x4 projectionMatrix : MATRIX;
+    };
+    \endcode
+    */
+    std::uint32_t   semanticIndex   = 0;
+
+    /**
+    \brief Specifies the system value type for this vertex attribute or SystemValue::Undefined if this attribute is not a system value. By default SystemValue::Undefined.
+    \remarks System value semantics are only used for shader code reflection. Examples of system value semantics are:
+    - Vertex ID: \c SV_VertexID (HLSL), \c gl_VertexID (GLSL), \c gl_VertexIndex (SPIR-V), <code>[[vertex_id]]</code> (Metal).
+    - Instance ID: \c SV_InstanceID (HLSL), \c gl_InstanceID (GLSL), \c gl_InstanceIndex (SPIR-V), <code>[[instance_id]]</code> (Metal).
+    \see ShaderProgram::Reflect
+    */
+    SystemValue     systemValue     = SystemValue::Undefined;
 
     /**
     \brief Vertex buffer binding slot. By default 0.
@@ -123,20 +166,12 @@ struct LLGL_EXPORT VertexAttribute
     std::uint32_t   stride          = 0;
 
     /**
-    \brief Semantic index (for HLSL) or vector index (for GLSL).
-    \remarks This is used when a matrix is distributed over multiple vector attributes.
+    \brief Instance data divisor (or instance data step rate).
+    \remarks If this is 0, this attribute is considered to be stored per vertex.
+    If this is greater than 0, this attribute is considered to be stored per every instanceDivisor's instance.
+    \note For Vulkan, this must only be 0 or 1.
     */
-    std::uint32_t   semanticIndex   = 0;
-
-    /**
-    \brief Specifies the system value type for this vertex attribute or SystemValue::Undefined if this attribute is not a system value. By default SystemValue::Undefined.
-    \remarks System value semantics must not be specified to create a shader program.
-    Instead, they are used only for shader code reflection. Examples of system value semantics are:
-    - Vertex ID: \c SV_VertexID (HLSL), \c gl_VertexID (GLSL), \c gl_VertexIndex (SPIR-V), <code>[[vertex_id]]</code> (Metal).
-    - Instance ID: \c SV_InstanceID (HLSL), \c gl_InstanceID (GLSL), \c gl_InstanceIndex (SPIR-V), <code>[[instance_id]]</code> (Metal).
-    \see ShaderProgram::Reflect
-    */
-    SystemValue     systemValue     = SystemValue::Undefined;
+    std::uint32_t   instanceDivisor = 0;
 };
 
 

@@ -351,11 +351,12 @@ static void Convert(LLGL::VertexAttribute& dst, VertexAttribute^ src)
     {
         dst.name            = ToStdString(src->Name);
         dst.format          = static_cast<LLGL::Format>(src->Format);
-        dst.instanceDivisor = src->InstanceDivisor;
+        dst.location        = src->Location;
+        dst.semanticIndex   = src->SemanticIndex;
         dst.slot            = src->Slot;
         dst.offset          = src->Offset;
         dst.stride          = src->Stride;
-        dst.semanticIndex   = src->SemanticIndex;
+        dst.instanceDivisor = src->InstanceDivisor;
     }
 }
 

@@ -23,53 +23,65 @@ VertexAttribute::VertexAttribute()
 {
     Name            = "";
     Format          = SharpLLGL::Format::Undefined;
-    InstanceDivisor = 0;
-    Offset          = 0;
+    Location        = 0;
     SemanticIndex   = 0;
+    Slot            = 0;
+    Offset          = 0;
+    Stride          = 0;
     SystemValue     = SharpLLGL::SystemValue::Undefined;
+    InstanceDivisor = 0;
 }
 
-VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format)
+VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int location)
 {
     Name            = name;
     Format          = format;
-    InstanceDivisor = 0;
-    Offset          = 0;
+    Location        = location;
     SemanticIndex   = 0;
     SystemValue     = SharpLLGL::SystemValue::Undefined;
+    Slot            = 0;
+    Offset          = 0;
+    Stride          = 0;
+    InstanceDivisor = 0;
 }
 
-VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int instanceDivisor)
+VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int location, unsigned int instanceDivisor)
 {
     Name            = name;
     Format          = format;
+    Location        = location;
+    SemanticIndex   = 0;
+    SystemValue     = SharpLLGL::SystemValue::Undefined;
+    Slot            = 0;
+    Offset          = 0;
+    Stride          = 0;
     InstanceDivisor = instanceDivisor;
-    Offset          = 0;
-    SemanticIndex   = 0;
-    SystemValue     = SharpLLGL::SystemValue::Undefined;
 }
 
-VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int instanceDivisor, SharpLLGL::SystemValue systemValue)
+VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int location, unsigned int instanceDivisor, SharpLLGL::SystemValue systemValue)
 {
     //TODO
 }
 
-VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, SharpLLGL::Format format, unsigned int instanceDivisor)
+VertexAttribute::VertexAttribute(String^ name, unsigned int semanticIndex, SharpLLGL::Format format, unsigned int location, unsigned int instanceDivisor)
 {
     Name            = name;
     Format          = format;
-    InstanceDivisor = instanceDivisor;
-    Offset          = 0;
+    Location        = location;
     SemanticIndex   = semanticIndex;
     SystemValue     = SharpLLGL::SystemValue::Undefined;
+    Slot            = 0;
+    Offset          = 0;
+    Stride          = 0;
+    InstanceDivisor = instanceDivisor;
 }
 
-VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor)
+VertexAttribute::VertexAttribute(String^ name, SharpLLGL::Format format, unsigned int location, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor)
 {
     //TODO
 }
 
-VertexAttribute::VertexAttribute(String^ semanticName, unsigned int semanticIndex, SharpLLGL::Format format, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor)
+VertexAttribute::VertexAttribute(String^ semanticName, unsigned int semanticIndex, SharpLLGL::Format format, unsigned int location, unsigned int offset, unsigned int stride, unsigned int slot, unsigned int instanceDivisor)
 {
     //TODO
 }

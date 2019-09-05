@@ -27,7 +27,10 @@ class GL2XVertexArray
     public:
 
         // Builds the specified attribute using a 'glVertexAttrib*Pointer' function.
-        void BuildVertexAttribute(GLuint bufferID, const VertexAttribute& attribute, GLuint attribIndex);
+        void BuildVertexAttribute(GLuint bufferID, const VertexAttribute& attribute);
+
+        // Finalizes building vertex attributes.
+        void Finalize();
 
         // Binds this vertex array.
         void Bind(GLStateManager& stateMngr) const;
@@ -47,7 +50,8 @@ class GL2XVertexArray
 
     private:
 
-        std::vector<GL2XVertexAttrib> attribs_;
+        std::vector<GL2XVertexAttrib>   attribs_;
+        GLuint                          attribIndexEnd_ = 0;
 
 };
 

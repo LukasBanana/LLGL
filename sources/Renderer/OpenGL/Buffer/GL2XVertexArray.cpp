@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribute& attribute, GLuint attribIndex)
+void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribute& attribute)
 {
     /* Check if instance divisor is used */
     if (attribute.instanceDivisor > 0)
@@ -31,20 +31,23 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
         ThrowNotSupportedExcept(__FUNCTION__, "integral vertex attributes");
 
     /* Get data type and components of vector type */
-    const auto& formatDesc = GetFormatAttribs(attribute.format);
-    if (formatDesc.bitSize == 0)
+    const auto& formatAttribs = GetFormatAttribs(attribute.format);
+    if ((formatAttribs.flags & FormatFlags::SupportsVertex) == 0)
         ThrowNotSupportedExcept(__FUNCTION__, "specified vertex attribute");
 
     /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
-    const GLsizei       stride          = static_cast<GLsizei>(attribute.stride);
-    const GLsizeiptr    offsetPtrSized  = static_cast<GLsizeiptr>(attribute.offset);
+    auto dataType       = GLTypes::Map(formatAttribs.dataType);
+    auto components     = static_cast<GLint>(formatAttribs.components);
+    auto attribIndex    = static_cast<GLuint>(attribute.location);
+    auto stride         = static_cast<GLsizei>(attribute.stride);
+    auto offsetPtrSized = static_cast<GLsizeiptr>(attribute.offset);
 
     attribs_.push_back(
         {
             bufferID,
             attribIndex,
-            static_cast<GLint>(formatDesc.components),
-            GLTypes::Map(formatDesc.dataType),
+            components,
+            dataType,
             GLBoolean(isNormalizedFormat),
             stride,
             reinterpret_cast<const GLvoid*>(offsetPtrSized)
@@ -52,23 +55,52 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
     );
 }
 
+void GL2XVertexArray::Finalize()
+{
+    if (attribs_.empty())
+        return;
+
+    /* Validate attribute indices are unique and fill the entire range [0, N) */
+    std::vector<bool> locationsTaken;
+    locationsTaken.resize(attribs_.size(), false);
+
+    for (const auto& attr : attribs_)
+    {
+        if (attr.index > locationsTaken.size() || locationsTaken[attr.index])
+            throw std::runtime_error("vertex attribute locations must fill the entire half-open range [0, N) for OpenGL 2.X");
+        locationsTaken[attr.index] = true;
+    }
+
+    /* Store upper bound for attribute indices */
+    attribIndexEnd_ = attribs_.back().index + 1;
+
+    /* Sort attributes by buffer binding and index in ascending order */
+    std::sort(
+        attribs_.begin(),
+        attribs_.end(),
+        [](const GL2XVertexAttrib& lhs, const GL2XVertexAttrib& rhs)
+        {
+            if (lhs.buffer < rhs.buffer)
+                return true;
+            if (lhs.buffer > rhs.buffer)
+                return false;
+            return (lhs.index < rhs.index);
+        }
+    );
+}
+
 void GL2XVertexArray::Bind(GLStateManager& stateMngr) const
 {
-    if (!attribs_.empty())
+    /* Enable all vertex arrays */
+    for (const auto& attr : attribs_)
     {
-        /* Enable all vertex arrays */
-        for (const auto& attr : attribs_)
-        {
-            stateMngr.BindBuffer(GLBufferTarget::ARRAY_BUFFER, attr.buffer);
-            glVertexAttribPointer(attr.index, attr.size, attr.type, attr.normalized, attr.size, attr.pointer);
-            glEnableVertexAttribArray(attr.index);
-        }
-
-        /* Disable remaining vertex arrays */
-        stateMngr.DisableVertexAttribArrays(attribs_.back().index + 1);
+        stateMngr.BindBuffer(GLBufferTarget::ARRAY_BUFFER, attr.buffer);
+        glVertexAttribPointer(attr.index, attr.size, attr.type, attr.normalized, attr.size, attr.pointer);
+        glEnableVertexAttribArray(attr.index);
     }
-    else
-        stateMngr.DisableVertexAttribArrays(0);
+
+    /* Disable remaining vertex arrays */
+    stateMngr.DisableVertexAttribArrays(attribIndexEnd_);
 }
 
 

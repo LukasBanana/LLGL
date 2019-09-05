@@ -40,7 +40,11 @@ struct LLGL_EXPORT VertexFormat
     \see VertexAttribute::offset
     \see Constants::ignoreOffset
     */
-    void AppendAttribute(const VertexAttribute& attrib, std::uint32_t offset = Constants::ignoreOffset);
+    void AppendAttribute(
+        const VertexAttribute&  attrib,
+        bool                    customLocation  = false,
+        std::uint32_t           customOffset    = Constants::ignoreOffset
+    );
 
     /**
     \brief Returns the stride (in bytes) of the first vertex.

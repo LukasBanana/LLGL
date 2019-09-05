@@ -67,8 +67,6 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
     /* Bind VAO */
     GLStateManager::Get().BindVertexArray(GetVaoID());
     {
-        GLuint attribIndex = 0;
-
         while (numBuffers-- > 0)
         {
             if (((*bufferArray)->GetBindFlags() & BindFlags::VertexBuffer) != 0)
@@ -81,7 +79,7 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
 
                 /* Build each vertex attribute */
                 for (const auto& attrib : vertexFormat.attributes)
-                    vao_.BuildVertexAttribute(attrib, attribIndex++);
+                    vao_.BuildVertexAttribute(attrib);
             }
             else
                 ThrowNoVertexBufferErr();
@@ -94,8 +92,6 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
 
 void GLBufferArrayWithVAO::BuildVertexArrayWithEmulator(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    GLuint attribIndex = 0;
-
     while (numBuffers-- > 0)
     {
         if (((*bufferArray)->GetBindFlags() & BindFlags::VertexBuffer) != 0)
@@ -105,7 +101,7 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithEmulator(std::uint32_t numBuffers
 
             /* Build each vertex attribute */
             for (const auto& attrib : vertexFormat.attributes)
-                vertexArrayGL2X_.BuildVertexAttribute(vertexBufferGL->GetID(), attrib, attribIndex++);
+                vertexArrayGL2X_.BuildVertexAttribute(vertexBufferGL->GetID(), attrib);
         }
         else
             ThrowNoVertexBufferErr();

@@ -216,8 +216,17 @@ struct ShaderReflection
 
     #else
 
-    //! Reflection data that is specificly for the vertex shader.
-    FragmentShaderAttributes            vertex;
+    /**
+    \brief Reflection data that is specificly for the vertex shader.
+    \remarks The shader reflection only considers the following members of the VertexAttribute structure,
+    for both \c inputAttribs and \c outputAttribs in VertexShaderAttributes:
+    - \c name
+    - \c format
+    - \c location
+    - \c semanticIndex
+    - \c systemValue
+    */
+    VertexShaderAttributes              vertex;
 
     //! Reflection data that is specificly for the fragment shader.
     FragmentShaderAttributes            fragment;
