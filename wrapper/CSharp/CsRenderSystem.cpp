@@ -370,26 +370,6 @@ static void Convert(LLGL::VertexFormat& dst, VertexFormat^ src)
     }
 }
 
-static void Convert(LLGL::BufferDescriptor::VertexBuffer& dst, BufferDescriptor::VertexBufferDescriptor^ src)
-{
-    if (src)
-    {
-        if (src->Format)
-            Convert(dst.format, src->Format);
-    }
-}
-
-static void Convert(LLGL::BufferDescriptor::IndexBuffer& dst, BufferDescriptor::IndexBufferDescriptor^ src)
-{
-    if (src)
-        dst.format = static_cast<LLGL::Format>(src->Format);
-}
-
-static void Convert(LLGL::BufferDescriptor::StorageBuffer& dst, BufferDescriptor::StorageBufferDescriptor^ src)
-{
-    //TODO...
-}
-
 static void Convert(LLGL::BufferDescriptor& dst, BufferDescriptor^ src)
 {
     if (src)
@@ -398,12 +378,10 @@ static void Convert(LLGL::BufferDescriptor& dst, BufferDescriptor^ src)
         dst.bindFlags       = static_cast<long>(src->BindFlags);
         dst.cpuAccessFlags  = static_cast<long>(src->CPUAccessFlags);
         dst.miscFlags       = static_cast<long>(src->MiscFlags);
-        if (src->VertexBuffer)
-            Convert(dst.vertexBuffer, src->VertexBuffer);
-        if (src->IndexBuffer)
-            Convert(dst.indexBuffer, src->IndexBuffer);
-        if (src->StorageBuffer)
-            Convert(dst.storageBuffer, src->StorageBuffer);
+        dst.vertexAttribs.resize(src->VertexAttribs->Count);
+        for (int i = 0; i < src->VertexAttribs->Count; ++i)
+            Convert(dst.vertexAttribs[i], src->VertexAttribs[i]);
+        dst.indexFormat = static_cast<LLGL::Format>(src->IndexFormat);
     }
 }
 

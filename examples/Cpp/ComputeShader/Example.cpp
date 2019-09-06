@@ -121,9 +121,9 @@ public:
         // Create vertex buffer
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.size                   = sizeof(vertices);
-            vertexBufferDesc.bindFlags              = LLGL::BindFlags::VertexBuffer;
-            vertexBufferDesc.vertexBuffer.format    = vertexFormat[0];
+            vertexBufferDesc.size           = sizeof(vertices);
+            vertexBufferDesc.bindFlags      = LLGL::BindFlags::VertexBuffer;
+            vertexBufferDesc.vertexAttribs  = vertexFormat[0].attributes;
         }
         vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
@@ -132,7 +132,7 @@ public:
         {
             instanceBufferDesc.size                         = sizeof(SceneObject)*maxNumSceneObjects;
             instanceBufferDesc.bindFlags                    = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
-            instanceBufferDesc.vertexBuffer.format          = vertexFormat[1];
+            instanceBufferDesc.vertexAttribs                = vertexFormat[1].attributes;
             instanceBufferDesc.storageBuffer.storageType    = LLGL::StorageBufferType::RWBuffer;
             instanceBufferDesc.storageBuffer.format         = LLGL::Format::R32Float;
             instanceBufferDesc.storageBuffer.stride         = sizeof(float);

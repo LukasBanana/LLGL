@@ -71,14 +71,13 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
         {
             if (((*bufferArray)->GetBindFlags() & BindFlags::VertexBuffer) != 0)
             {
-                auto vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, (*bufferArray++));
-                const auto& vertexFormat = vertexBufferGL->GetVertexFormat();
-
                 /* Bind VBO */
+                auto vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, (*bufferArray++));
                 GLStateManager::Get().BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBufferGL->GetID());
 
                 /* Build each vertex attribute */
-                for (const auto& attrib : vertexFormat.attributes)
+                const auto& vertexAttribs = vertexBufferGL->GetVertexAttribs();
+                for (const auto& attrib : vertexAttribs)
                     vao_.BuildVertexAttribute(attrib);
             }
             else
@@ -97,10 +96,10 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithEmulator(std::uint32_t numBuffers
         if (((*bufferArray)->GetBindFlags() & BindFlags::VertexBuffer) != 0)
         {
             auto vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, (*bufferArray++));
-            const auto& vertexFormat = vertexBufferGL->GetVertexFormat();
 
             /* Build each vertex attribute */
-            for (const auto& attrib : vertexFormat.attributes)
+            const auto& vertexAttribs = vertexBufferGL->GetVertexAttribs();
+            for (const auto& attrib : vertexAttribs)
                 vertexArrayGL2X_.BuildVertexAttribute(vertexBufferGL->GetID(), attrib);
         }
         else

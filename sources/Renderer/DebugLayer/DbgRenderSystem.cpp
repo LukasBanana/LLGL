@@ -613,27 +613,35 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
 
     std::uint32_t formatSize = 0;
 
-    if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::VertexBuffer) != 0 && !desc.vertexAttribs.empty())
     {
+        /* Validate all vertex attributes have the same binding slot */
+        if (desc.vertexAttribs.size() >= 2)
+        {
+            for (std::size_t i = 0; i + 1 < desc.vertexAttribs.size(); ++i)
+                ValidateVertexAttributesForBuffer(desc.vertexAttribs[i], desc.vertexAttribs[i + 1]);
+        }
+
         /* Validate buffer size for specified vertex format */
-        formatSize = desc.vertexBuffer.format.GetStride();
+        formatSize = desc.vertexAttribs.front().stride;
         if (formatSize > 0 && desc.size % formatSize != 0)
             LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
     }
 
-    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
+    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0 && desc.indexFormat != Format::Undefined)
     {
         /* Validate index format */
-        if (desc.indexBuffer.format != Format::R16UInt && desc.indexBuffer.format != Format::R32UInt)
+        if (desc.indexFormat != Format::R16UInt &&
+            desc.indexFormat != Format::R32UInt)
         {
-            if (auto formatName = ToString(desc.indexBuffer.format))
+            if (auto formatName = ToString(desc.indexFormat))
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
             else
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(desc.indexBuffer.format)));
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(desc.indexFormat)));
         }
 
         /* Validate buffer size for specified index format */
-        formatSize = GetFormatAttribs(desc.indexBuffer.format).bitSize / 8;
+        formatSize = GetFormatAttribs(desc.indexFormat).bitSize / 8;
         if (formatSize > 0 && desc.size % formatSize != 0)
         {
             LLGL_DBG_WARN(
@@ -653,6 +661,18 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
 
     if (formatSizeOut)
         *formatSizeOut = formatSize;
+}
+
+void DbgRenderSystem::ValidateVertexAttributesForBuffer(const VertexAttribute& lhs, const VertexAttribute& rhs)
+{
+    if (lhs.slot != rhs.slot || lhs.stride != rhs.stride || lhs.instanceDivisor != rhs.instanceDivisor)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "vertex attributes must have equal slot, stride, and instance divisor within the same buffer, "
+            "but found mismatch between \"" + lhs.name + "\" and \"" + rhs.name + "\""
+        );
+    }
 }
 
 void DbgRenderSystem::ValidateBufferSize(std::uint64_t size)

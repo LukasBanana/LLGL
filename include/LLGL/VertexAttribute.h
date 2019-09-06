@@ -23,9 +23,15 @@ namespace LLGL
 /* ----- Structures ----- */
 
 /**
-\brief Vertex input attribute structure.
+\brief Vertex input/output attribute structure.
+\remarks For attributes within the same vertex buffer, the following members \b must have the same value:
+- \c slot
+- \c stride
+- \c instanceDivisor
+\see VertexShaderAttributes::inputAttribs
+\see VertexShaderAttributes::outputAttribs
+\see BufferDescriptor::vertexAttribs
 \see VertexFormat::attributes
-\see ShaderReflection::vertexAttributes
 */
 struct LLGL_EXPORT VertexAttribute
 {

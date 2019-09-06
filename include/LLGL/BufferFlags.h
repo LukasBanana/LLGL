@@ -80,29 +80,6 @@ enum class StorageBufferType
 */
 struct BufferDescriptor
 {
-    #if 1 //TODO: Replace this by "vertexAttribs"
-    //! Vertex buffer specific descriptor structure.
-    struct VertexBuffer
-    {
-        /**
-        \brief Specifies the vertex format layout.
-        \remarks This is required to tell the renderer how the vertex attributes are stored inside the vertex buffer and
-        it must be the same vertex format which is used for the respective graphics pipeline shader program.
-        */
-        VertexFormat format;
-    };
-    #endif
-
-    //! Index buffer specific descriptor structure.
-    struct IndexBuffer
-    {
-        /**
-        \brief Specifies the format of each index in the buffer. This must be either Format::R16UInt or Format::R32UInt. By default Format::R32UInt.
-        \see Format
-        */
-        Format format = Format::R32UInt;
-    };
-
     /**
     \brief Storage buffer specific descriptor structure.
     \todo Move this into a BufferViewDescriptor.
@@ -138,14 +115,14 @@ struct BufferDescriptor
     \see bindFlags
     \see StorageBuffer::stride
     */
-    std::uint64_t   size            = 0;
+    std::uint64_t                   size            = 0;
 
     /**
     \brief These flags describe to which resource slots the buffer can be bound. By default 0.
     \remarks When the buffer will be bound to a vertex buffer slot for instance, the BindFlags::VertexBuffer flag is required.
     \see BindFlags
     */
-    long            bindFlags       = 0;
+    long                            bindFlags       = 0;
 
     /**
     \brief CPU read/write access flags. By default 0.
@@ -153,49 +130,38 @@ struct BufferDescriptor
     \see CPUAccessFlags
     \see RenderSystem::MapBuffer
     */
-    long            cpuAccessFlags  = 0;
+    long                            cpuAccessFlags  = 0;
 
     /**
     \brief Miscellaneous buffer flags. By default 0.
     \remarks This can be used as a hint for the renderer how frequently the buffer will be updated.
     \see MiscFlags
     */
-    long            miscFlags       = 0;
-
-    #if 1//TODO: replace
-
-    /**
-    \brief Vertex buffer type descriptor appendix.
-    \todo Rename to \c vertex
-    */
-    VertexBuffer    vertexBuffer;
-
-    #else
+    long                            miscFlags       = 0;
 
     /**
     \brief Specifies the list of vertex attributes.
     \remarks This is only used for vertex buffers and ignored if \c bindFlags does not contain the BindFlags::VertexBuffer bit.
+    \see BindFlags::VertexBuffer
     \see VertexShaderAttributes::inputAttribs
     */
-    std::vector<VertexAttribute> vertexAttribs;
-
-    #endif
-
-    #if 1//TODO: remove
+    std::vector<VertexAttribute>    vertexAttribs;
 
     /**
-    \brief Index buffer type descriptor appendix.
-    \todo Remove this, only use the secondary \c SetIndexBuffer function in CommandBuffer interface.
+    \brief Specifies the format of each index in the buffer. By default Format::Undefined.
+    \remarks This is only used for index buffers and ignored if \c bindFlags does not contain the BindFlags::IndexBuffer bit.
+    However, if the BindFlags::IndexBuffer bit is set, this must be either Format::R16UInt, Format::R32UInt, or Format::Undefined.
+    If Format::Undefined is specified, only the secondary \c SetIndexBuffer function can be used in the CommandBuffer interface.
+    \see BindFlags::IndexBuffer
+    \see CommandBuffer::SetIndexBuffer(Buffer&)
     */
-    IndexBuffer     indexBuffer;
-
-    #endif
+    Format                          indexFormat     = Format::Undefined;
 
     /**
     \brief Storage buffer type descriptor appendix.
     \todo Replace this by BufferViewDescriptor
     */
-    StorageBuffer   storageBuffer;
+    StorageBuffer                   storageBuffer;
 };
 
 

@@ -148,6 +148,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAccess access, const char* resourceTypeName);
 
         void ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSizeOut = nullptr);
+        void ValidateVertexAttributesForBuffer(const VertexAttribute& lhs, const VertexAttribute& rhs);
         void ValidateBufferSize(std::uint64_t size);
         void ValidateConstantBufferSize(std::uint64_t size);
         void ValidateBufferBoundary(std::uint64_t bufferSize, std::uint64_t dstOffset, std::uint64_t dataSize);

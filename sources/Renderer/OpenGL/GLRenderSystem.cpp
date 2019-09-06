@@ -150,8 +150,8 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     auto bufferGL = CreateGLBuffer(desc, initialData);
 
     /* Store meta data for certain types of buffers */
-    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
-        bufferGL->SetIndexType(desc.indexBuffer.format);
+    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0 && desc.indexFormat != Format::Undefined)
+        bufferGL->SetIndexType(desc.indexFormat);
 
     return bufferGL;
 }
@@ -166,7 +166,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& desc, const voi
         auto bufferGL = MakeUnique<GLBufferWithVAO>(desc.bindFlags);
         {
             GLBufferStorage(*bufferGL, desc, initialData);
-            bufferGL->BuildVertexArray(desc.vertexBuffer.format);
+            bufferGL->BuildVertexArray(desc.vertexAttribs.size(), desc.vertexAttribs.data());
         }
         return TakeOwnership(buffers_, std::move(bufferGL));
     }

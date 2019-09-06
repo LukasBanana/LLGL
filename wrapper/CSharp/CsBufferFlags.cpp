@@ -14,37 +14,6 @@ namespace SharpLLGL
 
 
 /*
- * VertexBufferDescriptor class
- */
-
-BufferDescriptor::VertexBufferDescriptor::VertexBufferDescriptor()
-{
-    Format = gcnew VertexFormat();
-}
-
-
-/*
- * IndexBufferDescriptor class
- */
-
-BufferDescriptor::IndexBufferDescriptor::IndexBufferDescriptor()
-{
-    Format = SharpLLGL::Format::R32UInt;
-}
-
-
-/*
- * StorageBufferDescriptor class
- */
-
-BufferDescriptor::StorageBufferDescriptor::StorageBufferDescriptor()
-{
-    StorageType = StorageBufferType::Buffer;
-    Format      = SharpLLGL::Format::RGBA32Float;
-}
-
-
-/*
  * BufferDescriptor class
  */
 
@@ -54,9 +23,8 @@ BufferDescriptor::BufferDescriptor()
     BindFlags       = SharpLLGL::BindFlags::None;
     CPUAccessFlags  = SharpLLGL::CPUAccessFlags::None;
     MiscFlags       = SharpLLGL::MiscFlags::None;
-    VertexBuffer    = gcnew VertexBufferDescriptor();
-    IndexBuffer     = gcnew IndexBufferDescriptor();
-    StorageBuffer   = gcnew StorageBufferDescriptor();
+    VertexAttribs   = gcnew List<VertexAttribute^>();
+    IndexFormat     = Format::Undefined;
 }
 
 

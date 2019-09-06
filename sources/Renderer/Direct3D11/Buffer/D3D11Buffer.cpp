@@ -210,8 +210,8 @@ void D3D11Buffer::CreateNativeBuffer(ID3D11Device* device, const BufferDescripto
 
     /* Store buffer creation attributes */
     size_   = descD3D.ByteWidth;
-    stride_ = desc.vertexBuffer.format.GetStride();
-    format_ = D3D11Types::Map(desc.indexBuffer.format);
+    stride_ = (desc.vertexAttribs.empty() ? 0 : desc.vertexAttribs.front().stride);
+    format_ = D3D11Types::Map(desc.indexFormat);
     usage_  = descD3D.Usage;
 }
 

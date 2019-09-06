@@ -25,7 +25,7 @@ class GLBufferWithVAO final : public GLBuffer
 
         GLBufferWithVAO(long bindFlags);
 
-        void BuildVertexArray(const VertexFormat& vertexFormat);
+        void BuildVertexArray(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
 
         // Returns the ID of the vertex-array-object (VAO)
         inline GLuint GetVaoID() const
@@ -33,10 +33,10 @@ class GLBufferWithVAO final : public GLBuffer
             return vao_.GetID();
         }
 
-        // Returns the vertex format.
-        inline const VertexFormat& GetVertexFormat() const
+        // Returns the list of vertex attributes.
+        inline const std::vector<VertexAttribute>& GetVertexAttribs() const
         {
-            return vertexFormat_;
+            return vertexAttribs_;
         }
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
@@ -56,11 +56,11 @@ class GLBufferWithVAO final : public GLBuffer
 
     private:
 
-        GLVertexArrayObject vao_;
-        VertexFormat        vertexFormat_;
+        GLVertexArrayObject             vao_;
+        std::vector<VertexAttribute>    vertexAttribs_;
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
-        GL2XVertexArray     vertexArrayGL2X_;
+        GL2XVertexArray                 vertexArrayGL2X_;
         #endif
 
 };

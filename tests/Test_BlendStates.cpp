@@ -74,9 +74,9 @@ int main()
 
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.size                   = sizeof(vertices);
-            vertexBufferDesc.bindFlags              = LLGL::BindFlags::VertexBuffer;
-            vertexBufferDesc.vertexBuffer.format    = vertexFormat;
+            vertexBufferDesc.size           = sizeof(vertices);
+            vertexBufferDesc.bindFlags      = LLGL::BindFlags::VertexBuffer;
+            vertexBufferDesc.vertexAttribs  = vertexFormat.attributes;
         }
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
@@ -84,7 +84,7 @@ int main()
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
             LLGL::ShaderDescriptor vertexShaderDesc{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" };
-            vertexShaderDesc.vertex.inputAttribs = vertexBufferDesc.vertexBuffer.format.attributes;
+            vertexShaderDesc.vertex.inputAttribs = vertexBufferDesc.vertexAttribs;
 
             shaderProgramDesc.vertexShader      = renderer->CreateShader(vertexShaderDesc);//{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" });
             shaderProgramDesc.fragmentShader    = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Shaders/BlendTest.frag" });

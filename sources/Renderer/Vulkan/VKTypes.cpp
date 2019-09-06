@@ -43,7 +43,7 @@ VkFormat Map(const Format format)
 {
     switch (format)
     {
-        case Format::Undefined:         break;
+        case Format::Undefined:         return VK_FORMAT_UNDEFINED;
 
         /* --- Alpha channel color formats --- */
         case Format::A8UNorm:           break;
@@ -366,6 +366,7 @@ VkIndexType ToVkIndexType(const Format format)
 {
     switch (format)
     {
+        case Format::Undefined: return VK_INDEX_TYPE_MAX_ENUM;
         case Format::R16UInt:   return VK_INDEX_TYPE_UINT16;
         case Format::R32UInt:   return VK_INDEX_TYPE_UINT32;
         default:                break;

@@ -51,48 +51,13 @@ public ref class BufferDescriptor
 
         BufferDescriptor();
 
-        ref class VertexBufferDescriptor
-        {
-
-            public:
-
-                VertexBufferDescriptor();
-
-                property VertexFormat^ Format;
-
-        };
-
-        ref class IndexBufferDescriptor
-        {
-
-            public:
-
-                IndexBufferDescriptor();
-
-                property Format Format;
-
-        };
-
-        ref class StorageBufferDescriptor
-        {
-
-            public:
-
-                StorageBufferDescriptor();
-
-                property StorageBufferType  StorageType;// = StorageBufferType::Buffer;
-                property Format             Format;//      = Format::RGBA32Float;
-                property System::UInt32     Stride;
-
-        };
-
         property System::UInt64             Size;
         property BindFlags                  BindFlags;
         property CPUAccessFlags             CPUAccessFlags;
         property MiscFlags                  MiscFlags;
-        property VertexBufferDescriptor^    VertexBuffer;
-        property IndexBufferDescriptor^     IndexBuffer;
-        property StorageBufferDescriptor^   StorageBuffer;
+        property List<VertexAttribute^>^    VertexAttribs;
+        property Format                     IndexFormat;
+
 };
 
 

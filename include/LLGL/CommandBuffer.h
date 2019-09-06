@@ -294,11 +294,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Sets the active index buffer for subsequent drawing operations.
         \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the binding flag BindFlags::IndexBuffer and its content <b>must not</b> be uninitialized.
+        For this version of \c SetIndexBuffer, the index buffer must also be created with \c indexFormat set to either Format::R16UInt or Format::R32UInt.
         \remarks An index buffer is only required for any \c DrawIndexed or \c DrawIndexedInstanced draw call.
         \see RenderSystem::CreateBuffer
         \see RenderSystem::WriteBuffer
         \see DrawIndexed
         \see DrawIndexedInstanced
+        \see BufferDescriptor::indexFormat
         */
         virtual void SetIndexBuffer(Buffer& buffer) = 0;
 

@@ -19,10 +19,13 @@ GLBufferWithVAO::GLBufferWithVAO(long bindFlags) :
 {
 }
 
-void GLBufferWithVAO::BuildVertexArray(const VertexFormat& vertexFormat)
+void GLBufferWithVAO::BuildVertexArray(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
 {
     /* Store vertex format (required if this buffer is used in a buffer array) */
-    vertexFormat_ = vertexFormat;
+    if (vertexAttribs > 0)
+        vertexAttribs_ = std::vector<VertexAttribute>(vertexAttribs, vertexAttribs + numVertexAttribs);
+    else
+        vertexAttribs_.clear();
 
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     if (!HasExtension(GLExt::ARB_vertex_array_object))
@@ -52,7 +55,7 @@ void GLBufferWithVAO::BuildVertexArrayWithVAO()
         GLStateManager::Get().BindBuffer(GLBufferTarget::ARRAY_BUFFER, GetID());
 
         /* Build each vertex attribute */
-        for (const auto& attrib : vertexFormat_.attributes)
+        for (const auto& attrib : vertexAttribs_)
             vao_.BuildVertexAttribute(attrib);
     }
     GLStateManager::Get().BindVertexArray(0);

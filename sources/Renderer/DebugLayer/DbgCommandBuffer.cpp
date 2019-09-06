@@ -364,6 +364,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
         LLGL_DBG_SOURCE;
         AssertRecording();
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndexBuffer);
+        ValidateIndexType(bufferDbg.desc.indexFormat);
         bindings_.indexBuffer = (&bufferDbg);
     }
 
@@ -1192,28 +1193,28 @@ void DbgCommandBuffer::ValidateVertexLayout()
     }
 }
 
-void DbgCommandBuffer::ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers)
+void DbgCommandBuffer::ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderVertexAttribs, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers)
 {
     /* Check if all vertex attributes are served by active vertex buffer(s) */
     std::size_t attribIndex = 0;
 
-    for (std::uint32_t bufferIndex = 0; attribIndex < shaderAttributes.size() && bufferIndex < numVertexBuffers; ++bufferIndex)
+    for (std::uint32_t bufferIndex = 0; attribIndex < shaderVertexAttribs.size() && bufferIndex < numVertexBuffers; ++bufferIndex)
     {
         /* Compare remaining shader attributes with next vertex buffer attributes */
-        const auto& vertexFormatRhs = vertexBuffers[bufferIndex]->desc.vertexBuffer.format;
+        const auto& bufferVertexAttribs = vertexBuffers[bufferIndex]->desc.vertexAttribs;
 
-        for (std::size_t i = 0; i < vertexFormatRhs.attributes.size() && attribIndex < shaderAttributes.size(); ++i, ++attribIndex)
+        for (std::size_t i = 0; i < bufferVertexAttribs.size() && attribIndex < shaderVertexAttribs.size(); ++i, ++attribIndex)
         {
             /* Compare current vertex attributes */
-            const auto& attribLhs = shaderAttributes[attribIndex];
-            const auto& attribRhs = vertexFormatRhs.attributes[i];
+            const auto& attribLhs = shaderVertexAttribs[attribIndex];
+            const auto& attribRhs = bufferVertexAttribs[i];
 
             if (attribLhs != attribRhs)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex layout mismatch between shader program and vertex buffer(s)");
         }
     }
 
-    if (attribIndex < shaderAttributes.size())
+    if (attribIndex < shaderVertexAttribs.size())
         LLGL_DBG_ERROR(ErrorType::InvalidState, "not all vertex attributes in the shader pipeline are covered by the bound vertex buffer(s)");
 }
 

@@ -24,8 +24,8 @@ static MTLResourceOptions GetMTLResourceOptions(const BufferDescriptor& desc)
 }
 
 MTBuffer::MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const void* initialData) :
-    Buffer           { desc.bindFlags                               },
-    indexType16Bits_ { (desc.indexBuffer.format == Format::R16UInt) }
+    Buffer           { desc.bindFlags                        },
+    indexType16Bits_ { (desc.indexFormat == Format::R16UInt) }
 {
     auto opt = GetMTLResourceOptions(desc);
 

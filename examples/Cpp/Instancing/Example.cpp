@@ -180,15 +180,15 @@ private:
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor desc;
 
-        desc.size                   = sizeof(vertexData);
-        desc.bindFlags              = LLGL::BindFlags::VertexBuffer;
-        desc.vertexBuffer.format    = vertexFormatPerVertex;
+        desc.size           = sizeof(vertexData);
+        desc.bindFlags      = LLGL::BindFlags::VertexBuffer;
+        desc.vertexAttribs  = vertexFormatPerVertex.attributes;
 
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexData);
 
         // Create buffer for per-instance data
-        desc.size                   = static_cast<std::uint32_t>(sizeof(Instance) * instanceData.size());
-        desc.vertexBuffer.format    = vertexFormatPerInstance;
+        desc.size           = static_cast<std::uint32_t>(sizeof(Instance) * instanceData.size());
+        desc.vertexAttribs  = vertexFormatPerInstance.attributes;
 
         vertexBuffers[1] = renderer->CreateBuffer(desc, instanceData.data());
 

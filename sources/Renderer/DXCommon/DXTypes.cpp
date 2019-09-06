@@ -63,7 +63,7 @@ DXGI_FORMAT Map(const Format format)
 {
     switch (format)
     {
-        case Format::Undefined:         break;//return DXGI_FORMAT_UNKNOWN;
+        case Format::Undefined:         return DXGI_FORMAT_UNKNOWN;
 
         /* --- Alpha channel color formats --- */
         case Format::A8UNorm:           return DXGI_FORMAT_A8_UNORM;
