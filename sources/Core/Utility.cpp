@@ -266,22 +266,20 @@ static void AssignShaderToDesc(ShaderProgramDescriptor& desc, Shader* shader)
     }
 }
 
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::initializer_list<Shader*>& shaders, const std::initializer_list<VertexFormat>& vertexFormats)
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::initializer_list<Shader*>& shaders)
 {
     ShaderProgramDescriptor desc;
     {
-        desc.vertexFormats = vertexFormats;
         for (auto shader : shaders)
             AssignShaderToDesc(desc, shader);
     }
     return desc;
 }
 
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>& shaders, const std::vector<VertexFormat>& vertexFormats)
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>& shaders)
 {
     ShaderProgramDescriptor desc;
     {
-        desc.vertexFormats = vertexFormats;
         for (auto shader : shaders)
             AssignShaderToDesc(desc, shader);
     }

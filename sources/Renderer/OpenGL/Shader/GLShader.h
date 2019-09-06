@@ -11,11 +11,18 @@
 
 #include <LLGL/Shader.h>
 #include "../OpenGL.h"
+#include "../../../Core/LinearStringContainer.h"
 
 
 namespace LLGL
 {
 
+
+struct GLVertexAttribute
+{
+    GLuint          index;
+    const GLchar*   name;
+};
 
 class GLShader final : public Shader
 {
@@ -39,22 +46,35 @@ class GLShader final : public Shader
             return id_;
         }
 
-    protected:
+        // Returns the vertex input attributes.
+        inline const std::vector<GLVertexAttribute>& GetVertexAttribs() const
+        {
+            return vertexAttribs_;
+        }
 
-        friend class GLShaderProgram;
-
-        bool MoveStreamOutputFormat(StreamOutputFormat& streamOutputFormat);
+        // Returns the transform feedback varying names.
+        inline const std::vector<const char*>& GetTransformFeedbackVaryings() const
+        {
+            return transformFeedbackVaryings_;
+        }
 
     private:
 
-        void Build(const ShaderDescriptor& shaderDesc);
+        void BuildShader(const ShaderDescriptor& shaderDesc);
+        void ReserveAttribNames(const VertexShaderAttributes& vertexAttribs);
+        void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
+        void BuildTransformFeedbackVaryings(std::size_t numVaryings, const VertexAttribute* varyings);
+
         void CompileSource(const ShaderDescriptor& shaderDesc);
         void LoadBinary(const ShaderDescriptor& shaderDesc);
 
     private:
 
-        GLuint              id_ = 0;
-        StreamOutputFormat  streamOutputFormat_;
+        GLuint                          id_                         = 0;
+
+        LinearStringContainer           vertexAttribNames_;
+        std::vector<GLVertexAttribute>  vertexAttribs_;
+        std::vector<const char*>        transformFeedbackVaryings_;
 
 };
 

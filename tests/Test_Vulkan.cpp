@@ -125,11 +125,15 @@ int main()
         auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
 
         // Create shader program
+        auto vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Shaders/Triangle.vert.spv");
+        auto fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Shaders/Triangle.frag.spv");
+
+        vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
+
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
-            shaderProgramDesc.vertexFormats     = { vertexFormat };
-            shaderProgramDesc.vertexShader      = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Shaders/Triangle.vert.spv"));
-            shaderProgramDesc.fragmentShader    = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Shaders/Triangle.frag.spv"));
+            shaderProgramDesc.vertexShader      = renderer->CreateShader(vertShaderDesc);
+            shaderProgramDesc.fragmentShader    = renderer->CreateShader(fragShaderDesc);
         }
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 

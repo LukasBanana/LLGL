@@ -80,6 +80,7 @@ enum class StorageBufferType
 */
 struct BufferDescriptor
 {
+    #if 1 //TODO: Replace this by "vertexAttribs"
     //! Vertex buffer specific descriptor structure.
     struct VertexBuffer
     {
@@ -90,6 +91,7 @@ struct BufferDescriptor
         */
         VertexFormat format;
     };
+    #endif
 
     //! Index buffer specific descriptor structure.
     struct IndexBuffer
@@ -160,13 +162,39 @@ struct BufferDescriptor
     */
     long            miscFlags       = 0;
 
-    //! Vertex buffer type descriptor appendix.
+    #if 1//TODO: replace
+
+    /**
+    \brief Vertex buffer type descriptor appendix.
+    \todo Rename to \c vertex
+    */
     VertexBuffer    vertexBuffer;
 
-    //! Index buffer type descriptor appendix.
+    #else
+
+    /**
+    \brief Specifies the list of vertex attributes.
+    \remarks This is only used for vertex buffers and ignored if \c bindFlags does not contain the BindFlags::VertexBuffer bit.
+    \see VertexShaderAttributes::inputAttribs
+    */
+    std::vector<VertexAttribute> vertexAttribs;
+
+    #endif
+
+    #if 1//TODO: remove
+
+    /**
+    \brief Index buffer type descriptor appendix.
+    \todo Remove this, only use the secondary \c SetIndexBuffer function in CommandBuffer interface.
+    */
     IndexBuffer     indexBuffer;
 
-    //! Storage buffer type descriptor appendix.
+    #endif
+
+    /**
+    \brief Storage buffer type descriptor appendix.
+    \todo Replace this by BufferViewDescriptor
+    */
     StorageBuffer   storageBuffer;
 };
 

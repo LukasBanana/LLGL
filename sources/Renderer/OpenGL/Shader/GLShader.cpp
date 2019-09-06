@@ -15,6 +15,7 @@
 #include <vector>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
 
 
 namespace LLGL
@@ -25,7 +26,10 @@ GLShader::GLShader(const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
     id_ = glCreateShader(GLTypes::Map(desc.type));
-    Build(desc);
+    BuildShader(desc);
+    ReserveAttribNames(desc.vertex);
+    BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
+    BuildTransformFeedbackVaryings(desc.vertex.outputAttribs.size(), desc.vertex.outputAttribs.data());
 }
 
 GLShader::~GLShader()
@@ -70,30 +74,80 @@ std::string GLShader::GetReport() const
 
 
 /*
- * ======= Protected: =======
- */
-
-bool GLShader::MoveStreamOutputFormat(StreamOutputFormat& streamOutputFormat)
-{
-    if (!streamOutputFormat_.attributes.empty())
-    {
-        streamOutputFormat.attributes = std::move(streamOutputFormat_.attributes);
-        return true;
-    }
-    return false;
-}
-
-
-/*
  * ======= Private: =======
  */
 
-void GLShader::Build(const ShaderDescriptor& shaderDesc)
+void GLShader::BuildShader(const ShaderDescriptor& shaderDesc)
 {
     if (IsShaderSourceCode(shaderDesc.sourceType))
         CompileSource(shaderDesc);
     else
         LoadBinary(shaderDesc);
+}
+
+void GLShader::ReserveAttribNames(const VertexShaderAttributes& vertexAttribs)
+{
+    vertexAttribNames_.Clear();
+
+    /* Reserve names for vertex attributs */
+    for (const auto& attr : vertexAttribs.inputAttribs)
+    {
+        if (attr.semanticIndex == 0)
+            vertexAttribNames_.Reserve(attr.name.size());
+    }
+
+    /* Reserve names for transform feedback varyings */
+    for (const auto& attr : vertexAttribs.outputAttribs)
+        vertexAttribNames_.Reserve(attr.name.size());
+}
+
+void GLShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
+        return;
+
+    /* Validate maximal number of vertex attributes (OpenGL supports at least 8 vertex attribute) */
+    static const std::size_t minSupportedVertexAttribs = 8;
+
+    std::size_t highestAttribIndex = 0;
+    for (std::size_t i = 0; i < numVertexAttribs; ++i)
+        highestAttribIndex = std::max(highestAttribIndex, vertexAttribs[i].location);
+
+    if (highestAttribIndex > minSupportedVertexAttribs)
+    {
+        GLint maxSupportedVertexAttribs = 0;
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxSupportedVertexAttribs);
+
+        if (highestAttribIndex > static_cast<std::size_t>(maxSupportedVertexAttribs))
+        {
+            throw std::invalid_argument(
+                "failed build input layout, because too many vertex attributes are specified (" +
+                std::to_string(highestAttribIndex) + " is specified, but maximum is " + std::to_string(maxSupportedVertexAttribs) + ")"
+            );
+        }
+    }
+
+    /* Bind all vertex attribute locations */
+    vertexAttribs_.clear();
+    vertexAttribs_.reserve(numVertexAttribs);
+
+    for (std::size_t i = 0; i < numVertexAttribs; ++i)
+    {
+        /* Store attribute meta data (matrices only use the 1st column) */
+        const auto& attr = vertexAttribs[i];
+        if (attr.semanticIndex == 0)
+            vertexAttribs_.push_back({ attr.location, vertexAttribNames_.CopyString(attr.name) });
+    }
+}
+
+void GLShader::BuildTransformFeedbackVaryings(std::size_t numVaryings, const VertexAttribute* varyings)
+{
+    if (numVaryings > 0 && varyings != nullptr)
+    {
+        transformFeedbackVaryings_.reserve(numVaryings);
+        for (std::size_t i = 0; i < numVaryings; ++i)
+            transformFeedbackVaryings_.push_back(vertexAttribNames_.CopyString(varyings[i].name));
+    }
 }
 
 void GLShader::CompileSource(const ShaderDescriptor& shaderDesc)
@@ -115,9 +169,6 @@ void GLShader::CompileSource(const ShaderDescriptor& shaderDesc)
     /* Load shader source code, then compile shader */
     glShaderSource(id_, 1, strings, nullptr);
     glCompileShader(id_);
-
-    /* Store stream-output format */
-    streamOutputFormat_ = shaderDesc.streamOutput.format;
 }
 
 void GLShader::LoadBinary(const ShaderDescriptor& shaderDesc)
@@ -150,9 +201,6 @@ void GLShader::LoadBinary(const ShaderDescriptor& shaderDesc)
         /* Specialize for the default "main" function in a SPIR-V module  */
         const char* entryPoint = (shaderDesc.entryPoint == nullptr || *shaderDesc.entryPoint == '\0' ? "main" : shaderDesc.entryPoint);
         glSpecializeShader(id_, entryPoint, 0, nullptr, nullptr);
-
-        /* Store stream-output format */
-        streamOutputFormat_ = shaderDesc.streamOutput.format;
     }
     else
     #endif

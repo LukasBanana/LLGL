@@ -31,7 +31,7 @@ class DbgShader final : public Shader
 
     public:
 
-        DbgShader(Shader& instance, const ShaderType type);
+        DbgShader(Shader& instance, const ShaderDescriptor& desc);
 
         inline bool IsCompiled() const
         {
@@ -40,8 +40,9 @@ class DbgShader final : public Shader
 
     public:
 
-        Shader&     instance;
-        std::string label;
+        Shader&                 instance;
+        const ShaderDescriptor  desc;
+        std::string             label;
 
 };
 

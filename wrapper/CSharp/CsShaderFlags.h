@@ -8,6 +8,7 @@
 #pragma once
 
 #include <vcclr.h>
+#include "CsVertexFormat.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -76,23 +77,33 @@ public enum class StageFlags
 
 /* ----- Structures ----- */
 
-public ref class ShaderDescriptor
+public ref class VertexShaderAttributes
 {
 
     public:
 
-        #if 0
-        ref class StreamOutput
-        {
+        VertexShaderAttributes();
 
-            public:
+        property List<VertexAttribute^>^ InputAttribs;
+        property List<VertexAttribute^>^ OutputAttribs;
 
-                StreamOutput();
+};
 
-                property StreamOutputFormat^ Format;
+/*
+public ref class FragmentShaderAttributes
+{
 
-        };
-        #endif
+    public:
+
+        FragmentShaderAttributes();
+
+        property List<FragmentAttribute^>^ OutputAttribs;
+
+};
+*/
+
+public ref class ShaderDescriptor
+{
 
     public:
 
@@ -104,15 +115,14 @@ public ref class ShaderDescriptor
         ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source, String^ entryPoint, String^ profile);
         ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source, String^ entryPoint, String^ profile, ShaderCompileFlags flags);
 
-        property ShaderType         Type;
-        property String^            Source;
-        property ShaderSourceType   SourceType;
-        property String^            EntryPoint;
-        property String^            Profile;
-        property ShaderCompileFlags Flags;
-        #if 0
-        property StreamOutput^      StreamOutput;
-        #endif
+        property ShaderType                 Type;
+        property String^                    Source;
+        property ShaderSourceType           SourceType;
+        property String^                    EntryPoint;
+        property String^                    Profile;
+        property ShaderCompileFlags         Flags;
+        property VertexShaderAttributes^    Vertex;
+        //property FragmentShaderAttributes^  Fragment;
 
 };
 

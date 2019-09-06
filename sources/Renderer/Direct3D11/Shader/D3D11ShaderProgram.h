@@ -26,8 +26,6 @@ class D3D11ShaderProgram final : public ShaderProgram
 
     public:
 
-        void SetName(const char* name) override;
-
         bool HasErrors() const override;
         std::string GetReport() const override;
 
@@ -41,10 +39,7 @@ class D3D11ShaderProgram final : public ShaderProgram
 
         D3D11ShaderProgram(ID3D11Device* device, const ShaderProgramDescriptor& desc);
 
-        inline const ComPtr<ID3D11InputLayout>& GetInputLayout() const
-        {
-            return inputLayout_;
-        }
+        ComPtr<ID3D11InputLayout> GetInputLayout() const;
 
         inline D3D11Shader* GetVS() const { return vs_; }
         inline D3D11Shader* GetHS() const { return hs_; }
@@ -55,12 +50,9 @@ class D3D11ShaderProgram final : public ShaderProgram
 
     private:
 
-        void BuildInputLayout(ID3D11Device* device, std::size_t numVertexFormats, const VertexFormat* vertexFormats);
-        void Link();
+        void LinkProgram();
 
     private:
-
-        ComPtr<ID3D11InputLayout>   inputLayout_;
 
         union
         {

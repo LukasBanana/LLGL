@@ -12,7 +12,6 @@
 #include "Export.h"
 #include "VertexAttribute.h"
 //#include "FragmentAttribute.h"
-#include "StreamOutputFormat.h" //TODO: replace by VertexAttribute
 #include <cstddef>
 #include <vector>
 
@@ -142,7 +141,12 @@ struct ShaderMacro
 */
 struct VertexShaderAttributes
 {
-    //! Vertex shader input attributes.
+    /**
+    \brief Vertex shader input attributes.
+    \remarks All of these attributes must be contained in the \c vertexAttribs list of the vertex buffer that will be used in conjunction with the respective shader.
+    In other words, a shader must not declare any vertex attributes that are not contained in the currently bound vertex buffer.
+    \see BufferDescriptor::vertexAttribs
+    */
     std::vector<VertexAttribute> inputAttribs;
 
     /**
@@ -199,14 +203,6 @@ struct ShaderDescriptor
         flags      { flags      }
     {
     }
-
-    #if 1//TODO: replace this by <code>vertex.outputAttribs</code>
-    //! Additional descriptor for stream outputs.
-    struct StreamOutput
-    {
-        StreamOutputFormat format;  //!< Stream-output buffer format.
-    };
-    #endif
 
     //! Specifies the type of the shader, i.e. if it is either a vertex or fragment shader or the like. By default ShaderType::Undefined.
     ShaderType                  type            = ShaderType::Undefined;
@@ -281,20 +277,11 @@ struct ShaderDescriptor
     */
     long                        flags           = 0;
 
-    #if 1//TODO: replace this by <code>vertex.outputAttribs</code>
-
-    //! Optional stream output descriptor for a geometry shader (or a vertex shader when used with OpenGL).
-    StreamOutput                streamOutput;
-
-    #else
-
     //! Vertex (or geometry) shader specific attributes.
     VertexShaderAttributes      vertex;
 
     //! Fragment shader specific attributes.
-    FragmentShaderAttributes    fragment;
-
-    #endif
+    //FragmentShaderAttributes    fragment;
 };
 
 

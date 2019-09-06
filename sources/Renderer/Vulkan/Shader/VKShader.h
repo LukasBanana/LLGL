@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Shader.h>
+#include <vector>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 
@@ -35,6 +36,7 @@ class VKShader final : public Shader
         VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc);
 
         void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
+        void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
 
         bool Reflect(ShaderReflection& reflection) const;
         bool ReflectLocalSize(Extent3D& localSize) const;
@@ -58,9 +60,19 @@ class VKShader final : public Shader
 
     private:
 
-        bool Build(const ShaderDescriptor& shaderDesc);
+        bool BuildShader(const ShaderDescriptor& shaderDesc);
+        void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
+
         bool CompileSource(const ShaderDescriptor& shaderDesc);
         bool LoadBinary(const ShaderDescriptor& shaderDesc);
+
+    private:
+
+        struct VertexInputLayout
+        {
+            std::vector<VkVertexInputBindingDescription>    bindingDescs;
+            std::vector<VkVertexInputAttributeDescription>  attribDescs;
+        };
 
     private:
 
@@ -68,6 +80,7 @@ class VKShader final : public Shader
         VKPtr<VkShaderModule>   shaderModule_;
         std::vector<char>       shaderModuleData_;
         LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Undefined;
+        VertexInputLayout       inputLayout_;
 
         std::string             entryPoint_;
         std::string             errorLog_;

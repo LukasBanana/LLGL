@@ -10,7 +10,7 @@
 
 
 #include "ForwardDecls.h"
-#include "VertexFormat.h"
+//#include "VertexFormat.h"
 #include "StreamOutputFormat.h" //TODO: replace this by VertexAttribute
 #include "ResourceFlags.h"
 #include "BufferFlags.h"
@@ -98,14 +98,6 @@ enum class UniformType
 */
 struct ShaderProgramDescriptor
 {
-    #if 1//TODO: replace by ShaderFlags::vertex
-    /**
-    \brief Vertex format list. This may also be empty, if the vertex shader has no input attributes or only a compute shader is specified.
-    \see VertexFormat
-    */
-    std::vector<VertexFormat>   vertexFormats;
-    #endif
-
     /**
     \brief Specifies the vertex shader.
     \remarks Each graphics shader program must have at least a vertex shader.

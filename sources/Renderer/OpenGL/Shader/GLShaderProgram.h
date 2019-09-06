@@ -18,6 +18,7 @@ namespace LLGL
 {
 
 
+struct GLVertexAttribute;
 class GLShaderBindingLayout;
 
 class GLShaderProgram final : public ShaderProgram
@@ -56,8 +57,8 @@ class GLShaderProgram final : public ShaderProgram
     private:
 
         void Attach(Shader* shader);
-        void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
-        void Link();
+        void BuildInputLayout(std::size_t numVertexAttribs, const GLVertexAttribute* vertexAttribs);
+        void LinkProgram(std::size_t numVaryings, const char* const* varyings);
 
         bool QueryActiveAttribs(
             GLenum              attribCountType,
@@ -67,9 +68,9 @@ class GLShaderProgram final : public ShaderProgram
             std::vector<char>&  nameBuffer
         ) const;
 
-        void BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes);
+        void BuildTransformFeedbackVaryingsEXT(std::size_t numVaryings, const char* const* varyings);
         #ifndef __APPLE__
-        void BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes);
+        void BuildTransformFeedbackVaryingsNV(std::size_t numVaryings, const char* const* varyings);
         #endif
 
         void QueryReflection(ShaderReflection& reflection) const;
@@ -85,8 +86,7 @@ class GLShaderProgram final : public ShaderProgram
 
     private:
 
-        GLuint              id_                 = 0;
-        StreamOutputFormat  streamOutputFormat_;
+        GLuint id_ = 0;
 
     private:
 

@@ -51,13 +51,9 @@ class D3D12ShaderProgram final : public ShaderProgram
 
     private:
 
-        void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
-        void Link();
+        void LinkProgram();
 
     private:
-
-        std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
-        LinearStringContainer                   inputElementNames_; // custom string container to hold valid string pointers.
 
         union
         {

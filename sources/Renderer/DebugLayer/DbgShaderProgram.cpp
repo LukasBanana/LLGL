@@ -39,12 +39,12 @@ DbgShaderProgram::DbgShaderProgram(
     }
 
     /* Store all attributes of vertex layout */
-    for (const auto& format : desc.vertexFormats)
+    if (auto shader = desc.vertexShader)
     {
-        for (const auto& attrib : format.attributes)
-            vertexLayout_.attributes.push_back(attrib);
+        auto shaderDbg = LLGL_CAST(DbgShader*, desc.vertexShader);
+        vertexLayout_.attributes    = shaderDbg->desc.vertex.inputAttribs;
+        vertexLayout_.bound         = true;
     }
-    vertexLayout_.bound = true;
 
     /* Store information whether this shader program contains a fragment shader */
     hasFragmentShader_ = (desc.fragmentShader != nullptr && desc.fragmentShader->GetType() == ShaderType::Fragment);

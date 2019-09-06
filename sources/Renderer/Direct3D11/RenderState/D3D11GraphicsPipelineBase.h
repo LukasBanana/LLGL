@@ -70,6 +70,8 @@ class D3D11GraphicsPipelineBase : public GraphicsPipeline
         void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
         void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
 
+    private:
+
         ComPtr<ID3D11InputLayout>       inputLayout_;
 
         ComPtr<ID3D11VertexShader>      vs_;

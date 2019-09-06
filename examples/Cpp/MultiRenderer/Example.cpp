@@ -143,23 +143,30 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
 
     const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
+    LLGL::ShaderDescriptor vertShaderDesc, fragShaderDesc;
+
     if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
     {
-        vertShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0"));
-        fragShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0"));
+        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0");
+        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0");
     }
     else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
     {
-        vertShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.vert"));
-        fragShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.frag"));
+        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.vert");
+        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.frag");
     }
     else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
     {
-        vertShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv"));
-        fragShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv"));
+        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
+        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
     }
     else
         throw std::runtime_error("shaders not supported for active renderer");
+
+    vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
+
+    vertShader = renderer->CreateShader(vertShaderDesc);
+    fragShader = renderer->CreateShader(fragShaderDesc);
 
     // Print info log (warnings and errors)
     for (auto shader : { vertShader, fragShader })
@@ -172,7 +179,6 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
     // Create shader program which is used as composite
     LLGL::ShaderProgramDescriptor shaderProgramDesc;
     {
-        shaderProgramDesc.vertexFormats     = { vertexFormat };
         shaderProgramDesc.vertexShader      = vertShader;
         shaderProgramDesc.fragmentShader    = fragShader;
     }

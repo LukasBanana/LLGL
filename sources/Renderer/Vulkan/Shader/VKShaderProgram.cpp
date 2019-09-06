@@ -27,8 +27,7 @@ VKShaderProgram::VKShaderProgram(const ShaderProgramDescriptor& desc)
     Attach(desc.geometryShader);
     Attach(desc.fragmentShader);
     Attach(desc.computeShader);
-    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
-    Link();
+    LinkProgram();
 }
 
 bool VKShaderProgram::HasErrors() const
@@ -93,33 +92,17 @@ void VKShaderProgram::FillShaderStageCreateInfos(VkPipelineShaderStageCreateInfo
         stageCount = 0;
 }
 
-void VKShaderProgram::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const
+bool VKShaderProgram::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const
 {
-    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    createInfo.pNext = nullptr;
-    createInfo.flags = 0;
-
-    if (vertexBindingDescs_.empty())
+    for (auto shader : shaders_)
     {
-        createInfo.vertexBindingDescriptionCount    = 0;
-        createInfo.pVertexBindingDescriptions       = nullptr;
+        if (shader->GetType() == ShaderType::Vertex)
+        {
+            shader->FillVertexInputStateCreateInfo(createInfo);
+            return true;
+        }
     }
-    else
-    {
-        createInfo.vertexBindingDescriptionCount    = static_cast<std::uint32_t>(vertexBindingDescs_.size());
-        createInfo.pVertexBindingDescriptions       = vertexBindingDescs_.data();
-    }
-
-    if (vertexAttribDescs_.empty())
-    {
-        createInfo.vertexAttributeDescriptionCount  = 0;
-        createInfo.pVertexAttributeDescriptions     = nullptr;
-    }
-    else
-    {
-        createInfo.vertexAttributeDescriptionCount  = static_cast<std::uint32_t>(vertexAttribDescs_.size());
-        createInfo.pVertexAttributeDescriptions     = vertexAttribDescs_.data();
-    }
+    return false;
 }
 
 
@@ -136,62 +119,7 @@ void VKShaderProgram::Attach(Shader* shader)
     }
 }
 
-// Helper structure to build set of <VkVertexInputBindingDescription> elements
-struct VKCompareVertexBindingDesc
-{
-    inline bool operator () (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const
-    {
-        return (lhs.binding < rhs.binding);
-    }
-};
-
-void VKShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats)
-{
-    if (numVertexFormats == 0 || vertexFormats == nullptr)
-        return;
-
-    vertexBindingDescs_.reserve(static_cast<std::size_t>(numVertexFormats));
-
-    std::set<VkVertexInputBindingDescription, VKCompareVertexBindingDesc> bindingDescSet;
-
-    for (std::size_t i = 0; i < numVertexFormats; ++i)
-    {
-        for (const auto& attr : vertexFormats[i].attributes)
-        {
-            if (attr.instanceDivisor > 1)
-            {
-                throw std::runtime_error(
-                    "vertex instance divisor must be 0 or 1 for Vulkan, but " +
-                    std::to_string(attr.instanceDivisor) + " was specified: " + attr.name
-                );
-            }
-
-            /* Append vertex input attribute descriptor */
-            VkVertexInputAttributeDescription vertexAttrib;
-            {
-                vertexAttrib.location   = attr.location;
-                vertexAttrib.binding    = attr.slot;
-                vertexAttrib.format     = VKTypes::Map(attr.format);
-                vertexAttrib.offset     = attr.offset;
-            }
-            vertexAttribDescs_.push_back(vertexAttrib);
-
-            /* Insert vertex binding descriptor */
-            VkVertexInputBindingDescription inputBinding;
-            {
-                inputBinding.binding    = attr.slot;
-                inputBinding.stride     = attr.stride;
-                inputBinding.inputRate  = (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
-            }
-            bindingDescSet.insert(inputBinding);
-        }
-    }
-
-    /* Store binding descriptor in vector */
-    vertexBindingDescs_.insert(vertexBindingDescs_.end(), bindingDescSet.begin(), bindingDescSet.end());
-}
-
-void VKShaderProgram::Link()
+void VKShaderProgram::LinkProgram()
 {
     linkError_ = LinkError::NoError;
 

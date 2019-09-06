@@ -623,6 +623,17 @@ void RenderSystem::Release(RenderTarget^ renderTarget)
 
 /* ----- Shader ----- */
 
+static void Convert(LLGL::VertexShaderAttributes& dst, VertexShaderAttributes^ src)
+{
+    dst.inputAttribs.resize(src->InputAttribs->Count);
+    for (int i = 0; i < src->InputAttribs->Count; ++i)
+        Convert(dst.inputAttribs[i], src->InputAttribs[i]);
+
+    dst.outputAttribs.resize(src->OutputAttribs->Count);
+    for (int i = 0; i < src->InputAttribs->Count; ++i)
+        Convert(dst.outputAttribs[i], src->OutputAttribs[i]);
+}
+
 static void Convert(LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src, std::string (&tempStr)[3])
 {
     if (src)
@@ -638,9 +649,8 @@ static void Convert(LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src, std::str
         dst.entryPoint      = tempStr[1].c_str();
         dst.profile         = tempStr[2].c_str();
         dst.flags           = static_cast<long>(src->Flags);
-        #if 0
-        dst.streamOutput    = ;
-        #endif
+        Convert(dst.vertex, src->Vertex);
+        //Convert(dst.fragment, src->Fragment);
     }
 }
 
@@ -663,9 +673,6 @@ static void Convert(LLGL::ShaderProgramDescriptor& dst, ShaderProgramDescriptor^
 {
     if (src)
     {
-        dst.vertexFormats.resize(static_cast<std::size_t>(src->VertexFormats->Count));
-        for (std::size_t i = 0; i < dst.vertexFormats.size(); ++i)
-            Convert(dst.vertexFormats[i], src->VertexFormats[i]);
         if (src->VertexShader)
             dst.vertexShader = src->VertexShader->Native;
         if (src->TessControlShader)

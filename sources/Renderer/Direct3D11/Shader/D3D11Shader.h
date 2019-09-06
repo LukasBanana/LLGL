@@ -73,16 +73,25 @@ class D3D11Shader final : public Shader
             return byteCode_.Get();
         }
 
+        // Returns the input layout for vertex shaders.
+        inline const ComPtr<ID3D11InputLayout>& GetInputLayout() const
+        {
+            return inputLayout_;
+        }
+
     private:
 
-        bool Build(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
+        bool BuildShader(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
+        void BuildInputLayout(ID3D11Device* device, UINT numVertexAttribs, const VertexAttribute* vertexAttribs);
+
         bool CompileSource(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
         bool LoadBinary(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
 
         void CreateNativeShader(
-            ID3D11Device*                           device,
-            const ShaderDescriptor::StreamOutput&   streamOutputDesc,
-            ID3D11ClassLinkage*                     classLinkage
+            ID3D11Device*           device,
+            std::size_t             numStreamOutputAttribs  = 0,
+            const VertexAttribute*  streamOutputAttribs     = nullptr,
+            ID3D11ClassLinkage*     classLinkage            = nullptr
         );
 
         HRESULT ReflectShaderByteCode(ShaderReflection& reflection) const;
@@ -90,10 +99,13 @@ class D3D11Shader final : public Shader
 
     private:
 
-        D3D11NativeShader   native_;
-        ComPtr<ID3DBlob>    byteCode_;
-        ComPtr<ID3DBlob>    errors_;
-        bool                hasErrors_  = false;
+        D3D11NativeShader           native_;
+
+        ComPtr<ID3DBlob>            byteCode_;
+        ComPtr<ID3DBlob>            errors_;
+        bool                        hasErrors_  = false;
+
+        ComPtr<ID3D11InputLayout>   inputLayout_;
 
 };
 

@@ -383,7 +383,7 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
-    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(desc), desc.type));
+    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(desc), desc));
 }
 
 static Shader* GetInstanceShader(Shader* shader)
@@ -400,7 +400,6 @@ ShaderProgram* DbgRenderSystem::CreateShaderProgram(const ShaderProgramDescripto
 {
     ShaderProgramDescriptor instanceDesc;
     {
-        instanceDesc.vertexFormats          = desc.vertexFormats;
         instanceDesc.vertexShader           = GetInstanceShader(desc.vertexShader);
         instanceDesc.tessControlShader      = GetInstanceShader(desc.tessControlShader);
         instanceDesc.tessEvaluationShader   = GetInstanceShader(desc.tessEvaluationShader);

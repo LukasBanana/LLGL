@@ -106,8 +106,13 @@ int main()
         auto bufDesc = constantBuffer->GetDesc();
 
         // Load shader
-        auto vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Shaders/TestShader.hlsl", "VS", "vs_5_0" });
-        auto fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Shaders/TestShader.hlsl", "PS", "ps_5_0" });
+        LLGL::ShaderDescriptor vertShaderDesc{ LLGL::ShaderType::Vertex,   "Shaders/TestShader.hlsl", "VS", "vs_5_0" };
+        LLGL::ShaderDescriptor fragShaderDesc{ LLGL::ShaderType::Fragment, "Shaders/TestShader.hlsl", "PS", "ps_5_0" };
+
+        vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
+
+        auto vertShader = renderer->CreateShader(vertShaderDesc);
+        auto fragShader = renderer->CreateShader(fragShaderDesc);
 
         if (vertShader->HasErrors())
             std::cerr << vertShader->GetReport() << std::endl;
@@ -118,7 +123,6 @@ int main()
         // Create shader program
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
-            shaderProgramDesc.vertexFormats     = { vertexFormat };
             shaderProgramDesc.vertexShader      = vertShader;
             shaderProgramDesc.fragmentShader    = fragShader;
         }

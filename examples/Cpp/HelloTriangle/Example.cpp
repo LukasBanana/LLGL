@@ -94,41 +94,49 @@ int main(int argc, char* argv[])
 
         const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
+        LLGL::ShaderDescriptor vertShaderDesc, fragShaderDesc;
+
         if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
         {
             #if 0
             if (contextDesc.profileOpenGL.contextProfile == LLGL::OpenGLContextProfile::CompatibilityProfile)
             {
-                vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.120.vert" });
-                fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.120.frag" });
+                vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.120.vert" };
+                fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.120.frag" };
             }
             else
             #endif
             {
                 #ifdef __APPLE__
-                vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.140core.vert" });
-                fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.140core.frag" });
+                vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.140core.vert" };
+                fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.140core.frag" };
                 #else
-                vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.vert" });
-                fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.frag" });
+                vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.vert" };
+                fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.frag" };
                 #endif
             }
         }
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
         {
-            vertShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv"));
-            fragShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv"));
+            vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
+            fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
         }
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
-            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0" });
-            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0" });
+            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0" };
+            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0" };
         }
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::Metal) != languages.end())
         {
-            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" });
-            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" });
+            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" };
+            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" };
         }
+
+        // Specify vertex attributes for vertex shader
+        vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
+
+        vertShader = renderer->CreateShader(vertShaderDesc);
+        fragShader = renderer->CreateShader(fragShaderDesc);
 
         for (auto shader : { vertShader, fragShader })
         {
@@ -143,7 +151,6 @@ int main(int argc, char* argv[])
         // Create shader program which is used as composite
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
-            shaderProgramDesc.vertexFormats     = { vertexFormat };
             shaderProgramDesc.vertexShader      = vertShader;
             shaderProgramDesc.fragmentShader    = fragShader;
         }

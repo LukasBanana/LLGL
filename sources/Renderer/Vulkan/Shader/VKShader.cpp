@@ -27,7 +27,8 @@ VKShader::VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc) 
     device_       { device                        },
     shaderModule_ { device, vkDestroyShaderModule }
 {
-    Build(desc);
+    BuildShader(desc);
+    BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
 }
 
 bool VKShader::HasErrors() const
@@ -68,6 +69,35 @@ void VKShader::FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& create
     createInfo.module               = shaderModule_;
     createInfo.pName                = entryPoint_.c_str();
     createInfo.pSpecializationInfo  = nullptr;
+}
+
+void VKShader::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const
+{
+    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = 0;
+
+    if (inputLayout_.bindingDescs.empty())
+    {
+        createInfo.vertexBindingDescriptionCount    = 0;
+        createInfo.pVertexBindingDescriptions       = nullptr;
+    }
+    else
+    {
+        createInfo.vertexBindingDescriptionCount    = static_cast<std::uint32_t>(inputLayout_.bindingDescs.size());
+        createInfo.pVertexBindingDescriptions       = inputLayout_.bindingDescs.data();
+    }
+
+    if (inputLayout_.attribDescs.empty())
+    {
+        createInfo.vertexAttributeDescriptionCount  = 0;
+        createInfo.pVertexAttributeDescriptions     = nullptr;
+    }
+    else
+    {
+        createInfo.vertexAttributeDescriptionCount  = static_cast<std::uint32_t>(inputLayout_.attribDescs.size());
+        createInfo.pVertexAttributeDescriptions     = inputLayout_.attribDescs.data();
+    }
 }
 
 static const char* GetOptString(const char* s)
@@ -372,12 +402,66 @@ bool VKShader::ReflectLocalSize(Extent3D& workGroupSize) const
  * ======= Private: =======
  */
 
-bool VKShader::Build(const ShaderDescriptor& shaderDesc)
+bool VKShader::BuildShader(const ShaderDescriptor& shaderDesc)
 {
     if (IsShaderSourceCode(shaderDesc.sourceType))
         return CompileSource(shaderDesc);
     else
         return LoadBinary(shaderDesc);
+}
+
+// Helper structure to build set of <VkVertexInputBindingDescription> elements
+struct VKCompareVertexBindingDesc
+{
+    inline bool operator () (const VkVertexInputBindingDescription& lhs, const VkVertexInputBindingDescription& rhs) const
+    {
+        return (lhs.binding < rhs.binding);
+    }
+};
+
+void VKShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
+        return;
+
+    inputLayout_.bindingDescs.reserve(numVertexAttribs);
+
+    std::set<VkVertexInputBindingDescription, VKCompareVertexBindingDesc> bindingDescSet;
+
+    for (std::size_t i = 0; i < numVertexAttribs; ++i)
+    {
+        const auto& attr = vertexAttribs[i];
+
+        if (attr.instanceDivisor > 1)
+        {
+            throw std::runtime_error(
+                "vertex instance divisor must be 0 or 1 for Vulkan, but " +
+                std::to_string(attr.instanceDivisor) + " was specified: " + attr.name
+            );
+        }
+
+        /* Append vertex input attribute descriptor */
+        VkVertexInputAttributeDescription vertexAttrib;
+        {
+            vertexAttrib.location   = attr.location;
+            vertexAttrib.binding    = attr.slot;
+            vertexAttrib.format     = VKTypes::Map(attr.format);
+            vertexAttrib.offset     = attr.offset;
+        }
+        inputLayout_.attribDescs.push_back(vertexAttrib);
+
+        /* Insert vertex binding descriptor */
+        VkVertexInputBindingDescription inputBinding;
+        {
+            inputBinding.binding    = attr.slot;
+            inputBinding.stride     = attr.stride;
+            inputBinding.inputRate  = (attr.instanceDivisor > 0 ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
+        }
+        bindingDescSet.insert(inputBinding);
+    }
+
+    /* Store binding descriptor in vector */
+    inputLayout_.bindingDescs.insert(inputLayout_.bindingDescs.end(), bindingDescSet.begin(), bindingDescSet.end());
 }
 
 bool VKShader::CompileSource(const ShaderDescriptor& shaderDesc)

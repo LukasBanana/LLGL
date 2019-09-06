@@ -106,7 +106,7 @@ struct LLGL_EXPORT VertexAttribute
     Format          format          = Format::RGBA32Float;
 
     /**
-    \brief Vertex attribute location.
+    \brief Vertex attribute location (only for OpenGL, Vulkan, Metal) or stream-output number (only for Direct3D).
     \remarks This is only required for OpenGL, Vulkan, and Metal. For Direct3D, this is ignored and instead \c semanticIndex is used.
     \remarks The following example shows GLSL attribute locations from 0 to 4 inclusive:
     \code
@@ -154,12 +154,20 @@ struct LLGL_EXPORT VertexAttribute
     /**
     \brief Vertex buffer binding slot. By default 0.
     \remarks This is used when multiple vertex buffers are used simultaneously.
+    This binding slot refers either to the input buffer indices (determined by \c SetVertexBufferArray),
+    or stream-output buffer indices (determined by \c SetStreamOutputBufferArray).
     \note Only supported with: Direct3D 11, Direct3D 12, Vulkan, Metal.
     \note For OpenGL, the vertex binding slots are automatically generated in ascending order and beginning with zero.
+    \see CommandBuffer::SetVertexBufferArray
+    \see CommandBuffer::SetStreamOutputBufferArray
     */
     std::uint32_t   slot            = 0;
 
-    //! Byte offset within each vertex and each buffer. By default 0.
+    /**
+    \brief Byte offset within each vertex and each buffer for input attributes, or component offset for output attributes. By default 0.
+    \remarks For vertex input attributes, this offset specifies the byte aligned offset within each vertex buffer.
+    \remarks For stream-output attributes, this offset specifies the first component that is to be written and must be either 0, 1, 2, or 3.
+    */
     std::uint32_t   offset          = 0;
 
     //! Specifies the vertex data stride which describes the byte offset between consecutive vertices.

@@ -14,6 +14,7 @@
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/BufferFlags.h>
 #include "../../DXCommon/ComPtr.h"
+#include "../../../Core/LinearStringContainer.h"
 #include <vector>
 #include <d3d12.h>
 
@@ -40,9 +41,13 @@ class D3D12Shader final : public Shader
         bool Reflect(ShaderReflection& reflection) const;
         bool ReflectNumThreads(Extent3D& numThreads) const;
 
+        D3D12_INPUT_LAYOUT_DESC GetInputLayoutDesc() const;
+
     private:
 
-        bool Build(const ShaderDescriptor& shaderDesc);
+        bool BuildShader(const ShaderDescriptor& shaderDesc);
+        void BuildInputLayout(UINT numVertexAttribs, const VertexAttribute* vertexAttribs);
+
         bool CompileSource(const ShaderDescriptor& shaderDesc);
         bool LoadBinary(const ShaderDescriptor& shaderDesc);
 
@@ -51,9 +56,13 @@ class D3D12Shader final : public Shader
 
     private:
 
-        ComPtr<ID3DBlob>    byteCode_;
-        ComPtr<ID3DBlob>    errors_;
-        bool                hasErrors_  = false;
+        ComPtr<ID3DBlob>                        byteCode_;
+
+        ComPtr<ID3DBlob>                        errors_;
+        bool                                    hasErrors_  = false;
+
+        std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
+        LinearStringContainer                   inputElementNames_; // custom string container to hold valid string pointers.
 
 };
 

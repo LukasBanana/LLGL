@@ -327,17 +327,33 @@ void ExampleBase::OnResize(const LLGL::Extent2D& resoluion)
 LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
     const std::vector<TutorialShaderDescriptor>&    shaderDescs,
     const std::vector<LLGL::VertexFormat>&          vertexFormats,
-    const LLGL::StreamOutputFormat&                 streamOutputFormat)
+    const LLGL::VertexFormat&                       streamOutputFormat)
 {
     ShaderProgramRecall recall;
 
     recall.shaderDescs = shaderDescs;
 
+    // Store vertex input attributes
+    for (const auto& vtxFmt : vertexFormats)
+    {
+        recall.vertexAttribs.inputAttribs.insert(
+            recall.vertexAttribs.inputAttribs.end(),
+            vtxFmt.attributes.begin(),
+            vtxFmt.attributes.end()
+        );
+    }
+
+    // Store vertex output attributs
+    recall.vertexAttribs.outputAttribs = streamOutputFormat.attributes;
+
     for (const auto& desc : shaderDescs)
     {
         // Create shader
         auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
-        shaderDesc.streamOutput.format = streamOutputFormat;
+        {
+            if (desc.type == LLGL::ShaderType::Vertex)
+                shaderDesc.vertex = recall.vertexAttribs;
+        }
         auto shader = renderer->CreateShader(shaderDesc);
 
         // Print info log (warnings and errors)
@@ -350,15 +366,13 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
     }
 
     // Create shader program
-    auto shaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(recall.shaders, vertexFormats));
+    auto shaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(recall.shaders));
 
     // Link shader program and check for errors
     if (shaderProgram->HasErrors())
         throw std::runtime_error(shaderProgram->GetReport());
 
     // Store information in call
-    recall.vertexFormats = vertexFormats;
-    recall.streamOutputFormat = streamOutputFormat;
     shaderPrograms_[shaderProgram] = recall;
 
     return shaderProgram;
@@ -389,7 +403,10 @@ bool ExampleBase::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
 
             // Create shader
             auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
-            shaderDesc.streamOutput.format = recall.streamOutputFormat;
+            {
+                if (desc.type == LLGL::ShaderType::Vertex)
+                    shaderDesc.vertex = recall.vertexAttribs;
+            }
             auto shader = renderer->CreateShader(shaderDesc);
 
             // Print info log (warnings and errors)
@@ -402,7 +419,7 @@ bool ExampleBase::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
         }
 
         // Create new shader program
-        auto newShaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(shaders, recall.vertexFormats));
+        auto newShaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(shaders));
 
         // Link shader program and check for errors
         if (newShaderProgram->HasErrors())

@@ -222,7 +222,7 @@ void D3D11Buffer::CreateCPUAccessBuffer(ID3D11Device* device, const BufferDescri
     {
         descD3D.ByteWidth           = static_cast<UINT>(desc.size);
         descD3D.Usage               = DXGetCPUAccessBufferUsage(desc);
-        descD3D.BindFlags           = DXGetBufferBindFlags(desc.bindFlags);
+        descD3D.BindFlags           = 0; // CPU-access buffer cannot have binding flags
         descD3D.CPUAccessFlags      = DXGetCPUAccessFlags(desc.cpuAccessFlags);
         descD3D.MiscFlags           = 0;
         descD3D.StructureByteStride = desc.storageBuffer.stride;

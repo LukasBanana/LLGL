@@ -115,30 +115,43 @@ int main(int argc, char* argv[])
             return (std::find(languages.begin(), languages.end(), lang) != languages.end());
         };
 
+        LLGL::ShaderDescriptor vertShaderDesc, geomShaderDesc, fragShaderDesc;
+
         if (HasLanguage(LLGL::ShadingLanguage::GLSL))
         {
-            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.vert" });
-            geomShader = renderer->CreateShader({ LLGL::ShaderType::Geometry, "Example.geom" });
-            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.frag" });
+            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.vert" };
+            geomShaderDesc = { LLGL::ShaderType::Geometry, "Example.geom" };
+            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.frag" };
         }
         else if (HasLanguage(LLGL::ShadingLanguage::SPIRV))
         {
-            vertShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv"));
-            geomShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Geometry, "Example.450core.geom.spv"));
-            fragShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv"));
+            vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
+            geomShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Geometry, "Example.450core.geom.spv");
+            fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
         }
         else if (HasLanguage(LLGL::ShadingLanguage::HLSL))
         {
-            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0" });
-            geomShader = renderer->CreateShader({ LLGL::ShaderType::Geometry, "Example.hlsl", "GS", "gs_4_0" });
-            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0" });
+            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_4_0" };
+            geomShaderDesc = { LLGL::ShaderType::Geometry, "Example.hlsl", "GS", "gs_4_0" };
+            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_4_0" };
         }
         else if (HasLanguage(LLGL::ShadingLanguage::Metal))
         {
-            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "2.0" });
-            //geomShader = N/A
-            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "2.0" });
+            vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "2.0" };
+            //geomShaderDesc = N/A
+            fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.metal", "PS", "2.0" };
         }
+
+        // Set vertex input attributes and create vertex shader
+        vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
+        vertShader = renderer->CreateShader(vertShaderDesc);
+
+        // Create geometry shader (if supported)
+        if (geomShaderDesc.source != nullptr)
+            geomShader = renderer->CreateShader(geomShaderDesc);
+
+        // Create fragment shader
+        fragShader = renderer->CreateShader(fragShaderDesc);
 
         // Print info log (warnings and errors)
         for (auto shader : { vertShader, geomShader, fragShader })
@@ -154,7 +167,6 @@ int main(int argc, char* argv[])
         // Create shader program which is used as composite
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
-            shaderProgramDesc.vertexFormats     = { vertexFormat };
             shaderProgramDesc.vertexShader      = vertShader;
             shaderProgramDesc.geometryShader    = geomShader;
             shaderProgramDesc.fragmentShader    = fragShader;

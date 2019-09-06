@@ -139,18 +139,16 @@ LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const cha
 /**
 \brief Returns a ShaderProgramDescriptor structure and assigns the input shaders into the respective structure members.
 \param[in] shaders Specifies the list of shaders to attach to the shader program. Null pointers in the list are ignored.
-\param[in] vertexFormats Specifies the list of vertex formats. By default empty.
 \see RenderSystem::CreateShaderProgram
 */
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::initializer_list<Shader*>& shaders, const std::initializer_list<VertexFormat>& vertexFormats = {});
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::initializer_list<Shader*>& shaders);
 
 /**
 \brief Returns a ShaderProgramDescriptor structure and assigns the input shaders into the respective structure members.
 \param[in] shaders Specifies the list of shaders to attach to the shader program. Null pointers in the list are ignored.
-\param[in] vertexFormats Specifies the list of vertex formats. By default empty.
 \see RenderSystem::CreateShaderProgram
 */
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>& shaders, const std::vector<VertexFormat>& vertexFormats = {});
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>& shaders);
 
 /* ----- PipelineLayoutDescriptor utility functions ----- */
 

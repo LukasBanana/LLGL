@@ -34,8 +34,37 @@ GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
     Attach(desc.geometryShader);
     Attach(desc.fragmentShader);
     Attach(desc.computeShader);
-    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
-    Link();
+
+    /* Build input layout for vertex shader */
+    if (auto vs = desc.vertexShader)
+    {
+        auto vsGL = LLGL_CAST(GLShader*, vs);
+        BuildInputLayout(vsGL->GetVertexAttribs().size(), vsGL->GetVertexAttribs().data());
+    }
+
+    /* Build transform feedback varyings for vertex or geometry shader (latter one has higher order) */
+    GLShader* shaderWithVaryings = nullptr;
+
+    if (auto gs = desc.geometryShader)
+    {
+        auto gsGL = LLGL_CAST(GLShader*, gs);
+        if (!gsGL->GetTransformFeedbackVaryings().empty())
+            shaderWithVaryings = gsGL;
+    }
+    else if (auto vs = desc.vertexShader)
+    {
+        auto vsGL = LLGL_CAST(GLShader*, vs);
+        if (!vsGL->GetTransformFeedbackVaryings().empty())
+            shaderWithVaryings = vsGL;
+    }
+
+    if (shaderWithVaryings != nullptr)
+    {
+        const auto& varyings = shaderWithVaryings->GetTransformFeedbackVaryings();
+        LinkProgram(varyings.size(), varyings.data());
+    }
+    else
+        LinkProgram(0, nullptr);
 }
 
 GLShaderProgram::~GLShaderProgram()
@@ -139,7 +168,6 @@ void GLShaderProgram::BindResourceSlots(const GLShaderBindingLayout& bindingLayo
  * ======= Private: =======
  */
 
-//TODO: refactor "MoveStreamOutputFormat" (shader might be used multiple times, but internal container gets lost!)
 void GLShaderProgram::Attach(Shader* shader)
 {
     if (shader != nullptr)
@@ -148,64 +176,30 @@ void GLShaderProgram::Attach(Shader* shader)
 
         /* Attach shader to shader program */
         glAttachShader(id_, shaderGL->GetID());
-
-        /* Move stream-output format from shader to shader program (if available) */
-        shaderGL->MoveStreamOutputFormat(streamOutputFormat_);
     }
 }
 
-void GLShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats)
+void GLShaderProgram::BuildInputLayout(std::size_t numVertexAttribs, const GLVertexAttribute* vertexAttribs)
 {
-    if (numVertexFormats == 0 || vertexFormats == nullptr)
-        return;
-
-    /* Validate maximal number of vertex attributes (OpenGL supports at least 8 vertex attribute) */
-    static const std::size_t minSupportedVertexAttribs = 8;
-
-    std::size_t numVertexAttribs = 0;
-    for (std::size_t i = 0; i < numVertexFormats; ++i)
-        numVertexAttribs += vertexFormats[i].attributes.size();
-
-    if (numVertexAttribs > minSupportedVertexAttribs)
-    {
-        GLint maxSupportedVertexAttribs = 0;
-        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxSupportedVertexAttribs);
-
-        if (numVertexAttribs > static_cast<std::size_t>(maxSupportedVertexAttribs))
-        {
-            throw std::invalid_argument(
-                "failed build input layout, because too many vertex attributes are specified (" +
-                std::to_string(numVertexAttribs) + " is specified, but maximum is " + std::to_string(maxSupportedVertexAttribs) + ")"
-            );
-        }
-    }
-
     /* Bind all vertex attribute locations */
-    GLuint index = 0;
-
-    for (std::size_t i = 0; i < numVertexFormats; ++i)
+    for (std::size_t i = 0; i < numVertexAttribs; ++i)
     {
-        for (const auto& attrib : vertexFormats[i].attributes)
-        {
-            /* Bind attribute location (matrices only use the 1st column) */
-            if (attrib.semanticIndex == 0)
-                glBindAttribLocation(id_, index, attrib.name.c_str());
-            ++index;
-        }
+        const auto& attr = vertexAttribs[i];
+        glBindAttribLocation(id_, attr.index, attr.name);
     }
 }
 
-void GLShaderProgram::Link()
+void GLShaderProgram::LinkProgram(std::size_t numVaryings, const char* const* varyings)
 {
     /* Check if transform-feedback varyings must be specified (before or after shader linking) */
-    if (!streamOutputFormat_.attributes.empty())
+    if (numVaryings > 0 && varyings != nullptr)
     {
         /* For GL_EXT_transform_feedback the varyings must be specified BEFORE linking */
         #ifndef __APPLE__
         if (HasExtension(GLExt::EXT_transform_feedback))
         #endif
         {
-            BuildTransformFeedbackVaryingsEXT(streamOutputFormat_.attributes);
+            BuildTransformFeedbackVaryingsEXT(numVaryings, varyings);
             glLinkProgram(id_);
             return;
         }
@@ -215,7 +209,7 @@ void GLShaderProgram::Link()
         if (HasExtension(GLExt::NV_transform_feedback))
         {
             glLinkProgram(id_);
-            BuildTransformFeedbackVaryingsNV(streamOutputFormat_.attributes);
+            BuildTransformFeedbackVaryingsNV(numVaryings, varyings);
             return;
         }
         #endif
@@ -247,37 +241,47 @@ bool GLShaderProgram::QueryActiveAttribs(
     return true;
 }
 
-void GLShaderProgram::BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes)
+void GLShaderProgram::BuildTransformFeedbackVaryingsEXT(std::size_t numVaryings, const char* const* varyings)
 {
+    if (numVaryings == 0 || varyings == nullptr)
+        return;
+
     /* Specify transform-feedback varyings by names */
-    std::vector<const GLchar*> varyings;
-    varyings.reserve(attributes.size());
-
-    for (const auto& attr : attributes)
-        varyings.push_back(attr.name.c_str());
-
-    glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
+    glTransformFeedbackVaryings(
+        id_,
+        static_cast<GLsizei>(numVaryings),
+        reinterpret_cast<const GLchar* const*>(varyings),
+        GL_INTERLEAVED_ATTRIBS
+    );
 }
 
 #ifndef __APPLE__
 
-void GLShaderProgram::BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes)
+void GLShaderProgram::BuildTransformFeedbackVaryingsNV(std::size_t numVaryings, const char* const* varyings)
 {
-    /* Specify transform-feedback varyings by locations */
-    std::vector<GLint> varyings;
-    varyings.reserve(attributes.size());
+    if (numVaryings == 0 || varyings == nullptr)
+        return;
 
-    for (const auto& attr : attributes)
+    /* Specify transform-feedback varyings by locations */
+    std::vector<GLint> varyingLocations;
+    varyingLocations.reserve(numVaryings);
+
+    for (std::size_t i = 0; i < numVaryings; ++i)
     {
         /* Get varying location by its name */
-        auto location = glGetVaryingLocationNV(id_, attr.name.c_str());
+        auto location = glGetVaryingLocationNV(id_, varyings[i]);
         if (location >= 0)
-            varyings.push_back(location);
+            varyingLocations.push_back(location);
         else
-            throw std::invalid_argument("stream-output attribute \"" + attr.name + "\" does not specify an active varying in GLSL shader program");
+            throw std::invalid_argument("stream-output attribute \"" + std::string(varyings[i]) + "\" does not specify an active varying in GLSL shader program");
     }
 
-    glTransformFeedbackVaryingsNV(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS_NV);
+    glTransformFeedbackVaryingsNV(
+        id_,
+        static_cast<GLsizei>(varyingLocations.size()),
+        varyingLocations.data(),
+        GL_INTERLEAVED_ATTRIBS_NV
+    );
 }
 
 #endif
@@ -365,7 +369,7 @@ static SystemValue FindSystemValue(const std::string& name)
 }
 
 // Internal struct for QueryVertexAttributes function
-struct GLVertexAttribute
+struct GLReflectVertexAttribute
 {
     std::string     name;
     Format          format;
@@ -381,7 +385,7 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
     if (!QueryActiveAttribs(GL_ACTIVE_ATTRIBUTES, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, numAttribs, maxNameLength, attribName))
         return;
 
-    std::vector<GLVertexAttribute> attributes;
+    std::vector<GLReflectVertexAttribute> attributes;
     attributes.reserve(static_cast<std::size_t>(numAttribs));
 
     /* Iterate over all vertex attributes */
@@ -410,7 +414,7 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
     std::sort(
         attributes.begin(),
         attributes.end(),
-        [](const GLVertexAttribute& lhs, const GLVertexAttribute& rhs)
+        [](const GLReflectVertexAttribute& lhs, const GLReflectVertexAttribute& rhs)
         {
             if (lhs.location < rhs.location)
                 return true;

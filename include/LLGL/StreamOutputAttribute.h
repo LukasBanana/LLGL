@@ -19,6 +19,7 @@ namespace LLGL
 {
 
 
+#if 1//TODO: remove
 /**
 \brief Stream-output attribute structure.
 \todo Maybe replace this by VertexAttribute
@@ -61,6 +62,7 @@ struct LLGL_EXPORT StreamOutputAttribute
 
 LLGL_EXPORT bool operator == (const StreamOutputAttribute& lhs, const StreamOutputAttribute& rhs);
 LLGL_EXPORT bool operator != (const StreamOutputAttribute& lhs, const StreamOutputAttribute& rhs);
+#endif // /REMOVE
 
 
 } // /namespace LLGL

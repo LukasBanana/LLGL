@@ -161,9 +161,10 @@ int main()
 
         LLGL::ShaderDescriptor vertShaderDesc;
         {
-            vertShaderDesc.type         = LLGL::ShaderType::Vertex;
-            vertShaderDesc.source       = vertShaderSource;
-            vertShaderDesc.sourceType   = LLGL::ShaderSourceType::CodeString;
+            vertShaderDesc.type                 = LLGL::ShaderType::Vertex;
+            vertShaderDesc.source               = vertShaderSource;
+            vertShaderDesc.sourceType           = LLGL::ShaderSourceType::CodeString;
+            vertShaderDesc.vertex.inputAttribs  = vertexFormat.attributes;
         }
         auto vertShader = renderer->CreateShader(vertShaderDesc);
 
@@ -197,7 +198,6 @@ int main()
         // Create shader program
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
-            shaderProgramDesc.vertexFormats     = { vertexFormat };
             shaderProgramDesc.vertexShader      = vertShader;
             shaderProgramDesc.fragmentShader    = fragShader;
         }

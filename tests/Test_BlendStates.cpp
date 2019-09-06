@@ -83,8 +83,10 @@ int main()
         // Create shader program
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
-            shaderProgramDesc.vertexFormats     = { vertexBufferDesc.vertexBuffer.format };
-            shaderProgramDesc.vertexShader      = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" });
+            LLGL::ShaderDescriptor vertexShaderDesc{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" };
+            vertexShaderDesc.vertex.inputAttribs = vertexBufferDesc.vertexBuffer.format.attributes;
+
+            shaderProgramDesc.vertexShader      = renderer->CreateShader(vertexShaderDesc);//{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" });
             shaderProgramDesc.fragmentShader    = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Shaders/BlendTest.frag" });
         }
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);

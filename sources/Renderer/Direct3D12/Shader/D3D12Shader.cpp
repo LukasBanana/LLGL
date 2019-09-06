@@ -6,6 +6,7 @@
  */
 
 #include "D3D12Shader.h"
+#include "../D3D12Types.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/Helper.h"
@@ -21,8 +22,9 @@ namespace LLGL
 D3D12Shader::D3D12Shader(const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
-    if (!Build(desc))
+    if (!BuildShader(desc))
         hasErrors_ = true;
+    BuildInputLayout(static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
 }
 
 bool D3D12Shader::HasErrors() const
@@ -64,17 +66,70 @@ bool D3D12Shader::ReflectNumThreads(Extent3D& numThreads) const
         return false;
 }
 
+D3D12_INPUT_LAYOUT_DESC D3D12Shader::GetInputLayoutDesc() const
+{
+    D3D12_INPUT_LAYOUT_DESC desc;
+    {
+        desc.pInputElementDescs = inputElements_.data();
+        desc.NumElements        = static_cast<UINT>(inputElements_.size());
+    }
+    return desc;
+}
+
 
 /*
  * ======= Private: =======
  */
 
-bool D3D12Shader::Build(const ShaderDescriptor& shaderDesc)
+bool D3D12Shader::BuildShader(const ShaderDescriptor& shaderDesc)
 {
     if (IsShaderSourceCode(shaderDesc.sourceType))
         return CompileSource(shaderDesc);
     else
         return LoadBinary(shaderDesc);
+}
+
+static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
+{
+    try
+    {
+        return D3D12Types::Map(attrib.format);
+    }
+    catch (const std::exception& e)
+    {
+        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: " + attrib.name);
+    }
+}
+
+/*
+Converts a vertex attributes to a D3D12 input element descriptor
+and stores the semantic name in the specified linear string container
+*/
+static void Convert(D3D12_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
+{
+    dst.SemanticName            = stringContainer.CopyString(src.name);
+    dst.SemanticIndex           = src.semanticIndex;
+    dst.Format                  = GetInputElementFormat(src);
+    dst.InputSlot               = src.slot;
+    dst.AlignedByteOffset       = src.offset;
+    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
+    dst.InstanceDataStepRate    = src.instanceDivisor;
+}
+
+void D3D12Shader::BuildInputLayout(UINT numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
+        return;
+
+    /* Reserve memory for the input element names */
+    inputElementNames_.Clear();
+    for (UINT i = 0; i < numVertexAttribs; ++i)
+        inputElementNames_.Reserve(vertexAttribs[i].name.size());
+
+    /* Build input element descriptors */
+    inputElements_.resize(numVertexAttribs);
+    for (UINT i = 0; i < numVertexAttribs; ++i)
+        Convert(inputElements_[i], vertexAttribs[i], inputElementNames_);
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx

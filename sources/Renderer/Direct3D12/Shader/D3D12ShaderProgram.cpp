@@ -7,7 +7,6 @@
 
 #include "D3D12ShaderProgram.h"
 #include "D3D12Shader.h"
-#include "../D3D12Types.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 #include <LLGL/Log.h>
@@ -34,8 +33,7 @@ D3D12ShaderProgram::D3D12ShaderProgram(const ShaderProgramDescriptor& desc)
     Attach(gs_, desc.geometryShader);
     Attach(ps_, desc.fragmentShader);
     Attach(cs_, desc.computeShader);
-    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
-    Link();
+    LinkProgram();
 }
 
 bool D3D12ShaderProgram::HasErrors() const
@@ -87,12 +85,10 @@ bool D3D12ShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
 
 D3D12_INPUT_LAYOUT_DESC D3D12ShaderProgram::GetInputLayoutDesc() const
 {
-    D3D12_INPUT_LAYOUT_DESC desc;
-
-    desc.pInputElementDescs = inputElements_.data();
-    desc.NumElements        = static_cast<UINT>(inputElements_.size());
-
-    return desc;
+    if (vs_ != nullptr)
+        return vs_->GetInputLayoutDesc();
+    else
+        return {};
 }
 
 
@@ -100,62 +96,7 @@ D3D12_INPUT_LAYOUT_DESC D3D12ShaderProgram::GetInputLayoutDesc() const
  * ======= Private: =======
  */
 
-static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
-{
-    try
-    {
-        return D3D12Types::Map(attrib.format);
-    }
-    catch (const std::exception& e)
-    {
-        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: " + attrib.name);
-    }
-}
-
-void D3D12ShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats)
-{
-    if (numVertexFormats == 0 || vertexFormats == nullptr)
-        return;
-
-    /* Reserve capacity for new elements */
-    std::size_t numElements = 0;
-
-    for (std::size_t i = 0; i < numVertexFormats; ++i)
-        numElements += vertexFormats[i].attributes.size();
-
-    inputElements_.clear();
-    inputElements_.reserve(numElements);
-
-    /* Reserve memory for the input element names */
-    inputElementNames_.Clear();
-    for (std::size_t i = 0; i < numVertexFormats; ++i)
-    {
-        for (const auto& attrib : vertexFormats[i].attributes)
-            inputElementNames_.Reserve(attrib.name.size());
-    }
-
-    /* Build input element descriptors */
-    for (std::size_t i = 0; i < numVertexFormats; ++i)
-    {
-        for (const auto& attrib : vertexFormats[i].attributes)
-        {
-            /* Build next input element and copy attribute names, because their pointers need to stay valid for later use */
-            D3D12_INPUT_ELEMENT_DESC elementDesc;
-            {
-                elementDesc.SemanticName            = inputElementNames_.CopyString(attrib.name);
-                elementDesc.SemanticIndex           = attrib.semanticIndex;
-                elementDesc.Format                  = GetInputElementFormat(attrib);
-                elementDesc.InputSlot               = attrib.slot;
-                elementDesc.AlignedByteOffset       = attrib.offset;
-                elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
-                elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
-            }
-            inputElements_.push_back(elementDesc);
-        }
-    }
-}
-
-void D3D12ShaderProgram::Link()
+void D3D12ShaderProgram::LinkProgram()
 {
     /* Validate shader composition */
     linkError_ = LinkError::NoError;

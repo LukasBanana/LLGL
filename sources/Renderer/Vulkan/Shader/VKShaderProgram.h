@@ -43,22 +43,17 @@ class VKShaderProgram final : public ShaderProgram
         void FillShaderStageCreateInfos(VkPipelineShaderStageCreateInfo* createInfos, std::uint32_t& stageCount) const;
 
         // Fills the specified create-info structure with the vertex input layout.
-        void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
+        bool FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
 
     private:
 
         void Attach(Shader* shader);
-        void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
-        void Link();
+        void LinkProgram();
 
     private:
 
-        std::vector<VKShader*>                          shaders_;
-
-        std::vector<VkVertexInputBindingDescription>    vertexBindingDescs_;
-        std::vector<VkVertexInputAttributeDescription>  vertexAttribDescs_;
-
-        LinkError                                       linkError_          = LinkError::NoError;
+        std::vector<VKShader*>  shaders_;
+        LinkError               linkError_ = LinkError::NoError;
 
 };
 

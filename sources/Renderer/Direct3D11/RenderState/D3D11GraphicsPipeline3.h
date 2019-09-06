@@ -25,10 +25,7 @@ class D3D11GraphicsPipeline3 final : public D3D11GraphicsPipelineBase
 
     public:
 
-        D3D11GraphicsPipeline3(
-            ID3D11Device3* device,
-            const GraphicsPipelineDescriptor& desc
-        );
+        D3D11GraphicsPipeline3(ID3D11Device3* device, const GraphicsPipelineDescriptor& desc);
 
         void Bind(D3D11StateManager& stateMngr) override;
 
@@ -37,6 +34,8 @@ class D3D11GraphicsPipeline3 final : public D3D11GraphicsPipelineBase
         void CreateDepthStencilState(ID3D11Device3* device, const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc);
         void CreateRasterizerState(ID3D11Device3* device, const RasterizerDescriptor& desc);
         void CreateBlendState(ID3D11Device3* device, const BlendDescriptor& desc);
+
+    private:
 
         ComPtr<ID3D11DepthStencilState> depthStencilState_;
         ComPtr<ID3D11RasterizerState2>  rasterizerState_;

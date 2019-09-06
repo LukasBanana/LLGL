@@ -6,6 +6,7 @@
  */
 
 #include "D3D11Shader.h"
+#include "../D3D11Types.h"
 #include "../D3D11ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
@@ -23,8 +24,9 @@ namespace LLGL
 D3D11Shader::D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
-    if (!Build(device, desc))
+    if (!BuildShader(device, desc))
         hasErrors_ = true;
+    BuildInputLayout(device, static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
 }
 
 void D3D11Shader::SetName(const char* name)
@@ -64,12 +66,74 @@ bool D3D11Shader::ReflectNumThreads(Extent3D& numThreads) const
  * ======= Private: =======
  */
 
-bool D3D11Shader::Build(ID3D11Device* device, const ShaderDescriptor& shaderDesc)
+bool D3D11Shader::BuildShader(ID3D11Device* device, const ShaderDescriptor& shaderDesc)
 {
     if (IsShaderSourceCode(shaderDesc.sourceType))
         return CompileSource(device, shaderDesc);
     else
         return LoadBinary(device, shaderDesc);
+}
+
+static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
+{
+    try
+    {
+        return D3D11Types::Map(attrib.format);
+    }
+    catch (const std::exception& e)
+    {
+        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: " + attrib.name);
+    }
+}
+
+// Converts a vertex attribute to a D3D input element descriptor
+static void Convert(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
+{
+    dst.SemanticName            = src.name.c_str();
+    dst.SemanticIndex           = src.semanticIndex;
+    dst.Format                  = GetInputElementFormat(src);
+    dst.InputSlot               = src.slot;
+    dst.AlignedByteOffset       = src.offset;
+    dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
+    dst.InstanceDataStepRate    = src.instanceDivisor;
+}
+
+// Converts a vertex attribute to a D3D stream-output entry
+static void Convert(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
+{
+    dst.Stream          = src.location;
+    dst.SemanticName    = src.name.c_str();
+    dst.SemanticIndex   = src.semanticIndex;
+    dst.StartComponent  = src.offset;
+    dst.ComponentCount  = GetFormatAttribs(src.format).components;
+    dst.OutputSlot      = src.slot;
+}
+
+void D3D11Shader::BuildInputLayout(ID3D11Device* device, UINT numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
+        return;
+
+    /* Check if input layout is allowed */
+    if (GetType() != ShaderType::Vertex)
+        throw std::runtime_error("cannot build input layout for shader unless it is a vertex shader");
+
+    /* Setup input element descriptors */
+    std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
+    inputElements.resize(numVertexAttribs);
+
+    for (UINT i = 0; i < numVertexAttribs; ++i)
+        Convert(inputElements[i], vertexAttribs[i]);
+
+    /* Create input layout */
+    auto hr = device->CreateInputLayout(
+        inputElements.data(),
+        numVertexAttribs,
+        GetByteCode()->GetBufferPointer(),
+        GetByteCode()->GetBufferSize(),
+        inputLayout_.ReleaseAndGetAddressOf()
+    );
+    DXThrowIfFailed(hr, "failed to create D3D11 input layout");
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
@@ -115,7 +179,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
 
     /* Get byte code from blob */
     if (byteCode_)
-        CreateNativeShader(device, shaderDesc.streamOutput, nullptr);
+        CreateNativeShader(device, shaderDesc.vertex.outputAttribs.size(), shaderDesc.vertex.outputAttribs.data());
 
     /* Store if compilation was successful */
     return !FAILED(hr);
@@ -137,7 +201,7 @@ bool D3D11Shader::LoadBinary(ID3D11Device* device, const ShaderDescriptor& shade
     if (byteCode_.Get() != nullptr && byteCode_->GetBufferSize() > 0)
     {
         /* Create native shader object */
-        CreateNativeShader(device, shaderDesc.streamOutput, nullptr);
+        CreateNativeShader(device, shaderDesc.vertex.outputAttribs.size(), shaderDesc.vertex.outputAttribs.data());
         return true;
     }
 
@@ -145,9 +209,10 @@ bool D3D11Shader::LoadBinary(ID3D11Device* device, const ShaderDescriptor& shade
 }
 
 void D3D11Shader::CreateNativeShader(
-    ID3D11Device*                           device,
-    const ShaderDescriptor::StreamOutput&   streamOutputDesc,
-    ID3D11ClassLinkage*                     classLinkage)
+    ID3D11Device*           device,
+    std::size_t             numStreamOutputAttribs,
+    const VertexAttribute*  streamOutputAttribs,
+    ID3D11ClassLinkage*     classLinkage)
 {
     native_.vs.Reset();
 
@@ -180,26 +245,14 @@ void D3D11Shader::CreateNativeShader(
 
             case ShaderType::Geometry:
             {
-                const auto& streamOutputFormat = streamOutputDesc.format;
-                if (!streamOutputFormat.attributes.empty())
+                if (streamOutputAttribs != nullptr && numStreamOutputAttribs > 0)
                 {
                     /* Initialize output elements for geometry shader with stream-output */
                     std::vector<D3D11_SO_DECLARATION_ENTRY> outputElements;
-                    outputElements.reserve(streamOutputFormat.attributes.size());
+                    outputElements.resize(numStreamOutputAttribs);
 
-                    for (const auto& attrib : streamOutputFormat.attributes)
-                    {
-                        D3D11_SO_DECLARATION_ENTRY elementDesc;
-                        {
-                            elementDesc.Stream          = attrib.stream;
-                            elementDesc.SemanticName    = attrib.name.c_str();
-                            elementDesc.SemanticIndex   = attrib.semanticIndex;
-                            elementDesc.StartComponent  = attrib.startComponent;
-                            elementDesc.ComponentCount  = attrib.components;
-                            elementDesc.OutputSlot      = attrib.outputSlot;
-                        }
-                        outputElements.push_back(elementDesc);
-                    }
+                    for (std::size_t i = 0; i < numStreamOutputAttribs; ++i)
+                        Convert(outputElements[i], streamOutputAttribs[i]);
 
                     /* Create geometry shader with stream-output declaration */
                     hr = device->CreateGeometryShaderWithStreamOutput(

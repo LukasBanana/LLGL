@@ -33,14 +33,14 @@ public:
     {
         // Create all graphics objects
         LLGL::VertexFormat vertexFormat;
-        LLGL::StreamOutputFormat streamOutputFormat;
+        LLGL::VertexFormat streamOutputFormat;
 
         CreateBuffers(vertexFormat, streamOutputFormat);
         CreateShaders(vertexFormat, streamOutputFormat);
         CreatePipelines();
     }
 
-    void CreateBuffers(LLGL::VertexFormat& vertexFormat, LLGL::StreamOutputFormat& streamOutputFormat)
+    void CreateBuffers(LLGL::VertexFormat& vertexFormat, LLGL::VertexFormat& streamOutputFormat)
     {
         // Specify vertex format
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
@@ -51,7 +51,7 @@ public:
         constantBuffer = CreateConstantBuffer(settings);
 
         // Specify stream-output format
-        LLGL::StreamOutputAttribute soAttrib;
+        LLGL::VertexAttribute soAttrib;
         {
             const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
             if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
@@ -71,7 +71,7 @@ public:
         streamOutputBuffer = renderer->CreateBuffer(soBufferDesc);
     }
 
-    void CreateShaders(const LLGL::VertexFormat& vertexFormat, const LLGL::StreamOutputFormat& streamOutputFormat)
+    void CreateShaders(const LLGL::VertexFormat& vertexFormat, const LLGL::VertexFormat& streamOutputFormat)
     {
         // Load shader program
         const auto& languages = renderer->GetRenderingCaps().shadingLanguages;

@@ -13,6 +13,12 @@ namespace SharpLLGL
 {
 
 
+VertexShaderAttributes::VertexShaderAttributes()
+{
+    InputAttribs = gcnew List<VertexAttribute^>();
+    OutputAttribs = gcnew List<VertexAttribute^>();
+}
+
 ShaderDescriptor::ShaderDescriptor()
 {
     Type        = ShaderType::Undefined;
@@ -21,6 +27,8 @@ ShaderDescriptor::ShaderDescriptor()
     EntryPoint  = "";
     Profile     = "";
     Flags       = ShaderCompileFlags::None;
+    Vertex      = gcnew VertexShaderAttributes();
+    //Fragment    = gcnew FragmentShaderAttributes();
 }
 
 ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source)
@@ -31,6 +39,8 @@ ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source)
     EntryPoint  = "";
     Profile     = "";
     Flags       = ShaderCompileFlags::None;
+    Vertex      = gcnew VertexShaderAttributes();
+    //Fragment    = gcnew FragmentShaderAttributes();
 }
 
 ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source, String^ entryPoint, String^ profile)
@@ -41,6 +51,8 @@ ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source, String^ entr
     EntryPoint  = entryPoint;
     Profile     = profile;
     Flags       = ShaderCompileFlags::None;
+    Vertex      = gcnew VertexShaderAttributes();
+    //Fragment    = gcnew FragmentShaderAttributes();
 }
 
 ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source, String^ entryPoint, String^ profile, ShaderCompileFlags flags)
@@ -51,6 +63,8 @@ ShaderDescriptor::ShaderDescriptor(ShaderType type, String^ source, String^ entr
     EntryPoint  = entryPoint;
     Profile     = profile;
     Flags       = flags;
+    Vertex      = gcnew VertexShaderAttributes();
+    //Fragment    = gcnew FragmentShaderAttributes();
 }
 
 ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source)
@@ -61,6 +75,8 @@ ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type,
     EntryPoint  = "";
     Profile     = "";
     Flags       = ShaderCompileFlags::None;
+    Vertex      = gcnew VertexShaderAttributes();
+    //Fragment    = gcnew FragmentShaderAttributes();
 }
 
 ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source, String^ entryPoint, String^ profile)
@@ -71,6 +87,8 @@ ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type,
     EntryPoint  = entryPoint;
     Profile     = profile;
     Flags       = ShaderCompileFlags::None;
+    Vertex      = gcnew VertexShaderAttributes();
+    //Fragment    = gcnew FragmentShaderAttributes();
 }
 
 ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type, String^ source, String^ entryPoint, String^ profile, ShaderCompileFlags flags)
@@ -81,6 +99,8 @@ ShaderDescriptor::ShaderDescriptor(ShaderSourceType sourceType, ShaderType type,
     EntryPoint  = entryPoint;
     Profile     = profile;
     Flags       = flags;
+    Vertex      = gcnew VertexShaderAttributes();
+    //Fragment    = gcnew FragmentShaderAttributes();
 }
 
 
