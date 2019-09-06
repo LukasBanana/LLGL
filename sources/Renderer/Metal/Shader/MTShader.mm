@@ -6,8 +6,10 @@
  */
 
 #include "MTShader.h"
+#include "../MTTypes.h"
 #include <LLGL/Platform/Platform.h>
 #include <cstring>
+#include <set>
 
 
 namespace LLGL
@@ -17,12 +19,16 @@ namespace LLGL
 MTShader::MTShader(id<MTLDevice> device, const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
-    hasErrors_ = !Compile(device, desc);
+    if (!Compile(device, desc))
+        hasErrors_ = true;
+    BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
 }
 
 MTShader::~MTShader()
 {
     ReleaseError();
+    if (vertexDesc_)
+        [vertexDesc_ release];
     if (native_)
         [native_ release];
     if (library_)
@@ -172,6 +178,55 @@ bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shade
 
     /* Load shader function with entry point */
     return LoadFunction(shaderDesc.entryPoint);
+}
+
+// Converts the vertex attribute to a Metal vertex buffer layout
+static void Convert(MTLVertexBufferLayoutDescriptor* dst, const VertexAttribute& src)
+{
+    if (src.instanceDivisor > 0)
+    {
+        dst.stepFunction = MTLVertexStepFunctionPerInstance;
+        dst.stepRate     = static_cast<NSUInteger>(src.instanceDivisor);
+    }
+    else
+    {
+        dst.stepFunction = MTLVertexStepFunctionPerVertex;
+        dst.stepRate     = 1;
+    }
+    dst.stride = static_cast<NSUInteger>(src.stride);
+}
+
+// Converts the vertex attribute to a Metal vertex attribute
+static void Convert(MTLVertexAttributeDescriptor* dst, const VertexAttribute& src)
+{
+    dst.format      = MTTypes::ToMTLVertexFormat(src.format);
+    dst.offset      = static_cast<NSUInteger>(src.offset);
+    dst.bufferIndex = static_cast<NSUInteger>(src.slot);
+}
+
+void MTShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
+        return;
+
+    /* Allocate new vertex descriptor */
+    if (vertexDesc_)
+        [vertexDesc_ release];
+    vertexDesc_ = [[MTLVertexDescriptor alloc] init];
+
+    /* Convert vertex attributes to Metal vertex buffer layouts and attribute descriptors */
+    std::set<std::uint32_t> slotOccupied;
+
+    for (std::size_t i = 0; i < numVertexAttribs; ++i)
+    {
+        const auto& attr = vertexAttribs[i];
+
+        auto occupied = slotOccupied.insert(attr.slot);
+        if (occupied.second)
+            Convert(vertexDesc_.layouts[attr.slot], attr);
+
+        Convert(vertexDesc_.attributes[attr.location], attr);
+    }
 }
 
 void MTShader::ReleaseError()

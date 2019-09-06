@@ -113,7 +113,13 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     if (imageDesc)
     {
         textureMT->Write(
-            TextureRegion{ Offset3D{ 0, 0, 0 }, textureMT->GetMipExtent(0) },
+            //TextureRegion{ Offset3D{ 0, 0, 0 }, textureMT->GetMipExtent(0) },
+            TextureRegion
+            {
+                TextureSubresource{ 0, textureDesc.arrayLayers, 0, 1 },
+                Offset3D{ 0, 0, 0 },
+                textureDesc.extent
+            },
             *imageDesc
         );
 

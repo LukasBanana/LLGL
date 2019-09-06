@@ -42,11 +42,19 @@ class MTShader : public Shader
             return (error_ != nullptr);
         }
 
+        // Returns the MTLVertexDescriptor object for this shader program.
+        inline MTLVertexDescriptor* GetMTLVertexDesc() const
+        {
+            return vertexDesc_;
+        }
+
     private:
 
         bool Compile(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
         bool CompileSource(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
         bool CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
+
+        void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
 
         void ReleaseError();
 
@@ -54,11 +62,13 @@ class MTShader : public Shader
 
     private:
 
-        id<MTLLibrary>  library_    = nil;
-        id<MTLFunction> native_     = nil;
+        id<MTLLibrary>          library_    = nil;
+        id<MTLFunction>         native_     = nil;
 
-        NSError*        error_      = nullptr;
-        bool            hasErrors_  = false;
+        NSError*                error_      = nullptr;
+        bool                    hasErrors_  = false;
+
+        MTLVertexDescriptor*    vertexDesc_ = nullptr;
 
 };
 

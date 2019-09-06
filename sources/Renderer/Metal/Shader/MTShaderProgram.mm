@@ -8,7 +8,6 @@
 #include "MTShaderProgram.h"
 #include "MTShader.h"
 #include "../../CheckedCast.h"
-#include "../MTTypes.h"
 
 
 namespace LLGL
@@ -24,12 +23,23 @@ MTShaderProgram::MTShaderProgram(id<MTLDevice> device, const ShaderProgramDescri
     Attach(desc.geometryShader);
     Attach(desc.fragmentShader);
     Attach(desc.computeShader);
-    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
+
+    /* Grab vertex descriptor and increment reference counter */
+    if (auto vs = desc.vertexShader)
+    {
+        auto vsMT = LLGL_CAST(MTShader*, vs);
+        if (auto vertexDesc = vsMT->GetMTLVertexDesc())
+        {
+            [vertexDesc retain];
+            vertexDesc_ = vertexDesc;
+        }
+    }
 }
 
 MTShaderProgram::~MTShaderProgram()
 {
-    ReleaseVertexDesc();
+    if (vertexDesc_)
+        [vertexDesc_ release];
 }
 
 bool MTShaderProgram::HasErrors() const
@@ -133,63 +143,6 @@ void MTShaderProgram::Attach(Shader* shader)
                     break;
             }
         }
-    }
-}
-
-//TODO: incomplete
-void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats)
-{
-    if (numVertexFormats == 0 || vertexFormats == nullptr)
-        return;
-
-    /* Allocate new vertex descriptor */
-    ReleaseVertexDesc();
-    vertexDesc_ = [[MTLVertexDescriptor alloc] init];
-
-    for (std::size_t i = 0; i < numVertexFormats; ++i)
-    {
-        const auto& attribs = vertexFormats[i].attributes;
-        if (attribs.empty())
-            continue;
-
-        const auto& attrib0 = attribs.front();
-
-        /* Convert vertex layout */
-        MTLVertexBufferLayoutDescriptor* layoutDesc = vertexDesc_.layouts[attrib0.slot];
-
-        //TODO: per-instance data by attribute (not by vertex format!)
-        layoutDesc.stepFunction = MTLVertexStepFunctionPerVertex;
-        layoutDesc.stepRate     = 1;
-        layoutDesc.stride       = static_cast<NSUInteger>(vertexFormats[i].stride);
-
-        /* Convert attributes */
-        #if 1//TODO
-        if (!attribs.empty() && attribs.front().instanceDivisor > 0)
-        {
-            layoutDesc.stepFunction = MTLVertexStepFunctionPerInstance;
-            layoutDesc.stepRate     = static_cast<NSUInteger>(attrib0.instanceDivisor);
-        }
-        #endif
-
-        for (std::size_t j = 0; j < attribs.size(); ++j)
-        {
-            const auto& attrib = attribs[j];
-
-            MTLVertexAttributeDescriptor* attribDesc = vertexDesc_.attributes[attrib.location];
-
-            attribDesc.format       = MTTypes::ToMTLVertexFormat(attrib.format);
-            attribDesc.offset       = static_cast<NSUInteger>(attrib.offset);
-            attribDesc.bufferIndex  = static_cast<NSUInteger>(attrib.slot);
-        }
-    }
-}
-
-void MTShaderProgram::ReleaseVertexDesc()
-{
-    if (vertexDesc_ != nullptr)
-    {
-        [vertexDesc_ release];
-        vertexDesc_ = nullptr;
     }
 }
 

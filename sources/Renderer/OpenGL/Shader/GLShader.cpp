@@ -111,7 +111,7 @@ void GLShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
 
     std::size_t highestAttribIndex = 0;
     for (std::size_t i = 0; i < numVertexAttribs; ++i)
-        highestAttribIndex = std::max(highestAttribIndex, vertexAttribs[i].location);
+        highestAttribIndex = std::max(highestAttribIndex, static_cast<std::size_t>(vertexAttribs[i].location));
 
     if (highestAttribIndex > minSupportedVertexAttribs)
     {

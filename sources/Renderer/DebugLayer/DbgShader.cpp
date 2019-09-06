@@ -15,8 +15,8 @@ namespace LLGL
 
 DbgShader::DbgShader(Shader& instance, const ShaderDescriptor& desc) :
     Shader    { desc.type },
-    desc      { desc      },
-    instance  { instance  }
+    instance  { instance  },
+    desc      { desc      }
 {
 }
 

@@ -184,6 +184,14 @@ struct TextureRegion
     {
     }
 
+    //! Constructor to initialize all members.
+    inline TextureRegion(const TextureSubresource& subresource, const Offset3D& offset, const Extent3D& extent) :
+        subresource { subresource },
+        offset      { offset      },
+        extent      { extent      }
+    {
+    }
+
     //! Specifies the texture subresource, i.e. MIP-map level and array layer range. By default only the first MIP-map level and first array layer is addressed.
     TextureSubresource  subresource;
 

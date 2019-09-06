@@ -69,7 +69,6 @@ class MTShaderProgram : public ShaderProgram
     private:
 
         void Attach(Shader* shader);
-        void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
         void ReleaseVertexDesc();
 
         void ReflectRenderPipeline(ShaderReflection& reflection) const;
