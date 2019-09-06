@@ -11,7 +11,7 @@
 
 #include "Export.h"
 #include "VertexAttribute.h"
-//#include "FragmentAttribute.h"
+#include "FragmentAttribute.h"
 #include <cstddef>
 #include <vector>
 
@@ -158,7 +158,6 @@ struct VertexShaderAttributes
     std::vector<VertexAttribute> outputAttribs;
 };
 
-#if 0//TODO
 /**
 \brief Fragment shader specific descriptor structure.
 \see ShaderDescriptor::fragment
@@ -169,7 +168,6 @@ struct FragmentShaderAttributes
     //! Fragment shader output attributes.
     std::vector<FragmentAttribute> outputAttribs;
 };
-#endif
 
 /**
 \brief Shader source and binary code descriptor structure.
@@ -281,7 +279,7 @@ struct ShaderDescriptor
     VertexShaderAttributes      vertex;
 
     //! Fragment shader specific attributes.
-    //FragmentShaderAttributes    fragment;
+    FragmentShaderAttributes    fragment;
 };
 
 

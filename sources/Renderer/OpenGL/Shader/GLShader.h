@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-struct GLVertexAttribute
+struct GLShaderAttribute
 {
     GLuint          index;
     const GLchar*   name;
@@ -46,11 +46,13 @@ class GLShader final : public Shader
             return id_;
         }
 
-        // Returns the vertex input attributes.
-        inline const std::vector<GLVertexAttribute>& GetVertexAttribs() const
-        {
-            return vertexAttribs_;
-        }
+        // Returns the vertex input attributes:
+        const GLShaderAttribute* GetVertexAttribs() const;
+        std::size_t GetNumVertexAttribs() const;
+
+        // Returns the vertex input attributes:
+        const GLShaderAttribute* GetFragmentAttribs() const;
+        std::size_t GetNumFragmentAttribs() const;
 
         // Returns the transform feedback varying names.
         inline const std::vector<const char*>& GetTransformFeedbackVaryings() const
@@ -61,8 +63,9 @@ class GLShader final : public Shader
     private:
 
         void BuildShader(const ShaderDescriptor& shaderDesc);
-        void ReserveAttribNames(const VertexShaderAttributes& vertexAttribs);
-        void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
+        void ReserveAttribs(const ShaderDescriptor& desc);
+        void BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
+        void BuildFragmentOutputLayout(std::size_t numFragmentAttribs, const FragmentAttribute* fragmentAttribs);
         void BuildTransformFeedbackVaryings(std::size_t numVaryings, const VertexAttribute* varyings);
 
         void CompileSource(const ShaderDescriptor& shaderDesc);
@@ -72,8 +75,9 @@ class GLShader final : public Shader
 
         GLuint                          id_                         = 0;
 
-        LinearStringContainer           vertexAttribNames_;
-        std::vector<GLVertexAttribute>  vertexAttribs_;
+        LinearStringContainer           shaderAttribNames_;
+        std::vector<GLShaderAttribute>  shaderAttribs_;
+        std::size_t                     numVertexAttribs_           = 0;
         std::vector<const char*>        transformFeedbackVaryings_;
 
 };

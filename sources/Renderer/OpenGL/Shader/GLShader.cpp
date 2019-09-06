@@ -25,11 +25,13 @@ namespace LLGL
 GLShader::GLShader(const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
+    /* Create shader and  */
     id_ = glCreateShader(GLTypes::Map(desc.type));
     BuildShader(desc);
-    ReserveAttribNames(desc.vertex);
-    BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
+    ReserveAttribs(desc);
+    BuildVertexInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
     BuildTransformFeedbackVaryings(desc.vertex.outputAttribs.size(), desc.vertex.outputAttribs.data());
+    BuildFragmentOutputLayout(desc.fragment.outputAttribs.size(), desc.fragment.outputAttribs.data());
 }
 
 GLShader::~GLShader()
@@ -72,6 +74,32 @@ std::string GLShader::GetReport() const
     return "";
 }
 
+const GLShaderAttribute* GLShader::GetVertexAttribs() const
+{
+    if (!shaderAttribs_.empty())
+        return &shaderAttribs_[0];
+    else
+        return nullptr;
+}
+
+std::size_t GLShader::GetNumVertexAttribs() const
+{
+    return numVertexAttribs_;
+}
+
+const GLShaderAttribute* GLShader::GetFragmentAttribs() const
+{
+    if (numVertexAttribs_ < shaderAttribs_.size())
+        return &shaderAttribs_[numVertexAttribs_];
+    else
+        return nullptr;
+}
+
+std::size_t GLShader::GetNumFragmentAttribs() const
+{
+    return (shaderAttribs_.size() - numVertexAttribs_);
+}
+
 
 /*
  * ======= Private: =======
@@ -85,23 +113,35 @@ void GLShader::BuildShader(const ShaderDescriptor& shaderDesc)
         LoadBinary(shaderDesc);
 }
 
-void GLShader::ReserveAttribNames(const VertexShaderAttributes& vertexAttribs)
+void GLShader::ReserveAttribs(const ShaderDescriptor& desc)
 {
-    vertexAttribNames_.Clear();
+    /* Reset attributes and their name storage */
+    shaderAttribs_.clear();
+    shaderAttribNames_.Clear();
 
     /* Reserve names for vertex attributs */
-    for (const auto& attr : vertexAttribs.inputAttribs)
+    for (const auto& attr : desc.vertex.inputAttribs)
     {
         if (attr.semanticIndex == 0)
-            vertexAttribNames_.Reserve(attr.name.size());
+        {
+            shaderAttribNames_.Reserve(attr.name.size());
+            ++numVertexAttribs_;
+        }
     }
 
     /* Reserve names for transform feedback varyings */
-    for (const auto& attr : vertexAttribs.outputAttribs)
-        vertexAttribNames_.Reserve(attr.name.size());
+    for (const auto& attr : desc.vertex.outputAttribs)
+        shaderAttribNames_.Reserve(attr.name.size());
+
+    /* Reserve names for fragment output attributes */
+    for (const auto& attr : desc.fragment.outputAttribs)
+        shaderAttribNames_.Reserve(attr.name.size());
+
+    /* Reserve memory for vertex input and fragment output attributes */
+    shaderAttribs_.reserve(numVertexAttribs_ + desc.fragment.outputAttribs.size());
 }
 
-void GLShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+void GLShader::BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
 {
     if (numVertexAttribs == 0 || vertexAttribs == nullptr)
         return;
@@ -128,15 +168,26 @@ void GLShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
     }
 
     /* Bind all vertex attribute locations */
-    vertexAttribs_.clear();
-    vertexAttribs_.reserve(numVertexAttribs);
-
     for (std::size_t i = 0; i < numVertexAttribs; ++i)
     {
         /* Store attribute meta data (matrices only use the 1st column) */
         const auto& attr = vertexAttribs[i];
         if (attr.semanticIndex == 0)
-            vertexAttribs_.push_back({ attr.location, vertexAttribNames_.CopyString(attr.name) });
+            shaderAttribs_.push_back({ attr.location, shaderAttribNames_.CopyString(attr.name) });
+    }
+}
+
+void GLShader::BuildFragmentOutputLayout(std::size_t numFragmentAttribs, const FragmentAttribute* fragmentAttribs)
+{
+    if (numFragmentAttribs == 0 || fragmentAttribs == nullptr)
+        return;
+
+    /* Bind all fragment attribute locations */
+    for (std::size_t i = 0; i < numFragmentAttribs; ++i)
+    {
+        /* Store attribute meta data (matrices only use the 1st column) */
+        const auto& attr = fragmentAttribs[i];
+        shaderAttribs_.push_back({ attr.location, shaderAttribNames_.CopyString(attr.name) });
     }
 }
 
@@ -146,7 +197,7 @@ void GLShader::BuildTransformFeedbackVaryings(std::size_t numVaryings, const Ver
     {
         transformFeedbackVaryings_.reserve(numVaryings);
         for (std::size_t i = 0; i < numVaryings; ++i)
-            transformFeedbackVaryings_.push_back(vertexAttribNames_.CopyString(varyings[i].name));
+            transformFeedbackVaryings_.push_back(shaderAttribNames_.CopyString(varyings[i].name));
     }
 }
 

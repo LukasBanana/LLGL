@@ -32,6 +32,7 @@ namespace LLGL
 \see VertexShaderAttributes::outputAttribs
 \see BufferDescriptor::vertexAttribs
 \see VertexFormat::attributes
+\see FragmentAttribute
 */
 struct LLGL_EXPORT VertexAttribute
 {

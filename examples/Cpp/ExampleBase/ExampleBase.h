@@ -144,6 +144,7 @@ private:
         std::vector<TutorialShaderDescriptor>   shaderDescs;
         std::vector<LLGL::Shader*>              shaders;
         LLGL::VertexShaderAttributes            vertexAttribs;
+        LLGL::FragmentShaderAttributes          fragmentAttribs;
     };
 
 private:
@@ -205,7 +206,8 @@ protected:
     LLGL::ShaderProgram* LoadShaderProgram(
         const std::vector<TutorialShaderDescriptor>&    shaderDescs,
         const std::vector<LLGL::VertexFormat>&          vertexFormats       = {},
-        const LLGL::VertexFormat&                       streamOutputFormat  = {}
+        const LLGL::VertexFormat&                       streamOutputFormat  = {},
+        const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs     = {}
     );
 
     // Reloads the specified shader program from the previously specified shader source files.

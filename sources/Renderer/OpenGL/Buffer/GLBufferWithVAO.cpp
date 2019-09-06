@@ -22,7 +22,7 @@ GLBufferWithVAO::GLBufferWithVAO(long bindFlags) :
 void GLBufferWithVAO::BuildVertexArray(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
 {
     /* Store vertex format (required if this buffer is used in a buffer array) */
-    if (vertexAttribs > 0)
+    if (numVertexAttribs > 0)
         vertexAttribs_ = std::vector<VertexAttribute>(vertexAttribs, vertexAttribs + numVertexAttribs);
     else
         vertexAttribs_.clear();

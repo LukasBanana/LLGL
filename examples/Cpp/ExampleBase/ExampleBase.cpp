@@ -327,7 +327,8 @@ void ExampleBase::OnResize(const LLGL::Extent2D& resoluion)
 LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
     const std::vector<TutorialShaderDescriptor>&    shaderDescs,
     const std::vector<LLGL::VertexFormat>&          vertexFormats,
-    const LLGL::VertexFormat&                       streamOutputFormat)
+    const LLGL::VertexFormat&                       streamOutputFormat,
+    const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs)
 {
     ShaderProgramRecall recall;
 
@@ -345,6 +346,7 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
 
     // Store vertex output attributs
     recall.vertexAttribs.outputAttribs = streamOutputFormat.attributes;
+    recall.fragmentAttribs.outputAttribs = fragmentAttribs;
 
     for (const auto& desc : shaderDescs)
     {
@@ -353,6 +355,8 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
         {
             if (desc.type == LLGL::ShaderType::Vertex)
                 shaderDesc.vertex = recall.vertexAttribs;
+            else if (desc.type == LLGL::ShaderType::Fragment)
+                shaderDesc.fragment = recall.fragmentAttribs;
         }
         auto shader = renderer->CreateShader(shaderDesc);
 
@@ -406,6 +410,8 @@ bool ExampleBase::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
             {
                 if (desc.type == LLGL::ShaderType::Vertex)
                     shaderDesc.vertex = recall.vertexAttribs;
+                else if (desc.type == LLGL::ShaderType::Fragment)
+                    shaderDesc.fragment = recall.fragmentAttribs;
             }
             auto shader = renderer->CreateShader(shaderDesc);
 

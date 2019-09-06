@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-struct GLVertexAttribute;
+struct GLShaderAttribute;
 class GLShaderBindingLayout;
 
 class GLShaderProgram final : public ShaderProgram
@@ -57,7 +57,8 @@ class GLShaderProgram final : public ShaderProgram
     private:
 
         void Attach(Shader* shader);
-        void BuildInputLayout(std::size_t numVertexAttribs, const GLVertexAttribute* vertexAttribs);
+        void BindAttribLocations(std::size_t numVertexAttribs, const GLShaderAttribute* vertexAttribs);
+        void BindFragDataLocations(std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs);
         void LinkProgram(std::size_t numVaryings, const char* const* varyings);
 
         bool QueryActiveAttribs(

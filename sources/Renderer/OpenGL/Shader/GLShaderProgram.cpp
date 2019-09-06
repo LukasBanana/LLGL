@@ -39,7 +39,14 @@ GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
     if (auto vs = desc.vertexShader)
     {
         auto vsGL = LLGL_CAST(GLShader*, vs);
-        BuildInputLayout(vsGL->GetVertexAttribs().size(), vsGL->GetVertexAttribs().data());
+        BindAttribLocations(vsGL->GetNumVertexAttribs(), vsGL->GetVertexAttribs());
+    }
+
+    /* Build input layout for vertex shader */
+    if (auto fs = desc.fragmentShader)
+    {
+        auto fsGL = LLGL_CAST(GLShader*, fs);
+        BindFragDataLocations(fsGL->GetNumFragmentAttribs(), fsGL->GetFragmentAttribs());
     }
 
     /* Build transform feedback varyings for vertex or geometry shader (latter one has higher order) */
@@ -179,13 +186,26 @@ void GLShaderProgram::Attach(Shader* shader)
     }
 }
 
-void GLShaderProgram::BuildInputLayout(std::size_t numVertexAttribs, const GLVertexAttribute* vertexAttribs)
+void GLShaderProgram::BindAttribLocations(std::size_t numVertexAttribs, const GLShaderAttribute* vertexAttribs)
 {
     /* Bind all vertex attribute locations */
     for (std::size_t i = 0; i < numVertexAttribs; ++i)
     {
         const auto& attr = vertexAttribs[i];
         glBindAttribLocation(id_, attr.index, attr.name);
+    }
+}
+
+void GLShaderProgram::BindFragDataLocations(std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs)
+{
+    /* Only bind if extension is supported, otherwise the sahder won't have multiple fragment outpus anyway */
+    if (HasExtension(GLExt::EXT_gpu_shader4))
+    {
+        for (std::size_t i = 0; i < numFragmentAttribs; ++i)
+        {
+            const auto& attr = fragmentAttribs[i];
+            glBindFragDataLocation(id_, attr.index, attr.name);
+        }
     }
 }
 
