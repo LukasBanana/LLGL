@@ -58,6 +58,7 @@ class LLGL_EXPORT Window : public Surface
 
                 /**
                 \brief Send when the window is about to quit.
+                \param[in] sender Specifies the sender of this event.
                 \param[out] veto Specifies whether to cancel the quit event.
                 If set to true, the call to \c PostQuit does not change the state \c sender, only the event listeners get informed.
                 If no event listener sets this parameter to true, \c sender is set to the 'Quit' state and \c ProcessEvents returns false from then on.

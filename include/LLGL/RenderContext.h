@@ -178,7 +178,7 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         The resolution of this video mode is only used if 'surface' is null,
         otherwise the resolution is determined by the content size of the specified surface (i.e. with the Surface::GetContentSize function).
         To determine the final video mode, use the GetVideoMode function.
-        \param[in] Optional pointer to a NativeContextHandle structure. This is only used for desktop platforms.
+        \param[in] windowContext Optional pointer to a NativeContextHandle structure. This is only used for desktop platforms.
         \see WindowDescriptor::windowContext
         \see Surface::GetContentSize
         \see GetVideoMode
@@ -200,7 +200,7 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         bool SetDisplayModeByVideoMode(Display& display, const VideoModeDescriptor& videoModeDesc);
 
         /**
-        \briefs Switches the fullscreen mode for the primary display if the specified fullscreen mode is different to the current fullscreen setting.
+        \brief Switches the fullscreen mode for the primary display if the specified fullscreen mode is different to the current fullscreen setting.
         \see SetDisplayModeByVideoMode
         \see GetVideoMode
         */

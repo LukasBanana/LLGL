@@ -32,7 +32,9 @@ struct LLGL_EXPORT VertexFormat
     /**
     \brief Appends the specified vertex attribute to this vertex format.
     \param[in] attrib Specifies the new attribute which is appended to this vertex format.
-    \param[in] offset Specifies the optional offset (in bytes) for this attribute.
+    \param[in] customLocation Specifies whether the attribute location is to be adopted.
+    Otherwise, the the location will be set to the previous attribute's location plus one.
+    \param[in] customOffset Specifies the optional offset (in bytes) for this attribute.
     If this is equal to <code>Constants::ignoreOffset</code>, the offset is determined by the previous vertex attribute offset plus its size.
     If there is no previous vertex attribute, the determined offset is 0. By default <code>Constants::ignoreOffset</code>.
     \remarks This function modifies the \c offset member of specified attribute before adding it to the \c attributes list,

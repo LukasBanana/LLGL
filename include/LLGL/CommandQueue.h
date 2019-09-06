@@ -52,7 +52,7 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
 
         #if 0
         /**
-        \briefs Submits all command buffers in the specified array to the command queue at once.
+        \brief Submits all command buffers in the specified array to the command queue at once.
         \see Submit(CommandBuffer&)
         */
         virtual void Submit(std::uint32_t numCommandBuffers, CommandBuffer* const * commandBuffers);

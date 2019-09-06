@@ -73,7 +73,7 @@ using ReportCallback = std::function<void(ReportType type, const std::string& me
 /* ----- Functions ----- */
 
 /**
-\briefs Posts a report to the currently set report callback.
+\brief Posts a report to the currently set report callback.
 \see ReportCallback
 */
 LLGL_EXPORT void PostReport(ReportType type, const std::string& message, const std::string& contextInfo = "");
