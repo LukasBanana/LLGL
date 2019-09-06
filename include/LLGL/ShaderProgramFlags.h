@@ -10,8 +10,7 @@
 
 
 #include "ForwardDecls.h"
-//#include "VertexFormat.h"
-#include "StreamOutputFormat.h" //TODO: replace this by VertexAttribute
+#include "ShaderFlags.h"
 #include "ResourceFlags.h"
 #include "BufferFlags.h"
 #include "PipelineLayoutFlags.h"
@@ -198,16 +197,6 @@ This is not a "descriptor", because it is only used as output from an interface 
 */
 struct ShaderReflection
 {
-    #if 1//TODO: replace this
-
-    //! List of all vertex input attributes.
-    std::vector<VertexAttribute>        vertexAttributes;
-
-    //! List of all stream-output attributes.
-    std::vector<StreamOutputAttribute>  streamOutputAttributes;
-
-    #else
-
     /**
     \brief Reflection data that is specificly for the vertex shader.
     \remarks The shader reflection only considers the following members of the VertexAttribute structure,
@@ -222,8 +211,6 @@ struct ShaderReflection
 
     //! Reflection data that is specificly for the fragment shader.
     FragmentShaderAttributes            fragment;
-
-    #endif
 
     //! List of all shader reflection resource views.
     std::vector<ShaderResource>         resources;

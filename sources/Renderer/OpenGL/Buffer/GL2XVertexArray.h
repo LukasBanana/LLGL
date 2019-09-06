@@ -9,7 +9,7 @@
 #define LLGL_GL2X_VERTEX_ARRAY_H
 
 
-#include <LLGL/VertexFormat.h>
+#include <LLGL/VertexAttribute.h>
 #include "../OpenGL.h"
 #include <vector>
 

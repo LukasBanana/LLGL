@@ -22,6 +22,7 @@
 #include "Log.h"
 #include "IndirectArguments.h"
 #include "ImageFlags.h"
+#include "VertexFormat.h"
 
 
 //DOXYGEN MAIN PAGE

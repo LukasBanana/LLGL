@@ -32,13 +32,12 @@ public ref class ShaderProgramDescriptor
 
         ShaderProgramDescriptor();
 
-        property List<VertexFormat^>^   VertexFormats;
-        property Shader^                VertexShader;
-        property Shader^                TessControlShader;
-        property Shader^                TessEvaluationShader;
-        property Shader^                GeometryShader;
-        property Shader^                FragmentShader;
-        property Shader^                ComputeShader;
+        property Shader^ VertexShader;
+        property Shader^ TessControlShader;
+        property Shader^ TessEvaluationShader;
+        property Shader^ GeometryShader;
+        property Shader^ FragmentShader;
+        property Shader^ ComputeShader;
 
 };
 

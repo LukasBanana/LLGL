@@ -52,20 +52,34 @@ int main()
         LLGL::Extent3D workGroupSize;
         shaderProgram->GetWorkGroupSize(workGroupSize);
 
-        std::cout << "Vertex Attributes:" << std::endl;
-        for (const LLGL::VertexAttribute& attr : reflect.vertexAttributes)
+        std::cout << "Vertex Input Attributes:" << std::endl;
+        for (const LLGL::VertexAttribute& attr : reflect.vertex.inputAttribs)
         {
-            std::cout << "  " << attr.name << "@" << attr.offset << std::endl;
+            std::cout << "  " << attr.name << " @ " << attr.location << std::endl;
+        }
+
+        std::cout << "Vertex Output Attributes:" << std::endl;
+        for (const LLGL::VertexAttribute& attr : reflect.vertex.outputAttribs)
+        {
+            std::cout << "  " << attr.name << " @ " << attr.location << std::endl;
+        }
+
+        std::cout << "Fragment Output Attributes:" << std::endl;
+        for (const LLGL::FragmentAttribute& attr : reflect.fragment.outputAttribs)
+        {
+            std::cout << "  " << attr.name << " @ " << attr.location << std::endl;
         }
 
         std::cout << "Resources:" << std::endl;
         for (const LLGL::ShaderResource& resc : reflect.resources)
         {
-            std::cout << "  " << resc.binding.name << "@" << resc.binding.slot << std::endl;
+            std::cout << "  " << resc.binding.name << " @ " << resc.binding.slot << std::endl;
         }
 
+        std::cout << "Uniforms:" << std::endl;
         for (const LLGL::ShaderUniform& unif : reflect.uniforms)
         {
+            std::cout << "  " << unif.name << " @ " << unif.location << std::endl;
         }
     }
     catch (const std::exception& e)

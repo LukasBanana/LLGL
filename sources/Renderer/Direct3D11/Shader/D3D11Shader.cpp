@@ -324,6 +324,15 @@ static ShaderResource* FetchOrInsertResource(
     return ref;
 }
 
+// Converts a D3D11 signature parameter into a vertex attribute
+static void Convert(VertexAttribute& dst, const D3D11_SIGNATURE_PARAMETER_DESC& src)
+{
+    dst.name            = std::string(src.SemanticName);
+    dst.format          = DXGetSignatureParameterType(src.ComponentType, src.Mask);
+    dst.semanticIndex   = src.SemanticIndex;
+    dst.systemValue     = DXTypes::Unmap(src.SystemValueType);
+}
+
 static HRESULT ReflectShaderVertexAttributes(
     ID3D11ShaderReflection*     reflectionObject,
     const D3D11_SHADER_DESC&    shaderDesc,
@@ -337,15 +346,55 @@ static HRESULT ReflectShaderVertexAttributes(
         if (FAILED(hr))
             return hr;
 
-        /* Add vertex attribute to output list */
+        /* Add vertex input attribute to output list */
         VertexAttribute vertexAttrib;
-        {
-            vertexAttrib.name           = std::string(paramDesc.SemanticName);
-            vertexAttrib.format         = DXGetSignatureParameterType(paramDesc.ComponentType, paramDesc.Mask);
-            vertexAttrib.semanticIndex  = paramDesc.SemanticIndex;
-            vertexAttrib.systemValue    = DXTypes::Unmap(paramDesc.SystemValueType);
-        }
-        reflection.vertexAttributes.push_back(vertexAttrib);
+        Convert(vertexAttrib, paramDesc);
+        reflection.vertex.inputAttribs.push_back(vertexAttrib);
+    }
+
+    for (UINT i = 0; i < shaderDesc.OutputParameters; ++i)
+    {
+        /* Get signature parameter descriptor */
+        D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
+        auto hr = reflectionObject->GetOutputParameterDesc(i, &paramDesc);
+        if (FAILED(hr))
+            return hr;
+
+        /* Add vertex output attribute to output list */
+        VertexAttribute vertexAttrib;
+        Convert(vertexAttrib, paramDesc);
+        reflection.vertex.outputAttribs.push_back(vertexAttrib);
+    }
+
+    return S_OK;
+}
+
+// Converts a D3D11 signature parameter into a fragment attribute
+static void Convert(FragmentAttribute& dst, const D3D11_SIGNATURE_PARAMETER_DESC& src)
+{
+    dst.name        = std::string(src.SemanticName);
+    dst.format      = DXGetSignatureParameterType(src.ComponentType, src.Mask);
+    dst.location    = src.SemanticIndex;
+    dst.systemValue = DXTypes::Unmap(src.SystemValueType);
+}
+
+static HRESULT ReflectShaderFragmentAttributes(
+    ID3D11ShaderReflection*     reflectionObject,
+    const D3D11_SHADER_DESC&    shaderDesc,
+    ShaderReflection&           reflection)
+{
+    for (UINT i = 0; i < shaderDesc.OutputParameters; ++i)
+    {
+        /* Get signature parameter descriptor */
+        D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
+        auto hr = reflectionObject->GetOutputParameterDesc(i, &paramDesc);
+        if (FAILED(hr))
+            return hr;
+
+        /* Add fragment attribute to output list */
+        FragmentAttribute fragmentAttrib;
+        Convert(fragmentAttrib, paramDesc);
+        reflection.fragment.outputAttribs.push_back(fragmentAttrib);
     }
 
     return S_OK;
@@ -474,7 +523,7 @@ static HRESULT ReflectShaderInputBindings(
     return S_OK;
 }
 
-HRESULT D3D11Shader::ReflectShaderByteCode(ShaderReflection& reflectionDesc) const
+HRESULT D3D11Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
 {
     HRESULT hr = S_OK;
 
@@ -489,16 +538,23 @@ HRESULT D3D11Shader::ReflectShaderByteCode(ShaderReflection& reflectionDesc) con
     if (FAILED(hr))
         return hr;
 
-    /* Get input parameter descriptors */
     if (GetType() == ShaderType::Vertex)
     {
-        hr = ReflectShaderVertexAttributes(reflectionObject.Get(), shaderDesc, reflectionDesc);
+        /* Get input parameter descriptors */
+        hr = ReflectShaderVertexAttributes(reflectionObject.Get(), shaderDesc, reflection);
+        if (FAILED(hr))
+            return hr;
+    }
+    else if (GetType() == ShaderType::Fragment)
+    {
+        /* Get output parameter descriptors */
+        hr = ReflectShaderFragmentAttributes(reflectionObject.Get(), shaderDesc, reflection);
         if (FAILED(hr))
             return hr;
     }
 
     /* Get input bindings */
-    hr = ReflectShaderInputBindings(reflectionObject.Get(), shaderDesc, GetStageFlags(), reflectionDesc);
+    hr = ReflectShaderInputBindings(reflectionObject.Get(), shaderDesc, GetStageFlags(), reflection);
     if (FAILED(hr))
         return hr;
 

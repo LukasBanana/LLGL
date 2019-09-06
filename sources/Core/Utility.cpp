@@ -12,6 +12,7 @@
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
 #include <LLGL/Shader.h>
+#include <LLGL/VertexFormat.h>
 #include <cstring>
 #include <cctype>
 

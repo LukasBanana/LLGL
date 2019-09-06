@@ -15,6 +15,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 */
 
 #include "Export.h"
+#include "ForwardDecls.h"
 #include "TextureFlags.h"
 #include "BufferFlags.h"
 #include "RenderTargetFlags.h"
@@ -29,10 +30,6 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 namespace LLGL
 {
 
-
-class Buffer;
-class Texture;
-class Sampler;
 
 /**
 \defgroup group_util Global utility functions, especially to fill descriptor structures.

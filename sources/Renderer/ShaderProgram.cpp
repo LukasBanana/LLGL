@@ -76,17 +76,42 @@ static int CompareResourceViewSWO(const ShaderResource& lhs, const ShaderResourc
 
 void ShaderProgram::ClearShaderReflection(ShaderReflection& reflection)
 {
-    reflection.vertexAttributes.clear();
-    reflection.streamOutputAttributes.clear();
-    #if 0//TODO
-    reflection.fragmentAttributes.clear();
-    #endif
+    reflection.vertex.inputAttribs.clear();
+    reflection.vertex.outputAttribs.clear();
+    reflection.fragment.outputAttribs.clear();
     reflection.resources.clear();
     reflection.uniforms.clear();
 }
 
 void ShaderProgram::FinalizeShaderReflection(ShaderReflection& reflection)
 {
+    /* Sort vertex input and output attributes by their location */
+    auto SortVertexAttributes = [](std::vector<VertexAttribute>& attribs)
+    {
+        std::sort(
+            attribs.begin(),
+            attribs.end(),
+            [](const VertexAttribute& lhs, const VertexAttribute& rhs) -> bool
+            {
+                return (lhs.location < rhs.location);
+            }
+        );
+    };
+
+    SortVertexAttributes(reflection.vertex.inputAttribs);
+    SortVertexAttributes(reflection.vertex.outputAttribs);
+
+    /* Sort fragment output attributes by their location */
+    std::sort(
+        reflection.fragment.outputAttribs.begin(),
+        reflection.fragment.outputAttribs.end(),
+        [](const FragmentAttribute& lhs, const FragmentAttribute& rhs) -> bool
+        {
+            return (lhs.location < rhs.location);
+        }
+    );
+
+    /* Sort resources by their strict-weak-order (SWO) */
     std::sort(
         reflection.resources.begin(),
         reflection.resources.end(),

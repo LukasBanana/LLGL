@@ -15,7 +15,6 @@ namespace SharpLLGL
 
 ShaderProgramDescriptor::ShaderProgramDescriptor()
 {
-    VertexFormats           = gcnew List<VertexFormat^>();
     VertexShader            = nullptr;
     TessControlShader       = nullptr;
     TessEvaluationShader    = nullptr;

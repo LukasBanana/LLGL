@@ -332,7 +332,7 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
     for (const auto& it : spvReflect.GetVaryings())
     {
         const auto& var = it.second;
-        if (var.input && GetType() == ShaderType::Vertex)
+        if (GetType() == ShaderType::Vertex)
         {
             std::uint32_t numVectors = 1;
 
@@ -341,6 +341,7 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
             {
                 attrib.name         = GetOptString(var.name);
                 attrib.format       = SpvTypeToFormat(var.type, &numVectors);
+                attrib.location     = var.location;
                 attrib.systemValue  = SpvBuiltinToSystemValue(var.builtin);
             }
 
@@ -348,8 +349,23 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
             for (std::uint32_t i = 0; i < numVectors; ++i)
             {
                 attrib.semanticIndex = i;
-                reflection.vertexAttributes.push_back(attrib);
+                if (var.input)
+                    reflection.vertex.inputAttribs.push_back(attrib);
+                else
+                    reflection.vertex.outputAttribs.push_back(attrib);
             }
+        }
+        else if (GetType() == ShaderType::Fragment && !var.input)
+        {
+            /* Determine and append fragment attribute data */
+            FragmentAttribute attrib;
+            {
+                attrib.name         = GetOptString(var.name);
+                attrib.format       = SpvTypeToFormat(var.type);
+                attrib.location     = var.location;
+                attrib.systemValue  = SpvBuiltinToSystemValue(var.builtin);
+            }
+            reflection.fragment.outputAttribs.push_back(attrib);
         }
     }
 

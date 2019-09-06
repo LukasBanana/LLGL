@@ -232,6 +232,14 @@ public:
                 }
             );
         }
+
+        #if 1//TEST
+        LLGL::ShaderReflection relection;
+        if (shaderProgramScene->Reflect(relection))
+        {
+            int x=0;
+        }
+        #endif
     }
 
     void CreateSamplers()

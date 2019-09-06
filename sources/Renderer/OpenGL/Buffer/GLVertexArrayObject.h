@@ -9,13 +9,14 @@
 #define LLGL_GL_VERTEX_ARRAY_OBJECT_H
 
 
-#include <LLGL/VertexFormat.h>
 #include "../OpenGL.h"
 
 
 namespace LLGL
 {
 
+
+struct VertexAttribute;
 
 // Wrapper class for an OpenGL Vertex-Array-Object (VAO), for GL 3.0+.
 class GLVertexArrayObject

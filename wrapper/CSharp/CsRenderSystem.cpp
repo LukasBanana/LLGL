@@ -360,16 +360,6 @@ static void Convert(LLGL::VertexAttribute& dst, VertexAttribute^ src)
     }
 }
 
-static void Convert(LLGL::VertexFormat& dst, VertexFormat^ src)
-{
-    if (src)
-    {
-        dst.attributes.resize(static_cast<std::size_t>(src->Attributes->Count));
-        for (std::size_t i = 0; i < dst.attributes.size(); ++i)
-            Convert(dst.attributes[i], src->Attributes[i]);
-    }
-}
-
 static void Convert(LLGL::BufferDescriptor& dst, BufferDescriptor^ src)
 {
     if (src)
@@ -611,6 +601,15 @@ static void Convert(LLGL::VertexShaderAttributes& dst, VertexShaderAttributes^ s
     for (int i = 0; i < src->InputAttribs->Count; ++i)
         Convert(dst.outputAttribs[i], src->OutputAttribs[i]);
 }
+
+/*
+static void Convert(LLGL::FragmentShaderAttributes& dst, FragmentShaderAttributes^ src)
+{
+    dst.outputAttribs.resize(src->OutputAttribs->Count);
+    for (int i = 0; i < src->InputAttribs->Count; ++i)
+        Convert(dst.outputAttribs[i], src->OutputAttribs[i]);
+}
+*/
 
 static void Convert(LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src, std::string (&tempStr)[3])
 {

@@ -157,7 +157,7 @@ void DbgShaderProgram::QueryInstanceAndVertexIDs(const RenderingCapabilities& ca
     ShaderReflection reflect;
     if (instance.Reflect(reflect))
     {
-        for (const auto& attr : reflect.vertexAttributes)
+        for (const auto& attr : reflect.vertex.inputAttribs)
         {
             if (vertexID_.empty())
             {

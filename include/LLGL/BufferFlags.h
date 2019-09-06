@@ -11,7 +11,7 @@
 
 #include "Export.h"
 #include "ResourceFlags.h"
-#include "VertexFormat.h"
+#include "VertexAttribute.h"
 #include "RenderSystemFlags.h"
 #include <string>
 #include <cstdint>

@@ -15,7 +15,7 @@
 #include "../../CheckedCast.h"
 #include "../../GLCommon/GLTypes.h"
 #include "../../../Core/Exception.h"
-#include <LLGL/VertexFormat.h>
+#include <LLGL/VertexAttribute.h>
 #include <LLGL/Constants.h>
 #include <vector>
 #include <stdexcept>
@@ -445,27 +445,32 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
     );
 
     /* Copy attribute into final list and determine offsets */
-    reflection.vertexAttributes.resize(attributes.size());
+    reflection.vertex.inputAttribs.resize(attributes.size());
 
     for (std::size_t i = 0; i < attributes.size(); ++i)
     {
         auto& src = attributes[i];
-        auto& dst = reflection.vertexAttributes[i];
+        auto& dst = reflection.vertex.inputAttribs[i];
 
         dst.name    = std::move(src.name);
         dst.format  = src.format;
 
         if (src.location == std::uint32_t(-1))
-            dst.systemValue = FindSystemValue(dst.name);
+        {
+            dst.location        = 0;
+            dst.systemValue     = FindSystemValue(dst.name);
+        }
         else
-            dst.semanticIndex = src.semanticIndex;
+        {
+            dst.location        = src.location;
+            dst.semanticIndex   = src.semanticIndex;
+        }
     }
 }
 
 void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) const
 {
-    StreamOutputFormat streamOutputFormat;
-    StreamOutputAttribute soAttrib;
+    VertexAttribute soAttrib;
 
     #ifndef __APPLE__
     if (HasExtension(GLExt::EXT_transform_feedback))
@@ -488,15 +493,16 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
             glGetTransformFeedbackVarying(id_, i, maxNameLength, &nameLength, &size, &type, attribName.data());
 
             /* Convert attribute information */
-            soAttrib.name = std::string(attribName.data());
+            soAttrib.name       = std::string(attribName.data());
+            soAttrib.location   = i;
             //auto attr = UnmapAttribType(type);
 
             /* Insert stream-output attribute into list */
             #if 0
             while (attr.second-- > 0)
-                streamOutputFormat.AppendAttribute(soAttrib);
+                reflection.vertex.outputAttribs.push_back(soAttrib);
             #else
-            streamOutputFormat.AppendAttribute(soAttrib);
+            reflection.vertex.outputAttribs.push_back(soAttrib);
             #endif
         }
     }
@@ -520,21 +526,20 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
             glGetActiveVaryingNV(id_, i, maxNameLength, &nameLength, &size, &type, attribName.data());
 
             /* Convert attribute information */
-            soAttrib.name = std::string(attribName.data());
+            soAttrib.name       = std::string(attribName.data());
+            soAttrib.location   = i;
             //auto attr = UnmapAttribType(type);
 
             /* Insert stream-output attribute into list */
             #if 0
             while (attr.second-- > 0)
-                streamOutputFormat.AppendAttribute(soAttrib);
+                reflection.vertex.outputAttribs.push_back(soAttrib);
             #else
-            streamOutputFormat.AppendAttribute(soAttrib);
+            reflection.vertex.outputAttribs.push_back(soAttrib);
             #endif
         }
     }
     #endif
-
-    reflection.streamOutputAttributes = std::move(streamOutputFormat.attributes);
 }
 
 #ifdef GL_ARB_program_interface_query

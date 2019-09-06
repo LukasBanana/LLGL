@@ -10,7 +10,7 @@
 #include "../../CheckedCast.h"
 #include "../VKTypes.h"
 #include <LLGL/Log.h>
-#include <LLGL/VertexFormat.h>
+#include <LLGL/VertexAttribute.h>
 #include <vector>
 #include <set>
 

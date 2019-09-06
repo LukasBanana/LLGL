@@ -10,7 +10,7 @@
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 #include <LLGL/Log.h>
-#include <LLGL/VertexFormat.h>
+#include <LLGL/VertexAttribute.h>
 #include <algorithm>
 #include <stdexcept>
 
