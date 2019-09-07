@@ -13,12 +13,15 @@ class Example_StreamOutput : public ExampleBase
 
     LLGL::ShaderProgram*    shaderProgram       = nullptr;
 
+    LLGL::PipelineLayout*   pipelineLayout      = nullptr;
     LLGL::GraphicsPipeline* pipeline            = nullptr;
 
     LLGL::Buffer*           vertexBuffer        = nullptr;
     LLGL::Buffer*           indexBuffer         = nullptr;
     LLGL::Buffer*           constantBuffer      = nullptr;
     LLGL::Buffer*           streamOutputBuffer  = nullptr;
+
+    LLGL::ResourceHeap*     resourceHeap        = nullptr;
 
     struct Settings
     {
@@ -38,6 +41,7 @@ public:
         CreateBuffers(vertexFormat, streamOutputFormat);
         CreateShaders(vertexFormat, streamOutputFormat);
         CreatePipelines();
+        CreateResourceHeaps();
     }
 
     void CreateBuffers(LLGL::VertexFormat& vertexFormat, LLGL::VertexFormat& streamOutputFormat)
@@ -103,13 +107,29 @@ public:
 
     void CreatePipelines()
     {
+        // Create graphics pipeline layout
+        pipelineLayout = renderer->CreatePipelineLayout(
+            LLGL::PipelineLayoutDesc("cbuffer(Settings@2):vert")
+        );
+
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.pipelineLayout             = pipelineLayout;
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+    }
+
+    void CreateResourceHeaps()
+    {
+        LLGL::ResourceHeapDescriptor heapDesc;
+        {
+            heapDesc.pipelineLayout = pipelineLayout;
+            heapDesc.resourceViews  = { constantBuffer };
+        }
+        resourceHeap = renderer->CreateResourceHeap(heapDesc);
     }
 
 private:
@@ -126,11 +146,13 @@ private:
         Gs::Translate(settings.wvpMatrix, { 0, 0, 7 });
         Gs::Scale(settings.wvpMatrix, Gs::Vector3f(0.5f));
         Gs::RotateFree(settings.wvpMatrix, Gs::Vector3f(1).Normalized(), rotation);
-        UpdateBuffer(constantBuffer, settings);
 
         // Start command recording
         commands->Begin();
         {
+            // Update constant buffer
+            commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
+
             // Set vertex and index buffers
             commands->SetVertexBuffer(*vertexBuffer);
             commands->SetIndexBuffer(*indexBuffer);
@@ -144,12 +166,12 @@ private:
                 // Set viewport to context resolution
                 commands->SetViewport(context->GetResolution());
 
-                // Set buffers
-                commands->SetResource(*constantBuffer, 0, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage);
-                commands->SetStreamOutputBuffer(*streamOutputBuffer);
-
                 // Set graphics pipeline state
                 commands->SetGraphicsPipeline(*pipeline);
+
+                // Set buffers
+                commands->SetGraphicsResourceHeap(*resourceHeap);
+                commands->SetStreamOutputBuffer(*streamOutputBuffer);
 
                 // Draw scene
                 commands->BeginStreamOutput(LLGL::PrimitiveType::Triangles);
