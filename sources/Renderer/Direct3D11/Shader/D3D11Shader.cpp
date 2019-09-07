@@ -26,7 +26,8 @@ D3D11Shader::D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc) :
 {
     if (!BuildShader(device, desc))
         hasErrors_ = true;
-    BuildInputLayout(device, static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
+    if (GetType() == ShaderType::Vertex)
+        BuildInputLayout(device, static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
 }
 
 void D3D11Shader::SetName(const char* name)
@@ -262,7 +263,7 @@ void D3D11Shader::CreateNativeShader(
                         static_cast<UINT>(outputElements.size()),
                         nullptr,
                         0,
-                        0,
+                        D3D11_SO_NO_RASTERIZED_STREAM,
                         classLinkage,
                         native_.gs.ReleaseAndGetAddressOf()
                     );

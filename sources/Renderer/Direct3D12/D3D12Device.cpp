@@ -26,6 +26,12 @@ bool D3D12Device::CreateDXDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::
             /* Create command queue and store final feature level */
             queue_          = CreateDXCommandQueue();
             featureLevel_   = level;
+
+            #ifdef LLGL_DEBUG
+            if (SUCCEEDED(device_.As(&infoQueue_)))
+                DenyLowSeverityWarnings();
+            #endif
+
             return true;
         }
     }
@@ -128,6 +134,38 @@ UINT D3D12Device::FindSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount)
 
     return 1u;
 }
+
+
+/*
+ * ======= Private: =======
+ */
+
+#ifdef LLGL_DEBUG
+
+void D3D12Device::DenyLowSeverityWarnings()
+{
+    D3D12_MESSAGE_SEVERITY severities[] =
+    {
+        D3D12_MESSAGE_SEVERITY_INFO,
+    };
+
+    D3D12_MESSAGE_ID denyIDs[] =
+    {
+        D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
+        D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE,
+    };
+
+    D3D12_INFO_QUEUE_FILTER filter = {};
+    {
+        filter.DenyList.NumSeverities   = sizeof(severities)/sizeof(severities[0]);
+        filter.DenyList.pSeverityList   = severities;
+        filter.DenyList.NumIDs          = sizeof(denyIDs)/sizeof(denyIDs[0]);
+        filter.DenyList.pIDList         = denyIDs;
+    }
+    infoQueue_->PushStorageFilter(&filter);
+}
+
+#endif // /LLGL_DEBUG
 
 
 } // /namespace LLGL

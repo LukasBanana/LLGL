@@ -24,7 +24,13 @@ D3D12Shader::D3D12Shader(const ShaderDescriptor& desc) :
 {
     if (!BuildShader(desc))
         hasErrors_ = true;
-    BuildInputLayout(static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
+    if (GetType() == ShaderType::Vertex || GetType() == ShaderType::Geometry)
+    {
+        ReserveVertexAttribs(desc);
+        if (GetType() == ShaderType::Vertex)
+            BuildInputLayout(static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
+        BuildStreamOutput(static_cast<UINT>(desc.vertex.outputAttribs.size()), desc.vertex.outputAttribs.data());
+    }
 }
 
 bool D3D12Shader::HasErrors() const
@@ -66,14 +72,29 @@ bool D3D12Shader::ReflectNumThreads(Extent3D& numThreads) const
         return false;
 }
 
-D3D12_INPUT_LAYOUT_DESC D3D12Shader::GetInputLayoutDesc() const
+bool D3D12Shader::GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const
 {
-    D3D12_INPUT_LAYOUT_DESC desc;
+    if (!inputElements_.empty())
     {
-        desc.pInputElementDescs = inputElements_.data();
-        desc.NumElements        = static_cast<UINT>(inputElements_.size());
+        layoutDesc.pInputElementDescs   = inputElements_.data();
+        layoutDesc.NumElements          = static_cast<UINT>(inputElements_.size());
+        return true;
     }
-    return desc;
+    return false;
+}
+
+bool D3D12Shader::GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) const
+{
+    if (!soDeclEntries_.empty())
+    {
+        layoutDesc.pSODeclaration   = soDeclEntries_.data();
+        layoutDesc.NumEntries       = static_cast<UINT>(soDeclEntries_.size());
+        layoutDesc.pBufferStrides   = soBufferStrides_.data();
+        layoutDesc.NumStrides       = static_cast<UINT>(soBufferStrides_.size());
+        layoutDesc.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+        return true;
+    }
+    return false;
 }
 
 
@@ -87,6 +108,16 @@ bool D3D12Shader::BuildShader(const ShaderDescriptor& shaderDesc)
         return CompileSource(shaderDesc);
     else
         return LoadBinary(shaderDesc);
+}
+
+void D3D12Shader::ReserveVertexAttribs(const ShaderDescriptor& shaderDesc)
+{
+    /* Reserve memory for the input element names */
+    vertexAttribNames_.Clear();
+    for (const auto& attr : shaderDesc.vertex.inputAttribs)
+        vertexAttribNames_.Reserve(attr.name.size());
+    for (const auto& attr : shaderDesc.vertex.outputAttribs)
+        vertexAttribNames_.Reserve(attr.name.size());
 }
 
 static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
@@ -121,15 +152,75 @@ void D3D12Shader::BuildInputLayout(UINT numVertexAttribs, const VertexAttribute*
     if (numVertexAttribs == 0 || vertexAttribs == nullptr)
         return;
 
-    /* Reserve memory for the input element names */
-    inputElementNames_.Clear();
-    for (UINT i = 0; i < numVertexAttribs; ++i)
-        inputElementNames_.Reserve(vertexAttribs[i].name.size());
-
     /* Build input element descriptors */
     inputElements_.resize(numVertexAttribs);
     for (UINT i = 0; i < numVertexAttribs; ++i)
-        Convert(inputElements_[i], vertexAttribs[i], inputElementNames_);
+        Convert(inputElements_[i], vertexAttribs[i], vertexAttribNames_);
+}
+
+/*
+Converts a vertex attributes to a D3D12 input element descriptor
+and stores the semantic name in the specified linear string container
+*/
+static void Convert(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
+{
+    dst.Stream          = src.location;
+    dst.SemanticName    = stringContainer.CopyString(src.name);
+    dst.SemanticIndex   = src.semanticIndex;
+    dst.StartComponent  = src.offset;
+    dst.ComponentCount  = GetFormatAttribs(src.format).components;
+    dst.OutputSlot      = src.slot;
+}
+
+void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute* vertexAttribs)
+{
+    if (numVertexAttribs == 0 || vertexAttribs == nullptr)
+        return;
+
+    /* Reserve memory for the buffer strides */
+    UINT maxSlot = 0;
+    for (UINT i = 0; i < numVertexAttribs; ++i)
+        maxSlot = std::max(maxSlot, vertexAttribs[i].slot);
+
+    soBufferStrides_.clear();
+    soBufferStrides_.resize(maxSlot + 1, 0);
+
+    /* Build stream-output entries and buffer strides */
+    soDeclEntries_.resize(numVertexAttribs);
+    for (UINT i = 0; i < numVertexAttribs; ++i)
+    {
+        const auto& attr = vertexAttribs[i];
+
+        /* Convert vertex attribute to stream-output entry */
+        Convert(soDeclEntries_[i], attr, vertexAttribNames_);
+
+        /* Store buffer stide */
+        auto& bufferStride = soBufferStrides_[attr.slot];
+        if (attr.stride == 0)
+        {
+            /* Error: vertex attribute must not have stride of zero */
+            throw std::runtime_error("buffer stride in stream-output attribute must not be zero: " + attr.name);
+        }
+        else if (bufferStride == 0)
+        {
+            /* Store new buffer stride */
+            bufferStride = attr.stride;
+        }
+        else if (bufferStride != attr.stride)
+        {
+            throw std::runtime_error(
+                "mismatch between buffer stride (" + std::to_string(bufferStride) +
+                ") and stream-output attribute (" + std::to_string(attr.stride) + "): " + attr.name
+            );
+        }
+    }
+
+    /* Build buffer stride */
+    for (std::size_t i = 0; i < soBufferStrides_.size(); ++i)
+    {
+        if (soBufferStrides_[i] == 0)
+            throw std::runtime_error("stream-output slot " + std::to_string(i) + " is not specified in vertex attributes");
+    }
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx

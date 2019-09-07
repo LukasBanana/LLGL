@@ -38,7 +38,7 @@ static MTAttachmentFormat MakeMTAttachmentFormat(
         }
         else
             fmt.pixelFormat = defaultPixelFormat;
-        
+
         /* Set default load and store actions */
         fmt.loadAction  = MTLLoadActionDontCare;
         fmt.storeAction = MTLStoreActionStore;

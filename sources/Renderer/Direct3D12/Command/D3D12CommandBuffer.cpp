@@ -342,7 +342,8 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 
 void D3D12CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
-    //todo...
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandList_->SOSetTargets(0, 1, &(bufferD3D.GetSOBufferView()));
 }
 
 void D3D12CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)

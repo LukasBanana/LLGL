@@ -56,11 +56,6 @@ class D3D12PipelineLayout final : public PipelineLayout
             long                            bindFlags
         );
 
-        void BuildRootSignatureFlags(
-            D3D12_ROOT_SIGNATURE_FLAGS&     signatureFlags,
-            const PipelineLayoutDescriptor& layoutDesc
-        );
-
     private:
 
         ComPtr<ID3D12RootSignature> rootSignature_;

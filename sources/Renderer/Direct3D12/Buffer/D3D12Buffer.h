@@ -76,29 +76,37 @@ class D3D12Buffer : public Buffer
             return indexBufferView_;
         }
 
+        // Returns the stream-output buffer view.
+        inline const D3D12_STREAM_OUTPUT_BUFFER_VIEW& GetSOBufferView() const
+        {
+            return soBufferView_;
+        }
+
         // Returns the memory alignment required for this buffer.
         inline UINT64 GetAlignment() const
         {
             return alignment_;
         }
 
-    protected:
+    private:
 
         void CreateNativeBuffer(ID3D12Device* device, const BufferDescriptor& desc);
 
         void CreateVertexBufferView(const BufferDescriptor& desc);
         void CreateIndexBufferView(const BufferDescriptor& desc);
+        void CreateStreamOutputBufferView(const BufferDescriptor& desc);
 
     private:
 
-        D3D12Resource               resource_;
+        D3D12Resource                   resource_;
 
-        UINT64                      bufferSize_         = 0;
-        UINT                        alignment_          = 16;
-        UINT                        structStride_       = 1;
-        D3D12_HEAP_TYPE             heapType_           = D3D12_HEAP_TYPE_DEFAULT;
-        D3D12_VERTEX_BUFFER_VIEW    vertexBufferView_;
-        D3D12_INDEX_BUFFER_VIEW     indexBufferView_;
+        UINT64                          bufferSize_         = 0;
+        UINT                            alignment_          = 1;
+        UINT                            structStride_       = 1;
+        D3D12_HEAP_TYPE                 heapType_           = D3D12_HEAP_TYPE_DEFAULT;
+        D3D12_VERTEX_BUFFER_VIEW        vertexBufferView_   = {};
+        D3D12_INDEX_BUFFER_VIEW         indexBufferView_    = {};
+        D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferView_       = {};
 
 };
 

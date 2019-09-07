@@ -11,6 +11,7 @@
 
 #include <LLGL/RenderTarget.h>
 #include "../D3D12Resource.h"
+#include "../RenderState/D3D12RenderPass.h"
 #include <d3d12.h>
 #include "../../DXCommon/ComPtr.h"
 
@@ -108,6 +109,7 @@ class D3D12RenderTarget final : public RenderTarget
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
         D3D12Resource                   depthStencilBuffer_;
         DXGI_FORMAT                     depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
+        D3D12RenderPass                 defaultRenderPass_;
 
         // Containers and references:
         std::vector<DXGI_FORMAT>        colorFormats_;

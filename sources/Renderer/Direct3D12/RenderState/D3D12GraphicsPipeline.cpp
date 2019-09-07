@@ -37,20 +37,27 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
 {
     /* Validate pointers and get D3D shader program */
     LLGL_ASSERT_PTR(desc.shaderProgram);
-
     auto shaderProgramD3D = LLGL_CAST(const D3D12ShaderProgram*, desc.shaderProgram);
 
+    /* Use either default root signature or from pipeline layout */
+    ID3D12RootSignature* rootSignature = nullptr;
     if (auto pipelineLayout = desc.pipelineLayout)
     {
-        /* Create pipeline state with root signature from pipeline layout */
         auto pipelineLayoutD3D = LLGL_CAST(const D3D12PipelineLayout*, pipelineLayout);
-        CreatePipelineState(device, *shaderProgramD3D, pipelineLayoutD3D->GetRootSignature(), desc);
+        rootSignature = pipelineLayoutD3D->GetRootSignature();
     }
     else
-    {
-        /* Create pipeline state with default root signature */
-        CreatePipelineState(device, *shaderProgramD3D, defaultRootSignature, desc);
-    }
+        rootSignature = defaultRootSignature;
+
+    /* Use either default render pass or from descriptor */
+    const D3D12RenderPass* renderPass = nullptr;
+    if (desc.renderPass != nullptr)
+        renderPass = LLGL_CAST(const D3D12RenderPass*, desc.renderPass);
+    /*else
+        renderPass = defaultRenderPass*/;
+
+    /* Create native graphics PSO */
+    CreatePipelineState(device, *shaderProgramD3D, rootSignature, renderPass, desc);
 
     /* Store dynamic pipeline states */
     primitiveTopology_  = D3D12Types::Map(desc.primitiveTopology);
@@ -178,7 +185,6 @@ static void SetBlendDescToLogicOp(D3D12_RENDER_TARGET_BLEND_DESC& dst, D3D12_LOG
     dst.RenderTargetWriteMask   = D3D12_COLOR_WRITE_ENABLE_ALL;
 }
 
-//TODO: consider RTV color formats
 static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], const BlendDescriptor& src, UINT numAttachments)
 {
     dst.AlphaToCoverageEnable = DXBoolean(src.alphaToCoverageEnabled);
@@ -215,6 +221,52 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
         */
         SetBlendDescToLogicOp(dst.RenderTarget[0], D3D12Types::Map(src.logicOp));
         dstColorFormats[0] = DXGI_FORMAT_R8G8B8A8_UINT;
+
+        /* Initialize remaining blend target to default values */
+        for (int i = 1; i < 8; ++i)
+        {
+            SetBlendDescToDefault(dst.RenderTarget[i]);
+            dstColorFormats[i] = DXGI_FORMAT_UNKNOWN;
+        }
+    }
+}
+
+static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], const BlendDescriptor& src, const D3D12RenderPass& renderPass)
+{
+    dst.AlphaToCoverageEnable = DXBoolean(src.alphaToCoverageEnabled);
+
+    if (src.logicOp == LogicOp::Disabled)
+    {
+        /* Enable independent blend states when multiple targets are specified */
+        dst.IndependentBlendEnable = DXBoolean(src.independentBlendEnabled);
+
+        for (UINT i = 0; i < 8u; ++i)
+        {
+            if (i < renderPass.GetNumColorAttachments())
+            {
+                /* Convert blend target descriptor */
+                Convert(dst.RenderTarget[i], src.targets[i]);
+                dstColorFormats[i] = renderPass.GetRTVFormats()[i];
+            }
+            else
+            {
+                /* Initialize blend target to default values */
+                SetBlendDescToDefault(dst.RenderTarget[i]);
+                dstColorFormats[i] = DXGI_FORMAT_UNKNOWN;
+            }
+        }
+    }
+    else
+    {
+        /* Independent blend states is not allowed when logic operations are used */
+        dst.IndependentBlendEnable = FALSE;
+
+        /*
+        Special output format required for logic operations
+        see https://msdn.microsoft.com/en-us/library/windows/desktop/mt426648(v=vs.85).aspx
+        */
+        SetBlendDescToLogicOp(dst.RenderTarget[0], D3D12Types::Map(src.logicOp));
+        dstColorFormats[0] = (renderPass.GetNumColorAttachments() > 0 ? renderPass.GetRTVFormats()[0] : DXGI_FORMAT_UNKNOWN);
 
         /* Initialize remaining blend target to default values */
         for (int i = 1; i < 8; ++i)
@@ -273,19 +325,14 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     D3D12Device&                        device,
     const D3D12ShaderProgram&           shaderProgram,
     ID3D12RootSignature*                rootSignature,
+    const D3D12RenderPass*              renderPass,
     const GraphicsPipelineDescriptor&   desc)
 {
     /* Store used root signature */
     rootSignature_ = rootSignature;
 
     /* Get number of render-target attachments */
-    UINT numAttachments = 1;
-
-    if (auto renderPass = desc.renderPass)
-    {
-        auto renderPassD3D = LLGL_CAST(const D3D12RenderPass*, renderPass);
-        numAttachments = std::min(renderPassD3D->GetNumColorAttachments(), LLGL_MAX_NUM_COLOR_ATTACHMENTS);
-    }
+    const UINT numAttachments = (renderPass != nullptr ? renderPass->GetNumColorAttachments() : 1);
 
     /* Setup D3D12 graphics pipeline descriptor */
     D3D12_GRAPHICS_PIPELINE_STATE_DESC stateDesc = {};
@@ -299,20 +346,17 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.HS = GetShaderByteCode(shaderProgram.GetHS());
     stateDesc.GS = GetShaderByteCode(shaderProgram.GetGS());
 
-    /* Initialize stream-output */
-    #if 0//TODO
-    stateDesc.StreamOutput.pSODeclaration   = nullptr;
-    stateDesc.StreamOutput.NumEntries       = 0;
-    stateDesc.StreamOutput.pBufferStrides   = nullptr;
-    stateDesc.StreamOutput.NumStrides       = 0;
-    stateDesc.StreamOutput.RasterizedStream = 0;
-    #endif
-
-    /* Initialize depth-stencil format */
-    stateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-
-    /* Convert blend state */
-    Convert(stateDesc.BlendState, stateDesc.RTVFormats, desc.blend, numAttachments);
+    /* Convert blend state and depth-stencil format */
+    if (renderPass != nullptr)
+    {
+        stateDesc.DSVFormat = renderPass->GetDSVFormat();
+        Convert(stateDesc.BlendState, stateDesc.RTVFormats, desc.blend, *renderPass);
+    }
+    else
+    {
+        stateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        Convert(stateDesc.BlendState, stateDesc.RTVFormats, desc.blend, numAttachments);
+    }
 
     /* Convert rasterizer state */
     Convert(stateDesc.RasterizerState, desc.rasterizer);
@@ -322,6 +366,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
 
     /* Convert other states */
     stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
+    stateDesc.StreamOutput          = shaderProgram.GetStreamOutputDesc();
     stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.rasterizer.multiSampling.sampleMask;

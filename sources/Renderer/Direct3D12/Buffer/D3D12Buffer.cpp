@@ -20,17 +20,26 @@ namespace LLGL
 {
 
 
+static const UINT64 g_soBufferFillSizeLen   = 16u;
+static const UINT64 g_cBufferAlignment      = 256u;
+
 D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
     Buffer { desc.bindFlags }
 {
-    InitMemory(vertexBufferView_);
-    InitMemory(indexBufferView_);
-
     /* Constant buffers must be aligned to 256 bytes */
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
-        alignment_ = 256u;
+        alignment_ = g_cBufferAlignment;
 
+    /* Create native buffer resource */
     CreateNativeBuffer(device, desc);
+
+    /* Create sub-resource views */
+    if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
+        CreateVertexBufferView(desc);
+    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
+        CreateIndexBufferView(desc);
+    if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
+        CreateStreamOutputBufferView(desc);
 }
 
 void D3D12Buffer::SetName(const char* name)
@@ -137,15 +146,13 @@ static D3D12_RESOURCE_STATES GetD3DUsageState(long bindFlags)
 void D3D12Buffer::CreateNativeBuffer(ID3D12Device* device, const BufferDescriptor& desc)
 {
     /* Store buffer attributes */
-    bufferSize_     = desc.size;
+    bufferSize_     = GetAlignedSize<UINT64>(desc.size, alignment_);
     structStride_   = std::max(1u, desc.storageBuffer.stride);
 
-    if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
-    {
-        /* Constant buffers must be aligned to 256 bytes */
-        const UINT64 alignment = 256;
-        bufferSize_ = GetAlignedSize(bufferSize_, alignment);
-    }
+    /* Determine actual resource size */
+    UINT64 bufferSize = bufferSize_;
+    if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
+        bufferSize += g_soBufferFillSizeLen;
 
     /* Determine initial resource state */
     resource_.usageState        = GetD3DUsageState(desc.bindFlags);
@@ -155,18 +162,12 @@ void D3D12Buffer::CreateNativeBuffer(ID3D12Device* device, const BufferDescripto
     auto hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize_, GetD3DResourceFlags(desc)),
+        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize, GetD3DResourceFlags(desc)),
         resource_.transitionState,
         nullptr,
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware buffer");
-
-    /* Create sub-resource views */
-    if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
-        CreateVertexBufferView(desc);
-    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
-        CreateIndexBufferView(desc);
 }
 
 void D3D12Buffer::CreateVertexBufferView(const BufferDescriptor& desc)
@@ -181,6 +182,14 @@ void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
     indexBufferView_.BufferLocation = GetNative()->GetGPUVirtualAddress();
     indexBufferView_.SizeInBytes    = static_cast<UINT>(GetBufferSize());
     indexBufferView_.Format         = D3D12Types::Map(desc.indexFormat);
+}
+
+void D3D12Buffer::CreateStreamOutputBufferView(const BufferDescriptor& desc)
+{
+    /* Use first 64 bits to buffer fill size, i.e. <BufferFilledSizeLocation>, set buffer location after the first 64 bits */
+    soBufferView_.BufferLocation            = GetNative()->GetGPUVirtualAddress() + g_soBufferFillSizeLen;
+    soBufferView_.SizeInBytes               = GetBufferSize();
+    soBufferView_.BufferFilledSizeLocation  = GetNative()->GetGPUVirtualAddress();
 }
 
 

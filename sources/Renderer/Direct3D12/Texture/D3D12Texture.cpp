@@ -519,6 +519,20 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     }
 }
 
+//TODO: incomplete
+static D3D12_RESOURCE_STATES GetInitialDXResourceState(const TextureDescriptor& desc)
+{
+    D3D12_RESOURCE_STATES flags = D3D12_RESOURCE_STATE_COMMON;
+
+    if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
+        flags |= D3D12_RESOURCE_STATE_DEPTH_READ;
+
+    if ((desc.bindFlags & BindFlags::Sampled) != 0)
+        flags |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+    return flags;
+}
+
 void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescriptor& desc)
 {
     /* Setup resource descriptor by texture descriptor and create hardware resource */
@@ -556,10 +570,7 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware texture");
 
     /* Determine resource usage */
-    if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
-        resource_.SetInitialState(D3D12_RESOURCE_STATE_DEPTH_READ);
-    else
-        resource_.SetInitialState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    resource_.SetInitialState(GetInitialDXResourceState(desc));
 }
 
 // Determine SRV dimension for descriptor heaps used in D3D12MipGenerator: either 1D array, 2D array, or 3D

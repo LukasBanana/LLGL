@@ -10,18 +10,30 @@
 
 
 #include <LLGL/Export.h>
-#include <LLGL/ForwardDecls.h>
 #include <cstdint>
+#include <cstddef>
 
 
 namespace LLGL
 {
 
 
+struct RenderPassDescriptor;
+
 /* ----- Functions ----- */
 
-// Fills the buffer with the indices for the color attachments that are meant to be cleared.
-LLGL_EXPORT std::uint8_t FillClearColorAttachmentIndices(std::uint8_t* clearColorAttachments, const RenderPassDescriptor& renderPassDesc);
+// Fills the array of indices with the invalid index of 0xFF.
+LLGL_EXPORT void ResetClearColorAttachmentIndices(
+    std::size_t     numColorAttachments,
+    std::uint8_t*   colorAttachmentsIndices
+);
+
+// Fills the array of indices for the color attachments that are meant to be cleared.
+LLGL_EXPORT std::uint8_t FillClearColorAttachmentIndices(
+    std::size_t                 numColorAttachments,
+    std::uint8_t*               colorAttachmentsIndices,
+    const RenderPassDescriptor& renderPassDesc
+);
 
 
 } // /namespace LLGL

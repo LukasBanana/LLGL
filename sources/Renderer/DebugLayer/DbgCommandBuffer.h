@@ -261,6 +261,8 @@ class DbgCommandBuffer final : public CommandBuffer
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 
         void ResetFrameProfile();
+        void ResetBindings();
+        void ResetStates();
 
     private:
 

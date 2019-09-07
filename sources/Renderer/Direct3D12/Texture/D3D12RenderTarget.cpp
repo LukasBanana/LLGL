@@ -27,6 +27,7 @@ D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDesc
 {
     CreateDescriptorHeaps(device, desc);
     CreateAttachments(device.GetNative(), desc);
+    defaultRenderPass_.BuildAttachments(desc.attachments.size(), desc.attachments.data(), depthStencilFormat_);
 }
 
 void D3D12RenderTarget::SetName(const char* name)
@@ -57,7 +58,7 @@ bool D3D12RenderTarget::HasStencilAttachment() const
 
 const RenderPass* D3D12RenderTarget::GetRenderPass() const
 {
-    return nullptr; // dummy
+    return (&defaultRenderPass_);
 }
 
 void D3D12RenderTarget::TransitionToOutputMerger(D3D12CommandContext& commandContext)

@@ -244,11 +244,6 @@ class D3D12RenderSystem final : public RenderSystem
         D3D12CommandContext                         commandContext_;
         D3D12StagingBufferPool                      stagingBufferPool_;
 
-        #ifdef LLGL_DEBUG
-        //ComPtr<ID3D12Debug>                         debugDevice_;
-        //ComPtr<ID3D12InfoQueue>                     debugInfoQueue_;
-        #endif
-
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<D3D12RenderContext>       renderContexts_;

@@ -85,10 +85,24 @@ bool D3D12ShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
 
 D3D12_INPUT_LAYOUT_DESC D3D12ShaderProgram::GetInputLayoutDesc() const
 {
-    if (vs_ != nullptr)
-        return vs_->GetInputLayoutDesc();
-    else
-        return {};
+    D3D12_INPUT_LAYOUT_DESC layoutDesc = {};
+
+    if (vs_ != nullptr && vs_->GetInputLayoutDesc(layoutDesc))
+        return layoutDesc;
+
+    return {};
+}
+
+D3D12_STREAM_OUTPUT_DESC D3D12ShaderProgram::GetStreamOutputDesc() const
+{
+    D3D12_STREAM_OUTPUT_DESC layoutDesc = {};
+
+    if (gs_ != nullptr && gs_->GetStreamOutputDesc(layoutDesc))
+        return layoutDesc;
+    if (vs_ != nullptr && vs_->GetStreamOutputDesc(layoutDesc))
+        return layoutDesc;
+
+    return {};
 }
 
 

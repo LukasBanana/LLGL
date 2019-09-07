@@ -131,6 +131,8 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
         );
     }
 
+    commandContext_.TransitionResource(bufferD3D->GetResource(), bufferD3D->GetResource().usageState, true);
+
     /* Execute upload commands and wait for GPU to finish execution */
     ExecuteCommandList();
     SyncGPU();
@@ -515,7 +517,7 @@ void D3D12RenderSystem::EnableDebugLayer()
     }
 }
 
-#endif
+#endif // /LLGL_DEBUG
 
 void D3D12RenderSystem::CreateFactory()
 {
@@ -525,7 +527,6 @@ void D3D12RenderSystem::CreateFactory()
     #else
     auto hr = CreateDXGIFactory1(IID_PPV_ARGS(factory_.ReleaseAndGetAddressOf()));
     #endif
-
     DXThrowIfFailed(hr, "failed to create DXGI factor 1.4");
 }
 

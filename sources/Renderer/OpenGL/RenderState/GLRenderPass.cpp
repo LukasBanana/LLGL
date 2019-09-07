@@ -18,7 +18,7 @@ GLRenderPass::GLRenderPass(const RenderPassDescriptor& desc) :
     numColorAttachments_ { static_cast<std::uint8_t>(desc.colorAttachments.size()) }
 {
     /* Check which color attachment must be cleared */
-    if (FillClearColorAttachmentIndices(clearColorAttachments_, desc) > 0)
+    if (FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc) > 0)
         clearMask_ |= GL_COLOR_BUFFER_BIT;
 
     /* Check if depth attachment must be cleared */

@@ -17,7 +17,7 @@ namespace LLGL
 D3D11RenderPass::D3D11RenderPass(const RenderPassDescriptor& desc)
 {
     /* Check which color attachment must be cleared */
-    FillClearColorAttachmentIndices(clearColorAttachments_, desc);
+    FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc);
 
     /* Check if depth attachment must be cleared */
     if (desc.depthAttachment.loadOp == AttachmentLoadOp::Clear)

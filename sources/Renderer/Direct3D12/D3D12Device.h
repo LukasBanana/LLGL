@@ -60,11 +60,29 @@ class D3D12Device
             return featureLevel_;
         }
 
+        #ifdef LLGL_DEBUG
+        // Returns the info queue of the debug layer.
+        inline ID3D12InfoQueue* GetInfoQueue() const
+        {
+            return infoQueue_.Get();
+        }
+        #endif
+
+    private:
+
+        #ifdef LLGL_DEBUG
+        void DenyLowSeverityWarnings();
+        #endif
+
     private:
 
         ComPtr<ID3D12Device>        device_;
         ComPtr<ID3D12CommandQueue>  queue_;
         D3D_FEATURE_LEVEL           featureLevel_   = D3D_FEATURE_LEVEL_9_1;
+
+        #ifdef LLGL_DEBUG
+        ComPtr<ID3D12InfoQueue>     infoQueue_;
+        #endif
 
 };
 

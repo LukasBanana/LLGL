@@ -13,6 +13,7 @@
 #include <LLGL/ForwardDecls.h>
 #include "../../StaticLimits.h"
 #include <cstdint>
+#include <cstddef>
 #include <d3d12.h>
 
 
@@ -25,7 +26,18 @@ class D3D12RenderPass final : public RenderPass
 
     public:
 
+        D3D12RenderPass() = default;
         D3D12RenderPass(const RenderPassDescriptor& desc);
+
+        // Builds the color and depth-stencil attachments index and format buffers with the specified render pass descriptor.
+        void BuildAttachments(const RenderPassDescriptor& desc);
+
+        // Builds the color and depth-stencil attachments index and format buffers with the specified render target attachment descriptor.
+        void BuildAttachments(
+            std::size_t                 numAttachmentDescs,
+            const AttachmentDescriptor* attachmentDescs,
+            const DXGI_FORMAT           defaultDepthStencilFormat
+        );
 
         // Returns the number of color attachments used for this render pass.
         inline UINT GetNumColorAttachments() const
@@ -45,11 +57,32 @@ class D3D12RenderPass final : public RenderPass
             return clearColorAttachments_;
         }
 
+        // Returns the array of native color formats.
+        inline const DXGI_FORMAT* GetRTVFormats() const
+        {
+            return rtvFormats_;
+        }
+
+        // Returns the native depth-stencil format.
+        inline DXGI_FORMAT GetDSVFormat() const
+        {
+            return dsvFormat_;
+        }
+
+    private:
+
+        void SetDSVFormat(DXGI_FORMAT format);
+        void SetRTVFormat(UINT colorAttachment, DXGI_FORMAT format);
+
     private:
 
         UINT            numColorAttachments_                                    = 0;
+
         UINT            clearFlagsDSV_                                          = 0;
         std::uint8_t    clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
+
+        DXGI_FORMAT     rtvFormats_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]             = {};
+        DXGI_FORMAT     dsvFormat_                                              = DXGI_FORMAT_UNKNOWN;
 
 };
 

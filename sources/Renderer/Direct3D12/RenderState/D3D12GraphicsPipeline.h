@@ -21,6 +21,7 @@ namespace LLGL
 
 
 class D3D12Device;
+class D3D12RenderPass;
 class D3D12ShaderProgram;
 class D3D12CommandContext;
 class ByteBufferIterator;
@@ -57,6 +58,7 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
             D3D12Device&                        device,
             const D3D12ShaderProgram&           shaderProgram,
             ID3D12RootSignature*                rootSignature,
+            const D3D12RenderPass*              renderPass,
             const GraphicsPipelineDescriptor&   desc
         );
 

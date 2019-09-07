@@ -56,6 +56,8 @@ DbgCommandBuffer::DbgCommandBuffer(
 void DbgCommandBuffer::Begin()
 {
     ResetFrameProfile();
+    ResetBindings();
+    ResetStates();
 
     if (debugger_)
         EnableRecording(true);
@@ -459,22 +461,30 @@ void DbgCommandBuffer::EndStreamOutput()
 
 /* ----- Resources ----- */
 
-//TODO: record bindings
+//TODO: also record individual resource bindings
 void DbgCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
-    LLGL_DBG_SOURCE;
-    AssertRecording();
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        AssertGraphicsPipelineBound();
+    }
 
     instance.SetGraphicsResourceHeap(resourceHeap, firstSet);
 
     profile_.graphicsResourceHeapBindings++;
 }
 
-//TODO: record bindings
+//TODO: also record individual resource bindings
 void DbgCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
-    LLGL_DBG_SOURCE;
-    AssertRecording();
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        AssertComputePipelineBound();
+    }
 
     instance.SetComputeResourceHeap(resourceHeap, firstSet);
 
@@ -644,7 +654,9 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
         LLGL_DBG_SOURCE;
         AssertRecording();
 
-        bindings_.graphicsPipeline = (&graphicsPipelineDbg);
+        /* Bind graphics pipeline and unbind compute pipeline */
+        bindings_.graphicsPipeline  = (&graphicsPipelineDbg);
+        bindings_.computePipeline   = nullptr;
 
         if (auto shaderProgram = graphicsPipelineDbg.desc.shaderProgram)
         {
@@ -677,7 +689,9 @@ void DbgCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
         LLGL_DBG_SOURCE;
         AssertRecording();
 
-        bindings_.computePipeline = &computePipelineDbg;
+        /* Bind compute pipeline and unbind graphics pipeline */
+        bindings_.graphicsPipeline  = nullptr;
+        bindings_.computePipeline   = &computePipelineDbg;
 
         if (auto shaderProgram = computePipelineDbg.desc.shaderProgram)
             bindings_.shaderProgram_ = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
@@ -1636,6 +1650,16 @@ void DbgCommandBuffer::ResetFrameProfile()
 {
     /* Reset all counters of frame profile */
     std::fill(std::begin(profile_.values), std::end(profile_.values), 0);
+}
+
+void DbgCommandBuffer::ResetBindings()
+{
+    ::memset(&bindings_, 0, sizeof(bindings_));
+}
+
+void DbgCommandBuffer::ResetStates()
+{
+    ::memset(&states_, 0, sizeof(states_));
 }
 
 

@@ -232,7 +232,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     else
     {
         /* Create swap chain for window handle */
-        NativeHandle wndHandle;
+        NativeHandle wndHandle = {};
         GetSurface().GetNativeHandle(&wndHandle);
 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc;

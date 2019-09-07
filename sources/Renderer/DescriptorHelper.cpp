@@ -8,31 +8,42 @@
 #include "DescriptorHelper.h"
 #include "StaticLimits.h"
 #include <LLGL/RenderPassFlags.h>
+#include <algorithm>
 
 
 namespace LLGL
 {
 
 
-LLGL_EXPORT std::uint8_t FillClearColorAttachmentIndices(std::uint8_t* clearColorAttachments, const RenderPassDescriptor& renderPassDesc)
+LLGL_EXPORT void ResetClearColorAttachmentIndices(
+    std::size_t     numColorAttachments,
+    std::uint8_t*   colorAttachmentsIndices)
+{
+    for (std::size_t i = 0; i < numColorAttachments; ++i)
+        colorAttachmentsIndices[i] = 0xFF;
+}
+
+LLGL_EXPORT std::uint8_t FillClearColorAttachmentIndices(
+    std::size_t                 numColorAttachments,
+    std::uint8_t*               colorAttachmentsIndices,
+    const RenderPassDescriptor& renderPassDesc)
 {
     /* Check which color attachment must be cleared */
-    std::uint8_t i = 0, bufferIndex = 0;
+    std::size_t i = 0;
 
-    for (const auto& attachment : renderPassDesc.colorAttachments)
+    for (std::uint8_t bufferIndex = 0; i < numColorAttachments && i < renderPassDesc.colorAttachments.size(); ++bufferIndex)
     {
-        if (attachment.loadOp == AttachmentLoadOp::Clear)
-            clearColorAttachments[i++] = bufferIndex;
-        ++bufferIndex;
+        if (renderPassDesc.colorAttachments[bufferIndex].loadOp == AttachmentLoadOp::Clear)
+            colorAttachmentsIndices[i++] = bufferIndex;
     }
 
     /* Initialize remaining attachment indices */
     const auto n = i;
 
-    for (; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
-        clearColorAttachments[i] = 0xFF;
+    while (i < numColorAttachments)
+        colorAttachmentsIndices[i++] = 0xFF;
 
-    return n;
+    return static_cast<std::uint8_t>(n);
 }
 
 

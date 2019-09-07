@@ -41,6 +41,7 @@ class D3D12ShaderProgram final : public ShaderProgram
     public:
 
         D3D12_INPUT_LAYOUT_DESC GetInputLayoutDesc() const;
+        D3D12_STREAM_OUTPUT_DESC GetStreamOutputDesc() const;
 
         inline D3D12Shader* GetVS() const { return vs_; }
         inline D3D12Shader* GetPS() const { return ps_; }

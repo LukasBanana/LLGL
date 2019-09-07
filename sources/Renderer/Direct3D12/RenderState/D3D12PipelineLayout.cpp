@@ -27,6 +27,29 @@ void D3D12PipelineLayout::SetName(const char* name)
     D3D12SetObjectName(rootSignature_.Get(), name);
 }
 
+static D3D12_ROOT_SIGNATURE_FLAGS GetRootSignatureFlags(const PipelineLayoutDescriptor& layoutDesc)
+{
+    D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+
+    /* Always allow acces to the input assembly */
+    signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
+
+    /* Determine which shader stages are not used for any binding points */
+    long stageFlags = 0;
+    for (const auto& binding : layoutDesc.bindings)
+        stageFlags |= binding.stageFlags;
+
+    /* Deny access to root signature for shader stages that are not affected by any binding point */
+    if ((stageFlags & StageFlags::VertexStage        ) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;   }
+    if ((stageFlags & StageFlags::TessControlStage   ) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;     }
+    if ((stageFlags & StageFlags::TessEvaluationStage) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;   }
+    if ((stageFlags & StageFlags::GeometryStage      ) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS; }
+    if ((stageFlags & StageFlags::FragmentStage      ) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;    }
+
+    return signatureFlags;
+}
+
 void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
     D3D12RootSignature rootSignature;
@@ -40,12 +63,8 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
     BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Texture, BindFlags::Storage        );
     BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0                         );
 
-    /* Get root signature flags */
-    D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
-    BuildRootSignatureFlags(signatureFlags, desc);
-
     /* Build final root signature descriptor */
-    rootSignature_ = rootSignature.Finalize(device, signatureFlags);
+    rootSignature_ = rootSignature.Finalize(device, GetRootSignatureFlags(desc));
 }
 
 void D3D12PipelineLayout::ReleaseRootSignature()
@@ -91,31 +110,6 @@ void D3D12PipelineLayout::BuildRootParameter(
             bindFlags_.push_back(binding.bindFlags);
         }
     }
-}
-
-//TODO: properly enable D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT and D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT
-void D3D12PipelineLayout::BuildRootSignatureFlags(
-    D3D12_ROOT_SIGNATURE_FLAGS&     signatureFlags,
-    const PipelineLayoutDescriptor& layoutDesc)
-{
-    signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-    /* Determine which shader stages are not used for any binding points */
-    long stageFlags = 0;
-    for (const auto& binding : layoutDesc.bindings)
-        stageFlags |= binding.stageFlags;
-
-    /* Deny access to root signature for shader stages that are not affected by any binding point */
-    if ((stageFlags & StageFlags::VertexStage) == 0)
-        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
-    if ((stageFlags & StageFlags::TessControlStage) == 0)
-        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
-    if ((stageFlags & StageFlags::TessEvaluationStage) == 0)
-        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;
-    if ((stageFlags & StageFlags::GeometryStage) == 0)
-        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-    if ((stageFlags & StageFlags::FragmentStage) == 0)
-        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 }
 
 
