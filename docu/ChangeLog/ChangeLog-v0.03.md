@@ -462,8 +462,8 @@ void CommandBuffer::SetResource(LLGL::Resource& resource,
                                 long            stageFlags = LLGL::StageFlags::AllStages);
 
 // Usage:
-myCmdBuffer->SetResource(*myConstBuffer, 0, LLGL::BindFlags::ConstantBuffer, LLGL::BindFlags::VertexStage);
-myCmdBuffer->SetResource(*myColorMap, 1, LLGL::BindFlags::Sampled, LLGL::BindFlags::FragmentStage);
+myCmdBuffer->SetResource(*myConstBuffer, 0, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage);
+myCmdBuffer->SetResource(*myColorMap, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
 ```
 
 
