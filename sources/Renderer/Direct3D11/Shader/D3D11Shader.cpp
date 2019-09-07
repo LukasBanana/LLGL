@@ -263,7 +263,7 @@ void D3D11Shader::CreateNativeShader(
                         static_cast<UINT>(outputElements.size()),
                         nullptr,
                         0,
-                        D3D11_SO_NO_RASTERIZED_STREAM,
+                        0,//D3D11_SO_NO_RASTERIZED_STREAM,
                         classLinkage,
                         native_.gs.ReleaseAndGetAddressOf()
                     );

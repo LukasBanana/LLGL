@@ -14,7 +14,7 @@ void main()
 		{
 			vec4 pos = gl_in[j].gl_Position;
 			pos.x += (float(i) - 1.0)*4.0;
-			pos.w = 7.0;
+			pos.w = 8.0;
 			gl_Position = pos;
 			EmitVertex();
 		}

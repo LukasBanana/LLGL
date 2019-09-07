@@ -91,7 +91,7 @@ bool D3D12Shader::GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) cons
         layoutDesc.NumEntries       = static_cast<UINT>(soDeclEntries_.size());
         layoutDesc.pBufferStrides   = soBufferStrides_.data();
         layoutDesc.NumStrides       = static_cast<UINT>(soBufferStrides_.size());
-        layoutDesc.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+        layoutDesc.RasterizedStream = 0;//D3D12_SO_NO_RASTERIZED_STREAM;
         return true;
     }
     return false;

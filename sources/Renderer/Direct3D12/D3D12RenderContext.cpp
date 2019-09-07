@@ -327,8 +327,6 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
             D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
         );
 
-        //const FLOAT optimizedClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
         for (UINT i = 0; i < numFrames_; ++i)
         {
             /* Create render target resource */
@@ -337,7 +335,7 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
                 D3D12_HEAP_FLAG_NONE,
                 &tex2DMSDesc,
                 D3D12_RESOURCE_STATE_RENDER_TARGET,
-                nullptr,//&CD3DX12_CLEAR_VALUE(colorFormat_, optimizedClearColor),
+                nullptr,
                 IID_PPV_ARGS(colorBuffersMS_[i].native.ReleaseAndGetAddressOf())
             );
             DXThrowIfCreateFailed(hr, "ID3D12Resource", "for multi-sampled swap-chain");
