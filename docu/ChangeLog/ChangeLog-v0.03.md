@@ -16,6 +16,7 @@
 - [`PipelineLayoutDesc` syntax](#pipelinelayoutdesc-syntax)
 - [`Format` information](#format-information)
 - [Direct resource binding](#direct-resource-binding)
+- [Vertex attribute description](#vertex-attribute-description)
 - [Removed features](#removed-features)
 
 
@@ -151,7 +152,8 @@ myCmdQueue->Submit(*myCmdBuffer);
 
 ## Index buffer format
 
-The class `IndexFormat` has been removed and replaced by the `Format` enum. The only valid index formats are `Format::R16UInt` (16-bit) and `Format::R32UInt` (32-bit). An 8-bit index format is no longer supported (OpenGL was the only renderer anyways that supported it).
+The class `IndexFormat` has been removed and replaced by the `Format` enum. The only valid index formats are `Format::R16UInt` (16-bit) and `Format::R32UInt` (32-bit). An 8-bit index format is no longer supported (OpenGL was the only renderer that supports it).
+Moreover, the index format in the buffer descriptor is optional. If the format is `Format::Undefined`, only the secondary `SetIndexBuffer` function of the `CommandBuffer` interface can be used with that index buffer.
 
 Before:
 ```cpp
@@ -160,15 +162,23 @@ LLGL::BufferDescriptor myBufferDesc;
 myBufferDesc.type               = LLGL::BufferType::Index;
 myBufferDesc.indexBuffer.format = LLGL::IndexFormat(LLGL::DataType::UInt16);
 /* ... */
+myCmdBuffer->SetIndexBuffer(*myIndexBuffer);
 ```
 
 After:
 ```cpp
-// Usage:
+// Usage (Option A):
 LLGL::BufferDescriptor myBufferDesc;
-myBufferDesc.bindFlags          = LLGL::BindFlags::IndexBuffer;
-myBufferDesc.indexBuffer.format = LLGL::Format::R16UInt;
+myBufferDesc.bindFlags   = LLGL::BindFlags::IndexBuffer;
+myBufferDesc.indexFormat = LLGL::Format::R16UInt;
 /* ... */
+myCmdBuffer->SetIndexBuffer(*myIndexBuffer);
+
+// Usage (Option B):
+LLGL::BufferDescriptor myBufferDesc;
+myBufferDesc.bindFlags   = LLGL::BindFlags::IndexBuffer;
+/* ... */
+myCmdBuffer->SetIndexBuffer(*myIndexBuffer, LLGL::Format::R16UInt);
 ```
 
 
@@ -203,7 +213,7 @@ Originally, the `ShaderUniform` interface was only intended to set binding point
 To avoid setting these binding points in each render pass over and over again, a `name` property has been added to the `BindingDescriptor` structure.
 This member is only required for OpenGL before version 4.2, or when the GLSL version does not support explicit binding points.
 The resource name in conjunction with the pipeline layout will tell the OpenGL backend how to initialize the respective uniforms.
-All other uniforms (matrices and other parameters for instances) must be set with the new `SetUniform`/`SetUniforms` functions each time a graphics pipeline is bound.
+All other uniforms (matrices and other parameters for instance) must be set with the new `SetUniform`/`SetUniforms` functions each time a graphics pipeline is bound.
 Also the syntax of the utility function `PipelineLayoutDesc` has been extended to support this optional property.
 
 Before:
@@ -281,13 +291,10 @@ LLGL::StorageBufferType LLGL::ShaderReflectionDescriptor::ResourceView::storageB
 LLGL::ShaderReflectionDescriptor ShaderProgram::QueryReflectionDesc() const;
 
 // Usage:
-try
-{
+try {
     LLGL::ShaderReflectionDescriptor reflection = myShaderProgram->QueryReflectionDesc();
     /* Evaluate ... */
-}
-catch (const std::exception& e)
-{
+} catch (const std::exception& e) {
     /* Error ... */
 }
 ```
@@ -303,12 +310,9 @@ bool ShaderProgram::Reflect(LLGL::ShaderReflection& reflection) const;
 
 // Usage:
 LLGL::ShaderReflection reflection;
-if (myShaderProgram->Reflect(reflection))
-{
+if (myShaderProgram->Reflect(reflection)) {
     /* Evaluate ... */
-}
-else
-{
+} else {
     /* Error ... */
 }
 ```
@@ -421,7 +425,7 @@ LLGL::FindSuitableImageFormat(myFormat, myImageFormat, myDataType);
 ```
 
 After:
-```
+```cpp
 // Interface:
 const LLGL::FormatAttributes& GetFormatAttribs(const LLGL::Format format);
 
@@ -467,11 +471,124 @@ myCmdBuffer->SetResource(*myColorMap, 1, LLGL::BindFlags::Sampled, LLGL::StageFl
 ```
 
 
+## Vertex attribute description
+
+The `VertexFormat` structure is no longer required and only remains as a utility. All vertex attributes are passed as a single list.
+Moreover, the input layout description has been moved from `ShaderProgramDescriptor` to `ShaderDescriptor`.
+
+Before:
+```cpp
+// Interface:
+std::vector<LLGL::VertexFormat>          LLGL::ShaderProgramDescriptor::vertexFormats;
+LLGL::StreamOutputFormat                 LLGL::ShaderDescriptor::StreamOutput::format;
+LLGL::ShaderDescriptor::StreamOutput     LLGL::ShaderDescriptor::streamOutput;
+std::vector<LLGL::VertexAttribute>       LLGL::ShaderReflectionDescriptor::vertexAttributes;
+std::vector<LLGL::StreamOutputAttribute> LLGL::ShaderReflectionDescriptor::streamOutputAttributes;
+LLGL::VertexFormat                       LLGL::BufferDescriptor::VertexBuffer::format;
+LLGL::BufferDescriptor::VertexBuffer     LLGL::BufferDescriptor::vertexBuffer;
+LLGL::IndexFormat                        LLGL::BufferDescriptor::IndexBuffer::format;
+LLGL::BufferDescriptor::IndexBuffer      LLGL::BufferDescriptor::indexBuffer;
+
+// Usage:
+struct MyVertex {
+    float position[3];       // attribute 0
+    float normal[3];         // attribute 1
+    float texCoord[2];       // attribute 2
+};
+struct MyInstance {
+    float   transform[4][4]; // attribute 3...6
+    uint8_t color[4];        // attribute 7
+};
+
+LLGL::VertexFormat myVertexFmt;
+myVertexFmt.AppendAttribute({ "position", LLGL::Format::RGB32Float });
+myVertexFmt.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
+myVertexFmt.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
+myVertexFmt.inputSlot = 0;
+
+LLGL::VertexFormat myInstanceFmt;
+myInstanceFmt.AppendAttribute({ "transform", 0, LLGL::Format::RGBA32Float, 1 });
+myInstanceFmt.AppendAttribute({ "transform", 1, LLGL::Format::RGBA32Float, 1 });
+myInstanceFmt.AppendAttribute({ "transform", 2, LLGL::Format::RGBA32Float, 1 });
+myInstanceFmt.AppendAttribute({ "transform", 3, LLGL::Format::RGBA32Float, 1 });
+myInstanceFmt.AppendAttribute({ "color",        LLGL::Format::RGBA8UNorm,  1 });
+myInstanceFmt.inputSlot = 1;
+
+LLGL::BufferDescriptor myVertexBufferDesc;
+myVertexBufferDesc.vertexBuffer.format = myVertexFmt;
+/* ... */
+
+LLGL::BufferDescriptor myInstanceBufferDesc;
+myInstanceBufferDesc.vertexBuffer.format = myInstanceFmt;
+/* ... */
+
+// Pass all vertex attributes to the vertex shader descriptor
+LLGL::ShaderProgramDescriptor myShaderProgramDesc;
+myShaderProgramDesc.vertexFormats = { myVertexFmt, myInstanceFmt };
+/* ... */
+```
+
+After:
+```cpp
+// Interface:
+std::vector<LLGL::VertexAttribute> LLGL::VertexShaderAttributes::inputAttribs;
+std::vector<LLGL::VertexAttribute> LLGL::VertexShaderAttributes::outputAttribs;
+LLGL::VertexShaderAttributes       LLGL::ShaderDescriptor::vertex;
+LLGL::VertexShaderAttributes       LLGL::ShaderReflection::vertex;
+std::vector<LLGL::VertexAttribute> LLGL::BufferDescriptor::vertexAttribs;
+LLGL::Format                       LLGL::BufferDescriptor::indexFormat;
+
+// Usage:
+struct MyVertex {
+    float position[3];       // attribute 0
+    float normal[3];         // attribute 1
+    float texCoord[2];       // attribute 2
+};
+struct MyInstance {
+    float   transform[4][4]; // attribute 3...6
+    uint8_t color[4];        // attribute 7
+};
+
+LLGL::VertexFormat myVertexFmt;
+myVertexFmt.AppendAttribute({ "position", LLGL::Format::RGB32Float, 0 });
+myVertexFmt.AppendAttribute({ "normal",   LLGL::Format::RGB32Float, 1 });
+myVertexFmt.AppendAttribute({ "texCoord", LLGL::Format::RG32Float,  2 });
+myVertexFmt.SetSlot(0);
+
+LLGL::VertexFormat myInstanceFmt;
+myInstanceFmt.AppendAttribute({ "transform", 0, LLGL::Format::RGBA32Float, 3, 1 });
+myInstanceFmt.AppendAttribute({ "transform", 1, LLGL::Format::RGBA32Float, 4, 1 });
+myInstanceFmt.AppendAttribute({ "transform", 2, LLGL::Format::RGBA32Float, 5, 1 });
+myInstanceFmt.AppendAttribute({ "transform", 3, LLGL::Format::RGBA32Float, 6, 1 });
+myInstanceFmt.AppendAttribute({ "color",        LLGL::Format::RGBA8UNorm,  7, 1 });
+myInstanceFmt.SetSlot(1);
+
+LLGL::BufferDescriptor myVertexBufferDesc;
+myVertexBufferDesc.vertexAttribs = myVertexFmt.attributes;
+/* ... */
+
+LLGL::BufferDescriptor myInstanceBufferDesc;
+myInstanceBufferDesc.vertexAttribs = myInstanceFmt.attributes;
+/* ... */
+
+// Pass all vertex attributes to the vertex shader descriptor
+LLGL::ShaderDescriptor myVertexShaderDesc;
+myVertexShaderDesc.vertex.inputAttribs = myVertexFmt.attributes;
+myVertexShaderDesc.vertex.inputAttribs.insert(
+    myVertexShaderDesc.vertex.inputAttribs.end(),
+    myInstanceFmt.attributes.begin(),
+    myInstanceFmt.attributes.end()
+);
+```
+
+
 ## Removed features
 
 The following features/functions have been removed:
 - The `Shader::Disassemble` function and `ShaderDisassembleFlags` enumeration have been removed. LLGL does not provide shader cross compilation or disassembling.
 - The compressed RGB format `Format::BC1RGB`. Use `Format::BC1UNorm` instead (for RGBA).
+- `StreamOutputFormat` has been replaced by `VertexFormat`
+- `StreamOutputAttribute` has been replaced by `VertexAttribute`
 
 
 
