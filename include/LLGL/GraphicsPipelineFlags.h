@@ -710,24 +710,26 @@ shader stages, depth-/ stencil-/ rasterizer-/ blend states etc.
 struct GraphicsPipelineDescriptor
 {
     /**
-    \brief Pointer to the shader program for the graphics pipeline. By default null.
+    \brief Specifies the shader program for the graphics pipeline. By default null.
     \remarks This must never be null when RenderSystem::CreateGraphicsPipeline is called with this structure.
     \see RenderSystem::CreateShaderProgram
     */
     const ShaderProgram*    shaderProgram       = nullptr;
 
     /**
-    \brief Pointer to a RenderPass object. By default null.
+    \brief Specifies an optional render pass. By default null.
     \remarks If this is null, the render pass of the RenderContext that was first created is used.
     This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
     \see CommandBuffer::BeginRenderPass
+    \see RenderSystem::CreateRenderPass
     */
     const RenderPass*       renderPass          = nullptr;
 
     /**
-    \brief Pointer to an optional pipeline layout for the graphics pipeline. By default null.
-    \remarks This layout determines at which slots buffer resources can be bound.
-    This is ignored by render systems which do not support pipeline layouts.
+    \brief Specifies an optional pipeline layout for the graphics pipeline. By default null.
+    \remarks This layout determines at which slots buffer resources will be bound.
+    If this is null, a default layout will be used that is only compatible with graphics pipelines that have no input and output vertex attributes and no binding points.
+    \see RenderSystem::CreatePipelineLayout
     */
     const PipelineLayout*   pipelineLayout      = nullptr;
 
@@ -738,7 +740,7 @@ struct GraphicsPipelineDescriptor
     PrimitiveTopology       primitiveTopology   = PrimitiveTopology::TriangleList;
 
     /**
-    \brief Specifies an optional list of viewports. If empty, the viewports must be set dynamically with the command buffer.
+    \brief Specifies an optional list of static viewports. If empty, the viewports must be set dynamically with the command buffer.
     \remarks This list must have the same number of entries as \c scissors, unless one of the lists is empty.
     \see CommandBuffer::SetViewport
     \see CommandBuffer::SetViewports
@@ -746,7 +748,7 @@ struct GraphicsPipelineDescriptor
     std::vector<Viewport>   viewports;
 
     /**
-    \brief Specifies an optional list of scissor rectangles. If empty, the scissors must be set dynamically with the command buffer.
+    \brief Specifies an optional list of static scissor rectangles. If empty, the scissors must be set dynamically with the command buffer.
     \remarks This list must have the same number of entries as \c viewports, unless one of the lists is empty.
     \see CommandBuffer::SetScissor
     \see CommandBuffer::SetScissors

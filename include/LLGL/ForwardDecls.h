@@ -56,6 +56,7 @@ struct DisplayModeDescriptor;
 struct DrawIndexedIndirectArguments;
 struct DrawIndirectArguments;
 struct DstImageDescriptor;
+struct FragmentAttribute;
 struct GraphicsPipelineDescriptor;
 struct MultiSamplingDescriptor;
 struct OpenGLDependentStateDescriptor;
@@ -86,8 +87,6 @@ struct ShaderUniform;
 struct SrcImageDescriptor;
 struct StencilDescriptor;
 struct StencilFaceDescriptor;
-struct StreamOutputAttribute;//TODO: remove
-struct StreamOutputFormat;//TODO: remove
 struct TextureDescriptor;
 struct TextureRegion;
 struct VertexAttribute;

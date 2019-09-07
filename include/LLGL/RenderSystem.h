@@ -429,6 +429,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         For legacy graphics APIs (i.e. Direct3D 11 and OpenGL), shader resources can also be bound individually with the extended command buffer.
         \return Pointer to the new PipelineLayout object or null if the renderer does not support pipeline layouts.
         \see CreateResourceHeap
+        \see PipelineLayoutDesc
         */
         virtual PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) = 0;
 
