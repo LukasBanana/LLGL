@@ -85,14 +85,24 @@ void D3D12StagingBuffer::Write(
     const void*                 data,
     UINT64                      dataSize)
 {
-    /* Copy CPU-memory to upload buffer */
-    char* intermediateData = nullptr;
-    HRESULT hr = native_->Map(0, nullptr, reinterpret_cast<void**>(&intermediateData));
-    if (SUCCEEDED(hr))
+    /* Map GPU host memory to CPU memory space CPU-memory to upload buffer */
+    char* mappedData = nullptr;
+    const D3D12_RANGE readRange{ 0, 0 };
+
+    HRESULT hr = native_->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
+    if (FAILED(hr))
+        return;
+
+    /* Copy input data to staging buffer */
+    ::memcpy(mappedData + offset_, data, static_cast<std::size_t>(dataSize));
+
+    /* Unmap buffer with range of written data */
+    const D3D12_RANGE writtenRange
     {
-        ::memcpy(intermediateData + offset_, data, static_cast<std::size_t>(dataSize));
-        native_->Unmap(0, nullptr);
-    }
+        static_cast<SIZE_T>(offset_),
+        static_cast<SIZE_T>(offset_ + dataSize)
+    };
+    native_->Unmap(0, &writtenRange);
 
     /* Encode copy buffer command */
     commandList->CopyBufferRegion(dstBuffer, dstOffset, native_.Get(), offset_, dataSize);

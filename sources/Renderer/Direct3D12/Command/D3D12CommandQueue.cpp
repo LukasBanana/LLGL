@@ -19,15 +19,18 @@ namespace LLGL
 {
 
 
-D3D12CommandQueue::D3D12CommandQueue(ID3D12Device* device, ID3D12CommandQueue* queue) :
-    native_      { queue  },
-    globalFence_ { device }
+D3D12CommandQueue::D3D12CommandQueue(
+    D3D12Device&            device,
+    D3D12_COMMAND_LIST_TYPE type)
+:
+    native_      { device.CreateDXCommandQueue(type) },
+    globalFence_ { device.GetNative()                }
 {
 }
 
 void D3D12CommandQueue::SetName(const char* name)
 {
-    D3D12SetObjectName(native_, name);
+    D3D12SetObjectName(native_.Get(), name);
 }
 
 /* ----- Command Buffers ----- */

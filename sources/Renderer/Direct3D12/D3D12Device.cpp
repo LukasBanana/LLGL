@@ -23,9 +23,8 @@ bool D3D12Device::CreateDXDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::
         hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(device_.ReleaseAndGetAddressOf()));
         if (SUCCEEDED(hr))
         {
-            /* Create command queue and store final feature level */
-            queue_          = CreateDXCommandQueue();
-            featureLevel_   = level;
+            /* Store selected feature level */
+            featureLevel_ = level;
 
             #ifdef LLGL_DEBUG
             if (SUCCEEDED(device_.As(&infoQueue_)))
@@ -38,14 +37,14 @@ bool D3D12Device::CreateDXDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::
     return false;
 }
 
-ComPtr<ID3D12CommandQueue> D3D12Device::CreateDXCommandQueue()
+ComPtr<ID3D12CommandQueue> D3D12Device::CreateDXCommandQueue(D3D12_COMMAND_LIST_TYPE type)
 {
     ComPtr<ID3D12CommandQueue> cmdQueue;
 
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
     {
         queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-        queueDesc.Type  = D3D12_COMMAND_LIST_TYPE_DIRECT;
+        queueDesc.Type  = type;
     }
     auto hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(cmdQueue.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12CommandQueue");

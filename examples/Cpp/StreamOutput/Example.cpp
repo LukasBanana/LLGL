@@ -118,7 +118,7 @@ public:
         {
             pipelineDesc.shaderProgram              = shaderProgram;
             pipelineDesc.pipelineLayout             = pipelineLayout;
-            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }

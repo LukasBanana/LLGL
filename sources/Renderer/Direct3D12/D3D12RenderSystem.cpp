@@ -38,7 +38,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateDevice();
 
     /* Create command queue interface */
-    commandQueue_ = MakeUnique<D3D12CommandQueue>(device_.GetNative(), device_.GetQueue());
+    commandQueue_ = MakeUnique<D3D12CommandQueue>(device_);
 
     /* Create command queue, command allocator, and graphics command list */
     commandContext_.Create(device_, *commandQueue_);

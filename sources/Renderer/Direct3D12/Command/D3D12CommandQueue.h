@@ -21,14 +21,17 @@ namespace LLGL
 {
 
 
-class D3D12RenderSystem;
+class D3D12Device;
 
 class D3D12CommandQueue final : public CommandQueue
 {
 
     public:
 
-        D3D12CommandQueue(ID3D12Device* device, ID3D12CommandQueue* queue);
+        D3D12CommandQueue(
+            D3D12Device&            device,
+            D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT
+        );
 
         void SetName(const char* name) override;
 
@@ -61,7 +64,7 @@ class D3D12CommandQueue final : public CommandQueue
         // Returns the native ID3D12CommandQueue object.
         inline ID3D12CommandQueue* GetNative() const
         {
-            return native_;
+            return native_.Get();
         }
 
         // Returns the global fence object for this queue.
@@ -78,8 +81,8 @@ class D3D12CommandQueue final : public CommandQueue
 
     private:
 
-        ID3D12CommandQueue* native_             = nullptr;
-        D3D12Fence          globalFence_;
+        ComPtr<ID3D12CommandQueue>  native_;
+        D3D12Fence                  globalFence_;
 
 };
 

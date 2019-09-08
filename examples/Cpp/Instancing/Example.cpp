@@ -355,10 +355,6 @@ private:
         settings.animVec[0] = std::sin(animationTime) * animationRadius;
         settings.animVec[1] = std::cos(animationTime) * animationRadius;
 
-        // Upload new data to the constant buffer on the GPU
-        if (constantBuffer)
-            UpdateBuffer(constantBuffer, settings);
-
         // Allow dynamic shader reloading (for debugging)
         if (input->KeyDown(LLGL::Key::R))
         {
@@ -390,6 +386,9 @@ private:
         {
             // Set buffer array, texture, and sampler
             commands->SetVertexBufferArray(*vertexBufferArray);
+
+            // Upload new data to the constant buffer on the GPU
+            commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
             // Set the render context as the initial render target
             commands->BeginRenderPass(*context);
