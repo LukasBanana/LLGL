@@ -260,17 +260,18 @@ private:
         #ifdef ENABLE_DEPTH_TEXTURE
 
         // Create depth texture
-        renderTargetDepthTex = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::Format::D32Float, renderTargetSize.width, renderTargetSize.height)
-        );
+        LLGL::TextureDescriptor depthTexDesc;
+        {
+            depthTexDesc.bindFlags      = LLGL::BindFlags::DepthStencilAttachment;
+            depthTexDesc.format         = LLGL::Format::D32Float;
+            depthTexDesc.extent.width   = renderTargetSize.width;
+            depthTexDesc.extent.height  = renderTargetSize.height;
+            depthTexDesc.mipLevels      = 1;
+            depthTexDesc.samples        = multiSamplingDesc.SampleCount();
+            depthTexDesc.type           = (depthTexDesc.samples > 1 ? LLGL::TextureType::Texture2DMS : LLGL::TextureType::Texture2D);
+        }
+        renderTargetDepthTex = renderer->CreateTexture(depthTexDesc);
 
-        #endif
-
-        #if 0//TEST
-        // Create depth texture
-        auto renderTargetDepthTex2 = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::Format::D32Float, renderTargetSize.width, renderTargetSize.height)
-        );
         #endif
 
         // Create render-target with multi-sampling

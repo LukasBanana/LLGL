@@ -60,6 +60,11 @@ glslangValidator -V -S vert -o StencilBuffer/Stencil.450core.vert.spv StencilBuf
 glslangValidator -V -S vert -o StencilBuffer/Scene.450core.vert.spv StencilBuffer/Scene.450core.vert
 glslangValidator -V -S frag -o StencilBuffer/Scene.450core.frag.spv StencilBuffer/Scene.450core.frag
 
+echo ####### StreamOutput #######
+glslangValidator -V -S vert -o StreamOutput/Example.450core.vert.spv StreamOutput/Example.450core.vert
+glslangValidator -V -S geom -o StreamOutput/Example.450core.geom.spv StreamOutput/Example.450core.geom
+glslangValidator -V -S frag -o StreamOutput/Example.450core.frag.spv StreamOutput/Example.450core.frag
+
 echo ####### VolumeRendering #######
 glslangValidator -V -S vert -o VolumeRendering/Example.450core.vert.spv VolumeRendering/Example.450core.vert
 glslangValidator -V -S frag -o VolumeRendering/Example.450core.frag.spv VolumeRendering/Example.450core.frag

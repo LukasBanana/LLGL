@@ -79,8 +79,7 @@ public:
     void CreateShaders(const LLGL::VertexFormat& vertexFormat, const LLGL::VertexFormat& streamOutputFormat)
     {
         // Load shader program
-        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
-        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+        if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             shaderProgram = LoadShaderProgram(
                 {
@@ -92,7 +91,19 @@ public:
                 streamOutputFormat
             );
         }
-        else
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" },
+                    { LLGL::ShaderType::Geometry, "Example.450core.geom.spv" },
+                    { LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }
+                },
+                { vertexFormat },
+                streamOutputFormat
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             shaderProgram = LoadShaderProgram(
                 {
@@ -104,6 +115,8 @@ public:
                 streamOutputFormat
             );
         }
+        else
+            throw std::runtime_error("shaders not available for selected renderer in this example");
     }
 
     void CreatePipelines()
