@@ -102,10 +102,10 @@ static void Convert(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
 // Converts a vertex attribute to a D3D stream-output entry
 static void Convert(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
 {
-    dst.Stream          = src.location;
+    dst.Stream          = 0;//src.location;
     dst.SemanticName    = src.name.c_str();
     dst.SemanticIndex   = src.semanticIndex;
-    dst.StartComponent  = src.offset;
+    dst.StartComponent  = 0;//src.offset;
     dst.ComponentCount  = GetFormatAttribs(src.format).components;
     dst.OutputSlot      = src.slot;
 }

@@ -56,6 +56,9 @@ enum class PrimitiveType
 
 /**
 \brief Primitive topology enumeration.
+\remarks All strip topologies (i.e. PrimitiveTopology::LineStrip, PrimitiveTopology::LineStripAdjacency,
+PrimitiveTopology::TriangleStrip, and PrimitiveTopology::TriangleStripAdjacency) use a fixed index value to restart the primitives.
+This fixed index value is the maximum possible value for the respective index buffer format, i.e. <code>2^16-1</code> (or \c 0xFFFF) for Format::R16UInt and <code>2^32-1</code> (or \c 0xFFFFFFFF) for Format::R32UInt.
 \see GraphicsPipelineDescriptor::primitiveTopology
 */
 enum class PrimitiveTopology
@@ -773,6 +776,16 @@ struct GraphicsPipelineDescriptor
 
 //! Returns true if the specified primitive topology is a patch list.
 LLGL_EXPORT bool IsPrimitiveTopologyPatches(const PrimitiveTopology primitiveTopology);
+
+/**
+\brief Returns true if hte specified primitive topology is a strip that 
+\return True if \c primitiveTopology is equal to one of the following primitive topologies:
+- PrimitiveTopology::LineStrip
+- PrimitiveTopology::LineStripAdjacency
+- PrimitiveTopology::TriangleStrip
+- PrimitiveTopology::TriangleStripAdjacency
+*/
+LLGL_EXPORT bool IsPrimitiveTopologyStrip(const PrimitiveTopology primitiveTopology);
 
 //! Returns the number of patch control points of the specified primitive topology (in range [1, 32]), or 0 if the topology is not a patch list.
 LLGL_EXPORT std::uint32_t GetPrimitiveTopologyPatchSize(const PrimitiveTopology primitiveTopology);

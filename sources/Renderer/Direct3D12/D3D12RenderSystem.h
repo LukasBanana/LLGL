@@ -230,10 +230,8 @@ class D3D12RenderSystem final : public RenderSystem
         D3D12Device                                 device_;
         D3D12Fence                                  fence_;
 
-        ComPtr<ID3D12CommandAllocator>              graphicsCmdAlloc_;
-        ComPtr<ID3D12GraphicsCommandList>           graphicsCmdList_;   // graphics command list to upload data to the GPU
-        //ComPtr<ID3D12CommandAllocator>              computeCmdAlloc_;
-        //ComPtr<ID3D12GraphicsCommandList>           computeCmdList_;    // compute command list to generate MIP-maps
+        ComPtr<ID3D12CommandAllocator>              commandAllocator_;
+        ComPtr<ID3D12GraphicsCommandList>           commandList_;           // graphics command list to upload data to the GPU
 
         D3D12PipelineLayout                         defaultPipelineLayout_;
         D3D12CommandSignaturePool                   commandSignaturePool_;

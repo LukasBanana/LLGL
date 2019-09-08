@@ -44,18 +44,15 @@ D3D12RenderSystem::D3D12RenderSystem()
     commandQueue_ = MakeUnique<D3D12CommandQueue>(device_.GetNative(), device_.GetQueue());
 
     /* Create command queue, command allocator, and graphics command list */
-    graphicsCmdAlloc_   = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
-    graphicsCmdList_    = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, graphicsCmdAlloc_.Get());
-
-    //computeCmdAlloc_    = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE);
-    //computeCmdList_     = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCmdAlloc_.Get());
+    commandAllocator_   = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    commandList_        = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator_.Get());
 
     /* Create default pipeline layout and command signature pool */
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
     commandSignaturePool_.CreateDefaultSignatures(device_.GetNative());
 
-    commandContext_.SetCommandList(graphicsCmdList_.Get());
-    commandContext_.SetCommandQueueAndAllocator(device_.GetQueue(), graphicsCmdAlloc_.Get());
+    commandContext_.SetCommandList(commandList_.Get());
+    commandContext_.SetCommandQueueAndAllocator(device_.GetQueue(), commandAllocator_.Get());
 
     stagingBufferPool_.InitializeDevice(device_.GetNative(), 0);
     D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
@@ -253,7 +250,7 @@ void D3D12RenderSystem::UpdateGpuTexture(
     }
     textureD3D.UpdateSubresource(
         device_.GetNative(),
-        graphicsCmdList_.Get(),
+        commandList_.Get(),
         uploadBuffer,
         subresourceData,
         region.subresource.baseMipLevel,
@@ -639,7 +636,7 @@ void D3D12RenderSystem::ExecuteCommandList()
     /* Close graphics command list, execute with command queue, and reset command list */
     commandContext_.Close();
     commandContext_.Execute(device_.GetQueue());
-    commandContext_.Reset(graphicsCmdAlloc_.Get());
+    commandContext_.Reset(commandAllocator_.Get());
 }
 
 

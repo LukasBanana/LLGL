@@ -367,7 +367,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     /* Convert other states */
     stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
     stateDesc.StreamOutput          = shaderProgram.GetStreamOutputDesc();
-    stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+    stateDesc.IBStripCutValue       = (IsPrimitiveTopologyStrip(desc.primitiveTopology) ? D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.rasterizer.multiSampling.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;

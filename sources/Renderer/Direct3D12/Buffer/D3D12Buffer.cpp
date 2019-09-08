@@ -20,6 +20,8 @@ namespace LLGL
 {
 
 
+// BufferFilledSize actually only needs 4 bytes, but we keep it 16 byte aligned
+// see https://docs.microsoft.com/en-us/windows/win32/direct3d12/stream-output-counters#bufferfilledsize
 static const UINT64 g_soBufferFillSizeLen   = 16u;
 static const UINT64 g_cBufferAlignment      = 256u;
 
@@ -123,6 +125,8 @@ static bool HasWriteAccess(const CPUAccess access)
     return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
 }
 
+#define _TEST_USE_COPY_BUFFER_REGION_
+
 HRESULT D3D12Buffer::Map(
     D3D12CommandContext&    commandContext,
     D3D12Fence&             fence,
@@ -141,6 +145,7 @@ HRESULT D3D12Buffer::Map(
             /* Copy content from GPU host memory to CPU memory */
             commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
             {
+                #ifdef _TEST_USE_COPY_BUFFER_REGION_
                 commandContext.GetCommandList()->CopyBufferRegion(
                     cpuAccessBuffer_.Get(),
                     range.Begin,
@@ -148,6 +153,9 @@ HRESULT D3D12Buffer::Map(
                     range.Begin,
                     range.End - range.Begin
                 );
+                #else
+                commandContext.GetCommandList()->CopyResource(cpuAccessBuffer_.Get(), GetNative());
+                #endif
             }
             commandContext.TransitionResource(resource_, resource_.usageState, true);
             commandContext.Finish(&fence);
@@ -176,6 +184,7 @@ void D3D12Buffer::Unmap(
             /* Copy content from CPU memory to GPU host memory */
             commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST, true);
             {
+                #ifdef _TEST_USE_COPY_BUFFER_REGION_
                 commandContext.GetCommandList()->CopyBufferRegion(
                     GetNative(),
                     mappedRange_.Begin,
@@ -183,6 +192,9 @@ void D3D12Buffer::Unmap(
                     mappedRange_.Begin,
                     mappedRange_.End - mappedRange_.Begin
                 );
+                #else
+                commandContext.GetCommandList()->CopyResource(GetNative(), cpuAccessBuffer_.Get());
+                #endif
             }
             commandContext.TransitionResource(resource_, resource_.usageState, true);
             commandContext.Finish(&fence);
@@ -240,9 +252,9 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
     structStride_   = std::max(1u, desc.storageBuffer.stride);
 
     /* Determine actual resource size */
-    UINT64 bufferSize = bufferSize_;
+    internalSize_ = bufferSize_;
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
-        bufferSize += g_soBufferFillSizeLen;
+        internalSize_ += g_soBufferFillSizeLen;
 
     /* Determine initial resource state */
     resource_.usageState        = GetD3DUsageState(desc.bindFlags);
@@ -252,7 +264,7 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
     auto hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize, GetD3DResourceFlags(desc)),
+        &CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), GetD3DResourceFlags(desc)),
         resource_.transitionState,
         nullptr,
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
@@ -282,7 +294,7 @@ void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, UINT64 size, long 
     auto hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(heapType),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(GetBufferSize(), D3D12_RESOURCE_FLAG_NONE),
+        &CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize()),
         cpuAccessBuffer_.usageState,
         nullptr,
         IID_PPV_ARGS(cpuAccessBuffer_.native.ReleaseAndGetAddressOf())
@@ -307,9 +319,9 @@ void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
 void D3D12Buffer::CreateStreamOutputBufferView(const BufferDescriptor& desc)
 {
     /* Use first 64 bits to buffer fill size, i.e. <BufferFilledSizeLocation>, set buffer location after the first 64 bits */
-    soBufferView_.BufferLocation            = GetNative()->GetGPUVirtualAddress() + g_soBufferFillSizeLen;
+    soBufferView_.BufferLocation            = GetNative()->GetGPUVirtualAddress();
     soBufferView_.SizeInBytes               = GetBufferSize();
-    soBufferView_.BufferFilledSizeLocation  = GetNative()->GetGPUVirtualAddress();
+    soBufferView_.BufferFilledSizeLocation  = GetNative()->GetGPUVirtualAddress() + GetBufferSize();
 }
 
 

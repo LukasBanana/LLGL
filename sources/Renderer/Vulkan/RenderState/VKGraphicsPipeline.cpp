@@ -26,11 +26,12 @@ VKGraphicsPipeline::VKGraphicsPipeline(
     VkPipelineLayout                    defaultPipelineLayout,
     const RenderPass*                   defaultRenderPass,
     const GraphicsPipelineDescriptor&   desc,
-    const VKGraphicsPipelineLimits&     limits) :
-        device_            { device                             },
-        pipeline_          { device, vkDestroyPipeline          },
-        scissorEnabled_    { desc.rasterizer.scissorTestEnabled },
-        hasDynamicScissor_ { desc.scissors.empty()              }
+    const VKGraphicsPipelineLimits&     limits)
+:
+    device_            { device                             },
+    pipeline_          { device, vkDestroyPipeline          },
+    scissorEnabled_    { desc.rasterizer.scissorTestEnabled },
+    hasDynamicScissor_ { desc.scissors.empty()              }
 {
     /* Get pipeline layout and render pass objects */
     VkPipelineLayout nativePipelineLayout = VK_NULL_HANDLE;
@@ -65,11 +66,12 @@ static void CreateInputAssemblyState(
     const GraphicsPipelineDescriptor&       desc,
     VkPipelineInputAssemblyStateCreateInfo& createInfo)
 {
+    /* Always enable primitive restart index for strip topologies, to be compatible with D3D11 and Metal */
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
     createInfo.flags                    = 0;
     createInfo.topology                 = VKTypes::Map(desc.primitiveTopology);
-    createInfo.primitiveRestartEnable   = VK_FALSE;
+    createInfo.primitiveRestartEnable   = VKBoolean(IsPrimitiveTopologyStrip(desc.primitiveTopology));
 }
 
 static void CreateTessellationState(

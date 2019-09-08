@@ -17,6 +17,17 @@ LLGL_EXPORT bool IsPrimitiveTopologyPatches(const PrimitiveTopology primitiveTop
     return (primitiveTopology >= PrimitiveTopology::Patches1 && primitiveTopology <= PrimitiveTopology::Patches32);
 }
 
+LLGL_EXPORT bool IsPrimitiveTopologyStrip(const PrimitiveTopology primitiveTopology)
+{
+    return
+    (
+        primitiveTopology == PrimitiveTopology::LineStrip               ||
+        primitiveTopology == PrimitiveTopology::LineStripAdjacency      ||
+        primitiveTopology == PrimitiveTopology::TriangleStrip           ||
+        primitiveTopology == PrimitiveTopology::TriangleStripAdjacency
+    );
+}
+
 LLGL_EXPORT std::uint32_t GetPrimitiveTopologyPatchSize(const PrimitiveTopology primitiveTopology)
 {
     if (IsPrimitiveTopologyPatches(primitiveTopology))

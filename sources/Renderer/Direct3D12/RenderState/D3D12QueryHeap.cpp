@@ -85,6 +85,7 @@ void D3D12QueryHeap::SetName(const char* name)
     D3D12SetObjectNameSubscript(GetResultResource(), name, ".Result");
 }
 
+//TODO: make use of <D3D12CommandContext> class
 void D3D12QueryHeap::ResolveData(ID3D12GraphicsCommandList* commandList, UINT firstQuery, UINT numQueries)
 {
     if (IsPredicate())
@@ -101,7 +102,7 @@ void* D3D12QueryHeap::Map(UINT firstQuery, UINT numQueries)
 {
     void* data = nullptr;
 
-    D3D12_RANGE range
+    const D3D12_RANGE range
     {
         static_cast<SIZE_T>(GetAlignedBufferOffest(firstQuery)),
         static_cast<SIZE_T>(GetAlignedBufferOffest(firstQuery + numQueries))
@@ -115,7 +116,7 @@ void* D3D12QueryHeap::Map(UINT firstQuery, UINT numQueries)
 
 void D3D12QueryHeap::Unmap()
 {
-    D3D12_RANGE range { 0, 0 };
+    const D3D12_RANGE range{ 0, 0 };
     resultResource_->Unmap(0, &range);
 }
 

@@ -81,6 +81,12 @@ class D3D12Buffer : public Buffer
             return bufferSize_;
         }
 
+        // Returns the internal buffer size: original size plus meta data (like stream-output size).
+        UINT64 GetInternalBufferSize() const
+        {
+            return internalSize_;
+        }
+
         // Returns the vertex buffer view.
         inline const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() const
         {
@@ -120,6 +126,7 @@ class D3D12Buffer : public Buffer
         D3D12Resource                   cpuAccessBuffer_;           // D3D12_HEAP_TYPE_UPLOAD or D3D12_HEAP_TYPE_READBACK
 
         UINT64                          bufferSize_         = 0;
+        UINT64                          internalSize_       = 0;
         UINT                            alignment_          = 1;
         UINT                            structStride_       = 1;
         D3D12_VERTEX_BUFFER_VIEW        vertexBufferView_   = {};

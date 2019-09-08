@@ -164,10 +164,10 @@ and stores the semantic name in the specified linear string container
 */
 static void Convert(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
 {
-    dst.Stream          = src.location;
+    dst.Stream          = 0;//src.location;
     dst.SemanticName    = stringContainer.CopyString(src.name);
     dst.SemanticIndex   = src.semanticIndex;
-    dst.StartComponent  = src.offset;
+    dst.StartComponent  = 0;//src.offset;
     dst.ComponentCount  = GetFormatAttribs(src.format).components;
     dst.OutputSlot      = src.slot;
 }

@@ -206,6 +206,9 @@ private:
             renderer->UnmapBuffer(*streamOutputBuffer);
         }
 
+        // Read stream-output buffer
+        commandQueue->WaitIdle();
+
         // Present result on the screen
         context->Present();
     }
