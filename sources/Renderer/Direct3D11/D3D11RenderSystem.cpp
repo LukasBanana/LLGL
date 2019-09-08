@@ -807,7 +807,8 @@ void D3D11RenderSystem::InitializeGpuTextureWithClearValue(
             auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, fillColor);
 
             /* Update only the first MIP-map level for each array slice */
-            imageDescDefault.data = imageBuffer.get();
+            imageDescDefault.data       = imageBuffer.get();
+            imageDescDefault.dataSize   = ImageDataSize(imageDescDefault.format, imageDescDefault.dataType, imageSize);
 
             for (std::uint32_t layer = 0; layer < arrayLayers; ++layer)
             {

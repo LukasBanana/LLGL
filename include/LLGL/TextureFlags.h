@@ -276,10 +276,9 @@ struct TextureDescriptor
 
     /**
     \brief Number of MIP-map levels. By default 0.
-    \remarks If this is 0, the full MIP-chain will be generated.
-    If this is 1, no MIP-mapping is used for this texture and it has only a single MIP-map level.
-    This field is ignored for multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray),
-    since these texture types only have a single MIP-map level.
+    \remarks If this is 0, the number of MIP-map levels will be determined automatically by the texture type and extent for a full MIP-chain.
+    \remarks If this is 1, no MIP-mapping is used for this texture and it has only a single MIP-map level.
+    \remarks For multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray), this value must be either 0 or 1.
     \see NumMipLevels
     \see CommandBuffer::GenerateMips
     */

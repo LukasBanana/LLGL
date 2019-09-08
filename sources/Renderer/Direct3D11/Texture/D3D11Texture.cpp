@@ -198,7 +198,7 @@ void D3D11Texture::CreateTexture1D(
     D3D11_TEXTURE1D_DESC descD3D;
     {
         descD3D.Width           = desc.extent.width;
-        descD3D.MipLevels       = desc.mipLevels;
+        descD3D.MipLevels       = NumMipLevels(desc);
         descD3D.ArraySize       = desc.arrayLayers;
         descD3D.Format          = D3D11Types::Map(desc.format);
         descD3D.Usage           = DXGetTextureUsage(desc);
@@ -225,7 +225,7 @@ void D3D11Texture::CreateTexture2D(
     {
         descD3D.Width               = desc.extent.width;
         descD3D.Height              = desc.extent.height;
-        descD3D.MipLevels           = desc.mipLevels;
+        descD3D.MipLevels           = NumMipLevels(desc);
         descD3D.ArraySize           = desc.arrayLayers;
         descD3D.Format              = D3D11Types::Map(desc.format);
         descD3D.SampleDesc.Count    = (IsMultiSampleTexture(desc.type) ? std::max(1u, desc.samples) : 1u);
@@ -255,7 +255,7 @@ void D3D11Texture::CreateTexture3D(
         descD3D.Width           = desc.extent.width;
         descD3D.Height          = desc.extent.height;
         descD3D.Depth           = desc.extent.depth;
-        descD3D.MipLevels       = desc.mipLevels;
+        descD3D.MipLevels       = NumMipLevels(desc);
         descD3D.Format          = D3D11Types::Map(desc.format);
         descD3D.Usage           = DXGetTextureUsage(desc);
         descD3D.BindFlags       = DXGetTextureBindFlags(desc);

@@ -125,8 +125,6 @@ static bool HasWriteAccess(const CPUAccess access)
     return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
 }
 
-#define _TEST_USE_COPY_BUFFER_REGION_
-
 HRESULT D3D12Buffer::Map(
     D3D12CommandContext&    commandContext,
     const D3D12_RANGE&      range,
@@ -144,7 +142,6 @@ HRESULT D3D12Buffer::Map(
             /* Copy content from GPU host memory to CPU memory */
             commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
             {
-                #ifdef _TEST_USE_COPY_BUFFER_REGION_
                 commandContext.GetCommandList()->CopyBufferRegion(
                     cpuAccessBuffer_.Get(),
                     range.Begin,
@@ -152,9 +149,6 @@ HRESULT D3D12Buffer::Map(
                     range.Begin,
                     range.End - range.Begin
                 );
-                #else
-                commandContext.GetCommandList()->CopyResource(cpuAccessBuffer_.Get(), GetNative());
-                #endif
             }
             commandContext.TransitionResource(resource_, resource_.usageState, true);
             commandContext.Finish(true);
@@ -184,7 +178,6 @@ void D3D12Buffer::Unmap(D3D12CommandContext& commandContext)
             /* Copy content from CPU memory to GPU host memory */
             commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST, true);
             {
-                #ifdef _TEST_USE_COPY_BUFFER_REGION_
                 commandContext.GetCommandList()->CopyBufferRegion(
                     GetNative(),
                     mappedRange_.Begin,
@@ -192,9 +185,6 @@ void D3D12Buffer::Unmap(D3D12CommandContext& commandContext)
                     mappedRange_.Begin,
                     mappedRange_.End - mappedRange_.Begin
                 );
-                #else
-                commandContext.GetCommandList()->CopyResource(GetNative(), cpuAccessBuffer_.Get());
-                #endif
             }
             commandContext.TransitionResource(resource_, resource_.usageState, true);
             commandContext.Finish(true);
