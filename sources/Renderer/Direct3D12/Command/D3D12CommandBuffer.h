@@ -203,14 +203,12 @@ class D3D12CommandBuffer final : public CommandBuffer
         // Returns the native ID3D12GraphicsCommandList object.
         inline ID3D12GraphicsCommandList* GetNative() const
         {
-            return commandList_.Get();
+            return commandList_;
         }
 
     private:
 
-        void CreateDevices(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc);
-
-        void NextCommandAllocator();
+        void CreateCommandContext(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc);
 
         void SetScissorRectsToDefault(UINT numScissorRects);
 
@@ -230,21 +228,10 @@ class D3D12CommandBuffer final : public CommandBuffer
             std::uint32_t&      idx
         );
 
-        inline ID3D12CommandAllocator* GetCommandAllocator() const
-        {
-            return cmdAllocators_[currentAllocator_].Get();
-        }
-
     private:
 
-        static const std::uint32_t g_maxNumAllocators = 3;
-
-        ComPtr<ID3D12CommandAllocator>      cmdAllocators_[g_maxNumAllocators];
-        std::uint32_t                       currentAllocator_                   = 0;
-        std::uint32_t                       numAllocators_                      = g_maxNumAllocators;
-
-        ComPtr<ID3D12GraphicsCommandList>   commandList_;
         D3D12CommandContext                 commandContext_;
+        ID3D12GraphicsCommandList*          commandList_                        = nullptr;
         const D3D12CommandSignaturePool*    commandSignaturePool_               = nullptr;
 
         D3D12StagingBufferPool              stagingBufferPool_;

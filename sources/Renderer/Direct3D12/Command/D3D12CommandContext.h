@@ -21,6 +21,7 @@ namespace LLGL
 
 struct D3D12Resource;
 class D3D12Fence;
+class D3D12Device;
 
 union D3D12Constant
 {
@@ -43,20 +44,29 @@ class D3D12CommandContext
     public:
 
         D3D12CommandContext();
+        D3D12CommandContext(D3D12Device& device);
 
-        void SetCommandList(ID3D12GraphicsCommandList* commandList);
-        void SetCommandQueueAndAllocator(ID3D12CommandQueue* commandQueue, ID3D12CommandAllocator* commandAllocator);
+        // Creats the command list and internal command allocators.
+        void Create(
+            D3D12Device&            device,
+            D3D12_COMMAND_LIST_TYPE commandListType = D3D12_COMMAND_LIST_TYPE_DIRECT,
+            UINT                    numAllocators   = ~0u,
+            bool                    initialClose    = false
+        );
 
         void Close();
         void Execute(ID3D12CommandQueue* commandQueue);
-        void Reset(ID3D12CommandAllocator* commandAllocator);
+        void Reset();
 
         // Calls Close, Execute, and Reset with the internal command queue and allocator.
         void Finish(D3D12Fence* fence = nullptr);
 
+        void SetCommandQueueRef(ID3D12CommandQueue* commandQueue);
+
+        // Returns the command list of this context.
         inline ID3D12GraphicsCommandList* GetCommandList() const
         {
-            return commandList_;
+            return commandList_.Get();
         }
 
         void TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate = false);
@@ -101,22 +111,38 @@ class D3D12CommandContext
 
     private:
 
+        // Clears the internal cached states.
+        void ClearCache();
+
+        // Returns the next resource barrier and flushes previous barriers if the cache is full.
         D3D12_RESOURCE_BARRIER& NextResourceBarrier();
 
-        void ClearCache();
+        // Switches to the next command allocator and resets it.
+        void NextCommandAllocator();
+
+        // Returns the current command allocator.
+        inline ID3D12CommandAllocator* GetCommandAllocator() const
+        {
+            return commandAllocators_[currentAllocatorIndex_].Get();
+        }
 
     private:
 
+        static const UINT g_maxNumAllocators        = 3;
         static const UINT g_maxNumResourceBarrieres = 16;
 
-        ID3D12GraphicsCommandList*  commandList_                                    = nullptr;
-        ID3D12CommandQueue*         commandQueue_                                   = nullptr;
-        ID3D12CommandAllocator*     commandAllocator_                               = nullptr;
+        ComPtr<ID3D12CommandAllocator>      commandAllocators_[g_maxNumAllocators];
+        UINT                                currentAllocatorIndex_                          = 0;
+        UINT                                numAllocators_                                  = g_maxNumAllocators;
 
-        D3D12_RESOURCE_BARRIER      resourceBarriers_[g_maxNumResourceBarrieres];
-        UINT                        numResourceBarriers_                            = 0;
+        ComPtr<ID3D12GraphicsCommandList>   commandList_;
 
-        StateCache                  stateCache_;
+        ID3D12CommandQueue*                 commandQueueRef_                                = nullptr;
+
+        D3D12_RESOURCE_BARRIER              resourceBarriers_[g_maxNumResourceBarrieres];
+        UINT                                numResourceBarriers_                            = 0;
+
+        StateCache                          stateCache_;
 
 };
 

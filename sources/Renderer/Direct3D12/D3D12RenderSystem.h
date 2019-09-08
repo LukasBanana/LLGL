@@ -229,13 +229,9 @@ class D3D12RenderSystem final : public RenderSystem
         ComPtr<IDXGIFactory4>                       factory_;
         D3D12Device                                 device_;
         D3D12Fence                                  fence_;
-
-        ComPtr<ID3D12CommandAllocator>              commandAllocator_;
-        ComPtr<ID3D12GraphicsCommandList>           commandList_;           // graphics command list to upload data to the GPU
-
+        D3D12CommandContext                         commandContext_;
         D3D12PipelineLayout                         defaultPipelineLayout_;
         D3D12CommandSignaturePool                   commandSignaturePool_;
-        D3D12CommandContext                         commandContext_;
         D3D12StagingBufferPool                      stagingBufferPool_;
 
         /* ----- Hardware object containers ----- */

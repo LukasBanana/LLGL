@@ -6,9 +6,11 @@
  */
 
 #include "D3D12CommandContext.h"
+#include "../D3D12Device.h"
 #include "../D3D12Resource.h"
 #include "../RenderState/D3D12Fence.h"
 #include "../../DXCommon/DXCore.h"
+#include <algorithm>
 
 
 namespace LLGL
@@ -20,19 +22,29 @@ D3D12CommandContext::D3D12CommandContext()
     ClearCache();
 }
 
-void D3D12CommandContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
+D3D12CommandContext::D3D12CommandContext(D3D12Device& device)
 {
-    if (commandList_ != commandList)
-    {
-        FlushResourceBarrieres();
-        commandList_ = commandList;
-    }
+    Create(device);
 }
 
-void D3D12CommandContext::SetCommandQueueAndAllocator(ID3D12CommandQueue* commandQueue, ID3D12CommandAllocator* commandAllocator)
+void D3D12CommandContext::Create(
+    D3D12Device&            device,
+    D3D12_COMMAND_LIST_TYPE commandListType,
+    UINT                    numAllocators,
+    bool                    initialClose)
 {
-    commandQueue_       = commandQueue;
-    commandAllocator_   = commandAllocator;
+    /* Determine number of command allocators */
+    numAllocators_ = std::max(1u, std::min(numAllocators, g_maxNumAllocators));
+
+    /* Create command allocators */
+    for (std::uint32_t i = 0; i < numAllocators_; ++i)
+        commandAllocators_[i] = device.CreateDXCommandAllocator(commandListType);
+
+    /* Create graphics command list and close it (they are created in recording mode) */
+    commandList_ = device.CreateDXCommandList(commandListType, GetCommandAllocator());
+
+    if (initialClose)
+        commandList_->Close();
 }
 
 void D3D12CommandContext::Close()
@@ -51,10 +63,13 @@ void D3D12CommandContext::Execute(ID3D12CommandQueue* commandQueue)
     commandQueue->ExecuteCommandLists(1, cmdLists);
 }
 
-void D3D12CommandContext::Reset(ID3D12CommandAllocator* commandAllocator)
+void D3D12CommandContext::Reset()
 {
+    /* Switch to next command allocator */
+    NextCommandAllocator();
+
     /* Reset graphics command list */
-    auto hr = commandList_->Reset(commandAllocator, nullptr);
+    auto hr = commandList_->Reset(GetCommandAllocator(), nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 
     /* Invalidate state cache */
@@ -65,17 +80,31 @@ void D3D12CommandContext::Finish(D3D12Fence* fence)
 {
     /* Close command list and execute, then reset command allocator for next encoding */
     Close();
-    Execute(commandQueue_);
+    Execute(commandQueueRef_);
 
     /* Synchronize GPU/CPU */
     if (fence)
     {
-        auto hr = commandQueue_->Signal(fence->GetNative(), fence->NextValue());
+        auto hr = commandQueueRef_->Signal(fence->GetNative(), fence->NextValue());
         DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
         fence->Wait(~0ull);
     }
 
-    Reset(commandAllocator_);
+    Reset();
+}
+
+/*void D3D12CommandContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
+{
+    if (commandList_ != commandList)
+    {
+        FlushResourceBarrieres();
+        commandList_ = commandList;
+    }
+}*/
+
+void D3D12CommandContext::SetCommandQueueRef(ID3D12CommandQueue* commandQueue)
+{
+    commandQueueRef_ = commandQueue;
 }
 
 void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
@@ -201,6 +230,16 @@ D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()
     if (numResourceBarriers_ == g_maxNumResourceBarrieres)
         FlushResourceBarrieres();
     return resourceBarriers_[numResourceBarriers_++];
+}
+
+void D3D12CommandContext::NextCommandAllocator()
+{
+    /* Get next command allocator */
+    currentAllocatorIndex_ = ((currentAllocatorIndex_ + 1) % numAllocators_);
+
+    /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
+    auto hr = GetCommandAllocator()->Reset();
+    DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 }
 
 void D3D12CommandContext::ClearCache()

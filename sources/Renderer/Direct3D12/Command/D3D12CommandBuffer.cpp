@@ -41,12 +41,12 @@ D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const Co
     commandSignaturePool_ { &(renderSystem.GetCommandSignaturePool())       },
     stagingBufferPool_    { renderSystem.GetDevice().GetNative(), USHRT_MAX }
 {
-    CreateDevices(renderSystem, desc);
+    CreateCommandContext(renderSystem, desc);
 }
 
 void D3D12CommandBuffer::SetName(const char* name)
 {
-    D3D12SetObjectName(commandList_.Get(), name);
+    D3D12SetObjectName(commandList_, name);
 }
 
 /* ----- Encoding ----- */
@@ -54,8 +54,7 @@ void D3D12CommandBuffer::SetName(const char* name)
 void D3D12CommandBuffer::Begin()
 {
     /* Reset command list using the next command allocator */
-    NextCommandAllocator();
-    commandContext_.Reset(GetCommandAllocator());
+    commandContext_.Reset();
     stagingBufferPool_.Reset();
 }
 
@@ -518,7 +517,7 @@ void D3D12CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
     commandList_->EndQuery(queryHeapD3D.GetNative(), queryHeapD3D.GetNativeType(), query);
-    queryHeapD3D.ResolveData(commandList_.Get(), query, 1);
+    queryHeapD3D.ResolveData(commandList_, query, 1);
 }
 
 static D3D12_PREDICATION_OP GetDXPredicateOp(const RenderConditionMode mode)
@@ -647,12 +646,12 @@ void D3D12CommandBuffer::PushDebugGroup(const char* name)
 {
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     std::wstring nameWStr = converter.from_bytes(name);
-    PIXBeginEvent(commandList_.Get(), 0, nameWStr.c_str());
+    PIXBeginEvent(commandList_, 0, nameWStr.c_str());
 }
 
 void D3D12CommandBuffer::PopDebugGroup()
 {
-    PIXEndEvent(commandList_.Get());
+    PIXEndEvent(commandList_);
 }
 
 /* ----- Extensions ----- */
@@ -675,42 +674,17 @@ static D3D12_COMMAND_LIST_TYPE GetD3DCommandListType(const CommandBufferDescript
         return D3D12_COMMAND_LIST_TYPE_DIRECT;
 }
 
-void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc)
+void D3D12CommandBuffer::CreateCommandContext(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc)
 {
     auto& device = renderSystem.GetDevice();
 
-    /* Determine number of command allocators */
-    numAllocators_ = std::max(1u, std::min(desc.numNativeBuffers, g_maxNumAllocators));
-
-    /* Create command allocators */
-    auto listType = GetD3DCommandListType(desc);
-
-    for (std::uint32_t i = 0; i < numAllocators_; ++i)
-    {
-        auto& cmdAlloc = cmdAllocators_[i];
-        cmdAlloc = device.CreateDXCommandAllocator(listType);
-    }
-
-    /* Create graphics command list and close it (they are created in recording mode) */
-    commandList_ = device.CreateDXCommandList(listType, GetCommandAllocator());
-    commandList_->Close();
-
-    /* Initialize command context */
-    commandContext_.SetCommandList(commandList_.Get());
+    /* Create command context and store reference to command list */
+    commandContext_.Create(device, GetD3DCommandListType(desc), desc.numNativeBuffers, true);
+    commandList_ = commandContext_.GetCommandList();
 
     /* Store increment size for descriptor heaps */
     rtvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     dsvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-}
-
-void D3D12CommandBuffer::NextCommandAllocator()
-{
-    /* Get next command allocator */
-    currentAllocator_ = ((currentAllocator_ + 1) % numAllocators_);
-
-    /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
-    auto hr = GetCommandAllocator()->Reset();
-    DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 }
 
 void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)

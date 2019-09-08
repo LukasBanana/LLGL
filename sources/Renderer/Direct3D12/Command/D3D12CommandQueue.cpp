@@ -101,7 +101,7 @@ void D3D12CommandQueue::WaitIdle()
 {
     /* Submit intermediate fence and wait for it to be signaled */
     Submit(intermediateFence_);
-    WaitFence(intermediateFence_, ~0ull);
+    intermediateFence_.Wait(~0ull);
 }
 
 /* ----- Internal ----- */
