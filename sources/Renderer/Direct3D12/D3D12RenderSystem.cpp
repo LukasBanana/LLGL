@@ -37,15 +37,11 @@ D3D12RenderSystem::D3D12RenderSystem()
     QueryVideoAdapters();
     CreateDevice();
 
-    /* Create fence for GPU/CPU synchronization */
-    fence_.Create(device_.GetNative());
-
     /* Create command queue interface */
     commandQueue_ = MakeUnique<D3D12CommandQueue>(device_.GetNative(), device_.GetQueue());
 
     /* Create command queue, command allocator, and graphics command list */
-    commandContext_.Create(device_);
-    commandContext_.SetCommandQueueRef(device_.GetQueue());
+    commandContext_.Create(device_, *commandQueue_);
 
     /* Create default pipeline layout and command signature pool */
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
@@ -131,8 +127,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
     commandContext_.TransitionResource(bufferD3D->GetResource(), bufferD3D->GetResource().usageState, true);
 
     /* Execute upload commands and wait for GPU to finish execution */
-    ExecuteCommandList();
-    SyncGPU();
+    ExecuteCommandListAndSync();
 
     return bufferD3D;
 }
@@ -171,7 +166,7 @@ void D3D12RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, 
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
     stagingBufferPool_.WriteImmediate(commandContext_, dstBufferD3D.GetResource(), dstOffset, data, dataSize);
-    ExecuteCommandList();
+    ExecuteCommandListAndSync();
 }
 
 void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
@@ -181,7 +176,7 @@ void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     void* mappedData = nullptr;
     const D3D12_RANGE range{ 0, static_cast<SIZE_T>(bufferD3D.GetBufferSize()) };
 
-    if (SUCCEEDED(bufferD3D.Map(commandContext_, fence_, range, &mappedData, access)))
+    if (SUCCEEDED(bufferD3D.Map(commandContext_, range, &mappedData, access)))
         return mappedData;
 
     return nullptr;
@@ -190,7 +185,7 @@ void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    bufferD3D.Unmap(commandContext_, fence_);
+    bufferD3D.Unmap(commandContext_);
 }
 
 /* ----- Textures ----- */
@@ -277,8 +272,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
             D3D12MipGenerator::Get().GenerateMips(commandContext_, *textureD3D, textureD3D->GetWholeSubresource());
 
         /* Execute upload commands and wait for GPU to finish execution */
-        ExecuteCommandList();
-        SyncGPU();
+        ExecuteCommandListAndSync();
     }
 
     return TakeOwnership(textures_, std::move(textureD3D));
@@ -298,8 +292,8 @@ void D3D12RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
     ComPtr<ID3D12Resource> uploadBuffer;
     UpdateGpuTexture(textureD3D, textureRegion, imageDesc, uploadBuffer);
 
-    ExecuteCommandList();
-    SyncGPU();
+    /* Execute upload commands and wait for GPU to finish execution */
+    ExecuteCommandListAndSync();
 }
 
 void D3D12RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
@@ -464,27 +458,27 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
     return swapChain;
 }
 
-void D3D12RenderSystem::SignalFenceValue(UINT64 fenceValue)
+void D3D12RenderSystem::SignalFenceValue(UINT64& fenceValue)
 {
-    commandQueue_->SignalFence(fence_, fenceValue);
+    auto& fence = commandQueue_->GetGlobalFence();
+    fenceValue = fence.GetNextValue();
+    commandQueue_->SignalFence(fence, fenceValue);
 }
 
 void D3D12RenderSystem::WaitForFenceValue(UINT64 fenceValue)
 {
-    fence_.WaitForValue(fenceValue, INFINITE);
+    commandQueue_->GetGlobalFence().WaitForValue(fenceValue);
 }
 
 void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
 {
-    fenceValue = fence_.NextValue(fenceValue);
-    commandQueue_->SignalFence(fence_, fenceValue);
-    fence_.WaitForValue(fenceValue, INFINITE);
+    SignalFenceValue(fenceValue);
+    WaitForFenceValue(fenceValue);
 }
 
 void D3D12RenderSystem::SyncGPU()
 {
-    commandQueue_->Submit(fence_);
-    fence_.Wait(~0ull);
+    commandQueue_->WaitIdle();
 }
 
 
@@ -630,6 +624,11 @@ void D3D12RenderSystem::QueryRenderingCaps()
 void D3D12RenderSystem::ExecuteCommandList()
 {
     commandContext_.Finish();
+}
+
+void D3D12RenderSystem::ExecuteCommandListAndSync()
+{
+    commandContext_.Finish(true);
 }
 
 

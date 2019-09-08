@@ -28,7 +28,7 @@ class D3D12Fence final : public Fence
     public:
 
         D3D12Fence() = default;
-        D3D12Fence(ID3D12Device* device, UINT64 initialValue);
+        D3D12Fence(ID3D12Device* device, UINT64 initialValue = 0);
         ~D3D12Fence();
 
         // Re-creates this fence object.
@@ -38,23 +38,26 @@ class D3D12Fence final : public Fence
         bool Wait(UINT64 timeoutNanosecs);
 
         // Waits until the specified value gets signaled.
-        bool WaitForValue(UINT64 value, DWORD timeoutMillisecs);
+        bool WaitForValue(UINT64 value, DWORD timeoutMillisecs = INFINITE);
 
-        // Returns the next value to be used as fence signal.
-        UINT64 NextValue();
-
-        // Returns the next value to be used as fence signal after the specified value.
-        UINT64 NextValue(UINT64 value);
+        // Waits until the specified value gets signaled and stores the next value.
+        bool WaitForValueAndUpdate(UINT64& value, DWORD timeoutMillisecs = INFINITE);
 
         // Returns the native ID3D12Fence object.
         inline ID3D12Fence* GetNative() const
         {
-            return fence_.Get();
+            return native_.Get();
+        }
+
+        // Returns the next value that will eventually be signaled.
+        inline UINT64 GetNextValue() const
+        {
+            return value_;
         }
 
     private:
 
-        ComPtr<ID3D12Fence> fence_;
+        ComPtr<ID3D12Fence> native_;
         HANDLE              event_  = 0;
         UINT64              value_  = 0;
 

@@ -45,17 +45,13 @@ class D3D12Buffer : public Buffer
         // Maps the buffer content to CPU memory space.
         HRESULT Map(
             D3D12CommandContext&    commandContext,
-            D3D12Fence&             fence,
             const D3D12_RANGE&      range,
             void**                  mappedData,
             const CPUAccess         access
         );
 
         // Unmaps the buffer content from CPU memory space.
-        void Unmap(
-            D3D12CommandContext&    commandContext,
-            D3D12Fence&             fence
-        );
+        void Unmap(D3D12CommandContext& commandContext);
 
         // Returns the resource wrapper.
         inline D3D12Resource& GetResource()

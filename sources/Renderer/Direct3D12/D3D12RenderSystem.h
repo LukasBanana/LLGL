@@ -161,7 +161,7 @@ class D3D12RenderSystem final : public RenderSystem
         ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
 
         // Internal fence
-        void SignalFenceValue(UINT64 fenceValue);
+        void SignalFenceValue(UINT64& fenceValue);
         void WaitForFenceValue(UINT64 fenceValue);
 
         // Waits until the GPU has done all previous work.
@@ -219,6 +219,7 @@ class D3D12RenderSystem final : public RenderSystem
 
         // Close, execute, and reset command list.
         void ExecuteCommandList();
+        void ExecuteCommandListAndSync();
 
         std::unique_ptr<D3D12Buffer> CreateGpuBuffer(const BufferDescriptor& desc, const void* initialData);
 
@@ -228,7 +229,6 @@ class D3D12RenderSystem final : public RenderSystem
 
         ComPtr<IDXGIFactory4>                       factory_;
         D3D12Device                                 device_;
-        D3D12Fence                                  fence_;
         D3D12CommandContext                         commandContext_;
         D3D12PipelineLayout                         defaultPipelineLayout_;
         D3D12CommandSignaturePool                   commandSignaturePool_;

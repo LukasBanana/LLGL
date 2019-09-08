@@ -13,6 +13,7 @@
 #include <LLGL/RenderContext.h>
 #include <cstddef>
 #include "D3D12Resource.h"
+#include "RenderState/D3D12Fence.h"
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
 
@@ -25,6 +26,7 @@ namespace LLGL
 
 
 class D3D12RenderSystem;
+class D3D12CommandQueue;
 class D3D12CommandBuffer;
 class D3D12CommandContext;
 
@@ -82,26 +84,28 @@ class D3D12RenderContext final : public RenderContext
         static const UINT g_maxSwapChainSize = 3;
 
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
+        D3D12CommandQueue*              commandQueue_                           = nullptr;
 
         ComPtr<IDXGISwapChain3>         swapChain_;
-        UINT                            swapChainInterval_                  = 0;
-        UINT                            swapChainSamples_                   = 1;
+        UINT                            swapChainInterval_                      = 0;
+        UINT                            swapChainSamples_                       = 1;
 
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
-        UINT                            rtvDescSize_                        = 0;
+        UINT                            rtvDescSize_                            = 0;
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
 
         D3D12Resource                   colorBuffers_[g_maxSwapChainSize];
         D3D12Resource                   colorBuffersMS_[g_maxSwapChainSize];
-        DXGI_FORMAT                     colorFormat_                        = DXGI_FORMAT_B8G8R8A8_UNORM;
+        DXGI_FORMAT                     colorFormat_                            = DXGI_FORMAT_B8G8R8A8_UNORM;
 
         D3D12Resource                   depthStencil_;
-        DXGI_FORMAT                     depthStencilFormat_                 = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT                     depthStencilFormat_                     = DXGI_FORMAT_UNKNOWN;
 
-        UINT64                          fenceValues_[g_maxSwapChainSize]    = {};
+        UINT64                          frameFenceValues_[g_maxSwapChainSize]   = {};
+        D3D12Fence                      frameFence_;
 
-        UINT                            numFrames_                          = 0;
-        UINT                            currentFrame_                       = 0;
+        UINT                            numFrames_                              = 0;
+        UINT                            currentFrame_                           = 0;
 
 };
 

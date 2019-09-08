@@ -10,6 +10,7 @@
 #include "D3D12Types.h"
 #include "D3D12ObjectUtils.h"
 #include "Command/D3D12CommandContext.h"
+#include "Command/D3D12CommandQueue.h"
 #include "Buffer/D3D12Buffer.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
@@ -32,8 +33,12 @@ D3D12RenderContext::D3D12RenderContext(
 :
     RenderContext     { desc.videoMode, desc.vsync       },
     renderSystem_     { renderSystem                     },
-    swapChainSamples_ { desc.multiSampling.SampleCount() }
+    swapChainSamples_ { desc.multiSampling.SampleCount() },
+    frameFence_       { renderSystem.GetDXDevice()       }
 {
+    /* Store reference to command queue */
+    commandQueue_ = LLGL_CAST(D3D12CommandQueue*, renderSystem_.GetCommandQueue());
+
     /* Setup surface for the render context */
     SetOrCreateSurface(surface, GetVideoMode(), nullptr);
 
@@ -157,7 +162,7 @@ bool D3D12RenderContext::HasDepthBuffer() const
 
 void D3D12RenderContext::SyncGPU()
 {
-    renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
+    renderSystem_.SyncGPU(frameFenceValues_[currentFrame_]);
 }
 
 
@@ -196,7 +201,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     {
         colorBuffers_[i].native.Reset();
         colorBuffersMS_[i].native.Reset();
-        fenceValues_[i] = fenceValues_[currentFrame_];
+        frameFenceValues_[i] = frameFenceValues_[currentFrame_];
     }
 
     depthStencil_.native.Reset();
@@ -400,18 +405,15 @@ void D3D12RenderContext::CreateDeviceResources()
 
 void D3D12RenderContext::MoveToNextFrame()
 {
-    /* Schedule signal command into the qeue */
-    auto currentFenceValue = fenceValues_[currentFrame_];
-    renderSystem_.SignalFenceValue(currentFenceValue);
+    /* Schedule signal command into the queue */
+    commandQueue_->SignalFence(frameFence_, frameFenceValues_[currentFrame_]);
 
     /* Advance frame index */
     currentFrame_ = swapChain_->GetCurrentBackBufferIndex();
 
-    /* Check to see if the next frame is ready to start */
-    renderSystem_.WaitForFenceValue(fenceValues_[currentFrame_]);
-
-    /* Set fence value for next frame */
-    fenceValues_[currentFrame_] = currentFenceValue + 1;
+    /* Wait until the fence value of the next frame is signaled, so we know the next frame is ready to start */
+    frameFence_.WaitForValue(frameFenceValues_[currentFrame_]);
+    frameFenceValues_[currentFrame_] = frameFence_.GetNextValue();
 }
 
 

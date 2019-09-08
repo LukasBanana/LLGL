@@ -200,6 +200,9 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         /* ----- Extended functions ----- */
 
+        // Executes this command buffer.
+        void Execute();
+
         // Returns the native ID3D12GraphicsCommandList object.
         inline ID3D12GraphicsCommandList* GetNative() const
         {

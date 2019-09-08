@@ -661,6 +661,13 @@ void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std
     // dummy
 }
 
+/* ----- Internal ----- */
+
+void D3D12CommandBuffer::Execute()
+{
+    commandContext_.Execute();
+}
+
 
 /*
  * ======= Private: =======
@@ -679,7 +686,8 @@ void D3D12CommandBuffer::CreateCommandContext(D3D12RenderSystem& renderSystem, c
     auto& device = renderSystem.GetDevice();
 
     /* Create command context and store reference to command list */
-    commandContext_.Create(device, GetD3DCommandListType(desc), desc.numNativeBuffers, true);
+    auto commandQueueD3D = LLGL_CAST(D3D12CommandQueue*, renderSystem.GetCommandQueue());
+    commandContext_.Create(device, *commandQueueD3D, GetD3DCommandListType(desc), desc.numNativeBuffers, true);
     commandList_ = commandContext_.GetCommandList();
 
     /* Store increment size for descriptor heaps */

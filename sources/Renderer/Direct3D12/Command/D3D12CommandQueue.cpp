@@ -20,8 +20,8 @@ namespace LLGL
 
 
 D3D12CommandQueue::D3D12CommandQueue(ID3D12Device* device, ID3D12CommandQueue* queue) :
-    native_            { queue     },
-    intermediateFence_ { device, 0 }
+    native_      { queue  },
+    globalFence_ { device }
 {
 }
 
@@ -36,8 +36,7 @@ void D3D12CommandQueue::Submit(CommandBuffer& commandBuffer)
 {
     /* Execute command list */
     auto& commandBufferD3D = LLGL_CAST(D3D12CommandBuffer&, commandBuffer);
-    ID3D12CommandList* cmdLists[] = { commandBufferD3D.GetNative() };
-    native_->ExecuteCommandLists(1, cmdLists);
+    commandBufferD3D.Execute();
 }
 
 /* ----- Queries ----- */
@@ -88,7 +87,7 @@ void D3D12CommandQueue::Submit(Fence& fence)
 {
     /* Schedule signal command into the queue */
     auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence);
-    SignalFence(fenceD3D, fenceD3D.NextValue());
+    SignalFence(fenceD3D, fenceD3D.GetNextValue());
 }
 
 bool D3D12CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
@@ -100,8 +99,8 @@ bool D3D12CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 void D3D12CommandQueue::WaitIdle()
 {
     /* Submit intermediate fence and wait for it to be signaled */
-    Submit(intermediateFence_);
-    intermediateFence_.Wait(~0ull);
+    SignalFence(globalFence_, globalFence_.GetNextValue());
+    globalFence_.Wait(~0ull);
 }
 
 /* ----- Internal ----- */

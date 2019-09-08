@@ -6,6 +6,7 @@
  */
 
 #include "D3D12CommandContext.h"
+#include "D3D12CommandQueue.h"
 #include "../D3D12Device.h"
 #include "../D3D12Resource.h"
 #include "../RenderState/D3D12Fence.h"
@@ -22,17 +23,26 @@ D3D12CommandContext::D3D12CommandContext()
     ClearCache();
 }
 
-D3D12CommandContext::D3D12CommandContext(D3D12Device& device)
+D3D12CommandContext::D3D12CommandContext(
+    D3D12Device&        device,
+    D3D12CommandQueue&  commandQueue)
 {
-    Create(device);
+    Create(device, commandQueue);
 }
 
 void D3D12CommandContext::Create(
     D3D12Device&            device,
+    D3D12CommandQueue&      commandQueue,
     D3D12_COMMAND_LIST_TYPE commandListType,
     UINT                    numAllocators,
     bool                    initialClose)
 {
+    /* Store reference to command queue */
+    commandQueue_ = &commandQueue;
+
+    /* Create fence for command allocators */
+    allocatorFence_.Create(device.GetNative());
+
     /* Determine number of command allocators */
     numAllocators_ = std::max(1u, std::min(numAllocators, g_maxNumAllocators));
 
@@ -57,10 +67,14 @@ void D3D12CommandContext::Close()
     DXThrowIfFailed(hr, "failed to close D3D12 command list");
 }
 
-void D3D12CommandContext::Execute(ID3D12CommandQueue* commandQueue)
+void D3D12CommandContext::Execute()
 {
+    /* Submit command list to queue */
     ID3D12CommandList* cmdLists[] = { GetCommandList() };
-    commandQueue->ExecuteCommandLists(1, cmdLists);
+    commandQueue_->GetNative()->ExecuteCommandLists(1, cmdLists);
+
+    /* Signal current allocator fence value */
+    commandQueue_->SignalFence(allocatorFence_, allocatorFenceValues_[currentAllocatorIndex_]);
 }
 
 void D3D12CommandContext::Reset()
@@ -76,35 +90,17 @@ void D3D12CommandContext::Reset()
     ClearCache();
 }
 
-void D3D12CommandContext::Finish(D3D12Fence* fence)
+void D3D12CommandContext::Finish(bool waitIdle)
 {
     /* Close command list and execute, then reset command allocator for next encoding */
     Close();
-    Execute(commandQueueRef_);
+    Execute();
 
     /* Synchronize GPU/CPU */
-    if (fence)
-    {
-        auto hr = commandQueueRef_->Signal(fence->GetNative(), fence->NextValue());
-        DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
-        fence->Wait(~0ull);
-    }
+    if (waitIdle)
+        commandQueue_->WaitIdle();
 
     Reset();
-}
-
-/*void D3D12CommandContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
-{
-    if (commandList_ != commandList)
-    {
-        FlushResourceBarrieres();
-        commandList_ = commandList;
-    }
-}*/
-
-void D3D12CommandContext::SetCommandQueueRef(ID3D12CommandQueue* commandQueue)
-{
-    commandQueueRef_ = commandQueue;
 }
 
 void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
@@ -236,6 +232,9 @@ void D3D12CommandContext::NextCommandAllocator()
 {
     /* Get next command allocator */
     currentAllocatorIndex_ = ((currentAllocatorIndex_ + 1) % numAllocators_);
+
+    /* Wait until fence value of next allocator has been signaled */
+    allocatorFence_.WaitForValueAndUpdate(allocatorFenceValues_[currentAllocatorIndex_]);
 
     /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
     auto hr = GetCommandAllocator()->Reset();

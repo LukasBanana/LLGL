@@ -129,7 +129,6 @@ static bool HasWriteAccess(const CPUAccess access)
 
 HRESULT D3D12Buffer::Map(
     D3D12CommandContext&    commandContext,
-    D3D12Fence&             fence,
     const D3D12_RANGE&      range,
     void**                  mappedData,
     const CPUAccess         access)
@@ -158,7 +157,7 @@ HRESULT D3D12Buffer::Map(
                 #endif
             }
             commandContext.TransitionResource(resource_, resource_.usageState, true);
-            commandContext.Finish(&fence);
+            commandContext.Finish(true);
 
             /* Map with read range */
             return cpuAccessBuffer_.Get()->Map(0, &range, mappedData);
@@ -173,14 +172,15 @@ HRESULT D3D12Buffer::Map(
     return E_FAIL;
 }
 
-void D3D12Buffer::Unmap(
-    D3D12CommandContext&    commandContext,
-    D3D12Fence&             fence)
+void D3D12Buffer::Unmap(D3D12CommandContext& commandContext)
 {
     if (cpuAccessBuffer_.Get() != nullptr)
     {
         if (HasWriteAccess(mappedCPUaccess_))
         {
+            /* Unmap with written range */
+            cpuAccessBuffer_.Get()->Unmap(0, &mappedRange_);
+
             /* Copy content from CPU memory to GPU host memory */
             commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST, true);
             {
@@ -197,10 +197,7 @@ void D3D12Buffer::Unmap(
                 #endif
             }
             commandContext.TransitionResource(resource_, resource_.usageState, true);
-            commandContext.Finish(&fence);
-
-            /* Unmap with written range */
-            cpuAccessBuffer_.Get()->Unmap(0, &mappedRange_);
+            commandContext.Finish(true);
         }
         else
         {

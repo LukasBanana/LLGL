@@ -64,10 +64,22 @@ class D3D12CommandQueue final : public CommandQueue
             return native_;
         }
 
+        // Returns the global fence object for this queue.
+        inline D3D12Fence& GetGlobalFence()
+        {
+            return globalFence_;
+        }
+
+        // Returns the global fence object for this queue as constant reference.
+        inline const D3D12Fence& GetGlobalFence() const
+        {
+            return globalFence_;
+        }
+
     private:
 
         ID3D12CommandQueue* native_             = nullptr;
-        D3D12Fence          intermediateFence_;
+        D3D12Fence          globalFence_;
 
 };
 
