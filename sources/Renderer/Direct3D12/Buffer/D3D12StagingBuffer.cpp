@@ -7,6 +7,7 @@
 
 #include "D3D12StagingBuffer.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../../Core/Helper.h"
 #include "../D3DX12/d3dx12.h"
 #include <string.h>
 
@@ -38,14 +39,20 @@ D3D12StagingBuffer& D3D12StagingBuffer::operator = (D3D12StagingBuffer&& rhs)
     return *this;
 }
 
-void D3D12StagingBuffer::Create(ID3D12Device* device, UINT64 size)
+void D3D12StagingBuffer::Create(
+    ID3D12Device*   device,
+    UINT64          size,
+    UINT64          alignment,
+    D3D12_HEAP_TYPE heapType)
 {
+    size = GetAlignedSize(size, alignment);
+
     /* Create GPU upload buffer */
     auto hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+        &CD3DX12_HEAP_PROPERTIES(heapType),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(size),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
+        (heapType == D3D12_HEAP_TYPE_READBACK ? D3D12_RESOURCE_STATE_COPY_DEST : D3D12_RESOURCE_STATE_GENERIC_READ),
         nullptr,
         IID_PPV_ARGS(native_.ReleaseAndGetAddressOf())
     );

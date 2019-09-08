@@ -88,8 +88,7 @@ void D3D12CommandQueue::Submit(Fence& fence)
 {
     /* Schedule signal command into the queue */
     auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence);
-    auto hr = native_->Signal(fenceD3D.GetNative(), fenceD3D.NextValue());
-    DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
+    SignalFence(fenceD3D, fenceD3D.NextValue());
 }
 
 bool D3D12CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
@@ -103,6 +102,14 @@ void D3D12CommandQueue::WaitIdle()
     /* Submit intermediate fence and wait for it to be signaled */
     Submit(intermediateFence_);
     WaitFence(intermediateFence_, ~0ull);
+}
+
+/* ----- Internal ----- */
+
+void D3D12CommandQueue::SignalFence(D3D12Fence& fenceD3D, UINT64 value)
+{
+    auto hr = native_->Signal(fenceD3D.GetNative(), value);
+    DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
 }
 
 

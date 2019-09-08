@@ -59,13 +59,27 @@ class D3D12StagingBufferPool
         // Allocates a new chunk with the specified minimal size.
         void AllocChunk(UINT64 minChunkSize);
 
+        // Resizes the specified staging buffer, but only grows its size.
+        void ResizeBuffer(
+            D3D12StagingBuffer& stagingBuffer,
+            D3D12_HEAP_TYPE     heapType,
+            UINT64              size,
+            UINT64              alignment
+        );
+
+        D3D12StagingBuffer& GetUploadBufferAndGrow(UINT64 size, UINT64 alignment);
+        //D3D12StagingBuffer& GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment);
+
     private:
 
         ID3D12Device*                   device_             = nullptr;
+
         std::vector<D3D12StagingBuffer> chunks_;
         std::size_t                     chunkIdx_           = 0;
         UINT64                          chunkSize_          = 0;
+
         D3D12StagingBuffer              globalUploadBuffer_;
+        //D3D12StagingBuffer              globalReadbackBuffer_;
 
 };
 

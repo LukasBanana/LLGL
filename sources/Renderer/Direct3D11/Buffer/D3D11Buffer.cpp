@@ -26,7 +26,7 @@ D3D11Buffer::D3D11Buffer(long bindFlags) :
 D3D11Buffer::D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
     Buffer { desc.bindFlags }
 {
-    CreateNativeBuffer(device, desc, initialData);
+    CreateGpuBuffer(device, desc, initialData);
 }
 
 void D3D11Buffer::SetName(const char* name)
@@ -109,12 +109,12 @@ void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* da
 
 static bool HasReadAccess(const CPUAccess access)
 {
-    return (access != CPUAccess::WriteOnly);
+    return (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite);
 }
 
 static bool HasWriteAccess(const CPUAccess access)
 {
-    return (access != CPUAccess::ReadOnly);
+    return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
 }
 
 void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access)
@@ -172,7 +172,7 @@ static UINT GetD3DBufferSize(const BufferDescriptor& desc)
         return size;
 }
 
-void D3D11Buffer::CreateNativeBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
+void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Initialize native buffer descriptor */
     D3D11_BUFFER_DESC descD3D;
@@ -206,7 +206,7 @@ void D3D11Buffer::CreateNativeBuffer(ID3D11Device* device, const BufferDescripto
 
     /* Create CPU access buffer (if required) */
     if (desc.cpuAccessFlags != 0)
-        CreateCPUAccessBuffer(device, desc);
+        CreateCpuAccessBuffer(device, desc);
 
     /* Store buffer creation attributes */
     size_   = descD3D.ByteWidth;
@@ -215,7 +215,7 @@ void D3D11Buffer::CreateNativeBuffer(ID3D11Device* device, const BufferDescripto
     usage_  = descD3D.Usage;
 }
 
-void D3D11Buffer::CreateCPUAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc)
+void D3D11Buffer::CreateCpuAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc)
 {
     /* Create new D3D11 hardware buffer (for CPU access) */
     D3D11_BUFFER_DESC descD3D;

@@ -68,13 +68,10 @@ class D3D11Buffer : public Buffer
             return usage_;
         }
 
-    protected:
-
-        void CreateNativeBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData);
-
     private:
 
-        void CreateCPUAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc);
+        void CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData);
+        void CreateCpuAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc);
 
     private:
 

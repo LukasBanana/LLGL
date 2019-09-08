@@ -353,7 +353,7 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
         // Create shader
         auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
         {
-            if (desc.type == LLGL::ShaderType::Vertex)
+            if (desc.type == LLGL::ShaderType::Vertex || desc.type == LLGL::ShaderType::Geometry)
                 shaderDesc.vertex = recall.vertexAttribs;
             else if (desc.type == LLGL::ShaderType::Fragment)
                 shaderDesc.fragment = recall.fragmentAttribs;

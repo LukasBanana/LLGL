@@ -53,7 +53,10 @@ class D3D12CommandQueue final : public CommandQueue
         bool WaitFence(Fence& fence, std::uint64_t timeout) override;
         void WaitIdle() override;
 
-        /* ----- Extended functions ----- */
+    public:
+
+        // Submits the specified fence with a custom value.
+        void SignalFence(D3D12Fence& fenceD3D, UINT64 value);
 
         // Returns the native ID3D12CommandQueue object.
         inline ID3D12CommandQueue* GetNative() const

@@ -81,11 +81,9 @@ void D3D12CommandBuffer::UpdateBuffer(
     std::uint16_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
-    //dstBufferD3D.UpdateDynamicSubresource(commandContext_, data, static_cast<UINT64>(dataSize), dstOffset);
     stagingBufferPool_.WriteStaged(commandContext_, dstBufferD3D.GetResource(), dstOffset, data, dataSize);
 }
 
-//TODO: resource transition and barrieres
 void D3D12CommandBuffer::CopyBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
@@ -95,10 +93,16 @@ void D3D12CommandBuffer::CopyBuffer(
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
     auto& srcBufferD3D = LLGL_CAST(D3D12Buffer&, srcBuffer);
-    commandList_->CopyBufferRegion(dstBufferD3D.GetNative(), dstOffset, srcBufferD3D.GetNative(), srcOffset, size);
+
+    commandContext_.TransitionResource(dstBufferD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
+    commandContext_.TransitionResource(srcBufferD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+    {
+        commandList_->CopyBufferRegion(dstBufferD3D.GetNative(), dstOffset, srcBufferD3D.GetNative(), srcOffset, size);
+    }
+    commandContext_.TransitionResource(dstBufferD3D.GetResource(), dstBufferD3D.GetResource().usageState);
+    commandContext_.TransitionResource(srcBufferD3D.GetResource(), srcBufferD3D.GetResource().usageState, true);
 }
 
-//TODO: resource transition and barrieres
 void D3D12CommandBuffer::CopyTexture(
     Texture&                dstTexture,
     const TextureLocation&  dstLocation,
@@ -110,18 +114,24 @@ void D3D12CommandBuffer::CopyTexture(
     auto& srcTextureD3D = LLGL_CAST(D3D12Texture&, srcTexture);
 
     const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = dstTextureD3D.CalcCopyLocation(dstLocation);
-    const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = dstTextureD3D.CalcCopyLocation(dstLocation);
+    const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = srcTextureD3D.CalcCopyLocation(dstLocation);
 
     const D3D12_BOX srcBox = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
 
-    commandList_->CopyTextureRegion(
-        &dstLocationD3D,                            // pDst
-        static_cast<UINT>(dstLocation.offset.x),    // DstX
-        static_cast<UINT>(dstLocation.offset.y),    // DstY
-        static_cast<UINT>(dstLocation.offset.z),    // DstZ
-        &srcLocationD3D,                            // pSrc
-        &srcBox                                     // pSrcBox
-    );
+    commandContext_.TransitionResource(dstTextureD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
+    commandContext_.TransitionResource(srcTextureD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+    {
+        commandList_->CopyTextureRegion(
+            &dstLocationD3D,                            // pDst
+            static_cast<UINT>(dstLocation.offset.x),    // DstX
+            static_cast<UINT>(dstLocation.offset.y),    // DstY
+            static_cast<UINT>(dstLocation.offset.z),    // DstZ
+            &srcLocationD3D,                            // pSrc
+            &srcBox                                     // pSrcBox
+        );
+    }
+    commandContext_.TransitionResource(dstTextureD3D.GetResource(), dstTextureD3D.GetResource().usageState);
+    commandContext_.TransitionResource(srcTextureD3D.GetResource(), srcTextureD3D.GetResource().usageState, true);
 }
 
 void D3D12CommandBuffer::GenerateMips(Texture& texture)

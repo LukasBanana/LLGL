@@ -191,7 +191,8 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 
     auto result = instance_->MapBuffer(bufferDbg.instance, access);
 
-    bufferDbg.mapped = true;
+    if (result != nullptr)
+        bufferDbg.mapped = true;
 
     if (profiler_)
         profiler_->frameProfile.bufferMappings++;

@@ -48,8 +48,8 @@ class D3D11BufferWithRV final : public D3D11Buffer
 
     private:
 
-        void CreateNativeSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
-        void CreateNativeUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements, UINT flags);
+        void CreateShaderResourceView(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
+        void CreateUnorderedAccessView(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements, UINT flags);
 
     private:
 

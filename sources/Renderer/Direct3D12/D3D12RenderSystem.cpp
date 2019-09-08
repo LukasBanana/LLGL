@@ -36,7 +36,9 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateFactory();
     QueryVideoAdapters();
     CreateDevice();
-    CreateGPUSynchObjects();
+
+    /* Create fence for GPU/CPU synchronization */
+    fence_.Create(device_.GetNative());
 
     /* Create command queue interface */
     commandQueue_ = MakeUnique<D3D12CommandQueue>(device_.GetNative(), device_.GetQueue());
@@ -45,13 +47,16 @@ D3D12RenderSystem::D3D12RenderSystem()
     graphicsCmdAlloc_   = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
     graphicsCmdList_    = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, graphicsCmdAlloc_.Get());
 
-    computeCmdAlloc_    = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE);
-    computeCmdList_     = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCmdAlloc_.Get());
+    //computeCmdAlloc_    = device_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE);
+    //computeCmdList_     = device_.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCmdAlloc_.Get());
 
     /* Create default pipeline layout and command signature pool */
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
     commandSignaturePool_.CreateDefaultSignatures(device_.GetNative());
+
     commandContext_.SetCommandList(graphicsCmdList_.Get());
+    commandContext_.SetCommandQueueAndAllocator(device_.GetQueue(), graphicsCmdAlloc_.Get());
+
     stagingBufferPool_.InitializeDevice(device_.GetNative(), 0);
     D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
 
@@ -76,8 +81,6 @@ D3D12RenderSystem::~D3D12RenderSystem()
 
     /* Clear resources of singletons */
     D3D12MipGenerator::Get().Clear();
-
-    CloseHandle(fenceEvent_);
 }
 
 /* ----- Render Context ----- */
@@ -170,7 +173,6 @@ void D3D12RenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
-//TODO: execute command list only before the next call to D3D12CommandBuffer::Begin()
 void D3D12RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
@@ -180,12 +182,21 @@ void D3D12RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, 
 
 void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
-    return nullptr;//todo...
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+
+    void* mappedData = nullptr;
+    const D3D12_RANGE range{ 0, static_cast<SIZE_T>(bufferD3D.GetBufferSize()) };
+
+    if (SUCCEEDED(bufferD3D.Map(commandContext_, fence_, range, &mappedData, access)))
+        return mappedData;
+
+    return nullptr;
 }
 
 void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 {
-    //todo...
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    bufferD3D.Unmap(commandContext_, fence_);
 }
 
 /* ----- Textures ----- */
@@ -461,40 +472,25 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
 
 void D3D12RenderSystem::SignalFenceValue(UINT64 fenceValue)
 {
-    /* Schedule signal command into the qeue */
-    auto hr = commandQueue_->GetNative()->Signal(fence_.Get(), fenceValue);
-    DXThrowIfFailed(hr, "failed to signal D3D12 fence into command queue");
+    commandQueue_->SignalFence(fence_, fenceValue);
 }
 
 void D3D12RenderSystem::WaitForFenceValue(UINT64 fenceValue)
 {
-    /* Wait until the fence has been crossed */
-    if (fence_->GetCompletedValue() < fenceValue)
-    {
-        auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
-        DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
-        WaitForSingleObjectEx(fenceEvent_, INFINITE, FALSE);
-    }
+    fence_.WaitForValue(fenceValue, INFINITE);
 }
 
 void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
 {
-    /* Increment fence value */
-    ++fenceValue;
-    fenceValue_ = fenceValue;
-
-    /* Schedule signal command into the qeue */
-    SignalFenceValue(fenceValue);
-
-    /* Wait until the fence has been processed */
-    auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
-    DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
-    WaitForSingleObjectEx(fenceEvent_, INFINITE, FALSE);
+    fenceValue = fence_.NextValue(fenceValue);
+    commandQueue_->SignalFence(fence_, fenceValue);
+    fence_.WaitForValue(fenceValue, INFINITE);
 }
 
 void D3D12RenderSystem::SyncGPU()
 {
-    SyncGPU(fenceValue_);
+    commandQueue_->Submit(fence_);
+    fence_.Wait(~0ull);
 }
 
 
@@ -558,19 +554,6 @@ void D3D12RenderSystem::CreateDevice()
         if (!device_.CreateDXDevice(hr, adapter.Get(), featureLevels))
             DXThrowIfFailed(hr, "failed to create D3D12 device");
     }
-}
-
-void D3D12RenderSystem::CreateGPUSynchObjects()
-{
-    /* Create D3D12 fence */
-    UINT64 initialFenceValue = 0;
-    auto hr = device_.GetNative()->CreateFence(initialFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 fence");
-
-    /* Create Win32 event */
-    fenceEvent_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    if (!fenceEvent_)
-        DXThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()), "failed to create Win32 event object");
 }
 
 static bool FindHighestShaderModel(ID3D12Device* device, D3D_SHADER_MODEL& shaderModel)

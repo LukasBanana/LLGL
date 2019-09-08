@@ -20,6 +20,7 @@ namespace LLGL
 
 
 struct D3D12Resource;
+class D3D12Fence;
 
 union D3D12Constant
 {
@@ -44,10 +45,14 @@ class D3D12CommandContext
         D3D12CommandContext();
 
         void SetCommandList(ID3D12GraphicsCommandList* commandList);
+        void SetCommandQueueAndAllocator(ID3D12CommandQueue* commandQueue, ID3D12CommandAllocator* commandAllocator);
 
-        void Reset(ID3D12CommandAllocator* commandAllocator);
         void Close();
         void Execute(ID3D12CommandQueue* commandQueue);
+        void Reset(ID3D12CommandAllocator* commandAllocator);
+
+        // Calls Close, Execute, and Reset with the internal command queue and allocator.
+        void Finish(D3D12Fence* fence = nullptr);
 
         inline ID3D12GraphicsCommandList* GetCommandList() const
         {
@@ -105,6 +110,8 @@ class D3D12CommandContext
         static const UINT g_maxNumResourceBarrieres = 16;
 
         ID3D12GraphicsCommandList*  commandList_                                    = nullptr;
+        ID3D12CommandQueue*         commandQueue_                                   = nullptr;
+        ID3D12CommandAllocator*     commandAllocator_                               = nullptr;
 
         D3D12_RESOURCE_BARRIER      resourceBarriers_[g_maxNumResourceBarrieres];
         UINT                        numResourceBarriers_                            = 0;

@@ -38,7 +38,12 @@ class D3D12StagingBuffer
         D3D12StagingBuffer& operator = (const D3D12StagingBuffer&) = delete;
 
         // Creates a new resource and resets the writing offset.
-        void Create(ID3D12Device* device, UINT64 size);
+        void Create(
+            ID3D12Device*   device,
+            UINT64          size,
+            UINT64          alignment   = 256u,
+            D3D12_HEAP_TYPE heapType    = D3D12_HEAP_TYPE_UPLOAD
+        );
 
         // Release the native buffer resource.
         void Release();

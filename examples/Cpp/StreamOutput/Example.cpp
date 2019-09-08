@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <iomanip>
 
 
 class Example_StreamOutput : public ExampleBase
@@ -134,6 +135,13 @@ public:
 
 private:
 
+    void PrintOutputVector(std::size_t index, const Gs::Vector4f* outputVectors)
+    {
+        const auto& v = outputVectors[index];
+        std::cout << std::fixed << std::setfill('0') << std::setprecision(2);
+        std::cout << "SV_Position[" << index << "] = " << v.x << ", " << v.y << ", " << v.z << ", " << v.w << "        \r";
+    }
+
     void OnDrawFrame() override
     {
         timer->MeasureTime();
@@ -156,6 +164,7 @@ private:
             // Set vertex and index buffers
             commands->SetVertexBuffer(*vertexBuffer);
             commands->SetIndexBuffer(*indexBuffer);
+            commands->SetStreamOutputBuffer(*streamOutputBuffer);
 
             // Begin render pass for context
             commands->BeginRenderPass(*context);
@@ -171,7 +180,6 @@ private:
 
                 // Set buffers
                 commands->SetGraphicsResourceHeap(*resourceHeap);
-                commands->SetStreamOutputBuffer(*streamOutputBuffer);
 
                 // Draw scene
                 commands->BeginStreamOutput(LLGL::PrimitiveType::Triangles);
@@ -179,23 +187,24 @@ private:
                     commands->DrawIndexed(36, 0);
                 }
                 commands->EndStreamOutput();
-
-                // Read stream-output buffer
-                renderer->GetCommandQueue()->WaitIdle();
-
-                if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::CPUAccess::ReadOnly))
-                {
-                    std::vector<Gs::Vector4f> output(36*3);
-                    ::memcpy(output.data(), outputBuffer, sizeof(Gs::Vector4f)*36*3);
-                    renderer->UnmapBuffer(*streamOutputBuffer);
-
-                    // print or debug data in "output" container ...
-                }
             }
             commands->EndRenderPass();
         }
         commands->End();
         commandQueue->Submit(*commands);
+
+        // Read stream-output buffer
+        commandQueue->WaitIdle();
+
+        if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::CPUAccess::ReadOnly))
+        {
+            // Print output data
+            PrintOutputVector(1, reinterpret_cast<const Gs::Vector4f*>(outputBuffer));
+            std::flush(std::cout);
+
+            // Unmap buffer
+            renderer->UnmapBuffer(*streamOutputBuffer);
+        }
 
         // Present result on the screen
         context->Present();

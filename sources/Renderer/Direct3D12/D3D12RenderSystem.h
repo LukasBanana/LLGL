@@ -213,7 +213,6 @@ class D3D12RenderSystem final : public RenderSystem
         void CreateFactory();
         void QueryVideoAdapters();
         void CreateDevice();
-        void CreateGPUSynchObjects();
 
         void QueryRendererInfo();
         void QueryRenderingCaps();
@@ -229,15 +228,12 @@ class D3D12RenderSystem final : public RenderSystem
 
         ComPtr<IDXGIFactory4>                       factory_;
         D3D12Device                                 device_;
+        D3D12Fence                                  fence_;
 
         ComPtr<ID3D12CommandAllocator>              graphicsCmdAlloc_;
         ComPtr<ID3D12GraphicsCommandList>           graphicsCmdList_;   // graphics command list to upload data to the GPU
-        ComPtr<ID3D12CommandAllocator>              computeCmdAlloc_;
-        ComPtr<ID3D12GraphicsCommandList>           computeCmdList_;    // compute command list to generate MIP-maps
-
-        ComPtr<ID3D12Fence>                         fence_;
-        HANDLE                                      fenceEvent_             = 0;
-        UINT64                                      fenceValue_             = 0;
+        //ComPtr<ID3D12CommandAllocator>              computeCmdAlloc_;
+        //ComPtr<ID3D12GraphicsCommandList>           computeCmdList_;    // compute command list to generate MIP-maps
 
         D3D12PipelineLayout                         defaultPipelineLayout_;
         D3D12CommandSignaturePool                   commandSignaturePool_;

@@ -7,6 +7,7 @@
 
 #include "D3D12CommandContext.h"
 #include "../D3D12Resource.h"
+#include "../RenderState/D3D12Fence.h"
 #include "../../DXCommon/DXCore.h"
 
 
@@ -28,14 +29,10 @@ void D3D12CommandContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
     }
 }
 
-void D3D12CommandContext::Reset(ID3D12CommandAllocator* commandAllocator)
+void D3D12CommandContext::SetCommandQueueAndAllocator(ID3D12CommandQueue* commandQueue, ID3D12CommandAllocator* commandAllocator)
 {
-    /* Reset graphics command list */
-    auto hr = commandList_->Reset(commandAllocator, nullptr);
-    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
-
-    /* Invalidate state cache */
-    ClearCache();
+    commandQueue_       = commandQueue;
+    commandAllocator_   = commandAllocator;
 }
 
 void D3D12CommandContext::Close()
@@ -52,6 +49,33 @@ void D3D12CommandContext::Execute(ID3D12CommandQueue* commandQueue)
 {
     ID3D12CommandList* cmdLists[] = { GetCommandList() };
     commandQueue->ExecuteCommandLists(1, cmdLists);
+}
+
+void D3D12CommandContext::Reset(ID3D12CommandAllocator* commandAllocator)
+{
+    /* Reset graphics command list */
+    auto hr = commandList_->Reset(commandAllocator, nullptr);
+    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
+
+    /* Invalidate state cache */
+    ClearCache();
+}
+
+void D3D12CommandContext::Finish(D3D12Fence* fence)
+{
+    /* Close command list and execute, then reset command allocator for next encoding */
+    Close();
+    Execute(commandQueue_);
+
+    /* Synchronize GPU/CPU */
+    if (fence)
+    {
+        auto hr = commandQueue_->Signal(fence->GetNative(), fence->NextValue());
+        DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
+        fence->Wait(~0ull);
+    }
+
+    Reset(commandAllocator_);
 }
 
 void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)

@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Buffer.h>
+#include <LLGL/RenderSystemFlags.h>
 #include "../D3D12Resource.h"
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
@@ -19,6 +20,7 @@ namespace LLGL
 {
 
 
+class D3D12Fence;
 class D3D12CommandContext;
 
 class D3D12Buffer : public Buffer
@@ -39,6 +41,21 @@ class D3D12Buffer : public Buffer
         void CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
         void CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, UINT firstElement, UINT numElements, UINT elementStride);
         void CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
+
+        // Maps the buffer content to CPU memory space.
+        HRESULT Map(
+            D3D12CommandContext&    commandContext,
+            D3D12Fence&             fence,
+            const D3D12_RANGE&      range,
+            void**                  mappedData,
+            const CPUAccess         access
+        );
+
+        // Unmaps the buffer content from CPU memory space.
+        void Unmap(
+            D3D12CommandContext&    commandContext,
+            D3D12Fence&             fence
+        );
 
         // Returns the resource wrapper.
         inline D3D12Resource& GetResource()
@@ -90,7 +107,8 @@ class D3D12Buffer : public Buffer
 
     private:
 
-        void CreateNativeBuffer(ID3D12Device* device, const BufferDescriptor& desc);
+        void CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& desc);
+        void CreateCpuAccessBuffer(ID3D12Device* device, UINT64 size, long cpuAccessFlags);
 
         void CreateVertexBufferView(const BufferDescriptor& desc);
         void CreateIndexBufferView(const BufferDescriptor& desc);
@@ -99,14 +117,17 @@ class D3D12Buffer : public Buffer
     private:
 
         D3D12Resource                   resource_;
+        D3D12Resource                   cpuAccessBuffer_;           // D3D12_HEAP_TYPE_UPLOAD or D3D12_HEAP_TYPE_READBACK
 
         UINT64                          bufferSize_         = 0;
         UINT                            alignment_          = 1;
         UINT                            structStride_       = 1;
-        D3D12_HEAP_TYPE                 heapType_           = D3D12_HEAP_TYPE_DEFAULT;
         D3D12_VERTEX_BUFFER_VIEW        vertexBufferView_   = {};
         D3D12_INDEX_BUFFER_VIEW         indexBufferView_    = {};
         D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferView_       = {};
+
+        D3D12_RANGE                     mappedRange_        = {};
+        CPUAccess                       mappedCPUaccess_    = CPUAccess::ReadOnly;
 
 };
 

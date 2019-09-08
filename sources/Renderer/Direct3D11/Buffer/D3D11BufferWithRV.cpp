@@ -48,18 +48,15 @@ D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescripto
     if (desc.storageBuffer.stride == 0)
         throw std::invalid_argument("storage buffer stride cannot be zero for a D3D11 resource view");
 
-    /* Create native D3D buffer */
-    CreateNativeBuffer(device, desc, initialData);
-
     /* Create resource views (SRV and UAV) */
     auto format         = GetD3DResourceViewFormat(desc.storageBuffer);
     auto numElements    = static_cast<UINT>(desc.size) / desc.storageBuffer.stride;
 
     if ((desc.bindFlags & BindFlags::Sampled) != 0)
-        CreateNativeSRV(device, format, 0, numElements);
+        CreateShaderResourceView(device, format, 0, numElements);
 
     if ((desc.bindFlags & BindFlags::Storage) != 0)
-        CreateNativeUAV(device, format, 0, numElements, GetUAVFlags(desc.storageBuffer));
+        CreateUnorderedAccessView(device, format, 0, numElements, GetUAVFlags(desc.storageBuffer));
 }
 
 void D3D11BufferWithRV::SetName(const char* name)
@@ -76,7 +73,7 @@ void D3D11BufferWithRV::SetName(const char* name)
  * ======= Private: =======
  */
 
-void D3D11BufferWithRV::CreateNativeSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements)
+void D3D11BufferWithRV::CreateShaderResourceView(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements)
 {
     /* Initialize descriptor and create SRV */
     D3D11_SHADER_RESOURCE_VIEW_DESC desc;
@@ -90,7 +87,7 @@ void D3D11BufferWithRV::CreateNativeSRV(ID3D11Device* device, DXGI_FORMAT format
     DXThrowIfFailed(hr, "failed to create D3D11 shader-resource-view (SRV) for storage buffer");
 }
 
-void D3D11BufferWithRV::CreateNativeUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements, UINT flags)
+void D3D11BufferWithRV::CreateUnorderedAccessView(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements, UINT flags)
 {
     /* Initialize descriptor and create UAV */
     D3D11_UNORDERED_ACCESS_VIEW_DESC desc;
