@@ -6,6 +6,7 @@
  */
 
 #include "VKExtensionRegistry.h"
+#include "../Vulkan.h"
 #include "../../../Core/Exception.h"
 #include <array>
 
@@ -15,6 +16,14 @@ namespace LLGL
 
 
 static std::array<bool, static_cast<std::size_t>(VKExt::Count)> g_registeredExtensions { { false } };
+
+static const char* g_optionalExtensions[] =
+{
+    VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
+    VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME,
+    VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
+    nullptr,
+};
 
 void RegisterExtension(VKExt extension)
 {
@@ -30,6 +39,11 @@ void AssertExtension(const VKExt extension, const char* extensionName, const cha
 {
     if (!HasExtension(extension))
         ThrowVKExtensionNotSupportedExcept(funcName, extensionName);
+}
+
+const char** GetOptionalExtensions()
+{
+    return g_optionalExtensions;
 }
 
 

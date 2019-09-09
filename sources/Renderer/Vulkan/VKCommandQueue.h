@@ -27,7 +27,7 @@ class VKCommandQueue final : public CommandQueue
 
         /* ----- Common ----- */
 
-        VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue graphicsQueue);
+        VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue queue);
 
         /* ----- Command Buffers ----- */
 
@@ -47,7 +47,7 @@ class VKCommandQueue final : public CommandQueue
     private:
 
         VkDevice    device_;
-        VkQueue     graphicsQueue_  = VK_NULL_HANDLE;
+        VkQueue     native_ = VK_NULL_HANDLE;
 
 };
 

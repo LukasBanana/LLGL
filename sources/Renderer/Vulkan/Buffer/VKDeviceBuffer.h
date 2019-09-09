@@ -9,7 +9,7 @@
 #define LLGL_VK_DEVICE_BUFFER_H
 
 
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include "../Memory/VKDeviceMemoryRegion.h"
 #include "../VKPtr.h"
 

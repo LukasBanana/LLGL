@@ -6,6 +6,7 @@
  */
 
 #include "VKPhysicalDevice.h"
+#include "Ext/VKExtensionRegistry.h"
 #include "VKCore.h"
 #include "RenderState/VKGraphicsPipeline.h"
 #include "../../Core/Vendor.h"
@@ -22,6 +23,7 @@ static const char* g_requiredVulkanExtensions[] =
 {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+    nullptr,
 };
 
 static bool CheckDeviceExtensionSupport(
@@ -55,7 +57,7 @@ static bool IsPhysicalDeviceSuitable(
     bool suitable = CheckDeviceExtensionSupport(
         physicalDevice,
         g_requiredVulkanExtensions,
-        sizeof(g_requiredVulkanExtensions) / sizeof(g_requiredVulkanExtensions[0]),
+        (sizeof(g_requiredVulkanExtensions) / sizeof(g_requiredVulkanExtensions[0]) - 1),
         extensions
     );
 
@@ -79,9 +81,8 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance)
         if (IsPhysicalDeviceSuitable(device, supportedExtensions_))
         {
             /* Store reference to all extension names */
-            supportedExtensionNames_.reserve(supportedExtensions_.size());
             for (const auto& extension : supportedExtensions_)
-                supportedExtensionNames_.push_back(extension.extensionName);
+                supportedExtensionNames_.insert(extension.extensionName);
 
             /* Store device and store properties */
             physicalDevice_ = device;
@@ -213,18 +214,17 @@ void VKPhysicalDevice::QueryDeviceProperties(
 
 VKDevice VKPhysicalDevice::CreateLogicalDevice()
 {
+    EnableExtensions(g_requiredVulkanExtensions, true);
+    EnableExtensions(GetOptionalExtensions());
+
     VKDevice device;
     device.CreateLogicalDevice(
         physicalDevice_,
         &features_,
-        #if 0
-        supportedExtensionNames_.data(),
-        static_cast<std::uint32_t>(supportedExtensionNames_.size())
-        #else
-        g_requiredVulkanExtensions,
-        sizeof(g_requiredVulkanExtensions) / sizeof(g_requiredVulkanExtensions[0])
-        #endif
+        enabledExtensionNames_.data(),
+        static_cast<std::uint32_t>(enabledExtensionNames_.size())
     );
+
     return device;
 }
 
@@ -257,6 +257,41 @@ void VKPhysicalDevice::QueryDeviceProperties()
     vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
     vkGetPhysicalDeviceProperties(physicalDevice_, &properties_);
     vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
+}
+
+void VKPhysicalDevice::EnableExtensions(const char** extensions, bool required)
+{
+    std::vector<const char*> missingExtensions;
+
+    for (; *extensions != nullptr; ++extensions)
+    {
+        const char* name = *extensions;
+        if (supportedExtensionNames_.find(name) != supportedExtensionNames_.end())
+        {
+            /* Append name to list of enabled extensions */
+            enabledExtensionNames_.push_back(name);
+        }
+        else if (required)
+        {
+            /* Error: missing extension that is marked as required */
+            missingExtensions.push_back(name);
+        }
+    }
+
+    /* Report error about required extensions that are not supported */
+    if (!missingExtensions.empty())
+    {
+        std::string s;
+
+        for (auto name : missingExtensions)
+        {
+            if (!s.empty())
+                s += ", ";
+            s += name;
+        }
+
+        throw std::runtime_error("unsupported Vulkan extensions: " + s);
+    }
 }
 
 

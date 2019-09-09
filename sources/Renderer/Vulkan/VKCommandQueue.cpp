@@ -17,9 +17,9 @@ namespace LLGL
 {
 
 
-VKCommandQueue::VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue graphicsQueue) :
-    device_        { device        },
-    graphicsQueue_ { graphicsQueue }
+VKCommandQueue::VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue queue) :
+    device_ { device },
+    native_ { queue  }
 {
 }
 
@@ -44,7 +44,7 @@ void VKCommandQueue::Submit(CommandBuffer& commandBuffer)
         submitInfo.signalSemaphoreCount = 0;
         submitInfo.pSignalSemaphores    = nullptr;
     }
-    auto result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, commandBufferVK.GetQueueSubmitFence());
+    auto result = vkQueueSubmit(native_, 1, &submitInfo, commandBufferVK.GetQueueSubmitFence());
     VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
 }
 
@@ -117,7 +117,7 @@ void VKCommandQueue::Submit(Fence& fence)
 {
     auto& fenceVK = LLGL_CAST(VKFence&, fence);
     fenceVK.Reset(device_);
-    vkQueueSubmit(graphicsQueue_, 0, nullptr, fenceVK.GetVkFence());
+    vkQueueSubmit(native_, 0, nullptr, fenceVK.GetVkFence());
 }
 
 bool VKCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
@@ -128,7 +128,7 @@ bool VKCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 
 void VKCommandQueue::WaitIdle()
 {
-    vkQueueWaitIdle(graphicsQueue_);
+    vkQueueWaitIdle(native_);
 }
 
 

@@ -86,6 +86,17 @@ static bool Load_VK_EXT_conditional_rendering(VkDevice handle)
     return true;
 }
 
+static bool Load_VK_EXT_transform_feedback(VkDevice handle)
+{
+    LOAD_VKPROC( vkCmdBindTransformFeedbackBuffersEXT );
+    LOAD_VKPROC( vkCmdBeginTransformFeedbackEXT       );
+    LOAD_VKPROC( vkCmdEndTransformFeedbackEXT         );
+    LOAD_VKPROC( vkCmdBeginQueryIndexedEXT            );
+    LOAD_VKPROC( vkCmdEndQueryIndexedEXT              );
+    LOAD_VKPROC( vkCmdDrawIndirectByteCountEXT        );
+    return true;
+}
+
 #endif // /LLGL_VK_ENABLE_EXT
 
 #undef LOAD_VKPROC
@@ -151,6 +162,7 @@ bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& sup
     /* Multi-vendor extensions */
     LOAD_VKEXT( EXT_debug_marker          );
     LOAD_VKEXT( EXT_conditional_rendering );
+    LOAD_VKEXT( EXT_transform_feedback    );
 
     #undef LOAD_VKEXT
 

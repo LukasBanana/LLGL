@@ -54,6 +54,15 @@ DECL_VKPROC( vkCmdDebugMarkerInsertEXT     );
 DECL_VKPROC( vkCmdBeginConditionalRenderingEXT );
 DECL_VKPROC( vkCmdEndConditionalRenderingEXT   );
 
+/* VK_EXT_conditional_rendering */
+
+DECL_VKPROC( vkCmdBindTransformFeedbackBuffersEXT );
+DECL_VKPROC( vkCmdBeginTransformFeedbackEXT       );
+DECL_VKPROC( vkCmdEndTransformFeedbackEXT         );
+DECL_VKPROC( vkCmdBeginQueryIndexedEXT            );
+DECL_VKPROC( vkCmdEndQueryIndexedEXT              );
+DECL_VKPROC( vkCmdDrawIndirectByteCountEXT        );
+
 #endif // /LLGL_VK_ENABLE_EXT
 
 #undef DECL_VKPROC

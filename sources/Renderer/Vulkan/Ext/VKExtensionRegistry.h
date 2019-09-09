@@ -25,6 +25,7 @@ enum class VKExt
     /* Multivendor extensions */
     EXT_debug_marker,
     EXT_conditional_rendering,
+    EXT_transform_feedback,
 
     /* Enumeration entry counter */
     Count,
@@ -39,6 +40,9 @@ bool HasExtension(const VKExt extension);
 
 // Throws an exception if the specified Vulkan extension is not supported.
 void AssertExtension(const VKExt extension, const char* extensionName, const char* funcName);
+
+// Returns the null-terminated list of optional extensions.
+const char** GetOptionalExtensions();
 
 
 } // /namespace LLGL

@@ -13,6 +13,8 @@
 #include "VKDevice.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <vector>
+#include <set>
+#include <cstring>
 
 
 namespace LLGL
@@ -40,7 +42,7 @@ class VKPhysicalDevice
 
         std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
 
-        // Returns true if the specified Vulkan extension is supported bny this physical device.
+        // Returns true if the specified Vulkan extension is supported by this physical device.
         bool SupportsExtension(const char* extension) const;
 
         /* ----- Handles ----- */
@@ -75,21 +77,34 @@ class VKPhysicalDevice
             return memoryProperties_;
         }
 
-        // Returns the list of supported extensions names.
-        inline const std::vector<const char*>& GetSupportedExtensionNames() const
+        // Returns the list of names of all supported and enabled extensions.
+        inline const std::vector<const char*>& GetExtensionNames() const
         {
-            return supportedExtensionNames_;
+            return enabledExtensionNames_;
         }
 
     private:
 
+        // Helper struct to compare ANSI-C strings in a strict-weak-order (SWO)
+        struct CStringSWO
+        {
+            inline bool operator ()(const char* lhs, const char* rhs) const
+            {
+                return (std::strcmp(lhs, rhs) < 0);
+            }
+        };
+
+    private:
+
         void QueryDeviceProperties();
+        void EnableExtensions(const char** extensions, bool required = false);
 
     private:
 
         VkPhysicalDevice                    physicalDevice_             = VK_NULL_HANDLE;
         std::vector<VkExtensionProperties>  supportedExtensions_;
-        std::vector<const char*>            supportedExtensionNames_;
+        std::set<const char*, CStringSWO>   supportedExtensionNames_;
+        std::vector<const char*>            enabledExtensionNames_;
 
         VkPhysicalDeviceFeatures            features_;
         VkPhysicalDeviceProperties          properties_;

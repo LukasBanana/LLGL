@@ -468,22 +468,40 @@ void VKCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 
 void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
-    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
+    if (HasExtension(VKExt::EXT_transform_feedback))
+    {
+        auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+
+        VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
+        VkDeviceSize offsets[] = { 0 };
+        VkDeviceSize sizes[] = { bufferVK.GetSize() };
+
+        vkCmdBindTransformFeedbackBuffersEXT(commandBuffer_, 0, 1, buffers, offsets, sizes);
+    }
+    else
+        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
 }
 
 void VKCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
 {
-    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
+    //TODO...
+    ThrowNotImplementedExcept(__FUNCTION__);
 }
 
-void VKCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+void VKCommandBuffer::BeginStreamOutput(const PrimitiveType /*primitiveType*/)
 {
-    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
+    if (HasExtension(VKExt::EXT_transform_feedback))
+        vkCmdBeginTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
+    else
+        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
 }
 
 void VKCommandBuffer::EndStreamOutput()
 {
-    ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
+    if (HasExtension(VKExt::EXT_transform_feedback))
+        vkCmdEndTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
+    else
+        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
 }
 
 /* ----- Resources ----- */

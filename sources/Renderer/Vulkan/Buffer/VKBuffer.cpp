@@ -8,6 +8,8 @@
 #include "VKBuffer.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
+#include "../Ext/VKExtensions.h"
+#include "../Ext/VKExtensionRegistry.h"
 
 
 namespace LLGL
@@ -29,13 +31,21 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
     if ((desc.bindFlags & BindFlags::IndirectBuffer) != 0)
         flags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
 
-    #ifdef LLGL_VK_ENABLE_EXT
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
-        flags |= VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_BUFFER_BIT_EXT;
-    #else
-    if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
-        throw std::runtime_error("stream output buffer not supported by Vulkan renderer");
-    #endif
+    {
+        #ifdef LLGL_VK_ENABLE_EXT
+        if (HasExtension(VKExt::EXT_transform_feedback))
+        {
+            /* Enable transform feedback with extension VK_EXT_transform_feedback */
+            flags |= VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_BUFFER_BIT_EXT;
+        }
+        else
+        #endif
+        {
+            /* Error: feature not supported due to missing extension */
+            throw std::runtime_error("stream output buffer not supported by Vulkan renderer");
+        }
+    }
 
     if ((desc.cpuAccessFlags & CPUAccessFlags::Read) != 0)
         flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;

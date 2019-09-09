@@ -154,7 +154,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     /* Copy staging buffer into hardware buffer */
     device_.CopyBuffer(stagingBuffer.GetVkBuffer(), buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
 
-    if ((desc.cpuAccessFlags & CPUAccessFlags::Write) != 0 || (desc.miscFlags & MiscFlags::DynamicUsage) != 0)
+    if (desc.cpuAccessFlags != 0 || (desc.miscFlags & MiscFlags::DynamicUsage) != 0)
     {
         /* Store ownership of staging buffer */
         buffer->TakeStagingBuffer(std::move(stagingBuffer));
@@ -831,7 +831,7 @@ void VKRenderSystem::CreateLogicalDevice()
     commandQueue_ = MakeUnique<VKCommandQueue>(device_, device_.GetVkQueue());
 
     /* Load Vulkan device extensions */
-    VKLoadDeviceExtensions(device_, physicalDevice_.GetSupportedExtensionNames());
+    VKLoadDeviceExtensions(device_, physicalDevice_.GetExtensionNames());
 }
 
 void VKRenderSystem::CreateDefaultPipelineLayout()
