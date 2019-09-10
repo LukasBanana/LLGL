@@ -34,10 +34,10 @@ class VKDeviceMemoryManager
     public:
 
         VKDeviceMemoryManager(
-            const VKPtr<VkDevice>& device,
+            const VKPtr<VkDevice>&                  device,
             const VkPhysicalDeviceMemoryProperties& memoryProperties,
-            VkDeviceSize minAllocationSize,
-            bool reduceFragmentation
+            VkDeviceSize                            minAllocationSize,
+            bool                                    reduceFragmentation
         );
 
         VKDeviceMemoryManager(const VKDeviceMemoryManager&) = delete;
@@ -85,6 +85,8 @@ class VKDeviceMemoryManager
 
         // Finds a suitable device memory chunk or allocates a new one.
         VKDeviceMemory* FindOrAllocChunk(VkDeviceSize allocationSize, std::uint32_t memoryTypeIndex, VkDeviceSize minFreeBlockSize);
+
+    private:
 
         const VKPtr<VkDevice>&                          device_;
         VkPhysicalDeviceMemoryProperties                memoryProperties_;

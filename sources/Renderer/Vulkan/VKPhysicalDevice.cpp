@@ -84,6 +84,15 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance)
             for (const auto& extension : supportedExtensions_)
                 supportedExtensionNames_.insert(extension.extensionName);
 
+            if (!EnableExtensions(g_requiredVulkanExtensions, true))
+            {
+                /* Stop considering this physical device, because some required extensions are not supported */
+                supportedExtensionNames_.clear();
+                continue;
+            }
+
+            EnableExtensions(GetOptionalExtensions());
+
             /* Store device and store properties */
             physicalDevice_ = device;
             QueryDeviceProperties();
@@ -214,9 +223,6 @@ void VKPhysicalDevice::QueryDeviceProperties(
 
 VKDevice VKPhysicalDevice::CreateLogicalDevice()
 {
-    EnableExtensions(g_requiredVulkanExtensions, true);
-    EnableExtensions(GetOptionalExtensions());
-
     VKDevice device;
     device.CreateLogicalDevice(
         physicalDevice_,
@@ -224,7 +230,6 @@ VKDevice VKPhysicalDevice::CreateLogicalDevice()
         enabledExtensionNames_.data(),
         static_cast<std::uint32_t>(enabledExtensionNames_.size())
     );
-
     return device;
 }
 
@@ -259,39 +264,24 @@ void VKPhysicalDevice::QueryDeviceProperties()
     vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
 }
 
-void VKPhysicalDevice::EnableExtensions(const char** extensions, bool required)
+bool VKPhysicalDevice::EnableExtensions(const char** extensions, bool required)
 {
-    std::vector<const char*> missingExtensions;
-
     for (; *extensions != nullptr; ++extensions)
     {
         const char* name = *extensions;
         if (supportedExtensionNames_.find(name) != supportedExtensionNames_.end())
         {
-            /* Append name to list of enabled extensions */
+            /* Add name to enabled Vulkan extensions */
             enabledExtensionNames_.push_back(name);
         }
         else if (required)
         {
-            /* Error: missing extension that is marked as required */
-            missingExtensions.push_back(name);
+            /* Cancel search and return with error */
+            enabledExtensionNames_.clear();
+            return false;
         }
     }
-
-    /* Report error about required extensions that are not supported */
-    if (!missingExtensions.empty())
-    {
-        std::string s;
-
-        for (auto name : missingExtensions)
-        {
-            if (!s.empty())
-                s += ", ";
-            s += name;
-        }
-
-        throw std::runtime_error("unsupported Vulkan extensions: " + s);
-    }
+    return true;
 }
 
 

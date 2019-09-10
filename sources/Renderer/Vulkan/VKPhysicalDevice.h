@@ -97,7 +97,7 @@ class VKPhysicalDevice
     private:
 
         void QueryDeviceProperties();
-        void EnableExtensions(const char** extensions, bool required = false);
+        bool EnableExtensions(const char** extensions, bool required = false);
 
     private:
 

@@ -216,20 +216,26 @@ struct RendererID
     static const int Reserved   = 0x000000ff; //!< Highest ID number for reserved future renderers. Value is 0x000000ff.
 };
 
-//! Renderer basic information structure.
+/**
+\brief Renderer basic information structure.
+\see RenderSystem::GetRendererInfo
+*/
 struct RendererInfo
 {
     //! Rendering API name and version (e.g. "OpenGL 4.6").
-    std::string rendererName;
+    std::string                 rendererName;
 
     //! Renderer device name (e.g. "GeForce GTX 1070/PCIe/SSE2").
-    std::string deviceName;
+    std::string                 deviceName;
 
     //! Vendor name of the renderer device (e.g. "NVIDIA Corporation").
-    std::string vendorName;
+    std::string                 vendorName;
 
     //! Shading language version (e.g. "GLSL 4.50").
-    std::string shadingLanguageName;
+    std::string                 shadingLanguageName;
+
+    //! List of enabled renderer extensions (e.g. "GL_ARB_direct_state_access" or "VK_EXT_conditional_rendering").
+    std::vector<std::string>    extensionNames;
 };
 
 /**

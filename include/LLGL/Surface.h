@@ -46,6 +46,7 @@ class LLGL_EXPORT Surface : public Interface
             //handle->window = 'some HWND window handle';
         }
         \endcode
+        \todo Add <code>std::size_t nativeHandleSize</code> parameter.
         */
         virtual void GetNativeHandle(void* nativeHandle) const = 0;
 

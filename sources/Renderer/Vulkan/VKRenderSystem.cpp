@@ -810,13 +810,17 @@ void VKRenderSystem::PickPhysicalDevice()
 {
     /* Pick physical device with Vulkan support */
     if (!physicalDevice_.PickPhysicalDevice(instance_))
-        throw std::runtime_error("failed to find physical device with Vulkan support");
+        throw std::runtime_error("failed to find suitable Vulkan device");
 
     /* Query and store rendering capabilities */
     RendererInfo info;
     RenderingCapabilities caps;
 
     physicalDevice_.QueryDeviceProperties(info, caps, gfxPipelineLimits_);
+
+    /* Store Vulkan extension names */
+    const auto& extensions = physicalDevice_.GetExtensionNames();
+    info.extensionNames = std::vector<std::string>(extensions.begin(), extensions.end());
 
     SetRendererInfo(info);
     SetRenderingCaps(caps);

@@ -273,6 +273,13 @@ ExampleBase::ExampleBase(
     std::cout << "  vendor:           " << info.vendorName << std::endl;
     std::cout << "  shading language: " << info.shadingLanguageName << std::endl;
 
+    if (!info.extensionNames.empty())
+    {
+        std::cout << "  extensions:" << std::endl;
+        for (const auto& name : info.extensionNames)
+            std::cout << "    " << name << std::endl;
+    }
+
     #ifdef LLGL_MOBILE_PLATFORM
 
     // Set canvas title
