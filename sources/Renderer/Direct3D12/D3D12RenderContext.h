@@ -14,6 +14,7 @@
 #include <cstddef>
 #include "D3D12Resource.h"
 #include "RenderState/D3D12Fence.h"
+#include "RenderState/D3D12RenderPass.h"
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
 
@@ -85,6 +86,7 @@ class D3D12RenderContext final : public RenderContext
 
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
         D3D12CommandQueue*              commandQueue_                           = nullptr;
+        D3D12RenderPass                 defaultRenderPass_;
 
         ComPtr<IDXGISwapChain3>         swapChain_;
         UINT                            swapChainInterval_                      = 0;

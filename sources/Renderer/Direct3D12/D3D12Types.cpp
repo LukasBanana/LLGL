@@ -356,6 +356,11 @@ DXGI_FORMAT ToDXGIFormatUAV(const DXGI_FORMAT format)
     return DXTypes::ToDXGIFormatUAV(format);
 }
 
+DXGI_FORMAT ToDXGIFormatUInt(const DXGI_FORMAT format)
+{
+    return DXTypes::ToDXGIFormatUInt(format);
+}
+
 
 } // /namespace D3D12Types
 

@@ -266,7 +266,11 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
         see https://msdn.microsoft.com/en-us/library/windows/desktop/mt426648(v=vs.85).aspx
         */
         SetBlendDescToLogicOp(dst.RenderTarget[0], D3D12Types::Map(src.logicOp));
-        dstColorFormats[0] = (renderPass.GetNumColorAttachments() > 0 ? renderPass.GetRTVFormats()[0] : DXGI_FORMAT_UNKNOWN);
+
+        if (renderPass.GetNumColorAttachments() > 0)
+            dstColorFormats[0] = D3D12Types::ToDXGIFormatUInt(renderPass.GetRTVFormats()[0]);
+        else
+            dstColorFormats[0] = DXGI_FORMAT_UNKNOWN;
 
         /* Initialize remaining blend target to default values */
         for (int i = 1; i < 8; ++i)

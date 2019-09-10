@@ -47,6 +47,7 @@ ResourceType            Unmap( const D3D_SRV_DIMENSION      dimension );
 DXGI_FORMAT             ToDXGIFormatDSV(const DXGI_FORMAT format);
 DXGI_FORMAT             ToDXGIFormatSRV(const DXGI_FORMAT format);
 DXGI_FORMAT             ToDXGIFormatUAV(const DXGI_FORMAT format);
+DXGI_FORMAT             ToDXGIFormatUInt(const DXGI_FORMAT format);
 
 bool                    HasStencilComponent(const DXGI_FORMAT format);
 bool                    IsDXGIFormatSRGB(const DXGI_FORMAT format);

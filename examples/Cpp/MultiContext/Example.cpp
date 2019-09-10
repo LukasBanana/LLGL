@@ -190,6 +190,8 @@ int main(int argc, char* argv[])
         pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         {
+            pipelineDesc.renderPass                 = context2->GetRenderPass();
+
             // Only enable logic operations if it's supported, otherwise an exception is thrown
             if (logicOpSupported)
                 pipelineDesc.blend.logicOp = LLGL::LogicOp::CopyInverted;

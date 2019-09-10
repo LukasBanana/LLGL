@@ -48,6 +48,9 @@ D3D12RenderContext::D3D12RenderContext(
 
     /* Initialize v-sync */
     OnSetVsync(desc.vsync);
+
+    /* Create default render pass */
+    defaultRenderPass_.BuildAttachments(1, &colorFormat_, depthStencilFormat_);
 }
 
 D3D12RenderContext::~D3D12RenderContext()
@@ -96,7 +99,7 @@ Format D3D12RenderContext::GetDepthStencilFormat() const
 
 const RenderPass* D3D12RenderContext::GetRenderPass() const
 {
-    return nullptr; // dummy
+    return (&defaultRenderPass_);
 }
 
 /* --- Extended functions --- */

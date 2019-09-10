@@ -27,7 +27,11 @@ D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDesc
 {
     CreateDescriptorHeaps(device, desc);
     CreateAttachments(device.GetNative(), desc);
-    defaultRenderPass_.BuildAttachments(desc.attachments.size(), desc.attachments.data(), depthStencilFormat_);
+    defaultRenderPass_.BuildAttachments(
+        static_cast<UINT>(desc.attachments.size()),
+        desc.attachments.data(),
+        depthStencilFormat_
+    );
 }
 
 void D3D12RenderTarget::SetName(const char* name)

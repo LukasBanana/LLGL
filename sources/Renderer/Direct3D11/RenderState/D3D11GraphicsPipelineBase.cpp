@@ -71,7 +71,7 @@ void D3D11GraphicsPipelineBase::SetStaticViewportsAndScissors(D3D11StateManager&
 {
     if (staticStateBuffer_)
     {
-        ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
+        ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
         if (numStaticViewports_ > 0)
         {
             stateMngr.GetContext()->RSSetViewports(
@@ -113,7 +113,7 @@ void D3D11GraphicsPipelineBase::BuildStaticStateBuffer(const GraphicsPipelineDes
     );
     staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
 
-    ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
+    ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
 
     /* Build static viewports in raw buffer */
     if (!desc.viewports.empty())

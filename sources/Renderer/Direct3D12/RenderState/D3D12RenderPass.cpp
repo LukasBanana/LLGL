@@ -67,7 +67,7 @@ void D3D12RenderPass::BuildAttachments(const RenderPassDescriptor& desc)
 }
 
 void D3D12RenderPass::BuildAttachments(
-    std::size_t                 numAttachmentDescs,
+    UINT                        numAttachmentDescs,
     const AttachmentDescriptor* attachmentDescs,
     const DXGI_FORMAT           defaultDepthStencilFormat)
 {
@@ -77,7 +77,7 @@ void D3D12RenderPass::BuildAttachments(
     ResetClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_);
 
     /* Check which color attachment must be cleared */
-    std::uint8_t colorAttachment = 0;
+    UINT colorAttachment = 0;
 
     for (UINT i = 0; i < numAttachmentDescs; ++i)
     {
@@ -112,6 +112,24 @@ void D3D12RenderPass::BuildAttachments(
     /* Reset remaining color formats */
     for (UINT i = numColorAttachments_; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
         SetRTVFormat(i, DXGI_FORMAT_UNKNOWN);
+}
+
+void D3D12RenderPass::BuildAttachments(
+    UINT                numColorFormats,
+    const DXGI_FORMAT*  colorFormats,
+    const DXGI_FORMAT   depthStencilFormat)
+{
+    /* Reset clear flags */
+    clearFlagsDSV_ = 0;
+    ResetClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_);
+
+    /* Store color attachment formats */
+    numColorAttachments_ = numColorFormats;
+    for (UINT i = 0; i < numColorFormats; ++i)
+        SetRTVFormat(i, colorFormats[i]);
+
+    /* Store depth-stencil attachment format */
+    SetDSVFormat(depthStencilFormat);
 }
 
 
