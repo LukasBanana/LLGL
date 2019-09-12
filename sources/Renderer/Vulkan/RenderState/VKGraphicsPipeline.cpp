@@ -168,26 +168,6 @@ static void CreateRasterizerState(
     createInfo.lineWidth                = std::max(limits.lineWidthRange[0], std::min(desc.rasterizer.lineWidth, limits.lineWidthRange[1]));
 }
 
-static VkSampleCountFlagBits GetSampleCountBitmask(const MultiSamplingDescriptor& desc)
-{
-    #if 0//TODO: multisampling currently not supported for Vulkan
-    if (desc.enabled)
-    {
-        switch (desc.samples)
-        {
-            case 1:  return VK_SAMPLE_COUNT_1_BIT;
-            case 2:  return VK_SAMPLE_COUNT_2_BIT;
-            case 4:  return VK_SAMPLE_COUNT_4_BIT;
-            case 8:  return VK_SAMPLE_COUNT_8_BIT;
-            case 16: return VK_SAMPLE_COUNT_16_BIT;
-            case 32: return VK_SAMPLE_COUNT_32_BIT;
-            case 64: return VK_SAMPLE_COUNT_64_BIT;
-        }
-    }
-    #endif
-    return VK_SAMPLE_COUNT_1_BIT;
-}
-
 static void CreateMultisampleState(
     const MultiSamplingDescriptor&          multiSampleDesc,
     const BlendDescriptor&                  blendDesc,
@@ -196,7 +176,7 @@ static void CreateMultisampleState(
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
     createInfo.flags                    = 0;
-    createInfo.rasterizationSamples     = GetSampleCountBitmask(multiSampleDesc);
+    createInfo.rasterizationSamples     = VKTypes::ToVkSampleCountBits(multiSampleDesc.SampleCount());
     createInfo.sampleShadingEnable      = VK_FALSE;
     createInfo.minSampleShading         = 0.0f;
     createInfo.pSampleMask              = &(multiSampleDesc.sampleMask);

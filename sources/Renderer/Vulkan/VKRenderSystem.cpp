@@ -569,7 +569,6 @@ void VKRenderSystem::Release(RenderTarget& renderTarget)
 {
     /* Release device memory region, then release texture object */
     auto& renderTargetVL = LLGL_CAST(VKRenderTarget&, renderTarget);
-    renderTargetVL.ReleaseDeviceMemoryResources(*deviceMemoryMngr_);
     RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 

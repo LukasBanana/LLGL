@@ -417,6 +417,9 @@ struct Scissor
 /**
 \brief Multi-sampling descriptor structure.
 \see RasterizerDescriptor::multiSampling
+\see RenderContextDescriptor::multiSampling
+\see RenderTargetDescriptor::multiSampling
+\todo Maybe remove this struct and use \c samples and \c sampleMask individually, since the latter one is only required for RasterizerDescriptor.
 */
 struct MultiSamplingDescriptor
 {

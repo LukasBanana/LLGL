@@ -1,12 +1,12 @@
 /*
- * VKDepthStencilBuffer.h
+ * VKColorBuffer.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_VK_DEPTH_STENCIL_BUFFER_H
-#define LLGL_VK_DEPTH_STENCIL_BUFFER_H
+#ifndef LLGL_VK_COLOR_BUFFER_H
+#define LLGL_VK_COLOR_BUFFER_H
 
 
 #include "VKRenderBuffer.h"
@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-class VKDepthStencilBuffer final : private VKRenderBuffer
+class VKColorBuffer final : private VKRenderBuffer
 {
 
     public:
 
-        VKDepthStencilBuffer(const VKPtr<VkDevice>& device);
+        VKColorBuffer(const VKPtr<VkDevice>& device);
 
         void Create(
             VKDeviceMemoryManager&  deviceMemoryMngr,

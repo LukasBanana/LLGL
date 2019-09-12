@@ -117,9 +117,6 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         \param[in] videoModeDesc Specifies the descriptor of the new video mode.
         \return True on success, otherwise the specified video mode was invalid (e.g. if the resolution contains a zero).
         \remarks When the video mode is changed from fullscreen to non-fullscreen, the previous surface position is restored.
-        \note This may invalidate the currently set render target if the back buffer is required,
-        so a subsequent call to "CommandBuffer::SetRenderTarget" is necessary!
-        \see CommandBuffer::SetRenderTarget(RenderContext&)
         */
         bool SetVideoMode(const VideoModeDescriptor& videoModeDesc);
 

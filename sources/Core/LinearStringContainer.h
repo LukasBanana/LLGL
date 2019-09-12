@@ -18,7 +18,12 @@ namespace LLGL
 {
 
 
-// Helper class to manage linear memory of multiple null-terminated strings.
+/*
+Helper class to manage linear memory of multiple null-terminated strings.
+1. Reserve all required memory for all strings
+2. Copy strings into linear memory
+Example: Buffer = "FirstString\0SecondString\0etc.\0"
+*/
 template <typename T>
 class LinearStringContainerBase
 {

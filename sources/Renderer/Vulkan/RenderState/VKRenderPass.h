@@ -39,7 +39,8 @@ class VKRenderPass final : public RenderPass
             VkDevice                        device,
             std::uint32_t                   numAttachments,
             std::uint32_t                   numColorAttachments,
-            const VkAttachmentDescription*  attachmentDescs
+            const VkAttachmentDescription*  attachmentDescs,
+            bool                            multiSamplingEnabled
         );
 
         // Returns the Vulkan render pass object.
@@ -80,7 +81,7 @@ class VKRenderPass final : public RenderPass
         VKPtr<VkRenderPass> renderPass_;
 
         std::uint64_t       clearValuesMask_        = 0;
-        std::uint8_t        depthStencilIndex_      = ~0;
+        std::uint8_t        depthStencilIndex_      = 0xFFu;
         std::uint8_t        numClearValues_         = 0;
         std::uint8_t        numColorAttachments_    = 0;
 

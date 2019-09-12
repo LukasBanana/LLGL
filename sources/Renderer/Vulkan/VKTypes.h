@@ -49,6 +49,7 @@ VkAttachmentLoadOp      Map( const AttachmentLoadOp     loadOp            );
 VkAttachmentStoreOp     Map( const AttachmentStoreOp    storeOp           );
 
 VkIndexType             ToVkIndexType(const Format format);
+VkSampleCountFlagBits   ToVkSampleCountBits(std::uint32_t samples);
 
 Format                  Unmap( const VkFormat format );
 

@@ -159,7 +159,7 @@ void VKDevice::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
 
     /* Create fence to ensure the command buffer has finished execution */
     {
-        VKFence fence { device_ };
+        VKFence fence{ device_ };
 
         /* Submit command buffer to queue */
         VkSubmitInfo submitInfo = {};

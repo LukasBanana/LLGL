@@ -20,10 +20,6 @@ VKDeviceImage::VKDeviceImage(const VKPtr<VkDevice>& device) :
 {
 }
 
-VKDeviceImage::~VKDeviceImage()
-{
-}
-
 void VKDeviceImage::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
 {
     auto device = deviceMemoryMngr.GetVkDevice();
@@ -70,7 +66,7 @@ void VKDeviceImage::CreateVkImage(
     std::uint32_t           numMipLevels,
     std::uint32_t           numArrayLayers,
     VkImageCreateFlags      createFlags,
-    VkSampleCountFlagBits   samplesFlags,
+    VkSampleCountFlagBits   sampleCountBits,
     VkImageUsageFlags       usageFlags)
 {
     /* Create image object */
@@ -84,7 +80,7 @@ void VKDeviceImage::CreateVkImage(
         createInfo.extent                   = extent;
         createInfo.mipLevels                = numMipLevels;
         createInfo.arrayLayers              = numArrayLayers;
-        createInfo.samples                  = samplesFlags;
+        createInfo.samples                  = sampleCountBits;
         createInfo.tiling                   = VK_IMAGE_TILING_OPTIMAL;
         createInfo.usage                    = usageFlags;
         createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE; // only used by graphics queue
@@ -93,7 +89,7 @@ void VKDeviceImage::CreateVkImage(
         createInfo.initialLayout            = VK_IMAGE_LAYOUT_UNDEFINED;
     }
     VkResult result = vkCreateImage(device, &createInfo, nullptr, image_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan image");
+    VKThrowIfCreateFailed(result, "VkImage");
 }
 
 void VKDeviceImage::ReleaseVkImage()
@@ -132,7 +128,7 @@ void VKDeviceImage::CreateVkImageView(
         createInfo.subresourceRange.layerCount      = numArrayLayers;
     }
     VkResult result = vkCreateImageView(device, &createInfo, nullptr, imageViewRef);
-    VKThrowIfFailed(result, "failed to create Vulkan image view");
+    VKThrowIfCreateFailed(result, "VkImageView");
 }
 
 

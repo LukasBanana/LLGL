@@ -14,6 +14,8 @@
 #include "../VKPtr.h"
 #include "../RenderState/VKRenderPass.h"
 #include "VKDepthStencilBuffer.h"
+#include "VKColorBuffer.h"
+#include <memory>
 
 
 namespace LLGL
@@ -25,7 +27,11 @@ class VKRenderTarget final : public RenderTarget
 
     public:
 
-        VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
+        VKRenderTarget(
+            const VKPtr<VkDevice>&          device,
+            VKDeviceMemoryManager&          deviceMemoryMngr,
+            const RenderTargetDescriptor&   desc
+        );
 
         Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
@@ -35,9 +41,10 @@ class VKRenderTarget final : public RenderTarget
 
         const RenderPass* GetRenderPass() const override;
 
-        /* ----- Extended functions ----- */
+    public:
 
-        void ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceMemoryMngr);
+        // Returns true if this render context has multi-sampling enabled.
+        bool HasMultiSampling() const;
 
         // Returns the Vulkan framebuffer object.
         inline VkFramebuffer GetVkFramebuffer() const
@@ -66,13 +73,26 @@ class VKRenderTarget final : public RenderTarget
     private:
 
         void CreateDepthStencilForAttachment(VKDeviceMemoryManager& deviceMemoryMngr, const AttachmentDescriptor& attachmentDesc);
+
+        void CreateRenderPass(
+            VkDevice                        device,
+            const RenderTargetDescriptor&   desc,
+            VKRenderPass&                   renderPass,
+            bool                            loadContent
+        );
+
         void CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc);
         void CreateSecondaryRenderPass(VkDevice device, const RenderTargetDescriptor& desc);
-        void CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
 
-        VkSampleCountFlagBits GetSampleCountFlags() const;
+        void CreateFramebuffer(
+            const VKPtr<VkDevice>&          device,
+            VKDeviceMemoryManager&          deviceMemoryMngr,
+            const RenderTargetDescriptor&   desc
+        );
 
     private:
+
+        using VKColorBufferPtr = std::unique_ptr<VKColorBuffer>;
 
         Extent2D                        resolution_;
 
@@ -85,8 +105,10 @@ class VKRenderTarget final : public RenderTarget
 
         VKDepthStencilBuffer            depthStencilBuffer_;
         VkFormat                        depthStencilFormat_     = VK_FORMAT_UNDEFINED;  // Format either from internal depth-stencil buffer or attachmed texture.
+        std::vector<VKColorBufferPtr>   colorBuffers_;                                  // Internal color buffers for multi-sampling
 
         std::uint32_t                   numColorAttachments_    = 0;
+        VkSampleCountFlagBits           sampleCountBits_        = VK_SAMPLE_COUNT_1_BIT;
 
 };
 

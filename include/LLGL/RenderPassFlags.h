@@ -59,8 +59,8 @@ enum class AttachmentStoreOp
 /* ----- Structures ----- */
 
 /**
-\brief Render target attachment descriptor structure.
-\remarks Two attachment format descriptors are considered compatible when their formats are matching.
+\brief Render pass attachment descriptor structure.
+\remarks Two attachment format descriptors are considered compatible when their formats and multi-sampling attributes are matching.
 \see RenderPassDescriptor
 */
 struct AttachmentFormatDescriptor
@@ -72,10 +72,11 @@ struct AttachmentFormatDescriptor
     inline AttachmentFormatDescriptor(
         const Format            format,
         const AttachmentLoadOp  loadOp  = AttachmentLoadOp::Load,
-        const AttachmentStoreOp storeOp = AttachmentStoreOp::Store) :
-            format  { format  },
-            loadOp  { loadOp  },
-            storeOp { storeOp }
+        const AttachmentStoreOp storeOp = AttachmentStoreOp::Store)
+    :
+        format  { format  },
+        loadOp  { loadOp  },
+        storeOp { storeOp }
     {
     }
 
@@ -89,9 +90,6 @@ struct AttachmentFormatDescriptor
     \see RenderContext::GetDepthStencilFormat
     */
     Format                  format  = Format::Undefined;
-
-    //TODO
-    //MultiSamplingDescriptor multiSampling;
 
     /**
     \brief Specifies the load operation of the previous attachment content. By default AttachmentLoadOp::Undefined.
@@ -141,6 +139,14 @@ struct RenderPassDescriptor
     They are separated here to specify different load and store operations.
     */
     AttachmentFormatDescriptor              stencilAttachment;
+
+    /**
+    \brief Specifies the number of samples for the respective render target attachment. By default 1.
+    \remarks This must be greater than 0. If this is 1, multi-sampling is disabled.
+    All attachments and the respective render target must have the same number of samples.
+    \see TextureDescriptor::samples
+    */
+    std::uint32_t                           samples             = 1;
 };
 
 

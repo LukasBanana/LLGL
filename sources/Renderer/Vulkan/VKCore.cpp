@@ -79,6 +79,25 @@ void VKThrowIfFailed(const VkResult result, const char* info)
     }
 }
 
+void VKThrowIfCreateFailed(const VkResult result, const char* interfaceName, const char* contextInfo)
+{
+    if (result != VK_SUCCESS)
+    {
+        std::string s;
+        {
+            s = "failed to create instance of <";
+            s += interfaceName;
+            s += '>';
+            if (contextInfo != nullptr)
+            {
+                s += ' ';
+                s += contextInfo;
+            }
+        }
+        VKThrowIfFailed(result, s.c_str());
+    }
+}
+
 // see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#fundamentals-versionnum
 std::string VKApiVersionToString(std::uint32_t version)
 {

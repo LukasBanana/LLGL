@@ -29,7 +29,7 @@ class VKDeviceImage
     public:
 
         VKDeviceImage(const VKPtr<VkDevice>& device);
-        virtual ~VKDeviceImage();
+        virtual ~VKDeviceImage() = default;
 
         void AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
         void ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
@@ -44,7 +44,7 @@ class VKDeviceImage
             std::uint32_t           numMipLevels,
             std::uint32_t           numArrayLayers,
             VkImageCreateFlags      createFlags,
-            VkSampleCountFlagBits   samplesFlags,
+            VkSampleCountFlagBits   sampleCountBits,
             VkImageUsageFlags       usageFlags
         );
 

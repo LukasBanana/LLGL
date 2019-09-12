@@ -11,11 +11,8 @@
 // Automatically rotate the model
 //#define AUTO_ROTATE
 
-// Enable multi-sampling anti-aliasing
-#define ENABLE_MULTISAMPLING
-
 // Use render pass to optimize attachment clearing
-#define ENABLE_RENDER_PASS
+//#define ENABLE_RENDER_PASS
 
 
 class Example_Tessellation : public ExampleBase
@@ -52,7 +49,7 @@ class Example_Tessellation : public ExampleBase
 public:
 
     Example_Tessellation() :
-        ExampleBase( L"LLGL Example: Tessellation" )//, { 800, 600 }, 0 )
+        ExampleBase( L"LLGL Example: Tessellation" )
     {
         // Check if constant buffers and tessellation shaders are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
@@ -148,6 +145,7 @@ public:
             (
                 LLGL::AttachmentFormatDescriptor{ context->GetDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear }
             );
+            renderPassDesc.samples = GetMultiSampleDesc().SampleCount();
         }
         renderPass = renderer->CreateRenderPass(renderPassDesc);
     }
@@ -183,6 +181,8 @@ public:
             pipelineDesc.shaderProgram              = shaderProgram;
             #ifdef ENABLE_RENDER_PASS
             pipelineDesc.renderPass                 = renderPass;
+            #else
+            pipelineDesc.renderPass                 = context->GetRenderPass();
             #endif
             pipelineDesc.pipelineLayout             = pipelineLayout;
 
@@ -190,9 +190,7 @@ public:
             pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::Patches4;
 
             // Enable multi-sample anti-aliasing
-            #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
-            #endif
+            pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
 
             // Enable depth test and writing
             pipelineDesc.depth.testEnabled          = true;
@@ -265,7 +263,7 @@ private:
         commands->Begin();
         {
             // Update constant buffer
-            UpdateBuffer(constantBuffer, settings);
+            commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
             // Set hardware buffers to draw the model
             commands->SetVertexBuffer(*vertexBuffer);
@@ -308,8 +306,6 @@ private:
 
         // Present result on the screen
         context->Present();
-
-        //renderer->GetCommandQueue()->WaitIdle();
     }
 
     void OnDrawFrame() override

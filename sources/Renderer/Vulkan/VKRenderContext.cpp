@@ -33,16 +33,18 @@ VKRenderContext::VKRenderContext(
     RenderContextDescriptor         desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext        { desc.videoMode, desc.vsync    },
-    instance_            { instance                      },
-    physicalDevice_      { physicalDevice                },
-    device_              { device                        },
-    deviceMemoryMngr_    { deviceMemoryMngr              },
-    surface_             { instance, vkDestroySurfaceKHR },
-    swapChain_           { device, vkDestroySwapchainKHR },
-    swapChainRenderPass_ { device                        },
-    secondaryRenderPass_ { device                        },
-    depthStencilBuffer_  { device                        }
+    RenderContext        { desc.videoMode, desc.vsync       },
+    instance_            { instance                         },
+    physicalDevice_      { physicalDevice                   },
+    device_              { device                           },
+    deviceMemoryMngr_    { deviceMemoryMngr                 },
+    surface_             { instance, vkDestroySurfaceKHR    },
+    swapChain_           { device, vkDestroySwapchainKHR    },
+    swapChainRenderPass_ { device                           },
+    swapChainSamples_    { desc.multiSampling.SampleCount() },
+    secondaryRenderPass_ { device                           },
+    depthStencilBuffer_  { device                           },
+    colorBuffers_        { device, device, device           }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
     desc.videoMode = GetVideoMode();
@@ -57,11 +59,6 @@ VKRenderContext::VKRenderContext(
     CreateSwapChain(desc.videoMode, desc.vsync);
 
     CreateSecondaryRenderPass();
-}
-
-VKRenderContext::~VKRenderContext()
-{
-    ReleaseDepthStencilBuffer();
 }
 
 void VKRenderContext::Present()
@@ -130,6 +127,11 @@ bool VKRenderContext::HasDepthStencilBuffer() const
     return (depthStencilBuffer_.GetVkFormat() != VK_FORMAT_UNDEFINED);
 }
 
+bool VKRenderContext::HasMultiSampling() const
+{
+    return (swapChainSamples_ > 1);
+}
+
 
 /*
  * ======= Private: =======
@@ -147,7 +149,7 @@ bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
     CreateGpuSurface();
 
     /* Recreate (or just release) depth-stencil buffer */
-    ReleaseDepthStencilBuffer();
+    ReleaseRenderBuffers();
     if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
         CreateDepthStencilBuffer(videoModeDesc);
 
@@ -227,14 +229,17 @@ void VKRenderContext::CreateGpuSurface()
     #endif
 
     /* Query surface support details and pick surface format */
-    surfaceSupportDetails_ = VKQuerySurfaceSupport(physicalDevice_, surface_);
-    swapChainFormat_ = PickSwapSurfaceFormat(surfaceSupportDetails_.formats);
+    surfaceSupportDetails_  = VKQuerySurfaceSupport(physicalDevice_, surface_);
+    swapChainFormat_        = PickSwapSurfaceFormat(surfaceSupportDetails_.formats);
 }
 
 void VKRenderContext::CreateRenderPass(VKRenderPass& renderPass, bool isSecondary)
 {
     RenderPassDescriptor renderPassDesc;
     {
+        /* Pass number of samples to render pass descriptor */
+        renderPassDesc.samples = swapChainSamples_;
+
         /* Determine load and store operations for primary and secondary render passes */
         auto loadOp     = (isSecondary ? AttachmentLoadOp::Load : AttachmentLoadOp::Undefined);
         auto storeOp    = AttachmentStoreOp::Store;
@@ -276,9 +281,12 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, 
     );
 
     /* Determine required image count for swap-chain */
-    auto imageCount = surfaceSupportDetails_.caps.minImageCount;
+    numSwapChainBuffers_ = surfaceSupportDetails_.caps.minImageCount;
+
     if (surfaceSupportDetails_.caps.maxImageCount > 0)
-        imageCount = std::max(imageCount, std::min(videoModeDesc.swapChainSize, surfaceSupportDetails_.caps.maxImageCount));
+        numSwapChainBuffers_ = std::max(numSwapChainBuffers_, std::min(videoModeDesc.swapChainSize, surfaceSupportDetails_.caps.maxImageCount));
+
+    numSwapChainBuffers_ = std::min(numSwapChainBuffers_, g_maxNumColorBuffers);
 
     /* Get device queues for graphics and presentation */
     VkSurfaceKHR surface = surface_.Get();
@@ -297,7 +305,7 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, 
         createInfo.pNext                        = nullptr;
         createInfo.flags                        = 0;
         createInfo.surface                      = surface_;
-        createInfo.minImageCount                = imageCount;
+        createInfo.minImageCount                = numSwapChainBuffers_;
         createInfo.imageFormat                  = swapChainFormat_.format;
         createInfo.imageColorSpace              = swapChainFormat_.colorSpace;
         createInfo.imageExtent                  = swapChainExtent_;
@@ -327,14 +335,16 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, 
     VKThrowIfFailed(result, "failed to create Vulkan swap-chain");
 
     /* Query swap-chain images */
-    result = vkGetSwapchainImagesKHR(device_, swapChain_, &imageCount, nullptr);
+    result = vkGetSwapchainImagesKHR(device_, swapChain_, &numSwapChainBuffers_, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan swap-chain images");
 
-    swapChainImages_.resize(imageCount);
-    result = vkGetSwapchainImagesKHR(device_, swapChain_, &imageCount, swapChainImages_.data());
+    result = vkGetSwapchainImagesKHR(device_, swapChain_, &numSwapChainBuffers_, swapChainImages_);
     VKThrowIfFailed(result, "failed to query Vulkan swap-chain images");
 
     /* Create all swap-chain dependent resources */
+    if (HasMultiSampling())
+        CreateColorBuffers(videoModeDesc);
+
     CreateSwapChainImageViews();
     CreateSwapChainFramebuffers();
 
@@ -365,13 +375,10 @@ void VKRenderContext::CreateSwapChainImageViews()
     }
 
     /* Create all image views for the swap-chain */
-    swapChainImageViews_.clear();
-    swapChainImageViews_.reserve(swapChainImages_.size());
-
-    for (auto image : swapChainImages_)
+    for (std::uint32_t i = 0; i < numSwapChainBuffers_; ++i)
     {
         /* Update image handle in Vulkan descriptor */
-        createInfo.image = image;
+        createInfo.image = swapChainImages_[i];
 
         /* Create image view for framebuffer */
         VKPtr<VkImageView> imageView{ device_, vkDestroyImageView };
@@ -379,17 +386,30 @@ void VKRenderContext::CreateSwapChainImageViews()
             auto result = vkCreateImageView(device_, &createInfo, nullptr, imageView.ReleaseAndGetAddressOf());
             VKThrowIfFailed(result, "failed to create Vulkan swap-chain image view");
         }
-        swapChainImageViews_.emplace_back(std::move(imageView));
+        swapChainImageViews_[i] = std::move(imageView);
     }
 }
 
 void VKRenderContext::CreateSwapChainFramebuffers()
 {
     /* Initialize image view attachments */
-    VkImageView attachments[2] = {};
+    VkImageView attachments[3] = {};
+
+    std::uint32_t numAttachments    = 0;
+    std::uint32_t attachmentDSV     = 0;
+    std::uint32_t attachmentColor   = 0;
+    std::uint32_t attachmentColorMS = 0;
+
+    attachmentColor = numAttachments++;
 
     if (HasDepthStencilBuffer())
-        attachments[1] = depthStencilBuffer_.GetVkImageView();
+    {
+        attachmentDSV = numAttachments++;
+        attachments[attachmentDSV] = depthStencilBuffer_.GetVkImageView();
+    }
+
+    if (HasMultiSampling())
+        attachmentColorMS = numAttachments++;
 
     /* Initialize framebuffer descriptor */
     VkFramebufferCreateInfo createInfo;
@@ -398,7 +418,7 @@ void VKRenderContext::CreateSwapChainFramebuffers()
         createInfo.pNext            = nullptr;
         createInfo.flags            = 0;
         createInfo.renderPass       = swapChainRenderPass_.GetVkRenderPass();
-        createInfo.attachmentCount  = (HasDepthStencilBuffer() ? 2 : 1);
+        createInfo.attachmentCount  = numAttachments;
         createInfo.pAttachments     = attachments;
         createInfo.width            = swapChainExtent_.width;
         createInfo.height           = swapChainExtent_.height;
@@ -406,13 +426,13 @@ void VKRenderContext::CreateSwapChainFramebuffers()
     }
 
     /* Create all framebuffers for the swap-chain */
-    swapChainFramebuffers_.clear();
-    swapChainFramebuffers_.reserve(swapChainImageViews_.size());
-
-    for (const auto& imageView : swapChainImageViews_)
+    for (std::uint32_t i = 0; i < numSwapChainBuffers_; ++i)
     {
         /* Update image view in Vulkan descriptor */
-        attachments[0] = imageView;
+        attachments[attachmentColor] = swapChainImageViews_[i];
+
+        if (HasMultiSampling())
+            attachments[attachmentColorMS] = colorBuffers_[i].GetVkImageView();
 
         /* Create framebuffer */
         VKPtr<VkFramebuffer> framebuffer{ device_, vkDestroyFramebuffer };
@@ -420,23 +440,44 @@ void VKRenderContext::CreateSwapChainFramebuffers()
             auto result = vkCreateFramebuffer(device_, &createInfo, nullptr, framebuffer.ReleaseAndGetAddressOf());
             VKThrowIfFailed(result, "failed to create Vulkan swap-chain framebuffer");
         }
-        swapChainFramebuffers_.emplace_back(std::move(framebuffer));
+        swapChainFramebuffers_[i] = std::move(framebuffer);
     }
 }
 
 void VKRenderContext::CreateDepthStencilBuffer(const VideoModeDescriptor& videoModeDesc)
 {
-    depthStencilBuffer_.CreateDepthStencil(
+    const auto sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
+    depthStencilBuffer_.Create(
         deviceMemoryMngr_,
         videoModeDesc.resolution,
         (videoModeDesc.stencilBits > 0 ? PickDepthStencilFormat() : PickDepthFormat()),
-        VK_SAMPLE_COUNT_1_BIT //TODO: multi-sampling
+        sampleCountBits
     );
 }
 
-void VKRenderContext::ReleaseDepthStencilBuffer()
+void VKRenderContext::CreateColorBuffers(const VideoModeDescriptor& videoModeDesc)
 {
-    depthStencilBuffer_.ReleaseDepthStencil(deviceMemoryMngr_);
+    /* Create VkImage objects for each swap-chain buffer */
+    const auto sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
+    for (std::uint32_t i = 0; i < numSwapChainBuffers_; ++i)
+    {
+        colorBuffers_[i].Create(
+            deviceMemoryMngr_,
+            videoModeDesc.resolution,
+            swapChainFormat_.format,
+            sampleCountBits
+        );
+    }
+}
+
+void VKRenderContext::ReleaseRenderBuffers()
+{
+    depthStencilBuffer_.Release();
+    if (HasMultiSampling())
+    {
+        for (std::uint32_t i = 0; i < numSwapChainBuffers_; ++i)
+            colorBuffers_[i].Release();
+    }
 }
 
 VkSurfaceFormatKHR VKRenderContext::PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const

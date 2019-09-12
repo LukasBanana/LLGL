@@ -59,6 +59,9 @@ public:
     // Builds a perspective projection matrix for this renderer.
     Gs::Matrix4f BuildPerspectiveProjection(float aspectRatio, float nearPlane, float farPlane, float fieldOfView) const;
 
+    // Returns the sub window of this renderer.
+    LLGL::Window& GetSubWindow();
+
 };
 
 MyRenderer::MyRenderer(
@@ -66,7 +69,8 @@ MyRenderer::MyRenderer(
     LLGL::Window&           mainWindow,
     const LLGL::Offset2D&   subWindowOffset,
     const LLGL::Viewport&   viewport)
-:   viewport       { viewport       },
+:
+    viewport       { viewport       },
     multiSampling  { 8u             },
     rendererModule { rendererModule }
 {
@@ -265,6 +269,11 @@ Gs::Matrix4f MyRenderer::BuildPerspectiveProjection(float aspectRatio, float nea
     return Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fieldOfView), flags).ToMatrix4();
 }
 
+LLGL::Window& MyRenderer::GetSubWindow()
+{
+    return *subWindow;
+}
+
 
 /*
  * Main function
@@ -275,7 +284,7 @@ int main(int argc, char* argv[])
     try
     {
         // Create main window
-        const LLGL::Extent2D resolution{ 800, 600 };
+        const LLGL::Extent2D resolution{ 1280, 768 };//{ 800, 600 };
 
         LLGL::WindowDescriptor mainWindowDesc;
         {
@@ -289,10 +298,13 @@ int main(int argc, char* argv[])
         const int halfWidth     = static_cast<int>(resolution.width/2);
         const int halfHeight    = static_cast<int>(resolution.height/2);
 
-        MyRenderer myRenderer0{ "Vulkan",       *mainWindow, { 0,         0          }, LLGL::Viewport{ { 0,          0           }, resolution } };
-        MyRenderer myRenderer1{ "OpenGL",       *mainWindow, { halfWidth, 0          }, LLGL::Viewport{ { -halfWidth, 0           }, resolution } };
-        MyRenderer myRenderer2{ "Direct3D11",   *mainWindow, { 0,         halfHeight }, LLGL::Viewport{ { 0,          -halfHeight }, resolution } };
-        MyRenderer myRenderer3{ "Direct3D12",   *mainWindow, { halfWidth, halfHeight }, LLGL::Viewport{ { -halfWidth, -halfHeight }, resolution } };
+        MyRenderer myRenderers[4] =
+        {
+            { "Vulkan",       *mainWindow, { 0,         0          }, LLGL::Viewport{ { 0,          0           }, resolution } },
+            { "OpenGL",       *mainWindow, { halfWidth, 0          }, LLGL::Viewport{ { -halfWidth, 0           }, resolution } },
+            { "Direct3D11",   *mainWindow, { 0,         halfHeight }, LLGL::Viewport{ { 0,          -halfHeight }, resolution } },
+            { "Direct3D12",   *mainWindow, { halfWidth, halfHeight }, LLGL::Viewport{ { -halfWidth, -halfHeight }, resolution } },
+        };
 
         mainWindow->Show();
 
@@ -300,12 +312,11 @@ int main(int argc, char* argv[])
         auto cubeVertices = GenerateTexturedCubeVertices();
         auto cubeIndices = GenerateTexturedCubeTriangleIndices();
 
-        myRenderer0.CreateResources(cubeVertices, cubeIndices);
-        myRenderer1.CreateResources(cubeVertices, cubeIndices);
-        myRenderer2.CreateResources(cubeVertices, cubeIndices);
-        myRenderer3.CreateResources(cubeVertices, cubeIndices);
+        for (auto& renderer : myRenderers)
+            renderer.CreateResources(cubeVertices, cubeIndices);
 
-        auto timer = LLGL::Timer::Create();
+        auto input = std::make_shared<LLGL::Input>();
+        mainWindow->AddEventListener(input);
 
         // Initialize matrices (OpenGL needs a unit-cube NDC-space)
         const float aspectRatio = static_cast<float>(mainWindowDesc.size.width) / static_cast<float>(mainWindowDesc.size.height);
@@ -313,27 +324,38 @@ int main(int argc, char* argv[])
         const float farPlane    = 100.0f;
         const float fieldOfView = 45.0f;
 
-        auto projMatrix0 = myRenderer0.BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
-        auto projMatrix1 = myRenderer1.BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
-        auto projMatrix2 = myRenderer2.BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
-        auto projMatrix3 = myRenderer3.BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
+        Gs::Matrix4f projMatrices[4];
+        for (int i = 0; i < 4; ++i)
+        {
+            projMatrices[i] = myRenderers[i].BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
+            myRenderers[i].GetSubWindow().AddEventListener(input);
+        }
 
         Gs::Matrix4f viewMatrix, worldMatrix;
         Gs::Translate(viewMatrix, Gs::Vector3f(0, 0, 5));
 
         // Enter main loop
-        while (mainWindow->ProcessEvents())
+        while (mainWindow->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
             // Update scene transformation
-            timer->MeasureTime();
-            auto dt = static_cast<float>(timer->GetDeltaTime());
-            Gs::RotateFree(worldMatrix, Gs::Vector3f(0, 1, 0), Gs::Deg2Rad(dt * 20.0f));
+            if (input->KeyPressed(LLGL::Key::LButton))
+            {
+                const auto mouseMotion = Gs::Vector2f
+                {
+                    static_cast<float>(input->GetMouseMotion().x),
+                    static_cast<float>(input->GetMouseMotion().y),
+                } * 0.005f;
+
+                // Rotate model around X and Y axes
+                Gs::Matrix4f deltaRotation;
+                Gs::RotateFree(deltaRotation, { 1, 0, 0 }, mouseMotion.y);
+                Gs::RotateFree(deltaRotation, { 0, 1, 0 }, mouseMotion.x);
+                worldMatrix = deltaRotation * worldMatrix;
+            }
 
             // Draw scene for all renderers
-            myRenderer0.Render(projMatrix0 * viewMatrix * worldMatrix);
-            myRenderer1.Render(projMatrix1 * viewMatrix * worldMatrix);
-            myRenderer2.Render(projMatrix2 * viewMatrix * worldMatrix);
-            myRenderer3.Render(projMatrix3 * viewMatrix * worldMatrix);
+            for (int i = 0; i < 4; ++i)
+                myRenderers[i].Render(projMatrices[i] * viewMatrix * worldMatrix);
         }
     }
     catch (const std::exception& e)

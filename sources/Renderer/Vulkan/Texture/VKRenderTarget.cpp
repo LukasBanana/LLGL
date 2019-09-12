@@ -9,6 +9,7 @@
 #include "VKTexture.h"
 #include "../Memory/VKDeviceMemoryManager.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/Helper.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
 #include <vector>
@@ -19,12 +20,17 @@ namespace LLGL
 {
 
 
-VKRenderTarget::VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc) :
-    resolution_          { desc.resolution              },
-    framebuffer_         { device, vkDestroyFramebuffer },
-    defaultRenderPass_   { device                       },
-    secondaryRenderPass_ { device                       },
-    depthStencilBuffer_  { device                       }
+VKRenderTarget::VKRenderTarget(
+    const VKPtr<VkDevice>&          device,
+    VKDeviceMemoryManager&          deviceMemoryMngr,
+    const RenderTargetDescriptor&   desc)
+:
+    resolution_          { desc.resolution                                                },
+    framebuffer_         { device, vkDestroyFramebuffer                                   },
+    defaultRenderPass_   { device                                                         },
+    secondaryRenderPass_ { device                                                         },
+    depthStencilBuffer_  { device                                                         },
+    sampleCountBits_     { VKTypes::ToVkSampleCountBits(desc.multiSampling.SampleCount()) }
 {
     if (desc.renderPass)
     {
@@ -66,9 +72,9 @@ const RenderPass* VKRenderTarget::GetRenderPass() const
     return renderPass_;
 }
 
-void VKRenderTarget::ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceMemoryMngr)
+bool VKRenderTarget::HasMultiSampling() const
 {
-    depthStencilBuffer_.ReleaseDepthStencil(deviceMemoryMngr);
+    return (sampleCountBits_ > VK_SAMPLE_COUNT_1_BIT);
 }
 
 
@@ -104,11 +110,11 @@ void VKRenderTarget::CreateDepthStencilForAttachment(VKDeviceMemoryManager& devi
     /* Create depth-stencil buffer */
     if (depthStencilBuffer_.GetVkFormat() == VK_FORMAT_UNDEFINED)
     {
-        depthStencilBuffer_.CreateDepthStencil(
+        depthStencilBuffer_.Create(
             deviceMemoryMngr,
             GetResolution(),
             GetDepthAttachmentVkFormat(attachmentDesc.type),
-            GetSampleCountFlags()
+            sampleCountBits_
         );
     }
     else
@@ -118,13 +124,13 @@ void VKRenderTarget::CreateDepthStencilForAttachment(VKDeviceMemoryManager& devi
 static void Convert(
     VkAttachmentDescription&    dst,
     const AttachmentDescriptor& src,
-    VkFormat                    srcFormat,
-    VkSampleCountFlagBits       srcSampleFlags,
+    VkFormat                    format,
+    VkSampleCountFlagBits       sampleCountBits,
     bool                        loadContent)
 {
     dst.flags           = 0;
-    dst.format          = srcFormat;
-    dst.samples         = srcSampleFlags;
+    dst.format          = format;
+    dst.samples         = sampleCountBits;
     dst.loadOp          = (loadContent ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
     dst.storeOp         = VK_ATTACHMENT_STORE_OP_STORE;
     dst.stencilLoadOp   = (loadContent && HasStencilComponent(src.type) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
@@ -133,11 +139,27 @@ static void Convert(
     dst.finalLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
-static void CreateRenderPass(
+static void SetVkAttachmentDescForColor(
+    VkAttachmentDescription&    dst,
+    VkFormat                    format,
+    VkSampleCountFlagBits       sampleCountBits,
+    bool                        loadContent)
+{
+    dst.flags           = 0;
+    dst.format          = format;
+    dst.samples         = sampleCountBits;
+    dst.loadOp          = (loadContent ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+    dst.storeOp         = VK_ATTACHMENT_STORE_OP_STORE;
+    dst.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    dst.stencilStoreOp  = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    dst.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
+    dst.finalLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+}
+
+void VKRenderTarget::CreateRenderPass(
     VkDevice                        device,
     const RenderTargetDescriptor&   desc,
     VKRenderPass&                   renderPass,
-    VkSampleCountFlagBits           sampleCountFlags,
     bool                            loadContent)
 {
     /* Initialize attachment descriptors */
@@ -145,6 +167,7 @@ static void CreateRenderPass(
     std::uint32_t numColorAttachments   = 0;
 
     std::vector<VkAttachmentDescription> attachmentDescs(numAttachments);
+    std::vector<VkFormat> colorFormats(numAttachments);
 
     for (const auto& attachment : desc.attachments)
     {
@@ -158,12 +181,12 @@ static void CreateRenderPass(
                 attachmentDescs[numColorAttachments],
                 attachment,
                 textureVK->GetVkFormat(),
-                sampleCountFlags,
+                VK_SAMPLE_COUNT_1_BIT, // target texture always has 1 sample only
                 loadContent
             );
 
             if (attachment.type == AttachmentType::Color)
-                ++numColorAttachments;
+                colorFormats[numColorAttachments++] = textureVK->GetVkFormat();
         }
         else
         {
@@ -172,26 +195,51 @@ static void CreateRenderPass(
                 attachmentDescs[numAttachments - 1],
                 attachment,
                 GetDepthAttachmentVkFormat(attachment.type),
-                sampleCountFlags,
+                sampleCountBits_,
                 loadContent
             );
         }
     }
 
-    renderPass.CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs.data());
+    /* Initialize attachment descriptors for multi-sampled color attachments */
+    if (HasMultiSampling())
+    {
+        attachmentDescs.resize(numAttachments + numColorAttachments);
+        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+        {
+            SetVkAttachmentDescForColor(
+                attachmentDescs[numAttachments + i],
+                colorFormats[i],
+                sampleCountBits_,
+                loadContent
+            );
+        }
+    }
+
+    /* Create native Vulkan render pass with attachment descriptors */
+    renderPass.CreateVkRenderPassWithDescriptors(
+        device,
+        numAttachments,
+        numColorAttachments,
+        attachmentDescs.data(),
+        HasMultiSampling()
+    );
 }
 
 void VKRenderTarget::CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
 {
-    CreateRenderPass(device, desc, defaultRenderPass_, GetSampleCountFlags(), false);
+    CreateRenderPass(device, desc, defaultRenderPass_, false);
 }
 
 void VKRenderTarget::CreateSecondaryRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
 {
-    CreateRenderPass(device, desc, secondaryRenderPass_, GetSampleCountFlags(), true);
+    CreateRenderPass(device, desc, secondaryRenderPass_, true);
 }
 
-void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc)
+void VKRenderTarget::CreateFramebuffer(
+    const VKPtr<VkDevice>&          device,
+    VKDeviceMemoryManager&          deviceMemoryMngr,
+    const RenderTargetDescriptor&   desc)
 {
     depthStencilFormat_     = VK_FORMAT_UNDEFINED;
     numColorAttachments_    = 0;
@@ -204,6 +252,7 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
 
     imageViews_.reserve(numAttachments);
     std::vector<VkImageView> imageViewRefs(numAttachments);
+    std::vector<VkFormat> colorFormats(numAttachments);
 
     for (const auto& attachment : desc.attachments)
     {
@@ -212,7 +261,7 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
             auto textureVK = LLGL_CAST(VKTexture*, texture);
 
             /* Create new image view for MIP-level and array layer specified in attachment descriptor */
-            VKPtr<VkImageView> imageView { device, vkDestroyImageView };
+            VKPtr<VkImageView> imageView{ device, vkDestroyImageView };
             {
                 textureVK->CreateImageView(
                     device,
@@ -227,7 +276,9 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
                 if (attachment.type == AttachmentType::Color)
                 {
                     /* Next color attachment index */
-                    imageViewRefs[numColorAttachments_++] = imageView;
+                    imageViewRefs[numColorAttachments_] = imageView;
+                    colorFormats[numColorAttachments_] = textureVK->GetVkFormat();
+                    ++numColorAttachments_;
                 }
                 else
                 {
@@ -254,6 +305,24 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
         }
     }
 
+    /* Create multi-sample color buffers */
+    if (HasMultiSampling())
+    {
+        colorBuffers_.reserve(numColorAttachments_);
+        imageViewRefs.reserve(numAttachments + numColorAttachments_);
+
+        for (std::uint32_t i = 0; i < numColorAttachments_; ++i)
+        {
+            /* Create new multi-sampled color buffer and store reference to image view in primary attachment container */
+            auto colorBuffer = MakeUnique<VKColorBuffer>(device);
+            {
+                colorBuffer->Create(deviceMemoryMngr, GetResolution(), colorFormats[i], sampleCountBits_);
+                imageViewRefs.push_back(colorBuffer->GetVkImageView());
+            }
+            colorBuffers_.push_back(std::move(colorBuffer));
+        }
+    }
+
     /* Create framebuffer object */
     VkFramebufferCreateInfo createInfo;
     {
@@ -261,7 +330,7 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
         createInfo.pNext            = nullptr;
         createInfo.flags            = 0;
         createInfo.renderPass       = renderPass_->GetVkRenderPass();
-        createInfo.attachmentCount  = numAttachments;
+        createInfo.attachmentCount  = (HasMultiSampling() ? numAttachments + numColorAttachments_ : numAttachments);
         createInfo.pAttachments     = imageViewRefs.data();
         createInfo.width            = GetResolution().width;
         createInfo.height           = GetResolution().height;
@@ -269,13 +338,6 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
     }
     VkResult result = vkCreateFramebuffer(device, &createInfo, nullptr, framebuffer_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan framebuffer");
-}
-
-//TODO: support multi-sampling
-VkSampleCountFlagBits VKRenderTarget::GetSampleCountFlags() const
-{
-    VkSampleCountFlagBits samplesFlags = VK_SAMPLE_COUNT_1_BIT;
-    return samplesFlags;
 }
 
 

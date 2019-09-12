@@ -15,6 +15,7 @@
 #include "VKPtr.h"
 #include "RenderState/VKRenderPass.h"
 #include "Texture/VKDepthStencilBuffer.h"
+#include "Texture/VKColorBuffer.h"
 #include <memory>
 #include <vector>
 
@@ -41,8 +42,6 @@ class VKRenderContext final : public RenderContext
             RenderContextDescriptor         desc,
             const std::shared_ptr<Surface>& surface
         );
-
-        ~VKRenderContext();
 
         void Present() override;
 
@@ -80,6 +79,9 @@ class VKRenderContext final : public RenderContext
         // Returns true if this render context has a depth-stencil buffer.
         bool HasDepthStencilBuffer() const;
 
+        // Returns true if this render context has multi-sampling enabled.
+        bool HasMultiSampling() const;
+
     private:
 
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
@@ -98,7 +100,8 @@ class VKRenderContext final : public RenderContext
         void CreateSwapChainFramebuffers();
 
         void CreateDepthStencilBuffer(const VideoModeDescriptor& videoModeDesc);
-        void ReleaseDepthStencilBuffer();
+        void CreateColorBuffers(const VideoModeDescriptor& videoModeDesc);
+        void ReleaseRenderBuffers();
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
         VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, const VsyncDescriptor& vsyncDesc) const;
@@ -110,32 +113,39 @@ class VKRenderContext final : public RenderContext
 
     private:
 
-        VkInstance                          instance_                   = VK_NULL_HANDLE;
-        VkPhysicalDevice                    physicalDevice_             = VK_NULL_HANDLE;
-        const VKPtr<VkDevice>&              device_;
+        static const std::uint32_t g_maxNumColorBuffers = 3;
 
-        VKDeviceMemoryManager&              deviceMemoryMngr_;
+        VkInstance              instance_                                       = VK_NULL_HANDLE;
+        VkPhysicalDevice        physicalDevice_                                 = VK_NULL_HANDLE;
+        const VKPtr<VkDevice>&  device_;
 
-        VKPtr<VkSurfaceKHR>                 surface_;
-        SurfaceSupportDetails               surfaceSupportDetails_;
+        VKDeviceMemoryManager&  deviceMemoryMngr_;
 
-        VKPtr<VkSwapchainKHR>               swapChain_;
-        VKRenderPass                        swapChainRenderPass_;
-        VkSurfaceFormatKHR                  swapChainFormat_;
-        VkExtent2D                          swapChainExtent_            = { 0, 0 };
-        std::vector<VkImage>                swapChainImages_;
-        std::vector<VKPtr<VkImageView>>     swapChainImageViews_;
-        std::vector<VKPtr<VkFramebuffer>>   swapChainFramebuffers_;
-        std::uint32_t                       presentImageIndex_          = 0;
+        VKPtr<VkSurfaceKHR>     surface_;
+        SurfaceSupportDetails   surfaceSupportDetails_;
 
-        VKRenderPass                        secondaryRenderPass_;
-        VKDepthStencilBuffer                depthStencilBuffer_;
+        VKPtr<VkSwapchainKHR>   swapChain_;
+        VKRenderPass            swapChainRenderPass_;
+        VkSurfaceFormatKHR      swapChainFormat_                                = {};
+        std::uint32_t           swapChainSamples_                               = 1;
+        VkExtent2D              swapChainExtent_                                = { 0, 0 };
+        VkImage                 swapChainImages_[g_maxNumColorBuffers];
+        VKPtr<VkImageView>      swapChainImageViews_[g_maxNumColorBuffers];
+        //VKPtr<VkImageView>      swapChainImageViewsMS_[g_maxNumColorBuffers];
+        VKPtr<VkFramebuffer>    swapChainFramebuffers_[g_maxNumColorBuffers];
 
-        VkQueue                             graphicsQueue_              = VK_NULL_HANDLE;
-        VkQueue                             presentQueue_               = VK_NULL_HANDLE;
+        std::uint32_t           numSwapChainBuffers_                            = 1;
+        std::uint32_t           presentImageIndex_                              = 0;
 
-        VKPtr<VkSemaphore>                  imageAvailableSemaphore_;
-        VKPtr<VkSemaphore>                  renderFinishedSemaphore_;
+        VKRenderPass            secondaryRenderPass_;
+        VKDepthStencilBuffer    depthStencilBuffer_;
+        VKColorBuffer           colorBuffers_[g_maxNumColorBuffers];
+
+        VkQueue                 graphicsQueue_                                  = VK_NULL_HANDLE;
+        VkQueue                 presentQueue_                                   = VK_NULL_HANDLE;
+
+        VKPtr<VkSemaphore>      imageAvailableSemaphore_;
+        VKPtr<VkSemaphore>      renderFinishedSemaphore_;
 
 };
 

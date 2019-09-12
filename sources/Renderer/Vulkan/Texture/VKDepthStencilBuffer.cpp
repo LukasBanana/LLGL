@@ -14,8 +14,7 @@ namespace LLGL
 
 
 VKDepthStencilBuffer::VKDepthStencilBuffer(const VKPtr<VkDevice>& device) :
-    VKDeviceImage { device                     },
-    imageView_     { device, vkDestroyImageView }
+    VKRenderBuffer { device }
 {
 }
 
@@ -35,61 +34,31 @@ static VkImageAspectFlags GetVkImageAspectByFormat(VkFormat format)
     }
 }
 
-void VKDepthStencilBuffer::CreateDepthStencil(
-    VKDeviceMemoryManager& deviceMemoryMngr, const Extent2D& extent, VkFormat format, VkSampleCountFlagBits samplesFlags)
+void VKDepthStencilBuffer::Create(
+    VKDeviceMemoryManager&  deviceMemoryMngr,
+    const Extent2D&         extent,
+    VkFormat                format,
+    VkSampleCountFlagBits   sampleCountBits)
 {
     /* Determine image aspect */
-    auto imageAspect = GetVkImageAspectByFormat(format);
-    if (!imageAspect)
+    auto aspectFlags = GetVkImageAspectByFormat(format);
+    if (!aspectFlags)
         throw std::invalid_argument("invalid format for Vulkan depth-stencil buffer");
 
-    auto device = deviceMemoryMngr.GetVkDevice();
-
     /* Create depth-stencil image */
-    CreateVkImage(
-        device,
-        VK_IMAGE_TYPE_2D,
+    VKRenderBuffer::Create(
+        deviceMemoryMngr,
+        extent,
         format,
-        { extent.width, extent.height, 1 },
-        1,                                          // MIP levels
-        1,                                          // array layers
-        0,                                          // create flags
-        samplesFlags,
+        aspectFlags,
+        sampleCountBits,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
     );
-
-    /* Allocate device memory region */
-    AllocateMemoryRegion(deviceMemoryMngr);
-
-    /* Create depth-stencil image view */
-    CreateVkImageView(
-        device,
-        VK_IMAGE_VIEW_TYPE_2D,
-        format,
-        imageAspect,
-        0, 1,                                       // MIP levels
-        0, 1,                                       // array layers
-        imageView_.ReleaseAndGetAddressOf()
-    );
-
-    /* Store parameters */
-    format_ = format;
 }
 
-void VKDepthStencilBuffer::ReleaseDepthStencil(VKDeviceMemoryManager& deviceMemoryMngr)
+void VKDepthStencilBuffer::Release()
 {
-    if (format_ != VK_FORMAT_UNDEFINED)
-    {
-        /* Release image and image view of depth-stencil buffer */
-        imageView_.Release();
-        ReleaseVkImage();
-
-        /* Release device memory region of depth-stencil buffer */
-        ReleaseMemoryRegion(deviceMemoryMngr);
-
-        /* Reset depth-stencil format */
-        format_ = VK_FORMAT_UNDEFINED;
-    }
+    VKRenderBuffer::Release();
 }
 
 
