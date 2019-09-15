@@ -32,7 +32,7 @@ class D3D12RenderTarget final : public RenderTarget
         void SetName(const char* name) override;
 
         Extent2D GetResolution() const override;
-
+        std::uint32_t GetSamples() const override;
         std::uint32_t GetNumColorAttachments() const override;
 
         bool HasDepthAttachment() const override;

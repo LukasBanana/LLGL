@@ -37,44 +37,53 @@ class Win32GLContext final : public GLContext
         bool SetSwapInterval(int interval) override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
+        std::uint32_t GetSamples() const override;
+
+    private:
+
+        struct WGLContextParams
+        {
+            RendererConfigurationOpenGL profile;
+            int                         colorBits   = 32;
+            int                         depthBits   = 24;
+            int                         stencilBits = 8;
+        };
 
     private:
 
         bool Activate(bool activate) override;
 
-        void CreateContext(Win32GLContext* sharedContext);
+        void CreateContext(const WGLContextParams& params, Win32GLContext* sharedContext = nullptr);
         void DeleteContext();
 
         void DeleteGLContext(HGLRC& renderContext);
 
-        HGLRC CreateGLContext(bool useExtProfile, Win32GLContext* sharedContext = nullptr);
+        HGLRC CreateGLContext(const WGLContextParams& params, bool useExtProfile, Win32GLContext* sharedContext = nullptr);
         HGLRC CreateStdContextProfile();
-        HGLRC CreateExtContextProfile(HGLRC sharedGLRC = nullptr);
+        HGLRC CreateExtContextProfile(const WGLContextParams& params, HGLRC sharedGLRC = nullptr);
 
-        void SetupDeviceContextAndPixelFormat();
-
-        void SelectPixelFormat();
-        bool SetupAntiAliasing();
+        void SetupDeviceContextAndPixelFormat(const WGLContextParams& params);
+        void SelectPixelFormat(const WGLContextParams& params);
+        bool SetupAntiAliasing(const WGLContextParams& params);
         void CopyPixelFormat(Win32GLContext& sourceContext);
 
-        void RecreateWindow();
+        void RecreateWindow(const WGLContextParams& params);
 
     private:
 
-        static const UINT           maxPixelFormatsMS                   = 8;
+        static const UINT   maxPixelFormatsMS                   = 8;
 
-        int                         pixelFormat_                        = 0;        // Standard pixel format.
-        int                         pixelFormatsMS_[maxPixelFormatsMS]  = {};       // Multi-sampled pixel formats.
-        UINT                        pixelFormatsMSCount_                = 0;
+        int                 pixelFormat_                        = 0;        // Standard pixel format.
+        int                 pixelFormatsMS_[maxPixelFormatsMS]  = {};       // Multi-sampled pixel formats.
+        UINT                pixelFormatsMSCount_                = 0;
+        int                 samples_                            = 1;
 
-        HDC                         hDC_                                = 0;        // Device context handle.
-        HGLRC                       hGLRC_                              = 0;        // OpenGL render context handle.
+        HDC                 hDC_                                = 0;        // Device context handle.
+        HGLRC               hGLRC_                              = 0;        // OpenGL render context handle.
 
-        RenderContextDescriptor     desc_;
-        RendererConfigurationOpenGL config_;
-        Surface&                    surface_;
+        Surface&            surface_;
 
-        bool                        hasSharedContext_                   = false;
+        bool                hasSharedContext_                   = false;
 
 };
 

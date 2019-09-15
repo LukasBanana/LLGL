@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <LLGL/Strings.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -264,18 +265,27 @@ ExampleBase::ExampleBase(
 
     // Print renderer information
     const auto& info = renderer->GetRendererInfo();
+    const auto contextRes = context->GetResolution();
 
-    std::cout << "renderer information:" << std::endl;
-    std::cout << "  renderer:         " << info.rendererName << std::endl;
-    std::cout << "  device:           " << info.deviceName << std::endl;
-    std::cout << "  vendor:           " << info.vendorName << std::endl;
-    std::cout << "  shading language: " << info.shadingLanguageName << std::endl;
+    std::cout << "render system:" << std::endl;
+    std::cout << "  renderer:           " << info.rendererName << std::endl;
+    std::cout << "  device:             " << info.deviceName << std::endl;
+    std::cout << "  vendor:             " << info.vendorName << std::endl;
+    std::cout << "  shading language:   " << info.shadingLanguageName << std::endl;
+    std::cout << std::endl;
+    std::cout << "render context:" << std::endl;
+    std::cout << "  resolution:         " << contextRes.width << " x " << contextRes.height << std::endl;
+    std::cout << "  samples:            " << context->GetSamples() << std::endl;
+    std::cout << "  colorFormat:        " << LLGL::ToString(context->GetColorFormat()) << std::endl;
+    std::cout << "  depthStencilFormat: " << LLGL::ToString(context->GetDepthStencilFormat()) << std::endl;
+    std::cout << std::endl;
 
     if (!info.extensionNames.empty())
     {
-        std::cout << "  extensions:" << std::endl;
+        std::cout << "extensions:" << std::endl;
         for (const auto& name : info.extensionNames)
-            std::cout << "    " << name << std::endl;
+            std::cout << "  " << name << std::endl;
+        std::cout << std::endl;
     }
 
     #ifdef LLGL_MOBILE_PLATFORM

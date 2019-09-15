@@ -36,7 +36,8 @@ MacOSGLContext::MacOSGLContext(
 :
     LLGL::GLContext { sharedContext }
 {
-    CreatePixelFormat(desc, config);
+    if (!CreatePixelFormat(desc, config))
+        throw std::runtime_error("failed to find suitable OpenGL pixel format");
 
     NativeHandle nativeHandle;
     surface.GetNativeHandle(&nativeHandle);
@@ -68,6 +69,11 @@ bool MacOSGLContext::SwapBuffers()
 void MacOSGLContext::Resize(const Extent2D& resolution)
 {
     [ctx_ update];
+}
+
+std::uint32_t MacOSGLContext::GetSamples() const
+{
+    return samples_;
 }
 
 
@@ -117,35 +123,32 @@ static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const RendererConfi
     throw std::runtime_error("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)");
 }
 
-void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc, const RendererConfigurationOpenGL& config)
+bool MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc, const RendererConfigurationOpenGL& config)
 {
-    NSOpenGLPixelFormatAttribute attribs[] =
+    /* Find suitable pixel format (for samples > 0) */
+    for (samples_ = GetClampedSamples(desc.samples); samples_ > 0; --samples_)
     {
-        NSOpenGLPFAAccelerated,
-        NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFAOpenGLProfile,   TranslateNSOpenGLProfile(config),
-        NSOpenGLPFADepthSize,       static_cast<std::uint32_t>(desc.videoMode.depthBits),
-        NSOpenGLPFAStencilSize,     static_cast<std::uint32_t>(desc.videoMode.stencilBits),
-        NSOpenGLPFAColorSize,       24,
-        NSOpenGLPFAAlphaSize,       8,
-        //NSOpenGLPFAMultisample,
-        NSOpenGLPFASampleBuffers,   (desc.samples > 1 ? 1u : 0u),
-        NSOpenGLPFASamples,         GetClampedSamples(desc.samples),
-        0
-    };
+        NSOpenGLPixelFormatAttribute attribs[] =
+        {
+            NSOpenGLPFAAccelerated,
+            NSOpenGLPFADoubleBuffer,
+            NSOpenGLPFAOpenGLProfile,   TranslateNSOpenGLProfile(config),
+            NSOpenGLPFADepthSize,       static_cast<std::uint32_t>(desc.videoMode.depthBits),
+            NSOpenGLPFAStencilSize,     static_cast<std::uint32_t>(desc.videoMode.stencilBits),
+            NSOpenGLPFAColorSize,       24,
+            NSOpenGLPFAAlphaSize,       8,
+            //NSOpenGLPFAMultisample,
+            NSOpenGLPFASampleBuffers,   (desc.samples > 1 ? 1u : 0u),
+            NSOpenGLPFASamples,         samples_,
+            0
+        };
 
-    while (true)
-    {
         /* Allocate NS-OpenGL pixel format */
         pixelFormat_ = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
         if (pixelFormat_)
-            break;
-
-        /* Find best suitable pixel format */
-        //todo...
-
-        throw std::runtime_error("failed to find suitable OpenGL pixel format");
+            return true;
     }
+    return false;
 }
 
 void MacOSGLContext::CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext)

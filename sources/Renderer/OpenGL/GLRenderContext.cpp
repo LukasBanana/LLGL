@@ -59,6 +59,11 @@ void GLRenderContext::Present()
     context_->SwapBuffers();
 }
 
+std::uint32_t GLRenderContext::GetSamples() const
+{
+    return context_->GetSamples();
+}
+
 Format GLRenderContext::GetColorFormat() const
 {
     /* Return fixed value, not much of control for an OpenGL context */

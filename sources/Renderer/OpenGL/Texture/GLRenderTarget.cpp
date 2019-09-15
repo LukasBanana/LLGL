@@ -95,6 +95,11 @@ Extent2D GLRenderTarget::GetResolution() const
     return resolution_;
 }
 
+std::uint32_t GLRenderTarget::GetSamples() const
+{
+    return static_cast<std::uint32_t>(samples_);
+}
+
 std::uint32_t GLRenderTarget::GetNumColorAttachments() const
 {
     return static_cast<std::uint32_t>(colorAttachments_.size());

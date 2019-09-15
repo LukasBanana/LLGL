@@ -106,6 +106,11 @@ void VKRenderContext::Present()
     AcquireNextPresentImage();
 }
 
+std::uint32_t VKRenderContext::GetSamples() const
+{
+    return swapChainSamples_;
+}
+
 Format VKRenderContext::GetColorFormat() const
 {
     return VKTypes::Unmap(swapChainFormat_.format);

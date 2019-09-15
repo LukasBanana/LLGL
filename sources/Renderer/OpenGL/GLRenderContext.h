@@ -44,6 +44,8 @@ class GLRenderContext final : public RenderContext
 
         void Present() override;
 
+        std::uint32_t GetSamples() const override;
+
         Format GetColorFormat() const override;
         Format GetDepthStencilFormat() const override;
 
@@ -80,7 +82,7 @@ class GLRenderContext final : public RenderContext
         void GetNativeContextHandle(
             NativeContextHandle&        windowContext,
             const VideoModeDescriptor&  videoModeDesc,
-            std::uint32_t               samples
+            std::uint32_t&              samples
         );
         #endif
 

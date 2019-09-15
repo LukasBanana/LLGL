@@ -37,12 +37,13 @@ class MacOSGLContext : public GLContext
         bool SetSwapInterval(int interval) override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
+        std::uint32_t GetSamples() const override;
 
     private:
 
         bool Activate(bool activate) override;
 
-        void CreatePixelFormat(const RenderContextDescriptor& desc, const RendererConfigurationOpenGL& config);
+        bool CreatePixelFormat(const RenderContextDescriptor& desc, const RendererConfigurationOpenGL& config);
 
         void CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext);
         void DeleteNSGLContext();
@@ -52,6 +53,7 @@ class MacOSGLContext : public GLContext
         NSOpenGLPixelFormat*    pixelFormat_    = nullptr;
         NSOpenGLContext*        ctx_            = nullptr;
         NSWindow*               wnd_            = nullptr;
+        std::uint32_t           samples_        = 1;
 
 };
 

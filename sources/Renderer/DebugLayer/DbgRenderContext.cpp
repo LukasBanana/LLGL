@@ -23,6 +23,11 @@ void DbgRenderContext::Present()
     instance.Present();
 }
 
+std::uint32_t DbgRenderContext::GetSamples() const
+{
+    return instance.GetSamples();
+}
+
 Format DbgRenderContext::GetColorFormat() const
 {
     return instance.GetColorFormat();

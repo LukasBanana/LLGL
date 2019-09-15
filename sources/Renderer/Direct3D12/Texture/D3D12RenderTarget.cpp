@@ -45,6 +45,11 @@ Extent2D D3D12RenderTarget::GetResolution() const
     return resolution_;
 }
 
+std::uint32_t D3D12RenderTarget::GetSamples() const
+{
+    return sampleDesc_.Count;
+}
+
 std::uint32_t D3D12RenderTarget::GetNumColorAttachments() const
 {
     return static_cast<std::uint32_t>(colorFormats_.size());

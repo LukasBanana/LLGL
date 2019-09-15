@@ -154,7 +154,12 @@ struct RenderTargetDescriptor
     */
     Extent2D                            resolution;
 
-    //! Number of samples for the render targets. By default 1.
+    /**
+    \brief Number of samples for the render targets. By default 1.
+    \remarks If the specified number of samples is not supported, LLGL will silently reduce it.
+    The actual number of samples can be queried by the \c GetSamples function of the RenderTarget interface.
+    \see RenderTarget::GetSamples
+    */
     std::uint32_t                       samples             = 1;
 
     /**

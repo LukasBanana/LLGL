@@ -52,6 +52,11 @@ Extent2D VKRenderTarget::GetResolution() const
     return resolution_;
 }
 
+std::uint32_t VKRenderTarget::GetSamples() const
+{
+    return static_cast<std::uint32_t>(sampleCountBits_);
+}
+
 std::uint32_t VKRenderTarget::GetNumColorAttachments() const
 {
     return numColorAttachments_;

@@ -34,6 +34,7 @@ class VKRenderTarget final : public RenderTarget
         );
 
         Extent2D GetResolution() const override;
+        std::uint32_t GetSamples() const override;
         std::uint32_t GetNumColorAttachments() const override;
 
         bool HasDepthAttachment() const override;

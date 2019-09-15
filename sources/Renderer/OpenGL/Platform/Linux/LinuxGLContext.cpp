@@ -87,6 +87,11 @@ void LinuxGLContext::Resize(const Extent2D& resolution)
     //TODO...
 }
 
+std::uint32_t LinuxGLContext::GetSamples() const
+{
+    return samples_;
+}
+
 
 /*
  * ======= Private: =======
@@ -107,6 +112,8 @@ void LinuxGLContext::CreateContext(
     LinuxGLContext*                     sharedContext)
 {
     GLXContext glcShared = (sharedContext != nullptr ? sharedContext->glc_ : nullptr);
+
+    samples_ = contextDesc.samples;
 
     /* Get X11 display, window, and visual information */
     display_    = nativeHandle.display;

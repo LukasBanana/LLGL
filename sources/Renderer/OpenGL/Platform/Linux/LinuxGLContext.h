@@ -36,6 +36,7 @@ class LinuxGLContext : public GLContext
         bool SetSwapInterval(int interval) override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
+        std::uint32_t GetSamples() const override;
 
     private:
 
@@ -58,6 +59,7 @@ class LinuxGLContext : public GLContext
         ::Window        wnd_        = 0;
         XVisualInfo*    visual_     = nullptr;
         GLXContext      glc_        = nullptr;
+        std::uint32_t   samples_    = 1;
 
 };
 

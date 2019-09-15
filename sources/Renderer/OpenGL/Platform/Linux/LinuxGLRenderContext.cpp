@@ -26,7 +26,7 @@ namespace LLGL
 void GLRenderContext::GetNativeContextHandle(
     NativeContextHandle&        windowContext,
     const VideoModeDescriptor&  videoModeDesc,
-    std::uint32_t               samples)
+    std::uint32_t&              samples)
 {
     /* Open X11 display */
     windowContext.display = XOpenDisplay(nullptr);
@@ -36,12 +36,13 @@ void GLRenderContext::GetNativeContextHandle(
     windowContext.parentWindow  = DefaultRootWindow(windowContext.display);
     windowContext.screen        = DefaultScreen(windowContext.display);
 
-    GLXFBConfig fbc = 0;
+    GLXFBConfig framebufferConfig = 0;
 
-    if (samples > 1)
+    /* Find suitable multi-sample format (for samples > 1) */
+    for (samples = GetClampedSamples(samples); samples > 1; --samples)
     {
-        /* Create FB configuration for multi-sampling */
-        const int fbAttribs[] =
+        /* Create framebuffer configuration for multi-sampling */
+        const int framebufferAttribs[] =
         {
             GLX_DOUBLEBUFFER,   True,
             GLX_X_RENDERABLE,   True,
@@ -55,34 +56,32 @@ void GLRenderContext::GetNativeContextHandle(
             GLX_DEPTH_SIZE,     videoModeDesc.depthBits,
             GLX_STENCIL_SIZE,   videoModeDesc.stencilBits,
             GLX_SAMPLE_BUFFERS, 1,
-            GLX_SAMPLES,        static_cast<int>(GetClampedSamples(samples)),
+            GLX_SAMPLES,        static_cast<int>(samples),
             None
         };
 
-        int attribs[100];
-        ::memcpy(attribs, fbAttribs, sizeof(fbAttribs));
+        int fbConfigsCount = 0;
+        GLXFBConfig* fbConfigs = glXChooseFBConfig(windowContext.display, windowContext.screen, framebufferAttribs, &fbConfigsCount);
 
-        int fbCount = 0;
-        GLXFBConfig* fbcList = glXChooseFBConfig(windowContext.display, windowContext.screen, attribs, &fbCount);
-
-        if (fbcList)
+        if (fbConfigs != nullptr)
         {
-            if (fbCount > 0)
-                fbc = fbcList[0];
-            XFree(fbcList);
+            if (fbConfigsCount > 0)
+            {
+                framebufferConfig = fbConfigs[0];
+                if (framebufferConfig != 0)
+                    break;
+            }
+            XFree(fbConfigs);
         }
     }
 
-    if (fbc)
+    if (framebufferConfig)
     {
         /* Choose XVisualInfo from FB config */
-        windowContext.visual = glXGetVisualFromFBConfig(windowContext.display, fbc);
+        windowContext.visual = glXGetVisualFromFBConfig(windowContext.display, framebufferConfig);
     }
     else
     {
-        if (samples > 1)
-            Log::PostReport(Log::ReportType::Error, "failed to choose XVisualInfo for multi-sampling");
-
         /* Choose standard XVisualInfo structure */
         int visualAttribs[] =
         {

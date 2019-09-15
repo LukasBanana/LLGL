@@ -50,6 +50,11 @@ void MTRenderContext::Present()
     [view_ draw];
 }
 
+std::uint32_t MTRenderContext::GetSamples() const
+{
+    return renderPass_.GetSampleCount();
+}
+
 Format MTRenderContext::GetColorFormat() const
 {
     return MTTypes::ToFormat(view_.colorPixelFormat);

@@ -25,6 +25,20 @@ class GLContext
 
     public:
 
+        // Sets the swap interval for vsync (Win32: wglSwapIntervalEXT, X11: glXSwapIntervalSGI).
+        virtual bool SetSwapInterval(int interval) = 0;
+
+        // Swaps the back buffer with the front buffer (Win32: ::SwapBuffers, X11: glXSwapBuffers).
+        virtual bool SwapBuffers() = 0;
+
+        // Resizes the GL context. This is called after the context surface has been resized.
+        virtual void Resize(const Extent2D& resolution) = 0;
+
+        // Returns the number of samples for this GL context. Must be in range [1, 64].
+        virtual std::uint32_t GetSamples() const = 0;
+
+    public:
+
         virtual ~GLContext();
 
         // Creates a platform specific GLContext instance.
@@ -40,15 +54,6 @@ class GLContext
 
         // Returns the active GLContext instance.
         static GLContext* Active();
-
-        // Sets the swap interval for vsync (Win32: wglSwapIntervalEXT, X11: glXSwapIntervalSGI).
-        virtual bool SetSwapInterval(int interval) = 0;
-
-        // Swaps the back buffer with the front buffer (Win32: ::SwapBuffers, X11: glXSwapBuffers).
-        virtual bool SwapBuffers() = 0;
-
-        // Resizes the GL context. This is called after the context surface has been resized.
-        virtual void Resize(const Extent2D& resolution) = 0;
 
         // Returns the state manager that is associated with this context.
         inline const std::shared_ptr<GLStateManager>& GetStateManager() const

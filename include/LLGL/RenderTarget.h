@@ -52,6 +52,15 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         virtual Extent2D GetResolution() const = 0;
 
         /**
+        \brief Returns the number of samples this render target was created with.
+        \remarks If a certain number of samples is not supported by the rendering API, LLGL will reduce the amount of samples.
+        This function returns the actual number of samples the hardware object was created with.
+        \see RenderTargetDescriptor::samples
+        \see VideoModeDescriptor::samples
+        */
+        virtual std::uint32_t GetSamples() const = 0;
+
+        /**
         \brief Returns the number of color attachments of this render target. This can also be zero.
         \remarks For a render context, this will always be 1.
         \see RenderContext::GetColorFormat

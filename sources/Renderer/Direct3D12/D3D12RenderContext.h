@@ -40,6 +40,8 @@ class D3D12RenderContext final : public RenderContext
 
         void Present() override;
 
+        std::uint32_t GetSamples() const override;
+
         Format GetColorFormat() const override;
         Format GetDepthStencilFormat() const override;
 

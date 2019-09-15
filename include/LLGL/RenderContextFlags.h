@@ -108,8 +108,10 @@ struct RenderContextDescriptor
     VsyncDescriptor         vsync;
 
     /**
-    \brief Number of samples for the swap-chain buffers. Must be in the range [1, 64]. By default 1.
-    \todo Move into \c VideoModeDescriptor
+    \brief Number of samples for the swap-chain buffers. By default 1.
+    \remarks If the specified number of samples is not supported, LLGL will silently reduce it.
+    The actual number of samples can be queried by the \c GetSamples function of the RenderTarget interface.
+    \see RenderTarget::GetSamples
     */
     std::uint32_t           samples     = 1;
 

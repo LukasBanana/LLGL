@@ -65,6 +65,11 @@ void D3D11RenderContext::Present()
     swapChain_->Present(swapChainInterval_, 0);
 }
 
+std::uint32_t D3D11RenderContext::GetSamples() const
+{
+    return swapChainSampleDesc_.Count;
+}
+
 Format D3D11RenderContext::GetColorFormat() const
 {
     return DXTypes::Unmap(colorFormat_);

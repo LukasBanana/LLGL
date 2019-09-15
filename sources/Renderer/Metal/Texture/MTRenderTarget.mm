@@ -106,6 +106,11 @@ Extent2D MTRenderTarget::GetResolution() const
     return resolution_;
 }
 
+std::uint32_t MTRenderTarget::GetSamples() const
+{
+    return renderPass_.GetSampleCount();
+}
+
 std::uint32_t MTRenderTarget::GetNumColorAttachments() const
 {
     return numColorAttachments_;

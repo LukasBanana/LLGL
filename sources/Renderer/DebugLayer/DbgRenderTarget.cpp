@@ -31,6 +31,11 @@ Extent2D DbgRenderTarget::GetResolution() const
     return instance.GetResolution();
 }
 
+std::uint32_t DbgRenderTarget::GetSamples() const
+{
+    return instance.GetSamples();
+}
+
 std::uint32_t DbgRenderTarget::GetNumColorAttachments() const
 {
     return instance.GetNumColorAttachments();

@@ -86,6 +86,11 @@ void D3D12RenderContext::Present()
     MoveToNextFrame();
 }
 
+std::uint32_t D3D12RenderContext::GetSamples() const
+{
+    return swapChainSampleDesc_.Count;
+}
+
 Format D3D12RenderContext::GetColorFormat() const
 {
     return DXTypes::Unmap(colorFormat_);
