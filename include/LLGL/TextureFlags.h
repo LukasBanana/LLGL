@@ -287,7 +287,6 @@ struct TextureDescriptor
     /**
     \brief Number of samples per texel. By default 1.
     \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
-    The equivalent member for graphics pipeline states is MultiSamplingDescriptor::samples.
     \see IsMultiSampleTexture
     */
     std::uint32_t   samples         = 1;

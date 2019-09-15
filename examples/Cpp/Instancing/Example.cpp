@@ -316,7 +316,7 @@ private:
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.depth.testEnabled              = true;
             pipelineDesc.depth.writeEnabled             = true;
-            pipelineDesc.rasterizer.multiSampling       = GetMultiSampleDesc();
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
 

@@ -169,17 +169,17 @@ static void CreateRasterizerState(
 }
 
 static void CreateMultisampleState(
-    const MultiSamplingDescriptor&          multiSampleDesc,
+    const VkSampleCountFlagBits             sampleCountBits,
     const BlendDescriptor&                  blendDesc,
     VkPipelineMultisampleStateCreateInfo&   createInfo)
 {
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
     createInfo.flags                    = 0;
-    createInfo.rasterizationSamples     = VKTypes::ToVkSampleCountBits(multiSampleDesc.SampleCount());
+    createInfo.rasterizationSamples     = sampleCountBits;
     createInfo.sampleShadingEnable      = VK_FALSE;
     createInfo.minSampleShading         = 0.0f;
-    createInfo.pSampleMask              = &(multiSampleDesc.sampleMask);
+    createInfo.pSampleMask              = static_cast<const VkSampleMask*>(&(blendDesc.sampleMask));
     createInfo.alphaToCoverageEnable    = VKBoolean(blendDesc.alphaToCoverageEnabled);
     createInfo.alphaToOneEnable         = VK_FALSE;
 }
@@ -336,7 +336,8 @@ void VKGraphicsPipeline::CreateVkGraphicsPipeline(
 
     /* Initialize multi-sample state */
     VkPipelineMultisampleStateCreateInfo multisampleState;
-    CreateMultisampleState(desc.rasterizer.multiSampling, desc.blend, multisampleState);
+    const auto sampleCountBits = (desc.rasterizer.multiSampleEnabled ? renderPass.GetSampleCountBits() : VK_SAMPLE_COUNT_1_BIT);
+    CreateMultisampleState(sampleCountBits, desc.blend, multisampleState);
 
     /* Initialize depth-stencil state */
     VkPipelineDepthStencilStateCreateInfo depthStencilState;

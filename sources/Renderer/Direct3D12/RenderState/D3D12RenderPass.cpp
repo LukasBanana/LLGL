@@ -6,10 +6,12 @@
  */
 
 #include "D3D12RenderPass.h"
+#include "../D3D12Device.h"
 #include "../D3D12Types.h"
 #include "../Texture/D3D12Texture.h"
 #include "../../DescriptorHelper.h"
 #include "../../CheckedCast.h"
+#include "../../TextureUtils.h"
 #include <LLGL/RenderPassFlags.h>
 #include <LLGL/RenderTargetFlags.h>
 #include <algorithm>
@@ -19,12 +21,16 @@ namespace LLGL
 {
 
 
-D3D12RenderPass::D3D12RenderPass(const RenderPassDescriptor& desc)
+D3D12RenderPass::D3D12RenderPass(
+    const D3D12Device& device,
+    const RenderPassDescriptor& desc)
 {
-    BuildAttachments(desc);
+    BuildAttachments(device, desc);
 }
 
-void D3D12RenderPass::BuildAttachments(const RenderPassDescriptor& desc)
+void D3D12RenderPass::BuildAttachments(
+    const D3D12Device&          device,
+    const RenderPassDescriptor& desc)
 {
     /* Reset flags and depth-stencil format */
     clearFlagsDSV_          = 0;
@@ -53,8 +59,8 @@ void D3D12RenderPass::BuildAttachments(const RenderPassDescriptor& desc)
     }
 
     /* Store native depth-stencil format */
-    if (desc.depthAttachment.format != desc.stencilAttachment.format &&
-        desc.depthAttachment.format != Format::Undefined             &&
+    if (desc.depthAttachment.format   != desc.stencilAttachment.format &&
+        desc.depthAttachment.format   != Format::Undefined             &&
         desc.stencilAttachment.format != Format::Undefined)
     {
         throw std::invalid_argument("mismatch between depth and stencil attachment formats");
@@ -64,12 +70,16 @@ void D3D12RenderPass::BuildAttachments(const RenderPassDescriptor& desc)
         SetDSVFormat(D3D12Types::Map(desc.depthAttachment.format));
     else if (desc.stencilAttachment.format != Format::Undefined)
         SetDSVFormat(D3D12Types::Map(desc.stencilAttachment.format));
+
+    /* Store sample descriptor */
+    sampleDesc_ = device.FindSuitableSampleDesc(numColorAttachments_, rtvFormats_, GetClampedSamples(desc.samples));
 }
 
 void D3D12RenderPass::BuildAttachments(
     UINT                        numAttachmentDescs,
     const AttachmentDescriptor* attachmentDescs,
-    const DXGI_FORMAT           defaultDepthStencilFormat)
+    const DXGI_FORMAT           defaultDepthStencilFormat,
+    const DXGI_SAMPLE_DESC&     sampleDesc)
 {
     /* Reset clear flags and depth-stencil format */
     clearFlagsDSV_ = 0;
@@ -112,12 +122,16 @@ void D3D12RenderPass::BuildAttachments(
     /* Reset remaining color formats */
     for (UINT i = numColorAttachments_; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
         SetRTVFormat(i, DXGI_FORMAT_UNKNOWN);
+
+    /* Store sample descriptor */
+    sampleDesc_ = sampleDesc;
 }
 
 void D3D12RenderPass::BuildAttachments(
-    UINT                numColorFormats,
-    const DXGI_FORMAT*  colorFormats,
-    const DXGI_FORMAT   depthStencilFormat)
+    UINT                    numColorFormats,
+    const DXGI_FORMAT*      colorFormats,
+    const DXGI_FORMAT       depthStencilFormat,
+    const DXGI_SAMPLE_DESC& sampleDesc)
 {
     /* Reset clear flags */
     clearFlagsDSV_ = 0;
@@ -130,6 +144,9 @@ void D3D12RenderPass::BuildAttachments(
 
     /* Store depth-stencil attachment format */
     SetDSVFormat(depthStencilFormat);
+
+    /* Store sample descriptor */
+    sampleDesc_ = sampleDesc;
 }
 
 

@@ -159,7 +159,7 @@ private:
 
     static std::string                          rendererModule_;
 
-    LLGL::MultiSamplingDescriptor               multiSampleDesc_;
+    std::uint32_t                               samples_            = 1;
 
 protected:
 
@@ -291,10 +291,10 @@ protected:
     // Returns true if the specified shading language is supported.
     bool Supported(const LLGL::ShadingLanguage shadingLanguage) const;
 
-    // Returns the multi-sampling descriptor that was used when the render context was created.
-    inline const LLGL::MultiSamplingDescriptor& GetMultiSampleDesc() const
+    // Returns the number of samples that was used when the render context was created.
+    inline std::uint32_t GetSampleCount() const
     {
-        return multiSampleDesc_;
+        return samples_;
     }
 
 };

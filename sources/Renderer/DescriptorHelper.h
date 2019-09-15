@@ -17,6 +17,7 @@
 namespace LLGL
 {
 
+//TODO: merge this header and source with "TextureUtils.cpp/h"
 
 struct RenderPassDescriptor;
 

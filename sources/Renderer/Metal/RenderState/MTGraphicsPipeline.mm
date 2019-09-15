@@ -39,7 +39,10 @@ static void FillDefaultMTStencilDesc(MTLStencilDescriptor* dst)
     dst.writeMask                   = 0;
 }
 
-MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
+MTGraphicsPipeline::MTGraphicsPipeline(
+    id<MTLDevice>                       device,
+    const GraphicsPipelineDescriptor&   desc,
+    const MTRenderPass*                 defaultRenderPass)
 {
     /* Convert standalone parameters */
     cullMode_       = MTTypes::ToMTLCullMode(desc.rasterizer.cullMode);
@@ -52,7 +55,7 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
     depthClamp_     = desc.rasterizer.depthBias.clamp;
 
     /* Create render pipeline and depth-stencil states */
-    CreateRenderPipelineState(device, desc);
+    CreateRenderPipelineState(device, desc, defaultRenderPass);
     CreateDepthStencilState(device, desc);
 }
 
@@ -79,7 +82,7 @@ void MTGraphicsPipeline::Bind(id<MTLRenderCommandEncoder> renderEncoder)
 static MTLColorWriteMask ToMTLColorWriteMask(const ColorRGBAb& color)
 {
     MTLColorWriteMask mask = MTLColorWriteMaskNone;
-    
+
     if (color.r)
         mask |= MTLColorWriteMaskRed;
     if (color.g)
@@ -101,12 +104,12 @@ static void FillColorAttachmentDesc(
     /* Render pipeline state */
     dst.pixelFormat                 = pixelFormat;
     dst.writeMask                   = ToMTLColorWriteMask(targetDesc.colorMask);
-    
+
     /* Controlling blend operation */
     dst.blendingEnabled             = (targetDesc.blendEnabled ? YES : NO);
     dst.alphaBlendOperation         = MTTypes::ToMTLBlendOperation(targetDesc.alphaArithmetic);
     dst.rgbBlendOperation           = MTTypes::ToMTLBlendOperation(targetDesc.colorArithmetic);
-    
+
     /* Blend factors */
     dst.destinationAlphaBlendFactor = MTTypes::ToMTLBlendFactor(targetDesc.dstAlpha);
     dst.destinationRGBBlendFactor   = MTTypes::ToMTLBlendFactor(targetDesc.dstColor);
@@ -114,13 +117,25 @@ static void FillColorAttachmentDesc(
     dst.sourceRGBBlendFactor        = MTTypes::ToMTLBlendFactor(targetDesc.srcColor);
 }
 
-void MTGraphicsPipeline::CreateRenderPipelineState(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
+void MTGraphicsPipeline::CreateRenderPipelineState(
+    id<MTLDevice>                       device,
+    const GraphicsPipelineDescriptor&   desc,
+    const MTRenderPass*                 defaultRenderPass)
 {
     /* Get native shader functions */
     auto shaderProgramMT = LLGL_CAST(const MTShaderProgram*, desc.shaderProgram);
     if (!shaderProgramMT)
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
-    
+
+    /* Get render pass object */
+    const MTRenderPass* renderPassMT = nullptr;
+    if (auto renderPass = desc.renderPass)
+        renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
+    else if (defaultRenderPass != nullptr)
+        renderPassMT = defaultRenderPass;
+    else
+        throw std::invalid_argument("cannot create graphics pipeline without render pass");
+
     /* Create render pipeline state */
     MTLRenderPipelineDescriptor* renderPipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
     {
@@ -130,49 +145,35 @@ void MTGraphicsPipeline::CreateRenderPipelineState(id<MTLDevice> device, const G
         renderPipelineDesc.fragmentFunction         = shaderProgramMT->GetFragmentMTLFunction();
         renderPipelineDesc.vertexFunction           = shaderProgramMT->GetVertexMTLFunction();
         renderPipelineDesc.inputPrimitiveTopology   = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
-        
-        if (auto renderPass = desc.renderPass)
+
+        /* Initialize pixel formats from render pass */
+        const auto& colorAttachments = renderPassMT->GetColorAttachments();
+        for (std::size_t i = 0, n = std::min(colorAttachments.size(), std::size_t(8u)); i < n; ++i)
         {
-            /* Initialize pixel formats from render pass */
-            auto renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
-            const auto& colorAttachments = renderPassMT->GetColorAttachments();
-            for (std::size_t i = 0, n = std::min(colorAttachments.size(), std::size_t(8u)); i < n; ++i)
-            {
-                FillColorAttachmentDesc(
-                    renderPipelineDesc.colorAttachments[i],
-                    colorAttachments[i].pixelFormat,
-                    desc.blend,
-                    desc.blend.targets[desc.blend.independentBlendEnabled ? i : 0]
-                );
-            };
-            renderPipelineDesc.depthAttachmentPixelFormat       = renderPassMT->GetDepthAttachment().pixelFormat;
-            renderPipelineDesc.stencilAttachmentPixelFormat     = renderPassMT->GetStencilAttachment().pixelFormat;
-        }
-        else
-        {
-            /* Initialize with default formats */
             FillColorAttachmentDesc(
-                renderPipelineDesc.colorAttachments[0],
-                MTLPixelFormatBGRA8Unorm,
+                renderPipelineDesc.colorAttachments[i],
+                colorAttachments[i].pixelFormat,
                 desc.blend,
-                desc.blend.targets[0]
+                desc.blend.targets[desc.blend.independentBlendEnabled ? i : 0]
             );
-            renderPipelineDesc.depthAttachmentPixelFormat       = MTLPixelFormatDepth32Float_Stencil8;
-            renderPipelineDesc.stencilAttachmentPixelFormat     = MTLPixelFormatDepth32Float_Stencil8;
-        }
-        
-        renderPipelineDesc.rasterizationEnabled = (desc.rasterizer.discardEnabled ? NO : YES);
-        renderPipelineDesc.sampleCount          = desc.rasterizer.multiSampling.SampleCount();
+        };
+
+        renderPipelineDesc.depthAttachmentPixelFormat       = renderPassMT->GetDepthAttachment().pixelFormat;
+        renderPipelineDesc.stencilAttachmentPixelFormat     = renderPassMT->GetStencilAttachment().pixelFormat;
+        renderPipelineDesc.rasterizationEnabled             = (desc.rasterizer.discardEnabled ? NO : YES);
+        renderPipelineDesc.sampleCount                      = (desc.rasterizer.multiSampleEnabled ? renderPassMT->GetSampleCount() : 1u);
     }
     NSError* error = nullptr;
     renderPipelineState_ = [device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error];
     [renderPipelineDesc release];
-    
+
     if (!renderPipelineState_)
         MTThrowIfCreateFailed(error, "MTLRenderPipelineState");
 }
 
-void MTGraphicsPipeline::CreateDepthStencilState(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
+void MTGraphicsPipeline::CreateDepthStencilState(
+    id<MTLDevice>                       device,
+    const GraphicsPipelineDescriptor&   desc)
 {
     MTLDepthStencilDescriptor* depthStencilDesc = [[MTLDepthStencilDescriptor alloc] init];
     {
@@ -182,7 +183,7 @@ void MTGraphicsPipeline::CreateDepthStencilState(id<MTLDevice> device, const Gra
             depthStencilDesc.depthCompareFunction   = MTTypes::ToMTLCompareFunction(desc.depth.compareOp);
         else
             depthStencilDesc.depthCompareFunction   = MTLCompareFunctionAlways;
-        
+
         /* Convert stencil descriptor */
         if (desc.stencil.testEnabled)
         {

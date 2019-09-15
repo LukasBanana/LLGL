@@ -64,7 +64,7 @@ class Win32GLContext final : public GLContext
         static const UINT           maxPixelFormatsMS                   = 8;
 
         int                         pixelFormat_                        = 0;        // Standard pixel format.
-        int                         pixelFormatsMS_[maxPixelFormatsMS]  = { 0 };    // Multi-sampled pixel formats.
+        int                         pixelFormatsMS_[maxPixelFormatsMS]  = {};       // Multi-sampled pixel formats.
         UINT                        pixelFormatsMSCount_                = 0;
 
         HDC                         hDC_                                = 0;        // Device context handle.

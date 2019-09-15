@@ -178,26 +178,26 @@ public:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             // Set references to shader program, render pass, and pipeline layout
-            pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.shaderProgram                  = shaderProgram;
             #ifdef ENABLE_RENDER_PASS
-            pipelineDesc.renderPass                 = renderPass;
+            pipelineDesc.renderPass                     = renderPass;
             #else
-            pipelineDesc.renderPass                 = context->GetRenderPass();
+            pipelineDesc.renderPass                     = context->GetRenderPass();
             #endif
-            pipelineDesc.pipelineLayout             = pipelineLayout;
+            pipelineDesc.pipelineLayout                 = pipelineLayout;
 
             // Set input-assembler state (draw pachtes with 4 control points)
-            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::Patches4;
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::Patches4;
 
             // Enable multi-sample anti-aliasing
-            pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
 
             // Enable depth test and writing
-            pipelineDesc.depth.testEnabled          = true;
-            pipelineDesc.depth.writeEnabled         = true;
+            pipelineDesc.depth.testEnabled              = true;
+            pipelineDesc.depth.writeEnabled             = true;
 
             // Enable back-face culling
-            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
+            pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
         }
 
         // Create graphics pipelines

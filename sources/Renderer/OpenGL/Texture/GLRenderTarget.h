@@ -102,7 +102,7 @@ class GLRenderTarget final : public RenderTarget
 
         std::vector<GLenum>         colorAttachments_;
 
-        GLsizei                     multiSamples_       = 0;
+        GLsizei                     samples_            = 1;
         GLbitfield                  blitMask_           = 0;
 
         const RenderPass*           renderPass_         = nullptr;

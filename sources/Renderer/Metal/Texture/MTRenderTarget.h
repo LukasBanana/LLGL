@@ -37,36 +37,34 @@ class MTRenderTarget final : public RenderTarget
         bool HasStencilAttachment() const override;
 
         const RenderPass* GetRenderPass() const override;
-    
+
     public:
-    
+
         // Returns the native render pass descritpor (of type <MTLRenderPassDescriptor>).
         inline MTLRenderPassDescriptor* GetNative() const
         {
             return native_;
         }
-    
+
     private:
-    
+
         void CreateAttachment(
             id<MTLDevice>                       device,
             MTLRenderPassAttachmentDescriptor*  attachment,
             const AttachmentDescriptor&         desc,
             const MTAttachmentFormat&           fmt,
-            const MultiSamplingDescriptor&      multiSamplingDesc,
             std::uint32_t                       slot
         );
-    
+
         MTLTextureDescriptor* CreateTextureDesc(
             id<MTLDevice>   device,
             MTLPixelFormat  pixelFormat,
             NSUInteger      sampleCount = 1u
         );
-    
+
         id<MTLTexture> CreateRenderTargetTexture(
             id<MTLDevice>                   device,
             const AttachmentType            type,
-            const MultiSamplingDescriptor&  multiSamplingDesc,
             id<MTLTexture>                  resolveTexture      = nil
         );
 

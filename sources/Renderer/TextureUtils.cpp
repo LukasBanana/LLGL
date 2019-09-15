@@ -6,6 +6,8 @@
  */
 
 #include "TextureUtils.h"
+#include "StaticLimits.h"
+#include "../Core/Helper.h"
 
 
 namespace LLGL
@@ -54,6 +56,11 @@ LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc)
         NumMipLevels(textureDesc) > 1 &&
         (textureDesc.miscFlags & (MiscFlags::GenerateMips | MiscFlags::NoInitialData)) == MiscFlags::GenerateMips
     );
+}
+
+LLGL_EXPORT std::uint32_t GetClampedSamples(std::uint32_t samples)
+{
+    return Clamp(samples, 1u, LLGL_MAX_NUM_SAMPLES);
 }
 
 

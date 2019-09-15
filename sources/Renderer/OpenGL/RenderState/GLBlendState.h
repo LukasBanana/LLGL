@@ -73,6 +73,7 @@ class GLBlendState
 
         GLfloat             blendColor_[4]                                  = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool                sampleAlphaToCoverage_                          = false;
+        GLbitfield          sampleMask_                                     = ~0u;
         bool                logicOpEnabled_                                 = false;
         GLenum              logicOp_                                        = GL_COPY;
         GLuint              numDrawBuffers_                                 = 0;

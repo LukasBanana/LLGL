@@ -190,7 +190,7 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
             GLX_DEPTH_SIZE,     24,
             GLX_STENCIL_SIZE,   8,
             //GLX_SAMPLE_BUFFERS, 1,
-            //GLX_SAMPLES,        1,//static_cast<int>(desc_.multiSampling.samples),
+            //GLX_SAMPLES,        1,//static_cast<int>(desc_.samples),
             None
         };
 

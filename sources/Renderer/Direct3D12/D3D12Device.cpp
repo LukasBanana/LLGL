@@ -114,24 +114,37 @@ ComPtr<ID3D12QueryHeap> D3D12Device::CreateDXQueryHeap(const D3D12_QUERY_HEAP_DE
 
 /* ----- Data queries ----- */
 
-UINT D3D12Device::FindSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount)
+DXGI_SAMPLE_DESC D3D12Device::FindSuitableSampleDesc(DXGI_FORMAT format, UINT maxSampleCount) const
 {
     D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS feature;
     feature.Format              = format;
     feature.Flags               = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
     feature.NumQualityLevels    = 0;
 
-    for (; sampleCount > 1u; --sampleCount)
+    for (; maxSampleCount > 1u; --maxSampleCount)
     {
-        feature.SampleCount = sampleCount;
+        feature.SampleCount = maxSampleCount;
         if (device_->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &feature, sizeof(feature)) == S_OK)
         {
             if (feature.NumQualityLevels > 0)
-                return sampleCount;
+                return { feature.SampleCount, feature.NumQualityLevels - 1 };
         }
     }
 
-    return 1u;
+    return { 1u, 0u };
+}
+
+DXGI_SAMPLE_DESC D3D12Device::FindSuitableSampleDesc(std::size_t numFormats, const DXGI_FORMAT* formats, UINT maxSampleCount) const
+{
+    DXGI_SAMPLE_DESC sampleDesc = { maxSampleCount, 0 };
+
+    for (std::size_t i = 0; i < numFormats; ++i)
+    {
+        if (formats[i] != DXGI_FORMAT_UNKNOWN)
+            sampleDesc = FindSuitableSampleDesc(formats[i], sampleDesc.Count);
+    }
+
+    return sampleDesc;
 }
 
 

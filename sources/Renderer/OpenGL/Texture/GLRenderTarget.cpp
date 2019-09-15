@@ -69,9 +69,9 @@ static std::size_t CountColorAttachments(const std::vector<AttachmentDescriptor>
  */
 
 GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
-    resolution_   { desc.resolution                                        },
-    multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) },
-    renderPass_   { desc.renderPass                                        }
+    resolution_ { desc.resolution                    },
+    samples_    { static_cast<GLsizei>(desc.samples) },
+    renderPass_ { desc.renderPass                    }
 {
     framebuffer_.GenFramebuffer();
     if (desc.attachments.empty())
@@ -251,7 +251,7 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescri
             static_cast<GLint>(desc.resolution.width),
             static_cast<GLint>(desc.resolution.height),
             1,
-            static_cast<GLint>(multiSamples_),
+            static_cast<GLint>(samples_),
             0
         );
     }
@@ -267,7 +267,7 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescri
             GL_RED,
             static_cast<GLsizei>(desc.resolution.width),
             static_cast<GLsizei>(desc.resolution.height),
-            multiSamples_
+            samples_
         );
 
         /* Attach dummy renderbuffer to first color attachment slot */
@@ -402,7 +402,7 @@ void GLRenderTarget::InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenu
         internalFormat,
         static_cast<GLsizei>(GetResolution().width),
         static_cast<GLsizei>(GetResolution().height),
-        multiSamples_
+        samples_
     );
 }
 
@@ -477,7 +477,7 @@ GLenum GLRenderTarget::MakeFramebufferDepthStencilAttachment(bool depth, bool st
 
 bool GLRenderTarget::HasMultiSampling() const
 {
-    return (multiSamples_ > 1);
+    return (samples_ > 1);
 }
 
 bool GLRenderTarget::HasCustomMultiSampling() const

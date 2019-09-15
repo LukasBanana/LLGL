@@ -154,8 +154,8 @@ struct RenderTargetDescriptor
     */
     Extent2D                            resolution;
 
-    //! Multi-sampling descriptor. By default, multi-sampling is disabled.
-    MultiSamplingDescriptor             multiSampling;
+    //! Number of samples for the render targets. By default 1.
+    std::uint32_t                       samples             = 1;
 
     /**
     \brief Specifies whether custom multi-sampling is used or not. By default false.
@@ -163,6 +163,7 @@ struct RenderTargetDescriptor
     i.e. textures of the following types: Texture2DMS, Texture2DMSArray.
     If this is false, only non-multi-sampled textures can be attached to a render-target.
     This field will be ignored if multi-sampling is disabled.
+    \todo Remove this attribute and support custom resolve textures instead.
     */
     bool                                customMultiSampling = false;
 

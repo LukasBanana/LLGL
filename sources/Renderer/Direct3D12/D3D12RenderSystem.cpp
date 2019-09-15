@@ -114,6 +114,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
 
     if (initialData)
     {
+        /* Write initial data to GPU buffer */
         stagingBufferPool_.WriteImmediate(
             commandContext_,
             bufferD3D->GetResource(),
@@ -122,12 +123,10 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
             desc.size,
             bufferD3D->GetAlignment()
         );
+
+        /* Execute upload commands and wait for GPU to finish execution */
+        ExecuteCommandListAndSync();
     }
-
-    commandContext_.TransitionResource(bufferD3D->GetResource(), bufferD3D->GetResource().usageState, true);
-
-    /* Execute upload commands and wait for GPU to finish execution */
-    ExecuteCommandListAndSync();
 
     return bufferD3D;
 }
@@ -331,7 +330,7 @@ void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
 
 RenderPass* D3D12RenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
 {
-    return TakeOwnership(renderPasses_, MakeUnique<D3D12RenderPass>(desc));
+    return TakeOwnership(renderPasses_, MakeUnique<D3D12RenderPass>(device_, desc));
 }
 
 void D3D12RenderSystem::Release(RenderPass& renderPass)
@@ -396,7 +395,12 @@ GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipeli
 {
     return TakeOwnership(
         graphicsPipelines_,
-        MakeUnique<D3D12GraphicsPipeline>(device_, defaultPipelineLayout_.GetRootSignature(), desc)
+        MakeUnique<D3D12GraphicsPipeline>(
+            device_,
+            defaultPipelineLayout_.GetRootSignature(),
+            desc,
+            GetDefaultRenderPass()
+        )
     );
 }
 
@@ -629,6 +633,16 @@ void D3D12RenderSystem::ExecuteCommandList()
 void D3D12RenderSystem::ExecuteCommandListAndSync()
 {
     commandContext_.Finish(true);
+}
+
+const D3D12RenderPass* D3D12RenderSystem::GetDefaultRenderPass() const
+{
+    if (!renderContexts_.empty())
+    {
+        if (auto renderPass = (*renderContexts_.begin())->GetRenderPass())
+            return LLGL_CAST(const D3D12RenderPass*, renderPass);
+    }
+    return nullptr;
 }
 
 

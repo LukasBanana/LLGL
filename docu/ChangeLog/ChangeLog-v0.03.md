@@ -17,6 +17,7 @@
 - [`Format` information](#format-information)
 - [Direct resource binding](#direct-resource-binding)
 - [Vertex attribute description](#vertex-attribute-description)
+- [Multi-sampling descriptor](#multi-sampling-descriptor)
 - [Removed features](#removed-features)
 
 
@@ -579,6 +580,32 @@ myVertexShaderDesc.vertex.inputAttribs.insert(
     myInstanceFmt.attributes.begin(),
     myInstanceFmt.attributes.end()
 );
+```
+
+
+## Multi-sampling descriptor
+
+`MultiSamplingDescriptor` has been removed and only the number of samples is no specified.
+Additionally, the `sampleMask` member has been moved to `BlendDescriptor`.
+
+Before:
+```cpp
+// Interface:
+bool                          LLGL::MultiSamplingDescriptor::enabled;
+std::uint32_t                 LLGL::MultiSamplingDescriptor::samples;
+std::uint32_t                 LLGL::MultiSamplingDescriptor::sampleMask;
+LLGL::MultiSamplingDescriptor LLGL::RasterizerDescriptor::multiSampling;
+LLGL::MultiSamplingDescriptor LLGL::RenderTargetDescriptor::multiSampling;
+LLGL::MultiSamplingDescriptor LLGL::RenderContextDescriptor::multiSampling;
+```
+
+After:
+```cpp
+// Interface:
+std::uint32_t LLGL::RasterizerDescriptor::samples;
+std::uint32_t LLGL::RenderTargetDescriptor::samples;
+std::uint32_t LLGL::RenderContextDescriptor::samples;
+std::uint32_t LLGL::BlendDescriptor::sampleMask;
 ```
 
 

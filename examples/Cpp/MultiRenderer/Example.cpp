@@ -35,7 +35,7 @@ class MyRenderer
     LLGL::PipelineLayout*               layout          = nullptr;
     LLGL::GraphicsPipeline*             pipeline        = nullptr;
 
-    const LLGL::MultiSamplingDescriptor multiSampling;
+    const std::uint32_t                 samples;
     const LLGL::Viewport                viewport;
     const std::string                   rendererModule;
 
@@ -71,7 +71,7 @@ MyRenderer::MyRenderer(
     const LLGL::Viewport&   viewport)
 :
     viewport       { viewport       },
-    multiSampling  { 8u             },
+    samples        { 8u             },
     rendererModule { rendererModule }
 {
     // Load render system module
@@ -100,7 +100,7 @@ MyRenderer::MyRenderer(
     LLGL::RenderContextDescriptor contextDesc;
     {
         contextDesc.videoMode.resolution    = windowDesc.size;
-        contextDesc.multiSampling           = multiSampling;
+        contextDesc.samples                 = samples;
     }
     context = renderer->CreateRenderContext(contextDesc, subWindow);
 }
@@ -209,11 +209,11 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
     // Create graphics pipelines
     LLGL::GraphicsPipelineDescriptor pipelineDesc;
     {
-        pipelineDesc.shaderProgram              = shaderProgram;
-        pipelineDesc.pipelineLayout             = layout;
-        pipelineDesc.depth.testEnabled          = true;
-        pipelineDesc.depth.writeEnabled         = true;
-        pipelineDesc.rasterizer.multiSampling   = multiSampling;
+        pipelineDesc.shaderProgram                  = shaderProgram;
+        pipelineDesc.pipelineLayout                 = layout;
+        pipelineDesc.depth.testEnabled              = true;
+        pipelineDesc.depth.writeEnabled             = true;
+        pipelineDesc.rasterizer.multiSampleEnabled  = (samples > 1);
     }
     pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 

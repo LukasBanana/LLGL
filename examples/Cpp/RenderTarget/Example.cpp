@@ -176,17 +176,17 @@ private:
         // Create graphics pipeline for render context
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = shaderProgram;
-            pipelineDesc.renderPass                 = context->GetRenderPass();
-            pipelineDesc.pipelineLayout             = pipelineLayout;
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.renderPass                     = context->GetRenderPass();
+            pipelineDesc.pipelineLayout                 = pipelineLayout;
 
             // Enable depth test and writing
-            pipelineDesc.depth.testEnabled          = true;
-            pipelineDesc.depth.writeEnabled         = true;
+            pipelineDesc.depth.testEnabled              = true;
+            pipelineDesc.depth.writeEnabled             = true;
 
             // Enable culling of back-facing polygons
-            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-            pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+            pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipelines[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
@@ -196,9 +196,9 @@ private:
             pipelineDesc.viewports  = { LLGL::Viewport{ { 0, 0 }, renderTarget->GetResolution() } };
 
             #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.multiSampling = LLGL::MultiSamplingDescriptor{ 8 };
+            pipelineDesc.rasterizer.multiSampleEnabled = true;
             #else
-            pipelineDesc.rasterizer.multiSampling = LLGL::MultiSamplingDescriptor{ 0 };
+            pipelineDesc.rasterizer.multiSampleEnabled = false;
             #endif
 
             if (IsOpenGL())
@@ -239,7 +239,9 @@ private:
     {
         // Initialize multisampling
         #ifdef ENABLE_MULTISAMPLING
-        const LLGL::MultiSamplingDescriptor multiSamplingDesc{ 8 };
+        const std::uint32_t samples = 8;
+        #else
+        const std::uint32_t samples = 1;
         #endif
 
         // Create empty render-target texture
@@ -267,7 +269,7 @@ private:
             depthTexDesc.extent.width   = renderTargetSize.width;
             depthTexDesc.extent.height  = renderTargetSize.height;
             depthTexDesc.mipLevels      = 1;
-            depthTexDesc.samples        = multiSamplingDesc.SampleCount();
+            depthTexDesc.samples        = samples;
             depthTexDesc.type           = (depthTexDesc.samples > 1 ? LLGL::TextureType::Texture2DMS : LLGL::TextureType::Texture2D);
         }
         renderTargetDepthTex = renderer->CreateTexture(depthTexDesc);
@@ -280,7 +282,7 @@ private:
             renderTargetDesc.resolution = renderTargetSize;
 
             #ifdef ENABLE_MULTISAMPLING
-            renderTargetDesc.multiSampling          = multiSamplingDesc;
+            renderTargetDesc.samples                = samples;
             #   ifdef ENABLE_CUSTOM_MULTISAMPLING
             renderTargetDesc.customMultiSampling    = true;
             #   endif

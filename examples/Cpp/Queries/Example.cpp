@@ -93,7 +93,7 @@ public:
             pipelineDesc.depth.testEnabled              = true;
             pipelineDesc.depth.writeEnabled             = true;
 
-            pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
 
             pipelineDesc.blend.targets[0].colorMask     = LLGL::ColorRGBAb{ false };

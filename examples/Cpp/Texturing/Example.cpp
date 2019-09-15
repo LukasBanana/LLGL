@@ -102,10 +102,10 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = shaderProgram;
-            pipelineDesc.pipelineLayout             = pipelineLayout;
-            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.pipelineLayout                 = pipelineLayout;
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }

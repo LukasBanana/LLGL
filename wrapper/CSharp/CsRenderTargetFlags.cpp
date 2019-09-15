@@ -65,7 +65,7 @@ RenderTargetDescriptor::RenderTargetDescriptor()
 {
     RenderPass          = nullptr;
     Resolution          = gcnew Extent2D();
-    MultiSampling       = gcnew MultiSamplingDescriptor();
+    Samples             = 1;
     CustomMultiSampling = false;
     Attachments         = gcnew List<AttachmentDescriptor^>();
 }

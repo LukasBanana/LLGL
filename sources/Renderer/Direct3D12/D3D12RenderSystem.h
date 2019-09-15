@@ -223,6 +223,8 @@ class D3D12RenderSystem final : public RenderSystem
 
         std::unique_ptr<D3D12Buffer> CreateGpuBuffer(const BufferDescriptor& desc, const void* initialData);
 
+        const D3D12RenderPass* GetDefaultRenderPass() const;
+
     private:
 
         /* ----- Common objects ----- */

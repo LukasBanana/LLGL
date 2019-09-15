@@ -10,7 +10,7 @@
 
 
 // Increment this number when the interface of LLGL changes in any way
-#define LLGL_BUILD_VERSION 5
+#define LLGL_BUILD_VERSION 6
 
 #ifdef LLGL_DEBUG
 #   if defined(_MSC_VER)

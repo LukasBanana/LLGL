@@ -178,13 +178,13 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram              = shaderProgramScene;
-                pipelineDesc.renderPass                 = context->GetRenderPass();
-                pipelineDesc.pipelineLayout             = pipelineLayout;
-                pipelineDesc.depth.testEnabled          = true;
-                pipelineDesc.depth.writeEnabled         = true;
-                pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+                pipelineDesc.shaderProgram                  = shaderProgramScene;
+                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.pipelineLayout                 = pipelineLayout;
+                pipelineDesc.depth.testEnabled              = true;
+                pipelineDesc.depth.writeEnabled             = true;
+                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+                pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
             pipelineScene = renderer->CreateGraphicsPipeline(pipelineDesc);
         }
@@ -193,20 +193,20 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram              = shaderProgramStencil;
-                pipelineDesc.renderPass                 = context->GetRenderPass();
-                pipelineDesc.pipelineLayout             = pipelineLayout;
-                pipelineDesc.depth.testEnabled          = true;                             // read all depth bits
-                pipelineDesc.depth.writeEnabled         = false;                            // write no depth bits
-                pipelineDesc.stencil.testEnabled        = true;                             // enable stencil test, even though we only write the stencil bits
-                pipelineDesc.stencil.front.depthPassOp  = LLGL::StencilOp::Replace;
-                pipelineDesc.stencil.front.compareOp    = LLGL::CompareOp::AlwaysPass;
-                pipelineDesc.stencil.front.reference    = 1;
-                pipelineDesc.stencil.front.readMask     = 0u;                               // read no stencil bits
-                pipelineDesc.stencil.front.writeMask    = ~0u;                              // write all stencil bits
-                pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
-                pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };   // write no color bits
+                pipelineDesc.shaderProgram                  = shaderProgramStencil;
+                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.pipelineLayout                 = pipelineLayout;
+                pipelineDesc.depth.testEnabled              = true;                             // read all depth bits
+                pipelineDesc.depth.writeEnabled             = false;                            // write no depth bits
+                pipelineDesc.stencil.testEnabled            = true;                             // enable stencil test, even though we only write the stencil bits
+                pipelineDesc.stencil.front.depthPassOp      = LLGL::StencilOp::Replace;
+                pipelineDesc.stencil.front.compareOp        = LLGL::CompareOp::AlwaysPass;
+                pipelineDesc.stencil.front.reference        = 1;
+                pipelineDesc.stencil.front.readMask         = 0u;                               // read no stencil bits
+                pipelineDesc.stencil.front.writeMask        = ~0u;                              // write all stencil bits
+                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+                pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
+                pipelineDesc.blend.targets[0].colorMask     = { false, false, false, false };   // write no color bits
             }
             pipelineStencilWrite = renderer->CreateGraphicsPipeline(pipelineDesc);
         }
@@ -215,18 +215,18 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram              = shaderProgramScene;
-                pipelineDesc.renderPass                 = context->GetRenderPass();
-                pipelineDesc.pipelineLayout             = pipelineLayout;
-                pipelineDesc.depth.testEnabled          = true;
-                pipelineDesc.depth.writeEnabled         = true;                             // write all depth bits
-                pipelineDesc.stencil.testEnabled        = true;
-                pipelineDesc.stencil.front.compareOp    = LLGL::CompareOp::Equal;
-                pipelineDesc.stencil.front.reference    = 0;
-                pipelineDesc.stencil.front.readMask     = ~0u;                              // read all stencil bits
-                pipelineDesc.stencil.front.writeMask    = 0u;                               // write no stencil bits
-                pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+                pipelineDesc.shaderProgram                  = shaderProgramScene;
+                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.pipelineLayout                 = pipelineLayout;
+                pipelineDesc.depth.testEnabled              = true;
+                pipelineDesc.depth.writeEnabled             = true;                             // write all depth bits
+                pipelineDesc.stencil.testEnabled            = true;
+                pipelineDesc.stencil.front.compareOp        = LLGL::CompareOp::Equal;
+                pipelineDesc.stencil.front.reference        = 0;
+                pipelineDesc.stencil.front.readMask         = ~0u;                              // read all stencil bits
+                pipelineDesc.stencil.front.writeMask        = 0u;                               // write no stencil bits
+                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+                pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
             pipelineStencilRead0 = renderer->CreateGraphicsPipeline(pipelineDesc);
 

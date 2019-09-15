@@ -36,10 +36,7 @@ int main()
 
         contextDesc.videoMode.resolution        = { 800, 600 };
         //contextDesc.videoMode.fullscreen        = true;
-
-        contextDesc.multiSampling.enabled       = true;
-        contextDesc.multiSampling.samples       = 8;
-
+        contextDesc.samples                     = 8;
         contextDesc.vsync.enabled               = true;
 
         /*contextDesc.profileOpenGL.extProfile    = true;
@@ -305,12 +302,12 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = &shaderProgram;
-            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleFan;
+            pipelineDesc.shaderProgram                  = &shaderProgram;
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleFan;
 
-            pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
 
-            pipelineDesc.blend.targets[0].dstColor  = LLGL::BlendOp::Zero;
+            pipelineDesc.blend.targets[0].dstColor      = LLGL::BlendOp::Zero;
         }
         auto& pipeline = *renderer->CreateGraphicsPipeline(pipelineDesc);
 

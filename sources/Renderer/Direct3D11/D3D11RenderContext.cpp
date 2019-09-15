@@ -23,17 +23,17 @@ D3D11RenderContext::D3D11RenderContext(
     const ComPtr<ID3D11Device>& device,
     const ComPtr<ID3D11DeviceContext>& context,
     const RenderContextDescriptor& desc,
-    const std::shared_ptr<Surface>& surface) :
-        RenderContext     { desc.videoMode, desc.vsync       },
-        device_           { device                           },
-        context_          { context                          },
-        swapChainSamples_ { desc.multiSampling.SampleCount() }
+    const std::shared_ptr<Surface>& surface)
+:
+    RenderContext { desc.videoMode, desc.vsync },
+    device_       { device                     },
+    context_      { context                    }
 {
     /* Setup surface for the render context */
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
 
     /* Create D3D objects */
-    CreateSwapChain(factory);
+    CreateSwapChain(factory, desc.samples);
     CreateBackBuffer(GetVideoMode());
 
     /* Initialize v-sync */
@@ -116,21 +116,7 @@ bool D3D11RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
  * ======= Private: =======
  */
 
-static UINT FintSuitableMultisamples(ID3D11Device* device, DXGI_FORMAT format, UINT sampleCount)
-{
-    for (; sampleCount > 1; --sampleCount)
-    {
-        UINT numLevels = 0;
-        if (device->CheckMultisampleQualityLevels(format, sampleCount, &numLevels) == S_OK)
-        {
-            if (numLevels > 0)
-                return sampleCount;
-        }
-    }
-    return 1;
-}
-
-void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
+void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, UINT samples)
 {
     /* Get current settings */
     const auto& videoMode = GetVideoMode();
@@ -140,18 +126,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
     colorFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM
 
     /* Find suitable multi-samples for color format */
-    auto sampleCount = FintSuitableMultisamples(device_.Get(), colorFormat_, swapChainSamples_);
-    if (swapChainSamples_ != sampleCount)
-    {
-        Log::PostReport(
-            Log::ReportType::Information,
-            (
-                "reduced multi-samples for anti-aliasing from " +
-                std::to_string(swapChainSamples_) + " to " + std::to_string(sampleCount)
-            )
-        );
-        swapChainSamples_ = sampleCount;
-    }
+    swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, samples);
 
     /* Create swap chain for window handle */
     NativeHandle wndHandle;
@@ -165,8 +140,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
         swapChainDesc.BufferDesc.Format                     = colorFormat_;
         swapChainDesc.BufferDesc.RefreshRate.Numerator      = vsync.refreshRate;
         swapChainDesc.BufferDesc.RefreshRate.Denominator    = vsync.interval;
-        swapChainDesc.SampleDesc.Count                      = swapChainSamples_;
-        swapChainDesc.SampleDesc.Quality                    = 0;
+        swapChainDesc.SampleDesc                            = swapChainSampleDesc_;
         swapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount                           = (videoMode.swapChainSize == 3 ? 2 : 1);
         swapChainDesc.OutputWindow                          = wndHandle.window;
@@ -199,17 +173,16 @@ void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDe
         /* Create depth stencil texture */
         D3D11_TEXTURE2D_DESC texDesc;
         {
-            texDesc.Width               = videoModeDesc.resolution.width;
-            texDesc.Height              = videoModeDesc.resolution.height;
-            texDesc.MipLevels           = 1;
-            texDesc.ArraySize           = 1;
-            texDesc.Format              = depthStencilFormat_;
-            texDesc.SampleDesc.Count    = swapChainSamples_;
-            texDesc.SampleDesc.Quality  = 0;
-            texDesc.Usage               = D3D11_USAGE_DEFAULT;
-            texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
-            texDesc.CPUAccessFlags      = 0;
-            texDesc.MiscFlags           = 0;
+            texDesc.Width           = videoModeDesc.resolution.width;
+            texDesc.Height          = videoModeDesc.resolution.height;
+            texDesc.MipLevels       = 1;
+            texDesc.ArraySize       = 1;
+            texDesc.Format          = depthStencilFormat_;
+            texDesc.SampleDesc      = swapChainSampleDesc_;
+            texDesc.Usage           = D3D11_USAGE_DEFAULT;
+            texDesc.BindFlags       = D3D11_BIND_DEPTH_STENCIL;
+            texDesc.CPUAccessFlags  = 0;
+            texDesc.MiscFlags       = 0;
         }
         hr = device_->CreateTexture2D(&texDesc, nullptr, backBuffer_.depthStencil.ReleaseAndGetAddressOf());
         DXThrowIfFailed(hr, "failed to create D3D11 depth-texture for swap-chain");

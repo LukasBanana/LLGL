@@ -32,7 +32,8 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
 {
     Convert(blendColor_, desc.blendFactor);
 
-    sampleAlphaToCoverage_ = desc.alphaToCoverageEnabled;
+    sampleAlphaToCoverage_  = desc.alphaToCoverageEnabled;
+    sampleMask_             = desc.sampleMask;
 
     if (desc.logicOp != LogicOp::Disabled)
     {
@@ -51,6 +52,11 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
         for (std::uint32_t i = 0; i < numColorAttachments; ++i)
             GLDrawBufferState::Convert(drawBuffers_[i], desc.targets[i]);
     }
+
+    #if 0//TODO
+    if (multiSampleEnabled_)
+        stateMngr.SetSampleMask(sampleMask_);
+    #endif
 }
 
 void GLBlendState::Bind(GLStateManager& stateMngr)
@@ -92,6 +98,7 @@ int GLBlendState::CompareSWO(const GLBlendState& rhs) const
     LLGL_COMPARE_MEMBER_SWO     ( blendColor_[2]         );
     LLGL_COMPARE_MEMBER_SWO     ( blendColor_[3]         );
     LLGL_COMPARE_MEMBER_SWO     ( sampleAlphaToCoverage_ );
+    //LLGL_COMPARE_MEMBER_SWO     ( sampleMask_            );
     LLGL_COMPARE_BOOL_MEMBER_SWO( logicOpEnabled_        );
     LLGL_COMPARE_MEMBER_SWO     ( logicOp_               );
     LLGL_COMPARE_MEMBER_SWO     ( numDrawBuffers_        );

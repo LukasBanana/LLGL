@@ -8,6 +8,7 @@
 #include "../../GLRenderContext.h"
 #include "../../Ext/GLExtensions.h"
 #include "../../Ext/GLExtensionLoader.h"
+#include "../../../TextureUtils.h"
 #include "../../../../Platform/Linux/LinuxWindow.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
@@ -23,9 +24,9 @@ namespace LLGL
  */
 
 void GLRenderContext::GetNativeContextHandle(
-    NativeContextHandle&            windowContext,
-    const VideoModeDescriptor&      videoModeDesc,
-    const MultiSamplingDescriptor&  multiSamplingDesc)
+    NativeContextHandle&        windowContext,
+    const VideoModeDescriptor&  videoModeDesc,
+    std::uint32_t               samples)
 {
     /* Open X11 display */
     windowContext.display = XOpenDisplay(nullptr);
@@ -37,7 +38,7 @@ void GLRenderContext::GetNativeContextHandle(
 
     GLXFBConfig fbc = 0;
 
-    if (multiSamplingDesc.enabled)
+    if (samples > 1)
     {
         /* Create FB configuration for multi-sampling */
         const int fbAttribs[] =
@@ -54,7 +55,7 @@ void GLRenderContext::GetNativeContextHandle(
             GLX_DEPTH_SIZE,     videoModeDesc.depthBits,
             GLX_STENCIL_SIZE,   videoModeDesc.stencilBits,
             GLX_SAMPLE_BUFFERS, 1,
-            GLX_SAMPLES,        static_cast<int>(multiSamplingDesc.samples),
+            GLX_SAMPLES,        static_cast<int>(GetClampedSamples(samples)),
             None
         };
 
@@ -79,7 +80,7 @@ void GLRenderContext::GetNativeContextHandle(
     }
     else
     {
-        if (multiSamplingDesc.enabled)
+        if (samples > 1)
             Log::PostReport(Log::ReportType::Error, "failed to choose XVisualInfo for multi-sampling");
 
         /* Choose standard XVisualInfo structure */

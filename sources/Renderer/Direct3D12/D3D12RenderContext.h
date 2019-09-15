@@ -73,10 +73,11 @@ class D3D12RenderContext final : public RenderContext
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
+        void QueryDeviceParameters(const D3D12Device& device, std::uint32_t samples);
+
         void CreateWindowSizeDependentResources(const VideoModeDescriptor& videoModeDesc);
         void CreateColorBufferRTVs(const VideoModeDescriptor& videoModeDesc);
         void CreateDepthStencil(const VideoModeDescriptor& videoModeDesc);
-        void CreateDeviceResources();
 
         void MoveToNextFrame();
 
@@ -90,7 +91,7 @@ class D3D12RenderContext final : public RenderContext
 
         ComPtr<IDXGISwapChain3>         swapChain_;
         UINT                            swapChainInterval_                      = 0;
-        UINT                            swapChainSamples_                       = 1;
+        DXGI_SAMPLE_DESC                swapChainSampleDesc_                    = { 1, 0 };
 
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
         UINT                            rtvDescSize_                            = 0;

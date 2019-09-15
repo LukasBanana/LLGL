@@ -40,7 +40,7 @@ class VKRenderPass final : public RenderPass
             std::uint32_t                   numAttachments,
             std::uint32_t                   numColorAttachments,
             const VkAttachmentDescription*  attachmentDescs,
-            bool                            multiSamplingEnabled
+            VkSampleCountFlagBits           sampleCountBits
         );
 
         // Returns the Vulkan render pass object.
@@ -76,14 +76,21 @@ class VKRenderPass final : public RenderPass
             return numColorAttachments_;
         }
 
+        // Returns the sample count flag bits for this render pass.
+        inline VkSampleCountFlagBits GetSampleCountBits() const
+        {
+            return sampleCountBits_;
+        }
+
     private:
 
-        VKPtr<VkRenderPass> renderPass_;
+        VKPtr<VkRenderPass>     renderPass_;
 
-        std::uint64_t       clearValuesMask_        = 0;
-        std::uint8_t        depthStencilIndex_      = 0xFFu;
-        std::uint8_t        numClearValues_         = 0;
-        std::uint8_t        numColorAttachments_    = 0;
+        std::uint64_t           clearValuesMask_        = 0;
+        std::uint8_t            depthStencilIndex_      = 0xFFu;
+        std::uint8_t            numClearValues_         = 0;
+        std::uint8_t            numColorAttachments_    = 0;
+        VkSampleCountFlagBits   sampleCountBits_        = VK_SAMPLE_COUNT_1_BIT;
 
 };
 

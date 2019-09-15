@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
         {
             contextDesc.videoMode.resolution    = { 640, 480 };
             contextDesc.vsync.enabled           = true;
-            contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor(8);
+            contextDesc.samples                 = 8;
         }
         auto context1 = renderer->CreateRenderContext(contextDesc);
         auto context2 = renderer->CreateRenderContext(contextDesc);
@@ -182,15 +182,15 @@ int main(int argc, char* argv[])
 
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = shaderProgram;
-            pipelineDesc.renderPass                 = context1->GetRenderPass();
-            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.renderPass                     = context1->GetRenderPass();
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
         }
         pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         {
-            pipelineDesc.renderPass                 = context2->GetRenderPass();
+            pipelineDesc.renderPass                     = context2->GetRenderPass();
 
             // Only enable logic operations if it's supported, otherwise an exception is thrown
             if (logicOpSupported)

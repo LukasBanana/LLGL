@@ -117,37 +117,6 @@ Scissor::Scissor(Offset2D^ offset, Extent2D^ extent)
 
 
 /*
- * MultiSamplingDescriptor class
- */
-
-MultiSamplingDescriptor::MultiSamplingDescriptor()
-{
-    Enabled     = false;
-    Samples     = 1;
-    SampleMask  = ~0;
-}
-
-MultiSamplingDescriptor::MultiSamplingDescriptor(unsigned int samples)
-{
-    Enabled     = (samples > 1);
-    Samples     = samples;
-    SampleMask  = ~0;
-}
-
-MultiSamplingDescriptor::MultiSamplingDescriptor(unsigned int samples, unsigned int sampleMask)
-{
-    Enabled     = (samples > 1);
-    Samples     = samples;
-    SampleMask  = sampleMask;
-}
-
-unsigned int MultiSamplingDescriptor::SampleCount::get()
-{
-    return (Enabled && Samples > 1 ? Samples : 1);
-}
-
-
-/*
  * DepthDescriptor class
  */
 
@@ -208,11 +177,11 @@ RasterizerDescriptor::RasterizerDescriptor()
     PolygonMode                 = SharpLLGL::PolygonMode::Fill;
     CullMode                    = SharpLLGL::CullMode::Disabled;
     DepthBias                   = gcnew DepthBiasDescriptor();
-    MultiSampling               = gcnew MultiSamplingDescriptor();
     DiscardEnabled              = false;
     FrontCCW                    = false;
     DepthClampEnabled           = false;
     ScissorTestEnabled          = false;
+    MultiSampleEnabled          = false;
     AntiAliasedLineEnabled      = false;
     ConservativeRasterization   = false;
     LineWidth                   = 1.0f;

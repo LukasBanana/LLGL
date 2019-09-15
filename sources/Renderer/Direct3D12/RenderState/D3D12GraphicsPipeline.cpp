@@ -33,7 +33,8 @@ namespace LLGL
 D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     D3D12Device&                        device,
     ID3D12RootSignature*                defaultRootSignature,
-    const GraphicsPipelineDescriptor&   desc)
+    const GraphicsPipelineDescriptor&   desc,
+    const D3D12RenderPass*              defaultRenderPass)
 {
     /* Validate pointers and get D3D shader program */
     LLGL_ASSERT_PTR(desc.shaderProgram);
@@ -53,8 +54,8 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     const D3D12RenderPass* renderPass = nullptr;
     if (desc.renderPass != nullptr)
         renderPass = LLGL_CAST(const D3D12RenderPass*, desc.renderPass);
-    /*else
-        renderPass = defaultRenderPass*/;
+    else
+        renderPass = defaultRenderPass;
 
     /* Create native graphics PSO */
     CreatePipelineState(device, *shaderProgramD3D, rootSignature, renderPass, desc);
@@ -290,7 +291,7 @@ static void Convert(D3D12_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
     dst.DepthBiasClamp          = src.depthBias.clamp;
     dst.SlopeScaledDepthBias    = src.depthBias.slopeFactor;
     dst.DepthClipEnable         = DXBoolean(!src.depthClampEnabled);
-    dst.MultisampleEnable       = DXBoolean(src.multiSampling.enabled);
+    dst.MultisampleEnable       = DXBoolean(src.multiSampleEnabled);
     dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
     dst.ForcedSampleCount       = 0; // no forced sample count
     dst.ConservativeRaster      = GetConservativeRaster(src.conservativeRasterization);
@@ -373,9 +374,10 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.StreamOutput          = shaderProgram.GetStreamOutputDesc();
     stateDesc.IBStripCutValue       = (IsPrimitiveTopologyStrip(desc.primitiveTopology) ? D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
-    stateDesc.SampleMask            = desc.rasterizer.multiSampling.sampleMask;
+    stateDesc.SampleMask            = desc.blend.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;
-    stateDesc.SampleDesc.Count      = device.FindSuitableMultisamples(stateDesc.RTVFormats[0], desc.rasterizer.multiSampling.SampleCount());
+    stateDesc.SampleDesc.Count      = (renderPass != nullptr ? renderPass->GetSampleDesc().Count : 1);
+    stateDesc.SampleDesc.Quality    = 0;
 
     /* Create graphics pipeline state and graphics command list */
     pipelineState_ = device.CreateDXGraphicsPipelineState(stateDesc);

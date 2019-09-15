@@ -60,7 +60,7 @@ D3D11GraphicsPipelineBase::D3D11GraphicsPipelineBase(const GraphicsPipelineDescr
     blendFactor_[1]     = desc.blend.blendFactor.g;
     blendFactor_[2]     = desc.blend.blendFactor.b;
     blendFactor_[3]     = desc.blend.blendFactor.a;
-    sampleMask_         = desc.rasterizer.multiSampling.sampleMask;
+    sampleMask_         = desc.blend.sampleMask;
 
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())

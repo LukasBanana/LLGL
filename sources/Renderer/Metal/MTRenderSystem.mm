@@ -244,7 +244,7 @@ void MTRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 GraphicsPipeline* MTRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<MTGraphicsPipeline>(device_, desc));
+    return TakeOwnership(graphicsPipelines_, MakeUnique<MTGraphicsPipeline>(device_, desc, GetDefaultRenderPass()));
 }
 
 ComputePipeline* MTRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -367,6 +367,16 @@ MTLFeatureSet MTRenderSystem::QueryHighestFeatureSet() const
     }
 
     return MTLFeatureSet_macOS_GPUFamily1_v1;
+}
+
+const MTRenderPass* MTRenderSystem::GetDefaultRenderPass() const
+{
+    if (!renderContexts_.empty())
+    {
+        if (auto renderPass = (*renderContexts_.begin())->GetRenderPass())
+            return LLGL_CAST(const MTRenderPass*, renderPass);
+    }
+    return nullptr;
 }
 
 

@@ -77,9 +77,9 @@ public ref class RenderContextDescriptor
 
         RenderContextDescriptor();
 
-        VsyncDescriptor^            Vsync;
-        MultiSamplingDescriptor^    MultiSampling;
-        VideoModeDescriptor^        VideoMode;
+        property VsyncDescriptor^       Vsync;
+        property unsigned int           Samples;
+        property VideoModeDescriptor^   VideoMode;
 
 };
 

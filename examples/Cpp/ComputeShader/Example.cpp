@@ -89,14 +89,14 @@ public:
             std::uint8_t    r, g, b, a;
         };
 
-        vertexFormat[0].AppendAttribute({ "coord", LLGL::Format::RG32Float  });
-        vertexFormat[0].AppendAttribute({ "color", LLGL::Format::RGBA8UNorm });
+        vertexFormat[0].AppendAttribute({ "coord", LLGL::Format::RG32Float,  0 });
+        vertexFormat[0].AppendAttribute({ "color", LLGL::Format::RGBA8UNorm, 1 });
         vertexFormat[0].SetStride(sizeof(Vertex));
         vertexFormat[0].SetSlot(0);
 
-        vertexFormat[1].AppendAttribute({ "rotation", 0, LLGL::Format::RG32Float, 1 });
-        vertexFormat[1].AppendAttribute({ "rotation", 1, LLGL::Format::RG32Float, 1 });
-        vertexFormat[1].AppendAttribute({ "position",    LLGL::Format::RG32Float, 1 });
+        vertexFormat[1].AppendAttribute({ "rotation", 0, LLGL::Format::RG32Float, 2, 1 });
+        vertexFormat[1].AppendAttribute({ "rotation", 1, LLGL::Format::RG32Float, 3, 1 });
+        vertexFormat[1].AppendAttribute({ "position",    LLGL::Format::RG32Float, 4, 1 });
         vertexFormat[1].SetStride(sizeof(SceneObject));
         vertexFormat[1].SetSlot(1);
 
@@ -275,9 +275,9 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = graphicsShader;
-            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+            pipelineDesc.shaderProgram                  = graphicsShader;
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         graphicsPipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }

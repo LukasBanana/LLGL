@@ -33,17 +33,17 @@ public:
     {
         // Specify vertex formats
         LLGL::VertexFormat vertexFormatPositions;
-        vertexFormatPositions.AppendAttribute({ "position", LLGL::Format::RG32Float });
+        vertexFormatPositions.AppendAttribute({ "position", LLGL::Format::RG32Float, 0 });
         vertexFormatPositions.SetSlot(0);
 
         LLGL::VertexFormat vertexFormatColors;
-        vertexFormatColors.AppendAttribute({ "color", LLGL::Format::RGB32Float });
+        vertexFormatColors.AppendAttribute({ "color", LLGL::Format::RGB32Float, 1 });
         vertexFormatColors.SetSlot(1);
 
         LLGL::VertexFormat vertexFormatInstanceData;
-        vertexFormatInstanceData.AppendAttribute({ "instanceColor",  LLGL::Format::RGB32Float, 1 });
-        vertexFormatInstanceData.AppendAttribute({ "instanceOffset", LLGL::Format::RG32Float,  1 });
-        vertexFormatInstanceData.AppendAttribute({ "instanceScale",  LLGL::Format::R32Float,   1 });
+        vertexFormatInstanceData.AppendAttribute({ "instanceColor",  LLGL::Format::RGB32Float, 2, 1 });
+        vertexFormatInstanceData.AppendAttribute({ "instanceOffset", LLGL::Format::RG32Float,  3, 1 });
+        vertexFormatInstanceData.AppendAttribute({ "instanceScale",  LLGL::Format::R32Float,   4, 1 });
         vertexFormatInstanceData.SetSlot(2);
 
         // Initialize buffer data
@@ -107,8 +107,8 @@ public:
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = shaderProgram;
-            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
@@ -129,7 +129,7 @@ private:
                 commands->Clear(LLGL::ClearFlags::Color);
 
                 // Set viewports
-                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
+                commands->SetViewport(context->GetVideoMode().resolution);
 
                 // Set graphics pipeline state
                 commands->SetGraphicsPipeline(*pipeline);

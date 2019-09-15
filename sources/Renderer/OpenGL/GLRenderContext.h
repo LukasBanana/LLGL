@@ -78,9 +78,9 @@ class GLRenderContext final : public RenderContext
 
         #ifdef __linux__
         void GetNativeContextHandle(
-            NativeContextHandle&            windowContext,
-            const VideoModeDescriptor&      videoModeDesc,
-            const MultiSamplingDescriptor&  multiSamplingDesc
+            NativeContextHandle&        windowContext,
+            const VideoModeDescriptor&  videoModeDesc,
+            std::uint32_t               samples
         );
         #endif
 

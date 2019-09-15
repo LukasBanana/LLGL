@@ -65,6 +65,10 @@ glslangValidator -V -S vert -o StreamOutput/Example.450core.vert.spv StreamOutpu
 glslangValidator -V -S geom -o StreamOutput/Example.450core.geom.spv StreamOutput/Example.450core.geom
 glslangValidator -V -S frag -o StreamOutput/Example.450core.frag.spv StreamOutput/Example.450core.frag
 
+echo ####### Animation #######
+glslangValidator -V -S vert -o Animation/Example.450core.vert.spv Animation/Example.450core.vert
+glslangValidator -V -S frag -o Animation/Example.450core.frag.spv Animation/Example.450core.frag
+
 echo ####### VolumeRendering #######
 glslangValidator -V -S vert -o VolumeRendering/Example.450core.vert.spv VolumeRendering/Example.450core.vert
 glslangValidator -V -S frag -o VolumeRendering/Example.450core.frag.spv VolumeRendering/Example.450core.frag

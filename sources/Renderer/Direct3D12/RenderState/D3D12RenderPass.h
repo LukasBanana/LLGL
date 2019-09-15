@@ -21,29 +21,41 @@ namespace LLGL
 {
 
 
+class D3D12Device;
+
 class D3D12RenderPass final : public RenderPass
 {
 
     public:
 
         D3D12RenderPass() = default;
-        D3D12RenderPass(const RenderPassDescriptor& desc);
+
+        // Constructs the render pass with the specified descriptor and uses the device to find a suitable sample descriptor (i.e DXGI_SAMPLE_DESC).
+        D3D12RenderPass(
+            const D3D12Device& device,
+            const RenderPassDescriptor& desc
+        );
 
         // Builds the color and depth-stencil attachments index and format buffers with the specified render pass descriptor.
-        void BuildAttachments(const RenderPassDescriptor& desc);
+        void BuildAttachments(
+            const D3D12Device&          device,
+            const RenderPassDescriptor& desc
+        );
 
         // Builds the color and depth-stencil attachments index and format buffers with the specified render target attachment descriptor.
         void BuildAttachments(
             UINT                        numAttachmentDescs,
             const AttachmentDescriptor* attachmentDescs,
-            const DXGI_FORMAT           defaultDepthStencilFormat
+            const DXGI_FORMAT           defaultDepthStencilFormat,
+            const DXGI_SAMPLE_DESC&     sampleDesc
         );
 
         // Builds the attachments with the explicit DXGI_FORMAT entries for color and depth-stencil.
         void BuildAttachments(
-            UINT                numColorFormats,
-            const DXGI_FORMAT*  colorFormats,
-            const DXGI_FORMAT   depthStencilFormat
+            UINT                    numColorFormats,
+            const DXGI_FORMAT*      colorFormats,
+            const DXGI_FORMAT       depthStencilFormat,
+            const DXGI_SAMPLE_DESC& sampleDesc
         );
 
         // Returns the number of color attachments used for this render pass.
@@ -76,6 +88,12 @@ class D3D12RenderPass final : public RenderPass
             return dsvFormat_;
         }
 
+        // Returns the native sample descriptor.
+        inline const DXGI_SAMPLE_DESC& GetSampleDesc() const
+        {
+            return sampleDesc_;
+        }
+
     private:
 
         void SetDSVFormat(DXGI_FORMAT format);
@@ -83,13 +101,15 @@ class D3D12RenderPass final : public RenderPass
 
     private:
 
-        UINT            numColorAttachments_                                    = 0;
+        UINT                numColorAttachments_                                    = 0;
 
-        UINT            clearFlagsDSV_                                          = 0;
-        std::uint8_t    clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
+        UINT                clearFlagsDSV_                                          = 0;
+        std::uint8_t        clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
 
-        DXGI_FORMAT     rtvFormats_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]             = {};
-        DXGI_FORMAT     dsvFormat_                                              = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT         rtvFormats_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]             = {};
+        DXGI_FORMAT         dsvFormat_                                              = DXGI_FORMAT_UNKNOWN;
+
+        DXGI_SAMPLE_DESC    sampleDesc_                                             = { 1, 0 };
 
 };
 

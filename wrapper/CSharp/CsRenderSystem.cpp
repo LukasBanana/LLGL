@@ -264,16 +264,6 @@ static void Convert(LLGL::VsyncDescriptor& dst, VsyncDescriptor^ src)
     }
 }
 
-static void Convert(LLGL::MultiSamplingDescriptor& dst, MultiSamplingDescriptor^ src)
-{
-    if (src)
-    {
-        dst.enabled     = src->Enabled;
-        dst.samples     = src->Samples;
-        dst.sampleMask  = src->SampleMask;
-    }
-}
-
 static void Convert(LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
 {
     if (src)
@@ -303,7 +293,7 @@ static void Convert(LLGL::RenderContextDescriptor& dst, RenderContextDescriptor^
     if (src)
     {
         Convert(dst.vsync, src->Vsync);
-        Convert(dst.multiSampling, src->MultiSampling);
+        dst.samples = src->Samples;
         Convert(dst.videoMode, src->VideoMode);
     }
 }
@@ -569,7 +559,7 @@ static void Convert(LLGL::RenderTargetDescriptor& dst, RenderTargetDescriptor^ s
     {
         dst.renderPass = (src->RenderPass != nullptr ? src->RenderPass->Native : nullptr);
         Convert(dst.resolution, src->Resolution);
-        Convert(dst.multiSampling, src->MultiSampling);
+        dst.samples = src->Samples;
         dst.customMultiSampling = src->CustomMultiSampling;
         dst.attachments.resize(src->Attachments->Count);
         for (std::size_t i = 0; i < dst.attachments.size(); ++i)
@@ -796,7 +786,7 @@ static void Convert(LLGL::RasterizerDescriptor& dst, RasterizerDescriptor^ src)
         dst.polygonMode                 = static_cast<LLGL::PolygonMode>(src->PolygonMode);
         dst.cullMode                    = static_cast<LLGL::CullMode>(src->CullMode);
         Convert(dst.depthBias, src->DepthBias);
-        Convert(dst.multiSampling, src->MultiSampling);
+        dst.multiSampleEnabled          = src->MultiSampleEnabled;
         dst.frontCCW                    = src->FrontCCW;
         dst.discardEnabled              = src->DiscardEnabled;
         dst.depthClampEnabled           = src->DepthClampEnabled;

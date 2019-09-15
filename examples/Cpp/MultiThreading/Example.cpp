@@ -172,16 +172,16 @@ private:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             // Set references to shader program, and pipeline layout
-            pipelineDesc.shaderProgram              = shaderProgram;
-            pipelineDesc.pipelineLayout             = pipelineLayout;
-            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.pipelineLayout                 = pipelineLayout;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
 
             // Enable depth test and writing
-            pipelineDesc.depth.testEnabled          = true;
-            pipelineDesc.depth.writeEnabled         = true;
+            pipelineDesc.depth.testEnabled              = true;
+            pipelineDesc.depth.writeEnabled             = true;
 
             // Enable back-face culling
-            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
+            pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
         }
 
         // Create first graphics pipeline

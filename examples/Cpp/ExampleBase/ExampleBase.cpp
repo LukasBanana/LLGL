@@ -209,14 +209,15 @@ void ExampleBase::Run()
 ExampleBase::ExampleBase(
     const std::wstring&     title,
     const LLGL::Extent2D&   resolution,
-    std::uint32_t           multiSampling,
+    std::uint32_t           samples,
     bool                    vsync,
     bool                    debugger)
 :
     profilerObj_ { new LLGL::RenderingProfiler() },
     debuggerObj_ { new LLGL::RenderingDebugger() },
     timer        { LLGL::Timer::Create()         },
-    profiler     { *profilerObj_                 }
+    profiler     { *profilerObj_                 },
+    samples_     { samples                       }
 {
     // Set report callback to standard output
     LLGL::Log::SetReportCallbackStd();
@@ -248,12 +249,9 @@ ExampleBase::ExampleBase(
     {
         contextDesc.videoMode.resolution    = resolution;
         contextDesc.vsync.enabled           = vsync;
-        contextDesc.multiSampling.enabled   = (multiSampling > 1);
-        contextDesc.multiSampling.samples   = multiSampling;
+        contextDesc.samples                 = samples;
     }
     context = renderer->CreateRenderContext(contextDesc);
-
-    multiSampleDesc_ = contextDesc.multiSampling;
 
     // Create command buffer
     commands = renderer->CreateCommandBuffer();

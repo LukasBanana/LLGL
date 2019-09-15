@@ -20,12 +20,18 @@ namespace LLGL
 {
 
 
+class MTRenderPass;
+
 class MTGraphicsPipeline : public GraphicsPipeline
 {
 
     public:
 
-        MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc);
+        MTGraphicsPipeline(
+            id<MTLDevice>                       device,
+            const GraphicsPipelineDescriptor&   desc,
+            const MTRenderPass*                 defaultRenderPass
+        );
 
         // Binds the render pipeline state, depth-stencil states, and sets the remaining parameters with the specified command encoder.
         void Bind(id<MTLRenderCommandEncoder> renderEncoder);
@@ -37,10 +43,18 @@ class MTGraphicsPipeline : public GraphicsPipeline
         }
 
     private:
-    
-        void CreateRenderPipelineState(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc);
-        void CreateDepthStencilState(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc);
-    
+
+        void CreateRenderPipelineState(
+            id<MTLDevice>                       device,
+            const GraphicsPipelineDescriptor&   desc,
+            const MTRenderPass*                 defaultRenderPass
+        );
+
+        void CreateDepthStencilState(
+            id<MTLDevice>                       device,
+            const GraphicsPipelineDescriptor&   desc
+        );
+
     private:
 
         id<MTLRenderPipelineState>  renderPipelineState_    = nil;

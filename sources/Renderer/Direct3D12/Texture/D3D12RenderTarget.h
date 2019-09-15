@@ -100,7 +100,7 @@ class D3D12RenderTarget final : public RenderTarget
     private:
 
         Extent2D                        resolution_;
-        UINT                            samples_            = 0;
+        DXGI_SAMPLE_DESC                sampleDesc_         = { 1, 0 };
 
         // Objects:
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;

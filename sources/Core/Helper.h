@@ -204,6 +204,13 @@ T GetAlignedSize(T size, T alignment)
     return size;
 }
 
+// Clamps the value x into the range [minimum, maximum].
+template <typename T>
+T Clamp(const T& x, const T& minimum, const T& maximum)
+{
+    return std::max(minimum, std::min(x, maximum));
+}
+
 // Returns the raw function pointer of the specified member function, e.g. GetMemberFuncPtr(&Foo::Bar).
 template <typename T>
 const void* GetMemberFuncPtr(T pfn)

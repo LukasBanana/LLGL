@@ -38,9 +38,9 @@ RendererConfigurationOpenGL::RendererConfigurationOpenGL()
 
 RenderContextDescriptor::RenderContextDescriptor()
 {
-    Vsync           = gcnew VsyncDescriptor();
-    MultiSampling   = gcnew MultiSamplingDescriptor();
-    VideoMode       = gcnew VideoModeDescriptor();
+    Vsync       = gcnew VsyncDescriptor();
+    Samples     = 1;
+    VideoMode   = gcnew VideoModeDescriptor();
 }
 
 

@@ -25,7 +25,7 @@ GLRenderContext::GLRenderContext(
 
     /* Setup surface for the render context and pass native context handle */
     NativeContextHandle windowContext;
-    GetNativeContextHandle(windowContext, desc.videoMode, desc.multiSampling);
+    GetNativeContextHandle(windowContext, desc.videoMode, desc.samples);
     SetOrCreateSurface(surface, desc.videoMode, &windowContext);
 
     #else

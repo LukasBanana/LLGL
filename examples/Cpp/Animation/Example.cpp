@@ -160,13 +160,13 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram              = shaderProgram;
-                pipelineDesc.renderPass                 = context->GetRenderPass();
-                pipelineDesc.pipelineLayout             = pipelineLayout;
-                pipelineDesc.depth.testEnabled          = true;
-                pipelineDesc.depth.writeEnabled         = true;
-                pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+                pipelineDesc.shaderProgram                  = shaderProgram;
+                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.pipelineLayout                 = pipelineLayout;
+                pipelineDesc.depth.testEnabled              = true;
+                pipelineDesc.depth.writeEnabled             = true;
+                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+                pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
             pipelineScene = renderer->CreateGraphicsPipeline(pipelineDesc);
         }

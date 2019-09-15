@@ -12,15 +12,13 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/RenderPass.h>
+#include <LLGL/ForwardDecls.h>
 #include <vector>
 
 
 namespace LLGL
 {
 
-
-struct RenderPassDescriptor;
-struct RenderTargetDescriptor;
 
 struct MTAttachmentFormat
 {
@@ -37,9 +35,13 @@ class MTRenderPass final : public RenderPass
 
         MTRenderPass(const RenderPassDescriptor& desc);
         MTRenderPass(const RenderTargetDescriptor& desc);
+        MTRenderPass(const RenderContextDescriptor& desc);
 
     public:
-    
+
+        // Returns the combined depth-stencil format.
+        MTLPixelFormat GetDepthStencilFormat() const;
+
         inline const std::vector<MTAttachmentFormat>& GetColorAttachments() const
         {
             return colorAttachments_;
@@ -49,10 +51,15 @@ class MTRenderPass final : public RenderPass
         {
             return depthAttachment_;
         }
-    
+
         inline const MTAttachmentFormat& GetStencilAttachment() const
         {
             return stencilAttachment_;
+        }
+
+        inline NSUInteger GetSampleCount() const
+        {
+            return sampleCount_;
         }
 
     private:
@@ -60,6 +67,7 @@ class MTRenderPass final : public RenderPass
         std::vector<MTAttachmentFormat> colorAttachments_;
         MTAttachmentFormat              depthAttachment_;
         MTAttachmentFormat              stencilAttachment_;
+        NSUInteger                      sampleCount_        = 1;
 
 };
 

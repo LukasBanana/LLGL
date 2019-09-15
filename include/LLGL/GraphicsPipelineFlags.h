@@ -415,52 +415,6 @@ struct Scissor
 };
 
 /**
-\brief Multi-sampling descriptor structure.
-\see RasterizerDescriptor::multiSampling
-\see RenderContextDescriptor::multiSampling
-\see RenderTargetDescriptor::multiSampling
-\todo Maybe remove this struct and use \c samples and \c sampleMask individually, since the latter one is only required for RasterizerDescriptor.
-*/
-struct MultiSamplingDescriptor
-{
-    MultiSamplingDescriptor() = default;
-
-    /**
-    \brief Constructor to initialize the sample.
-    \param[in] samples Specifies the number of samples used for multi-sampling. If this is greater than 1, multi-sampling is enabled.
-    \param[in] sampleMask Specifies the bitmask for sample coverage.
-    */
-    inline MultiSamplingDescriptor(std::uint32_t samples, std::uint32_t sampleMask = ~0) :
-        enabled    { (samples > 1) },
-        samples    { samples       },
-        sampleMask { sampleMask    }
-    {
-    }
-
-    /**
-    \brief Returns the sample count for the state of this multi-sampling descriptor.
-    \return <code>max{ 1, samples }</code> if multi-sampling is enabled, otherwise 1.
-    */
-    inline std::uint32_t SampleCount() const
-    {
-        return (enabled && samples > 1 ? samples : 1);
-    }
-
-    //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    bool            enabled     = false;
-
-    /**
-    \brief Number of samples used for multi-sampling. By default 1.
-    \remarks The equivalent member for multi-sampled textures is TextureDescriptor::samples.
-    \see TextureDescriptor::samples
-    */
-    std::uint32_t   samples     = 1;
-
-    //! Specifies the bitmask for sample coverage. By default \c 0xFFFFFFFF.
-    std::uint32_t   sampleMask  = ~0u;
-};
-
-/**
 \brief Depth state descriptor structure.
 \see GraphicsPipelineDescriptor::depth
 */
@@ -576,9 +530,6 @@ struct RasterizerDescriptor
     //! Specifies the parameters to bias fragment depth values.
     DepthBiasDescriptor     depthBias;
 
-    //! (Multi-)sampling descriptor.
-    MultiSamplingDescriptor multiSampling;
-
     //! If enabled, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding. By default disabled.
     bool                    frontCCW                    = false;
 
@@ -597,6 +548,9 @@ struct RasterizerDescriptor
     \see CommandBuffer::SetScissors
     */
     bool                    scissorTestEnabled          = false;
+
+    //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
+    bool                    multiSampleEnabled          = false;
 
     //! Specifies whether lines are rendered with or without anti-aliasing. By default disabled.
     bool                    antiAliasedLineEnabled      = false;
@@ -664,6 +618,7 @@ struct BlendDescriptor
     /**
     \brief Specifies whether to use alpha-to-coverage as a multi-sampling technique when setting a pixel to a render target. By default disabled.
     \remarks This is useful when multi-sampling is enabled and alpha tests are implemented in a fragment shader (e.g. to render fences, plants, or other transparent geometries).
+    \see sampleMask
     */
     bool                                alphaToCoverageEnabled  = false;
 
@@ -675,6 +630,13 @@ struct BlendDescriptor
     \see targets
     */
     bool                                independentBlendEnabled = false;
+
+    /**
+    \brief Specifies the sample bitmask if alpha coverage is enabled. By default \c 0xFFFFFFFF.
+    \remarks If \c alphaToCoverageEnabled is false, this field is ignored.
+    \see alphaToCoverageEnabled
+    */
+    std::uint32_t                       sampleMask              = ~0u;
 
     /**
     \brief Specifies the logic fragment operation. By default LogicOp::Disabled.

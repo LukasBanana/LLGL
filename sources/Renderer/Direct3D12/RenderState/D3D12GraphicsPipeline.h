@@ -38,7 +38,8 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
         D3D12GraphicsPipeline(
             D3D12Device&                        device,
             ID3D12RootSignature*                defaultRootSignature,
-            const GraphicsPipelineDescriptor&   desc
+            const GraphicsPipelineDescriptor&   desc,
+            const D3D12RenderPass*              defaultRenderPass
         );
 
         void Bind(D3D12CommandContext& commandContext);

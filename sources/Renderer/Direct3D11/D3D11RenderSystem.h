@@ -154,7 +154,13 @@ class D3D11RenderSystem final : public RenderSystem
 
     public:
 
-        /* ----- Extended internal functions ----- */
+        /* ----- Internal functions ----- */
+
+        // Returns a sample descriptor for the specified format.
+        static DXGI_SAMPLE_DESC FindSuitableSampleDesc(ID3D11Device* device, DXGI_FORMAT format, UINT maxSampleCount);
+
+        // Returns the least common denominator of a suitable sample descriptor for all formats.
+        static DXGI_SAMPLE_DESC FindSuitableSampleDesc(ID3D11Device* device, std::size_t numFormats, const DXGI_FORMAT* formats, UINT maxSampleCount);
 
         // Returns the ID3D11Device object.
         inline ID3D11Device* GetDevice() const

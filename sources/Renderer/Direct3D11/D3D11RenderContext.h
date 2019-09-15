@@ -34,14 +34,12 @@ class D3D11RenderContext final : public RenderContext
 
     public:
 
-        /* ----- Common ----- */
-
         D3D11RenderContext(
-            IDXGIFactory* factory,
-            const ComPtr<ID3D11Device>& device,
-            const ComPtr<ID3D11DeviceContext>& context,
-            const RenderContextDescriptor& desc,
-            const std::shared_ptr<Surface>& surface
+            IDXGIFactory*                       factory,
+            const ComPtr<ID3D11Device>&         device,
+            const ComPtr<ID3D11DeviceContext>&  context,
+            const RenderContextDescriptor&      desc,
+            const std::shared_ptr<Surface>&     surface
         );
 
         void SetName(const char* name) override;
@@ -53,7 +51,7 @@ class D3D11RenderContext final : public RenderContext
 
         const RenderPass* GetRenderPass() const override;
 
-        /* ----- Extended internal functions ----- */
+    public:
 
         inline const D3D11BackBuffer& GetBackBuffer() const
         {
@@ -65,7 +63,7 @@ class D3D11RenderContext final : public RenderContext
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
-        void CreateSwapChain(IDXGIFactory* factory);
+        void CreateSwapChain(IDXGIFactory* factory, UINT samples);
         void CreateBackBuffer(const VideoModeDescriptor& videoModeDesc);
         void ResizeBackBuffer(const VideoModeDescriptor& videoModeDesc);
 
@@ -75,8 +73,8 @@ class D3D11RenderContext final : public RenderContext
         ComPtr<ID3D11DeviceContext> context_;
 
         ComPtr<IDXGISwapChain>      swapChain_;
-        UINT                        swapChainInterval_  = 0;
-        UINT                        swapChainSamples_   = 1;
+        UINT                        swapChainInterval_      = 0;
+        DXGI_SAMPLE_DESC            swapChainSampleDesc_    = { 1, 0 };
 
         D3D11BackBuffer             backBuffer_;
 

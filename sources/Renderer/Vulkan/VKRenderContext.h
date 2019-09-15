@@ -131,7 +131,6 @@ class VKRenderContext final : public RenderContext
         VkExtent2D              swapChainExtent_                                = { 0, 0 };
         VkImage                 swapChainImages_[g_maxNumColorBuffers];
         VKPtr<VkImageView>      swapChainImageViews_[g_maxNumColorBuffers];
-        //VKPtr<VkImageView>      swapChainImageViewsMS_[g_maxNumColorBuffers];
         VKPtr<VkFramebuffer>    swapChainFramebuffers_[g_maxNumColorBuffers];
 
         std::uint32_t           numSwapChainBuffers_                            = 1;

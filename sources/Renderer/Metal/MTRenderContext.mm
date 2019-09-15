@@ -7,6 +7,7 @@
 
 #include "MTRenderContext.h"
 #include "MTTypes.h"
+#include "../TextureUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -14,40 +15,12 @@ namespace LLGL
 {
 
 
-static MTLPixelFormat GetColorMTLPixelFormat(int /*colorBits*/)
-{
-    return MTLPixelFormatBGRA8Unorm;
-}
-
-static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBits)
-{
-    #if 0 //TODO: graphics pipeline must get the correct type from the render context
-    if (depthBits > 0 && stencilBits > 0)
-    {
-        if (depthBits == 32)
-            return MTLPixelFormatDepth32Float_Stencil8;
-    }
-    else if (depthBits > 0)
-    {
-        if (depthBits == 32)
-            return MTLPixelFormatDepth32Float;
-        else if (depthBits == 16)
-            return MTLPixelFormatDepth16Unorm;
-    }
-    else if (stencilBits > 0)
-        return MTLPixelFormatStencil8;
-    return MTLPixelFormatDepth24Unorm_Stencil8;
-    #else
-    return MTLPixelFormatDepth32Float_Stencil8;
-    #endif
-}
-
-/* ----- Common ----- */
-
 MTRenderContext::MTRenderContext(
     id<MTLDevice>                   device,
     RenderContextDescriptor         desc,
     const std::shared_ptr<Surface>& surface)
+:
+    renderPass_ { desc }
 {
     /* Create surface */
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
@@ -64,9 +37,9 @@ MTRenderContext::MTRenderContext(
     [wnd.contentViewController setView:view_];
 
     /* Initialize color and depth buffer */
-    view_.colorPixelFormat          = GetColorMTLPixelFormat(desc.videoMode.colorBits);
-    view_.depthStencilPixelFormat   = GetDepthStencilMTLPixelFormat(desc.videoMode.depthBits, desc.videoMode.stencilBits);
-    view_.sampleCount               = desc.multiSampling.SampleCount();
+    view_.colorPixelFormat          = renderPass_.GetColorAttachments()[0].pixelFormat;
+    view_.depthStencilPixelFormat   = renderPass_.GetDepthStencilFormat();
+    view_.sampleCount               = renderPass_.GetSampleCount();
 
     if (desc.vsync.enabled)
         view_.preferredFramesPerSecond = static_cast<NSInteger>(desc.vsync.refreshRate);
@@ -89,7 +62,7 @@ Format MTRenderContext::GetDepthStencilFormat() const
 
 const RenderPass* MTRenderContext::GetRenderPass() const
 {
-    return nullptr; //TODO
+    return (&renderPass_);
 }
 
 

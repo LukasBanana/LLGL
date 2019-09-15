@@ -107,8 +107,10 @@ TODO:
 */
 void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
 {
+    const bool hasMultiSampling = (desc_.samples > 1);
+
     /* If a shared context has passed, use its pre-selected pixel format */
-    if (desc_.multiSampling.enabled && sharedContext)
+    if (hasMultiSampling && sharedContext)
         CopyPixelFormat(*sharedContext);
 
     /* First setup device context and choose pixel format */
@@ -121,7 +123,7 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
         throw std::runtime_error("failed to create standard OpenGL render context");
 
     /* Check for multi-sample anti-aliasing */
-    if (desc_.multiSampling.enabled && !hasSharedContext_)
+    if (hasMultiSampling && !hasSharedContext_)
     {
         /* Setup anti-aliasing after creating a standard render context. */
         if (SetupAntiAliasing())
@@ -146,9 +148,7 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
         {
             /* Print warning and disable anti-aliasing */
             ErrAntiAliasingNotSupported();
-
-            desc_.multiSampling.enabled = false;
-            desc_.multiSampling.samples = 0;
+            desc_.samples = 1;
         }
     }
 
@@ -389,13 +389,13 @@ void Win32GLContext::SelectPixelFormat()
     }
 
     /* Try to find suitable pixel format */
-    const bool wantAntiAliasFormat = (desc_.multiSampling.enabled && pixelFormatsMSCount_ > 0);
+    const bool isMultiSampleFormatRequested = (desc_.samples > 1 && pixelFormatsMSCount_ > 0);
 
     bool wasStandardFormatUsed = false;
 
     for (UINT pixelFormatMSIndex = 0;;)
     {
-        if (wantAntiAliasFormat && pixelFormatMSIndex < Win32GLContext::maxPixelFormatsMS)
+        if (isMultiSampleFormatRequested && pixelFormatMSIndex < Win32GLContext::maxPixelFormatsMS)
         {
             /* Choose anti-aliasing pixel format */
             pixelFormat_ = pixelFormatsMS_[pixelFormatMSIndex++];
@@ -406,7 +406,7 @@ void Win32GLContext::SelectPixelFormat()
             /* Choose standard pixel format */
             pixelFormat_ = ChoosePixelFormat(hDC_, &formatDesc);
 
-            if (wantAntiAliasFormat)
+            if (isMultiSampleFormatRequested)
                 ErrAntiAliasingNotSupported();
 
             wasStandardFormatUsed = true;
@@ -442,10 +442,9 @@ bool Win32GLContext::SetupAntiAliasing()
         return false;
 
     /* Setup pixel format for anti-aliasing */
-    const auto queriedMultiSamples = desc_.multiSampling.samples;
     const auto& videoMode = desc_.videoMode;
 
-    while (desc_.multiSampling.samples > 0)
+    while (desc_.samples > 0)
     {
         const float attribsFlt[] = { 0.0f, 0.0f };
 
@@ -459,8 +458,8 @@ bool Win32GLContext::SetupAntiAliasing()
             WGL_DEPTH_BITS_ARB,     videoMode.depthBits,
             WGL_STENCIL_BITS_ARB,   videoMode.stencilBits,
             WGL_DOUBLE_BUFFER_ARB,  GL_TRUE,
-            WGL_SAMPLE_BUFFERS_ARB, (desc_.multiSampling.enabled ? GL_TRUE : GL_FALSE),
-            WGL_SAMPLES_ARB,        static_cast<int>(desc_.multiSampling.samples),
+            WGL_SAMPLE_BUFFERS_ARB, (desc_.samples > 1 ? GL_TRUE : GL_FALSE),
+            WGL_SAMPLES_ARB,        static_cast<int>(desc_.samples),
             0, 0
         };
 
@@ -476,14 +475,14 @@ bool Win32GLContext::SetupAntiAliasing()
 
         if (!result || pixelFormatsMSCount_ < 1)
         {
-            if (desc_.multiSampling.samples <= 0)
+            if (desc_.samples <= 0)
             {
                 /* Lowest count of multi-samples reached -> return with error */
                 return false;
             }
 
             /* Choose next lower count of multi-samples */
-            --desc_.multiSampling.samples;
+            desc_.samples--;
         }
         else
         {
@@ -491,24 +490,6 @@ bool Win32GLContext::SetupAntiAliasing()
             break;
         }
     }
-
-    /* Check if multi-sample count was reduced */
-    if (desc_.multiSampling.samples < queriedMultiSamples)
-    {
-        Log::PostReport(
-            Log::ReportType::Information,
-            (
-                "reduced multi-samples for anti-aliasing from " + std::to_string(queriedMultiSamples) +
-                " to " + std::to_string(desc_.multiSampling.samples)
-            )
-        );
-    }
-
-    /* Enable anti-aliasing */
-    if (desc_.multiSampling.enabled)
-        glEnable(GL_MULTISAMPLE);
-    else
-        glDisable(GL_MULTISAMPLE);
 
     return true;
 }

@@ -160,11 +160,11 @@ private:
         // Create graphics pipeline for skybox
         LLGL::GraphicsPipelineDescriptor pipelineDescSky;
         {
-            pipelineDescSky.shaderProgram               = shaderProgramSky;
-            pipelineDescSky.pipelineLayout              = layoutSky;
-            //pipelineDescSky.depth.testEnabled           = true;
-            //pipelineDescSky.depth.writeEnabled          = true;
-            pipelineDescSky.rasterizer.multiSampling    = GetMultiSampleDesc();
+            pipelineDescSky.shaderProgram                   = shaderProgramSky;
+            pipelineDescSky.pipelineLayout                  = layoutSky;
+            //pipelineDescSky.depth.testEnabled               = true;
+            //pipelineDescSky.depth.writeEnabled              = true;
+            pipelineDescSky.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
         }
         pipelineSky = renderer->CreateGraphicsPipeline(pipelineDescSky);
 
@@ -184,11 +184,11 @@ private:
         // Create graphics pipeline for meshes
         LLGL::GraphicsPipelineDescriptor pipelineDescMeshes;
         {
-            pipelineDescMeshes.shaderProgram            = shaderProgramMeshes;
-            pipelineDescMeshes.pipelineLayout           = layoutMeshes;
-            pipelineDescMeshes.depth.testEnabled        = true;
-            pipelineDescMeshes.depth.writeEnabled       = true;
-            pipelineDescMeshes.rasterizer.multiSampling = GetMultiSampleDesc();
+            pipelineDescMeshes.shaderProgram                    = shaderProgramMeshes;
+            pipelineDescMeshes.pipelineLayout                   = layoutMeshes;
+            pipelineDescMeshes.depth.testEnabled                = true;
+            pipelineDescMeshes.depth.writeEnabled               = true;
+            pipelineDescMeshes.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
         }
         pipelineMeshes = renderer->CreateGraphicsPipeline(pipelineDescMeshes);
     }

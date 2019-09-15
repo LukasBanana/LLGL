@@ -65,7 +65,7 @@ public ref class RenderTargetDescriptor
 
         property RenderPass^                    RenderPass;
         property Extent2D^                      Resolution;
-        property MultiSamplingDescriptor^       MultiSampling;
+        property unsigned int                   Samples;
         property bool                           CustomMultiSampling;
         property List<AttachmentDescriptor^>^   Attachments;
 

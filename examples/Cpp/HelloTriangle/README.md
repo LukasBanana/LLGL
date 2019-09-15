@@ -31,7 +31,7 @@ LLGL::RenderContextDescriptor myContextDesc;
 myContextDesc.videoMode.resolution = { 800, 600 };
 myContextDesc.videoMode.fullscreen = false;
 myContextDesc.vsync.enabled        = true;
-myContextDesc.multiSampling        = LLGL::MultiSamplingDescriptor { 8 };
+myContextDesc.samples              = 8;
 LLGL::RenderContext* myContext = myRenderer->CreateRenderContext(contextDesc);
 ```
 Most objects in LLGL are created with descriptors (similar to Direct3D and Vulkan). This one describes that we want a render context with a resolution of 800 x 600 pixels, windowed-mode (no fullscreen), V-sync enabled, and 8 samples for anti-aliasing.

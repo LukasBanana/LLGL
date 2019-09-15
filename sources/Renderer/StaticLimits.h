@@ -18,6 +18,9 @@
 // Maximum number of viewports and scissors.
 #define LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS (16u)
 
+// Maximum number of samples for multi-sampled rendering.
+#define LLGL_MAX_NUM_SAMPLES                (64u)
+
 
 #endif
 

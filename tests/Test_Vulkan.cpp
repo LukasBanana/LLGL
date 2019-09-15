@@ -35,14 +35,11 @@ int main()
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
 
-        contextDesc.videoMode.resolution        = { 800, 600 };
-        contextDesc.videoMode.swapChainSize     = 2;
-        //contextDesc.videoMode.fullscreen        = true;
-
-        contextDesc.multiSampling.enabled       = true;
-        contextDesc.multiSampling.samples       = 8;
-
-        contextDesc.vsync.enabled               = true;
+        contextDesc.videoMode.resolution    = { 800, 600 };
+        contextDesc.videoMode.swapChainSize = 2;
+        //contextDesc.videoMode.fullscreen    = true;
+        contextDesc.samples                 = 8;
+        contextDesc.vsync.enabled           = true;
 
         const auto resolution = contextDesc.videoMode.resolution;
         const Gs::Vector2f viewportSize { static_cast<float>(resolution.width), static_cast<float>(resolution.height) };

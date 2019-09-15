@@ -7,8 +7,9 @@
 
 #include "MacOSGLContext.h"
 #include "../../../../Platform/MacOS/MacOSWindow.h"
-#include "../../../CheckedCast.h"
 #include "../../../../Core/Helper.h"
+#include "../../../CheckedCast.h"
+#include "../../../TextureUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 
@@ -128,8 +129,8 @@ void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc, cons
         NSOpenGLPFAColorSize,       24,
         NSOpenGLPFAAlphaSize,       8,
         //NSOpenGLPFAMultisample,
-        NSOpenGLPFASampleBuffers,   (desc.multiSampling.enabled ? 1u : 0u),
-        NSOpenGLPFASamples,         desc.multiSampling.SampleCount(),
+        NSOpenGLPFASampleBuffers,   (desc.samples > 1 ? 1u : 0u),
+        NSOpenGLPFASamples,         GetClampedSamples(desc.samples),
         0
     };
 

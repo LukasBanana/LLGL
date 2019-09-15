@@ -155,8 +155,10 @@ class MTRenderSystem : public RenderSystem
 
         MTLFeatureSet QueryHighestFeatureSet() const;
 
+        const MTRenderPass* GetDefaultRenderPass() const;
+
     private:
-    
+
         /* ----- Common objects ----- */
 
         id<MTLDevice>                           device_             = nil;

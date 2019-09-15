@@ -324,7 +324,7 @@ void Convert(D3D11_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
     dst.SlopeScaledDepthBias    = src.depthBias.slopeFactor;
     dst.DepthClipEnable         = DXBoolean(!src.depthClampEnabled);
     dst.ScissorEnable           = DXBoolean(src.scissorTestEnabled);
-    dst.MultisampleEnable       = DXBoolean(src.multiSampling.enabled);
+    dst.MultisampleEnable       = DXBoolean(src.multiSampleEnabled);
     dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
 }
 
@@ -341,7 +341,7 @@ void Convert(D3D11_RASTERIZER_DESC2& dst, const RasterizerDescriptor& src)
     dst.SlopeScaledDepthBias    = src.depthBias.slopeFactor;
     dst.DepthClipEnable         = DXBoolean(!src.depthClampEnabled);
     dst.ScissorEnable           = DXBoolean(src.scissorTestEnabled);
-    dst.MultisampleEnable       = DXBoolean(src.multiSampling.enabled);
+    dst.MultisampleEnable       = DXBoolean(src.multiSampleEnabled);
     dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
     dst.ForcedSampleCount       = 0;
     dst.ConservativeRaster      = (src.conservativeRasterization ? D3D11_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D11_CONSERVATIVE_RASTERIZATION_MODE_OFF);

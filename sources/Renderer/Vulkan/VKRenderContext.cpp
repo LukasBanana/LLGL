@@ -11,6 +11,7 @@
 #include "Memory/VKDeviceMemoryManager.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
+#include "../TextureUtils.h"
 #include <set>
 
 
@@ -33,18 +34,18 @@ VKRenderContext::VKRenderContext(
     RenderContextDescriptor         desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext        { desc.videoMode, desc.vsync       },
-    instance_            { instance                         },
-    physicalDevice_      { physicalDevice                   },
-    device_              { device                           },
-    deviceMemoryMngr_    { deviceMemoryMngr                 },
-    surface_             { instance, vkDestroySurfaceKHR    },
-    swapChain_           { device, vkDestroySwapchainKHR    },
-    swapChainRenderPass_ { device                           },
-    swapChainSamples_    { desc.multiSampling.SampleCount() },
-    secondaryRenderPass_ { device                           },
-    depthStencilBuffer_  { device                           },
-    colorBuffers_        { device, device, device           }
+    RenderContext        { desc.videoMode, desc.vsync      },
+    instance_            { instance                        },
+    physicalDevice_      { physicalDevice                  },
+    device_              { device                          },
+    deviceMemoryMngr_    { deviceMemoryMngr                },
+    surface_             { instance, vkDestroySurfaceKHR   },
+    swapChain_           { device, vkDestroySwapchainKHR   },
+    swapChainRenderPass_ { device                          },
+    swapChainSamples_    { GetClampedSamples(desc.samples) },
+    secondaryRenderPass_ { device                          },
+    depthStencilBuffer_  { device                          },
+    colorBuffers_        { device, device, device          }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
     desc.videoMode = GetVideoMode();

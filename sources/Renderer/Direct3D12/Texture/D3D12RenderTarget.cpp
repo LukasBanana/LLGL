@@ -22,15 +22,15 @@ namespace LLGL
 
 
 D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDescriptor& desc) :
-    resolution_ { desc.resolution                  },
-    samples_    { desc.multiSampling.SampleCount() }
+    resolution_ { desc.resolution }
 {
     CreateDescriptorHeaps(device, desc);
     CreateAttachments(device.GetNative(), desc);
     defaultRenderPass_.BuildAttachments(
         static_cast<UINT>(desc.attachments.size()),
         desc.attachments.data(),
-        depthStencilFormat_
+        depthStencilFormat_,
+        sampleDesc_
     );
 }
 
@@ -122,7 +122,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderTarget::GetCPUDescriptorHandleForDSV() co
 
 bool D3D12RenderTarget::HasMultiSampling() const
 {
-    return (samples_ > 1);
+    return (sampleDesc_.Count > 1);
 }
 
 
@@ -165,6 +165,10 @@ void D3D12RenderTarget::CreateDescriptorHeaps(D3D12Device& device, const RenderT
             }
         }
     }
+
+    /* Determine and store suitable sample descriptor */
+    if (desc.samples > 1)
+        sampleDesc_ = device.FindSuitableSampleDesc(colorFormats_.size(), colorFormats_.data(), desc.samples);
 
     /* Create RTV descriptor heap */
     if (!colorFormats_.empty())
@@ -259,8 +263,8 @@ void D3D12RenderTarget::CreateColorBuffersMS(ID3D12Device* device, const RenderT
             resolution_.height,
             1, // arraySize
             1, // mipLevels
-            samples_,
-            0,
+            sampleDesc_.Count,
+            sampleDesc_.Quality,
             D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
         );
 
@@ -297,8 +301,8 @@ void D3D12RenderTarget::CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT for
         resolution_.height,
         1, // arraySize
         1, // mipLevels
-        samples_,
-        0,
+        sampleDesc_.Count,
+        sampleDesc_.Quality,
         (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
     );
 

@@ -25,12 +25,12 @@ VKRenderTarget::VKRenderTarget(
     VKDeviceMemoryManager&          deviceMemoryMngr,
     const RenderTargetDescriptor&   desc)
 :
-    resolution_          { desc.resolution                                                },
-    framebuffer_         { device, vkDestroyFramebuffer                                   },
-    defaultRenderPass_   { device                                                         },
-    secondaryRenderPass_ { device                                                         },
-    depthStencilBuffer_  { device                                                         },
-    sampleCountBits_     { VKTypes::ToVkSampleCountBits(desc.multiSampling.SampleCount()) }
+    resolution_          { desc.resolution                            },
+    framebuffer_         { device, vkDestroyFramebuffer               },
+    defaultRenderPass_   { device                                     },
+    secondaryRenderPass_ { device                                     },
+    depthStencilBuffer_  { device                                     },
+    sampleCountBits_     { VKTypes::ToVkSampleCountBits(desc.samples) }
 {
     if (desc.renderPass)
     {
@@ -222,7 +222,7 @@ void VKRenderTarget::CreateRenderPass(
         numAttachments,
         numColorAttachments,
         attachmentDescs.data(),
-        HasMultiSampling()
+        sampleCountBits_
     );
 }
 

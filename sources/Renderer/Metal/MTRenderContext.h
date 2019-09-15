@@ -13,6 +13,7 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
+#include "RenderState/MTRenderPass.h"
 
 
 namespace LLGL
@@ -54,7 +55,8 @@ class MTRenderContext : public RenderContext
 
     private:
 
-        MTKView* view_ = nullptr;
+        MTKView*        view_       = nullptr;
+        MTRenderPass    renderPass_;
 
 };
 

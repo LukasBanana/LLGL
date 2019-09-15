@@ -59,6 +59,8 @@ class D3D11RenderTarget final : public RenderTarget
 
     private:
 
+        void FindSuitableSampleDesc(const RenderTargetDescriptor& desc);
+
         void Attach(const AttachmentDescriptor& attachmentDesc);
         void AttachDepthBuffer();
         void AttachStencilBuffer();
@@ -74,6 +76,7 @@ class D3D11RenderTarget final : public RenderTarget
 
     private:
 
+        //TODO: remove this member
         ID3D11Device*                               device_                     = nullptr;
 
         Extent2D                                    resolution_;
@@ -94,7 +97,7 @@ class D3D11RenderTarget final : public RenderTarget
             DXGI_FORMAT             format;
         };
 
-        UINT                                        multiSamples_               = 0;
+        DXGI_SAMPLE_DESC                            sampleDesc_                 = { 1u, 0u };
         std::vector<MultiSampledAttachment>         multiSampledAttachments_;
 
         const RenderPass*                           renderPass_                 = nullptr;

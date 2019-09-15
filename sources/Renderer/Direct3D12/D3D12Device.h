@@ -39,7 +39,11 @@ class D3D12Device
 
         /* ----- Data queries ----- */
 
-        UINT FindSuitableMultisamples(DXGI_FORMAT format, UINT sampleCount);
+        // Returns a suitable sample descriptor for the specified format.
+        DXGI_SAMPLE_DESC FindSuitableSampleDesc(DXGI_FORMAT format, UINT maxSampleCount) const;
+
+        // Returns the least common denominator of a suitable sample descriptor for all formats.
+        DXGI_SAMPLE_DESC FindSuitableSampleDesc(std::size_t numFormats, const DXGI_FORMAT* formats, UINT maxSampleCount) const;
 
         /* ----- Native handles ----- */
 

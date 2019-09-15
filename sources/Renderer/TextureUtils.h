@@ -15,6 +15,7 @@
 namespace LLGL
 {
 
+//TODO: merge this header and source iwth "DescriptorHelper.cpp/h"
 
 /* ----- Structures ----- */
 
@@ -37,6 +38,9 @@ LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const E
 
 // Returns true if the specified flags for texture creation require MIP-map generation at creation time.
 LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc);
+
+// Returns the samples clamped to the range [1, LLGL_MAX_NUM_SAMPLES].
+LLGL_EXPORT std::uint32_t GetClampedSamples(std::uint32_t samples);
 
 
 } // /namespace LLGL

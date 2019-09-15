@@ -32,7 +32,7 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
 {
     /* Allocate native render pass descriptor */
     native_ = [[MTLRenderPassDescriptor alloc] init];
-    
+
     for (const auto& attachment : desc.attachments)
     {
         switch (attachment.type)
@@ -44,12 +44,11 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
                     native_.colorAttachments[numColorAttachments_],
                     attachment,
                     renderPass_.GetColorAttachments()[numColorAttachments_],
-                    desc.multiSampling,
                     numColorAttachments_
                 );
                 ++numColorAttachments_;
                 break;
-                
+
             case AttachmentType::Depth:
                 /* Create depth attachment */
                 CreateAttachment(
@@ -57,11 +56,10 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
                     native_.depthAttachment,
                     attachment,
                     renderPass_.GetDepthAttachment(),
-                    desc.multiSampling,
                     0
                 );
                 break;
-                
+
             case AttachmentType::DepthStencil:
                 /* Create depth-stencil attachment */
                 CreateAttachment(
@@ -69,12 +67,11 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
                     native_.depthAttachment,
                     attachment,
                     renderPass_.GetDepthAttachment(),
-                    desc.multiSampling,
                     0
                 );
                 Copy(native_.stencilAttachment, native_.depthAttachment);
                 break;
-                
+
             case AttachmentType::Stencil:
                 /* Create stencil attachment */
                 CreateAttachment(
@@ -82,7 +79,6 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
                     native_.stencilAttachment,
                     attachment,
                     renderPass_.GetStencilAttachment(),
-                    desc.multiSampling,
                     0
                 );
                 break;
@@ -100,7 +96,7 @@ MTRenderTarget::~MTRenderTarget()
         [attachment.texture release];
     if (auto attachment = native_.stencilAttachment)
         [attachment.texture release];
-    
+
     //[native_ release];
     #endif
 }
@@ -140,7 +136,6 @@ void MTRenderTarget::CreateAttachment(
     MTLRenderPassAttachmentDescriptor*  attachment,
     const AttachmentDescriptor&         desc,
     const MTAttachmentFormat&           fmt,
-    const MultiSamplingDescriptor&      multiSamplingDesc,
     std::uint32_t                       slot)
 {
     if (auto texture = desc.texture)
@@ -150,10 +145,10 @@ void MTRenderTarget::CreateAttachment(
         id<MTLTexture> tex = textureMT->GetNative();
         [tex retain];
 
-        if (multiSamplingDesc.SampleCount() > 1)
+        if (renderPass_.GetSampleCount() > 1)
         {
             /* Create resolve texture if multi-sampling is enabled */
-            attachment.texture          = CreateRenderTargetTexture(device, desc.type, multiSamplingDesc, tex);
+            attachment.texture          = CreateRenderTargetTexture(device, desc.type, tex);
             attachment.resolveTexture   = tex;
         }
         else
@@ -165,7 +160,7 @@ void MTRenderTarget::CreateAttachment(
     else if (desc.type != AttachmentType::Color)
     {
         /* Create native texture for depth-stencil attachments */
-        attachment.texture = CreateRenderTargetTexture(device, desc.type, multiSamplingDesc);
+        attachment.texture = CreateRenderTargetTexture(device, desc.type);
     }
     else
     {
@@ -219,18 +214,17 @@ MTLTextureDescriptor* MTRenderTarget::CreateTextureDesc(
 id<MTLTexture> MTRenderTarget::CreateRenderTargetTexture(
     id<MTLDevice>                   device,
     const AttachmentType            type,
-    const MultiSamplingDescriptor&  multiSamplingDesc,
     id<MTLTexture>                  resolveTexture)
 {
     auto texDesc = CreateTextureDesc(
         device,
         (resolveTexture != nil ? [resolveTexture pixelFormat] : SelectPixelFormat(type)),
-        multiSamplingDesc.SampleCount()
+        renderPass_.GetSampleCount()
     );
-    
+
     id<MTLTexture> texture = [device newTextureWithDescriptor:texDesc];
     [texDesc release];
-    
+
     return texture;
 }
 

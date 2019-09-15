@@ -489,6 +489,35 @@ void D3D11RenderSystem::Release(Fence& fence)
     RemoveFromUniqueSet(fences_, &fence);
 }
 
+/* ----- Internal functions ----- */
+
+DXGI_SAMPLE_DESC D3D11RenderSystem::FindSuitableSampleDesc(ID3D11Device* device, DXGI_FORMAT format, UINT maxSampleCount)
+{
+    for (; maxSampleCount > 1; --maxSampleCount)
+    {
+        UINT numQualityLevels = 0;
+        if (device->CheckMultisampleQualityLevels(format, maxSampleCount, &numQualityLevels) == S_OK)
+        {
+            if (numQualityLevels > 0)
+                return { maxSampleCount, numQualityLevels - 1 };
+        }
+    }
+    return { 1u, 0u };
+}
+
+DXGI_SAMPLE_DESC D3D11RenderSystem::FindSuitableSampleDesc(ID3D11Device* device, std::size_t numFormats, const DXGI_FORMAT* formats, UINT maxSampleCount)
+{
+    DXGI_SAMPLE_DESC sampleDesc = { maxSampleCount, 0 };
+
+    for (std::size_t i = 0; i < numFormats; ++i)
+    {
+        if (formats[i] != DXGI_FORMAT_UNKNOWN)
+            sampleDesc = D3D11RenderSystem::FindSuitableSampleDesc(device, formats[i], sampleDesc.Count);
+    }
+
+    return sampleDesc;
+}
+
 
 /*
  * ======= Private: =======

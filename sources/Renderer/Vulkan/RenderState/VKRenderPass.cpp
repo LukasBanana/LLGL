@@ -113,8 +113,11 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     if (hasDepthStencil)
         Convert(attachmentDescs[numColorAttachments], desc.depthAttachment, desc.stencilAttachment, sampleCountBits);
 
-    for (std::uint32_t i = 0; i < numColorAttachments; ++i)
-        Convert(attachmentDescs[numAttachments + i], desc.colorAttachments[i], sampleCountBits);
+    if (sampleCountBits > VK_SAMPLE_COUNT_1_BIT)
+    {
+        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+            Convert(attachmentDescs[numAttachments + i], desc.colorAttachments[i], sampleCountBits);
+    }
 
     /* Create render pass with native attachment descriptors */
     CreateVkRenderPassWithDescriptors(
@@ -122,7 +125,7 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
         numAttachments,
         numColorAttachments,
         attachmentDescs.data(),
-        (desc.samples > 1)
+        sampleCountBits
     );
 }
 
@@ -131,8 +134,12 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     std::uint32_t                   numAttachments,
     std::uint32_t                   numColorAttachments,
     const VkAttachmentDescription*  attachmentDescs,
-    bool                            multiSamplingEnabled)
+    VkSampleCountFlagBits           sampleCountBits)
 {
+    /* Store sample count bits */
+    sampleCountBits_ = sampleCountBits;
+    const bool multiSampleEnabled = (sampleCountBits > VK_SAMPLE_COUNT_1_BIT);
+
     std::vector<VkAttachmentReference> rtvAttachmentsRefs(numAttachments);
     std::vector<VkAttachmentReference> rtvMsaaAttachmentsRefs;
     VkAttachmentReference dsvAttachmentRef = {};
@@ -171,7 +178,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         dsvAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     }
 
-    if (multiSamplingEnabled)
+    if (multiSampleEnabled)
     {
         rtvMsaaAttachmentsRefs.resize(numColorAttachments);
         for (std::uint32_t i = 0; i < numColorAttachments; ++i)
@@ -223,7 +230,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         createInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         createInfo.pNext                    = nullptr;
         createInfo.flags                    = 0;
-        createInfo.attachmentCount          = (multiSamplingEnabled ? numAttachments + numColorAttachments : numAttachments);
+        createInfo.attachmentCount          = (multiSampleEnabled ? numAttachments + numColorAttachments : numAttachments);
         createInfo.pAttachments             = attachmentDescs;
         createInfo.subpassCount             = 1;
         createInfo.pSubpasses               = (&subpassDesc);

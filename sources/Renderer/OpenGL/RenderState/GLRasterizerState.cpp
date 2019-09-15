@@ -44,8 +44,7 @@ GLRasterizerState::GLRasterizerState(const RasterizerDescriptor& desc)
     rasterizerDiscard_      = desc.discardEnabled;
     scissorTestEnabled_     = desc.scissorTestEnabled;
     depthClampEnabled_      = desc.depthClampEnabled;
-    multiSampleEnabled_     = desc.multiSampling.enabled;
-    sampleMask_             = desc.multiSampling.sampleMask;
+    multiSampleEnabled_     = desc.multiSampleEnabled;
     lineSmoothEnabled_      = desc.antiAliasedLineEnabled;
     lineWidth_              = desc.lineWidth;
     polygonOffsetEnabled_   = IsPolygonOffsetEnabled(desc.depthBias);
@@ -90,11 +89,6 @@ void GLRasterizerState::Bind(GLStateManager& stateMngr)
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     stateMngr.Set(GLStateExt::CONSERVATIVE_RASTERIZATION, conservativeRaster_);
     #endif
-
-    #if 0//TODO
-    if (multiSampleEnabled_)
-        stateMngr.SetSampleMask(sampleMask_);
-    #endif
 }
 
 int GLRasterizerState::CompareSWO(const GLRasterizerState& rhs) const
@@ -107,7 +101,6 @@ int GLRasterizerState::CompareSWO(const GLRasterizerState& rhs) const
     LLGL_COMPARE_BOOL_MEMBER_SWO( scissorTestEnabled_   );
     LLGL_COMPARE_BOOL_MEMBER_SWO( depthClampEnabled_    );
     LLGL_COMPARE_BOOL_MEMBER_SWO( multiSampleEnabled_   );
-    LLGL_COMPARE_MEMBER_SWO     ( sampleMask_           );
     LLGL_COMPARE_BOOL_MEMBER_SWO( lineSmoothEnabled_    );
     LLGL_COMPARE_MEMBER_SWO     ( lineWidth_            );
     LLGL_COMPARE_BOOL_MEMBER_SWO( polygonOffsetEnabled_ );

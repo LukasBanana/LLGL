@@ -20,11 +20,13 @@ namespace LLGL
 
 
 D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc) :
-    device_       { device                           },
-    resolution_   { desc.resolution                  },
-    multiSamples_ { desc.multiSampling.SampleCount() },
-    renderPass_   { desc.renderPass                  }
+    device_     { device          },
+    resolution_ { desc.resolution },
+    renderPass_ { desc.renderPass }
 {
+    if (desc.samples > 1)
+        FindSuitableSampleDesc(desc);
+
     #if 0
     if (desc.attachments.empty())
     {
@@ -124,6 +126,44 @@ void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)
 /*
  * ======= Private: =======
  */
+
+void D3D11RenderTarget::FindSuitableSampleDesc(const RenderTargetDescriptor& desc)
+{
+    /* Gather all attachment formats */
+    const auto numFormats = std::min(LLGL_MAX_NUM_ATTACHMENTS, desc.attachments.size());
+    DXGI_FORMAT formats[LLGL_MAX_NUM_ATTACHMENTS];
+
+    for (std::size_t i = 0; i < numFormats; ++i)
+    {
+        const auto& attachment = desc.attachments[i];
+        if (auto texture = attachment.texture)
+        {
+            /* Get format from texture */
+            auto textureD3D = LLGL_CAST(D3D11Texture*, texture);
+            formats[i] = textureD3D->GetFormat();
+        }
+        else
+        {
+            /* Get format by type */
+            switch (attachment.type)
+            {
+                case AttachmentType::Depth:
+                    formats[i] = DXGI_FORMAT_D32_FLOAT;
+                    break;
+                case AttachmentType::DepthStencil:
+                case AttachmentType::Stencil:
+                    formats[i] = DXGI_FORMAT_D24_UNORM_S8_UINT;
+                    break;
+                default:
+                    formats[i] = DXGI_FORMAT_UNKNOWN;
+                    break;
+            }
+        }
+    }
+
+    /* Find least common denominator of suitable sample descriptor for all attachment formats */
+    sampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_, numFormats, formats, desc.samples);
+}
 
 void D3D11RenderTarget::Attach(const AttachmentDescriptor& attachmentDesc)
 {
@@ -261,11 +301,11 @@ void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const Attac
         D3D11_TEXTURE2D_DESC texDesc;
         textureD3D.GetNative().tex2D->GetDesc(&texDesc);
         {
-            texDesc.Width               = (texDesc.Width << attachmentDesc.mipLevel);
-            texDesc.Height              = (texDesc.Height << attachmentDesc.mipLevel);
-            texDesc.MipLevels           = 1;
-            texDesc.SampleDesc.Count    = multiSamples_;
-            texDesc.MiscFlags           = 0;
+            texDesc.Width       = (texDesc.Width << attachmentDesc.mipLevel);
+            texDesc.Height      = (texDesc.Height << attachmentDesc.mipLevel);
+            texDesc.MipLevels   = 1;
+            texDesc.SampleDesc  = sampleDesc_;
+            texDesc.MiscFlags   = 0;
         }
         ComPtr<ID3D11Texture2D> tex2DMS;
         auto hr = device_->CreateTexture2D(&texDesc, nullptr, tex2DMS.ReleaseAndGetAddressOf());
@@ -336,17 +376,16 @@ void D3D11RenderTarget::CreateDepthStencilAndDSV(DXGI_FORMAT format)
     /* Create depth-stencil resource */
     D3D11_TEXTURE2D_DESC texDesc;
     {
-        texDesc.Width               = GetResolution().width;
-        texDesc.Height              = GetResolution().height;
-        texDesc.MipLevels           = 1;
-        texDesc.ArraySize           = 1;
-        texDesc.Format              = format;
-        texDesc.SampleDesc.Count    = std::max(1u, multiSamples_);
-        texDesc.SampleDesc.Quality  = 0;
-        texDesc.Usage               = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
-        texDesc.CPUAccessFlags      = 0;
-        texDesc.MiscFlags           = 0;
+        texDesc.Width           = GetResolution().width;
+        texDesc.Height          = GetResolution().height;
+        texDesc.MipLevels       = 1;
+        texDesc.ArraySize       = 1;
+        texDesc.Format          = format;
+        texDesc.SampleDesc      = sampleDesc_;
+        texDesc.Usage           = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags       = D3D11_BIND_DEPTH_STENCIL;
+        texDesc.CPUAccessFlags  = 0;
+        texDesc.MiscFlags       = 0;
     }
     auto hr = device_->CreateTexture2D(&texDesc, nullptr, depthStencil_.ReleaseAndGetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11Texture2D", "for render-target depth-stencil");
@@ -372,7 +411,7 @@ void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11
 
 bool D3D11RenderTarget::HasMultiSampling() const
 {
-    return (multiSamples_ > 1);
+    return (sampleDesc_.Count > 1);
 }
 
 

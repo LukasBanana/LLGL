@@ -27,7 +27,10 @@ namespace LLGL
 */
 struct VsyncDescriptor
 {
-    //! Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
+    /**
+    \brief Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
+    \todo Remove this member and use \c interval only. Set \c interval to zero to disable v-sync.
+    */
     bool            enabled     = false;
 
     /**
@@ -104,8 +107,11 @@ struct RenderContextDescriptor
     //! Vertical-synchronization (Vsync) descriptor.
     VsyncDescriptor         vsync;
 
-    //! Multi-sampling descriptor.
-    MultiSamplingDescriptor multiSampling;
+    /**
+    \brief Number of samples for the swap-chain buffers. Must be in the range [1, 64]. By default 1.
+    \todo Move into \c VideoModeDescriptor
+    */
+    std::uint32_t           samples     = 1;
 
     //! Video mode descriptor.
     VideoModeDescriptor     videoMode;

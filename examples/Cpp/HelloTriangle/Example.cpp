@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
             contextDesc.videoMode.resolution    = { 800, 600 };
             contextDesc.vsync.enabled           = true;
             #ifdef ENABLE_MULTISAMPLING
-            contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor { 8 }; // check if LLGL adapts sample count that is too high
+            contextDesc.samples                 = 8; // check if LLGL adapts sample count that is too high
             #endif
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
@@ -163,10 +163,10 @@ int main(int argc, char* argv[])
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = shaderProgram;
-            pipelineDesc.renderPass                 = context->GetRenderPass();
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.renderPass                     = context->GetRenderPass();
             #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
             #endif
         }
         LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);

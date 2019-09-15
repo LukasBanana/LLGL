@@ -293,7 +293,7 @@ public:
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, colorMap },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMap },
             };
-            renderTargetDesc.multiSampling = GetMultiSampleDesc();
+            renderTargetDesc.samples = GetSampleCount();
         }
         renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
 
@@ -349,15 +349,15 @@ public:
         // Create graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDescScene;
         {
-            pipelineDescScene.shaderProgram             = shaderProgramScene;
-            pipelineDescScene.renderPass                = renderTargetScene->GetRenderPass();
-            pipelineDescScene.pipelineLayout            = layoutScene;
+            pipelineDescScene.shaderProgram                 = shaderProgramScene;
+            pipelineDescScene.renderPass                    = renderTargetScene->GetRenderPass();
+            pipelineDescScene.pipelineLayout                = layoutScene;
 
-            pipelineDescScene.depth.testEnabled         = true;
-            pipelineDescScene.depth.writeEnabled        = true;
+            pipelineDescScene.depth.testEnabled             = true;
+            pipelineDescScene.depth.writeEnabled            = true;
 
-            pipelineDescScene.rasterizer.cullMode       = LLGL::CullMode::Back;
-            pipelineDescScene.rasterizer.multiSampling  = GetMultiSampleDesc();
+            pipelineDescScene.rasterizer.cullMode           = LLGL::CullMode::Back;
+            pipelineDescScene.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
         }
         pipelineScene = renderer->CreateGraphicsPipeline(pipelineDescScene);
 
@@ -373,10 +373,10 @@ public:
         // Create graphics pipeline for final post-processor
         LLGL::GraphicsPipelineDescriptor pipelineDescFinal;
         {
-            pipelineDescFinal.shaderProgram             = shaderProgramFinal;
-            pipelineDescFinal.pipelineLayout            = layoutFinal;
-            pipelineDescFinal.renderPass                = context->GetRenderPass();
-            pipelineDescFinal.rasterizer.multiSampling  = GetMultiSampleDesc();
+            pipelineDescFinal.shaderProgram                 = shaderProgramFinal;
+            pipelineDescFinal.pipelineLayout                = layoutFinal;
+            pipelineDescFinal.renderPass                    = context->GetRenderPass();
+            pipelineDescFinal.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
         }
         pipelineFinal = renderer->CreateGraphicsPipeline(pipelineDescFinal);
     }

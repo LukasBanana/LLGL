@@ -213,26 +213,6 @@ public ref class Scissor
 
 };
 
-public ref class MultiSamplingDescriptor
-{
-
-    public:
-
-        MultiSamplingDescriptor();
-        MultiSamplingDescriptor(unsigned int samples);
-        MultiSamplingDescriptor(unsigned int samples, unsigned int sampleMask);
-
-        property unsigned int SampleCount
-        {
-            unsigned int get();
-        }
-
-        property bool           Enabled;
-        property unsigned int   Samples;
-        property unsigned int   SampleMask;
-
-};
-
 public ref class DepthDescriptor
 {
 
@@ -299,11 +279,11 @@ public ref class RasterizerDescriptor
         property PolygonMode                PolygonMode;
         property CullMode                   CullMode;
         property DepthBiasDescriptor^       DepthBias;
-        property MultiSamplingDescriptor^   MultiSampling;
         property bool                       FrontCCW;
         property bool                       DiscardEnabled;
         property bool                       DepthClampEnabled;
         property bool                       ScissorTestEnabled;
+        property bool                       MultiSampleEnabled;
         property bool                       AntiAliasedLineEnabled;
         property bool                       ConservativeRasterization;
         property float                      LineWidth;

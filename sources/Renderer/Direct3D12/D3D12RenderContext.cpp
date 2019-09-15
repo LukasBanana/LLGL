@@ -31,10 +31,9 @@ D3D12RenderContext::D3D12RenderContext(
     const RenderContextDescriptor&  desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext     { desc.videoMode, desc.vsync       },
-    renderSystem_     { renderSystem                     },
-    swapChainSamples_ { desc.multiSampling.SampleCount() },
-    frameFence_       { renderSystem.GetDXDevice()       }
+    RenderContext     { desc.videoMode, desc.vsync },
+    renderSystem_     { renderSystem               },
+    frameFence_       { renderSystem.GetDXDevice() }
 {
     /* Store reference to command queue */
     commandQueue_ = LLGL_CAST(D3D12CommandQueue*, renderSystem_.GetCommandQueue());
@@ -43,14 +42,14 @@ D3D12RenderContext::D3D12RenderContext(
     SetOrCreateSurface(surface, GetVideoMode(), nullptr);
 
     /* Create device resources and window dependent resource */
-    CreateDeviceResources();
+    QueryDeviceParameters(renderSystem.GetDevice(), desc.samples);
     CreateWindowSizeDependentResources(GetVideoMode());
 
     /* Initialize v-sync */
     OnSetVsync(desc.vsync);
 
     /* Create default render pass */
-    defaultRenderPass_.BuildAttachments(1, &colorFormat_, depthStencilFormat_);
+    defaultRenderPass_.BuildAttachments(1, &colorFormat_, depthStencilFormat_, swapChainSampleDesc_);
 }
 
 D3D12RenderContext::~D3D12RenderContext()
@@ -155,7 +154,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForDSV() c
 
 bool D3D12RenderContext::HasMultiSampling() const
 {
-    return (swapChainSamples_ > 1);
+    return (swapChainSampleDesc_.Count > 1);
 }
 
 bool D3D12RenderContext::HasDepthBuffer() const
@@ -192,6 +191,16 @@ bool D3D12RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
     return true;
+}
+
+void D3D12RenderContext::QueryDeviceParameters(const D3D12Device& device, std::uint32_t samples)
+{
+    /* Find suitable sample descriptor */
+    if (samples > 1)
+        swapChainSampleDesc_ = device.FindSuitableSampleDesc(colorFormat_, samples);
+
+    /* Store size of RTV descriptor */
+    rtvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 }
 
 void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescriptor& videoModeDesc)
@@ -307,20 +316,6 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
         rtvDescHandle.Offset(1, rtvDescSize_);
     }
 
-    /* Find suitable multi-samples for color format */
-    auto sampleCount = renderSystem_.GetDevice().FindSuitableMultisamples(colorFormat_, swapChainSamples_);
-    if (swapChainSamples_ != sampleCount)
-    {
-        Log::PostReport(
-            Log::ReportType::Information,
-            (
-                "reduced multi-samples for anti-aliasing from " +
-                std::to_string(swapChainSamples_) + " to " + std::to_string(sampleCount)
-            )
-        );
-        swapChainSamples_ = sampleCount;
-    }
-
     if (HasMultiSampling())
     {
         /* Create multi-sampled render targets */
@@ -330,8 +325,8 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
             videoModeDesc.resolution.height,
             1, // arraySize
             1, // mipLevels
-            swapChainSamples_,
-            0,
+            swapChainSampleDesc_.Count,
+            swapChainSampleDesc_.Quality,
             D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
         );
 
@@ -382,8 +377,8 @@ void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoMode
         videoModeDesc.resolution.height,
         1, // arraySize
         1, // mipLevels
-        swapChainSamples_,
-        0,
+        swapChainSampleDesc_.Count,
+        swapChainSampleDesc_.Quality,
         (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
     );
 
@@ -398,12 +393,6 @@ void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoMode
 
     /* Create depth-stencil view (DSV) */
     device->CreateDepthStencilView(depthStencil_.native.Get(), nullptr, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
-}
-
-void D3D12RenderContext::CreateDeviceResources()
-{
-    /* Store size of RTV descriptor */
-    rtvDescSize_ = renderSystem_.GetDXDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 }
 
 void D3D12RenderContext::MoveToNextFrame()
