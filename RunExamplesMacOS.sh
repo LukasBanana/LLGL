@@ -19,12 +19,14 @@ options=(
     "Texturing"
     "Render Target"
     "Buffer Array"
+    "Instancing"
     "Stream Output"
     "Post Processing"
     "Shadow Mapping"
     "Stencil Buffer"
     "Volume Rendering"
     "Compute Shader"
+    "Animation"
 )
 select opt in "${options[@]}"
 do
@@ -45,22 +47,28 @@ do
         (cd examples/Cpp/BufferArray; ../../../$BUILD_DIR/Example_BufferArray.app/Contents/MacOS/Example_BufferArray)
         ;;
     "${options[5]}")
-        (cd examples/Cpp/StreamOutput; ../../../$BUILD_DIR/Example_StreamOutput.app/Contents/MacOS/Example_StreamOutput)
+        (cd examples/Cpp/Instancing; ../../../$BUILD_DIR/Example_Instancing.app/Contents/MacOS/Example_Instancing)
         ;;
     "${options[6]}")
-        (cd examples/Cpp/PostProcessing; ../../../$BUILD_DIR/Example_PostProcessing.app/Contents/MacOS/Example_PostProcessing)
+        (cd examples/Cpp/StreamOutput; ../../../$BUILD_DIR/Example_StreamOutput.app/Contents/MacOS/Example_StreamOutput)
         ;;
     "${options[7]}")
-        (cd examples/Cpp/ShadowMapping; ../../../$BUILD_DIR/Example_ShadowMapping.app/Contents/MacOS/Example_ShadowMapping)
+        (cd examples/Cpp/PostProcessing; ../../../$BUILD_DIR/Example_PostProcessing.app/Contents/MacOS/Example_PostProcessing)
         ;;
     "${options[8]}")
-        (cd examples/Cpp/StencilBuffer; ../../../$BUILD_DIR/Example_StencilBuffer.app/Contents/MacOS/Example_StencilBuffer)
+        (cd examples/Cpp/ShadowMapping; ../../../$BUILD_DIR/Example_ShadowMapping.app/Contents/MacOS/Example_ShadowMapping)
         ;;
     "${options[9]}")
-        (cd examples/Cpp/VolumeRendering; ../../../$BUILD_DIR/Example_VolumeRendering.app/Contents/MacOS/Example_VolumeRendering)
+        (cd examples/Cpp/StencilBuffer; ../../../$BUILD_DIR/Example_StencilBuffer.app/Contents/MacOS/Example_StencilBuffer)
         ;;
     "${options[10]}")
+        (cd examples/Cpp/VolumeRendering; ../../../$BUILD_DIR/Example_VolumeRendering.app/Contents/MacOS/Example_VolumeRendering)
+        ;;
+    "${options[11]}")
         (cd examples/Cpp/ComputeShader; ../../../$BUILD_DIR/Example_ComputeShader.app/Contents/MacOS/Example_ComputeShader)
+        ;;
+    "${options[12]}")
+        (cd examples/Cpp/Animation; ../../../$BUILD_DIR/Example_Animation.app/Contents/MacOS/Example_Animation)
         ;;
     *)
         echo "invalid selection"
