@@ -6,8 +6,9 @@
  */
 
 #include "GLRenderbuffer.h"
-#include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
+#include "../Ext/GLExtensions.h"
+#include "../../GLCommon/GLExtensionRegistry.h"
 
 
 namespace LLGL
@@ -52,16 +53,48 @@ void GLRenderbuffer::DeleteRenderbuffer()
     }
 }
 
-void GLRenderbuffer::Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
+static void GLRenderbufferStorage(GLuint id, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
 {
-    /* Bind renderbuffer */
-    GLStateManager::Get().BindRenderbuffer(id_);
-
-    /* Initialize renderbuffer storage */
+    /* Bind renderbuffer and define storage with or without multi-sampling */
+    GLStateManager::Get().BindRenderbuffer(id);
     if (samples > 1)
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, internalFormat, width, height);
     else
         glRenderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
+}
+
+#if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+
+static void GLNamedRenderbufferStorage(GLuint id, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
+{
+    /* Define storage of named renderbuffer with or without multi-sampling */
+    if (samples > 1)
+        glNamedRenderbufferStorageMultisample(id, samples, internalFormat, width, height);
+    else
+        glNamedRenderbufferStorage(id, internalFormat, width, height);
+}
+
+#endif // /GL_ARB_direct_state_access
+
+void GLRenderbuffer::BindAndDefineStorage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
+{
+    GLRenderbufferStorage(id_, internalFormat, width, height, samples);
+}
+
+void GLRenderbuffer::DefineStorage(GLuint id, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        /* Define storage of named renderbuffer directly */
+        GLNamedRenderbufferStorage(id, internalFormat, width, height, samples);
+    }
+    else
+    #endif
+    {
+        /* Bind and define storage of renderbuffer */
+        GLRenderbufferStorage(id, internalFormat, width, height, samples);
+    }
 }
 
 

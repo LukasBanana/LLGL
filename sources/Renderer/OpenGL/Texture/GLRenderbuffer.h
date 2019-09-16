@@ -35,7 +35,7 @@ class GLRenderbuffer
         void DeleteRenderbuffer();
 
         // Binds the renderbuffer and initialized its storage.
-        void Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples);
+        void BindAndDefineStorage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples);
 
         // Returns the hardware buffer ID.
         inline GLuint GetID() const
@@ -54,6 +54,11 @@ class GLRenderbuffer
         {
             return Valid();
         }
+
+    public:
+
+        // Defines the storage for
+        static void DefineStorage(GLuint id, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples);
 
     private:
 

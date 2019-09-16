@@ -877,6 +877,20 @@ void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
     }
 }
 
+void GLStateManager::PushBoundRenderbuffer()
+{
+    renderbufferState_.boundRenderbufferStack.push(renderbufferState_.boundRenderbuffer);
+}
+
+void GLStateManager::PopBoundRenderbuffer()
+{
+    const auto& state = renderbufferState_.boundRenderbufferStack.top();
+    {
+        BindRenderbuffer(state);
+    }
+    renderbufferState_.boundRenderbufferStack.pop();
+}
+
 void GLStateManager::NotifyRenderbufferRelease(GLuint renderbuffer)
 {
     InvalidateBoundGLObject(renderbufferState_.boundRenderbuffer, renderbuffer);

@@ -194,6 +194,9 @@ class GLStateManager
 
         void BindRenderbuffer(GLuint renderbuffer);
 
+        void PushBoundRenderbuffer();
+        void PopBoundRenderbuffer();
+
         void NotifyRenderbufferRelease(GLuint renderbuffer);
 
         /* ----- Texture ----- */
@@ -394,7 +397,8 @@ class GLStateManager
 
         struct GLRenderbufferState
         {
-            GLuint boundRenderbuffer = 0;
+            GLuint              boundRenderbuffer = 0;
+            std::stack<GLuint>  boundRenderbufferStack;
         };
 
         struct GLTextureLayer

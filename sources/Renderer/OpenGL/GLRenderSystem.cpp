@@ -239,8 +239,19 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 {
     auto texture = MakeUnique<GLTexture>(textureDesc);
 
+    if (texture->IsRenderbuffer())
+        InitializeGLRenderbuffer(*texture, textureDesc);
+    else
+        InitializeGLTexture(*texture, textureDesc, imageDesc);
+
+    return TakeOwnership(textures_, std::move(texture));
+}
+
+//private
+void GLRenderSystem::InitializeGLTexture(GLTexture& texture, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+{
     /* Bind texture */
-    GLStateManager::Get().BindGLTexture(*texture);
+    GLStateManager::Get().BindGLTexture(texture);
 
     /* Initialize texture parameters for the first time */
     auto target = GLTypes::Map(textureDesc.type);
@@ -321,8 +332,18 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     /* Generate MIP-maps if enabled */
     if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
         GLMipGenerator::Get().GenerateMips(textureDesc.type);
+}
 
-    return TakeOwnership(textures_, std::move(texture));
+//private
+void GLRenderSystem::InitializeGLRenderbuffer(GLTexture& texture, const TextureDescriptor& textureDesc)
+{
+    GLRenderbuffer::DefineStorage(
+        texture.GetID(),
+        GLTypes::Map(textureDesc.format),
+        static_cast<GLsizei>(textureDesc.extent.width),
+        static_cast<GLsizei>(textureDesc.extent.height),
+        static_cast<GLsizei>(textureDesc.samples)
+    );
 }
 
 #if 0//TODO

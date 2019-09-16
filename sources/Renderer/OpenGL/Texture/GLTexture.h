@@ -17,6 +17,7 @@ namespace LLGL
 {
 
 
+// OpenGL texture class that manages a GL textures and renderbuffers (if the texture is only used as attachment but not for sampling).
 class GLTexture final : public Texture
 {
 
@@ -61,14 +62,25 @@ class GLTexture final : public Texture
             return numMipLevels_;
         }
 
+        // Returns true if this object managges a GL renderbuffer instead of a texture.
+        inline bool IsRenderbuffer() const
+        {
+            return isRenderbuffer_;
+        }
+
     private:
 
-        void GetTexParams(GLint* internalFormat, GLint* extent) const;
+        void GetTextureParams(GLint* internalFormat, GLint* extent, GLint* samples) const;
+        void GetRenderbufferParams(GLint* internalFormat, GLint* extent, GLint* samples) const;
+
+        void GetTextureMipSize(GLint level, GLint (&texSize)[3]) const;
+        void GetRenderbufferSize(GLint (&texSize)[3]) const;
 
     private:
 
-        GLuint  id_             = 0;
+        GLuint  id_             = 0;        // GL object name for texture or renderbuffer
         GLsizei numMipLevels_   = 1;
+        bool    isRenderbuffer_ = false;
 
 };
 

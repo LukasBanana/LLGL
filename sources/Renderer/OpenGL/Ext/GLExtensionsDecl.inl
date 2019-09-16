@@ -208,6 +208,7 @@ DECL_GLPROC(PFNGLDELETERENDERBUFFERSPROC,                           glDeleteRend
 DECL_GLPROC(PFNGLBINDRENDERBUFFERPROC,                              glBindRenderbuffer,                             void,           (GLenum, GLuint));
 DECL_GLPROC(PFNGLRENDERBUFFERSTORAGEPROC,                           glRenderbufferStorage,                          void,           (GLenum, GLenum, GLsizei, GLsizei));
 DECL_GLPROC(PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC,                glRenderbufferStorageMultisample,               void,           (GLenum, GLsizei, GLenum, GLsizei, GLsizei));
+DECL_GLPROC(PFNGLGETRENDERBUFFERPARAMETERIVPROC,                    glGetRenderbufferParameteriv,                   void,           (GLenum, GLenum, GLint*));
 DECL_GLPROC(PFNGLGENFRAMEBUFFERSPROC,                               glGenFramebuffers,                              void,           (GLsizei, GLuint*));
 DECL_GLPROC(PFNGLDELETEFRAMEBUFFERSPROC,                            glDeleteFramebuffers,                           void,           (GLsizei, const GLuint*));
 DECL_GLPROC(PFNGLBINDFRAMEBUFFERPROC,                               glBindFramebuffer,                              void,           (GLenum, GLuint));

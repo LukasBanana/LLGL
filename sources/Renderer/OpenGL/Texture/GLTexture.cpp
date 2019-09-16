@@ -18,33 +18,77 @@ namespace LLGL
 {
 
 
-GLTexture::GLTexture(const TextureDescriptor& desc) :
-    Texture       { desc.type                                },
-    numMipLevels_ { static_cast<GLsizei>(NumMipLevels(desc)) }
+// Returns true if a GL renderbuffer is sufficient for a texture with the specified bind flags
+static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
-    if (HasExtension(GLExt::ARB_direct_state_access))
+    /* Renderbuffers can only be used for 2D and 2D-multi-sampled textures with a single MIP-map, and only if it's only used as a attachment */
+    const long bindFlags = (desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage | BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment));
+    return
+    (
+        desc.mipLevels == 1 &&
+        (desc.type == TextureType::Texture2D || desc.type == TextureType::Texture2DMS) &&
+        (bindFlags == BindFlags::ColorAttachment || bindFlags == BindFlags::DepthStencilAttachment) &&
+        (desc.cpuAccessFlags == 0)
+    );
+}
+
+GLTexture::GLTexture(const TextureDescriptor& desc) :
+    Texture         { desc.type                                },
+    numMipLevels_   { static_cast<GLsizei>(NumMipLevels(desc)) },
+    isRenderbuffer_ { IsRenderbufferSufficient(desc)           }
+{
+    if (isRenderbuffer_)
     {
-        /* Create new GL texture object with respective target */
-        glCreateTextures(GLTypes::Map(GetType()), 1, &id_);
+        #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+        if (HasExtension(GLExt::ARB_direct_state_access))
+        {
+            /* Create new GL renderbuffer object */
+            glCreateRenderbuffers(1, &id_);
+        }
+        else
+        #endif
+        {
+            /* Create new GL renderbuffer object (must be bound to a target before it can be used) */
+            glGenRenderbuffers(1, &id_);
+        }
     }
     else
-    #endif
     {
-        /* Create new GL texture object (must be bound to a target before it can be used) */
-        glGenTextures(1, &id_);
+        #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+        if (HasExtension(GLExt::ARB_direct_state_access))
+        {
+            /* Create new GL texture object with respective target */
+            glCreateTextures(GLTypes::Map(GetType()), 1, &id_);
+        }
+        else
+        #endif
+        {
+            /* Create new GL texture object (must be bound to a target before it can be used) */
+            glGenTextures(1, &id_);
+        }
     }
 }
 
 GLTexture::~GLTexture()
 {
-    glDeleteTextures(1, &id_);
-    GLStateManager::Get().NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
+    if (isRenderbuffer_)
+    {
+        glDeleteRenderbuffers(1, &id_);
+        GLStateManager::Get().NotifyRenderbufferRelease(id_);
+    }
+    else
+    {
+        glDeleteTextures(1, &id_);
+        GLStateManager::Get().NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
+    }
 }
 
 void GLTexture::SetName(const char* name)
 {
-    GLSetObjectLabel(GL_TEXTURE, GetID(), name);
+    if (isRenderbuffer_)
+        GLSetObjectLabel(GL_RENDERBUFFER, GetID(), name);
+    else
+        GLSetObjectLabel(GL_TEXTURE, GetID(), name);
 }
 
 static GLenum GLGetTextureParamTarget(const TextureType type)
@@ -69,33 +113,17 @@ Extent3D GLTexture::GetMipExtent(std::uint32_t mipLevel) const
     GLint texSize[3] = { 0 };
     GLint level = static_cast<GLint>(mipLevel);
 
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
-    if (HasExtension(GLExt::ARB_direct_state_access))
+    if (isRenderbuffer_)
     {
-        /* Query texture attributes directly using DSA */
-        glGetTextureLevelParameteriv(id_, level, GL_TEXTURE_WIDTH,  &texSize[0]);
-        glGetTextureLevelParameteriv(id_, level, GL_TEXTURE_HEIGHT, &texSize[1]);
-        glGetTextureLevelParameteriv(id_, level, GL_TEXTURE_DEPTH,  &texSize[2]);
+        /* Get MIP-map extent from renderbuffer object, but only for the first MIP-map */
+        if (level == 0)
+            GetRenderbufferSize(texSize);
     }
     else
-    #endif
     {
-        /* Push currently bound texture onto stack to restore it after query */
-        GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
-        {
-            /* Bind texture and query attributes */
-            GLStateManager::Get().BindGLTexture(*this);
-            auto target = GLGetTextureParamTarget(GetType());
-            glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH,  &texSize[0]);
-            glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &texSize[1]);
-            glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH,  &texSize[2]);
-        }
-        GLStateManager::Get().PopBoundTexture();
+        /* Get MIP-map extent from texture object */
+        GetTextureMipSize(level, texSize);
     }
-
-    /* Adjust depth value for cube texture to be uniform with D3D */
-    if (IsCubeTexture(GetType()))
-        texSize[2] *= 6;
 
     return
     {
@@ -115,8 +143,11 @@ TextureDescriptor GLTexture::GetDesc() const
     texDesc.mipLevels       = static_cast<std::uint32_t>(GetNumMipLevels());
 
     /* Query hardware texture format and size */
-    GLint internalFormat = 0, extent[3] = { 0 };
-    GetTexParams(&internalFormat, extent);
+    GLint internalFormat = 0, extent[3] = { 0 }, samples = 1;
+    if (isRenderbuffer_)
+        GetRenderbufferParams(&internalFormat, extent, &samples);
+    else
+        GetTextureParams(&internalFormat, extent, &samples);
 
     /*
     Transform data from OpenGL to LLGL
@@ -131,6 +162,8 @@ TextureDescriptor GLTexture::GetDesc() const
         texDesc.extent.depth    = static_cast<std::uint32_t>(extent[2]);
     else
         texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[2]);
+
+    texDesc.samples             = static_cast<std::uint32_t>(samples);
 
     return texDesc;
 }
@@ -262,45 +295,54 @@ void GLTexture::CopyImageSubData(
     const Offset3D& srcOffset,
     const Extent3D& extent)
 {
-    #ifdef GL_ARB_copy_image
-    if (HasExtension(GLExt::ARB_copy_image))
+    if (!isRenderbuffer_)
     {
-        /* Copy raw data of texture directly (GL 4.3+) */
-        GLCopyImageSubData(*this, dstLevel, dstOffset, srcTexture, srcLevel, srcOffset, extent);
-    }
-    else
-    #endif // /GL_ARB_copy_image
-    {
-        /* Copy source texture from GL_READ_BUFFER into destination texture */
-        GLCopyTexSubImage(*this, dstLevel, dstOffset, srcTexture, srcLevel, srcOffset, extent);
+        #ifdef GL_ARB_copy_image
+        if (HasExtension(GLExt::ARB_copy_image))
+        {
+            /* Copy raw data of texture directly (GL 4.3+) */
+            GLCopyImageSubData(*this, dstLevel, dstOffset, srcTexture, srcLevel, srcOffset, extent);
+        }
+        else
+        #endif // /GL_ARB_copy_image
+        {
+            /* Copy source texture from GL_READ_BUFFER into destination texture */
+            GLCopyTexSubImage(*this, dstLevel, dstOffset, srcTexture, srcLevel, srcOffset, extent);
+        }
     }
 }
 
 void GLTexture::TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc)
 {
-    #ifdef GL_ARB_texture_view
-    if (HasExtension(GLExt::ARB_texture_view))
+    if (!isRenderbuffer_)
     {
-        /* Initialize texture with texture-view description */
-        glTextureView(
-            GetID(),
-            GLTypes::Map(textureViewDesc.type),
-            sharedTexture.GetID(),
-            GLTypes::Map(textureViewDesc.format),
-            textureViewDesc.subresource.baseMipLevel,
-            textureViewDesc.subresource.numMipLevels,
-            textureViewDesc.subresource.baseArrayLayer,
-            textureViewDesc.subresource.numArrayLayers
-        );
+        #ifdef GL_ARB_texture_view
+        if (HasExtension(GLExt::ARB_texture_view))
+        {
+            /* Initialize texture with texture-view description */
+            glTextureView(
+                GetID(),
+                GLTypes::Map(textureViewDesc.type),
+                sharedTexture.GetID(),
+                GLTypes::Map(textureViewDesc.format),
+                textureViewDesc.subresource.baseMipLevel,
+                textureViewDesc.subresource.numMipLevels,
+                textureViewDesc.subresource.baseArrayLayer,
+                textureViewDesc.subresource.numArrayLayers
+            );
+        }
+        #endif // /GL_ARB_texture_view
     }
-    #endif // /GL_ARB_texture_view
 }
 
 GLenum GLTexture::GetInternalFormat() const
 {
     /* Query hardware texture format */
     GLint internalFormat = 0;
-    GetTexParams(&internalFormat, nullptr);
+    if (isRenderbuffer_)
+        GetRenderbufferParams(&internalFormat, nullptr, nullptr);
+    else
+        GetTextureParams(&internalFormat, nullptr, nullptr);
     return static_cast<GLenum>(internalFormat);
 }
 
@@ -309,7 +351,7 @@ GLenum GLTexture::GetInternalFormat() const
  * ======= Private: =======
  */
 
-void GLTexture::GetTexParams(GLint* internalFormat, GLint* extent) const
+void GLTexture::GetTextureParams(GLint* internalFormat, GLint* extent, GLint* samples) const
 {
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
@@ -324,6 +366,9 @@ void GLTexture::GetTexParams(GLint* internalFormat, GLint* extent) const
             glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_HEIGHT, &extent[1]);
             glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_DEPTH,  &extent[2]);
         }
+
+        if (samples != nullptr)
+            glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_SAMPLES, samples);
     }
     else
     #endif
@@ -344,8 +389,113 @@ void GLTexture::GetTexParams(GLint* internalFormat, GLint* extent) const
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &extent[1]);
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH,  &extent[2]);
             }
+
+            if (samples != nullptr)
+                glGetTexLevelParameteriv(target, 0, GL_TEXTURE_SAMPLES, samples);
         }
         GLStateManager::Get().PopBoundTexture();
+    }
+}
+
+void GLTexture::GetRenderbufferParams(GLint* internalFormat, GLint* extent, GLint* samples) const
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        /* Query texture attributes directly using DSA */
+        if (internalFormat != nullptr)
+            glGetNamedRenderbufferParameteriv(id_, GL_RENDERBUFFER_INTERNAL_FORMAT, internalFormat);
+
+        if (extent != nullptr)
+        {
+            glGetNamedRenderbufferParameteriv(id_, GL_RENDERBUFFER_WIDTH,  &extent[0]);
+            glGetNamedRenderbufferParameteriv(id_, GL_RENDERBUFFER_HEIGHT, &extent[1]);
+            extent[2] = 1;
+        }
+
+        if (samples != nullptr)
+            glGetNamedRenderbufferParameteriv(id_, GL_RENDERBUFFER_SAMPLES, samples);
+    }
+    else
+    #endif
+    {
+        /* Push currently bound texture onto stack to restore it after query */
+        GLStateManager::Get().PushBoundRenderbuffer();
+        {
+            /* Bind texture and query attributes */
+            GLStateManager::Get().BindRenderbuffer(id_);
+
+            if (internalFormat != nullptr)
+                glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, internalFormat);
+
+            if (extent != nullptr)
+            {
+                glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,  &extent[0]);
+                glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &extent[1]);
+                extent[2] = 1;
+            }
+
+            if (samples != nullptr)
+                glGetRenderbufferParameteriv(id_, GL_RENDERBUFFER_SAMPLES, samples);
+        }
+        GLStateManager::Get().PopBoundRenderbuffer();
+    }
+}
+
+void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        /* Query texture attributes directly using DSA */
+        glGetTextureLevelParameteriv(id_, level, GL_TEXTURE_WIDTH,  &texSize[0]);
+        glGetTextureLevelParameteriv(id_, level, GL_TEXTURE_HEIGHT, &texSize[1]);
+        glGetTextureLevelParameteriv(id_, level, GL_TEXTURE_DEPTH,  &texSize[2]);
+    }
+    else
+    #endif
+    {
+        /* Push currently bound texture onto stack to restore it after query */
+        GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
+        {
+            /* Bind texture and query attributes */
+            GLStateManager::Get().BindGLTexture(*this);
+            auto target = GLGetTextureParamTarget(GetType());
+            glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH,  &texSize[0]);
+            glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &texSize[1]);
+            glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH,  &texSize[2]);
+        }
+        GLStateManager::Get().PopBoundTexture();
+    }
+
+    /* Adjust depth value for cube texture to be uniform with D3D */
+    if (IsCubeTexture(GetType()))
+        texSize[2] *= 6;
+}
+
+void GLTexture::GetRenderbufferSize(GLint (&texSize)[3]) const
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glGetNamedRenderbufferParameteriv(id_, GL_RENDERBUFFER_WIDTH, &texSize[0]);
+        glGetNamedRenderbufferParameteriv(id_, GL_RENDERBUFFER_HEIGHT, &texSize[1]);
+        texSize[2] = 1;
+    }
+    else
+    #endif
+    {
+        /* Push currently bound texture onto stack to restore it after query */
+        GLStateManager::Get().PushBoundRenderbuffer();
+        {
+            /* Bind texture and query attributes */
+            GLStateManager::Get().BindRenderbuffer(id_);
+            auto target = GLGetTextureParamTarget(GetType());
+            glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,  &texSize[0]);
+            glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &texSize[1]);
+            texSize[2] = 1;
+        }
+        GLStateManager::Get().PopBoundRenderbuffer();
     }
 }
 

@@ -169,6 +169,9 @@ class GLRenderSystem final : public RenderSystem
 
         GLBuffer* CreateGLBuffer(const BufferDescriptor& desc, const void* initialData);
 
+        void InitializeGLTexture(GLTexture& texture, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc);
+        void InitializeGLRenderbuffer(GLTexture& texture, const TextureDescriptor& textureDesc);
+
     private:
 
         /* ----- Hardware object containers ----- */

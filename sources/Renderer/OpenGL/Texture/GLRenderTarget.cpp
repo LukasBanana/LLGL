@@ -268,7 +268,7 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescri
 
         /* Create dummy renderbuffer attachment */
         renderbuffer_.GenRenderbuffer();
-        renderbuffer_.Storage(
+        renderbuffer_.BindAndDefineStorage(
             GL_RED,
             static_cast<GLsizei>(desc.resolution.width),
             static_cast<GLsizei>(desc.resolution.height),
@@ -403,7 +403,7 @@ void GLRenderTarget::CreateRenderbufferMS(GLenum attachment, GLenum internalForm
 
 void GLRenderTarget::InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat)
 {
-    renderbuffer.Storage(
+    renderbuffer.BindAndDefineStorage(
         internalFormat,
         static_cast<GLsizei>(GetResolution().width),
         static_cast<GLsizei>(GetResolution().height),

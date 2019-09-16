@@ -95,31 +95,40 @@ void GLFramebuffer::AttachTexture(
     GLenum              target)
 {
     GLuint texID = texture.GetID();
-    switch (texture.GetType())
+    if (texture.IsRenderbuffer())
     {
-        case TextureType::Texture1D:
-            glFramebufferTexture1D(target, attachment, GL_TEXTURE_1D, texID, mipLevel);
-            break;
-        case TextureType::Texture2D:
-            glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texID, mipLevel);
-            break;
-        case TextureType::Texture3D:
-            glFramebufferTexture3D(target, attachment, GL_TEXTURE_3D, texID, mipLevel, arrayLayer);
-            break;
-        case TextureType::TextureCube:
-            glFramebufferTexture2D(target, attachment, GLTypes::ToTextureCubeMap(static_cast<std::uint32_t>(arrayLayer)), texID, mipLevel);
-            break;
-        case TextureType::Texture1DArray:
-        case TextureType::Texture2DArray:
-        case TextureType::TextureCubeArray:
-            glFramebufferTextureLayer(target, attachment, texID, mipLevel, arrayLayer);
-            break;
-        case TextureType::Texture2DMS:
-            glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D_MULTISAMPLE, texID, 0);
-            break;
-        case TextureType::Texture2DMSArray:
-            glFramebufferTextureLayer(target, attachment, texID, 0, arrayLayer);
-            break;
+        /* Attach renderbuffer to FBO */
+        glFramebufferRenderbuffer(target, attachment, GL_RENDERBUFFER, texID);
+    }
+    else
+    {
+        /* Attach texture to FBO */
+        switch (texture.GetType())
+        {
+            case TextureType::Texture1D:
+                glFramebufferTexture1D(target, attachment, GL_TEXTURE_1D, texID, mipLevel);
+                break;
+            case TextureType::Texture2D:
+                glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texID, mipLevel);
+                break;
+            case TextureType::Texture3D:
+                glFramebufferTexture3D(target, attachment, GL_TEXTURE_3D, texID, mipLevel, arrayLayer);
+                break;
+            case TextureType::TextureCube:
+                glFramebufferTexture2D(target, attachment, GLTypes::ToTextureCubeMap(static_cast<std::uint32_t>(arrayLayer)), texID, mipLevel);
+                break;
+            case TextureType::Texture1DArray:
+            case TextureType::Texture2DArray:
+            case TextureType::TextureCubeArray:
+                glFramebufferTextureLayer(target, attachment, texID, mipLevel, arrayLayer);
+                break;
+            case TextureType::Texture2DMS:
+                glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D_MULTISAMPLE, texID, 0);
+                break;
+            case TextureType::Texture2DMSArray:
+                glFramebufferTextureLayer(target, attachment, texID, 0, arrayLayer);
+                break;
+        }
     }
 }
 
