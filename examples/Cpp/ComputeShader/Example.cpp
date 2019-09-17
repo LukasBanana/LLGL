@@ -33,8 +33,6 @@ class Example_ComputeShader : public ExampleBase
     LLGL::ShaderProgram*    graphicsShader          = nullptr;
     LLGL::GraphicsPipeline* graphicsPipeline        = nullptr;
 
-    //LLGL::Fence*            fence                   = nullptr;
-
     struct SceneState
     {
         float           time            = 0.0f;
@@ -161,9 +159,6 @@ public:
             argBufferDesc.storageBuffer.stride      = sizeof(std::uint32_t);
         }
         indirectArgBuffer = renderer->CreateBuffer(argBufferDesc);
-
-        // Create fence
-        //fence = renderer->CreateFence();
     }
 
     void CreateComputePipeline()
@@ -288,7 +283,7 @@ private:
     {
         timer->MeasureTime();
 
-        // Set render target
+        // Record and submit compute commands
         commands->Begin();
         {
             // Update timer
@@ -301,7 +296,13 @@ private:
             commands->Dispatch(sceneState.numSceneObjects, 1, 1);
 
             commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
+        }
+        commands->End();
+        commandQueue->Submit(*commands);
 
+        // Record and submit graphics commands
+        commands->Begin();
+        {
             // Draw scene
             commands->BeginRenderPass(*context);
             {
