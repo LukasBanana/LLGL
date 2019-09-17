@@ -29,7 +29,6 @@ class D3D11Buffer : public Buffer
 
     public:
 
-        D3D11Buffer(long bindFlags);
         D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
         void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);

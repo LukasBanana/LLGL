@@ -18,11 +18,6 @@ namespace LLGL
 {
 
 
-D3D11Buffer::D3D11Buffer(long bindFlags) :
-    Buffer { bindFlags }
-{
-}
-
 D3D11Buffer::D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
     Buffer { desc.bindFlags }
 {

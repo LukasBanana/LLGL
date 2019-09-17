@@ -43,7 +43,7 @@ static UINT GetUAVFlags(const BufferDescriptor::StorageBuffer& desc)
 }
 
 D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
-    D3D11Buffer  { desc.bindFlags }
+    D3D11Buffer { device, desc, initialData }
 {
     if (desc.storageBuffer.stride == 0)
         throw std::invalid_argument("storage buffer stride cannot be zero for a D3D11 resource view");
