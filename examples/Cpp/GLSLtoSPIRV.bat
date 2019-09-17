@@ -14,8 +14,8 @@ glslangValidator -V -S vert -o Texturing/Example.450core.vert.spv Texturing/Exam
 glslangValidator -V -S frag -o Texturing/Example.450core.frag.spv Texturing/Example.450core.frag
 
 echo ####### Queries #######
-glslangValidator -V -S vert -o Queries/Example.450core.vert.spv Query/Example.450core.vert
-glslangValidator -V -S frag -o Queries/Example.450core.frag.spv Query/Example.450core.frag
+glslangValidator -V -S vert -o Queries/Example.450core.vert.spv Queries/Example.450core.vert
+glslangValidator -V -S frag -o Queries/Example.450core.frag.spv Queries/Example.450core.frag
 
 echo ####### RenderTarget #######
 glslangValidator -V -S vert -o RenderTarget/Example.450core.vert.spv RenderTarget/Example.450core.vert
