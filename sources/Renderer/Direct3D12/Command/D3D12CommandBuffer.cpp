@@ -539,6 +539,12 @@ static D3D12_PREDICATION_OP GetDXPredicateOp(const RenderConditionMode mode)
 void D3D12CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
+
+    /* Flush query result data if it was marked as dirty */
+    if (queryHeapD3D.InsideDirtyRange(query, 1))
+        queryHeapD3D.FlushDirtyRange(commandList_);
+
+    /* Set specified query as predicate */
     commandList_->SetPredication(
         queryHeapD3D.GetResultResource(),
         queryHeapD3D.GetAlignedBufferOffest(query),

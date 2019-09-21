@@ -11,6 +11,8 @@
 #include "../../DXCommon/DXCore.h"
 #include "../D3D12Device.h"
 #include "../D3DX12/d3dx12.h"
+#include <algorithm>
+#include <cstdint>
 
 
 namespace LLGL
@@ -80,6 +82,9 @@ D3D12QueryHeap::D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& d
         );
         resultResource_->SetName(L"LLGL::D3D12QueryHeap::CPUResultResource");
     }
+
+    /* Initialize dirty range with invalidation */
+    InvalidateDirtyRange();
 }
 
 void D3D12QueryHeap::SetName(const char* name)
@@ -90,35 +95,44 @@ void D3D12QueryHeap::SetName(const char* name)
 
 void D3D12QueryHeap::Begin(ID3D12GraphicsCommandList* commandList, UINT query)
 {
+    /* Begin query section or call "EndQuery" for a single timestamp */
     if (nativeType_ == D3D12_QUERY_TYPE_TIMESTAMP)
         commandList->EndQuery(GetNative(), GetNativeType(), query * queryPerType_);
     else
         commandList->BeginQuery(GetNative(), GetNativeType(), query * queryPerType_);
+
+    /* Mark specified query data as 'dirty' */
+    MarkDirtyRange(query, 1);
 }
 
 void D3D12QueryHeap::End(ID3D12GraphicsCommandList* commandList, UINT query)
 {
+    /* End query section or call "EndQuery" on another timestamp to get elapsed time range */
     if (nativeType_ == D3D12_QUERY_TYPE_TIMESTAMP)
         commandList->EndQuery(GetNative(), GetNativeType(), query * queryPerType_ + 1);
     else
         commandList->EndQuery(GetNative(), GetNativeType(), query * queryPerType_);
-    ResolveData(commandList, query, 1);
 }
 
-//TODO: make use of <D3D12CommandContext> class
-void D3D12QueryHeap::ResolveData(ID3D12GraphicsCommandList* commandList, UINT firstQuery, UINT numQueries)
+void D3D12QueryHeap::FlushDirtyRange(ID3D12GraphicsCommandList* commandList)
 {
-    firstQuery *= queryPerType_;
-    numQueries *= queryPerType_;
-
-    if (IsPredicate())
+    if (HasDirtyRange())
     {
-        TransitionResource(commandList, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST);
-        CopyResultsToResource(commandList, firstQuery, numQueries);
-        TransitionResource(commandList, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+        /* Resolve query data within the dirty range, then invalidate range */
+        ResolveData(commandList, dirtyRange_[0], dirtyRange_[1] - dirtyRange_[0]);
+        InvalidateDirtyRange();
     }
-    else
-        CopyResultsToResource(commandList, firstQuery, numQueries);
+}
+
+bool D3D12QueryHeap::HasDirtyRange() const
+{
+    return (dirtyRange_[0] < dirtyRange_[1]);
+}
+
+bool D3D12QueryHeap::InsideDirtyRange(UINT firstQuery, UINT numQueries) const
+{
+    /* Check if the specified queries are inside the dirty range, i.e. if [first, count) overlaps wiht [begin, end) */
+    return (firstQuery + numQueries > dirtyRange_[0] && firstQuery < dirtyRange_[1]);
 }
 
 void* D3D12QueryHeap::Map(UINT firstQuery, UINT numQueries)
@@ -155,6 +169,33 @@ UINT64 D3D12QueryHeap::GetAlignedBufferOffest(UINT query) const
 /*
  * ======= Private: =======
  */
+
+void D3D12QueryHeap::InvalidateDirtyRange()
+{
+    dirtyRange_[0] = UINT32_MAX;
+    dirtyRange_[1] = 0;
+}
+
+void D3D12QueryHeap::MarkDirtyRange(UINT firstQuery, UINT numQueries)
+{
+    dirtyRange_[0] = std::min(dirtyRange_[0], firstQuery);
+    dirtyRange_[1] = std::max(dirtyRange_[1], firstQuery + numQueries);
+}
+
+void D3D12QueryHeap::ResolveData(ID3D12GraphicsCommandList* commandList, UINT firstQuery, UINT numQueries)
+{
+    firstQuery *= queryPerType_;
+    numQueries *= queryPerType_;
+
+    if (IsPredicate())
+    {
+        TransitionResource(commandList, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST);
+        CopyResultsToResource(commandList, firstQuery, numQueries);
+        TransitionResource(commandList, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+    }
+    else
+        CopyResultsToResource(commandList, firstQuery, numQueries);
+}
 
 void D3D12QueryHeap::TransitionResource(
     ID3D12GraphicsCommandList*  commandList,

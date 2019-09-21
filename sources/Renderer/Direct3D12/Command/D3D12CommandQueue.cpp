@@ -26,6 +26,7 @@ D3D12CommandQueue::D3D12CommandQueue(
     native_      { device.CreateDXCommandQueue(type) },
     globalFence_ { device.GetNative()                }
 {
+    commandContext_.Create(device, *this);
     DetermineTimestampFrequency();
 }
 
@@ -54,34 +55,42 @@ bool D3D12CommandQueue::QueryResult(
 {
     auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
 
-    if (auto mappedData = queryHeapD3D.Map(firstQuery, numQueries))
+    /* Ensure query results have been resolved */
+    if (queryHeapD3D.InsideDirtyRange(firstQuery, numQueries))
     {
-        const auto queryType = queryHeapD3D.GetNativeType();
-        bool result = false;
-
-        if (dataSize == numQueries * sizeof(std::uint32_t))
-        {
-            /* Query 64-bit values and convert them to 32-bit values */
-            QueryResultUInt32(queryType, mappedData, firstQuery, numQueries, reinterpret_cast<std::uint32_t*>(data));
-            result = true;
-        }
-        else if (dataSize == numQueries * sizeof(std::uint64_t))
-        {
-            /* Query 64-bit values and copy them directly to output */
-            QueryResultUInt64(queryType, mappedData, firstQuery, numQueries, reinterpret_cast<std::uint64_t*>(data));
-            result = true;
-        }
-        else if (dataSize == numQueries * sizeof(QueryPipelineStatistics))
-        {
-            /* Query pipeline statistics and copy them directly to output (if structs are compatible) */
-            result = QueryResultPipelineStatistics(queryType, mappedData, firstQuery, numQueries, reinterpret_cast<QueryPipelineStatistics*>(data));
-        }
-
-        queryHeapD3D.Unmap();
-        return result;
+        queryHeapD3D.FlushDirtyRange(commandContext_.GetCommandList());
+        commandContext_.Finish(true);
     }
 
-    return false;
+    /* Map query result buffer to CPU local memory */
+    auto mappedData = queryHeapD3D.Map(firstQuery, numQueries);
+    if (mappedData == nullptr)
+        return false;
+
+    const auto queryType = queryHeapD3D.GetNativeType();
+    bool result = false;
+
+    if (dataSize == numQueries * sizeof(std::uint32_t))
+    {
+        /* Query 64-bit values and convert them to 32-bit values */
+        QueryResultUInt32(queryType, mappedData, firstQuery, numQueries, reinterpret_cast<std::uint32_t*>(data));
+        result = true;
+    }
+    else if (dataSize == numQueries * sizeof(std::uint64_t))
+    {
+        /* Query 64-bit values and copy them directly to output */
+        QueryResultUInt64(queryType, mappedData, firstQuery, numQueries, reinterpret_cast<std::uint64_t*>(data));
+        result = true;
+    }
+    else if (dataSize == numQueries * sizeof(QueryPipelineStatistics))
+    {
+        /* Query pipeline statistics and copy them directly to output (if structs are compatible) */
+        result = QueryResultPipelineStatistics(queryType, mappedData, firstQuery, numQueries, reinterpret_cast<QueryPipelineStatistics*>(data));
+    }
+
+    queryHeapD3D.Unmap();
+
+    return result;
 }
 
 /* ----- Fences ----- */

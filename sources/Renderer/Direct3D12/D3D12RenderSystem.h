@@ -231,7 +231,7 @@ class D3D12RenderSystem final : public RenderSystem
 
         ComPtr<IDXGIFactory4>                       factory_;
         D3D12Device                                 device_;
-        D3D12CommandContext                         commandContext_;
+        D3D12CommandContext*                        commandContext_         = nullptr;
         D3D12PipelineLayout                         defaultPipelineLayout_;
         D3D12CommandSignaturePool                   commandSignaturePool_;
         D3D12StagingBufferPool                      stagingBufferPool_;

@@ -34,8 +34,16 @@ class D3D12QueryHeap final : public QueryHeap
         void Begin(ID3D12GraphicsCommandList* commandList, UINT query);
         void End(ID3D12GraphicsCommandList* commandList, UINT query);
 
-        void ResolveData(ID3D12GraphicsCommandList* commandList, UINT firstQuery, UINT numQueries);
+        // Resolves all queries if not already done.
+        void FlushDirtyRange(ID3D12GraphicsCommandList* commandList);
 
+        // Returns true if this query heap has a dirty range that must be resolved before the query data can be retrieved.
+        bool HasDirtyRange() const;
+
+        // Returns true if the specified range of queries overlaps with the dirty range.
+        bool InsideDirtyRange(UINT firstQuery, UINT numQueries) const;
+
+        // Maps the query result buffer to CPU local memory.
         void* Map(UINT firstQuery, UINT numQueries);
         void Unmap();
 
@@ -68,6 +76,11 @@ class D3D12QueryHeap final : public QueryHeap
 
     private:
 
+        void InvalidateDirtyRange();
+        void MarkDirtyRange(UINT firstQuery, UINT numQueries);
+
+        void ResolveData(ID3D12GraphicsCommandList* commandList, UINT firstQuery, UINT numQueries);
+
         void TransitionResource(
             ID3D12GraphicsCommandList*  commandList,
             D3D12_RESOURCE_STATES       stateBefore,
@@ -82,12 +95,13 @@ class D3D12QueryHeap final : public QueryHeap
 
     private:
 
-        D3D12_QUERY_TYPE        nativeType_         = D3D12_QUERY_TYPE_OCCLUSION;
+        D3D12_QUERY_TYPE        nativeType_     = D3D12_QUERY_TYPE_OCCLUSION;
         ComPtr<ID3D12QueryHeap> native_;
         ComPtr<ID3D12Resource>  resultResource_;
-        UINT                    alignedStride_      = 0;
-        UINT                    queryPerType_       = 1;
-        bool                    isPredicate_        = false;
+        UINT                    alignedStride_  = 0;
+        UINT                    queryPerType_   = 1;
+        bool                    isPredicate_    = false;
+        UINT                    dirtyRange_[2]  = {};       // Marks the min/max range of queries that need to be resolved
 
 };
 

@@ -38,10 +38,8 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateDevice();
 
     /* Create command queue interface */
-    commandQueue_ = MakeUnique<D3D12CommandQueue>(device_);
-
-    /* Create command queue, command allocator, and graphics command list */
-    commandContext_.Create(device_, *commandQueue_);
+    commandQueue_   = MakeUnique<D3D12CommandQueue>(device_);
+    commandContext_ = &(commandQueue_->GetContext());
 
     /* Create default pipeline layout and command signature pool */
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
@@ -116,7 +114,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
     {
         /* Write initial data to GPU buffer */
         stagingBufferPool_.WriteImmediate(
-            commandContext_,
+            *commandContext_,
             bufferD3D->GetResource(),
             0,
             initialData,
@@ -164,7 +162,7 @@ void D3D12RenderSystem::Release(BufferArray& bufferArray)
 void D3D12RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
-    stagingBufferPool_.WriteImmediate(commandContext_, dstBufferD3D.GetResource(), dstOffset, data, dataSize);
+    stagingBufferPool_.WriteImmediate(*commandContext_, dstBufferD3D.GetResource(), dstOffset, data, dataSize);
     ExecuteCommandListAndSync();
 }
 
@@ -175,7 +173,7 @@ void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     void* mappedData = nullptr;
     const D3D12_RANGE range{ 0, static_cast<SIZE_T>(bufferD3D.GetBufferSize()) };
 
-    if (SUCCEEDED(bufferD3D.Map(commandContext_, range, &mappedData, access)))
+    if (SUCCEEDED(bufferD3D.Map(*commandContext_, range, &mappedData, access)))
         return mappedData;
 
     return nullptr;
@@ -184,7 +182,7 @@ void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    bufferD3D.Unmap(commandContext_);
+    bufferD3D.Unmap(*commandContext_);
 }
 
 /* ----- Textures ----- */
@@ -241,7 +239,7 @@ void D3D12RenderSystem::UpdateGpuTexture(
     }
     textureD3D.UpdateSubresource(
         device_.GetNative(),
-        commandContext_.GetCommandList(),
+        commandContext_->GetCommandList(),
         uploadBuffer,
         subresourceData,
         region.subresource.baseMipLevel,
@@ -268,7 +266,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 
         /* Generate MIP-maps if enabled */
         if (MustGenerateMipsOnCreate(textureDesc))
-            D3D12MipGenerator::Get().GenerateMips(commandContext_, *textureD3D, textureD3D->GetWholeSubresource());
+            D3D12MipGenerator::Get().GenerateMips(*commandContext_, *textureD3D, textureD3D->GetWholeSubresource());
 
         /* Execute upload commands and wait for GPU to finish execution */
         ExecuteCommandListAndSync();
@@ -627,12 +625,12 @@ void D3D12RenderSystem::QueryRenderingCaps()
 
 void D3D12RenderSystem::ExecuteCommandList()
 {
-    commandContext_.Finish();
+    commandContext_->Finish();
 }
 
 void D3D12RenderSystem::ExecuteCommandListAndSync()
 {
-    commandContext_.Finish(true);
+    commandContext_->Finish(true);
 }
 
 const D3D12RenderPass* D3D12RenderSystem::GetDefaultRenderPass() const

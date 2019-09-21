@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandQueue.h>
+#include "D3D12CommandContext.h"
 #include "../RenderState/D3D12Fence.h"
 #include "../../DXCommon/ComPtr.h"
 #include "../../StaticLimits.h"
@@ -67,6 +68,12 @@ class D3D12CommandQueue final : public CommandQueue
             return native_.Get();
         }
 
+        // Returns the command context for this queue.
+        inline D3D12CommandContext& GetContext()
+        {
+            return commandContext_;
+        }
+
         // Returns the global fence object for this queue.
         inline D3D12Fence& GetGlobalFence()
         {
@@ -117,6 +124,7 @@ class D3D12CommandQueue final : public CommandQueue
     private:
 
         ComPtr<ID3D12CommandQueue>  native_;
+        D3D12CommandContext         commandContext_;
         D3D12Fence                  globalFence_;
         double                      timestampScale_         = 1.0;  // Frequency to nanoseconds scale
         bool                        isTimestampNanosecs_    = true; // True, if timestamps are in nanoseconds unit
