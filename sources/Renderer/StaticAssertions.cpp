@@ -8,17 +8,19 @@
 #include "StaticAssertions.h"
 #include <LLGL/Format.h>
 #include <LLGL/IndirectArguments.h>
+#include <LLGL/QueryHeapFlags.h>
 
 
 namespace LLGL
 {
 
 
-LLGL_ASSERT_POD_STRUCT( FormatAttributes );
-LLGL_ASSERT_POD_STRUCT( DrawIndirectArguments );
-LLGL_ASSERT_POD_STRUCT( DrawIndexedIndirectArguments );
-LLGL_ASSERT_POD_STRUCT( DrawPatchIndirectArgument );
-LLGL_ASSERT_POD_STRUCT( DispatchIndirectArguments );
+LLGL_ASSERT_STDLAYOUT_STRUCT( FormatAttributes );
+LLGL_ASSERT_STDLAYOUT_STRUCT( DrawIndirectArguments );
+LLGL_ASSERT_STDLAYOUT_STRUCT( DrawIndexedIndirectArguments );
+LLGL_ASSERT_STDLAYOUT_STRUCT( DrawPatchIndirectArgument );
+LLGL_ASSERT_STDLAYOUT_STRUCT( DispatchIndirectArguments );
+LLGL_ASSERT_STDLAYOUT_STRUCT( QueryPipelineStatistics );
 
 
 } // /namespace LLGL

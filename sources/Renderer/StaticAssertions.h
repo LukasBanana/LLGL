@@ -12,8 +12,8 @@
 #include <type_traits>
 
 
-#define LLGL_ASSERT_POD_STRUCT(IDENT) \
-    static_assert(std::is_pod<IDENT>::value, "LLGL::" #IDENT " must be a POD struct")
+#define LLGL_ASSERT_STDLAYOUT_STRUCT(IDENT) \
+    static_assert(std::is_standard_layout<IDENT>::value, "LLGL::" #IDENT " must have standard layout")
 
 
 #endif
