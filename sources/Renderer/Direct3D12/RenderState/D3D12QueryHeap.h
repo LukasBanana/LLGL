@@ -31,6 +31,9 @@ class D3D12QueryHeap final : public QueryHeap
 
         D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& desc);
 
+        void Begin(ID3D12GraphicsCommandList* commandList, UINT query);
+        void End(ID3D12GraphicsCommandList* commandList, UINT query);
+
         void ResolveData(ID3D12GraphicsCommandList* commandList, UINT firstQuery, UINT numQueries);
 
         void* Map(UINT firstQuery, UINT numQueries);
@@ -83,6 +86,7 @@ class D3D12QueryHeap final : public QueryHeap
         ComPtr<ID3D12QueryHeap> native_;
         ComPtr<ID3D12Resource>  resultResource_;
         UINT                    alignedStride_      = 0;
+        UINT                    queryPerType_       = 1;
         bool                    isPredicate_        = false;
 
 };

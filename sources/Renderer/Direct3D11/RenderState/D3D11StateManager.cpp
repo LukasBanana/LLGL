@@ -19,18 +19,27 @@ D3D11StateManager::D3D11StateManager(ComPtr<ID3D11DeviceContext>& context) :
 {
 }
 
+// Check if D3D11_VIEWPORT and Viewport structures can be safely reinterpret-casted
+static constexpr bool IsCompatibleToD3DViewport()
+{
+    return
+    (
+        sizeof(D3D11_VIEWPORT)             == sizeof(Viewport)             &&
+        offsetof(D3D11_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
+        offsetof(D3D11_VIEWPORT, TopLeftY) == offsetof(Viewport, y       ) &&
+        offsetof(D3D11_VIEWPORT, Width   ) == offsetof(Viewport, width   ) &&
+        offsetof(D3D11_VIEWPORT, Height  ) == offsetof(Viewport, height  ) &&
+        offsetof(D3D11_VIEWPORT, MinDepth) == offsetof(Viewport, minDepth) &&
+        offsetof(D3D11_VIEWPORT, MaxDepth) == offsetof(Viewport, maxDepth)
+    );
+}
+
 void D3D11StateManager::SetViewports(std::uint32_t numViewports, const Viewport* viewportArray)
 {
     numViewports = std::min(numViewports, std::uint32_t(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
 
     /* Check if D3D11_VIEWPORT and Viewport structures can be safely reinterpret-casted */
-    if ( sizeof(D3D11_VIEWPORT)             == sizeof(Viewport)             &&
-         offsetof(D3D11_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
-         offsetof(D3D11_VIEWPORT, TopLeftY) == offsetof(Viewport, y       ) &&
-         offsetof(D3D11_VIEWPORT, Width   ) == offsetof(Viewport, width   ) &&
-         offsetof(D3D11_VIEWPORT, Height  ) == offsetof(Viewport, height  ) &&
-         offsetof(D3D11_VIEWPORT, MinDepth) == offsetof(Viewport, minDepth) &&
-         offsetof(D3D11_VIEWPORT, MaxDepth) == offsetof(Viewport, maxDepth) )
+    if (IsCompatibleToD3DViewport())
     {
         /* Now it's safe to reinterpret cast the viewports into D3D viewports */
         context_->RSSetViewports(numViewports, reinterpret_cast<const D3D11_VIEWPORT*>(viewportArray));

@@ -46,11 +46,14 @@ D3D12QueryHeap::D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& d
     else
         alignedStride_ = sizeof(UINT64);
 
+    /* For some query types, multiple internal queries must be created */
+    queryPerType_ = (desc.type == QueryType::TimeElapsed ? 2 : 1);
+
     /* Create native query heap */
     D3D12_QUERY_HEAP_DESC queryDesc;
     {
         queryDesc.Type      = D3D12Types::MapQueryHeapType(desc.type);
-        queryDesc.Count     = desc.numQueries;
+        queryDesc.Count     = desc.numQueries * queryPerType_;
         queryDesc.NodeMask  = 0;
     }
     native_ = device.CreateDXQueryHeap(queryDesc);
@@ -61,7 +64,7 @@ D3D12QueryHeap::D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& d
         resultResource_ = DXCreateResultResource(
             device.GetNative(),
             D3D12_HEAP_TYPE_DEFAULT,
-            desc.numQueries * alignedStride_,
+            queryDesc.Count * alignedStride_,
             D3D12_RESOURCE_STATE_GENERIC_READ
         );
         resultResource_->SetName(L"LLGL::D3D12QueryHeap::GPUResultResource");
@@ -72,7 +75,7 @@ D3D12QueryHeap::D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& d
         resultResource_ = DXCreateResultResource(
             device.GetNative(),
             D3D12_HEAP_TYPE_READBACK,
-            desc.numQueries * alignedStride_,
+            queryDesc.Count * alignedStride_,
             D3D12_RESOURCE_STATE_COPY_DEST
         );
         resultResource_->SetName(L"LLGL::D3D12QueryHeap::CPUResultResource");
@@ -85,9 +88,29 @@ void D3D12QueryHeap::SetName(const char* name)
     D3D12SetObjectNameSubscript(GetResultResource(), name, ".Result");
 }
 
+void D3D12QueryHeap::Begin(ID3D12GraphicsCommandList* commandList, UINT query)
+{
+    if (nativeType_ == D3D12_QUERY_TYPE_TIMESTAMP)
+        commandList->EndQuery(GetNative(), GetNativeType(), query * queryPerType_);
+    else
+        commandList->BeginQuery(GetNative(), GetNativeType(), query * queryPerType_);
+}
+
+void D3D12QueryHeap::End(ID3D12GraphicsCommandList* commandList, UINT query)
+{
+    if (nativeType_ == D3D12_QUERY_TYPE_TIMESTAMP)
+        commandList->EndQuery(GetNative(), GetNativeType(), query * queryPerType_ + 1);
+    else
+        commandList->EndQuery(GetNative(), GetNativeType(), query * queryPerType_);
+    ResolveData(commandList, query, 1);
+}
+
 //TODO: make use of <D3D12CommandContext> class
 void D3D12QueryHeap::ResolveData(ID3D12GraphicsCommandList* commandList, UINT firstQuery, UINT numQueries)
 {
+    firstQuery *= queryPerType_;
+    numQueries *= queryPerType_;
+
     if (IsPredicate())
     {
         TransitionResource(commandList, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST);
@@ -100,24 +123,27 @@ void D3D12QueryHeap::ResolveData(ID3D12GraphicsCommandList* commandList, UINT fi
 
 void* D3D12QueryHeap::Map(UINT firstQuery, UINT numQueries)
 {
-    void* data = nullptr;
+    void* mappedData = nullptr;
 
-    const D3D12_RANGE range
+    firstQuery *= queryPerType_;
+    numQueries *= queryPerType_;
+
+    const D3D12_RANGE readRange
     {
         static_cast<SIZE_T>(GetAlignedBufferOffest(firstQuery)),
         static_cast<SIZE_T>(GetAlignedBufferOffest(firstQuery + numQueries))
     };
 
-    auto hr = resultResource_->Map(0, &range, &data);
+    auto hr = resultResource_->Map(0, &readRange, &mappedData);
     DXThrowIfFailed(hr, "failed to map result resource of D3D12 query heap");
 
-    return data;
+    return mappedData;
 }
 
 void D3D12QueryHeap::Unmap()
 {
-    const D3D12_RANGE range{ 0, 0 };
-    resultResource_->Unmap(0, &range);
+    const D3D12_RANGE writtenRange{ 0, 0 };
+    resultResource_->Unmap(0, &writtenRange);
 }
 
 UINT64 D3D12QueryHeap::GetAlignedBufferOffest(UINT query) const

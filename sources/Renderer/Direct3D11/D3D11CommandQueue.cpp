@@ -105,13 +105,17 @@ bool D3D11CommandQueue::QueryResultSingleUInt64(
                         if (disjointData.Disjoint == FALSE)
                         {
                             /* Normalize elapsed time to nanoseconds */
-                            static const double nanoseconds = 1000000000.0;
+                            static const UINT64 nanosecondFrequency = 1000000000;
 
-                            auto deltaTime      = (endTime - startTime);
-                            auto scale          = (nanoseconds / static_cast<double>(disjointData.Frequency));
-                            auto elapsedTime    = (static_cast<double>(deltaTime) * scale);
-
-                            data = static_cast<std::uint64_t>(elapsedTime + 0.5);
+                            const auto deltaTime = (endTime - startTime);
+                            if (disjointData.Frequency != nanosecondFrequency)
+                            {
+                                const auto scale        = (static_cast<double>(nanosecondFrequency) / static_cast<double>(disjointData.Frequency));
+                                const auto elapsedTime  = (static_cast<double>(deltaTime) * scale);
+                                data = static_cast<std::uint64_t>(elapsedTime + 0.5);
+                            }
+                            else
+                                data = deltaTime;
                         }
                         else
                             data = 0;
@@ -187,7 +191,7 @@ bool D3D11CommandQueue::QueryResultUInt64(
 
 // Static function (can be checked at compile time) to determine if
 // the structs <QueryPipelineStatistics> and <D3D11_QUERY_DATA_PIPELINE_STATISTICS> are compatible.
-static bool IsQueryPipelineStatsD3DCompatible()
+static constexpr bool IsQueryPipelineStatsD3DCompatible()
 {
     return
     (

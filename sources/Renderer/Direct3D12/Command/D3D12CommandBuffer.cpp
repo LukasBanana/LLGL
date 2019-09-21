@@ -147,6 +147,21 @@ void D3D12CommandBuffer::GenerateMips(Texture& texture, const TextureSubresource
 
 /* ----- Viewport and Scissor ----- */
 
+// Check if D3D12_VIEWPORT and Viewport structures can be safely reinterpret-casted
+static constexpr bool IsCompatibleToD3DViewport()
+{
+    return
+    (
+        sizeof(D3D12_VIEWPORT)             == sizeof(Viewport)             &&
+        offsetof(D3D12_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
+        offsetof(D3D12_VIEWPORT, TopLeftY) == offsetof(Viewport, y       ) &&
+        offsetof(D3D12_VIEWPORT, Width   ) == offsetof(Viewport, width   ) &&
+        offsetof(D3D12_VIEWPORT, Height  ) == offsetof(Viewport, height  ) &&
+        offsetof(D3D12_VIEWPORT, MinDepth) == offsetof(Viewport, minDepth) &&
+        offsetof(D3D12_VIEWPORT, MaxDepth) == offsetof(Viewport, maxDepth)
+    );
+}
+
 void D3D12CommandBuffer::SetViewport(const Viewport& viewport)
 {
     D3D12CommandBuffer::SetViewports(1, &viewport);
@@ -157,13 +172,7 @@ void D3D12CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport
     numViewports = std::min(numViewports, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
 
     /* Check if D3D12_VIEWPORT and Viewport structures can be safely reinterpret-casted */
-    if ( sizeof(D3D12_VIEWPORT)             == sizeof(Viewport)             &&
-         offsetof(D3D12_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
-         offsetof(D3D12_VIEWPORT, TopLeftY) == offsetof(Viewport, y       ) &&
-         offsetof(D3D12_VIEWPORT, Width   ) == offsetof(Viewport, width   ) &&
-         offsetof(D3D12_VIEWPORT, Height  ) == offsetof(Viewport, height  ) &&
-         offsetof(D3D12_VIEWPORT, MinDepth) == offsetof(Viewport, minDepth) &&
-         offsetof(D3D12_VIEWPORT, MaxDepth) == offsetof(Viewport, maxDepth) )
+    if (IsCompatibleToD3DViewport())
     {
         /* Now it's safe to reinterpret cast the viewports into D3D viewports */
         commandList_->RSSetViewports(numViewports, reinterpret_cast<const D3D12_VIEWPORT*>(viewports));
@@ -510,14 +519,13 @@ void D3D12CommandBuffer::SetUniforms(
 void D3D12CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
-    commandList_->BeginQuery(queryHeapD3D.GetNative(), queryHeapD3D.GetNativeType(), query);
+    queryHeapD3D.Begin(commandList_, query);
 }
 
 void D3D12CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D12QueryHeap&, queryHeap);
-    commandList_->EndQuery(queryHeapD3D.GetNative(), queryHeapD3D.GetNativeType(), query);
-    queryHeapD3D.ResolveData(commandList_, query, 1);
+    queryHeapD3D.End(commandList_, query);
 }
 
 static D3D12_PREDICATION_OP GetDXPredicateOp(const RenderConditionMode mode)

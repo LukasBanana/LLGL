@@ -56,7 +56,7 @@ void D3D12StagingBuffer::Create(
         nullptr,
         IID_PPV_ARGS(native_.ReleaseAndGetAddressOf())
     );
-    DXThrowIfCreateFailed(hr, "failed to create D3D12 committed resource for upload buffer");
+    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for staging buffer");
 
     /* Store new size and reset write offset */
     size_   = size;

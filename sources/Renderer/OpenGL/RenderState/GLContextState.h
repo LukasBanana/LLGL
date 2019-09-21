@@ -19,37 +19,37 @@ namespace LLGL
 // Structure with all information about the state of an OpenGL context that can be managed by GLStateManager.
 struct GLContextState
 {
-    static const GLuint numTextureLayers        = 32;
-    static const GLuint numStates               = (static_cast<GLuint>(GLState::PROGRAM_POINT_SIZE) + 1);
-    static const GLuint numBufferTargets        = (static_cast<GLuint>(GLBufferTarget::UNIFORM_BUFFER) + 1);
-    static const GLuint numFramebufferTargets   = (static_cast<GLuint>(GLFramebufferTarget::READ_FRAMEBUFFER) + 1);
-    static const GLuint numTextureTargets       = (static_cast<GLuint>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+    static const GLuint numTextureLayers    = 32;
+    static const GLuint numCaps             = (static_cast<GLuint>(GLState::PROGRAM_POINT_SIZE) + 1);
+    static const GLuint numBufferTargets    = (static_cast<GLuint>(GLBufferTarget::UNIFORM_BUFFER) + 1);
+    static const GLuint numFboTargets       = (static_cast<GLuint>(GLFramebufferTarget::READ_FRAMEBUFFER) + 1);
+    static const GLuint numTextureTargets   = (static_cast<GLuint>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-    static const GLuint numStatesExt            = (static_cast<GLuint>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
+    static const GLuint numCapsExt          = (static_cast<GLuint>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
     #endif
 
     // Rasterizer state
-    GLenum          polygonMode         = GL_FILL;
-    GLfloat         offsetFactor        = 0.0f;
-    GLfloat         offsetUnits         = 0.0f;
-    GLfloat         offsetClamp         = 0.0f;
-    GLenum          cullFace            = GL_BACK;
-    GLenum          frontFace           = GL_CCW;
-    GLint           patchVertices       = 0;
-    GLfloat         lineWidth           = 1.0f;
+    GLenum          polygonMode                         = GL_FILL;
+    GLfloat         offsetFactor                        = 0.0f;
+    GLfloat         offsetUnits                         = 0.0f;
+    GLfloat         offsetClamp                         = 0.0f;
+    GLenum          cullFace                            = GL_BACK;
+    GLenum          frontFace                           = GL_CCW;
+    GLint           patchVertices                       = 0;
+    GLfloat         lineWidth                           = 1.0f;
 
     // Depth-stencil state
-    GLenum          depthFunc           = GL_LESS;
-    GLboolean       depthMask           = GL_TRUE;
-    GLboolean       cachedDepthMask     = GL_TRUE;
+    GLenum          depthFunc                           = GL_LESS;
+    GLboolean       depthMask                           = GL_TRUE;
+    GLboolean       cachedDepthMask                     = GL_TRUE;
 
     // Blend state
-    GLfloat         blendColor[4]       = { 0.0f, 0.0f, 0.0f, 0.0f };
-    GLenum          logicOpCode         = GL_COPY;
+    GLfloat         blendColor[4]                       = { 0.0f, 0.0f, 0.0f, 0.0f };
+    GLenum          logicOpCode                         = GL_COPY;
 
     // Capabilities
-    bool            capabilities[numStates];
+    bool            capabilities[numCaps];
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
@@ -59,7 +59,7 @@ struct GLContextState
         bool        enabled = false;
     };
 
-    ExtensionState  capabilitiesExt[numStatesExt];
+    ExtensionState  capabilitiesExt[numCapsExt];
 
     #endif
 
@@ -67,10 +67,10 @@ struct GLContextState
     GLuint          boundBuffers[numBufferTargets];
 
     // Framebuffer Objects (FBO)
-    GLuint          boundFramebuffers[numFramebufferTargets];
+    GLuint          boundFramebuffers[numFboTargets];
 
     // Renerbuffer Objects (RBO)
-    GLuint          boundRenderbuffer   = 0;
+    GLuint          boundRenderbuffer                   = 0;
 
     // Textures
     struct GLTextureLayer
@@ -78,15 +78,15 @@ struct GLContextState
         GLuint      boundTextures[numTextureTargets];
     };
 
-    GLuint          activeTexture       = 0;
+    GLuint          activeTexture                       = 0;
     GLTextureLayer  textureLayers[numTextureLayers];
 
     // Vertex Array Objects (VAO)
-    GLuint          boundVertexArray        = 0;
-    GLuint          boundElementArrayBuffer = 0;
+    GLuint          boundVertexArray                    = 0;
+    GLuint          boundElementArrayBuffer             = 0;
 
     // Programs
-    GLuint          boundProgram        = 0;
+    GLuint          boundProgram                        = 0;
 
     // Samplers
     GLuint          boundSamplers[numTextureLayers];

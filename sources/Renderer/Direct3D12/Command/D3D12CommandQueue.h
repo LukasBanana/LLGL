@@ -81,8 +81,45 @@ class D3D12CommandQueue final : public CommandQueue
 
     private:
 
+        void DetermineTimestampFrequency();
+
+        void QueryResultSingleUInt64(
+            D3D12_QUERY_TYPE    queryType,
+            const void*         mappedData,
+            std::uint32_t       query,
+            std::uint64_t&      data
+        );
+
+        void QueryResultUInt32(
+            D3D12_QUERY_TYPE    queryType,
+            const void*         mappedData,
+            std::uint32_t       firstQuery,
+            std::uint32_t       numQueries,
+            std::uint32_t*      data
+        );
+
+        void QueryResultUInt64(
+            D3D12_QUERY_TYPE    queryType,
+            const void*         mappedData,
+            std::uint32_t       firstQuery,
+            std::uint32_t       numQueries,
+            std::uint64_t*      data
+        );
+
+        bool QueryResultPipelineStatistics(
+            D3D12_QUERY_TYPE            queryType,
+            const void*                 mappedData,
+            std::uint32_t               firstQuery,
+            std::uint32_t               numQueries,
+            QueryPipelineStatistics*    data
+        );
+
+    private:
+
         ComPtr<ID3D12CommandQueue>  native_;
         D3D12Fence                  globalFence_;
+        double                      timestampScale_         = 1.0;  // Frequency to nanoseconds scale
+        bool                        isTimestampNanosecs_    = true; // True, if timestamps are in nanoseconds unit
 
 };
 

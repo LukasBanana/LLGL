@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <chrono>
 
 
 class Example_Queries : public ExampleBase
@@ -24,9 +25,17 @@ class Example_Queries : public ExampleBase
 
     LLGL::QueryHeap*        occlusionQuery          = nullptr;
     LLGL::QueryHeap*        geometryQuery           = nullptr;
+    LLGL::QueryHeap*        timerQuery              = nullptr;
 
     Gs::Matrix4f            modelTransform[2];
     bool                    animEnabled             = true;
+
+    using Clock     = std::chrono::system_clock;
+    using TimePoint = std::chrono::time_point<Clock>;
+    using Ticks     = std::chrono::milliseconds;
+
+    TimePoint               prevPrintTime           = Clock::now();
+    const long long         printRefreshRate        = 100;
 
     struct Model
     {
@@ -124,6 +133,13 @@ public:
             queryDesc.renderCondition   = false;
         }
         geometryQuery = renderer->CreateQueryHeap(queryDesc);
+
+        // Create query to measure GPU timing
+        {
+            queryDesc.type              = LLGL::QueryType::TimeElapsed;
+            queryDesc.renderCondition   = false;
+        }
+        timerQuery = renderer->CreateQueryHeap(queryDesc);
     }
 
     void CreateResourceHeaps()
@@ -156,7 +172,7 @@ public:
         return result;
     }
 
-    void PrintQueryResult()
+    void PrintQueryResults()
     {
         // Query pipeline statistics results
         LLGL::QueryPipelineStatistics stats;
@@ -165,9 +181,17 @@ public:
             /* wait */
         }
 
+        // Query timing results
+        std::uint64_t elapsedTime = 0;
+        while (!commandQueue->QueryResult(*timerQuery, 0, 1, &elapsedTime, sizeof(elapsedTime)))
+        {
+            /* wait */
+        }
+
         // Print result
         std::cout << "input assembly primitives: " << stats.inputAssemblyPrimitives;
         std::cout << ", vertex shader invocations: " << stats.vertexShaderInvocations;
+        std::cout << ", timing: " << static_cast<double>(elapsedTime)/1000000.0 << " ms";
         std::cout << "                         \r";
         std::flush(std::cout);
     }
@@ -260,27 +284,38 @@ private:
 
         commands->Begin();
         {
-            // Set buffers
-            commands->SetVertexBuffer(*vertexBuffer);
-
-            commands->BeginQuery(*geometryQuery);
+            // Measure GPU performance
+            commands->BeginQuery(*timerQuery);
             {
-                // Start with qeometry query
-                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
+                // Set buffers
+                commands->SetVertexBuffer(*vertexBuffer);
 
-                commands->BeginRenderPass(*context);
+                // Start with qeometry query
+                commands->BeginQuery(*geometryQuery);
                 {
-                    RenderBoundingBoxes();
-                    RenderScene();
+                    commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
+
+                    commands->BeginRenderPass(*context);
+                    {
+                        RenderBoundingBoxes();
+                        RenderScene();
+                    }
+                    commands->EndRenderPass();
                 }
-                commands->EndRenderPass();
+                commands->EndQuery(*geometryQuery);
             }
-            commands->EndQuery(*geometryQuery);
+            commands->EndQuery(*timerQuery);
         }
         commands->End();
         commandQueue->Submit(*commands);
 
-        PrintQueryResult();
+        // Print query results every couple of milliseconds
+        auto currentTime = Clock::now();
+        if (std::chrono::duration_cast<Ticks>(currentTime - prevPrintTime).count() >= printRefreshRate)
+        {
+            prevPrintTime = currentTime;
+            PrintQueryResults();
+        }
 
         // Present result on the screen
         context->Present();

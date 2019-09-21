@@ -223,7 +223,7 @@ void VKCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& s
 
 #if 0//TODO: currently unused
 // Check if VkViewport and Viewport structures can be safely reinterpret-casted
-static bool IsCompatibleToVkViewport()
+static constexpr bool IsCompatibleToVkViewport()
 {
     return
     (

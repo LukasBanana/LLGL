@@ -79,6 +79,8 @@ class D3D11CommandQueue final : public CommandQueue
             QueryPipelineStatistics*    data
         );
 
+    private:
+
         ComPtr<ID3D11DeviceContext> context_;
         D3D11Fence                  intermediateFence_;
 
