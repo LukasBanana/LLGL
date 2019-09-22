@@ -20,6 +20,8 @@ namespace LLGL
 {
 
 
+class VKQueryHeap;
+
 class VKCommandQueue final : public CommandQueue
 {
 
@@ -43,6 +45,34 @@ class VKCommandQueue final : public CommandQueue
 
         bool WaitFence(Fence& fence, std::uint64_t timeout) override;
         void WaitIdle() override;
+
+    private:
+
+        VkResult GetQueryResults(
+            VKQueryHeap&    queryHeapVK,
+            std::uint32_t   firstQuery,
+            std::uint32_t   numQueries,
+            void*           data,
+            std::size_t     dataSize
+        );
+
+        VkResult GetQueryBatchedResults(
+            VKQueryHeap&        queryHeapVK,
+            std::uint32_t       firstQuery,
+            std::uint32_t       numQueries,
+            void*               data,
+            std::size_t         dataSize,
+            VkDeviceSize        stride,
+            VkQueryResultFlags  flags
+        );
+
+        VkResult GetQuerySingleResult(
+            VKQueryHeap&        queryHeapVK,
+            std::uint32_t       query,
+            void*               data,
+            VkDeviceSize        stride,
+            VkQueryResultFlags  flags
+        );
 
     private:
 

@@ -59,29 +59,8 @@ bool VKCommandQueue::QueryResult(
 {
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
-    /* Determine flags and stride */
-    VkQueryResultFlags  resultFlags = 0;
-    VkDeviceSize        stride      = sizeof(std::uint32_t);
-
-    if (dataSize != numQueries * sizeof(std::uint32_t))
-    {
-        resultFlags |= VK_QUERY_RESULT_64_BIT;
-        stride      = sizeof(std::uint64_t);
-    }
-
     /* Store result directly into output parameter */
-    auto stateResult = vkGetQueryPoolResults(
-        device_,
-        queryHeapVK.GetVkQueryPool(),
-        firstQuery,
-        numQueries,
-        dataSize,
-        data,
-        stride,
-        resultFlags
-    );
-
-    /* Check if result is not ready yet */
+    auto stateResult = GetQueryResults(queryHeapVK, firstQuery, numQueries, data, dataSize);
     if (stateResult == VK_NOT_READY)
         return false;
 
@@ -129,6 +108,139 @@ bool VKCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 void VKCommandQueue::WaitIdle()
 {
     vkQueueWaitIdle(native_);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+VkResult VKCommandQueue::GetQueryResults(
+    VKQueryHeap&    queryHeapVK,
+    std::uint32_t   firstQuery,
+    std::uint32_t   numQueries,
+    void*           data,
+    std::size_t     dataSize)
+{
+    /* Determine flags and stride */
+    VkQueryResultFlags  flags   = 0;
+    VkDeviceSize        stride  = 0;
+
+    if (dataSize == numQueries * sizeof(std::uint64_t) ||
+        dataSize == numQueries * sizeof(QueryPipelineStatistics))
+    {
+        flags   = VK_QUERY_RESULT_64_BIT;
+        stride  = sizeof(std::uint64_t);
+    }
+    else if (dataSize == numQueries * sizeof(std::uint32_t))
+    {
+        flags   = 0;
+        stride  = sizeof(std::uint32_t);
+    }
+    else
+        return VK_ERROR_VALIDATION_FAILED_EXT;
+
+    if (queryHeapVK.GetType() == QueryType::TimeElapsed)
+    {
+        /* Get elapsed time values from difference between start and end timestamps */
+        auto dataByteAligned = reinterpret_cast<std::uint8_t*>(data);
+
+        for (std::uint32_t query = firstQuery; query < firstQuery + numQueries; ++query)
+        {
+            auto stateResult = GetQuerySingleResult(queryHeapVK, query, dataByteAligned, stride, flags);
+            if (stateResult != VK_SUCCESS)
+                return stateResult;
+            dataByteAligned += stride;
+        }
+
+        return VK_SUCCESS;
+    }
+    else
+    {
+        /* Get query data directly as batch */
+        return GetQueryBatchedResults(queryHeapVK, firstQuery, numQueries, data, dataSize, stride, flags);
+    }
+}
+
+VkResult VKCommandQueue::GetQueryBatchedResults(
+    VKQueryHeap&        queryHeapVK,
+    std::uint32_t       firstQuery,
+    std::uint32_t       numQueries,
+    void*               data,
+    std::size_t         dataSize,
+    VkDeviceSize        stride,
+    VkQueryResultFlags  flags)
+{
+    return vkGetQueryPoolResults(
+        device_,
+        queryHeapVK.GetVkQueryPool(),
+        firstQuery * queryHeapVK.GetGroupSize(),
+        numQueries * queryHeapVK.GetGroupSize(),
+        dataSize,
+        data,
+        stride,
+        flags
+    );
+}
+
+VkResult VKCommandQueue::GetQuerySingleResult(
+    VKQueryHeap&        queryHeapVK,
+    std::uint32_t       query,
+    void*               data,
+    VkDeviceSize        stride,
+    VkQueryResultFlags  flags)
+{
+    VkResult result = VK_NOT_READY;
+
+    query *= queryHeapVK.GetGroupSize();
+
+    if (queryHeapVK.GetType() == QueryType::TimeElapsed)
+    {
+        /* Query start and end timestamps */
+        std::uint64_t timestamps[2];
+        result = vkGetQueryPoolResults(
+            device_,
+            queryHeapVK.GetVkQueryPool(),
+            query,
+            queryHeapVK.GetGroupSize(),
+            sizeof(timestamps),
+            timestamps,
+            sizeof(timestamps[0]),
+            VK_QUERY_RESULT_64_BIT
+        );
+
+        if (result == VK_SUCCESS)
+        {
+            /* Store difference between timestamps in output buffer */
+            const auto elapsedTime = (timestamps[1] - timestamps[0]);
+            if (stride == sizeof(std::uint64_t))
+            {
+                auto dst = reinterpret_cast<std::uint64_t*>(data);
+                dst[0] = elapsedTime;
+            }
+            else
+            {
+                auto dst = reinterpret_cast<std::uint32_t*>(data);
+                dst[0] = static_cast<std::uint32_t>(elapsedTime);
+            }
+        }
+    }
+    else
+    {
+        /* Use output buffer directly to store query result */
+        result = vkGetQueryPoolResults(
+            device_,
+            queryHeapVK.GetVkQueryPool(),
+            query,
+            queryHeapVK.GetGroupSize(),
+            static_cast<std::size_t>(stride),
+            data,
+            stride,
+            flags
+        );
+    }
+
+    return result;
 }
 
 

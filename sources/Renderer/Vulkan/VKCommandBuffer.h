@@ -24,6 +24,7 @@ namespace LLGL
 class VKDevice;
 class VKPhysicalDevice;
 class VKResourceHeap;
+class VKQueryHeap;
 
 class VKCommandBuffer final : public CommandBuffer
 {
@@ -251,7 +252,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         #if 1//TODO: optimize
         void ResetQueryPoolsInFlight();
-        void AppendQueryPoolInFlight(VkQueryPool queryPool);
+        void AppendQueryPoolInFlight(VKQueryHeap* queryHeap);
         #endif
 
     private:
@@ -289,8 +290,8 @@ class VKCommandBuffer final : public CommandBuffer
         std::uint32_t                   maxDrawIndirectCount_       = 0;
 
         #if 1//TODO: optimize usage of query pools
-        std::vector<VkQueryPool>        queryPoolsInFlight_;
-        std::size_t                     numQueryPoolsInFlight_      = 0;
+        std::vector<VKQueryHeap*>       queryHeapsInFlight_;
+        std::size_t                     numQueryHeapsInFlight_      = 0;
         #endif
 
 };

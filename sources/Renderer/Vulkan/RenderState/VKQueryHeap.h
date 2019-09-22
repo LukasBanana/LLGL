@@ -31,16 +31,30 @@ class VKQueryHeap final : public QueryHeap
             return queryPool_.Get();
         }
 
+        // Returns the control flags to be used for vkCmdBeginQuery.
+        inline VkQueryControlFlags GetControlFlags() const
+        {
+            return controlFlags_;
+        }
+
         // Returns the number of queries per group.
         inline std::uint32_t GetGroupSize() const
         {
             return groupSize_;
         }
 
+        // Returns the number of native queries.
+        inline std::uint32_t GetNumQueries() const
+        {
+            return numQueries_;
+        }
+
     private:
 
         VKPtr<VkQueryPool>  queryPool_;
-        std::uint32_t       groupSize_  = 1;
+        VkQueryControlFlags controlFlags_   = 0;
+        std::uint32_t       groupSize_      = 1;
+        std::uint32_t       numQueries_     = 0;
 
 };
 

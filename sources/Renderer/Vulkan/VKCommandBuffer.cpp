@@ -105,7 +105,7 @@ void VKCommandBuffer::Begin()
 
     #if 1//TODO: optimize
     /* Reset all query pools that were in flight during last encoding */
-    ResetQueryPoolsInFlight();
+    //ResetQueryPoolsInFlight();
     #endif
 
     /* Store new record state */
@@ -722,20 +722,38 @@ void VKCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
-    /* Begin query and determine control flags (for either 'SamplesPassed' or 'AnySamplesPassed') */
-    VkQueryControlFlags flags = 0;
+    query *= queryHeapVK.GetGroupSize();
 
-    if (queryHeapVK.GetType() == QueryType::SamplesPassed)
-        flags |= VK_QUERY_CONTROL_PRECISE_BIT;
-
-    vkCmdBeginQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query, flags);
+    if (queryHeapVK.GetType() == QueryType::TimeElapsed)
+    {
+        /* Record first timestamp */
+        vkCmdWriteTimestamp(commandBuffer_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryHeapVK.GetVkQueryPool(), query);
+    }
+    else
+    {
+        /* Begin query section */
+        vkCmdBeginQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query, queryHeapVK.GetControlFlags());
+    }
 }
 
 void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
-    vkCmdEndQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query);
-    AppendQueryPoolInFlight(queryHeapVK.GetVkQueryPool());
+
+    query *= queryHeapVK.GetGroupSize();
+
+    if (queryHeapVK.GetType() == QueryType::TimeElapsed)
+    {
+        /* Record second timestamp */
+        vkCmdWriteTimestamp(commandBuffer_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryHeapVK.GetVkQueryPool(), query + 1);
+    }
+    else
+    {
+        /* End query section */
+        vkCmdEndQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query);
+    }
+
+    AppendQueryPoolInFlight(&queryHeapVK);
 }
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
@@ -1105,18 +1123,26 @@ void VKCommandBuffer::EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier)
 
 void VKCommandBuffer::ResetQueryPoolsInFlight()
 {
-    for (std::size_t i = 0; i < numQueryPoolsInFlight_; ++i)
-        vkCmdResetQueryPool(commandBuffer_, queryPoolsInFlight_[i], 0, 1);
-    numQueryPoolsInFlight_ = 0;
+    for (std::size_t i = 0; i < numQueryHeapsInFlight_; ++i)
+    {
+        auto& queryHeapVK = *(queryHeapsInFlight_[0]);
+        vkCmdResetQueryPool(
+            commandBuffer_,
+            queryHeapVK.GetVkQueryPool(),
+            0,
+            queryHeapVK.GetNumQueries()
+        );
+    }
+    numQueryHeapsInFlight_ = 0;
 }
 
-void VKCommandBuffer::AppendQueryPoolInFlight(VkQueryPool queryPool)
+void VKCommandBuffer::AppendQueryPoolInFlight(VKQueryHeap* queryHeap)
 {
-    if (numQueryPoolsInFlight_ >= queryPoolsInFlight_.size())
-        queryPoolsInFlight_.push_back(queryPool);
+    if (numQueryHeapsInFlight_ >= queryHeapsInFlight_.size())
+        queryHeapsInFlight_.push_back(queryHeap);
     else
-        queryPoolsInFlight_[numQueryPoolsInFlight_] = queryPool;
-    ++numQueryPoolsInFlight_;
+        queryHeapsInFlight_[numQueryHeapsInFlight_] = queryHeap;
+    ++numQueryHeapsInFlight_;
 }
 
 

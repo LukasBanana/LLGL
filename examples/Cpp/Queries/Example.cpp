@@ -189,10 +189,11 @@ public:
         }
 
         // Print result
-        std::cout << "input assembly primitives: " << stats.inputAssemblyPrimitives;
-        std::cout << ", vertex shader invocations: " << stats.vertexShaderInvocations;
+        std::cout << "input assembly: " << stats.inputAssemblyPrimitives;
+        std::cout << ", vertex invocations: " << stats.vertexShaderInvocations;
+        std::cout << ", fragment invocations: " << stats.fragmentShaderInvocations;
         std::cout << ", timing: " << static_cast<double>(elapsedTime)/1000000.0 << " ms";
-        std::cout << "                         \r";
+        std::cout << "        \r";
         std::flush(std::cout);
     }
 
