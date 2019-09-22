@@ -101,7 +101,7 @@ class D3D12QueryHeap final : public QueryHeap
         UINT                    alignedStride_  = 0;
         UINT                    queryPerType_   = 1;
         bool                    isPredicate_    = false;
-        UINT                    dirtyRange_[2]  = {};       // Marks the min/max range of queries that need to be resolved
+        UINT                    dirtyRange_[2]  = {};       // Begin/end range of queries that need to be resolved
 
 };
 

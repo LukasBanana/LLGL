@@ -31,8 +31,9 @@ VKDeviceBuffer::VKDeviceBuffer(
     const VKPtr<VkDevice>&      device,
     const VkBufferCreateInfo&   createInfo,
     VKDeviceMemoryManager&      deviceMemoryMngr,
-    VkMemoryPropertyFlags       memoryProperties) :
-        VKDeviceBuffer { device }
+    VkMemoryPropertyFlags       memoryProperties)
+:
+    VKDeviceBuffer { device }
 {
     CreateVkBufferAndMemoryRegion(device, createInfo, deviceMemoryMngr, memoryProperties);
 }

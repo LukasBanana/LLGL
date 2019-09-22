@@ -53,11 +53,12 @@ static VkQueryControlFlags GetQueryControlFlags(const QueryHeapDescriptor& desc)
 }
 
 VKQueryHeap::VKQueryHeap(const VKPtr<VkDevice>& device, const QueryHeapDescriptor& desc) :
-    QueryHeap     { desc.type                    },
-    queryPool_    { device, vkDestroyQueryPool   },
-    controlFlags_ { GetQueryControlFlags(desc)   },
-    groupSize_    { GetQueryGroupSize(desc)      },
-    numQueries_   { desc.numQueries * groupSize_ }
+    QueryHeap      { desc.type                    },
+    queryPool_     { device, vkDestroyQueryPool   },
+    controlFlags_  { GetQueryControlFlags(desc)   },
+    groupSize_     { GetQueryGroupSize(desc)      },
+    numQueries_    { desc.numQueries * groupSize_ },
+    hasPredicates_ { desc.renderCondition         }
 {
     /* Create query pool object */
     VkQueryPoolCreateInfo createInfo;

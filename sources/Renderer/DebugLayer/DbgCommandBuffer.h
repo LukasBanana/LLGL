@@ -249,6 +249,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         bool ValidateQueryIndex(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
         DbgQueryHeap::State* GetAndValidateQueryState(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
+        void ValidateRenderCondition(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
 
         void AssertRecording();
         void AssertInsideRenderPass();

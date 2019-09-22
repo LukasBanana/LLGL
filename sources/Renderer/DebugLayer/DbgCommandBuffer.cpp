@@ -803,8 +803,12 @@ void DbgCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t 
 {
     auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
-    LLGL_DBG_SOURCE;
-    AssertRecording();
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateRenderCondition(queryHeapDbg, query);
+    }
 
     instance.BeginRenderCondition(queryHeapDbg.instance, query, mode);
 
@@ -813,8 +817,11 @@ void DbgCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t 
 
 void DbgCommandBuffer::EndRenderCondition()
 {
-    LLGL_DBG_SOURCE;
-    AssertRecording();
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+    }
     instance.EndRenderCondition();
 }
 
@@ -1590,6 +1597,14 @@ DbgQueryHeap::State* DbgCommandBuffer::GetAndValidateQueryState(DbgQueryHeap& qu
         return &(queryHeapDbg.states[query]);
     else
         return nullptr;
+}
+
+void DbgCommandBuffer::ValidateRenderCondition(DbgQueryHeap& queryHeapDbg, std::uint32_t query)
+{
+    if (!features_.hasRenderCondition)
+        LLGL_DBG_ERROR_NOT_SUPPORTED("conditional rendering");
+    if (!queryHeapDbg.desc.renderCondition)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot use query heap for conditional rendering that was not created with 'renderCondition' enabled");
 }
 
 void DbgCommandBuffer::AssertRecording()

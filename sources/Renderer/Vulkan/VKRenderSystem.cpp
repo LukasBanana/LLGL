@@ -18,6 +18,7 @@
 #include "VKCore.h"
 #include "VKTypes.h"
 #include "VKInitializers.h"
+#include "RenderState/VKPredicateQueryHeap.h"
 #include <LLGL/Log.h>
 #include <LLGL/ImageFlags.h>
 
@@ -643,7 +644,10 @@ void VKRenderSystem::Release(ComputePipeline& computePipeline)
 
 QueryHeap* VKRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
 {
-    return TakeOwnership(queryHeaps_, MakeUnique<VKQueryHeap>(device_, desc));
+    if (desc.renderCondition)
+        return TakeOwnership(queryHeaps_, MakeUnique<VKPredicateQueryHeap>(device_, *deviceMemoryMngr_, desc));
+    else
+        return TakeOwnership(queryHeaps_, MakeUnique<VKQueryHeap>(device_, desc));
 }
 
 void VKRenderSystem::Release(QueryHeap& queryHeap)

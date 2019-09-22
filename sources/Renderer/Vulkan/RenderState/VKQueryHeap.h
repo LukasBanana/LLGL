@@ -18,7 +18,8 @@ namespace LLGL
 {
 
 
-class VKQueryHeap final : public QueryHeap
+// Base class for Vulkan query heaps (sub class: VKPredicateQueryHeap).
+class VKQueryHeap : public QueryHeap
 {
 
     public:
@@ -49,12 +50,19 @@ class VKQueryHeap final : public QueryHeap
             return numQueries_;
         }
 
+        // Returns true if this query heap has predicates for conditional rendering, i.e. it can be casted to <VKPredicateQueryHeap>.
+        inline bool HasPredicates() const
+        {
+            return hasPredicates_;
+        }
+
     private:
 
         VKPtr<VkQueryPool>  queryPool_;
         VkQueryControlFlags controlFlags_   = 0;
         std::uint32_t       groupSize_      = 1;
         std::uint32_t       numQueries_     = 0;
+        bool                hasPredicates_  = false;
 
 };
 

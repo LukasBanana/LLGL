@@ -15,7 +15,7 @@
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"
 #include "RenderState/VKResourceHeap.h"
-#include "RenderState/VKQueryHeap.h"
+#include "RenderState/VKPredicateQueryHeap.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKTexture.h"
 #include "Texture/VKRenderTarget.h"
@@ -103,9 +103,9 @@ void VKCommandBuffer::Begin()
     auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
 
-    #if 1//TODO: optimize
+    #if 0//TODO: optimize
     /* Reset all query pools that were in flight during last encoding */
-    //ResetQueryPoolsInFlight();
+    ResetQueryPoolsInFlight();
     #endif
 
     /* Store new record state */
@@ -734,6 +734,13 @@ void VKCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
         /* Begin query section */
         vkCmdBeginQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query, queryHeapVK.GetControlFlags());
     }
+
+    if (queryHeapVK.HasPredicates())
+    {
+        /* Mark dirty range for predicates */
+        auto& predicateQueryHeapVK = LLGL_CAST(VKPredicateQueryHeap&, queryHeapVK);
+        predicateQueryHeapVK.MarkDirtyRange(query, 1);
+    }
 }
 
 void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
@@ -758,33 +765,47 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    #if 0//TODO
     /* Ensure "VK_EXT_conditional_rendering" is supported */
     LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
 
-    /* Begin conditional rendering block */
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
+    if (!queryHeapVK.HasPredicates())
+        return;
+
+    auto& predicateQueryHeapVK = LLGL_CAST(VKPredicateQueryHeap&, queryHeapVK);
+
+    /* Flush dirty range before using predicate result buffer */
+    if (predicateQueryHeapVK.InsideDirtyRange(query, 1))
+    {
+        if (IsInsideRenderPass())
+        {
+            PauseRenderPass();
+            predicateQueryHeapVK.FlushDirtyRange(commandBuffer_);
+            ResumeRenderPass();
+        }
+        else
+            predicateQueryHeapVK.FlushDirtyRange(commandBuffer_);
+    }
+
+    /* Begin conditional rendering block */
     VkConditionalRenderingBeginInfoEXT beginInfo;
     {
         beginInfo.sType     = VK_STRUCTURE_TYPE_CONDITIONAL_RENDERING_BEGIN_INFO_EXT;
         beginInfo.pNext     = nullptr;
-        beginInfo.buffer    = ;
-        beginInfo.offset    = ;
+        beginInfo.buffer    = predicateQueryHeapVK.GetResultVkBuffer();
+        beginInfo.offset    = query * sizeof(std::uint32_t);
         beginInfo.flags     = (mode >= RenderConditionMode::WaitInverted ? VK_CONDITIONAL_RENDERING_INVERTED_BIT_EXT : 0);
     }
     vkCmdBeginConditionalRenderingEXT(commandBuffer_, &beginInfo);
-    #endif
 }
 
 void VKCommandBuffer::EndRenderCondition()
 {
-    #if 0//TODO
     /* Ensure "VK_EXT_conditional_rendering" is supported */
     LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
 
     /* End conditional rendering block */
     vkCmdEndConditionalRenderingEXT(commandBuffer_);
-    #endif
 }
 
 /* ----- Drawing ----- */

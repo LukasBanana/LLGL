@@ -119,7 +119,7 @@ void D3D12QueryHeap::FlushDirtyRange(ID3D12GraphicsCommandList* commandList)
     if (HasDirtyRange())
     {
         /* Resolve query data within the dirty range, then invalidate range */
-        ResolveData(commandList, dirtyRange_[0], dirtyRange_[1] - dirtyRange_[0]);
+        ResolveData(commandList, dirtyRange_[0], (dirtyRange_[1] - dirtyRange_[0]));
         InvalidateDirtyRange();
     }
 }
