@@ -512,6 +512,11 @@ class LLGL_EXPORT RenderSystem : public Interface
         //! Validates the specified image data size against the required size (in bytes).
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);
 
+        /**
+        \brief Copies the specified source data (i.e. \c srcData) to the destination image.
+        \remarks This function also performs image conversion if there is a mismatch between source and destination format.
+        \see ConvertImageBuffer
+        */
         void CopyTextureImageData(
             const DstImageDescriptor&   dstImageDesc,
             const void*                 srcData,

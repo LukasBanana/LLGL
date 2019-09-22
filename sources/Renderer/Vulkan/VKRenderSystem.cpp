@@ -378,8 +378,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             image,
             VkOffset3D{ 0, 0, 0 },
             GetTextureVkExtent(textureDesc),
-            0,
-            GetTextureLayertCount(textureDesc)
+            TextureSubresource{ 0, GetTextureLayertCount(textureDesc), 0, 1 }
         );
 
         device_.TransitionImageLayout(
@@ -496,9 +495,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
             image,
             VkOffset3D{ offset.x, offset.y, offset.z },
             VkExtent3D{ extent.width, extent.height, extent.depth },
-            subresource.baseArrayLayer,
-            subresource.numArrayLayers,
-            subresource.baseMipLevel
+            subresource
         );
 
         device_.TransitionImageLayout(
@@ -518,7 +515,70 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
 
 void VKRenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
-    //todo
+    auto& textureVK = LLGL_CAST(VKTexture&, texture);
+
+    /* Determine size of image for staging buffer */
+    const Offset3D              offset      { 0, 0, 0 };
+    const Extent3D              extent      { textureVK.GetMipExtent(mipLevel) };
+    const auto                  format      { VKTypes::Unmap(textureVK.GetVkFormat()) };
+    const TextureSubresource    subresource { 0, textureVK.GetNumArrayLayers(), mipLevel, 1 };
+
+    auto        image           = textureVK.GetVkImage();
+    const auto  imageSize       = extent.width * extent.height * extent.depth;
+    const auto  imageDataSize   = static_cast<VkDeviceSize>(TextureBufferSize(format, imageSize));
+
+    /* Create staging buffer */
+    VkBufferCreateInfo stagingCreateInfo;
+    BuildVkBufferCreateInfo(stagingCreateInfo, imageDataSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+    auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo);
+
+    /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
+    auto cmdBuffer = device_.AllocCommandBuffer();
+    {
+        device_.TransitionImageLayout(
+            cmdBuffer,
+            image,
+            textureVK.GetVkFormat(),
+            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            subresource
+        );
+
+        device_.CopyImageToBuffer(
+            cmdBuffer,
+            image,
+            stagingBuffer.GetVkBuffer(),
+            VkOffset3D{ offset.x, offset.y, offset.z },
+            VkExtent3D{ extent.width, extent.height, extent.depth },
+            subresource
+        );
+
+        device_.TransitionImageLayout(
+            cmdBuffer,
+            image,
+            textureVK.GetVkFormat(),
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            subresource
+        );
+    }
+    device_.FlushCommandBuffer(cmdBuffer);
+
+    /* Map staging buffer to CPU memory space */
+    if (auto region = stagingBuffer.GetMemoryRegion())
+    {
+        /* Map buffer memory to host memory */
+        auto deviceMemory = region->GetParentChunk();
+        if (auto memory = deviceMemory->Map(device_, region->GetOffset(), imageDataSize))
+        {
+            /* Copy data to buffer object */
+            CopyTextureImageData(imageDesc, memory, VKTypes::Unmap(textureVK.GetVkFormat()), extent);
+            deviceMemory->Unmap(device_);
+        }
+    }
+
+    /* Release staging buffer */
+    stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
 }
 
 /* ----- Sampler States ---- */

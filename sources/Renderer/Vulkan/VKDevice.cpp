@@ -261,14 +261,12 @@ void VKDevice::CopyBuffer(
 }
 
 void VKDevice::CopyBufferToImage(
-    VkCommandBuffer     commandBuffer,
-    VkBuffer            srcBuffer,
-    VkImage             dstImage,
-    const VkOffset3D&   offset,
-    const VkExtent3D&   extent,
-    std::uint32_t       baseArrayLayer,
-    std::uint32_t       numArrayLayers,
-    std::uint32_t       mipLevel)
+    VkCommandBuffer             commandBuffer,
+    VkBuffer                    srcBuffer,
+    VkImage                     dstImage,
+    const VkOffset3D&           offset,
+    const VkExtent3D&           extent,
+    const TextureSubresource&   subresource)
 {
     VkBufferImageCopy region;
     {
@@ -276,13 +274,36 @@ void VKDevice::CopyBufferToImage(
         region.bufferRowLength                  = 0;
         region.bufferImageHeight                = 0;
         region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel        = mipLevel;
-        region.imageSubresource.baseArrayLayer  = baseArrayLayer;
-        region.imageSubresource.layerCount      = numArrayLayers;
+        region.imageSubresource.mipLevel        = subresource.baseMipLevel;
+        region.imageSubresource.baseArrayLayer  = subresource.baseArrayLayer;
+        region.imageSubresource.layerCount      = subresource.numArrayLayers;
         region.imageOffset                      = offset;
         region.imageExtent                      = extent;
     }
     vkCmdCopyBufferToImage(commandBuffer, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+}
+
+void VKDevice::CopyImageToBuffer(
+    VkCommandBuffer             commandBuffer,
+    VkImage                     srcImage,
+    VkBuffer                    dstBuffer,
+    const VkOffset3D&           offset,
+    const VkExtent3D&           extent,
+    const TextureSubresource&   subresource)
+{
+    VkBufferImageCopy region;
+    {
+        region.bufferOffset                     = 0;
+        region.bufferRowLength                  = 0;
+        region.bufferImageHeight                = 0;
+        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel        = subresource.baseMipLevel;
+        region.imageSubresource.baseArrayLayer  = subresource.baseArrayLayer;
+        region.imageSubresource.layerCount      = subresource.numArrayLayers;
+        region.imageOffset                      = offset;
+        region.imageExtent                      = extent;
+    }
+    vkCmdCopyImageToBuffer(commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstBuffer, 1, &region);
 }
 
 void VKDevice::GenerateMips(

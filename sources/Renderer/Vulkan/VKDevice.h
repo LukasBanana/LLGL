@@ -79,15 +79,24 @@ class VKDevice
             VkDeviceSize    dstOffset = 0
         );
 
+        // Copies the source buffer into the destination image (numMipLevels must be 1).
         void CopyBufferToImage(
-            VkCommandBuffer     commandBuffer,
-            VkBuffer            srcBuffer,
-            VkImage             dstImage,
-            const VkOffset3D&   offset,
-            const VkExtent3D&   extent,
-            std::uint32_t       baseArrayLayer  = 0,
-            std::uint32_t       numArrayLayers  = 1,
-            std::uint32_t       mipLevel        = 0
+            VkCommandBuffer             commandBuffer,
+            VkBuffer                    srcBuffer,
+            VkImage                     dstImage,
+            const VkOffset3D&           offset,
+            const VkExtent3D&           extent,
+            const TextureSubresource&   subresource
+        );
+
+        // Copies the source image into the destination buffer (numMipLevels must be 1).
+        void CopyImageToBuffer(
+            VkCommandBuffer             commandBuffer,
+            VkImage                     srcImage,
+            VkBuffer                    dstBuffer,
+            const VkOffset3D&           offset,
+            const VkExtent3D&           extent,
+            const TextureSubresource&   subresource
         );
 
         void GenerateMips(
