@@ -21,6 +21,19 @@ namespace LLGL
 
 
 /**
+\brief Structure with annotation and elapsed time for a timer profile.
+\see 
+*/
+struct ProfileTimeRecord
+{
+    //! Time record annotation, e.g. function name that was recorded from the CommandBuffer.
+    const char*     annotation  = "";
+
+    //! Elapsed time (in nanoseconds) to execute the respective command.
+    std::uint64_t   elapsedTime = 0;
+};
+
+/**
 \brief Profile of a rendered frame.
 \see RenderingProfiler::NextFrame
 */
@@ -36,13 +49,18 @@ struct FrameProfile
     inline void Clear()
     {
         std::fill(std::begin(values), std::end(values), 0);
+        timeRecords.clear();
     }
 
     //! Accumulates the specified profile with this profile.
     inline void Accumulate(const FrameProfile& rhs)
     {
+        /* Accumulate counters */
         for (std::size_t i = 0; i < (sizeof(values) / sizeof(values[0])); ++i)
             values[i] += rhs.values[i];
+
+        /* Append time records */
+        timeRecords.insert(timeRecords.end(), rhs.timeRecords.begin(), rhs.timeRecords.end());
     }
 
     union
@@ -264,6 +282,12 @@ struct FrameProfile
         //! All proflile values as linear array.
         std::uint32_t values[33];
     };
+
+    /**
+    \brief List of all time records for this frame profile.
+    \see RenderingProfiler::timeRecordingEnabled
+    */
+    std::vector<ProfileTimeRecord> timeRecords;
 };
 
 /**
@@ -292,7 +316,13 @@ class LLGL_EXPORT RenderingProfiler
     public:
 
         //! Current frame profile with all counter values.
-        FrameProfile frameProfile;
+        FrameProfile    frameProfile;
+
+        /**
+        \brief Specifis whether the command buffer time recording is enabled or disabled. By default disabled.
+        \see FrameProfile::timeRecords
+        */
+        bool            timeRecordingEnabled    = false;
 
 };
 

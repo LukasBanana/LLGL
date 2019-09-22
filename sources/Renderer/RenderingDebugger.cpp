@@ -14,10 +14,6 @@ namespace LLGL
 {
 
 
-RenderingDebugger::~RenderingDebugger()
-{
-}
-
 void RenderingDebugger::SetSource(const char* source)
 {
     source_ = (source != nullptr ? source : "");

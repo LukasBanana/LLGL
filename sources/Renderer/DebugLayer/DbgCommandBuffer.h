@@ -13,6 +13,7 @@
 #include <LLGL/RenderingProfiler.h>
 #include "DbgGraphicsPipeline.h"
 #include "DbgQueryHeap.h"
+#include "DbgQueryTimerManager.h"
 #include <cstdint>
 #include <string>
 #include <stack>
@@ -29,6 +30,7 @@ class DbgRenderTarget;
 class DbgComputePipeline;
 class DbgShaderProgram;
 class RenderingDebugger;
+class RenderingProfiler;
 
 class DbgCommandBuffer final : public CommandBuffer
 {
@@ -38,8 +40,11 @@ class DbgCommandBuffer final : public CommandBuffer
         /* ----- Common ----- */
 
         DbgCommandBuffer(
-            CommandBuffer&                  instance,
+            RenderSystem&                   renderSystemInstance,
+            CommandQueue&                   commandQueueInstance,
+            CommandBuffer&                  commandBufferInstance,
             RenderingDebugger*              debugger,
+            RenderingProfiler*              profiler,
             const CommandBufferDescriptor&  desc,
             const RenderingCapabilities&    caps
         );
@@ -202,8 +207,6 @@ class DbgCommandBuffer final : public CommandBuffer
 
         /* ----- Internal ----- */
 
-        void EnableRecording(bool enable);
-
         void NextProfile(FrameProfile& outputProfile);
 
     public:
@@ -214,6 +217,8 @@ class DbgCommandBuffer final : public CommandBuffer
         const CommandBufferDescriptor   desc;
 
     private:
+
+        void EnableRecording(bool enable);
 
         void ValidateGenerateMips(DbgTexture& textureDbg, const TextureSubresource* subresource = nullptr);
         void ValidateViewport(const Viewport& viewport);
@@ -264,22 +269,29 @@ class DbgCommandBuffer final : public CommandBuffer
         void ResetBindings();
         void ResetStates();
 
+        void StartTimer(const char* annotation);
+        void EndTimer();
+
     private:
 
         /* ----- Common objects ----- */
 
-        RenderingDebugger*              debugger_               = nullptr;
+        RenderingDebugger*          debugger_                       = nullptr;
+        RenderingProfiler*          profiler_                       = nullptr;
 
-        const RenderingFeatures&        features_;
-        const RenderingLimits&          limits_;
+        const RenderingFeatures&    features_;
+        const RenderingLimits&      limits_;
 
-        std::stack<std::string>         debugGroups_;
+        std::stack<std::string>     debugGroups_;
+
+        DbgQueryTimerManager        timerMngr_;
+        bool                        perfProfilerEnabled_            = false;
 
         /* ----- Render states ----- */
 
-        FrameProfile                    profile_;
+        FrameProfile                profile_;
 
-        PrimitiveTopology               topology_               = PrimitiveTopology::TriangleList;
+        PrimitiveTopology           topology_                       = PrimitiveTopology::TriangleList;
 
         struct Bindings
         {

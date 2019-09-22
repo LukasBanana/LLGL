@@ -46,7 +46,7 @@ class LLGL_EXPORT RenderingDebugger
 
     public:
 
-        virtual ~RenderingDebugger();
+        virtual ~RenderingDebugger() = default;
 
         /**
         \brief Sets the new source function name.

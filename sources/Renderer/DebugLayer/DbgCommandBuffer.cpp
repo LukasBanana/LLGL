@@ -29,6 +29,18 @@ namespace LLGL
 {
 
 
+#define LLGL_DBG_COMMAND(NAME, CMD) \
+    if (perfProfilerEnabled_)       \
+    {                               \
+        StartTimer(NAME);           \
+        CMD;                        \
+        EndTimer();                 \
+    }                               \
+    else                            \
+    {                               \
+        CMD;                        \
+    }
+
 static const char* GetLabelOrDefault(const std::string& label, const char* defaultLabel)
 {
     if (label.empty())
@@ -38,16 +50,21 @@ static const char* GetLabelOrDefault(const std::string& label, const char* defau
 }
 
 DbgCommandBuffer::DbgCommandBuffer(
-    CommandBuffer&                  instance,
+    RenderSystem&                   renderSystemInstance,
+    CommandQueue&                   commandQueueInstance,
+    CommandBuffer&                  commandBufferInstance,
     RenderingDebugger*              debugger,
+    RenderingProfiler*              profiler,
     const CommandBufferDescriptor&  desc,
     const RenderingCapabilities&    caps)
 :
-    instance      { instance      },
-    desc          { desc          },
-    debugger_     { debugger      },
-    features_     { caps.features },
-    limits_       { caps.limits   }
+    instance      { commandBufferInstance                                             },
+    desc          { desc                                                              },
+    debugger_     { debugger                                                          },
+    profiler_     { profiler                                                          },
+    features_     { caps.features                                                     },
+    limits_       { caps.limits                                                       },
+    timerMngr_    { renderSystemInstance, commandQueueInstance, commandBufferInstance }
 {
 }
 
@@ -55,10 +72,17 @@ DbgCommandBuffer::DbgCommandBuffer(
 
 void DbgCommandBuffer::Begin()
 {
+    /* Reset previous states */
     ResetFrameProfile();
     ResetBindings();
     ResetStates();
 
+    /* Enable performance profiler if it was scheduled */
+    perfProfilerEnabled_ = (profiler_ != nullptr && profiler_->timeRecordingEnabled);
+    if (perfProfilerEnabled_)
+        timerMngr_.Reset();
+
+    /* Begin with command recording  */
     if (debugger_)
         EnableRecording(true);
 
@@ -69,9 +93,14 @@ void DbgCommandBuffer::Begin()
 
 void DbgCommandBuffer::End()
 {
+    /* End with command recording */
     if (debugger_)
         EnableRecording(false);
     instance.End();
+
+    /* Resolve timer query results for performance profiler */
+    if (perfProfilerEnabled_)
+        timerMngr_.TakeRecords(profile_.timeRecords);
 }
 
 void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -93,7 +122,7 @@ void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
         );
     }
 
-    instance.Execute(commandBufferDbg.instance);
+    LLGL_DBG_COMMAND( "Execute", instance.Execute(commandBufferDbg.instance) );
 }
 
 /* ----- Blitting ----- */
@@ -112,7 +141,7 @@ void DbgCommandBuffer::UpdateBuffer(
         AssertRecording();
     }
 
-    instance.UpdateBuffer(dstBufferDbg.instance, dstOffset, data, dataSize);
+    LLGL_DBG_COMMAND( "UpdateBuffer", instance.UpdateBuffer(dstBufferDbg.instance, dstOffset, data, dataSize) );
 
     profile_.bufferUpdates++;
 }
@@ -133,7 +162,7 @@ void DbgCommandBuffer::CopyBuffer(
         AssertRecording();
     }
 
-    instance.CopyBuffer(dstBufferDbg.instance, dstOffset, srcBufferDbg.instance, srcOffset, size);
+    LLGL_DBG_COMMAND( "CopyBuffer", instance.CopyBuffer(dstBufferDbg.instance, dstOffset, srcBufferDbg.instance, srcOffset, size) );
 
     profile_.bufferCopies++;
 }
@@ -154,7 +183,7 @@ void DbgCommandBuffer::CopyTexture(
         AssertRecording();
     }
 
-    instance.CopyTexture(dstTextureDbg.instance, dstLocation, srcTextureDbg.instance, srcLocation, extent);
+    LLGL_DBG_COMMAND( "CopyTexture", instance.CopyTexture(dstTextureDbg.instance, dstLocation, srcTextureDbg.instance, srcLocation, extent) );
 
     profile_.textureCopies++;
 }
@@ -170,7 +199,7 @@ void DbgCommandBuffer::GenerateMips(Texture& texture)
         ValidateGenerateMips(textureDbg);
     }
 
-    instance.GenerateMips(textureDbg.instance);
+    LLGL_DBG_COMMAND( "GenerateMips", instance.GenerateMips(textureDbg.instance) );
 
     profile_.mipMapsGenerations++;
 }
@@ -186,7 +215,7 @@ void DbgCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& 
         ValidateGenerateMips(textureDbg, &subresource);
     }
 
-    instance.GenerateMips(textureDbg.instance, subresource);
+    LLGL_DBG_COMMAND( "GenerateMips", instance.GenerateMips(textureDbg.instance, subresource) );
 
     profile_.mipMapsGenerations++;
 }
@@ -202,7 +231,7 @@ void DbgCommandBuffer::SetViewport(const Viewport& viewport)
         ValidateViewport(viewport);
     }
 
-    instance.SetViewport(viewport);
+    LLGL_DBG_COMMAND( "SetViewport", instance.SetViewport(viewport) );
 }
 
 void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
@@ -234,14 +263,14 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         }
     }
 
-    instance.SetViewports(numViewports, viewports);
+    LLGL_DBG_COMMAND( "SetViewports", instance.SetViewports(numViewports, viewports) );
 }
 
 void DbgCommandBuffer::SetScissor(const Scissor& scissor)
 {
     LLGL_DBG_SOURCE;
     AssertRecording();
-    instance.SetScissor(scissor);
+    LLGL_DBG_COMMAND( "SetScissor", instance.SetScissor(scissor) );
 }
 
 void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
@@ -255,24 +284,24 @@ void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sci
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no scissor rectangles are specified");
     }
 
-    instance.SetScissors(numScissors, scissors);
+    LLGL_DBG_COMMAND( "SetScissors", instance.SetScissors(numScissors, scissors) );
 }
 
 /* ----- Clear ----- */
 
 void DbgCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
-    instance.SetClearColor(color);
+    LLGL_DBG_COMMAND( "SetClearColor", instance.SetClearColor(color) );
 }
 
 void DbgCommandBuffer::SetClearDepth(float depth)
 {
-    instance.SetClearDepth(depth);
+    LLGL_DBG_COMMAND( "SetClearDepth", instance.SetClearDepth(depth) );
 }
 
 void DbgCommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
-    instance.SetClearStencil(stencil);
+    LLGL_DBG_COMMAND( "SetClearStencil", instance.SetClearStencil(stencil) );
 }
 
 void DbgCommandBuffer::Clear(long flags)
@@ -283,7 +312,8 @@ void DbgCommandBuffer::Clear(long flags)
         AssertRecording();
         AssertInsideRenderPass();
     }
-    instance.Clear(flags);
+
+    LLGL_DBG_COMMAND( "Clear", instance.Clear(flags) );
 
     profile_.attachmentClears++;
 }
@@ -299,7 +329,7 @@ void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Atta
             ValidateAttachmentClear(attachments[i]);
     }
 
-    instance.ClearAttachments(numAttachments, attachments);
+    LLGL_DBG_COMMAND( "ClearAttachments", instance.ClearAttachments(numAttachments, attachments) );
 
     profile_.attachmentClears++;
 }
@@ -322,7 +352,7 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
         bindings_.anyNonEmptyVertexBuffer   = (bufferDbg.elements > 0);
     }
 
-    instance.SetVertexBuffer(bufferDbg.instance);
+    LLGL_DBG_COMMAND( "SetVertexBuffer", instance.SetVertexBuffer(bufferDbg.instance) );
 
     profile_.vertexBufferBindings++;
 }
@@ -352,7 +382,7 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
         }
     }
 
-    instance.SetVertexBufferArray(bufferArrayDbg.instance);
+    LLGL_DBG_COMMAND( "SetVertexBufferArray", instance.SetVertexBufferArray(bufferArrayDbg.instance) );
 
     profile_.vertexBufferBindings++;
 }
@@ -370,7 +400,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
         bindings_.indexBuffer = (&bufferDbg);
     }
 
-    instance.SetIndexBuffer(bufferDbg.instance);
+    LLGL_DBG_COMMAND( "SetIndexBuffer", instance.SetIndexBuffer(bufferDbg.instance) );
 
     profile_.indexBufferBindings++;
 }
@@ -389,7 +419,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
         bindings_.indexBuffer = (&bufferDbg);
     }
 
-    instance.SetIndexBuffer(bufferDbg.instance, format, offset);
+    LLGL_DBG_COMMAND( "SetIndexBuffer", instance.SetIndexBuffer(bufferDbg.instance, format, offset) );
 
     profile_.indexBufferBindings++;
 }
@@ -408,7 +438,7 @@ void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
         bindings_.streamOutput = (&bufferDbg);
     }
 
-    instance.SetStreamOutputBuffer(bufferDbg.instance);
+    LLGL_DBG_COMMAND( "SetStreamOutputBuffer", instance.SetStreamOutputBuffer(bufferDbg.instance) );
 
     profile_.streamOutputBufferBindings++;
 }
@@ -422,7 +452,7 @@ void DbgCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
         ValidateBindFlags(bufferArray.GetBindFlags(), BindFlags::StreamOutputBuffer, BindFlags::StreamOutputBuffer, "LLGL::BufferArray");
     }
 
-    instance.SetStreamOutputBufferArray(bufferArray);
+    LLGL_DBG_COMMAND( "SetStreamOutputBufferArray", instance.SetStreamOutputBufferArray(bufferArray) );
 
     profile_.streamOutputBufferBindings++;
 }
@@ -471,7 +501,7 @@ void DbgCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::
         AssertGraphicsPipelineBound();
     }
 
-    instance.SetGraphicsResourceHeap(resourceHeap, firstSet);
+    LLGL_DBG_COMMAND( "SetGraphicsResourceHeap", instance.SetGraphicsResourceHeap(resourceHeap, firstSet) );
 
     profile_.graphicsResourceHeapBindings++;
 }
@@ -486,7 +516,7 @@ void DbgCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::u
         AssertComputePipelineBound();
     }
 
-    instance.SetComputeResourceHeap(resourceHeap, firstSet);
+    LLGL_DBG_COMMAND( "SetComputeResourceHeap", instance.SetComputeResourceHeap(resourceHeap, firstSet) );
 
     profile_.computeResourceHeapBindings++;
 }
@@ -503,6 +533,9 @@ void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long 
 
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
+
+    if (perfProfilerEnabled_)
+        StartTimer("SetResource");
 
     switch (resource.GetResourceType())
     {
@@ -569,6 +602,9 @@ void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long 
         }
         break;
     }
+
+    if (perfProfilerEnabled_)
+        EndTimer();
 }
 
 void DbgCommandBuffer::ResetResourceSlots(
@@ -586,7 +622,7 @@ void DbgCommandBuffer::ResetResourceSlots(
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
-    instance.ResetResourceSlots(resourceType, firstSlot, numSlots, bindFlags, stageFlags);
+    LLGL_DBG_COMMAND( "ResetResourceSlots", instance.ResetResourceSlots(resourceType, firstSlot, numSlots, bindFlags, stageFlags) );
 }
 
 /* ----- Render Passes ----- */
@@ -675,7 +711,7 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     topology_ = graphicsPipelineDbg.desc.primitiveTopology;
 
     /* Call wrapped function */
-    instance.SetGraphicsPipeline(graphicsPipelineDbg.instance);
+    LLGL_DBG_COMMAND( "SetGraphicsPipeline", instance.SetGraphicsPipeline(graphicsPipelineDbg.instance) );
 
     profile_.graphicsPipelineBindings++;
 }
@@ -699,7 +735,7 @@ void DbgCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
             bindings_.shaderProgram_ = nullptr;
     }
 
-    instance.SetComputePipeline(computePipelineDbg.instance);
+    LLGL_DBG_COMMAND( "SetComputePipeline", instance.SetComputePipeline(computePipelineDbg.instance) );
 
     profile_.computePipelineBindings++;
 }
@@ -709,7 +745,7 @@ void DbgCommandBuffer::SetUniform(
     const void*     data,
     std::uint32_t   dataSize)
 {
-    instance.SetUniform(location, data, dataSize);
+    LLGL_DBG_COMMAND( "SetUniform", instance.SetUniform(location, data, dataSize) );
 }
 
 void DbgCommandBuffer::SetUniforms(
@@ -718,7 +754,7 @@ void DbgCommandBuffer::SetUniforms(
     const void*     data,
     std::uint32_t   dataSize)
 {
-    instance.SetUniforms(location, count, data, dataSize);
+    LLGL_DBG_COMMAND( "SetUniforms", instance.SetUniforms(location, count, data, dataSize) );
 }
 
 /* ----- Queries ----- */
@@ -792,7 +828,7 @@ void DbgCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex
         ValidateDrawCmd(numVertices, firstVertex, 1, 0);
     }
 
-    instance.Draw(numVertices, firstVertex);
+    LLGL_DBG_COMMAND( "Draw", instance.Draw(numVertices, firstVertex) );
 
     profile_.drawCommands++;
 }
@@ -805,7 +841,7 @@ void DbgCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t first
         ValidateDrawIndexedCmd(numIndices, 1, firstIndex, 0, 0);
     }
 
-    instance.DrawIndexed(numIndices, firstIndex);
+    LLGL_DBG_COMMAND( "DrawIndexed", instance.DrawIndexed(numIndices, firstIndex) );
 
     profile_.drawCommands++;
 }
@@ -818,7 +854,7 @@ void DbgCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t first
         ValidateDrawIndexedCmd(numIndices, 1, firstIndex, vertexOffset, 0);
     }
 
-    instance.DrawIndexed(numIndices, firstIndex, vertexOffset);
+    LLGL_DBG_COMMAND( "DrawIndexed", instance.DrawIndexed(numIndices, firstIndex, vertexOffset) );
 
     profile_.drawCommands++;
 }
@@ -832,7 +868,7 @@ void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fi
         ValidateDrawCmd(numVertices, firstVertex, numInstances, 0);
     }
 
-    instance.DrawInstanced(numVertices, firstVertex, numInstances);
+    LLGL_DBG_COMMAND( "DrawInstanced", instance.DrawInstanced(numVertices, firstVertex, numInstances) );
 
     profile_.drawCommands++;
 }
@@ -847,7 +883,7 @@ void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fi
         ValidateDrawCmd(numVertices, firstVertex, numInstances, firstInstance);
     }
 
-    instance.DrawInstanced(numVertices, firstVertex, numInstances, firstInstance);
+    LLGL_DBG_COMMAND( "DrawInstanced", instance.DrawInstanced(numVertices, firstVertex, numInstances, firstInstance) );
 
     profile_.drawCommands++;
 }
@@ -861,7 +897,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint3
         ValidateDrawIndexedCmd(numIndices, numInstances, firstIndex, 0, 0);
     }
 
-    instance.DrawIndexedInstanced(numIndices, numInstances, firstIndex);
+    LLGL_DBG_COMMAND( "DrawIndexedInstanced", instance.DrawIndexedInstanced(numIndices, numInstances, firstIndex) );
 
     profile_.drawCommands++;
 }
@@ -875,7 +911,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint3
         ValidateDrawIndexedCmd(numIndices, numInstances, firstIndex, vertexOffset, 0);
     }
 
-    instance.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset);
+    LLGL_DBG_COMMAND( "DrawIndexedInstanced", instance.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset) );
 
     profile_.drawCommands++;
 }
@@ -890,7 +926,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint3
         ValidateDrawIndexedCmd(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
     }
 
-    instance.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
+    LLGL_DBG_COMMAND( "DrawIndexedInstanced", instance.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance) );
 
     profile_.drawCommands++;
 }
@@ -908,7 +944,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
     }
 
-    instance.DrawIndirect(bufferDbg.instance, offset);
+    LLGL_DBG_COMMAND( "DrawIndirect", instance.DrawIndirect(bufferDbg.instance, offset) );
 
     profile_.drawCommands++;
 }
@@ -927,7 +963,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::u
         ValidateAddressAlignment(stride, 4, "<stride> parameter");
     }
 
-    instance.DrawIndirect(bufferDbg.instance, offset, numCommands, stride);
+    LLGL_DBG_COMMAND( "DrawIndirect", instance.DrawIndirect(bufferDbg.instance, offset, numCommands, stride) );
 
     profile_.drawCommands += numCommands;
 }
@@ -945,7 +981,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
     }
 
-    instance.DrawIndexedIndirect(bufferDbg.instance, offset);
+    LLGL_DBG_COMMAND( "DrawIndexedIndirect", instance.DrawIndexedIndirect(bufferDbg.instance, offset) );
 
     profile_.drawCommands++;
 }
@@ -964,7 +1000,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset,
         ValidateAddressAlignment(stride, 4, "<stride> parameter");
     }
 
-    instance.DrawIndexedIndirect(bufferDbg.instance, offset, numCommands, stride);
+    LLGL_DBG_COMMAND( "DrawIndexedIndirect", instance.DrawIndexedIndirect(bufferDbg.instance, offset, numCommands, stride) );
 
     profile_.drawCommands += numCommands;
 }
@@ -986,7 +1022,7 @@ void DbgCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numW
         ValidateThreadGroupLimit(numWorkGroupsZ, limits_.maxComputeShaderWorkGroups[2]);
     }
 
-    instance.Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+    LLGL_DBG_COMMAND( "Dispatch", instance.Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ) );
 
     profile_.dispatchCommands++;
 }
@@ -1003,7 +1039,7 @@ void DbgCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
     }
 
-    instance.DispatchIndirect(bufferDbg.instance, offset);
+    LLGL_DBG_COMMAND( "DispatchIndirect", instance.DispatchIndirect(bufferDbg.instance, offset) );
 
     profile_.dispatchCommands++;
 }
@@ -1044,10 +1080,24 @@ void DbgCommandBuffer::PopDebugGroup()
 
 void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
 {
-    instance.SetGraphicsAPIDependentState(stateDesc, stateDescSize);
+    LLGL_DBG_COMMAND( "SetGraphicsAPIDependentState", instance.SetGraphicsAPIDependentState(stateDesc, stateDescSize) );
 }
 
 /* ----- Internal ----- */
+
+void DbgCommandBuffer::NextProfile(FrameProfile& outputProfile)
+{
+    /* Copy frame profile values to output profile */
+    std::copy(std::begin(profile_.values), std::end(profile_.values), std::begin(outputProfile.values));
+    outputProfile.timeRecords = std::move(profile_.timeRecords);
+}
+
+#undef LLGL_DBG_COMMAND
+
+
+/*
+ * ======= Private: =======
+ */
 
 void DbgCommandBuffer::EnableRecording(bool enable)
 {
@@ -1064,17 +1114,6 @@ void DbgCommandBuffer::EnableRecording(bool enable)
         states_.recording = enable;
     }
 }
-
-void DbgCommandBuffer::NextProfile(FrameProfile& outputProfile)
-{
-    /* Copy frame profile values to output profile */
-    std::copy(std::begin(profile_.values), std::end(profile_.values), std::begin(outputProfile.values));
-}
-
-
-/*
- * ======= Private: =======
- */
 
 void DbgCommandBuffer::ValidateGenerateMips(DbgTexture& textureDbg, const TextureSubresource* subresource)
 {
@@ -1660,6 +1699,16 @@ void DbgCommandBuffer::ResetBindings()
 void DbgCommandBuffer::ResetStates()
 {
     ::memset(&states_, 0, sizeof(states_));
+}
+
+void DbgCommandBuffer::StartTimer(const char* annotation)
+{
+    timerMngr_.Start(annotation);
+}
+
+void DbgCommandBuffer::EndTimer()
+{
+    timerMngr_.Stop();
 }
 
 

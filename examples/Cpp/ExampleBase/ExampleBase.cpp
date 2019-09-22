@@ -7,6 +7,7 @@
 
 #include <ExampleBase.h>
 #include <LLGL/Strings.h>
+#include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -188,11 +189,31 @@ void ExampleBase::SelectRendererModule(int argc, char* argv[])
 void ExampleBase::Run()
 {
     LLGL::Extent2D resolution = context->GetResolution();
+    bool showTimeRecords = false;
 
     while (context->GetSurface().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
     {
-        // Update profiler
-        profilerObj_->NextProfile();
+        // Update profiler (if debugging is enabled)
+        if (debuggerObj_)
+        {
+            if (showTimeRecords)
+            {
+                std::cout << "\n";
+                std::cout << "FRAME TIME RECORDS:\n";
+                std::cout << "-------------------\n";
+                for (const auto& rec : profilerObj_->frameProfile.timeRecords)
+                    std::cout << rec.annotation << ": " << rec.elapsedTime << " ns\n";
+
+                profilerObj_->timeRecordingEnabled = false;
+                showTimeRecords = false;
+            }
+            else if (input->KeyDown(LLGL::Key::F1))
+            {
+                profilerObj_->timeRecordingEnabled = true;
+                showTimeRecords = true;
+            }
+            profilerObj_->NextProfile();
+        }
 
         // Draw current frame
         OnDrawFrame();
@@ -237,13 +258,12 @@ ExampleBase::ExampleBase(
     // Create render system
     renderer = LLGL::RenderSystem::Load(
         rendererDesc,
-        #ifdef LLGL_DEBUG//_DEBUG
         (debugger ? profilerObj_.get() : nullptr),
         (debugger ? debuggerObj_.get() : nullptr)
-        #else
-        nullptr, nullptr
-        #endif
     );
+
+    if (!debugger)
+        debuggerObj_.reset();
 
     // Create render context
     LLGL::RenderContextDescriptor contextDesc;
