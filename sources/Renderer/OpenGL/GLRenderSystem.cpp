@@ -430,11 +430,11 @@ void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     }
 }
 
-void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
+void GLRenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);
 
-    auto& textureGL = LLGL_CAST(const GLTexture&, texture);
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
 
     /* Read image data from texture */
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT

@@ -297,6 +297,11 @@ protected:
         return samples_;
     }
 
+protected:
+
+    // Returns the name of the renderer module (e.g. "OpenGL" or "Direct3D11").
+    static const std::string& GetModuleName();
+
 };
 
 

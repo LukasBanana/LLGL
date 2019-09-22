@@ -685,3 +685,8 @@ bool ExampleBase::Supported(const LLGL::ShadingLanguage shadingLanguage) const
     return (std::find(languages.begin(), languages.end(), shadingLanguage) != languages.end());
 }
 
+const std::string& ExampleBase::GetModuleName()
+{
+    return rendererModule_;
+}
+

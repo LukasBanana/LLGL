@@ -752,7 +752,7 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
     if (queryHeapVK.GetType() == QueryType::TimeElapsed)
     {
         /* Record second timestamp */
-        vkCmdWriteTimestamp(commandBuffer_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryHeapVK.GetVkQueryPool(), query + 1);
+        vkCmdWriteTimestamp(commandBuffer_, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryHeapVK.GetVkQueryPool(), query + 1);
     }
     else
     {
@@ -760,7 +760,9 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
         vkCmdEndQuery(commandBuffer_, queryHeapVK.GetVkQueryPool(), query);
     }
 
+    #if 0//TEST
     AppendQueryPoolInFlight(&queryHeapVK);
+    #endif
 }
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
@@ -768,23 +770,19 @@ void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t q
     /* Ensure "VK_EXT_conditional_rendering" is supported */
     LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
 
-    auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
-    if (!queryHeapVK.HasPredicates())
-        return;
-
-    auto& predicateQueryHeapVK = LLGL_CAST(VKPredicateQueryHeap&, queryHeapVK);
+    auto& queryHeapVK = LLGL_CAST(VKPredicateQueryHeap&, queryHeap);
 
     /* Flush dirty range before using predicate result buffer */
-    if (predicateQueryHeapVK.InsideDirtyRange(query, 1))
+    if (queryHeapVK.InsideDirtyRange(query, 1))
     {
         if (IsInsideRenderPass())
         {
             PauseRenderPass();
-            predicateQueryHeapVK.FlushDirtyRange(commandBuffer_);
+            queryHeapVK.FlushDirtyRange(commandBuffer_);
             ResumeRenderPass();
         }
         else
-            predicateQueryHeapVK.FlushDirtyRange(commandBuffer_);
+            queryHeapVK.FlushDirtyRange(commandBuffer_);
     }
 
     /* Begin conditional rendering block */
@@ -792,7 +790,7 @@ void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t q
     {
         beginInfo.sType     = VK_STRUCTURE_TYPE_CONDITIONAL_RENDERING_BEGIN_INFO_EXT;
         beginInfo.pNext     = nullptr;
-        beginInfo.buffer    = predicateQueryHeapVK.GetResultVkBuffer();
+        beginInfo.buffer    = queryHeapVK.GetResultVkBuffer();
         beginInfo.offset    = query * sizeof(std::uint32_t);
         beginInfo.flags     = (mode >= RenderConditionMode::WaitInverted ? VK_CONDITIONAL_RENDERING_INVERTED_BIT_EXT : 0);
     }
@@ -1060,87 +1058,6 @@ bool VKCommandBuffer::IsInsideRenderPass() const
 {
     return (recordState_ == RecordState::InsideRenderPass);
 }
-
-//TODO: current unused; previously used for 'Clear' function
-#if 0
-
-void VKCommandBuffer::BeginClearImage(
-    VkImageMemoryBarrier&           clearToPresentBarrier,
-    VkImage                         image,
-    const VkImageAspectFlags        clearFlags,
-    const VkClearColorValue*        clearColor,
-    const VkClearDepthStencilValue* clearDepthStencil)
-{
-    /* Initialize image subresource range */
-    VkImageSubresourceRange subresourceRange;
-    {
-        subresourceRange.aspectMask     = clearFlags;
-        subresourceRange.baseMipLevel   = 0;
-        subresourceRange.levelCount     = 1;
-        subresourceRange.baseArrayLayer = 0;
-        subresourceRange.layerCount     = 1;
-    }
-
-    /* Initialize pre-barrier */
-    VkImageMemoryBarrier presentToClearBarrier;
-    {
-        presentToClearBarrier.sType                 = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        presentToClearBarrier.pNext                 = nullptr;
-        presentToClearBarrier.srcAccessMask         = VK_ACCESS_MEMORY_READ_BIT;
-        presentToClearBarrier.dstAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
-        presentToClearBarrier.oldLayout             = VK_IMAGE_LAYOUT_UNDEFINED;
-        presentToClearBarrier.newLayout             = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        presentToClearBarrier.srcQueueFamilyIndex   = queuePresentFamily_;
-        presentToClearBarrier.dstQueueFamilyIndex   = queuePresentFamily_;
-        presentToClearBarrier.image                 = image;
-        presentToClearBarrier.subresourceRange      = subresourceRange;
-    }
-
-    /* Initialize post-barrier */
-    {
-        clearToPresentBarrier.sType                 = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        clearToPresentBarrier.pNext                 = nullptr;
-        clearToPresentBarrier.srcAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
-        clearToPresentBarrier.dstAccessMask         = VK_ACCESS_MEMORY_READ_BIT;
-        clearToPresentBarrier.oldLayout             = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        clearToPresentBarrier.newLayout             = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        clearToPresentBarrier.srcQueueFamilyIndex   = queuePresentFamily_;
-        clearToPresentBarrier.dstQueueFamilyIndex   = queuePresentFamily_;
-        clearToPresentBarrier.image                 = image;
-        clearToPresentBarrier.subresourceRange      = subresourceRange;
-    }
-
-    /* Record barrier and clear color commands */
-    vkCmdPipelineBarrier(
-        commandBuffer_,
-        VK_PIPELINE_STAGE_TRANSFER_BIT,
-        VK_PIPELINE_STAGE_TRANSFER_BIT,
-        0,
-        0, nullptr,
-        0, nullptr,
-        1, &presentToClearBarrier
-    );
-
-    if ((clearFlags & VK_IMAGE_ASPECT_COLOR_BIT) != 0)
-        vkCmdClearColorImage(commandBuffer_, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, clearColor, 1, &subresourceRange);
-    if ((clearFlags & (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)) != 0)
-        vkCmdClearDepthStencilImage(commandBuffer_, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, clearDepthStencil, 1, &subresourceRange);
-}
-
-void VKCommandBuffer::EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier)
-{
-    vkCmdPipelineBarrier(
-        commandBuffer_,                         // VkCommandBuffer
-        VK_PIPELINE_STAGE_TRANSFER_BIT,         // source stage
-        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,   // destination stage
-        0,                                      // no dependencie flags
-        0, nullptr,                             // no memory barriers
-        0, nullptr,                             // no buffer memory barriers
-        1, &clearToPresentBarrier               // image memory barriers
-    );
-}
-
-#endif
 
 void VKCommandBuffer::ResetQueryPoolsInFlight()
 {

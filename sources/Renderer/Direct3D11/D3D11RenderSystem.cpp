@@ -274,16 +274,10 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
     }
 }
 
-static void ValidateImageDataSize(std::size_t dataSize, std::size_t requiredDataSize)
-{
-    if (dataSize < requiredDataSize)
-        throw std::invalid_argument("output image data buffer too small for texture read operation");
-}
-
-void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
+void D3D11RenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);
-    auto& textureD3D = LLGL_CAST(const D3D11Texture&, texture);
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
 
     /* Create a copy of the hardware texture with CPU read access */
     D3D11NativeTexture texCopy;
@@ -294,41 +288,11 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     auto hr = context_->Map(texCopy.resource.Get(), 0, D3D11_MAP_READ, 0, &mappedSubresource);
     DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
-    /* Query MIP-level size to determine image buffer size */
-    auto size           = texture.GetMipExtent(mipLevel);
-    auto numTexels      = (size.width * size.height * size.depth);
+    /* Copy host visible resource to CPU accessible resource */
+    auto format = D3D11Types::Unmap(textureD3D.GetFormat());
+    auto extent = textureD3D.GetMipExtent(mipLevel);
 
-    /* Check if image buffer must be converted */
-    const auto& srcTexFormat    = GetFormatAttribs(D3D11Types::Unmap(textureD3D.GetFormat()));
-    auto srcPitch               = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
-    auto srcImageSize           = (numTexels * srcPitch);
-
-    if (srcTexFormat.format != imageDesc.format || srcTexFormat.dataType != imageDesc.dataType)
-    {
-        /* Determine destination image size */
-        auto dstPitch       = DataTypeSize(imageDesc.dataType) * ImageFormatSize(imageDesc.format);
-        auto dstImageSize   = (numTexels * dstPitch);
-
-        /* Validate input size */
-        ValidateImageDataSize(imageDesc.dataSize, dstImageSize);
-
-        /* Convert mapped data into requested format */
-        auto tempData = ConvertImageBuffer(
-            SrcImageDescriptor{ srcTexFormat.format, srcTexFormat.dataType, mappedSubresource.pData, srcImageSize },
-            imageDesc.format, imageDesc.dataType, GetConfiguration().threadCount
-        );
-
-        /* Copy temporary data into output buffer */
-        ::memcpy(imageDesc.data, tempData.get(), dstImageSize);
-    }
-    else
-    {
-        /* Validate input size */
-        ValidateImageDataSize(imageDesc.dataSize, srcImageSize);
-
-        /* Copy mapped data directly into the output buffer */
-        ::memcpy(imageDesc.data, mappedSubresource.pData, srcImageSize);
-    }
+    CopyTextureImageData(imageDesc, mappedSubresource.pData, format, extent);
 
     /* Unmap resource */
     context_->Unmap(texCopy.resource.Get(), 0);

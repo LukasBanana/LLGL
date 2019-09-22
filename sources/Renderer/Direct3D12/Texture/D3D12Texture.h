@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+class D3D12CommandContext;
+
 class D3D12Texture final : public Texture
 {
 
@@ -41,6 +43,14 @@ class D3D12Texture final : public Texture
             UINT                        mipLevel        = 0,
             UINT                        firstArrayLayer = 0,
             UINT                        numArrayLayers  = ~0
+        );
+
+        // Creates a CPU accessible readback buffer for this texture resource.
+        void CreateSubresourceCopyAsReadbackBuffer(
+            ID3D12Device*           device,
+            D3D12CommandContext&    commandContext,
+            ComPtr<ID3D12Resource>& readbackBuffer,
+            UINT                    mipLevel
         );
 
         // Creates either the default SRV for the entire resource or a subresource.

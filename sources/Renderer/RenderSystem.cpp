@@ -8,6 +8,8 @@
 #include "../Platform/Module.h"
 #include "../Core/Helper.h"
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Format.h>
+#include <LLGL/ImageFlags.h>
 #include <LLGL/Log.h>
 #include "BuildID.h"
 #include "StaticLimits.h"
@@ -408,6 +410,48 @@ void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t require
         s += " is specified)";
 
         throw std::invalid_argument(s);
+    }
+}
+
+void RenderSystem::CopyTextureImageData(
+    const DstImageDescriptor&   dstImageDesc,
+    const void*                 srcData,
+    const Format                srcFormat,
+    const Extent3D&             srcExtent)
+{
+    /* Query MIP-level size to determine image buffer size */
+    const auto numTexels = (srcExtent.width * srcExtent.height * srcExtent.depth);
+
+    /* Check if image buffer must be converted */
+    const auto& srcTexFormat    = GetFormatAttribs(srcFormat);
+    auto srcPitch               = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
+    auto srcImageSize           = (numTexels * srcPitch);
+
+    if (srcTexFormat.format != dstImageDesc.format || srcTexFormat.dataType != dstImageDesc.dataType)
+    {
+        /* Determine destination image size */
+        auto dstPitch       = DataTypeSize(dstImageDesc.dataType) * ImageFormatSize(dstImageDesc.format);
+        auto dstImageSize   = (numTexels * dstPitch);
+
+        /* Validate input size */
+        AssertImageDataSize(dstImageDesc.dataSize, dstImageSize);
+
+        /* Convert mapped data into requested format */
+        auto tempData = ConvertImageBuffer(
+            SrcImageDescriptor{ srcTexFormat.format, srcTexFormat.dataType, srcData, srcImageSize },
+            dstImageDesc.format, dstImageDesc.dataType, GetConfiguration().threadCount
+        );
+
+        /* Copy temporary data into output buffer */
+        ::memcpy(dstImageDesc.data, tempData.get(), dstImageSize);
+    }
+    else
+    {
+        /* Validate input size */
+        AssertImageDataSize(dstImageDesc.dataSize, srcImageSize);
+
+        /* Copy mapped data directly into the output buffer */
+        ::memcpy(dstImageDesc.data, srcData, srcImageSize);
     }
 }
 

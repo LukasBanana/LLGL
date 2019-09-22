@@ -150,7 +150,7 @@ void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     textureMT.Write(textureRegion, imageDesc);
 }
 
-void MTRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
+void MTRenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
     //todo
 }

@@ -334,7 +334,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see Texture::GetMipExtent
         \todo Replace \c mipLevel parameter with \c textureRegion just like with the \c WriteTexture function.
         */
-        virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) = 0;
+        virtual void ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) = 0;
 
         /* ----- Samplers ---- */
 
@@ -511,6 +511,13 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         //! Validates the specified image data size against the required size (in bytes).
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);
+
+        void CopyTextureImageData(
+            const DstImageDescriptor&   dstImageDesc,
+            const void*                 srcData,
+            const Format                srcFormat,
+            const Extent3D&             srcExtent
+        );
 
     private:
 

@@ -293,9 +293,31 @@ void D3D12RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
     ExecuteCommandListAndSync();
 }
 
-void D3D12RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
+void D3D12RenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
-    //todo
+    auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
+
+    /* Create CPU accessible readback buffer for texture and execute command list */
+    ComPtr<ID3D12Resource> readbackBuffer;
+    textureD3D.CreateSubresourceCopyAsReadbackBuffer(device_.GetNative(), *commandContext_, readbackBuffer, mipLevel);
+    ExecuteCommandListAndSync();
+
+    /* Map readback buffer to CPU memory space */
+    const auto subresource = textureD3D.CalcSubresource(mipLevel, 0);
+    void* mappedData = nullptr;
+
+    auto hr = readbackBuffer->Map(subresource, nullptr, &mappedData);
+    DXThrowIfFailed(hr, "failed to map D3D12 texture copy resource");
+
+    /* Copy CPU accessible buffer to output data */
+    auto format = D3D12Types::Unmap(textureD3D.GetFormat());
+    auto extent = textureD3D.GetMipExtent(mipLevel);
+
+    CopyTextureImageData(imageDesc, mappedData, format, extent);
+
+    /* Unmap buffer */
+    const D3D12_RANGE writtenRange{ 0, 0 };
+    readbackBuffer->Unmap(subresource, &writtenRange);
 }
 
 /* ----- Sampler States ---- */
@@ -520,7 +542,6 @@ void D3D12RenderSystem::QueryVideoAdapters()
 {
     /* Enumerate over all video adapters */
     ComPtr<IDXGIAdapter> adapter;
-
     for (UINT i = 0; factory_->EnumAdapters(i, adapter.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND; ++i)
     {
         /* Add adapter to the list and release handle */

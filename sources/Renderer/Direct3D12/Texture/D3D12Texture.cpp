@@ -6,6 +6,7 @@
  */
 
 #include "D3D12Texture.h"
+#include "../Command/D3D12CommandContext.h"
 #include "../D3D12ObjectUtils.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
@@ -189,6 +190,54 @@ void D3D12Texture::UpdateSubresource(
     );
 
     commandList->ResourceBarrier(1, &resourceBarrier);
+}
+
+void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
+    ID3D12Device*           device,
+    D3D12CommandContext&    commandContext,
+    ComPtr<ID3D12Resource>& readbackBuffer,
+    UINT                    mipLevel)
+{
+    /* Determine required buffer size for texture subresource */
+    const Extent3D  extent          = GetMipExtent(mipLevel);
+    const Format    format          = D3D12Types::Unmap(GetFormat());
+    const auto&     formatAttribs   = GetFormatAttribs(format);
+    const UINT64    bufferSize      = extent.width * extent.height * extent.depth * (formatAttribs.bitSize / 8 / formatAttribs.blockWidth);
+
+    /* Create readback buffer with texture resource descriptor */
+    auto hr = device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(readbackBuffer.ReleaseAndGetAddressOf())
+    );
+    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for texture readback buffer");
+
+    /* Copy host visible resource to CPU accessible resource */
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT bufferFootprint;
+    {
+        bufferFootprint.Offset              = 0;
+        bufferFootprint.Footprint.Format    = GetFormat();
+        bufferFootprint.Footprint.Width     = extent.width;
+        bufferFootprint.Footprint.Height    = extent.height;
+        bufferFootprint.Footprint.Depth     = extent.depth;
+        bufferFootprint.Footprint.RowPitch  = extent.width * formatAttribs.bitSize / 8 / formatAttribs.blockWidth;
+    }
+
+    const auto srcBox = CalcRegion(Offset3D{ 0, 0, 0 }, extent);
+
+    commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+    {
+        commandContext.GetCommandList()->CopyTextureRegion(
+            &CD3DX12_TEXTURE_COPY_LOCATION(readbackBuffer.Get(), bufferFootprint),
+            0, 0, 0,
+            &CD3DX12_TEXTURE_COPY_LOCATION(GetNative(), CalcSubresource(mipLevel, 0)),
+            &srcBox
+        );
+    }
+    commandContext.TransitionResource(resource_, resource_.usageState, true);
 }
 
 void D3D12Texture::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)

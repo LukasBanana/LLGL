@@ -255,9 +255,9 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
         profiler_->frameProfile.textureWrites++;
 }
 
-void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
+void DbgRenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
-    auto& textureDbg = LLGL_CAST(const DbgTexture&, texture);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
     if (debugger_)
     {

@@ -516,7 +516,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
 }
 
-void VKRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
+void VKRenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
     //todo
 }

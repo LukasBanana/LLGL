@@ -225,6 +225,8 @@ class VKCommandBuffer final : public CommandBuffer
             ReadyForSubmit,     // after "End"
         };
 
+    private:
+
         void CreateCommandPool(std::uint32_t queueFamilyIndex);
         void CreateCommandBuffers(std::size_t bufferCount);
         void CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences);
@@ -235,18 +237,6 @@ class VKCommandBuffer final : public CommandBuffer
         void ResumeRenderPass();
 
         bool IsInsideRenderPass() const;
-
-        //TODO: current unused; previously used for 'Clear' function
-        #if 0
-        void BeginClearImage(
-            VkImageMemoryBarrier&           clearToPresentBarrier,
-            VkImage                         image,
-            const VkImageAspectFlags        clearFlags,
-            const VkClearColorValue*        clearColor,
-            const VkClearDepthStencilValue* clearDepthStencil
-        );
-        void EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier);
-        #endif
 
         void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
 
