@@ -19,6 +19,7 @@ namespace LLGL
 
 
 struct SrcImageDescriptor;
+struct DstImageDescriptor;
 
 class MTTexture : public Texture
 {
@@ -34,7 +35,14 @@ class MTTexture : public Texture
         MTTexture(id<MTLDevice> device, const TextureDescriptor& desc);
         ~MTTexture();
 
-        void Write(const TextureRegion& textureRegion, SrcImageDescriptor imageDesc);
+        // Returns the region for the specified subresource.
+        MTLRegion GetSubresourceRegion(NSUInteger mipLevel) const;
+
+        // Copies the source image data to the specified texture region; 'numMipLevel' must be 1.
+        void WriteRegion(const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc);
+
+        // Copies the specified texture region to the destination image data; 'numMipLevel' must be 1.
+        void ReadRegion(const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc);
 
         // Creats a new MTLTexture object as subresource view from this texture.
         id<MTLTexture> CreateSubresourceView(const TextureSubresource& subresource);

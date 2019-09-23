@@ -22,9 +22,9 @@ namespace LLGL
 // Subresource data size structure with stride per row, stride per array layer, and whole data size.
 struct SubresourceLayout
 {
-    std::uint32_t rowStride     = 0;
-    std::uint32_t layerStride   = 0;
-    std::uint32_t dataSize      = 0;
+    std::uint32_t rowStride     = 0; // Bytes per row
+    std::uint32_t layerStride   = 0; // Bytes per layer
+    std::uint32_t dataSize      = 0; // Bytes per resource
 };
 
 

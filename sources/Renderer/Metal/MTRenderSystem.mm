@@ -11,6 +11,7 @@
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
 #include "MTFeatureSet.h"
+#include "MTTypes.h"
 #include <LLGL/ImageFlags.h>
 #include <AvailabilityMacros.h>
 
@@ -112,7 +113,7 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     if (imageDesc)
     {
-        textureMT->Write(
+        textureMT->WriteRegion(
             //TextureRegion{ Offset3D{ 0, 0, 0 }, textureMT->GetMipExtent(0) },
             TextureRegion
             {
@@ -147,12 +148,18 @@ void MTRenderSystem::Release(Texture& texture)
 void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
-    textureMT.Write(textureRegion, imageDesc);
+    textureMT.WriteRegion(textureRegion, imageDesc);
 }
 
 void MTRenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
-    //todo
+    auto& textureMT = LLGL_CAST(MTTexture&, texture);
+
+    id<MTLTexture> tex = textureMT.GetNative();
+    const TextureSubresource subresource{ 0, static_cast<std::uint32_t>([tex arrayLength]), mipLevel, 1 };
+    const TextureRegion region{ subresource, Offset3D{ 0, 0, 0 }, textureMT.GetMipExtent(mipLevel) };
+
+    textureMT.ReadRegion(region, imageDesc);
 }
 
 /* ----- Sampler States ---- */
