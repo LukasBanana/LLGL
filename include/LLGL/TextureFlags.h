@@ -371,18 +371,87 @@ struct TextureViewDescriptor
 \param[in] height Specifies the texture height or number of layers for 1D array textures. By default 1 (if 1D textures are used).
 \param[in] depth Specifies the texture depth or number of layers for 2D array textures. By default 1 (if 1D or 2D textures are used).
 \remarks The height and depth are optional parameters, so this function can be easily used for 1D, 2D, and 3D textures.
-\return <code>1 + floor(log2(max{ width, height, depth }))</code>.
+\return \f$\left\lfloor 1 + log_2\left(\max\left\{ \text{width}, \text{height}, \text{depth} \right\} \right) \right\rfloor\f$
 */
 LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height = 1, std::uint32_t depth = 1);
 
 /**
-\brief Returns the number of MIP-map levels for the specified texture descriptor.
-\param[in] textureDesc Specifies the descriptor whose parameters are used to determine the number of MIP-map levels.
-\remarks This function will deduce the number MIP-map levels automatically only if the member "mipLevels" is zero.
-Otherwise, the value of this member is returned.
+\brief Returns the number of MIP-map levels for the specified texture attributes.
+\param[in] type Specifies the texture type for which the MIP-map extent is to be determined.
+\param[in] extent Specifies the extent of the first MIP-map level.
 \see NumMipLevels(std::uint32_t, std::uint32_t, std::uint32_t)
 */
+LLGL_EXPORT std::uint32_t NumMipLevels(const TextureType type, const Extent3D& extent);
+
+/**
+\brief Returns the number of MIP-map levels for the specified texture descriptor.
+\param[in] textureDesc Specifies the descriptor whose parameters are used to determine the number of MIP-map levels.
+\remarks This function will deduce the number MIP-map levels automatically only if the member \c mipLevels is zero.
+Otherwise, the value of this member is returned.
+\see NumMipLevels(const TextureType, const Extent3D&)
+*/
 LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc);
+
+/**
+\brief Returns the number of MIP-map dimensions for the specified texture type. This is either 1, 2, 3, or 0 if the input is invalid.
+\remarks MIP-map dimensions <b>do count</b> array layers as a dimension, e.g. for TextureType::Texture2DArray this function returns 3.
+\see Texture::GetMipExtent
+\see NumTextureDimensions
+*/
+LLGL_EXPORT std::uint32_t NumMipDimensions(const TextureType type);
+
+/**
+\brief Returns the number of texture dimensions for the specified texture type. This is either 1, 2, 3, or 0 if the input is invalid.
+\remarks Texture dimensions <b>don't count</b> array layers as a dimension, e.g. for TextureType::Texture2DArray this function returns 2.
+\see TextureDescriptor::extent
+\see NumMipDimensions
+*/
+LLGL_EXPORT std::uint32_t NumTextureDimensions(const TextureType type);
+
+/**
+\brief Returns the MIP-map extent (including array layers) for the specified texture type, or an empty extent if \c mipLevel is out of bounds (see \c NumMipLevels).
+\param[in] type Specifies the texture type for which the MIP-map extent is to be determined.
+\param[in] extent Specifies the extent of the first MIP-map level.
+\param[in] mipLevel Specifies the MIP-map level whose extent is to be determined. The first and largest MIP-map level has index zero.
+\see Texture::GetMipExtent
+\see TextureDescriptor::extent
+\see NumMipLevels(const TextureType, const Extent3D&)
+*/
+LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel);
+
+/**
+\brief Returns the number of texture elements (texels) for the specified texture attributes, or zero extent if \c mipLevel is out of bounds (see \c NumMipLevels).
+\param[in] type Specifies the texture type for which the number of texels are to be determined.
+\param[in] extent Specifies the extent of the first MIP-map level.
+\param[in] mipLevel Specifies the MIP-map level whose number of texels is to be determined. The first and largest MIP-map level has index zero.
+\see TextureDescriptor::type
+\see NumMipLevels(const TextureType, const Extent3D&)
+*/
+LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel);
+
+/**
+\brief Returns the number of texture elements (texels) for the specified texture subresource range, or zero if the array layers are out of bounds.
+\param[in] type Specifies the texture type for which the number of texels are to be determined.
+\param[in] extent Specifies the extent of the first MIP-map level.
+\param[in] subresource Specifies the subresource range. The function returns zero if the array layer range is out of bounds.
+Which dimension in \c extent specifies the number of array layers depends on the texture type.
+\see TextureDescriptor::arrayLayers
+\see TextureSubresource::baseArrayLayer
+\see TextureSubresource::numArrayLayers
+\see NumMipTexels(const TextureType, const Extent3D&, std::uint32_t)
+*/
+LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, const TextureSubresource& subresource);
+
+/**
+\brief Returns the number of texture elements (texels) for the specified texture descriptor.
+\param[in] textureDesc Specifies the texture descriptor for which the number of MIP-map texels are determined.
+\param[in] mipLevel Optional parameter to specify only a single MIP-map level.
+If this is \c 0xFFFFFFFF, the number of texels for the entire MIP-map chain is determined. By default \c 0xFFFFFFFF.
+The size of the MIP-map chain is determined by \c textureDesc.mipLevels.
+\see NumMipTexels(const TextureType, const Extent3D&, std::uint32_t)
+\see TextureDescriptor::mipLevels
+*/
+LLGL_EXPORT std::uint32_t NumMipTexels(const TextureDescriptor& textureDesc, std::uint32_t mipLevel = ~0u);
 
 /**
 \brief Returns the required buffer size (in bytes) of a texture with the specified hardware format and number of texels.
@@ -392,14 +461,9 @@ For the DXT compressed texture formats, this must be a multiple of 16, since the
 \return The required buffer size (in bytes), or zero if the input is invalid.
 \remarks The counterpart for image data is the function ImageDataSize.
 \see ImageDataSize
+\todo Rename to \c GetMipBufferSize
 */
 LLGL_EXPORT std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels);
-
-/**
-\brief Returns the texture size (in texels) of the specified texture descriptor, or zero if the texture type is invalid.
-\see TextureDescriptor::type
-*/
-LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc);
 
 /**
 \brief Returns true if the specified texture descriptor describes a texture with MIP-mapping enabled.

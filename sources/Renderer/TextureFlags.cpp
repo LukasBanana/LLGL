@@ -16,29 +16,154 @@ namespace LLGL
 
 LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height, std::uint32_t depth)
 {
-    auto maxSize = std::max({ width, height, depth });
-    auto log2Size = static_cast<std::uint32_t>(std::log2(maxSize));
-    return (1 + log2Size);
+    const auto maxSize = std::max({ width, height, depth });
+    const auto log2Size = static_cast<std::uint32_t>(std::log2(maxSize));
+    return (1u + log2Size);
+}
+
+LLGL_EXPORT std::uint32_t NumMipLevels(const TextureType type, const Extent3D& extent)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:        return NumMipLevels(extent.width);
+        case TextureType::Texture2D:        return NumMipLevels(extent.width, extent.height);
+        case TextureType::Texture3D:        return NumMipLevels(extent.width, extent.height, extent.depth);
+        case TextureType::TextureCube:      return NumMipLevels(extent.width, extent.height);
+        case TextureType::Texture1DArray:   return NumMipLevels(extent.width);
+        case TextureType::Texture2DArray:   return NumMipLevels(extent.width, extent.height);
+        case TextureType::TextureCubeArray: return NumMipLevels(extent.width, extent.height);
+        case TextureType::Texture2DMS:      return 1u;
+        case TextureType::Texture2DMSArray: return 1u;
+    }
+    return 0u;
 }
 
 LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
 {
     if (textureDesc.mipLevels == 0)
+        return NumMipLevels(textureDesc.type, textureDesc.extent);
+    else
+        return textureDesc.mipLevels;
+}
+
+LLGL_EXPORT std::uint32_t NumMipDimensions(const TextureType type)
+{
+    switch (type)
     {
-        switch (textureDesc.type)
+        case TextureType::Texture1D:        return 1;
+        case TextureType::Texture2D:        return 2;
+        case TextureType::Texture3D:        return 3;
+        case TextureType::TextureCube:      return 2;
+        case TextureType::Texture1DArray:   return 2; // Array layer +1 dimension
+        case TextureType::Texture2DArray:   return 3; // Array layer +1 dimension
+        case TextureType::TextureCubeArray: return 3; // Array layer +1 dimension
+        case TextureType::Texture2DMS:      return 2;
+        case TextureType::Texture2DMSArray: return 3; // Array layer +1 dimension
+    }
+    return 0;
+}
+
+LLGL_EXPORT std::uint32_t NumTextureDimensions(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:        return 1;
+        case TextureType::Texture2D:        return 2;
+        case TextureType::Texture3D:        return 3;
+        case TextureType::TextureCube:      return 2;
+        case TextureType::Texture1DArray:   return 1;
+        case TextureType::Texture2DArray:   return 2;
+        case TextureType::TextureCubeArray: return 2;
+        case TextureType::Texture2DMS:      return 2;
+        case TextureType::Texture2DMSArray: return 2;
+    }
+    return 0;
+}
+
+// Returns the 1D extent for the specified MIP-map
+static std::uint32_t MipExtent(std::uint32_t extent, std::uint32_t mipLevel)
+{
+    return std::max(1u, extent >> mipLevel);
+}
+
+LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& e, std::uint32_t m)
+{
+    if (m < NumMipLevels(type, e))
+    {
+        switch (type)
         {
-            case TextureType::Texture1D:        return NumMipLevels(textureDesc.extent.width);
-            case TextureType::Texture2D:        return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height);
-            case TextureType::Texture3D:        return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height, textureDesc.extent.depth);
-            case TextureType::TextureCube:      return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height);
-            case TextureType::Texture1DArray:   return NumMipLevels(textureDesc.extent.width);
-            case TextureType::Texture2DArray:   return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height);
-            case TextureType::TextureCubeArray: return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height);
-            case TextureType::Texture2DMS:      return 1u;
-            case TextureType::Texture2DMSArray: return 1u;
+            case TextureType::Texture1D:        return Extent3D{ MipExtent(e.width, m), 1u, 1u };
+            case TextureType::Texture2D:        return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), 1u };
+            case TextureType::Texture3D:        return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), MipExtent(e.depth, m) };
+            case TextureType::TextureCube:      return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), 1u };
+            case TextureType::Texture1DArray:   return Extent3D{ MipExtent(e.width, m), e.height, 1u };
+            case TextureType::Texture2DArray:   return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), e.depth };
+            case TextureType::TextureCubeArray: return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), e.depth };
+            case TextureType::Texture2DMS:      return Extent3D{ e.width, e.height, 1u };
+            case TextureType::Texture2DMSArray: return Extent3D{ e.width, e.height, e.depth };
         }
     }
-    return textureDesc.mipLevels;
+    return {};
+}
+
+LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel)
+{
+    auto mipExtent = GetMipExtent(type, extent, mipLevel);
+    return (mipExtent.width * mipExtent.height * mipExtent.depth);
+}
+
+// Returns the subresource extent for the specified range of array layers.
+static Extent3D GetSubresourceExtent(const TextureType type, const Extent3D& extent, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
+{
+    switch (type)
+    {
+        case TextureType::Texture1DArray:
+            if (baseArrayLayer + numArrayLayers > extent.height)
+                return {};
+            else
+                return Extent3D{ extent.width, numArrayLayers, 1u };
+
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+        case TextureType::Texture2DMSArray:
+            if (baseArrayLayer + numArrayLayers > extent.depth)
+                return {};
+            else
+                return Extent3D{ extent.width, extent.height, numArrayLayers };
+
+        default:
+            if (baseArrayLayer + numArrayLayers != 1)
+                return {};
+            else
+                return extent;
+    }
+    return {};
+}
+
+LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, const TextureSubresource& subresource)
+{
+    std::uint32_t numTexels = 0;
+
+    const auto subresourceExtent = GetSubresourceExtent(type, extent, subresource.baseArrayLayer, subresource.numArrayLayers);
+    for (std::uint32_t mipLevel = 0; mipLevel < subresource.numMipLevels; ++mipLevel)
+        numTexels += NumMipTexels(type, subresourceExtent, subresource.baseMipLevel + mipLevel);
+
+    return numTexels;
+}
+
+LLGL_EXPORT std::uint32_t NumMipTexels(const TextureDescriptor& textureDesc, std::uint32_t mipLevel)
+{
+    if (mipLevel == ~0u)
+    {
+        std::uint32_t numTexels = 0;
+
+        const auto numMipLevels = NumMipLevels(textureDesc);
+        for (mipLevel = 0; mipLevel < numMipLevels; ++mipLevel)
+            numTexels += NumMipTexels(textureDesc.type, textureDesc.extent, mipLevel);
+
+        return numTexels;
+    }
+    return NumMipTexels(textureDesc.type, textureDesc.extent, mipLevel);
 }
 
 std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)
@@ -49,24 +174,6 @@ std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)
         return ((numTexels / blockSize * formatDesc.bitSize) / 8);
     else
         return 0;
-}
-
-LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc)
-{
-    const auto& extent = textureDesc.extent;
-    switch (textureDesc.type)
-    {
-        case TextureType::Texture1D:        return extent.width;
-        case TextureType::Texture2D:        return extent.width * extent.height;
-        case TextureType::Texture3D:        return extent.width * extent.height * extent.depth;
-        case TextureType::TextureCube:      return extent.width * extent.height * textureDesc.arrayLayers;
-        case TextureType::Texture1DArray:   return extent.width * textureDesc.arrayLayers;
-        case TextureType::Texture2DArray:   return extent.width * extent.height * textureDesc.arrayLayers;
-        case TextureType::TextureCubeArray: return extent.width * extent.height * textureDesc.arrayLayers;
-        case TextureType::Texture2DMS:      return extent.width * extent.height;
-        case TextureType::Texture2DMSArray: return extent.width * extent.height * textureDesc.arrayLayers;
-        default:                            return 0;
-    }
 }
 
 LLGL_EXPORT bool IsMipMappedTexture(const TextureDescriptor& textureDesc)

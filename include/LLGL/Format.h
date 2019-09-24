@@ -266,18 +266,18 @@ enum class DataType
 {
     Undefined,  //!< Undefined data type.
 
-    Int8,       //!< 8-bit signed integer (char).
-    UInt8,      //!< 8-bit unsigned integer (unsigned char).
+    Int8,       //!< 8-bit signed integer (\c char).
+    UInt8,      //!< 8-bit unsigned integer (<c>unsigned char</c>).
 
-    Int16,      //!< 16-bit signed integer (short).
-    UInt16,     //!< 16-bit unsigned integer (unsigned short).
+    Int16,      //!< 16-bit signed integer (\c short).
+    UInt16,     //!< 16-bit unsigned integer (<c>unsigned short</c>).
 
-    Int32,      //!< 32-bit signed integer (int).
-    UInt32,     //!< 32-bit unsigned integer (unsiged int).
+    Int32,      //!< 32-bit signed integer (\c int).
+    UInt32,     //!< 32-bit unsigned integer (<c>unsigned int</c>).
 
-    Float16,    //!< 16-bit floating-point (half).
-    Float32,    //!< 32-bit floating-point (float).
-    Float64,    //!< 64-bit real type (double).
+    Float16,    //!< 16-bit floating-point (\c half).
+    Float32,    //!< 32-bit floating-point (\c float).
+    Float64,    //!< 64-bit real type (\c double).
 };
 
 /**

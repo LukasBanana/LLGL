@@ -287,7 +287,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     const auto& cfg = GetConfiguration();
 
     /* Determine size of image for staging buffer */
-    const auto imageSize        = TextureSize(textureDesc);
+    const auto imageSize        = NumMipTexels(textureDesc, 0);
     const auto initialDataSize  = static_cast<VkDeviceSize>(TextureBufferSize(textureDesc.format, imageSize));
 
     /* Set up initial image data */
