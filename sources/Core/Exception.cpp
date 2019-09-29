@@ -92,7 +92,7 @@ LLGL_EXPORT void ThrowNullPointerExcept(const char* funcName, const char* paramN
         s += paramName;
         s += "' must not be a null pointer";
     }
-    throw std::runtime_error(s);
+    throw std::invalid_argument(s);
 }
 
 [[noreturn]]

@@ -331,8 +331,9 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     ID3D11DeviceContext*    context,
     D3D11NativeTexture&     textureCopy,
     UINT                    cpuAccessFlags,
-    UINT                    mipLevel) const
+    const TextureRegion&    region) const
 {
+    const UINT mipLevel = region.subresource.baseMipLevel;
     D3D11_RESOURCE_DIMENSION dimension;
     native_.resource->GetType(&dimension);
 
@@ -344,12 +345,13 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
             D3D11_TEXTURE1D_DESC desc;
             native_.tex1D->GetDesc(&desc);
             {
-                desc.Width          = (desc.Width << mipLevel);
+                desc.Width          = region.extent.width;
                 desc.MipLevels      = 1;
+                desc.ArraySize      = region.subresource.numArrayLayers;
                 desc.Usage          = D3D11_USAGE_STAGING;
                 desc.BindFlags      = 0;
                 desc.CPUAccessFlags = cpuAccessFlags;
-                desc.MiscFlags      = (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE);
+                desc.MiscFlags      = 0;
             }
             textureCopy.tex1D = DXCreateTexture1D(device, desc);
         }
@@ -361,9 +363,10 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
             D3D11_TEXTURE2D_DESC desc;
             native_.tex2D->GetDesc(&desc);
             {
-                desc.Width          = (desc.Width << mipLevel);
-                desc.Height         = (desc.Height << mipLevel);
+                desc.Width          = region.extent.width;
+                desc.Height         = region.extent.height;
                 desc.MipLevels      = 1;
+                desc.ArraySize      = region.subresource.numArrayLayers;
                 desc.Usage          = D3D11_USAGE_STAGING;
                 desc.BindFlags      = 0;
                 desc.CPUAccessFlags = cpuAccessFlags;
@@ -379,14 +382,14 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
             D3D11_TEXTURE3D_DESC desc;
             native_.tex3D->GetDesc(&desc);
             {
-                desc.Width          = (desc.Width << mipLevel);
-                desc.Height         = (desc.Height << mipLevel);
-                desc.Depth          = (desc.Depth << mipLevel);
+                desc.Width          = region.extent.width;
+                desc.Height         = region.extent.height;
+                desc.Depth          = region.extent.depth;
                 desc.MipLevels      = 1;
                 desc.Usage          = D3D11_USAGE_STAGING;
                 desc.BindFlags      = 0;
                 desc.CPUAccessFlags = cpuAccessFlags;
-                desc.MiscFlags      = (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE);
+                desc.MiscFlags      = 0;
             }
             textureCopy.tex3D = DXCreateTexture3D(device, desc);
         }
@@ -394,14 +397,30 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     }
 
     /* Copy subresource */
-    context->CopySubresourceRegion(
-        textureCopy.resource.Get(),
-        0,
-        0, 0, 0, // DstX, DstY, DstZ
-        native_.resource.Get(),
-        CalcSubresource(mipLevel, 0),
-        nullptr
-    );
+    const D3D11_BOX srcBox
+    {
+        static_cast<UINT>(region.offset.x),
+        static_cast<UINT>(region.offset.y),
+        static_cast<UINT>(region.offset.z),
+        static_cast<UINT>(region.offset.x) + region.extent.width,
+        static_cast<UINT>(region.offset.y) + region.extent.height,
+        static_cast<UINT>(region.offset.z) + region.extent.depth,
+    };
+
+    for (std::uint32_t i = 0; i < region.subresource.numArrayLayers; ++i)
+    {
+        const UINT arrayLayer = region.subresource.baseArrayLayer + i;
+        context->CopySubresourceRegion(
+            textureCopy.resource.Get(),
+            D3D11CalcSubresource(0, i, 1),
+            0, // DstX
+            0, // DstY
+            0, // DstZ
+            native_.resource.Get(),
+            D3D11CalcSubresource(mipLevel, arrayLayer, numMipLevels_),
+            &srcBox
+        );
+    }
 }
 
 void D3D11Texture::CreateSubresourceSRV(

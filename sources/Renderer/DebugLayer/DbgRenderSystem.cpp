@@ -245,8 +245,8 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateMipLevelLimit(textureRegion.subresource.baseMipLevel, textureRegion.subresource.numMipLevels, textureDbg.mipLevels);
         ValidateTextureRegion(textureDbg, textureRegion);
+        ValidateImageDataSize(textureDbg, textureRegion, imageDesc.format, imageDesc.dataType, imageDesc.dataSize);
     }
 
     instance_->WriteTexture(textureDbg.instance, textureRegion, imageDesc);
@@ -255,32 +255,21 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
         profiler_->frameProfile.textureWrites++;
 }
 
-void DbgRenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
+void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-
-        /* Validate MIP-level */
-        ValidateMipLevelLimit(mipLevel, 1, textureDbg.mipLevels);
-
-        /* Validate output data size */
-        const auto requiredDataSize =
-        (
-            textureDbg.desc.extent.width        *
-            textureDbg.desc.extent.height       *
-            textureDbg.desc.extent.depth        *
-            textureDbg.desc.arrayLayers         *
-            ImageFormatSize(imageDesc.format)   *
-            DataTypeSize(imageDesc.dataType)
-        );
-
-        ValidateTextureImageDataSize(imageDesc.dataSize, requiredDataSize);
+        ValidateTextureRegion(textureDbg, textureRegion);
+        ValidateImageDataSize(textureDbg, textureRegion, imageDesc.format, imageDesc.dataType, imageDesc.dataSize);
     }
 
-    instance_->ReadTexture(textureDbg.instance, mipLevel, imageDesc);
+    instance_->ReadTexture(textureDbg.instance, textureRegion, imageDesc);
+
+    if (profiler_)
+        profiler_->frameProfile.textureReads++;
 }
 
 /* ----- Sampler States ---- */
@@ -981,14 +970,28 @@ void DbgRenderSystem::ValidateMipLevelLimit(std::uint32_t baseMipLevel, std::uin
     }
 }
 
-void DbgRenderSystem::ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize)
+void DbgRenderSystem::ValidateImageDataSize(const DbgTexture& textureDbg, const TextureRegion& textureRegion, ImageFormat imageFormat, DataType dataType, std::size_t dataSize)
 {
+    /* Validate output data size */
+    const auto& subresource         = textureRegion.subresource;
+    const auto  baseSubresource     = TextureSubresource{ 0, subresource.numArrayLayers, 0, subresource.numMipLevels };
+    const auto  numTexels           = NumMipTexels(textureDbg.desc.type, textureRegion.extent, baseSubresource);
+    const auto  requiredDataSize    = ImageDataSize(imageFormat, dataType, numTexels);
+
     if (dataSize < requiredDataSize)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "image data size too small for texture (" + std::to_string(dataSize) +
-            " specified but required is " + std::to_string(requiredDataSize) + ")"
+            "image data size too small for texture: " + std::to_string(dataSize) +
+            " byte(s) specified but required is " + std::to_string(requiredDataSize) + " byte(s)"
+        );
+    }
+    else if (dataSize > requiredDataSize)
+    {
+        LLGL_DBG_WARN(
+            WarningType::ImproperArgument,
+            "image data size larger than expected for texture: " + std::to_string(dataSize) +
+            " byte(s) specified but required is " + std::to_string(requiredDataSize) + " byte(s)"
         );
     }
 }
@@ -1016,6 +1019,21 @@ void DbgRenderSystem::ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLa
 
 void DbgRenderSystem::ValidateTextureRegion(const DbgTexture& textureDbg, const TextureRegion& textureRegion)
 {
+    /* Validate MIP-map level range */
+    ValidateMipLevelLimit(
+        textureRegion.subresource.baseMipLevel,
+        textureRegion.subresource.numMipLevels,
+        textureDbg.mipLevels
+    );
+
+    /* Validate array layer range */
+    ValidateTextureArrayRangeWithEnd(
+        textureRegion.subresource.baseArrayLayer,
+        textureRegion.subresource.numArrayLayers,
+        textureDbg.desc.arrayLayers
+    );
+
+    /* Validate offset */
     if (textureRegion.offset.x < 0 || textureRegion.offset.y < 0 || textureRegion.offset.z < 0)
     {
         LLGL_DBG_ERROR(
@@ -1024,6 +1042,7 @@ void DbgRenderSystem::ValidateTextureRegion(const DbgTexture& textureDbg, const 
         );
     }
 
+    /* Validate offset plus extent */
     auto IsRegionOutside = [](std::int32_t offset, std::uint32_t extent, std::uint32_t limit)
     {
         return (offset >= 0 && static_cast<std::uint32_t>(offset) + extent > limit);

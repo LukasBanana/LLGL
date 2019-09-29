@@ -167,9 +167,10 @@ struct TextureLocation
 };
 
 /**
-\brief Texture region structure: MIP-map level, offset, and extent.
-\remarks This is used to write (or partially write) the image data of a texture MIP-map level.
+\brief Texture region structure: Subresource (MIP-map level and array layer range), offset, and extent.
+\remarks This is used to write (or partially write) and read (or partially read) the image data of a \b single texture MIP-map level.
 \see RenderSystem::WriteTexture
+\see RenderSystem::ReadTexture
 \see TextureLocation
 */
 struct TextureRegion
@@ -192,7 +193,11 @@ struct TextureRegion
     {
     }
 
-    //! Specifies the texture subresource, i.e. MIP-map level and array layer range. By default only the first MIP-map level and first array layer is addressed.
+    /**
+    \brief Specifies the texture subresource, i.e. MIP-map level and array layer range. By default only the first MIP-map level and first array layer is addressed.
+    \remarks For texture regions, \c numMipLevels of the TextureSubresource structure must always be 1, i.e. texture regions can only select a single MIP-map at a time.
+    \see TextureSubresource::numMipLevels
+    */
     TextureSubresource  subresource;
 
     /**
@@ -430,10 +435,10 @@ LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& extent
 LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel);
 
 /**
-\brief Returns the number of texture elements (texels) for the specified texture subresource range, or zero if the array layers are out of bounds.
+\brief Returns the number of texture elements (texels) for the specified texture subresource range.
 \param[in] type Specifies the texture type for which the number of texels are to be determined.
 \param[in] extent Specifies the extent of the first MIP-map level.
-\param[in] subresource Specifies the subresource range. The function returns zero if the array layer range is out of bounds.
+\param[in] subresource Specifies the subresource range.
 Which dimension in \c extent specifies the number of array layers depends on the texture type.
 \see TextureDescriptor::arrayLayers
 \see TextureSubresource::baseArrayLayer

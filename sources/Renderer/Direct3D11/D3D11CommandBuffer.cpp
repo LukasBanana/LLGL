@@ -45,8 +45,8 @@ namespace LLGL
 
 
 // Global array of null pointers to unbind resource slots
-static void*    g_nullResources[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]   = {};
-static UINT     g_zeroCounters[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT]       = {};
+static void* const  g_nullResources[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]   = {};
+static const UINT   g_zeroCounters[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT]       = {};
 
 static bool HasBufferResourceViews(const Buffer& buffer)
 {

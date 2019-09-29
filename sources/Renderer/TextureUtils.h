@@ -30,8 +30,11 @@ struct SubresourceLayout
 
 /* ----- Functions ----- */
 
-// Calculates the actual 3D dimensional offset for the specified texture type.
-LLGL_EXPORT Offset3D CalcTextureOffset(const TextureType type, const Offset3D& offset, std::uint32_t arrayLayer);
+// Calculates the actual 3D offset for the specified texture type.
+LLGL_EXPORT Offset3D CalcTextureOffset(const TextureType type, const Offset3D& offset, std::uint32_t baseArrayLayer);
+
+// Calculates the actual 3D extent for the specified texture and range of array layers.
+LLGL_EXPORT Extent3D CalcTextureExtent(const TextureType type, const Extent3D& extent, std::uint32_t numArrayLayers);
 
 // Calculates the size and strides for a subresource of the specified format and extent.
 LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent);

@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/Image.h>
+#include "ImageUtils.h"
 #include <algorithm>
 #include <string.h>
 
@@ -13,65 +14,6 @@
 namespace LLGL
 {
 
-
-static void BitBlit(
-    const Extent3D& copyExtent,
-    std::uint32_t   bpp,
-    char*           dst,
-    std::uint32_t   dstRowStride,
-    std::uint32_t   dstDepthStride,
-    const char*     src,
-    std::uint32_t   srcRowStride,
-    std::uint32_t   srcDepthStride)
-{
-    const auto copyRowStride    = bpp * copyExtent.width;
-    const auto copyDepthStride  = copyRowStride * copyExtent.height;
-
-    if (srcRowStride == dstRowStride && copyRowStride == dstRowStride)
-    {
-        if (srcDepthStride == dstDepthStride && copyDepthStride && dstDepthStride)
-        {
-            /* Copy region directly into output data */
-            ::memcpy(dst, src, copyDepthStride * copyExtent.depth);
-        }
-        else
-        {
-            /* Copy region directly into output data */
-            for (std::uint32_t z = 0; z < copyExtent.depth; ++z)
-            {
-                /* Copy current slice */
-                ::memcpy(dst, src, copyDepthStride);
-
-                /* Move pointers to next slice */
-                dst += dstDepthStride;
-                src += srcDepthStride;
-            }
-        }
-    }
-    else
-    {
-        /* Adjust depth stride */
-        srcDepthStride -= srcRowStride * copyExtent.height;
-
-        /* Copy region directly into output data */
-        for (std::uint32_t z = 0; z < copyExtent.depth; ++z)
-        {
-            /* Copy current slice */
-            for (std::uint32_t y = 0; y < copyExtent.height; ++y)
-            {
-                /* Copy current row */
-                ::memcpy(dst, src, copyRowStride);
-
-                /* Move pointers to next row */
-                dst += dstRowStride;
-                src += srcRowStride;
-            }
-
-            /* Move pointers to next slice */
-            src += srcDepthStride;
-        }
-    }
-}
 
 /* ----- Common ----- */
 
@@ -322,22 +264,20 @@ void Image::Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRe
                 srcImageRef = &srcImageTemp;
             }
 
-            /* Get destination image parameters */
-            const auto  bpp             = GetBytesPerPixel();
-            const auto  dstRowStride    = bpp * GetExtent().width;
-            const auto  dstDepthStride  = dstRowStride * GetExtent().height;
-            auto        dst             = data_.get() + GetDataPtrOffset(dstRegionOffset);
+            /* Copy image buffer region */
+            const auto srcExtent = srcImageRef->GetExtent();
+            const auto dstExtent = GetExtent();
 
-            /* Get source image parameters */
-            const auto  srcRowStride    = bpp * srcImageRef->GetExtent().width;
-            const auto  srcDepthStride  = srcRowStride * srcImageRef->GetExtent().height;
-            auto        src             = srcImageRef->data_.get() + srcImageRef->GetDataPtrOffset(srcRegionOffset);
-
-            /* Blit source image into region */
-            BitBlit(
-                srcRegionExtent, bpp,
-                dst, dstRowStride, dstDepthStride,
-                src, srcRowStride, srcDepthStride
+            CopyImageBufferRegion(
+                GetDstDesc(),
+                dstRegionOffset,
+                dstExtent.width,
+                dstExtent.width * dstExtent.height,
+                srcImageRef->GetSrcDesc(),
+                srcRegionOffset,
+                srcExtent.width,
+                srcExtent.width * srcExtent.height,
+                srcRegionExtent
             );
         }
     }

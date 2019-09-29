@@ -202,6 +202,43 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
 );
 
 /**
+\briefs Copies an image buffer region from the source buffer to the destination buffer.
+\param[out] dstImageDesc Specifies the destination image descriptor.
+\param[in] dstOffset Specifies the 3D offset of the destination image.
+\param[in] dstRowStride Specifies the number of pixels for each row in the destination image.
+\param[in] dstSliceStride Specifies the number of pixels for each slice in the destination image.
+\param[in] srcImageDesc Specifies the source image descriptor.
+\param[in] srcOffset Specifies the 3D offset of the source image.
+\param[in] srcRowStride Specifies the number of pixels for each row in the source image.
+\param[in] srcSliceStride Specifies the number of pixels for each slice in the source image.
+\param[in] extent Specifies the region extent to be copied.
+\remarks Only performs a bitwise copy. No blending or other operation is performed.
+\throw std::invalid_argument If the destination buffer is a null pointer.
+\throw std::invalid_argument If the destination buffer size does not match the required output buffer size.
+\throw std::invalid_argument If the source buffer is a null pointer.
+\throw std::invalid_argument If the source buffer size is not a multiple of the source data type size times the image format size.
+\throw std::invalid_argument If source and destination image descriptors do not have the same format and data type.
+\throw std::out_of_range If \c srcOffset plus \c extent is outside the boundary of the source image.
+\throw std::out_of_range If \c dstOffset plus \c extent is outside the boundary of the destination image.
+*/
+LLGL_EXPORT void CopyImageBufferRegion(
+    // Destination
+    const DstImageDescriptor&   dstImageDesc,
+    const Offset3D&             dstOffset,
+    std::uint32_t               dstRowStride,
+    std::uint32_t               dstSliceStride,
+
+    // Source
+    const SrcImageDescriptor&   srcImageDesc,
+    const Offset3D&             srcOffset,
+    std::uint32_t               srcRowStride,
+    std::uint32_t               srcSliceStride,
+
+    // Region
+    const Extent3D&             extent
+);
+
+/**
 \brief Generates an image buffer with the specified fill data for each pixel.
 \param[in] format Specifies the image format of each pixel in the output image.
 \param[in] dataType Specifies the data type of each component of each pixel in the output image.

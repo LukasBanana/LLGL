@@ -151,15 +151,10 @@ void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     textureMT.WriteRegion(textureRegion, imageDesc);
 }
 
-void MTRenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
+void MTRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
 {
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
-
-    id<MTLTexture> tex = textureMT.GetNative();
-    const TextureSubresource subresource{ 0, static_cast<std::uint32_t>([tex arrayLength]), mipLevel, 1 };
-    const TextureRegion region{ subresource, Offset3D{ 0, 0, 0 }, textureMT.GetMipExtent(mipLevel) };
-
-    textureMT.ReadRegion(region, imageDesc);
+    textureMT.ReadRegion(textureRegion, imageDesc);
 }
 
 /* ----- Sampler States ---- */

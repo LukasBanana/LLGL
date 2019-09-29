@@ -101,7 +101,7 @@ class D3D12RenderContext final : public RenderContext
 
         D3D12Resource                   colorBuffers_[g_maxSwapChainSize];
         D3D12Resource                   colorBuffersMS_[g_maxSwapChainSize];
-        DXGI_FORMAT                     colorFormat_                            = DXGI_FORMAT_B8G8R8A8_UNORM;
+        DXGI_FORMAT                     colorFormat_                            = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM;
 
         D3D12Resource                   depthStencil_;
         DXGI_FORMAT                     depthStencilFormat_                     = DXGI_FORMAT_UNKNOWN;

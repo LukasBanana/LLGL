@@ -79,7 +79,7 @@ class DbgRenderSystem final : public RenderSystem
         void Release(Texture& texture) override;
 
         void WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc) override;
-        void ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) override;
+        void ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc) override;
 
         /* ----- Sampler States ---- */
 
@@ -165,12 +165,12 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateCubeTextureSize(std::uint32_t width, std::uint32_t height);
         void ValidateArrayTextureLayers(const TextureType type, std::uint32_t layers);
         void ValidateMipLevelLimit(std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t maxNumMipLevels);
-        void ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize);
         void ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers);
         void ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit);
         void ValidateTextureRegion(const DbgTexture& textureDbg, const TextureRegion& textureRegion);
         void ValidateTextureView(const DbgTexture& sharedTextureDbg, const TextureViewDescriptor& desc);
         void ValidateTextureViewType(const TextureType sharedTextureType, const TextureType textureViewType, const std::initializer_list<TextureType>& validTypes);
+        void ValidateImageDataSize(const DbgTexture& textureDbg, const TextureRegion& textureRegion, ImageFormat imageFormat, DataType dataType, std::size_t dataSize);
 
         void ValidateAttachmentDesc(const AttachmentDescriptor& desc);
 

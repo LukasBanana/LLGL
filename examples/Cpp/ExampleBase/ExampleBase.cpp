@@ -582,13 +582,28 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)
 {
+    #if 0//TESTING
+
+    mipLevel = 1;
+    LLGL::Extent3D texSize{ 150, 256, 1 };
+
+    #else
+
     // Get texture dimension
-    auto texSize = texture.GetMipExtent(0);
+    auto texSize = texture.GetMipExtent(mipLevel);
+
+    #endif
 
     // Read texture image data
-    std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.width*texSize.height);
+    std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.width * texSize.height);
     renderSys.ReadTexture(
-        texture, mipLevel,
+        texture,
+        LLGL::TextureRegion
+        {
+            LLGL::TextureSubresource{ 0, mipLevel },
+            LLGL::Offset3D{},
+            texSize
+        },
         LLGL::DstImageDescriptor
         {
             LLGL::ImageFormat::RGBA,

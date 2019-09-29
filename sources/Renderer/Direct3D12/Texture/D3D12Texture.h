@@ -49,8 +49,9 @@ class D3D12Texture final : public Texture
         void CreateSubresourceCopyAsReadbackBuffer(
             ID3D12Device*           device,
             D3D12CommandContext&    commandContext,
+            const TextureRegion&    region,
             ComPtr<ID3D12Resource>& readbackBuffer,
-            UINT                    mipLevel
+            UINT&                   rowStride
         );
 
         // Creates either the default SRV for the entire resource or a subresource.

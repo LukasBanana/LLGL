@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/TextureFlags.h>
+#include "TextureUtils.h"
 #include <algorithm>
 #include <cmath>
 
@@ -112,39 +113,11 @@ LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& e
     return (mipExtent.width * mipExtent.height * mipExtent.depth);
 }
 
-// Returns the subresource extent for the specified range of array layers.
-static Extent3D GetSubresourceExtent(const TextureType type, const Extent3D& extent, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
-{
-    switch (type)
-    {
-        case TextureType::Texture1DArray:
-            if (baseArrayLayer + numArrayLayers > extent.height)
-                return {};
-            else
-                return Extent3D{ extent.width, numArrayLayers, 1u };
-
-        case TextureType::Texture2DArray:
-        case TextureType::TextureCubeArray:
-        case TextureType::Texture2DMSArray:
-            if (baseArrayLayer + numArrayLayers > extent.depth)
-                return {};
-            else
-                return Extent3D{ extent.width, extent.height, numArrayLayers };
-
-        default:
-            if (baseArrayLayer + numArrayLayers != 1)
-                return {};
-            else
-                return extent;
-    }
-    return {};
-}
-
 LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, const TextureSubresource& subresource)
 {
     std::uint32_t numTexels = 0;
 
-    const auto subresourceExtent = GetSubresourceExtent(type, extent, subresource.baseArrayLayer, subresource.numArrayLayers);
+    const auto subresourceExtent = CalcTextureExtent(type, extent, subresource.numArrayLayers);
     for (std::uint32_t mipLevel = 0; mipLevel < subresource.numMipLevels; ++mipLevel)
         numTexels += NumMipTexels(type, subresourceExtent, subresource.baseMipLevel + mipLevel);
 

@@ -274,28 +274,29 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
     }
 }
 
-void D3D11RenderSystem::ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
+void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
 
     /* Create a copy of the hardware texture with CPU read access */
     D3D11NativeTexture texCopy;
-    textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), texCopy, D3D11_CPU_ACCESS_READ, mipLevel);
+    textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), texCopy, D3D11_CPU_ACCESS_READ, textureRegion);
 
     /* Map subresource for reading */
+    const UINT subresource = 0;
+
     D3D11_MAPPED_SUBRESOURCE mappedSubresource;
-    auto hr = context_->Map(texCopy.resource.Get(), 0, D3D11_MAP_READ, 0, &mappedSubresource);
+    auto hr = context_->Map(texCopy.resource.Get(), subresource, D3D11_MAP_READ, 0, &mappedSubresource);
     DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
     /* Copy host visible resource to CPU accessible resource */
     auto format = D3D11Types::Unmap(textureD3D.GetFormat());
-    auto extent = textureD3D.GetMipExtent(mipLevel);
 
-    CopyTextureImageData(imageDesc, mappedSubresource.pData, format, extent);
+    CopyTextureImageData(imageDesc, textureRegion.extent, format, mappedSubresource.pData, mappedSubresource.RowPitch);
 
     /* Unmap resource */
-    context_->Unmap(texCopy.resource.Get(), 0);
+    context_->Unmap(texCopy.resource.Get(), subresource);
 }
 
 /* ----- Sampler States ---- */

@@ -509,6 +509,11 @@ DECL_GLPROC(PFNGLDRAWELEMENTSINDIRECTPROC,                          glDrawElemen
 DECL_GLPROC(PFNGLMULTIDRAWARRAYSINDIRECTPROC,                       glMultiDrawArraysIndirect,                      void,           (GLenum, const void*, GLsizei, GLsizei));
 DECL_GLPROC(PFNGLMULTIDRAWELEMENTSINDIRECTPROC,                     glMultiDrawElementsIndirect,                    void,           (GLenum, GLenum, const void*, GLsizei, GLsizei));
 
+/* GL_ARB_get_texture_sub_image */
+
+DECL_GLPROC(PFNGLGETTEXTURESUBIMAGEPROC,                            glGetTextureSubImage,                           void,           (GLuint, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, GLsizei, void*));
+DECL_GLPROC(PFNGLGETCOMPRESSEDTEXTURESUBIMAGEPROC,                  glGetCompressedTextureSubImage,                 void,           (GLuint, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLsizei, void*));
+
 /* GL_ARB_direct_state_access */
 
 DECL_GLPROC(PFNGLCREATETRANSFORMFEEDBACKSPROC,                      glCreateTransformFeedbacks,                     void,           (GLsizei, GLuint*));

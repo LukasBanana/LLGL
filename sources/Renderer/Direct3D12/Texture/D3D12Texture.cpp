@@ -9,8 +9,10 @@
 #include "../Command/D3D12CommandContext.h"
 #include "../D3D12ObjectUtils.h"
 #include "../D3DX12/d3dx12.h"
-#include "../../DXCommon/DXCore.h"
 #include "../D3D12Types.h"
+#include "../../DXCommon/DXCore.h"
+#include "../../TextureUtils.h"
+#include "../../../Core/Helper.h"
 #include <algorithm>
 
 
@@ -19,11 +21,11 @@ namespace LLGL
 
 
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
-    Texture         { desc.type                    },
-    format_         { D3D12Types::Map(desc.format) },
-    numMipLevels_   { NumMipLevels(desc)           },
-    numArrayLayers_ { desc.arrayLayers             },
-    bindFlags_      { desc.bindFlags               }
+    Texture         { desc.type                      },
+    format_         { D3D12Types::Map(desc.format)   },
+    numMipLevels_   { NumMipLevels(desc)             },
+    numArrayLayers_ { std::max(1u, desc.arrayLayers) },
+    bindFlags_      { desc.bindFlags                 }
 {
     CreateNativeTexture(device, desc);
     if (SupportsGenerateMips())
@@ -192,17 +194,27 @@ void D3D12Texture::UpdateSubresource(
     commandList->ResourceBarrier(1, &resourceBarrier);
 }
 
+static void GetD3DTextureBufferSize(const Format format, const Extent3D& extent, UINT rowAlignment, UINT& rowPitch, UINT64& bufferSize)
+{
+    const auto& formatAttribs = GetFormatAttribs(format);
+    rowPitch    = GetAlignedSize(extent.width * formatAttribs.bitSize / (8 * formatAttribs.blockWidth), rowAlignment);
+    bufferSize  = rowPitch * (extent.height / formatAttribs.blockHeight) * extent.depth - rowPitch + rowPitch;
+}
+
 void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
     ID3D12Device*           device,
     D3D12CommandContext&    commandContext,
+    const TextureRegion&    region,
     ComPtr<ID3D12Resource>& readbackBuffer,
-    UINT                    mipLevel)
+    UINT&                   rowStride)
 {
     /* Determine required buffer size for texture subresource */
-    const Extent3D  extent          = GetMipExtent(mipLevel);
-    const Format    format          = D3D12Types::Unmap(GetFormat());
-    const auto&     formatAttribs   = GetFormatAttribs(format);
-    const UINT64    bufferSize      = extent.width * extent.height * extent.depth * (formatAttribs.bitSize / 8 / formatAttribs.blockWidth);
+    const auto offset = CalcTextureOffset(GetType(), region.offset, region.subresource.baseArrayLayer);
+    const auto extent = CalcTextureExtent(GetType(), region.extent, region.subresource.numArrayLayers);
+    const auto format = D3D12Types::Unmap(GetFormat());
+
+    UINT64 bufferSize = 0;
+    GetD3DTextureBufferSize(format, extent, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT, rowStride, bufferSize);
 
     /* Create readback buffer with texture resource descriptor */
     auto hr = device->CreateCommittedResource(
@@ -223,17 +235,18 @@ void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
         bufferFootprint.Footprint.Width     = extent.width;
         bufferFootprint.Footprint.Height    = extent.height;
         bufferFootprint.Footprint.Depth     = extent.depth;
-        bufferFootprint.Footprint.RowPitch  = extent.width * formatAttribs.bitSize / 8 / formatAttribs.blockWidth;
+        bufferFootprint.Footprint.RowPitch  = rowStride;
     }
 
-    const auto srcBox = CalcRegion(Offset3D{ 0, 0, 0 }, extent);
+    const auto srcBox = CalcRegion(offset, extent);
 
     commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
     {
+        const UINT srcSubresource = CalcSubresource(region.subresource.baseMipLevel, 0/*region.subresource.baseArrayLayer*/);
         commandContext.GetCommandList()->CopyTextureRegion(
             &CD3DX12_TEXTURE_COPY_LOCATION(readbackBuffer.Get(), bufferFootprint),
             0, 0, 0,
-            &CD3DX12_TEXTURE_COPY_LOCATION(GetNative(), CalcSubresource(mipLevel, 0)),
+            &CD3DX12_TEXTURE_COPY_LOCATION(GetNative(), srcSubresource),
             &srcBox
         );
     }
@@ -426,18 +439,7 @@ UINT D3D12Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer) const
 UINT D3D12Texture::CalcSubresource(const TextureLocation& location) const
 {
     /* Only include array layer in subresource calculation for array and cube texture types */
-    switch (GetType())
-    {
-        case TextureType::Texture1DArray:
-            return CalcSubresource(location.mipLevel, static_cast<UINT>(location.offset.y));
-        case TextureType::TextureCube:
-        case TextureType::Texture2DArray:
-        case TextureType::Texture2DMSArray:
-        case TextureType::TextureCubeArray:
-            return CalcSubresource(location.mipLevel, static_cast<UINT>(location.offset.z));
-        default:
-            return CalcSubresource(location.mipLevel, 0);
-    }
+    return CalcSubresource(location.mipLevel, std::min(location.arrayLayer, numArrayLayers_ - 1));
 }
 
 D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(const TextureLocation& location) const

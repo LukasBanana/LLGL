@@ -18,6 +18,7 @@
 - [Direct resource binding](#direct-resource-binding)
 - [Vertex attribute description](#vertex-attribute-description)
 - [Multi-sampling descriptor](#multi-sampling-descriptor)
+- [`ReadTexture` interface](#readtexture-interface)
 - [Removed features](#removed-features)
 
 
@@ -606,6 +607,47 @@ std::uint32_t LLGL::RasterizerDescriptor::samples;
 std::uint32_t LLGL::RenderTargetDescriptor::samples;
 std::uint32_t LLGL::RenderContextDescriptor::samples;
 std::uint32_t LLGL::BlendDescriptor::sampleMask;
+```
+
+
+## `ReadTexture` interface
+
+The `ReadTexture` function of the `RenderSystem` interface now supports subresource regions.
+Note that the number of MIP-map levels (i.e. `numMipLevels` attribute) must always be 1 for texture regions.
+
+Before:
+```cpp
+// Interface:
+void LLGL::RenderSystem::ReadTexture(
+    LLGL::Texture&                  texture,
+    std::uint32_t                   mipLevel,
+    const LLGL::DstImageDescriptor& imageDesc
+);
+
+// Usage:
+myRenderer->ReadTexture(*myTex, myMipLevel, myImageDesc);
+```
+
+After:
+```cpp
+// Interface:
+void LLGL::RenderSystem::ReadTexture(
+    LLGL::Texture&                  texture,
+    const LLGL::TextureRegion       textureRegion,
+    const LLGL::DstImageDescriptor& imageDesc
+);
+
+// Usage:
+LLGL::TextureSubresource mySubresource {
+    myArrayLayer, // base array layer
+    myMipLevel    // Base MIP-map level
+};
+LLGL::TextureRegion myRegion {
+    mySubresource,
+    LLGL::Offset3D{ 0, 0, 0 },
+    myTex->GetMipExtent(myMipLevel)
+};
+myRenderer->ReadTexture(*myTex, myRegion, myImageDesc);
 ```
 
 

@@ -78,6 +78,7 @@ enum class GLExt
     ARB_clear_buffer_object,
     ARB_draw_indirect,
     ARB_multi_draw_indirect,
+    ARB_get_texture_sub_image,          // GL 4.5
     ARB_direct_state_access,            // GL 4.5
 
     /* Extensions without procedures */

@@ -679,6 +679,13 @@ static bool Load_GL_ARB_multi_draw_indirect(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_get_texture_sub_image(bool usePlaceholder)
+{
+    LOAD_GLPROC( glGetTextureSubImage           );
+    LOAD_GLPROC( glGetCompressedTextureSubImage );
+    return true;
+}
+
 static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
@@ -1040,6 +1047,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_clear_buffer_object          );
     LOAD_GLEXT( ARB_draw_indirect                );
     LOAD_GLEXT( ARB_multi_draw_indirect          );
+    LOAD_GLEXT( ARB_get_texture_sub_image        );
     #ifdef LLGL_GL_ENABLE_DSA_EXT
     LOAD_GLEXT( ARB_direct_state_access          );
     #endif

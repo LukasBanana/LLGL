@@ -93,7 +93,7 @@ class D3D11Texture final : public Texture
             ID3D11DeviceContext*    context,
             D3D11NativeTexture&     textureCopy,
             UINT                    cpuAccessFlags,
-            UINT                    mipLevel
+            const TextureRegion&    region
         ) const;
 
         // Creates a shader-resource-view (SRV) of a subresource of this texture object.

@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <thread>
 #include <cstring>
+#include "ImageUtils.h"
 #include "../Core/Helper.h"
 #include "../Core/Assertion.h"
 #include "Float16Compressor.h"
@@ -569,9 +570,15 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
     return 0;
 }
 
+// Returns the number of bytes per pixel for the specified imagea format and data type
+static std::uint32_t GetBytesPerPixel(const ImageFormat imageFormat, const DataType dataType)
+{
+    return (ImageFormatSize(imageFormat) * DataTypeSize(dataType));
+}
+
 LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat imageFormat, const DataType dataType, std::uint32_t numPixels)
 {
-    return (ImageFormatSize(imageFormat) * DataTypeSize(dataType) * numPixels);
+    return (GetBytesPerPixel(imageFormat, dataType) * numPixels);
 }
 
 LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat)
@@ -584,18 +591,29 @@ LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat)
     return (imageFormat == ImageFormat::Depth || imageFormat == ImageFormat::DepthStencil);
 }
 
+static void ValidateSourceImageDesc(const SrcImageDescriptor& imageDesc)
+{
+    LLGL_ASSERT_PTR(imageDesc.data);
+    if (imageDesc.dataSize % GetBytesPerPixel(imageDesc.format, imageDesc.dataType) != 0)
+        throw std::invalid_argument("source image data size is not a multiple of the source data type size");
+}
+
+static void ValidateDestinationImageDesc(const DstImageDescriptor& imageDesc)
+{
+    LLGL_ASSERT_PTR(imageDesc.data);
+    if (imageDesc.dataSize % GetBytesPerPixel(imageDesc.format, imageDesc.dataType) != 0)
+        throw std::invalid_argument("destination image data size is not a multiple of the destination data type size");
+}
+
 static void ValidateImageConversionParams(
     const SrcImageDescriptor&   srcImageDesc,
     ImageFormat                 dstFormat,
     DataType                    dstDataType)
 {
-    LLGL_ASSERT_PTR(srcImageDesc.data);
     if (IsCompressedFormat(srcImageDesc.format) || IsCompressedFormat(dstFormat))
         throw std::invalid_argument("cannot convert compressed image formats");
     if (IsDepthStencilFormat(srcImageDesc.format) || IsDepthStencilFormat(dstFormat))
         throw std::invalid_argument("cannot convert depth-stencil image formats");
-    if (srcImageDesc.dataSize % (DataTypeSize(srcImageDesc.dataType) * ImageFormatSize(srcImageDesc.format)) != 0)
-        throw std::invalid_argument("source image data size is not a multiple of the source data type size");
 }
 
 LLGL_EXPORT bool ConvertImageBuffer(
@@ -604,8 +622,9 @@ LLGL_EXPORT bool ConvertImageBuffer(
     std::size_t                 threadCount)
 {
     /* Validate input parameters */
+    ValidateSourceImageDesc(srcImageDesc);
+    ValidateDestinationImageDesc(dstImageDesc);
     ValidateImageConversionParams(srcImageDesc, dstImageDesc.format, dstImageDesc.dataType);
-    LLGL_ASSERT_PTR(dstImageDesc.data);
 
     if (threadCount >= Constants::maxThreadCount)
         threadCount = std::thread::hardware_concurrency();
@@ -671,6 +690,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     std::size_t                 threadCount)
 {
     /* Validate input parameters */
+    ValidateSourceImageDesc(srcImageDesc);
     ValidateImageConversionParams(srcImageDesc, dstFormat, dstDataType);
 
     if (threadCount >= Constants::maxThreadCount)
@@ -750,6 +770,83 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     }
 
     return nullptr;
+}
+
+// Returns the 1D flattened buffer position for a 3D image coordinate ('bpp' denotes the bytes per pixel)
+static std::size_t GetFlattenedImageBufferPos(
+    std::uint32_t x,
+    std::uint32_t y,
+    std::uint32_t z,
+    std::uint32_t rows,
+    std::uint32_t slices,
+    std::uint32_t bpp)
+{
+    return static_cast<std::size_t>(z * slices + y * rows + x) * bpp;
+}
+
+static std::size_t GetFlattenedImageBufferPosEnd(
+    const Offset3D& offset,
+    const Extent3D& extent,
+    std::uint32_t   rows,
+    std::uint32_t   slices,
+    std::uint32_t   bpp)
+{
+    /* Subtract 1 from extent dimensions and add <bpp> again to get the excluding iterator end */
+    return GetFlattenedImageBufferPos(
+        static_cast<std::uint32_t>(offset.x) + extent.width  - 1u,
+        static_cast<std::uint32_t>(offset.y) + extent.height - 1u,
+        static_cast<std::uint32_t>(offset.z) + extent.depth  - 1u,
+        rows,
+        slices,
+        bpp
+    ) + bpp;
+}
+
+LLGL_EXPORT void CopyImageBufferRegion(
+    const DstImageDescriptor&   dstImageDesc,
+    const Offset3D&             dstOffset,
+    std::uint32_t               dstRowStride,
+    std::uint32_t               dstSliceStride,
+    const SrcImageDescriptor&   srcImageDesc,
+    const Offset3D&             srcOffset,
+    std::uint32_t               srcRowStride,
+    std::uint32_t               srcSliceStride,
+    const Extent3D&             extent)
+{
+    /* Validate input parameters */
+    ValidateSourceImageDesc(srcImageDesc);
+    ValidateDestinationImageDesc(dstImageDesc);
+
+    if (srcImageDesc.format != dstImageDesc.format || srcImageDesc.dataType != dstImageDesc.dataType)
+        throw std::invalid_argument("cannot copy image buffer region with source and destination images having different format or data type");
+
+    const auto bpp = GetBytesPerPixel(dstImageDesc.format, dstImageDesc.dataType);
+
+    /* Validate destination image boundaries */
+    const auto dstPos       = GetFlattenedImageBufferPos(dstOffset.x, dstOffset.y, dstOffset.z, dstRowStride, dstSliceStride, bpp);
+    const auto dstPosEnd    = GetFlattenedImageBufferPosEnd(dstOffset, extent, dstRowStride, dstSliceStride, bpp);
+
+    if (dstPosEnd > dstImageDesc.dataSize)
+        throw std::out_of_range("destination image buffer region out of range");
+
+    /* Validate source image boundaries */
+    const auto srcPos       = GetFlattenedImageBufferPos(srcOffset.x, srcOffset.y, srcOffset.z, srcRowStride, srcSliceStride, bpp);
+    const auto srcPosEnd    = GetFlattenedImageBufferPosEnd(srcOffset, extent, srcRowStride, srcSliceStride, bpp);
+
+    if (srcPosEnd > srcImageDesc.dataSize)
+        throw std::out_of_range("source image buffer region out of range");
+
+    /* Copy image buffer region */
+    BitBlit(
+        extent,
+        bpp,
+        (reinterpret_cast<char*>(dstImageDesc.data) + dstPos),
+        dstRowStride * bpp,
+        dstSliceStride * bpp,
+        (reinterpret_cast<const char*>(srcImageDesc.data) + srcPos),
+        srcRowStride * bpp,
+        srcSliceStride * bpp
+    );
 }
 
 LLGL_EXPORT ByteBuffer GenerateImageBuffer(

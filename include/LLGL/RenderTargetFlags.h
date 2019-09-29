@@ -25,6 +25,7 @@ namespace LLGL
 /**
 \brief Render target attachment type enumeration.
 \see AttachmentDescriptor
+\todo Remove this enum and use Format instead.
 */
 enum class AttachmentType
 {
@@ -80,11 +81,24 @@ struct AttachmentDescriptor
     {
     }
 
+    #if 1//TODO: replace this by \c format
+
     /**
     \brief Specifies for which output information the texture attachment is to be used,
     e.g. for color or depth information. By default AttachmentType::Color.
     */
     AttachmentType  type        = AttachmentType::Color;
+
+    #else
+
+    /**
+    \brief Specifies the secondary attachment format is \c texture is null.
+    \remarks If \c texture <b>is</b> specified, this attribute is ignored and the attachment format is determined by that texture.
+    \remarks If \c texture <b>is not</b> specified, this attribute determines the attachment format, or disables the attachment if this attributes is Format::Undefined.
+    */
+    Format          format      = Format::Undefined;
+
+    #endif
 
     /**
     \brief Pointer to the texture which is to be used as target output. By default null.
@@ -126,8 +140,8 @@ auto myRenderTargetSize = myColorTexture->GetMipExtent(0);
 myRenderTargetDesc.resolution = { myRenderTargetSize.width, myRenderTargetSize.height };
 
 myRenderTargetDesc.attachments = {
-    LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, myColorTexture },
-    LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth },
+    LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, myColorTexture },
+    LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth },
 };
 
 auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
@@ -162,23 +176,54 @@ struct RenderTargetDescriptor
     */
     std::uint32_t                       samples             = 1;
 
+    #if 1//TODO: replace this
+
     /**
     \brief Specifies whether custom multi-sampling is used or not. By default false.
     \remarks If this is true, only multi-sampled textures can be attached to a render-target,
     i.e. textures of the following types: Texture2DMS, Texture2DMSArray.
     If this is false, only non-multi-sampled textures can be attached to a render-target.
     This field will be ignored if multi-sampling is disabled.
-    \todo Remove this attribute and support custom resolve textures instead.
+    \todo Remove this attribute and support custom resolve attachments instead.
     */
     bool                                customMultiSampling = false;
 
     /**
     \brief Specifies all render target attachment descriptors.
     \remarks This container can also be empty, if the respective fragment shader has no direct output but writes into a storage texture instead
-    (e.g. <code>image3D</code> in GLSL, or <code>RWTexture3D<float4></code> in HLSL).
+    (e.g. \c image3D in GLSL, or <code>RWTexture3D<float4></code> in HLSL).
     If the respective rendering API does not support render targets without any attachments, LLGL will generate a dummy texture.
     */
     std::vector<AttachmentDescriptor>   attachments;
+
+    #else
+
+    /**
+    \brief Specifies the list of color attachment descriptors.
+    \remarks Each attachment descriptor describes into which target will be rendered.
+    \remarks For each attachment, for which a texture is specified, this texture must have the same number of samples as specified by RenderTargetDescriptor::samples,
+    must have the same size as specified by RenderTargetDescriptor::resolution, and must have been created with the binding flag BindFlags::ColorAttachment.
+    \see TextureDescriptor::samples
+    */
+    AttachmentDescriptor                colorAttachments[8];
+
+    /**
+    \brief Specifies the list of attachment descriptors for which the corresponding multi-sampled color attachments will be resolved into after a render pass.
+    \remarks Each attachment descriptor describes a multi-sampled resolve target for the corresponding color attachment.
+    \remarks For each attachment, for which a texture is specified, this texture must have 1 sample,
+    must have the same size as specified by RenderTargetDescriptor::resolution, and must have been created with the binding flag BindFlags::ColorAttachment.
+    */
+    AttachmentDescriptor                resolveAttachments[8];
+
+    /**
+    \brief Specifies the depth-stencil attachment descriptor.
+    \remarks If a texture is specified for this attachment, this texture must have the same number of samples as specified by RenderTargetDescriptor::samples,
+    must have the same size as specified by RenderTargetDescriptor::resolution, and must have been created with the binding flag BindFlags::DepthStencilAttachment.
+    \see TextureDescriptor::samples
+    */
+    AttachmentDescriptor                depthStencilAttachment;
+
+    #endif
 };
 
 

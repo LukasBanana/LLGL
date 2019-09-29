@@ -295,7 +295,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Updates the image data of the specified texture.
         \param[in] texture Specifies the texture whose data is to be updated.
-        \param[in] textureRegion Specifies the texture region where the texture is to be updated. The field TextureRegion::numMipLevels \b must be 1.
+        \param[in] textureRegion Specifies the region where the texture is to be updated. The field TextureRegion::numMipLevels \b must be 1.
         \param[in] imageDesc Specifies the image data descriptor. Its \c data member must not be null!
         \remarks This function can only be used for non-multi-sample textures, i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray.
         */
@@ -304,7 +304,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Reads the image data from the specified texture.
         \param[in] texture Specifies the texture object to read from.
-        \param[in] mipLevel Specifies the MIP-level from which to read the texture data.
+        \param[in] textureRegion Specifies the region where the texture data is to be read.
         \param[out] imageDesc Specifies the destination image descriptor to write the texture data to.
         \remarks The required size for a successful texture read operation depends on the image format, data type, and texture size.
         The Texture::GetDesc or Texture::GetMipExtent functions can be used to determine the texture dimensions.
@@ -332,9 +332,8 @@ class LLGL_EXPORT RenderSystem : public Interface
         \throws std::invalid_argument If <code>imageDesc.data</code> is null.
         \see Texture::GetDesc
         \see Texture::GetMipExtent
-        \todo Replace \c mipLevel parameter with \c textureRegion just like with the \c WriteTexture function.
         */
-        virtual void ReadTexture(Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) = 0;
+        virtual void ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc) = 0;
 
         /* ----- Samplers ---- */
 
@@ -513,15 +512,16 @@ class LLGL_EXPORT RenderSystem : public Interface
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);
 
         /**
-        \brief Copies the specified source data (i.e. \c srcData) to the destination image.
+        \brief Copies the specified source data (i.e. \c data) to the destination image.
         \remarks This function also performs image conversion if there is a mismatch between source and destination format.
         \see ConvertImageBuffer
         */
         void CopyTextureImageData(
             const DstImageDescriptor&   dstImageDesc,
-            const void*                 srcData,
-            const Format                srcFormat,
-            const Extent3D&             srcExtent
+            const Extent3D&             extent,
+            const Format                format,
+            const void*                 data,
+            std::size_t                 rowStride   = 0
         );
 
     private:
