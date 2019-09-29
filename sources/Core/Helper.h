@@ -253,7 +253,12 @@ inline std::size_t StrLength<wchar_t>(const wchar_t* s)
 template <typename T>
 inline T* AdvancePtr(T* ptr, std::size_t offset)
 {
-    using TByteAligned = std::conditional<std::is_const<T>::value, const std::int8_t, std::int8_t>::type;
+    using TByteAligned = typename std::conditional
+    <
+        std::is_const<T>::value,
+        const std::int8_t,
+        std::int8_t
+    >::type;
     return reinterpret_cast<T*>(reinterpret_cast<TByteAligned*>(ptr) + offset);
 }
 
