@@ -488,7 +488,7 @@ void VKCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     ThrowNotImplementedExcept(__FUNCTION__);
 }
 
-void VKCommandBuffer::BeginStreamOutput(const PrimitiveType /*primitiveType*/)
+void VKCommandBuffer::BeginStreamOutput()
 {
     if (HasExtension(VKExt::EXT_transform_feedback))
         vkCmdBeginTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);

@@ -209,46 +209,6 @@ GLenum Map(const DataType dataType)
     MapFailed("DataType");
 }
 
-GLenum Map(const PrimitiveType primitiveType)
-{
-    switch (primitiveType)
-    {
-        case PrimitiveType::Points:     return GL_POINTS;
-        case PrimitiveType::Lines:      return GL_LINES;
-        case PrimitiveType::Triangles:  return GL_TRIANGLES;
-    }
-    MapFailed("PrimitiveType");
-}
-
-GLenum Map(const PrimitiveTopology primitiveTopology)
-{
-    switch (primitiveTopology)
-    {
-        case PrimitiveTopology::PointList:              return GL_POINTS;
-        case PrimitiveTopology::LineList:               return GL_LINES;
-        case PrimitiveTopology::LineStrip:              return GL_LINE_STRIP;
-        case PrimitiveTopology::LineLoop:               return GL_LINE_LOOP;
-        #ifdef LLGL_OPENGL
-        case PrimitiveTopology::LineListAdjacency:      return GL_LINES_ADJACENCY;
-        case PrimitiveTopology::LineStripAdjacency:     return GL_LINE_STRIP_ADJACENCY;
-        #endif
-        case PrimitiveTopology::TriangleList:           return GL_TRIANGLES;
-        case PrimitiveTopology::TriangleStrip:          return GL_TRIANGLE_STRIP;
-        case PrimitiveTopology::TriangleFan:            return GL_TRIANGLE_FAN;
-        #ifdef LLGL_OPENGL
-        case PrimitiveTopology::TriangleListAdjacency:  return GL_TRIANGLES_ADJACENCY;
-        case PrimitiveTopology::TriangleStripAdjacency: return GL_TRIANGLE_STRIP_ADJACENCY;
-        #endif
-        default:
-            #ifdef LLGL_OPENGL
-            if (primitiveTopology >= PrimitiveTopology::Patches1 && primitiveTopology <= PrimitiveTopology::Patches32)
-                return GL_PATCHES;
-            #endif
-            break;
-    }
-    MapFailed("PrimitiveTopology");
-}
-
 GLenum Map(const TextureType textureType)
 {
     #ifdef LLGL_OPENGL
@@ -579,6 +539,59 @@ GLenum Map(const LogicOp logicOp)
     }
     #endif
     MapFailed("LogicOp");
+}
+
+GLenum ToDrawMode(const PrimitiveTopology primitiveTopology)
+{
+    switch (primitiveTopology)
+    {
+        case PrimitiveTopology::PointList:              return GL_POINTS;
+        case PrimitiveTopology::LineList:               return GL_LINES;
+        case PrimitiveTopology::LineStrip:              return GL_LINE_STRIP;
+        case PrimitiveTopology::LineLoop:               return GL_LINE_LOOP;
+        #ifdef LLGL_OPENGL
+        case PrimitiveTopology::LineListAdjacency:      return GL_LINES_ADJACENCY;
+        case PrimitiveTopology::LineStripAdjacency:     return GL_LINE_STRIP_ADJACENCY;
+        #endif
+        case PrimitiveTopology::TriangleList:           return GL_TRIANGLES;
+        case PrimitiveTopology::TriangleStrip:          return GL_TRIANGLE_STRIP;
+        case PrimitiveTopology::TriangleFan:            return GL_TRIANGLE_FAN;
+        #ifdef LLGL_OPENGL
+        case PrimitiveTopology::TriangleListAdjacency:  return GL_TRIANGLES_ADJACENCY;
+        case PrimitiveTopology::TriangleStripAdjacency: return GL_TRIANGLE_STRIP_ADJACENCY;
+        #endif
+        default:
+            #ifdef LLGL_OPENGL
+            if (primitiveTopology >= PrimitiveTopology::Patches1 && primitiveTopology <= PrimitiveTopology::Patches32)
+                return GL_PATCHES;
+            #endif
+            break;
+    }
+    MapFailed("PrimitiveTopology");
+}
+
+GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology)
+{
+    switch (primitiveTopology)
+    {
+        case PrimitiveTopology::PointList:
+            return GL_POINTS;
+        case PrimitiveTopology::LineList:
+        case PrimitiveTopology::LineStrip:
+        case PrimitiveTopology::LineLoop:
+        case PrimitiveTopology::LineListAdjacency:
+        case PrimitiveTopology::LineStripAdjacency:
+            return GL_LINES;
+        case PrimitiveTopology::TriangleList:
+        case PrimitiveTopology::TriangleStrip:
+        case PrimitiveTopology::TriangleFan:
+        case PrimitiveTopology::TriangleListAdjacency:
+        case PrimitiveTopology::TriangleStripAdjacency:
+            return GL_TRIANGLES;
+        default:
+            break;
+    }
+    MapFailed("PrimitiveTopology");
 }
 
 

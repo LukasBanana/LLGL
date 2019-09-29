@@ -114,7 +114,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void SetStreamOutputBuffer(Buffer& buffer) override;
         void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
 
-        void BeginStreamOutput(const PrimitiveType primitiveType) override;
+        void BeginStreamOutput() override;
         void EndStreamOutput() override;
 
         /* ----- Resources ----- */

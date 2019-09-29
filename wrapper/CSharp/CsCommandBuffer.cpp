@@ -208,7 +208,7 @@ void CommandBuffer::SetStreamOutputBufferArray(BufferArray^ bufferArray)
 {
 }
 
-void CommandBuffer::BeginStreamOutput(PrimitiveType primitiveType)
+void CommandBuffer::BeginStreamOutput()
 {
 }
 

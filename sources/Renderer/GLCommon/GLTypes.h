@@ -32,8 +32,6 @@ GLenum MapOrZero(const Format textureFormat);
 
 GLenum Map( const CPUAccess             cpuAccess           );
 GLenum Map( const DataType              dataType            );
-GLenum Map( const PrimitiveType         primitiveType       );
-GLenum Map( const PrimitiveTopology     primitiveTopology   );
 GLenum Map( const TextureType           textureType         );
 GLenum Map( const TextureSwizzle        textureSwizzle      );
 GLenum Map( const Format                format              );
@@ -57,6 +55,12 @@ GLenum ToTextureCubeMap(std::uint32_t arrayLayer);
 
 // Returns an enum in [GL_COLOR_ATTACHMENT0, ..., GL_COLOR_ATTACHMENT7].
 GLenum ToColorAttachment(std::uint32_t attachmentIndex);
+
+// Returns the <drawMode> enum for glDraw* commands.
+GLenum ToDrawMode(const PrimitiveTopology primitiveTopology);
+
+// Returns the <primitiveMode> enum for glBeginTransformFeedback* commands.
+GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology);
 
 UniformType UnmapUniformType( const GLenum uniformType    );
 Format      UnmapFormat     ( const GLenum internalFormat );

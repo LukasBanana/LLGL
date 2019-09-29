@@ -339,7 +339,7 @@ void D3D11CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     );
 }
 
-void D3D11CommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+void D3D11CommandBuffer::BeginStreamOutput()
 {
     // dummy
 }

@@ -46,8 +46,6 @@ namespace LLGL
 GLImmediateCommandBuffer::GLImmediateCommandBuffer(const std::shared_ptr<GLStateManager>& stateMngr) :
     stateMngr_ { stateMngr }
 {
-    GLCommandBuffer::InitializeGLRenderState(renderState_);
-    GLCommandBuffer::InitializeGLClearValue(clearValue_);
 }
 
 /* ----- Encoding ----- */
@@ -327,15 +325,15 @@ static void ErrTransformFeedbackNotSupported(const char* funcName)
 
 #endif
 
-void GLImmediateCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+void GLImmediateCommandBuffer::BeginStreamOutput()
 {
     #ifdef __APPLE__
     glBeginTransformFeedback(GLTypes::Map(primitiveType));
     #else
     if (HasExtension(GLExt::EXT_transform_feedback))
-        glBeginTransformFeedback(GLTypes::Map(primitiveType));
+        glBeginTransformFeedback(renderState_.primitiveMode);
     else if (HasExtension(GLExt::NV_transform_feedback))
-        glBeginTransformFeedbackNV(GLTypes::Map(primitiveType));
+        glBeginTransformFeedbackNV(renderState_.primitiveMode);
     else
         ErrTransformFeedbackNotSupported(__FUNCTION__);
     #endif
@@ -485,8 +483,9 @@ void GLImmediateCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPip
     auto& graphicsPipelineGL = LLGL_CAST(GLGraphicsPipeline&, graphicsPipeline);
     graphicsPipelineGL.Bind(*stateMngr_);
 
-    /* Store draw mode */
-    renderState_.drawMode = graphicsPipelineGL.GetDrawMode();
+    /* Store draw and primitive mode */
+    renderState_.drawMode       = graphicsPipelineGL.GetDrawMode();
+    renderState_.primitiveMode  = graphicsPipelineGL.GetPrimitiveMode();
 }
 
 void GLImmediateCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)

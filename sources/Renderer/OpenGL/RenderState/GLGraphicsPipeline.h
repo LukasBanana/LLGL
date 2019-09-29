@@ -51,6 +51,12 @@ class GLGraphicsPipeline final : public GraphicsPipeline
             return drawMode_;
         }
 
+        // Returns the GL mode for transform-feedback commands (GL_POINTS, GL_LINES, GL_TRIANGLES).
+        inline GLenum GetPrimitiveMode() const
+        {
+            return primitiveMode_;
+        }
+
     private:
 
         void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
@@ -67,7 +73,8 @@ class GLGraphicsPipeline final : public GraphicsPipeline
         GLShaderBindingLayoutSPtr   shaderBindingLayout_;
 
         // input-assembler state
-        GLenum                      drawMode_               = GL_TRIANGLES;
+        GLenum                      drawMode_               = GL_TRIANGLES; // for glDraw*
+        GLenum                      primitiveMode_          = GL_TRIANGLES; // for glBeginTransformFeedback*
         GLint                       patchVertices_          = 0;
 
         // state objects

@@ -330,7 +330,7 @@ void MTCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     //todo
 }
 
-void MTCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+void MTCommandBuffer::BeginStreamOutput()
 {
     //todo
 }

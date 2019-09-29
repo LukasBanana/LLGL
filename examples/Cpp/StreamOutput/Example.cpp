@@ -204,7 +204,7 @@ private:
                 commands->SetGraphicsResourceHeap(*resourceHeap);
 
                 // Draw scene with stream output
-                commands->BeginStreamOutput(LLGL::PrimitiveType::Triangles);
+                commands->BeginStreamOutput();
                 {
                     commands->DrawIndexed(36, 0);
                 }

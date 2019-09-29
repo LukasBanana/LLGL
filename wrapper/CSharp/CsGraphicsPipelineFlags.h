@@ -29,13 +29,6 @@ namespace SharpLLGL
 
 /* ----- Enumerations ----- */
 
-public enum class PrimitiveType
-{
-    Points,
-    Lines,
-    Triangles,
-};
-
 public enum class PrimitiveTopology
 {
     PointList,

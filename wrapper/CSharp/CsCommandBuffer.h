@@ -93,7 +93,7 @@ public ref class CommandBuffer
 
         void SetStreamOutputBufferArray(BufferArray^ bufferArray);
 
-        void BeginStreamOutput(PrimitiveType primitiveType);
+        void BeginStreamOutput();
         void EndStreamOutput();
         #endif
 

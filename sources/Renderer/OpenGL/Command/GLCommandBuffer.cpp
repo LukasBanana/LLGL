@@ -30,29 +30,6 @@ void GLCommandBuffer::SetIndexFormat(GLRenderState& renderState, bool index16Bit
 }
 
 
-/*
- * ======= Protected: =======
- */
-
-void GLCommandBuffer::InitializeGLRenderState(GLRenderState& dst)
-{
-    dst.drawMode            = GL_TRIANGLES;
-    dst.indexBufferDataType = GL_UNSIGNED_INT;
-    dst.indexBufferStride   = 4;
-    dst.indexBufferOffset   = 0;
-}
-
-void GLCommandBuffer::InitializeGLClearValue(GLClearValue& dst)
-{
-    dst.color[0]    = 0.0f;
-    dst.color[1]    = 0.0f;
-    dst.color[2]    = 0.0f;
-    dst.color[3]    = 0.0f;
-    dst.depth       = 1.0f;
-    dst.stencil     = 0;
-}
-
-
 } // /namespace LLGL
 
 

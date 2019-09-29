@@ -54,7 +54,8 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     }
 
     /* Convert input-assembler state */
-    drawMode_ = GLTypes::Map(desc.primitiveTopology);
+    drawMode_       = GLTypes::ToDrawMode(desc.primitiveTopology);
+    primitiveMode_  = GLTypes::ToPrimitiveMode(desc.primitiveTopology);
 
     if (IsPrimitiveTopologyPatches(desc.primitiveTopology))
     {

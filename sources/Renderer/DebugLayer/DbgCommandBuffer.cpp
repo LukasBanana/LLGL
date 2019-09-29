@@ -460,7 +460,7 @@ void DbgCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     profile_.streamOutputBufferBindings++;
 }
 
-void DbgCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+void DbgCommandBuffer::BeginStreamOutput()
 {
     if (debugger_)
     {
@@ -473,7 +473,7 @@ void DbgCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
         states_.streamOutputBusy = true;
     }
 
-    instance.BeginStreamOutput(primitiveType);
+    instance.BeginStreamOutput();
 
     profile_.streamOutputSections++;
 }

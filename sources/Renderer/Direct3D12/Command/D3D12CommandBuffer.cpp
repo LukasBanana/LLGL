@@ -369,7 +369,7 @@ void D3D12CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     //TODO
 }
 
-void D3D12CommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+void D3D12CommandBuffer::BeginStreamOutput()
 {
     // dummy
 }

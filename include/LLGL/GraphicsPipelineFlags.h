@@ -24,37 +24,6 @@ namespace LLGL
 /* ----- Enumerations ----- */
 
 /**
-\brief Primitive type enumeration.
-\remarks These entries are generic terms of a primitive topology.
-\see CommandBuffer::BeginStreamOutput
-*/
-enum class PrimitiveType
-{
-    /**
-    \brief Generic term for all point primitives.
-    \remarks This term refers to the following primitive topologies:
-    PrimitiveTopology::PointList.
-    */
-    Points,
-
-    /**
-    \brief Generic term for all line primitives.
-    \remarks This term refers to the following primitive topologies:
-    PrimitiveTopology::LineList, PrimitiveTopology::LineStrip, PrimitiveTopology::LineLoop,
-    PrimitiveTopology::LineListAdjacency, and PrimitiveTopology::LineStripAdjacency.
-    */
-    Lines,
-
-    /**
-    \brief Generic term for all triangle primitives.
-    \remarks This term refers to the following primitive topologies:
-    PrimitiveTopology::TriangleList, PrimitiveTopology::TriangleStrip, PrimitiveTopology::TriangleFan,
-    PrimitiveTopology::TriangleListAdjacency, and PrimitiveTopology::TriangleStripAdjacency.
-    */
-    Triangles,
-};
-
-/**
 \brief Primitive topology enumeration.
 \remarks All strip topologies (i.e. PrimitiveTopology::LineStrip, PrimitiveTopology::LineStripAdjacency,
 PrimitiveTopology::TriangleStrip, and PrimitiveTopology::TriangleStripAdjacency) use a fixed index value to restart the primitives.

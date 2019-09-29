@@ -129,17 +129,18 @@ struct GLScissor
 
 struct GLRenderState
 {
-    GLenum      drawMode;            // = GL_TRIANGLES
-    GLenum      indexBufferDataType; // = GL_UNSIGNED_INT
-    GLsizeiptr  indexBufferStride;   // = 4
-    GLsizeiptr  indexBufferOffset;   // = 0
+    GLenum      drawMode            = GL_TRIANGLES;
+    GLenum      primitiveMode       = GL_TRIANGLES;
+    GLenum      indexBufferDataType = GL_UNSIGNED_INT;
+    GLsizeiptr  indexBufferStride   = 4;
+    GLsizeiptr  indexBufferOffset   = 0;
 };
 
 struct GLClearValue
 {
-    GLfloat color[4];   // = { 0.0f, 0.0f, 0.0f, 0.0f }
-    GLfloat depth;      // = 1.0f
-    GLint   stencil;    // = 0
+    GLfloat color[4]    = { 0.0f, 0.0f, 0.0f, 0.0f };
+    GLfloat depth       = 1.0f;
+    GLint   stencil     = 0;
 };
 
 

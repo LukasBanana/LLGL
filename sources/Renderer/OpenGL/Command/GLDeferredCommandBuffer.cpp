@@ -51,8 +51,6 @@ GLDeferredCommandBuffer::GLDeferredCommandBuffer(long flags, std::size_t reserve
     flags_ { flags }
 {
     buffer_.reserve(reservedSize);
-    GLCommandBuffer::InitializeGLRenderState(renderState_);
-    GLCommandBuffer::InitializeGLClearValue(clearValue_);
 }
 
 /* ----- Encoding ----- */
@@ -397,7 +395,7 @@ static void ErrTransformFeedbackNotSupported(const char* funcName)
 
 #endif
 
-void GLDeferredCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+void GLDeferredCommandBuffer::BeginStreamOutput()
 {
     #ifdef __APPLE__
     auto cmd = AllocCommand<GLCmdBeginTransformFeedback>(GLOpcodeBeginTransformFeedback);
@@ -406,12 +404,12 @@ void GLDeferredCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveTyp
     if (HasExtension(GLExt::EXT_transform_feedback))
     {
         auto cmd = AllocCommand<GLCmdBeginTransformFeedback>(GLOpcodeBeginTransformFeedback);
-        cmd->primitiveMove = GLTypes::Map(primitiveType);
+        cmd->primitiveMove = renderState_.primitiveMode;
     }
     else if (HasExtension(GLExt::NV_transform_feedback))
     {
         auto cmd = AllocCommand<GLCmdBeginTransformFeedbackNV>(GLOpcodeBeginTransformFeedbackNV);
-        cmd->primitiveMove = GLTypes::Map(primitiveType);
+        cmd->primitiveMove = renderState_.primitiveMode;
     }
     else
         ErrTransformFeedbackNotSupported(__FUNCTION__);
@@ -569,8 +567,10 @@ void GLDeferredCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipe
     auto cmd = AllocCommand<GLCmdBindGraphicsPipeline>(GLOpcodeBindGraphicsPipeline);
     cmd->graphicsPipeline = LLGL_CAST(GLGraphicsPipeline*, &graphicsPipeline);
 
-    renderState_.drawMode = cmd->graphicsPipeline->GetDrawMode();
-    boundShaderProgram_ = cmd->graphicsPipeline->GetShaderProgram()->GetID();
+    /* Store draw mode, primitive mode, and shader program */
+    renderState_.drawMode       = cmd->graphicsPipeline->GetDrawMode();
+    renderState_.primitiveMode  = cmd->graphicsPipeline->GetPrimitiveMode();
+    boundShaderProgram_         = cmd->graphicsPipeline->GetShaderProgram()->GetID();
 }
 
 void GLDeferredCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
