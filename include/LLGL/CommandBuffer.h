@@ -338,14 +338,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Begins with stream-output for subsequent draw calls.
         \param[in] primitiveType Specifies the primitive output type of the last vertex processing shader stage (e.g. vertex- or geometry shader).
         \see EndStreamOutput
-        \todo Remove this function and make the begin/end section part of the active graphics pipeline.
+        \see RenderingFeatures::hasStreamOutputs
+        \see RenderingLimits::maxStreamOutputs
         */
         virtual void BeginStreamOutput(const PrimitiveType primitiveType) = 0;
 
         /**
         \brief Ends the current stream-output.
         \see BeginStreamOutput
-        \todo Remove this function and make the begin/end section part of the active graphics pipeline.
         */
         virtual void EndStreamOutput() = 0;
 

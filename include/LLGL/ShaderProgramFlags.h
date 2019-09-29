@@ -102,7 +102,6 @@ struct ShaderProgramDescriptor
     \remarks Each graphics shader program must have at least a vertex shader.
     For a compute shader program, only a compute shader must be specified.
     With OpenGL, this shader may also have a stream output.
-    \see ShaderDescriptor::streamOutput
     */
     Shader*                     vertexShader            = nullptr;
 
@@ -123,7 +122,6 @@ struct ShaderProgramDescriptor
     /**
     \brief Specifies an optional geometry shader.
     \remarks This shader may also have a stream output.
-    \see ShaderDescriptor::streamOutput
     */
     Shader*                     geometryShader          = nullptr;
 

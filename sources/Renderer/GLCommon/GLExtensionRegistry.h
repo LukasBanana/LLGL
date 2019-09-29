@@ -59,6 +59,8 @@ enum class GLExt
     KHR_debug,
     ARB_clip_control,
     EXT_transform_feedback,
+    //ARB_transform_feedback2,
+    ARB_transform_feedback3,
     NV_transform_feedback,
     EXT_gpu_shader4,
     ARB_pipeline_statistics_query,

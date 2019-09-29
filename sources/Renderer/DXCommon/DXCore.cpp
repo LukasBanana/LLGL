@@ -382,6 +382,7 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     caps.limits.maxComputeShaderWorkGroupSize[0]    = 1024u;
     caps.limits.maxComputeShaderWorkGroupSize[1]    = 1024u;
     caps.limits.maxComputeShaderWorkGroupSize[2]    = 1024u;
+    caps.limits.maxStreamOutputs                    = 4u;
 }
 
 std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLevel)

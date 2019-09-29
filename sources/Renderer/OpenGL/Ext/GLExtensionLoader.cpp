@@ -1052,6 +1052,9 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_direct_state_access          );
     #endif
 
+    /* Enable extensions and ignore procedures */
+    ENABLE_GLEXT( ARB_transform_feedback3 );
+
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );
     ENABLE_GLEXT( EXT_texture_array                );

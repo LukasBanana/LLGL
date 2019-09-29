@@ -219,6 +219,12 @@ void VKPhysicalDevice::QueryDeviceProperties(
     pipelineLimits.lineWidthRange[0]    = limits.lineWidthRange[0];
     pipelineLimits.lineWidthRange[1]    = limits.lineWidthRange[1];
     pipelineLimits.lineWidthGranularity = limits.lineWidthGranularity;
+
+    /*
+    TODO: extension limits
+    - VkPhysicalDeviceTransformFeedbackFeaturesEXT
+    - VkPhysicalDeviceTransformFeedbackPropertiesEXT
+    */
 }
 
 VKDevice VKPhysicalDevice::CreateLogicalDevice()

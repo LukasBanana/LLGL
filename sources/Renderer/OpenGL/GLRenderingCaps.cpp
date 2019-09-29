@@ -197,8 +197,8 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasOffsetInstancing            = HasExtension(GLExt::ARB_base_instance);
     features.hasIndirectDrawing             = HasExtension(GLExt::ARB_draw_indirect);
     features.hasViewportArrays              = HasExtension(GLExt::ARB_viewport_array);
-    features.hasConservativeRasterization   = ( HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization) );
-    features.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );
+    features.hasConservativeRasterization   = (HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization));
+    features.hasStreamOutputs               = (HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback));
     features.hasLogicOp                     = true;
     features.hasPipelineStatistics          = HasExtension(GLExt::ARB_pipeline_statistics_query);
     features.hasRenderCondition             = true;
@@ -236,9 +236,24 @@ static void GLGetFeatureLimits(RenderingLimits& limits)
     limits.maxViewportSize[0]               = static_cast<std::uint32_t>(maxViewportDims[0]);
     limits.maxViewportSize[1]               = static_cast<std::uint32_t>(maxViewportDims[1]);
 
-    /* Set maximum buffer size to maximum value for <GLsizei> (used in 'glBufferData') */
+    /* Determine maximum buffer size to maximum value for <GLsizei> (used in 'glBufferData') */
     limits.maxBufferSize                    = static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max());
     limits.maxConstantBufferSize            = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
+
+    /* Determine maximum number of stream-outputs */
+    #ifdef GL_ARB_transform_feedback3
+    if (HasExtension(GLExt::ARB_transform_feedback3))
+    {
+        /* Get maximum number of stream-outputs from <GL_ARB_transform_feedback3> extension */
+        limits.maxStreamOutputs = GLGetUInt(GL_MAX_TRANSFORM_FEEDBACK_BUFFERS);
+    }
+    else
+    #endif // /GL_ARB_transform_feedback3
+    if (HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback))
+    {
+        /* Presume that at least one stream-output is supported */
+        limits.maxStreamOutputs = 1u;
+    }
 }
 
 static void GLGetTextureLimits(const RenderingFeatures& features, RenderingLimits& limits)

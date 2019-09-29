@@ -83,7 +83,12 @@ enum class ShadingLanguage
     HLSL_4_0        = (0x30000 | 400),  //!< HLSL 4.0 (since Direct3D 10).
     HLSL_4_1        = (0x30000 | 410),  //!< HLSL 4.1 (since Direct3D 10.1).
     HLSL_5_0        = (0x30000 | 500),  //!< HLSL 5.0 (since Direct3D 11).
-    HLSL_5_1        = (0x30000 | 510),  //!< HLSL 5.1 (since Direct3D 12 and Direct3D 11.3).
+    HLSL_5_1        = (0x30000 | 510),  //!< HLSL 5.1 (since Direct3D 11.3).
+    HLSL_6_0        = (0x30000 | 600),  //!< HLSL 6.0 (since Direct3D 12). Shader model 6.0 adds wave intrinsics and 64-bit integer types to HLSL.
+    HLSL_6_1        = (0x30000 | 601),  //!< HLSL 6.1 (since Direct3D 12). Shader model 6.1 adds \c SV_ViewID and \c SV_Barycentrics semantics to HLSL.
+    HLSL_6_2        = (0x30000 | 602),  //!< HLSL 6.2 (since Direct3D 12). Shader model 6.2 adds 16-bit scalar types to HLSL.
+    HLSL_6_3        = (0x30000 | 603),  //!< HLSL 6.3 (since Direct3D 12). Shader model 6.3 adds ray tracing (DXR) to HLSL.
+    HLSL_6_4        = (0x30000 | 604),  //!< HLSL 6.4 (since Direct3D 12). Shader model 6.4 adds machine learning intrinsics to HLSL.
 
     Metal           = (0x40000),        //!< Metal Shading Language.
     Metal_1_0       = (0x40000 | 100),  //!< Metal 1.0 (since iOS 8.0).
@@ -451,8 +456,9 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether stream-output is supported.
-    \see ShaderSource::streamOutput
+    \see VertexShaderAttributes::outputAttribs
     \see CommandBuffer::BeginStreamOutput
+    \see RenderingLimits::maxStreamOutputs
     */
     bool hasStreamOutputs               = false;
 
@@ -499,7 +505,7 @@ struct RenderingLimits
 
     /**
     \brief Specifies the maximum number of color attachments for each render target.
-    \remarks This value must not be greater than 8.
+    \remarks This value <b>must not</b> be greater than 8.
     \see RenderTargetDescriptor::attachments
     \see RenderPassDescriptor::colorAttachments
     \see BlendDescriptor::targets
@@ -585,6 +591,14 @@ struct RenderingLimits
     \see BufferDescriptor::size
     */
     std::uint64_t   maxConstantBufferSize               = 0;
+
+    /**
+    \brief Specifies the maximum number of simultaneous stream-output buffers.
+    \remarks This is usually 4 for renderers that support stream-outputs, and 0 for renderers that do not support stream-outputs.
+    \see CommandBuffer::BeginStreamOutput
+    \see RenderingFeatures::hasStreamOutputs
+    */
+    std::uint32_t   maxStreamOutputs                    = 0;
 };
 
 /**

@@ -150,10 +150,12 @@ struct VertexShaderAttributes
     std::vector<VertexAttribute> inputAttribs;
 
     /**
-    \brief Vertex (or geometry) shader output attributes.
+    \brief Vertex (or geometry) shader stream-output attributes.
     \remarks Some rendering APIs need the output stream attributes for the vertex shader and other APIs need them for the geometry shader.
     To keep the code logic simple, it is valid to declare the output attributes for both the vertex and geometry shader (or even all that will be used in the same shader program).
     Output attributes are ignored where they cannot be used.
+    \see RenderingFeatures::hasStreamOutputs
+    \see CommandBuffer::BeginStreamOutput
     */
     std::vector<VertexAttribute> outputAttribs;
 };
