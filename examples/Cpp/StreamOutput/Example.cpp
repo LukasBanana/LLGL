@@ -171,6 +171,15 @@ private:
         // Start command recording
         commands->Begin();
         {
+            #if 1//TODO
+            if (renderer->GetRendererID() == LLGL::RendererID::Direct3D12)
+            {
+                // Reset stream-output buffer offset
+                std::uint64_t zeroData = 0;
+                commands->UpdateBuffer(*streamOutputBuffer, sizeof(Gs::Vector4f) * 36 * 3, &zeroData, sizeof(zeroData));
+            }
+            #endif
+
             // Update constant buffer
             commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
@@ -194,7 +203,7 @@ private:
                 // Set buffers
                 commands->SetGraphicsResourceHeap(*resourceHeap);
 
-                // Draw scene
+                // Draw scene with stream output
                 commands->BeginStreamOutput(LLGL::PrimitiveType::Triangles);
                 {
                     commands->DrawIndexed(36, 0);
@@ -207,7 +216,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Read stream-output buffer
-        commandQueue->WaitIdle();
+        //commandQueue->WaitIdle();
 
         if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::CPUAccess::ReadOnly))
         {
@@ -220,7 +229,7 @@ private:
         }
 
         // Read stream-output buffer
-        commandQueue->WaitIdle();
+        //commandQueue->WaitIdle();
 
         // Present result on the screen
         context->Present();

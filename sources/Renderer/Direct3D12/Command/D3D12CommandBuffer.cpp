@@ -366,7 +366,7 @@ void D3D12CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 
 void D3D12CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
 {
-    //todo...
+    //TODO
 }
 
 void D3D12CommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
@@ -421,7 +421,7 @@ void D3D12CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std:
 
 void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
 {
-    // dummy
+    //TODOL: use "SetGraphicsRootShaderResourceView" etc.
 }
 
 void D3D12CommandBuffer::ResetResourceSlots(
@@ -431,6 +431,10 @@ void D3D12CommandBuffer::ResetResourceSlots(
     long                bindFlags,
     long                stageFlags)
 {
+
+    const D3D12_STREAM_OUTPUT_BUFFER_VIEW nullViews[1] = {};
+    commandList_->SOSetTargets(0, 1, nullViews);
+
     // dummy
 }
 

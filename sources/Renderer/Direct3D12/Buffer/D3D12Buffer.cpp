@@ -22,7 +22,7 @@ namespace LLGL
 
 // BufferFilledSize actually only needs 4 bytes, but we keep it 16 byte aligned
 // see https://docs.microsoft.com/en-us/windows/win32/direct3d12/stream-output-counters#bufferfilledsize
-static const UINT64 g_soBufferFillSizeLen   = 16u;
+static const UINT64 g_soBufferFillSizeLen   = sizeof(UINT64);
 static const UINT64 g_cBufferAlignment      = 256u;
 
 D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
@@ -37,7 +37,7 @@ D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
 
     /* Create CPU access buffer */
     if (desc.cpuAccessFlags != 0)
-        CreateCpuAccessBuffer(device, desc.size, desc.cpuAccessFlags);
+        CreateCpuAccessBuffer(device, desc.cpuAccessFlags);
 
     /* Create sub-resource views */
     if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
@@ -259,7 +259,7 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware buffer");
 }
 
-void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, UINT64 size, long cpuAccessFlags)
+void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlags)
 {
     /* Determine heap type and resource state */
     D3D12_HEAP_TYPE heapType = D3D12_HEAP_TYPE_UPLOAD;

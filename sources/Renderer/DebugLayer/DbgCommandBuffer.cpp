@@ -139,6 +139,7 @@ void DbgCommandBuffer::UpdateBuffer(
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
+        ValidateBufferRange(dstBufferDbg, dstOffset, dataSize, "destination range");
     }
 
     LLGL_DBG_COMMAND( "UpdateBuffer", instance.UpdateBuffer(dstBufferDbg.instance, dstOffset, data, dataSize) );
@@ -160,6 +161,8 @@ void DbgCommandBuffer::CopyBuffer(
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
+        ValidateBufferRange(dstBufferDbg, dstOffset, size, "destination range");
+        ValidateBufferRange(srcBufferDbg, srcOffset, size, "source range");
     }
 
     LLGL_DBG_COMMAND( "CopyBuffer", instance.CopyBuffer(dstBufferDbg.instance, dstOffset, srcBufferDbg.instance, srcOffset, size) );
@@ -257,8 +260,8 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "viewport array exceeded maximal number of viewports (" + std::to_string(numViewports) +
-                " specified but limit is " + std::to_string(limits_.maxViewports) + ")"
+                "viewport array index out of bounds: " +
+                std::to_string(numViewports) + " specified but limit is " + std::to_string(limits_.maxViewports)
             );
         }
     }
@@ -1199,7 +1202,7 @@ void DbgCommandBuffer::ValidateViewport(const Viewport& viewport)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "viewport exceeded maximal size ([" + std::to_string(w) + " x " + std::to_string(h) +
+            "viewport exceeded maximal size: [" + std::to_string(w) + " x " + std::to_string(h) +
             "] specified but limit is [" + std::to_string(limits_.maxViewportSize[0]) + " x " + std::to_string(limits_.maxViewportSize[1]) + "])"
         );
     }
@@ -1428,8 +1431,8 @@ void DbgCommandBuffer::ValidateVertexLimit(std::uint32_t vertexCount, std::uint3
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "vertex count out of bounds (" + std::to_string(vertexCount) +
-            " specified but limit is " + std::to_string(vertexLimit) + ")"
+            "vertex count out of bounds: " + std::to_string(vertexCount) +
+            " specified but limit is " + std::to_string(vertexLimit)
         );
     }
 }
@@ -1440,8 +1443,8 @@ void DbgCommandBuffer::ValidateThreadGroupLimit(std::uint32_t size, std::uint32_
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "thread group size X is too large (" + std::to_string(size) +
-            " specified but limit is " + std::to_string(limit) + ")"
+            "thread group size X out of bounds: " + std::to_string(size) +
+            " specified but limit is " + std::to_string(limit)
         );
     }
 }
@@ -1452,8 +1455,8 @@ void DbgCommandBuffer::ValidateAttachmentLimit(std::uint32_t attachmentIndex, st
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "color attachment index out of bounds (" + std::to_string(attachmentIndex) +
-            " specified but upper bound is " + std::to_string(attachmentUpperBound) + ")"
+            "color attachment index out of bounds: " + std::to_string(attachmentIndex) +
+            " specified but upper bound is " + std::to_string(attachmentUpperBound)
         );
     }
 }
@@ -1554,14 +1557,15 @@ void DbgCommandBuffer::ValidateStageFlags(long stageFlags, long validFlags)
         LLGL_DBG_WARN(WarningType::ImproperArgument, "unknown shader stage flags specified");
 }
 
-void DbgCommandBuffer::ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size)
+void DbgCommandBuffer::ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size, const char* rangeName)
 {
     if (offset + size > bufferDbg.desc.size)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "buffer range out of bounds (" + std::to_string(offset + size) +
-            " specified but limit is " + std::to_string(bufferDbg.desc.size) + ")"
+            std::string(rangeName != nullptr ? rangeName : "range") + " out of bounds" +
+            std::string(bufferDbg.label.empty() ? "" : " for \"" + bufferDbg.label + "\"") + ": " +
+            std::to_string(offset + size) + " specified but limit is " + std::to_string(bufferDbg.desc.size)
         );
     }
 }
@@ -1583,8 +1587,8 @@ bool DbgCommandBuffer::ValidateQueryIndex(DbgQueryHeap& queryHeapDbg, std::uint3
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "query index out of bounds (" + std::to_string(query) +
-            " specified but upper bound is " + std::to_string(queryHeapDbg.states.size()) + ")"
+            "query index out of bounds: " + std::to_string(query) +
+            " specified but upper bound is " + std::to_string(queryHeapDbg.states.size())
         );
         return false;
     }

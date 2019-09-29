@@ -244,7 +244,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void ValidateIndexType(const Format format);
 
         void ValidateStageFlags(long stageFlags, long validFlags);
-        void ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size);
+        void ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t offset, std::uint64_t size, const char* rangeName = nullptr);
         void ValidateAddressAlignment(std::uint64_t address, std::uint64_t alignment, const char* addressName);
 
         bool ValidateQueryIndex(DbgQueryHeap& queryHeapDbg, std::uint32_t query);

@@ -110,7 +110,7 @@ class D3D12Buffer : public Buffer
     private:
 
         void CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& desc);
-        void CreateCpuAccessBuffer(ID3D12Device* device, UINT64 size, long cpuAccessFlags);
+        void CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlags);
 
         void CreateVertexBufferView(const BufferDescriptor& desc);
         void CreateIndexBufferView(const BufferDescriptor& desc);
