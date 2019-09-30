@@ -1,8 +1,3 @@
-<p align="center">
-    <a href="https://ci.appveyor.com/project/LukasBanana/llgl"><img src="https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true" /></a>
-    <a href="https://travis-ci.org/LukasBanana/LLGL"><img src="https://api.travis-ci.org/LukasBanana/LLGL.svg" /></a>
-</p>
-
 # Low Level Graphics Library (LLGL)
 
 <p align="center"><img src="docu/LLGL_Logo.png"/></p>
@@ -27,6 +22,13 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 
 * **Version**: 0.03 Beta (see [ChangeLog](docu/ChangeLog))
 
+| Platform | Progress | Remarks | CI |
+|----------|:--------:|---------|:--:|
+| Windows | 100% | Tested on *Windows 10* | <a href="https://ci.appveyor.com/project/LukasBanana/llgl"><img src="https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true" /></a> |
+| GNU/Linux | 70% | Tested on *Kubuntu 16* | <a href="https://travis-ci.org/LukasBanana/LLGL"><img src="https://api.travis-ci.org/LukasBanana/LLGL.svg" /></a> |
+| macOS | 70% | Tested on *macOS Sierra* | <a href="https://travis-ci.org/LukasBanana/LLGL"><img src="https://api.travis-ci.org/LukasBanana/LLGL.svg" /></a> |
+| iOS | 1% | Currently not compilable | n/a |
+
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
 | OpenGL | ~90% | |
@@ -34,13 +36,6 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 | Direct3D 12 | ~50% | Experimental state |
 | Vulkan | ~50% | Experimental state |
 | Metal | ~50% | Experimental state |
-
-| Platform | Progress | Remarks |
-|----------|:--------:|---------|
-| Windows | 100% | Tested on *Windows 10* |
-| GNU/Linux | 70% | Tested on *Kubuntu 16* |
-| macOS | 70% | Tested on *macOS Sierra* |
-| iOS | 1% | Currently not compilable |
 
 | Language Binding | Progress | Remarks |
 |------------------|:--------:|---------|
