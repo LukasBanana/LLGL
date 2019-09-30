@@ -135,7 +135,7 @@ void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)
 void D3D11RenderTarget::FindSuitableSampleDesc(const RenderTargetDescriptor& desc)
 {
     /* Gather all attachment formats */
-    const auto numFormats = std::min(LLGL_MAX_NUM_ATTACHMENTS, desc.attachments.size());
+    const auto numFormats = std::min(std::size_t(LLGL_MAX_NUM_ATTACHMENTS), desc.attachments.size());
     DXGI_FORMAT formats[LLGL_MAX_NUM_ATTACHMENTS];
 
     for (std::size_t i = 0; i < numFormats; ++i)

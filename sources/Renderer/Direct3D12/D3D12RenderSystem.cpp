@@ -15,6 +15,7 @@
 #include "../../Core/Assertion.h"
 #include "D3DX12/d3dx12.h"
 #include <limits>
+#include <codecvt>
 
 #include "Buffer/D3D12Buffer.h"
 #include "Buffer/D3D12BufferArray.h"
@@ -616,7 +617,7 @@ void D3D12RenderSystem::QueryRendererInfo()
     if (!videoAdatperDescs_.empty())
     {
         const auto& videoAdapterDesc = videoAdatperDescs_.front();
-        info.deviceName = std::string(videoAdapterDesc.name.begin(), videoAdapterDesc.name.end());
+        info.deviceName = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(videoAdapterDesc.name);
         info.vendorName = videoAdapterDesc.vendor;
     }
     else
