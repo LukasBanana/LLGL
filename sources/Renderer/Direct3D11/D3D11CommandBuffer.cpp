@@ -317,38 +317,6 @@ void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
     context_->IASetIndexBuffer(bufferD3D.GetNative(), D3D11Types::Map(format), static_cast<UINT>(offset));
 }
 
-/* ----- Stream Output Buffers ------ */
-
-void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
-{
-    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-
-    ID3D11Buffer* buffers[] = { bufferD3D.GetNative() };
-    UINT offsets[] = { 0 };
-
-    context_->SOSetTargets(1, buffers, offsets);
-}
-
-void D3D11CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
-{
-    auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);
-    context_->SOSetTargets(
-        bufferArrayD3D.GetCount(),
-        bufferArrayD3D.GetBuffers(),
-        bufferArrayD3D.GetOffsets()
-    );
-}
-
-void D3D11CommandBuffer::BeginStreamOutput()
-{
-    // dummy
-}
-
-void D3D11CommandBuffer::EndStreamOutput()
-{
-    // dummy
-}
-
 /* ----- Resources ----- */
 
 void D3D11CommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*firstSet*/)
@@ -518,6 +486,30 @@ void D3D11CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_
 void D3D11CommandBuffer::EndRenderCondition()
 {
     context_->SetPredication(nullptr, FALSE);
+}
+
+/* ----- Stream Output ------ */
+
+void D3D11CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
+{
+    ID3D11Buffer* soTargets[LLGL_MAX_NUM_SO_BUFFERS];
+    UINT offsets[LLGL_MAX_NUM_SO_BUFFERS];
+
+    numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
+
+    for (std::uint32_t i = 0; i < numBuffers; ++i)
+    {
+        auto bufferD3D = LLGL_CAST(D3D11Buffer*, buffers[i]);
+        soTargets[i] = bufferD3D->GetNative();
+        offsets[i] = 0;
+    }
+
+    context_->SOSetTargets(numBuffers, soTargets, offsets);
+}
+
+void D3D11CommandBuffer::EndStreamOutput()
+{
+    context_->SOSetTargets(0, nullptr, nullptr);
 }
 
 /* ----- Drawing ----- */

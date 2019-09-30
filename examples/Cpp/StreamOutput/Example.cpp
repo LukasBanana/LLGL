@@ -186,7 +186,6 @@ private:
             // Set vertex and index buffers
             commands->SetVertexBuffer(*vertexBuffer);
             commands->SetIndexBuffer(*indexBuffer);
-            commands->SetStreamOutputBuffer(*streamOutputBuffer);
 
             // Begin render pass for context
             commands->BeginRenderPass(*context);
@@ -204,7 +203,7 @@ private:
                 commands->SetGraphicsResourceHeap(*resourceHeap);
 
                 // Draw scene with stream output
-                commands->BeginStreamOutput();
+                commands->BeginStreamOutput(1, &streamOutputBuffer);
                 {
                     commands->DrawIndexed(36, 0);
                 }

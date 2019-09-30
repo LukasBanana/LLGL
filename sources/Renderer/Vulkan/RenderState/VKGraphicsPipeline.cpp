@@ -12,9 +12,9 @@
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
-#include "../../StaticLimits.h"
 #include <cstddef>
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/StaticLimits.h>
 
 
 namespace LLGL

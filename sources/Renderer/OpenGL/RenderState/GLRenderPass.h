@@ -11,8 +11,8 @@
 
 #include <LLGL/RenderPass.h>
 #include <LLGL/RenderPassFlags.h>
+#include <LLGL/StaticLimits.h>
 #include <cstdint>
-#include "../../StaticLimits.h"
 #include "../OpenGL.h"
 
 

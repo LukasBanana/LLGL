@@ -13,6 +13,7 @@
 #include "ColorRGBA.h"
 #include "Types.h"
 #include "ForwardDecls.h"
+#include "StaticLimits.h"
 #include <vector>
 #include <cstdint>
 
@@ -635,7 +636,7 @@ struct BlendDescriptor
     i.e. <code>targets[0]</code> and all remaining entries <code>targets[1..7]</code> are ignored.
     \see independentBlendEnabled
     */
-    BlendTargetDescriptor               targets[8];
+    BlendTargetDescriptor               targets[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 };
 
 /**

@@ -7,6 +7,7 @@
 
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommand.h"
+#include <LLGL/StaticLimits.h>
 
 #include "../../TextureUtils.h"
 #include "../GLRenderContext.h"
@@ -15,7 +16,6 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
 #include "../../CheckedCast.h"
-#include "../../StaticLimits.h"
 #include "../../../Core/Assertion.h"
 
 #include "../Shader/GLShaderProgram.h"
@@ -371,75 +371,16 @@ void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format
     SetIndexFormat(renderState_, format == Format::R16UInt, offset);
 }
 
-/* ----- Stream Output Buffers ------ */
-
-void GLDeferredCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
-{
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    SetGenericBuffer(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, bufferGL, 0);
-}
-
-void GLDeferredCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
-{
-    auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
-    SetGenericBufferArray(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, bufferArrayGL, 0);
-}
-
-#ifndef __APPLE__
-
-[[noreturn]]
-static void ErrTransformFeedbackNotSupported(const char* funcName)
-{
-    ThrowNotSupportedExcept(funcName, "stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)");
-}
-
-#endif
-
-void GLDeferredCommandBuffer::BeginStreamOutput()
-{
-    #ifdef __APPLE__
-    auto cmd = AllocCommand<GLCmdBeginTransformFeedback>(GLOpcodeBeginTransformFeedback);
-    cmd->primitiveMove = GLTypes::Map(primitiveType);
-    #else
-    if (HasExtension(GLExt::EXT_transform_feedback))
-    {
-        auto cmd = AllocCommand<GLCmdBeginTransformFeedback>(GLOpcodeBeginTransformFeedback);
-        cmd->primitiveMove = renderState_.primitiveMode;
-    }
-    else if (HasExtension(GLExt::NV_transform_feedback))
-    {
-        auto cmd = AllocCommand<GLCmdBeginTransformFeedbackNV>(GLOpcodeBeginTransformFeedbackNV);
-        cmd->primitiveMove = renderState_.primitiveMode;
-    }
-    else
-        ErrTransformFeedbackNotSupported(__FUNCTION__);
-    #endif
-}
-
-void GLDeferredCommandBuffer::EndStreamOutput()
-{
-    #ifdef __APPLE__
-    AllocOpCode(GLOpcodeEndTransformFeedback);
-    #else
-    if (HasExtension(GLExt::EXT_transform_feedback))
-        AllocOpCode(GLOpcodeEndTransformFeedback);
-    else if (HasExtension(GLExt::NV_transform_feedback))
-        AllocOpCode(GLOpcodeEndTransformFeedbackNV);
-    else
-        ErrTransformFeedbackNotSupported(__FUNCTION__);
-    #endif
-}
-
 /* ----- Resource Heaps ----- */
 
 void GLDeferredCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
 {
-    SetResourceHeap(resourceHeap);
+    BindResourceHeap(resourceHeap);
 }
 
 void GLDeferredCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
 {
-    SetResourceHeap(resourceHeap);
+    BindResourceHeap(resourceHeap);
 }
 
 void GLDeferredCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
@@ -455,9 +396,9 @@ void GLDeferredCommandBuffer::SetResource(Resource& resource, std::uint32_t slot
 
             /* Bind uniform buffer (UBO) or shader storage buffer (SSBO) */
             if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-                SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, bufferGL, slot);
+                BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, bufferGL, slot);
             if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-                SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, bufferGL, slot);
+                BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, bufferGL, slot);
         }
         break;
 
@@ -467,7 +408,7 @@ void GLDeferredCommandBuffer::SetResource(Resource& resource, std::uint32_t slot
 
             /* Bind sampled texture resource */
             if ((bindFlags & BindFlags::Sampled) != 0)
-                SetTexture(textureGL, slot);
+                BindTexture(textureGL, slot);
 
             //TODO: support image storage types (e.g. <image2D> in GLSL)
             /*if ((bindFlags & BindFlags::Storage) != 0)
@@ -479,7 +420,7 @@ void GLDeferredCommandBuffer::SetResource(Resource& resource, std::uint32_t slot
         case ResourceType::Sampler:
         {
             auto& samplerGL = LLGL_CAST(GLSampler&, resource);
-            SetSampler(samplerGL, slot);
+            BindSampler(samplerGL, slot);
         }
         break;
     }
@@ -641,6 +582,58 @@ void GLDeferredCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::ui
 void GLDeferredCommandBuffer::EndRenderCondition()
 {
     AllocOpCode(GLOpcodeEndConditionalRender);
+}
+
+/* ----- Stream Output ------ */
+
+#ifndef __APPLE__
+
+[[noreturn]]
+static void ErrTransformFeedbackNotSupported(const char* funcName)
+{
+    ThrowNotSupportedExcept(funcName, "stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)");
+}
+
+#endif
+
+void GLDeferredCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
+{
+    /* Bind transform feedback buffers */
+    numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
+    BindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, 0, numBuffers, buffers);
+
+    /* Begin transform feedback section */
+    #ifdef __APPLE__
+    auto cmd = AllocCommand<GLCmdBeginTransformFeedback>(GLOpcodeBeginTransformFeedback);
+    cmd->primitiveMove = renderState_.primitiveMode;
+    #else
+    if (HasExtension(GLExt::EXT_transform_feedback))
+    {
+        auto cmd = AllocCommand<GLCmdBeginTransformFeedback>(GLOpcodeBeginTransformFeedback);
+        cmd->primitiveMove = renderState_.primitiveMode;
+    }
+    else if (HasExtension(GLExt::NV_transform_feedback))
+    {
+        auto cmd = AllocCommand<GLCmdBeginTransformFeedbackNV>(GLOpcodeBeginTransformFeedbackNV);
+        cmd->primitiveMove = renderState_.primitiveMode;
+    }
+    else
+        ErrTransformFeedbackNotSupported(__FUNCTION__);
+    #endif
+}
+
+void GLDeferredCommandBuffer::EndStreamOutput()
+{
+    #ifdef __APPLE__
+    AllocOpCode(GLOpcodeEndTransformFeedback);
+    #else
+    if (HasExtension(GLExt::EXT_transform_feedback))
+        AllocOpCode(GLOpcodeEndTransformFeedback);
+    else if (HasExtension(GLExt::NV_transform_feedback))
+        AllocOpCode(GLOpcodeEndTransformFeedbackNV);
+    else
+        ErrTransformFeedbackNotSupported(__FUNCTION__);
+    #endif
 }
 
 /* ----- Drawing ----- */
@@ -933,7 +926,7 @@ bool GLDeferredCommandBuffer::IsPrimary() const
  * ======= Private: =======
  */
 
-void GLDeferredCommandBuffer::SetGenericBuffer(const GLBufferTarget bufferTarget, GLBuffer& bufferGL, std::uint32_t slot)
+void GLDeferredCommandBuffer::BindBufferBase(const GLBufferTarget bufferTarget, GLBuffer& bufferGL, std::uint32_t slot)
 {
     auto cmd = AllocCommand<GLCmdBindBufferBase>(GLOpcodeBindBufferBase);
     {
@@ -943,19 +936,33 @@ void GLDeferredCommandBuffer::SetGenericBuffer(const GLBufferTarget bufferTarget
     }
 }
 
-void GLDeferredCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferTarget, GLBufferArray& bufferArrayGL, std::uint32_t startSlot)
+void GLDeferredCommandBuffer::BindBuffersBase(const GLBufferTarget bufferTarget, std::uint32_t first, std::uint32_t count, Buffer* const * buffers)
 {
-    auto count = bufferArrayGL.GetIDArray().size();
-    auto cmd = AllocCommand<GLCmdBindBuffersBase>(GLOpcodeBindBuffersBase, sizeof(GLuint)*count);
+    if (count > 1)
     {
-        cmd->target = bufferTarget;
-        cmd->first  = startSlot;
-        cmd->count  = static_cast<GLsizei>(count);
-        ::memcpy(cmd + 1, bufferArrayGL.GetIDArray().data(), sizeof(GLuint)*count);
+        /* Encode as multi binding with <BindBuffersBase> */
+        auto cmd = AllocCommand<GLCmdBindBuffersBase>(GLOpcodeBindBuffersBase, sizeof(GLuint)*count);
+        {
+            cmd->target = bufferTarget;
+            cmd->first  = first;
+            cmd->count  = static_cast<GLsizei>(count);
+            auto bufferIDs = reinterpret_cast<GLuint*>(cmd + 1);
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                auto bufferGL = LLGL_CAST(GLBuffer*, buffers[i]);
+                bufferIDs[i] = bufferGL->GetID();
+            }
+        }
+    }
+    else if (count == 1)
+    {
+        /* Encode as single binding with <BindBufferBase> */
+        auto bufferGL = LLGL_CAST(GLBuffer*, buffers[0]);
+        BindBufferBase(bufferTarget, *bufferGL, first);
     }
 }
 
-void GLDeferredCommandBuffer::SetTexture(GLTexture& textureGL, std::uint32_t slot)
+void GLDeferredCommandBuffer::BindTexture(GLTexture& textureGL, std::uint32_t slot)
 {
     auto cmd = AllocCommand<GLCmdBindTexture>(GLOpcodeBindTexture);
     {
@@ -964,7 +971,7 @@ void GLDeferredCommandBuffer::SetTexture(GLTexture& textureGL, std::uint32_t slo
     }
 }
 
-void GLDeferredCommandBuffer::SetSampler(GLSampler& samplerGL, std::uint32_t slot)
+void GLDeferredCommandBuffer::BindSampler(GLSampler& samplerGL, std::uint32_t slot)
 {
     auto cmd = AllocCommand<GLCmdBindSampler>(GLOpcodeBindSampler);
     {
@@ -973,7 +980,7 @@ void GLDeferredCommandBuffer::SetSampler(GLSampler& samplerGL, std::uint32_t slo
     }
 }
 
-void GLDeferredCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap)
+void GLDeferredCommandBuffer::BindResourceHeap(ResourceHeap& resourceHeap)
 {
     auto cmd = AllocCommand<GLCmdBindResourceHeap>(GLOpcodeBindResourceHeap);
     cmd->resourceHeap = LLGL_CAST(GLResourceHeap*, &resourceHeap);

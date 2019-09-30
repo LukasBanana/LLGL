@@ -318,28 +318,6 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
     SetIndexType(format == Format::R16UInt);
 }
 
-/* ----- Stream Output Buffers ------ */
-
-void MTCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
-{
-    //todo
-}
-
-void MTCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
-{
-    //todo
-}
-
-void MTCommandBuffer::BeginStreamOutput()
-{
-    //todo
-}
-
-void MTCommandBuffer::EndStreamOutput()
-{
-    //todo
-}
-
 /* ----- Resources ----- */
 
 void MTCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
@@ -479,6 +457,18 @@ void MTCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t q
 }
 
 void MTCommandBuffer::EndRenderCondition()
+{
+    //todo
+}
+
+/* ----- Stream Output ------ */
+
+void MTCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
+{
+    //todo
+}
+
+void MTCommandBuffer::EndStreamOutput()
 {
     //todo
 }

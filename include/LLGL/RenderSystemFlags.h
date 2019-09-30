@@ -594,7 +594,7 @@ struct RenderingLimits
 
     /**
     \brief Specifies the maximum number of simultaneous stream-output buffers.
-    \remarks This is usually 4 for renderers that support stream-outputs, and 0 for renderers that do not support stream-outputs.
+    \remarks This must not be larger than \c LLGL_MAX_NUM_SO_BUFFERS which is 4.
     \see CommandBuffer::BeginStreamOutput
     \see RenderingFeatures::hasStreamOutputs
     */

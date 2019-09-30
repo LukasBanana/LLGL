@@ -12,10 +12,10 @@
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLCore.h"
 #include "../../CheckedCast.h"
-#include "../../StaticLimits.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/StaticLimits.h>
 
 
 namespace LLGL

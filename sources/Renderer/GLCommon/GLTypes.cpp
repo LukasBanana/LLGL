@@ -6,7 +6,7 @@
  */
 
 #include "GLTypes.h"
-#include "../StaticLimits.h"
+#include <LLGL/StaticLimits.h>
 #include <stdexcept>
 #include <string>
 

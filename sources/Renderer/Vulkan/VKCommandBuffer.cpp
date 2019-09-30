@@ -22,8 +22,8 @@
 #include "Buffer/VKBuffer.h"
 #include "Buffer/VKBufferArray.h"
 #include "../CheckedCast.h"
-#include "../StaticLimits.h"
 #include "../../Core/Exception.h"
+#include <LLGL/StaticLimits.h>
 #include <cstddef>
 
 
@@ -464,46 +464,6 @@ void VKCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
     vkCmdBindIndexBuffer(commandBuffer_, bufferVK.GetVkBuffer(), offset, VKTypes::ToVkIndexType(format));
 }
 
-/* ----- Stream Output Buffers ------ */
-
-void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
-{
-    if (HasExtension(VKExt::EXT_transform_feedback))
-    {
-        auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-
-        VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
-        VkDeviceSize offsets[] = { 0 };
-        VkDeviceSize sizes[] = { bufferVK.GetSize() };
-
-        vkCmdBindTransformFeedbackBuffersEXT(commandBuffer_, 0, 1, buffers, offsets, sizes);
-    }
-    else
-        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
-}
-
-void VKCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
-{
-    //TODO...
-    ThrowNotImplementedExcept(__FUNCTION__);
-}
-
-void VKCommandBuffer::BeginStreamOutput()
-{
-    if (HasExtension(VKExt::EXT_transform_feedback))
-        vkCmdBeginTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
-    else
-        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
-}
-
-void VKCommandBuffer::EndStreamOutput()
-{
-    if (HasExtension(VKExt::EXT_transform_feedback))
-        vkCmdEndTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
-    else
-        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
-}
-
 /* ----- Resources ----- */
 
 //private
@@ -804,6 +764,45 @@ void VKCommandBuffer::EndRenderCondition()
 
     /* End conditional rendering block */
     vkCmdEndConditionalRenderingEXT(commandBuffer_);
+}
+
+/* ----- Stream Output ------ */
+
+#if 0
+void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
+{
+    if (HasExtension(VKExt::EXT_transform_feedback))
+    {
+        auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+
+        VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
+        VkDeviceSize offsets[] = { 0 };
+        VkDeviceSize sizes[] = { bufferVK.GetSize() };
+
+        vkCmdBindTransformFeedbackBuffersEXT(commandBuffer_, 0, 1, buffers, offsets, sizes);
+    }
+    else
+        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
+}
+#endif
+
+void VKCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
+{
+    if (HasExtension(VKExt::EXT_transform_feedback))
+    {
+        //TODO: bind buffers
+        vkCmdBeginTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
+    }
+    else
+        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
+}
+
+void VKCommandBuffer::EndStreamOutput()
+{
+    if (HasExtension(VKExt::EXT_transform_feedback))
+        vkCmdEndTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
+    else
+        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
 }
 
 /* ----- Drawing ----- */

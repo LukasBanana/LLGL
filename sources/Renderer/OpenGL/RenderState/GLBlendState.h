@@ -10,8 +10,8 @@
 
 
 #include <LLGL/ForwardDecls.h>
+#include <LLGL/StaticLimits.h>
 #include "../OpenGL.h"
-#include "../../StaticLimits.h"
 #include <memory>
 
 

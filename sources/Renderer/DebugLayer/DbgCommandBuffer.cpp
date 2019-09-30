@@ -427,71 +427,6 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
     profile_.indexBufferBindings++;
 }
 
-/* ----- Stream Output Buffers ------ */
-
-void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
-{
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateBindBufferFlags(bufferDbg, BindFlags::StreamOutputBuffer);
-        bindings_.streamOutput = (&bufferDbg);
-    }
-
-    LLGL_DBG_COMMAND( "SetStreamOutputBuffer", instance.SetStreamOutputBuffer(bufferDbg.instance) );
-
-    profile_.streamOutputBufferBindings++;
-}
-
-void DbgCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        ValidateBindFlags(bufferArray.GetBindFlags(), BindFlags::StreamOutputBuffer, BindFlags::StreamOutputBuffer, "LLGL::BufferArray");
-    }
-
-    LLGL_DBG_COMMAND( "SetStreamOutputBufferArray", instance.SetStreamOutputBufferArray(bufferArray) );
-
-    profile_.streamOutputBufferBindings++;
-}
-
-void DbgCommandBuffer::BeginStreamOutput()
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        if (states_.streamOutputBusy)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "stream-output is already busy");
-        if (!bindings_.streamOutput)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "no stream-output buffer is bound");
-        states_.streamOutputBusy = true;
-    }
-
-    instance.BeginStreamOutput();
-
-    profile_.streamOutputSections++;
-}
-
-void DbgCommandBuffer::EndStreamOutput()
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        if (!states_.streamOutputBusy)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "stream-output has not started");
-        states_.streamOutputBusy = false;
-    }
-
-    instance.EndStreamOutput();
-}
-
 /* ----- Resources ----- */
 
 //TODO: also record individual resource bindings
@@ -826,6 +761,86 @@ void DbgCommandBuffer::EndRenderCondition()
         AssertRecording();
     }
     instance.EndRenderCondition();
+}
+
+/* ----- Stream Output ------ */
+
+void DbgCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
+{
+    Buffer* bufferInstances[LLGL_MAX_NUM_SO_BUFFERS];
+    bool validationFailed = false;
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+
+        ValidateStreamOutputs(numBuffers);
+        numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
+
+        /* Bind stream-output buffers */
+        for (std::uint32_t i = 0; i < numBuffers; ++i)
+        {
+            auto bufferDbg = LLGL_CAST(DbgBuffer*, buffers[i]);
+            if (bufferDbg != nullptr)
+            {
+                ValidateBindBufferFlags(*bufferDbg, BindFlags::StreamOutputBuffer);
+                bindings_.streamOutputs[i] = bufferDbg;
+                bufferInstances[i] = &(bufferDbg->instance);
+            }
+            else
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "null pointer in array of stream-output buffers"
+                );
+                validationFailed = true;
+            }
+        }
+
+        bindings_.numStreamOutputs = numBuffers;
+
+        /* Validate stream-outputs are currently not active */
+        if (states_.streamOutputBusy)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "stream-output is already busy");
+        states_.streamOutputBusy = true;
+    }
+    else
+    {
+        /* Only gather buffer instances from array */
+        numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
+        for (std::uint32_t i = 0; i < numBuffers; ++i)
+        {
+            auto bufferDbg = LLGL_CAST(DbgBuffer*, buffers[i]);
+            if (bufferDbg != nullptr)
+                bufferInstances[i] = &(bufferDbg->instance);
+            else
+                return;
+        }
+    }
+
+    if (!validationFailed)
+        instance.BeginStreamOutput(numBuffers, bufferInstances);
+
+    profile_.streamOutputSections++;
+}
+
+void DbgCommandBuffer::EndStreamOutput()
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+
+        /* Validate stream-outputs are currently active */
+        if (!states_.streamOutputBusy)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "stream-output has not started");
+        states_.streamOutputBusy = false;
+
+        bindings_.numStreamOutputs = 0;
+    }
+
+    instance.EndStreamOutput();
 }
 
 /* ----- Drawing ----- */
@@ -1609,6 +1624,18 @@ void DbgCommandBuffer::ValidateRenderCondition(DbgQueryHeap& queryHeapDbg, std::
         LLGL_DBG_ERROR_NOT_SUPPORTED("conditional rendering");
     if (!queryHeapDbg.desc.renderCondition)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot use query heap for conditional rendering that was not created with 'renderCondition' enabled");
+}
+
+void DbgCommandBuffer::ValidateStreamOutputs(std::uint32_t numBuffers)
+{
+    if (numBuffers > limits_.maxStreamOutputs)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "maximum number of stream-output buffers exceeded limit: " +
+            std::to_string(numBuffers) + " specified but limit is " + std::to_string(limits_.maxStreamOutputs)
+        );
+    }
 }
 
 void DbgCommandBuffer::AssertRecording()

@@ -15,7 +15,6 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
 #include "../../CheckedCast.h"
-#include "../../StaticLimits.h"
 #include "../../../Core/Assertion.h"
 
 #include "../Shader/GLShaderProgram.h"
@@ -36,6 +35,7 @@
 #include "../RenderState/GLRenderPass.h"
 #include "../RenderState/GLQueryHeap.h"
 
+#include <LLGL/StaticLimits.h>
 #include <algorithm>
 #include <string.h>
 

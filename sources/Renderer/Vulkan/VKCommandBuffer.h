@@ -102,14 +102,6 @@ class VKCommandBuffer final : public CommandBuffer
         void SetIndexBuffer(Buffer& buffer) override;
         void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override;
 
-        /* ----- Stream Output Buffers ------ */
-
-        void SetStreamOutputBuffer(Buffer& buffer) override;
-        void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
-
-        void BeginStreamOutput() override;
-        void EndStreamOutput() override;
-
         /* ----- Resources ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
@@ -161,6 +153,11 @@ class VKCommandBuffer final : public CommandBuffer
 
         void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) override;
         void EndRenderCondition() override;
+
+        /* ----- Stream Output ------ */
+
+        void BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers) override;
+        void EndStreamOutput() override;
 
         /* ----- Drawing ----- */
 

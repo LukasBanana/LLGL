@@ -6,7 +6,7 @@
  */
 
 #include "DescriptorHelper.h"
-#include "StaticLimits.h"
+#include <LLGL/StaticLimits.h>
 #include <LLGL/RenderPassFlags.h>
 #include <algorithm>
 

@@ -10,9 +10,9 @@
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Format.h>
 #include <LLGL/ImageFlags.h>
+#include <LLGL/StaticLimits.h>
 #include <LLGL/Log.h>
 #include "BuildID.h"
-#include "StaticLimits.h"
 
 #include <LLGL/RenderSystem.h>
 #include <array>

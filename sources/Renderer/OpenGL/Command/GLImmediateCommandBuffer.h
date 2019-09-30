@@ -93,14 +93,6 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
         void SetIndexBuffer(Buffer& buffer) override;
         void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override;
 
-        /* ----- Stream Output Buffers ------ */
-
-        void SetStreamOutputBuffer(Buffer& buffer) override;
-        void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
-
-        void BeginStreamOutput() override;
-        void EndStreamOutput() override;
-
         /* ----- Resources ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
@@ -153,6 +145,11 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
         void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) override;
         void EndRenderCondition() override;
 
+        /* ----- Stream Output ------ */
+
+        void BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers) override;
+        void EndStreamOutput() override;
+
         /* ----- Drawing ----- */
 
         void Draw(std::uint32_t numVertices, std::uint32_t firstVertex) override;
@@ -193,13 +190,6 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         // Returns true.
         bool IsImmediateCmdBuffer() const override;
-
-    private:
-
-        void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot);
-        void SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot);
-
-        void SetResourceHeap(ResourceHeap& resourceHeap);
 
     private:
 

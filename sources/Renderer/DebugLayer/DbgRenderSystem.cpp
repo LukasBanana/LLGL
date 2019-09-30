@@ -8,10 +8,10 @@
 #include "DbgRenderSystem.h"
 #include "DbgCore.h"
 #include "../../Core/Helper.h"
-#include "../StaticLimits.h"
 #include "../CheckedCast.h"
 #include <LLGL/Strings.h>
 #include <LLGL/ImageFlags.h>
+#include <LLGL/StaticLimits.h>
 
 
 namespace LLGL

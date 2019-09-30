@@ -316,40 +316,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) = 0;
 
-        /* ----- Stream Output Buffers ------ */
-
-        /**
-        \brief Sets the active stream-output buffer to the stream-output stage.
-        \param[in] buffer Specifies the stream-output buffer to set. This buffer must have been created with the binding flag BindFlags::StreamOutputBuffer.
-        \see RenderSystem::MapBuffer
-        \see RenderSystem::UnmapBuffer
-        */
-        virtual void SetStreamOutputBuffer(Buffer& buffer) = 0;
-
-        /**
-        \brief Sets the active array of stream-output buffers.
-        \param[in] bufferArray Specifies the stream-output buffer array to set.
-        \see RenderSystem::CreateBufferArray
-        \see SetStreamOutputBuffer
-        */
-        virtual void SetStreamOutputBufferArray(BufferArray& bufferArray) = 0;
-
-        /**
-        \brief Begins with stream-output for subsequent draw calls.
-        \remarks This must only be called if a graphics pipeline is currently bound.
-        \see EndStreamOutput
-        \see SetGraphicsPipeline
-        \see RenderingFeatures::hasStreamOutputs
-        \see RenderingLimits::maxStreamOutputs
-        */
-        virtual void BeginStreamOutput() = 0;
-
-        /**
-        \brief Ends the current stream-output.
-        \see BeginStreamOutput
-        */
-        virtual void EndStreamOutput() = 0;
-
         /* ----- Resources ----- */
 
         /**
@@ -613,6 +579,27 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see BeginRenderCondition
         */
         virtual void EndRenderCondition() = 0;
+
+        /* ----- Stream Output ------ */
+
+        /**
+        \brief Begins a stream-output section for subsequent draw calls.
+        \param[in] numBuffers Specifies the number of stream-output buffers. This must be in the range <code>[1, RenderingLimits::maxStreamOutputs]</code>.
+        \param[in] buffers Array to the stream-output buffers. This must be a valid pointer to an array of \c numBuffers buffer objects.
+        Each of these buffers must have been created with the binding flag BindFlags::StreamOutputBuffer.
+        \remarks This must only be called if a graphics pipeline is currently bound.
+        \see EndStreamOutput
+        \see SetGraphicsPipeline
+        \see RenderingFeatures::hasStreamOutputs
+        \see RenderingLimits::maxStreamOutputs
+        */
+        virtual void BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers) = 0;
+
+        /**
+        \brief Ends the current stream-output.
+        \see BeginStreamOutput
+        */
+        virtual void EndStreamOutput() = 0;
 
         /* ----- Drawing ----- */
 

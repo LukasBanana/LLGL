@@ -19,6 +19,7 @@
 - [Vertex attribute description](#vertex-attribute-description)
 - [Multi-sampling descriptor](#multi-sampling-descriptor)
 - [`ReadTexture` interface](#readtexture-interface)
+- [Stream-output interface](#stream-output-interface)
 - [Removed features](#removed-features)
 
 
@@ -650,6 +651,38 @@ LLGL::TextureRegion myRegion {
 myRenderer->ReadTexture(*myTex, myRegion, myImageDesc);
 ```
 
+## Stream-output interface
+
+Stream-output buffers are now passed dynamically to the `BeginStreamOutput` function. There is no longer a `BufferArray` for stream-outputs.
+
+Before:
+```cpp
+// Interface:
+enum class LLGL::PrimitiveType;
+void LLGL::CommandBuffer::SetStreamOutputBuffer(Buffer& buffer);
+void LLGL::CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray);
+void LLGL::CommandBuffer::BeginStreamOutput();
+void LLGL::CommandBuffer::EndStreamOutput();
+
+// Usage:
+myCmdBuffer->SetStreamOutputBufferArray(*mySOTargetsBufferArray);
+myCmdBuffer->BeginStreamOutput(LLGL::PrimitiveType::Triangles);
+/* ... */
+myCmdBuffer->EndStreamOutput();
+```
+
+After:
+```cpp
+// Interface:
+void LLGL::CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers);
+void LLGL::CommandBuffer::EndStreamOutput();
+
+// Usage:
+myCmdBuffer->BeginStreamOutput(2, mySOTargets);
+/* ... */
+myCmdBuffer->EndStreamOutput();
+```
+
 
 ## Removed features
 
@@ -658,6 +691,7 @@ The following features/functions have been removed:
 - The compressed RGB format `Format::BC1RGB`. Use `Format::BC1UNorm` instead (for RGBA).
 - `StreamOutputFormat` has been replaced by `VertexFormat`
 - `StreamOutputAttribute` has been replaced by `VertexAttribute`
+- `PrimitiveType` enumeration has been replaced by `PrimitiveTopology`
 
 
 

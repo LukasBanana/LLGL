@@ -11,6 +11,7 @@
 
 #include <LLGL/CommandBuffer.h>
 #include <LLGL/RenderingProfiler.h>
+#include <LLGL/StaticLimits.h>
 #include "DbgGraphicsPipeline.h"
 #include "DbgQueryHeap.h"
 #include "DbgQueryTimerManager.h"
@@ -109,14 +110,6 @@ class DbgCommandBuffer final : public CommandBuffer
         void SetIndexBuffer(Buffer& buffer) override;
         void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override;
 
-        /* ----- Stream Output Buffers ------ */
-
-        void SetStreamOutputBuffer(Buffer& buffer) override;
-        void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
-
-        void BeginStreamOutput() override;
-        void EndStreamOutput() override;
-
         /* ----- Resources ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
@@ -168,6 +161,11 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) override;
         void EndRenderCondition() override;
+
+        /* ----- Stream Output ------ */
+
+        void BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers) override;
+        void EndStreamOutput() override;
 
         /* ----- Drawing ----- */
 
@@ -251,6 +249,8 @@ class DbgCommandBuffer final : public CommandBuffer
         DbgQueryHeap::State* GetAndValidateQueryState(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
         void ValidateRenderCondition(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
 
+        void ValidateStreamOutputs(std::uint32_t numBuffers);
+
         void AssertRecording();
         void AssertInsideRenderPass();
         void AssertGraphicsPipelineBound();
@@ -277,8 +277,8 @@ class DbgCommandBuffer final : public CommandBuffer
 
         /* ----- Common objects ----- */
 
-        RenderingDebugger*          debugger_                       = nullptr;
-        RenderingProfiler*          profiler_                       = nullptr;
+        RenderingDebugger*          debugger_                               = nullptr;
+        RenderingProfiler*          profiler_                               = nullptr;
 
         const RenderingFeatures&    features_;
         const RenderingLimits&      limits_;
@@ -286,36 +286,37 @@ class DbgCommandBuffer final : public CommandBuffer
         std::stack<std::string>     debugGroups_;
 
         DbgQueryTimerManager        timerMngr_;
-        bool                        perfProfilerEnabled_            = false;
+        bool                        perfProfilerEnabled_                    = false;
 
         /* ----- Render states ----- */
 
         FrameProfile                profile_;
 
-        PrimitiveTopology           topology_                       = PrimitiveTopology::TriangleList;
+        PrimitiveTopology           topology_                               = PrimitiveTopology::TriangleList;
 
         struct Bindings
         {
-            DbgRenderContext*       renderContext           = nullptr;
-            DbgRenderTarget*        renderTarget            = nullptr;
-            DbgBuffer*              vertexBufferStore[1]    = { nullptr };
-            DbgBuffer* const *      vertexBuffers           = nullptr;
-            std::uint32_t           numVertexBuffers        = 0;
-            bool                    anyNonEmptyVertexBuffer = false;
-            bool                    anyShaderAttributes     = false;
-            DbgBuffer*              indexBuffer             = nullptr;
-            DbgBuffer*              streamOutput            = nullptr;
-            DbgGraphicsPipeline*    graphicsPipeline        = nullptr;
-            DbgComputePipeline*     computePipeline         = nullptr;
-            const DbgShaderProgram* shaderProgram_          = nullptr;
+            DbgRenderContext*       renderContext                           = nullptr;
+            DbgRenderTarget*        renderTarget                            = nullptr;
+            DbgBuffer*              vertexBufferStore[1]                    = {};
+            DbgBuffer* const *      vertexBuffers                           = nullptr;
+            std::uint32_t           numVertexBuffers                        = 0;
+            bool                    anyNonEmptyVertexBuffer                 = false;
+            bool                    anyShaderAttributes                     = false;
+            DbgBuffer*              indexBuffer                             = nullptr;
+            DbgBuffer*              streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]  = {};
+            std::uint32_t           numStreamOutputs                        = 0;
+            DbgGraphicsPipeline*    graphicsPipeline                        = nullptr;
+            DbgComputePipeline*     computePipeline                         = nullptr;
+            const DbgShaderProgram* shaderProgram_                          = nullptr;
         }
         bindings_;
 
         struct States
         {
-            bool recording          = false;
-            bool insideRenderPass   = false;
-            bool streamOutputBusy   = false;
+            bool                    recording                               = false;
+            bool                    insideRenderPass                        = false;
+            bool                    streamOutputBusy                        = false;
         }
         states_;
 

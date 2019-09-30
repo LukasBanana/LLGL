@@ -86,12 +86,14 @@ struct FrameProfile
             */
             std::uint32_t indexBufferBindings;
 
+            #if 1//TODO: remove this
             /**
             \brief Counter for all stream-output buffer and stream-output buffer array bindings.
             \see CommandBuffer::SetStreamOutputBuffer
             \see CommandBuffer::SetStreamOutputBufferArray
             */
             std::uint32_t streamOutputBufferBindings;
+            #endif
 
             /**
             \brief Counter for all individual constant buffer bindings.

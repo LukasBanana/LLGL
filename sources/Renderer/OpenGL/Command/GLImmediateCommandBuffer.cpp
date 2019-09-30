@@ -8,6 +8,7 @@
 #include "GLImmediateCommandBuffer.h"
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommandExecutor.h"
+#include <LLGL/StaticLimits.h>
 
 #include "../../TextureUtils.h"
 #include "../GLRenderContext.h"
@@ -16,7 +17,6 @@
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLCore.h"
 #include "../../CheckedCast.h"
-#include "../../StaticLimits.h"
 #include "../../../Core/Assertion.h"
 
 #include "../Shader/GLShaderProgram.h"
@@ -303,66 +303,22 @@ void GLImmediateCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format forma
     SetIndexFormat(renderState_, format == Format::R16UInt, offset);
 }
 
-/* ----- Stream Output Buffers ------ */
-
-void GLImmediateCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
-{
-    SetGenericBuffer(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, buffer, 0);
-}
-
-void GLImmediateCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
-{
-    SetGenericBufferArray(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, bufferArray, 0);
-}
-
-#ifndef __APPLE__
-
-[[noreturn]]
-static void ErrTransformFeedbackNotSupported(const char* funcName)
-{
-    ThrowNotSupportedExcept(funcName, "stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)");
-}
-
-#endif
-
-void GLImmediateCommandBuffer::BeginStreamOutput()
-{
-    #ifdef __APPLE__
-    glBeginTransformFeedback(GLTypes::Map(primitiveType));
-    #else
-    if (HasExtension(GLExt::EXT_transform_feedback))
-        glBeginTransformFeedback(renderState_.primitiveMode);
-    else if (HasExtension(GLExt::NV_transform_feedback))
-        glBeginTransformFeedbackNV(renderState_.primitiveMode);
-    else
-        ErrTransformFeedbackNotSupported(__FUNCTION__);
-    #endif
-}
-
-void GLImmediateCommandBuffer::EndStreamOutput()
-{
-    #ifdef __APPLE__
-    glEndTransformFeedback();
-    #else
-    if (HasExtension(GLExt::EXT_transform_feedback))
-        glEndTransformFeedback();
-    else if (HasExtension(GLExt::NV_transform_feedback))
-        glEndTransformFeedbackNV();
-    else
-        ErrTransformFeedbackNotSupported(__FUNCTION__);
-    #endif
-}
-
 /* ----- Resource Heaps ----- */
+
+static void BindResourceHeap(GLStateManager& stateMngr, ResourceHeap& resourceHeap)
+{
+    auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
+    resourceHeapGL.Bind(stateMngr);
+}
 
 void GLImmediateCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
 {
-    SetResourceHeap(resourceHeap);
+    BindResourceHeap(*stateMngr_, resourceHeap);
 }
 
 void GLImmediateCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
 {
-    SetResourceHeap(resourceHeap);
+    BindResourceHeap(*stateMngr_, resourceHeap);
 }
 
 void GLImmediateCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long /*stageFlags*/)
@@ -545,6 +501,60 @@ void GLImmediateCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::u
 void GLImmediateCommandBuffer::EndRenderCondition()
 {
     glEndConditionalRender();
+}
+
+/* ----- Stream Output ------ */
+
+#ifndef __APPLE__
+
+[[noreturn]]
+static void ErrTransformFeedbackNotSupported(const char* funcName)
+{
+    ThrowNotSupportedExcept(funcName, "stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)");
+}
+
+#endif
+
+void GLImmediateCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
+{
+    /* Bind transform feedback buffers */
+    GLuint soTargets[LLGL_MAX_NUM_SO_BUFFERS];
+    numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
+
+    for (std::uint32_t i = 0; i < numBuffers; ++i)
+    {
+        auto bufferGL = LLGL_CAST(GLBuffer*, buffers[i]);
+        soTargets[i] = bufferGL->GetID();
+    }
+
+    stateMngr_->BindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, 0, static_cast<GLsizei>(numBuffers), soTargets);
+
+    /* Begin transform feedback section */
+    #ifdef __APPLE__
+    glBeginTransformFeedback(renderState_.primitiveMode);
+    #else
+    if (HasExtension(GLExt::EXT_transform_feedback))
+        glBeginTransformFeedback(renderState_.primitiveMode);
+    else if (HasExtension(GLExt::NV_transform_feedback))
+        glBeginTransformFeedbackNV(renderState_.primitiveMode);
+    else
+        ErrTransformFeedbackNotSupported(__FUNCTION__);
+    #endif
+}
+
+void GLImmediateCommandBuffer::EndStreamOutput()
+{
+    /* End transform feedback section */
+    #ifdef __APPLE__
+    glEndTransformFeedback();
+    #else
+    if (HasExtension(GLExt::EXT_transform_feedback))
+        glEndTransformFeedback();
+    else if (HasExtension(GLExt::NV_transform_feedback))
+        glEndTransformFeedbackNV();
+    else
+        ErrTransformFeedbackNotSupported(__FUNCTION__);
+    #endif
 }
 
 /* ----- Drawing ----- */
@@ -813,36 +823,6 @@ void GLImmediateCommandBuffer::SetGraphicsAPIDependentState(const void* stateDes
 bool GLImmediateCommandBuffer::IsImmediateCmdBuffer() const
 {
     return true;
-}
-
-
-/*
- * ======= Private: =======
- */
-
-void GLImmediateCommandBuffer::SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot)
-{
-    /* Bind buffer with BindBufferBase */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBufferBase(bufferTarget, slot, bufferGL.GetID());
-}
-
-void GLImmediateCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot)
-{
-    /* Bind buffers with BindBuffersBase */
-    auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
-    stateMngr_->BindBuffersBase(
-        bufferTarget,
-        startSlot,
-        static_cast<GLsizei>(bufferArrayGL.GetIDArray().size()),
-        bufferArrayGL.GetIDArray().data()
-    );
-}
-
-void GLImmediateCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap)
-{
-    auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
-    resourceHeapGL.Bind(*stateMngr_);
 }
 
 

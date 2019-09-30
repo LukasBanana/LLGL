@@ -356,29 +356,6 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
     }
 }
 
-/* ----- Stream Output Buffers ------ */
-
-void D3D12CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
-{
-    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    commandList_->SOSetTargets(0, 1, &(bufferD3D.GetSOBufferView()));
-}
-
-void D3D12CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
-{
-    //TODO
-}
-
-void D3D12CommandBuffer::BeginStreamOutput()
-{
-    // dummy
-}
-
-void D3D12CommandBuffer::EndStreamOutput()
-{
-    // dummy
-}
-
 /* ----- Resources ----- */
 
 void D3D12CommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
@@ -559,6 +536,29 @@ void D3D12CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_
 void D3D12CommandBuffer::EndRenderCondition()
 {
     commandList_->SetPredication(nullptr, 0, D3D12_PREDICATION_OP_EQUAL_ZERO);
+}
+
+/* ----- Stream Output ------ */
+
+void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
+{
+    D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferViews[LLGL_MAX_NUM_SO_BUFFERS];
+
+    numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
+
+    for (std::uint32_t i = 0; i < numBuffers; ++i)
+    {
+        auto bufferD3D = LLGL_CAST(D3D12Buffer*, buffers[i]);
+        soBufferViews[i] = bufferD3D->GetSOBufferView();
+    }
+
+    commandList_->SOSetTargets(0, numBuffers, soBufferViews);
+}
+
+void D3D12CommandBuffer::EndStreamOutput()
+{
+    const D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferViewsNull[LLGL_MAX_NUM_SO_BUFFERS] = {};
+    commandList_->SOSetTargets(0, LLGL_MAX_NUM_SO_BUFFERS, soBufferViewsNull);
 }
 
 /* ----- Drawing ----- */

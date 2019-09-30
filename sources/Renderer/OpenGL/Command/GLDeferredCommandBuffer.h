@@ -101,14 +101,6 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void SetIndexBuffer(Buffer& buffer) override;
         void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override;
 
-        /* ----- Stream Output Buffers ------ */
-
-        void SetStreamOutputBuffer(Buffer& buffer) override;
-        void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
-
-        void BeginStreamOutput() override;
-        void EndStreamOutput() override;
-
         /* ----- Resources ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
@@ -160,6 +152,11 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
         void BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query = 0, const RenderConditionMode mode = RenderConditionMode::Wait) override;
         void EndRenderCondition() override;
+
+        /* ----- Stream Output ------ */
+
+        void BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers) override;
+        void EndStreamOutput() override;
 
         /* ----- Drawing ----- */
 
@@ -241,11 +238,11 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
     private:
 
-        void SetGenericBuffer(const GLBufferTarget bufferTarget, GLBuffer& bufferGL, std::uint32_t slot);
-        void SetGenericBufferArray(const GLBufferTarget bufferTarget, GLBufferArray& bufferArrayGL, std::uint32_t startSlot);
-        void SetTexture(GLTexture& textureGL, std::uint32_t slot);
-        void SetSampler(GLSampler& samplerGL, std::uint32_t slot);
-        void SetResourceHeap(ResourceHeap& resourceHeap);
+        void BindBufferBase(const GLBufferTarget bufferTarget, GLBuffer& bufferGL, std::uint32_t slot);
+        void BindBuffersBase(const GLBufferTarget bufferTarget, std::uint32_t first, std::uint32_t count, Buffer* const * buffers);
+        void BindTexture(GLTexture& textureGL, std::uint32_t slot);
+        void BindSampler(GLSampler& samplerGL, std::uint32_t slot);
+        void BindResourceHeap(ResourceHeap& resourceHeap);
 
         /* Allocates only an opcode for empty commands */
         void AllocOpCode(const GLOpcode opcode);

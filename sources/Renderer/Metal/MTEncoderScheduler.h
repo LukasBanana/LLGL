@@ -11,7 +11,7 @@
 
 #import <Metal/Metal.h>
 
-#include "../StaticLimits.h"
+#include <LLGL/StaticLimits.h>
 #include <cstdint>
 
 
@@ -44,7 +44,7 @@ class MTEncoderScheduler
         // Interrupts the render command encoder (if active).
         void PauseRenderEncoder();
         void ResumeRenderEncoder();
-    
+
         // Retunrs a copy of the current render pass descriptor or null if there is none.
         MTLRenderPassDescriptor* CopyRenderPassDesc();
 
@@ -59,7 +59,7 @@ class MTEncoderScheduler
         void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap);
 
     public:
-    
+
         // Returns the current render command encoder and flushes the queued render pass.
         id<MTLRenderCommandEncoder> GetRenderEncoderAndFlushRenderPass();
 
@@ -80,9 +80,9 @@ class MTEncoderScheduler
         {
             return blitEncoder_;
         }
-    
+
     private:
-    
+
         void SubmitRenderEncoderState();
         void ResetRenderEncoderState();
 
@@ -104,13 +104,13 @@ class MTEncoderScheduler
         };
 
     private:
-    
+
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
-    
+
         id<MTLRenderCommandEncoder>     renderEncoder_  	    = nil;
         id<MTLComputeCommandEncoder>    computeEncoder_         = nil;
         id<MTLBlitCommandEncoder>       blitEncoder_            = nil;
-    
+
         MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
         MTRenderEncoderState            renderEncoderState_;
 
