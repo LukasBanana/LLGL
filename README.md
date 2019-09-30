@@ -1,8 +1,6 @@
 # Low Level Graphics Library (LLGL)
 
 <p align="center"><img src="docu/LLGL_Logo.png"/></p>
-
-
 ## License
 
 [3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
@@ -24,9 +22,9 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 
 | Platform | Progress | Remarks | CI |
 |----------|:--------:|---------|:--:|
-| Windows | 100% | Tested on *Windows 10* | <a href="https://ci.appveyor.com/project/LukasBanana/llgl"><img src="https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true" /></a> |
-| GNU/Linux | 70% | Tested on *Kubuntu 16* | <a href="https://travis-ci.org/LukasBanana/LLGL"><img src="https://api.travis-ci.org/LukasBanana/LLGL.svg" /></a> |
-| macOS | 70% | Tested on *macOS Sierra* | <a href="https://travis-ci.org/LukasBanana/LLGL"><img src="https://api.travis-ci.org/LukasBanana/LLGL.svg" /></a> |
+| Windows | 100% | Tested on *Windows 10* | [![Windows Build](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl) |
+| GNU/Linux | 70% | Tested on *Kubuntu 16* | [![Linux Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_LINUX&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
+| macOS | 70% | Tested on *macOS Sierra* | [![MacOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
 | iOS | 1% | Currently not compilable | n/a |
 
 | Renderer | Progress | Remarks |

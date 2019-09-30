@@ -5,6 +5,7 @@ matrix:
   include:
     # Linux
     - os: linux
+      env: BADGE_LINUX
       before_install:
       - git clone https://github.com/LukasBanana/GaussianLib.git
       - sudo apt-get install libx11-dev libxxf86vm-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libvulkan1 mesa-vulkan-drivers vulkan-utils
@@ -15,6 +16,7 @@ matrix:
 
     # MacOS
     - os: osx
+      env: BADGE_MACOS
       osx_image: xcode11
       before_install:
       - git clone https://github.com/LukasBanana/GaussianLib.git
