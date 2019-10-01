@@ -19,6 +19,7 @@
 #include <LLGL/RenderPassFlags.h>
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
+#include <LLGL/Platform/Platform.h>
 //#include <LLGL/QueryHeapFlags.h>
 
 
@@ -34,7 +35,9 @@ MTLPixelFormat      	    ToMTLPixelFormat            ( const Format             
 MTLVertexFormat     	    ToMTLVertexFormat           ( const Format              format            );
 MTLTextureType              ToMTLTextureType            ( const TextureType         textureType       );
 MTLPrimitiveType            ToMTLPrimitiveType          ( const PrimitiveTopology   primitiveTopology );
+#ifndef LLGL_OS_IOS
 MTLPrimitiveTopologyClass   ToMTLPrimitiveTopologyClass ( const PrimitiveTopology   primitiveTopology );
+#endif // /LLGL_OS_IOS
 MTLCullMode                 ToMTLCullMode               ( const CullMode            cullMode          );
 MTLCompareFunction          ToMTLCompareFunction        ( const CompareOp           compareOp         );
 MTLSamplerAddressMode       ToMTLSamplerAddressMode     ( const SamplerAddressMode  addressMode       );

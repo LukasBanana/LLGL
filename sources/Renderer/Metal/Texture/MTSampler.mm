@@ -8,11 +8,14 @@
 #include "MTSampler.h"
 #include "../MTTypes.h"
 #include <algorithm>
+#include <LLGL/Platform/Platform.h>
 
 
 namespace LLGL
 {
 
+
+#ifndef LLGL_OS_IOS
 
 static MTLSamplerBorderColor GetBorderColor(const ColorRGBAf& color)
 {
@@ -25,6 +28,8 @@ static MTLSamplerBorderColor GetBorderColor(const ColorRGBAf& color)
     }
     return MTLSamplerBorderColorOpaqueWhite;
 }
+
+#endif // /LLGL_OS_IOS
 
 static void Convert(MTLSamplerDescriptor* dst, const SamplerDescriptor& src)
 {
@@ -39,7 +44,9 @@ static void Convert(MTLSamplerDescriptor* dst, const SamplerDescriptor& src)
     dst.lodMaxClamp     = src.maxLOD;
     dst.maxAnisotropy   = std::max<NSUInteger>(1, std::min<NSUInteger>(static_cast<NSUInteger>(src.maxAnisotropy), 16));
     dst.compareFunction = (src.compareEnabled ? MTTypes::ToMTLCompareFunction(src.compareOp) : MTLCompareFunctionNever);
+    #ifndef LLGL_OS_IOS
     dst.borderColor     = GetBorderColor(src.borderColor);
+    #endif // /LLGL_OS_IOS
 }
 
 MTSampler::MTSampler(id<MTLDevice> device, const SamplerDescriptor& desc)

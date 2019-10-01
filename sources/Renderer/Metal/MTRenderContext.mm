@@ -30,11 +30,22 @@ MTRenderContext::MTRenderContext(
     GetSurface().GetNativeHandle(&nativeHandle);
 
     /* Create MetalKit view */
+    #ifdef LLGL_OS_IOS
+
+    UIView* view = nativeHandle.view;
+
+    view_ = [[MTKView alloc] initWithFrame:view.frame device:device];
+
+    #else
+
     NSWindow* wnd = nativeHandle.window;
 
     view_ = [[MTKView alloc] initWithFrame:wnd.frame device:device];
+
     [wnd setContentView:view_];
     [wnd.contentViewController setView:view_];
+
+    #endif // /LLGL_OS_IOS
 
     /* Initialize color and depth buffer */
     view_.colorPixelFormat          = renderPass_.GetColorAttachments()[0].pixelFormat;

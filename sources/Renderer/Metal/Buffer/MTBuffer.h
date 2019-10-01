@@ -11,6 +11,7 @@
 
 #import <Metal/Metal.h>
 
+#include <LLGL/Platform/Platform.h>
 #include <LLGL/Buffer.h>
 
 
@@ -51,7 +52,9 @@ class MTBuffer : public Buffer
 
         id<MTLBuffer>   native_             = nil;
         bool            indexType16Bits_    = false;
+        #ifndef LLGL_OS_IOS
         bool            isManaged_          = false;
+        #endif
         bool            mappedWriteAccess_  = false;
 
 };

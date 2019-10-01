@@ -10,6 +10,7 @@
 #include "RenderState/MTGraphicsPipeline.h"
 #include "RenderState/MTComputePipeline.h"
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/Platform/Platform.h>
 #include <algorithm>
 
 
@@ -191,18 +192,26 @@ void MTEncoderScheduler::SubmitRenderEncoderState()
         if (renderEncoderState_.viewportCount > 0 && dirtyBits_.viewports != 0)
         {
             /* Bind viewports */
+            #ifndef LLGL_OS_IOS //TODO: since iOS 12.0
             [renderEncoder_
                 setViewports:   renderEncoderState_.viewports
                 count:          renderEncoderState_.viewportCount
             ];
+            #else
+            [renderEncoder_ setViewport:renderEncoderState_.viewports[0]];
+            #endif
         }
         if (renderEncoderState_.scissorRectCount > 0 && dirtyBits_.scissors != 0)
         {
             /* Bind scissor rectangles */
+            #ifndef LLGL_OS_IOS //TODO: since iOS 12.0
             [renderEncoder_
                 setScissorRects:    renderEncoderState_.scissorRects
                 count:              renderEncoderState_.scissorRectCount
             ];
+            #else
+            [renderEncoder_ setScissorRect:renderEncoderState_.scissorRects[0]];
+            #endif
         }
         if (renderEncoderState_.vertexBufferRange.length > 0 && dirtyBits_.vertexBuffers != 0)
         {

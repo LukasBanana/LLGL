@@ -15,12 +15,16 @@ namespace LLGL
 
 static MTLResourceOptions GetMTLResourceOptions(const BufferDescriptor& desc)
 {
+    #ifdef LLGL_OS_IOS
+    return MTLResourceStorageModeShared;
+    #else
     if ((desc.miscFlags & MiscFlags::DynamicUsage) != 0)
         return MTLResourceStorageModeShared;
     //else if ((desc.bindFlags & BindFlags::Storage) != 0)
     //    return MTLResourceStorageModePrivate;
     else
         return MTLResourceStorageModeManaged;
+    #endif
 }
 
 MTBuffer::MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const void* initialData) :
@@ -29,7 +33,9 @@ MTBuffer::MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const voi
 {
     auto opt = GetMTLResourceOptions(desc);
 
+    #ifndef LLGL_OS_IOS
     isManaged_ = ((opt & MTLResourceStorageModeManaged) != 0);
+    #endif
 
     if (initialData)
         native_ = [device newBufferWithBytes:initialData length:(NSUInteger)desc.size options:opt];
@@ -67,9 +73,11 @@ void MTBuffer::Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize
     auto byteAlignedBuffer = reinterpret_cast<std::int8_t*>([native_ contents]);
     ::memcpy(byteAlignedBuffer + dstOffset, data, dataSize);
 
+    #ifndef LLGL_OS_IOS
     /* Notify Metal API about update */
     if (isManaged_)
         [native_ didModifyRange:range];
+    #endif
 }
 
 void* MTBuffer::Map(CPUAccess access)
@@ -80,6 +88,7 @@ void* MTBuffer::Map(CPUAccess access)
 
 void MTBuffer::Unmap()
 {
+    #ifndef LLGL_OS_IOS
     if (isManaged_ && mappedWriteAccess_)
     {
         NSRange range;
@@ -87,6 +96,7 @@ void MTBuffer::Unmap()
         range.length    = [native_ length];
         [native_ didModifyRange:range];
     }
+    #endif // /LLGL_OS_IOS
     mappedWriteAccess_ = false;
 }
 

@@ -45,8 +45,10 @@ static MTLResourceOptions GetResourceOptions(const TextureDescriptor& desc)
 
     if (IsDepthStencilFormat(desc.format))
         opt |= MTLResourceStorageModePrivate;
+    #ifndef LLGL_OS_IOS
     else
         opt |= MTLResourceStorageModeManaged;
+    #endif // /LLGL_OS_IOS
 
     return opt;
 }

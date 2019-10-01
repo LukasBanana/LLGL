@@ -9,6 +9,7 @@
 #include <LLGL/RenderPassFlags.h>
 #include <LLGL/RenderTargetFlags.h>
 #include <LLGL/RenderContextFlags.h>
+#include <LLGL/Platform/Platform.h>
 #include "../MTTypes.h"
 #include "../Texture/MTTexture.h"
 #include "../../CheckedCast.h"
@@ -85,8 +86,8 @@ MTRenderPass::MTRenderPass(const RenderTargetDescriptor& desc) :
                     depthAttachment_    = MakeMTAttachmentFormat(attachment, MTLPixelFormatDepth32Float);
                     break;
                 case AttachmentType::DepthStencil:
-                    depthAttachment_    = MakeMTAttachmentFormat(attachment, MTLPixelFormatDepth24Unorm_Stencil8);
-                    stencilAttachment_  = MakeMTAttachmentFormat(attachment, MTLPixelFormatDepth24Unorm_Stencil8);
+                    depthAttachment_    = MakeMTAttachmentFormat(attachment, MTLPixelFormatDepth32Float_Stencil8);
+                    stencilAttachment_  = MakeMTAttachmentFormat(attachment, MTLPixelFormatDepth32Float_Stencil8);
                     break;
                 case AttachmentType::Stencil:
                     stencilAttachment_  = MakeMTAttachmentFormat(attachment, MTLPixelFormatStencil8);

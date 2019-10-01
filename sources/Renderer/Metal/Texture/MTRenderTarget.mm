@@ -192,7 +192,7 @@ static MTLPixelFormat SelectPixelFormat(const AttachmentType type)
     {
         case AttachmentType::Color:         return MTLPixelFormatRGBA8Unorm;
         case AttachmentType::Depth:         return MTLPixelFormatDepth32Float;
-        case AttachmentType::DepthStencil:  return MTLPixelFormatDepth24Unorm_Stencil8;
+        case AttachmentType::DepthStencil:  return MTLPixelFormatDepth32Float_Stencil8;
         case AttachmentType::Stencil:       return MTLPixelFormatStencil8;
     }
     return MTLPixelFormatInvalid;

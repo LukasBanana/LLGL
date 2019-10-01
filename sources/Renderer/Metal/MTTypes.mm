@@ -148,11 +148,16 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::RGB9E5Float:       return MTLPixelFormatRGB9E5Float;
 
         /* --- Depth-stencil formats --- */
+        #ifndef LLGL_OS_IOS
         case Format::D16UNorm:          return MTLPixelFormatDepth16Unorm;
+        #endif
         case Format::D32Float:          return MTLPixelFormatDepth32Float;
+        #ifndef LLGL_OS_IOS
         case Format::D24UNormS8UInt:    return MTLPixelFormatDepth24Unorm_Stencil8;
+        #endif
         case Format::D32FloatS8X24UInt: return MTLPixelFormatDepth32Float_Stencil8;
 
+        #ifndef LLGL_OS_IOS
         /* --- Compressed color formats --- */
         case Format::BC1UNorm:          return MTLPixelFormatBC1_RGBA;
         case Format::BC1UNorm_sRGB:     return MTLPixelFormatBC1_RGBA_sRGB;
@@ -164,6 +169,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::BC4SNorm:          return MTLPixelFormatBC4_RSnorm;
         case Format::BC5UNorm:          return MTLPixelFormatBC5_RGUnorm;
         case Format::BC5SNorm:          return MTLPixelFormatBC5_RGSnorm;
+        #endif
     }
     MapFailed("Format", "MTLPixelFormat");
 }
@@ -272,6 +278,8 @@ MTLPrimitiveType ToMTLPrimitiveType(const PrimitiveTopology primitiveTopology)
     MapFailed("PrimitiveTopology", "MTLPrimitiveType");
 }
 
+#ifndef LLGL_OS_IOS
+
 MTLPrimitiveTopologyClass ToMTLPrimitiveTopologyClass(const PrimitiveTopology primitiveTopology)
 {
     switch (primitiveTopology)
@@ -285,6 +293,8 @@ MTLPrimitiveTopologyClass ToMTLPrimitiveTopologyClass(const PrimitiveTopology pr
     }
     MapFailed("PrimitiveTopology", "MTLPrimitiveTopologyClass");
 }
+
+#endif // /LLGL_OS_IOS
 
 MTLCullMode ToMTLCullMode(const CullMode cullMode)
 {
@@ -320,8 +330,13 @@ MTLSamplerAddressMode ToMTLSamplerAddressMode(const SamplerAddressMode addressMo
         case SamplerAddressMode::Repeat:        return MTLSamplerAddressModeRepeat;
         case SamplerAddressMode::Mirror:        return MTLSamplerAddressModeMirrorRepeat;
         case SamplerAddressMode::Clamp:         return MTLSamplerAddressModeClampToEdge;
+        #ifndef LLGL_OS_IOS
         case SamplerAddressMode::Border:        return MTLSamplerAddressModeClampToBorderColor;
         case SamplerAddressMode::MirrorOnce:    return MTLSamplerAddressModeMirrorClampToEdge;
+        #else
+        case SamplerAddressMode::Border:        break;
+        case SamplerAddressMode::MirrorOnce:    break;
+        #endif // /LLGL_OS_IOS
     }
     MapFailed("SamplerAddressMode", "MTLSamplerAddressMode");
 }
@@ -498,11 +513,16 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatRGB9E5Float:             return Format::RGB9E5Float;
 
         /* --- Depth-stencil formats --- */
+        #ifndef LLGL_OS_IOS
         case MTLPixelFormatDepth16Unorm:            return Format::D16UNorm;
+        #endif // /LLGL_OS_IOS
         case MTLPixelFormatDepth32Float:            return Format::D32Float;
+        #ifndef LLGL_OS_IOS
         case MTLPixelFormatDepth24Unorm_Stencil8:   return Format::D24UNormS8UInt;
+        #endif // /LLGL_OS_IOS
         case MTLPixelFormatDepth32Float_Stencil8:   return Format::D32FloatS8X24UInt;
 
+        #ifndef LLGL_OS_IOS
         /* --- Compressed color formats --- */
         case MTLPixelFormatBC1_RGBA:                return Format::BC1UNorm;
         case MTLPixelFormatBC1_RGBA_sRGB:           return Format::BC1UNorm_sRGB;
@@ -514,6 +534,7 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatBC4_RSnorm:              return Format::BC4SNorm;
         case MTLPixelFormatBC5_RGUnorm:             return Format::BC5UNorm;
         case MTLPixelFormatBC5_RGSnorm:             return Format::BC5SNorm;
+        #endif // /LLGL_OS_IOS
 
         default:                                    break;
     }

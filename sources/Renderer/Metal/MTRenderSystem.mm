@@ -13,6 +13,7 @@
 #include "MTFeatureSet.h"
 #include "MTTypes.h"
 #include <LLGL/ImageFlags.h>
+#include <LLGL/Platform/Platform.h>
 #include <AvailabilityMacros.h>
 
 
@@ -344,9 +345,45 @@ const char* MTRenderSystem::QueryMetalVersion() const
     return "1.0";
 }
 
-MTLFeatureSet MTRenderSystem::QueryHighestFeatureSet() const
+#ifdef LLGL_OS_IOS
+
+static void GetFeatureSetsForIOS(const MTLFeatureSet*& fsets, std::size_t& count, MTLFeatureSet& fsetDefault)
 {
-    static const MTLFeatureSet g_potentialFeatureSets[] =
+    static const MTLFeatureSet g_featureSetsIOS[] =
+    {
+        MTLFeatureSet_iOS_GPUFamily5_v1,
+        MTLFeatureSet_iOS_GPUFamily4_v2,
+        MTLFeatureSet_iOS_GPUFamily3_v4,
+        MTLFeatureSet_iOS_GPUFamily2_v5,
+        MTLFeatureSet_iOS_GPUFamily1_v5,
+
+        MTLFeatureSet_iOS_GPUFamily4_v1,
+        MTLFeatureSet_iOS_GPUFamily3_v3,
+        MTLFeatureSet_iOS_GPUFamily2_v4,
+        MTLFeatureSet_iOS_GPUFamily1_v4,
+
+        MTLFeatureSet_iOS_GPUFamily3_v2,
+        MTLFeatureSet_iOS_GPUFamily2_v3,
+        MTLFeatureSet_iOS_GPUFamily1_v3,
+
+        MTLFeatureSet_iOS_GPUFamily3_v1,
+        MTLFeatureSet_iOS_GPUFamily2_v2,
+        MTLFeatureSet_iOS_GPUFamily1_v2,
+
+        MTLFeatureSet_iOS_GPUFamily2_v1,
+        MTLFeatureSet_iOS_GPUFamily1_v1,
+    };
+
+    fsets       = g_featureSetsIOS;
+    count       = sizeof(g_featureSetsIOS)/sizeof(g_featureSetsIOS[0]);
+    fsetDefault = MTLFeatureSet_iOS_GPUFamily1_v1;
+}
+
+#else
+
+static void GetFeatureSetsForMacOS(const MTLFeatureSet*& fsets, std::size_t& count, MTLFeatureSet& fsetDefault)
+{
+    static const MTLFeatureSet g_featureSetsMacOS[] =
     {
         #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
         MTLFeatureSet_macOS_ReadWriteTextureTier2,
@@ -362,13 +399,34 @@ MTLFeatureSet MTRenderSystem::QueryHighestFeatureSet() const
         MTLFeatureSet_macOS_GPUFamily1_v1,
     };
 
-    for (auto fset : g_potentialFeatureSets)
+    fsets       = g_featureSetsMacOS;
+    count       = sizeof(g_featureSetsMacOS)/sizeof(g_featureSetsMacOS[0]);
+    fsetDefault = MTLFeatureSet_macOS_GPUFamily1_v1;
+}
+
+#endif // /LLGL_OS_IOS
+
+MTLFeatureSet MTRenderSystem::QueryHighestFeatureSet() const
+{
+    /* Get list of feature sets for macOS or iOS */
+    const MTLFeatureSet* fsets;
+    std::size_t count;
+    MTLFeatureSet fsetDefault;
+
+    #ifdef LLGL_OS_IOS
+    GetFeatureSetsForIOS(fsets, count, fsetDefault);
+    #else
+    GetFeatureSetsForMacOS(fsets, count, fsetDefault);
+    #endif // /LLGL_OS_IOS
+
+    /* Find highest supported feature set */
+    for (std::size_t i = 0; i < count; ++i)
     {
-        if ([device_ supportsFeatureSet:fset])
-            return fset;
+        if ([device_ supportsFeatureSet:fsets[i]])
+            return fsets[i];
     }
 
-    return MTLFeatureSet_macOS_GPUFamily1_v1;
+    return fsetDefault;
 }
 
 const MTRenderPass* MTRenderSystem::GetDefaultRenderPass() const

@@ -8,6 +8,7 @@
 #include "MTShaderProgram.h"
 #include "MTShader.h"
 #include "../../CheckedCast.h"
+#include <LLGL/Platform/Platform.h>
 
 
 namespace LLGL
@@ -186,7 +187,9 @@ void MTShaderProgram::ReflectRenderPipeline(ShaderReflection& reflection) const
         pipelineDesc.alphaToOneEnabled                  = NO;
         pipelineDesc.fragmentFunction                   = GetFragmentMTLFunction();
         pipelineDesc.vertexFunction                     = GetVertexMTLFunction();
+        #ifndef LLGL_OS_IOS
         pipelineDesc.inputPrimitiveTopology             = MTLPrimitiveTopologyClassTriangle;
+        #endif // /LLGL_OS_IOS
         pipelineDesc.colorAttachments[0].pixelFormat    = MTLPixelFormatBGRA8Unorm;
         pipelineDesc.depthAttachmentPixelFormat         = MTLPixelFormatDepth32Float_Stencil8;
         pipelineDesc.stencilAttachmentPixelFormat       = MTLPixelFormatDepth32Float_Stencil8;

@@ -13,6 +13,7 @@
 #include "../MTCore.h"
 #include "../../CheckedCast.h"
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/Platform/Platform.h>
 
 
 namespace LLGL
@@ -144,7 +145,9 @@ void MTGraphicsPipeline::CreateRenderPipelineState(
         renderPipelineDesc.alphaToOneEnabled        = NO;
         renderPipelineDesc.fragmentFunction         = shaderProgramMT->GetFragmentMTLFunction();
         renderPipelineDesc.vertexFunction           = shaderProgramMT->GetVertexMTLFunction();
+        #ifndef LLGL_OS_IOS
         renderPipelineDesc.inputPrimitiveTopology   = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
+        #endif
 
         /* Initialize pixel formats from render pass */
         const auto& colorAttachments = renderPassMT->GetColorAttachments();
