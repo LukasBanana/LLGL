@@ -3,7 +3,7 @@ dist: xenial
 sudo: required
 matrix:
   include:
-    # Linux
+    # GNU/Linux
     - os: linux
       env: BADGE_LINUX
       before_install:
@@ -14,13 +14,22 @@ matrix:
       script:
       - cmake --build .
 
-    # MacOS
+    # macOS
     - os: osx
       env: BADGE_MACOS
       osx_image: xcode11
       before_install:
       - git clone https://github.com/LukasBanana/GaussianLib.git
       before_script:
-      - cmake -DDLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_METAL=ON -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S .
+      - cmake -DDLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_METAL=ON -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S . -B build_macos
       script:
-      - cmake --build .
+      - cmake --build build_macos
+
+    # iOS
+    - os: osx
+      env: BADGE_IOS
+      osx_image: xcode11
+      before_script:
+      - cmake -DLLGL_BUILD_RENDERER_OPENGLES3=OFF -DLLGL_BUILD_RENDERER_METAL=ON -DLLGL_BUILD_EXAMPLES=OFF -DLLGL_BUILD_RENDERER_METAL=ON -DCMAKE_SYSTEM_NAME=iOS "-DCMAKE_OSX_ARCHITECTURES=arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO -DCMAKE_IOS_INSTALL_COMBINED=YES -DIOS_PLATFORM=YES -S . -B build_ios
+      script:
+      - cmake --build build_ios

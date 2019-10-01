@@ -47,21 +47,6 @@ macro(ADD_TEST_PROJECT TEST_NAME TEST_FILES LIB_FILES)
     set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 endmacro()
 
-macro(ADD_FRAMEWORK PROJECT_NAME FRAMEWORK_NAME)
-    find_library(
-        "FRAMEWORK_${FRAMEWORK_NAME}"
-        NAMES ${FRAMEWORK_NAME}
-        PATHS ${CMAKE_OSX_SYSROOT}/System/Library
-        PATH_SUFFIXES Frameworks
-        NO_DEFAULT_PATH
-    )
-    if(${FRAMEWORK_${FRAMEWORK_NAME}} STREQUAL "FRAMEWORK_${FRAMEWORK_NAME}-NOTFOUND")
-        message(ERROR ": Framework ${FRAMEWORK_NAME} not found")
-    else()
-        target_link_libraries(${PROJECT_NAME} ${FRAMEWORK_${FRAMEWORK_NAME}})
-    endif()
-endmacro(ADD_FRAMEWORK)
-
 if(WIN32)
     ADD_DEFINE(_CRT_SECURE_NO_WARNINGS)
     ADD_DEFINE(_SCL_SECURE_NO_WARNINGS)
@@ -564,9 +549,7 @@ endif()
 
 if(APPLE)
     if(MOBILE_PLATFORM)
-#        ADD_FRAMEWORK(LLGL UIKit)
-        find_library(UIKIT_LIBRARY UIKit)
-        target_link_libraries(LLGL ${UIKIT_LIBRARY})
+        target_link_libraries(LLGL PUBLIC "-framework Foundation -framework UIKit")
     else()
         find_library(COCOA_LIBRARY Cocoa)
         target_link_libraries(LLGL ${COCOA_LIBRARY})
@@ -593,12 +576,11 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
         endif()
         
         set_target_properties(LLGL_OpenGLES3 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-        target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES})
         
-        if(MOBILE_PLATFORM)
-            ADD_FRAMEWORK(LLGL_OpenGLES3 UIKit)
-            ADD_FRAMEWORK(LLGL_OpenGLES3 QuartzCore)
-            ADD_FRAMEWORK(LLGL_OpenGLES3 OpenGLES)
+        if(APPLE)
+	        target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES")
+		else()
+	        target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES})
         endif()
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_OPENGLES3)

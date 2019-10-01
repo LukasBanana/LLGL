@@ -23,9 +23,9 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 | Platform | Progress | Remarks | CI |
 |----------|:--------:|---------|:--:|
 | Windows | 100% | Tested on *Windows 10* | [![Windows Build](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl) |
-| GNU/Linux | 70% | Tested on *Kubuntu 16* | [![Linux Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_LINUX&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
-| macOS | 70% | Tested on *macOS Sierra* | [![MacOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
-| iOS | 1% | Currently not compilable | n/a |
+| GNU/Linux | 70% | Tested on *Kubuntu 16* | [![GNU/Linux Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_LINUX&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
+| macOS | 70% | Tested on *macOS Sierra* | [![macOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
+| iOS | 1% | Tested on *macOS Mojave* | [![iOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_IOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
 
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
