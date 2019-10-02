@@ -1,6 +1,8 @@
 # Low Level Graphics Library (LLGL)
 
 <p align="center"><img src="docu/LLGL_Logo.png"/></p>
+
+
 ## License
 
 [3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
