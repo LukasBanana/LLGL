@@ -39,10 +39,8 @@ static MTLLanguageVersion GetMTLLanguageVersion(const ShaderDescriptor& desc)
 {
     if (desc.profile != nullptr)
     {
-        #ifndef LLGL_OS_IOS
         if (std::strcmp(desc.profile, "2.1") == 0)
             return MTLLanguageVersion2_1;
-        #endif // /LLGL_OS_IOS
         if (std::strcmp(desc.profile, "2.0") == 0)
             return MTLLanguageVersion2_0;
         if (std::strcmp(desc.profile, "1.2") == 0)

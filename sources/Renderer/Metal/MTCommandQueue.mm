@@ -37,12 +37,12 @@ void MTCommandQueue::Submit(CommandBuffer& commandBuffer)
     [cmdBuffer commit];
 
     /* Hold reference to last submitted command buffer */
-    if (lastSubmittedCmdBuffer_ != cmdBuffer)
+    /*if (lastSubmittedCmdBuffer_ != cmdBuffer)
     {
         if (lastSubmittedCmdBuffer_ != nil)
             [lastSubmittedCmdBuffer_ release];
         lastSubmittedCmdBuffer_ = [cmdBuffer retain];
-    }
+    }*/
 }
 
 /* ----- Queries ----- */

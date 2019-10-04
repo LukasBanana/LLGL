@@ -278,8 +278,6 @@ MTLPrimitiveType ToMTLPrimitiveType(const PrimitiveTopology primitiveTopology)
     MapFailed("PrimitiveTopology", "MTLPrimitiveType");
 }
 
-#ifndef LLGL_OS_IOS
-
 MTLPrimitiveTopologyClass ToMTLPrimitiveTopologyClass(const PrimitiveTopology primitiveTopology)
 {
     switch (primitiveTopology)
@@ -293,8 +291,6 @@ MTLPrimitiveTopologyClass ToMTLPrimitiveTopologyClass(const PrimitiveTopology pr
     }
     MapFailed("PrimitiveTopology", "MTLPrimitiveTopologyClass");
 }
-
-#endif // /LLGL_OS_IOS
 
 MTLCullMode ToMTLCullMode(const CullMode cullMode)
 {

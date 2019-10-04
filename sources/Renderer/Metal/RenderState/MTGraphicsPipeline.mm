@@ -67,12 +67,16 @@ void MTGraphicsPipeline::Bind(id<MTLRenderCommandEncoder> renderEncoder)
     [renderEncoder setCullMode:cullMode_];
     [renderEncoder setFrontFacingWinding:winding_];
     [renderEncoder setTriangleFillMode:fillMode_];
+    #ifndef LLGL_OS_IOS//TODO: since MTLFeatureSet_iOS_GPUFamily2_v1
     [renderEncoder setDepthClipMode:clipMode_];
+    #endif
+    #if 0//TODO: disabled for testing iOS
     [renderEncoder setDepthBias:depthBias_ slopeScale:depthSlope_ clamp:depthClamp_];
     if (stencilFrontRef_ == stencilBackRef_)
         [renderEncoder setStencilFrontReferenceValue:stencilFrontRef_ backReferenceValue:stencilBackRef_];
     else
         [renderEncoder setStencilReferenceValue:stencilFrontRef_];
+    #endif
 }
 
 
@@ -145,9 +149,9 @@ void MTGraphicsPipeline::CreateRenderPipelineState(
         renderPipelineDesc.alphaToOneEnabled        = NO;
         renderPipelineDesc.fragmentFunction         = shaderProgramMT->GetFragmentMTLFunction();
         renderPipelineDesc.vertexFunction           = shaderProgramMT->GetVertexMTLFunction();
-        #ifndef LLGL_OS_IOS
-        renderPipelineDesc.inputPrimitiveTopology   = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
-        #endif
+
+        if (@available(iOS 12.0, *))
+            renderPipelineDesc.inputPrimitiveTopology   = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
 
         /* Initialize pixel formats from render pass */
         const auto& colorAttachments = renderPassMT->GetColorAttachments();

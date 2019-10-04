@@ -10,6 +10,8 @@
 #include "../TextureUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 
+#import <QuartzCore/CAMetalLayer.h>
+
 
 namespace LLGL
 {
@@ -32,9 +34,19 @@ MTRenderContext::MTRenderContext(
     /* Create MetalKit view */
     #ifdef LLGL_OS_IOS
 
-    UIView* view = nativeHandle.view;
+    //UIView* view = nativeHandle.view;
+    CGRect screenBounds = [UIScreen mainScreen].nativeBounds;
 
-    view_ = [[MTKView alloc] initWithFrame:view.frame device:device];
+    view_ = [[MTKView alloc] initWithFrame:screenBounds device:device];
+
+    if (NSClassFromString(@"MTKView") != nullptr)
+    {
+        CALayer* layer = view_.layer;
+        if (layer != nullptr && [layer isKindOfClass:NSClassFromString(@"CAMetalLayer")])
+        {
+            metalLayer_ = reinterpret_cast<CAMetalLayer*>(layer);
+        }
+    }
 
     #else
 
@@ -48,6 +60,8 @@ MTRenderContext::MTRenderContext(
     #endif // /LLGL_OS_IOS
 
     /* Initialize color and depth buffer */
+    //MTLPixelFormat colorFmt = metalLayer_.pixelFormat;
+
     view_.colorPixelFormat          = renderPass_.GetColorAttachments()[0].pixelFormat;
     view_.depthStencilPixelFormat   = renderPass_.GetDepthStencilFormat();
     view_.sampleCount               = renderPass_.GetSampleCount();
@@ -63,7 +77,7 @@ void MTRenderContext::Present()
 
 std::uint32_t MTRenderContext::GetSamples() const
 {
-    return renderPass_.GetSampleCount();
+    return static_cast<std::uint32_t>(renderPass_.GetSampleCount());
 }
 
 Format MTRenderContext::GetColorFormat() const

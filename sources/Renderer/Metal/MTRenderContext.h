@@ -58,6 +58,7 @@ class MTRenderContext : public RenderContext
     private:
 
         MTKView*        view_       = nullptr;
+        CAMetalLayer*   metalLayer_ = nullptr;
         MTRenderPass    renderPass_;
 
 };

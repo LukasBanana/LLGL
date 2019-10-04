@@ -219,6 +219,7 @@ class MTCommandBuffer : public CommandBuffer
 
         id<MTLCommandQueue>             cmdQueue_               = nil;
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
+        dispatch_semaphore_t            cmdBufferSemaphore_     = nil;
 
         MTEncoderScheduler              encoderScheduler_;
         std::vector<id<MTLDrawable>>    drawables_;

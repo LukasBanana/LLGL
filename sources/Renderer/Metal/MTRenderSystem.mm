@@ -325,8 +325,40 @@ void MTRenderSystem::QueryRenderingCaps()
 
 const char* MTRenderSystem::QueryMetalVersion() const
 {
+    const auto featureSet = QueryHighestFeatureSet();
+
+    #ifdef LLGL_OS_IOS
+
+    //TODO:
+    switch (featureSet)
+    {
+        case MTLFeatureSet_iOS_GPUFamily5_v1: return "GPU Family 5.v1";
+        case MTLFeatureSet_iOS_GPUFamily4_v2: return "GPU Family 4.v2";
+        case MTLFeatureSet_iOS_GPUFamily3_v4: return "GPU Family 3.v4";
+        case MTLFeatureSet_iOS_GPUFamily2_v5: return "GPU Family 2.v5";
+        case MTLFeatureSet_iOS_GPUFamily1_v5: return "GPU Family 1.v5";
+
+        case MTLFeatureSet_iOS_GPUFamily4_v1: return "GPU Family 4.v1";
+        case MTLFeatureSet_iOS_GPUFamily3_v3: return "GPU Family 3.v3";
+        case MTLFeatureSet_iOS_GPUFamily2_v4: return "GPU Family 2.v4";
+        case MTLFeatureSet_iOS_GPUFamily1_v4: return "GPU Family 1.v4";
+
+        case MTLFeatureSet_iOS_GPUFamily3_v2: return "GPU Family 3.v2";
+        case MTLFeatureSet_iOS_GPUFamily2_v3: return "GPU Family 2.v3";
+        case MTLFeatureSet_iOS_GPUFamily1_v3: return "GPU Family 1.v3";
+
+        case MTLFeatureSet_iOS_GPUFamily3_v1: return "GPU Family 3.v1";
+        case MTLFeatureSet_iOS_GPUFamily2_v2: return "GPU Family 2.v2";
+        case MTLFeatureSet_iOS_GPUFamily1_v2: return "GPU Family 1.v2";
+
+        case MTLFeatureSet_iOS_GPUFamily2_v1: return "GPU Family 2.v1";
+        case MTLFeatureSet_iOS_GPUFamily1_v1: return "GPU Family 1.v1";
+    }
+
+    #else
+
     #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_11
-    switch (QueryHighestFeatureSet())
+    switch (featureSet)
     {
         #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
         case MTLFeatureSet_macOS_GPUFamily2_v1: return "2.1";
@@ -342,6 +374,8 @@ const char* MTRenderSystem::QueryMetalVersion() const
         default:                                break;
     }
     #endif
+
+    #endif // /LLGL_OS_IOS
     return "1.0";
 }
 

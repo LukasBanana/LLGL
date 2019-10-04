@@ -32,6 +32,8 @@ MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQu
     cmdQueue_          { cmdQueue          },
     stagingBufferPool_ { device, USHRT_MAX }
 {
+    const NSUInteger maxCmdBuffers = 3;
+    cmdBufferSemaphore_ = dispatch_semaphore_create(maxCmdBuffers);
 }
 
 MTCommandBuffer::~MTCommandBuffer()
@@ -43,8 +45,20 @@ MTCommandBuffer::~MTCommandBuffer()
 
 void MTCommandBuffer::Begin()
 {
+    /* Wait until next command buffer becomes available */
+    dispatch_semaphore_wait(cmdBufferSemaphore_, DISPATCH_TIME_FOREVER);
+
     /* Allocate new command buffer from command queue */
     cmdBuffer_ = [cmdQueue_ commandBuffer];
+
+    /* Append complete handler to signal semaphore */
+    __block dispatch_semaphore_t blockSemaphore = cmdBufferSemaphore_;
+    [cmdBuffer_
+        addCompletedHandler:^(id<MTLCommandBuffer> cmdBuffer)
+        {
+            dispatch_semaphore_signal(blockSemaphore);
+        }
+    ];
 
     /* Reset schedulers and pools */
     encoderScheduler_.Reset(cmdBuffer_);

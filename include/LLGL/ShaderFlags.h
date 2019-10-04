@@ -208,9 +208,9 @@ struct ShaderDescriptor
     ShaderType                  type            = ShaderType::Undefined;
 
     /**
-    \brief Pointer to the shader source. This is either a null terminated string or a raw byte buffer (depending on the 'sourceType' member).
+    \brief Pointer to the shader source. This is either a null terminated string or a raw byte buffer (depending on the \c sourceType member).
     \remarks This must not be null when passed to the RenderSystem::CreateShader function.
-    If this is raw byte buffer rather than a null terminated string, the 'sourceSize' member must not be zero!
+    If this is raw byte buffer rather than a null terminated string, the \c sourceSize member must not be zero!
     \see sourceSize
     \see sourceType
     */
@@ -219,7 +219,7 @@ struct ShaderDescriptor
     /**
     \brief Specifies the size of the shader source (excluding the null terminator).
     \remarks If this is zero, the 'source' member is expected to point to a null terminated string and the size is automatically determined.
-    For the binrary buffer source type (i.e. ShaderSourceType::BinaryBuffer), this must not be zero!
+    For the binary buffer source type (i.e. ShaderSourceType::BinaryBuffer), this must not be zero!
     \see source
     */
     std::size_t                 sourceSize      = 0;
@@ -228,7 +228,7 @@ struct ShaderDescriptor
     \brief Specifies the type of the shader source. By default ShaderSourceType::CodeFile.
     \remarks With the filename source types (i.e. ShaderSourceType::CodeFile and ShaderSourceType::BinaryFile),
     the shader source or binary code will be loaded from file using the standard C++ file streams (i.e. std::ifstream).
-    Only the binary buffer source type (i.e. ShaderSourceType::BinaryBuffer) does not require a null terminator for the 'source' pointer.
+    Only the binary buffer source type (i.e. ShaderSourceType::BinaryBuffer) does not require a null terminator for the \c source pointer.
     \see ShaderSourceType
     \see source
     */

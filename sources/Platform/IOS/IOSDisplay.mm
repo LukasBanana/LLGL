@@ -78,11 +78,16 @@ DisplayModeDescriptor IOSDisplay::GetDisplayMode() const
 {
     DisplayModeDescriptor displayModeDesc;
     {
-        /* Get pixel size from main display */
-        CGRect screenRect = [[UIScreen mainScreen] bounds];
-        displayModeDesc.resolution.width    = static_cast<std::uint32_t>(screenRect.size.width);
-        displayModeDesc.resolution.height   = static_cast<std::uint32_t>(screenRect.size.height);
-        displayModeDesc.refreshRate         = 60; //TODO
+        /* Get attributes from main screen */
+        UIScreen*   mainScreen  = [UIScreen mainScreen];
+
+        CGRect      screenRect  = [mainScreen nativeBounds];
+        CGFloat     screenScale = [mainScreen nativeScale];
+        NSInteger   maxFPS      = [mainScreen maximumFramesPerSecond];
+
+        displayModeDesc.resolution.width    = static_cast<std::uint32_t>(screenRect.size.width * screenScale);
+        displayModeDesc.resolution.height   = static_cast<std::uint32_t>(screenRect.size.height * screenScale);
+        displayModeDesc.refreshRate         = static_cast<std::uint32_t>(maxFPS);
     }
     return displayModeDesc;
 }
