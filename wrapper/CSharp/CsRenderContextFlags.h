@@ -9,7 +9,7 @@
 
 #include <vcclr.h>
 #include "CsTypes.h"
-#include "CsGraphicsPipelineFlags.h"
+#include "CsPipelineStateFlags.h"
 
 
 namespace SharpLLGL

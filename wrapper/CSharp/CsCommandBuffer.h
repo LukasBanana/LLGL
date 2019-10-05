@@ -10,9 +10,9 @@
 #include <vcclr.h>
 #include <LLGL/CommandBuffer.h>
 #include "CsTypes.h"
-#include "CsRenderSystemChilds.h"
+#include "CsRenderSystemChild.h"
 #include "CsCommandBufferFlags.h"
-#include "CsGraphicsPipelineFlags.h"
+#include "CsPipelineStateFlags.h"
 #include "CsRenderTarget.h"
 #include "CsColor.h"
 
@@ -86,17 +86,6 @@ public ref class CommandBuffer
         void SetVertexBufferArray(BufferArray^ bufferArray);
         void SetIndexBuffer(Buffer^ buffer);
 
-        #if 0
-        /* ----- Stream Output Buffers ------ */
-
-        void SetStreamOutputBuffer(Buffer^ buffer);
-
-        void SetStreamOutputBufferArray(BufferArray^ bufferArray);
-
-        void BeginStreamOutput();
-        void EndStreamOutput();
-        #endif
-
         /* ----- Resource Heaps ----- */
 
         void SetGraphicsResourceHeap(ResourceHeap^ resourceHeap);
@@ -115,8 +104,12 @@ public ref class CommandBuffer
 
         /* ----- Pipeline States ----- */
 
-        void SetGraphicsPipeline(GraphicsPipeline^ graphicsPipeline);
-        void SetComputePipeline(ComputePipeline^ computePipeline);
+        void SetPipelineState(PipelineState^ pipelineState);
+
+        #if 0
+        void SetUniform(UniformLocation location, const void* data, std::uint32_t dataSize);
+        void SetUniforms(UniformLocation location, std::uint32_t count, const void* data, std::uint32_t dataSize);
+        #endif
 
         /* ----- Queries ----- */
 
@@ -130,6 +123,11 @@ public ref class CommandBuffer
         void BeginRenderCondition(QueryHeap^ queryHeap, unsigned int query, RenderConditionMode mode);
         void EndRenderCondition();
         #endif
+
+        /* ----- Stream Outputs ------ */
+
+        void BeginStreamOutput(array<Buffer^>^ buffers);
+        void EndStreamOutput();
 
         /* ----- Drawing ----- */
 

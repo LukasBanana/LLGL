@@ -13,6 +13,7 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
+#include <LLGL/Platform/Platform.h>
 #include "RenderState/MTRenderPass.h"
 
 
@@ -58,7 +59,9 @@ class MTRenderContext : public RenderContext
     private:
 
         MTKView*        view_       = nullptr;
+        #ifdef LLGL_OS_IOS
         CAMetalLayer*   metalLayer_ = nullptr;
+        #endif
         MTRenderPass    renderPass_;
 
 };

@@ -22,6 +22,9 @@
 
 #include "Texture/D3D12MipGenerator.h"
 
+#include "RenderState/D3D12GraphicsPSO.h"
+#include "RenderState/D3D12ComputePSO.h"
+
 
 namespace LLGL
 {
@@ -413,11 +416,11 @@ void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
 {
     return TakeOwnership(
-        graphicsPipelines_,
-        MakeUnique<D3D12GraphicsPipeline>(
+        pipelineStates_,
+        MakeUnique<D3D12GraphicsPSO>(
             device_,
             defaultPipelineLayout_.GetRootSignature(),
             desc,
@@ -426,24 +429,18 @@ GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipeli
     );
 }
 
-ComputePipeline* D3D12RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
 {
     return TakeOwnership(
-        computePipelines_,
-        MakeUnique<D3D12ComputePipeline>(device_, defaultPipelineLayout_.GetRootSignature(), desc)
+        pipelineStates_,
+        MakeUnique<D3D12ComputePSO>(device_, defaultPipelineLayout_.GetRootSignature(), desc)
     );
 }
 
-void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
+void D3D12RenderSystem::Release(PipelineState& pipelineState)
 {
     SyncGPU();
-    RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
-}
-
-void D3D12RenderSystem::Release(ComputePipeline& computePipeline)
-{
-    SyncGPU();
-    RemoveFromUniqueSet(computePipelines_, &computePipeline);
+    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
 }
 
 /* ----- Queries ----- */
@@ -617,7 +614,7 @@ void D3D12RenderSystem::QueryRendererInfo()
     if (!videoAdatperDescs_.empty())
     {
         const auto& videoAdapterDesc = videoAdatperDescs_.front();
-        info.deviceName = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(videoAdapterDesc.name);
+        info.deviceName = ToUTF8String(videoAdapterDesc.name);
         info.vendorName = videoAdapterDesc.vendor;
     }
     else

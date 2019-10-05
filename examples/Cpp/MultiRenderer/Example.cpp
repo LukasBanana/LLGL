@@ -33,7 +33,7 @@ class MyRenderer
     LLGL::ResourceHeap*                 resourceHeap    = nullptr;
     LLGL::ShaderProgram*                shaderProgram   = nullptr;
     LLGL::PipelineLayout*               layout          = nullptr;
-    LLGL::GraphicsPipeline*             pipeline        = nullptr;
+    LLGL::PipelineState*                pipeline        = nullptr;
 
     const std::uint32_t                 samples;
     const LLGL::Viewport                viewport;
@@ -215,7 +215,7 @@ void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, co
         pipelineDesc.depth.writeEnabled             = true;
         pipelineDesc.rasterizer.multiSampleEnabled  = (samples > 1);
     }
-    pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+    pipeline = renderer->CreatePipelineState(pipelineDesc);
 
     // Get command queue
     cmdQueue = renderer->GetCommandQueue();
@@ -244,7 +244,7 @@ void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
             cmdBuffer->SetViewport(viewport);
 
             // Set graphics pipeline and vertex buffer
-            cmdBuffer->SetGraphicsPipeline(*pipeline);
+            cmdBuffer->SetPipelineState(*pipeline);
             cmdBuffer->SetGraphicsResourceHeap(*resourceHeap);
 
             // Draw triangulated cube

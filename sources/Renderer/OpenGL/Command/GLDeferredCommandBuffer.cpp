@@ -28,8 +28,7 @@
 #include "../Buffer/GLBufferArrayWithVAO.h"
 
 #include "../RenderState/GLStateManager.h"
-#include "../RenderState/GLGraphicsPipeline.h"
-#include "../RenderState/GLComputePipeline.h"
+#include "../RenderState/GLGraphicsPSO.h"
 #include "../RenderState/GLResourceHeap.h"
 #include "../RenderState/GLRenderPass.h"
 #include "../RenderState/GLQueryHeap.h"
@@ -503,22 +502,20 @@ void GLDeferredCommandBuffer::EndRenderPass()
 
 /* ----- Pipeline States ----- */
 
-void GLDeferredCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void GLDeferredCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    auto cmd = AllocCommand<GLCmdBindGraphicsPipeline>(GLOpcodeBindGraphicsPipeline);
-    cmd->graphicsPipeline = LLGL_CAST(GLGraphicsPipeline*, &graphicsPipeline);
+    auto cmd = AllocCommand<GLCmdBindPipelineState>(GLOpcodeBindPipelineState);
+    cmd->pipelineState = LLGL_CAST(GLPipelineState*, &pipelineState);
 
     /* Store draw mode, primitive mode, and shader program */
-    renderState_.drawMode       = cmd->graphicsPipeline->GetDrawMode();
-    renderState_.primitiveMode  = cmd->graphicsPipeline->GetPrimitiveMode();
-    boundShaderProgram_         = cmd->graphicsPipeline->GetShaderProgram()->GetID();
-}
+    boundShaderProgram_ = cmd->pipelineState->GetShaderProgram()->GetID();
 
-void GLDeferredCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
-{
-    auto cmd = AllocCommand<GLCmdBindComputePipeline>(GLOpcodeBindComputePipeline);
-    cmd->computePipeline = LLGL_CAST(GLComputePipeline*, &computePipeline);
-    boundShaderProgram_ = cmd->computePipeline->GetShaderProgram()->GetID();
+    if (cmd->pipelineState->IsGraphicsPSO())
+    {
+        auto graphicsPSO = LLGL_CAST(GLGraphicsPSO*, cmd->pipelineState);
+        renderState_.drawMode       = graphicsPSO->GetDrawMode();
+        renderState_.primitiveMode  = graphicsPSO->GetPrimitiveMode();
+    }
 }
 
 void GLDeferredCommandBuffer::SetUniform(

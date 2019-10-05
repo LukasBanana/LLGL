@@ -17,8 +17,8 @@ class Example_ShadowMapping : public ExampleBase
     LLGL::PipelineLayout*       pipelineLayoutShadowMap = nullptr;
     LLGL::PipelineLayout*       pipelineLayoutScene     = nullptr;
 
-    LLGL::GraphicsPipeline*     pipelineShadowMap       = {};
-    LLGL::GraphicsPipeline*     pipelineScene           = {};
+    LLGL::PipelineState*        pipelineShadowMap       = {};
+    LLGL::PipelineState*        pipelineScene           = {};
 
     LLGL::ResourceHeap*         resourceHeapShadowMap   = {};
     LLGL::ResourceHeap*         resourceHeapScene       = {};
@@ -258,7 +258,7 @@ private:
                 pipelineDesc.blend.targets[0].colorMask             = { false, false, false, false };
                 pipelineDesc.viewports                              = { shadowMapResolution };
             }
-            pipelineShadowMap = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineShadowMap = renderer->CreatePipelineState(pipelineDesc);
         }
 
         // Create graphics pipeline for scene rendering
@@ -273,7 +273,7 @@ private:
                 pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
-            pipelineScene = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineScene = renderer->CreatePipelineState(pipelineDesc);
         }
     }
 
@@ -359,7 +359,7 @@ private:
         commands->BeginRenderPass(*shadowMapRenderTarget);
         {
             commands->Clear(LLGL::ClearFlags::Depth);
-            commands->SetGraphicsPipeline(*pipelineShadowMap);
+            commands->SetPipelineState(*pipelineShadowMap);
             commands->SetGraphicsResourceHeap(*resourceHeapShadowMap);
             RenderAllMeshes();
         }
@@ -376,7 +376,7 @@ private:
         {
             commands->Clear(LLGL::ClearFlags::ColorDepth);
             commands->SetViewport(context->GetResolution());
-            commands->SetGraphicsPipeline(*pipelineScene);
+            commands->SetPipelineState(*pipelineScene);
             commands->SetGraphicsResourceHeap(*resourceHeapScene);
             RenderAllMeshes();
         }

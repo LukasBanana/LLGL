@@ -22,7 +22,7 @@ namespace LLGLExamples
         private RenderContext context;
         private CommandQueue cmdQueue;
         private CommandBuffer cmdBuffer;
-        private GraphicsPipeline pipeline;
+        private PipelineState pipeline;
 
         public void Run()
         {
@@ -40,6 +40,7 @@ namespace LLGLExamples
                     contextDesc.VideoMode.ColorBits         = 32;
                     contextDesc.VideoMode.DepthBits         = 24;
                     contextDesc.VideoMode.StencilBits       = 8;
+                    contextDesc.Samples                     = 8;
                 }
                 context = renderer.CreateRenderContext(contextDesc);
 
@@ -61,8 +62,8 @@ namespace LLGLExamples
 
                 // Create vertex buffer
                 var vertexFormat = new VertexFormat();
-                vertexFormat.AppendAttribute(new VertexAttribute("coord", Format.RGBA32Float));
-                vertexFormat.AppendAttribute(new VertexAttribute("color", Format.RGBA8UNorm));
+                vertexFormat.AppendAttribute(new VertexAttribute("coord", Format.RGBA32Float, 0));
+                vertexFormat.AppendAttribute(new VertexAttribute("color", Format.RGBA8UNorm, 1));
 
                 var vertices = new Vertex[]
                 {
@@ -73,48 +74,48 @@ namespace LLGLExamples
 
                 var vertexBufferDesc = new BufferDescriptor();
                 {
-                    vertexBufferDesc.BindFlags              = BindFlags.VertexBuffer;
-                    vertexBufferDesc.Size                   = vertexFormat.Stride * (ulong)vertices.Length;
-                    vertexBufferDesc.VertexBuffer.Format    = vertexFormat;
+                    vertexBufferDesc.BindFlags      = BindFlags.VertexBuffer;
+                    vertexBufferDesc.Size           = vertexFormat.Attributes[0].Stride * (ulong)vertices.Length;
+                    vertexBufferDesc.VertexAttribs  = vertexFormat.Attributes;
                 }
                 var vertexBuffer = renderer.CreateBuffer(vertexBufferDesc, vertices);
 
                 // Create shaders
-                var vertShader = renderer.CreateShader(
-                    new ShaderDescriptor(
-                        type: ShaderType.Vertex,
-                        sourceType: ShaderSourceType.CodeString,
-                        source: @"
-                            #version 330 core
-                            in vec4 coord;
-                            in vec3 color;
-                            out vec4 vColor;
-                            void main() {
-                                gl_Position = coord;
-                                vColor = vec4(color, 1);
-                            }
-                        "
-                    )
+                var vsDesc = new ShaderDescriptor(
+                    type: ShaderType.Vertex,
+                    sourceType: ShaderSourceType.CodeString,
+                    source: @"
+                        #version 330 core
+                        in vec4 coord;
+                        in vec4 color;
+                        out vec4 vColor;
+                        void main() {
+                            gl_Position = coord;
+                            vColor = color;
+                        }
+                    "
                 );
-                var fragShader = renderer.CreateShader(
-                    new ShaderDescriptor
-                    (
-                        type: ShaderType.Fragment,
-                        sourceType: ShaderSourceType.CodeString,
-                        source: @"
-                            #version 330 core
-                            in vec4 vColor;
-                            out vec4 fColor;
-                            void main() {
-                                fColor = vColor;
-                            }
-                        "
-                    )
+
+                vsDesc.Vertex.InputAttribs = vertexFormat.Attributes;
+
+                var fsDesc = new ShaderDescriptor(
+                    type: ShaderType.Fragment,
+                    sourceType: ShaderSourceType.CodeString,
+                    source: @"
+                        #version 330 core
+                        in vec4 vColor;
+                        out vec4 fColor;
+                        void main() {
+                            fColor = vColor;
+                        }
+                    "
                 );
+
+                var vertShader = renderer.CreateShader(vsDesc);
+                var fragShader = renderer.CreateShader(fsDesc);
 
                 var shaderProgramDesc = new ShaderProgramDescriptor();
                 {
-                    shaderProgramDesc.VertexFormats.Add(vertexFormat);
                     shaderProgramDesc.VertexShader      = vertShader;
                     shaderProgramDesc.FragmentShader    = fragShader;
                 }
@@ -126,9 +127,10 @@ namespace LLGLExamples
                 // Create graphics pipeline
                 var pipelineDesc = new GraphicsPipelineDescriptor();
                 {
-                    pipelineDesc.ShaderProgram = shaderProgram;
+                    pipelineDesc.ShaderProgram                  = shaderProgram;
+                    pipelineDesc.Rasterizer.MultiSampleEnabled  = true;
                 }
-                pipeline = renderer.CreateGraphicsPipeline(pipelineDesc);
+                pipeline = renderer.CreatePipelineState(pipelineDesc);
 
                 // Get command queue
                 cmdQueue = renderer.CommandQueue;
@@ -147,9 +149,7 @@ namespace LLGLExamples
                         {
                             cmdBuffer.Clear(ClearFlags.Color);
                             cmdBuffer.SetViewport(new Viewport(context.Resolution));
-
-                            cmdBuffer.SetGraphicsPipeline(pipeline);
-
+                            cmdBuffer.SetPipelineState(pipeline);
                             cmdBuffer.Draw(3, 0);
                         }
                         cmdBuffer.EndRenderPass();

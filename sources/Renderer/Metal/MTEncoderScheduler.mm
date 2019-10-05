@@ -7,9 +7,9 @@
 
 #include "MTEncoderScheduler.h"
 #include "RenderState/MTResourceHeap.h"
-#include "RenderState/MTGraphicsPipeline.h"
-#include "RenderState/MTComputePipeline.h"
-#include <LLGL/GraphicsPipelineFlags.h>
+#include "RenderState/MTGraphicsPSO.h"
+#include "RenderState/MTComputePSO.h"
+#include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include <algorithm>
 
@@ -161,9 +161,9 @@ void MTEncoderScheduler::SetVertexBuffers(const id<MTLBuffer>* buffers, const NS
     dirtyBits_.vertexBuffers = 1;
 }
 
-void MTEncoderScheduler::SetGraphicsPipeline(MTGraphicsPipeline* graphicsPipeline)
+void MTEncoderScheduler::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
 {
-    renderEncoderState_.graphicsPipeline = graphicsPipeline;
+    renderEncoderState_.graphicsPSO = pipelineState;
     dirtyBits_.graphicsPipeline = 1;
 }
 
@@ -222,10 +222,10 @@ void MTEncoderScheduler::SubmitRenderEncoderState()
                 withRange:          renderEncoderState_.vertexBufferRange
             ];
         }
-        if (renderEncoderState_.graphicsPipeline != nullptr && dirtyBits_.graphicsPipeline != 0)
+        if (renderEncoderState_.graphicsPSO != nullptr && dirtyBits_.graphicsPipeline != 0)
         {
             /* Bind graphics pipeline */
-            renderEncoderState_.graphicsPipeline->Bind(renderEncoder_);
+            renderEncoderState_.graphicsPSO->Bind(renderEncoder_);
         }
         if (renderEncoderState_.resourceHeap != nullptr && dirtyBits_.resourceHeap != 0)
         {
@@ -243,7 +243,7 @@ void MTEncoderScheduler::ResetRenderEncoderState()
     renderEncoderState_.viewportCount               = 0;
     renderEncoderState_.scissorRectCount            = 0;
     renderEncoderState_.vertexBufferRange.length    = 0;
-    renderEncoderState_.graphicsPipeline            = nullptr;
+    renderEncoderState_.graphicsPSO                 = nullptr;
     renderEncoderState_.resourceHeap                = nullptr;
 }
 

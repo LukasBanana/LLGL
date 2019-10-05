@@ -8,7 +8,7 @@
 #pragma once
 
 #include <vcclr.h>
-#include "CsRenderSystemChilds.h"
+#include "CsRenderSystemChild.h"
 #include "CsShaderFlags.h"
 
 #using <System.dll>

@@ -277,14 +277,27 @@ void CommandBuffer::EndRenderPass()
 
 /* ----- Pipeline States ----- */
 
-void CommandBuffer::SetGraphicsPipeline(GraphicsPipeline^ graphicsPipeline)
+void CommandBuffer::SetPipelineState(PipelineState^ pipelineState)
 {
-    native_->SetGraphicsPipeline(*graphicsPipeline->Native);
+    native_->SetPipelineState(*pipelineState->Native);
 }
 
-void CommandBuffer::SetComputePipeline(ComputePipeline^ computePipeline)
+/* ----- Stream Outputs ------ */
+
+void CommandBuffer::BeginStreamOutput(array<Buffer^>^ buffers)
 {
-    native_->SetComputePipeline(*computePipeline->Native);
+    LLGL::Buffer* nativeBuffers[LLGL_MAX_NUM_SO_BUFFERS];
+
+    auto numBuffers = std::min(static_cast<std::uint32_t>(buffers->Length), LLGL_MAX_NUM_SO_BUFFERS);
+    for (std::uint32_t i = 0; i < numBuffers; ++i)
+        nativeBuffers[i] = buffers[i]->NativeSub;
+
+    native_->BeginStreamOutput(numBuffers, nativeBuffers);
+}
+
+void CommandBuffer::EndStreamOutput()
+{
+    native_->EndStreamOutput();
 }
 
 /* ----- Drawing ----- */

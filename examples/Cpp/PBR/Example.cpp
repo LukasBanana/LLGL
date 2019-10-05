@@ -17,11 +17,11 @@ class Example_PBR : public ExampleBase
 
     LLGL::ShaderProgram*        shaderProgramMeshes = nullptr;
     LLGL::PipelineLayout*       layoutMeshes        = nullptr;
-    LLGL::GraphicsPipeline*     pipelineMeshes      = nullptr;
+    LLGL::PipelineState*        pipelineMeshes      = nullptr;
 
     LLGL::ShaderProgram*        shaderProgramSky    = nullptr;
     LLGL::PipelineLayout*       layoutSky           = nullptr;
-    LLGL::GraphicsPipeline*     pipelineSky         = nullptr;
+    LLGL::PipelineState*        pipelineSky         = nullptr;
 
     LLGL::Texture*              skyboxArray         = nullptr;
     LLGL::Texture*              colorMapArray       = nullptr;
@@ -166,7 +166,7 @@ private:
             //pipelineDescSky.depth.writeEnabled              = true;
             pipelineDescSky.rasterizer.multiSampleEnabled   = (GetSampleCount() > 1);
         }
-        pipelineSky = renderer->CreateGraphicsPipeline(pipelineDescSky);
+        pipelineSky = renderer->CreatePipelineState(pipelineDescSky);
 
         // Create pipeline layout for meshes
         layoutMeshes = renderer->CreatePipelineLayout(
@@ -190,7 +190,7 @@ private:
             pipelineDescMeshes.depth.writeEnabled               = true;
             pipelineDescMeshes.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
         }
-        pipelineMeshes = renderer->CreateGraphicsPipeline(pipelineDescMeshes);
+        pipelineMeshes = renderer->CreatePipelineState(pipelineDescMeshes);
     }
 
     void LoadImage(const std::string& filename, int& texWidth, int& texHeight, std::vector<std::uint8_t>& imageData)
@@ -448,14 +448,14 @@ private:
 
     void RenderSkybox()
     {
-        commands->SetGraphicsPipeline(*pipelineSky);
+        commands->SetPipelineState(*pipelineSky);
         commands->SetGraphicsResourceHeap(*resourceHeapSkybox);
         commands->Draw(3, 0);
     }
 
     void RenderMesh(const TriangleMesh& mesh)
     {
-        commands->SetGraphicsPipeline(*pipelineMeshes);
+        commands->SetPipelineState(*pipelineMeshes);
         commands->SetGraphicsResourceHeap(*resourceHeapMeshes);
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }

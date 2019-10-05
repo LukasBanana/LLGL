@@ -21,9 +21,8 @@
 #include "Buffer/MTBuffer.h"
 #include "Buffer/MTBufferArray.h"
 
-#include "RenderState/MTGraphicsPipeline.h"
-#include "RenderState/MTComputePipeline.h"
 #include "RenderState/MTPipelineLayout.h"
+#include "RenderState/MTPipelineState.h"
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTRenderPass.h"
 #include "RenderState/MTFence.h"
@@ -128,11 +127,10 @@ class MTRenderSystem : public RenderSystem
 
         /* ----- Pipeline States ----- */
 
-        GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
-        ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
+        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc) override;
+        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc) override;
 
-        void Release(GraphicsPipeline& graphicsPipeline) override;
-        void Release(ComputePipeline& computePipeline) override;
+        void Release(PipelineState& pipelineState) override;
 
         /* ----- Queries ----- */
 
@@ -161,27 +159,26 @@ class MTRenderSystem : public RenderSystem
 
         /* ----- Common objects ----- */
 
-        id<MTLDevice>                           device_             = nil;
+        id<MTLDevice>                       device_             = nil;
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<MTRenderContext>      renderContexts_;
-        HWObjectInstance<MTCommandQueue>        commandQueue_;
-        HWObjectContainer<MTCommandBuffer>      commandBuffers_;
-        HWObjectContainer<MTBuffer>             buffers_;
-        HWObjectContainer<MTBufferArray>        bufferArrays_;
-        HWObjectContainer<MTTexture>            textures_;
-        HWObjectContainer<MTSampler>            samplers_;
-        HWObjectContainer<MTRenderPass>         renderPasses_;
-        HWObjectContainer<MTRenderTarget>       renderTargets_;
-        HWObjectContainer<MTShader>             shaders_;
-        HWObjectContainer<MTShaderProgram>      shaderPrograms_;
-        HWObjectContainer<MTPipelineLayout>     pipelineLayouts_;
-        HWObjectContainer<MTGraphicsPipeline>   graphicsPipelines_;
-        HWObjectContainer<MTComputePipeline>    computePipelines_;
-        HWObjectContainer<MTResourceHeap>       resourceHeaps_;
-        //HWObjectContainer<MTQueryHeap>          queryHeaps_;
-        HWObjectContainer<MTFence>              fences_;
+        HWObjectContainer<MTRenderContext>  renderContexts_;
+        HWObjectInstance<MTCommandQueue>    commandQueue_;
+        HWObjectContainer<MTCommandBuffer>  commandBuffers_;
+        HWObjectContainer<MTBuffer>         buffers_;
+        HWObjectContainer<MTBufferArray>    bufferArrays_;
+        HWObjectContainer<MTTexture>        textures_;
+        HWObjectContainer<MTSampler>        samplers_;
+        HWObjectContainer<MTRenderPass>     renderPasses_;
+        HWObjectContainer<MTRenderTarget>   renderTargets_;
+        HWObjectContainer<MTShader>         shaders_;
+        HWObjectContainer<MTShaderProgram>  shaderPrograms_;
+        HWObjectContainer<MTPipelineLayout> pipelineLayouts_;
+        HWObjectContainer<MTPipelineState>  pipelineStates_;
+        HWObjectContainer<MTResourceHeap>   resourceHeaps_;
+        //HWObjectContainer<MTQueryHeap>      queryHeaps_;
+        HWObjectContainer<MTFence>          fences_;
 
 };
 

@@ -8,6 +8,7 @@
 #include "CsRenderSystem.h"
 #include "CsHelper.h"
 #include <LLGL/ImageFlags.h>
+#include <LLGL/Utility.h>
 #include <algorithm>
 
 
@@ -588,7 +589,7 @@ static void Convert(LLGL::VertexShaderAttributes& dst, VertexShaderAttributes^ s
         Convert(dst.inputAttribs[i], src->InputAttribs[i]);
 
     dst.outputAttribs.resize(src->OutputAttribs->Count);
-    for (int i = 0; i < src->InputAttribs->Count; ++i)
+    for (int i = 0; i < src->OutputAttribs->Count; ++i)
         Convert(dst.outputAttribs[i], src->OutputAttribs[i]);
 }
 
@@ -701,6 +702,13 @@ PipelineLayout^ RenderSystem::CreatePipelineLayout(PipelineLayoutDescriptor^ des
 {
     LLGL::PipelineLayoutDescriptor nativeDesc;
     Convert(nativeDesc, desc);
+    return gcnew PipelineLayout(native_->CreatePipelineLayout(nativeDesc));
+}
+
+PipelineLayout^ RenderSystem::CreatePipelineLayout(String^ layoutSignature)
+{
+    auto layoutSignatureCStr = ToStdString(layoutSignature);
+    LLGL::PipelineLayoutDescriptor nativeDesc = LLGL::PipelineLayoutDesc(layoutSignatureCStr.c_str());
     return gcnew PipelineLayout(native_->CreatePipelineLayout(nativeDesc));
 }
 
@@ -849,13 +857,13 @@ static void Convert(LLGL::GraphicsPipelineDescriptor& dst, GraphicsPipelineDescr
     }
 }
 
-GraphicsPipeline^ RenderSystem::CreateGraphicsPipeline(GraphicsPipelineDescriptor^ desc)
+PipelineState^ RenderSystem::CreatePipelineState(GraphicsPipelineDescriptor^ desc)
 {
     LLGL::GraphicsPipelineDescriptor nativeDesc;
     Convert(nativeDesc, desc);
     try
     {
-        return gcnew GraphicsPipeline(native_->CreateGraphicsPipeline(nativeDesc));
+        return gcnew PipelineState(native_->CreatePipelineState(nativeDesc));
     }
     catch (const std::exception& e)
     {
@@ -867,14 +875,10 @@ GraphicsPipeline^ RenderSystem::CreateGraphicsPipeline(GraphicsPipelineDescripto
 ComputePipeline^ RenderSystem::CreateComputePipeline(ComputePipelineDescriptor^ desc);
 #endif
 
-void RenderSystem::Release(GraphicsPipeline^ graphicsPipeline)
+void RenderSystem::Release(PipelineState^ pipelineState)
 {
-    native_->Release(*graphicsPipeline->Native);
+    native_->Release(*pipelineState->Native);
 }
-
-#if 0
-void RenderSystem::Release(ComputePipeline^ computePipeline);
-#endif
 
 /* ----- Fences ----- */
 

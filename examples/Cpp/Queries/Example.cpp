@@ -14,8 +14,8 @@ class Example_Queries : public ExampleBase
 
     LLGL::ShaderProgram*    shaderProgram           = nullptr;
 
-    LLGL::GraphicsPipeline* occlusionPipeline       = nullptr;
-    LLGL::GraphicsPipeline* scenePipeline           = nullptr;
+    LLGL::PipelineState*    occlusionPipeline       = nullptr;
+    LLGL::PipelineState*    scenePipeline           = nullptr;
 
     LLGL::PipelineLayout*   pipelineLayout          = nullptr;
     LLGL::ResourceHeap*     resourceHeap            = nullptr;
@@ -107,14 +107,14 @@ public:
 
             pipelineDesc.blend.targets[0].colorMask     = LLGL::ColorRGBAb{ false };
         }
-        occlusionPipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        occlusionPipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Create graphics pipeline for scene rendering
         {
             pipelineDesc.blend.targets[0].blendEnabled  = true;
             pipelineDesc.blend.targets[0].colorMask     = LLGL::ColorRGBAb{ true };
         }
-        scenePipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        scenePipeline = renderer->CreatePipelineState(pipelineDesc);
     }
 
     void CreateQueries()
@@ -242,7 +242,7 @@ private:
         commands->Clear(LLGL::ClearFlags::Depth);
 
         // Set resources
-        commands->SetGraphicsPipeline(*occlusionPipeline);
+        commands->SetPipelineState(*occlusionPipeline);
         commands->SetGraphicsResourceHeap(*resourceHeap);
 
         // Draw occluder box
@@ -264,7 +264,7 @@ private:
         commands->Clear(LLGL::ClearFlags::ColorDepth);
 
         // Set resources
-        commands->SetGraphicsPipeline(*scenePipeline);
+        commands->SetPipelineState(*scenePipeline);
 
         // Draw scene
         SetBoxTransformAndColor(modelTransform[1], { 0, 1, 0 });

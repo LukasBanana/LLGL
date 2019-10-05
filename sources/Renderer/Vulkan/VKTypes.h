@@ -13,7 +13,7 @@
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/ResourceHeapFlags.h>
-#include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/PipelineStateFlags.h>
 #include <LLGL/RenderPassFlags.h>
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>

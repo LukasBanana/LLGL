@@ -12,8 +12,8 @@
 #include "Ext/VKExtensionRegistry.h"
 #include "Ext/VKExtensions.h"
 #include "RenderState/VKRenderPass.h"
-#include "RenderState/VKGraphicsPipeline.h"
-#include "RenderState/VKComputePipeline.h"
+#include "RenderState/VKGraphicsPSO.h"
+#include "RenderState/VKComputePSO.h"
 #include "RenderState/VKResourceHeap.h"
 #include "RenderState/VKPredicateQueryHeap.h"
 #include "Texture/VKSampler.h"
@@ -629,34 +629,33 @@ void VKCommandBuffer::EndRenderPass()
 
 /* ----- Pipeline States ----- */
 
-void VKCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    auto& graphicsPipelineVK = LLGL_CAST(VKGraphicsPipeline&, graphicsPipeline);
+    /* Bind native PSO */
+    auto& pipelineStateVK = LLGL_CAST(VKPipelineState&, pipelineState);
+    vkCmdBindPipeline(commandBuffer_, pipelineStateVK.GetBindPoint(), pipelineStateVK.GetVkPipeline());
 
-    /* Bind graphics pipeline */
-    vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineVK.GetVkPipeline());
-
-    /* Scissor rectangle must be updated (if scissor test is disabled) */
-    scissorEnabled_ = graphicsPipelineVK.IsScissorEnabled();
-    if (!scissorEnabled_ && scissorRectInvalidated_ && graphicsPipelineVK.HasDynamicScissor())
+    /* Handle special case for graphics PSOs */
+    if (pipelineStateVK.GetBindPoint() == VK_PIPELINE_BIND_POINT_GRAPHICS)
     {
-        /* Set scissor to render target resolution */
-        VkRect2D scissorRect;
+        auto& graphicsPSO = LLGL_CAST(VKGraphicsPSO&, pipelineStateVK);
+
+        /* Scissor rectangle must be updated (if scissor test is disabled) */
+        scissorEnabled_ = graphicsPSO.IsScissorEnabled();
+        if (!scissorEnabled_ && scissorRectInvalidated_ && graphicsPSO.HasDynamicScissor())
         {
-            scissorRect.offset = { 0, 0 };
-            scissorRect.extent = framebufferExtent_;
+            /* Set scissor to render target resolution */
+            VkRect2D scissorRect;
+            {
+                scissorRect.offset = { 0, 0 };
+                scissorRect.extent = framebufferExtent_;
+            }
+            vkCmdSetScissor(commandBuffer_, 0, 1, &scissorRect);
+
+            /* Avoid scissor update with each graphics pipeline binding (as long as render pass does not change) */
+            scissorRectInvalidated_ = false;
         }
-        vkCmdSetScissor(commandBuffer_, 0, 1, &scissorRect);
-
-        /* Avoid scissor update with each graphics pipeline binding (as long as render pass does not change) */
-        scissorRectInvalidated_ = false;
     }
-}
-
-void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
-{
-    auto& computePipelineVK = LLGL_CAST(VKComputePipeline&, computePipeline);
-    vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, computePipelineVK.GetVkPipeline());
 }
 
 void VKCommandBuffer::SetUniform(

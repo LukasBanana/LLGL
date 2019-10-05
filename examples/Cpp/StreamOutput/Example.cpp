@@ -15,7 +15,7 @@ class Example_StreamOutput : public ExampleBase
     LLGL::ShaderProgram*    shaderProgram       = nullptr;
 
     LLGL::PipelineLayout*   pipelineLayout      = nullptr;
-    LLGL::GraphicsPipeline* pipeline            = nullptr;
+    LLGL::PipelineState*    pipeline            = nullptr;
 
     LLGL::Buffer*           vertexBuffer        = nullptr;
     LLGL::Buffer*           indexBuffer         = nullptr;
@@ -133,7 +133,7 @@ public:
             pipelineDesc.pipelineLayout                 = pipelineLayout;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
-        pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline = renderer->CreatePipelineState(pipelineDesc);
     }
 
     void CreateResourceHeaps()
@@ -197,7 +197,7 @@ private:
                 commands->SetViewport(context->GetResolution());
 
                 // Set graphics pipeline state
-                commands->SetGraphicsPipeline(*pipeline);
+                commands->SetPipelineState(*pipeline);
 
                 // Set buffers
                 commands->SetGraphicsResourceHeap(*resourceHeap);

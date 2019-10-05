@@ -20,7 +20,7 @@ class Example_Instancing : public ExampleBase
 
     LLGL::ShaderProgram*        shaderProgram       = nullptr;
 
-    LLGL::GraphicsPipeline*     pipeline[2]         = {};//   = nullptr;
+    LLGL::PipelineState*        pipeline[2]         = {};
 
     LLGL::PipelineLayout*       pipelineLayout      = nullptr;
     LLGL::ResourceHeap*         resourceHeaps[2]    = {};
@@ -318,13 +318,13 @@ private:
             pipelineDesc.depth.writeEnabled             = true;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
-        pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[0] = renderer->CreatePipelineState(pipelineDesc);
 
         // Create graphics pipeline with multi-sampling and alpha-to-coverage enabled
         {
             pipelineDesc.blend.alphaToCoverageEnabled   = true;
         }
-        pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[1] = renderer->CreatePipelineState(pipelineDesc);
     }
 
     void UpdateAnimation()
@@ -400,7 +400,7 @@ private:
                 commands->SetViewport(context->GetResolution());
 
                 // Set graphics pipeline state
-                commands->SetGraphicsPipeline(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
+                commands->SetPipelineState(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
                 // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
                 commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);

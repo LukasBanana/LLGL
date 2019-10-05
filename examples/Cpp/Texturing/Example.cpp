@@ -15,7 +15,7 @@ class Example_Texturing : public ExampleBase
 
     LLGL::ShaderProgram*        shaderProgram       = nullptr;
     LLGL::PipelineLayout*       pipelineLayout      = nullptr;
-    LLGL::GraphicsPipeline*     pipeline            = nullptr;
+    LLGL::PipelineState*        pipeline            = nullptr;
     LLGL::Buffer*               vertexBuffer        = nullptr;
     LLGL::Texture*              colorMaps[2]        = {};
     LLGL::Sampler*              sampler[5]          = {};
@@ -107,7 +107,7 @@ public:
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
-        pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline = renderer->CreatePipelineState(pipelineDesc);
     }
 
     void LoadUncompressedTexture(const std::string& filename)
@@ -278,7 +278,7 @@ private:
                 commands->SetViewport(context->GetVideoMode().resolution);
 
                 // Set graphics pipeline and vertex buffer
-                commands->SetGraphicsPipeline(*pipeline);
+                commands->SetPipelineState(*pipeline);
 
                 // Set graphics shader resources
                 commands->SetGraphicsResourceHeap(*resourceHeaps[resourceIndex], 0);

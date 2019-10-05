@@ -11,7 +11,7 @@
 
 #include "Export.h"
 #include "RenderContextFlags.h"
-#include "GraphicsPipelineFlags.h"
+#include "PipelineStateFlags.h"
 #include <cstdint>
 #include <algorithm>
 
@@ -22,7 +22,7 @@ namespace LLGL
 
 /**
 \brief Structure with annotation and elapsed time for a timer profile.
-\see 
+\see FrameProfile::timeRecords
 */
 struct ProfileTimeRecord
 {
@@ -144,14 +144,14 @@ struct FrameProfile
             std::uint32_t computeResourceHeapBindings;
 
             /**
-            \brief Counter for all graphics pipeline bindings.
-            \see CommandBuffer::SetGraphicsPipeline
+            \brief Counter for all graphics pipeline state bindings.
+            \see CommandBuffer::SetPipelineState
             */
             std::uint32_t graphicsPipelineBindings;
 
             /**
-            \brief Counter for all compute pipeline bindings.
-            \see CommandBuffer::SetComputePipeline
+            \brief Counter for all compute pipeline state bindings.
+            \see CommandBuffer::SetPipelineState
             */
             std::uint32_t computePipelineBindings;
 

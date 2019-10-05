@@ -10,7 +10,7 @@
 #include <vcclr.h>
 #include <LLGL/RenderTarget.h>
 #include "CsTypes.h"
-#include "CsRenderSystemChilds.h"
+#include "CsRenderSystemChild.h"
 
 #using <System.dll>
 #using <System.Core.dll>

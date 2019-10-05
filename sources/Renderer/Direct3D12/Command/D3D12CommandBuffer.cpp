@@ -24,6 +24,8 @@
 #include "../RenderState/D3D12ResourceHeap.h"
 #include "../RenderState/D3D12RenderPass.h"
 #include "../RenderState/D3D12QueryHeap.h"
+#include "../RenderState/D3D12GraphicsPSO.h"
+#include "../RenderState/D3D12ComputePSO.h"
 
 #include "../D3DX12/d3dx12.h"
 #include <pix.h>
@@ -459,23 +461,27 @@ void D3D12CommandBuffer::EndRenderPass()
 
 /* ----- Pipeline States ----- */
 
-void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    /* Set graphics root signature, graphics pipeline state, and primitive topology */
-    auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
-    graphicsPipelineD3D.Bind(commandContext_);
+    /* Bind pipeline state to command context */
+    auto& pipelineStateD3D = LLGL_CAST(D3D12PipelineState&, pipelineState);
+    if (pipelineStateD3D.IsGraphicsPSO())
+    {
+        /* Bind graphics PSO */
+        auto& graphicsPSO = LLGL_CAST(D3D12GraphicsPSO&, pipelineState);
+        graphicsPSO.Bind(commandContext_);
 
-    /* Scissor rectangle must be updated (if scissor test is disabled) */
-    scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();
-    if (!scissorEnabled_ && commandList_->GetType() == D3D12_COMMAND_LIST_TYPE_DIRECT)
-        SetScissorRectsToDefault(graphicsPipelineD3D.NumDefaultScissorRects());
-}
-
-void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
-{
-    /* Set compute root signature, graphics pipeline state, and primitive topology */
-    auto& computePipelineD3D = LLGL_CAST(D3D12ComputePipeline&, computePipeline);
-    computePipelineD3D.Bind(commandContext_);
+        /* Scissor rectangle must be updated (if scissor test is disabled) */
+        scissorEnabled_ = graphicsPSO.IsScissorEnabled();
+        if (!scissorEnabled_ && commandList_->GetType() == D3D12_COMMAND_LIST_TYPE_DIRECT)
+            SetScissorRectsToDefault(graphicsPSO.NumDefaultScissorRects());
+    }
+    else
+    {
+        /* Bind compute PSO */
+        auto& computePSO = LLGL_CAST(D3D12ComputePSO&, pipelineState);
+        computePSO.Bind(commandContext_);
+    }
 }
 
 void D3D12CommandBuffer::SetUniform(

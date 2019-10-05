@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
             pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
             #endif
         }
-        LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        LLGL::PipelineState* pipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Get command queue to record and submit command buffers
         LLGL::CommandQueue* queue = renderer->GetCommandQueue();
@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
                 commands->SetViewport(resolution);
 
                 // Set graphics pipeline
-                commands->SetGraphicsPipeline(*pipeline);
+                commands->SetPipelineState(*pipeline);
 
                 // Set vertex buffer
                 commands->SetVertexBuffer(*vertexBuffer);

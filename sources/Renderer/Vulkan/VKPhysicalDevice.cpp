@@ -8,7 +8,7 @@
 #include "VKPhysicalDevice.h"
 #include "Ext/VKExtensionRegistry.h"
 #include "VKCore.h"
-#include "RenderState/VKGraphicsPipeline.h"
+#include "RenderState/VKGraphicsPSO.h"
 #include "../../Core/Vendor.h"
 #include <string>
 #include <cstring>

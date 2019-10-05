@@ -13,7 +13,7 @@ class Example_BufferArray : public ExampleBase
 
     LLGL::ShaderProgram*    shaderProgram       = nullptr;
 
-    LLGL::GraphicsPipeline* pipeline            = nullptr;
+    LLGL::PipelineState*    pipeline            = nullptr;
 
     LLGL::Buffer*           vertexBuffers[3]    = { nullptr };
     LLGL::BufferArray*      vertexBufferArray   = nullptr;
@@ -110,7 +110,7 @@ public:
             pipelineDesc.shaderProgram                  = shaderProgram;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
-        pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline = renderer->CreatePipelineState(pipelineDesc);
     }
 
 private:
@@ -132,7 +132,7 @@ private:
                 commands->SetViewport(context->GetVideoMode().resolution);
 
                 // Set graphics pipeline state
-                commands->SetGraphicsPipeline(*pipeline);
+                commands->SetPipelineState(*pipeline);
 
                 // Draw 4 instances of the triangle with 3 vertices each
                 commands->DrawInstanced(3, 0, 4);

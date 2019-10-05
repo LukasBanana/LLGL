@@ -17,10 +17,10 @@ class Example_StencilBuffer : public ExampleBase
     LLGL::ShaderProgram*        shaderProgramScene      = nullptr;
     LLGL::ShaderProgram*        shaderProgramStencil    = nullptr;
 
-    LLGL::GraphicsPipeline*     pipelineScene           = {};
-    LLGL::GraphicsPipeline*     pipelineStencilWrite    = {};
-    LLGL::GraphicsPipeline*     pipelineStencilRead0    = {};
-    LLGL::GraphicsPipeline*     pipelineStencilRead1    = {};
+    LLGL::PipelineState*        pipelineScene           = {};
+    LLGL::PipelineState*        pipelineStencilWrite    = {};
+    LLGL::PipelineState*        pipelineStencilRead0    = {};
+    LLGL::PipelineState*        pipelineStencilRead1    = {};
 
     LLGL::Buffer*               vertexBuffer            = nullptr;
     LLGL::Buffer*               constantBuffer          = nullptr;
@@ -186,7 +186,7 @@ private:
                 pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
-            pipelineScene = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineScene = renderer->CreatePipelineState(pipelineDesc);
         }
 
         // Create graphics pipeline for stencil-write rendering
@@ -208,7 +208,7 @@ private:
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
                 pipelineDesc.blend.targets[0].colorMask     = { false, false, false, false };   // write no color bits
             }
-            pipelineStencilWrite = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineStencilWrite = renderer->CreatePipelineState(pipelineDesc);
         }
 
         // Create graphics pipeline for stencil-read rendering
@@ -228,12 +228,12 @@ private:
                 pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
-            pipelineStencilRead0 = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineStencilRead0 = renderer->CreatePipelineState(pipelineDesc);
 
             {
                 pipelineDesc.stencil.front.reference = 1;
             }
-            pipelineStencilRead1 = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineStencilRead1 = renderer->CreatePipelineState(pipelineDesc);
         }
     }
 
@@ -298,28 +298,28 @@ private:
     {
         // Clear entire framebuffer
         commands->Clear(LLGL::ClearFlags::All);
-        commands->SetGraphicsPipeline(*pipelineScene);
+        commands->SetPipelineState(*pipelineScene);
         commands->SetGraphicsResourceHeap(*resourceHeap);
         RenderMesh(meshScene);
     }
 
     void RenderPortal()
     {
-        commands->SetGraphicsPipeline(*pipelineStencilWrite);
+        commands->SetPipelineState(*pipelineStencilWrite);
         //commands->SetGraphicsResourceHeap(*resourceHeap);
         RenderMesh(meshPortal);
     }
 
     void RenderSceneOutidePortal()
     {
-        commands->SetGraphicsPipeline(*pipelineStencilRead0);
+        commands->SetPipelineState(*pipelineStencilRead0);
         //commands->SetGraphicsResourceHeap(*resourceHeap);
         RenderMesh(meshObject1);
     }
 
     void RenderSceneInsidePortal()
     {
-        commands->SetGraphicsPipeline(*pipelineStencilRead1);
+        commands->SetPipelineState(*pipelineStencilRead1);
         //commands->SetGraphicsResourceHeap(*resourceHeap);
         RenderMesh(meshObject2);
     }

@@ -16,8 +16,7 @@
 #include <codecvt>
 
 #include "RenderState/D3D11StateManager.h"
-#include "RenderState/D3D11GraphicsPipelineBase.h"
-#include "RenderState/D3D11ComputePipeline.h"
+#include "RenderState/D3D11PipelineState.h"
 #include "RenderState/D3D11QueryHeap.h"
 #include "RenderState/D3D11ResourceHeap.h"
 #include "RenderState/D3D11RenderPass.h"
@@ -405,16 +404,10 @@ void D3D11CommandBuffer::EndRenderPass()
 
 /* ----- Pipeline States ----- */
 
-void D3D11CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void D3D11CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    auto& graphicsPipelineD3D = LLGL_CAST(D3D11GraphicsPipelineBase&, graphicsPipeline);
-    graphicsPipelineD3D.Bind(*stateMngr_);
-}
-
-void D3D11CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
-{
-    auto& computePipelineD3D = LLGL_CAST(D3D11ComputePipeline&, computePipeline);
-    computePipelineD3D.Bind(*stateMngr_);
+    auto& pipelineStateD3D = LLGL_CAST(D3D11PipelineState&, pipelineState);
+    pipelineStateD3D.Bind(*stateMngr_);
 }
 
 void D3D11CommandBuffer::SetUniform(

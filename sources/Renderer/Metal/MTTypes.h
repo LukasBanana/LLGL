@@ -14,7 +14,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
-#include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/PipelineStateFlags.h>
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/RenderPassFlags.h>
 #include <LLGL/Format.h>

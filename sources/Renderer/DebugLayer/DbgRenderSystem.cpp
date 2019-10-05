@@ -28,7 +28,9 @@ All the actual render system objects are stored in the members named "instance",
 */
 
 DbgRenderSystem::DbgRenderSystem(
-    const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger)
+    const std::shared_ptr<RenderSystem>&    instance,
+    RenderingProfiler*                      profiler,
+    RenderingDebugger*                      debugger)
 :
     instance_ { instance           },
     profiler_ { profiler           },
@@ -430,7 +432,7 @@ void DbgRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
 {
     LLGL_DBG_SOURCE;
 
@@ -445,7 +447,7 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
             if (desc.pipelineLayout != nullptr)
                 instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
         }
-        return TakeOwnership(graphicsPipelines_, MakeUnique<DbgGraphicsPipeline>(*instance_->CreateGraphicsPipeline(instanceDesc), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc), desc));
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "shader program must not be null");
@@ -453,7 +455,7 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
     return nullptr;
 }
 
-ComputePipeline* DbgRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
+PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
 {
     LLGL_DBG_SOURCE;
 
@@ -465,7 +467,7 @@ ComputePipeline* DbgRenderSystem::CreateComputePipeline(const ComputePipelineDes
             if (desc.pipelineLayout != nullptr)
                 instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
         }
-        return TakeOwnership(computePipelines_, MakeUnique<DbgComputePipeline>(*instance_->CreateComputePipeline(instanceDesc), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc), desc));
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "shader program must not be null");
@@ -473,14 +475,9 @@ ComputePipeline* DbgRenderSystem::CreateComputePipeline(const ComputePipelineDes
     return nullptr;
 }
 
-void DbgRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
+void DbgRenderSystem::Release(PipelineState& pipelineState)
 {
-    ReleaseDbg(graphicsPipelines_, graphicsPipeline);
-}
-
-void DbgRenderSystem::Release(ComputePipeline& computePipeline)
-{
-    ReleaseDbg(computePipelines_, computePipeline);
+    ReleaseDbg(pipelineStates_, pipelineState);
 }
 
 /* ----- Queries ----- */

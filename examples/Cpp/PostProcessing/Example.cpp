@@ -26,9 +26,9 @@ class Example_PostProcessing : public ExampleBase
     LLGL::PipelineLayout*   layoutBlur          = nullptr;
     LLGL::PipelineLayout*   layoutFinal         = nullptr;
 
-    LLGL::GraphicsPipeline* pipelineScene       = nullptr;
-    LLGL::GraphicsPipeline* pipelineBlur        = nullptr;
-    LLGL::GraphicsPipeline* pipelineFinal       = nullptr;
+    LLGL::PipelineState*    pipelineScene       = nullptr;
+    LLGL::PipelineState*    pipelineBlur        = nullptr;
+    LLGL::PipelineState*    pipelineFinal       = nullptr;
 
     LLGL::ResourceHeap*     resourceHeapScene   = nullptr;
     LLGL::ResourceHeap*     resourceHeapBlurX   = nullptr;
@@ -359,7 +359,7 @@ public:
             pipelineDescScene.rasterizer.cullMode           = LLGL::CullMode::Back;
             pipelineDescScene.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
         }
-        pipelineScene = renderer->CreateGraphicsPipeline(pipelineDescScene);
+        pipelineScene = renderer->CreatePipelineState(pipelineDescScene);
 
         // Create graphics pipeline for blur post-processor
         LLGL::GraphicsPipelineDescriptor pipelineDescPP;
@@ -368,7 +368,7 @@ public:
             pipelineDescPP.renderPass       = renderTargetBlurX->GetRenderPass();
             pipelineDescPP.pipelineLayout   = layoutBlur;
         }
-        pipelineBlur = renderer->CreateGraphicsPipeline(pipelineDescPP);
+        pipelineBlur = renderer->CreatePipelineState(pipelineDescPP);
 
         // Create graphics pipeline for final post-processor
         LLGL::GraphicsPipelineDescriptor pipelineDescFinal;
@@ -378,7 +378,7 @@ public:
             pipelineDescFinal.renderPass                    = context->GetRenderPass();
             pipelineDescFinal.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
         }
-        pipelineFinal = renderer->CreateGraphicsPipeline(pipelineDescFinal);
+        pipelineFinal = renderer->CreatePipelineState(pipelineDescFinal);
     }
 
     void CreateResourceHeaps()
@@ -576,7 +576,7 @@ private:
                 commands->ClearAttachments(3, clearCmds);
 
                 // Bind pipeline and resources
-                commands->SetGraphicsPipeline(*pipelineScene);
+                commands->SetPipelineState(*pipelineScene);
                 commands->SetGraphicsResourceHeap(*resourceHeapScene);
 
                 // Draw outer scene model
@@ -600,7 +600,7 @@ private:
                 commands->SetViewport(viewportQuarter);
 
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-                commands->SetGraphicsPipeline(*pipelineBlur);
+                commands->SetPipelineState(*pipelineBlur);
                 commands->SetGraphicsResourceHeap(*resourceHeapBlurX);
                 commands->Draw(3, 0);
             }
@@ -621,7 +621,7 @@ private:
             {
                 // Set viewport back to full resolution
                 commands->SetViewport(viewportFull);
-                commands->SetGraphicsPipeline(*pipelineFinal);
+                commands->SetPipelineState(*pipelineFinal);
                 commands->SetGraphicsResourceHeap(*resourceHeapFinal);
 
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)

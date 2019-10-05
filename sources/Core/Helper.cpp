@@ -7,6 +7,7 @@
 
 #include "Helper.h"
 #include <fstream>
+#include <codecvt>
 
 
 namespace LLGL
@@ -43,6 +44,16 @@ LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
     file.read(buffer.data(), fileSize);
 
     return buffer;
+}
+
+LLGL_EXPORT std::string ToUTF8String(const std::wstring& utf16)
+{
+    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(utf16);
+}
+
+LLGL_EXPORT std::wstring ToUTF16String(const std::string& utf8)
+{
+    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(utf8);
 }
 
 

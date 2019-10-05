@@ -121,8 +121,7 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         /* ----- Pipeline States ----- */
 
-        void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
-        void SetComputePipeline(ComputePipeline& computePipeline) override;
+        void SetPipelineState(PipelineState& pipelineState) override;
 
         void SetUniform(
             UniformLocation location,

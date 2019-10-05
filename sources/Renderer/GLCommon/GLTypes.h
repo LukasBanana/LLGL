@@ -15,7 +15,7 @@
 #include <LLGL/BufferFlags.h>
 #include <LLGL/CommandBufferFlags.h>
 #include <LLGL/TextureFlags.h>
-#include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/PipelineStateFlags.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/ShaderProgramFlags.h>

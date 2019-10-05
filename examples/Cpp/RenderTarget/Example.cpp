@@ -27,7 +27,7 @@ class Example_RenderTarget : public ExampleBase
 
     LLGL::ShaderProgram*    shaderProgram           = nullptr;
 
-    LLGL::GraphicsPipeline* pipelines[2]            = {};
+    LLGL::PipelineState*    pipelines[2]            = {};
     LLGL::PipelineLayout*   pipelineLayout          = nullptr;
 
     LLGL::Buffer*           vertexBuffer            = nullptr;
@@ -188,7 +188,7 @@ private:
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
-        pipelines[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipelines[1] = renderer->CreatePipelineState(pipelineDesc);
 
         // Create graphics pipeline for render target
         {
@@ -216,7 +216,7 @@ private:
                 pipelineDesc.rasterizer.frontCCW = true;
             }
         }
-        pipelines[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipelines[0] = renderer->CreatePipelineState(pipelineDesc);
     }
 
     void CreateColorMap()
@@ -375,7 +375,7 @@ private:
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             // Bind graphics pipeline for render target
-            commands->SetGraphicsPipeline(*pipelines[0]);
+            commands->SetPipelineState(*pipelines[0]);
 
             // Set common buffers and sampler states
             commands->SetIndexBuffer(*indexBuffer);
@@ -424,7 +424,7 @@ private:
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             // Binds graphics pipeline for render context
-            commands->SetGraphicsPipeline(*pipelines[1]);
+            commands->SetPipelineState(*pipelines[1]);
 
             // Set viewport to fullscreen.
             // Note: this must be done AFTER the respective graphics pipeline has been set,

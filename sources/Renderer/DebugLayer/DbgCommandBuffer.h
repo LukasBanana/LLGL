@@ -12,7 +12,6 @@
 #include <LLGL/CommandBuffer.h>
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/StaticLimits.h>
-#include "DbgGraphicsPipeline.h"
 #include "DbgQueryHeap.h"
 #include "DbgQueryTimerManager.h"
 #include <cstdint>
@@ -28,7 +27,7 @@ class DbgBuffer;
 class DbgTexture;
 class DbgRenderContext;
 class DbgRenderTarget;
-class DbgComputePipeline;
+class DbgPipelineState;
 class DbgShaderProgram;
 class RenderingDebugger;
 class RenderingProfiler;
@@ -138,8 +137,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         /* ----- Pipeline States ----- */
 
-        void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
-        void SetComputePipeline(ComputePipeline& computePipeline) override;
+        void SetPipelineState(PipelineState& pipelineState) override;
 
         void SetUniform(
             UniformLocation location,
@@ -306,8 +304,7 @@ class DbgCommandBuffer final : public CommandBuffer
             DbgBuffer*              indexBuffer                             = nullptr;
             DbgBuffer*              streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]  = {};
             std::uint32_t           numStreamOutputs                        = 0;
-            DbgGraphicsPipeline*    graphicsPipeline                        = nullptr;
-            DbgComputePipeline*     computePipeline                         = nullptr;
+            DbgPipelineState*       pipelineState                           = nullptr;
             const DbgShaderProgram* shaderProgram_                          = nullptr;
         }
         bindings_;

@@ -19,8 +19,8 @@
 #include "CsCommandQueue.h"
 #include "CsShader.h"
 #include "CsShaderProgram.h"
-#include "CsGraphicsPipelineFlags.h"
 #include "CsPipelineLayoutFlags.h"
+#include "CsPipelineStateFlags.h"
 #include "CsResourceHeapFlags.h"
 #include "CsSamplerFlags.h"
 #include "CsRenderTargetFlags.h"
@@ -200,22 +200,18 @@ public ref class RenderSystem
         /* ----- Pipeline Layouts ----- */
 
         PipelineLayout^ CreatePipelineLayout(PipelineLayoutDescriptor^ desc);
+        PipelineLayout^ CreatePipelineLayout(String^ layoutSignature);
 
         void Release(PipelineLayout^ pipelineLayout);
 
         /* ----- Pipeline States ----- */
 
-        GraphicsPipeline^ CreateGraphicsPipeline(GraphicsPipelineDescriptor^ desc);
-
+        PipelineState^ CreatePipelineState(GraphicsPipelineDescriptor^ desc);
         #if 0
-        ComputePipeline^ CreateComputePipeline(ComputePipelineDescriptor^ desc);
+        PipelineState^ CreatePipelineState(ComputePipelineDescriptor^ desc);
         #endif
 
-        void Release(GraphicsPipeline^ graphicsPipeline);
-
-        #if 0
-        void Release(ComputePipeline^ computePipeline);
-        #endif
+        void Release(PipelineState^ pipelineState);
 
         #if 0
         /* ----- Queries ----- */

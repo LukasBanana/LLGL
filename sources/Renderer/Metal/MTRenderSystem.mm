@@ -12,6 +12,8 @@
 #include "../../Core/Vendor.h"
 #include "MTFeatureSet.h"
 #include "MTTypes.h"
+#include "RenderState/MTGraphicsPSO.h"
+#include "RenderState/MTComputePSO.h"
 #include <LLGL/ImageFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include <AvailabilityMacros.h>
@@ -245,24 +247,19 @@ void MTRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-GraphicsPipeline* MTRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<MTGraphicsPipeline>(device_, desc, GetDefaultRenderPass()));
+    return TakeOwnership(pipelineStates_, MakeUnique<MTGraphicsPSO>(device_, desc, GetDefaultRenderPass()));
 }
 
-ComputePipeline* MTRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
+PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
 {
-    return TakeOwnership(computePipelines_, MakeUnique<MTComputePipeline>(device_, desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<MTComputePSO>(device_, desc));
 }
 
-void MTRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
+void MTRenderSystem::Release(PipelineState& pipelineState)
 {
-    RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
-}
-
-void MTRenderSystem::Release(ComputePipeline& computePipeline)
-{
-    RemoveFromUniqueSet(computePipelines_, &computePipeline);
+    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
 }
 
 /* ----- Queries ----- */

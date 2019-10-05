@@ -177,7 +177,7 @@ int main(int argc, char* argv[])
             throw std::runtime_error(shaderProgram->GetReport());
 
         // Create graphics pipeline
-        LLGL::GraphicsPipeline* pipeline[2] = {};
+        LLGL::PipelineState* pipeline[2] = {};
         const bool logicOpSupported = renderer->GetRenderingCaps().features.hasLogicOp;
 
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -187,7 +187,7 @@ int main(int argc, char* argv[])
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
         }
-        pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[0] = renderer->CreatePipelineState(pipelineDesc);
 
         {
             pipelineDesc.renderPass                     = context2->GetRenderPass();
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
             if (logicOpSupported)
                 pipelineDesc.blend.logicOp = LLGL::LogicOp::CopyInverted;
         }
-        pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[1] = renderer->CreatePipelineState(pipelineDesc);
 
         // Initialize viewport array
         LLGL::Viewport viewports[2] =
@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
                 // Set global render states: viewports, vertex buffer, and graphics pipeline
                 commands->SetViewports(2, viewports);
                 commands->SetVertexBuffer(*vertexBuffer);
-                commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
+                commands->SetPipelineState(*pipeline[enableLogicOp ? 1 : 0]);
 
                 // Draw triangle with 3 vertices in 1st render context
                 commands->BeginRenderPass(*context1);

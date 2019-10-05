@@ -97,30 +97,30 @@ int main()
         // Create graphics pipeline
         static const std::size_t numPipelines = 4;
 
-        LLGL::GraphicsPipeline* pipeline[numPipelines] = {};
+        LLGL::PipelineState* pipeline[numPipelines] = {};
 
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram      = shaderProgram;
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
         }
-        pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[0] = renderer->CreatePipelineState(pipelineDesc);
 
         {
             pipelineDesc.blend.targets[0].blendEnabled = true;
         }
-        pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[1] = renderer->CreatePipelineState(pipelineDesc);
 
         {
             pipelineDesc.primitiveTopology = LLGL::PrimitiveTopology::LineLoop;
         }
-        pipeline[2] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[2] = renderer->CreatePipelineState(pipelineDesc);
 
         {
             pipelineDesc.blend.targets[0].blendEnabled = false;
             pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
         }
-        pipeline[3] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[3] = renderer->CreatePipelineState(pipelineDesc);
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();
@@ -177,7 +177,7 @@ int main()
                     for (int i = 0; i < 4; ++i)
                     {
                         commands->SetViewport(viewports[i]);
-                        commands->SetGraphicsPipeline(*pipeline[i]);
+                        commands->SetPipelineState(*pipeline[i]);
                         commands->Draw(4, 0);
                     }
                 }

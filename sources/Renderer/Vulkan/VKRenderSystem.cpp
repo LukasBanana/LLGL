@@ -19,6 +19,7 @@
 #include "VKTypes.h"
 #include "VKInitializers.h"
 #include "RenderState/VKPredicateQueryHeap.h"
+#include "RenderState/VKComputePSO.h"
 #include <LLGL/Log.h>
 #include <LLGL/ImageFlags.h>
 
@@ -256,32 +257,6 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-// Returns the extent for the specified texture dimensionality (used for the dimension of 'VK_IMAGE_TYPE_1D/ 2D/ 3D')
-static VkExtent3D GetTextureVkExtent(const TextureDescriptor& desc)
-{
-    switch (desc.type)
-    {
-        case TextureType::Texture1D:        /*pass*/
-        case TextureType::Texture1DArray:   return { desc.extent.width, 1u, 1u };
-        case TextureType::Texture2D:        /*pass*/
-        case TextureType::Texture2DArray:   /*pass*/
-        case TextureType::TextureCube:      /*pass*/
-        case TextureType::TextureCubeArray: /*pass*/
-        case TextureType::Texture2DMS:      /*pass*/
-        case TextureType::Texture2DMSArray: return { desc.extent.width, desc.extent.height, 1u };
-        case TextureType::Texture3D:        return { desc.extent.width, desc.extent.height, desc.extent.depth };
-    }
-    throw std::invalid_argument("cannot determine texture extent for unknown texture type");
-}
-
-static std::uint32_t GetTextureLayertCount(const TextureDescriptor& desc)
-{
-    if (IsArrayTexture(desc.type))
-        return desc.arrayLayers;
-    else
-        return 1;
-}
-
 Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     const auto& cfg = GetConfiguration();
@@ -350,23 +325,17 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, initialData, initialDataSize);
 
     /* Create device texture */
-    auto textureVK      = MakeUnique<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
-
-    auto image          = textureVK->GetVkImage();
-    auto mipLevels      = textureVK->GetNumMipLevels();
-    auto arrayLayers    = textureVK->GetNumArrayLayers();
+    auto textureVK  = MakeUnique<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
-    auto formatVK = VKTypes::Map(textureDesc.format);
-
     auto cmdBuffer = device_.AllocCommandBuffer();
     {
-        const TextureSubresource subresource{ 0, arrayLayers, 0, mipLevels };
+        const TextureSubresource subresource{ 0, textureVK->GetNumArrayLayers(), 0, textureVK->GetNumMipLevels() };
 
         device_.TransitionImageLayout(
             cmdBuffer,
-            image,
-            formatVK,
+            textureVK->GetVkImage(),
+            textureVK->GetVkFormat(),
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             subresource
@@ -375,16 +344,16 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         device_.CopyBufferToImage(
             cmdBuffer,
             stagingBuffer.GetVkBuffer(),
-            image,
+            textureVK->GetVkImage(),
             VkOffset3D{ 0, 0, 0 },
-            GetTextureVkExtent(textureDesc),
-            TextureSubresource{ 0, GetTextureLayertCount(textureDesc), 0, 1 }
+            textureVK->GetVkExtent(),
+            subresource
         );
 
         device_.TransitionImageLayout(
             cmdBuffer,
-            image,
-            formatVK,
+            textureVK->GetVkImage(),
+            textureVK->GetVkFormat(),
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             subresource
@@ -670,11 +639,11 @@ void VKRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
 {
     return TakeOwnership(
-        graphicsPipelines_,
-        MakeUnique<VKGraphicsPipeline>(
+        pipelineStates_,
+        MakeUnique<VKGraphicsPSO>(
             device_,
             defaultPipelineLayout_,
             (!renderContexts_.empty() ? (*renderContexts_.begin())->GetRenderPass() : nullptr),
@@ -684,19 +653,14 @@ GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
     );
 }
 
-ComputePipeline* VKRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
+PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
 {
-    return TakeOwnership(computePipelines_, MakeUnique<VKComputePipeline>(device_, desc, defaultPipelineLayout_));
+    return TakeOwnership(pipelineStates_, MakeUnique<VKComputePSO>(device_, desc, defaultPipelineLayout_));
 }
 
-void VKRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
+void VKRenderSystem::Release(PipelineState& pipelineState)
 {
-    RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
-}
-
-void VKRenderSystem::Release(ComputePipeline& computePipeline)
-{
-    RemoveFromUniqueSet(computePipelines_, &computePipeline);
+    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
 }
 
 /* ----- Queries ----- */

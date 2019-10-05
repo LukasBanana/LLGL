@@ -32,10 +32,9 @@ struct InterfaceID
         BufferArray,            //!< \see BufferArray
         CommandBuffer,          //!< \see CommandBuffer
         CommandQueue,           //!< \see CommandQueue
-        ComputePipeline,        //!< \see ComputePipeline
         Fence,                  //!< \see Fence
-        GraphicsPipeline,       //!< \see GraphicsPipeline
         PipelineLayout,         //!< \see PipelineLayout
+        PipelineState,          //!< \see PipelineState
         QueryHeap,              //!< \see QueryHeap
         RenderPass,             //!< \see RenderPass
         RenderTarget,           //!< \see RenderTarget

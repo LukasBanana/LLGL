@@ -8,7 +8,7 @@
 #pragma once
 
 #include <vcclr.h>
-#include "CsGraphicsPipelineFlags.h"
+#include "CsPipelineStateFlags.h"
 #include "CsColor.h"
 
 #using <System.dll>

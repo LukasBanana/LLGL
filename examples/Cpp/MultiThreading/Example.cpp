@@ -90,24 +90,24 @@ class Measure
 class Example_MultiThreading : public ExampleBase
 {
 
-    LLGL::ShaderProgram*            shaderProgram       = nullptr;
-    LLGL::Buffer*                   vertexBuffer        = nullptr;
-    LLGL::Buffer*                   indexBuffer         = nullptr;
-    LLGL::PipelineLayout*           pipelineLayout      = nullptr;
-    LLGL::CommandBuffer*            primaryCmdBuffer    = nullptr;
+    LLGL::ShaderProgram*        shaderProgram       = nullptr;
+    LLGL::Buffer*               vertexBuffer        = nullptr;
+    LLGL::Buffer*               indexBuffer         = nullptr;
+    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
+    LLGL::CommandBuffer*        primaryCmdBuffer    = nullptr;
 
-    std::uint32_t                   numIndices          = 0;
-    std::mutex                      logMutex;
+    std::uint32_t               numIndices          = 0;
+    std::mutex                  logMutex;
 
-    Measure                         measure;
+    Measure                     measure;
 
     struct Bundle
     {
-        LLGL::GraphicsPipeline*     pipeline            = nullptr;
-        LLGL::Buffer*               constantBuffer      = nullptr;
-        LLGL::ResourceHeap*         resourceHeap        = nullptr;
-        LLGL::CommandBuffer*        secondaryCmdBuffer  = nullptr;
-        Gs::Matrix4f                wvpMatrix;
+        LLGL::PipelineState*    pipeline            = nullptr;
+        LLGL::Buffer*           constantBuffer      = nullptr;
+        LLGL::ResourceHeap*     resourceHeap        = nullptr;
+        LLGL::CommandBuffer*    secondaryCmdBuffer  = nullptr;
+        Gs::Matrix4f            wvpMatrix;
     }
     bundle[2];
 
@@ -185,7 +185,7 @@ private:
         }
 
         // Create first graphics pipeline
-        bundle[0].pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        bundle[0].pipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Create second graphics pipeline
         {
@@ -195,7 +195,7 @@ private:
             targetDesc.srcColor         = LLGL::BlendOp::One;
             targetDesc.colorArithmetic  = LLGL::BlendArithmetic::Subtract;
         }
-        bundle[1].pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        bundle[1].pipeline = renderer->CreatePipelineState(pipelineDesc);
     }
 
     static void PrintThreadsafe(std::mutex& mtx, const std::string& text)
@@ -218,7 +218,7 @@ private:
 
         cmdBuffer.Begin();
         {
-            cmdBuffer.SetGraphicsPipeline(*bundle.pipeline);
+            cmdBuffer.SetPipelineState(*bundle.pipeline);
             cmdBuffer.SetGraphicsResourceHeap(*bundle.resourceHeap, 0);
             cmdBuffer.DrawIndexed(numIndices, 0);
         }
@@ -258,7 +258,7 @@ private:
 
                 for (auto& bdl : bundle)
                 {
-                    cmdBuffer.SetGraphicsPipeline(*bdl.pipeline);
+                    cmdBuffer.SetPipelineState(*bdl.pipeline);
                     cmdBuffer.SetGraphicsResourceHeap(*bdl.resourceHeap, 0);
                     cmdBuffer.DrawIndexed(numIndices, 0);
                 }

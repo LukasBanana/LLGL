@@ -10,8 +10,8 @@
 #include "MTTypes.h"
 #include "Buffer/MTBuffer.h"
 #include "Buffer/MTBufferArray.h"
-#include "RenderState/MTGraphicsPipeline.h"
-#include "RenderState/MTComputePipeline.h"
+#include "RenderState/MTGraphicsPSO.h"
+#include "RenderState/MTComputePSO.h"
 #include "RenderState/MTResourceHeap.h"
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
@@ -412,28 +412,30 @@ void MTCommandBuffer::EndRenderPass()
 
 /* ----- Pipeline States ----- */
 
-void MTCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void MTCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
     /* Set graphics pipeline with encoder scheduler */
-    auto& graphicsPipelineMT = LLGL_CAST(MTGraphicsPipeline&, graphicsPipeline);
-    encoderScheduler_.SetGraphicsPipeline(&graphicsPipelineMT);
-
-    /* Store primitive type to subsequent draw commands */
-    primitiveType_ = graphicsPipelineMT.GetMTLPrimitiveType();
-}
-
-void MTCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
-{
-    /* Set compute pipeline with encoder scheduler */
-    auto& computePipelineMT = LLGL_CAST(MTComputePipeline&, computePipeline);
-    encoderScheduler_.BindComputeEncoder();
-    computePipelineMT.Bind(encoderScheduler_.GetComputeEncoder());
-
-    /* Store reference to work group size of shader program */
-    if (auto shaderProgram = computePipelineMT.GetShaderProgram())
-        numThreadsPerGroup_ = &(shaderProgram->GetNumThreadsPerGroup());
+    auto& pipelineStateMT = LLGL_CAST(MTPipelineState&, pipelineState);
+    if (pipelineStateMT.IsGraphicsPSO())
+    {
+        /* Schedule graphics pipeline and store primitive type for draw commands */
+        auto& graphicsPSO = LLGL_CAST(MTGraphicsPSO&, pipelineStateMT);
+        encoderScheduler_.SetGraphicsPSO(&graphicsPSO);
+        primitiveType_ = graphicsPSO.GetMTLPrimitiveType();
+    }
     else
-        numThreadsPerGroup_ = &g_defaultNumThreadsPerGroup;
+    {
+        /* Set compute pipeline with encoder scheduler */
+        auto& computePSO = LLGL_CAST(MTComputePSO&, pipelineStateMT);
+        encoderScheduler_.BindComputeEncoder();
+        computePSO.Bind(encoderScheduler_.GetComputeEncoder());
+
+        /* Store reference to work group size of shader program */
+        if (auto shaderProgram = computePSO.GetShaderProgram())
+            numThreadsPerGroup_ = &(shaderProgram->GetNumThreadsPerGroup());
+        else
+            numThreadsPerGroup_ = &g_defaultNumThreadsPerGroup;
+    }
 }
 
 void MTCommandBuffer::SetUniform(

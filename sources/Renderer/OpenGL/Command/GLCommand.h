@@ -24,8 +24,7 @@ class RenderTarget;
 class GLBuffer;
 class GLTexture;
 class GLResourceHeap;
-class GLGraphicsPipeline;
-class GLComputePipeline;
+class GLPipelineState;
 class GLQueryHeap;
 class GLRenderContext;
 class GLRenderTarget;
@@ -196,14 +195,9 @@ struct GLCmdBindRenderPass
 //  const ClearValue*   clearValues[numClearValues];
 };
 
-struct GLCmdBindGraphicsPipeline
+struct GLCmdBindPipelineState
 {
-    GLGraphicsPipeline* graphicsPipeline;
-};
-
-struct GLCmdBindComputePipeline
-{
-    GLComputePipeline* computePipeline;
+    GLPipelineState* pipelineState;
 };
 
 struct GLCmdSetUniforms

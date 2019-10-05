@@ -17,8 +17,7 @@
 #include "DbgBuffer.h"
 #include "DbgBufferArray.h"
 #include "DbgPipelineLayout.h"
-#include "DbgGraphicsPipeline.h"
-#include "DbgComputePipeline.h"
+#include "DbgPipelineState.h"
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
 #include "DbgShader.h"
@@ -122,11 +121,10 @@ class DbgRenderSystem final : public RenderSystem
 
         /* ----- Pipeline States ----- */
 
-        GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
-        ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
+        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc) override;
+        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc) override;
 
-        void Release(GraphicsPipeline& graphicsPipeline) override;
-        void Release(ComputePipeline& computePipeline) override;
+        void Release(PipelineState& pipelineState) override;
 
         /* ----- Queries ----- */
 
@@ -219,8 +217,7 @@ class DbgRenderSystem final : public RenderSystem
         HWObjectContainer<DbgShader>            shaders_;
         HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
         HWObjectContainer<DbgPipelineLayout>    pipelineLayouts_;
-        HWObjectContainer<DbgGraphicsPipeline>  graphicsPipelines_;
-        HWObjectContainer<DbgComputePipeline>   computePipelines_;
+        HWObjectContainer<DbgPipelineState>     pipelineStates_;
         //HWObjectContainer<DbgSampler>           samplers_;
         HWObjectContainer<DbgQueryHeap>         queryHeaps_;
 

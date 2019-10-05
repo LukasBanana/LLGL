@@ -27,11 +27,11 @@ class Example_ComputeShader : public ExampleBase
 
     LLGL::ShaderProgram*    computeShader           = nullptr;
     LLGL::PipelineLayout*   computeLayout           = nullptr;
-    LLGL::ComputePipeline*  computePipeline         = nullptr;
+    LLGL::PipelineState*    computePipeline         = nullptr;
     LLGL::ResourceHeap*     computeResourceHeap     = nullptr;
 
     LLGL::ShaderProgram*    graphicsShader          = nullptr;
-    LLGL::GraphicsPipeline* graphicsPipeline        = nullptr;
+    LLGL::PipelineState*    graphicsPipeline        = nullptr;
 
     struct SceneState
     {
@@ -210,7 +210,7 @@ public:
             pipelineDesc.shaderProgram  = computeShader;
             pipelineDesc.pipelineLayout = computeLayout;
         }
-        computePipeline = renderer->CreateComputePipeline(pipelineDesc);
+        computePipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Create resource heap for compute pipeline
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
@@ -274,7 +274,7 @@ public:
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
-        graphicsPipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        graphicsPipeline = renderer->CreatePipelineState(pipelineDesc);
     }
 
 private:
@@ -291,7 +291,7 @@ private:
             commands->UpdateBuffer(*inputBuffer, 0, &sceneState, sizeof(sceneState));
 
             // Run compute shader
-            commands->SetComputePipeline(*computePipeline);
+            commands->SetPipelineState(*computePipeline);
             commands->SetComputeResourceHeap(*computeResourceHeap);
             commands->Dispatch(sceneState.numSceneObjects, 1, 1);
 
@@ -314,7 +314,7 @@ private:
                 commands->SetVertexBufferArray(*vertexBufferArray);
 
                 // Draw scene with indirect argument buffer
-                commands->SetGraphicsPipeline(*graphicsPipeline);
+                commands->SetPipelineState(*graphicsPipeline);
                 commands->DrawIndirect(*indirectArgBuffer, 0, 2, sizeof(LLGL::DrawIndirectArguments));
 
                 commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);

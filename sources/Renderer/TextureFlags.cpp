@@ -126,17 +126,20 @@ LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& e
 
 LLGL_EXPORT std::uint32_t NumMipTexels(const TextureDescriptor& textureDesc, std::uint32_t mipLevel)
 {
+    const auto extent = CalcTextureExtent(textureDesc.type, textureDesc.extent, textureDesc.arrayLayers);
+
     if (mipLevel == ~0u)
     {
         std::uint32_t numTexels = 0;
 
         const auto numMipLevels = NumMipLevels(textureDesc);
         for (mipLevel = 0; mipLevel < numMipLevels; ++mipLevel)
-            numTexels += NumMipTexels(textureDesc.type, textureDesc.extent, mipLevel);
+            numTexels += NumMipTexels(textureDesc.type, extent, mipLevel);
 
         return numTexels;
     }
-    return NumMipTexels(textureDesc.type, textureDesc.extent, mipLevel);
+
+    return NumMipTexels(textureDesc.type, extent, mipLevel);
 }
 
 std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)

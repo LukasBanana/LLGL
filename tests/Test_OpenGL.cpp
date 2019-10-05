@@ -309,7 +309,7 @@ int main()
 
             pipelineDesc.blend.targets[0].dstColor      = LLGL::BlendOp::Zero;
         }
-        auto& pipeline = *renderer->CreateGraphicsPipeline(pipelineDesc);
+        auto& pipeline = *renderer->CreatePipelineState(pipelineDesc);
 
         // Create sampler
         LLGL::SamplerDescriptor samplerDesc;
@@ -367,7 +367,7 @@ int main()
                     commands->SetClearColor({ 0.3f, 0.3f, 1 });
                     commands->Clear(LLGL::ClearFlags::Color);
 
-                    commands->SetGraphicsPipeline(pipeline);
+                    commands->SetPipelineState(pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
 
                     auto projection = Gs::ProjectionMatrix4f::Planar(

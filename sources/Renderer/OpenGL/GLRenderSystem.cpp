@@ -23,6 +23,8 @@
 #include "GLRenderingCaps.h"
 #include "Command/GLImmediateCommandBuffer.h"
 #include "Command/GLDeferredCommandBuffer.h"
+#include "RenderState/GLGraphicsPSO.h"
+#include "RenderState/GLComputePSO.h"
 
 
 namespace LLGL
@@ -510,13 +512,13 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
             CopyImageBufferRegion(
                 imageDesc,
                 Offset3D{ 0, 0, 0 },
-                textureRegion.extent.width,
-                textureRegion.extent.width * textureRegion.extent.height,
+                extent.width,
+                extent.width * extent.height,
                 SrcImageDescriptor{ imageDesc.format, imageDesc.dataType, intermediateData.get(), dataSize },
-                textureRegion.offset,
+                offset,
                 mipExtent.width,
                 mipExtent.width * mipExtent.height,
-                textureRegion.extent
+                extent
             );
         }
     }
@@ -633,24 +635,19 @@ void GLRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-GraphicsPipeline* GLRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<GLGraphicsPipeline>(desc, GetRenderingCaps().limits));
+    return TakeOwnership(pipelineStates_, MakeUnique<GLGraphicsPSO>(desc, GetRenderingCaps().limits));
 }
 
-ComputePipeline* GLRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
+PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
 {
-    return TakeOwnership(computePipelines_, MakeUnique<GLComputePipeline>(desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<GLComputePSO>(desc));
 }
 
-void GLRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
+void GLRenderSystem::Release(PipelineState& pipelineState)
 {
-    RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
-}
-
-void GLRenderSystem::Release(ComputePipeline& computePipeline)
-{
-    RemoveFromUniqueSet(computePipelines_, &computePipeline);
+    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
 }
 
 /* ----- Queries ----- */

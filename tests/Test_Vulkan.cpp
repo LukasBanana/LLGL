@@ -223,7 +223,7 @@ int main()
 
             pipelineDesc.blend.targets[0].blendEnabled = true;
         }
-        auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Create query
         #ifdef TEST_QUERY
@@ -256,7 +256,7 @@ int main()
             commands->Begin();
             {
                 commands->SetVertexBuffer(*vertexBuffer);
-                commands->SetGraphicsPipeline(*pipeline);
+                commands->SetPipelineState(*pipeline);
                 commands->SetGraphicsResourceHeap(*resourceViewHeap);
 
                 // Update constant buffer

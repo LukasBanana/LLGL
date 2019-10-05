@@ -37,10 +37,8 @@
 #include "ShaderProgramFlags.h"
 #include "PipelineLayout.h"
 #include "PipelineLayoutFlags.h"
-#include "GraphicsPipeline.h"
-#include "GraphicsPipelineFlags.h"
-#include "ComputePipeline.h"
-#include "ComputePipelineFlags.h"
+#include "PipelineState.h"
+#include "PipelineStateFlags.h"
 #include "QueryHeap.h"
 #include "Fence.h"
 
@@ -437,28 +435,29 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /* ----- Pipeline States ----- */
 
+        #if 0//TODO
+        virtual PipelineState* CreatePipelineState(const Blob& serializedCache);
+        #endif
+
         /**
-        \brief Creates a new and initialized graphics pipeline state object.
+        \brief Creates a new graphics pipeline state object (PSO).
         \param[in] desc Specifies the graphics pipeline descriptor.
         This will describe the entire pipeline state, i.e. the blending-, rasterizer-, depth-, stencil- and shader states.
-        The "shaderProgram" member of the descriptor must never be null!
+        The \c shaderProgram member of the descriptor must never be null!
         \see GraphicsPipelineDescriptor
         */
-        virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) = 0;
+        virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc/*, std::unique_ptr<Blob>* serializedCache = nullptr*/) = 0;
 
         /**
-        \brief Creates a new and initialized compute pipeline state object.
+        \brief Creates a new compute pipeline state object (PSO).
         \param[in] desc Specifies the compute pipeline descriptor. This will describe the shader states.
-        The "shaderProgram" member of the descriptor must never be null!
+        The \c shaderProgram member of the descriptor must never be null!
         \see ComputePipelineDescriptor
         */
-        virtual ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) = 0;
+        virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc/*, std::unique_ptr<Blob>* serializedCache = nullptr*/) = 0;
 
-        //! Releases the specified GraphicsPipeline object. After this call, the specified object must no longer be used.
-        virtual void Release(GraphicsPipeline& graphicsPipeline) = 0;
-
-        //! Releases the specified ComputePipeline object. After this call, the specified object must no longer be used.
-        virtual void Release(ComputePipeline& computePipeline) = 0;
+        //! Releases the specified PipelineState object. After this call, the specified object must no longer be used.
+        virtual void Release(PipelineState& pipelineState) = 0;
 
         /* ----- Queries ----- */
 

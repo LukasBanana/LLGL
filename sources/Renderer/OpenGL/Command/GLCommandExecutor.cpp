@@ -29,8 +29,7 @@
 #include "../Buffer/GLBufferArrayWithVAO.h"
 
 #include "../RenderState/GLStateManager.h"
-#include "../RenderState/GLGraphicsPipeline.h"
-#include "../RenderState/GLComputePipeline.h"
+#include "../RenderState/GLPipelineState.h"
 #include "../RenderState/GLResourceHeap.h"
 #include "../RenderState/GLRenderPass.h"
 #include "../RenderState/GLQueryHeap.h"
@@ -243,16 +242,10 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             stateMngr.BindRenderPass(*(cmd->renderTarget), cmd->renderPass, cmd->numClearValues, reinterpret_cast<const ClearValue*>(cmd + 1), cmd->defaultClearValue);
             return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
         }
-        case GLOpcodeBindGraphicsPipeline:
+        case GLOpcodeBindPipelineState:
         {
-            auto cmd = reinterpret_cast<const GLCmdBindGraphicsPipeline*>(pc);
-            cmd->graphicsPipeline->Bind(stateMngr);
-            return sizeof(*cmd);
-        }
-        case GLOpcodeBindComputePipeline:
-        {
-            auto cmd = reinterpret_cast<const GLCmdBindComputePipeline*>(pc);
-            cmd->computePipeline->Bind(stateMngr);
+            auto cmd = reinterpret_cast<const GLCmdBindPipelineState*>(pc);
+            cmd->pipelineState->Bind(stateMngr);
             return sizeof(*cmd);
         }
         case GLOpcodeSetUniforms:

@@ -14,7 +14,7 @@ class Example_Animation : public ExampleBase
     LLGL::PipelineLayout*       pipelineLayout          = nullptr;
     LLGL::ResourceHeap*         resourceHeap            = {};
     LLGL::ShaderProgram*        shaderProgram           = nullptr;
-    LLGL::GraphicsPipeline*     pipelineScene           = {};
+    LLGL::PipelineState*        pipelineScene           = {};
 
     LLGL::Buffer*               vertexBuffer            = nullptr;
     LLGL::Buffer*               constantBuffer          = nullptr;
@@ -168,7 +168,7 @@ private:
                 pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
-            pipelineScene = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineScene = renderer->CreatePipelineState(pipelineDesc);
         }
     }
 
@@ -310,7 +310,7 @@ private:
 
     void RenderScene()
     {
-        commands->SetGraphicsPipeline(*pipelineScene);
+        commands->SetPipelineState(*pipelineScene);
         commands->SetGraphicsResourceHeap(*resourceHeap);
 
         RenderMesh(meshStairsBottom);

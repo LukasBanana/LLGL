@@ -490,7 +490,6 @@ void GLTexture::GetRenderbufferSize(GLint (&texSize)[3]) const
         {
             /* Bind texture and query attributes */
             GLStateManager::Get().BindRenderbuffer(id_);
-            auto target = GLGetTextureParamTarget(GetType());
             glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,  &texSize[0]);
             glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &texSize[1]);
             texSize[2] = 1;

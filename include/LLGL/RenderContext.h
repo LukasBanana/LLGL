@@ -19,8 +19,7 @@
 #include "ShaderProgram.h"
 #include "Texture.h"
 #include "RenderTarget.h"
-#include "GraphicsPipeline.h"
-#include "ComputePipeline.h"
+#include "PipelineState.h"
 #include "Sampler.h"
 #include "QueryHeap.h"
 

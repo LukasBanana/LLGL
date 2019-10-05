@@ -33,8 +33,7 @@
 #include "RenderState/VKFence.h"
 #include "RenderState/VKRenderPass.h"
 #include "RenderState/VKPipelineLayout.h"
-#include "RenderState/VKGraphicsPipeline.h"
-#include "RenderState/VKComputePipeline.h"
+#include "RenderState/VKGraphicsPSO.h"
 #include "RenderState/VKResourceHeap.h"
 
 #include <string>
@@ -136,11 +135,10 @@ class VKRenderSystem final : public RenderSystem
 
         /* ----- Pipeline States ----- */
 
-        GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
-        ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
+        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc) override;
+        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc) override;
 
-        void Release(GraphicsPipeline& graphicsPipeline) override;
-        void Release(ComputePipeline& computePipeline) override;
+        void Release(PipelineState& pipelineState) override;
 
         /* ----- Queries ----- */
 
@@ -205,8 +203,7 @@ class VKRenderSystem final : public RenderSystem
         HWObjectContainer<VKShader>             shaders_;
         HWObjectContainer<VKShaderProgram>      shaderPrograms_;
         HWObjectContainer<VKPipelineLayout>     pipelineLayouts_;
-        HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
-        HWObjectContainer<VKComputePipeline>    computePipelines_;
+        HWObjectContainer<VKPipelineState>      pipelineStates_;
         HWObjectContainer<VKResourceHeap>       resourceHeaps_;
         HWObjectContainer<VKQueryHeap>          queryHeaps_;
         HWObjectContainer<VKFence>              fences_;

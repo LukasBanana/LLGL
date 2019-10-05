@@ -10,7 +10,7 @@
 
 
 #include "../../DXCommon/ComPtr.h"
-#include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/PipelineStateFlags.h>
 #include <vector>
 #include <cstdint>
 #include <d3d11.h>
@@ -20,7 +20,7 @@ namespace LLGL
 {
 
 
-//TODO: add function to bind ID3D11... objects to avoid unnecessary bindings (can be easily tracked by their pointers).
+//TODO: rename to <D3D11CommandContext>
 class D3D11StateManager
 {
 
@@ -53,8 +53,6 @@ class D3D11StateManager
 
     private:
 
-        /* ----- Structures ----- */
-
         struct D3DInputAssemblyState
         {
             D3D11_PRIMITIVE_TOPOLOGY    primitiveTopology   = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
@@ -81,7 +79,7 @@ class D3D11StateManager
             UINT                        sampleMask          = 0xffffffff;
         };
 
-        /* ----- Members ----- */
+    private:
 
         ComPtr<ID3D11DeviceContext> context_;
 

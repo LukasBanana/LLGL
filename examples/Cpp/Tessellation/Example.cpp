@@ -19,7 +19,7 @@ class Example_Tessellation : public ExampleBase
 {
 
     LLGL::ShaderProgram*    shaderProgram       = nullptr;
-    LLGL::GraphicsPipeline* pipeline[2]         = { nullptr };
+    LLGL::PipelineState*    pipeline[2]         = { nullptr };
 
     LLGL::Buffer*           vertexBuffer        = nullptr;
     LLGL::Buffer*           indexBuffer         = nullptr;
@@ -201,10 +201,10 @@ public:
         }
 
         // Create graphics pipelines
-        pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[0] = renderer->CreatePipelineState(pipelineDesc);
 
         pipelineDesc.rasterizer.polygonMode = LLGL::PolygonMode::Wireframe;
-        pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[1] = renderer->CreatePipelineState(pipelineDesc);
     }
 
     void ShowTessLevel()
@@ -283,7 +283,7 @@ private:
                 commands->SetViewport(context->GetVideoMode().resolution);
 
                 // Set graphics pipeline with the shader
-                commands->SetGraphicsPipeline(*pipeline[showWireframe ? 1 : 0]);
+                commands->SetPipelineState(*pipeline[showWireframe ? 1 : 0]);
 
                 if (resourceHeap)
                 {

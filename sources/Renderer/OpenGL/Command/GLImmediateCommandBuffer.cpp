@@ -30,8 +30,7 @@
 #include "../Buffer/GLBufferArrayWithVAO.h"
 
 #include "../RenderState/GLStateManager.h"
-#include "../RenderState/GLGraphicsPipeline.h"
-#include "../RenderState/GLComputePipeline.h"
+#include "../RenderState/GLGraphicsPSO.h"
 #include "../RenderState/GLResourceHeap.h"
 #include "../RenderState/GLRenderPass.h"
 #include "../RenderState/GLQueryHeap.h"
@@ -433,21 +432,19 @@ void GLImmediateCommandBuffer::EndRenderPass()
 
 /* ----- Pipeline States ----- */
 
-void GLImmediateCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void GLImmediateCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
     /* Bind graphics pipeline render states */
-    auto& graphicsPipelineGL = LLGL_CAST(GLGraphicsPipeline&, graphicsPipeline);
-    graphicsPipelineGL.Bind(*stateMngr_);
+    auto& pipelineStateGL = LLGL_CAST(GLPipelineState&, pipelineState);
+    pipelineStateGL.Bind(*stateMngr_);
 
     /* Store draw and primitive mode */
-    renderState_.drawMode       = graphicsPipelineGL.GetDrawMode();
-    renderState_.primitiveMode  = graphicsPipelineGL.GetPrimitiveMode();
-}
-
-void GLImmediateCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
-{
-    auto& computePipelineGL = LLGL_CAST(GLComputePipeline&, computePipeline);
-    computePipelineGL.Bind(*stateMngr_);
+    if (pipelineStateGL.IsGraphicsPSO())
+    {
+        auto& graphicsPSO = LLGL_CAST(GLGraphicsPSO&, pipelineStateGL);
+        renderState_.drawMode       = graphicsPSO.GetDrawMode();
+        renderState_.primitiveMode  = graphicsPSO.GetPrimitiveMode();
+    }
 }
 
 void GLImmediateCommandBuffer::SetUniform(

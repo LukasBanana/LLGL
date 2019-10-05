@@ -17,7 +17,7 @@
 #include "DbgRenderTarget.h"
 #include "DbgShaderProgram.h"
 #include "DbgQueryHeap.h"
-#include "DbgComputePipeline.h"
+#include "DbgPipelineState.h"
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
@@ -619,9 +619,9 @@ void DbgCommandBuffer::EndRenderPass()
 
 /* ----- Pipeline States ----- */
 
-void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    auto& graphicsPipelineDbg = LLGL_CAST(DbgGraphicsPipeline&, graphicsPipeline);
+    auto& pipelineStateDbg = LLGL_CAST(DbgPipelineState&, pipelineState);
 
     if (debugger_)
     {
@@ -629,53 +629,40 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
         AssertRecording();
 
         /* Bind graphics pipeline and unbind compute pipeline */
-        bindings_.graphicsPipeline  = (&graphicsPipelineDbg);
-        bindings_.computePipeline   = nullptr;
+        bindings_.pipelineState         = (&pipelineStateDbg);
+        bindings_.shaderProgram_        = nullptr;
+        bindings_.anyShaderAttributes   = false;
 
-        if (auto shaderProgram = graphicsPipelineDbg.desc.shaderProgram)
+        if (pipelineStateDbg.isGraphicsPSO)
         {
-            auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
-            bindings_.shaderProgram_        = shaderProgramDbg;
-            bindings_.anyShaderAttributes   = !(shaderProgramDbg->GetVertexLayout().attributes.empty());
+            if (auto shaderProgram = pipelineStateDbg.graphicsDesc.shaderProgram)
+            {
+                auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
+                bindings_.shaderProgram_        = shaderProgramDbg;
+                bindings_.anyShaderAttributes   = !(shaderProgramDbg->GetVertexLayout().attributes.empty());
+            }
         }
         else
         {
-            bindings_.shaderProgram_        = nullptr;
-            bindings_.anyShaderAttributes   = false;
+            if (auto shaderProgram = pipelineStateDbg.computeDesc.shaderProgram)
+            {
+                auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
+                bindings_.shaderProgram_ = shaderProgramDbg;
+            }
         }
     }
 
     /* Store primitive topology used in graphics pipeline */
-    topology_ = graphicsPipelineDbg.desc.primitiveTopology;
+    if (pipelineStateDbg.isGraphicsPSO)
+        topology_ = pipelineStateDbg.graphicsDesc.primitiveTopology;
 
     /* Call wrapped function */
-    LLGL_DBG_COMMAND( "SetGraphicsPipeline", instance.SetGraphicsPipeline(graphicsPipelineDbg.instance) );
+    LLGL_DBG_COMMAND( "SetPipelineState", instance.SetPipelineState(pipelineStateDbg.instance) );
 
-    profile_.graphicsPipelineBindings++;
-}
-
-void DbgCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
-{
-    auto& computePipelineDbg = LLGL_CAST(DbgComputePipeline&, computePipeline);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-
-        /* Bind compute pipeline and unbind graphics pipeline */
-        bindings_.graphicsPipeline  = nullptr;
-        bindings_.computePipeline   = &computePipelineDbg;
-
-        if (auto shaderProgram = computePipelineDbg.desc.shaderProgram)
-            bindings_.shaderProgram_ = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
-        else
-            bindings_.shaderProgram_ = nullptr;
-    }
-
-    LLGL_DBG_COMMAND( "SetComputePipeline", instance.SetComputePipeline(computePipelineDbg.instance) );
-
-    profile_.computePipelineBindings++;
+    if (pipelineStateDbg.isGraphicsPSO)
+        profile_.graphicsPipelineBindings++;
+    else
+        profile_.computePipelineBindings++;
 }
 
 void DbgCommandBuffer::SetUniform(
@@ -1258,16 +1245,19 @@ void DbgCommandBuffer::ValidateAttachmentClear(const AttachmentClear& attachment
 
 void DbgCommandBuffer::ValidateVertexLayout()
 {
-    if (bindings_.graphicsPipeline && bindings_.numVertexBuffers > 0)
+    if (auto pso = bindings_.pipelineState)
     {
-        auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, bindings_.graphicsPipeline->desc.shaderProgram);
-        const auto& vertexLayout = shaderProgramDbg->GetVertexLayout();
+        if (pso->isGraphicsPSO && bindings_.numVertexBuffers > 0)
+        {
+            auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, pso->graphicsDesc.shaderProgram);
+            const auto& vertexLayout = shaderProgramDbg->GetVertexLayout();
 
-        /* Check if vertex layout is specified in active shader program */
-        if (vertexLayout.bound)
-            ValidateVertexLayoutAttributes(vertexLayout.attributes, bindings_.vertexBuffers, bindings_.numVertexBuffers);
-        else if (bindings_.anyNonEmptyVertexBuffer)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program while bound vertex buffers are non-empty");
+            /* Check if vertex layout is specified in active shader program */
+            if (vertexLayout.bound)
+                ValidateVertexLayoutAttributes(vertexLayout.attributes, bindings_.vertexBuffers, bindings_.numVertexBuffers);
+            else if (bindings_.anyNonEmptyVertexBuffer)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program while bound vertex buffers are non-empty");
+        }
     }
 }
 
@@ -1652,14 +1642,18 @@ void DbgCommandBuffer::AssertInsideRenderPass()
 
 void DbgCommandBuffer::AssertGraphicsPipelineBound()
 {
-    if (!bindings_.graphicsPipeline)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound: missing call to <LLGL::CommandBuffer::SetGraphicsPipeline>");
+    if (bindings_.pipelineState == nullptr)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound: missing call to <LLGL::CommandBuffer::SetPipelineState>");
+    else if (!bindings_.pipelineState->isGraphicsPSO)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "compute pipeline is bound but graphics pipeline is required");
 }
 
 void DbgCommandBuffer::AssertComputePipelineBound()
 {
-    if (!bindings_.computePipeline)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound: missing call to <LLGL::CommandBuffer::SetComputePipeline>");
+    if (bindings_.pipelineState == nullptr)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound: missing call to <LLGL::CommandBuffer::SetPipelineState>");
+    else if (bindings_.pipelineState->isGraphicsPSO)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "graphics pipeline is bound but compute pipeline is required");
 }
 
 void DbgCommandBuffer::AssertVertexBufferBound()

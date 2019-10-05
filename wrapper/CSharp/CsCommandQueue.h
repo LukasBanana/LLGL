@@ -10,7 +10,7 @@
 #include <vcclr.h>
 #include <LLGL/CommandQueue.h>
 #include "CsCommandBuffer.h"
-#include "CsRenderSystemChilds.h"
+#include "CsRenderSystemChild.h"
 
 #using <System.dll>
 #using <System.Core.dll>

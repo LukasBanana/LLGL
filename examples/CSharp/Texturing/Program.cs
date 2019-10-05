@@ -41,7 +41,7 @@ namespace LLGLExamples
         private RenderContext context;
         private CommandQueue cmdQueue;
         private CommandBuffer cmdBuffer;
-        private GraphicsPipeline pipeline;
+        private PipelineState pipeline;
 
         public void Run()
         {
@@ -59,6 +59,7 @@ namespace LLGLExamples
                     contextDesc.VideoMode.ColorBits         = 32;
                     contextDesc.VideoMode.DepthBits         = 24;
                     contextDesc.VideoMode.StencilBits       = 8;
+                    contextDesc.Samples                     = 8;
                 }
                 context = renderer.CreateRenderContext(contextDesc);
 
@@ -80,8 +81,8 @@ namespace LLGLExamples
 
                 // Create vertex buffer
                 var vertexFormat = new VertexFormat();
-                vertexFormat.AppendAttribute(new VertexAttribute("coord",    Format.RG32Float));
-                vertexFormat.AppendAttribute(new VertexAttribute("texCoord", Format.RG32Float));
+                vertexFormat.AppendAttribute(new VertexAttribute("coord",    Format.RG32Float, 0));
+                vertexFormat.AppendAttribute(new VertexAttribute("texCoord", Format.RG32Float, 1));
 
                 const float uvScale = 10.0f;
 
@@ -95,49 +96,50 @@ namespace LLGLExamples
 
                 var vertexBufferDesc = new BufferDescriptor();
                 {
-                    vertexBufferDesc.BindFlags              = BindFlags.VertexBuffer;
-                    vertexBufferDesc.Size                   = vertexFormat.Stride * (ulong)vertices.Length;
-                    vertexBufferDesc.VertexBuffer.Format    = vertexFormat;
+                    vertexBufferDesc.BindFlags      = BindFlags.VertexBuffer;
+                    vertexBufferDesc.Size           = vertexFormat.Attributes[0].Stride * (ulong)vertices.Length;
+                    vertexBufferDesc.VertexAttribs  = vertexFormat.Attributes;
                 }
                 var vertexBuffer = renderer.CreateBuffer(vertexBufferDesc, vertices);
 
                 // Create shaders
-                var vertShader = renderer.CreateShader(
-                    new ShaderDescriptor(
-                        type: ShaderType.Vertex,
-                        sourceType: ShaderSourceType.CodeString,
-                        source: @"
-                            #version 330 core
-                            in vec2 coord;
-                            in vec2 texCoord;
-                            out vec2 vTexCoord;
-                            void main() {
-                                gl_Position = vec4(coord, 0, 1);
-                                vTexCoord = texCoord;
-                            }
-                        "
-                    )
+                var vsDesc = new ShaderDescriptor(
+                    type: ShaderType.Vertex,
+                    sourceType: ShaderSourceType.CodeString,
+                    source: @"
+                        #version 330 core
+                        in vec2 coord;
+                        in vec2 texCoord;
+                        out vec2 vTexCoord;
+                        void main() {
+                            gl_Position = vec4(coord, 0, 1);
+                            vTexCoord = texCoord;
+                        }
+                    "
                 );
-                var fragShader = renderer.CreateShader(
-                    new ShaderDescriptor
-                    (
-                        type: ShaderType.Fragment,
-                        sourceType: ShaderSourceType.CodeString,
-                        source: @"
-                            #version 330 core
-                            in vec2 vTexCoord;
-                            out vec4 fColor;
-                            uniform sampler2D tex;
-                            void main() {
-                                fColor = texture(tex, vTexCoord);
-                            }
-                        "
-                    )
+
+                vsDesc.Vertex.InputAttribs = vertexFormat.Attributes;
+
+                var fsDesc = new ShaderDescriptor
+                (
+                    type: ShaderType.Fragment,
+                    sourceType: ShaderSourceType.CodeString,
+                    source: @"
+                        #version 330 core
+                        in vec2 vTexCoord;
+                        out vec4 fColor;
+                        uniform sampler2D tex;
+                        void main() {
+                            fColor = texture(tex, vTexCoord);
+                        }
+                    "
                 );
+
+                var vertShader = renderer.CreateShader(vsDesc);
+                var fragShader = renderer.CreateShader(fsDesc);
 
                 var shaderProgramDesc = new ShaderProgramDescriptor();
                 {
-                    shaderProgramDesc.VertexFormats.Add(vertexFormat);
                     shaderProgramDesc.VertexShader      = vertShader;
                     shaderProgramDesc.FragmentShader    = fragShader;
                 }
@@ -147,26 +149,18 @@ namespace LLGLExamples
                     throw new Exception(shaderProgram.Report);
 
                 // Create pipeline layout
-                var pipelineLayoutDesc = new PipelineLayoutDescriptor();
-                {
-                    pipelineLayoutDesc.Bindings.Add(
-                        new BindingDescriptor(ResourceType.Texture, BindFlags.Sampled, StageFlags.FragmentStage, 0)
-                    );
-                    pipelineLayoutDesc.Bindings.Add(
-                        new BindingDescriptor(ResourceType.Sampler, 0, StageFlags.FragmentStage, 0)
-                    );
-                }
-                var pipelineLayout = renderer.CreatePipelineLayout(pipelineLayoutDesc);
+                var pipelineLayout = renderer.CreatePipelineLayout("texture(0):frag, sampler(0):frag");
 
                 // Create graphics pipeline
                 var pipelineDesc = new GraphicsPipelineDescriptor();
                 {
-                    pipelineDesc.ShaderProgram      = shaderProgram;
-                    pipelineDesc.PipelineLayout     = pipelineLayout;
-                    pipelineDesc.PrimitiveTopology  = PrimitiveTopology.TriangleStrip;
-                    pipelineDesc.Blend.Targets[0].BlendEnabled = true;
+                    pipelineDesc.ShaderProgram                  = shaderProgram;
+                    pipelineDesc.PipelineLayout                 = pipelineLayout;
+                    pipelineDesc.PrimitiveTopology              = PrimitiveTopology.TriangleStrip;
+                    pipelineDesc.Blend.Targets[0].BlendEnabled  = true;
+                    pipelineDesc.Rasterizer.MultiSampleEnabled  = true;
                 }
-                pipeline = renderer.CreateGraphicsPipeline(pipelineDesc);
+                pipeline = renderer.CreatePipelineState(pipelineDesc);
 
                 // Create texture
                 var imageDesc = new SrcImageDescriptor<RGBA>();
@@ -220,7 +214,7 @@ namespace LLGLExamples
                             cmdBuffer.Clear(ClearFlags.Color);
                             cmdBuffer.SetViewport(new Viewport(0, 0, context.Resolution.Width, context.Resolution.Height));
 
-                            cmdBuffer.SetGraphicsPipeline(pipeline);
+                            cmdBuffer.SetPipelineState(pipeline);
                             cmdBuffer.SetGraphicsResourceHeap(resourceHeap);
 
                             cmdBuffer.Draw(4, 0);

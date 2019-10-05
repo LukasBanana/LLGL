@@ -168,7 +168,7 @@ int main()
             pipelineDesc.rasterizer.multiSampling    = contextDesc.multiSampling;
             #endif
         }
-        auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
         commands->SetClearColor({ 0.1f, 0.1f, 0.4f });
         //context->SetClearColor({ 0, 0, 0 });
@@ -212,7 +212,7 @@ int main()
                     commands->Clear(LLGL::ClearFlags::Color);
                     commands->SetViewport(contextDesc.videoMode.resolution);
 
-                    commands->SetGraphicsPipeline(*pipeline);
+                    commands->SetPipelineState(*pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
                     commands->SetGraphicsResourceHeap(*resourceHeap);
 

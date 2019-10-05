@@ -20,6 +20,7 @@
 - [Multi-sampling descriptor](#multi-sampling-descriptor)
 - [`ReadTexture` interface](#readtexture-interface)
 - [Stream-output interface](#stream-output-interface)
+- [Pipeline state interface](#pipeline-state-interface)
 - [Removed features](#removed-features)
 
 
@@ -681,6 +682,37 @@ void LLGL::CommandBuffer::EndStreamOutput();
 myCmdBuffer->BeginStreamOutput(2, mySOTargets);
 /* ... */
 myCmdBuffer->EndStreamOutput();
+```
+
+## Pipeline state interface
+
+Graphics and compute pipelines have been merged into one interface. `GraphicsPipeline` and `ComputePipeline` interfaces have been replaced by `PipelineState`.
+
+Before:
+```cpp
+// Interface:
+LLGL::GraphicsPipeline* LLGL::RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc);
+LLGL::ComputePipeline*  LLGL::RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc);
+void                    LLGL::CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline);
+void                    LLGL::CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline);
+
+// Usage:
+LLGL::GraphicsPipeline* myGfxPipeline = myRenderer->CreateGraphicsPipeline(/* ... */);
+/* ... */
+myCmdBuffer->SetGraphicsPipeline(*myGfxPipeline);
+```
+
+After:
+```cpp
+// Interface:
+LLGL::PipelineState*    LLGL::RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc);
+LLGL::PipelineState*    LLGL::RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc);
+void                    LLGL::CommandBuffer::SetPipelineState(PipelineState& pipelineState);
+
+// Usage:
+LLGL::PipelineState* myGfxPipeline = myRenderer->CreatePipelineState(/* ... */);
+/* ... */
+myCmdBuffer->SetPipelineState(*myGfxPipeline);
 ```
 
 

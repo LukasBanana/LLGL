@@ -20,9 +20,9 @@ class Example_VolumeRendering : public ExampleBase
     LLGL::PipelineLayout*       pipelineLayoutCbuffer   = nullptr;
     LLGL::PipelineLayout*       pipelineLayoutFinalPass = nullptr;
 
-    LLGL::GraphicsPipeline*     pipelineRangePass       = nullptr;
-    LLGL::GraphicsPipeline*     pipelineZPrePass        = nullptr;
-    LLGL::GraphicsPipeline*     pipelineFinalPass       = nullptr;
+    LLGL::PipelineState*        pipelineRangePass       = nullptr;
+    LLGL::PipelineState*        pipelineZPrePass        = nullptr;
+    LLGL::PipelineState*        pipelineFinalPass       = nullptr;
 
     LLGL::ResourceHeap*         resourceHeapCbuffer     = nullptr;
     LLGL::ResourceHeap*         resourceHeapFinalPass   = nullptr;
@@ -282,7 +282,7 @@ private:
                 //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
                 pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
             }
-            pipelineRangePass = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineRangePass = renderer->CreatePipelineState(pipelineDesc);
         }
 
         // Create graphics pipeline for Z-pre pass
@@ -299,7 +299,7 @@ private:
                 //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
                 pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
             }
-            pipelineZPrePass = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineZPrePass = renderer->CreatePipelineState(pipelineDesc);
         }
 
         // Create graphics pipeline for final scene rendering
@@ -322,7 +322,7 @@ private:
                 blendTarget.dstColor                    = LLGL::BlendOp::One;
                 blendTarget.srcColor                    = LLGL::BlendOp::SrcAlpha;
             }
-            pipelineFinalPass = renderer->CreateGraphicsPipeline(pipelineDesc);
+            pipelineFinalPass = renderer->CreatePipelineState(pipelineDesc);
         }
     }
 
@@ -430,7 +430,7 @@ private:
                 // Render depth-range pass
                 commands->PushDebugGroup("Range Pass");
                 {
-                    commands->SetGraphicsPipeline(*pipelineRangePass);
+                    commands->SetPipelineState(*pipelineRangePass);
                     commands->SetGraphicsResourceHeap(*resourceHeapCbuffer);
                     commands->Draw(mesh.numVertices, mesh.firstVertex);
                 }
@@ -450,7 +450,7 @@ private:
                 // Render Z-pre pass
                 commands->PushDebugGroup("Z-Pre Pass");
                 {
-                    commands->SetGraphicsPipeline(*pipelineZPrePass);
+                    commands->SetPipelineState(*pipelineZPrePass);
                     commands->SetGraphicsResourceHeap(*resourceHeapCbuffer);
                     commands->Draw(mesh.numVertices, mesh.firstVertex);
                 }
@@ -459,7 +459,7 @@ private:
                 // Render final scene pass
                 commands->PushDebugGroup("Final Pass");
                 {
-                    commands->SetGraphicsPipeline(*pipelineFinalPass);
+                    commands->SetPipelineState(*pipelineFinalPass);
                     commands->SetGraphicsResourceHeap(*resourceHeapFinalPass);
                     commands->Draw(mesh.numVertices, mesh.firstVertex);
                 }

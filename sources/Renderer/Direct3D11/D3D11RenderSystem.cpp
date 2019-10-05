@@ -17,15 +17,15 @@
 #include <sstream>
 #include <iomanip>
 #include <limits>
-#include <codecvt>
 
 #include "Buffer/D3D11Buffer.h"
 #include "Buffer/D3D11BufferArray.h"
 #include "Buffer/D3D11BufferWithRV.h"
 
-#include "RenderState/D3D11GraphicsPipeline.h"
-#include "RenderState/D3D11GraphicsPipeline1.h"
-#include "RenderState/D3D11GraphicsPipeline3.h"
+#include "RenderState/D3D11GraphicsPSO.h"
+#include "RenderState/D3D11GraphicsPSO1.h"
+#include "RenderState/D3D11GraphicsPSO3.h"
+#include "RenderState/D3D11ComputePSO.h"
 
 
 namespace LLGL
@@ -386,13 +386,13 @@ void D3D11RenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-GraphicsPipeline* D3D11RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     if (device3_)
     {
         /* Create graphics pipeline for Direct3D 11.3 */
-        return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline3>(device3_.Get(), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO3>(device3_.Get(), desc));
     }
     #endif
 
@@ -400,7 +400,7 @@ GraphicsPipeline* D3D11RenderSystem::CreateGraphicsPipeline(const GraphicsPipeli
     if (device2_)
     {
         /* Create graphics pipeline for Direct3D 11.1 (there is no dedicated class for 11.2) */
-        return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline1>(device2_.Get(), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO1>(device2_.Get(), desc));
     }
     #endif
 
@@ -408,27 +408,22 @@ GraphicsPipeline* D3D11RenderSystem::CreateGraphicsPipeline(const GraphicsPipeli
     if (device1_)
     {
         /* Create graphics pipeline for Direct3D 11.1 */
-        return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline1>(device1_.Get(), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO1>(device1_.Get(), desc));
     }
     #endif
 
     /* Create graphics pipeline for Direct3D 11.0 */
-    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline>(device_.Get(), desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO>(device_.Get(), desc));
 }
 
-ComputePipeline* D3D11RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
+PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
 {
-    return TakeOwnership(computePipelines_, MakeUnique<D3D11ComputePipeline>(desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<D3D11ComputePSO>(desc));
 }
 
-void D3D11RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
+void D3D11RenderSystem::Release(PipelineState& pipelineState)
 {
-    RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
-}
-
-void D3D11RenderSystem::Release(ComputePipeline& computePipeline)
-{
-    RemoveFromUniqueSet(computePipelines_, &computePipeline);
+    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
 }
 
 /* ----- Queries ----- */
@@ -612,7 +607,7 @@ void D3D11RenderSystem::QueryRendererInfo()
     if (!videoAdatperDescs_.empty())
     {
         const auto& videoAdapterDesc = videoAdatperDescs_.front();
-        info.deviceName = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(videoAdapterDesc.name);
+        info.deviceName = ToUTF8String(videoAdapterDesc.name);
         info.vendorName = videoAdapterDesc.vendor;
     }
     else

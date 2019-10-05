@@ -88,13 +88,13 @@ int main()
         {
             pipelineDesc.shaderProgram = shaderProgram;
         }
-        auto pipeline = renderer->CreateComputePipeline(pipelineDesc);
+        auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Set resources
         commands->Begin();
         {
             commands->SetResource(*storageBuffer, 0, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
-            commands->SetComputePipeline(*pipeline);
+            commands->SetPipelineState(*pipeline);
 
             // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query
             commands->BeginQuery(*timerQuery);

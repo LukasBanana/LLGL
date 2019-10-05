@@ -33,8 +33,7 @@
 #include "../Buffer/GLBufferArrayWithVAO.h"
 
 #include "../RenderState/GLStateManager.h"
-#include "../RenderState/GLGraphicsPipeline.h"
-#include "../RenderState/GLComputePipeline.h"
+#include "../RenderState/GLGraphicsPSO.h"
 #include "../RenderState/GLResourceHeap.h"
 #include "../RenderState/GLRenderPass.h"
 #include "../RenderState/GLQueryHeap.h"
@@ -237,16 +236,13 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLStateManager::BindRenderPass, g_stateMngrArg, cmd->renderTarget, cmd->renderPass, cmd->numClearValues, (cmd + 1), &(cmd->defaultClearValue));
             return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
         }
-        case GLOpcodeBindGraphicsPipeline:
+        case GLOpcodeBindPipelineState:
         {
-            auto cmd = reinterpret_cast<const GLCmdBindGraphicsPipeline*>(pc);
-            compiler.CallMember(&GLGraphicsPipeline::Bind, cmd->graphicsPipeline, g_stateMngrArg);
-            return sizeof(*cmd);
-        }
-        case GLOpcodeBindComputePipeline:
-        {
-            auto cmd = reinterpret_cast<const GLCmdBindComputePipeline*>(pc);
-            compiler.CallMember(&GLComputePipeline::Bind, cmd->computePipeline, g_stateMngrArg);
+            auto cmd = reinterpret_cast<const GLCmdBindPipelineState*>(pc);
+            if (cmd->pipelineState->IsGraphicsPSO())
+                compiler.CallMember(&GLGraphicsPSO::Bind, cmd->pipelineState, g_stateMngrArg);
+            else
+                compiler.CallMember(&GLPipelineState::Bind, cmd->pipelineState, g_stateMngrArg);
             return sizeof(*cmd);
         }
         case GLOpcodeSetUniforms:

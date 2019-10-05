@@ -8,8 +8,8 @@
 #pragma once
 
 #include <vcclr.h>
-#include "CsRenderSystemChilds.h"
-#include "CsGraphicsPipelineFlags.h"
+#include "CsRenderSystemChild.h"
+#include "CsPipelineStateFlags.h"
 
 #using <System.dll>
 #using <System.Core.dll>

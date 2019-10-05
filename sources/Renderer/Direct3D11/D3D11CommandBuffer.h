@@ -128,8 +128,7 @@ class D3D11CommandBuffer final : public CommandBuffer
 
         /* ----- Pipeline States ----- */
 
-        void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
-        void SetComputePipeline(ComputePipeline& computePipeline) override;
+        void SetPipelineState(PipelineState& pipelineState) override;
 
         void SetUniform(
             UniformLocation location,

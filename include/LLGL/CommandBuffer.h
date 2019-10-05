@@ -22,8 +22,7 @@
 #include "RenderPass.h"
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
-#include "GraphicsPipeline.h"
-#include "ComputePipeline.h"
+#include "PipelineState.h"
 #include "QueryHeap.h"
 
 #include <cstdint>
@@ -449,36 +448,36 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /* ----- Pipeline States ----- */
 
         /**
-        \brief Sets the active graphics pipeline state.
-        \param[in] graphicsPipeline Specifies the graphics pipeline state to set.
-        \remarks This will set all blending-, rasterizer-, depth-, stencil-, and shader states.
-        A valid graphics pipeline must always be set before any drawing operation can be performed,
-        and a graphics pipeline can only be set inside a render pass.
+        \brief Sets the active graphics or compute pipeline state.
+        \param[in] pipelineState Specifies the pipeline state which is to be bound for subsequent draw or compute commands.
+        \remarks A <b>graphics pipeline state</b> will set all blending-, rasterizer-, depth-, stencil-, and shader states.
+        A valid graphics pipeline state must always be set before any drawing operation can be performed,
+        and a graphics pipeline state \b can be set \b inside and \b outside a render pass section.
+        \remarks A <b>compute pipeline state</b> will set shader states for dispatch compute commands.
+        A valid compute pipeline state must always be set before any dispatch compute operation cam ne performed,
+        and a compute pipeline state \b must be set \b outside a render pass section.
         \code
-        // First set render target
+        // Set compute pipeline state
+        myCmdBuffer->SetPipelineState(*myComputePipeline);
+
+        // Perform compute commands
+        myCmdBuffer->Dispatch(...);
+
+        // Start render pass section
         myCmdBuffer->BeginRenderPass(...);
         {
-            // Then set graphics pipeline
-            myCmdBuffer->SetGraphicsPipeline(...);
+            // Set graphics pipeline state
+            myCmdBuffer->SetPipelineState(*myGraphicsPipeline);
 
-            // Then perform drawing operations
+            // Perform drawing operations
             myCmdBuffer->SetGraphicsResourceHeap(...);
             myCmdBuffer->Draw(...);
         }
         myCmdBuffer->EndRenderPass();
         \endcode
-        \see RenderSystem::CreateGraphicsPipeline
+        \see RenderSystem::CreatePipelineState
         */
-        virtual void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
-
-        /**
-        \brief Sets the active compute pipeline state.
-        \param[in] computePipeline Specifies the compuite pipeline state to set.
-        \remarks This will set the compute shader states.
-        A valid compute pipeline must always be set before any compute operation can be performed.
-        \see RenderSystem::CreateComputePipeline
-        */
-        virtual void SetComputePipeline(ComputePipeline& computePipeline) = 0;
+        virtual void SetPipelineState(PipelineState& pipelineState) = 0;
 
         #if 0//TODO: enable this
         /**

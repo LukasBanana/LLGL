@@ -10,7 +10,7 @@
 
 
 #include <LLGL/VertexAttribute.h>
-#include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/PipelineStateFlags.h>
 #include <LLGL/RenderContextFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/SamplerFlags.h>

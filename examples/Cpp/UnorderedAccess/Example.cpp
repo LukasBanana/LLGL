@@ -14,12 +14,12 @@ class Example_UnorderedAccess : public ExampleBase
 
     LLGL::ShaderProgram*    computeShaderProgram    = nullptr;
     LLGL::PipelineLayout*   computePipelineLayout   = nullptr;
-    LLGL::ComputePipeline*  computePipeline         = nullptr;
+    LLGL::PipelineState*    computePipeline         = nullptr;
     LLGL::ResourceHeap*     computeResourceHeap     = nullptr;
 
     LLGL::ShaderProgram*    graphicsShaderProgram   = nullptr;
     LLGL::PipelineLayout*   graphicsPipelineLayout  = nullptr;
-    LLGL::GraphicsPipeline* graphicsPipeline        = nullptr;
+    LLGL::PipelineState*    graphicsPipeline        = nullptr;
     LLGL::ResourceHeap*     graphicsResourceHeap    = nullptr;
 
     LLGL::Buffer*           vertexBuffer            = nullptr;
@@ -143,7 +143,7 @@ public:
             computePipelineDesc.shaderProgram   = computeShaderProgram;
             computePipelineDesc.pipelineLayout  = computePipelineLayout;
         }
-        computePipeline = renderer->CreateComputePipeline(computePipelineDesc);
+        computePipeline = renderer->CreatePipelineState(computePipelineDesc);
 
         // Create graphics pipeline layout
         {
@@ -162,7 +162,7 @@ public:
             graphicsPipelineDesc.pipelineLayout     = graphicsPipelineLayout;
             graphicsPipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
         }
-        graphicsPipeline = renderer->CreateGraphicsPipeline(graphicsPipelineDesc);
+        graphicsPipeline = renderer->CreatePipelineState(graphicsPipelineDesc);
     }
 
     void CreateTextures()
@@ -220,7 +220,7 @@ private:
         commands->Begin();
         {
             // Run compute shader
-            commands->SetComputePipeline(*computePipeline);
+            commands->SetPipelineState(*computePipeline);
             commands->SetComputeResourceHeap(*computeResourceHeap);
             commands->Dispatch(textureSize.width, textureSize.height, textureSize.depth);
 
@@ -229,7 +229,7 @@ private:
 
             // Set graphics resources
             commands->SetVertexBuffer(*vertexBuffer);
-            commands->SetGraphicsPipeline(*graphicsPipeline);
+            commands->SetPipelineState(*graphicsPipeline);
             commands->SetGraphicsResourceHeap(*graphicsResourceHeap);
 
             // Draw scene
