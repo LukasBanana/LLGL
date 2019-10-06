@@ -6,6 +6,7 @@
  */
 
 #include "StaticAssertions.h"
+#include "Serialization.h"
 #include <LLGL/Format.h>
 #include <LLGL/IndirectArguments.h>
 #include <LLGL/QueryHeapFlags.h>
@@ -21,6 +22,7 @@ LLGL_ASSERT_STDLAYOUT_STRUCT( DrawIndexedIndirectArguments );
 LLGL_ASSERT_STDLAYOUT_STRUCT( DrawPatchIndirectArgument );
 LLGL_ASSERT_STDLAYOUT_STRUCT( DispatchIndirectArguments );
 LLGL_ASSERT_STDLAYOUT_STRUCT( QueryPipelineStatistics );
+LLGL_ASSERT_STDLAYOUT_STRUCT( Serialization::Segment );
 
 
 } // /namespace LLGL
