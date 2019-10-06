@@ -41,7 +41,7 @@ Win32JITProgram::Win32JITProgram(const void* code, std::size_t size) :
 
 Win32JITProgram::~Win32JITProgram()
 {
-    VirtualFree(addr_, size_, MEM_RELEASE);
+    VirtualFree(addr_, 0, MEM_RELEASE);
 }
 
 
