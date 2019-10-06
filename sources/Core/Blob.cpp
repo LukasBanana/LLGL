@@ -178,12 +178,12 @@ std::unique_ptr<Blob> Blob::CreateStrongRef(std::string&& container)
 std::unique_ptr<Blob> Blob::CreateFromFile(const char* filename)
 {
     if (filename == nullptr || *filename == '\0')
-        return false;
+        return nullptr;
 
     /* Read file as binary */
     std::ifstream file{ filename, std::ios::in | std::ios::binary };
     if (!file.good())
-        return false;
+        return nullptr;
 
     /* Determine file size */
     file.seekg(0, std::ios::end);
