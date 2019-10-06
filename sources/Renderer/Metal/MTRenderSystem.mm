@@ -247,12 +247,17 @@ void MTRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
+PipelineState* MTRenderSystem::CreatePipelineState(const Blob& /*serializedCache*/)
+{
+    return nullptr;//TODO
+}
+
+PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(pipelineStates_, MakeUnique<MTGraphicsPSO>(device_, desc, GetDefaultRenderPass()));
 }
 
-PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
+PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(pipelineStates_, MakeUnique<MTComputePSO>(device_, desc));
 }

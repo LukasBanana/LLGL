@@ -133,8 +133,9 @@ class D3D11RenderSystem final : public RenderSystem
 
         /* ----- Pipeline States ----- */
 
-        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc) override;
-        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc) override;
+        PipelineState* CreatePipelineState(const Blob& serializedCache) override;
+        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
+        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
 
         void Release(PipelineState& pipelineState) override;
 

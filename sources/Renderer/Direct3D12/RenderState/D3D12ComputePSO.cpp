@@ -22,10 +22,10 @@ namespace LLGL
 
 D3D12ComputePSO::D3D12ComputePSO(
     D3D12Device&                        device,
-    ID3D12RootSignature*                defaultRootSignature,
+    D3D12PipelineLayout&                defaultPipelineLayout,
     const ComputePipelineDescriptor&    desc)
 :
-    D3D12PipelineState { false, defaultRootSignature, desc.pipelineLayout }
+    D3D12PipelineState { false, desc.pipelineLayout, defaultPipelineLayout }
 {
     /* Validate pointers and get D3D shader program */
     LLGL_ASSERT_PTR(desc.shaderProgram);

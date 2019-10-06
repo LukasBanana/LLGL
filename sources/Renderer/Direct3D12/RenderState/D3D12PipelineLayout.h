@@ -20,7 +20,7 @@ namespace LLGL
 {
 
 
-class D3D12RootSignature;
+class D3D12RootSignatureBuilder;
 
 class D3D12PipelineLayout final : public PipelineLayout
 {
@@ -46,10 +46,22 @@ class D3D12PipelineLayout final : public PipelineLayout
             return rootSignature_.Get();
         }
 
+        // Returns the native ID3D12RootSignature object as ComPtr.
+        inline const ComPtr<ID3D12RootSignature>& GetSharedRootSignature() const
+        {
+            return rootSignature_;
+        }
+
+        // Returns the serialized blob of the root siganture.
+        inline ID3DBlob* GetSerializedBlob() const
+        {
+            return serializedBlob_.Get();
+        }
+
     private:
 
         void BuildRootParameter(
-            D3D12RootSignature&             rootSignature,
+            D3D12RootSignatureBuilder&      rootSignature,
             D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
             const PipelineLayoutDescriptor& layoutDesc,
             const ResourceType              resourceType,
@@ -59,6 +71,7 @@ class D3D12PipelineLayout final : public PipelineLayout
     private:
 
         ComPtr<ID3D12RootSignature> rootSignature_;
+        ComPtr<ID3DBlob>            serializedBlob_;
         std::vector<long>           bindFlags_;
 
 };

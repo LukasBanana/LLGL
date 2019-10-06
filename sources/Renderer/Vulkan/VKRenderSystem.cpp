@@ -639,7 +639,12 @@ void VKRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
+PipelineState* VKRenderSystem::CreatePipelineState(const Blob& /*serializedCache*/)
+{
+    return nullptr;//TODO
+}
+
+PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(
         pipelineStates_,
@@ -653,7 +658,7 @@ PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescrip
     );
 }
 
-PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
+PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(pipelineStates_, MakeUnique<VKComputePSO>(device_, desc, defaultPipelineLayout_));
 }

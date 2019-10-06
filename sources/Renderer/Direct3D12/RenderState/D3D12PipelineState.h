@@ -12,6 +12,7 @@
 #include <LLGL/PipelineState.h>
 #include <LLGL/ForwardDecls.h>
 #include "../../DXCommon/ComPtr.h"
+#include "../../Serialization.h"
 #include <d3d12.h>
 #include <memory>
 
@@ -21,6 +22,7 @@ namespace LLGL
 
 
 class D3D12CommandContext;
+class D3D12PipelineLayout;
 
 class D3D12PipelineState : public PipelineState
 {
@@ -44,8 +46,14 @@ class D3D12PipelineState : public PipelineState
 
         D3D12PipelineState(
             bool                    isGraphicsPSO,
-            ID3D12RootSignature*    defaultRootSignature,
-            const PipelineLayout*   pipelineLayout
+            const PipelineLayout*   pipelineLayout,
+            D3D12PipelineLayout&    defaultPipelineLayout
+        );
+
+        D3D12PipelineState(
+            bool                            isGraphicsPSO,
+            ID3D12Device*                   device,
+            Serialization::Deserializer&    reader
         );
 
         // Stores the native PSO.
@@ -60,14 +68,14 @@ class D3D12PipelineState : public PipelineState
         // Returns the root signature this PSO was linked to.
         inline ID3D12RootSignature* GetRootSignature() const
         {
-            return rootSignature_;
+            return rootSignature_.Get();
         }
 
     private:
 
-        ComPtr<ID3D12PipelineState> native_;
-        ID3D12RootSignature*        rootSignature_  = nullptr;
         const bool                  isGraphicsPSO_  = false;
+        ComPtr<ID3D12PipelineState> native_;
+        ComPtr<ID3D12RootSignature> rootSignature_;
 
 };
 

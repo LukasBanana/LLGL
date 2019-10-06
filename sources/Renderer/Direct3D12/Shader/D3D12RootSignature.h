@@ -1,12 +1,12 @@
 /*
- * D3D12RootSignature.h
+ * D3D12RootSignatureBuilder.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_D3D12_ROOT_SIGNATURE_H
-#define LLGL_D3D12_ROOT_SIGNATURE_H
+#ifndef LLGL_D3D12_ROOT_SIGNATURE_BUILDER_H
+#define LLGL_D3D12_ROOT_SIGNATURE_BUILDER_H
 
 
 #include "D3D12RootParameter.h"
@@ -20,7 +20,7 @@ namespace LLGL
 
 
 // Helper class to manage all root parameters of a root signature
-class D3D12RootSignature
+class D3D12RootSignatureBuilder
 {
 
     public:
@@ -33,13 +33,20 @@ class D3D12RootSignature
 
         D3D12_STATIC_SAMPLER_DESC* AppendStaticSampler();
 
-        ComPtr<ID3D12RootSignature> Finalize(ID3D12Device* device, D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE);
+        // Creates the final native D3D root signature.
+        ComPtr<ID3D12RootSignature> Finalize(
+            ID3D12Device*               device,
+            D3D12_ROOT_SIGNATURE_FLAGS  flags           = D3D12_ROOT_SIGNATURE_FLAG_NONE,
+            ComPtr<ID3DBlob>*           serializedBlob  = nullptr
+        );
 
+        // Returns a constant reference to the root parameter at the specified index.
         inline const D3D12RootParameter& operator [] (std::size_t idx) const
         {
             return rootParams_[idx];
         }
 
+        // Returns a reference to the root parameter at the specified index.
         inline D3D12RootParameter& operator [] (std::size_t idx)
         {
             return rootParams_[idx];

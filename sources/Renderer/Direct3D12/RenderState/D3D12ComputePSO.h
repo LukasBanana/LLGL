@@ -18,6 +18,7 @@ namespace LLGL
 
 class D3D12Device;
 class D3D12ShaderProgram;
+class D3D12PipelineLayout;
 
 class D3D12ComputePSO final : public D3D12PipelineState
 {
@@ -26,7 +27,7 @@ class D3D12ComputePSO final : public D3D12PipelineState
 
         D3D12ComputePSO(
             D3D12Device&                        device,
-            ID3D12RootSignature*                defaultRootSignature,
+            D3D12PipelineLayout&                defaultPipelineLayout,
             const ComputePipelineDescriptor&    desc
         );
 

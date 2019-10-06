@@ -386,7 +386,12 @@ void D3D11RenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
+PipelineState* D3D11RenderSystem::CreatePipelineState(const Blob& /*serializedCache*/)
+{
+    return nullptr;//TODO
+}
+
+PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     if (device3_)
@@ -416,7 +421,7 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO>(device_.Get(), desc));
 }
 
-PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
+PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(pipelineStates_, MakeUnique<D3D11ComputePSO>(desc));
 }

@@ -432,7 +432,12 @@ void DbgRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
+PipelineState* DbgRenderSystem::CreatePipelineState(const Blob& serializedCache)
+{
+    return nullptr;//TODO
+}
+
+PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache)
 {
     LLGL_DBG_SOURCE;
 
@@ -447,7 +452,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescri
             if (desc.pipelineLayout != nullptr)
                 instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
         }
-        return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), desc));
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "shader program must not be null");
@@ -455,7 +460,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescri
     return nullptr;
 }
 
-PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
+PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache)
 {
     LLGL_DBG_SOURCE;
 
@@ -467,7 +472,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescrip
             if (desc.pipelineLayout != nullptr)
                 instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
         }
-        return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), desc));
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "shader program must not be null");

@@ -1,5 +1,5 @@
 /*
- * D3D12RootSignature.cpp
+ * D3D12RootSignatureBuilder.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -14,21 +14,21 @@ namespace LLGL
 {
 
 
-void D3D12RootSignature::Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
+void D3D12RootSignatureBuilder::Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
 {
     nativeRootParams_.reserve(maxNumRootParamters);
     rootParams_.reserve(maxNumRootParamters);
     staticSamplers_.reserve(maxNumStaticSamplers);
 }
 
-void D3D12RootSignature::ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
+void D3D12RootSignatureBuilder::ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
 {
     Reset(maxNumRootParamters, maxNumStaticSamplers);
     while (maxNumRootParamters-- > 0)
         AppendRootParameter();
 }
 
-D3D12RootParameter* D3D12RootSignature::AppendRootParameter()
+D3D12RootParameter* D3D12RootSignatureBuilder::AppendRootParameter()
 {
     /* Create new root paramter */
     nativeRootParams_.push_back({});
@@ -36,7 +36,7 @@ D3D12RootParameter* D3D12RootSignature::AppendRootParameter()
     return &(rootParams_.back());
 }
 
-D3D12RootParameter* D3D12RootSignature::FindCompatibleRootParameter(D3D12_DESCRIPTOR_RANGE_TYPE rangeType)
+D3D12RootParameter* D3D12RootSignatureBuilder::FindCompatibleRootParameter(D3D12_DESCRIPTOR_RANGE_TYPE rangeType)
 {
     /* Find compatible root parameter (search from back to front) */
     for (auto it = rootParams_.rbegin(); it != rootParams_.rend(); ++it)
@@ -47,7 +47,7 @@ D3D12RootParameter* D3D12RootSignature::FindCompatibleRootParameter(D3D12_DESCRI
     return nullptr;
 }
 
-D3D12_STATIC_SAMPLER_DESC* D3D12RootSignature::AppendStaticSampler()
+D3D12_STATIC_SAMPLER_DESC* D3D12RootSignatureBuilder::AppendStaticSampler()
 {
     D3D12_STATIC_SAMPLER_DESC samplerDesc;
     {
@@ -96,7 +96,10 @@ static ComPtr<ID3DBlob> DXSerializeRootSignature(
     return signature;
 }
 
-static ComPtr<ID3D12RootSignature> DXCreateRootSignature(ID3D12Device* device, const D3D12_ROOT_SIGNATURE_DESC& signatureDesc)
+static ComPtr<ID3D12RootSignature> DXCreateRootSignature(
+    ID3D12Device*                       device,
+    const D3D12_ROOT_SIGNATURE_DESC&    signatureDesc,
+    ComPtr<ID3DBlob>*                   serializedBlob)
 {
     ComPtr<ID3D12RootSignature> rootSignature;
 
@@ -112,10 +115,17 @@ static ComPtr<ID3D12RootSignature> DXCreateRootSignature(ID3D12Device* device, c
     );
     DXThrowIfFailed(hr, "failed to create D3D12 root signature");
 
+    /* Return serialized signature blob */
+    if (serializedBlob != nullptr)
+        *serializedBlob = std::move(signature);
+
     return rootSignature;
 }
 
-ComPtr<ID3D12RootSignature> D3D12RootSignature::Finalize(ID3D12Device* device, D3D12_ROOT_SIGNATURE_FLAGS flags)
+ComPtr<ID3D12RootSignature> D3D12RootSignatureBuilder::Finalize(
+    ID3D12Device*               device,
+    D3D12_ROOT_SIGNATURE_FLAGS  flags,
+    ComPtr<ID3DBlob>*           serializedBlob)
 {
     D3D12_ROOT_SIGNATURE_DESC signatureDesc;
     {
@@ -135,7 +145,7 @@ ComPtr<ID3D12RootSignature> D3D12RootSignature::Finalize(ID3D12Device* device, D
 
         signatureDesc.Flags                 = flags;
     }
-    return DXCreateRootSignature(device, signatureDesc);
+    return DXCreateRootSignature(device, signatureDesc, serializedBlob);
 }
 
 

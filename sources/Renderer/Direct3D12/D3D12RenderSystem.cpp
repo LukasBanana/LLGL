@@ -7,6 +7,7 @@
 
 #include "D3D12RenderSystem.h"
 #include "D3D12Types.h"
+#include "D3D12Serialization.h"
 #include "../DXCommon/DXCore.h"
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
@@ -416,24 +417,54 @@ void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const Blob& serializedCache)
 {
-    return TakeOwnership(
+    Serialization::Deserializer reader{ serializedCache };
+
+    /* Read type of PSO */
+    auto seg = reader.ReadSegment();
+    if (seg.ident == Serialization::D3D12Ident_GraphicsPSOIdent)
+    {
+        /* Create graphics PSO from cache */
+        return TakeOwnership(pipelineStates_, MakeUnique<D3D12GraphicsPSO>(device_, reader));
+    }
+    #if 0//TODO
+    else if (seg.ident == Serialization::D3D12Ident_ComputePSOIdent)
+    {
+        /* Create compute PSO from cache */
+        return TakeOwnership(pipelineStates_, MakeUnique<D3D12ComputePSO>(device_, reader));
+    }
+    #endif
+
+    throw std::runtime_error("serialized cache does not denote a D3D12 graphics or compute PSO");
+}
+
+PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache)
+{
+    Serialization::Serializer writer;
+
+    auto pipelineState = TakeOwnership(
         pipelineStates_,
         MakeUnique<D3D12GraphicsPSO>(
             device_,
-            defaultPipelineLayout_.GetRootSignature(),
+            defaultPipelineLayout_,
             desc,
-            GetDefaultRenderPass()
+            GetDefaultRenderPass(),
+            (serializedCache != nullptr ? &writer : nullptr)
         )
     );
+
+    if (serializedCache != nullptr)
+        *serializedCache = writer.Finalize();
+
+    return pipelineState;
 }
 
-PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(
         pipelineStates_,
-        MakeUnique<D3D12ComputePSO>(device_, defaultPipelineLayout_.GetRootSignature(), desc)
+        MakeUnique<D3D12ComputePSO>(device_, defaultPipelineLayout_, desc)
     );
 }
 

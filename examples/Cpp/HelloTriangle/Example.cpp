@@ -15,6 +15,9 @@
 // Enable timer to show render times every second
 //#define ENABLE_TIMER
 
+// Enable caching of pipeline state objects (PSO)
+#define ENABLE_CACHED_PSO
+
 int main(int argc, char* argv[])
 {
     try
@@ -161,15 +164,53 @@ int main(int argc, char* argv[])
             throw std::runtime_error(shaderProgram->GetReport());
 
         // Create graphics pipeline
-        LLGL::GraphicsPipelineDescriptor pipelineDesc;
+        LLGL::PipelineState* pipeline = nullptr;
+        std::unique_ptr<LLGL::Blob> pipelineCache;
+
+        #ifdef ENABLE_CACHED_PSO
+        // Try to read PSO cache from file
+        const std::string cacheFilename = "GraphicsPSO." + rendererModule + ".cache";
+        if ((pipelineCache = LLGL::Blob::CreateFromFile(cacheFilename)) != nullptr)
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
-            pipelineDesc.renderPass                     = context->GetRenderPass();
-            #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
+            // Create graphics PSO from cache
+            pipeline = renderer->CreatePipelineState(*pipelineCache);
+            std::cout << "Pipeline cache restored: " << pipelineCache->GetSize() << " bytes" << std::endl;
+        }
+        else
+        #endif
+        {
+            LLGL::GraphicsPipelineDescriptor pipelineDesc;
+            {
+                pipelineDesc.shaderProgram                  = shaderProgram;
+                pipelineDesc.renderPass                     = context->GetRenderPass();
+                #ifdef ENABLE_MULTISAMPLING
+                pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
+                #endif
+            }
+
+            #ifdef ENABLE_CACHED_PSO
+
+            // Create and cache graphics PSO
+            pipeline = renderer->CreatePipelineState(pipelineDesc, &pipelineCache);
+            if (pipelineCache)
+            {
+                std::cout << "Pipeline cache created: " << pipelineCache->GetSize() << " bytes" << std::endl;
+
+                // Store PSO cache to file
+                std::ofstream file{ cacheFilename, std::ios::out | std::ios::binary };
+                file.write(
+                    reinterpret_cast<const char*>(pipelineCache->GetData()),
+                    static_cast<std::streamsize>(pipelineCache->GetSize())
+                );
+            }
+
+            #else
+
+            // Create graphics PSO
+            pipeline = renderer->CreatePipelineState(pipelineDesc);
+
             #endif
         }
-        LLGL::PipelineState* pipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Get command queue to record and submit command buffers
         LLGL::CommandQueue* queue = renderer->GetCommandQueue();

@@ -4,3 +4,4 @@ tests/Output
 build
 *.aps
 Screenshot.*
+*.cache

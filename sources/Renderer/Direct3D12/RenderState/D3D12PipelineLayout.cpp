@@ -52,7 +52,7 @@ static D3D12_ROOT_SIGNATURE_FLAGS GetRootSignatureFlags(const PipelineLayoutDesc
 
 void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
-    D3D12RootSignature rootSignature;
+    D3D12RootSignatureBuilder rootSignature;
     rootSignature.Reset(static_cast<UINT>(desc.bindings.size()), 0);
 
     /* Build root parameter for each descriptor range type */
@@ -64,7 +64,7 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
     BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0                         );
 
     /* Build final root signature descriptor */
-    rootSignature_ = rootSignature.Finalize(device, GetRootSignatureFlags(desc));
+    rootSignature_ = rootSignature.Finalize(device, GetRootSignatureFlags(desc), &serializedBlob_);
 }
 
 void D3D12PipelineLayout::ReleaseRootSignature()
@@ -83,7 +83,7 @@ long D3D12PipelineLayout::GetBindFlagsByIndex(std::size_t idx) const
  */
 
 void D3D12PipelineLayout::BuildRootParameter(
-    D3D12RootSignature&             rootSignature,
+    D3D12RootSignatureBuilder&      rootSignature,
     D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
     const PipelineLayoutDescriptor& layoutDesc,
     const ResourceType              resourceType,

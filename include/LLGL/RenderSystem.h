@@ -17,6 +17,7 @@
 #include "RenderingProfiler.h"
 #include "RenderingDebugger.h"
 
+#include "Blob.h"
 #include "Buffer.h"
 #include "BufferFlags.h"
 #include "BufferArray.h"
@@ -435,26 +436,66 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /* ----- Pipeline States ----- */
 
-        #if 0//TODO
-        virtual PipelineState* CreatePipelineState(const Blob& serializedCache);
-        #endif
+        /**
+        \brief Creates a new graphics or compute pipeline state object (PSO) from the specified cache.
+        \param[in] serializedCache Specifies the serialized cache that was created from the same pipeline state.
+        This is usually created during a previous application run, stored to file, and restored on a later run.
+        \remarks Here is an example how to use pipeline state caches:
+        \code
+        // Try to read PSO cache file
+        if (auto myCache = LLGL::Blob::CreateFromFile("MyPSOCacheFile.bin"))
+        {
+            // Create PSO from cache
+            myPipelineState = myRenderer->CreatePipelineState(*myCache);
+        }
+        else
+        {
+            // Setup initial pipeline state
+            LLGL::ComputePipelineDescritpor myPipelineDesc;
+            myPipelineDesc.pipelineLayout = myPipelineLayout;
+            myPipelineDesc.shaderProgram  = myShaderProgram;
+
+            // Create new PSO
+            std::unique_ptr<LLGL::Blob> myCache;
+            myRenderer->CreatePipelineState(myPipelineDesc, &myCache);
+
+            // Store PSO to file
+            std::ofstream myCacheFile{ "MyPSOCacheFile.bin", std::ios::out | std::ios::binary };
+            myCacheFile.write(
+                reinterpret_cast<const char*>(myCache->GetData()),
+                static_cast<std::streamsize>(myCache->GetSize())
+            );
+        }
+        \endcode
+        \see CreatePipelineState(const GraphicsPipelineDescriptor&, std::unique_ptr<Blob>*)
+        \see CreatePipelineState(const ComputePipelineDescriptor&, std::unique_ptr<Blob>*)
+        */
+        virtual PipelineState* CreatePipelineState(const Blob& serializedCache) = 0;
 
         /**
         \brief Creates a new graphics pipeline state object (PSO).
         \param[in] desc Specifies the graphics pipeline descriptor.
         This will describe the entire pipeline state, i.e. the blending-, rasterizer-, depth-, stencil- and shader states.
         The \c shaderProgram member of the descriptor must never be null!
+        \param[out] serializedCache Optional pointer to a unique Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
+        This cache may be unique to the respective hardware and driver the application is running on. The behavior is undefined if this cache is used in a different software environment.
+        It can be used to faster restore a pipeline state on next application run.
         \see GraphicsPipelineDescriptor
+        \see CreatePipelineState(const Blob&)
         */
-        virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc/*, std::unique_ptr<Blob>* serializedCache = nullptr*/) = 0;
+        virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) = 0;
 
         /**
         \brief Creates a new compute pipeline state object (PSO).
-        \param[in] desc Specifies the compute pipeline descriptor. This will describe the shader states.
+        \param[in] desc Specifies the compute pipeline descriptor. This will describe the entire pipeline state.
         The \c shaderProgram member of the descriptor must never be null!
+        \param[out] serializedCache Optional pointer to a unique Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
+        This cache may be unique to the respective hardware and driver the application is running on. The behavior is undefined if this cache is used in a different software environment.
+        It can be used to faster restore a pipeline state on next application run.
         \see ComputePipelineDescriptor
+        \see CreatePipelineState(const Blob&)
         */
-        virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc/*, std::unique_ptr<Blob>* serializedCache = nullptr*/) = 0;
+        virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) = 0;
 
         //! Releases the specified PipelineState object. After this call, the specified object must no longer be used.
         virtual void Release(PipelineState& pipelineState) = 0;

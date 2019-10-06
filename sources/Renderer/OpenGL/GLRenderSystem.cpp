@@ -635,12 +635,17 @@ void GLRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 /* ----- Pipeline States ----- */
 
-PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc)
+PipelineState* GLRenderSystem::CreatePipelineState(const Blob& /*serializedCache*/)
+{
+    return nullptr;//TODO
+}
+
+PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(pipelineStates_, MakeUnique<GLGraphicsPSO>(desc, GetRenderingCaps().limits));
 }
 
-PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc)
+PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(pipelineStates_, MakeUnique<GLComputePSO>(desc));
 }

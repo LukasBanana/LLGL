@@ -9,7 +9,9 @@
 #include "D3D12PipelineLayout.h"
 #include "../D3D12Device.h"
 #include "../D3D12ObjectUtils.h"
+#include "../D3D12Serialization.h"
 #include "../../CheckedCast.h"
+#include "../../DXCommon/DXCore.h"
 
 
 namespace LLGL
@@ -18,8 +20,8 @@ namespace LLGL
 
 D3D12PipelineState::D3D12PipelineState(
     bool                    isGraphicsPSO,
-    ID3D12RootSignature*    defaultRootSignature,
-    const PipelineLayout*   pipelineLayout)
+    const PipelineLayout*   pipelineLayout,
+    D3D12PipelineLayout&    defaultPipelineLayout)
 :
     isGraphicsPSO_ { isGraphicsPSO }
 {
@@ -27,13 +29,26 @@ D3D12PipelineState::D3D12PipelineState(
     {
         /* Create pipeline state with root signature from pipeline layout */
         auto pipelineLayoutD3D = LLGL_CAST(const D3D12PipelineLayout*, pipelineLayout);
-        rootSignature_ = pipelineLayoutD3D->GetRootSignature();
+        rootSignature_ = pipelineLayoutD3D->GetSharedRootSignature();
     }
     else
     {
         /* Create pipeline state with default root signature */
-        rootSignature_ = defaultRootSignature;
+        rootSignature_ = defaultPipelineLayout.GetSharedRootSignature();
     }
+}
+
+D3D12PipelineState::D3D12PipelineState(
+    bool                            isGraphicsPSO,
+    ID3D12Device*                   device,
+    Serialization::Deserializer&    reader)
+:
+    isGraphicsPSO_ { isGraphicsPSO }
+{
+    /* Create root signature from cache */
+    auto seg = reader.ReadSegment(Serialization::D3D12Ident_RootSignature);
+    auto hr = device->CreateRootSignature(0, seg.data, seg.size, IID_PPV_ARGS(rootSignature_.ReleaseAndGetAddressOf()));
+    DXThrowIfFailed(hr, "failed to create D3D12 root signature");
 }
 
 void D3D12PipelineState::SetName(const char* name)
