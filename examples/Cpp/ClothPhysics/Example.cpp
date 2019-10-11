@@ -33,13 +33,13 @@ class Example_ClothPhysics : public ExampleBase
         NumAttribs
     };
 
-    const std::uint32_t     numSolverIterations                 = 4;    // Number of integration steps to resolve stretching constraints between particles, good values are in [1, 10]
+    const std::uint32_t     numSolverIterations                 = 8;    // Number of integration steps to resolve stretching constraints between particles, good values are in [1, 10]
     const std::uint32_t     clothSegmentsU                      = 16;   // Number of segments in horizontal direction for cloth geometry
     const std::uint32_t     clothSegmentsV                      = 16;   // Number of segments in vertical direction for cloth geometry
     const float             clothParticleMass                   = 1.0f;
     const Gs::Vector3f      gravityVector                       = { 0, -9.81f * 0.2f, 0 };
     const float             dampingFactor                       = 3.8f;
-    const float             stiffnessFactor                     = 1.0f; // Should be in [0, 1]
+    float                   stiffnessFactor                     = 1.0f; // Should be in [0, 1]
     const Gs::Vector3f      viewPos                             = { 0, -0.75f, -5 };
 
     LLGL::VertexFormat      vertexFormat;
@@ -48,6 +48,9 @@ class Example_ClothPhysics : public ExampleBase
     LLGL::Buffer*           particleBuffers[NumAttribs]         = {};
     LLGL::BufferArray*      vertexBufferArray                   = nullptr;
     LLGL::Buffer*           indexBuffer                         = nullptr;
+
+    LLGL::Texture*          colorMap                            = nullptr;
+    LLGL::Sampler*          linearSampler                       = nullptr;
 
     LLGL::PipelineLayout*   computeLayout                       = nullptr;
     LLGL::ResourceHeap*     computeResourceHeaps[2]             = {}; // Swap-buffer fashion
@@ -90,7 +93,7 @@ class Example_ClothPhysics : public ExampleBase
 public:
 
     Example_ClothPhysics() :
-        ExampleBase { L"LLGL Example: Cloth Physics" }
+        ExampleBase { L"LLGL Example: Cloth Physics" }//, { 1280, 768 }, 8, false }
     {
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
@@ -100,6 +103,8 @@ public:
 
         // Create all graphics objects
         CreateBuffers();
+        CreateTexture();
+        CreateSampler();
         CreateComputePipeline();
         CreateGraphicsPipeline();
     }
@@ -125,7 +130,7 @@ public:
                 const auto idx = v * (clothSegmentsU + 1) + u;
 
                 // Set mass for left and righ top particles to infinity to create suspension points
-                bool isSuspensionPoint = (v == 0 && (u == 0 || u == clothSegmentsU));// || (v == clothSegmentsV && u == 0);
+                bool isSuspensionPoint = (v == 0 && (u == 0 || u == clothSegmentsU));
 
                 // Initialize base attributes
                 auto& vertBase = verticesBase[idx];
@@ -251,6 +256,23 @@ public:
         indexBuffer = renderer->CreateBuffer(indexBufferDesc, indices.data());
     }
 
+    void CreateTexture()
+    {
+        // Load color map from file
+        colorMap = LoadTexture("../../Media/Textures/Logo_LLGL.png");
+    }
+
+    void CreateSampler()
+    {
+        // Create sampler state with linear interpolation (default configuration)
+        LLGL::SamplerDescriptor samplerDesc;
+        {
+            samplerDesc.addressModeU = LLGL::SamplerAddressMode::Clamp;
+            samplerDesc.addressModeV = LLGL::SamplerAddressMode::Clamp;
+        }
+        linearSampler = renderer->CreateSampler(samplerDesc);
+    }
+
     void CreateComputePipeline()
     {
         // Create compute shader
@@ -335,7 +357,7 @@ public:
 
         // Create graphics pipeline layout
         graphicsLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):vert:frag")
+            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag")
         );
 
         // Create graphics pipeline
@@ -355,7 +377,7 @@ public:
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
             resourceHeapDesc.pipelineLayout = graphicsLayout;
-            resourceHeapDesc.resourceViews  = { constantBuffer };
+            resourceHeapDesc.resourceViews  = { constantBuffer, colorMap, linearSampler };
         }
         graphicsResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
     }
@@ -365,12 +387,21 @@ private:
     void UpdateScene()
     {
         // Update user input
+        auto motion = input->GetMouseMotion();
+
         if (input->KeyPressed(LLGL::Key::LButton))
         {
-            auto motion = input->GetMouseMotion();
             viewRotation.x += static_cast<float>(motion.y) * 0.25f;
             viewRotation.x = Gs::Clamp(viewRotation.x, -90.0f, 90.0f);
             viewRotation.y += static_cast<float>(motion.x) * 0.25f;
+        }
+
+        if (input->KeyPressed(LLGL::Key::RButton))
+        {
+            float delta = motion.x*0.01f;
+            stiffnessFactor = std::max(0.5f, std::min(stiffnessFactor + delta, 1.0f));
+            std::cout << "stiffness: " << static_cast<int>(stiffnessFactor * 100.0f) << "%    \r";
+            std::flush(std::cout);
         }
 
         // Update timer

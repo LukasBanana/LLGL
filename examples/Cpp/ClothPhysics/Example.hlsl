@@ -208,29 +208,22 @@ VOut VS(in VIn inp)
  * HLSL pixel shader
  */
 
+Texture2D colorMap : register(t0);
+SamplerState linearSampler : register(s0);
+
 float4 PS(in VOut inp, bool frontFace : SV_IsFrontFace) : SV_Target0
 {
-    #if 1
     // Compute lighting
     float3 normal = normalize(inp.normal.xyz);
     normal *= lerp(1.0, -1.0, frontFace);
 
-    #if 0
-    return float4(normal*0.5+0.5,1.0);
-    #endif
-
     float NdotL = lerp(0.2, 1.0, max(0.0, dot(normal, -lightVec.xyz)));
 
     // Sample color texture
-    float4 diffuse = (float4)1;
+    float4 color = colorMap.Sample(linearSampler, inp.texCoord);
 
-    diffuse.rg = lerp(diffuse.rg, inp.texCoord, 0.5);
-
-    float4 color = diffuse;
+    color.rgb = lerp(color.rgb, float3(inp.texCoord, 1.0), 0.5);
 
     return float4(color.rgb * NdotL, color.a);
-    #else
-    return float4(inp.texCoord.xy, 0.0, 1.0);
-    #endif
 }
 
