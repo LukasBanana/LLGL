@@ -14,59 +14,77 @@
 class Example_ClothPhysics : public ExampleBase
 {
 
-    const std::uint32_t     clothSegmentsU          = 16;
-    const std::uint32_t     clothSegmentsV          = 16;
-    const float             clothParticleMass       = 1.0f;
-    const float             dampingFactor           = 3.8f;
-    const Gs::Vector3f      viewPos                 = { 0, -0.75f, -5 };
+    enum ComputeShader
+    {
+        CSForces = 0,
+        CSStretchConstraints,
+        CSRelaxation,
+        NumComputeShaders
+    };
+
+    enum ParticleAttribute
+    {
+        AttribBase = 0, // Original position, UV coordinates, inverse mass: float4[2] per particle
+        AttribCurrPos,  // Current position: float4 per particle
+        AttribNextPos,  // Next position: float4 per particle
+        AttribPrevPos,  // Previous position: float4 per particle
+        AttribVelocity, // Velocity vector: float4 per particle
+        AttribNormal,   // Surface normal: float4 per particle
+        NumAttribs
+    };
+
+    const std::uint32_t     numSolverIterations                 = 4;    // Number of integration steps to resolve stretching constraints between particles, good values are in [1, 10]
+    const std::uint32_t     clothSegmentsU                      = 16;   // Number of segments in horizontal direction for cloth geometry
+    const std::uint32_t     clothSegmentsV                      = 16;   // Number of segments in vertical direction for cloth geometry
+    const float             clothParticleMass                   = 1.0f;
+    const Gs::Vector3f      gravityVector                       = { 0, -9.81f * 0.2f, 0 };
+    const float             dampingFactor                       = 3.8f;
+    const float             stiffnessFactor                     = 1.0f; // Should be in [0, 1]
+    const Gs::Vector3f      viewPos                             = { 0, -0.75f, -5 };
 
     LLGL::VertexFormat      vertexFormat;
 
-    LLGL::Buffer*           constantBuffer          = nullptr;
-    LLGL::Buffer*           vertexBuffer            = nullptr;
-    LLGL::Buffer*           indexBuffer             = nullptr;
+    LLGL::Buffer*           constantBuffer                      = nullptr;
+    LLGL::Buffer*           particleBuffers[NumAttribs]         = {};
+    LLGL::BufferArray*      vertexBufferArray                   = nullptr;
+    LLGL::Buffer*           indexBuffer                         = nullptr;
 
-    LLGL::PipelineLayout*   computeLayout           = nullptr;
-    LLGL::ResourceHeap*     computeResourceHeap     = nullptr;
+    LLGL::PipelineLayout*   computeLayout                       = nullptr;
+    LLGL::ResourceHeap*     computeResourceHeaps[2]             = {}; // Swap-buffer fashion
 
-    LLGL::ShaderProgram*    computeShaders[3]       = {};
-    LLGL::PipelineState*    computePipelines[3]     = {};
+    LLGL::ShaderProgram*    computeShaders[NumComputeShaders]   = {};
+    LLGL::PipelineState*    computePipelines[NumComputeShaders] = {};
 
-    LLGL::ShaderProgram*    graphicsShader          = nullptr;
-    LLGL::PipelineLayout*   graphicsLayout          = nullptr;
-    LLGL::PipelineState*    graphicsPipeline        = nullptr;
-    LLGL::ResourceHeap*     graphicsResourceHeap    = nullptr;
+    LLGL::ShaderProgram*    graphicsShader                      = nullptr;
+    LLGL::PipelineLayout*   graphicsLayout                      = nullptr;
+    LLGL::PipelineState*    graphicsPipeline                    = nullptr;
+    LLGL::ResourceHeap*     graphicsResourceHeap                = nullptr;
 
-    std::uint32_t           numClothIndices         = 0;
+    std::uint32_t           numClothVertices                    = 0;
+    std::uint32_t           numClothIndices                     = 0;
+    std::uint32_t           swapBufferIndex                     = 0; // Index to swap particle buffer heaps
     Gs::Vector2f            viewRotation;
 
     struct SceneState
     {
         Gs::Matrix4f    wvpMatrix;
         Gs::Matrix4f    wMatrix;
-        Gs::Vector4f    gravity         = { 0.0f, -9.81f * 0.1f, 0.0f, 1.0f };
+        Gs::Vector4f    gravity;
         std::uint32_t   gridSize[2];
-        std::uint32_t   numIterations   = 4;
-        std::uint32_t   pad0;
+        std::uint32_t   pad0[2];
         float           damping;
-        float           stiffness       = 1.0f;
-        float           dt;
+        float           dTime;
+        float           dStiffness; // Reciprocal of number of solver iterations: 1/n
         float           pad1;
         Gs::Vector4f    lightVec        = { 0.0f, 0.0f, 1.0f, 0.0f };
     }
     sceneState;
 
-    struct Vertex
+    struct ParticleBase
     {
-        Gs::Vector4f    origPos;
-        Gs::Vector4f    prevPos;
-        Gs::Vector4f    nextPos;
-        Gs::Vector4f    velocity;
-        Gs::Vector4f    pos;
-        Gs::Vector4f    normal;
-        Gs::Vector2f    texCoord;
-        float           invMass;
-        float           pad0;
+        float uv[2];
+        float invMass;
+        float pad0;
     };
 
 public:
@@ -86,39 +104,51 @@ public:
         CreateGraphicsPipeline();
     }
 
-    void GenerateClothGeometry(std::vector<Vertex>& vertices, std::vector<std::uint32_t>& indices)
+    // Generates the grid geometry for the cloth with triangle strip topology
+    void GenerateClothGeometry(
+        std::vector<ParticleBase>&  verticesBase,
+        std::vector<Gs::Vector4f>&  verticesPos,
+        std::vector<std::uint32_t>& indices)
     {
         const auto invSegsU = 1.0f / static_cast<float>(clothSegmentsU);
         const auto invSegsV = 1.0f / static_cast<float>(clothSegmentsV);
 
         // Generate vertices from top to bottom, left to right
-        vertices.resize((clothSegmentsU + 1)*(clothSegmentsV + 1));
+        const auto numVertices = (clothSegmentsU + 1)*(clothSegmentsV + 1);
+        verticesBase.resize(numVertices);
+        verticesPos.resize(numVertices);
 
         for (std::uint32_t v = 0; v <= clothSegmentsV; ++v)
         {
             for (std::uint32_t u = 0; u <= clothSegmentsU; ++u)
             {
+                const auto idx = v * (clothSegmentsU + 1) + u;
+
                 // Set mass for left and righ top particles to infinity to create suspension points
                 bool isSuspensionPoint = (v == 0 && (u == 0 || u == clothSegmentsU));// || (v == clothSegmentsV && u == 0);
 
-                auto& vert = vertices[v * (clothSegmentsU + 1) + u];
+                // Initialize base attributes
+                auto& vertBase = verticesBase[idx];
                 {
                     // Initialize vertex attributes to generate 2D grid
-                    vert.texCoord.x = static_cast<float>(u) * invSegsU;
-                    vert.texCoord.y = static_cast<float>(v) * invSegsV;
-                    vert.origPos.x  = vert.texCoord.x * 2.0f - 1.0f;
-                    vert.origPos.y  = 0.0f;
-                    vert.origPos.z  = vert.texCoord.y * -2.0f;
-                    vert.prevPos    = vert.origPos;
-                    vert.pos        = vert.origPos;
+                    vertBase.uv[0] = static_cast<float>(u) * invSegsU;
+                    vertBase.uv[1] = static_cast<float>(v) * invSegsV;
 
                     // Store mass as inverse value to simplify physics integration (zero means infinite mass)
-                    vert.invMass    = (isSuspensionPoint ? 0.0f : 1.0f / clothParticleMass);
+                    vertBase.invMass = (isSuspensionPoint ? 0.0f : 1.0f / clothParticleMass);
+                }
+
+                // Initialize current and previous position for vertices
+                auto& vertPos = verticesPos[idx];
+                {
+                    vertPos.x = vertBase.uv[0] * 2.0f - 1.0f;
+                    vertPos.y = 0.0f;
+                    vertPos.z = vertBase.uv[1] * -2.0f;
                 }
             }
         }
 
-        // Generate indices for triangle strips
+        // Generate indices for triangle strips: one strip for each row, two indices for each column in the strips
         for (std::uint32_t v = 0; v < clothSegmentsV; ++v)
         {
             // Generate indices for row of triangle strip
@@ -138,34 +168,78 @@ public:
         sceneState.gridSize[1] = (clothSegmentsV + 1);
     }
 
+    // Creates and initializes the particle buffer specified by <attrib>
+    void CreateParticleBuffer(
+        ParticleAttribute               attrib,
+        LLGL::StorageBufferType         storageType,
+        const void*                     initialData     = nullptr,
+        const LLGL::VertexAttribute*    vertexAttrib    = nullptr)
+    {
+        // Initialize binding flags
+        long bindFlags = 0;
+        if (vertexAttrib != nullptr)
+            bindFlags |= LLGL::BindFlags::VertexBuffer;
+
+        if (storageType == LLGL::StorageBufferType::Buffer)
+            bindFlags |= LLGL::BindFlags::Sampled;
+        else if (storageType == LLGL::StorageBufferType::RWBuffer)
+            bindFlags |= LLGL::BindFlags::Storage;
+
+        // Create particle buffer
+        LLGL::BufferDescriptor bufferDesc;
+        {
+            bufferDesc.size                         = sizeof(Gs::Vector4f) * numClothVertices;
+            bufferDesc.storageBuffer.format         = LLGL::Format::RGBA32Float;
+            bufferDesc.bindFlags                    = bindFlags;
+            bufferDesc.storageBuffer.storageType    = storageType;
+            if (vertexAttrib != nullptr)
+                bufferDesc.vertexAttribs = { *vertexAttrib };
+        }
+        particleBuffers[attrib] = renderer->CreateBuffer(bufferDesc, initialData);
+    }
+
     void CreateBuffers()
     {
         // Initialize vertex format for rendering (not all vertex attributes are required for rendering)
-        vertexFormat.AppendAttribute({ "pos",      LLGL::Format::RGBA32Float }, false, sizeof(Gs::Vector4f)*4);
-        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGBA32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float   });
-        vertexFormat.SetStride(sizeof(Vertex));
-        vertexFormat.SetSlot(0);
+        vertexFormat.attributes =
+        {
+            LLGL::VertexAttribute{ "pos",      LLGL::Format::RGBA32Float, 0, 0, sizeof(Gs::Vector4f), 0 },
+            LLGL::VertexAttribute{ "normal",   LLGL::Format::RGBA32Float, 1, 0, sizeof(Gs::Vector4f), 1 },
+            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,   2, 0, sizeof(Gs::Vector4f), 2 },
+        };
 
-        // Generate vertex and index data
-        std::vector<Vertex> vertices;
+        // Generate vertex and index data and store number of vertices and indices for draw commands
+        std::vector<ParticleBase> verticesBase;
+        std::vector<Gs::Vector4f> verticesPos;
+        std::vector<Gs::Vector4f> zeroVectors;
         std::vector<std::uint32_t> indices;
-        GenerateClothGeometry(vertices, indices);
+
+        GenerateClothGeometry(verticesBase, verticesPos, indices);
+
+        numClothVertices    = static_cast<std::uint32_t>(verticesPos.size());
+        numClothIndices     = static_cast<std::uint32_t>(indices.size());
+
+        zeroVectors.resize(verticesBase.size());
 
         // Create constant buffer
         constantBuffer = CreateConstantBuffer(sceneState);
 
-        // Create vertex buffer
-        LLGL::BufferDescriptor vertexBufferDesc;
+        // Create particle buffers for each attribute
+        CreateParticleBuffer(AttribBase,     LLGL::StorageBufferType::RWBuffer, verticesBase.data(), &(vertexFormat.attributes[2]));
+        CreateParticleBuffer(AttribCurrPos,  LLGL::StorageBufferType::RWBuffer, verticesPos.data());
+        CreateParticleBuffer(AttribNextPos,  LLGL::StorageBufferType::RWBuffer, verticesPos.data());
+        CreateParticleBuffer(AttribPrevPos,  LLGL::StorageBufferType::RWBuffer, verticesPos.data(), &(vertexFormat.attributes[0]));
+        CreateParticleBuffer(AttribVelocity, LLGL::StorageBufferType::RWBuffer, zeroVectors.data());
+        CreateParticleBuffer(AttribNormal,   LLGL::StorageBufferType::RWBuffer, zeroVectors.data(), &(vertexFormat.attributes[1]));
+
+        // Create vertex buffer array for rendering
+        LLGL::Buffer* const buffers[3] =
         {
-            vertexBufferDesc.size                       = sizeof(Vertex) * vertices.size();
-            vertexBufferDesc.bindFlags                  = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
-            vertexBufferDesc.vertexAttribs              = vertexFormat.attributes;
-            vertexBufferDesc.storageBuffer.storageType  = LLGL::StorageBufferType::RWBuffer;
-            vertexBufferDesc.storageBuffer.format       = LLGL::Format::RGBA32Float;
-            //vertexBufferDesc.storageBuffer.stride       = sizeof(Gs::Vector4f);//sizeof(Vertex);
-        }
-        vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices.data());
+            particleBuffers[AttribPrevPos], // Read "pos" from last written position (i.e. "prevPos") from last compute shader invocation
+            particleBuffers[AttribNormal],  // Read "normal"
+            particleBuffers[AttribBase]     // Read "texCoord" from .xy
+        };
+        vertexBufferArray = renderer->CreateBufferArray(3, buffers);
 
         // Create index buffer
         LLGL::BufferDescriptor indexBufferDesc;
@@ -175,9 +249,6 @@ public:
             indexBufferDesc.indexFormat = LLGL::Format::R32UInt;
         }
         indexBuffer = renderer->CreateBuffer(indexBufferDesc, indices.data());
-
-        // Store number of indices for draw commands
-        numClothIndices = static_cast<std::uint32_t>(indices.size());
     }
 
     void CreateComputePipeline()
@@ -200,16 +271,39 @@ public:
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(1):comp, rwbuffer(2):comp")
+            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):comp, rwbuffer(parBase@2, parCurrPos@3, parNextPos@4, parPrevPos@5, parVelocity@6, parNormal@7):comp")
         );
 
         // Create resource heaps for compute pipeline
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
             resourceHeapDesc.pipelineLayout = computeLayout;
-            resourceHeapDesc.resourceViews  = { constantBuffer, vertexBuffer };
+            resourceHeapDesc.resourceViews  =
+            {
+                constantBuffer,
+                particleBuffers[AttribBase],
+                particleBuffers[AttribCurrPos],
+                particleBuffers[AttribNextPos],
+                particleBuffers[AttribPrevPos],
+                particleBuffers[AttribVelocity],
+                particleBuffers[AttribNormal]
+            };
         }
-        computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        computeResourceHeaps[0] = renderer->CreateResourceHeap(resourceHeapDesc);
+
+        {
+            resourceHeapDesc.resourceViews =
+            {
+                constantBuffer,
+                particleBuffers[AttribBase],
+                particleBuffers[AttribNextPos], // Swap pos with next-pos
+                particleBuffers[AttribCurrPos], // Swap next-pos with pos
+                particleBuffers[AttribPrevPos],
+                particleBuffers[AttribVelocity],
+                particleBuffers[AttribNormal]
+            };
+        }
+        computeResourceHeaps[1] = renderer->CreateResourceHeap(resourceHeapDesc);
 
         // Create compute pipeline
         for (int i = 0; i < 3; ++i)
@@ -241,7 +335,7 @@ public:
 
         // Create graphics pipeline layout
         graphicsLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(1):vert:frag")
+            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):vert:frag")
         );
 
         // Create graphics pipeline
@@ -281,8 +375,10 @@ private:
 
         // Update timer
         timer->MeasureTime();
-        sceneState.dt       = std::max(0.0001f, static_cast<float>(timer->GetDeltaTime()));
-        sceneState.damping  = (1.0f - std::pow(10.0f, -dampingFactor));
+        sceneState.damping      = (1.0f - std::pow(10.0f, -dampingFactor));
+        sceneState.dTime        = std::max(0.0001f, static_cast<float>(timer->GetDeltaTime()));
+        sceneState.dStiffness   = 1.0f - std::pow(1.0f - stiffnessFactor, 1.0f / static_cast<float>(numSolverIterations));
+        sceneState.gravity      = Gs::Vector4f{ gravityVector, 0.0f };
 
         // Update world matrix
         sceneState.wMatrix.LoadIdentity();
@@ -308,15 +404,41 @@ private:
             // Update scene state constant buffer
             commands->UpdateBuffer(*constantBuffer, 0, &sceneState, sizeof(sceneState));
 
-            // Run compute shader
-            for (int i = 0; i < 3; ++i)
+            // Run compute shader to apply particle forces
+            commands->PushDebugGroup("CSForces");
             {
-                commands->SetPipelineState(*computePipelines[i]);
-                commands->SetComputeResourceHeap(*computeResourceHeap);
+                commands->SetPipelineState(*computePipelines[CSForces]);
+                commands->SetComputeResourceHeap(*computeResourceHeaps[swapBufferIndex]);
                 commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
             }
+            commands->PopDebugGroup();
 
-            commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 2, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
+            // Run compute shader to apply stretch constraints with number of integration steps
+            commands->PushDebugGroup("CSStretchConstraints");
+            {
+                commands->SetPipelineState(*computePipelines[CSStretchConstraints]);
+
+                for (std::uint32_t i = 0; i < numSolverIterations; ++i)
+                {
+                    if (i > 0)
+                        swapBufferIndex = (swapBufferIndex + 1) % 2;
+                    commands->SetComputeResourceHeap(*computeResourceHeaps[swapBufferIndex]);
+                    commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
+                }
+            }
+            commands->PopDebugGroup();
+
+            // Run compute shader to adjust velocity of particles
+            commands->PushDebugGroup("CSRelaxation");
+            {
+                commands->SetPipelineState(*computePipelines[CSRelaxation]);
+                commands->SetComputeResourceHeap(*computeResourceHeaps[swapBufferIndex]);
+                commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
+            }
+            commands->PopDebugGroup();
+
+            //commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 5, 3, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
+            commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 2, 6, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
         }
         commands->End();
         commandQueue->Submit(*commands);
@@ -332,7 +454,7 @@ private:
                 commands->SetViewport(context->GetVideoMode().resolution);
 
                 // Set vertex and index buffers
-                commands->SetVertexBuffer(*vertexBuffer);
+                commands->SetVertexBufferArray(*vertexBufferArray);
                 commands->SetIndexBuffer(*indexBuffer);
 
                 // Draw scene with indirect argument buffer
@@ -340,7 +462,8 @@ private:
                 commands->SetGraphicsResourceHeap(*graphicsResourceHeap);
                 commands->DrawIndexed(numClothIndices, 0);
 
-                commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 0, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
+                //commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 0, 2, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
+                commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 0, 3, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
             }
             commands->EndRenderPass();
         }

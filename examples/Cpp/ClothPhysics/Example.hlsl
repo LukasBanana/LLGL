@@ -2,87 +2,53 @@
  * HLSL compute shader
  */
 
-#define SIZEOF_PARTICLE (7)
-
 cbuffer SceneState : register(b1)
 {
     float4x4    wvpMatrix;
     float4x4    wMatrix;
     float4      gravity;
     uint2       gridSize;
-    uint        numIterations;
-    uint        _pad0;
+    uint2       _pad0;
     float       damping;
-    float       stiffness;
-    float       dt;
+    float       dTime;
+    float       dStiffness;
     float       _pad1;
     float4      lightVec;
 };
 
-struct Particle
+// Sub view of a particle
+struct ParticleView
 {
-    float4 origPos;
-    float4 prevPos;
-    float4 nextPos;
-    float4 velocity;
     float4 currPos;
+    float4 nextPos;
+    float4 origPos;
     float4 normal;
-    float4 uv_invMass;
+    float invMass;
 };
 
-RWBuffer<float4> particles : register(u2);
+// Particle buffers
+//Buffer<float4>      parBase     : register(t2); // UV (.xy) and inverse mass (.z)
+RWBuffer<float4>    parBase     : register(u2); // UV (.xy) and inverse mass (.z)
+RWBuffer<float4>    parCurrPos  : register(u3);
+RWBuffer<float4>    parNextPos  : register(u4);
+RWBuffer<float4>    parPrevPos  : register(u5);
+RWBuffer<float4>    parVelocity : register(u6);
+RWBuffer<float4>    parNormal   : register(u7);
 
+// Returns the particle index for the specified grid
 uint GridPosToIndex(uint2 gridPos)
 {
-    return (gridPos.y * gridSize.x + gridPos.x) * SIZEOF_PARTICLE;
+    return (gridPos.y * gridSize.x + gridPos.x);
 }
 
-void ReadParticle(uint2 gridPos, out Particle par)
+// Converts the specified grid UV coordinates to the original vertex coordinates.
+// Only distance between those coordinates are important.
+float4 UVToOrigPos(float2 uv)
 {
-    uint i = GridPosToIndex(gridPos);
-    par.origPos     = particles[i + 0];
-    par.prevPos     = particles[i + 1];
-    par.nextPos     = particles[i + 2];
-    par.velocity    = particles[i + 3];
-    par.currPos     = particles[i + 4];
-    par.normal      = particles[i + 5];
-    par.uv_invMass  = particles[i + 6];
+    return float4(uv.x * 2.0 - 1.0, 0.0, uv.y * -2.0, 1.0);
 }
 
-void ReadParticleSub(uint2 gridPos, out float3 currPos, out float3 origPos, out float invMass)
-{
-    uint i = GridPosToIndex(gridPos);
-    origPos = particles[i + 0].xyz;
-    currPos = particles[i + 4].xyz;
-    invMass = particles[i + 6].z;
-}
-
-float3 ReadParticlePos(uint2 gridPos)
-{
-    uint i = GridPosToIndex(gridPos);
-    return particles[i + 4].xyz;
-}
-
-void WriteParticle(uint2 gridPos, in Particle par)
-{
-    uint i = GridPosToIndex(gridPos);
-    //particles[i + 0] = par.origPos;
-    particles[i + 1] = par.prevPos;
-    particles[i + 2] = par.nextPos;
-    particles[i + 3] = par.velocity;
-    particles[i + 4] = par.currPos;
-    //particles[i + 5] = par.normal;
-    //particles[i + 6] = par.uv_invMass;
-}
-
-void WriteParticleNextPosAndNormal(uint2 gridPos, float4 nextPos, float4 normal)
-{
-    uint i = GridPosToIndex(gridPos);
-    particles[i + 2] = nextPos;
-    particles[i + 5] = normal;
-}
-
-void AccumulateStretchConstraints(Particle par, int2 neighborGridPos, inout float3 dCorrection)
+void AccumulateStretchConstraints(ParticleView par, int2 neighborGridPos, inout float3 dCorrection)
 {
     if (neighborGridPos.x < 0 || (uint)neighborGridPos.x >= gridSize.x ||
         neighborGridPos.y < 0 || (uint)neighborGridPos.y >= gridSize.y)
@@ -91,24 +57,29 @@ void AccumulateStretchConstraints(Particle par, int2 neighborGridPos, inout floa
     }
 
     // Read neighbor particle
-    float3 neighborPos;
-    float3 neighborOrigPos;
-    float neighborInvMass;
-    ReadParticleSub((uint2)neighborGridPos, neighborPos, neighborOrigPos, neighborInvMass);
+    uint idx = GridPosToIndex((uint2)neighborGridPos);
+    float4 otherCurrPos = parCurrPos[idx];
+    float4 otherOrigPos = UVToOrigPos(parBase[idx].xy);
+    float otherInvMass = parBase[idx].z;
 
     // Compute edge distance between particle and its neighbor
-    float3 dPos = par.nextPos.xyz - neighborPos;
+    float3 dPos = (par.nextPos - otherCurrPos).xyz;
     float currDist = length(dPos);
-    float edgeDist = distance(par.origPos.xyz, neighborOrigPos);
+    float edgeDist = distance(par.origPos, otherOrigPos);
 
     // Compute stretch constraint
-    dPos = normalize(dPos) * ((currDist - edgeDist) / (par.uv_invMass.z + neighborInvMass));
+    dPos = normalize(dPos) * ((currDist - edgeDist) / (par.invMass + otherInvMass));
 
     // Adjust position
-    dCorrection += (dPos * -par.uv_invMass.z);
+    dCorrection += (dPos * -par.invMass);
 }
 
-void AccumulateSurfaceNormal(float4 pos, int2 gridPos0, int2 gridPos1, inout float3 normal)
+float3 ReadParticlePos(uint2 gridPos)
+{
+    return parCurrPos[GridPosToIndex(gridPos)].xyz;
+}
+
+void AccumulateSurfaceNormal(float4 pos, int2 gridPos0, int2 gridPos1, inout float4 normal)
 {
     if (gridPos0.x < 0 || (uint)gridPos0.x >= gridSize.x ||
         gridPos0.y < 0 || (uint)gridPos0.y >= gridSize.y ||
@@ -118,15 +89,15 @@ void AccumulateSurfaceNormal(float4 pos, int2 gridPos0, int2 gridPos1, inout flo
         return;
     }
 
-    float3 v0 = ReadParticlePos(gridPos0) - pos.xyz;
-    float3 v1 = ReadParticlePos(gridPos1) - pos.xyz;
+    float3 v0 = ReadParticlePos((uint2)gridPos0) - pos.xyz;
+    float3 v1 = ReadParticlePos((uint2)gridPos1) - pos.xyz;
 
-    normal += cross(v0, v1);
+    normal.xyz += cross(v0, v1);
 }
 
-void ApplyStretchConstraints(inout Particle par, int2 gridPos)
+void ApplyStretchConstraints(inout ParticleView par, int2 gridPos)
 {
-    if (par.uv_invMass.z == 0.0)
+    if (par.invMass == 0.0)
     {
         return;
     }
@@ -144,67 +115,64 @@ void ApplyStretchConstraints(inout Particle par, int2 gridPos)
     dPos /= 8.0;
 
     // Compute normal
-    float3 normal = (float3)0;
+    float4 normal = (float4)0;
     AccumulateSurfaceNormal(par.currPos, gridPos + int2( 0, +1), gridPos + int2(+1,  0), normal);
     AccumulateSurfaceNormal(par.currPos, gridPos + int2(+1,  0), gridPos + int2( 0, -1), normal);
     AccumulateSurfaceNormal(par.currPos, gridPos + int2( 0, -1), gridPos + int2(-1,  0), normal);
     AccumulateSurfaceNormal(par.currPos, gridPos + int2(-1,  0), gridPos + int2( 0, +1), normal);
-    par.normal.xyz = normal / 4.0;
+    par.normal = normal / 4.0;
 
     // Adjust position by correction vector
-    par.nextPos.xyz += dPos * stiffness;
+    par.nextPos.xyz += dPos * dStiffness;
 }
 
 [numthreads(1, 1, 1)]
 void CSForces(uint2 threadID : SV_DispatchThreadID)
 {
-    // Read particle
-    Particle par;
-    ReadParticle(threadID, par);
+    uint idx = GridPosToIndex(threadID);
 
     // Accumulate force and multiply by inverse mass
-    float3 force = gravity.xyz;
-    force *= par.uv_invMass.z;
+    float invMass = parBase[idx].z;
+    float4 force = gravity;
+    force *= invMass;
 
     // Apply velocity and damping
-    par.velocity.xyz += force * dt * damping;
+    parVelocity[idx] += force * dTime * damping;
 
     // Apply position based physics simulation
-    par.currPos.xyz += par.velocity.xyz * dt;
-
-    // Write particle back to swap-buffer
-    WriteParticle(threadID, par);
+    parCurrPos[idx] += float4(parVelocity[idx].xyz, 0.0) * dTime;
 }
 
 [numthreads(1, 1, 1)]
 void CSStretchConstraints(uint2 threadID : SV_DispatchThreadID)
 {
+    uint idx = GridPosToIndex(threadID);
+
     // Read particle
-    Particle par;
-    ReadParticle(threadID, par);
+    ParticleView par;
+    par.currPos = parCurrPos[idx];
     par.nextPos = par.currPos;
+    par.origPos = UVToOrigPos(parBase[idx].xy);
+    par.normal  = parNormal[idx];
+    par.invMass = parBase[idx].z;
 
     // Apply stretch constraints
     ApplyStretchConstraints(par, (int2)threadID);
 
     // Write next position back to swap-buffer
-    WriteParticleNextPosAndNormal(threadID, par.nextPos, par.normal);
+    parNextPos[idx] = par.nextPos;
+    parNormal[idx] = par.normal;
 }
 
 [numthreads(1, 1, 1)]
 void CSRelaxation(uint2 threadID : SV_DispatchThreadID)
 {
-    // Read particle
-    Particle par;
-    ReadParticle(threadID, par);
+    uint idx = GridPosToIndex(threadID);
 
-    // Adjust velocity
-    par.currPos = par.nextPos;
-    par.velocity.xyz = (par.currPos.xyz - par.prevPos.xyz) / dt;
-    par.prevPos = par.currPos;
-
-    // Write particle back to swap-buffer
-    WriteParticle(threadID, par);
+    // Adjust velocity and store current and previous position
+    parCurrPos[idx] = parNextPos[idx];
+    parVelocity[idx] = (parCurrPos[idx] - parPrevPos[idx]) / dTime;
+    parPrevPos[idx] = parCurrPos[idx];
 }
 
 
@@ -242,6 +210,7 @@ VOut VS(in VIn inp)
 
 float4 PS(in VOut inp, bool frontFace : SV_IsFrontFace) : SV_Target0
 {
+    #if 1
     // Compute lighting
     float3 normal = normalize(inp.normal.xyz);
     normal *= lerp(1.0, -1.0, frontFace);
@@ -260,5 +229,8 @@ float4 PS(in VOut inp, bool frontFace : SV_IsFrontFace) : SV_Target0
     float4 color = diffuse;
 
     return float4(color.rgb * NdotL, color.a);
+    #else
+    return float4(inp.texCoord.xy, 0.0, 1.0);
+    #endif
 }
 
