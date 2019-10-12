@@ -435,7 +435,9 @@ public:
 
         // Create graphics pipeline layout
         graphicsLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag")
+            IsMetal()
+                ? LLGL::PipelineLayoutDesc("cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag")
+                : LLGL::PipelineLayoutDesc("cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag")
         );
 
         // Create graphics pipeline

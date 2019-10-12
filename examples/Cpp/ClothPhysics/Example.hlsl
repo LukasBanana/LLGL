@@ -2,7 +2,7 @@
  * HLSL cloth physics shader
  */
 
-cbuffer SceneState : register(b1)
+cbuffer SceneState : register(b0)
 {
     float4x4    wvpMatrix;
     float4x4    wMatrix;
@@ -27,12 +27,12 @@ struct ParticleView
 };
 
 // Particle buffers
-Buffer<float4>      parBase     : register(t2); // UV (.xy) and inverse mass (.z)
-RWBuffer<float4>    parCurrPos  : register(u3);
-RWBuffer<float4>    parNextPos  : register(u4);
-RWBuffer<float4>    parPrevPos  : register(u5);
-RWBuffer<float4>    parVelocity : register(u6);
-RWBuffer<float4>    parNormal   : register(u7);
+Buffer<float4>      parBase     : register(t1); // UV (.xy) and inverse mass (.z)
+RWBuffer<float4>    parCurrPos  : register(u2);
+RWBuffer<float4>    parNextPos  : register(u3);
+RWBuffer<float4>    parPrevPos  : register(u4);
+RWBuffer<float4>    parVelocity : register(u5);
+RWBuffer<float4>    parNormal   : register(u6);
 
 // Returns the particle index for the specified grid
 uint GridPosToIndex(uint2 gridPos)
@@ -207,8 +207,8 @@ VOut VS(in VIn inp)
  * HLSL pixel shader
  */
 
-Texture2D colorMap : register(t2);
-SamplerState linearSampler : register(s3);
+Texture2D colorMap : register(t0);
+SamplerState linearSampler : register(s0);
 
 float4 PS(in VOut inp, bool frontFace : SV_IsFrontFace) : SV_Target0
 {
