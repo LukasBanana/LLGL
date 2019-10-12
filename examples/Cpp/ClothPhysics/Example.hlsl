@@ -27,8 +27,7 @@ struct ParticleView
 };
 
 // Particle buffers
-//Buffer<float4>      parBase     : register(t2); // UV (.xy) and inverse mass (.z)
-RWBuffer<float4>    parBase     : register(u2); // UV (.xy) and inverse mass (.z)
+Buffer<float4>      parBase     : register(t2); // UV (.xy) and inverse mass (.z)
 RWBuffer<float4>    parCurrPos  : register(u3);
 RWBuffer<float4>    parNextPos  : register(u4);
 RWBuffer<float4>    parPrevPos  : register(u5);
@@ -208,8 +207,8 @@ VOut VS(in VIn inp)
  * HLSL pixel shader
  */
 
-Texture2D colorMap : register(t0);
-SamplerState linearSampler : register(s0);
+Texture2D colorMap : register(t2);
+SamplerState linearSampler : register(s3);
 
 float4 PS(in VOut inp, bool frontFace : SV_IsFrontFace) : SV_Target0
 {

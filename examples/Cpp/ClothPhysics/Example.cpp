@@ -79,7 +79,7 @@ class Example_ClothPhysics : public ExampleBase
         float           dTime;
         float           dStiffness; // Reciprocal of number of solver iterations: 1/n
         float           pad1;
-        Gs::Vector4f    lightVec        = { 0.0f, 0.0f, 1.0f, 0.0f };
+        Gs::Vector4f    lightVec    = { 0.0f, 0.0f, 1.0f, 0.0f };
     }
     sceneState;
 
@@ -93,7 +93,7 @@ class Example_ClothPhysics : public ExampleBase
 public:
 
     Example_ClothPhysics() :
-        ExampleBase { L"LLGL Example: Cloth Physics" }//, { 1280, 768 }, 8, false }
+        ExampleBase { L"LLGL Example: Cloth Physics" }
     {
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
@@ -107,6 +107,10 @@ public:
         CreateSampler();
         CreateComputePipeline();
         CreateGraphicsPipeline();
+
+        // Show some information
+        std::cout << "press LEFT MOUSE BUTTON and move the mouse to rotate the camera" << std::endl;
+        std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the cloth stiffness" << std::endl;
     }
 
     // Generates the grid geometry for the cloth with triangle strip topology
@@ -230,7 +234,7 @@ public:
         constantBuffer = CreateConstantBuffer(sceneState);
 
         // Create particle buffers for each attribute
-        CreateParticleBuffer(AttribBase,     LLGL::StorageBufferType::RWBuffer, verticesBase.data(), &(vertexFormat.attributes[2]));
+        CreateParticleBuffer(AttribBase,     LLGL::StorageBufferType::Buffer,   verticesBase.data(), &(vertexFormat.attributes[2]));
         CreateParticleBuffer(AttribCurrPos,  LLGL::StorageBufferType::RWBuffer, verticesPos.data());
         CreateParticleBuffer(AttribNextPos,  LLGL::StorageBufferType::RWBuffer, verticesPos.data());
         CreateParticleBuffer(AttribPrevPos,  LLGL::StorageBufferType::RWBuffer, verticesPos.data(), &(vertexFormat.attributes[0]));
@@ -288,12 +292,38 @@ public:
                 { { LLGL::ShaderType::Compute, "Example.hlsl", "CSRelaxation", "cs_5_0" } }
             );
         }
+        #if 0
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        {
+            computeShaders[0] = LoadShaderProgram(
+                { { LLGL::ShaderType::Compute, "Example.CSForces.comp" } }
+            );
+            computeShaders[1] = LoadShaderProgram(
+                { { LLGL::ShaderType::Compute, "Example.CSStretchConstraints.comp" } }
+            );
+            computeShaders[2] = LoadShaderProgram(
+                { { LLGL::ShaderType::Compute, "Example.CSRelaxation.comp" } }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            computeShaders[0] = LoadShaderProgram(
+                { { LLGL::ShaderType::Compute, "Example.CSForces.450core.comp.spv" } }
+            );
+            computeShaders[1] = LoadShaderProgram(
+                { { LLGL::ShaderType::Compute, "Example.CSStretchConstraints.450core.comp.spv" } }
+            );
+            computeShaders[2] = LoadShaderProgram(
+                { { LLGL::ShaderType::Compute, "Example.CSRelaxation.450core.comp.spv" } }
+            );
+        }
+        #endif
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):comp, rwbuffer(parBase@2, parCurrPos@3, parNextPos@4, parPrevPos@5, parVelocity@6, parNormal@7):comp")
+            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):comp, buffer(parBase@2), rwbuffer(parCurrPos@3, parNextPos@4, parPrevPos@5, parVelocity@6, parNormal@7):comp")
         );
 
         // Create resource heaps for compute pipeline
@@ -352,12 +382,34 @@ public:
                 { vertexFormat }
             );
         }
+        #if 0
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        {
+            graphicsShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.VS.vert" },
+                    { LLGL::ShaderType::Fragment, "Example.PS.frag" }
+                },
+                { vertexFormat }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            graphicsShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.VS.450core.vert.spv" },
+                    { LLGL::ShaderType::Fragment, "Example.PS.450core.frag.spv" }
+                },
+                { vertexFormat }
+            );
+        }
+        #endif
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
 
         // Create graphics pipeline layout
         graphicsLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag")
+            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):vert:frag, texture(colorMap@2):frag, sampler(linearSampler@3):frag")
         );
 
         // Create graphics pipeline
@@ -468,8 +520,7 @@ private:
             }
             commands->PopDebugGroup();
 
-            //commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 5, 3, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
-            commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 2, 6, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
+            commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 5, 3, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
         }
         commands->End();
         commandQueue->Submit(*commands);
@@ -493,8 +544,7 @@ private:
                 commands->SetGraphicsResourceHeap(*graphicsResourceHeap);
                 commands->DrawIndexed(numClothIndices, 0);
 
-                //commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 0, 2, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
-                commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 0, 3, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
+                commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 0, 2, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
             }
             commands->EndRenderPass();
         }
