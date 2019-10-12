@@ -42,15 +42,25 @@ static UINT GetUAVFlags(const BufferDescriptor::StorageBuffer& desc)
     }
 }
 
+static UINT GetStructuredBufferStride(const BufferDescriptor::StorageBuffer& desc)
+{
+    if (desc.stride > 0)
+        return desc.stride;
+    else
+        return (GetFormatAttribs(desc.format).bitSize / 8);
+}
+
 D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
     D3D11Buffer { device, desc, initialData }
 {
-    if (desc.storageBuffer.stride == 0)
-        throw std::invalid_argument("storage buffer stride cannot be zero for a D3D11 resource view");
+    /* Determine stride size either for structured buffers or regular buffers */
+    //if (desc.storageBuffer.stride == 0)
+    //    throw std::invalid_argument("storage buffer stride cannot be zero for a D3D11 resource view");
+    const UINT stride = std::max(1u, GetStructuredBufferStride(desc.storageBuffer));
 
     /* Create resource views (SRV and UAV) */
     auto format         = GetD3DResourceViewFormat(desc.storageBuffer);
-    auto numElements    = static_cast<UINT>(desc.size) / desc.storageBuffer.stride;
+    auto numElements    = static_cast<UINT>(desc.size) / stride;
 
     if ((desc.bindFlags & BindFlags::Sampled) != 0)
         CreateShaderResourceView(device, format, 0, numElements);

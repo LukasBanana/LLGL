@@ -219,13 +219,13 @@ static D3D12_RESOURCE_STATES GetD3DUsageState(long bindFlags)
 
     if ((bindFlags & (BindFlags::VertexBuffer | BindFlags::ConstantBuffer)) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-    if ((bindFlags & BindFlags::IndexBuffer) != 0)
+    else if ((bindFlags & BindFlags::IndexBuffer) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
-    if ((bindFlags & BindFlags::Storage) != 0)
+    else if ((bindFlags & BindFlags::Storage) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-    if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
+    else if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_STREAM_OUT;
-    if ((bindFlags & BindFlags::IndirectBuffer) != 0)
+    else if ((bindFlags & BindFlags::IndirectBuffer) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
 
     return flagsD3D;

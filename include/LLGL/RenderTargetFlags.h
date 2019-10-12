@@ -92,7 +92,7 @@ struct AttachmentDescriptor
     #else
 
     /**
-    \brief Specifies the secondary attachment format is \c texture is null.
+    \brief Specifies the secondary attachment format if \c texture is null.
     \remarks If \c texture <b>is</b> specified, this attribute is ignored and the attachment format is determined by that texture.
     \remarks If \c texture <b>is not</b> specified, this attribute determines the attachment format, or disables the attachment if this attributes is Format::Undefined.
     */

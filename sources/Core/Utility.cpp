@@ -487,6 +487,9 @@ static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, con
     for (;;)
     {
         /* Parse optional name */
+        IgnoreWhiteSpaces(s);
+        bindingDesc.name.clear();
+
         if (std::isalpha(static_cast<unsigned char>(*s)) || *s == '_')
         {
             for (; std::isalnum(static_cast<unsigned char>(*s)) || *s == '_'; ++s)

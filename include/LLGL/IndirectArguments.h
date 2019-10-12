@@ -109,7 +109,7 @@ so this structure is required to fill the buffer that is used for the arguments 
 \see CommandBuffer::DrawIndexedIndirect
 \see Metal counterpart \c MTLDrawPatchIndirectArguments: https://developer.apple.com/documentation/metal/mtldrawpatchindirectarguments?language=objc
 */
-struct DrawPatchIndirectArgument
+struct DrawPatchIndirectArguments
 {
     //! Specifies the number of patches per instance.
     std::uint32_t numPatches;
