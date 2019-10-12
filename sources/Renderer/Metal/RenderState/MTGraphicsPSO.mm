@@ -40,6 +40,44 @@ static void FillDefaultMTStencilDesc(MTLStencilDescriptor* dst)
     dst.writeMask                   = 0;
 }
 
+static bool IsBlendOpUsingBlendFactor(const BlendOp op)
+{
+    return (op == BlendOp::BlendFactor || op == BlendOp::InvBlendFactor);
+}
+
+static bool IsTargetUsingBlendFactor(const BlendTargetDescriptor& desc)
+{
+    return
+    (
+        desc.blendEnabled &&
+        (
+            IsBlendOpUsingBlendFactor(desc.srcColor) ||
+            IsBlendOpUsingBlendFactor(desc.dstColor) ||
+            IsBlendOpUsingBlendFactor(desc.srcAlpha) ||
+            IsBlendOpUsingBlendFactor(desc.dstAlpha)
+        )
+    );
+}
+
+// Returns true if any of the enabled blend targets make use the blending factor (RGBA)
+static bool AnyTargetUsesBlendFactor(const BlendDescriptor& desc)
+{
+    if (desc.independentBlendEnabled)
+    {
+        for (const auto& target : desc.targets)
+        {
+            if (IsTargetUsingBlendFactor(target))
+                return true;
+        }
+    }
+    else
+    {
+        if (IsTargetUsingBlendFactor(desc.targets[0]))
+            return true;
+    }
+    return false;
+}
+
 MTGraphicsPSO::MTGraphicsPSO(
     id<MTLDevice>                       device,
     const GraphicsPipelineDescriptor&   desc,
@@ -48,14 +86,19 @@ MTGraphicsPSO::MTGraphicsPSO(
     MTPipelineState { true }
 {
     /* Convert standalone parameters */
-    cullMode_       = MTTypes::ToMTLCullMode(desc.rasterizer.cullMode);
-    winding_        = (desc.rasterizer.frontCCW ? MTLWindingCounterClockwise : MTLWindingClockwise);
-    fillMode_       = MTTypes::ToMTLTriangleFillMode(desc.rasterizer.polygonMode);
-    primitiveType_  = MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
-    clipMode_       = (desc.rasterizer.depthClampEnabled ? MTLDepthClipModeClamp : MTLDepthClipModeClip);
-    depthBias_      = desc.rasterizer.depthBias.constantFactor;
-    depthSlope_     = desc.rasterizer.depthBias.slopeFactor;
-    depthClamp_     = desc.rasterizer.depthBias.clamp;
+    cullMode_       	= MTTypes::ToMTLCullMode(desc.rasterizer.cullMode);
+    winding_            = (desc.rasterizer.frontCCW ? MTLWindingCounterClockwise : MTLWindingClockwise);
+    fillMode_           = MTTypes::ToMTLTriangleFillMode(desc.rasterizer.polygonMode);
+    primitiveType_  	= MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
+    clipMode_           = (desc.rasterizer.depthClampEnabled ? MTLDepthClipModeClamp : MTLDepthClipModeClip);
+    depthBias_          = desc.rasterizer.depthBias.constantFactor;
+    depthSlope_         = desc.rasterizer.depthBias.slopeFactor;
+    depthClamp_         = desc.rasterizer.depthBias.clamp;
+    blendColorEnabled_  = AnyTargetUsesBlendFactor(desc.blend);
+    blendColor_[0]      = desc.blend.blendFactor.r;
+    blendColor_[1]      = desc.blend.blendFactor.g;
+    blendColor_[2]      = desc.blend.blendFactor.b;
+    blendColor_[3]      = desc.blend.blendFactor.a;
 
     /* Create render pipeline and depth-stencil states */
     CreateRenderPipelineState(device, desc, defaultRenderPass);
@@ -69,9 +112,10 @@ void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
     [renderEncoder setCullMode:cullMode_];
     [renderEncoder setFrontFacingWinding:winding_];
     [renderEncoder setTriangleFillMode:fillMode_];
-    #ifndef LLGL_OS_IOS//TODO: since MTLFeatureSet_iOS_GPUFamily2_v1
-    [renderEncoder setDepthClipMode:clipMode_];
-    #endif
+
+    if (@available(macOS 10.11, iOS 11, *))
+        [renderEncoder setDepthClipMode:clipMode_];
+
     #ifndef LLGL_OS_IOS//TODO: disabled for testing iOS
     [renderEncoder setDepthBias:depthBias_ slopeScale:depthSlope_ clamp:depthClamp_];
     if (stencilFrontRef_ == stencilBackRef_)
@@ -79,6 +123,16 @@ void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
     else
         [renderEncoder setStencilReferenceValue:stencilFrontRef_];
     #endif
+
+    if (blendColorEnabled_)
+    {
+        [renderEncoder
+            setBlendColorRed:   blendColor_[0]
+            green:              blendColor_[1]
+            blue:               blendColor_[2]
+            alpha:              blendColor_[3]
+        ];
+    }
 }
 
 

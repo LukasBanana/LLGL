@@ -318,12 +318,28 @@ public:
             );
         }
         #endif
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            computeShaders[0] = LoadShaderProgram(
+                { { LLGL::ShaderType::Compute, "Example.metal", "CSForces", "2.0" } }
+            );
+            computeShaders[1] = LoadShaderProgram(
+                { { LLGL::ShaderType::Compute, "Example.metal", "CSStretchConstraints", "2.0" } }
+            );
+            computeShaders[2] = LoadShaderProgram(
+                { { LLGL::ShaderType::Compute, "Example.metal", "CSRelaxation", "2.0" } }
+            );
+        }
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):comp, buffer(parBase@2), rwbuffer(parCurrPos@3, parNextPos@4, parPrevPos@5, parVelocity@6, parNormal@7):comp")
+            LLGL::PipelineLayoutDesc(
+                "cbuffer(SceneState@0):comp,"
+                "buffer(parBase@1),"
+                "rwbuffer(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp"
+            )
         );
 
         // Create resource heaps for compute pipeline
@@ -404,12 +420,22 @@ public:
             );
         }
         #endif
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            graphicsShader = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "2.0" },
+                    { LLGL::ShaderType::Fragment, "Example.metal", "PS", "2.0" }
+                },
+                { vertexFormat }
+            );
+        }
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
 
         // Create graphics pipeline layout
         graphicsLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(SceneState@1):vert:frag, texture(colorMap@2):frag, sampler(linearSampler@3):frag")
+            LLGL::PipelineLayoutDesc("cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag")
         );
 
         // Create graphics pipeline
@@ -520,7 +546,7 @@ private:
             }
             commands->PopDebugGroup();
 
-            commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 5, 3, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
+            commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 4, 3, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
         }
         commands->End();
         commandQueue->Submit(*commands);

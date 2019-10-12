@@ -1,5 +1,5 @@
 /*
- * HLSL compute shader
+ * HLSL cloth physics shader
  */
 
 cbuffer SceneState : register(b1)

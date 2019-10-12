@@ -65,6 +65,8 @@ class MTGraphicsPSO : public MTPipelineState
         float                       depthBias_              = 0.0f;
         float                       depthSlope_             = 0.0f;
         float                       depthClamp_             = 0.0f;
+        bool                        blendColorEnabled_      = false;
+        float                       blendColor_[4]          = { 0.0f, 0.0f, 0.0f, 0.0f };
         std::uint32_t               stencilFrontRef_        = 0;
         std::uint32_t               stencilBackRef_         = 0;
 

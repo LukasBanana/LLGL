@@ -27,6 +27,7 @@ options=(
     "Volume Rendering"
     "Compute Shader"
     "Animation"
+    "Cloth Physics"
 )
 select opt in "${options[@]}"
 do
@@ -69,6 +70,9 @@ do
         ;;
     "${options[12]}")
         (cd examples/Cpp/Animation; ../../../$BUILD_DIR/Example_Animation.app/Contents/MacOS/Example_Animation)
+        ;;
+    "${options[13]}")
+        (cd examples/Cpp/ClothPhysics; ../../../$BUILD_DIR/Example_ClothPhysics.app/Contents/MacOS/Example_ClothPhysics)
         ;;
     *)
         echo "invalid selection"

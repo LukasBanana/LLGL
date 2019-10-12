@@ -149,11 +149,11 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     DDSHeaderDX10 headerDX10;
     ::memset(&headerDX10, 0, sizeof(headerDX10));
 
-    bool hasDX10Header  = false;
-    bool hasMips        = ((header.flags        & DDSFLAG_MIPMAPS   ) != 0);
+    //bool hasDX10Header  = false;
+    //bool hasMips        = ((header.flags        & DDSFLAG_MIPMAPS   ) != 0);
     bool hasDepth       = ((header.flags        & DDSFLAG_DEPTH     ) != 0);
-    bool hasAlpha       = ((header.format.flags & DDSFLAG_ALPHA     ) != 0);
-    bool isCompressed   = ((header.format.flags & DDSFLAG_COMPRESSED) != 0);
+    //bool hasAlpha       = ((header.format.flags & DDSFLAG_ALPHA     ) != 0);
+    //bool isCompressed   = ((header.format.flags & DDSFLAG_COMPRESSED) != 0);
     bool isCubeMap      = ((header.cubeMapFlags & DDSFLAG_CUBEMAP   ) != 0);
 
     // Store parameters in descriptors
