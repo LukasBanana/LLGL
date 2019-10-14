@@ -16,6 +16,7 @@
 
 #include "../Buffer/D3D12Buffer.h"
 #include "../Buffer/D3D12BufferArray.h"
+#include "../Buffer/D3D12BufferConstantsPool.h"
 
 #include "../Texture/D3D12Texture.h"
 #include "../Texture/D3D12RenderTarget.h"
@@ -549,15 +550,40 @@ void D3D12CommandBuffer::EndRenderCondition()
 void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
 {
     D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferViews[LLGL_MAX_NUM_SO_BUFFERS];
+    D3D12Buffer* buffersD3D[LLGL_MAX_NUM_SO_BUFFERS];
 
     numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
 
+    /* Store native buffer views and transition resources */
     for (std::uint32_t i = 0; i < numBuffers; ++i)
     {
         auto bufferD3D = LLGL_CAST(D3D12Buffer*, buffers[i]);
+        buffersD3D[i] = bufferD3D;
         soBufferViews[i] = bufferD3D->GetSOBufferView();
+        commandContext_.TransitionResource(bufferD3D->GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
+    }
+    commandContext_.FlushResourceBarrieres();
+
+    /* Reset counter values in buffers by copying from a static zero-initialized buffer to the stream-output targets */
+    const auto srcBufferView = D3D12BufferConstantsPool::Get().FetchConstants(D3D12BufferConstants::ZeroUInt64);
+
+    for (std::uint32_t i = 0; i < numBuffers; ++i)
+    {
+        commandList_->CopyBufferRegion(
+            buffersD3D[i]->GetNative(),
+            buffersD3D[i]->GetBufferSize(),
+            srcBufferView.resource,
+            srcBufferView.offset,
+            srcBufferView.size
+        );
     }
 
+    /* Transition resources to stream-output */
+    for (std::uint32_t i = 0; i < numBuffers; ++i)
+        commandContext_.TransitionResource(buffersD3D[i]->GetResource(), D3D12_RESOURCE_STATE_STREAM_OUT);
+    commandContext_.FlushResourceBarrieres();
+
+    /* Set active stream-output targets */
     commandList_->SOSetTargets(0, numBuffers, soBufferViews);
 }
 

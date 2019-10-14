@@ -171,15 +171,6 @@ private:
         // Start command recording
         commands->Begin();
         {
-            #if 1//TODO
-            if (renderer->GetRendererID() == LLGL::RendererID::Direct3D12)
-            {
-                // Reset stream-output buffer offset
-                std::uint64_t zeroData = 0;
-                commands->UpdateBuffer(*streamOutputBuffer, sizeof(Gs::Vector4f) * 36 * 3, &zeroData, sizeof(zeroData));
-            }
-            #endif
-
             // Update constant buffer
             commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 

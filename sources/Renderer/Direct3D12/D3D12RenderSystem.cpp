@@ -20,6 +20,7 @@
 
 #include "Buffer/D3D12Buffer.h"
 #include "Buffer/D3D12BufferArray.h"
+#include "Buffer/D3D12BufferConstantsPool.h"
 
 #include "Texture/D3D12MipGenerator.h"
 
@@ -52,6 +53,7 @@ D3D12RenderSystem::D3D12RenderSystem()
 
     stagingBufferPool_.InitializeDevice(device_.GetNative(), 0);
     D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
+    D3D12BufferConstantsPool::Get().InitializeDevice(device_.GetNative(), *commandContext_, stagingBufferPool_);
 
     /* Initialize renderer information */
     QueryRendererInfo();
