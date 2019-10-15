@@ -13,7 +13,7 @@ This is one of the few functions that takes a string rather than an enumeration 
 The exception handling to find a suitable render system can look like this:
 ```cpp
 std::unique_ptr<LLGL::RenderSystem> myRenderer;
-for (auto module : { "Vulkan", "Direct3D12", "Direct3D11", "OpenGL" }) {
+for (auto module : { "Direct3D12", "Direct3D11", "Metal", "Vulkan", "OpenGL" }) {
     try {
         myRenderer = LLGL::RenderSystem::Load(module);
         break;
@@ -32,7 +32,7 @@ myContextDesc.videoMode.resolution = { 800, 600 };
 myContextDesc.videoMode.fullscreen = false;
 myContextDesc.vsync.enabled        = true;
 myContextDesc.samples              = 8;
-LLGL::RenderContext* myContext = myRenderer->CreateRenderContext(contextDesc);
+LLGL::RenderContext* myContext = myRenderer->CreateRenderContext(myContextDesc);
 ```
 Most objects in LLGL are created with descriptors (similar to Direct3D and Vulkan). This one describes that we want a render context with a resolution of 800 x 600 pixels, windowed-mode (no fullscreen), V-sync enabled, and 8 samples for anti-aliasing.
 
@@ -49,9 +49,9 @@ struct MyVertex {
 For this tutorial we only want to render a single triangle so we define our 3 vertices:
 ```cpp
 MyVertex myVertices[3] = {
-    MyVertex { {  0.0f,  0.5f }, { 255,   0,   0, 255 } },
-    MyVertex { {  0.5f, -0.5f }, {   0, 255,   0, 255 } },
-    MyVertex { { -0.5f, -0.5f }, {   0,   0, 255, 255 } },
+    MyVertex{ {  0.0f,  0.5f }, { 255,   0,   0, 255 } },
+    MyVertex{ {  0.5f, -0.5f }, {   0, 255,   0, 255 } },
+    MyVertex{ { -0.5f, -0.5f }, {   0,   0, 255, 255 } },
 };
 ```
 The `VertexFormat` structure has a couple of member functions to simplify the description of a vertex format, but we could also use the member variables directly. The `AppendAttribute` function determines the data offset for each vertex attribute automatically:
@@ -65,9 +65,9 @@ The strings "position" and "color" must be equal to the identifiers used in the 
 Now we can create the GPU vertex buffer:
 ```cpp
 LLGL::BufferDescriptor myVBufferDesc;
-myVBufferDesc.size                = sizeof(myVertices);            // Size (in bytes) of the buffer
-myVBufferDesc.bindFlags           = LLGL::BindFlags::VertexBuffer; // Use for vertex buffer binding
-myVBufferDesc.vertexBuffer.format = myVertexFormat;                // Buffer format for vertices
+myVBufferDesc.size          = sizeof(myVertices);            // Size (in bytes) of the buffer
+myVBufferDesc.bindFlags     = LLGL::BindFlags::VertexBuffer; // Use for vertex buffer binding
+myVBufferDesc.vertexAttribs = myVertexFormat.attributes;     // Vertex buffer attributes
 LLGL::Buffer* myVertexBuffer = myRenderer->CreateBuffer(myVBufferDesc, myVertices);
 ```
 The parameter `bindFlags` takes a bitwise OR combination of the enumeration entries of `LLG::BindFlags`, to tell the render system for which purposes the buffer will be used. In this case, we will only bind it as a vertex buffer.
@@ -84,43 +84,47 @@ bool IsSupported(LLGL::ShadingLanguage lang) {
 ```
 Here is an example of loading a shader for either HLSL or GLSL source files:
 ```cpp
-LLGL::ShaderProgramDescritpor myProgramDesc;
+LLGL::ShaderDescriptor myVSDesc, myFSDesc;
 if (IsSupported(LLGL::ShadingLanguage::HLSL)) {
-    myProgramDesc.vertexShader   = myRenderer->CreateShader({ LLGL::ShaderType::Vertex,   "MyShader.hlsl", "VMain", "vs_4_0" });
-    myProgramDesc.fragmentShader = myRenderer->CreateShader({ LLGL::ShaderType::Fragment, "MyShader.hlsl", "PMain", "ps_4_0" });
+    myVSDesc = { LLGL::ShaderType::Vertex,   "MyShader.hlsl", "VMain", "vs_4_0" };
+    myFSDesc = { LLGL::ShaderType::Fragment, "MyShader.hlsl", "PMain", "ps_4_0" };
 } else if (IsSupported(LLGL::ShadingLanguage::GLSL)) {
-    myProgramDesc.vertexShader   = myRenderer->CreateShader({ LLGL::ShaderType::Vertex,   "MyShader.vert" });
-    myProgramDesc.fragmentShader = myRenderer->CreateShader({ LLGL::ShaderType::Fragment, "MyShader.frag" });
+    myVSDesc = { LLGL::ShaderType::Vertex,   "MyShader.vert" };
+    myFSDesc = { LLGL::ShaderType::Fragment, "MyShader.frag" };
 } else {
     /* Error: shading language not supported ... */
 }
+myVSDesc.vertex.inputAttribs = myVertexFormat.attributes;
 ```
 The initializer list within the `CreateShader` function call constructs the descriptor `ShaderDescriptor`. The descriptor provides members to specifiy the shader code as content or as filename which is then loaded by the framework. In our case, we just load the shaders from file (e.g. `MyShader.hlsl`). The descriptor also provides a member to specify whether our shader is in binary or high-level text form. However, not all render systems provide both. For example, Vulkan can only load binary SPIR-V modules. With Direct3D 11 and Direct3D 12, we can load either our HLSL shader directly from a text file, or load a pre-compiled DXBC binary file. Here is an example how to load a shader as content instead of loading it from file:
 ```cpp
 LLGL::ShaderDescriptor myShaderDesc;
-myShaderDesc.type       = LLGL::ShaderType::Vertex;
-myShaderDesc.source     = "#version 330\n"
-                          "void main() {\n"
-                          "    gl_Position = vec4(0, 0, 0, 1);\n"
-                          "}\n";
-myShaderDesc.sourceSize = 0;                                    // Ignored for null-terminated sources
-myShaderDesc.sourceType = LLGL::ShaderSourceType::CodeString;   // Source is null-terminated string and in high-level format
-myShaderDesc.entryPoint = "";                                   // Only required for HLSL (can be null)
-myShaderDesc.profile    = "";                                   // Only required for HLSL (can be null)
+myShaderDesc.type                = LLGL::ShaderType::Vertex;
+myShaderDesc.source              = "#version 330\n"
+                                   "void main() {\n"
+                                   "    gl_Position = vec4(0, 0, 0, 1);\n"
+                                   "}\n";
+myShaderDesc.sourceSize          = 0;                                    // Ignored for null-terminated sources
+myShaderDesc.sourceType          = LLGL::ShaderSourceType::CodeString;   // Source is null-terminated string and in high-level format
+myShaderDesc.entryPoint          = "";                                   // Only required for HLSL (can be null)
+myShaderDesc.profile             = "";                                   // Only required for HLSL (can be null)
+myShaderDesc.vertex.inputAttribs = myVertexFormat.attributes;            // Vertex input attribnutes (only for vertex shaders)
 LLGL::Shader* myExampleShader = myRenderer->CreateShader(myShaderDesc);
 ```
 The members `entryPoint` and `profile` are only required for HLSL (e.g. `entryPoint="main"` and `profile="vs_4_0"`). The member `source` is of type `const char*` and is either a null-terminated string or a raw byte buffer (for shader byte code). If the source type is either `CodeFile` or `BinaryFile`, the source code is read from file using the C++ standard file streams (i.e. `std::ifstream`).
 
 After we created the shaders we also need to specify the input layout by passing the vertex format to the shader program descriptor:
 ```cpp
-myProgramDesc.vertexFormats = { myVertexFormat };
+LLGL::ShaderProgramDescritpor myProgramDesc;
+myProgramDesc.vertexShader   = myRenderer->CreateShader(myVSDesc);
+myProgramDesc.fragmentShader = myRenderer->CreateShader(myFSDesc);
 ```
 However, this is not necessary for a compute shader.
 
 Even if a shader compiles successfully, we can query the information log if the shader compiler reports some warnings:
 ```cpp
 for (auto shader : { myProgramDesc.vertexShader, myProgramDesc.fragmentShader }) {
-    std::string log = shader->QueryInfoLog();
+    std::string log = shader->GetReport();
     if (!log.empty()) {
         std::cerr << log << std::endl;
     }
@@ -130,7 +134,7 @@ Now we can finally create the shader program and check for linking errors:
 ```cpp
 LLGL::ShaderProgram* myShaderProgram = myRenderer->CreateShaderProgram(myProgramDesc);
 if (myShaderProgram->HasErrors()) {
-    throw std::runtime_error(myShaderProgram->QueryInfoLog());
+    throw std::runtime_error(myShaderProgram->GetReport());
 }
 ```
 
@@ -140,8 +144,9 @@ if (myShaderProgram->HasErrors()) {
 Before we enter our render loop we need a pipeline state object and a command buffer to submit draw commands to the GPU. For this tutorial we can use almost all default values in the graphics pipeline state descriptor, but we always need to set the shader program:
 ```cpp
 LLGL::GraphicsPipelineDescriptor myPipelineDesc;
-myPipelineDesc.shaderProgram = myShaderProgram;
-LLGL::GraphicsPipeline* myPipeline = myRenderer->CreateGraphicsPipeline(myPipelineDesc);
+myPipelineDesc.shaderProgram                 = myShaderProgram;
+myPipelineDesc.rasterizer.multiSampleEnabled = (myContextDesc.samples > 1);
+LLGL::PipelineState* myPipeline = myRenderer->CreatePipelineState(myPipelineDesc);
 ```
 The members `depth`, `stencil`, `rasterizer`, and `blend` from the  `GraphicsPipelineDescriptor` structure can be used to specify a lot more configurations for a graphics pipeline. But for now, we leave them as is.
 
@@ -157,7 +162,7 @@ LLGL::CommandBuffer* myCmdBuffer = myRenderer->CreateCommandBuffer();
 Our render loop can be implemented with a simple `while`-statement in which is update the window events. For this we need the instance of the `Window` interface, which was created when we called `CreateRenderContext`:
 ```cpp
 // Cast "Window" from base class "Surface" (only on desktop platforms such as Windows, GNU/Linux, and macOS)
-LLGL::Window& myWindow = static_cast<LLGL::Window&>(myContext->GetSurface());
+LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window>(myContext->GetSurface());
 
 // Process window events (such as user input)
 while (myWindow.ProcessEvents()) {
@@ -182,7 +187,7 @@ We currently only use the default render pass that is created by the render cont
 
 After binding the render target, we specify into which area the scene is rendered. For this simple example, we render into the entire render context:
 ```cpp
-myCmdBuffer->SetViewport(LLGL::Viewport{ { 0, 0 }, myContext->GetResolution() });
+myCmdBuffer->SetViewport(myContext->GetResolution());
 ```
 Contrary to Direct3D 12, LLGL manages the scissor rectangle automatically if the scissor test is disabled in the graphics pipeline (which is the default). Hence, we only need to set the viewport, but not the scissor rectangle.
 
@@ -192,7 +197,7 @@ myCmdBuffer->Clear(LLGL::ClearFlags::Color);
 ```
 To clear multiple attachments of the active render target, the `ClearAttachments` function can be used instead. The last state we set before rendering is the pipeline state and the vertex buffer we created earlier:
 ```cpp
-myCmdBuffer->SetGraphicsPipeline(*myPipeline);
+myCmdBuffer->SetPipelineState(*myPipeline);
 ```
 Now we can finally draw our first triangle:
 ```cpp

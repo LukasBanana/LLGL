@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
         std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
 
         // Set window title and show window
-        auto& window = static_cast<LLGL::Window&>(context->GetSurface());
+        auto& window = LLGL::CastTo<LLGL::Window>(context->GetSurface());
 
         window.SetTitle(L"LLGL Example: Hello Triangle");
         window.Show();
@@ -218,9 +218,6 @@ int main(int argc, char* argv[])
         // Create command buffer to submit subsequent graphics commands to the GPU
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
 
-        // Get resolution to determine viewport size
-        const auto resolution = contextDesc.videoMode.resolution;
-
         #ifdef ENABLE_TIMER
         auto timer = LLGL::Timer::Create();
         auto start = std::chrono::system_clock::now();
@@ -243,7 +240,7 @@ int main(int argc, char* argv[])
             commands->Begin();
             {
                 // Set viewport and scissor rectangle
-                commands->SetViewport(resolution);
+                commands->SetViewport(context->GetResolution());
 
                 // Set graphics pipeline
                 commands->SetPipelineState(*pipeline);
