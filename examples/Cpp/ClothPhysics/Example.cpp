@@ -108,6 +108,17 @@ public:
         CreateComputePipeline();
         CreateGraphicsPipeline();
 
+        // Label objects
+        constantBuffer->SetName("Buffer.Constants");
+        particleBuffers[AttribBase]->SetName("Buffer.Particles.Base");
+        particleBuffers[AttribCurrPos]->SetName("Buffer.Particles.CurrentPosition");
+        particleBuffers[AttribNextPos]->SetName("Buffer.Particles.NextPosition");
+        particleBuffers[AttribPrevPos]->SetName("Buffer.Particles.PreviousPosition");
+        particleBuffers[AttribVelocity]->SetName("Buffer.Particles.Velocity");
+        particleBuffers[AttribNormal]->SetName("Buffer.Particles.Normal");
+        vertexBufferArray->SetName("BufferArray.Vertices");
+        indexBuffer->SetName("Buffer.Indices");
+
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse to rotate the camera" << std::endl;
         std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the cloth stiffness" << std::endl;
@@ -292,7 +303,6 @@ public:
                 { { LLGL::ShaderType::Compute, "Example.hlsl", "CSRelaxation", "cs_5_0" } }
             );
         }
-        #if 0
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             computeShaders[0] = LoadShaderProgram(
@@ -305,6 +315,7 @@ public:
                 { { LLGL::ShaderType::Compute, "Example.CSRelaxation.comp" } }
             );
         }
+        #if 0
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
             computeShaders[0] = LoadShaderProgram(
@@ -398,7 +409,6 @@ public:
                 { vertexFormat }
             );
         }
-        #if 0
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             graphicsShader = LoadShaderProgram(
@@ -409,6 +419,7 @@ public:
                 { vertexFormat }
             );
         }
+        #if 0
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
             graphicsShader = LoadShaderProgram(

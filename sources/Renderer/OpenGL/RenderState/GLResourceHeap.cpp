@@ -8,6 +8,7 @@
 #include "GLResourceHeap.h"
 #include "GLPipelineLayout.h"
 #include "GLStateManager.h"
+#include "../Ext/GLExtensions.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLSampler.h"
 #include "../Texture/GLTexture.h"
@@ -70,6 +71,37 @@ struct GLResourceBinding
 
 
 /*
+ * Internal functions
+ */
+
+#ifdef GL_ARB_shader_image_load_store
+
+// Returns the bitfield of <glMemoryBarrier> for the specified resources
+static GLbitfield GetMemoryBarrierBitfield(const std::vector<ResourceViewDescriptor>& resourceViews)
+{
+    GLbitfield barriers = 0;
+
+    for (const auto& desc : resourceViews)
+    {
+        if (auto resource = desc.resource)
+        {
+            /* Enabel <GL_SHADER_STORAGE_BARRIER_BIT> bitmask for UAV buffers */
+            if (resource->GetResourceType() == ResourceType::Buffer)
+            {
+                auto buffer = LLGL_CAST(Buffer*, resource);
+                if ((buffer->GetBindFlags() & BindFlags::Storage) != 0)
+                    barriers |= GL_SHADER_STORAGE_BARRIER_BIT;
+            }
+        }
+    }
+
+    return barriers;
+}
+
+#endif // /GL_ARB_shader_image_load_store
+
+
+/*
  * GLResourceHeap class
  */
 
@@ -84,6 +116,11 @@ GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc)
     const auto& bindings = pipelineLayoutGL->GetBindings();
     if (desc.resourceViews.size() != bindings.size())
         throw std::invalid_argument("failed to create resource heap due to mismatch between number of resources and bindings");
+
+    /* Determine memory barriers */
+    #ifdef GL_ARB_shader_image_load_store
+    barriers_ = GetMemoryBarrierBitfield(desc.resourceViews);
+    #endif // /GL_ARB_shader_image_load_store
 
     /* Build buffer segments */
     ResourceBindingIterator resourceIterator { desc.resourceViews, bindings };
@@ -138,6 +175,14 @@ static void BindSamplersSegment(GLStateManager& stateMngr, std::int8_t*& byteAli
 void GLResourceHeap::Bind(GLStateManager& stateMngr)
 {
     auto byteAlignedBuffer = buffer_.data();
+
+    #ifdef GL_ARB_shader_image_load_store
+
+    /* Submit memory barriers for UAVs */
+    if (barriers_ != 0)
+        glMemoryBarrier(barriers_);
+
+    #endif // /GL_ARB_shader_image_load_store
 
     /* Bind all constant buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numConstantBufferSegments; ++i)

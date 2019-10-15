@@ -73,6 +73,7 @@ class GLResourceHeap final : public ResourceHeap
 
         SegmentationHeader          segmentationHeader_;
         std::vector<std::int8_t>    buffer_;
+        GLbitfield                  barriers_           = 0;
 
 };
 
