@@ -85,7 +85,7 @@ static GLbitfield GetMemoryBarrierBitfield(const std::vector<ResourceViewDescrip
     {
         if (auto resource = desc.resource)
         {
-            /* Enabel <GL_SHADER_STORAGE_BARRIER_BIT> bitmask for UAV buffers */
+            /* Enable <GL_SHADER_STORAGE_BARRIER_BIT> bitmask for UAV buffers */
             if (resource->GetResourceType() == ResourceType::Buffer)
             {
                 auto buffer = LLGL_CAST(Buffer*, resource);

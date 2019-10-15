@@ -244,6 +244,7 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         bool                                scissorEnabled_                     = false;
         UINT                                numBoundScissorRects_               = 0;
+        UINT                                numColorBuffers_                    = 0;
 
         RenderTarget*                       boundRenderTarget_                  = nullptr;
 

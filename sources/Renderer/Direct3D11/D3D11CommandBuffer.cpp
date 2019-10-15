@@ -229,7 +229,7 @@ static UINT GetClearFlagsDSV(long flags)
 
 void D3D11CommandBuffer::Clear(long flags)
 {
-    /* Clear color buffer */
+    /* Clear color buffers */
     if ((flags & ClearFlags::Color) != 0)
     {
         for (auto rtv : framebufferView_.rtvList)

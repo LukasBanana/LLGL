@@ -266,7 +266,14 @@ void D3D12CommandBuffer::Clear(long flags)
     {
         /* Clear color buffers */
         if ((flags & ClearFlags::Color) != 0)
-            commandList_->ClearRenderTargetView(rtvDescHandle_, clearValue_.color.Ptr(), 0, nullptr);
+        {
+            auto rtvDescHandle = rtvDescHandle_;
+            for (UINT i = 0; i < numColorBuffers_; ++i)
+            {
+                commandList_->ClearRenderTargetView(rtvDescHandle, clearValue_.color.Ptr(), 0, nullptr);
+                rtvDescHandle.ptr += rtvDescSize_;
+            }
+        }
     }
 
     if (dsvDescHandle_.ptr != 0)
@@ -775,15 +782,15 @@ void D3D12CommandBuffer::BindRenderTarget(D3D12RenderTarget& renderTargetD3D)
     renderTargetD3D.TransitionToOutputMerger(commandContext_);
 
     /* Set current back buffer as RTV and optional DSV */
-    const UINT numRenderTargets = renderTargetD3D.GetNumColorAttachments();
+    numColorBuffers_ = renderTargetD3D.GetNumColorAttachments();
 
     rtvDescHandle_ = renderTargetD3D.GetCPUDescriptorHandleForRTV();
     dsvDescHandle_ = renderTargetD3D.GetCPUDescriptorHandleForDSV();
 
     if (dsvDescHandle_.ptr != 0)
-        commandList_->OMSetRenderTargets(numRenderTargets, &rtvDescHandle_, TRUE, &dsvDescHandle_);
+        commandList_->OMSetRenderTargets(numColorBuffers_, &rtvDescHandle_, TRUE, &dsvDescHandle_);
     else
-        commandList_->OMSetRenderTargets(numRenderTargets, &rtvDescHandle_, TRUE, nullptr);
+        commandList_->OMSetRenderTargets(numColorBuffers_, &rtvDescHandle_, TRUE, nullptr);
 }
 
 void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
@@ -796,6 +803,8 @@ void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
     );
 
     /* Set current back buffer as RTV and optional DSV */
+    numColorBuffers_ = 1;
+
     rtvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForRTV();
     dsvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForDSV();
 
