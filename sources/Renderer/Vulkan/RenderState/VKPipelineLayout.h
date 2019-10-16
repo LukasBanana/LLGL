@@ -23,6 +23,7 @@ namespace LLGL
 struct VKLayoutBinding
 {
     std::uint32_t       dstBinding;
+    long                stageFlags;
     VkDescriptorType    descriptorType;
 };
 

@@ -479,6 +479,8 @@ void VKCommandBuffer::BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelin
         0,
         nullptr
     );
+
+    resourceHeapVK.InsertPipelineBarrier(commandBuffer_);
 }
 
 void VKCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)

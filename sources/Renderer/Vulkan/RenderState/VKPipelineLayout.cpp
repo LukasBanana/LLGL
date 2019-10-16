@@ -122,7 +122,15 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
     bindings_.reserve(numBindings);
     for (std::size_t i = 0; i < numBindings; ++i)
-        bindings_.push_back({ desc.bindings[i].slot, layoutBindings[i].descriptorType });
+    {
+        bindings_.push_back(
+            {
+                desc.bindings[i].slot,
+                desc.bindings[i].stageFlags,
+                layoutBindings[i].descriptorType
+            }
+        );
+    }
 }
 
 

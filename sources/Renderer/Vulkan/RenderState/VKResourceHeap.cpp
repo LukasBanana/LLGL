@@ -47,6 +47,9 @@ VKResourceHeap::VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeap
 
     /* Update write descriptors in descriptor set */
     UpdateDescriptorSets(desc, bindings);
+
+    /* Create pipeline barrier for resource views that require it, e.g. those with storage binding flags */
+    CreatePipelineBarrier(desc.resourceViews, pipelineLayoutVK->GetBindings());
 }
 
 VKResourceHeap::~VKResourceHeap()
@@ -56,6 +59,12 @@ VKResourceHeap::~VKResourceHeap()
     auto result = vkFreeDescriptorSets(device_, descriptorPool_, 1, &descriptorSet_);
     VKThrowIfFailed(result, "failed to release Vulkan descriptor sets");
     #endif
+}
+
+void VKResourceHeap::InsertPipelineBarrier(VkCommandBuffer commandBuffer)
+{
+    if (barrier_.IsEnabled())
+        barrier_.Submit(commandBuffer);
 }
 
 
@@ -266,6 +275,33 @@ void VKResourceHeap::FillWriteDescriptorForBuffer(const ResourceViewDescriptor& 
         writeDesc->pImageInfo       = nullptr;
         writeDesc->pBufferInfo      = bufferInfo;
         writeDesc->pTexelBufferView = nullptr;
+    }
+}
+
+void VKResourceHeap::CreatePipelineBarrier(const std::vector<ResourceViewDescriptor>& resourceViews, const std::vector<VKLayoutBinding>& bindings)
+{
+    for (std::size_t i = 0; i < resourceViews.size(); ++i)
+    {
+        const auto& desc    = resourceViews[i];
+        const auto& binding = bindings[i];
+
+        if (auto resource = desc.resource)
+        {
+            /* Enable <GL_SHADER_STORAGE_BARRIER_BIT> bitmask for UAV buffers */
+            if (resource->GetResourceType() == ResourceType::Buffer)
+            {
+                auto buffer = LLGL_CAST(Buffer*, resource);
+                if ((buffer->GetBindFlags() & BindFlags::Storage) != 0)
+                {
+                    /* Insert worst case scenario for a UAV resource */
+                    barrier_.InsertMemoryBarrier(
+                        bindings[i].stageFlags,
+                        VK_ACCESS_SHADER_WRITE_BIT,
+                        VK_ACCESS_SHADER_READ_BIT
+                    );
+                }
+            }
+        }
     }
 }
 
