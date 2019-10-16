@@ -217,14 +217,27 @@ class D3D12CommandBuffer final : public CommandBuffer
         void ClearAttachmentsWithRenderPass(
             const D3D12RenderPass&  renderPassD3D,
             std::uint32_t           numClearValues,
-            const ClearValue*       clearValues
+            const ClearValue*       clearValues,
+            UINT                    numRects        = 0,
+            const D3D12_RECT*       rects           = nullptr
         );
 
-        void ClearColorBuffers(
+        void ClearRenderTargetViews(
             const std::uint8_t* colorBuffers,
             std::uint32_t       numClearValues,
             const ClearValue*   clearValues,
-            std::uint32_t&      idx
+            std::uint32_t&      idx,
+            UINT                numRects,
+            const D3D12_RECT*   rects
+        );
+
+        void ClearDepthStencilView(
+            D3D12_CLEAR_FLAGS   clearFlags,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            std::uint32_t       idx,
+            UINT                numRects,
+            const D3D12_RECT*   rects
         );
 
     private:

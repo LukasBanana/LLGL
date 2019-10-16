@@ -115,8 +115,13 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
 
     if (sampleCountBits > VK_SAMPLE_COUNT_1_BIT)
     {
+        /* Take color attachment format descriptors for multi-sampled attachemnts */
         for (std::uint32_t i = 0; i < numColorAttachments; ++i)
             Convert(attachmentDescs[numAttachments + i], desc.colorAttachments[i], sampleCountBits);
+
+        /* Modify original attachment descriptors */
+        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+            attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     }
 
     /* Create render pass with native attachment descriptors */
@@ -155,13 +160,12 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     /* Build bitmask for clear values: least significant bit (LSB) is used for the first attachment */
     clearValuesMask_ = 0;
 
-    for (std::uint32_t i = numAttachments; i > 0; --i)
+    for (std::uint32_t i = 0; i < numAttachments; ++i)
     {
-        clearValuesMask_ <<= 1;
-        if (attachmentDescs[i - 1].loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
+        if (attachmentDescs[multiSampleEnabled && i + 1 < numAttachments ? numAttachments + i : i].loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
         {
-            clearValuesMask_ |= 0x1ull;
-            numClearValues_ = std::max(numClearValues_, static_cast<std::uint8_t>(i));
+            clearValuesMask_ |= (0x1ull << i);
+            numClearValues_ = std::max(numClearValues_, static_cast<std::uint8_t>(i + 1));
         }
     }
 

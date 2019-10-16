@@ -24,6 +24,7 @@ namespace LLGL
 class VKDevice;
 class VKPhysicalDevice;
 class VKResourceHeap;
+class VKRenderPass;
 class VKQueryHeap;
 
 class VKCommandBuffer final : public CommandBuffer
@@ -228,6 +229,14 @@ class VKCommandBuffer final : public CommandBuffer
         void CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences);
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
+
+        void ConvertRenderPassClearValues(
+            const VKRenderPass& renderPass,
+            std::uint32_t&      dstClearValuesCount,
+            VkClearValue*       dstClearValues,
+            std::uint32_t       srcClearValuesCount,
+            const ClearValue*   srcClearValues
+        );
 
         void PauseRenderPass();
         void ResumeRenderPass();

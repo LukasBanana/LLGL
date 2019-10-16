@@ -12,6 +12,9 @@
 #include <chrono>//!!!
 #endif
 
+// Enables custom render pass to clear at the begin of a render pass section (more efficient)
+#define ENABLE_CUSTOM_RENDER_PASS
+
 
 class Example_PostProcessing : public ExampleBase
 {
@@ -57,6 +60,10 @@ class Example_PostProcessing : public ExampleBase
     LLGL::RenderTarget*     renderTargetBlurX   = nullptr;
     LLGL::RenderTarget*     renderTargetBlurY   = nullptr;
 
+    #ifdef ENABLE_CUSTOM_RENDER_PASS
+    LLGL::RenderPass*       renderPassScene     = nullptr;
+    #endif
+
     struct SceneSettings
     {
         Gs::Matrix4f        wvpMatrix;
@@ -86,6 +93,9 @@ public:
         CreateSamplers();
         CreateTextures();
         CreateRenderTargets();
+        #ifdef ENABLE_CUSTOM_RENDER_PASS
+        CreateRenderPasses();
+        #endif
         CreatePipelineLayouts();
         CreatePipelines();
         CreateResourceHeaps();
@@ -289,9 +299,9 @@ public:
             renderTargetDesc.resolution = resolution;
             renderTargetDesc.attachments =
             {
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth },
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, colorMap },
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMap },
+                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth },
+                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, colorMap },
+                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, glossMap },
             };
             renderTargetDesc.samples = GetSampleCount();
         }
@@ -306,7 +316,7 @@ public:
             renderTargetBlurXDesc.resolution = resolution;
             renderTargetBlurXDesc.attachments =
             {
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMapBlurX }
+                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, glossMapBlurX }
             };
         }
         renderTargetBlurX = renderer->CreateRenderTarget(renderTargetBlurXDesc);
@@ -317,11 +327,31 @@ public:
             renderTargetBlurYDesc.resolution = resolution;
             renderTargetBlurYDesc.attachments =
             {
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMapBlurY }
+                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, glossMapBlurY }
             };
         }
         renderTargetBlurY = renderer->CreateRenderTarget(renderTargetBlurYDesc);
     }
+
+    #ifdef ENABLE_CUSTOM_RENDER_PASS
+
+    void CreateRenderPasses()
+    {
+        //TODO: should be able to query depth-stencil format from <RenderTarget> just like with <RenderContext>
+        LLGL::RenderPassDescriptor renderPassDesc;
+        {
+            renderPassDesc.colorAttachments =
+            {
+                LLGL::AttachmentFormatDescriptor{ colorMap->GetDesc().format, LLGL::AttachmentLoadOp::Clear },
+                LLGL::AttachmentFormatDescriptor{ glossMap->GetDesc().format, LLGL::AttachmentLoadOp::Clear },
+            };
+            renderPassDesc.depthAttachment  = LLGL::AttachmentFormatDescriptor{ LLGL::Format::D32Float, LLGL::AttachmentLoadOp::Clear };
+            renderPassDesc.samples          = GetSampleCount();
+        }
+        renderPassScene = renderer->CreateRenderPass(renderPassDesc);
+    }
+
+    #endif // /ENABLE_CUSTOM_RENDER_PASS
 
     // The utility function <LLGL::PipelineLayoutDesc> is used here, to simplify the description of the pipeline layouts
     void CreatePipelineLayouts()
@@ -560,20 +590,38 @@ private:
             // Set graphics pipeline and vertex buffer for scene rendering
             commands->SetVertexBuffer(*vertexBufferScene);
 
+            #ifdef ENABLE_CUSTOM_RENDER_PASS
+
+            // Clear scene render target with render pass and initial clear values
+            LLGL::ClearValue clearValues[3];
+            clearValues[0].color = defaultClearColor;
+            clearValues[1].color = LLGL::ColorRGBAf{ 0, 0, 0, 1 };
+            clearValues[2].depth = 1.0f;
+
             // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
+            commands->BeginRenderPass(*renderTargetScene, renderPassScene, 3, clearValues);
+
+            #else
+
             commands->BeginRenderPass(*renderTargetScene);
+
+            #endif // /ENABLE_CUSTOM_RENDER_PASS
             {
                 // Set viewport to full size
                 commands->SetViewport(viewportFull);
 
+                #ifndef ENABLE_CUSTOM_RENDER_PASS
+
                 // Clear individual buffers in render target (color, glossiness, depth)
                 LLGL::AttachmentClear clearCmds[3] =
                 {
-                    LLGL::AttachmentClear { defaultClearColor, 0 },
-                    LLGL::AttachmentClear { LLGL::ColorRGBAf { 0, 0, 0, 0 }, 1 },
-                    LLGL::AttachmentClear { 1.0f }
+                    LLGL::AttachmentClear{ defaultClearColor, 0 },
+                    LLGL::AttachmentClear{ LLGL::ColorRGBAf{ 0, 0, 0, 0 }, 1 },
+                    LLGL::AttachmentClear{ 1.0f }
                 };
                 commands->ClearAttachments(3, clearCmds);
+
+                #endif // /ENABLE_CUSTOM_RENDER_PASS
 
                 // Bind pipeline and resources
                 commands->SetPipelineState(*pipelineScene);

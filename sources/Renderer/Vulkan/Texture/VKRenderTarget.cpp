@@ -210,6 +210,8 @@ void VKRenderTarget::CreateRenderPass(
     if (HasMultiSampling())
     {
         attachmentDescs.resize(numAttachments + numColorAttachments);
+
+        /* Take color attachment format descriptors for multi-sampled attachemnts */
         for (std::uint32_t i = 0; i < numColorAttachments; ++i)
         {
             SetVkAttachmentDescForColor(
@@ -219,6 +221,10 @@ void VKRenderTarget::CreateRenderPass(
                 loadContent
             );
         }
+
+        /* Modify original attachment descriptors */
+        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+            attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     }
 
     /* Create native Vulkan render pass with attachment descriptors */

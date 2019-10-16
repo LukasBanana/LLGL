@@ -313,7 +313,7 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 
 /* ----- Clear ----- */
 
-static void Convert(VkClearColorValue& dst, const ColorRGBAf& src)
+static void ToVkClearColor(VkClearColorValue& dst, const ColorRGBAf& src)
 {
     dst.float32[0] = src.r;
     dst.float32[1] = src.g;
@@ -323,7 +323,7 @@ static void Convert(VkClearColorValue& dst, const ColorRGBAf& src)
 
 void VKCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
-    Convert(clearColor_, color);
+    ToVkClearColor(clearColor_, color);
 }
 
 void VKCommandBuffer::SetClearDepth(float depth)
@@ -401,7 +401,7 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
             /* Convert color clear command */
             dst.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
             dst.colorAttachment = src.colorAttachment;
-            Convert(dst.clearValue.color, src.clearValue.color);
+            ToVkClearColor(dst.clearValue.color, src.clearValue.color);
             ++numAttachmentsVK;
         }
         else if (hasDSVAttachment_)
@@ -546,7 +546,7 @@ void VKCommandBuffer::BeginRenderPass(
     scissorRectInvalidated_ = true;
 
     /* Declare array or clear values */
-    VkClearValue clearValuesVK[LLGL_MAX_NUM_ATTACHMENTS];
+    VkClearValue clearValuesVK[LLGL_MAX_NUM_COLOR_ATTACHMENTS * 2 + 1];
     std::uint32_t numClearValuesVK = 0;
 
     /* Get native render pass object either from RenderTarget or RenderPass interface */
@@ -555,44 +555,7 @@ void VKCommandBuffer::BeginRenderPass(
         /* Get native VkRenderPass object */
         auto renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
         renderPass_ = renderPassVK->GetVkRenderPass();
-
-        /* Fill array of clear values */
-        numClearValuesVK        = renderPassVK->GetNumClearValues();
-        auto clearValuesMask    = renderPassVK->GetClearValuesMask();
-        auto depthStencilIndex  = renderPassVK->GetDepthStencilIndex();
-
-        for (std::uint32_t i = 0; i < numClearValuesVK; ++i)
-        {
-            /* Check if current attachment index requires a clear value */
-            if (((clearValuesMask >> i) & 0x1ull) != 0)
-            {
-                auto& dst = clearValuesVK[i];
-
-                if (numClearValues > 0)
-                {
-                    /* Set specified clear parameter */
-                    if (i == depthStencilIndex)
-                    {
-                        dst.depthStencil.depth      = clearValues->depth;
-                        dst.depthStencil.stencil    = clearValues->stencil;
-                    }
-                    else
-                        Convert(dst.color, clearValues->color);
-
-                    /* Get next clear value parameter */
-                    --numClearValues;
-                    ++clearValues;
-                }
-                else
-                {
-                    /* Set global clear parameters (from SetClearColor, SetClearDepth, SetClearStencil) */
-                    if (i == depthStencilIndex)
-                        dst.depthStencil = clearDepthStencil_;
-                    else
-                        dst.color = clearColor_;
-                }
-            }
-        }
+        ConvertRenderPassClearValues(*renderPassVK, numClearValuesVK, clearValuesVK, numClearValues, clearValues);
     }
 
     /* Record begin of render pass */
@@ -1028,6 +991,64 @@ void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, 
         }
         vkCmdClearAttachments(commandBuffer_, numAttachments, attachments, 1, &clearRect);
     }
+}
+
+static void ToVkClearDepthStencil(VkClearDepthStencilValue& dst, float srcDepth, std::uint32_t srcStencil)
+{
+    dst.depth   = srcDepth;
+    dst.stencil = srcStencil;
+}
+
+void VKCommandBuffer::ConvertRenderPassClearValues(
+    const VKRenderPass& renderPass,
+    std::uint32_t&      dstClearValuesCount,
+    VkClearValue*       dstClearValues,
+    std::uint32_t       srcClearValuesCount,
+    const ClearValue*   srcClearValues)
+{
+    /* Fill array of clear values */
+    dstClearValuesCount     = renderPass.GetNumClearValues();
+    auto clearValuesMask    = renderPass.GetClearValuesMask();
+    auto depthStencilIndex  = renderPass.GetDepthStencilIndex();
+    bool multiSampleEnabled = (renderPass.GetSampleCountBits() > VK_SAMPLE_COUNT_1_BIT);
+
+    std::uint32_t dstIndex = 0, srcIndex = 0;
+
+    for (std::uint32_t i = 0; i < dstClearValuesCount; ++i)
+    {
+        /* Check if current attachment index requires a clear value */
+        if (((clearValuesMask >> i) & 0x1ull) != 0)
+        {
+            /* Select destination Vulkan clear value */
+            if (i == depthStencilIndex || !multiSampleEnabled)
+                dstIndex = i;
+            else
+                dstIndex = (renderPass.GetNumColorAttachments() + 1u + i);
+
+            auto& dst = dstClearValues[dstIndex];
+
+            if (srcIndex < srcClearValuesCount)
+            {
+                /* Set specified clear parameter */
+                const auto& src = srcClearValues[srcIndex++];
+                if (i == depthStencilIndex)
+                    ToVkClearDepthStencil(dst.depthStencil, src.depth, src.stencil);
+                else
+                    ToVkClearColor(dst.color, src.color);
+            }
+            else
+            {
+                /* Set global clear parameters (from SetClearColor, SetClearDepth, SetClearStencil) */
+                if (i == depthStencilIndex)
+                    dst.depthStencil = clearDepthStencil_;
+                else
+                    dst.color = clearColor_;
+            }
+        }
+    }
+
+    if (multiSampleEnabled)
+        dstClearValuesCount += renderPass.GetNumColorAttachments();
 }
 
 void VKCommandBuffer::PauseRenderPass()
