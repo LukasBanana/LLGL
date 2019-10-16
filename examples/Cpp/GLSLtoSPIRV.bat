@@ -73,4 +73,11 @@ echo ####### VolumeRendering #######
 glslangValidator -V -S vert -o VolumeRendering/Example.450core.vert.spv VolumeRendering/Example.450core.vert
 glslangValidator -V -S frag -o VolumeRendering/Example.450core.frag.spv VolumeRendering/Example.450core.frag
 
+echo ####### ClothPhysics #######
+glslangValidator -V -S vert -o ClothPhysics/Example.VS.450core.vert.spv ClothPhysics/Example.VS.450core.vert
+glslangValidator -V -S frag -o ClothPhysics/Example.PS.450core.frag.spv ClothPhysics/Example.PS.450core.frag
+glslangValidator -V -S comp -o ClothPhysics/Example.CSForces.450core.comp.spv ClothPhysics/Example.CSForces.450core.comp
+glslangValidator -V -S comp -o ClothPhysics/Example.CSStretchConstraints.450core.comp.spv ClothPhysics/Example.CSStretchConstraints.450core.comp
+glslangValidator -V -S comp -o ClothPhysics/Example.CSRelaxation.450core.comp.spv ClothPhysics/Example.CSRelaxation.450core.comp
+
 pause

@@ -315,7 +315,6 @@ public:
                 { { LLGL::ShaderType::Compute, "Example.CSRelaxation.comp" } }
             );
         }
-        #if 0
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
             computeShaders[0] = LoadShaderProgram(
@@ -328,7 +327,6 @@ public:
                 { { LLGL::ShaderType::Compute, "Example.CSRelaxation.450core.comp.spv" } }
             );
         }
-        #endif
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             computeShaders[0] = LoadShaderProgram(
@@ -419,7 +417,6 @@ public:
                 { vertexFormat }
             );
         }
-        #if 0
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
             graphicsShader = LoadShaderProgram(
@@ -430,7 +427,6 @@ public:
                 { vertexFormat }
             );
         }
-        #endif
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             graphicsShader = LoadShaderProgram(
@@ -446,7 +442,7 @@ public:
 
         // Create graphics pipeline layout
         graphicsLayout = renderer->CreatePipelineLayout(
-            IsMetal()
+            IsMetal() || IsVulkan()
                 ? LLGL::PipelineLayoutDesc("cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag")
                 : LLGL::PipelineLayoutDesc("cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag")
         );
