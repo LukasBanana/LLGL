@@ -259,11 +259,11 @@ LLGL::PipelineLayoutDescriptor myLayoutDesc = LLGL::PipelineLayoutDesc(
     "texture(myColorMap@2):frag,"
 );
 LLGL::PipelineLayout* myLayout = myRenderer->CreatePipelineLayout(myLayoutDesc);
-LLGL::UniformLocation myProjectionUniform = myShaderProgram->QueryUniformLocation("myProjection");
+LLGL::UniformLocation myProjectionUniform = myShaderProgram->FindUniformLocation("myProjection");
 
 /* ... */
 
-myCmdBuffer->SetGraphicsPipeline(myGfxPipeline);
+myCmdBuffer->SetPipelineState(*myGfxPipeline);
 float myProjectionMatrix[16] = /* ... */;
 myCmdBuffer->SetUniform(myProjectionUniform, &myProjectionMatrix[0], sizeof(myProjectionMatrix));
 ```
@@ -384,8 +384,8 @@ Display::QueryList                     --> Display::InstantiateList
 Display::QueryPrimary                  --> Display::InstantiatePrimary
 Display::QuerySupportedDisplayModes    --> Display::GetSupportedDisplayModes
 Format::BC1RGBA                        --> Format::BC1UNorm
-Format::BC2RGBA                        --> Format::BC1UNorm
-Format::BC3RGBA                        --> Format::BC1UNorm
+Format::BC2RGBA                        --> Format::BC2UNorm
+Format::BC3RGBA                        --> Format::BC3UNorm
 FrameProfile::rwStorageBufferBindings  --> FrameProfile::storageBufferBindings
 FrameProfile::sampleBufferBindings     --> FrameProfile::sampledBufferBindings
 Image::QueryDstDesc                    --> Display::GetDstDesc
@@ -588,7 +588,7 @@ myVertexShaderDesc.vertex.inputAttribs.insert(
 
 ## Multi-sampling descriptor
 
-`MultiSamplingDescriptor` has been removed and only the number of samples is no specified.
+`MultiSamplingDescriptor` has been removed and only the number of samples is now specified.
 Additionally, the `sampleMask` member has been moved to `BlendDescriptor`.
 
 Before:
