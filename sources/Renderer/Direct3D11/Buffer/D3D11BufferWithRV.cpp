@@ -9,6 +9,7 @@
 #include "../D3D11Types.h"
 #include "../D3D11ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../BufferUtils.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
 #include <algorithm>
@@ -42,21 +43,11 @@ static UINT GetUAVFlags(const BufferDescriptor::StorageBuffer& desc)
     }
 }
 
-static UINT GetStructuredBufferStride(const BufferDescriptor::StorageBuffer& desc)
-{
-    if (desc.stride > 0)
-        return desc.stride;
-    else
-        return (GetFormatAttribs(desc.format).bitSize / 8);
-}
-
 D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
     D3D11Buffer { device, desc, initialData }
 {
     /* Determine stride size either for structured buffers or regular buffers */
-    //if (desc.storageBuffer.stride == 0)
-    //    throw std::invalid_argument("storage buffer stride cannot be zero for a D3D11 resource view");
-    const UINT stride = std::max(1u, GetStructuredBufferStride(desc.storageBuffer));
+    const UINT stride = GetStorageBufferStride(desc.storageBuffer);
 
     /* Create resource views (SRV and UAV) */
     auto format         = GetD3DResourceViewFormat(desc.storageBuffer);

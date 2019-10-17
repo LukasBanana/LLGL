@@ -11,6 +11,7 @@
 #include "../D3D12ObjectUtils.h"
 #include "../Command/D3D12CommandContext.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../BufferUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/Helper.h"
 #include <stdexcept>
@@ -236,7 +237,7 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
 {
     /* Store buffer attributes */
     bufferSize_     = GetAlignedSize<UINT64>(desc.size, alignment_);
-    structStride_   = std::max(1u, desc.storageBuffer.stride);
+    structStride_   = GetStorageBufferStride(desc.storageBuffer);
 
     /* Determine actual resource size */
     internalSize_ = bufferSize_;

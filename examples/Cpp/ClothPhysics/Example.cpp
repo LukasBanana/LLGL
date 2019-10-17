@@ -209,9 +209,9 @@ public:
         LLGL::BufferDescriptor bufferDesc;
         {
             bufferDesc.size                         = sizeof(Gs::Vector4f) * numClothVertices;
-            bufferDesc.storageBuffer.format         = LLGL::Format::RGBA32Float;
             bufferDesc.bindFlags                    = bindFlags;
             bufferDesc.storageBuffer.storageType    = storageType;
+            bufferDesc.storageBuffer.format         = LLGL::Format::RGBA32Float;
             if (vertexAttrib != nullptr)
                 bufferDesc.vertexAttribs = { *vertexAttrib };
         }
