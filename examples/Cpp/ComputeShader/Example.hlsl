@@ -21,7 +21,7 @@ struct SceneObject
     float2      _pad0;
 };
 
-RWBuffer<float> sceneObjects : register(u3);
+RWBuffer<float4> sceneObjects : register(u3);
 
 struct DrawIndirectArguments
 {
@@ -31,15 +31,16 @@ struct DrawIndirectArguments
     uint firstInstance;
 };
 
-RWBuffer<uint> drawArgs : register(u4);
+RWBuffer<uint4> drawArgs : register(u4);
 
 void WriteDrawArgs(DrawIndirectArguments args, uint idx)
 {
-    idx *= 4;
-    drawArgs[idx    ] = args.numVertices;
-    drawArgs[idx + 1] = args.numInstances;
-    drawArgs[idx + 2] = args.firstVertex;
-    drawArgs[idx + 3] = args.firstInstance;
+    drawArgs[idx] = uint4(
+        args.numVertices,
+        args.numInstances,
+        args.firstVertex,
+        args.firstInstance
+    );
 }
 
 void WriteDrawArgsTri(uint idx, uint numInstances, uint firstInstance)
@@ -73,13 +74,9 @@ void WriteSceneObject(uint idx)
     float c = cos(a*2.0);
 
     // Compute rotation and position
-    idx *= 8;
-    sceneObjects[idx    ] = c*r;
-    sceneObjects[idx + 1] = s*r;
-    sceneObjects[idx + 2] = -s*r;
-    sceneObjects[idx + 3] = c*r;
-    sceneObjects[idx + 4] = sin(a)*d;
-    sceneObjects[idx + 5] = cos(a)*d;
+    idx *= 2;
+    sceneObjects[idx    ] = float4(c*r, s*r, -s*r, c*r);
+    sceneObjects[idx + 1] = float4(sin(a)*d, cos(a)*d, 0.0, 0.0);
 }
 
 [numthreads(1, 1, 1)]

@@ -128,12 +128,11 @@ public:
         // Create instance buffer
         LLGL::BufferDescriptor instanceBufferDesc;
         {
-            instanceBufferDesc.size                         = sizeof(SceneObject)*maxNumSceneObjects;
+            instanceBufferDesc.size                         = sizeof(SceneObject) * maxNumSceneObjects;
             instanceBufferDesc.bindFlags                    = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
             instanceBufferDesc.vertexAttribs                = vertexFormat[1].attributes;
             instanceBufferDesc.storageBuffer.storageType    = LLGL::StorageBufferType::RWBuffer;
-            instanceBufferDesc.storageBuffer.format         = LLGL::Format::R32Float;
-            instanceBufferDesc.storageBuffer.stride         = sizeof(float);
+            instanceBufferDesc.storageBuffer.format         = LLGL::Format::RGBA32Float;
         }
         instanceBuffer = renderer->CreateBuffer(instanceBufferDesc);
 
@@ -152,11 +151,10 @@ public:
         // Create indirect argument buffer
         LLGL::BufferDescriptor argBufferDesc;
         {
-            argBufferDesc.size                      = sizeof(LLGL::DrawIndirectArguments)*2;
+            argBufferDesc.size                      = sizeof(LLGL::DrawIndirectArguments) * 2;
             argBufferDesc.bindFlags                 = LLGL::BindFlags::IndirectBuffer | LLGL::BindFlags::Storage;
             argBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWBuffer;
-            argBufferDesc.storageBuffer.format      = LLGL::Format::R32UInt;
-            argBufferDesc.storageBuffer.stride      = sizeof(std::uint32_t);
+            argBufferDesc.storageBuffer.format      = LLGL::Format::RGBA32UInt;
         }
         indirectArgBuffer = renderer->CreateBuffer(argBufferDesc);
     }
