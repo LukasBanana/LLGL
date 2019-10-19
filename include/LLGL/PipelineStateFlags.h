@@ -735,7 +735,7 @@ struct ComputePipelineDescriptor
 LLGL_EXPORT bool IsPrimitiveTopologyPatches(const PrimitiveTopology primitiveTopology);
 
 /**
-\brief Returns true if hte specified primitive topology is a strip that 
+\brief Returns true if the specified primitive topology is a strip that generates a new primitive with each new vertex.
 \return True if \c primitiveTopology is equal to one of the following primitive topologies:
 - PrimitiveTopology::LineStrip
 - PrimitiveTopology::LineStripAdjacency

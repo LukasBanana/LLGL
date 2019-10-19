@@ -589,6 +589,8 @@ GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology)
         case PrimitiveTopology::TriangleStripAdjacency:
             return GL_TRIANGLES;
         default:
+            if (primitiveTopology >= PrimitiveTopology::Patches1 && primitiveTopology <= PrimitiveTopology::Patches32)
+                return 0;
             break;
     }
     MapFailed("PrimitiveTopology");
