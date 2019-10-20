@@ -32,10 +32,23 @@ static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
     );
 }
 
+// Maps the specified format to a swizzle format, or identity swizzle if texture swizzling is not necessary
+static GLSwizzleFormat MapSwizzleFormat(const Format format)
+{
+    const auto& formatDesc = GetFormatAttribs(format);
+    if (formatDesc.format == ImageFormat::Alpha)
+        return GLSwizzleFormat::Alpha;
+    else if (formatDesc.format == ImageFormat::BGRA)
+        return GLSwizzleFormat::BGRA;
+    else
+        return GLSwizzleFormat::RGBA;
+}
+
 GLTexture::GLTexture(const TextureDescriptor& desc) :
     Texture         { desc.type                                },
     numMipLevels_   { static_cast<GLsizei>(NumMipLevels(desc)) },
-    isRenderbuffer_ { IsRenderbufferSufficient(desc)           }
+    isRenderbuffer_ { IsRenderbufferSufficient(desc)           },
+    swizzleFormat_  { MapSwizzleFormat(desc.format)            }
 {
     if (isRenderbuffer_)
     {
@@ -133,6 +146,41 @@ Extent3D GLTexture::GetMipExtent(std::uint32_t mipLevel) const
     };
 }
 
+// Maps the format from Alpha swizzling to RGBA
+static Format MapGLSwizzleFormatAlpha(const Format format)
+{
+    switch (format)
+    {
+        case Format::R8UNorm:   return Format::A8UNorm;
+        default:                return format;
+    }
+}
+
+// Maps the format from BGRA swizzling to RGBA
+static Format MapGLSwizzleFormatBGRA(const Format format)
+{
+    switch (format)
+    {
+        case Format::RGBA8UNorm:        return Format::BGRA8UNorm;
+        case Format::RGBA8UNorm_sRGB:   return Format::BGRA8UNorm_sRGB;
+        case Format::RGBA8SNorm:        return Format::BGRA8SNorm;
+        case Format::RGBA8UInt:         return Format::BGRA8UInt;
+        case Format::RGBA8SInt:         return Format::BGRA8SInt;
+        default:                        return format;
+    }
+}
+
+// Returns the texture format for the specified texture swizzling
+static Format MapGLSwizzleFormat(const Format format, const GLSwizzleFormat swizzle)
+{
+    switch (swizzle)
+    {
+        case GLSwizzleFormat::Alpha:    return MapGLSwizzleFormatAlpha(format);
+        case GLSwizzleFormat::BGRA:     return MapGLSwizzleFormatBGRA(format);
+        default:                        return format;
+    }
+}
+
 TextureDescriptor GLTexture::GetDesc() const
 {
     TextureDescriptor texDesc;
@@ -153,7 +201,8 @@ TextureDescriptor GLTexture::GetDesc() const
     Transform data from OpenGL to LLGL
     NOTE: for cube textures, depth extent can also be copied directly without transformation (no need to multiply by 6)
     */
-    texDesc.format              = GLTypes::UnmapFormat(static_cast<GLenum>(internalFormat));
+    const auto format           = GLTypes::UnmapFormat(static_cast<GLenum>(internalFormat));
+    texDesc.format              = MapGLSwizzleFormat(format, swizzleFormat_);
 
     texDesc.extent.width        = static_cast<std::uint32_t>(extent[0]);
     texDesc.extent.height       = static_cast<std::uint32_t>(extent[1]);
@@ -166,6 +215,74 @@ TextureDescriptor GLTexture::GetDesc() const
     texDesc.samples             = static_cast<std::uint32_t>(samples);
 
     return texDesc;
+}
+
+static TextureSwizzleRGBA GetTextureSwizzlePermutationBGRA(const TextureSwizzleRGBA& swizzle)
+{
+    TextureSwizzleRGBA permutation;
+    {
+        permutation.r = swizzle.b;
+        permutation.g = swizzle.g;
+        permutation.b = swizzle.r;
+        permutation.a = swizzle.a;
+    }
+    return permutation;
+}
+
+// Maps the TextureSwizzleRGBA::a component to a different value for the "Alpha" swizzle format
+static TextureSwizzle GetTextureSwizzlePermutationAlphaComponent(const TextureSwizzle swizzleAlpha)
+{
+    switch (swizzleAlpha)
+    {
+        case TextureSwizzle::Alpha: return TextureSwizzle::Red;     // Only alpha component can be mapped to another component
+        case TextureSwizzle::Zero:  return TextureSwizzle::Zero;    // Zero is allowed as fixed value
+        case TextureSwizzle::One:   return TextureSwizzle::One;     // One is allowed as fixed value
+        default:                    return TextureSwizzle::Zero;    // Use zero as default value
+    }
+}
+
+static TextureSwizzleRGBA GetTextureSwizzlePermutationAlpha(const TextureSwizzleRGBA& swizzle)
+{
+    TextureSwizzleRGBA permutation;
+    {
+        permutation.r = TextureSwizzle::Zero;
+        permutation.g = TextureSwizzle::Zero;
+        permutation.b = TextureSwizzle::Zero;
+        permutation.a = GetTextureSwizzlePermutationAlphaComponent(swizzle.a);
+    }
+    return permutation;
+}
+
+static void InitializeGLTextureSwizzle(GLenum target, const TextureSwizzleRGBA& swizzle)
+{
+    glTexParameteri(target, GL_TEXTURE_SWIZZLE_R, GLTypes::Map(swizzle.r));
+    glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, GLTypes::Map(swizzle.g));
+    glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, GLTypes::Map(swizzle.b));
+    glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, GLTypes::Map(swizzle.a));
+}
+
+void GLTexture::InitializeTextureSwizzle(const TextureSwizzleRGBA& swizzle, bool ignoreIdentitySwizzle)
+{
+    /* Ignore initialization if default values can be used */
+    if (swizzleFormat_ == GLSwizzleFormat::RGBA && ignoreIdentitySwizzle)
+        return;
+
+    /* Map swizzle parameters according for permutation format */
+    const auto target = GLTypes::Map(GetType());
+    switch (swizzleFormat_)
+    {
+        case GLSwizzleFormat::RGBA:
+            InitializeGLTextureSwizzle(target, swizzle);
+            break;
+
+        case GLSwizzleFormat::BGRA:
+            InitializeGLTextureSwizzle(target, GetTextureSwizzlePermutationBGRA(swizzle));
+            break;
+
+        case GLSwizzleFormat::Alpha:
+            InitializeGLTextureSwizzle(target, GetTextureSwizzlePermutationAlpha(swizzle));
+            break;
+    }
 }
 
 #ifdef GL_ARB_copy_image

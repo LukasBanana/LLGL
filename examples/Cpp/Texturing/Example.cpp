@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <LLGL/Strings.h>
 #include <DDSImageReader.h>
 #include <stb/stb_image.h>
 
@@ -51,6 +52,13 @@ public:
         CreateTextures();
         CreateSamplers();
         CreateResourceHeaps();
+
+        // Update resource labels
+        for (int i = 0; i < 2; ++i)
+        {
+            if (auto formatStr = LLGL::ToString(colorMaps[i]->GetDesc().format))
+                resourceLabels[i] = (std::string("format = ") + formatStr);
+        }
 
         // Print some information on the standard output
         std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
@@ -145,7 +153,7 @@ public:
                 texDesc.type        = LLGL::TextureType::Texture2D;
 
                 // Texture hardware format: RGBA with normalized 8-bit unsigned char type
-                texDesc.format      = LLGL::Format::RGBA8UNorm;//RGBA8UNorm; //BGRA8UNorm
+                texDesc.format      = LLGL::Format::BGRA8UNorm;//RGBA8UNorm; //BGRA8UNorm
 
                 // Texture size
                 texDesc.extent      = { static_cast<std::uint32_t>(texWidth), static_cast<std::uint32_t>(texHeight), 1u };
@@ -153,7 +161,7 @@ public:
                 // Generate all MIP-map levels for this texture
                 texDesc.miscFlags   = LLGL::MiscFlags::GenerateMips;
             }
-            colorMaps[0] = renderer->CreateTexture(texDesc, &imageDesc);
+            colorMaps[1] = renderer->CreateTexture(texDesc, &imageDesc);
         }
         auto texCreationTime = static_cast<double>(timer->Stop()) / static_cast<double>(timer->GetFrequency());
         std::cout << "texture creation time: " << (texCreationTime * 1000.0) << " ms" << std::endl;
@@ -173,7 +181,7 @@ public:
 
         // Create texture with MIP-map level 0
         imageDesc.dataSize = LLGL::TextureBufferSize(texDesc.format, texDesc.extent.width * texDesc.extent.height * texDesc.extent.depth);
-        colorMaps[1] = renderer->CreateTexture(texDesc, &imageDesc);
+        colorMaps[0] = renderer->CreateTexture(texDesc, &imageDesc);
 
         // Write MIP-map levels 1...N
         const auto& formatDesc = LLGL::GetFormatAttribs(texDesc.format);
@@ -197,15 +205,15 @@ public:
                 imageDesc.data                  = reinterpret_cast<const std::int8_t*>(imageDesc.data) + imageDesc.dataSize;
                 imageDesc.dataSize              = mipLevelDataSize;
 
-                renderer->WriteTexture(*colorMaps[1], region, imageDesc);
+                renderer->WriteTexture(*colorMaps[0], region, imageDesc);
             }
         }
     }
 
     void CreateTextures()
     {
-        LoadUncompressedTexture("../../Media/Textures/Crate.jpg");
         LoadCompressedTexture("../../Media/Textures/Crate-DXT1-MipMapped.dds");
+        LoadUncompressedTexture("../../Media/Textures/Crate.jpg");
     }
 
     void CreateSamplers()
@@ -242,7 +250,7 @@ public:
             LLGL::ResourceHeapDescriptor resourceHeapDesc;
             {
                 resourceHeapDesc.pipelineLayout = pipelineLayout;
-                resourceHeapDesc.resourceViews  = { sampler[i > 0 ? i - 1 : 0], colorMaps[i == 0 ? 1 : 0] };
+                resourceHeapDesc.resourceViews  = { sampler[i > 0 ? i - 1 : 0], colorMaps[i == 0 ? 0 : 1] };
             }
             resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
         }

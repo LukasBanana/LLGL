@@ -249,6 +249,16 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     return TakeOwnership(textures_, std::move(texture));
 }
 
+static ImageFormat MapSwizzleImageFormat(const ImageFormat format)
+{
+    switch (format)
+    {
+        case ImageFormat::RGBA: return ImageFormat::BGRA;
+        case ImageFormat::RGB:  return ImageFormat::BGR;
+        default:                return format;
+    }
+}
+
 //private
 void GLRenderSystem::InitializeGLTexture(GLTexture& texture, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
@@ -261,24 +271,18 @@ void GLRenderSystem::InitializeGLTexture(GLTexture& texture, const TextureDescri
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    #if 0//TODO
     /* Configure texture swizzling if format is not supported */
-    const auto& formatDesc = GetFormatAttribs(textureDesc.format);
-    if (formatDesc.format == ImageFormat::Alpha)
+    texture.InitializeTextureSwizzle({}, true);
+
+    /* Convert initial image data for texture swizzle formats */
+    SrcImageDescriptor intermediateImageDesc;
+
+    if (imageDesc != nullptr && texture.GetSwizzleFormat() == GLSwizzleFormat::BGRA)
     {
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_R, GL_ZERO);
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, GL_ZERO);
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, GL_ZERO);
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, GL_RED);
+        intermediateImageDesc = *imageDesc;
+        intermediateImageDesc.format = MapSwizzleImageFormat(imageDesc->format);
+        imageDesc = &intermediateImageDesc;
     }
-    else if (formatDesc.format == ImageFormat::BGRA)
-    {
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_R, GL_BLUE);
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, GL_GREEN);
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, GL_RED);
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
-    }
-    #endif
 
     /* Build texture storage and upload image dataa */
     switch (textureDesc.type)

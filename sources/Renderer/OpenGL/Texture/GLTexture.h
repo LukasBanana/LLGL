@@ -17,6 +17,14 @@ namespace LLGL
 {
 
 
+// Predefined texture swizzles to emulate certain texture format
+enum class GLSwizzleFormat
+{
+    RGBA,   // GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA
+    BGRA,   // GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA
+    Alpha,  // GL_ZERO, GL_ZERO, GL_ZERO, GL_RED
+};
+
 // OpenGL texture class that manages a GL textures and renderbuffers (if the texture is only used as attachment but not for sampling).
 class GLTexture final : public Texture
 {
@@ -33,6 +41,9 @@ class GLTexture final : public Texture
 
         GLTexture(const TextureDescriptor& desc);
         ~GLTexture();
+
+        // Initialize the texture swizzle parameters; the texture must already be bound to an active texture layer.
+        void InitializeTextureSwizzle(const TextureSwizzleRGBA& swizzle = {}, bool ignoreIdentitySwizzle = false);
 
         // Copies the specified source texture into this texture.
         void CopyImageSubData(
@@ -68,6 +79,12 @@ class GLTexture final : public Texture
             return isRenderbuffer_;
         }
 
+        // Returns the texture swizzle format.
+        inline GLSwizzleFormat GetSwizzleFormat() const
+        {
+            return swizzleFormat_;
+        }
+
     private:
 
         void GetTextureParams(GLint* internalFormat, GLint* extent, GLint* samples) const;
@@ -78,9 +95,10 @@ class GLTexture final : public Texture
 
     private:
 
-        GLuint  id_             = 0;        // GL object name for texture or renderbuffer
-        GLsizei numMipLevels_   = 1;
-        bool    isRenderbuffer_ = false;
+        GLuint          id_             = 0;                        // GL object name for texture or renderbuffer
+        GLsizei         numMipLevels_   = 1;
+        bool            isRenderbuffer_ = false;
+        GLSwizzleFormat swizzleFormat_  = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
 
 };
 
