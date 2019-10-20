@@ -136,13 +136,27 @@ static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObject
 
 
 /*
- * GLStateManager class
+ * GLStateManager static members
  */
 
-static std::vector<GLStateManager*> g_GLStateManagerList;
+const std::uint32_t         GLStateManager::numTextureLayers;
+const std::uint32_t         GLStateManager::numImageUnits;
+const std::uint32_t         GLStateManager::numStates;
+const std::uint32_t         GLStateManager::numBufferTargets;
+const std::uint32_t         GLStateManager::numFramebufferTargets;
+const std::uint32_t         GLStateManager::numTextureTargets;
+
+#ifdef LLGL_GL_ENABLE_VENDOR_EXT
+const std::uint32_t         GLStateManager::numStatesExt;
+#endif LLGL_GL_ENABLE_VENDOR_EXT
 
 GLStateManager*             GLStateManager::active_;
 GLStateManager::GLLimits    GLStateManager::commonLimits_;
+
+
+/*
+ * GLStateManager class
+ */
 
 GLStateManager::GLStateManager()
 {
@@ -160,14 +174,6 @@ GLStateManager::GLStateManager()
     /* Make this the active state manager if there is no previous one */
     if (GLStateManager::active_ == nullptr)
         GLStateManager::active_ = this;
-
-    /* Store state manager in global list */
-    g_GLStateManagerList.push_back(this);
-}
-
-GLStateManager::~GLStateManager()
-{
-    RemoveFromList(g_GLStateManagerList, this);
 }
 
 void GLStateManager::DetermineExtensionsAndLimits()
@@ -1010,12 +1016,23 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
 
 void GLStateManager::BindImageTexture(GLuint unit, GLint level, GLenum format, GLuint texture)
 {
-    if (unit < limits_.maxImageUnits)
+    #ifdef GL_ARB_shader_image_load_store
+    if (HasExtension(GLExt::ARB_shader_image_load_store))
     {
+        #ifdef LLGL_DEBUG
+        LLGL_ASSERT_UPPER_BOUND(unit, limits_.maxImageUnits);
+        #endif
+
         if (texture != 0)
             glBindImageTexture(unit, texture, level, GL_TRUE, 0, GL_READ_WRITE, format);
         else
             glBindImageTexture(unit, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8);
+    }
+    else
+    #endif // /GL_ARB_shader_image_load_store
+    {
+        /* Error: extension not supported */
+        throw std::runtime_error("renderer does not support storage images");
     }
 }
 

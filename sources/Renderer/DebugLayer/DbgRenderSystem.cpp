@@ -972,6 +972,7 @@ void DbgRenderSystem::ValidateMipLevelLimit(std::uint32_t baseMipLevel, std::uin
     }
 }
 
+//TODO: also support compressed formats in validation
 void DbgRenderSystem::ValidateImageDataSize(const DbgTexture& textureDbg, const TextureRegion& textureRegion, ImageFormat imageFormat, DataType dataType, std::size_t dataSize)
 {
     /* Validate output data size */
@@ -980,21 +981,25 @@ void DbgRenderSystem::ValidateImageDataSize(const DbgTexture& textureDbg, const 
     const auto  numTexels           = NumMipTexels(textureDbg.desc.type, textureRegion.extent, baseSubresource);
     const auto  requiredDataSize    = ImageDataSize(imageFormat, dataType, numTexels);
 
-    if (dataSize < requiredDataSize)
+    /* Ignore compressed formats */
+    if (requiredDataSize != 0)
     {
-        LLGL_DBG_ERROR(
-            ErrorType::InvalidArgument,
-            "image data size too small for texture: " + std::to_string(dataSize) +
-            " byte(s) specified but required is " + std::to_string(requiredDataSize) + " byte(s)"
-        );
-    }
-    else if (dataSize > requiredDataSize)
-    {
-        LLGL_DBG_WARN(
-            WarningType::ImproperArgument,
-            "image data size larger than expected for texture: " + std::to_string(dataSize) +
-            " byte(s) specified but required is " + std::to_string(requiredDataSize) + " byte(s)"
-        );
+        if (dataSize < requiredDataSize)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "image data size too small for texture: " + std::to_string(dataSize) +
+                " byte(s) specified but required is " + std::to_string(requiredDataSize) + " byte(s)"
+            );
+        }
+        else if (dataSize > requiredDataSize)
+        {
+            LLGL_DBG_WARN(
+                WarningType::ImproperArgument,
+                "image data size larger than expected for texture: " + std::to_string(dataSize) +
+                " byte(s) specified but required is " + std::to_string(requiredDataSize) + " byte(s)"
+            );
+        }
     }
 }
 

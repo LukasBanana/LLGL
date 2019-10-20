@@ -118,7 +118,7 @@ struct DstImageDescriptor
 /**
 \brief Returns the size (in number of components) of the specified image format.
 \param[in] imageFormat Specifies the image format.
-\return Number of components of the specified image format, or 0 if 'imageFormat' specifies a compressed color format.
+\return Number of components of the specified image format, or 0 if \c imageFormat specifies a compressed color format.
 \note Compressed formats are not supported.
 \see IsCompressedFormat(const ImageFormat)
 \see ImageFormat

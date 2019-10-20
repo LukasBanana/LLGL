@@ -60,7 +60,6 @@ class GLStateManager
         /* ----- Common ----- */
 
         GLStateManager();
-        ~GLStateManager();
 
         // Returns the active GL state manager.
         static inline GLStateManager& Get()
@@ -450,6 +449,8 @@ class GLStateManager
 
         static GLStateManager*          active_;
         static GLLimits                 commonLimits_;          // Common denominator of limitations for all GL contexts
+
+    private:
 
         GLLimits                        limits_;                // Limitations of this GL context
 
