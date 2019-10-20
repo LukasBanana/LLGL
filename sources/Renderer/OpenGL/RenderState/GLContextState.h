@@ -20,6 +20,7 @@ namespace LLGL
 struct GLContextState
 {
     static const GLuint numTextureLayers    = 32;
+    static const GLuint numImageUnits       = 8;
     static const GLuint numCaps             = (static_cast<GLuint>(GLState::PROGRAM_POINT_SIZE) + 1);
     static const GLuint numBufferTargets    = (static_cast<GLuint>(GLBufferTarget::UNIFORM_BUFFER) + 1);
     static const GLuint numFboTargets       = (static_cast<GLuint>(GLFramebufferTarget::READ_FRAMEBUFFER) + 1);
@@ -80,6 +81,16 @@ struct GLContextState
 
     GLuint          activeTexture                       = 0;
     GLTextureLayer  textureLayers[numTextureLayers];
+
+    // Images
+    struct GLImageUnit
+    {
+        GLuint      texture;
+        GLenum      format;
+        GLenum      access;
+    };
+
+    GLImageUnit     imageUnits[numImageUnits];
 
     // Vertex Array Objects (VAO)
     GLuint          boundVertexArray                    = 0;

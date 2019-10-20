@@ -409,10 +409,8 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
                 compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, cmd->first, cmd->count);
             if (cmd->resetTextures)
                 compiler.CallMember(&GLStateManager::UnbindTextures, g_stateMngrArg, cmd->first, cmd->count);
-            #if 0//TODO
             if (cmd->resetImages)
-                compiler.CallMember(&GLStateManager::UnbindImages, g_stateMngrArg, cmd->first, cmd->count);
-            #endif
+                compiler.CallMember(&GLStateManager::UnbindImageTextures, g_stateMngrArg, cmd->first, cmd->count);
             if (cmd->resetSamplers)
                 compiler.CallMember(&GLStateManager::UnbindSamplers, g_stateMngrArg, cmd->first, cmd->count);
             return sizeof(*cmd);

@@ -47,6 +47,7 @@ class GLResourceHeap final : public ResourceHeap
         void BuildConstantBufferSegments(ResourceBindingIterator& resourceIterator);
         void BuildStorageBufferSegments(ResourceBindingIterator& resourceIterator);
         void BuildTextureSegments(ResourceBindingIterator& resourceIterator);
+        void BuildImageTextureSegments(ResourceBindingIterator& resourceIterator);
         void BuildSamplerSegments(ResourceBindingIterator& resourceIterator);
 
         void BuildAllSegments(
@@ -56,7 +57,8 @@ class GLResourceHeap final : public ResourceHeap
         );
 
         void BuildSegment1(GLResourceBindingIter it, GLsizei count);
-        void BuildSegment2(GLResourceBindingIter it, GLsizei count);
+        void BuildSegment2Target(GLResourceBindingIter it, GLsizei count);
+        void BuildSegment2Format(GLResourceBindingIter it, GLsizei count);
 
     private:
 
@@ -66,6 +68,7 @@ class GLResourceHeap final : public ResourceHeap
             std::uint8_t numConstantBufferSegments  = 0;
             std::uint8_t numStorageBufferSegments   = 0;
             std::uint8_t numTextureSegments         = 0;
+            std::uint8_t numImageTextureSegments    = 0;
             std::uint8_t numSamplerSegments         = 0;
         };
 

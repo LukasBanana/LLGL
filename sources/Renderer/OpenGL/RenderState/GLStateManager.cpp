@@ -988,14 +988,14 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
         }
 
         /*
-        Bind all textures at once, but don't reset the currently active texture layer.
+        Unbind all textures at once, but don't reset the currently active texture layer.
         The spec. of GL_ARB_multi_bind states that the active texture slot is not modified by this function.
         see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_multi_bind.txt
         */
         glBindTextures(first, count, nullptr);
     }
     else
-    #endif
+    #endif // /GL_ARB_multi_bind
     {
         /* Unbind all targets for each texture layer individually */
         while (count-- > 0)
@@ -1005,6 +1005,51 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
                 BindTexture(static_cast<GLTextureTarget>(target), 0);
             ++first;
         }
+    }
+}
+
+void GLStateManager::BindImageTexture(GLuint unit, GLint level, GLenum format, GLuint texture)
+{
+    if (unit < limits_.maxImageUnits)
+    {
+        if (texture != 0)
+            glBindImageTexture(unit, texture, level, GL_TRUE, 0, GL_READ_WRITE, format);
+        else
+            glBindImageTexture(unit, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8);
+    }
+}
+
+void GLStateManager::BindImageTextures(GLuint first, GLsizei count, const GLenum* formats, const GLuint* textures)
+{
+    #ifdef GL_ARB_multi_bind
+    if (HasExtension(GLExt::ARB_multi_bind))
+    {
+        /* Bind all image units at once */
+        glBindImageTextures(first, count, textures);
+    }
+    else
+    #endif // /GL_ARB_multi_bind
+    {
+        /* Bind image units individually */
+        for (GLsizei i = 0; i < count; ++i)
+            BindImageTexture(first + static_cast<GLuint>(i), 0, formats[i], textures[i]);
+    }
+}
+
+void GLStateManager::UnbindImageTextures(GLuint first, GLsizei count)
+{
+    #ifdef GL_ARB_multi_bind
+    if (HasExtension(GLExt::ARB_multi_bind))
+    {
+        /* Bind all image units at once */
+        glBindImageTextures(first, count, nullptr);
+    }
+    else
+    #endif // /GL_ARB_multi_bind
+    {
+        /* Unbind all image units individually */
+        for (GLsizei i = 0; i < count; ++i)
+            BindImageTexture(first + static_cast<GLuint>(i), 0, 0, 0);
     }
 }
 
@@ -1273,6 +1318,8 @@ static void AccumCommonGLLimits(GLStateManager::GLLimits& dst, const GLStateMana
         dst.maxDebugNameLength  = std::min(dst.maxDebugNameLength, src.maxDebugNameLength);
         dst.maxDebugStackDepth  = std::min(dst.maxDebugStackDepth, src.maxDebugStackDepth);
         dst.maxLabelLength      = std::min(dst.maxLabelLength, src.maxLabelLength);
+        dst.maxTextureLayers    = std::min(dst.maxTextureLayers, src.maxTextureLayers);
+        dst.maxImageUnits       = std::min(dst.maxImageUnits, src.maxImageUnits);
     }
 }
 
@@ -1300,6 +1347,21 @@ void GLStateManager::DetermineLimits()
         glGetIntegerv(GL_MAX_LABEL_LENGTH, &limits_.maxLabelLength);
     }
     #endif
+
+    /* Get maximum number of texture layers */
+    GLint maxTextureImageUnits = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureImageUnits);
+    limits_.maxTextureLayers = std::min(GLStateManager::numTextureLayers, static_cast<GLuint>(maxTextureImageUnits));
+
+    /* Get maximum number of image units */
+    #ifdef GL_ARB_shader_image_load_store
+    if (HasExtension(GLExt::ARB_shader_image_load_store))
+    {
+        GLint maxImageUnits = 0;
+        glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
+        limits_.maxImageUnits = std::min(GLStateManager::numImageUnits, static_cast<GLuint>(maxImageUnits));
+    }
+    #endif // /GL_ARB_shader_image_load_store
 
     /* Accumulate common limitations */
     AccumCommonGLLimits(GLStateManager::commonLimits_, limits_);

@@ -408,10 +408,8 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
                 stateMngr.UnbindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, cmd->first, cmd->count);
             if (cmd->resetTextures)
                 stateMngr.UnbindTextures(cmd->first, cmd->count);
-            #if 0//TODO
             if (cmd->resetImages)
-                stateMngr.UnbindImages(cmd->first, cmd->count);
-            #endif
+                stateMngr.UnbindImageTextures(cmd->first, cmd->count);
             if (cmd->resetSamplers)
                 stateMngr.UnbindSamplers(cmd->first, cmd->count);
             return sizeof(*cmd);

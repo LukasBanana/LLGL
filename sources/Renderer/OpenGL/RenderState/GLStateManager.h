@@ -51,6 +51,8 @@ class GLStateManager
             GLint       maxDebugNameLength  = 0;                // Maximal length of names for debug groups (minimum value is 1).
             GLint       maxDebugStackDepth  = 0;                // Maximal depth of the debug group stack (minimum value is 64).
             GLint       maxLabelLength      = 0;                // Maximal length of debug labels (minimum value is 256).
+            GLuint      maxTextureLayers    = 0;                // Maximal number of texture layers (minimum value is 16).
+            GLuint      maxImageUnits       = 0;                // Maximal number of image units.
         };
 
     public:
@@ -209,6 +211,10 @@ class GLStateManager
         void BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures);
         void UnbindTextures(GLuint first, GLsizei count);
 
+        void BindImageTexture(GLuint unit, GLint level, GLenum format, GLuint texture);
+        void BindImageTextures(GLuint first, GLsizei count, const GLenum* formats, const GLuint* textures);
+        void UnbindImageTextures(GLuint first, GLsizei count);
+
         void PushBoundTexture(std::uint32_t layer, GLTextureTarget target);
         void PushBoundTexture(GLTextureTarget target);
         void PopBoundTexture();
@@ -310,6 +316,7 @@ class GLStateManager
     private:
 
         static const std::uint32_t numTextureLayers         = 32;
+        static const std::uint32_t numImageUnits            = 8;
         static const std::uint32_t numStates                = (static_cast<std::uint32_t>(GLState::PROGRAM_POINT_SIZE) + 1);
         static const std::uint32_t numBufferTargets         = (static_cast<std::uint32_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
         static const std::uint32_t numFramebufferTargets    = (static_cast<std::uint32_t>(GLFramebufferTarget::READ_FRAMEBUFFER) + 1);

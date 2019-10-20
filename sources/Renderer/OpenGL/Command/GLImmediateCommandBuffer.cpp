@@ -398,10 +398,8 @@ void GLImmediateCommandBuffer::ResetResourceSlots(
             {
                 if ((bindFlags & BindFlags::Sampled) != 0)
                     stateMngr_->UnbindTextures(first, count);
-                #if 0//TODO
                 if ((bindFlags & BindFlags::Storage) != 0)
-                    stateMngr_->UnbindImages(first, count);
-                #endif
+                    stateMngr_->UnbindImageTextures(first, count);
             }
             break;
 
