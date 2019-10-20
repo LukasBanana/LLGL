@@ -284,11 +284,11 @@ int main(int argc, char* argv[])
     try
     {
         // Create main window
-        const LLGL::Extent2D resolution{ 1280, 768 };//{ 800, 600 };
+        const LLGL::Extent2D resolution{ 800, 600 };
 
         LLGL::WindowDescriptor mainWindowDesc;
         {
-            mainWindowDesc.title    = L"LLGL Example: Multi Renderer ( OpenGL and Direct3D 11 )";
+            mainWindowDesc.title    = L"LLGL Example: Multi Renderer ( OpenGL, Vulkan, Direct3D 11, Direct3D 12 )";
             mainWindowDesc.size     = resolution;
             mainWindowDesc.centered = true;
         }
