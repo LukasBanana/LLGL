@@ -103,12 +103,11 @@ public:
                 { vertexFormat }
             );
         }
-        #if 0
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             computeShaderProgram = LoadShaderProgram(
                 {
-                    { LLGL::ShaderType::Vertex,     "Example.comp" }
+                    { LLGL::ShaderType::Compute,    "Example.comp" }
                 }
             );
             graphicsShaderProgram = LoadShaderProgram(
@@ -119,7 +118,21 @@ public:
                 { vertexFormat }
             );
         }
-        #endif
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            computeShaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Compute,    "Example.450core.comp.spv" }
+                }
+            );
+            graphicsShaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,     "Example.450core.vert.spv" },
+                    { LLGL::ShaderType::Fragment,   "Example.450core.frag.spv" }
+                },
+                { vertexFormat }
+            );
+        }
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
     }
@@ -127,15 +140,9 @@ public:
     void CreatePipelines()
     {
         // Create compute pipeline layout
-        LLGL::PipelineLayoutDescriptor layoutDesc;
-        {
-            layoutDesc.bindings =
-            {
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::ComputeStage, 0 },
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage, 0 },
-            };
-        }
-        computePipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
+        computePipelineLayout = renderer->CreatePipelineLayout(
+            LLGL::PipelineLayoutDesc("texture(tex@0):comp, rwtexture(texOut@1):comp")
+        );
 
         // Create compute pipeline
         LLGL::ComputePipelineDescriptor computePipelineDesc;
@@ -146,14 +153,11 @@ public:
         computePipeline = renderer->CreatePipelineState(computePipelineDesc);
 
         // Create graphics pipeline layout
-        {
-            layoutDesc.bindings =
-            {
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, 0 },
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Sampler, 0,                        LLGL::StageFlags::FragmentStage, 0 },
-            };
-        }
-        graphicsPipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
+        graphicsPipelineLayout = renderer->CreatePipelineLayout(
+            IsVulkan()
+                ? LLGL::PipelineLayoutDesc("texture(tex@0):frag, sampler(texSampler@1):frag")
+                : LLGL::PipelineLayoutDesc("texture(tex@0):frag, sampler(texSampler@0):frag")
+        );
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor graphicsPipelineDesc;
@@ -225,7 +229,7 @@ private:
             commands->Dispatch(textureSize.width, textureSize.height, textureSize.depth);
 
             // Reset texture from shader output binding point
-            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 0, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
+            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 1, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
 
             // Set graphics resources
             commands->SetVertexBuffer(*vertexBuffer);

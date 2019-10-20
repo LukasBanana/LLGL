@@ -80,4 +80,9 @@ glslangValidator -V -S comp -o ClothPhysics/Example.CSForces.450core.comp.spv Cl
 glslangValidator -V -S comp -o ClothPhysics/Example.CSStretchConstraints.450core.comp.spv ClothPhysics/Example.CSStretchConstraints.450core.comp
 glslangValidator -V -S comp -o ClothPhysics/Example.CSRelaxation.450core.comp.spv ClothPhysics/Example.CSRelaxation.450core.comp
 
+echo ####### UnorderedAccess #######
+glslangValidator -V -S vert -o UnorderedAccess/Example.450core.vert.spv UnorderedAccess/Example.450core.vert
+glslangValidator -V -S frag -o UnorderedAccess/Example.450core.frag.spv UnorderedAccess/Example.450core.frag
+glslangValidator -V -S comp -o UnorderedAccess/Example.450core.comp.spv UnorderedAccess/Example.450core.comp
+
 pause

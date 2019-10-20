@@ -38,12 +38,13 @@ float4 PS(OutputVS inp) : SV_Target
 
 // COMPUTE SHADER
 
-RWTexture2D<float4> texOut : register(u0);
+RWTexture2D<float4> texOut : register(u1);
 
 [numthreads(1, 1, 1)]
 void CS(uint3 id : SV_DispatchThreadID)
 {
-    texOut[id.xy] = tex.Load(id)*1.5;
+    float2 tc = ((float2)id.xy) * 0.1;
+    texOut[id.xy] = tex.Load(id) * (sin(tc.x)*0.2 + 1.0);
 }
 
 
