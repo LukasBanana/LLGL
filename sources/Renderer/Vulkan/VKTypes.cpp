@@ -362,6 +362,17 @@ VkAttachmentStoreOp Map(const AttachmentStoreOp storeOp)
     MapFailed("AttachmentStoreOp", "VkAttachmentStoreOp");
 }
 
+VkStencilFaceFlags Map(const StencilFace stencilFace)
+{
+    switch (stencilFace)
+    {
+        case StencilFace::FrontAndBack: return VK_STENCIL_FRONT_AND_BACK;
+        case StencilFace::Front:        return VK_STENCIL_FACE_FRONT_BIT;
+        case StencilFace::Back:         return VK_STENCIL_FACE_BACK_BIT;
+    }
+    MapFailed("StencilFace", "VkStencilFaceFlags");
+}
+
 VkIndexType ToVkIndexType(const Format format)
 {
     switch (format)

@@ -518,6 +518,26 @@ void GLDeferredCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     }
 }
 
+void GLDeferredCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+{
+    auto cmd = AllocCommand<GLCmdSetBlendColor>(GLOpcodeSetBlendColor);
+    {
+        cmd->color[0] = color.r;
+        cmd->color[1] = color.g;
+        cmd->color[2] = color.b;
+        cmd->color[3] = color.a;
+    }
+}
+
+void GLDeferredCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
+{
+    auto cmd = AllocCommand<GLCmdSetStencilRef>(GLOpcodeSetStencilRef);
+    {
+        cmd->ref    = static_cast<GLint>(reference);
+        cmd->face   = GLTypes::Map(stencilFace);
+    }
+}
+
 void GLDeferredCommandBuffer::SetUniform(
     UniformLocation location,
     const void*     data,

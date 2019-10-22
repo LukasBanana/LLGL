@@ -132,6 +132,7 @@ class GLStateManager
 
         void SetDepthFunc(GLenum func);
         void SetDepthMask(GLboolean flag);
+        void SetStencilRef(GLint ref, GLenum face);
 
         /* ----- Rasterizer states ----- */
 
@@ -145,7 +146,7 @@ class GLStateManager
 
         void BindBlendState(GLBlendState* blendState);
 
-        void SetBlendColor(const GLfloat (&color)[4]);
+        void SetBlendColor(const GLfloat* color);
         void SetLogicOp(GLenum opcode);
 
         /* ----- Buffer ----- */

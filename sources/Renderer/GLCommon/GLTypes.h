@@ -49,6 +49,7 @@ GLenum Map( const SamplerFilter         textureMinFilter, const SamplerFilter te
 GLenum Map( const ShaderType            shaderType          );
 GLenum Map( const RenderConditionMode   renderConditionMode );
 GLenum Map( const LogicOp               logicOp             );
+GLenum Map( const StencilFace           stencilFace         );
 
 // Returns an enum in [GL_TEXTURE_CUBE_MAP_POSITIVE_X, ..., GL_TEXTURE_CUBE_MAP_NEGATIVE_Z] for (arrayLayer % 6).
 GLenum ToTextureCubeMap(std::uint32_t arrayLayer);

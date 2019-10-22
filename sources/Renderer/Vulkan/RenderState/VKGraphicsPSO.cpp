@@ -279,6 +279,10 @@ static void CreateDynamicState(
         dynamicStatesVK.push_back(VK_DYNAMIC_STATE_VIEWPORT);
     if (desc.scissors.empty())
         dynamicStatesVK.push_back(VK_DYNAMIC_STATE_SCISSOR);
+    if (desc.blend.blendFactorDynamic)
+        dynamicStatesVK.push_back(VK_DYNAMIC_STATE_BLEND_CONSTANTS);
+    if (desc.stencil.referenceDynamic)
+        dynamicStatesVK.push_back(VK_DYNAMIC_STATE_STENCIL_REFERENCE);
 
     createInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     createInfo.pNext                = nullptr;

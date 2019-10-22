@@ -35,7 +35,10 @@ class GLBlendState
 
         GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments);
 
+        // Binds the entire blend state.
         void Bind(GLStateManager& stateMngr);
+
+        // Binds only the color masks for all draw buffers of this blend state.
         void BindColorMaskOnly(GLStateManager& stateMngr);
 
         // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
@@ -72,6 +75,7 @@ class GLBlendState
     private:
 
         GLfloat             blendColor_[4]                                  = { 0.0f, 0.0f, 0.0f, 0.0f };
+        bool                blendColorDynamic_                              = false;
         bool                sampleAlphaToCoverage_                          = false;
         GLbitfield          sampleMask_                                     = ~0u;
         bool                logicOpEnabled_                                 = false;

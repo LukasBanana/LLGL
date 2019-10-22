@@ -42,8 +42,14 @@ class D3D11StateManager
         void SetComputeShader(ID3D11ComputeShader* shader);
 
         void SetRasterizerState(ID3D11RasterizerState* rasterizerState);
+
+        void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState);
         void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState, UINT stencilRef);
+        void SetStencilRef(UINT stencilRef);
+
+        void SetBlendState(ID3D11BlendState* blendState, UINT sampleMask);
         void SetBlendState(ID3D11BlendState* blendState, const FLOAT* blendFactor, UINT sampleMask);
+        void SetBlendFactor(const FLOAT* blendFactor);
 
         // Returns the ID3D11DeviceContext that this state manager is associated with.
         inline ID3D11DeviceContext* GetContext() const

@@ -410,6 +410,16 @@ void D3D11CommandBuffer::SetPipelineState(PipelineState& pipelineState)
     pipelineStateD3D.Bind(*stateMngr_);
 }
 
+void D3D11CommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+{
+    stateMngr_->SetBlendFactor(color.Ptr());
+}
+
+void D3D11CommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace /*stencilFace*/)
+{
+    stateMngr_->SetStencilRef(reference);
+}
+
 void D3D11CommandBuffer::SetUniform(
     UniformLocation location,
     const void*     data,

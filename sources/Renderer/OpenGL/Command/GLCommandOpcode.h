@@ -46,6 +46,8 @@ enum GLOpcode : std::uint8_t
     GLOpcodeBindResourceHeap,
     GLOpcodeBindRenderPass,
     GLOpcodeBindPipelineState,
+    GLOpcodeSetBlendColor,
+    GLOpcodeSetStencilRef,
     GLOpcodeSetUniforms,
     GLOpcodeBeginQuery,
     GLOpcodeEndQuery,

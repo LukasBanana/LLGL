@@ -33,10 +33,20 @@ void D3D11GraphicsPSO3::Bind(D3D11StateManager& stateMngr)
     /* Bind base pipeline states */
     D3D11GraphicsPSOBase::Bind(stateMngr);
 
-    /* Setup render states */
+    /* Bind rasterizer state */
     stateMngr.SetRasterizerState(rasterizerState_.Get());
-    stateMngr.SetDepthStencilState(depthStencilState_.Get(), GetStencilRef());
-    stateMngr.SetBlendState(blendState_.Get(), GetBlendFactor(), GetSampleMask());
+
+    /* Bind depth-stencil state */
+    if (IsStencilRefDynamic())
+        stateMngr.SetDepthStencilState(depthStencilState_.Get());
+    else
+        stateMngr.SetDepthStencilState(depthStencilState_.Get(), GetStencilRef());
+
+    /* Bind blend state */
+    if (IsBlendFactorDynamic())
+        stateMngr.SetBlendState(blendState_.Get(), GetSampleMask());
+    else
+        stateMngr.SetBlendState(blendState_.Get(), GetBlendFactor(), GetSampleMask());
 }
 
 

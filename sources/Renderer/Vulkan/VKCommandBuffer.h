@@ -132,6 +132,8 @@ class VKCommandBuffer final : public CommandBuffer
         /* ----- Pipeline States ----- */
 
         void SetPipelineState(PipelineState& pipelineState) override;
+        void SetBlendFactor(const ColorRGBAf& color) override;
+        void SetStencilReference(std::uint32_t reference, const StencilFace stencilFace = StencilFace::FrontAndBack) override;
 
         void SetUniform(
             UniformLocation location,

@@ -282,6 +282,22 @@ void CommandBuffer::SetPipelineState(PipelineState^ pipelineState)
     native_->SetPipelineState(*pipelineState->Native);
 }
 
+void CommandBuffer::SetBlendFactor(ColorRGBA<float>^ color)
+{
+    LLGL::ColorRGBAf nativeColor{ color->R, color->G, color->B, color->A };
+    native_->SetBlendFactor(nativeColor);
+}
+
+void CommandBuffer::SetStencilReference(unsigned int reference)
+{
+    native_->SetStencilReference(reference);
+}
+
+/*void CommandBuffer::SetStencilReference(unsigned int reference, const StencilFace stencilFace)
+{
+    native_->SetStencilReference(reference, static_cast<LLGL::StencilFace>(stencilFace));
+}*/
+
 /* ----- Stream Outputs ------ */
 
 void CommandBuffer::BeginStreamOutput(array<Buffer^>^ buffers)

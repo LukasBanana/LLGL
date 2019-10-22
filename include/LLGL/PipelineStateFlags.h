@@ -436,8 +436,11 @@ struct StencilFaceDescriptor
     /**
     \brief Specifies the stencil reference value. By default 0.
     \remarks This value will be used when the stencil operation is StencilOp::Replace.
+    \remarks If \c referenceDynamic is set to true, this member is ignored.
     \note For Direct3D 11 and Direct3D 12, only the stencil reference value of the front face will be used.
     \see StencilDescriptor::front
+    \see StencilDescriptor::referenceDynamic
+    \see CommandBuffer::SetStencilReference
     */
     std::uint32_t   reference       = 0u;
 };
@@ -449,7 +452,15 @@ struct StencilFaceDescriptor
 struct StencilDescriptor
 {
     //! Specifies whether the stencil test is enabled or disabled. By default disabled.
-    bool                    testEnabled  = false;
+    bool                    testEnabled         = false;
+
+    /**
+    \brief Specifies whether the stencil reference values will be set dynamically with the command buffer. By default false.
+    \remarks If this is true, StencilFaceDescriptor::reference in \c front and \c back are ignored
+    and the stencil reference values must be set with the \c SetStencilReference function everytime the graphics pipeline is set.
+    \see CommandBuffer::SetStencilReference
+    */
+    bool                    referenceDynamic    = false;
 
     /**
     \brief Specifies the front face settings for the stencil test.
@@ -619,16 +630,23 @@ struct BlendDescriptor
     */
     LogicOp                             logicOp                 = LogicOp::Disabled;
 
-    #if 1//TODO: replace this by CommandBuffer::SetBlendFactor
     /**
     \brief Specifies the blending color factor. By default (0, 0, 0, 0).
     \remarks This is only used if any blending operations of any blending target is either BlendOp::BlendFactor or BlendOp::InvBlendFactor.
+    \remarks If \c blendFactorDynamic is set to true, this member is ignored.
     \see BlendOp::BlendFactor
     \see BlendOp::InvBlendFactor
-    \todo Move this into a dynamic function "CommandBuffer::SetBlendFactor".
+    \see CommandBuffer::SetBlendFactor
     */
     ColorRGBAf                          blendFactor             = { 0.0f, 0.0f, 0.0f, 0.0f };
-    #endif
+
+    /**
+    \brief Specifies whether the blend factor will be set dynamically with the command buffer. By default false.
+    \remarks If this is true, \c blendFactor is ignored
+    and the blending factors must be set with the \c SetBlendFactor function everytime the graphics pipeline is set.
+    \see CommandBuffer::SetBlendFactor
+    */
+    bool                                blendFactorDynamic      = false;
 
     /**
     \brief Render-target blend states for the respective color attachments. A maximum of 8 targets is supported.

@@ -665,6 +665,38 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         profile_.computePipelineBindings++;
 }
 
+//TODO: add check of opposite state to Draw* commands
+void DbgCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        if (auto pipelineStateDbg = AssertAndGetGraphicsPSO())
+        {
+            if (!pipelineStateDbg->graphicsDesc.blend.blendFactorDynamic)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "graphics pipeline was not created with 'blendFactorDynamic' enabled");
+        }
+    }
+
+    LLGL_DBG_COMMAND( "SetBlendFactor", instance.SetBlendFactor(color) );
+}
+
+//TODO: add check of opposite state to Draw* commands
+void DbgCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        if (auto pipelineStateDbg = AssertAndGetGraphicsPSO())
+        {
+            if (!pipelineStateDbg->graphicsDesc.stencil.referenceDynamic)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "graphics pipeline was not created with 'referenceDynamic' enabled");
+        }
+    }
+
+    LLGL_DBG_COMMAND( "SetStencilReference", instance.SetStencilReference(reference, stencilFace) );
+}
+
 void DbgCommandBuffer::SetUniform(
     UniformLocation location,
     const void*     data,
@@ -1628,6 +1660,36 @@ void DbgCommandBuffer::ValidateStreamOutputs(std::uint32_t numBuffers)
     }
 }
 
+DbgPipelineState* DbgCommandBuffer::AssertAndGetGraphicsPSO()
+{
+    if (bindings_.pipelineState == nullptr)
+    {
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound: missing call to <LLGL::CommandBuffer::SetPipelineState>");
+        return nullptr;
+    }
+    else if (!bindings_.pipelineState->isGraphicsPSO)
+    {
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "compute pipeline is bound but graphics pipeline is required");
+        return nullptr;
+    }
+    return bindings_.pipelineState;
+}
+
+DbgPipelineState* DbgCommandBuffer::AssertAndGetComputePSO()
+{
+    if (bindings_.pipelineState == nullptr)
+    {
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound: missing call to <LLGL::CommandBuffer::SetPipelineState>");
+        return nullptr;
+    }
+    else if (bindings_.pipelineState->isGraphicsPSO)
+    {
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "graphics pipeline is bound but compute pipeline is required");
+        return nullptr;
+    }
+    return bindings_.pipelineState;
+}
+
 void DbgCommandBuffer::AssertRecording()
 {
     if (!states_.recording)
@@ -1642,18 +1704,12 @@ void DbgCommandBuffer::AssertInsideRenderPass()
 
 void DbgCommandBuffer::AssertGraphicsPipelineBound()
 {
-    if (bindings_.pipelineState == nullptr)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound: missing call to <LLGL::CommandBuffer::SetPipelineState>");
-    else if (!bindings_.pipelineState->isGraphicsPSO)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "compute pipeline is bound but graphics pipeline is required");
+    AssertAndGetGraphicsPSO();
 }
 
 void DbgCommandBuffer::AssertComputePipelineBound()
 {
-    if (bindings_.pipelineState == nullptr)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound: missing call to <LLGL::CommandBuffer::SetPipelineState>");
-    else if (bindings_.pipelineState->isGraphicsPSO)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "graphics pipeline is bound but compute pipeline is required");
+    AssertAndGetComputePSO();
 }
 
 void DbgCommandBuffer::AssertVertexBufferBound()

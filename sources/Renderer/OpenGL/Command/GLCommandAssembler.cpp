@@ -245,6 +245,18 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
                 compiler.CallMember(&GLPipelineState::Bind, cmd->pipelineState, g_stateMngrArg);
             return sizeof(*cmd);
         }
+        case GLOpcodeSetBlendColor:
+        {
+            auto cmd = reinterpret_cast<const GLCmdSetBlendColor*>(pc);
+            compiler.CallMember(&GLStateManager::SetBlendColor, g_stateMngrArg, cmd->color);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeSetStencilRef:
+        {
+            auto cmd = reinterpret_cast<const GLCmdSetStencilRef*>(pc);
+            compiler.CallMember(&GLStateManager::SetStencilRef, g_stateMngrArg, cmd->ref, cmd->face);
+            return sizeof(*cmd);
+        }
         case GLOpcodeSetUniforms:
         {
             auto cmd = reinterpret_cast<const GLCmdSetUniforms*>(pc);

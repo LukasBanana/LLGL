@@ -32,6 +32,7 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
 {
     Convert(blendColor_, desc.blendFactor);
 
+    blendColorDynamic_      = desc.blendFactorDynamic;
     sampleAlphaToCoverage_  = desc.alphaToCoverageEnabled;
     sampleMask_             = desc.sampleMask;
 
@@ -62,7 +63,9 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
 void GLBlendState::Bind(GLStateManager& stateMngr)
 {
     /* Set blend factor */
-    stateMngr.SetBlendColor(blendColor_);
+    if (!blendColorDynamic_)
+        stateMngr.SetBlendColor(blendColor_);
+
     stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);
 
     if (logicOpEnabled_)

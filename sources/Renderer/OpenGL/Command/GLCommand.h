@@ -200,6 +200,17 @@ struct GLCmdBindPipelineState
     GLPipelineState* pipelineState;
 };
 
+struct GLCmdSetBlendColor
+{
+    GLfloat color[4];
+};
+
+struct GLCmdSetStencilRef
+{
+    GLint   ref;
+    GLenum  face;
+};
+
 struct GLCmdSetUniforms
 {
     GLuint      program;

@@ -36,7 +36,11 @@ class GLDepthStencilState
 
         GLDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc);
 
+        // Binds the entire depth-stencil state.
         void Bind(GLStateManager& stateMngr);
+
+        // Binds only the stencil reference together with the remaining parameters for the glStencilFunc* call.
+        void BindStencilRefOnly(GLint ref, GLenum face = GL_FRONT_AND_BACK);
 
         // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
         int CompareSWO(const GLDepthStencilState& rhs) const;
@@ -45,7 +49,7 @@ class GLDepthStencilState
 
         struct GLStencilFaceState
         {
-            static void Convert(GLStencilFaceState& dst, const StencilFaceDescriptor& src);
+            static void Convert(GLStencilFaceState& dst, const StencilFaceDescriptor& src, bool referenceDynamic);
             static int CompareSWO(const GLStencilFaceState& lhs, const GLStencilFaceState& rhs);
 
             GLenum  sfail       = GL_KEEP;
@@ -72,6 +76,7 @@ class GLDepthStencilState
         // stencil states
         bool                stencilTestEnabled_         = false;    // glEnable(GL_STENCIL_TEST)
         bool                independentStencilFaces_    = false;
+        bool                referenceDynamic_           = false;
         GLStencilFaceState  stencilFront_;
         GLStencilFaceState  stencilBack_;
 

@@ -771,7 +771,8 @@ static void Convert(LLGL::StencilDescriptor& dst, StencilDescriptor^ src)
 {
     if (src)
     {
-        dst.testEnabled = src->TestEnabled;
+        dst.testEnabled         = src->TestEnabled;
+        dst.referenceDynamic    = src->ReferenceDynamic;
         Convert(dst.front, src->Front);
         Convert(dst.back, src->Back);
     }
@@ -825,6 +826,7 @@ static void Convert(LLGL::BlendDescriptor& dst, BlendDescriptor^ src)
     if (src)
     {
         Convert(dst.blendFactor, src->BlendFactor);
+        dst.blendFactorDynamic      = src->BlendFactorDynamic;
         dst.alphaToCoverageEnabled  = src->AlphaToCoverageEnabled;
         dst.independentBlendEnabled = src->IndependentBlendEnabled;
         dst.logicOp                 = static_cast<LLGL::LogicOp>(src->LogicOp);

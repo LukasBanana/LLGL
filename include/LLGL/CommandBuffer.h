@@ -176,7 +176,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Sets a single viewport.
         \remarks Similar to SetViewports but only a single viewport is set.
+        \remarks This must only be used if the currently bound graphics pipeline state was created with \c viewports being empty. Otherwise, the behavior is undefined.
         \see SetViewports
+        \see GraphicsPipelineDescriptor::viewports
         */
         virtual void SetViewport(const Viewport& viewport) = 0;
 
@@ -187,6 +189,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured with the \c SetGraphicsAPIDependentState function.
         If OpenGLDependentStateDescriptor::originLowerLeft is \c false, the origin of each viewport is on the upper-left (like for all other render systems).
         If OpenGLDependentStateDescriptor::originLowerLeft is \c true, the origin of each viewport is on the lower-left.
+        \remarks This must only be used if the currently bound graphics pipeline state was created with \c viewports being empty. Otherwise, the behavior is undefined.
+        \see GraphicsPipelineDescriptor::viewports
         \see SetGraphicsAPIDependentState
         \see RenderingLimits::maxViewports
         */
@@ -195,7 +199,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Sets a single scissor rectangle.
         \remarks Similar to SetScissors but only a single scissor rectangle is set.
+        \remarks This must only be used if the currently bound graphics pipeline state was created with \c scissors being empty. Otherwise, the behavior is undefined.
         \see SetScissors
+        \see GraphicsPipelineDescriptor::scissors
         */
         virtual void SetScissor(const Scissor& scissor) = 0;
 
@@ -207,6 +213,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         with the \c SetGraphicsAPIDependentState function. If <code>stateOpenGL.screenSpaceOriginLowerLeft</code> is \c false,
         the origin of each scissor rectangle is on the upper-left (like for all other render systems).
         If <code>stateOpenGL.screenSpaceOriginLowerLeft</code> is \c true, the origin of each scissor rectangle is on the lower-left.
+        \remarks This must only be used if the currently bound graphics pipeline state was created with \c scissors being empty. Otherwise, the behavior is undefined.
+        \see GraphicsPipelineDescriptor::scissors
         \see SetGraphicsAPIDependentState
         \see RasterizerDescriptor::scissorTestEnabled
         */
@@ -418,14 +426,20 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         myCmdBuffer->EndRenderPass();
         \endcode
         \remarks
-        The following commands can only appear \em inside a render pass section:
+        The following commands \b must only be used \b inside a render pass section:
         - Drawing commands (i.e. \c Draw, \c DrawInstanced, \c DrawIndexed, \c DrawIndexedInstanced, \c DrawIndirect and \c DrawIndexedIndirect).
-        - Clear attachment commands (i.e. \c Clear, and \c ClearAttachments).
+        - Clear attachment commands (i.e. \c Clear and \c ClearAttachments).
         - Query block (i.e. \c BeginQuery and \c EndQuery).
         - Conditional render block (i.e. \c BeginRenderCondition and \c EndRenderCondition).
+        - Stream-output block (i.e. \c BeginStreamOutput and \c EndStreamOutput).
         \remarks
-        The following commands can only appear \em outside a render pass section:
+        The following commands \b must only be used \b outside a render pass section:
         - Dispatch compute commands (i.e. \c Dispatch and \c DispatchIndirect).
+        \remarks
+        The following commands \em can be used both inside and outside a render pass section but are \em recommended
+        to be used only \b outside a render pass section to avoid potential performace penalties:
+        - Copy commands (i.e. \c UpdateBuffer, \c CopyBuffer, and \c CopyTexture).
+        - MIP-map generation commands (i.e. \c GenerateMips).
         \see RenderSystem::CreateRenderPass
         \see RenderSystem::CreateRenderTarget
         \see RenderTargetDescriptor::renderPass
@@ -479,7 +493,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetPipelineState(PipelineState& pipelineState) = 0;
 
-        #if 0//TODO: enable this
         /**
         \brief Sets the dynamic pipeline state for blending factors.
         \param[in] color Specifies the blending factors for each color component.
@@ -487,9 +500,20 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks This is only used for the following blending operations:
         - BlendOp::BlendFactor
         - BlendOp::InvBlendFactor
+        \remarks This must only be used if the currently bound graphics pipeline state was created with \c blendFactorDynamic set to true. Otherwise, the behavior is undefined.
+        \see BlendDescriptor::blendFactorDynamic
         */
         virtual void SetBlendFactor(const ColorRGBAf& color) = 0;
-        #endif
+
+        /**
+        \brief Sets the dynamic pipeline state for stencil reference values.
+        \param[in] reference Specifies the reference value.
+        \param[in] stencilFace Specifies the faces that will be affected by this reference value.
+        For Direct3D renderers, this must be StencilFace::FrontAndBack, which is the default value.
+        \remarks This must only be used if the currently bound graphics pipeline state was created with \c referenceDynamic set to true. Otherwise, the behavior is undefined.
+        \see StencilDescriptor::referenceDynamic
+        */
+        virtual void SetStencilReference(std::uint32_t reference, const StencilFace stencilFace = StencilFace::FrontAndBack) = 0;
 
         /**
         \brief Sets the value of a single uniform (a.k.a. shader constant) in the shader program that is currently bound.

@@ -28,8 +28,10 @@ GLDepthStencilState::GLDepthStencilState(const DepthDescriptor& depthDesc, const
 
     /* Convert stencil states */
     stencilTestEnabled_ = stencilDesc.testEnabled;
-    GLStencilFaceState::Convert(stencilFront_, stencilDesc.front);
-    GLStencilFaceState::Convert(stencilBack_, stencilDesc.back);
+    referenceDynamic_   = stencilDesc.referenceDynamic;
+
+    GLStencilFaceState::Convert(stencilFront_, stencilDesc.front, stencilDesc.referenceDynamic);
+    GLStencilFaceState::Convert(stencilBack_, stencilDesc.back, stencilDesc.referenceDynamic);
 
     independentStencilFaces_ = (GLStencilFaceState::CompareSWO(stencilFront_, stencilBack_) == 0);
 }
@@ -61,6 +63,41 @@ void GLDepthStencilState::Bind(GLStateManager& stateMngr)
     }
     else
         stateMngr.Disable(GLState::STENCIL_TEST);
+}
+
+void GLDepthStencilState::BindStencilRefOnly(GLint ref, GLenum face)
+{
+    if (independentStencilFaces_)
+    {
+        switch (face)
+        {
+            case GL_FRONT_AND_BACK:
+                glStencilFuncSeparate(GL_FRONT, stencilFront_.func, ref, stencilFront_.mask);
+                glStencilFuncSeparate(GL_BACK, stencilBack_.func, ref, stencilBack_.mask);
+                break;
+            case GL_FRONT:
+                glStencilFuncSeparate(GL_FRONT, stencilFront_.func, ref, stencilFront_.mask);
+                break;
+            case GL_BACK:
+                glStencilFuncSeparate(GL_BACK, stencilBack_.func, ref, stencilBack_.mask);
+                break;
+        }
+    }
+    else
+    {
+        switch (face)
+        {
+            case GL_FRONT_AND_BACK:
+                glStencilFunc(stencilFront_.func, ref, stencilFront_.mask);
+                break;
+            case GL_FRONT:
+                glStencilFuncSeparate(GL_FRONT, stencilFront_.func, ref, stencilFront_.mask);
+                break;
+            case GL_BACK:
+                glStencilFuncSeparate(GL_BACK, stencilBack_.func, ref, stencilBack_.mask);
+                break;
+        }
+    }
 }
 
 int GLDepthStencilState::CompareSWO(const GLDepthStencilState& rhs) const
@@ -104,14 +141,16 @@ int GLDepthStencilState::CompareSWO(const GLDepthStencilState& rhs) const
 void GLDepthStencilState::BindStencilFaceState(const GLStencilFaceState& state, GLenum face)
 {
     glStencilOpSeparate(face, state.sfail, state.dpfail, state.dppass);
-    glStencilFuncSeparate(face, state.func, state.ref, state.mask);
+    if (!referenceDynamic_)
+        glStencilFuncSeparate(face, state.func, state.ref, state.mask);
     glStencilMaskSeparate(face, state.writeMask);
 }
 
 void GLDepthStencilState::BindStencilState(const GLStencilFaceState& state)
 {
     glStencilOp(state.sfail, state.dpfail, state.dppass);
-    glStencilFunc(state.func, state.ref, state.mask);
+    if (!referenceDynamic_)
+        glStencilFunc(state.func, state.ref, state.mask);
     glStencilMask(state.writeMask);
 }
 
@@ -120,13 +159,13 @@ void GLDepthStencilState::BindStencilState(const GLStencilFaceState& state)
  * GLDrawBufferState struct
  */
 
-void GLDepthStencilState::GLStencilFaceState::Convert(GLStencilFaceState& dst, const StencilFaceDescriptor& src)
+void GLDepthStencilState::GLStencilFaceState::Convert(GLStencilFaceState& dst, const StencilFaceDescriptor& src, bool referenceDynamic)
 {
     dst.sfail        = GLTypes::Map(src.stencilFailOp);
     dst.dpfail       = GLTypes::Map(src.depthFailOp);
     dst.dppass       = GLTypes::Map(src.depthPassOp);
     dst.func         = GLTypes::Map(src.compareOp);
-    dst.ref          = static_cast<GLint>(src.reference);
+    dst.ref          = (referenceDynamic ? 0 : static_cast<GLint>(src.reference));
     dst.mask         = src.readMask;
     dst.writeMask    = src.writeMask;
 }

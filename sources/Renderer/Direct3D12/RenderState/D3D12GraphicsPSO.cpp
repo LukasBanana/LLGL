@@ -53,12 +53,14 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
 
     /* Store dynamic pipeline states */
     primitiveTopology_  = D3D12Types::Map(desc.primitiveTopology);
+    scissorEnabled_     = desc.rasterizer.scissorTestEnabled;
     stencilRef_         = desc.stencil.front.reference;
+    stencilRefDynamic_  = desc.stencil.referenceDynamic;
     blendFactor_[0]     = desc.blend.blendFactor.r;
     blendFactor_[1]     = desc.blend.blendFactor.g;
     blendFactor_[2]     = desc.blend.blendFactor.b;
     blendFactor_[3]     = desc.blend.blendFactor.a;
-    scissorEnabled_     = desc.rasterizer.scissorTestEnabled;
+    blendFactorDynamic_ = desc.blend.blendFactorDynamic;
 
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())
@@ -91,8 +93,11 @@ void D3D12GraphicsPSO::Bind(D3D12CommandContext& commandContext)
     auto commandList = commandContext.GetCommandList();
 
     commandList->IASetPrimitiveTopology(primitiveTopology_);
-    commandList->OMSetBlendFactor(blendFactor_);
-    commandList->OMSetStencilRef(stencilRef_);
+
+    if (!stencilRefDynamic_)
+        commandList->OMSetStencilRef(stencilRef_);
+    if (!blendFactorDynamic_)
+        commandList->OMSetBlendFactor(blendFactor_);
 
     /* Set static viewports and scissors */
     SetStaticViewportsAndScissors(commandList);
@@ -505,7 +510,9 @@ void D3D12GraphicsPSO::SerializePSO(
     {
         writer.WriteTyped(primitiveTopology_);
         writer.WriteTyped(blendFactor_);
+        writer.WriteTyped(blendFactorDynamic_);
         writer.WriteTyped(stencilRef_);
+        writer.WriteTyped(stencilRefDynamic_);
         writer.WriteTyped(scissorEnabled_);
         writer.WriteTyped(numStaticViewports_);
         writer.WriteTyped(numStaticScissors_);
@@ -604,7 +611,9 @@ void D3D12GraphicsPSO::DeserializePSO(
     {
         reader.ReadTyped(primitiveTopology_);
         reader.ReadTyped(blendFactor_);
+        reader.ReadTyped(blendFactorDynamic_);
         reader.ReadTyped(stencilRef_);
+        reader.ReadTyped(stencilRefDynamic_);
         reader.ReadTyped(scissorEnabled_);
         reader.ReadTyped(numStaticViewports_);
         reader.ReadTyped(numStaticScissors_);

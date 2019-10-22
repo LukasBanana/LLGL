@@ -150,9 +150,10 @@ StencilFaceDescriptor::StencilFaceDescriptor()
 
 StencilDescriptor::StencilDescriptor()
 {
-    TestEnabled = false;
-    Front       = gcnew StencilFaceDescriptor();
-    Back        = gcnew StencilFaceDescriptor();
+    TestEnabled         = false;
+    ReferenceDynamic    = false;
+    Front               = gcnew StencilFaceDescriptor();
+    Back                = gcnew StencilFaceDescriptor();
 }
 
 
@@ -212,6 +213,7 @@ BlendTargetDescriptor::BlendTargetDescriptor()
 BlendDescriptor::BlendDescriptor()
 {
     BlendFactor             = gcnew ColorRGBA<float>(0.0f, 0.0f, 0.0f, 0.0f);
+    BlendFactorDynamic      = false;
     AlphaToCoverageEnabled  = false;
     IndependentBlendEnabled = false;
     LogicOp                 = SharpLLGL::LogicOp::Disabled;

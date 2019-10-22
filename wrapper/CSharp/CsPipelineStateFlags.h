@@ -244,6 +244,7 @@ public ref class StencilDescriptor
         StencilDescriptor();
 
         property bool                   TestEnabled;
+        property bool                   ReferenceDynamic;
         property StencilFaceDescriptor^ Front;
         property StencilFaceDescriptor^ Back;
 
@@ -309,6 +310,7 @@ public ref class BlendDescriptor
         BlendDescriptor();
 
         property ColorRGBA<float>^              BlendFactor;
+        property bool                           BlendFactorDynamic;
         property bool                           AlphaToCoverageEnabled;
         property bool                           IndependentBlendEnabled;
         property LogicOp                        LogicOp;

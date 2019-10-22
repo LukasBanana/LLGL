@@ -541,6 +541,17 @@ GLenum Map(const LogicOp logicOp)
     MapFailed("LogicOp");
 }
 
+GLenum Map(const StencilFace stencilFace)
+{
+    switch (stencilFace)
+    {
+        case StencilFace::FrontAndBack: return GL_FRONT_AND_BACK;
+        case StencilFace::Front:        return GL_FRONT;
+        case StencilFace::Back:         return GL_BACK;
+    }
+    MapFailed("StencilFace");
+}
+
 GLenum ToDrawMode(const PrimitiveTopology primitiveTopology)
 {
     switch (primitiveTopology)

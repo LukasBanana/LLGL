@@ -35,6 +35,29 @@ enum class RenderConditionMode
     ByRegionNoWaitInverted, //!< Same as ByRegionNoWait, but the condition is inverted.
 };
 
+/**
+\brief Stencil face enumeration.
+\remarks To be compatible with Direct3D renderers, it is recommended to always use \c FrontAndBack.
+\see CommandBuffer::SetStencilReference
+*/
+enum class StencilFace
+{
+    //! Refers to both the front and back face of primitives.
+    FrontAndBack,
+
+    /**
+    \brief Refers only to the front face of primitives.
+    \note Only supported with: OpenGL, Vulkan, Metal.
+    */
+    Front,
+
+    /**
+    \brief Refers only to the back face of primitives.
+    \note Only supported with: OpenGL, Vulkan, Metal.
+    */
+    Back,
+};
+
 
 /* ----- Flags ----- */
 

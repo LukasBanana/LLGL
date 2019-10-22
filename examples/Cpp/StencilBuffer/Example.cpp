@@ -19,8 +19,7 @@ class Example_StencilBuffer : public ExampleBase
 
     LLGL::PipelineState*        pipelineScene           = {};
     LLGL::PipelineState*        pipelineStencilWrite    = {};
-    LLGL::PipelineState*        pipelineStencilRead0    = {};
-    LLGL::PipelineState*        pipelineStencilRead1    = {};
+    LLGL::PipelineState*        pipelineStencilRead     = {};
 
     LLGL::Buffer*               vertexBuffer            = nullptr;
     LLGL::Buffer*               constantBuffer          = nullptr;
@@ -196,17 +195,17 @@ private:
                 pipelineDesc.shaderProgram                  = shaderProgramStencil;
                 pipelineDesc.renderPass                     = context->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayout;
-                pipelineDesc.depth.testEnabled              = true;                             // read all depth bits
-                pipelineDesc.depth.writeEnabled             = false;                            // write no depth bits
-                pipelineDesc.stencil.testEnabled            = true;                             // enable stencil test, even though we only write the stencil bits
+                pipelineDesc.depth.testEnabled              = true;                             // Read all depth bits
+                pipelineDesc.depth.writeEnabled             = false;                            // Write no depth bits
+                pipelineDesc.stencil.testEnabled            = true;                             // Enable stencil test, even though we only write the stencil bits
                 pipelineDesc.stencil.front.depthPassOp      = LLGL::StencilOp::Replace;
                 pipelineDesc.stencil.front.compareOp        = LLGL::CompareOp::AlwaysPass;
                 pipelineDesc.stencil.front.reference        = 1;
-                pipelineDesc.stencil.front.readMask         = 0u;                               // read no stencil bits
-                pipelineDesc.stencil.front.writeMask        = ~0u;                              // write all stencil bits
+                pipelineDesc.stencil.front.readMask         = 0u;                               // Read no stencil bits
+                pipelineDesc.stencil.front.writeMask        = ~0u;                              // Write all stencil bits
                 pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
-                pipelineDesc.blend.targets[0].colorMask     = { false, false, false, false };   // write no color bits
+                pipelineDesc.blend.targets[0].colorMask     = { false, false, false, false };   // Write no color bits
             }
             pipelineStencilWrite = renderer->CreatePipelineState(pipelineDesc);
         }
@@ -219,21 +218,16 @@ private:
                 pipelineDesc.renderPass                     = context->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayout;
                 pipelineDesc.depth.testEnabled              = true;
-                pipelineDesc.depth.writeEnabled             = true;                             // write all depth bits
+                pipelineDesc.depth.writeEnabled             = true;                             // Write all depth bits
                 pipelineDesc.stencil.testEnabled            = true;
+                pipelineDesc.stencil.referenceDynamic       = true;                             // Change stencil reference independently of PSO
                 pipelineDesc.stencil.front.compareOp        = LLGL::CompareOp::Equal;
-                pipelineDesc.stencil.front.reference        = 0;
-                pipelineDesc.stencil.front.readMask         = ~0u;                              // read all stencil bits
-                pipelineDesc.stencil.front.writeMask        = 0u;                               // write no stencil bits
+                pipelineDesc.stencil.front.readMask         = ~0u;                              // Read all stencil bits
+                pipelineDesc.stencil.front.writeMask        = 0u;                               // Write no stencil bits
                 pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
-            pipelineStencilRead0 = renderer->CreatePipelineState(pipelineDesc);
-
-            {
-                pipelineDesc.stencil.front.reference = 1;
-            }
-            pipelineStencilRead1 = renderer->CreatePipelineState(pipelineDesc);
+            pipelineStencilRead = renderer->CreatePipelineState(pipelineDesc);
         }
     }
 
@@ -296,31 +290,32 @@ private:
 
     void RenderScene()
     {
-        // Clear entire framebuffer
+        // Clear entire framebuffer, i.e. color, depth, and stencil buffers
         commands->Clear(LLGL::ClearFlags::All);
+
+        // Render scene background
         commands->SetPipelineState(*pipelineScene);
         commands->SetGraphicsResourceHeap(*resourceHeap);
         RenderMesh(meshScene);
     }
 
-    void RenderPortal()
+    void RenderPortalStencil()
     {
+        // Render portal stencil (no color is written)
         commands->SetPipelineState(*pipelineStencilWrite);
-        //commands->SetGraphicsResourceHeap(*resourceHeap);
         RenderMesh(meshPortal);
     }
 
-    void RenderSceneOutidePortal()
+    void RenderSceneBetweenPortal()
     {
-        commands->SetPipelineState(*pipelineStencilRead0);
-        //commands->SetGraphicsResourceHeap(*resourceHeap);
-        RenderMesh(meshObject1);
-    }
+        commands->SetPipelineState(*pipelineStencilRead);
 
-    void RenderSceneInsidePortal()
-    {
-        commands->SetPipelineState(*pipelineStencilRead1);
-        //commands->SetGraphicsResourceHeap(*resourceHeap);
+        // Render scene objects outside portal (stencil = 0)
+        commands->SetStencilReference(0);
+        RenderMesh(meshObject1);
+
+        // Render scene objects inside portal (stencil = 1)
+        commands->SetStencilReference(1);
         RenderMesh(meshObject2);
     }
 
@@ -345,15 +340,11 @@ private:
                 commands->PopDebugGroup();
 
                 commands->PushDebugGroup("Stencil Write Pass (Render Portal)");
-                RenderPortal();
+                RenderPortalStencil();
                 commands->PopDebugGroup();
 
-                commands->PushDebugGroup("Stencil Read Pass 0 (Outside Portal)");
-                RenderSceneOutidePortal();
-                commands->PopDebugGroup();
-
-                commands->PushDebugGroup("Stencil Read Pass 1 (Inside Portal)");
-                RenderSceneInsidePortal();
+                commands->PushDebugGroup("Stencil Read Pass (Between Portal)");
+                RenderSceneBetweenPortal();
                 commands->PopDebugGroup();
             }
             commands->EndRenderPass();

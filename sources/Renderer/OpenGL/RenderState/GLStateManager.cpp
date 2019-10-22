@@ -570,6 +570,12 @@ void GLStateManager::SetDepthMask(GLboolean flag)
     }
 }
 
+void GLStateManager::SetStencilRef(GLint ref, GLenum face)
+{
+    if (boundDepthStencilState_ != nullptr)
+        boundDepthStencilState_->BindStencilRefOnly(ref, face);
+}
+
 /* ----- Rasterizer states ----- */
 
 void GLStateManager::NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState)
@@ -604,7 +610,7 @@ void GLStateManager::BindBlendState(GLBlendState* blendState)
     }
 }
 
-void GLStateManager::SetBlendColor(const GLfloat (&color)[4])
+void GLStateManager::SetBlendColor(const GLfloat* color)
 {
     if ( color[0] != commonState_.blendColor[0] ||
          color[1] != commonState_.blendColor[1] ||

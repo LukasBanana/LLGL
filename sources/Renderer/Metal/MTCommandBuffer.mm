@@ -438,6 +438,16 @@ void MTCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     }
 }
 
+void MTCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+{
+    //TODO
+}
+
+void MTCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
+{
+    //TODO
+}
+
 void MTCommandBuffer::SetUniform(
     UniformLocation location,
     const void*     data,

@@ -623,6 +623,16 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     }
 }
 
+void VKCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+{
+    vkCmdSetBlendConstants(commandBuffer_, color.Ptr());
+}
+
+void VKCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
+{
+    vkCmdSetStencilReference(commandBuffer_, VKTypes::Map(stencilFace), reference);
+}
+
 void VKCommandBuffer::SetUniform(
     UniformLocation location,
     const void*     data,

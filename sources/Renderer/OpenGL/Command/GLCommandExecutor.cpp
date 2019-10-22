@@ -248,6 +248,18 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             cmd->pipelineState->Bind(stateMngr);
             return sizeof(*cmd);
         }
+        case GLOpcodeSetBlendColor:
+        {
+            auto cmd = reinterpret_cast<const GLCmdSetBlendColor*>(pc);
+            stateMngr.SetBlendColor(cmd->color);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeSetStencilRef:
+        {
+            auto cmd = reinterpret_cast<const GLCmdSetStencilRef*>(pc);
+            stateMngr.SetStencilRef(cmd->ref, cmd->face);
+            return sizeof(*cmd);
+        }
         case GLOpcodeSetUniforms:
         {
             auto cmd = reinterpret_cast<const GLCmdSetUniforms*>(pc);

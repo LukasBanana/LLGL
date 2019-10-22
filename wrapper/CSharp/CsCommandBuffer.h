@@ -105,6 +105,9 @@ public ref class CommandBuffer
         /* ----- Pipeline States ----- */
 
         void SetPipelineState(PipelineState^ pipelineState);
+        void SetBlendFactor(ColorRGBA<float>^ color);
+        void SetStencilReference(unsigned int reference);
+        //void SetStencilReference(unsigned int reference, const StencilFace stencilFace);
 
         #if 0
         void SetUniform(UniformLocation location, const void* data, std::uint32_t dataSize);

@@ -56,10 +56,12 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& des
     /* Store dynamic pipeline states */
     primitiveTopology_  = D3D11Types::Map(desc.primitiveTopology);
     stencilRef_         = desc.stencil.front.reference;
+    stencilRefDynamic_  = desc.stencil.referenceDynamic;
     blendFactor_[0]     = desc.blend.blendFactor.r;
     blendFactor_[1]     = desc.blend.blendFactor.g;
     blendFactor_[2]     = desc.blend.blendFactor.b;
     blendFactor_[3]     = desc.blend.blendFactor.a;
+    blendFactorDynamic_ = desc.blend.blendFactorDynamic;
     sampleMask_         = desc.blend.sampleMask;
 
     /* Build static state buffer for viewports and scissors */

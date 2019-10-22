@@ -445,6 +445,16 @@ void GLImmediateCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     }
 }
 
+void GLImmediateCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+{
+    stateMngr_->SetBlendColor(color.Ptr());
+}
+
+void GLImmediateCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
+{
+    stateMngr_->SetStencilRef(static_cast<GLint>(reference), GLTypes::Map(stencilFace));
+}
+
 void GLImmediateCommandBuffer::SetUniform(
     UniformLocation location,
     const void*     data,

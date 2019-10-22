@@ -50,10 +50,22 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
             return stencilRef_;
         }
 
+        // Returns true if the stencil reference value must be set independently of the PSO.
+        inline bool IsStencilRefDynamic() const
+        {
+            return stencilRefDynamic_;
+        }
+
         // Returns the pointer to an array of 4 floating-points for the blending factor for the 'OMSetBlendState' function.
         inline const FLOAT* GetBlendFactor() const
         {
             return blendFactor_;
+        }
+
+        // Returns true if the blend factor must be set independently of the PSO.
+        inline bool IsBlendFactorDynamic() const
+        {
+            return blendFactorDynamic_;
         }
 
         // Returns the 32-bit sample mask for the 'OMSetBlendState' function.
@@ -82,7 +94,9 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
 
         D3D11_PRIMITIVE_TOPOLOGY        primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
         UINT                            stencilRef_         = 0;
+        bool                            stencilRefDynamic_  = false;
         FLOAT                           blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
+        bool                            blendFactorDynamic_ = false;
         UINT                            sampleMask_         = std::numeric_limits<UINT>::max();
 
         std::unique_ptr<char[]>         staticStateBuffer_;

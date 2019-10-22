@@ -167,6 +167,15 @@ void D3D11StateManager::SetRasterizerState(ID3D11RasterizerState* rasterizerStat
     }
 }
 
+void D3D11StateManager::SetDepthStencilState(ID3D11DepthStencilState* depthStencilState)
+{
+    if (renderState_.depthStencilState != depthStencilState)
+    {
+        renderState_.depthStencilState = depthStencilState;
+        context_->OMSetDepthStencilState(depthStencilState, renderState_.stencilRef);
+    }
+}
+
 void D3D11StateManager::SetDepthStencilState(ID3D11DepthStencilState* depthStencilState, UINT stencilRef)
 {
     if (renderState_.depthStencilState != depthStencilState || renderState_.stencilRef != stencilRef)
@@ -174,6 +183,15 @@ void D3D11StateManager::SetDepthStencilState(ID3D11DepthStencilState* depthStenc
         renderState_.depthStencilState  = depthStencilState;
         renderState_.stencilRef         = stencilRef;
         context_->OMSetDepthStencilState(depthStencilState, stencilRef);
+    }
+}
+
+void D3D11StateManager::SetStencilRef(UINT stencilRef)
+{
+    if (renderState_.stencilRef != stencilRef)
+    {
+        renderState_.stencilRef = stencilRef;
+        context_->OMSetDepthStencilState(renderState_.depthStencilState, stencilRef);
     }
 }
 
@@ -188,6 +206,16 @@ static bool EqualsBlendFactors(const FLOAT* lhs, const FLOAT* rhs)
     );
 }
 
+void D3D11StateManager::SetBlendState(ID3D11BlendState* blendState, UINT sampleMask)
+{
+    if (renderState_.blendState != blendState || renderState_.sampleMask != sampleMask)
+    {
+        renderState_.blendState     = blendState;
+        renderState_.sampleMask     = sampleMask;
+        context_->OMSetBlendState(blendState, renderState_.blendFactor, sampleMask);
+    }
+}
+
 void D3D11StateManager::SetBlendState(ID3D11BlendState* blendState, const FLOAT* blendFactor, UINT sampleMask)
 {
     if (renderState_.blendState != blendState || !EqualsBlendFactors(renderState_.blendFactor, blendFactor) || renderState_.sampleMask != sampleMask)
@@ -199,6 +227,18 @@ void D3D11StateManager::SetBlendState(ID3D11BlendState* blendState, const FLOAT*
         renderState_.blendFactor[3] = blendFactor[3];
         renderState_.sampleMask     = sampleMask;
         context_->OMSetBlendState(blendState, blendFactor, sampleMask);
+    }
+}
+
+void D3D11StateManager::SetBlendFactor(const FLOAT* blendFactor)
+{
+    if (!EqualsBlendFactors(renderState_.blendFactor, blendFactor))
+    {
+        renderState_.blendFactor[0] = blendFactor[0];
+        renderState_.blendFactor[1] = blendFactor[1];
+        renderState_.blendFactor[2] = blendFactor[2];
+        renderState_.blendFactor[3] = blendFactor[3];
+        context_->OMSetBlendState(renderState_.blendState, blendFactor, renderState_.sampleMask);
     }
 }
 
