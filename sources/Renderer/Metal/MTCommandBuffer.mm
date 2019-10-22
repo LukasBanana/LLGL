@@ -440,12 +440,12 @@ void MTCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
 void MTCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
 {
-    //TODO
+    encoderScheduler_.SetBlendColor(color.Ptr());
 }
 
 void MTCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
 {
-    //TODO
+    encoderScheduler_.SetStencilRef(reference, stencilFace);
 }
 
 void MTCommandBuffer::SetUniform(

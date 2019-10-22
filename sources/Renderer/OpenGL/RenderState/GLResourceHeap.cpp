@@ -122,6 +122,8 @@ GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc)
     /* Determine memory barriers */
     #ifdef GL_ARB_shader_image_load_store
     barriers_ = GetMemoryBarrierBitfield(desc.resourceViews);
+    #else
+    barriers_ = 0;
     #endif // /GL_ARB_shader_image_load_store
 
     /* Build buffer segments */

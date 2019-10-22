@@ -40,6 +40,18 @@ class MTGraphicsPSO : public MTPipelineState
             return primitiveType_;
         }
 
+        // Returns true if the blend color must be set independently of the PSO.
+        inline bool IsBlendColorDynamic() const
+        {
+            return blendColorDynamic_;
+        }
+
+        // Returns true if the stencil reference must be set independently of the PSO.
+        inline bool IsStencilRefDynamic() const
+        {
+            return stencilRefDynamic_;
+        }
+
     private:
 
         void CreateRenderPipelineState(
@@ -57,16 +69,22 @@ class MTGraphicsPSO : public MTPipelineState
 
         id<MTLRenderPipelineState>  renderPipelineState_    = nil;
         id<MTLDepthStencilState>    depthStencilState_      = nil;
+
         MTLCullMode                 cullMode_               = MTLCullModeNone;
         MTLWinding                  winding_                = MTLWindingClockwise;
         MTLTriangleFillMode         fillMode_               = MTLTriangleFillModeFill;
         MTLPrimitiveType            primitiveType_          = MTLPrimitiveTypeTriangle;
         MTLDepthClipMode            clipMode_               = MTLDepthClipModeClip;
+
         float                       depthBias_              = 0.0f;
         float                       depthSlope_             = 0.0f;
         float                       depthClamp_             = 0.0f;
+
+        bool                        blendColorDynamic_      = false;
         bool                        blendColorEnabled_      = false;
         float                       blendColor_[4]          = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+        bool                        stencilRefDynamic_      = false;
         std::uint32_t               stencilFrontRef_        = 0;
         std::uint32_t               stencilBackRef_         = 0;
 

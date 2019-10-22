@@ -148,7 +148,7 @@ const std::uint32_t         GLStateManager::numTextureTargets;
 
 #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 const std::uint32_t         GLStateManager::numStatesExt;
-#endif LLGL_GL_ENABLE_VENDOR_EXT
+#endif // /LLGL_GL_ENABLE_VENDOR_EXT
 
 GLStateManager*             GLStateManager::active_;
 GLStateManager::GLLimits    GLStateManager::commonLimits_;

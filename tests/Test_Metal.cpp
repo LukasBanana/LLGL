@@ -72,13 +72,13 @@ int main()
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
         vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
         vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGB8UNorm });
-        vertexFormat.stride = sizeof(Vertex);
+        vertexFormat.SetStride(sizeof(Vertex));
 
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.size                   = sizeof(vertices);
-            vertexBufferDesc.bindFlags              = LLGL::BindFlags::VertexBuffer;
-            vertexBufferDesc.vertexBuffer.format    = vertexFormat;
+            vertexBufferDesc.size           = sizeof(vertices);
+            vertexBufferDesc.bindFlags      = LLGL::BindFlags::VertexBuffer;
+            vertexBufferDesc.vertexAttribs  = vertexFormat.attributes;
         }
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
         
@@ -120,11 +120,15 @@ int main()
         auto sampler = renderer->CreateSampler(samplerDesc);
         
         // Create shader program
+        LLGL::ShaderDescriptor vsDesc { LLGL::ShaderType::Vertex,   "TestShader.metal", "VMain", "1.1" };
+        LLGL::ShaderDescriptor fsDesc { LLGL::ShaderType::Fragment, "TestShader.metal", "FMain", "1.1" };
+
+        vsDesc.vertex.inputAttribs = vertexFormat.attributes;
+
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
-            shaderProgramDesc.vertexFormats     = { vertexBufferDesc.vertexBuffer.format };
-            shaderProgramDesc.vertexShader      = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "TestShader.metal", "VMain", "1.1" });
-            shaderProgramDesc.fragmentShader    = renderer->CreateShader({ LLGL::ShaderType::Fragment, "TestShader.metal", "FMain", "1.1" });
+            shaderProgramDesc.vertexShader      = renderer->CreateShader(vsDesc);
+            shaderProgramDesc.fragmentShader    = renderer->CreateShader(fsDesc);
         }
         auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
         
@@ -137,7 +141,7 @@ int main()
             pipelineDesc.shaderProgram      = shaderProgram;
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
         }
-        auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Main loop
         commands->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
@@ -152,7 +156,7 @@ int main()
                     
                     commands->Clear(LLGL::ClearFlags::Color);
 
-                    commands->SetGraphicsPipeline(*pipeline);
+                    commands->SetPipelineState(*pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
                     
                     commands->SetResource(*texture, LLGL::BindFlags::Sampled, 0, LLGL::StageFlags::FragmentStage);

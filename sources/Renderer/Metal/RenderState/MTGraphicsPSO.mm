@@ -91,10 +91,13 @@ MTGraphicsPSO::MTGraphicsPSO(
     fillMode_           = MTTypes::ToMTLTriangleFillMode(desc.rasterizer.polygonMode);
     primitiveType_  	= MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
     clipMode_           = (desc.rasterizer.depthClampEnabled ? MTLDepthClipModeClamp : MTLDepthClipModeClip);
+
     depthBias_          = desc.rasterizer.depthBias.constantFactor;
     depthSlope_         = desc.rasterizer.depthBias.slopeFactor;
     depthClamp_         = desc.rasterizer.depthBias.clamp;
-    blendColorEnabled_  = AnyTargetUsesBlendFactor(desc.blend);
+
+    blendColorDynamic_  = desc.blend.blendFactorDynamic;
+    blendColorEnabled_  = (!desc.blend.blendFactorDynamic && AnyTargetUsesBlendFactor(desc.blend));
     blendColor_[0]      = desc.blend.blendFactor.r;
     blendColor_[1]      = desc.blend.blendFactor.g;
     blendColor_[2]      = desc.blend.blendFactor.b;
@@ -118,10 +121,14 @@ void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
 
     #ifndef LLGL_OS_IOS//TODO: disabled for testing iOS
     [renderEncoder setDepthBias:depthBias_ slopeScale:depthSlope_ clamp:depthClamp_];
-    if (stencilFrontRef_ == stencilBackRef_)
-        [renderEncoder setStencilFrontReferenceValue:stencilFrontRef_ backReferenceValue:stencilBackRef_];
-    else
-        [renderEncoder setStencilReferenceValue:stencilFrontRef_];
+
+    if (!stencilRefDynamic_)
+    {
+        if (stencilFrontRef_ != stencilBackRef_)
+            [renderEncoder setStencilFrontReferenceValue:stencilFrontRef_ backReferenceValue:stencilBackRef_];
+        else
+            [renderEncoder setStencilReferenceValue:stencilFrontRef_];
+    }
     #endif
 
     if (blendColorEnabled_)
@@ -262,6 +269,7 @@ void MTGraphicsPSO::CreateDepthStencilState(
         /* Store stencil reference values */
         stencilFrontRef_    = desc.stencil.front.reference;
         stencilBackRef_     = desc.stencil.back.reference;
+        stencilRefDynamic_  = desc.stencil.referenceDynamic;
     }
     depthStencilState_ = [device newDepthStencilStateWithDescriptor:depthStencilDesc];
     [depthStencilDesc release];

@@ -12,6 +12,7 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/StaticLimits.h>
+#include <LLGL/CommandBufferFlags.h>
 #include <cstdint>
 
 
@@ -57,6 +58,8 @@ class MTEncoderScheduler
         void SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount);
         void SetGraphicsPSO(MTGraphicsPSO* pipelineState);
         void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap);
+        void SetBlendColor(const float* blendColor);
+        void SetStencilRef(std::uint32_t ref, const StencilFace face);
 
     public:
 
@@ -99,8 +102,16 @@ class MTEncoderScheduler
             id<MTLBuffer>   vertexBuffers[g_maxNumVertexBuffers];
             NSUInteger      vertexBufferOffsets[g_maxNumVertexBuffers];
             NSRange         vertexBufferRange                                   = { 0, 0 };
+
             MTGraphicsPSO*  graphicsPSO                                         = nullptr;
             MTResourceHeap* resourceHeap                                        = nullptr;
+
+            float           blendColor[4]                                       = { 0.0f, 0.0f, 0.0f, 0.0f };
+            bool            blendColorDynamic                                   = false;
+
+            std::uint32_t   stencilFrontRef                                     = 0;
+            std::uint32_t   stencilBackRef                                      = 0;
+            bool            stencilRefDynamic                                   = false;
         };
 
     private:
@@ -126,6 +137,8 @@ class MTEncoderScheduler
                 std::uint8_t vertexBuffers      : 1;
                 std::uint8_t graphicsPipeline   : 1;
                 std::uint8_t resourceHeap       : 1;
+                std::uint8_t blendColor         : 1;
+                std::uint8_t stencilRef         : 1;
             };
         }
         dirtyBits_;

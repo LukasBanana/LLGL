@@ -163,14 +163,46 @@ void MTEncoderScheduler::SetVertexBuffers(const id<MTLBuffer>* buffers, const NS
 
 void MTEncoderScheduler::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
 {
-    renderEncoderState_.graphicsPSO = pipelineState;
-    dirtyBits_.graphicsPipeline = 1;
+    if (pipelineState != nullptr)
+    {
+        renderEncoderState_.graphicsPSO         = pipelineState;
+        renderEncoderState_.blendColorDynamic   = pipelineState->IsBlendColorDynamic();
+        renderEncoderState_.stencilRefDynamic   = pipelineState->IsStencilRefDynamic();
+        dirtyBits_.graphicsPipeline = 1;
+    }
 }
 
 void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap)
 {
     renderEncoderState_.resourceHeap = resourceHeap;
     dirtyBits_.resourceHeap = 1;
+}
+
+void MTEncoderScheduler::SetBlendColor(const float* blendColor)
+{
+    renderEncoderState_.blendColor[0] = blendColor[0];
+    renderEncoderState_.blendColor[1] = blendColor[1];
+    renderEncoderState_.blendColor[2] = blendColor[2];
+    renderEncoderState_.blendColor[3] = blendColor[3];
+    dirtyBits_.blendColor = 1;
+}
+
+void MTEncoderScheduler::SetStencilRef(std::uint32_t ref, const StencilFace face)
+{
+    switch (face)
+    {
+        case StencilFace::FrontAndBack:
+            renderEncoderState_.stencilFrontRef = ref;
+            renderEncoderState_.stencilBackRef = ref;
+            break;
+        case StencilFace::Front:
+            renderEncoderState_.stencilFrontRef = ref;
+            break;
+        case StencilFace::Back:
+            renderEncoderState_.stencilBackRef = ref;
+            break;
+    }
+    dirtyBits_.stencilRef = 1;
 }
 
 id<MTLRenderCommandEncoder> MTEncoderScheduler::GetRenderEncoderAndFlushRenderPass()
@@ -192,26 +224,28 @@ void MTEncoderScheduler::SubmitRenderEncoderState()
         if (renderEncoderState_.viewportCount > 0 && dirtyBits_.viewports != 0)
         {
             /* Bind viewports */
-            #ifndef LLGL_OS_IOS //TODO: since iOS 12.0
-            [renderEncoder_
-                setViewports:   renderEncoderState_.viewports
-                count:          renderEncoderState_.viewportCount
-            ];
-            #else
-            [renderEncoder_ setViewport:renderEncoderState_.viewports[0]];
-            #endif
+            if (@available(macOS 10.13, iOS 12.0, *))
+            {
+                [renderEncoder_
+                    setViewports:   renderEncoderState_.viewports
+                    count:          renderEncoderState_.viewportCount
+                ];
+            }
+            else
+                [renderEncoder_ setViewport:renderEncoderState_.viewports[0]];
         }
         if (renderEncoderState_.scissorRectCount > 0 && dirtyBits_.scissors != 0)
         {
             /* Bind scissor rectangles */
-            #ifndef LLGL_OS_IOS //TODO: since iOS 12.0
-            [renderEncoder_
-                setScissorRects:    renderEncoderState_.scissorRects
-                count:              renderEncoderState_.scissorRectCount
-            ];
-            #else
-            [renderEncoder_ setScissorRect:renderEncoderState_.scissorRects[0]];
-            #endif
+            if (@available(macOS 10.13, iOS 12.0, *))
+            {
+                [renderEncoder_
+                    setScissorRects:    renderEncoderState_.scissorRects
+                    count:              renderEncoderState_.scissorRectCount
+                ];
+            }
+            else
+                [renderEncoder_ setScissorRect:renderEncoderState_.scissorRects[0]];
         }
         if (renderEncoderState_.vertexBufferRange.length > 0 && dirtyBits_.vertexBuffers != 0)
         {
@@ -231,6 +265,29 @@ void MTEncoderScheduler::SubmitRenderEncoderState()
         {
             /* Bind resource heap */
             renderEncoderState_.resourceHeap->BindGraphicsResources(renderEncoder_);
+        }
+        if (renderEncoderState_.blendColorDynamic && dirtyBits_.blendColor != 0)
+        {
+            /* Set blend color */
+            [renderEncoder_
+                setBlendColorRed:   renderEncoderState_.blendColor[0]
+                green:              renderEncoderState_.blendColor[1]
+                blue:               renderEncoderState_.blendColor[2]
+                alpha:              renderEncoderState_.blendColor[3]
+            ];
+        }
+        if (renderEncoderState_.stencilRefDynamic && dirtyBits_.stencilRef != 0)
+        {
+            /* Set stencil reference */
+            if (renderEncoderState_.stencilFrontRef != renderEncoderState_.stencilBackRef)
+            {
+                [renderEncoder_
+                    setStencilFrontReferenceValue:  renderEncoderState_.stencilFrontRef
+                    backReferenceValue:             renderEncoderState_.stencilBackRef
+                ];
+            }
+            else
+                [renderEncoder_ setStencilReferenceValue:renderEncoderState_.stencilFrontRef];
         }
 
         /* Reset all dirty bits */
