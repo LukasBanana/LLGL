@@ -10,6 +10,7 @@
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLCore.h"
 #include "../../GLCommon/GLTypes.h"
+#include "../../PipelineStateUtils.h"
 #include "../../../Core/HelperMacros.h"
 #include "../Texture/GLRenderTarget.h"
 #include "GLStateManager.h"
@@ -33,6 +34,7 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
     Convert(blendColor_, desc.blendFactor);
 
     blendColorDynamic_      = desc.blendFactorDynamic;
+    blendColorEnabled_      = IsStaticBlendFactorEnabled(desc);
     sampleAlphaToCoverage_  = desc.alphaToCoverageEnabled;
     sampleMask_             = desc.sampleMask;
 
@@ -63,7 +65,7 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
 void GLBlendState::Bind(GLStateManager& stateMngr)
 {
     /* Set blend factor */
-    if (!blendColorDynamic_)
+    if (blendColorEnabled_)
         stateMngr.SetBlendColor(blendColor_);
 
     stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);

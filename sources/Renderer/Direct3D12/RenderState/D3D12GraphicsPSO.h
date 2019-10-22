@@ -94,10 +94,12 @@ class D3D12GraphicsPSO final : public D3D12PipelineState
 
         D3D12_PRIMITIVE_TOPOLOGY    primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
         bool                        scissorEnabled_     = false;
+
+        bool                        stencilRefEnabled_  = false;
         UINT                        stencilRef_         = 0;
-        bool                        stencilRefDynamic_  = false;
+
+        bool                        blendFactorEnabled_ = false;
         FLOAT                       blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
-        bool                        blendFactorDynamic_ = false;
 
         std::unique_ptr<char[]>     staticStateBuffer_;
         UINT                        numStaticViewports_ = 0;

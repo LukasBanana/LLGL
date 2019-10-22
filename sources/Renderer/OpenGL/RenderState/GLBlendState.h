@@ -74,8 +74,9 @@ class GLBlendState
 
     private:
 
-        GLfloat             blendColor_[4]                                  = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool                blendColorDynamic_                              = false;
+        bool                blendColorEnabled_                              = false;
+        GLfloat             blendColor_[4]                                  = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool                sampleAlphaToCoverage_                          = false;
         GLbitfield          sampleMask_                                     = ~0u;
         bool                logicOpEnabled_                                 = false;

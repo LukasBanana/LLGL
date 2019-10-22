@@ -18,6 +18,7 @@
 #include "../D3D12Serialization.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
+#include "../../PipelineStateUtils.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/ByteBufferIterator.h"
@@ -54,13 +55,15 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
     /* Store dynamic pipeline states */
     primitiveTopology_  = D3D12Types::Map(desc.primitiveTopology);
     scissorEnabled_     = desc.rasterizer.scissorTestEnabled;
+
+    stencilRefEnabled_  = IsStaticStencilRefEnabled(desc.stencil);
     stencilRef_         = desc.stencil.front.reference;
-    stencilRefDynamic_  = desc.stencil.referenceDynamic;
+
+    blendFactorEnabled_ = IsStaticBlendFactorEnabled(desc.blend);
     blendFactor_[0]     = desc.blend.blendFactor.r;
     blendFactor_[1]     = desc.blend.blendFactor.g;
     blendFactor_[2]     = desc.blend.blendFactor.b;
     blendFactor_[3]     = desc.blend.blendFactor.a;
-    blendFactorDynamic_ = desc.blend.blendFactorDynamic;
 
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())
@@ -94,9 +97,9 @@ void D3D12GraphicsPSO::Bind(D3D12CommandContext& commandContext)
 
     commandList->IASetPrimitiveTopology(primitiveTopology_);
 
-    if (!stencilRefDynamic_)
+    if (stencilRefEnabled_)
         commandList->OMSetStencilRef(stencilRef_);
-    if (!blendFactorDynamic_)
+    if (blendFactorEnabled_)
         commandList->OMSetBlendFactor(blendFactor_);
 
     /* Set static viewports and scissors */
@@ -509,10 +512,10 @@ void D3D12GraphicsPSO::SerializePSO(
     writer.Begin(Serialization::D3D12Ident_StaticState);
     {
         writer.WriteTyped(primitiveTopology_);
+        writer.WriteTyped(blendFactorEnabled_);
         writer.WriteTyped(blendFactor_);
-        writer.WriteTyped(blendFactorDynamic_);
+        writer.WriteTyped(stencilRefEnabled_);
         writer.WriteTyped(stencilRef_);
-        writer.WriteTyped(stencilRefDynamic_);
         writer.WriteTyped(scissorEnabled_);
         writer.WriteTyped(numStaticViewports_);
         writer.WriteTyped(numStaticScissors_);
@@ -610,10 +613,10 @@ void D3D12GraphicsPSO::DeserializePSO(
     reader.Begin(Serialization::D3D12Ident_StaticState);
     {
         reader.ReadTyped(primitiveTopology_);
+        reader.ReadTyped(blendFactorEnabled_);
         reader.ReadTyped(blendFactor_);
-        reader.ReadTyped(blendFactorDynamic_);
+        reader.ReadTyped(stencilRefEnabled_);
         reader.ReadTyped(stencilRef_);
-        reader.ReadTyped(stencilRefDynamic_);
         reader.ReadTyped(scissorEnabled_);
         reader.ReadTyped(numStaticViewports_);
         reader.ReadTyped(numStaticScissors_);

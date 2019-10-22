@@ -93,10 +93,10 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
         ComPtr<ID3D11PixelShader>       ps_;
 
         D3D11_PRIMITIVE_TOPOLOGY        primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
-        UINT                            stencilRef_         = 0;
         bool                            stencilRefDynamic_  = false;
-        FLOAT                           blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
+        UINT                            stencilRef_         = 0;
         bool                            blendFactorDynamic_ = false;
+        FLOAT                           blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
         UINT                            sampleMask_         = std::numeric_limits<UINT>::max();
 
         std::unique_ptr<char[]>         staticStateBuffer_;

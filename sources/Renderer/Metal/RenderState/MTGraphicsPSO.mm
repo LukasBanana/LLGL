@@ -12,6 +12,7 @@
 #include "../MTTypes.h"
 #include "../MTCore.h"
 #include "../../CheckedCast.h"
+#include "../../PipelineStateUtils.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
 
@@ -40,44 +41,6 @@ static void FillDefaultMTStencilDesc(MTLStencilDescriptor* dst)
     dst.writeMask                   = 0;
 }
 
-static bool IsBlendOpUsingBlendFactor(const BlendOp op)
-{
-    return (op == BlendOp::BlendFactor || op == BlendOp::InvBlendFactor);
-}
-
-static bool IsTargetUsingBlendFactor(const BlendTargetDescriptor& desc)
-{
-    return
-    (
-        desc.blendEnabled &&
-        (
-            IsBlendOpUsingBlendFactor(desc.srcColor) ||
-            IsBlendOpUsingBlendFactor(desc.dstColor) ||
-            IsBlendOpUsingBlendFactor(desc.srcAlpha) ||
-            IsBlendOpUsingBlendFactor(desc.dstAlpha)
-        )
-    );
-}
-
-// Returns true if any of the enabled blend targets make use the blending factor (RGBA)
-static bool AnyTargetUsesBlendFactor(const BlendDescriptor& desc)
-{
-    if (desc.independentBlendEnabled)
-    {
-        for (const auto& target : desc.targets)
-        {
-            if (IsTargetUsingBlendFactor(target))
-                return true;
-        }
-    }
-    else
-    {
-        if (IsTargetUsingBlendFactor(desc.targets[0]))
-            return true;
-    }
-    return false;
-}
-
 MTGraphicsPSO::MTGraphicsPSO(
     id<MTLDevice>                       device,
     const GraphicsPipelineDescriptor&   desc,
@@ -97,7 +60,7 @@ MTGraphicsPSO::MTGraphicsPSO(
     depthClamp_         = desc.rasterizer.depthBias.clamp;
 
     blendColorDynamic_  = desc.blend.blendFactorDynamic;
-    blendColorEnabled_  = (!desc.blend.blendFactorDynamic && AnyTargetUsesBlendFactor(desc.blend));
+    blendColorEnabled_  = IsStaticBlendFactorEnabled(desc.blend);
     blendColor_[0]      = desc.blend.blendFactor.r;
     blendColor_[1]      = desc.blend.blendFactor.g;
     blendColor_[2]      = desc.blend.blendFactor.b;
