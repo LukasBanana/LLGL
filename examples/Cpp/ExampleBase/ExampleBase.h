@@ -207,7 +207,8 @@ protected:
         const std::vector<TutorialShaderDescriptor>&    shaderDescs,
         const std::vector<LLGL::VertexFormat>&          vertexFormats       = {},
         const LLGL::VertexFormat&                       streamOutputFormat  = {},
-        const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs     = {}
+        const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs     = {},
+        const LLGL::ShaderMacro*                        defines             = nullptr
     );
 
     // Reloads the specified shader program from the previously specified shader source files.

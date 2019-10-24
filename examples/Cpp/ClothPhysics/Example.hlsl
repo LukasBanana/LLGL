@@ -27,12 +27,25 @@ struct ParticleView
 };
 
 // Particle buffers
+#ifdef ENABLE_STORAGE_TEXTURES
+
+Texture2D<float4>   parBase     : register(t1); // UV (.xy) and inverse mass (.z)
+RWTexture2D<float4> parCurrPos  : register(u2);
+RWTexture2D<float4> parNextPos  : register(u3);
+RWTexture2D<float4> parPrevPos  : register(u4);
+RWTexture2D<float4> parVelocity : register(u5);
+RWTexture2D<float4> parNormal   : register(u6);
+
+#else
+
 Buffer<float4>      parBase     : register(t1); // UV (.xy) and inverse mass (.z)
 RWBuffer<float4>    parCurrPos  : register(u2);
 RWBuffer<float4>    parNextPos  : register(u3);
 RWBuffer<float4>    parPrevPos  : register(u4);
 RWBuffer<float4>    parVelocity : register(u5);
 RWBuffer<float4>    parNormal   : register(u6);
+
+#endif // /ENABLE_STORAGE_TEXTURES
 
 // Returns the particle index for the specified grid
 uint GridPosToIndex(uint2 gridPos)
@@ -56,7 +69,12 @@ void AccumulateStretchConstraints(ParticleView par, int2 neighborGridPos, inout 
     }
 
     // Read neighbor particle
+    #ifdef ENABLE_STORAGE_TEXTURES
+    uint2 idx = (uint2)neighborGridPos;
+    #else
     uint idx = GridPosToIndex((uint2)neighborGridPos);
+    #endif // /ENABLE_STORAGE_TEXTURES
+
     float4 otherCurrPos = parCurrPos[idx];
     float4 otherOrigPos = UVToOrigPos(parBase[idx].xy);
     float otherInvMass = parBase[idx].z;
@@ -75,7 +93,11 @@ void AccumulateStretchConstraints(ParticleView par, int2 neighborGridPos, inout 
 
 float3 ReadParticlePos(uint2 gridPos)
 {
+    #ifdef ENABLE_STORAGE_TEXTURES
+    return parCurrPos[gridPos].xyz;
+    #else
     return parCurrPos[GridPosToIndex(gridPos)].xyz;
+    #endif // /ENABLE_STORAGE_TEXTURES
 }
 
 void AccumulateSurfaceNormal(float4 pos, int2 gridPos0, int2 gridPos1, inout float4 normal)
@@ -128,7 +150,11 @@ void ApplyStretchConstraints(inout ParticleView par, int2 gridPos)
 [numthreads(1, 1, 1)]
 void CSForces(uint2 threadID : SV_DispatchThreadID)
 {
+    #ifdef ENABLE_STORAGE_TEXTURES
+    uint2 idx = threadID;
+    #else
     uint idx = GridPosToIndex(threadID);
+    #endif // /ENABLE_STORAGE_TEXTURES
 
     // Accumulate force and multiply by inverse mass
     float invMass = parBase[idx].z;
@@ -145,7 +171,11 @@ void CSForces(uint2 threadID : SV_DispatchThreadID)
 [numthreads(1, 1, 1)]
 void CSStretchConstraints(uint2 threadID : SV_DispatchThreadID)
 {
+    #ifdef ENABLE_STORAGE_TEXTURES
+    uint2 idx = threadID;
+    #else
     uint idx = GridPosToIndex(threadID);
+    #endif // /ENABLE_STORAGE_TEXTURES
 
     // Read particle
     ParticleView par;
@@ -166,7 +196,11 @@ void CSStretchConstraints(uint2 threadID : SV_DispatchThreadID)
 [numthreads(1, 1, 1)]
 void CSRelaxation(uint2 threadID : SV_DispatchThreadID)
 {
+    #ifdef ENABLE_STORAGE_TEXTURES
+    uint2 idx = threadID;
+    #else
     uint idx = GridPosToIndex(threadID);
+    #endif // /ENABLE_STORAGE_TEXTURES
 
     // Adjust velocity and store current and previous position
     parCurrPos[idx] = parNextPos[idx];
@@ -179,13 +213,6 @@ void CSRelaxation(uint2 threadID : SV_DispatchThreadID)
  * HLSL vertex shader
  */
 
-struct VIn
-{
-    float4 position : POS;
-    float4 normal   : NORMAL;
-    float2 texCoord : TEXCOORD;
-};
-
 struct VOut
 {
     float4 position : SV_Position;
@@ -193,14 +220,37 @@ struct VOut
     float2 texCoord : TEXCOORD;
 };
 
-VOut VS(in VIn inp)
+#ifdef ENABLE_STORAGE_TEXTURES
+
+Texture2D<float4> vertexBase    : register(t1); // UV (.xy) and inverse mass (.z)
+Texture2D<float4> vertexPos     : register(t2);
+Texture2D<float4> vertexNormal  : register(t3);
+
+void VS(uint id : SV_VertexID, out VOut outp)
 {
-    VOut outp;
+    uint2 idx = uint2(id % gridSize.x, id / gridSize.x);
+    outp.position   = mul(wvpMatrix, vertexPos[idx]);
+    outp.normal     = mul(wMatrix, vertexNormal[idx]);
+    outp.texCoord   = vertexBase[idx].xy;
+}
+
+#else
+
+struct VIn
+{
+    float4 position : POS;
+    float4 normal   : NORMAL;
+    float2 texCoord : TEXCOORD;
+};
+
+void VS(in VIn inp, out VOut outp)
+{
     outp.position   = mul(wvpMatrix, inp.position);
     outp.normal     = mul(wMatrix, inp.normal);
     outp.texCoord   = inp.texCoord;
-    return outp;
 }
+
+#endif // /ENABLE_STORAGE_TEXTURES
 
 
 /*

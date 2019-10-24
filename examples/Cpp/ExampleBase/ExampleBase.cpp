@@ -363,7 +363,8 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
     const std::vector<TutorialShaderDescriptor>&    shaderDescs,
     const std::vector<LLGL::VertexFormat>&          vertexFormats,
     const LLGL::VertexFormat&                       streamOutputFormat,
-    const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs)
+    const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs,
+    const LLGL::ShaderMacro*                        defines)
 {
     ShaderProgramRecall recall;
 
@@ -388,6 +389,7 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
         // Create shader
         auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
         {
+            shaderDesc.defines = defines;
             if (desc.type == LLGL::ShaderType::Vertex || desc.type == LLGL::ShaderType::Geometry)
                 shaderDesc.vertex = recall.vertexAttribs;
             else if (desc.type == LLGL::ShaderType::Fragment)
