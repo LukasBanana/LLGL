@@ -162,11 +162,11 @@ struct LLGL_EXPORT VertexAttribute
     \brief Vertex buffer binding slot. By default 0.
     \remarks This is used when multiple vertex buffers are used simultaneously.
     This binding slot refers either to the input buffer indices (determined by \c SetVertexBufferArray),
-    or stream-output buffer indices (determined by \c SetStreamOutputBufferArray).
+    or stream-output buffer indices (determined by \c BeginStreamOutput).
     \note Only supported with: Direct3D 11, Direct3D 12, Vulkan, Metal.
     \note For OpenGL, the vertex binding slots are automatically generated in ascending order and beginning with zero.
     \see CommandBuffer::SetVertexBufferArray
-    \see CommandBuffer::SetStreamOutputBufferArray
+    \see CommandBuffer::BeginStreamOutput
     */
     std::uint32_t   slot            = 0;
 

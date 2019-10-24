@@ -82,7 +82,7 @@ struct BindFlags
         /**
         \brief The resource can be used to bind an output stream buffer (also referred to as "transform feedback").
         \remarks This can only be used for Buffer resources.
-        \see CommandBuffer::SetStreamOutputBuffer
+        \see CommandBuffer::BeginStreamOutput
         */
         StreamOutputBuffer      = (1 << 3),
 

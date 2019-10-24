@@ -200,14 +200,6 @@ void CommandBuffer::SetIndexBuffer(Buffer^ buffer)
 #if 0
 /* ----- Stream Output Buffers ------ */
 
-void CommandBuffer::SetStreamOutputBuffer(Buffer^ buffer)
-{
-}
-
-void CommandBuffer::SetStreamOutputBufferArray(BufferArray^ bufferArray)
-{
-}
-
 void CommandBuffer::BeginStreamOutput()
 {
 }
