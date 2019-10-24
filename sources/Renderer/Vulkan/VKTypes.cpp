@@ -404,6 +404,16 @@ VkSampleCountFlagBits ToVkSampleCountBits(std::uint32_t samples)
     );
 }
 
+VkOffset3D ToVkOffset(const Offset3D& offset)
+{
+    return VkOffset3D{ offset.x, offset.y, offset.z };
+}
+
+VkExtent3D ToVkExtent(const Extent3D& extent)
+{
+    return VkExtent3D{ extent.width, extent.height, extent.depth };
+}
+
 Format Unmap(const VkFormat format)
 {
     switch (format)

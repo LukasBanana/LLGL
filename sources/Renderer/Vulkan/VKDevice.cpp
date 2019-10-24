@@ -7,6 +7,7 @@
 
 #include "VKDevice.h"
 #include "RenderState/VKFence.h"
+#include "Texture/VKTexture.h"
 #include "Memory/VKDeviceMemoryRegion.h"
 #include "Memory/VKDeviceMemory.h"
 #include <set>
@@ -258,6 +259,23 @@ void VKDevice::CopyBuffer(
         CopyBuffer(cmdBuffer, srcBuffer, dstBuffer, size, srcOffset, dstOffset);
     }
     FlushCommandBuffer(cmdBuffer);
+}
+
+void VKDevice::CopyTexture(
+    VkCommandBuffer     commandBuffer,
+    VKTexture&          srcTexture,
+    VKTexture&          dstTexture,
+    const VkImageCopy&  region)
+{
+    vkCmdCopyImage(
+        commandBuffer,
+        srcTexture.GetVkImage(),
+        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        dstTexture.GetVkImage(),
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        1,
+        &region
+    );
 }
 
 void VKDevice::CopyBufferToImage(

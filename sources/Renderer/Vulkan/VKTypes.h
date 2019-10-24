@@ -51,6 +51,8 @@ VkStencilFaceFlags      Map( const StencilFace          stencilFace       );
 
 VkIndexType             ToVkIndexType(const Format format);
 VkSampleCountFlagBits   ToVkSampleCountBits(std::uint32_t samples);
+VkOffset3D              ToVkOffset(const Offset3D& offset);
+VkExtent3D              ToVkExtent(const Extent3D& extent);
 
 Format                  Unmap( const VkFormat format );
 

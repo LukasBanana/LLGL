@@ -50,6 +50,9 @@ class VKTexture final : public Texture
 
         void CreateInternalImageView(VkDevice device);
 
+        // Returns the image ascpect flags for the VkFormat of this texture.
+        VkImageAspectFlags GetAspectFlags() const;
+
         // Returns the Vulkan image object.
         inline VkImage GetVkImage() const
         {
@@ -95,8 +98,6 @@ class VKTexture final : public Texture
     private:
 
         void CreateImage(VkDevice device, const TextureDescriptor& desc);
-
-        VkImageAspectFlags GetAspectFlags() const;
 
     private:
 

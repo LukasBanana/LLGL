@@ -186,7 +186,32 @@ void VKCommandBuffer::CopyTexture(
     const TextureLocation&  srcLocation,
     const Extent3D&         extent)
 {
-    //TODO
+    auto& dstTextureVK = LLGL_CAST(VKTexture&, dstTexture);
+    auto& srcTextureVK = LLGL_CAST(VKTexture&, srcTexture);
+
+    VkImageCopy region;
+    {
+        region.srcSubresource.aspectMask        = srcTextureVK.GetAspectFlags();
+        region.srcSubresource.mipLevel          = srcLocation.mipLevel;
+        region.srcSubresource.baseArrayLayer    = srcLocation.arrayLayer;
+        region.srcSubresource.layerCount        = 1;
+        region.srcOffset                        = VKTypes::ToVkOffset(srcLocation.offset);
+        region.dstSubresource.aspectMask        = dstTextureVK.GetAspectFlags();
+        region.dstSubresource.mipLevel          = dstLocation.mipLevel;
+        region.dstSubresource.baseArrayLayer    = dstLocation.arrayLayer;
+        region.dstSubresource.layerCount        = 1;
+        region.dstOffset                        = VKTypes::ToVkOffset(dstLocation.offset);
+        region.extent                           = VKTypes::ToVkExtent(extent);
+    }
+
+    if (IsInsideRenderPass())
+    {
+        PauseRenderPass();
+        device_.CopyTexture(commandBuffer_, srcTextureVK, dstTextureVK, region);
+        ResumeRenderPass();
+    }
+    else
+        device_.CopyTexture(commandBuffer_, srcTextureVK, dstTextureVK, region);
 }
 
 void VKCommandBuffer::GenerateMips(Texture& texture)

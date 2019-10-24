@@ -20,6 +20,8 @@ namespace LLGL
 {
 
 
+class VKTexture;
+
 class VKDevice
 {
 
@@ -77,6 +79,13 @@ class VKDevice
             VkDeviceSize    size,
             VkDeviceSize    srcOffset = 0,
             VkDeviceSize    dstOffset = 0
+        );
+
+        void CopyTexture(
+            VkCommandBuffer     commandBuffer,
+            VKTexture&          srcTexture,
+            VKTexture&          dstTexture,
+            const VkImageCopy&  region
         );
 
         // Copies the source buffer into the destination image (numMipLevels must be 1).
