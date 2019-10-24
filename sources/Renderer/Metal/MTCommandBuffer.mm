@@ -141,7 +141,32 @@ void MTCommandBuffer::CopyTexture(
     const TextureLocation&  srcLocation,
     const Extent3D&         extent)
 {
-    //TODO
+    auto& dstTextureMT = LLGL_CAST(MTTexture&, dstTexture);
+    auto& srcTextureMT = LLGL_CAST(MTTexture&, srcTexture);
+
+    MTLOrigin srcOrigin, dstOrigin;
+    MTTypes::Convert(srcOrigin, srcLocation.offset);
+    MTTypes::Convert(dstOrigin, dstLocation.offset);
+
+    MTLSize srcSize;
+    MTTypes::Convert(srcSize, extent);
+
+    encoderScheduler_.PauseRenderEncoder();
+    {
+        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+        [blitEncoder
+            copyFromTexture:    srcTextureMT.GetNative()
+            sourceSlice:        srcLocation.arrayLayer
+            sourceLevel:        srcLocation.mipLevel
+            sourceOrigin:       srcOrigin
+            sourceSize:         srcSize
+            toTexture:          dstTextureMT.GetNative()
+            destinationSlice:   dstLocation.arrayLayer
+            destinationLevel:   dstLocation.mipLevel
+            destinationOrigin:  dstOrigin
+        ];
+    }
+    encoderScheduler_.ResumeRenderEncoder();
 }
 
 void MTCommandBuffer::GenerateMips(Texture& texture)
