@@ -63,6 +63,16 @@ DECL_VKPROC( vkCmdBeginQueryIndexedEXT            );
 DECL_VKPROC( vkCmdEndQueryIndexedEXT              );
 DECL_VKPROC( vkCmdDrawIndirectByteCountEXT        );
 
+/* VK_KHR_get_physical_device_properties2 */
+
+DECL_VKPROC( vkGetPhysicalDeviceFeatures2KHR                    );
+DECL_VKPROC( vkGetPhysicalDeviceProperties2KHR                  );
+DECL_VKPROC( vkGetPhysicalDeviceFormatProperties2KHR            );
+DECL_VKPROC( vkGetPhysicalDeviceImageFormatProperties2KHR       );
+DECL_VKPROC( vkGetPhysicalDeviceQueueFamilyProperties2KHR       );
+DECL_VKPROC( vkGetPhysicalDeviceMemoryProperties2KHR            );
+DECL_VKPROC( vkGetPhysicalDeviceSparseImageFormatProperties2KHR );
+
 #endif // /LLGL_VK_ENABLE_EXT
 
 #undef DECL_VKPROC

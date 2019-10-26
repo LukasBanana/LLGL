@@ -8,6 +8,7 @@
 #include "VKGraphicsPSO.h"
 #include "VKPipelineLayout.h"
 #include "VKRenderPass.h"
+#include "../Ext/VKExtensionRegistry.h"
 #include "../Shader/VKShaderProgram.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
@@ -133,30 +134,38 @@ static void CreateViewportState(
 }
 
 static void CreateRasterizerState(
-    const GraphicsPipelineDescriptor&       desc,
-    const VKGraphicsPipelineLimits&         limits,
-    VkPipelineRasterizationStateCreateInfo& createInfo)
+    const RasterizerDescriptor&                             desc,
+    const VKGraphicsPipelineLimits&                         limits,
+    VkPipelineRasterizationStateCreateInfo&                 createInfo,
+    VkPipelineRasterizationConservativeStateCreateInfoEXT&  createInfoConservativeRasterExt)
 {
-    const auto& depthBias = desc.rasterizer.depthBias;
-    auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
-
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
     createInfo.flags                    = 0;
-    createInfo.depthClampEnable         = VKBoolean(desc.rasterizer.depthClampEnabled);
-    createInfo.rasterizerDiscardEnable  = VKBoolean(desc.rasterizer.discardEnabled);
-    createInfo.polygonMode              = VKTypes::Map(desc.rasterizer.polygonMode);
-    createInfo.cullMode                 = VKTypes::Map(desc.rasterizer.cullMode);
-    #if 0//TODO: make this optional for the user (for now: flip front face to overcome flipped viewport)
-    createInfo.frontFace                = (desc.rasterizer.frontCCW ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE);
-    #else
-    createInfo.frontFace                = (desc.rasterizer.frontCCW ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE);
-    #endif
-    createInfo.depthBiasEnable          = VKBoolean(depthBias.constantFactor != 0.0f || depthBias.slopeFactor != 0.0f || depthBias.clamp != 0.0f);
-    createInfo.depthBiasConstantFactor  = depthBias.constantFactor;
-    createInfo.depthBiasClamp           = depthBias.clamp;
-    createInfo.depthBiasSlopeFactor     = depthBias.slopeFactor;
-    createInfo.lineWidth                = std::max(limits.lineWidthRange[0], std::min(desc.rasterizer.lineWidth, limits.lineWidthRange[1]));
+    createInfo.depthClampEnable         = VKBoolean(desc.depthClampEnabled);
+    createInfo.rasterizerDiscardEnable  = VKBoolean(desc.discardEnabled);
+    createInfo.polygonMode              = VKTypes::Map(desc.polygonMode);
+    createInfo.cullMode                 = VKTypes::Map(desc.cullMode);
+    createInfo.frontFace                = (desc.frontCCW ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE);
+    createInfo.depthBiasEnable          = VKBoolean(desc.depthBias.constantFactor != 0.0f || desc.depthBias.slopeFactor != 0.0f || desc.depthBias.clamp != 0.0f);
+    createInfo.depthBiasConstantFactor  = desc.depthBias.constantFactor;
+    createInfo.depthBiasClamp           = desc.depthBias.clamp;
+    createInfo.depthBiasSlopeFactor     = desc.depthBias.slopeFactor;
+    createInfo.lineWidth                = std::max(limits.lineWidthRange[0], std::min(desc.lineWidth, limits.lineWidthRange[1]));
+
+    if (desc.conservativeRasterization)
+    {
+        LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conservative_rasterization, "VK_EXT_conservative_rasterization");
+
+        createInfo.pNext = &createInfoConservativeRasterExt;
+        {
+            createInfoConservativeRasterExt.sType                               = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_CONSERVATIVE_STATE_CREATE_INFO_EXT;
+            createInfoConservativeRasterExt.pNext                               = nullptr;
+            createInfoConservativeRasterExt.flags                               = 0;
+            createInfoConservativeRasterExt.conservativeRasterizationMode       = VK_CONSERVATIVE_RASTERIZATION_MODE_OVERESTIMATE_EXT;
+            createInfoConservativeRasterExt.extraPrimitiveOverestimationSize    = 0.0f;
+        }
+    }
 }
 
 static void CreateMultisampleState(
@@ -328,7 +337,8 @@ void VKGraphicsPSO::CreateVkPipeline(
 
     /* Initialize rasterizer state */
     VkPipelineRasterizationStateCreateInfo rasterizerState;
-    CreateRasterizerState(desc, limits, rasterizerState);
+    VkPipelineRasterizationConservativeStateCreateInfoEXT createInfoConservativeRasterExt;
+    CreateRasterizerState(desc.rasterizer, limits, rasterizerState, createInfoConservativeRasterExt);
 
     /* Initialize multi-sample state */
     VkPipelineMultisampleStateCreateInfo multisampleState;

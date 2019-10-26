@@ -21,11 +21,13 @@ enum class VKExt
 {
     /* Khronos extensions */
     KHR_maintenance1,
+    KHR_get_physical_device_properties2,
 
     /* Multivendor extensions */
     EXT_debug_marker,
     EXT_conditional_rendering,
     EXT_transform_feedback,
+    EXT_conservative_rasterization,
 
     /* Enumeration entry counter */
     Count,

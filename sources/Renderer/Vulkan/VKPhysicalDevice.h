@@ -96,19 +96,28 @@ class VKPhysicalDevice
 
     private:
 
-        void QueryDeviceProperties();
         bool EnableExtensions(const char** extensions, bool required = false);
+
+        void QueryDeviceInfo();
+        void QueryDeviceFeaturesWithExtensions();
+        void QueryDevicePropertiesWithExtensions();
+        void QueryDeviceMemoryPropertiesWithExtensions();
 
     private:
 
-        VkPhysicalDevice                    physicalDevice_             = VK_NULL_HANDLE;
-        std::vector<VkExtensionProperties>  supportedExtensions_;
-        std::set<const char*, CStringSWO>   supportedExtensionNames_;
-        std::vector<const char*>            enabledExtensionNames_;
+        // Main device objects
+        VkPhysicalDevice                                        physicalDevice_             = VK_NULL_HANDLE;
+        std::vector<VkExtensionProperties>                      supportedExtensions_;
+        std::set<const char*, CStringSWO>                       supportedExtensionNames_;
+        std::vector<const char*>                                enabledExtensionNames_;
 
-        VkPhysicalDeviceFeatures            features_;
-        VkPhysicalDeviceProperties          properties_;
-        VkPhysicalDeviceMemoryProperties    memoryProperties_;
+        // Common device properties and features
+        VkPhysicalDeviceFeatures                                features_                   = {};
+        VkPhysicalDeviceProperties                              properties_                 = {};
+        VkPhysicalDeviceMemoryProperties                        memoryProperties_           = {};
+
+        // Extension specific
+        VkPhysicalDeviceConservativeRasterizationPropertiesEXT  conservRasterProps_         = {};
 
 };
 

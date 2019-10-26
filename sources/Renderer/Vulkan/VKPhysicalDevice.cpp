@@ -95,7 +95,7 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance)
 
             /* Store device and store properties */
             physicalDevice_ = device;
-            QueryDeviceProperties();
+            QueryDeviceInfo();
 
             return true;
         }
@@ -262,14 +262,6 @@ bool VKPhysicalDevice::SupportsExtension(const char* extension) const
  * ======= Private: =======
  */
 
-void VKPhysicalDevice::QueryDeviceProperties()
-{
-    /* Query physical device features and memory propertiers */
-    vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
-    vkGetPhysicalDeviceProperties(physicalDevice_, &properties_);
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
-}
-
 bool VKPhysicalDevice::EnableExtensions(const char** extensions, bool required)
 {
     for (; *extensions != nullptr; ++extensions)
@@ -288,6 +280,81 @@ bool VKPhysicalDevice::EnableExtensions(const char** extensions, bool required)
         }
     }
     return true;
+}
+
+void VKPhysicalDevice::QueryDeviceInfo()
+{
+    if (HasExtension(VKExt::KHR_get_physical_device_properties2))
+    {
+        /* Query physical device features and properties with extensions */
+        QueryDeviceFeaturesWithExtensions();
+        QueryDevicePropertiesWithExtensions();
+        QueryDeviceMemoryPropertiesWithExtensions();
+    }
+    else
+    {
+        /* Query physical device features and memory properties */
+        vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
+        vkGetPhysicalDeviceProperties(physicalDevice_, &properties_);
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
+    }
+}
+
+void VKPhysicalDevice::QueryDeviceFeaturesWithExtensions()
+{
+    /*VkPhysicalDeviceFeatures2 featuresExt;
+    {
+        featuresExt.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        //TODO...
+    }
+    vkGetPhysicalDeviceFeatures2(physicalDevice_, &featuresExt);
+    features_ = featuresExt.features;*/
+
+    vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
+}
+
+struct VKBaseStructureInfo
+{
+    VkStructureType sType;
+    void*           pNext;
+};
+
+void VKPhysicalDevice::QueryDevicePropertiesWithExtensions()
+{
+    VKBaseStructureInfo* currentDesc = nullptr;
+
+    auto ChainDescritpor = [&currentDesc](void* descPtr, VkStructureType type)
+    {
+        /* Chain next descriptor into previous one */
+        currentDesc->pNext = descPtr;
+
+        /* Write structure type and store next descriptor */
+        auto baseDescPtr = reinterpret_cast<VKBaseStructureInfo*>(descPtr);
+        {
+            baseDescPtr->sType = type;
+        }
+        currentDesc = baseDescPtr;
+    };
+
+    /* Chain extensions into output descriptor */
+    VkPhysicalDeviceProperties2 propertiesExt = {};
+    propertiesExt.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+
+    currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&propertiesExt);
+
+    if (HasExtension(VKExt::EXT_conservative_rasterization))
+        ChainDescritpor(&conservRasterProps_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT);
+
+    /* Query device properties with extension "VK_KHR_get_physical_device_properties2" */
+    vkGetPhysicalDeviceProperties2(physicalDevice_, &propertiesExt);
+
+    /* Store primary device properties */
+    properties_ = propertiesExt.properties;
+}
+
+void VKPhysicalDevice::QueryDeviceMemoryPropertiesWithExtensions()
+{
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
 }
 
 

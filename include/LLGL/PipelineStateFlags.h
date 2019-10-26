@@ -538,9 +538,14 @@ struct RasterizerDescriptor
 
     /**
     \brief If true, conservative rasterization is enabled. By default disabled.
-    \note Only supported with: Direct3D 12, Direct3D 11.3, OpenGL (if the extension \c GL_NV_conservative_raster or \c GL_INTEL_conservative_rasterization is supported).
+    \note Only supported with:
+    - Direct3D 12
+    - Direct3D 11.3
+    - OpenGL (if the extension \c GL_NV_conservative_raster or \c GL_INTEL_conservative_rasterization is supported)
+    - Vulkan (if the extension \c VK_EXT_conservative_rasterization is supported).
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
+    \see https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VK_EXT_conservative_rasterization.html
     \see RenderingFeatures::hasConservativeRasterization
     */
     bool                    conservativeRasterization   = false;

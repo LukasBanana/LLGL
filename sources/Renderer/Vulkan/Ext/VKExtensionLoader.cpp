@@ -97,6 +97,18 @@ static bool Load_VK_EXT_transform_feedback(VkDevice handle)
     return true;
 }
 
+static bool Load_VK_KHR_get_physical_device_properties2(VkDevice handle)
+{
+    LOAD_VKPROC( vkGetPhysicalDeviceFeatures2KHR                    );
+    LOAD_VKPROC( vkGetPhysicalDeviceProperties2KHR                  );
+    LOAD_VKPROC( vkGetPhysicalDeviceFormatProperties2KHR            );
+    LOAD_VKPROC( vkGetPhysicalDeviceImageFormatProperties2KHR       );
+    LOAD_VKPROC( vkGetPhysicalDeviceQueueFamilyProperties2KHR       );
+    LOAD_VKPROC( vkGetPhysicalDeviceMemoryProperties2KHR            );
+    LOAD_VKPROC( vkGetPhysicalDeviceSparseImageFormatProperties2KHR );
+    return true;
+}
+
 #endif // /LLGL_VK_ENABLE_EXT
 
 #undef LOAD_VKPROC
@@ -156,13 +168,25 @@ bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& sup
         }
     };
 
+    auto EnableExtension = [&](const VKExt extensionID, const char* extName)
+    {
+        if (IsSupported(extName))
+            RegisterExtension(extensionID);
+    };
+
     #define LOAD_VKEXT(NAME) \
         LoadExtension(VKExt::##NAME, "VK_" #NAME, Load_VK_##NAME)
 
+    #define ENABLE_VKEXT(NAME) \
+        EnableExtension(VKExt::##NAME, "VK_" #NAME)
+
     /* Multi-vendor extensions */
-    LOAD_VKEXT( EXT_debug_marker          );
-    LOAD_VKEXT( EXT_conditional_rendering );
-    LOAD_VKEXT( EXT_transform_feedback    );
+    LOAD_VKEXT( KHR_get_physical_device_properties2 );
+    LOAD_VKEXT( EXT_debug_marker                    );
+    LOAD_VKEXT( EXT_conditional_rendering           );
+    LOAD_VKEXT( EXT_transform_feedback              );
+
+    ENABLE_VKEXT( EXT_conservative_rasterization );
 
     #undef LOAD_VKEXT
 
