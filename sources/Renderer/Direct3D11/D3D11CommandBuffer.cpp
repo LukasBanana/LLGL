@@ -8,6 +8,7 @@
 #include "D3D11CommandBuffer.h"
 #include "D3D11RenderContext.h"
 #include "D3D11Types.h"
+#include "../DXCommon/DXTypes.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
@@ -54,15 +55,20 @@ static bool HasBufferResourceViews(const Buffer& buffer)
 
 
 D3D11CommandBuffer::D3D11CommandBuffer(
+    ID3D11Device*                               device,
     const ComPtr<ID3D11DeviceContext>&          context,
     const std::shared_ptr<D3D11StateManager>&   stateMngr,
     const CommandBufferDescriptor&              desc)
-:   context_   { context   },
+:
+    device_    { device    },
+    context_   { context   },
     stateMngr_ { stateMngr }
 {
     /* Store information whether the command buffer has an immediate or deferred context */
-    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+    if ((desc.flags & (CommandBufferFlags::DeferredSubmit | CommandBufferFlags::MultiSubmit)) != 0)
         hasDeferredContext_ = true;
+    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+        isSecondaryCmdBuffer_ = true;
 
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     context_->QueryInterface(IID_PPV_ARGS(&annotation_));
@@ -88,10 +94,13 @@ void D3D11CommandBuffer::End()
 void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 {
     auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, deferredCommandBuffer);
-    if (auto commandList = cmdBufferD3D.commandList_.Get())
+    if (cmdBufferD3D.IsSecondaryCmdBuffer())
     {
-        /* Execute encoded command list with immediate context */
-        context_->ExecuteCommandList(commandList, TRUE);
+        if (auto commandList = cmdBufferD3D.GetDeferredCommandList())
+        {
+            /* Execute encoded command list with immediate context */
+            context_->ExecuteCommandList(commandList, TRUE);
+        }
     }
 }
 
@@ -130,6 +139,91 @@ void D3D11CommandBuffer::CopyBuffer(
             static_cast<LONG>(srcOffset + size), 1, 1
         )
     );
+}
+
+// private
+void D3D11CommandBuffer::ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT offset, UINT size, const UINT (&valuesVec4)[4])
+{
+    /* Create intermediate UAV for fill range */
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+    {
+        uavDesc.Format              = DXGI_FORMAT_R32_UINT;
+        uavDesc.ViewDimension       = D3D11_UAV_DIMENSION_BUFFER;
+        uavDesc.Buffer.FirstElement = offset / sizeof(UINT);
+        uavDesc.Buffer.NumElements  = size / sizeof(UINT);
+        uavDesc.Buffer.Flags        = 0;
+    };
+    ComPtr<ID3D11UnorderedAccessView> intermediateUAV;
+    device_->CreateUnorderedAccessView(buffer, &uavDesc, &intermediateUAV);
+
+    /* Clear destination buffer with intermediate UAV */
+    context_->ClearUnorderedAccessViewUint(intermediateUAV.Get(), valuesVec4);
+}
+
+void D3D11CommandBuffer::FillBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    std::uint32_t   value,
+    std::uint64_t   fillSize)
+{
+    auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
+
+    /* Copy value to 4D vector to be used with native D3D11 clear functions */
+    UINT valuesVec4[4] = { value, value, value, value };
+
+    /* Clamp range to buffer size if whole buffer is meant to be filled */
+    if (fillSize == Constants::wholeSize)
+    {
+        dstOffset   = 0;
+        fillSize    = dstBufferD3D.GetSize();
+    }
+
+    const bool isWholeBufferRange   = (dstOffset == 0 && fillSize == dstBufferD3D.GetSize());
+    const UINT offset               = static_cast<UINT>(dstOffset);
+    const UINT size                 = static_cast<UINT>(fillSize);
+
+    if ((dstBufferD3D.GetBindFlags() & BindFlags::Storage) != 0)
+    {
+        auto& dstBufferUAV = LLGL_CAST(D3D11BufferWithRV&, dstBufferD3D);
+        auto uav = dstBufferUAV.GetUAV();
+
+        if (uav != nullptr &&
+            isWholeBufferRange &&
+            DXTypes::MakeUAVClearVector(dstBufferUAV.GetBufferFormat(), valuesVec4, value))
+        {
+            /* Fill destination buffer directly with primary UAV */
+            context_->ClearUnorderedAccessViewUint(uav, valuesVec4);
+        }
+        else
+        {
+            /* Fill destination buffer with intermediate UAV */
+            ClearWithIntermediateUAV(dstBufferD3D.GetNative(), offset, size, valuesVec4);
+        }
+    }
+    else
+    {
+        /* Create intermediate buffer with UAV */
+        D3D11_BUFFER_DESC bufferDesc;
+        {
+            bufferDesc.ByteWidth            = static_cast<UINT>(fillSize);
+            bufferDesc.Usage                = D3D11_USAGE_DEFAULT;
+            bufferDesc.BindFlags            = D3D11_BIND_UNORDERED_ACCESS;
+            bufferDesc.CPUAccessFlags       = 0;
+            bufferDesc.MiscFlags            = 0;
+            bufferDesc.StructureByteStride  = sizeof(UINT);
+        }
+        ComPtr<ID3D11Buffer> intermediateBuffer;
+        device_->CreateBuffer(&bufferDesc, nullptr, &intermediateBuffer);
+
+        /* Fill destination buffer with intermediate UAV */
+        ClearWithIntermediateUAV(intermediateBuffer.Get(), 0, size, valuesVec4);
+
+        /* Copy intermediate buffer into destination buffer */
+        if (isWholeBufferRange)
+            context_->CopyResource(dstBufferD3D.GetNative(), intermediateBuffer.Get());
+        else
+            context_->CopySubresourceRegion(dstBufferD3D.GetNative(), 0, offset, 0, 0, intermediateBuffer.Get(), 0, nullptr);
+    }
 }
 
 void D3D11CommandBuffer::CopyTexture(
@@ -609,8 +703,7 @@ void D3D11CommandBuffer::PushDebugGroup(const char* name)
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     if (annotation_)
     {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        std::wstring nameWStr = converter.from_bytes(name);
+        std::wstring nameWStr = ToUTF16String(name);
         annotation_->BeginEvent(nameWStr.c_str());
     }
     #endif

@@ -50,6 +50,20 @@ struct GLCmdCopyBufferSubData
     GLsizeiptr  size;
 };
 
+struct GLCmdClearBufferData
+{
+    GLBuffer*       buffer;
+    std::uint32_t   data;
+};
+
+struct GLCmdClearBufferSubData
+{
+    GLBuffer*       buffer;
+    GLintptr        offset;
+    GLsizeiptr      size;
+    std::uint32_t   data;
+};
+
 struct GLCmdCopyImageSubData
 {
     GLTexture*  dstTexture;

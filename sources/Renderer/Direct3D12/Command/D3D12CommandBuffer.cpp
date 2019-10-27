@@ -11,6 +11,7 @@
 #include "../D3D12RenderContext.h"
 #include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
+#include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 
@@ -103,6 +104,28 @@ void D3D12CommandBuffer::CopyBuffer(
     }
     commandContext_.TransitionResource(dstBufferD3D.GetResource(), dstBufferD3D.GetResource().usageState);
     commandContext_.TransitionResource(srcBufferD3D.GetResource(), srcBufferD3D.GetResource().usageState, true);
+}
+
+void D3D12CommandBuffer::FillBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    std::uint32_t   value,
+    std::uint64_t   fillSize)
+{
+    auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
+
+    /* Copy value to 4D vector to be used with native D3D12 clear functions */
+    UINT valuesVec4[4] = { value, value, value, value };
+
+    /* Clamp range to buffer size if whole buffer is meant to be filled */
+    if (fillSize == Constants::wholeSize)
+    {
+        dstOffset   = 0;
+        fillSize    = dstBufferD3D.GetBufferSize();
+    }
+
+    /* Clear buffer subresource with R32UInt format */
+    dstBufferD3D.ClearSubresourceUInt(commandContext_, DXGI_FORMAT_R32_UINT, sizeof(UINT), dstOffset, fillSize, valuesVec4);
 }
 
 void D3D12CommandBuffer::CopyTexture(
@@ -711,8 +734,7 @@ void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void D3D12CommandBuffer::PushDebugGroup(const char* name)
 {
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    std::wstring nameWStr = converter.from_bytes(name);
+    std::wstring nameWStr = ToUTF16String(name);
     PIXBeginEvent(commandList_, 0, nameWStr.c_str());
 }
 

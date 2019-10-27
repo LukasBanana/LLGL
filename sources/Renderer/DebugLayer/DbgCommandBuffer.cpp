@@ -170,6 +170,37 @@ void DbgCommandBuffer::CopyBuffer(
     profile_.bufferCopies++;
 }
 
+void DbgCommandBuffer::FillBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    std::uint32_t   value,
+    std::uint64_t   fillSize)
+{
+    auto& dstBufferDbg = LLGL_CAST(DbgBuffer&, dstBuffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+
+        if (fillSize == Constants::wholeSize)
+        {
+            if (dstOffset != 0)
+                LLGL_DBG_WARN(WarningType::ImproperArgument, "non-zero argument for 'dstOffset' is ignored because 'fillSize' is set to LLGL::wholeSize");
+        }
+        else
+        {
+            if (fillSize % 4 != 0)
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer fill size is not a multiple of 4");
+            ValidateBufferRange(dstBufferDbg, dstOffset, fillSize);
+        }
+    }
+
+    LLGL_DBG_COMMAND( "FillBuffer", instance.FillBuffer(dstBufferDbg.instance, dstOffset, value, fillSize) );
+
+    profile_.bufferFills++;
+}
+
 void DbgCommandBuffer::CopyTexture(
     Texture&                dstTexture,
     const TextureLocation&  dstLocation,

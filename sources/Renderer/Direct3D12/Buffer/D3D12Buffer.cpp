@@ -27,7 +27,8 @@ static const UINT64 g_soBufferFillSizeLen   = sizeof(UINT64);
 static const UINT64 g_cBufferAlignment      = 256u;
 
 D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
-    Buffer { desc.bindFlags }
+    Buffer  { desc.bindFlags                             },
+    format_ { D3D12Types::Map(desc.storageBuffer.format) }
 {
     /* Constant buffers must be aligned to 256 bytes */
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
@@ -101,6 +102,7 @@ void D3D12Buffer::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCR
     device->CreateShaderResourceView(GetNative(), &srvDesc, cpuDescHandle);
 }
 
+//TODO: support counter resource
 void D3D12Buffer::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc;
@@ -124,6 +126,81 @@ static bool HasReadAccess(const CPUAccess access)
 static bool HasWriteAccess(const CPUAccess access)
 {
     return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
+}
+
+void D3D12Buffer::ClearSubresourceUInt(
+    D3D12CommandContext&    commandContext,
+    DXGI_FORMAT             format,
+    UINT                    formatStride,
+    UINT64                  offset,
+    UINT64                  fillSize,
+    const UINT              (&values)[4])
+{
+    ID3D12GraphicsCommandList*  commandList = commandContext.GetCommandList();
+    ID3D12Resource*             resource    = GetNative();
+
+    /* Create intermediate buffer if the primary buffer does not support UAVs */
+    const bool useIntermediateBuffer = ((GetBindFlags() & BindFlags::Storage) == 0);
+
+    if (useIntermediateBuffer)
+    {
+        if (uavIntermediateBuffer_.Get() == nullptr)
+            CreateIntermediateUAVBuffer();
+        resource = uavIntermediateBuffer_.Get();
+    }
+
+    /* Create intermediate descritpor heap if not already done or format changed */
+    if (!uavIntermediateDescHeap_ || format_ != format)
+        CreateIntermediateUAVDescriptorHeap(resource, format, formatStride);
+
+    /* Get GPU and CPU descriptor handles for intermediate descriptor heap */
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = uavIntermediateDescHeap_->GetGPUDescriptorHandleForHeapStart();
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle = uavIntermediateDescHeap_->GetCPUDescriptorHandleForHeapStart();
+
+    if (useIntermediateBuffer)
+    {
+        /* Clear interemdiate buffer with UAV */
+        ClearSubresourceWithUAV(
+            commandList,
+            uavIntermediateBuffer_.Get(),
+            GetBufferSize(),
+            gpuDescHandle,
+            cpuDescHandle,
+            offset,
+            fillSize,
+            values
+        );
+
+        /* Copy intermediate buffer into destination buffer */
+        commandContext.TransitionResource(uavIntermediateBuffer_, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        commandContext.TransitionResource(GetResource(), D3D12_RESOURCE_STATE_COPY_DEST, true);
+        {
+            if (fillSize == GetBufferSize())
+                commandList->CopyResource(GetNative(), uavIntermediateBuffer_.Get());
+            else
+                commandList->CopyBufferRegion(GetNative(), offset, uavIntermediateBuffer_.Get(), offset, fillSize);
+        }
+        commandContext.TransitionResource(uavIntermediateBuffer_, uavIntermediateBuffer_.usageState);
+        commandContext.TransitionResource(GetResource(), GetResource().usageState, true);
+    }
+    else
+    {
+        /* Clear destination buffer directly with intermediate UAV */
+        commandContext.TransitionResource(GetResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
+        {
+            ClearSubresourceWithUAV(
+                commandList,
+                GetNative(),
+                GetBufferSize(),
+                gpuDescHandle,
+                cpuDescHandle,
+                offset,
+                fillSize,
+                values
+            );
+        }
+        commandContext.TransitionResource(GetResource(), GetResource().usageState, true);
+    }
 }
 
 HRESULT D3D12Buffer::Map(
@@ -290,6 +367,60 @@ void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlag
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 CPU access buffer");
 }
 
+void D3D12Buffer::CreateIntermediateUAVDescriptorHeap(ID3D12Resource* resource, DXGI_FORMAT format, UINT formatStride)
+{
+    /* Use device the resource was created with */
+    ComPtr<ID3D12Device> device;
+    resource_.Get()->GetDevice(IID_PPV_ARGS(&device));
+
+    /* Create intermediate descriptor heap only for this resource */
+    D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
+    {
+        heapDesc.Type               = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        heapDesc.NumDescriptors     = 1;
+        heapDesc.Flags              = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        heapDesc.NodeMask           = 0;
+    }
+    HRESULT hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(uavIntermediateDescHeap_.ReleaseAndGetAddressOf()));
+    DXThrowIfCreateFailed(hr, "ID3D12DescriptorHeap", "for buffer subresource UAV");
+
+    /* Create UAV for subresource in intermediate heap descriptor */
+    D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+    {
+        uavDesc.ViewDimension               = D3D12_UAV_DIMENSION_BUFFER;
+        uavDesc.Format                      = format;
+        uavDesc.Buffer.FirstElement         = 0;
+        uavDesc.Buffer.NumElements          = static_cast<UINT>(bufferSize_ / formatStride);
+        uavDesc.Buffer.StructureByteStride  = 0;
+        uavDesc.Buffer.CounterOffsetInBytes = 0;
+        uavDesc.Buffer.Flags                = D3D12_BUFFER_UAV_FLAG_NONE;
+    }
+    device->CreateUnorderedAccessView(resource, nullptr, &uavDesc, uavIntermediateDescHeap_->GetCPUDescriptorHandleForHeapStart());
+
+    /* Store new format */
+    format_ = format;
+}
+
+void D3D12Buffer::CreateIntermediateUAVBuffer()
+{
+    /* Use device the resource was created with */
+    ComPtr<ID3D12Device> device;
+    resource_.Get()->GetDevice(IID_PPV_ARGS(&device));
+
+    /* Create intermediate resource with UAV support */
+    auto hr = device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS),
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        nullptr,
+        IID_PPV_ARGS(uavIntermediateBuffer_.native.ReleaseAndGetAddressOf())
+    );
+    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for buffer subresource UAV");
+
+    uavIntermediateBuffer_.SetInitialState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+}
+
 void D3D12Buffer::CreateVertexBufferView(const BufferDescriptor& desc)
 {
     vertexBufferView_.BufferLocation    = GetNative()->GetGPUVirtualAddress();
@@ -310,6 +441,47 @@ void D3D12Buffer::CreateStreamOutputBufferView(const BufferDescriptor& desc)
     soBufferView_.BufferLocation            = GetNative()->GetGPUVirtualAddress();
     soBufferView_.SizeInBytes               = GetBufferSize();
     soBufferView_.BufferFilledSizeLocation  = GetNative()->GetGPUVirtualAddress() + GetBufferSize();
+}
+
+void D3D12Buffer::ClearSubresourceWithUAV(
+    ID3D12GraphicsCommandList*  commandList,
+    ID3D12Resource*             resource,
+    UINT64                      resourceSize,
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+    UINT64                      offset,
+    UINT64                      fillSize,
+    const UINT                  (&valuesVec4)[4])
+{
+    if (offset == 0 && fillSize == resourceSize)
+    {
+        /* Fill whole buffer (don't use D3D12_RECT) */
+        commandList->ClearUnorderedAccessViewUint(
+            gpuDescHandle,
+            cpuDescHandle,
+            resource,
+            valuesVec4,
+            0,
+            nullptr
+        );
+    }
+    else
+    {
+        /* Fill range of buffer (use D3D12_RECT) */
+        const D3D12_RECT rect =
+        {
+            static_cast<LONG>(offset           ), 0,
+            static_cast<LONG>(offset + fillSize), 1
+        };
+        commandList->ClearUnorderedAccessViewUint(
+            gpuDescHandle,
+            cpuDescHandle,
+            resource,
+            valuesVec4,
+            1,
+            &rect
+        );
+    }
 }
 
 

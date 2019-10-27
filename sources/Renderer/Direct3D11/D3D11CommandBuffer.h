@@ -35,6 +35,7 @@ class D3D11CommandBuffer final : public CommandBuffer
         /* ----- Common ----- */
 
         D3D11CommandBuffer(
+            ID3D11Device*                               device,
             const ComPtr<ID3D11DeviceContext>&          context,
             const std::shared_ptr<D3D11StateManager>&   stateMngr,
             const CommandBufferDescriptor&              desc
@@ -62,6 +63,13 @@ class D3D11CommandBuffer final : public CommandBuffer
             Buffer&         srcBuffer,
             std::uint64_t   srcOffset,
             std::uint64_t   size
+        ) override;
+
+        void FillBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            std::uint32_t   value,
+            std::uint64_t   fillSize    = Constants::wholeSize
         ) override;
 
         void CopyTexture(
@@ -192,6 +200,22 @@ class D3D11CommandBuffer final : public CommandBuffer
 
         void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
 
+    public:
+
+        /* ----- Internal ----- */
+
+        // Returns the native command list for deferred contexts or null if there is none.
+        inline ID3D11CommandList* GetDeferredCommandList() const
+        {
+            return commandList_.Get();
+        }
+
+        // Returns true if this is a secondary command buffer that can be executed within a primary command buffer.
+        inline bool IsSecondaryCmdBuffer() const
+        {
+            return isSecondaryCmdBuffer_;
+        }
+
     private:
 
         void SetBuffer(Buffer& buffer, std::uint32_t slot, long bindFlags, long stageFlags);
@@ -230,6 +254,8 @@ class D3D11CommandBuffer final : public CommandBuffer
             std::uint32_t&      idx
         );
 
+        void ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT offset, UINT size, const UINT (&valuesVec4)[4]);
+
     private:
 
         struct D3D11FramebufferView
@@ -238,9 +264,14 @@ class D3D11CommandBuffer final : public CommandBuffer
             ID3D11DepthStencilView*                 dsv = nullptr;
         };
 
+    private:
+
+        ID3D11Device*                       device_                 = nullptr;
         ComPtr<ID3D11DeviceContext>         context_;
-        bool                                hasDeferredContext_ = false;
         ComPtr<ID3D11CommandList>           commandList_;
+
+        bool                                hasDeferredContext_     = false;
+        bool                                isSecondaryCmdBuffer_   = false;
 
         #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
         ComPtr<ID3DUserDefinedAnnotation>   annotation_;
@@ -249,7 +280,7 @@ class D3D11CommandBuffer final : public CommandBuffer
         std::shared_ptr<D3D11StateManager>  stateMngr_;
 
         D3D11FramebufferView                framebufferView_;
-        D3D11RenderTarget*                  boundRenderTarget_  = nullptr;
+        D3D11RenderTarget*                  boundRenderTarget_      = nullptr;
 
         ClearValue                          clearValue_;
 

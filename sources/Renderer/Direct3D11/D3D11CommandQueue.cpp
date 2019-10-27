@@ -6,6 +6,7 @@
  */
 
 #include "D3D11CommandQueue.h"
+#include "D3D11CommandBuffer.h"
 #include "RenderState/D3D11Fence.h"
 #include "RenderState/D3D11QueryHeap.h"
 #include "../CheckedCast.h"
@@ -23,9 +24,17 @@ D3D11CommandQueue::D3D11CommandQueue(ID3D11Device* device, ComPtr<ID3D11DeviceCo
 
 /* ----- Command Buffers ----- */
 
-void D3D11CommandQueue::Submit(CommandBuffer& /*commandBuffer*/)
+void D3D11CommandQueue::Submit(CommandBuffer& commandBuffer)
 {
-    // dummy
+    auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, commandBuffer);
+    if (!cmdBufferD3D.IsSecondaryCmdBuffer())
+    {
+        if (auto commandList = cmdBufferD3D.GetDeferredCommandList())
+        {
+            /* Execute encoded command list with immediate context but don't restore previous state */
+            context_->ExecuteCommandList(commandList, FALSE);
+        }
+    }
 }
 
 /* ----- Queries ----- */

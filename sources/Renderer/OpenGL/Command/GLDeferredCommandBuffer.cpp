@@ -134,6 +134,32 @@ void GLDeferredCommandBuffer::CopyBuffer(
     }
 }
 
+void GLDeferredCommandBuffer::FillBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    std::uint32_t   value,
+    std::uint64_t   fillSize)
+{
+    if (fillSize == Constants::wholeSize)
+    {
+        auto cmd = AllocCommand<GLCmdClearBufferData>(GLOpcodeClearBufferData);
+        {
+            cmd->buffer = LLGL_CAST(GLBuffer*, &dstBuffer);
+            cmd->data   = value;
+        }
+    }
+    else
+    {
+        auto cmd = AllocCommand<GLCmdClearBufferSubData>(GLOpcodeClearBufferSubData);
+        {
+            cmd->buffer = LLGL_CAST(GLBuffer*, &dstBuffer);
+            cmd->offset = static_cast<GLintptr>(dstOffset);
+            cmd->size   = static_cast<GLsizeiptr>(fillSize);
+            cmd->data   = value;
+        }
+    }
+}
+
 void GLDeferredCommandBuffer::CopyTexture(
     Texture&                dstTexture,
     const TextureLocation&  dstLocation,

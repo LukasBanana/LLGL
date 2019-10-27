@@ -44,7 +44,8 @@ static UINT GetUAVFlags(const BufferDescriptor::StorageBuffer& desc)
 }
 
 D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
-    D3D11Buffer { device, desc, initialData }
+    D3D11Buffer   { device, desc, initialData                  },
+    bufferFormat_ { D3D11Types::Map(desc.storageBuffer.format) }
 {
     /* Determine stride size either for structured buffers or regular buffers */
     const UINT stride = GetStorageBufferStride(desc.storageBuffer);

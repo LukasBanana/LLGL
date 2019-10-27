@@ -51,7 +51,17 @@ LLGL_EXPORT std::string ToUTF8String(const std::wstring& utf16)
     return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(utf16);
 }
 
+LLGL_EXPORT std::string ToUTF8String(const wchar_t* utf16)
+{
+    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(utf16);
+}
+
 LLGL_EXPORT std::wstring ToUTF16String(const std::string& utf8)
+{
+    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(utf8);
+}
+
+LLGL_EXPORT std::wstring ToUTF16String(const char* utf8)
 {
     return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(utf8);
 }

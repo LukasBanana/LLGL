@@ -67,6 +67,13 @@ class VKCommandBuffer final : public CommandBuffer
             std::uint64_t   size
         ) override;
 
+        void FillBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            std::uint32_t   value,
+            std::uint64_t   fillSize    = Constants::wholeSize
+        ) override;
+
         void CopyTexture(
             Texture&                dstTexture,
             const TextureLocation&  dstLocation,
@@ -199,9 +206,6 @@ class VKCommandBuffer final : public CommandBuffer
 
         /* ----- Internals ----- */
 
-        // Acquires the next native VkCommandBuffer object.
-        void AcquireNextBuffer();
-
         // Returns the native VkCommandBuffer object.
         inline VkCommandBuffer GetVkCommandBuffer() const
         {
@@ -227,8 +231,8 @@ class VKCommandBuffer final : public CommandBuffer
     private:
 
         void CreateCommandPool(std::uint32_t queueFamilyIndex);
-        void CreateCommandBuffers(std::size_t bufferCount);
-        void CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences);
+        void CreateCommandBuffers(std::uint32_t bufferCount);
+        void CreateRecordingFences(VkQueue graphicsQueue, std::uint32_t numFences);
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
 
@@ -246,6 +250,9 @@ class VKCommandBuffer final : public CommandBuffer
         bool IsInsideRenderPass() const;
 
         void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
+
+        // Acquires the next native VkCommandBuffer object.
+        void AcquireNextBuffer();
 
         #if 1//TODO: optimize
         void ResetQueryPoolsInFlight();

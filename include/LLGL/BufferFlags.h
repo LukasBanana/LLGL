@@ -97,6 +97,7 @@ struct BufferDescriptor
         \brief Specifies the vector format of a typed buffer. By default Format::Undefined.
         \remarks This is only used if the storage type is either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
         \see IsTypedBuffer
+        \todo Merge this with \c indexFormat
         */
         Format              format      = Format::Undefined;
 

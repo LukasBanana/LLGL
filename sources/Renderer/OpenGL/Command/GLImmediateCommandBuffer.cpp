@@ -94,6 +94,19 @@ void GLImmediateCommandBuffer::CopyBuffer(
     );
 }
 
+void GLImmediateCommandBuffer::FillBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    std::uint32_t   value,
+    std::uint64_t   fillSize)
+{
+    auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
+    if (fillSize == Constants::wholeSize)
+        dstBufferGL.ClearBufferData(value);
+    else
+        dstBufferGL.ClearBufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(fillSize), value);
+}
+
 void GLImmediateCommandBuffer::CopyTexture(
     Texture&                dstTexture,
     const TextureLocation&  dstLocation,

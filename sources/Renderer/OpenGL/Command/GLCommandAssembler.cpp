@@ -66,6 +66,18 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLBuffer::CopyBufferSubData, cmd->writeBuffer, cmd->readBuffer, cmd->readOffset, cmd->writeOffset, cmd->size);
             return sizeof(*cmd);
         }
+        case GLOpcodeClearBufferData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdClearBufferData*>(pc);
+            compiler.CallMember(&GLBuffer::ClearBufferData, cmd->buffer, cmd->data);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeClearBufferSubData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdClearBufferSubData*>(pc);
+            compiler.CallMember(&GLBuffer::ClearBufferSubData, cmd->buffer, cmd->offset, cmd->size, cmd->data);
+            return sizeof(*cmd);
+        }
         case GLOpcodeCopyImageSubData:
         {
             auto cmd = reinterpret_cast<const GLCmdCopyImageSubData*>(pc);

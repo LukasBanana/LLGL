@@ -166,6 +166,12 @@ struct FrameProfile
             std::uint32_t bufferCopies;
 
             /**
+            \brief Counter for all buffer fills during command encoding.
+            \see CommandBuffer::FillBuffer
+            */
+            std::uint32_t bufferFills;
+
+            /**
             \brief Counter for all buffer write operations outside of command encoding.
             \see RenderSystem::WriteBuffer
             */
@@ -273,7 +279,7 @@ struct FrameProfile
         };
 
         //! All proflile values as linear array.
-        std::uint32_t values[33];
+        std::uint32_t values[34];
     };
 
     /**

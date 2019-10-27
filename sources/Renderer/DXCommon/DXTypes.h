@@ -51,6 +51,7 @@ DXGI_FORMAT             ToDXGIFormatUInt(const DXGI_FORMAT format);
 
 bool                    HasStencilComponent(const DXGI_FORMAT format);
 bool                    IsDXGIFormatSRGB(const DXGI_FORMAT format);
+bool                    MakeUAVClearVector(const DXGI_FORMAT format, UINT (&valuesVec4)[4], UINT value);
 
 
 } // /namespace DXTypes

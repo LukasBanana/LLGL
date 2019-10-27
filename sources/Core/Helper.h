@@ -273,9 +273,11 @@ LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename);
 
 // Converts the UTF16 input string to UTF8 string.
 LLGL_EXPORT std::string ToUTF8String(const std::wstring& utf16);
+LLGL_EXPORT std::string ToUTF8String(const wchar_t* utf16);
 
 // Converts the UTF8 input string to UTF16 string.
 LLGL_EXPORT std::wstring ToUTF16String(const std::string& utf8);
+LLGL_EXPORT std::wstring ToUTF16String(const char* utf8);
 
 
 } // /namespace LLGL

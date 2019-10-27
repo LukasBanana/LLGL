@@ -120,11 +120,11 @@ void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESO
 
         /* Store new state in resource */
         resource.transitionState = newState;
-
-        /* Flush resource barrieres if required */
-        if (flushImmediate)
-            FlushResourceBarrieres();
     }
+
+    /* Flush resource barrieres if required */
+    if (flushImmediate)
+        FlushResourceBarrieres();
 }
 
 void D3D12CommandContext::InsertUAVBarrier(D3D12Resource& resource, bool flushImmediate)

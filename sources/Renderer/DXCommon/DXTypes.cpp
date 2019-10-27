@@ -522,6 +522,147 @@ bool IsDXGIFormatSRGB(const DXGI_FORMAT format)
     }
 }
 
+/*
+Fills the 4D vector for the specified DXGI_FORMAT in order to fill a buffer with a fixed 32-bit value.
+For formats that don't have 32-bit components such as DXGI_FORMAT_R16G16_UINT,
+the value must be distributed over the components to work with "ID3D11DeviceContext::ClearUnorderedAccessViewUint".
+see https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-clearunorderedaccessviewuint
+*/
+bool MakeUAVClearVector(const DXGI_FORMAT format, UINT (&valuesVec4)[4], UINT value)
+{
+    switch (format)
+    {
+        case DXGI_FORMAT_R32G32B32A32_FLOAT:
+        case DXGI_FORMAT_R32G32B32A32_UINT:
+        case DXGI_FORMAT_R32G32B32A32_SINT:
+        case DXGI_FORMAT_R32G32_FLOAT:
+        case DXGI_FORMAT_R32G32_UINT:
+        case DXGI_FORMAT_R32G32_SINT:
+        case DXGI_FORMAT_R32_FLOAT:
+        case DXGI_FORMAT_R32_UINT:
+        case DXGI_FORMAT_R32_SINT:
+        {
+            valuesVec4[3] = value;
+            valuesVec4[2] = value;
+            valuesVec4[1] = value;
+            valuesVec4[0] = value;
+        }
+        return true;
+
+        case DXGI_FORMAT_R16G16B16A16_FLOAT:
+        case DXGI_FORMAT_R16G16B16A16_UNORM:
+        case DXGI_FORMAT_R16G16B16A16_UINT:
+        case DXGI_FORMAT_R16G16B16A16_SNORM:
+        case DXGI_FORMAT_R16G16B16A16_SINT:
+        case DXGI_FORMAT_R16G16_FLOAT:
+        case DXGI_FORMAT_R16G16_UNORM:
+        case DXGI_FORMAT_R16G16_UINT:
+        case DXGI_FORMAT_R16G16_SNORM:
+        case DXGI_FORMAT_R16G16_SINT:
+        {
+            valuesVec4[3] = (value >> 16) & 0x0000FFFF;
+            valuesVec4[2] = (value      ) & 0x0000FFFF;
+            valuesVec4[1] = (value >> 16) & 0x0000FFFF;
+            valuesVec4[0] = (value      ) & 0x0000FFFF;
+        }
+        return true;
+
+        case DXGI_FORMAT_R8G8B8A8_UNORM:
+        case DXGI_FORMAT_R8G8B8A8_UINT:
+        case DXGI_FORMAT_R8G8B8A8_SNORM:
+        case DXGI_FORMAT_R8G8B8A8_SINT:
+        {
+            valuesVec4[3] = (value >> 24) & 0x000000FF;
+            valuesVec4[2] = (value >> 16) & 0x000000FF;
+            valuesVec4[1] = (value >>  8) & 0x000000FF;
+            valuesVec4[0] = (value      ) & 0x000000FF;
+        }
+        return true;
+
+        case DXGI_FORMAT_R10G10B10A2_UNORM:
+        case DXGI_FORMAT_R10G10B10A2_UINT:
+        {
+            valuesVec4[3] = (value >> 22) & 0x000003FF;
+            valuesVec4[2] = (value >> 12) & 0x000003FF;
+            valuesVec4[1] = (value >>  2) & 0x000003FF;
+            valuesVec4[0] = (value      ) & 0x00000003;
+        }
+        return true;
+
+        case DXGI_FORMAT_R11G11B10_FLOAT:
+        {
+            valuesVec4[3] = (value >> 21) & 0x000007FF;
+            valuesVec4[2] = (value >> 10) & 0x000007FF;
+            valuesVec4[1] = (value      ) & 0x000003FF;
+            valuesVec4[0] = 0;
+        }
+        return true;
+
+        case DXGI_FORMAT_R8G8_UNORM:
+        case DXGI_FORMAT_R8G8_UINT:
+        case DXGI_FORMAT_R8G8_SNORM:
+        case DXGI_FORMAT_R8G8_SINT:
+        {
+            /* Only supported if lower and upper 16-bit halfs are equal */
+            if (((value >> 16) & 0x0000FFFF) == (value & 0x0000FFFF))
+            {
+                const UINT v0 = (value >> 8) & 0x000000FF;
+                const UINT v1 = (value     ) & 0x000000FF;
+                valuesVec4[3] = v0;
+                valuesVec4[2] = v1;
+                valuesVec4[1] = v0;
+                valuesVec4[0] = v1;
+                return true;
+            }
+        }
+        break;
+
+        case DXGI_FORMAT_R16_FLOAT:
+        case DXGI_FORMAT_R16_UNORM:
+        case DXGI_FORMAT_R16_UINT:
+        case DXGI_FORMAT_R16_SNORM:
+        case DXGI_FORMAT_R16_SINT:
+        {
+            /* Only supported if lower and upper 16-bit halfs are equal */
+            if (((value >> 16) & 0x0000FFFF) == (value & 0x0000FFFF))
+            {
+                const UINT v0 = value & 0x0000FFFF;
+                valuesVec4[3] = v0;
+                valuesVec4[2] = v0;
+                valuesVec4[1] = v0;
+                valuesVec4[0] = v0;
+                return true;
+            }
+        }
+        break;
+
+        case DXGI_FORMAT_R8_UNORM:
+        case DXGI_FORMAT_R8_UINT:
+        case DXGI_FORMAT_R8_SNORM:
+        case DXGI_FORMAT_R8_SINT:
+        case DXGI_FORMAT_A8_UNORM:
+        {
+            /* Only supported if all 8 bits are equal */
+            if (((value >> 24) & 0x000000FF) == (value & 0x000000FF) &&
+                ((value >> 16) & 0x000000FF) == (value & 0x000000FF) &&
+                ((value >>  8) & 0x000000FF) == (value & 0x000000FF))
+            {
+                const UINT v0 = value & 0x000000FF;
+                valuesVec4[3] = v0;
+                valuesVec4[2] = v0;
+                valuesVec4[1] = v0;
+                valuesVec4[0] = v0;
+                return true;
+            }
+        }
+        break;
+
+        default:
+        break;
+    }
+    return false;
+}
+
 
 } // /namespace DXTypes
 

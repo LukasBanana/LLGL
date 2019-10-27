@@ -40,6 +40,12 @@ static const std::uint32_t  ignoreOffset    = ~0u;
 */
 static const std::uint32_t  invalidSlot     = ~0u;
 
+/**
+\brief Specifies to use the whole size of a resource.
+\see CommandBuffer::FillBuffer
+*/
+static const std::uint64_t  wholeSize       = ~0ull;
+
 
 } // /namespace Constants
 

@@ -63,6 +63,18 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             cmd->writeBuffer->CopyBufferSubData(*(cmd->readBuffer), cmd->readOffset, cmd->writeOffset, cmd->size);
             return sizeof(*cmd);
         }
+        case GLOpcodeClearBufferData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdClearBufferData*>(pc);
+            cmd->buffer->ClearBufferData(cmd->data);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeClearBufferSubData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdClearBufferSubData*>(pc);
+            cmd->buffer->ClearBufferSubData(cmd->offset, cmd->size, cmd->data);
+            return sizeof(*cmd);
+        }
         case GLOpcodeCopyImageSubData:
         {
             auto cmd = reinterpret_cast<const GLCmdCopyImageSubData*>(pc);

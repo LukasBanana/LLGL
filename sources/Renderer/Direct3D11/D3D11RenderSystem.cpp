@@ -80,7 +80,7 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+    if ((desc.flags & (CommandBufferFlags::DeferredSubmit | CommandBufferFlags::MultiSubmit)) != 0)
     {
         /* Create deferred D3D11 device context */
         ComPtr<ID3D11DeviceContext> deferredContext;
@@ -90,7 +90,7 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         /* Create command buffer with deferred context and dedicated state manager */
         return TakeOwnership(
             commandBuffers_,
-            MakeUnique<D3D11CommandBuffer>(deferredContext, std::make_shared<D3D11StateManager>(deferredContext), desc)
+            MakeUnique<D3D11CommandBuffer>(device_.Get(), deferredContext, std::make_shared<D3D11StateManager>(deferredContext), desc)
         );
     }
     else
@@ -98,7 +98,7 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         /* Create command buffer with immediate context */
         return TakeOwnership(
             commandBuffers_,
-            MakeUnique<D3D11CommandBuffer>(context_, stateMngr_, desc)
+            MakeUnique<D3D11CommandBuffer>(device_.Get(), context_, stateMngr_, desc)
         );
     }
 }

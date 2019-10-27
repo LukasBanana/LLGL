@@ -53,12 +53,19 @@ class MTCommandBuffer : public CommandBuffer
             std::uint16_t   dataSize
         ) override;
 
-        virtual void CopyBuffer(
+        void CopyBuffer(
             Buffer&         dstBuffer,
             std::uint64_t   dstOffset,
             Buffer&         srcBuffer,
             std::uint64_t   srcOffset,
             std::uint64_t   size
+        ) override;
+
+        void FillBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            std::uint32_t   value,
+            std::uint64_t   fillSize    = Constants::wholeSize
         ) override;
 
         void CopyTexture(

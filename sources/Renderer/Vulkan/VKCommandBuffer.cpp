@@ -33,12 +33,22 @@ namespace LLGL
 
 static const std::uint32_t g_maxNumViewportsPerBatch = 16;
 
+// Returns the maximum for a indirect multi draw command
 static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDevice)
 {
     if (physicalDevice.GetFeatures().multiDrawIndirect != VK_FALSE)
         return physicalDevice.GetProperties().limits.maxDrawIndirectCount;
     else
-        return 1;
+        return 1u;
+}
+
+// Returns the number of native command buffers for the specified descriptor
+static std::uint32_t GetNumVkCommandBuffers(const CommandBufferDescriptor& desc)
+{
+    if ((desc.flags & CommandBufferFlags::MultiSubmit) != 0)
+        return 1u;
+    else
+        return std::max(1u, desc.numNativeBuffers);
 }
 
 VKCommandBuffer::VKCommandBuffer(
@@ -53,14 +63,17 @@ VKCommandBuffer::VKCommandBuffer(
     queuePresentFamily_   { queueFamilyIndices.presentFamily        },
     maxDrawIndirectCount_ { GetMaxDrawIndirectCount(physicalDevice) }
 {
-    std::size_t bufferCount = std::max(1u, desc.numNativeBuffers);
-
     /* Translate creation flags */
     if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
     {
         usageFlags_     = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
         bufferLevel_    = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
     }
+    else if ((desc.flags & CommandBufferFlags::MultiSubmit) != 0)
+        usageFlags_ = 0;
+
+    /* Determine number of internal command buffers */
+    const auto bufferCount = GetNumVkCommandBuffers(desc);
 
     /* Create native command buffer objects */
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
@@ -177,6 +190,38 @@ void VKCommandBuffer::CopyBuffer(
     }
     else
         vkCmdCopyBuffer(commandBuffer_, srcBufferVK.GetVkBuffer(), dstBufferVK.GetVkBuffer(), 1, &region);
+}
+
+void VKCommandBuffer::FillBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    std::uint32_t   value,
+    std::uint64_t   fillSize)
+{
+    auto& dstBufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
+
+    /* Determine destination buffer range and ignore <dstOffset> if the whole buffer is meant to be filled */
+    VkDeviceSize offset, size;
+    if (fillSize == Constants::wholeSize)
+    {
+        offset  = 0;
+        size    = VK_WHOLE_SIZE;
+    }
+    else
+    {
+        offset  = static_cast<VkDeviceSize>(dstOffset);
+        size    = static_cast<VkDeviceSize>(fillSize);
+    }
+
+    /* Encode fill buffer command */
+    if (IsInsideRenderPass())
+    {
+        PauseRenderPass();
+        vkCmdFillBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, value);
+        ResumeRenderPass();
+    }
+    else
+        vkCmdFillBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, value);
 }
 
 void VKCommandBuffer::CopyTexture(
@@ -942,15 +987,6 @@ void VKCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::s
     // dummy
 }
 
-/* ----- Internals ----- */
-
-void VKCommandBuffer::AcquireNextBuffer()
-{
-    commandBufferIndex_ = (commandBufferIndex_ + 1) % commandBufferList_.size();
-    commandBuffer_      = commandBufferList_[commandBufferIndex_];
-    recordingFence_     = recordingFenceList_[commandBufferIndex_].Get();
-}
-
 
 /*
  * ======= Private: =======
@@ -970,7 +1006,7 @@ void VKCommandBuffer::CreateCommandPool(std::uint32_t queueFamilyIndex)
     VKThrowIfFailed(result, "failed to create Vulkan command pool");
 }
 
-void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
+void VKCommandBuffer::CreateCommandBuffers(std::uint32_t bufferCount)
 {
     /* Allocate command buffers */
     commandBufferList_.resize(bufferCount);
@@ -981,13 +1017,13 @@ void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
         allocInfo.pNext                 = nullptr;
         allocInfo.commandPool           = commandPool_;
         allocInfo.level                 = bufferLevel_;
-        allocInfo.commandBufferCount    = static_cast<std::uint32_t>(bufferCount);
+        allocInfo.commandBufferCount    = bufferCount;
     }
     auto result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferList_.data());
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
 }
 
-void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences)
+void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::uint32_t numFences)
 {
     recordingFenceList_.reserve(numFences);
 
@@ -998,9 +1034,9 @@ void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t n
         createInfo.flags = 0;
     }
 
-    for (std::size_t i = 0; i < numFences; ++i)
+    for (std::uint32_t i = 0; i < numFences; ++i)
     {
-        VKPtr<VkFence> fence { device_, vkDestroyFence };
+        VKPtr<VkFence> fence{ device_, vkDestroyFence };
         {
             /* Create fence for command buffer recording */
             auto result = vkCreateFence(device_, &createInfo, nullptr, fence.ReleaseAndGetAddressOf());
@@ -1113,6 +1149,13 @@ void VKCommandBuffer::ResumeRenderPass()
 bool VKCommandBuffer::IsInsideRenderPass() const
 {
     return (recordState_ == RecordState::InsideRenderPass);
+}
+
+void VKCommandBuffer::AcquireNextBuffer()
+{
+    commandBufferIndex_ = (commandBufferIndex_ + 1) % commandBufferList_.size();
+    commandBuffer_      = commandBufferList_[commandBufferIndex_];
+    recordingFence_     = recordingFenceList_[commandBufferIndex_].Get();
 }
 
 void VKCommandBuffer::ResetQueryPoolsInFlight()

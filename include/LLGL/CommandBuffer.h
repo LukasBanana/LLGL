@@ -18,6 +18,7 @@
 #include "BufferArray.h"
 #include "ResourceHeap.h"
 #include "PipelineLayoutFlags.h"
+#include "Constants.h"
 
 #include "RenderPass.h"
 #include "RenderTarget.h"
@@ -100,11 +101,11 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Encodes a buffer copy command for the specified buffer region.
-        \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
+        \param[in,out] dstBuffer Specifies the destination buffer whose data is to be updated.
         \param[in] dstOffset Specifies the destination offset (in bytes) at which the destination buffer is to be updated.
         This offset plus the size (i.e. <code>dstOffset + size</code>) must be less than or equal to the size of the destination buffer.
         \param[in] srcBuffer Specifies the source buffer whose data is to be read from.
-        \param[in] srcOffset Specifies teh source offset (in bytes) at which the source buffer is to be read from.
+        \param[in] srcOffset Specifies the source offset (in bytes) at which the source buffer is to be read from.
         This offset plus the size (i.e. <code>srcOffset + size</code>) must be less than or equal to the size of the source buffer.
         \param[in] size Specifies the size of the buffer region to copy.
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
@@ -118,9 +119,49 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             std::uint64_t   size
         ) = 0;
 
+        #if 0//TODO
+
+        /**
+        \brief Encodes a buffer copy command that blits data from a source texture.
+        \param[in,out] dstBuffer Specifies the destination buffer whose data is to be updated.
+        \param[in] dstOffset Specifies the destination offset (in bytes) at which the destination buffer is to be updated.
+        \param[in] srcTexture Specifies the source texture whose data is to be read from.
+        \param[in] srcRegion Specifies the source region where the texture is to be copied. Note that the \c numMipLevels attribute of this parameter \b must be 1.
+        \remarks This is called "copy buffer from texture" instead of "copy texture to buffer" to be uniform with the notation <code>buffer := texture</code>, or <code>memcpy(destination, source, size)</code>.
+        \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
+        Otherwise, render pass interruptions might be inserted by LLGL.
+        */
+        virtual void CopyBufferFromTexture(
+            Buffer&                 dstBuffer,
+            std::uint64_t           dstOffset,
+            Texture&                srcTexture,
+            const TextureRegion&    srcRegion
+        ) = 0;
+
+        #endif // /TODO
+
+        /**
+        \brief Fills the destination buffer with copies of the specified 32-bit value.
+        \param[in,out] dstBuffer Specifies the destination buffer whose data is to be updated.
+        This command works with all kinds of buffers, but for performance reasons it is recommended to create this buffer with the binding flag BindFlags::Storage.
+        Otherwise, an intermediate buffer might be created and copied by LLGL.
+        \param[in] dstOffset Specifies the destination offset (in bytes) at which the destination buffer is to be updated.
+        \param[in] value Specifies the 32-bit value to fill the buffer with.
+        \param[in] fillSize Specifies the fill size (in bytes) of the buffer region. This \b must be a multiple of 4. By default Constants::wholeSize.
+        If this is equal to \c Constants::wholeSize, \c dstOffset is ignored and the entire buffer will be filled.
+        \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
+        Otherwise, render pass interruptions might be inserted by LLGL.
+        */
+        virtual void FillBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            std::uint32_t   value,
+            std::uint64_t   fillSize    = Constants::wholeSize
+        ) = 0;
+
         /**
         \brief Encodes a texture copy command for the specified texture regions.
-        \param[in] dstTexture Specifies the destination texture whose data is to be updated.
+        \param[in,out] dstTexture Specifies the destination texture whose data is to be updated.
         \param[in] dstLocation Specifies the destination location, including MIP-map level and offset.
         Its offset plus the extent (i.e. <code>dstLocation.offset + extent</code>) must be less than or equal to the size of the destination texture.
         \param[in] srcTexture Specifies the source texture whose data is to be read from.
@@ -140,11 +181,26 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             const Extent3D&         extent
         ) = 0;
 
-        #if 0
-        virtual void FillBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, std::uint64_t size, std::uint32_t data) = 0;
-        virtual void FillTexture(Texture& dstTexture, [...]) = 0;
-        virtual void BlitTexture(Texture& dstTexture, Texture& srcTexture, [...], Filter filter) = 0;
-        #endif
+        #if 0//TODO
+
+        /**
+        \brief Encodes a texture copy command that blits data from a source buffer.
+        \param[in,out] dstTexture Specifies the destination texture whose data is to be updated.
+        \param[in] dstRegion Specifies the destination region where the texture is to be updated. Note that the \c numMipLevels attribute of this parameter \b must be 1.
+        \param[in] srcBuffer Specifies the source buffer whose data is to be read from.
+        \param[in] srcOffset Specifies the source offset (in bytes) at which the source buffer is to be read from.
+        \remarks This is called "copy texture from buffer" instead of "copy buffer to texture" to be uniform with the notation <code>texture := buffer</code>, or <code>memcpy(destination, source, size)</code>.
+        \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
+        Otherwise, render pass interruptions might be inserted by LLGL.
+        */
+        virtual void CopyTextureFromBuffer(
+            Texture&                dstTexture,
+            const TextureRegion&    dstRegion,
+            Buffer&                 srcBuffer,
+            std::uint64_t           srcOffset
+        ) = 0;
+
+        #endif // /TODO
 
         /**
         \brief Generates all MIP-maps for the specified texture.

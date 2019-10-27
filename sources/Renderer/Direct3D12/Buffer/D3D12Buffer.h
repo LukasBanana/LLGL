@@ -42,6 +42,19 @@ class D3D12Buffer : public Buffer
         void CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, UINT firstElement, UINT numElements, UINT elementStride);
         void CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
 
+        /*
+        Clears the buffer subresource with an intermediate UAV descriptor heap.
+        Also an intermediate buffer is used if this buffer was not created with BindFlags::Storage.
+        */
+        void ClearSubresourceUInt(
+            D3D12CommandContext&    commandContext,
+            DXGI_FORMAT             format,
+            UINT                    formatStride,
+            UINT64                  offset,
+            UINT64                  fillSize,
+            const UINT              (&values)[4]
+        );
+
         // Maps the buffer content to CPU memory space.
         HRESULT Map(
             D3D12CommandContext&    commandContext,
@@ -107,30 +120,54 @@ class D3D12Buffer : public Buffer
             return alignment_;
         }
 
+        // Returns the native format of the buffer or DXGI_FORMAT_UNKNOWN; only used for storage buffers.
+        inline DXGI_FORMAT GetFormat() const
+        {
+            return format_;
+        }
+
     private:
 
         void CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& desc);
         void CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlags);
 
+        void CreateIntermediateUAVDescriptorHeap(ID3D12Resource* resource, DXGI_FORMAT format, UINT formatStride);
+        void CreateIntermediateUAVBuffer();
+
         void CreateVertexBufferView(const BufferDescriptor& desc);
         void CreateIndexBufferView(const BufferDescriptor& desc);
         void CreateStreamOutputBufferView(const BufferDescriptor& desc);
 
+        void ClearSubresourceWithUAV(
+            ID3D12GraphicsCommandList*  commandList,
+            ID3D12Resource*             resource,
+            UINT64                      resourceSize,
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle,
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+            UINT64                      offset,
+            UINT64                      fillSize,
+            const UINT                  (&valuesVec4)[4]
+        );
+
     private:
 
         D3D12Resource                   resource_;
-        D3D12Resource                   cpuAccessBuffer_;           // D3D12_HEAP_TYPE_UPLOAD or D3D12_HEAP_TYPE_READBACK
+        D3D12Resource                   cpuAccessBuffer_; // D3D12_HEAP_TYPE_UPLOAD or D3D12_HEAP_TYPE_READBACK
 
-        UINT64                          bufferSize_         = 0;
-        UINT64                          internalSize_       = 0;
-        UINT                            alignment_          = 1;
-        UINT                            structStride_       = 1;
-        D3D12_VERTEX_BUFFER_VIEW        vertexBufferView_   = {};
-        D3D12_INDEX_BUFFER_VIEW         indexBufferView_    = {};
-        D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferView_       = {};
+        ComPtr<ID3D12DescriptorHeap>    uavIntermediateDescHeap_;
+        D3D12Resource                   uavIntermediateBuffer_;
 
-        D3D12_RANGE                     mappedRange_        = {};
-        CPUAccess                       mappedCPUaccess_    = CPUAccess::ReadOnly;
+        UINT64                          bufferSize_                 = 0;
+        UINT64                          internalSize_               = 0;
+        UINT                            alignment_                  = 1;
+        UINT                            structStride_               = 1;
+        D3D12_VERTEX_BUFFER_VIEW        vertexBufferView_           = {};
+        D3D12_INDEX_BUFFER_VIEW         indexBufferView_            = {};
+        D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferView_               = {};
+        DXGI_FORMAT                     format_                     = DXGI_FORMAT_UNKNOWN;
+
+        D3D12_RANGE                     mappedRange_                = {};
+        CPUAccess                       mappedCPUaccess_            = CPUAccess::ReadOnly;
 
 };
 

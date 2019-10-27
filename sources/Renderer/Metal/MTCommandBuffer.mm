@@ -134,6 +134,15 @@ void MTCommandBuffer::CopyBuffer(
     encoderScheduler_.ResumeRenderEncoder();
 }
 
+void MTCommandBuffer::FillBuffer(
+    Buffer&         dstBuffer,
+    std::uint64_t   dstOffset,
+    std::uint32_t   value,
+    std::uint64_t   fillSize)
+{
+    //TODO
+}
+
 void MTCommandBuffer::CopyTexture(
     Texture&                dstTexture,
     const TextureLocation&  dstLocation,

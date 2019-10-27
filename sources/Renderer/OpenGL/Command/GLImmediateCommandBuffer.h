@@ -57,6 +57,13 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
             std::uint64_t   size
         ) override;
 
+        void FillBuffer(
+            Buffer&         dstBuffer,
+            std::uint64_t   dstOffset,
+            std::uint32_t   value,
+            std::uint64_t   fillSize    = Constants::wholeSize
+        ) override;
+
         void CopyTexture(
             Texture&                dstTexture,
             const TextureLocation&  dstLocation,
