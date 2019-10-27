@@ -13,7 +13,7 @@
 
 
 // Enables/disables the use of two secondary command buffers
-#define ENABLE_SECONDARY_COMMAND_BUFFERS
+//#define ENABLE_SECONDARY_COMMAND_BUFFERS
 
 class Measure
 {
@@ -237,6 +237,9 @@ private:
         auto& cmdBuffer = *primaryCmdBuffer;
         cmdBuffer.Begin();
         {
+            // Initialize clear color
+            cmdBuffer.SetClearColor(defaultClearColor);
+
             // Set hardware buffers to draw the model
             cmdBuffer.SetVertexBuffer(*vertexBuffer);
             cmdBuffer.SetIndexBuffer(*indexBuffer);

@@ -35,6 +35,10 @@ echo ####### MultiRenderer #######
 glslangValidator -V -S vert -o MultiRenderer/Example.450core.vert.spv MultiRenderer/Example.450core.vert
 glslangValidator -V -S frag -o MultiRenderer/Example.450core.frag.spv MultiRenderer/Example.450core.frag
 
+echo ####### MultiThreading #######
+glslangValidator -V -S vert -o MultiThreading/Example.450core.vert.spv MultiThreading/Example.450core.vert
+glslangValidator -V -S frag -o MultiThreading/Example.450core.frag.spv MultiThreading/Example.450core.frag
+
 echo ####### BufferArray #######
 glslangValidator -V -S vert -o BufferArray/Example.450core.vert.spv BufferArray/Example.450core.vert
 glslangValidator -V -S frag -o BufferArray/Example.450core.frag.spv BufferArray/Example.450core.frag
