@@ -10,6 +10,7 @@
 
 ## Documentation
 
+- **Version**: 0.03 Beta (see [ChangeLog](docu/ChangeLog))
 - [Getting Started with LLGL](docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF)
 with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
 - [LLGL Reference Manual](docu/refman.pdf) (PDF)
@@ -18,24 +19,14 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 - [Examples for C#](examples/CSharp)
 
 
-## Progress
+## Platform Support
 
-* **Version**: 0.03 Beta (see [ChangeLog](docu/ChangeLog))
-
-| Platform | Progress | Remarks | CI |
-|----------|:--------:|---------|:--:|
-| Windows | 100% | Tested on *Windows 10* | [![Windows Build](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl) |
-| GNU/Linux | 70% | Tested on *Kubuntu 16* | [![GNU/Linux Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_LINUX&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
-| macOS | 70% | Tested on *macOS Sierra* | [![macOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
-| iOS | 1% | Tested on *macOS Mojave* | [![iOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_IOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) |
-
-| Renderer | Progress | Remarks |
-|----------|:--------:|---------|
-| OpenGL | ~90% | |
-| Direct3D 11 | ~90% | |
-| Direct3D 12 | ~50% | Experimental state |
-| Vulkan | ~50% | Experimental state |
-| Metal | ~50% | Experimental state |
+| Platform | Remarks | CI | D3D12 | D3D11 | Vulkan | OpenGL | Metal |
+|----------|---------|:--:|:------:|:------:|:-----:|:-----:|:-----:|
+| Windows | Tested on *Windows 10* | [![Windows Build](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A |
+| GNU/Linux | Tested on *Kubuntu 16* | [![GNU/Linux Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_LINUX&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A |
+| macOS | Tested on *macOS Sierra* | [![macOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: |
+| iOS | Tested on *macOS Mojave* | [![iOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_IOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_multiplication_x: | :heavy_check_mark: |
 
 | Language Binding | Progress | Remarks |
 |------------------|:--------:|---------|
