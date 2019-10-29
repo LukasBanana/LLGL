@@ -17,6 +17,7 @@
 #include "Texture/MTSampler.h"
 #include "Texture/MTRenderTarget.h"
 #include "Shader/MTShaderProgram.h"
+#include "Shader/MTBuiltinShaderPool.h"
 #include "../CheckedCast.h"
 #include <algorithm>
 #include <limits.h>
@@ -140,7 +141,36 @@ void MTCommandBuffer::FillBuffer(
     std::uint32_t   value,
     std::uint64_t   fillSize)
 {
-    //TODO
+    auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
+
+    /* Check if native "fillBuffer" command can be used */
+    const bool valueBytesAreEqual =
+    (
+        ((value >> 24) & 0x000000FF) == (value & 0x000000FF) &&
+        ((value >> 16) & 0x000000FF) == (value & 0x000000FF) &&
+        ((value >>  8) & 0x000000FF) == (value & 0x000000FF)
+    );
+
+    /* Determine buffer range for fill command */
+    NSRange range;
+    if (fillSize == Constants::wholeSize)
+    {
+        NSUInteger bufferSize = [dstBufferMT.GetNative() length];
+        range = NSMakeRange(0, bufferSize);
+    }
+    else
+    {
+        range = NSMakeRange(
+            static_cast<NSUInteger>(dstOffset),
+            static_cast<NSUInteger>(fillSize)
+        );
+    }
+
+    /* Fill with native command if all four bytes are equal, otherwise use blit and comput commands */
+    if (valueBytesAreEqual)
+        FillBufferByte1(dstBufferMT, range, static_cast<std::uint8_t>(value & 0x000000FF));
+    else
+        FillBufferByte4(dstBufferMT, range, value);
 }
 
 void MTCommandBuffer::CopyTexture(
@@ -897,9 +927,9 @@ void MTCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
 
 void MTCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
-    encoderScheduler_.BindComputeEncoder();
+    auto computeEncoder = encoderScheduler_.BindComputeEncoder();
     MTLSize numGroups = { numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ };
-    [encoderScheduler_.GetComputeEncoder()
+    [computeEncoder
         dispatchThreadgroups:   numGroups
         threadsPerThreadgroup:  *numThreadsPerGroup_
     ];
@@ -907,9 +937,9 @@ void MTCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWo
 
 void MTCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    encoderScheduler_.BindComputeEncoder();
+    auto computeEncoder = encoderScheduler_.BindComputeEncoder();
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    [encoderScheduler_.GetComputeEncoder()
+    [computeEncoder
         dispatchThreadgroupsWithIndirectBuffer: bufferMT.GetNative()
         indirectBufferOffset:                   static_cast<NSUInteger>(offset)
         threadsPerThreadgroup:                  *numThreadsPerGroup_
@@ -1072,6 +1102,66 @@ void MTCommandBuffer::SetSampler(MTSampler& samplerMT, std::uint32_t slot, long 
     }
 }
 #endif
+
+void MTCommandBuffer::FillBufferByte1(MTBuffer& bufferMT, const NSRange& range, std::uint8_t value)
+{
+    encoderScheduler_.PauseRenderEncoder();
+    {
+        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+        [blitEncoder fillBuffer:bufferMT.GetNative() range:range value:value];
+    }
+    encoderScheduler_.ResumeRenderEncoder();
+}
+
+void MTCommandBuffer::FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
+{
+    /* Use emulated fill command if buffer range is small enough to avoid having both a blit and compute encoder */
+    if (range.length > 256)
+        FillBufferByte4Accelerated(bufferMT, range, value);
+    else
+        FillBufferByte4Emulated(bufferMT, range, value);
+}
+
+void MTCommandBuffer::FillBufferByte4Emulated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
+{
+    /* Copy value into stack local buffer */
+    std::uint32_t localBuffer[256 / sizeof(std::uint32_t)];
+    std::fill(std::begin(localBuffer), std::end(localBuffer), value);
+
+    /* Write clear value into first range of destination buffer */
+    UpdateBuffer(bufferMT, range.location, localBuffer, range.length);
+}
+
+//TODO: manage binding of compute PSO in MTEncoderScheduler
+void MTCommandBuffer::FillBufferByte4Accelerated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
+{
+    /* Write clear value into first range of destination buffer */
+    UpdateBuffer(bufferMT, range.location, &value, sizeof(value));
+
+    /* Copy value to remaining buffer range */
+    encoderScheduler_.PauseRenderEncoder();
+    {
+        auto computeEncoder = encoderScheduler_.BindComputeEncoder();
+
+        /* Bind compute PSO with kernel to fill buffer */
+        id<MTLComputePipelineState> pso = MTBuiltinShaderPool::Get().GetComputePSO(MTBuiltinComputePSO::FillBufferByte4);
+        [computeEncoder setComputePipelineState:pso];
+
+        /* Bind destination buffer range */
+        [computeEncoder
+            setBuffer:  bufferMT.GetNative()
+            offset:     range.location
+            atIndex:    0
+        ];
+
+        /* Dispatch compute kernels */
+        [computeEncoder
+            dispatchThreads:        MTLSizeMake(range.length, 1, 1)
+            threadsPerThreadgroup:  MTLSizeMake(32, 1, 1)
+        ];
+    }
+    encoderScheduler_.ResumeRenderEncoder();
+}
 
 
 } // /namespace LLGL

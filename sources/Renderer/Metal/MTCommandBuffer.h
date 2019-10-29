@@ -214,6 +214,11 @@ class MTCommandBuffer : public CommandBuffer
         void SetTexture(MTTexture& textureMT, std::uint32_t slot, long stageFlags);
         void SetSampler(MTSampler& samplerMT, std::uint32_t slot, long stageFlags);
 
+        void FillBufferByte1(MTBuffer& bufferMT, const NSRange& range, std::uint8_t value);
+        void FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
+        void FillBufferByte4Emulated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
+        void FillBufferByte4Accelerated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
+
     private:
 
         struct MTClearValue
