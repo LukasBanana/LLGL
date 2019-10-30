@@ -28,7 +28,7 @@ class D3D12RenderSystem;
 class D3D12RenderContext;
 class D3D12RenderTarget;
 class D3D12RenderPass;
-class D3D12CommandSignaturePool;
+class D3D12SignatureFactory;
 struct D3D12Resource;
 
 class D3D12CommandBuffer final : public CommandBuffer
@@ -251,24 +251,24 @@ class D3D12CommandBuffer final : public CommandBuffer
 
     private:
 
-        D3D12CommandContext                 commandContext_;
-        ID3D12GraphicsCommandList*          commandList_                        = nullptr;
-        const D3D12CommandSignaturePool*    commandSignaturePool_               = nullptr;
+        D3D12CommandContext             commandContext_;
+        ID3D12GraphicsCommandList*      commandList_            = nullptr;
+        const D3D12SignatureFactory*    cmdSignatureFactory_    = nullptr;
 
-        D3D12StagingBufferPool              stagingBufferPool_;
+        D3D12StagingBufferPool          stagingBufferPool_;
 
-        D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_                      = {};
-        UINT                                rtvDescSize_                        = 0;
-        D3D12_CPU_DESCRIPTOR_HANDLE         dsvDescHandle_                      = {};
-        UINT                                dsvDescSize_                        = 0;
+        D3D12_CPU_DESCRIPTOR_HANDLE     rtvDescHandle_          = {};
+        UINT                            rtvDescSize_            = 0;
+        D3D12_CPU_DESCRIPTOR_HANDLE     dsvDescHandle_          = {};
+        UINT                            dsvDescSize_            = 0;
 
-        ClearValue                          clearValue_;
+        ClearValue                      clearValue_;
 
-        bool                                scissorEnabled_                     = false;
-        UINT                                numBoundScissorRects_               = 0;
-        UINT                                numColorBuffers_                    = 0;
+        bool                            scissorEnabled_         = false;
+        UINT                            numBoundScissorRects_   = 0;
+        UINT                            numColorBuffers_        = 0;
 
-        RenderTarget*                       boundRenderTarget_                  = nullptr;
+        RenderTarget*                   boundRenderTarget_      = nullptr;
 
 };
 

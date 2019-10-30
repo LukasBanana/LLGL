@@ -17,7 +17,7 @@
 #include "Command/D3D12CommandQueue.h"
 #include "Command/D3D12CommandBuffer.h"
 #include "Command/D3D12CommandContext.h"
-#include "Command/D3D12CommandSignaturePool.h"
+#include "Command/D3D12SignatureFactory.h"
 
 #include "Buffer/D3D12Buffer.h"
 #include "Buffer/D3D12StagingBufferPool.h"
@@ -192,14 +192,16 @@ class D3D12RenderSystem final : public RenderSystem
             return device_;
         }
 
+        // Returns the device object.
         inline const D3D12Device& GetDevice() const
         {
             return device_;
         }
 
-        inline const D3D12CommandSignaturePool& GetCommandSignaturePool() const
+        // Returns the command signmature factory.
+        inline const D3D12SignatureFactory& GetSignatureFactory() const
         {
-            return commandSignaturePool_;
+            return cmdSignatureFactory_;
         }
 
     private:
@@ -231,7 +233,7 @@ class D3D12RenderSystem final : public RenderSystem
         D3D12Device                                 device_;
         D3D12CommandContext*                        commandContext_         = nullptr;
         D3D12PipelineLayout                         defaultPipelineLayout_;
-        D3D12CommandSignaturePool                   commandSignaturePool_;
+        D3D12SignatureFactory                       cmdSignatureFactory_;
         D3D12StagingBufferPool                      stagingBufferPool_;
 
         /* ----- Hardware object containers ----- */

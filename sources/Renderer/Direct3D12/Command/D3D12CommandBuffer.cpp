@@ -6,7 +6,7 @@
  */
 
 #include "D3D12CommandBuffer.h"
-#include "D3D12CommandSignaturePool.h"
+#include "D3D12SignatureFactory.h"
 #include "../D3D12ObjectUtils.h"
 #include "../D3D12RenderContext.h"
 #include "../D3D12RenderSystem.h"
@@ -42,8 +42,8 @@ namespace LLGL
 
 
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
-    commandSignaturePool_ { &(renderSystem.GetCommandSignaturePool())       },
-    stagingBufferPool_    { renderSystem.GetDevice().GetNative(), USHRT_MAX }
+    cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())           },
+    stagingBufferPool_   { renderSystem.GetDevice().GetNative(), USHRT_MAX }
 {
     CreateCommandContext(renderSystem, desc);
 }
@@ -679,7 +679,7 @@ void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
     commandList_->ExecuteIndirect(
-        commandSignaturePool_->GetSignatureDrawIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+        cmdSignatureFactory_->GetSignatureDrawIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
     );
 }
 
@@ -689,7 +689,7 @@ void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std:
     while (numCommands-- > 0)
     {
         commandList_->ExecuteIndirect(
-            commandSignaturePool_->GetSignatureDrawIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+            cmdSignatureFactory_->GetSignatureDrawIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
         );
         offset += stride;
     }
@@ -699,7 +699,7 @@ void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offse
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
     commandList_->ExecuteIndirect(
-        commandSignaturePool_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+        cmdSignatureFactory_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
     );
 }
 
@@ -709,7 +709,7 @@ void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offse
     while (numCommands-- > 0)
     {
         commandList_->ExecuteIndirect(
-            commandSignaturePool_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+            cmdSignatureFactory_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
         );
         offset += stride;
     }
@@ -726,7 +726,7 @@ void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
     commandList_->ExecuteIndirect(
-        commandSignaturePool_->GetSignatureDispatchIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
+        cmdSignatureFactory_->GetSignatureDispatchIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
     );
 }
 

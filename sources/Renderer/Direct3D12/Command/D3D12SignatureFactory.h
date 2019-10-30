@@ -1,5 +1,5 @@
 /*
- * D3D12CommandSignaturePool.h
+ * D3D12SignatureFactory.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class D3D12CommandSignaturePool
+class D3D12SignatureFactory
 {
 
     public:

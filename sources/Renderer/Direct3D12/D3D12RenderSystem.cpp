@@ -49,7 +49,7 @@ D3D12RenderSystem::D3D12RenderSystem()
 
     /* Create default pipeline layout and command signature pool */
     defaultPipelineLayout_.CreateRootSignature(device_.GetNative(), {});
-    commandSignaturePool_.CreateDefaultSignatures(device_.GetNative());
+    cmdSignatureFactory_.CreateDefaultSignatures(device_.GetNative());
 
     stagingBufferPool_.InitializeDevice(device_.GetNative(), 0);
     D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
