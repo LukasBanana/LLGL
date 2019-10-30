@@ -27,9 +27,17 @@ namespace LLGL
 {
 
 
+/*
+Minimum size for the "FillBuffer" command to use a GPU kernel.
+for smaller buffers an emulated CPU copy operation will be used.
+*/
+static const NSUInteger g_minFillBufferForKernel = 64;
+
+// Default value when no compute PSO is bound.
 static const MTLSize g_defaultNumThreadsPerGroup { 1, 1, 1 };
 
 MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue) :
+    device_            { device            },
     cmdQueue_          { cmdQueue          },
     stagingBufferPool_ { device, USHRT_MAX }
 {
@@ -141,6 +149,9 @@ void MTCommandBuffer::FillBuffer(
     std::uint32_t   value,
     std::uint64_t   fillSize)
 {
+    if (fillSize == 0)
+        return;
+
     auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
 
     /* Check if native "fillBuffer" command can be used */
@@ -1116,7 +1127,7 @@ void MTCommandBuffer::FillBufferByte1(MTBuffer& bufferMT, const NSRange& range, 
 void MTCommandBuffer::FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
 {
     /* Use emulated fill command if buffer range is small enough to avoid having both a blit and compute encoder */
-    if (range.length > 256)
+    if (range.length > g_minFillBufferForKernel)
         FillBufferByte4Accelerated(bufferMT, range, value);
     else
         FillBufferByte4Emulated(bufferMT, range, value);
@@ -1125,7 +1136,7 @@ void MTCommandBuffer::FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, 
 void MTCommandBuffer::FillBufferByte4Emulated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
 {
     /* Copy value into stack local buffer */
-    std::uint32_t localBuffer[256 / sizeof(std::uint32_t)];
+    std::uint32_t localBuffer[g_minFillBufferForKernel / sizeof(std::uint32_t)];
     std::fill(std::begin(localBuffer), std::end(localBuffer), value);
 
     /* Write clear value into first range of destination buffer */
@@ -1135,10 +1146,6 @@ void MTCommandBuffer::FillBufferByte4Emulated(MTBuffer& bufferMT, const NSRange&
 //TODO: manage binding of compute PSO in MTEncoderScheduler
 void MTCommandBuffer::FillBufferByte4Accelerated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value)
 {
-    /* Write clear value into first range of destination buffer */
-    UpdateBuffer(bufferMT, range.location, &value, sizeof(value));
-
-    /* Copy value to remaining buffer range */
     encoderScheduler_.PauseRenderEncoder();
     {
         auto computeEncoder = encoderScheduler_.BindComputeEncoder();
@@ -1147,18 +1154,47 @@ void MTCommandBuffer::FillBufferByte4Accelerated(MTBuffer& bufferMT, const NSRan
         id<MTLComputePipelineState> pso = MTBuiltinShaderPool::Get().GetComputePSO(MTBuiltinComputePSO::FillBufferByte4);
         [computeEncoder setComputePipelineState:pso];
 
-        /* Bind destination buffer range */
-        [computeEncoder
-            setBuffer:  bufferMT.GetNative()
-            offset:     range.location
-            atIndex:    0
-        ];
+        /* Bind destination buffer range and store clear value as input constant buffer */
+        [computeEncoder setBuffer:bufferMT.GetNative() offset:range.location atIndex:0];
+        [computeEncoder setBytes:&value length:sizeof(value) atIndex:1];
 
         /* Dispatch compute kernels */
-        [computeEncoder
-            dispatchThreads:        MTLSizeMake(range.length, 1, 1)
-            threadsPerThreadgroup:  MTLSizeMake(32, 1, 1)
-        ];
+        const NSUInteger numValues = range.length / sizeof(std::uint32_t);
+        const NSUInteger maxLocalThreads = std::min(
+            device_.maxThreadsPerThreadgroup.width,
+            pso.maxTotalThreadsPerThreadgroup
+        );
+
+        if (@available(iOS 11.0, macOS 10.13, *))
+        {
+            /* Dispatch all threads with a single command and let Metal distribute the full and partial threadgroups */
+            [computeEncoder
+                dispatchThreads:        MTLSizeMake(numValues, 1, 1)
+                threadsPerThreadgroup:  MTLSizeMake(std::min(numValues, maxLocalThreads), 1, 1)
+            ];
+        }
+        else
+        {
+            /* Disaptch threadgroups with as many local threads as possible */
+            const NSUInteger numThreadGroups = numValues / maxLocalThreads;
+            if (numThreadGroups > 0)
+            {
+                [computeEncoder
+                    dispatchThreadgroups:   MTLSizeMake(numThreadGroups, 1, 1)
+                    threadsPerThreadgroup:  MTLSizeMake(maxLocalThreads, 1, 1)
+                ];
+            }
+
+            /* Dispatch local threads for remaining range */
+            const NSUInteger remainingValues = numValues % maxLocalThreads;
+            if (remainingValues > 0)
+            {
+                [computeEncoder
+                    dispatchThreadgroups:   MTLSizeMake(1, 1, 1)
+                    threadsPerThreadgroup:  MTLSizeMake(remainingValues, 1, 1)
+                ];
+            }
+        }
     }
     encoderScheduler_.ResumeRenderEncoder();
 }

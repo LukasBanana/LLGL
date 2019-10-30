@@ -230,6 +230,7 @@ class MTCommandBuffer : public CommandBuffer
 
     private:
 
+        id<MTLDevice>                   device_                 = nil;
         id<MTLCommandQueue>             cmdQueue_               = nil;
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
         dispatch_semaphore_t            cmdBufferSemaphore_     = nil;

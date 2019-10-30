@@ -5,17 +5,13 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include <metal_stdlib>
-#include <simd/simd.h>
-
-using namespace metal;
-
 // Fill "clearValue" into the output buffer
 kernel void CS(
     device uint*    outBuffer   [[buffer(0)]],
+    constant uint&  clearValue  [[buffer(1)]],
     uint            threadID    [[thread_position_in_grid]])
 {
-    outBuffer[threadID] = outBuffer[0];
+    outBuffer[threadID] = clearValue;
 }
 
 
