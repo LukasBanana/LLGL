@@ -1,12 +1,12 @@
 /*
- * MTBuiltinShaderPool.h
+ * MTBuiltinPSOFactory.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_MT_BUILTIN_SHADER_POOL_H
-#define LLGL_MT_BUILTIN_SHADER_POOL_H
+#ifndef LLGL_MT_BUILTIN_PSO_FACTORY_H
+#define LLGL_MT_BUILTIN_PSO_FACTORY_H
 
 
 #import <Metal/Metal.h>
@@ -23,27 +23,27 @@ enum class MTBuiltinComputePSO
     Num
 };
 
-// Builtin Metal shader pool singleton.
-class MTBuiltinShaderPool
+// Builtin Metal PSO factory singleton.
+class MTBuiltinPSOFactory
 {
 
     public:
 
-        MTBuiltinShaderPool(const MTBuiltinShaderPool&) = delete;
-        MTBuiltinShaderPool& operator = (const MTBuiltinShaderPool&) = delete;
+        MTBuiltinPSOFactory(const MTBuiltinPSOFactory&) = delete;
+        MTBuiltinPSOFactory& operator = (const MTBuiltinPSOFactory&) = delete;
 
         // Returns the instance of this singleton.
-        static MTBuiltinShaderPool& Get();
+        static MTBuiltinPSOFactory& Get();
 
         // Loads all builtin shaders and creates the respective pipeline state objects (PSO).
-        void LoadBuiltinShaders(id<MTLDevice> device);
+        void CreateBuiltinPSOs(id<MTLDevice> device);
 
         // Returns the specified builtin compute PSO.
         id<MTLComputePipelineState> GetComputePSO(const MTBuiltinComputePSO builtin) const;
 
     private:
 
-        MTBuiltinShaderPool() = default;
+        MTBuiltinPSOFactory() = default;
 
         void LoadBuiltinComputePSO(
             id<MTLDevice>               device,

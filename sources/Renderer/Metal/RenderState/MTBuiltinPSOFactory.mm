@@ -1,13 +1,13 @@
 /*
- * MTBuiltinShaderPool.mm
+ * MTBuiltinPSOFactory.mm
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "MTBuiltinShaderPool.h"
-#include "MTShader.h"
-#include "Builtin/MTBuiltin.h"
+#include "MTBuiltinPSOFactory.h"
+#include "../Shader/MTShader.h"
+#include "../Shader/Builtin/MTBuiltin.h"
 #include "../MTCore.h"
 
 
@@ -15,18 +15,18 @@ namespace LLGL
 {
 
 
-MTBuiltinShaderPool& MTBuiltinShaderPool::Get()
+MTBuiltinPSOFactory& MTBuiltinPSOFactory::Get()
 {
-    static MTBuiltinShaderPool g_instance;
+    static MTBuiltinPSOFactory g_instance;
     return g_instance;
 }
 
-void MTBuiltinShaderPool::LoadBuiltinShaders(id<MTLDevice> device)
+void MTBuiltinPSOFactory::CreateBuiltinPSOs(id<MTLDevice> device)
 {
     LoadBuiltinComputePSO(device, MTBuiltinComputePSO::FillBufferByte4, g_metalLibFillBufferByte4, g_metalLibFillBufferByte4Len);
 }
 
-id<MTLComputePipelineState> MTBuiltinShaderPool::GetComputePSO(const MTBuiltinComputePSO builtin) const
+id<MTLComputePipelineState> MTBuiltinPSOFactory::GetComputePSO(const MTBuiltinComputePSO builtin) const
 {
     const auto idx = static_cast<std::size_t>(builtin);
     if (idx < g_numComputePSOs)
@@ -40,7 +40,7 @@ id<MTLComputePipelineState> MTBuiltinShaderPool::GetComputePSO(const MTBuiltinCo
  * ======= Private: =======
  */
 
-void MTBuiltinShaderPool::LoadBuiltinComputePSO(
+void MTBuiltinPSOFactory::LoadBuiltinComputePSO(
     id<MTLDevice>               device,
     const MTBuiltinComputePSO   builtin,
     const char*                 kernelFunc,

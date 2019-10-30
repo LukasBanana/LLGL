@@ -14,7 +14,7 @@
 #include "MTTypes.h"
 #include "RenderState/MTGraphicsPSO.h"
 #include "RenderState/MTComputePSO.h"
-#include "Shader/MTBuiltinShaderPool.h"
+#include "RenderState/MTBuiltinPSOFactory.h"
 #include <LLGL/ImageFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include <AvailabilityMacros.h>
@@ -318,8 +318,8 @@ void MTRenderSystem::CreateDeviceResources()
     /* Create command queue */
     commandQueue_ = MakeUnique<MTCommandQueue>(device_);
 
-    /* Load builtin shaders */
-    MTBuiltinShaderPool::Get().LoadBuiltinShaders(device_);
+    /* Initialize builtin PSOs */
+    MTBuiltinPSOFactory::Get().CreateBuiltinPSOs(device_);
 }
 
 void MTRenderSystem::QueryRenderingCaps()

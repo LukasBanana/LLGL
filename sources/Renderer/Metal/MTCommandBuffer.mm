@@ -13,11 +13,11 @@
 #include "RenderState/MTGraphicsPSO.h"
 #include "RenderState/MTComputePSO.h"
 #include "RenderState/MTResourceHeap.h"
+#include "RenderState/MTBuiltinPSOFactory.h"
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
 #include "Texture/MTRenderTarget.h"
 #include "Shader/MTShaderProgram.h"
-#include "Shader/MTBuiltinShaderPool.h"
 #include "../CheckedCast.h"
 #include <algorithm>
 #include <limits.h>
@@ -1151,7 +1151,7 @@ void MTCommandBuffer::FillBufferByte4Accelerated(MTBuffer& bufferMT, const NSRan
         auto computeEncoder = encoderScheduler_.BindComputeEncoder();
 
         /* Bind compute PSO with kernel to fill buffer */
-        id<MTLComputePipelineState> pso = MTBuiltinShaderPool::Get().GetComputePSO(MTBuiltinComputePSO::FillBufferByte4);
+        id<MTLComputePipelineState> pso = MTBuiltinPSOFactory::Get().GetComputePSO(MTBuiltinComputePSO::FillBufferByte4);
         [computeEncoder setComputePipelineState:pso];
 
         /* Bind destination buffer range and store clear value as input constant buffer */
