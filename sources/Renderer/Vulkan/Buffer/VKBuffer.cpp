@@ -56,12 +56,14 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
 }
 
 VKBuffer::VKBuffer(const VKPtr<VkDevice>& device, const BufferDescriptor& desc) :
-    Buffer            { desc.bindFlags                           },
-    bufferObj_        { device                                   },
-    bufferObjStaging_ { device                                   },
-    size_             { desc.size                                },
-    indexType_        { VKTypes::ToVkIndexType(desc.indexFormat) }
+    Buffer            { desc.bindFlags },
+    bufferObj_        { device         },
+    bufferObjStaging_ { device         },
+    size_             { desc.size      }
 {
+    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
+        indexType_ = VKTypes::ToVkIndexType(desc.format);
+
     VkBufferCreateInfo createInfo;
     {
         createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

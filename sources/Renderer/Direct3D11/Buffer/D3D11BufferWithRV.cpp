@@ -19,46 +19,51 @@ namespace LLGL
 {
 
 
-static DXGI_FORMAT GetD3DResourceViewFormat(const BufferDescriptor::StorageBuffer& desc)
+static DXGI_FORMAT GetD3DResourceViewFormat(const BufferDescriptor& desc)
 {
     /*
     D3D11_BUFFER_UAV_FLAG_RAW buffer flag for ByteAddressBuffer requires the UAV to have the DXGI_FORMAT_R32_TYPELESS format.
     -> see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476096(v=vs.85).aspx
     */
-    if (IsTypedBuffer(desc.storageType))
+    if (IsTypedBuffer(desc))
         return D3D11Types::Map(desc.format);
-    if (IsByteAddressBuffer(desc.storageType))
+    if (IsByteAddressBuffer(desc))
         return DXGI_FORMAT_R32_TYPELESS;
     return DXGI_FORMAT_UNKNOWN;
 }
 
-static UINT GetUAVFlags(const BufferDescriptor::StorageBuffer& desc)
+static UINT GetUAVFlags(const BufferDescriptor& desc)
 {
-    switch (desc.storageType)
+    if ((desc.bindFlags & BindFlags::Storage) != 0)
     {
-        case StorageBufferType::RWByteAddressBuffer:        return D3D11_BUFFER_UAV_FLAG_RAW;
-        case StorageBufferType::AppendStructuredBuffer:     return D3D11_BUFFER_UAV_FLAG_APPEND;
-        case StorageBufferType::ConsumeStructuredBuffer:    return D3D11_BUFFER_UAV_FLAG_COUNTER;
-        default:                                            return 0;
+        if (IsStructuredBuffer(desc))
+        {
+            if ((desc.miscFlags & MiscFlags::Append) != 0)
+                return D3D11_BUFFER_UAV_FLAG_APPEND;
+            if ((desc.miscFlags & MiscFlags::Counter) != 0)
+                return D3D11_BUFFER_UAV_FLAG_COUNTER;
+        }
+        else if (IsByteAddressBuffer(desc))
+            return D3D11_BUFFER_UAV_FLAG_RAW;
     }
+    return 0;
 }
 
 D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
-    D3D11Buffer   { device, desc, initialData                  },
-    bufferFormat_ { D3D11Types::Map(desc.storageBuffer.format) }
+    D3D11Buffer   { device, desc, initialData }
 {
     /* Determine stride size either for structured buffers or regular buffers */
-    const UINT stride = GetStorageBufferStride(desc.storageBuffer);
+    const UINT stride = GetStorageBufferStride(desc);
 
     /* Create resource views (SRV and UAV) */
-    auto format         = GetD3DResourceViewFormat(desc.storageBuffer);
+    auto format         = GetD3DResourceViewFormat(desc);
     auto numElements    = static_cast<UINT>(desc.size) / stride;
 
     if ((desc.bindFlags & BindFlags::Sampled) != 0)
         CreateShaderResourceView(device, format, 0, numElements);
 
     if ((desc.bindFlags & BindFlags::Storage) != 0)
-        CreateUnorderedAccessView(device, format, 0, numElements, GetUAVFlags(desc.storageBuffer));
+        CreateUnorderedAccessView(device, format, 0, numElements, GetUAVFlags(desc));
 }
 
 void D3D11BufferWithRV::SetName(const char* name)

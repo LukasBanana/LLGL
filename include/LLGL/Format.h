@@ -320,12 +320,13 @@ struct FormatFlags
         SupportsRenderTarget    = (1 << 8),
 
         /**
-        \brief Specifies whether the format can have more than one MIP-maps.
+        \brief Specifies whether the format can have more than one MIP-map.
         \see TextureDescriptor::mipLevels
         */
         SupportsMips            = (1 << 9),
 
         /**
+        \brief Specifies whether the format supports to automatically generate MIP-maps.
         \remarks This implies that the flags \c SupportsMips and \c SupportsRenderTarget are also enabled.
         \see MiscFlgas::GenerateMips
         \see CommandBuffer::GenerateMips

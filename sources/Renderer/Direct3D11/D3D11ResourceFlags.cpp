@@ -96,9 +96,9 @@ UINT DXGetBufferMiscFlags(const BufferDescriptor& desc)
 
     if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
     {
-        if (IsStructuredBuffer(desc.storageBuffer.storageType))
+        if (IsStructuredBuffer(desc))
             flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-        else if (IsByteAddressBuffer(desc.storageBuffer.storageType))
+        else if (IsByteAddressBuffer(desc))
             flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
     }
 

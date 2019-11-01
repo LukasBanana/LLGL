@@ -152,8 +152,8 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     auto bufferGL = CreateGLBuffer(desc, initialData);
 
     /* Store meta data for certain types of buffers */
-    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0 && desc.indexFormat != Format::Undefined)
-        bufferGL->SetIndexType(desc.indexFormat);
+    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0 && desc.format != Format::Undefined)
+        bufferGL->SetIndexType(desc.format);
 
     return bufferGL;
 }

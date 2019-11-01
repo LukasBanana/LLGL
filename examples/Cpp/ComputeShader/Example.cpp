@@ -128,11 +128,10 @@ public:
         // Create instance buffer
         LLGL::BufferDescriptor instanceBufferDesc;
         {
-            instanceBufferDesc.size                         = sizeof(SceneObject) * maxNumSceneObjects;
-            instanceBufferDesc.bindFlags                    = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
-            instanceBufferDesc.vertexAttribs                = vertexFormat[1].attributes;
-            instanceBufferDesc.storageBuffer.storageType    = LLGL::StorageBufferType::RWBuffer;
-            instanceBufferDesc.storageBuffer.format         = LLGL::Format::RGBA32Float;
+            instanceBufferDesc.size             = sizeof(SceneObject) * maxNumSceneObjects;
+            instanceBufferDesc.bindFlags        = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
+            instanceBufferDesc.vertexAttribs    = vertexFormat[1].attributes;
+            instanceBufferDesc.format           = LLGL::Format::RGBA32Float;
         }
         instanceBuffer = renderer->CreateBuffer(instanceBufferDesc);
 
@@ -151,10 +150,9 @@ public:
         // Create indirect argument buffer
         LLGL::BufferDescriptor argBufferDesc;
         {
-            argBufferDesc.size                      = sizeof(LLGL::DrawIndirectArguments) * 2;
-            argBufferDesc.bindFlags                 = LLGL::BindFlags::IndirectBuffer | LLGL::BindFlags::Storage;
-            argBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWBuffer;
-            argBufferDesc.storageBuffer.format      = LLGL::Format::RGBA32UInt;
+            argBufferDesc.size      = sizeof(LLGL::DrawIndirectArguments) * 2;
+            argBufferDesc.bindFlags = LLGL::BindFlags::IndirectBuffer | LLGL::BindFlags::Storage;
+            argBufferDesc.format    = LLGL::Format::RGBA32UInt;
         }
         indirectArgBuffer = renderer->CreateBuffer(argBufferDesc);
     }
@@ -315,7 +313,7 @@ private:
                 commands->SetPipelineState(*graphicsPipeline);
                 commands->DrawIndirect(*indirectArgBuffer, 0, 2, sizeof(LLGL::DrawIndirectArguments));
 
-                commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
+                commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 1, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
             }
             commands->EndRenderPass();
         }

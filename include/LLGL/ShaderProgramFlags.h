@@ -87,6 +87,67 @@ enum class UniformType
     AtomicCounter,  //!< Atomic counter uniform (e.g. "atomic_uint").
 };
 
+/**
+\brief Storage buffer type enumeration for shader reflection.
+\note Only supported with: Direct3D 11, Direct3D 12.
+\see ShaderResource::storageBufferType
+*/
+enum class StorageBufferType
+{
+    //! Undefined storage buffer type.
+    Undefined,
+
+    /**
+    \brief Typed buffer, e.g. \c Buffer<float4> in HLSL.
+    \see BufferDescriptor::format
+    */
+    TypedBuffer,
+
+    /**
+    \brief Structured buffer, e.g. \c StructuredBuffer<MyStruct> in HLSL.
+    \see BufferDescriptor::stride
+    */
+    StructuredBuffer,
+
+    /**
+    \brief Byte-address buffer, e.g. \c ByteAddressBuffer in HLSL.
+    \see BufferDescriptor::format
+    */
+    ByteAddressBuffer,
+
+    /**
+    \brief Typed read/write buffer, e.g. \c RWBuffer<float4> in HLSL.
+    \see BufferDescriptor::format
+    */
+    RWTypedBuffer,
+
+    /**
+    \brief Read/write structured buffer, e.g. \c RWStructuredBuffer<MyStruct> in HLSL.
+    \see BufferDescriptor::stride
+    */
+    RWStructuredBuffer,
+
+    /**
+    \brief Read/write byte-address buffer, e.g. \c RWByteAddressBuffer in HLSL.
+    \see BufferDescriptor::stride
+    */
+    RWByteAddressBuffer,
+
+    /**
+    \brief Append structured buffer, e.g. \c AppendStructuredBuffer<MyStruct> in HLSL.
+    \see BufferDescriptor::stride
+    \see MiscFlags::Append
+    */
+    AppendStructuredBuffer,
+
+    /**
+    \brief Consume structured buffer, e.g. \c ConsumeStructuredBuffer<MyStruct> in HLSL.
+    \see BufferDescriptor::stride
+    \see MiscFlags::Append
+    */
+    ConsumeStructuredBuffer,
+};
+
 
 /* ----- Structures ----- */
 
@@ -156,7 +217,7 @@ struct ShaderResource
     /**
     \brief Specifies the size (in bytes) for a constant buffer resource.
     \remarks Additional attribute exclusively used for constant buffer resources.
-    For all other resources, i.e. when 'type' is not equal to 'ResourceType::ConstantBuffer', this attribute is zero.
+    For all other resources, i.e. when \c type is not equal to ShaderResourceType::ConstantBuffer, this attribute is zero.
     \see ResourceType::ConstantBuffer
     */
     std::uint32_t       constantBufferSize  = 0;

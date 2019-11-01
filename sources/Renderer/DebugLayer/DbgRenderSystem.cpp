@@ -626,20 +626,20 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
             LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
     }
 
-    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0 && desc.indexFormat != Format::Undefined)
+    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0 && desc.format != Format::Undefined)
     {
         /* Validate index format */
-        if (desc.indexFormat != Format::R16UInt &&
-            desc.indexFormat != Format::R32UInt)
+        if (desc.format != Format::R16UInt &&
+            desc.format != Format::R32UInt)
         {
-            if (auto formatName = ToString(desc.indexFormat))
+            if (auto formatName = ToString(desc.format))
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
             else
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(desc.indexFormat)));
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(desc.format)));
         }
 
         /* Validate buffer size for specified index format */
-        formatSize = GetFormatAttribs(desc.indexFormat).bitSize / 8;
+        formatSize = GetFormatAttribs(desc.format).bitSize / 8;
         if (formatSize > 0 && desc.size % formatSize != 0)
         {
             LLGL_DBG_WARN(
@@ -656,6 +656,10 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
         if (desc.size % packAlignment != 0)
             LLGL_DBG_WARN(WarningType::ImproperArgument, "constant buffer size is out of pack alignment (alignment is 16 bytes)");
     }
+
+    /* Validate buffer stride */
+    if (desc.stride > 0 && desc.size % desc.stride != 0)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer stride is greater than zero, but size is not a multiple of stride");
 
     if (formatSizeOut)
         *formatSizeOut = formatSize;

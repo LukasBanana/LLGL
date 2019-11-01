@@ -21,57 +21,6 @@ namespace LLGL
 {
 
 
-/* ----- Enumerations ----- */
-
-/**
-\brief Storage buffer type enumeration.
-\note Only supported with: Direct3D 11, Direct3D 12.
-\see BufferDescriptor::StorageBuffer::storageType
-\todo Replace by BindFlag with different options (e.g. StructuredBuffer and Storage).
-*/
-enum class StorageBufferType
-{
-    //! Undefined storage buffer type.
-    Undefined,
-
-    //! Typed buffer.
-    Buffer,
-
-    /**
-    \brief Structured buffer.
-    \note This cannot be used together with a buffer that has the binding flag BindFlags::IndirectBuffer.
-    */
-    StructuredBuffer,
-
-    //! Byte-address buffer.
-    ByteAddressBuffer,
-
-    //! Typed read/write buffer.
-    RWBuffer,
-
-    /**
-    \brief Structured read/write buffer.
-    \note This cannot be used together with a buffer that has the binding flag BindFlags::IndirectBuffer.
-    */
-    RWStructuredBuffer,
-
-    //! Byte-address read/write buffer.
-    RWByteAddressBuffer,
-
-    /**
-    \brief Append structured buffer.
-    \note This cannot be used together with a buffer that has the binding flag BindFlags::IndirectBuffer.
-    */
-    AppendStructuredBuffer,
-
-    /**
-    \brief Consume structured buffer.
-    \note This cannot be used together with a buffer that has the binding flag BindFlags::IndirectBuffer.
-    */
-    ConsumeStructuredBuffer,
-};
-
-
 /* ----- Structures ----- */
 
 /**
@@ -81,42 +30,35 @@ enum class StorageBufferType
 struct BufferDescriptor
 {
     /**
-    \brief Storage buffer specific descriptor structure.
-    \todo Move this into a BufferViewDescriptor.
-    */
-    struct StorageBuffer
-    {
-        /**
-        \brief Specifies the storage buffer type. By defalut StorageBufferType::Undefined.
-        \remarks In OpenGL there are only generic storage buffers (or rather "Shader Storage Buffer Objects").
-        However, a valid type should always be specified when a storage buffer is created.
-        */
-        StorageBufferType   storageType = StorageBufferType::Undefined;
-
-        /**
-        \brief Specifies the vector format of a typed buffer. By default Format::Undefined.
-        \remarks This is only used if the storage type is either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
-        \see IsTypedBuffer
-        \todo Merge this with \c indexFormat
-        */
-        Format              format      = Format::Undefined;
-
-        /**
-        \brief Specifies the stride (in bytes) of each element in a storage buffer. By default 0.
-        \remarks If the buffer has the BindFlags::Sampled or BindFlags::Storage flag, then \c stride must not be zero.
-        \see BufferDescriptor::bindFlags
-        */
-        std::uint32_t       stride      = 0;
-    };
-
-    /**
     \brief Buffer size (in bytes). This must not be larger than RenderingLimits::maxBufferSize. By default 0.
-    \remarks If the buffer has the BindFlags::Sampled or BindFlags::Storage flag, then \c size must be a multiple of <code>storageBuffer.stride</code>.
+    \remarks If \c stride is greater than zero, then \c size \b must be a multiple of \c stride.
     \see RenderingLimits::maxBufferSize
     \see bindFlags
-    \see StorageBuffer::stride
     */
     std::uint64_t                   size            = 0;
+
+    /**
+    \brief Optional stride for structured buffers. By default 0.
+    \remarks This is only used for Direct3D structured buffer, i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, and \c ConsumeStructuredBuffer in HLSL.
+    \remarks If this is non-zero, the \c format attribute is ignored for sampled and storage buffers, i.e. buffers with the binding flags BindFlags::Sampled or BindFlags::Storage.
+    \note If the buffer has the binding flag BindFlags::IndirectBuffer, this \b must be 0.
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    \see MiscFlags::Append
+    \see MiscFlags::Counter
+    */
+    std::uint32_t                   stride          = 0;
+
+    /**
+    \brief Optioanl hardware buffer format. By default Format::Undefined.
+    \remarks This is used for index buffers, typed buffers (e.g. \c Buffer<uint4> and \c RWBuffer<float4> in HLSL), and byte address buffers (i.e. \c ByteAddressBuffer and \c RWByteAddressBuffer in HLSL).
+    \remarks This field is ignored if the binding flags do not contain at least one of the following bits: BindFlags::IndexBuffer, BindFlags::Sampled, or BindFlags::Storage.
+    \remarks If the BindFlags::IndexBuffer bit is set, this must be either Format::R16UInt, Format::R32UInt, or Format::Undefined.
+    \remarks If Format::Undefined is specified and the BindFlags::IndexBuffer bit is set, only the secondary \c SetIndexBuffer function can be used in the CommandBuffer interface.
+    \remarks If Format::Undefined is specified and \c stride is zero, sampled and storage buffers will be interpreted as byte address buffers.
+    \see BindFlags::IndexBuffer
+    \see CommandBuffer::SetIndexBuffer(Buffer&)
+    */
+    Format                          format          = Format::Undefined;
 
     /**
     \brief These flags describe to which resource slots the buffer can be bound. By default 0.
@@ -147,22 +89,6 @@ struct BufferDescriptor
     \see VertexShaderAttributes::inputAttribs
     */
     std::vector<VertexAttribute>    vertexAttribs;
-
-    /**
-    \brief Specifies the format of each index in the buffer. By default Format::Undefined.
-    \remarks This is only used for index buffers and ignored if \c bindFlags does not contain the BindFlags::IndexBuffer bit.
-    However, if the BindFlags::IndexBuffer bit is set, this must be either Format::R16UInt, Format::R32UInt, or Format::Undefined.
-    If Format::Undefined is specified, only the secondary \c SetIndexBuffer function can be used in the CommandBuffer interface.
-    \see BindFlags::IndexBuffer
-    \see CommandBuffer::SetIndexBuffer(Buffer&)
-    */
-    Format                          indexFormat     = Format::Undefined;
-
-    /**
-    \brief Storage buffer type descriptor appendix.
-    \todo Replace this by BufferViewDescriptor
-    */
-    StorageBuffer                   storageBuffer;
 };
 
 
@@ -174,31 +100,19 @@ struct BufferDescriptor
 @{
 */
 
-/**
-\brief Returns true if the storage buffer type denotes a read/write (RW) buffer.
-\return True if \c type either StorageBufferType::RWBuffer, StorageBufferType::RWStructuredBuffer,
-StorageBufferType::RWByteAddressBuffer, StorageBufferType::AppendStructuredBuffer, or StorageBufferType::ConsumeStructuredBuffer.
-*/
-LLGL_EXPORT bool IsRWBuffer(const StorageBufferType type);
+//! Returns true if the buffer descriptor denotes a typed buffer, i.e. \c Buffer or \c RWBuffer in HLSL.
+LLGL_EXPORT bool IsTypedBuffer(const BufferDescriptor& desc);
 
 /**
-\brief Returns true if the storage buffer type denotes a simply typed buffer.
-\return True if \c type either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
+\brief Returns true if the buffer descriptor denotes a structured buffer,
+i.e. \c StructuredBuffer, \c RWStructuredBuffer, \c AppendStructuredBuffer, or \c ConsumeStructuredBuffer in HLSL.
 */
-LLGL_EXPORT bool IsTypedBuffer(const StorageBufferType type);
+LLGL_EXPORT bool IsStructuredBuffer(const BufferDescriptor& desc);
 
 /**
-\brief Returns true if the storage buffer type denotes a structured buffer.
-\return True if \c type either StorageBufferType::StructuredBuffer, StorageBufferType::RWStructuredBuffer,
-StorageBufferType::AppendStructuredBuffer, or StorageBufferType::ConsumeStructuredBuffer.
+\brief Returns true if the buffer descriptor denotes a byte addresse buffer, i.e. \c ByteAddressBuffer or \c RWByteAddressBuffer in HLSL.
 */
-LLGL_EXPORT bool IsStructuredBuffer(const StorageBufferType type);
-
-/**
-\brief Returns true if the storage buffer type denotes a byte addresse buffer.
-\return True if \c type either StorageBufferType::ByteAddressBuffer or StorageBufferType::RWByteAddressBuffer.
-*/
-LLGL_EXPORT bool IsByteAddressBuffer(const StorageBufferType type);
+LLGL_EXPORT bool IsByteAddressBuffer(const BufferDescriptor& desc);
 
 /** @} */
 

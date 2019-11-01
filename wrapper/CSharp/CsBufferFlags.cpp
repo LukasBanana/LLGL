@@ -20,11 +20,12 @@ namespace SharpLLGL
 BufferDescriptor::BufferDescriptor()
 {
     Size            = 0;
+    Stride          = 0;
+    Format          = SharpLLGL::Format::Undefined;
     BindFlags       = SharpLLGL::BindFlags::None;
     CPUAccessFlags  = SharpLLGL::CPUAccessFlags::None;
     MiscFlags       = SharpLLGL::MiscFlags::None;
     VertexAttribs   = gcnew List<VertexAttribute^>();
-    IndexFormat     = Format::Undefined;
 }
 
 

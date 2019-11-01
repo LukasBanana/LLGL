@@ -46,12 +46,6 @@ class D3D11BufferWithRV final : public D3D11Buffer
             return initialCount_;
         }
 
-        //TODO: replace by "GetFormat"
-        inline DXGI_FORMAT GetBufferFormat() const
-        {
-            return bufferFormat_;
-        }
-
     private:
 
         void CreateShaderResourceView(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
@@ -61,10 +55,7 @@ class D3D11BufferWithRV final : public D3D11Buffer
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;
-
         UINT                                initialCount_   = std::numeric_limits<UINT>::max();
-
-        DXGI_FORMAT                         bufferFormat_   = DXGI_FORMAT_UNKNOWN;
 
 };
 

@@ -579,7 +579,7 @@ struct RenderingLimits
 
     /**
     \brief Specifies the maximum size (in bytes) that is supported for hardware buffers (vertex, index, storage buffers).
-    \remarks Constant buffers are a special case for which 'maxConstantBufferSize' can be used.
+    \remarks Constant buffers are a special case for which \c maxConstantBufferSize can be used.
     \see BufferDescriptor::size
     \see maxConstantBufferSize
     */

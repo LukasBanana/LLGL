@@ -189,7 +189,7 @@ void D3D11CommandBuffer::FillBuffer(
 
         if (uav != nullptr &&
             isWholeBufferRange &&
-            DXTypes::MakeUAVClearVector(dstBufferUAV.GetBufferFormat(), valuesVec4, value))
+            DXTypes::MakeUAVClearVector(dstBufferUAV.GetFormat(), valuesVec4, value))
         {
             /* Fill destination buffer directly with primary UAV */
             context_->ClearUnorderedAccessViewUint(uav, valuesVec4);

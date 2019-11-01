@@ -407,7 +407,12 @@ static void ReflectShaderResourceGeneric(
         resource->binding.bindFlags     |= bindFlags;
         resource->binding.stageFlags    |= stageFlags;
         resource->binding.arraySize     = inputBindDesc.BindCount;
-        resource->storageBufferType     = storageBufferType;
+
+        /* Take storage buffer type or unmap from input type */
+        if (storageBufferType != StorageBufferType::Undefined)
+            resource->storageBufferType = storageBufferType;
+        else
+            resource->storageBufferType = DXTypes::Unmap(inputBindDesc.Type);
     }
 }
 
@@ -483,7 +488,10 @@ static HRESULT ReflectShaderInputBindings(
 
             case D3D_SIT_TBUFFER:
             case D3D_SIT_TEXTURE:
-                ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Texture, BindFlags::Sampled, stageFlags);
+                if (inputBindDesc.Dimension == D3D_SRV_DIMENSION_BUFFER)
+                    ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Buffer, BindFlags::Sampled, stageFlags, StorageBufferType::TypedBuffer);
+                else
+                    ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Texture, BindFlags::Sampled, stageFlags);
                 break;
 
             case D3D_SIT_SAMPLER:

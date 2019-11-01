@@ -247,7 +247,10 @@ struct TextureDescriptor
     */
     long            miscFlags       = (MiscFlags::FixedSamples | MiscFlags::GenerateMips);
 
-    //! Hardware texture format. By default Format::RGBA8UNorm.
+    /**
+    \brief Hardware texture format. By default Format::RGBA8UNorm.
+    \see RenderingCapabilities::textureFormats
+    */
     Format          format          = Format::RGBA8UNorm;
 
     /**

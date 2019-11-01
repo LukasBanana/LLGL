@@ -27,8 +27,8 @@ static const UINT64 g_soBufferFillSizeLen   = sizeof(UINT64);
 static const UINT64 g_cBufferAlignment      = 256u;
 
 D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
-    Buffer  { desc.bindFlags                             },
-    format_ { D3D12Types::Map(desc.storageBuffer.format) }
+    Buffer  { desc.bindFlags               },
+    format_ { D3D12Types::Map(desc.format) }
 {
     /* Constant buffers must be aligned to 256 bytes */
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
@@ -314,7 +314,7 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
 {
     /* Store buffer attributes */
     bufferSize_     = GetAlignedSize<UINT64>(desc.size, alignment_);
-    structStride_   = GetStorageBufferStride(desc.storageBuffer);
+    structStride_   = GetStorageBufferStride(desc);
 
     /* Determine actual resource size */
     internalSize_ = bufferSize_;
@@ -432,7 +432,7 @@ void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
 {
     indexBufferView_.BufferLocation = GetNative()->GetGPUVirtualAddress();
     indexBufferView_.SizeInBytes    = static_cast<UINT>(GetBufferSize());
-    indexBufferView_.Format         = D3D12Types::Map(desc.indexFormat);
+    indexBufferView_.Format         = D3D12Types::Map(desc.format);
 }
 
 void D3D12Buffer::CreateStreamOutputBufferView(const BufferDescriptor& desc)

@@ -85,7 +85,7 @@ class VKBuffer : public Buffer
         VkDeviceSize    size_               = 0;
         CPUAccess       mappedCPUAccess_    = CPUAccess::ReadOnly;
 
-        VkIndexType     indexType_          = VK_INDEX_TYPE_UINT32;
+        VkIndexType     indexType_          = VK_INDEX_TYPE_MAX_ENUM;
 
 };
 

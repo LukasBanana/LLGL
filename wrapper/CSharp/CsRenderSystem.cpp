@@ -356,13 +356,14 @@ static void Convert(LLGL::BufferDescriptor& dst, BufferDescriptor^ src)
     if (src)
     {
         dst.size            = src->Size;
+        dst.stride          = src->Stride;
+        dst.format          = static_cast<LLGL::Format>(src->Format);
         dst.bindFlags       = static_cast<long>(src->BindFlags);
         dst.cpuAccessFlags  = static_cast<long>(src->CPUAccessFlags);
         dst.miscFlags       = static_cast<long>(src->MiscFlags);
         dst.vertexAttribs.resize(src->VertexAttribs->Count);
         for (int i = 0; i < src->VertexAttribs->Count; ++i)
             Convert(dst.vertexAttribs[i], src->VertexAttribs[i]);
-        dst.indexFormat = static_cast<LLGL::Format>(src->IndexFormat);
     }
 }
 

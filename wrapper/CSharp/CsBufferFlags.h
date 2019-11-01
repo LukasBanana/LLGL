@@ -31,10 +31,10 @@ namespace SharpLLGL
 public enum class StorageBufferType
 {
     Undefined,
-    Buffer,
+    TypedBuffer,
     StructuredBuffer,
     ByteAddressBuffer,
-    RWBuffer,
+    RWTypedBuffer,
     RWStructuredBuffer,
     RWByteAddressBuffer,
     AppendStructuredBuffer,
@@ -52,11 +52,12 @@ public ref class BufferDescriptor
         BufferDescriptor();
 
         property System::UInt64             Size;
+        property unsigned int               Stride;
+        property Format                     Format;
         property BindFlags                  BindFlags;
         property CPUAccessFlags             CPUAccessFlags;
         property MiscFlags                  MiscFlags;
         property List<VertexAttribute^>^    VertexAttribs;
-        property Format                     IndexFormat;
 
 };
 

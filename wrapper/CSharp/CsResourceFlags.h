@@ -69,6 +69,8 @@ public enum class MiscFlags
     FixedSamples    = (1 << 1),
     GenerateMips    = (1 << 2),
     NoInitialData   = (1 << 3),
+    Append          = (1 << 4),
+    Counter         = (1 << 5),
 };
 
 

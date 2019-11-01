@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT std::uint32_t GetStorageBufferStride(const BufferDescriptor::StorageBuffer& desc)
+LLGL_EXPORT std::uint32_t GetStorageBufferStride(const BufferDescriptor& desc)
 {
     if (desc.stride > 0)
         return desc.stride;

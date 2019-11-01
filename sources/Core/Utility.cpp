@@ -166,9 +166,9 @@ LLGL_EXPORT BufferDescriptor IndexBufferDesc(std::uint64_t size, const Format fo
     BufferDescriptor desc;
     {
         desc.size           = size;
+        desc.format         = format;
         desc.bindFlags      = BindFlags::IndexBuffer;
         desc.cpuAccessFlags = cpuAccessFlags;
-        desc.indexFormat    = format;
     }
     return desc;
 }
@@ -190,10 +190,21 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const Storage
     BufferDescriptor desc;
     {
         desc.size                       = size;
+        desc.stride                     = stride;
         desc.bindFlags                  = BindFlags::Storage;
         desc.cpuAccessFlags             = cpuAccessFlags;
-        desc.storageBuffer.storageType  = storageType;
-        desc.storageBuffer.stride       = stride;
+
+        if (storageType == StorageBufferType::TypedBuffer       ||
+            storageType == StorageBufferType::StructuredBuffer  ||
+            storageType == StorageBufferType::ByteAddressBuffer)
+        {
+            desc.bindFlags |= BindFlags::Sampled;
+        }
+        if (storageType == StorageBufferType::AppendStructuredBuffer ||
+            storageType == StorageBufferType::ConsumeStructuredBuffer)
+        {
+            desc.miscFlags |= MiscFlags::Append;
+        }
     }
     return desc;
 }

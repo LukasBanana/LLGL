@@ -17,6 +17,7 @@
 - [`Format` information](#format-information)
 - [Direct resource binding](#direct-resource-binding)
 - [Vertex attribute description](#vertex-attribute-description)
+- [Storage buffer description](#storage-buffer-description)
 - [Multi-sampling descriptor](#multi-sampling-descriptor)
 - [`ReadTexture` interface](#readtexture-interface)
 - [Stream-output interface](#stream-output-interface)
@@ -174,7 +175,7 @@ After:
 // Usage (Option A):
 LLGL::BufferDescriptor myBufferDesc;
 myBufferDesc.bindFlags   = LLGL::BindFlags::IndexBuffer;
-myBufferDesc.indexFormat = LLGL::Format::R16UInt;
+myBufferDesc.format      = LLGL::Format::R16UInt;
 /* ... */
 myCmdBuffer->SetIndexBuffer(*myIndexBuffer);
 
@@ -398,6 +399,8 @@ ShaderProgram::QueryInfoLog            --> ShaderProgram::GetReport
 ShaderProgram::QueryUniformLocation    --> ShaderProgram::FindUniformLocation
 Texture::QueryDesc                     --> Texture::GetDesc
 Texture::QueryMipExtent                --> Texture::GetMipExtent
+StorageBufferType::Buffer              --> StorageBufferType::TypedBuffer
+StorageBufferType::RWBuffer            --> StorageBufferType::RWTypedBuffer
 ```
 
 
@@ -583,6 +586,54 @@ myVertexShaderDesc.vertex.inputAttribs.insert(
     myInstanceFmt.attributes.begin(),
     myInstanceFmt.attributes.end()
 );
+```
+
+
+## Storage buffer description
+
+The interleaved structure `BufferDescriptor::StorageBuffer` has been removed and a storage buffer is no described with the general purpose attributes.
+
+Before:
+```cpp
+// Interface:
+LLGL::StorageBufferType LLGL::BufferDescriptor::StorageBuffer::storageType;
+LLGL::Format            LLGL::BufferDescriptor::StorageBuffer::format;
+std::uint32_t           LLGL::BufferDescriptor::StorageBuffer::stride;
+
+// Usage:
+LLGL::BufferDescriptor myRWTypedBufferDesc;
+myRWTypedBufferDesc.type                        = LLGL::BufferType::Storage;
+myRWTypedBufferDesc.size                        = /* ... */
+myRWTypedBufferDesc.storageBuffer.storageType   = LLGL::StorageBufferType::RWBuffer;
+myRWTypedBufferDesc.storageBuffer.format        = LLGL::Format::RGBA32Float;
+myRWTypedBufferDesc.storageBuffer.stride        = sizeof(float4)*4;
+
+LLGL::BufferDescriptor myStructBufferDesc;
+myStructBufferDesc.type                         = LLGL::BufferType::Storage;
+myStructBufferDesc.size                         = /* ... */
+myStructBufferDesc.storageBuffer.storageType    = LLGL::StorageBufferType::StructuredBuffer;
+myStructBufferDesc.storageBuffer.format         = LLGL::Format::Undefined;
+myStructBufferDesc.storageBuffer.stride         = sizeof(MyStruct);
+```
+
+After:
+```cpp
+// Interface:
+std::uint32_t LLGL::BufferDescritpor::stride;
+LLGL::Format  LLGL::BufferDescritpor::format;
+
+// Usage:
+LLGL::BufferDescriptor myRWTypedBufferDesc;
+myRWTypedBufferDesc.size        = /* ... */
+myRWTypedBufferDesc.stride      = sizeof(float4)*4;
+myRWTypedBufferDesc.format      = LLGL::Format::RGBA32Float;
+myRWTypedBufferDesc.bindFlags   = LLGL::BindFlags::Storage;
+
+LLGL::BufferDescriptor myStructBufferDesc;
+myStructBufferDesc.size         = /* ... */
+myStructBufferDesc.stride       = sizeof(MyStruct);
+myStructBufferDesc.format       = LLGL::Format::Undefined;
+myStructBufferDesc.bindFlags    = LLGL::BindFlags::Sampled;
 ```
 
 

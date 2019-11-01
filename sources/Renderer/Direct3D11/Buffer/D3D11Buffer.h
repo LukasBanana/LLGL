@@ -55,7 +55,7 @@ class D3D11Buffer : public Buffer
             return stride_;
         }
 
-        // Returns the native buffer format (e.g. index format).
+        // Returns the native buffer format (i.e. format of index buffer or typed buffer).
         inline DXGI_FORMAT GetFormat() const
         {
             return format_;

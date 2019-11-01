@@ -12,36 +12,32 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT bool IsRWBuffer(const StorageBufferType type)
-{
-    return (type >= StorageBufferType::RWBuffer);
-}
-
-LLGL_EXPORT bool IsTypedBuffer(const StorageBufferType type)
+LLGL_EXPORT bool IsTypedBuffer(const BufferDescriptor& desc)
 {
     return
     (
-        type == StorageBufferType::Buffer   ||
-        type == StorageBufferType::RWBuffer
+        desc.stride == 0 &&
+        desc.format != Format::Undefined &&
+        (desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0
     );
 }
 
-LLGL_EXPORT bool IsStructuredBuffer(const StorageBufferType type)
+LLGL_EXPORT bool IsStructuredBuffer(const BufferDescriptor& desc)
 {
     return
     (
-        type == StorageBufferType::StructuredBuffer         ||
-        type == StorageBufferType::RWStructuredBuffer       ||
-        type >= StorageBufferType::AppendStructuredBuffer
+        desc.stride > 0 &&
+        (desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0
     );
 }
 
-LLGL_EXPORT bool IsByteAddressBuffer(const StorageBufferType type)
+LLGL_EXPORT bool IsByteAddressBuffer(const BufferDescriptor& desc)
 {
     return
     (
-        type == StorageBufferType::ByteAddressBuffer    ||
-        type == StorageBufferType::RWByteAddressBuffer
+        desc.stride == 0 &&
+        desc.format == Format::Undefined &&
+        (desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0
     );
 }
 

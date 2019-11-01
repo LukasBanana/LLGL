@@ -177,7 +177,7 @@ void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& 
         descD3D.BindFlags           = DXGetBufferBindFlags(desc.bindFlags);
         descD3D.CPUAccessFlags      = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
         descD3D.MiscFlags           = DXGetBufferMiscFlags(desc);
-        descD3D.StructureByteStride = desc.storageBuffer.stride;
+        descD3D.StructureByteStride = desc.stride;
     }
 
     if (initialData)
@@ -206,7 +206,7 @@ void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& 
     /* Store buffer creation attributes */
     size_   = descD3D.ByteWidth;
     stride_ = (desc.vertexAttribs.empty() ? 0 : desc.vertexAttribs.front().stride);
-    format_ = D3D11Types::Map(desc.indexFormat);
+    format_ = D3D11Types::Map(desc.format);
     usage_  = descD3D.Usage;
 }
 
@@ -220,7 +220,7 @@ void D3D11Buffer::CreateCpuAccessBuffer(ID3D11Device* device, const BufferDescri
         descD3D.BindFlags           = 0; // CPU-access buffer cannot have binding flags
         descD3D.CPUAccessFlags      = DXGetCPUAccessFlags(desc.cpuAccessFlags);
         descD3D.MiscFlags           = 0;
-        descD3D.StructureByteStride = desc.storageBuffer.stride;
+        descD3D.StructureByteStride = desc.stride;
     }
     auto hr = device->CreateBuffer(&descD3D, nullptr, cpuAccessBuffer_.ReleaseAndGetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11Buffer", "for CPU-access buffer");

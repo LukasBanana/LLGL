@@ -223,7 +223,7 @@ public:
 
         // Initialize binding flags
         long bindFlags = LLGL::BindFlags::Sampled;
-        if (storageType == LLGL::StorageBufferType::RWBuffer)
+        if (storageType == LLGL::StorageBufferType::RWTypedBuffer)
             bindFlags |= LLGL::BindFlags::Storage;
 
         // Create particle buffers as texture
@@ -251,18 +251,17 @@ public:
         if (vertexAttrib != nullptr)
             bindFlags |= LLGL::BindFlags::VertexBuffer;
 
-        if (storageType == LLGL::StorageBufferType::Buffer)
+        if (storageType == LLGL::StorageBufferType::TypedBuffer)
             bindFlags |= LLGL::BindFlags::Sampled;
-        else if (storageType == LLGL::StorageBufferType::RWBuffer)
+        else if (storageType == LLGL::StorageBufferType::RWTypedBuffer)
             bindFlags |= LLGL::BindFlags::Storage;
 
         // Create particle buffers
         LLGL::BufferDescriptor bufferDesc;
         {
-            bufferDesc.size                         = sizeof(Gs::Vector4f) * numClothVertices;
-            bufferDesc.bindFlags                    = bindFlags;
-            bufferDesc.storageBuffer.storageType    = storageType;
-            bufferDesc.storageBuffer.format         = LLGL::Format::RGBA32Float;
+            bufferDesc.size         = sizeof(Gs::Vector4f) * numClothVertices;
+            bufferDesc.bindFlags    = bindFlags;
+            bufferDesc.format       = LLGL::Format::RGBA32Float;
             if (vertexAttrib != nullptr)
                 bufferDesc.vertexAttribs = { *vertexAttrib };
         }
@@ -298,12 +297,12 @@ public:
         constantBuffer = CreateConstantBuffer(sceneState);
 
         // Create particle buffers for each attribute
-        CreateParticleBuffer(AttribBase,     LLGL::StorageBufferType::Buffer,   verticesBase.data(), &(vertexFormat.attributes[2]));
-        CreateParticleBuffer(AttribCurrPos,  LLGL::StorageBufferType::RWBuffer, verticesPos.data());
-        CreateParticleBuffer(AttribNextPos,  LLGL::StorageBufferType::RWBuffer, verticesPos.data());
-        CreateParticleBuffer(AttribPrevPos,  LLGL::StorageBufferType::RWBuffer, verticesPos.data(), &(vertexFormat.attributes[0]));
-        CreateParticleBuffer(AttribVelocity, LLGL::StorageBufferType::RWBuffer, zeroVectors.data());
-        CreateParticleBuffer(AttribNormal,   LLGL::StorageBufferType::RWBuffer, zeroVectors.data(), &(vertexFormat.attributes[1]));
+        CreateParticleBuffer(AttribBase,     LLGL::StorageBufferType::TypedBuffer,   verticesBase.data(), &(vertexFormat.attributes[2]));
+        CreateParticleBuffer(AttribCurrPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data());
+        CreateParticleBuffer(AttribNextPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data());
+        CreateParticleBuffer(AttribPrevPos,  LLGL::StorageBufferType::RWTypedBuffer, verticesPos.data(), &(vertexFormat.attributes[0]));
+        CreateParticleBuffer(AttribVelocity, LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data());
+        CreateParticleBuffer(AttribNormal,   LLGL::StorageBufferType::RWTypedBuffer, zeroVectors.data(), &(vertexFormat.attributes[1]));
 
         #ifdef ENABLE_STORAGE_TEXTURES
 
@@ -333,7 +332,7 @@ public:
         {
             indexBufferDesc.size        = sizeof(std::uint32_t) * indices.size();
             indexBufferDesc.bindFlags   = LLGL::BindFlags::IndexBuffer;
-            indexBufferDesc.indexFormat = LLGL::Format::R32UInt;
+            indexBufferDesc.format      = LLGL::Format::R32UInt;
         }
         indexBuffer = renderer->CreateBuffer(indexBufferDesc, indices.data());
     }

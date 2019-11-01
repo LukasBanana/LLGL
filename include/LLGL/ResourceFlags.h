@@ -207,6 +207,26 @@ struct MiscFlags
         \remarks If this is specified, a texture or buffer resource will stay uninitialized during creation and the content is undefined.
         */
         NoInitialData   = (1 << 3),
+
+        /**
+        \brief Enables a storage buffer to be used for \c AppendStructuredBuffer and \c ConsumeStructuredBuffer in HLSL only.
+        \remarks This can only be used with buffers that also have the binding flag BindFlags::Storage and a \c stride greater than zero.
+        \remarks This cannot be used together with the MiscFlags::Counter bit.
+        \note Only supported with: Direct3D 11, Direct3D 12.
+        \see BufferDescriptor::stride
+        \see https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_buffer_uav_flag
+        */
+        Append          = (1 << 4),
+
+        /**
+        \brief Enables the hidden counter in a storage buffer to be used for \c RWStructuredBuffer in HLSL only.
+        \remarks This can only be used with buffers that also have the binding flag BindFlags::Storage and a \c stride greater than zero.
+        \remarks This cannot be used together with the MiscFlags::Append bit.
+        \note Only supported with Direct3D 11, Direct3D 12.
+        \see BufferDescriptor::stride
+        \see https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_buffer_uav_flag
+        */
+        Counter         = (1 << 5),
     };
 };
 

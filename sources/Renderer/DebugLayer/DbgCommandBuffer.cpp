@@ -430,7 +430,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
         LLGL_DBG_SOURCE;
         AssertRecording();
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndexBuffer);
-        ValidateIndexType(bufferDbg.desc.indexFormat);
+        ValidateIndexType(bufferDbg.desc.format);
         bindings_.indexBuffer = (&bufferDbg);
     }
 
