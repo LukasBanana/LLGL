@@ -21,42 +21,48 @@
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
 
 // NSWindow style masks with latest bitmasks
-static const auto g_WinStyleBorderless      = NSWindowStyleMaskBorderless;
-static const auto g_WinStyleResizable       = NSWindowStyleMaskResizable;
-static const auto g_WinStyleTitleBar        = (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable);
+static const auto g_WinStyleBorderless          = NSWindowStyleMaskBorderless;
+static const auto g_WinStyleResizable           = NSWindowStyleMaskResizable;
+static const auto g_WinStyleTitleBar            = (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable);
 
 // NSEvent masks with latest bitmasks
-static const auto g_EventMaskAny            = NSEventMaskAny;
-static const auto g_EventTypeKeyDown        = NSEventTypeKeyDown;
-static const auto g_EventTypeKeyUp          = NSEventTypeKeyUp;
-static const auto g_EventTypeLMouseDragged  = NSEventTypeLeftMouseDragged;
-static const auto g_EventTypeRMouseDragged  = NSEventTypeRightMouseDragged;
-static const auto g_EventTypeMouseMoved     = NSEventTypeMouseMoved;
-static const auto g_EventTypeLMouseDown     = NSEventTypeLeftMouseDown;
-static const auto g_EventTypeLMouseUp       = NSEventTypeLeftMouseUp;
-static const auto g_EventTypeRMouseDown     = NSEventTypeRightMouseDown;
-static const auto g_EventTypeRMouseUp       = NSEventTypeRightMouseUp;
-static const auto g_EventTypeScrollWheel    = NSEventTypeScrollWheel;
+static const auto g_EventMaskAny                = NSEventMaskAny;
+static const auto g_EventTypeKeyDown            = NSEventTypeKeyDown;
+static const auto g_EventTypeKeyUp              = NSEventTypeKeyUp;
+static const auto g_EventTypeMouseMoved         = NSEventTypeMouseMoved;
+static const auto g_EventTypeLMouseDragged      = NSEventTypeLeftMouseDragged;
+static const auto g_EventTypeLMouseDown         = NSEventTypeLeftMouseDown;
+static const auto g_EventTypeLMouseUp           = NSEventTypeLeftMouseUp;
+static const auto g_EventTypeRMouseDragged      = NSEventTypeRightMouseDragged;
+static const auto g_EventTypeRMouseDown         = NSEventTypeRightMouseDown;
+static const auto g_EventTypeRMouseUp           = NSEventTypeRightMouseUp;
+static const auto g_EventTypeExtMouseDragged    = NSEventTypeOtherMouseDragged;
+static const auto g_EventTypeExtMouseDown       = NSEventTypeOtherMouseDown;
+static const auto g_EventTypeExtMouseUp         = NSEventTypeOtherMouseUp;
+static const auto g_EventTypeScrollWheel        = NSEventTypeScrollWheel;
 
 #else
 
 // NSWindow style masks with obsolete bitmasks
-static const auto g_WinStyleBorderless      = NSBorderlessWindowMask;
-static const auto g_WinStyleResizable       = NSResizableWindowMask;
-static const auto g_WinStyleTitleBar        = (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask);
+static const auto g_WinStyleBorderless          = NSBorderlessWindowMask;
+static const auto g_WinStyleResizable           = NSResizableWindowMask;
+static const auto g_WinStyleTitleBar            = (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask);
 
 // NSEvent masks with obsolete bitmasks
-static const auto g_EventMaskAny            = NSAnyEventMask;
-static const auto g_EventTypeKeyDown        = NSKeyDown;
-static const auto g_EventTypeKeyUp          = NSKeyUp;
-static const auto g_EventTypeLMouseDragged  = NSLeftMouseDragged;
-static const auto g_EventTypeRMouseDragged  = NSRightMouseDragged;
-static const auto g_EventTypeMouseMoved     = NSMouseMoved;
-static const auto g_EventTypeLMouseDown     = NSLeftMouseDown;
-static const auto g_EventTypeLMouseUp       = NSLeftMouseUp;
-static const auto g_EventTypeRMouseDown     = NSRightMouseDown;
-static const auto g_EventTypeRMouseUp       = NSRightMouseUp;
-static const auto g_EventTypeScrollWheel    = NSScrollWheel;
+static const auto g_EventMaskAny                = NSAnyEventMask;
+static const auto g_EventTypeKeyDown            = NSKeyDown;
+static const auto g_EventTypeKeyUp              = NSKeyUp;
+static const auto g_EventTypeMouseMoved         = NSMouseMoved;
+static const auto g_EventTypeLMouseDragged      = NSLeftMouseDragged;
+static const auto g_EventTypeLMouseDown         = NSLeftMouseDown;
+static const auto g_EventTypeLMouseUp           = NSLeftMouseUp;
+static const auto g_EventTypeRMouseDragged      = NSRightMouseDragged;
+static const auto g_EventTypeRMouseDown         = NSRightMouseDown;
+static const auto g_EventTypeRMouseUp           = NSRightMouseUp;
+static const auto g_EventTypeExtMouseDragged    = NSOtherMouseDragged;
+static const auto g_EventTypeExtMouseDown       = NSOtherMouseDown;
+static const auto g_EventTypeExtMouseUp         = NSOtherMouseUp;
+static const auto g_EventTypeScrollWheel        = NSScrollWheel;
 
 #endif
 
@@ -514,6 +520,7 @@ void MacOSWindow::OnProcessEvents()
                 
             case g_EventTypeLMouseDragged:
             case g_EventTypeRMouseDragged:
+            case g_EventTypeExtMouseDragged:
             case g_EventTypeMouseMoved:
                 ProcessMouseMoveEvent(event);
                 break;
@@ -533,7 +540,15 @@ void MacOSWindow::OnProcessEvents()
             case g_EventTypeRMouseUp:
                 ProcessMouseKeyEvent(Key::RButton, false);
                 break;
-                
+
+            case g_EventTypeExtMouseDown:
+                ProcessMouseKeyEvent(Key::MButton, true);
+                break;
+
+            case g_EventTypeExtMouseUp:
+                ProcessMouseKeyEvent(Key::MButton, false);
+                break;
+
             case g_EventTypeScrollWheel:
                 ProcessMouseWheelEvent(event);
                 break;
