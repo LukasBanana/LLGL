@@ -21,6 +21,7 @@ namespace LLGL
 
 
 class ResourceBindingIterator;
+struct ResourceHeapDescriptor;
 struct D3DResourceBinding;
 
 /*

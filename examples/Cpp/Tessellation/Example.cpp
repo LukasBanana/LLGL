@@ -141,9 +141,6 @@ public:
                 { vertexFormat }
             );
             constantBufferIndex = 1;//TODO: unify
-
-            LLGL::ShaderReflection reflect;
-            shaderProgram->Reflect(reflect);
         }
     }
 

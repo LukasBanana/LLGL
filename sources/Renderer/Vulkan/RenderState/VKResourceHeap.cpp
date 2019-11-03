@@ -15,6 +15,7 @@
 #include "../VKContainers.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
+#include <LLGL/ResourceHeapFlags.h>
 #include <map>
 
 

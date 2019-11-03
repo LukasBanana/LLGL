@@ -22,6 +22,7 @@ namespace LLGL
 
 class GLStateManager;
 class ResourceBindingIterator;
+struct ResourceHeapDescriptor;
 struct GLResourceBinding;
 
 /*

@@ -12,11 +12,14 @@
 #include <LLGL/ResourceHeap.h>
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
+#include <cstddef>
 
 
 namespace LLGL
 {
 
+
+struct ResourceHeapDescriptor;
 
 class D3D12ResourceHeap final : public ResourceHeap
 {

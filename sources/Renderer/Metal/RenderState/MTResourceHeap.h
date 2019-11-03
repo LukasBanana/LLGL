@@ -23,6 +23,7 @@ namespace LLGL
 
 class ResourceBindingIterator;
 struct MTResourceBinding;
+struct ResourceHeapDescriptor;
 
 /*
 This class emulates the behavior of a descriptor set like in Vulkan,
@@ -45,7 +46,7 @@ class MTResourceHeap : public ResourceHeap
 
         using MTResourceBindingIter = std::vector<MTResourceBinding>::const_iterator;
         using BuildSegmentFunc = std::function<void(MTResourceBindingIter begin, NSUInteger count)>;
-    
+
         void BuildBufferSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments);
         void BuildTextureSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments);
         void BuildSamplerSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments);
@@ -63,6 +64,8 @@ class MTResourceHeap : public ResourceHeap
         void BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, std::int8_t*& byteAlignedBuffer);
         void BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, std::int8_t*& byteAlignedBuffer);
 
+    private:
+
         // Header structure to describe all segments within the raw buffer.
         struct SegmentationHeader
         {
@@ -73,15 +76,17 @@ class MTResourceHeap : public ResourceHeap
             std::uint8_t numVertexBufferSegments;
             std::uint8_t numVertexTextureSegments;
             std::uint8_t numVertexSamplerSegments;
-            
+
             std::uint8_t numFragmentBufferSegments;
             std::uint8_t numFragmentTextureSegments;
             std::uint8_t numFragmentSamplerSegments;
-            
+
             std::uint8_t numKernelBufferSegments;
             std::uint8_t numKernelTextureSegments;
             std::uint8_t numKernelSamplerSegments;
         };
+
+    private:
 
         SegmentationHeader          segmentationHeader_;
         std::uint16_t               bufferOffsetKernel_ = 0;

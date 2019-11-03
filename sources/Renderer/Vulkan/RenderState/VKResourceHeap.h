@@ -23,6 +23,8 @@ namespace LLGL
 class VKBuffer;
 struct VKWriteDescriptorContainer;
 struct VKLayoutBinding;
+struct ResourceHeapDescriptor;
+struct ResourceViewDescriptor;
 
 class VKResourceHeap final : public ResourceHeap
 {

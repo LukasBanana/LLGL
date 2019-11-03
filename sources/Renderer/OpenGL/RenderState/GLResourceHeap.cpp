@@ -14,6 +14,7 @@
 #include "../Texture/GLTexture.h"
 #include "../../CheckedCast.h"
 #include "../../ResourceBindingIterator.h"
+#include <LLGL/ResourceHeapFlags.h>
 
 
 namespace LLGL

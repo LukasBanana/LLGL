@@ -15,6 +15,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
 #include <LLGL/Resource.h>
+#include <LLGL/ResourceHeapFlags.h>
 #include <functional>
 
 
