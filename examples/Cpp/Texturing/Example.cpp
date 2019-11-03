@@ -172,6 +172,32 @@ public:
 
         // Release image data
         stbi_image_free(imageBuffer);
+
+        #if 1//TESTING
+
+        LLGL::BufferDescriptor bufDesc;
+        {
+            bufDesc.size = 4*100;
+            bufDesc.bindFlags   = LLGL::BindFlags::Storage;
+            bufDesc.format      = LLGL::Format::RGBA8UInt;
+        }
+        auto tempBuffer = renderer->CreateBuffer(bufDesc);
+        tempBuffer->SetName("tempBuffer");
+
+        commands->Begin();
+        {
+            #if 0
+            commands->FillBuffer(*tempBuffer, 0, 0xFF00FFFF, 4*60);
+            commands->FillBuffer(*tempBuffer, 4*60, 0x00FF00FF, 4*40);
+            #else
+            commands->FillBuffer(*tempBuffer, 0, 0xABCDEF12);
+            //commands->FillBuffer(*tempBuffer, 0, 0x00FF00FF);
+            #endif
+        }
+        commands->End();
+        commandQueue->Submit(*commands);
+
+        #endif // /TESTING
     }
 
     void LoadCompressedTexture(const std::string& filename)

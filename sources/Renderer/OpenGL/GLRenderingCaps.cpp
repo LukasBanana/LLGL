@@ -193,6 +193,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasUniforms                    = HasExtension(GLExt::ARB_shader_objects);
     features.hasGeometryShaders             = HasExtension(GLExt::ARB_geometry_shader4);
     features.hasTessellationShaders         = HasExtension(GLExt::ARB_tessellation_shader);
+    features.hasTessellatorStage            = features.hasTessellationShaders;
     features.hasComputeShaders              = HasExtension(GLExt::ARB_compute_shader);
     features.hasInstancing                  = HasExtension(GLExt::ARB_draw_instanced);
     features.hasOffsetInstancing            = HasExtension(GLExt::ARB_base_instance);

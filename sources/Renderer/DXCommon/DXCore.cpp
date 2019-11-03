@@ -355,6 +355,7 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     caps.features.hasUniforms                       = false; // not supported by D3D11
     caps.features.hasGeometryShaders                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasTessellationShaders            = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
+    caps.features.hasTessellatorStage               = caps.features.hasTessellationShaders;
     caps.features.hasComputeShaders                 = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasInstancing                     = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasOffsetInstancing               = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
@@ -383,6 +384,7 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     caps.limits.maxComputeShaderWorkGroupSize[1]    = 1024u;
     caps.limits.maxComputeShaderWorkGroupSize[2]    = 1024u;
     caps.limits.maxStreamOutputs                    = 4u;
+    caps.limits.maxTessFactor                       = 64u;
 }
 
 std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLevel)

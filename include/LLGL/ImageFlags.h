@@ -202,7 +202,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
 );
 
 /**
-\briefs Copies an image buffer region from the source buffer to the destination buffer.
+\brief Copies an image buffer region from the source buffer to the destination buffer.
 \param[out] dstImageDesc Specifies the destination image descriptor.
 \param[in] dstOffset Specifies the 3D offset of the destination image.
 \param[in] dstRowStride Specifies the number of pixels for each row in the destination image.

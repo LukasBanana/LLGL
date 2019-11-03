@@ -407,10 +407,21 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether tessellation shaders are supported.
+    \remarks This feature implies that \c hasTessellatorStage is true.
+    \note Only supported with: Direct3D 12, Direct3D 11, Vulkan, OpenGL.
     \see ShaderType::TessControl
     \see ShaderType::TessEvaluation
     */
     bool hasTessellationShaders         = false;
+
+    /**
+    \brief Specifies whether tessellator stage is supported.
+    \remarks The Metal backend supports a tessellator stage but no dedicated tessellation shaders.
+    The tessellation control shader and the tessellation evaluation shader are usually defined
+    by a compute kernel and a post-tessellation vertex function respectively.
+    \see TessellationDescriptor.
+    */
+    bool hasTessellatorStage            = false;
 
     /**
     \brief Specifies whether compute shaders are supported.

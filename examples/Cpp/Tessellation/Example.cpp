@@ -56,8 +56,8 @@ public:
 
         if (!renderCaps.features.hasConstantBuffers)
             throw std::runtime_error("constant buffers are not supported by this renderer");
-        //if (!renderCaps.features.hasTessellationShaders)
-        //    throw std::runtime_error("tessellation shaders are not supported by this renderer");
+        if (!renderCaps.features.hasTessellatorStage)
+            throw std::runtime_error("tessellation is not supported by this renderer");
 
         // Create graphics object
         auto vertexFormat = CreateBuffers();

@@ -90,6 +90,7 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     LLGL_VALIDATE_FEATURE( hasUniforms,                  "uniforms"                   );
     LLGL_VALIDATE_FEATURE( hasGeometryShaders,           "geometry shaders"           );
     LLGL_VALIDATE_FEATURE( hasTessellationShaders,       "tessellation shaders"       );
+    LLGL_VALIDATE_FEATURE( hasTessellatorStage,          "tessellator stage"          );
     LLGL_VALIDATE_FEATURE( hasComputeShaders,            "compute shaders"            );
     LLGL_VALIDATE_FEATURE( hasInstancing,                "hardware instancing"        );
     LLGL_VALIDATE_FEATURE( hasOffsetInstancing,          "offset instancing"          );
@@ -164,6 +165,8 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     LLGL_VALIDATE_LIMIT( maxViewportSize[1],                "viewport height"                           );
     LLGL_VALIDATE_LIMIT( maxBufferSize,                     "buffer size"                               );
     LLGL_VALIDATE_LIMIT( maxConstantBufferSize,             "constant buffer size"                      );
+    LLGL_VALIDATE_LIMIT( maxStreamOutputs,                  "stream outputs"                            );
+    LLGL_VALIDATE_LIMIT( maxTessFactor,                     "tessellation factor"                       );
 
     #undef LLGL_VALIDATE_LIMIT
     #undef LLGL_CONTINUE_VALIDATION_IF

@@ -386,7 +386,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] resourceHeap Specifies the resource heap that contains all shader resources that will be bound to the shader pipeline.
         \param[in] firstSet Specifies the set number of the first layout descriptor.
         \remarks This may invalidate the previously bound resource heap for both the graphics and compute pipeline.
-        \note Parameter 'firstSet' is only supported with: Vulkan.
+        \note Parameter \c firstSet is only supported with: Vulkan.
+        \todo Merge this with SetComputeResourceHeap and rename to \c SetResourceHeap
         */
         virtual void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) = 0;
 
@@ -395,7 +396,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] resourceHeap Specifies the resource heap that contains all shader resources that will be bound to the shader pipeline.
         \param[in] firstSet Specifies the set number of the first layout descriptor.
         \remarks This may invalidate the previously bound resource heap for both the graphics and compute pipeline.
-        \note Parameter 'firstSet' is only supported with: Vulkan.
+        \note Parameter \c firstSet is only supported with: Vulkan.
+        \todo Merge this with SetGraphicsResourceHeap and rename to \c SetResourceHeap
         */
         virtual void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) = 0;
 

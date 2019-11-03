@@ -181,6 +181,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.features.hasUniforms                       = true;
     caps.features.hasGeometryShaders                = (features_.geometryShader != VK_FALSE);
     caps.features.hasTessellationShaders            = (features_.tessellationShader != VK_FALSE);
+    caps.features.hasTessellatorStage               = caps.features.hasTessellationShaders;
     caps.features.hasComputeShaders                 = true;
     caps.features.hasInstancing                     = true;
     caps.features.hasOffsetInstancing               = true;
@@ -214,6 +215,8 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
     caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
     caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;
+    caps.limits.maxStreamOutputs                    = 0; //TODO
+    caps.limits.maxTessFactor                       = limits.maxTessellationGenerationLevel;
 
     /* Store graphics pipeline spcific limitations */
     pipelineLimits.lineWidthRange[0]    = limits.lineWidthRange[0];
