@@ -60,10 +60,10 @@ bool MTShaderProgram::Reflect(ShaderReflection& reflection) const
 {
     ShaderProgram::ClearShaderReflection(reflection);
 
+    if (vertexFunc_ != nil || fragmentFunc_ != nil)
+        ReflectRenderPipeline(reflection);
     if (kernelFunc_ != nil)
         ReflectComputePipeline(reflection);
-    else
-        ReflectRenderPipeline(reflection);
 
     ShaderProgram::FinalizeShaderReflection(reflection);
     return true;
@@ -98,6 +98,14 @@ bool MTShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
     return false;
 }
 
+NSUInteger MTShaderProgram::GetNumPatchControlPoints() const
+{
+    if (vertexFunc_ != nil && [vertexFunc_ patchType] != MTLPatchTypeNone)
+        return [vertexFunc_ patchControlPointCount];
+    else
+        return 0;
+}
+
 
 /*
  * ======= Private: =======
@@ -126,13 +134,9 @@ void MTShaderProgram::Attach(Shader* shader)
                     vertexFunc_ = shaderFunc;
                     break;
                 case ShaderType::TessControl:
-                    //???
-                    break;
                 case ShaderType::TessEvaluation:
-                    //???
-                    break;
                 case ShaderType::Geometry:
-                    //???
+                    // Ignore, shader stages not supported by Metal
                     break;
                 case ShaderType::Fragment:
                     fragmentFunc_ = shaderFunc;
@@ -158,7 +162,25 @@ static ResourceType ToResourceType(MTLArgumentType type)
     }
 }
 
-static void ReflectShaderArgument(MTLArgument* arg, ShaderReflection& reflection)
+static long GetShaderArgumentBindFlags(MTLArgument* arg, const ResourceType resourceType)
+{
+    long bindFlags = 0;
+
+    bool isRead     = (arg.access != MTLArgumentAccessWriteOnly);
+    bool isWritten  = (arg.access != MTLArgumentAccessReadOnly);
+
+    if (resourceType == ResourceType::Buffer || resourceType == ResourceType::Texture)
+    {
+        if (isRead)
+            bindFlags |= BindFlags::Sampled;
+        if (isWritten)
+            bindFlags |= BindFlags::Storage;
+    }
+
+    return bindFlags;
+}
+
+static void ReflectShaderArgument(MTLArgument* arg, ShaderReflection& reflection, long stageFlags)
 {
     auto resourceType = ToResourceType(arg.type);
     if (resourceType != ResourceType::Undefined)
@@ -167,6 +189,8 @@ static void ReflectShaderArgument(MTLArgument* arg, ShaderReflection& reflection
         {
             resource.binding.name       = [arg.name UTF8String];
             resource.binding.type       = resourceType;
+            resource.binding.bindFlags  = GetShaderArgumentBindFlags(arg, resourceType);
+            resource.binding.stageFlags = stageFlags;
             resource.binding.slot       = static_cast<std::uint32_t>(arg.index);
             resource.binding.arraySize  = static_cast<std::uint32_t>(arg.arrayLength);
             if (resourceType == ResourceType::Buffer)
@@ -179,7 +203,7 @@ static void ReflectShaderArgument(MTLArgument* arg, ShaderReflection& reflection
 void MTShaderProgram::ReflectRenderPipeline(ShaderReflection& reflection) const
 {
     //TODO: get pixel formats from render target or render context
-    /* Create render pipeline state */
+    /* Create temporary render pipeline state to retrieve shader reflection */
     MTLRenderPipelineDescriptor* pipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
     {
         pipelineDesc.vertexDescriptor                   = GetMTLVertexDesc();
@@ -211,16 +235,31 @@ void MTShaderProgram::ReflectRenderPipeline(ShaderReflection& reflection) const
     [pipelineDesc release];
 
     for (MTLArgument* arg in psoReflect.vertexArguments)
-        ReflectShaderArgument(arg, reflection);
+        ReflectShaderArgument(arg, reflection, StageFlags::VertexStage);
     for (MTLArgument* arg in psoReflect.fragmentArguments)
-        ReflectShaderArgument(arg, reflection);
+        ReflectShaderArgument(arg, reflection, StageFlags::FragmentStage);
 
     [pso release];
 }
 
 void MTShaderProgram::ReflectComputePipeline(ShaderReflection& reflection) const
 {
-    //TODO
+    /* Create temporary compute pipeline state to retrieve shader reflection */
+    MTLComputePipelineReflection* psoReflect = nullptr;
+    MTLPipelineOption opt = (MTLPipelineOptionArgumentInfo | MTLPipelineOptionBufferTypeInfo);
+    NSError* error = nullptr;
+
+    id<MTLComputePipelineState> pso = [device_
+        newComputePipelineStateWithFunction:    GetKernelMTLFunction()
+        options:                                opt
+        reflection:                             &psoReflect
+        error:                                  &error
+    ];
+
+    for (MTLArgument* arg in psoReflect.arguments)
+        ReflectShaderArgument(arg, reflection, StageFlags::ComputeStage);
+
+    [pso release];
 }
 
 

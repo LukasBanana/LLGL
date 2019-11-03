@@ -154,6 +154,16 @@ void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEn
     }
 }
 
+bool MTResourceHeap::HasGraphicsResources() const
+{
+    return ((segmentationHeader_.hasVertexResources | segmentationHeader_.hasFragmentResources) != 0);
+}
+
+bool MTResourceHeap::HasComputeResources() const
+{
+    return (segmentationHeader_.hasKernelResources != 0);
+}
+
 
 /*
  * ======= Private: =======

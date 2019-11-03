@@ -164,6 +164,23 @@ SubType* TakeOwnership(std::list<std::unique_ptr<BaseType>>& objectSet, std::uni
     return ref;
 }
 
+// Similar to std::unqiue but with predicate is allowed to modify elements.
+template <typename ForwardIt, typename BinaryPredicate>
+static ForwardIt UniqueMerge(ForwardIt begin, ForwardIt end, BinaryPredicate pred)
+{
+    if (begin == end)
+        return end;
+
+    ForwardIt result = begin;
+    while (++begin != end)
+    {
+        if (!pred(*result, *begin) && ++result != begin)
+            *result = std::move(*begin);
+    }
+
+    return ++result;
+}
+
 // Returns the specified integral value as hexadecimal string.
 template <typename T>
 std::string ToHex(T value)

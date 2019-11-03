@@ -56,8 +56,8 @@ public:
 
         if (!renderCaps.features.hasConstantBuffers)
             throw std::runtime_error("constant buffers are not supported by this renderer");
-        if (!renderCaps.features.hasTessellationShaders)
-            throw std::runtime_error("tessellation shaders are not supported by this renderer");
+        //if (!renderCaps.features.hasTessellationShaders)
+        //    throw std::runtime_error("tessellation shaders are not supported by this renderer");
 
         // Create graphics object
         auto vertexFormat = CreateBuffers();
@@ -130,6 +130,21 @@ public:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::Metal))
+        {
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Compute,        "Example.metal", "HS", "2.0" },
+                    { LLGL::ShaderType::Vertex,         "Example.metal", "DS", "2.0" },
+                    { LLGL::ShaderType::Fragment,       "Example.metal", "PS", "2.0" }
+                },
+                { vertexFormat }
+            );
+            constantBufferIndex = 1;//TODO: unify
+
+            LLGL::ShaderReflection reflect;
+            shaderProgram->Reflect(reflect);
+        }
     }
 
     #ifdef ENABLE_RENDER_PASS
@@ -160,7 +175,11 @@ public:
             {
                 LLGL::BindingDescriptor
                 {
-                    "Settings", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::AllTessStages, constantBufferIndex
+                    "Settings",
+                    LLGL::ResourceType::Buffer,
+                    LLGL::BindFlags::ConstantBuffer,
+                    (IsMetal() ? LLGL::StageFlags::ComputeStage | LLGL::StageFlags::VertexStage : LLGL::StageFlags::AllTessStages),
+                    constantBufferIndex
                 }
             };
         }
@@ -198,6 +217,11 @@ public:
 
             // Enable back-face culling
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+
+            // Specify tessellation state (only required for Metal)
+            pipelineDesc.tessellation.indexFormat       = LLGL::Format::R32UInt;
+            pipelineDesc.tessellation.partition         = LLGL::TessellationPartition::FractionalOdd;
+            pipelineDesc.tessellation.outputWindingCCW  = true;
         }
 
         // Create graphics pipelines
@@ -288,7 +312,7 @@ private:
                 if (resourceHeap)
                 {
                     // Bind resource view heap to graphics pipeline
-                    commands->SetGraphicsResourceHeap(*resourceHeap, 0);
+                    commands->SetGraphicsResourceHeap(*resourceHeap);
                 }
                 else
                 {

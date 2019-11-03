@@ -40,6 +40,27 @@ class MTGraphicsPSO : public MTPipelineState
             return primitiveType_;
         }
 
+        /*
+        Returns the number of patch control points for graphics PSOs with a tessellator stage,
+        or 0 if there was no post-tessellation vertex function specified.
+        */
+        inline NSUInteger GetNumPatchControlPoints() const
+        {
+            return numPatchControlPoints_;
+        }
+
+        // Returns the patch type of the post-tessellation vertex function.
+        inline MTLPatchType GetPatchType() const
+        {
+            return patchType_;
+        }
+
+        // Returns the compute pipeline state for tessellation shaders.
+        inline id<MTLComputePipelineState> GetTessPipelineState() const
+        {
+            return tessPipelineState_;
+        }
+
         // Returns true if the blend color must be set independently of the PSO.
         inline bool IsBlendColorDynamic() const
         {
@@ -69,12 +90,15 @@ class MTGraphicsPSO : public MTPipelineState
 
         id<MTLRenderPipelineState>  renderPipelineState_    = nil;
         id<MTLDepthStencilState>    depthStencilState_      = nil;
+        id<MTLComputePipelineState> tessPipelineState_      = nil;
 
         MTLCullMode                 cullMode_               = MTLCullModeNone;
         MTLWinding                  winding_                = MTLWindingClockwise;
         MTLTriangleFillMode         fillMode_               = MTLTriangleFillModeFill;
         MTLPrimitiveType            primitiveType_          = MTLPrimitiveTypeTriangle;
         MTLDepthClipMode            clipMode_               = MTLDepthClipModeClip;
+        NSUInteger                  numPatchControlPoints_  = 0;
+        MTLPatchType                patchType_              = MTLPatchTypeNone;
 
         float                       depthBias_              = 0.0f;
         float                       depthSlope_             = 0.0f;

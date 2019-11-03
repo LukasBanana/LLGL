@@ -220,7 +220,9 @@ Shader* MTRenderSystem::CreateShader(const ShaderDescriptor& desc)
 
 ShaderProgram* MTRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
 {
+    #if 0//TESS
     AssertCreateShaderProgram(desc);
+    #endif
     return TakeOwnership(shaderPrograms_, MakeUnique<MTShaderProgram>(device_, desc));
 }
 

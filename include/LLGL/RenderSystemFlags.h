@@ -599,6 +599,13 @@ struct RenderingLimits
     \see RenderingFeatures::hasStreamOutputs
     */
     std::uint32_t   maxStreamOutputs                    = 0;
+
+    /**
+    \brief Specifies the maimum tessellation factor.
+    \remarks Metal for example supports 64 on macOS and 16 on iOS.
+    \see TessellationDescriptor::maxTessFactor
+    */
+    std::uint32_t   maxTessFactor                       = 0;
 };
 
 /**

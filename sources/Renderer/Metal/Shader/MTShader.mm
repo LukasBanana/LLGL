@@ -181,7 +181,7 @@ bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shade
 }
 
 // Converts the vertex attribute to a Metal vertex buffer layout
-static void Convert(MTLVertexBufferLayoutDescriptor* dst, const VertexAttribute& src)
+static void Convert(MTLVertexBufferLayoutDescriptor* dst, const VertexAttribute& src, bool isPatchControlPoint)
 {
     if (src.instanceDivisor > 0)
     {
@@ -190,7 +190,7 @@ static void Convert(MTLVertexBufferLayoutDescriptor* dst, const VertexAttribute&
     }
     else
     {
-        dst.stepFunction = MTLVertexStepFunctionPerVertex;
+        dst.stepFunction = (isPatchControlPoint ? MTLVertexStepFunctionPerPatchControlPoint : MTLVertexStepFunctionPerVertex);
         dst.stepRate     = 1;
     }
     dst.stride = static_cast<NSUInteger>(src.stride);
@@ -214,6 +214,9 @@ void MTShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
         [vertexDesc_ release];
     vertexDesc_ = [[MTLVertexDescriptor alloc] init];
 
+    /* If the patch type of the vertex function is not MTLPatchTypeNone, the vertex layout declares a patch control point */
+    bool isPatchControlPoint = (native_ != nil && [native_ patchType] != MTLPatchTypeNone);
+
     /* Convert vertex attributes to Metal vertex buffer layouts and attribute descriptors */
     std::set<std::uint32_t> slotOccupied;
 
@@ -223,7 +226,7 @@ void MTShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
 
         auto occupied = slotOccupied.insert(attr.slot);
         if (occupied.second)
-            Convert(vertexDesc_.layouts[attr.slot], attr);
+            Convert(vertexDesc_.layouts[attr.slot], attr, isPatchControlPoint);
 
         Convert(vertexDesc_.attributes[attr.location], attr);
     }

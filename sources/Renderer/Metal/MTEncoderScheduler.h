@@ -61,10 +61,20 @@ class MTEncoderScheduler
         void SetBlendColor(const float* blendColor);
         void SetStencilRef(std::uint32_t ref, const StencilFace face);
 
+        // Converts, binds, and stores the respective state in the internal compute encoder state.
+        void SetComputePSO(MTComputePSO* pipelineState);
+        void SetComputeResourceHeap(MTResourceHeap* resourceHeap);
+
+        // Rebinds the currently bounds resource heap to the specified compute encoder (used for tessellation encoding).
+        void RebindResourceHeap(id<MTLComputeCommandEncoder> computeEncoder);
+
     public:
 
-        // Returns the current render command encoder and flushes the queued render pass.
-        id<MTLRenderCommandEncoder> GetRenderEncoderAndFlushRenderPass();
+        // Returns the current render command encoder and flushes the queued render states and render pass.
+        id<MTLRenderCommandEncoder> GetRenderEncoderAndFlushState();
+
+        // Returns the current compute command encoder and flushes the stored compute states.
+        id<MTLComputeCommandEncoder> GetComputeEncoderAndFlushState();
 
         // Returns the current render command encoder.
         inline id<MTLRenderCommandEncoder> GetRenderEncoder() const
@@ -89,6 +99,9 @@ class MTEncoderScheduler
         void SubmitRenderEncoderState();
         void ResetRenderEncoderState();
 
+        void SubmitComputeEncoderState();
+        void ResetComputeEncoderState();
+
     private:
 
         static const NSUInteger g_maxNumVertexBuffers = 32;
@@ -104,7 +117,7 @@ class MTEncoderScheduler
             NSRange         vertexBufferRange                                   = { 0, 0 };
 
             MTGraphicsPSO*  graphicsPSO                                         = nullptr;
-            MTResourceHeap* resourceHeap                                        = nullptr;
+            MTResourceHeap* graphicsResourceHeap                                = nullptr;
 
             float           blendColor[4]                                       = { 0.0f, 0.0f, 0.0f, 0.0f };
             bool            blendColorDynamic                                   = false;
@@ -112,6 +125,12 @@ class MTEncoderScheduler
             std::uint32_t   stencilFrontRef                                     = 0;
             std::uint32_t   stencilBackRef                                      = 0;
             bool            stencilRefDynamic                                   = false;
+        };
+
+        struct MTComputeEncoderState
+        {
+            MTComputePSO*   computePSO                                          = nullptr;
+            MTResourceHeap* computeResourceHeap                                 = nullptr;
         };
 
     private:
@@ -124,6 +143,7 @@ class MTEncoderScheduler
 
         MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
         MTRenderEncoderState            renderEncoderState_;
+        MTComputeEncoderState           computeEncoderState_;
 
         bool                            isRenderEncoderPaused_  = false;
 
@@ -132,16 +152,27 @@ class MTEncoderScheduler
             std::uint8_t bits;
             struct
             {
-                std::uint8_t viewports          : 1;
-                std::uint8_t scissors           : 1;
-                std::uint8_t vertexBuffers      : 1;
-                std::uint8_t graphicsPipeline   : 1;
-                std::uint8_t resourceHeap       : 1;
-                std::uint8_t blendColor         : 1;
-                std::uint8_t stencilRef         : 1;
+                std::uint8_t viewports              : 1;
+                std::uint8_t scissors               : 1;
+                std::uint8_t vertexBuffers          : 1;
+                std::uint8_t graphicsPSO            : 1;
+                std::uint8_t graphicsResourceHeap   : 1;
+                std::uint8_t blendColor             : 1;
+                std::uint8_t stencilRef             : 1;
             };
         }
-        dirtyBits_;
+        renderDirtyBits_;
+
+        union
+        {
+            std::uint8_t bits;
+            struct
+            {
+                std::uint8_t computePSO             : 1;
+                std::uint8_t computeResourceHeap    : 1;
+            };
+        }
+        computeDirtyBits_;
 
 };
 

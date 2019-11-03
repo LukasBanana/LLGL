@@ -38,6 +38,9 @@ class MTResourceHeap : public ResourceHeap
         void BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder);
         void BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder);
 
+        bool HasGraphicsResources() const;
+        bool HasComputeResources() const;
+
     private:
 
         using MTResourceBindingIter = std::vector<MTResourceBinding>::const_iterator;

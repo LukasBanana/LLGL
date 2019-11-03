@@ -255,6 +255,9 @@ static void GLGetFeatureLimits(RenderingLimits& limits)
         /* Presume that at least one stream-output is supported */
         limits.maxStreamOutputs = 1u;
     }
+
+    /* Determine tessellation limits */
+    limits.maxTessFactor = GLGetUInt(GL_MAX_TESS_GEN_LEVEL);
 }
 
 static void GLGetTextureLimits(const RenderingFeatures& features, RenderingLimits& limits)

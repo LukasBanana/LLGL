@@ -13,7 +13,7 @@
 #endif
 
 // Enables custom render pass to clear at the begin of a render pass section (more efficient)
-#define ENABLE_CUSTOM_RENDER_PASS
+//#define ENABLE_CUSTOM_RENDER_PASS
 
 
 class Example_PostProcessing : public ExampleBase

@@ -55,7 +55,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
 {
     switch (format)
     {
-        case Format::Undefined:       	break;
+        case Format::Undefined:       	return MTLPixelFormatInvalid;
 
         /* --- Alpha channel color formats --- */
         case Format::A8UNorm:        	return MTLPixelFormatA8Unorm;
@@ -247,6 +247,31 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
     MapFailed("Format", "MTLVertexFormat");
 }
 
+MTLTessellationControlPointIndexType ToMTLPatchIndexType(const Format format)
+{
+    switch (format)
+    {
+        case Format::Undefined: return MTLTessellationControlPointIndexTypeNone;
+        case Format::R16UInt:   return MTLTessellationControlPointIndexTypeUInt16;
+        case Format::R32UInt:   return MTLTessellationControlPointIndexTypeUInt32;
+        default:                break;
+    }
+    MapFailed("Format", "MTLTessellationControlPointIndexType");
+}
+
+MTLTessellationPartitionMode ToMTLPartitionMode(const TessellationPartition partitionMode)
+{
+    switch (partitionMode)
+    {
+        case TessellationPartition::Undefined:      break;
+        case TessellationPartition::Integer:        return MTLTessellationPartitionModeInteger;
+        case TessellationPartition::Pow2:           return MTLTessellationPartitionModePow2;
+        case TessellationPartition::FractionalOdd:  return MTLTessellationPartitionModeFractionalOdd;
+        case TessellationPartition::FractionalEven: return MTLTessellationPartitionModeFractionalEven;
+    }
+    MapFailed("TessellationPartition", "MTLTessellationPartitionMode");
+}
+
 MTLTextureType ToMTLTextureType(const TextureType textureType)
 {
     switch (textureType)
@@ -273,7 +298,10 @@ MTLPrimitiveType ToMTLPrimitiveType(const PrimitiveTopology primitiveTopology)
         case PrimitiveTopology::LineStrip:      return MTLPrimitiveTypeLineStrip;
         case PrimitiveTopology::TriangleList:   return MTLPrimitiveTypeTriangle;
         case PrimitiveTopology::TriangleStrip:  return MTLPrimitiveTypeTriangleStrip;
-        default:                                break;
+        default:
+            if (IsPrimitiveTopologyPatches(primitiveTopology))
+                return MTLPrimitiveTypePoint;
+            break;
     }
     MapFailed("PrimitiveTopology", "MTLPrimitiveType");
 }
@@ -287,7 +315,10 @@ MTLPrimitiveTopologyClass ToMTLPrimitiveTopologyClass(const PrimitiveTopology pr
         case PrimitiveTopology::LineStrip:      return MTLPrimitiveTopologyClassLine;
         case PrimitiveTopology::TriangleList:   /* pass */
         case PrimitiveTopology::TriangleStrip:  return MTLPrimitiveTopologyClassTriangle;
-        default:                                break;
+        default:
+            if (IsPrimitiveTopologyPatches(primitiveTopology))
+                return MTLPrimitiveTopologyClassUnspecified;
+            break;
     }
     MapFailed("PrimitiveTopology", "MTLPrimitiveTopologyClass");
 }

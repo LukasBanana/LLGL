@@ -30,6 +30,8 @@ class MTShader : public Shader
 
         std::string GetReport() const override;
 
+    public:
+
         // Returns the native MTLFunction object.
         inline id<MTLFunction> GetNative() const
         {

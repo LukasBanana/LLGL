@@ -39,6 +39,9 @@ class MTShaderProgram : public ShaderProgram
 
     public:
 
+        // Returns the number of patch control points or 0 if this shader program does not contain a post-tessellation vertex function.
+        NSUInteger GetNumPatchControlPoints() const;
+
         // Returns the MTLVertexDescriptor object for this shader program.
         inline MTLVertexDescriptor* GetMTLVertexDesc() const
         {

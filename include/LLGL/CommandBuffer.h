@@ -702,6 +702,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] numIndices Specifies the number of indices to generate.
         \param[in] firstIndex Specifies the zero-based offset of the first index from the index buffer.
         \param[in] vertexOffset Specifies the base vertex offset (positive or negative) which is added to each index from the index buffer.
+        \note For the Metal renderer, the parameter \c vertexOffset is ignored when tessellation is enabled.
         */
         virtual void DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset) = 0;
 
@@ -743,6 +744,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         The system value \c SV_InstanceID in HLSL will always start with zero,
         but the system value \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan)
         will start with the value of \c firstInstance.
+        \note For the Metal renderer, the parameter \c vertexOffset is ignored when tessellation is enabled.
         \see RenderingFeatures::hasInstancing
         \see RenderingFeatures::hasOffsetInstancing
         */

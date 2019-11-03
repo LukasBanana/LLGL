@@ -158,6 +158,12 @@ void MTGraphicsPSO::CreateRenderPipelineState(
     if (!shaderProgramMT)
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
 
+    /* Get number of patch control points if a post-tessellation vertex function is specified */
+    numPatchControlPoints_ = shaderProgramMT->GetNumPatchControlPoints();
+
+    if (id<MTLFunction> vertexFunc = shaderProgramMT->GetVertexMTLFunction())
+        patchType_ = [vertexFunc patchType];
+
     /* Get render pass object */
     const MTRenderPass* renderPassMT = nullptr;
     if (auto renderPass = desc.renderPass)
@@ -168,40 +174,64 @@ void MTGraphicsPSO::CreateRenderPipelineState(
         throw std::invalid_argument("cannot create graphics pipeline without render pass");
 
     /* Create render pipeline state */
-    MTLRenderPipelineDescriptor* renderPipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
+    MTLRenderPipelineDescriptor* psoDesc = [[MTLRenderPipelineDescriptor alloc] init];
     {
-        renderPipelineDesc.vertexDescriptor         = shaderProgramMT->GetMTLVertexDesc();
-        renderPipelineDesc.alphaToCoverageEnabled   = MTBoolean(desc.blend.alphaToCoverageEnabled);
-        renderPipelineDesc.alphaToOneEnabled        = NO;
-        renderPipelineDesc.fragmentFunction         = shaderProgramMT->GetFragmentMTLFunction();
-        renderPipelineDesc.vertexFunction           = shaderProgramMT->GetVertexMTLFunction();
+        psoDesc.vertexDescriptor        = shaderProgramMT->GetMTLVertexDesc();
+        psoDesc.alphaToCoverageEnabled  = MTBoolean(desc.blend.alphaToCoverageEnabled);
+        psoDesc.alphaToOneEnabled       = NO;
+        psoDesc.fragmentFunction        = shaderProgramMT->GetFragmentMTLFunction();
+        psoDesc.vertexFunction          = shaderProgramMT->GetVertexMTLFunction();
 
         if (@available(iOS 12.0, *))
-            renderPipelineDesc.inputPrimitiveTopology   = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
+            psoDesc.inputPrimitiveTopology = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
 
         /* Initialize pixel formats from render pass */
         const auto& colorAttachments = renderPassMT->GetColorAttachments();
         for (std::size_t i = 0, n = std::min(colorAttachments.size(), std::size_t(8u)); i < n; ++i)
         {
             FillColorAttachmentDesc(
-                renderPipelineDesc.colorAttachments[i],
+                psoDesc.colorAttachments[i],
                 colorAttachments[i].pixelFormat,
                 desc.blend,
                 desc.blend.targets[desc.blend.independentBlendEnabled ? i : 0]
             );
         };
 
-        renderPipelineDesc.depthAttachmentPixelFormat       = renderPassMT->GetDepthAttachment().pixelFormat;
-        renderPipelineDesc.stencilAttachmentPixelFormat     = renderPassMT->GetStencilAttachment().pixelFormat;
-        renderPipelineDesc.rasterizationEnabled             = (desc.rasterizer.discardEnabled ? NO : YES);
-        renderPipelineDesc.sampleCount                      = (desc.rasterizer.multiSampleEnabled ? renderPassMT->GetSampleCount() : 1u);
+        psoDesc.depthAttachmentPixelFormat      = renderPassMT->GetDepthAttachment().pixelFormat;
+        psoDesc.stencilAttachmentPixelFormat    = renderPassMT->GetStencilAttachment().pixelFormat;
+        psoDesc.rasterizationEnabled            = (desc.rasterizer.discardEnabled ? NO : YES);
+        psoDesc.sampleCount                     = (desc.rasterizer.multiSampleEnabled ? renderPassMT->GetSampleCount() : 1u);
+
+        /* Specify tessellation state */
+        if (numPatchControlPoints_ > 0)
+        {
+            #ifdef LLGL_OS_IOS
+            psoDesc.maxTessellationFactor               = std::min(desc.tessellation.maxTessFactor, 16u);
+            #else
+            psoDesc.maxTessellationFactor               = std::min(desc.tessellation.maxTessFactor, 64u);
+            #endif
+            psoDesc.tessellationFactorScaleEnabled      = NO;
+            psoDesc.tessellationFactorFormat            = MTLTessellationFactorFormatHalf; // Can only be <half>
+            psoDesc.tessellationControlPointIndexType   = MTTypes::ToMTLPatchIndexType(desc.tessellation.indexFormat);
+            psoDesc.tessellationFactorStepFunction      = MTLTessellationFactorStepFunctionPerPatchAndPerInstance; // Same behavior as in D3D
+            psoDesc.tessellationOutputWindingOrder      = (desc.tessellation.outputWindingCCW ? MTLWindingCounterClockwise : MTLWindingClockwise);
+            psoDesc.tessellationPartitionMode           = MTTypes::ToMTLPartitionMode(desc.tessellation.partition);
+        }
     }
     NSError* error = nullptr;
-    renderPipelineState_ = [device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error];
-    [renderPipelineDesc release];
+    renderPipelineState_ = [device newRenderPipelineStateWithDescriptor:psoDesc error:&error];
+    [psoDesc release];
 
     if (!renderPipelineState_)
         MTThrowIfCreateFailed(error, "MTLRenderPipelineState");
+
+    /* Create compute PSO for tessellation stage */
+    if (numPatchControlPoints_ > 0)
+    {
+        tessPipelineState_ = [device newComputePipelineStateWithFunction:shaderProgramMT->GetKernelMTLFunction() error:&error];
+        if (!tessPipelineState_)
+            MTThrowIfCreateFailed(error, "MTLComputePipelineState");
+    }
 }
 
 void MTGraphicsPSO::CreateDepthStencilState(

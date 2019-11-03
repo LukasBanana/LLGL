@@ -111,7 +111,6 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasConservativeRasterization   = false;
     features.hasStreamOutputs               = false;
     features.hasLogicOp                     = false;
-    features.hasIndirectDrawing             = (version >= 102);
 
     /* Specify limits */
     limits.maxBufferSize                    = [device maxBufferLength];
@@ -134,6 +133,12 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     limits.maxComputeShaderWorkGroupSize[0] = static_cast<std::uint32_t>(workGroupSize.width);
     limits.maxComputeShaderWorkGroupSize[1] = static_cast<std::uint32_t>(workGroupSize.height);
     limits.maxComputeShaderWorkGroupSize[2] = static_cast<std::uint32_t>(workGroupSize.depth);
+
+    #ifdef LLGL_OS_IOS
+    limits.maxTessFactor                    = 16;
+    #else
+    limits.maxTessFactor                    = 64;
+    #endif
 }
 
 

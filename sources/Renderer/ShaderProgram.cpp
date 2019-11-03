@@ -8,6 +8,7 @@
 #include <LLGL/ShaderProgram.h>
 #include <LLGL/Shader.h>
 #include <algorithm>
+#include "../Core/Helper.h"
 #include "../Core/HelperMacros.h"
 
 
@@ -120,6 +121,31 @@ void ShaderProgram::FinalizeShaderReflection(ShaderReflection& reflection)
             return (CompareResourceViewSWO(lhs, rhs) < 0);
         }
     );
+
+    /* Merge stage flags of equal resource bindings */
+    auto mergeEnd = UniqueMerge(
+        reflection.resources.begin(),
+        reflection.resources.end(),
+        []( ShaderResource& lhs, const ShaderResource& rhs) -> bool
+        {
+            /* Compare shader resource on equality (except of binding flags and stage flags) */
+            if (lhs.binding.name        == rhs.binding.name         &&
+                lhs.binding.type        == rhs.binding.type         &&
+                lhs.binding.slot        == rhs.binding.slot         &&
+                lhs.binding.arraySize   == rhs.binding.arraySize    &&
+                lhs.constantBufferSize  == rhs.constantBufferSize   &&
+                lhs.storageBufferType   == rhs.storageBufferType)
+            {
+                /* Merge binding flags and stage flags */
+                lhs.binding.bindFlags   |= rhs.binding.bindFlags;
+                lhs.binding.stageFlags  |= rhs.binding.stageFlags;
+                return true;
+            }
+            return false;
+        }
+    );
+
+    reflection.resources.erase(mergeEnd, reflection.resources.end());
 }
 
 const char* ShaderProgram::LinkErrorToString(const LinkError errorCode)

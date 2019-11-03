@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "ColorRGBA.h"
 #include "Types.h"
+#include "Format.h"
 #include "ForwardDecls.h"
 #include "StaticLimits.h"
 #include <vector>
@@ -244,6 +245,40 @@ enum class LogicOp
     NOR,            //!< Resulting operation: <code>~(src | dst)</code>.
     XOR,            //!< Resulting operation: <code>src ^ dst</code>.
     Equiv,          //!< Resulting operation: <code>~(src ^ dst)</code>.
+};
+
+/**
+\brief Tessellation partition mode enumeration.
+\see TessellationDescriptor::partition
+*/
+enum class TessellationPartition
+{
+    //! Undefined partition mode.
+    Undefined,
+
+    /**
+    \brief Integer with integers only.
+    \remarks Equivalent of \c [partitioning("integer")] in HLSL and \c layout(equal_spacing) in GLSL.
+    */
+    Integer,
+
+    /**
+    \brief Partition with power-of-two number only.
+    \remarks Equivalent of \c [partitioning("pow2")] in HLSL.
+    */
+    Pow2,
+
+    /**
+    \brief Partition with an odd, fractional number.
+    \remarks Equivalent of \c [partitioning("fractional_odd")] in HLSL and \c layout(fractional_odd_spacing) in GLSL.
+    */
+    FractionalOdd,
+
+    /**
+    \brief Partition with an even, fractional number.
+    \remarks Equivalent of \c [partitioning("fractional_even")] in HLSL and \c layout(fractional_even_spacing) in GLSL.
+    */
+    FractionalEven,
 };
 
 
@@ -663,6 +698,45 @@ struct BlendDescriptor
 };
 
 /**
+\brief Tessellation descriptor structure for the graphics pipeline.
+\remarks This is only used for the Metal backend or shader reflection.
+\see GraphicsPipelineDescriptor::tessellation
+*/
+struct TessellationDescriptor
+{
+    //! Specifies the partition mode of the tessellator stage. By default TessellationPartition::Undefined.
+    TessellationPartition   partition       = TessellationPartition::Undefined;
+
+    /**
+    \brief Specifies the index buffer format. By default
+    \remarks If patches are rendered with an index buffer (i.e. \c DrawIndexed or \c DrawIndexedInstanced) this must be either Format::R16UInt or Format::R32UInt.
+    \see CommandBuffer::DrawIndexed
+    \see CommandBuffer::DrawIndexedInstanced
+    */
+    Format                  indexFormat     = Format::Undefined;
+
+    /**
+    \brief Specifies the maximum tessellation factor. By default 64.
+    \remarks Depending on the partition mode, this value must be:
+    - <code>Integer</code>: An odd or even number.
+    - <code>Pow2</code>: A power of two.
+    - <code>FractionalOdd</code>: An even number (same as <code>FractionalEven</code>).
+    - <code>FractionalEven</code>: An even number (same as <code>FractionalOdd</code>).
+    \remarks This value is automatically clamped to the maximum value allowed by the rendering API, e.g. 64 for macOS and 16 for iOS.
+    \remarks Equivalent of \c [maxtessfactor(64.0)] in HLSL.
+    \see RenderingLimits::maxTessFactor
+    */
+    std::uint32_t           maxTessFactor       = 64;
+
+    /**
+    \brief If enabled, the output topology is in counter-clockwise winding order. By default disabled.
+    \remarks Equivalent of \c [outputtopology("triangle_ccw")] in HLSL and \c layout(ccw) in GLSL.
+    \see RasterizerDescriptor::frontCCW
+    */
+    bool                    outputWindingCCW    = false;
+};
+
+/**
 \brief Graphics pipeline state descriptor structure.
 \remarks This structure describes the entire graphics pipeline:
 shader stages, depth-/ stencil-/ rasterizer-/ blend states etc.
@@ -727,6 +801,14 @@ struct GraphicsPipelineDescriptor
 
     //! Specifies the state descriptor for the blend stage.
     BlendDescriptor         blend;
+
+    /**
+    \brief Specifies the tessellation pipeline state.
+    \remarks This is only used to configure a few tessellation states on the CPU side for the Metal backend.
+    All other backends ignore this member silently.
+    \note Only supported with: Metal.
+    */
+    TessellationDescriptor  tessellation;
 };
 
 /**

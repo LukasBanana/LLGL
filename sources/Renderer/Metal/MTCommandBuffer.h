@@ -14,6 +14,7 @@
 #include <LLGL/CommandBuffer.h>
 #include <LLGL/StaticLimits.h>
 #include "Buffer/MTStagingBufferPool.h"
+#include "Buffer/MTTessFactorBuffer.h"
 #include "MTEncoderScheduler.h"
 #include <vector>
 
@@ -210,6 +211,8 @@ class MTCommandBuffer : public CommandBuffer
         void QueueDrawable(id<MTLDrawable> drawable);
         void PresentDrawables();
 
+        void SetResourceHeap(ResourceHeap& resourceHeap);
+
         void SetBuffer(MTBuffer& bufferMT, std::uint32_t slot, long stageFlags);
         void SetTexture(MTTexture& textureMT, std::uint32_t slot, long stageFlags);
         void SetSampler(MTSampler& samplerMT, std::uint32_t slot, long stageFlags);
@@ -218,6 +221,16 @@ class MTCommandBuffer : public CommandBuffer
         void FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
         void FillBufferByte4Emulated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
         void FillBufferByte4Accelerated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
+
+        void DispatchTessellatorStage(NSUInteger numPatchesAndInstances);
+        id<MTLRenderCommandEncoder> GetRenderEncoderForPatches(NSUInteger numPatches);
+
+        // Dispatches the specified amount of local threads in as large threadgroups as possible.
+        void DispatchThreads1D(
+            id<MTLComputeCommandEncoder>    computeEncoder,
+            id<MTLComputePipelineState>     computePSO,
+            NSUInteger                      numThreads
+        );
 
     private:
 
@@ -249,6 +262,12 @@ class MTCommandBuffer : public CommandBuffer
         MTClearValue                    clearValue_;
 
         MTStagingBufferPool             stagingBufferPool_;
+
+        // Tessellator stage objects
+        MTTessFactorBuffer              tessFactorBuffer_;
+        NSUInteger                      tessFactorBufferSlot_   = 30;
+        NSUInteger                      tessFactorSize_         = 0;
+        id<MTLComputePipelineState>     tessPipelineState_      = nil;
 
 };
 
