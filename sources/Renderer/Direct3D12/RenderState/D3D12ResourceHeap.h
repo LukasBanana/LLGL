@@ -44,6 +44,18 @@ class D3D12ResourceHeap final : public ResourceHeap
             return numDescriptorHeaps_;
         }
 
+        // Returns true if this resource heap has graphics root descriptors.
+        inline bool HasGraphicsDescriptors() const
+        {
+            return hasGraphicsDescriptors_;
+        }
+
+        // Returns true if this resource heap has compute root descriptors.
+        inline bool HasComputeDescriptors() const
+        {
+            return hasComputeDescriptors_;
+        }
+
     private:
 
         D3D12_CPU_DESCRIPTOR_HANDLE CreateHeapTypeCbvSrvUav(ID3D12Device* device, const ResourceHeapDescriptor& desc);
@@ -83,8 +95,11 @@ class D3D12ResourceHeap final : public ResourceHeap
         ComPtr<ID3D12DescriptorHeap>    heapTypeCbvSrvUav_;
         ComPtr<ID3D12DescriptorHeap>    heapTypeSampler_;
 
-        ID3D12DescriptorHeap*           descriptorHeaps_[2] = {};   // References to the ComPtr objects
-        UINT                            numDescriptorHeaps_ = 0;
+        ID3D12DescriptorHeap*           descriptorHeaps_[2]     = {};   // References to the ComPtr objects
+        UINT                            numDescriptorHeaps_     = 0;
+
+        bool                            hasGraphicsDescriptors_ = false;
+        bool                            hasComputeDescriptors_  = false;
 
 };
 

@@ -412,14 +412,16 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 
 /* ----- Resources ----- */
 
-void MTCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*firstSet*/)
+void MTCommandBuffer::SetResourceHeap(
+    ResourceHeap&           resourceHeap,
+    const PipelineBindPoint bindPoint,
+    std::uint32_t           /*firstSet*/)
 {
-    SetResourceHeap(resourceHeap);
-}
-
-void MTCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*firstSet*/)
-{
-    SetResourceHeap(resourceHeap);
+    auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
+    if (resourceHeapMT.HasGraphicsResources() && bindPoint != PipelineBindPoint::Compute)
+        encoderScheduler_.SetGraphicsResourceHeap(&resourceHeapMT);
+    if (resourceHeapMT.HasComputeResources() && bindPoint != PipelineBindPoint::Graphics)
+        encoderScheduler_.SetComputeResourceHeap(&resourceHeapMT);
 }
 
 void MTCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long /*bindFlags*/, long stageFlags)
@@ -979,15 +981,6 @@ void MTCommandBuffer::PresentDrawables()
     for (auto d : drawables_)
         [cmdBuffer_ presentDrawable:d];
     drawables_.clear();
-}
-
-void MTCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap)
-{
-    auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
-    if (resourceHeapMT.HasGraphicsResources())
-        encoderScheduler_.SetGraphicsResourceHeap(&resourceHeapMT);
-    if (resourceHeapMT.HasComputeResources())
-        encoderScheduler_.SetComputeResourceHeap(&resourceHeapMT);
 }
 
 #if 0//TODO: store direct binding in <MTEncoderScheduler>

@@ -243,7 +243,7 @@ private:
 
         // Set resources
         commands->SetPipelineState(*occlusionPipeline);
-        commands->SetGraphicsResourceHeap(*resourceHeap);
+        commands->SetResourceHeap(*resourceHeap);
 
         // Draw occluder box
         SetBoxTransformAndColor(modelTransform[0], { 1, 1, 1 });

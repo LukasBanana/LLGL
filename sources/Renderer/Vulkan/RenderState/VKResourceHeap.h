@@ -55,6 +55,15 @@ class VKResourceHeap final : public ResourceHeap
             return descriptorSets_;
         }
 
+        /*
+        Returns the pipeline binding point for this resource heap.
+        Note: for Vulkan, currently only one binding point is supported for each resource heap.
+        */
+        inline VkPipelineBindPoint GetBindPoint() const
+        {
+            return bindPoint_;
+        }
+
     private:
 
         void CreateDescriptorPool(const ResourceHeapDescriptor& desc, const std::vector<VKLayoutBinding>& bindings);
@@ -74,6 +83,7 @@ class VKResourceHeap final : public ResourceHeap
         VKPtr<VkDescriptorPool>         descriptorPool_;
         std::vector<VkDescriptorSet>    descriptorSets_;
         VKPipelineBarrier               barrier_;
+        VkPipelineBindPoint             bindPoint_      = VK_PIPELINE_BIND_POINT_MAX_ENUM;
 
 
 };

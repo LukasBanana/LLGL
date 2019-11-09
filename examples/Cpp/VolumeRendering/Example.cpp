@@ -431,7 +431,7 @@ private:
                 commands->PushDebugGroup("Range Pass");
                 {
                     commands->SetPipelineState(*pipelineRangePass);
-                    commands->SetGraphicsResourceHeap(*resourceHeapCbuffer);
+                    commands->SetResourceHeap(*resourceHeapCbuffer);
                     commands->Draw(mesh.numVertices, mesh.firstVertex);
                 }
                 commands->PopDebugGroup();
@@ -451,7 +451,7 @@ private:
                 commands->PushDebugGroup("Z-Pre Pass");
                 {
                     commands->SetPipelineState(*pipelineZPrePass);
-                    commands->SetGraphicsResourceHeap(*resourceHeapCbuffer);
+                    commands->SetResourceHeap(*resourceHeapCbuffer);
                     commands->Draw(mesh.numVertices, mesh.firstVertex);
                 }
                 commands->PopDebugGroup();
@@ -460,7 +460,7 @@ private:
                 commands->PushDebugGroup("Final Pass");
                 {
                     commands->SetPipelineState(*pipelineFinalPass);
-                    commands->SetGraphicsResourceHeap(*resourceHeapFinalPass);
+                    commands->SetResourceHeap(*resourceHeapFinalPass);
                     commands->Draw(mesh.numVertices, mesh.firstVertex);
                 }
                 commands->PopDebugGroup();

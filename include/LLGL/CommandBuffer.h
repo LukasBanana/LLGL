@@ -382,24 +382,20 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /* ----- Resources ----- */
 
         /**
-        \brief Binds the specified resource heap to the graphics pipeline.
+        \brief Binds the specified resource heap to the respective pipeline.
         \param[in] resourceHeap Specifies the resource heap that contains all shader resources that will be bound to the shader pipeline.
+        \param[in] bindPoint Specifies to which pipeline the resource heap is meant be bound. By default PipelineBindPoint::Undefined.
+        If this is PipelineBindPoint::Undefined, the resource heap is automatically bound to the graphics and/or compute pipeline.
+        Use this parameter if a resource heap has one or more resources that are in both the graphics and compute pipeline to avoid unnecessary bindings.
         \param[in] firstSet Specifies the set number of the first layout descriptor.
         \remarks This may invalidate the previously bound resource heap for both the graphics and compute pipeline.
         \note Parameter \c firstSet is only supported with: Vulkan.
-        \todo Merge this with SetComputeResourceHeap and rename to \c SetResourceHeap
         */
-        virtual void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) = 0;
-
-        /**
-        \brief Binds the specified resource heap to the compute pipeline.
-        \param[in] resourceHeap Specifies the resource heap that contains all shader resources that will be bound to the shader pipeline.
-        \param[in] firstSet Specifies the set number of the first layout descriptor.
-        \remarks This may invalidate the previously bound resource heap for both the graphics and compute pipeline.
-        \note Parameter \c firstSet is only supported with: Vulkan.
-        \todo Merge this with SetGraphicsResourceHeap and rename to \c SetResourceHeap
-        */
-        virtual void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) = 0;
+        virtual void SetResourceHeap(
+            ResourceHeap&           resourceHeap,
+            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined,
+            std::uint32_t           firstSet        = 0
+        ) = 0;
 
         /**
         \brief Sets the specified resource to a binding slot.
@@ -420,7 +416,12 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \note Only supported with: OpenGL, Direct3D 11, Metal.
         \see RenderingFeatures::hasDirectResourceBinding
         */
-        virtual void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) = 0;
+        virtual void SetResource(
+            Resource&       resource,
+            std::uint32_t   slot,
+            long            bindFlags,
+            long            stageFlags = StageFlags::AllStages
+        ) = 0;
 
         /**
         \brief Resets the binding slots for the specified resources.
@@ -529,20 +530,15 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         A valid compute pipeline state must always be set before any dispatch compute operation cam ne performed,
         and a compute pipeline state \b must be set \b outside a render pass section.
         \code
-        // Set compute pipeline state
+        // Set compute pipeline state and perform compute commands
         myCmdBuffer->SetPipelineState(*myComputePipeline);
-
-        // Perform compute commands
         myCmdBuffer->Dispatch(...);
 
         // Start render pass section
         myCmdBuffer->BeginRenderPass(...);
         {
-            // Set graphics pipeline state
+            // Set graphics pipeline state and perform drawing operations
             myCmdBuffer->SetPipelineState(*myGraphicsPipeline);
-
-            // Perform drawing operations
-            myCmdBuffer->SetGraphicsResourceHeap(...);
             myCmdBuffer->Draw(...);
         }
         myCmdBuffer->EndRenderPass();

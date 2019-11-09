@@ -24,6 +24,16 @@ namespace SharpLLGL
 {
 
 
+/* ----- Enumerations ----- */
+
+public enum class PipelineBindPoint
+{
+    Undefined,
+    Graphics,
+    Compute,
+};
+
+
 /* ----- Flags ----- */
 
 [Flags]

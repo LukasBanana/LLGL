@@ -373,6 +373,17 @@ VkStencilFaceFlags Map(const StencilFace stencilFace)
     MapFailed("StencilFace", "VkStencilFaceFlags");
 }
 
+VkPipelineBindPoint Map(const PipelineBindPoint pipelineBindPoint)
+{
+    switch (pipelineBindPoint)
+    {
+        case PipelineBindPoint::Undefined:  return VK_PIPELINE_BIND_POINT_MAX_ENUM;
+        case PipelineBindPoint::Graphics:   return VK_PIPELINE_BIND_POINT_GRAPHICS;
+        case PipelineBindPoint::Compute:    return VK_PIPELINE_BIND_POINT_COMPUTE;
+    }
+    VKTypes::MapFailed("PipelineBindPoint", "VkPipelineBindPoint");
+}
+
 VkIndexType ToVkIndexType(const Format format)
 {
     switch (format)

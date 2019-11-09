@@ -123,16 +123,10 @@ struct FrameProfile
             std::uint32_t samplerBindings;
 
             /**
-            \brief Counter for all resource heap bindings on the graphics pipeline.
-            \see CommandBuffer::SetGraphicsResourceHeap
+            \brief Counter for all resource heap bindings.
+            \see CommandBuffer::SetResourceHeap
             */
-            std::uint32_t graphicsResourceHeapBindings;
-
-            /**
-            \brief Counter for all resource heap bindings on the compute pipeline.
-            \see CommandBuffer::SetComputeResourceHeap
-            */
-            std::uint32_t computeResourceHeapBindings;
+            std::uint32_t resourceHeapBindings;
 
             /**
             \brief Counter for all graphics pipeline state bindings.

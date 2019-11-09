@@ -460,37 +460,31 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
 
 /* ----- Resources ----- */
 
+//TODO: incomplete
 //TODO: also record individual resource bindings
-void DbgCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
+void DbgCommandBuffer::SetResourceHeap(
+    ResourceHeap&           resourceHeap,
+    const PipelineBindPoint bindPoint,
+    std::uint32_t           firstSet)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        AssertGraphicsPipelineBound();
+        //AssertGraphicsPipelineBound();
+        //AssertComputePipelineBound();
     }
 
-    LLGL_DBG_COMMAND( "SetGraphicsResourceHeap", instance.SetGraphicsResourceHeap(resourceHeap, firstSet) );
+    LLGL_DBG_COMMAND( "SetResourceHeap", instance.SetResourceHeap(resourceHeap, bindPoint, firstSet) );
 
-    profile_.graphicsResourceHeapBindings++;
+    profile_.resourceHeapBindings++;
 }
 
-//TODO: also record individual resource bindings
-void DbgCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        AssertComputePipelineBound();
-    }
-
-    LLGL_DBG_COMMAND( "SetComputeResourceHeap", instance.SetComputeResourceHeap(resourceHeap, firstSet) );
-
-    profile_.computeResourceHeapBindings++;
-}
-
-void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
+void DbgCommandBuffer::SetResource(
+    Resource&       resource,
+    std::uint32_t   slot,
+    long            bindFlags,
+    long            stageFlags)
 {
     if (debugger_)
     {

@@ -191,7 +191,7 @@ private:
                 commands->SetPipelineState(*pipeline);
 
                 // Set buffers
-                commands->SetGraphicsResourceHeap(*resourceHeap);
+                commands->SetResourceHeap(*resourceHeap);
 
                 // Draw scene with stream output
                 commands->BeginStreamOutput(1, &streamOutputBuffer);

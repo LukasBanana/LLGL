@@ -549,33 +549,48 @@ void VKCommandBuffer::BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelin
         0,
         nullptr
     );
+}
 
+void VKCommandBuffer::SetResourceHeap(
+    ResourceHeap&           resourceHeap,
+    const PipelineBindPoint bindPoint,
+    std::uint32_t           firstSet)
+{
+    auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
+
+    /* Bind resource heap to pipelines */
+    if (bindPoint == PipelineBindPoint::Undefined)
+    {
+        if (resourceHeapVK.GetBindPoint() == VK_PIPELINE_BIND_POINT_MAX_ENUM)
+        {
+            BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_GRAPHICS, firstSet);
+            BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_COMPUTE, firstSet);
+        }
+        else
+            BindResourceHeap(resourceHeapVK, resourceHeapVK.GetBindPoint(), firstSet);
+    }
+    else
+        BindResourceHeap(resourceHeapVK, VKTypes::Map(bindPoint), firstSet);
+
+    /* Insert resource barrier into command buffer */
     resourceHeapVK.InsertPipelineBarrier(commandBuffer_);
 }
 
-void VKCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
-{
-    auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
-    BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_GRAPHICS, firstSet);
-}
-
-void VKCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
-{
-    auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
-    BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_COMPUTE, firstSet);
-}
-
-void VKCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
+void VKCommandBuffer::SetResource(
+    Resource&       /*resource*/,
+    std::uint32_t   /*slot*/,
+    long            /*bindFlags*/,
+    long            /*stageFlags*/)
 {
     // dummy
 }
 
 void VKCommandBuffer::ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags)
+    const ResourceType  /*resourceType*/,
+    std::uint32_t       /*firstSlot*/,
+    std::uint32_t       /*numSlots*/,
+    long                /*bindFlags*/,
+    long                /*stageFlags*/)
 {
     // dummy
 }

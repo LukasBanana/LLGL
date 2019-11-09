@@ -110,8 +110,11 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
         /* ----- Resources ----- */
 
-        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
-        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetResourceHeap(
+            ResourceHeap&           resourceHeap,
+            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined,
+            std::uint32_t           firstSet        = 0
+        ) override;
 
         void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) override;
 
@@ -250,7 +253,6 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void BindBuffersBase(const GLBufferTarget bufferTarget, std::uint32_t first, std::uint32_t count, Buffer* const * buffers);
         void BindTexture(GLTexture& textureGL, std::uint32_t slot);
         void BindSampler(GLSampler& samplerGL, std::uint32_t slot);
-        void BindResourceHeap(ResourceHeap& resourceHeap);
 
         /* Allocates only an opcode for empty commands */
         void AllocOpCode(const GLOpcode opcode);

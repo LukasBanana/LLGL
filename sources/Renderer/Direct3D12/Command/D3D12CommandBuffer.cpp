@@ -391,41 +391,29 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 
 /* ----- Resources ----- */
 
-void D3D12CommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
+void D3D12CommandBuffer::SetResourceHeap(
+    ResourceHeap&           resourceHeap,
+    const PipelineBindPoint bindPoint,
+    std::uint32_t           /*firstSet*/)
 {
-    /* Get descriptor heaps */
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
 
-    auto descHeaps = resourceHeapD3D.GetDescriptorHeaps();
+    /* Get descriptor heaps */
     auto heapCount = resourceHeapD3D.GetNumDescriptorHeaps();
-
     if (heapCount > 0)
     {
         /* Bind descriptor heaps */
+        auto descHeaps = resourceHeapD3D.GetDescriptorHeaps();
         commandList_->SetDescriptorHeaps(heapCount, descHeaps);
 
         /* Bind root descriptor tables to graphics pipeline */
         for (UINT i = 0; i < heapCount; ++i)
-            commandList_->SetGraphicsRootDescriptorTable(i, descHeaps[i]->GetGPUDescriptorHandleForHeapStart());
-    }
-}
-
-void D3D12CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
-{
-    /* Get descriptor heaps */
-    auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
-
-    auto descHeaps = resourceHeapD3D.GetDescriptorHeaps();
-    auto heapCount = resourceHeapD3D.GetNumDescriptorHeaps();
-
-    if (heapCount > 0)
-    {
-        /* Bind descriptor heaps */
-        commandList_->SetDescriptorHeaps(heapCount, descHeaps);
-
-        /* Bind root descriptor tables to compute pipeline */
-        for (UINT i = 0; i < heapCount; ++i)
-            commandList_->SetComputeRootDescriptorTable(i, descHeaps[i]->GetGPUDescriptorHandleForHeapStart());
+        {
+            if (resourceHeapD3D.HasGraphicsDescriptors() && bindPoint != PipelineBindPoint::Compute)
+                commandList_->SetGraphicsRootDescriptorTable(i, descHeaps[i]->GetGPUDescriptorHandleForHeapStart());
+            if (resourceHeapD3D.HasComputeDescriptors() && bindPoint != PipelineBindPoint::Graphics)
+                commandList_->SetComputeRootDescriptorTable(i, descHeaps[i]->GetGPUDescriptorHandleForHeapStart());
+        }
     }
 }
 

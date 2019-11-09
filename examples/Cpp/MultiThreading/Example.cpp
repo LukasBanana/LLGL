@@ -219,7 +219,7 @@ private:
         cmdBuffer.Begin();
         {
             cmdBuffer.SetPipelineState(*bundle.pipeline);
-            cmdBuffer.SetGraphicsResourceHeap(*bundle.resourceHeap, 0);
+            cmdBuffer.SetResourceHeap(*bundle.resourceHeap);
             cmdBuffer.DrawIndexed(numIndices, 0);
         }
         cmdBuffer.End();
@@ -262,7 +262,7 @@ private:
                 for (auto& bdl : bundle)
                 {
                     cmdBuffer.SetPipelineState(*bdl.pipeline);
-                    cmdBuffer.SetGraphicsResourceHeap(*bdl.resourceHeap, 0);
+                    cmdBuffer.SetResourceHeap(*bdl.resourceHeap);
                     cmdBuffer.DrawIndexed(numIndices, 0);
                 }
 

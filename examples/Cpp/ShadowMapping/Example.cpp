@@ -360,7 +360,7 @@ private:
         {
             commands->Clear(LLGL::ClearFlags::Depth);
             commands->SetPipelineState(*pipelineShadowMap);
-            commands->SetGraphicsResourceHeap(*resourceHeapShadowMap);
+            commands->SetResourceHeap(*resourceHeapShadowMap);
             RenderAllMeshes();
         }
         commands->EndRenderPass();
@@ -377,7 +377,7 @@ private:
             commands->Clear(LLGL::ClearFlags::ColorDepth);
             commands->SetViewport(context->GetResolution());
             commands->SetPipelineState(*pipelineScene);
-            commands->SetGraphicsResourceHeap(*resourceHeapScene);
+            commands->SetResourceHeap(*resourceHeapScene);
             RenderAllMeshes();
         }
         commands->EndRenderPass();

@@ -225,7 +225,7 @@ private:
         {
             // Run compute shader
             commands->SetPipelineState(*computePipeline);
-            commands->SetComputeResourceHeap(*computeResourceHeap);
+            commands->SetResourceHeap(*computeResourceHeap);
             commands->Dispatch(textureSize.width, textureSize.height, textureSize.depth);
 
             // Reset texture from shader output binding point
@@ -234,7 +234,7 @@ private:
             // Set graphics resources
             commands->SetVertexBuffer(*vertexBuffer);
             commands->SetPipelineState(*graphicsPipeline);
-            commands->SetGraphicsResourceHeap(*graphicsResourceHeap);
+            commands->SetResourceHeap(*graphicsResourceHeap);
 
             // Draw scene
             commands->BeginRenderPass(*context);

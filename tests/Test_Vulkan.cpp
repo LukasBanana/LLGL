@@ -257,7 +257,7 @@ int main()
             {
                 commands->SetVertexBuffer(*vertexBuffer);
                 commands->SetPipelineState(*pipeline);
-                commands->SetGraphicsResourceHeap(*resourceViewHeap);
+                commands->SetResourceHeap(*resourceViewHeap);
 
                 // Update constant buffer
                 Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.002f);

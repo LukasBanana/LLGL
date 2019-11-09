@@ -398,14 +398,13 @@ void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format
 
 /* ----- Resource Heaps ----- */
 
-void GLDeferredCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
+void GLDeferredCommandBuffer::SetResourceHeap(
+    ResourceHeap&           resourceHeap,
+    const PipelineBindPoint /*bindPoint*/,
+    std::uint32_t           /*firstSet*/)
 {
-    BindResourceHeap(resourceHeap);
-}
-
-void GLDeferredCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
-{
-    BindResourceHeap(resourceHeap);
+    auto cmd = AllocCommand<GLCmdBindResourceHeap>(GLOpcodeBindResourceHeap);
+    cmd->resourceHeap = LLGL_CAST(GLResourceHeap*, &resourceHeap);
 }
 
 void GLDeferredCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
@@ -1021,12 +1020,6 @@ void GLDeferredCommandBuffer::BindSampler(GLSampler& samplerGL, std::uint32_t sl
         cmd->slot       = slot;
         cmd->sampler    = samplerGL.GetID();
     }
-}
-
-void GLDeferredCommandBuffer::BindResourceHeap(ResourceHeap& resourceHeap)
-{
-    auto cmd = AllocCommand<GLCmdBindResourceHeap>(GLOpcodeBindResourceHeap);
-    cmd->resourceHeap = LLGL_CAST(GLResourceHeap*, &resourceHeap);
 }
 
 void GLDeferredCommandBuffer::AllocOpCode(const GLOpcode opcode)

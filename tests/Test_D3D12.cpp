@@ -214,7 +214,7 @@ int main()
 
                     commands->SetPipelineState(*pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
-                    commands->SetGraphicsResourceHeap(*resourceHeap);
+                    commands->SetResourceHeap(*resourceHeap);
 
                     commands->Draw(3, 0);
                 }

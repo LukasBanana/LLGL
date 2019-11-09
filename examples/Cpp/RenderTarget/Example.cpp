@@ -384,7 +384,7 @@ private:
             if (resourceHeaps[0])
             {
                 // Set graphics pipeline resources
-                commands->SetGraphicsResourceHeap(*resourceHeaps[0]);
+                commands->SetResourceHeap(*resourceHeaps[0]);
             }
             else
             {
@@ -434,7 +434,7 @@ private:
             if (resourceHeaps[1])
             {
                 // Set graphics pipeline resources
-                commands->SetGraphicsResourceHeap(*resourceHeaps[1]);
+                commands->SetResourceHeap(*resourceHeaps[1]);
             }
             else
             {

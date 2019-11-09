@@ -23,11 +23,25 @@ namespace LLGL
 {
 
 
+static const D3D12PipelineLayout* GetD3DPipelineLayout(const ResourceHeapDescriptor& desc)
+{
+    if (!desc.pipelineLayout)
+        throw std::invalid_argument("cannot create resource heap without pipeline layout");
+    return LLGL_CAST(const D3D12PipelineLayout*, desc.pipelineLayout);
+}
+
 D3D12ResourceHeap::D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDescriptor& desc)
 {
     /* Create descriptor heaps */
     auto cpuDescHandleCbvSrvUav = CreateHeapTypeCbvSrvUav(device, desc);
     auto cpuDescHandleSampler   = CreateHeapTypeSampler(device, desc);
+
+    /* Store meta data which pipelines will be used by this resource heap */
+    auto pipelineLayoutD3D = GetD3DPipelineLayout(desc);
+    auto combinedStageFlags = pipelineLayoutD3D->GetCombinedStageFlags();
+
+    hasGraphicsDescriptors_ = ((combinedStageFlags & StageFlags::AllGraphicsStages) != 0);
+    hasComputeDescriptors_  = ((combinedStageFlags & StageFlags::ComputeStage     ) != 0);
 
     /* Create descriptors */
     std::size_t bindingIndex = 0;
@@ -145,13 +159,6 @@ static void ForEachResourceViewOfType(
                 callback(*resource);
         }
     }
-}
-
-static const D3D12PipelineLayout* GetD3DPipelineLayout(const ResourceHeapDescriptor& desc)
-{
-    if (!desc.pipelineLayout)
-        throw std::invalid_argument("cannot create resource heap without pipeline layout");
-    return LLGL_CAST(const D3D12PipelineLayout*, desc.pipelineLayout);
 }
 
 // Returns true if the specified resource binding flags match the binding flags in the pipeline layout; if true, the binding index is increased.

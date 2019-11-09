@@ -309,7 +309,7 @@ private:
                 if (resourceHeap)
                 {
                     // Bind resource view heap to graphics pipeline
-                    commands->SetGraphicsResourceHeap(*resourceHeap);
+                    commands->SetResourceHeap(*resourceHeap);
                 }
                 else
                 {

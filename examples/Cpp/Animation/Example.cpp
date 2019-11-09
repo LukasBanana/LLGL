@@ -311,7 +311,7 @@ private:
     void RenderScene()
     {
         commands->SetPipelineState(*pipelineScene);
-        commands->SetGraphicsResourceHeap(*resourceHeap);
+        commands->SetResourceHeap(*resourceHeap);
 
         RenderMesh(meshStairsBottom);
         RenderMesh(meshStairsTop);

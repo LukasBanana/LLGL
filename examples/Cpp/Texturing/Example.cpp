@@ -173,7 +173,7 @@ public:
         // Release image data
         stbi_image_free(imageBuffer);
 
-        #if 1//TESTING
+        #if 0//TESTING
 
         LLGL::BufferDescriptor bufDesc;
         {
@@ -245,7 +245,7 @@ public:
         LoadCompressedTexture("../../Media/Textures/Crate-DXT1-MipMapped.dds");
         LoadUncompressedTexture("../../Media/Textures/Crate.jpg");
 
-        #if 1//TEST
+        #if 0//TEST
         LLGL::BufferDescriptor bufDesc;
         {
             bufDesc.size = 500;
@@ -346,7 +346,7 @@ private:
                 commands->SetPipelineState(*pipeline);
 
                 // Set graphics shader resources
-                commands->SetGraphicsResourceHeap(*resourceHeaps[resourceIndex], 0);
+                commands->SetResourceHeap(*resourceHeaps[resourceIndex]);
 
                 // Draw fullscreen quad
                 commands->Draw(4, 0);

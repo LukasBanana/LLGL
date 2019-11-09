@@ -16,6 +16,7 @@
 - [`PipelineLayoutDesc` syntax](#pipelinelayoutdesc-syntax)
 - [`Format` information](#format-information)
 - [Direct resource binding](#direct-resource-binding)
+- [Resource heap binding](#resource-heap-binding)
 - [Vertex attribute description](#vertex-attribute-description)
 - [Storage buffer description](#storage-buffer-description)
 - [Multi-sampling descriptor](#multi-sampling-descriptor)
@@ -475,6 +476,36 @@ void CommandBuffer::SetResource(LLGL::Resource& resource,
 // Usage:
 myCmdBuffer->SetResource(*myConstBuffer, 0, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage);
 myCmdBuffer->SetResource(*myColorMap, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
+```
+
+## Resource heap binding
+
+The `SetGraphicsResourceHeap` and `SetComputeResourceHeap` functions have been merged into a single function named `SetResourceHeap`.
+The second parameter is optional and can be used when a resource heap contains resources for both the graphics and compute pipeline to avoid unnecessary bindings.
+
+Before:
+```cpp
+// Interface:
+void CommandBuffer::SetGraphicsResourceHeap(LLGL::ResourceHeap& resourceHeap, std::uint32_t firstSet = 0);
+void CommandBuffer::SetComputeResourceHeap(LLGL::ResourceHeap& resourceHeap, std::uint32_t firstSet = 0);
+
+// Usage:
+myCmdBuffer->SetGraphicsResourceHeap(*myCommonResourceHeap);
+myCmdBuffer->SetGraphicsResourceHeap(*myGfxResourceHeap);
+```
+
+After:
+```cpp
+// Interface:
+void CommandBuffer::SetResourceHeap(
+    LLGL::ResourceHeap&             resourceHeap,
+    const LLGL::PipelineBindPoint   bindPoint       = LLGL::PipelineBindPoint::Undefined,
+    std::uint32_t                   firstSet        = 0
+);
+
+// Usage:
+myCmdBuffer->SetResourceHeap(*myCommonResourceHeap, LLGL::PipelineBindPoint::Graphics);
+myCmdBuffer->SetResourceHeap(*myGfxResourceHeap);
 ```
 
 

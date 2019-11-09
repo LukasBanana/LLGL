@@ -625,7 +625,7 @@ private:
 
                 // Bind pipeline and resources
                 commands->SetPipelineState(*pipelineScene);
-                commands->SetGraphicsResourceHeap(*resourceHeapScene);
+                commands->SetResourceHeap(*resourceHeapScene);
 
                 // Draw outer scene model
                 SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
@@ -649,7 +649,7 @@ private:
 
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
                 commands->SetPipelineState(*pipelineBlur);
-                commands->SetGraphicsResourceHeap(*resourceHeapBlurX);
+                commands->SetResourceHeap(*resourceHeapBlurX);
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();
@@ -659,7 +659,7 @@ private:
             commands->BeginRenderPass(*renderTargetBlurY);
             {
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-                commands->SetGraphicsResourceHeap(*resourceHeapBlurY);
+                commands->SetResourceHeap(*resourceHeapBlurY);
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();
@@ -670,7 +670,7 @@ private:
                 // Set viewport back to full resolution
                 commands->SetViewport(viewportFull);
                 commands->SetPipelineState(*pipelineFinal);
-                commands->SetGraphicsResourceHeap(*resourceHeapFinal);
+                commands->SetResourceHeap(*resourceHeapFinal);
 
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
                 commands->Draw(3, 0);

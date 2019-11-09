@@ -245,7 +245,7 @@ void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
 
             // Set graphics pipeline and vertex buffer
             cmdBuffer->SetPipelineState(*pipeline);
-            cmdBuffer->SetGraphicsResourceHeap(*resourceHeap);
+            cmdBuffer->SetResourceHeap(*resourceHeap);
 
             // Draw triangulated cube
             cmdBuffer->DrawIndexed(36, 0);

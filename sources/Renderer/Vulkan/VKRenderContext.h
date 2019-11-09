@@ -32,8 +32,6 @@ class VKRenderContext final : public RenderContext
 
     public:
 
-        /* ----- Common ----- */
-
         VKRenderContext(
             const VKPtr<VkInstance>&        instance,
             VkPhysicalDevice                physicalDevice,
@@ -52,7 +50,7 @@ class VKRenderContext final : public RenderContext
 
         const RenderPass* GetRenderPass() const override;
 
-        /* --- Extended functions --- */
+    public:
 
         // Returns the swap-chain render pass object.
         inline const VKRenderPass& GetSwapChainRenderPass() const

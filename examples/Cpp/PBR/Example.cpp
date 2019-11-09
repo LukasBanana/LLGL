@@ -449,14 +449,14 @@ private:
     void RenderSkybox()
     {
         commands->SetPipelineState(*pipelineSky);
-        commands->SetGraphicsResourceHeap(*resourceHeapSkybox);
+        commands->SetResourceHeap(*resourceHeapSkybox);
         commands->Draw(3, 0);
     }
 
     void RenderMesh(const TriangleMesh& mesh)
     {
         commands->SetPipelineState(*pipelineMeshes);
-        commands->SetGraphicsResourceHeap(*resourceHeapMeshes);
+        commands->SetResourceHeap(*resourceHeapMeshes);
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 

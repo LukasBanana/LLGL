@@ -211,24 +211,19 @@ void CommandBuffer::EndStreamOutput()
 
 /* ----- Resource Heaps ----- */
 
-void CommandBuffer::SetGraphicsResourceHeap(ResourceHeap^ resourceHeap)
+void CommandBuffer::SetResourceHeap(ResourceHeap^ resourceHeap)
 {
-    native_->SetGraphicsResourceHeap(*resourceHeap->Native);
+    native_->SetResourceHeap(*resourceHeap->Native);
 }
 
-void CommandBuffer::SetGraphicsResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet)
+void CommandBuffer::SetResourceHeap(ResourceHeap^ resourceHeap, PipelineBindPoint bindPoint)
 {
-    native_->SetGraphicsResourceHeap(*resourceHeap->Native, firstSet);
+    native_->SetResourceHeap(*resourceHeap->Native, static_cast<LLGL::PipelineBindPoint>(bindPoint));
 }
 
-void CommandBuffer::SetComputeResourceHeap(ResourceHeap^ resourceHeap)
+void CommandBuffer::SetResourceHeap(ResourceHeap^ resourceHeap, PipelineBindPoint bindPoint, unsigned int firstSet)
 {
-    native_->SetComputeResourceHeap(*resourceHeap->Native);
-}
-
-void CommandBuffer::SetComputeResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet)
-{
-    native_->SetComputeResourceHeap(*resourceHeap->Native, firstSet);
+    native_->SetResourceHeap(*resourceHeap->Native, static_cast<LLGL::PipelineBindPoint>(bindPoint), firstSet);
 }
 
 /* ----- Render Passes ----- */

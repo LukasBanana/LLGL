@@ -18,8 +18,13 @@ namespace LLGL
 
 D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
+    /* Create root signature */
     bindFlags_.reserve(desc.bindings.size());
     CreateRootSignature(device, desc);
+
+    /* Accumulate stage flags */
+    for (const auto& binding : desc.bindings)
+        combinedStageFlags_ |= binding.stageFlags;
 }
 
 void D3D12PipelineLayout::SetName(const char* name)

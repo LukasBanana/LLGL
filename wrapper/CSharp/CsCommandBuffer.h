@@ -88,11 +88,9 @@ public ref class CommandBuffer
 
         /* ----- Resource Heaps ----- */
 
-        void SetGraphicsResourceHeap(ResourceHeap^ resourceHeap);
-        void SetGraphicsResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet);
-
-        void SetComputeResourceHeap(ResourceHeap^ resourceHeap);
-        void SetComputeResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet);
+        void SetResourceHeap(ResourceHeap^ resourceHeap);
+        void SetResourceHeap(ResourceHeap^ resourceHeap, PipelineBindPoint bindPoint);
+        void SetResourceHeap(ResourceHeap^ resourceHeap, PipelineBindPoint bindPoint, unsigned int firstSet);
 
         /* ----- Render Passes ----- */
 

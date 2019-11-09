@@ -403,13 +403,13 @@ private:
                 commands->SetPipelineState(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
                 // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-                commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
+                commands->SetResourceHeap(*resourceHeaps[0]);
                 commands->DrawInstanced(4, 0, numPlantInstances);
 
                 // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
                 if (renderer->GetRenderingCaps().features.hasOffsetInstancing)
                 {
-                    commands->SetGraphicsResourceHeap(*resourceHeaps[1], 0);
+                    commands->SetResourceHeap(*resourceHeaps[1]);
                     commands->DrawInstanced(4, 4, 1, numPlantInstances);
                 }
             }

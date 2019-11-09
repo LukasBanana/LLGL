@@ -288,7 +288,7 @@ private:
 
             // Run compute shader
             commands->SetPipelineState(*computePipeline);
-            commands->SetComputeResourceHeap(*computeResourceHeap);
+            commands->SetResourceHeap(*computeResourceHeap);
             commands->Dispatch(sceneState.numSceneObjects, 1, 1);
 
             commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);

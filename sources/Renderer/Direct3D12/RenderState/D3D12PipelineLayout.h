@@ -58,6 +58,12 @@ class D3D12PipelineLayout final : public PipelineLayout
             return serializedBlob_.Get();
         }
 
+        // Returns the bitwise OR combined stage flags of all resource view descriptors.
+        inline long GetCombinedStageFlags() const
+        {
+            return combinedStageFlags_;
+        }
+
     private:
 
         void BuildRootParameter(
@@ -73,6 +79,7 @@ class D3D12PipelineLayout final : public PipelineLayout
         ComPtr<ID3D12RootSignature> rootSignature_;
         ComPtr<ID3DBlob>            serializedBlob_;
         std::vector<long>           bindFlags_;
+        long                        combinedStageFlags_ = 0;
 
 };
 

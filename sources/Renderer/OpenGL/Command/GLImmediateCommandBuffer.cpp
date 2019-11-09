@@ -317,20 +317,13 @@ void GLImmediateCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format forma
 
 /* ----- Resource Heaps ----- */
 
-static void BindResourceHeap(GLStateManager& stateMngr, ResourceHeap& resourceHeap)
+void GLImmediateCommandBuffer::SetResourceHeap(
+    ResourceHeap&           resourceHeap,
+    const PipelineBindPoint /*bindPoint*/,
+    std::uint32_t           /*firstSet*/)
 {
     auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
-    resourceHeapGL.Bind(stateMngr);
-}
-
-void GLImmediateCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
-{
-    BindResourceHeap(*stateMngr_, resourceHeap);
-}
-
-void GLImmediateCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
-{
-    BindResourceHeap(*stateMngr_, resourceHeap);
+    resourceHeapGL.Bind(*stateMngr_);
 }
 
 void GLImmediateCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long /*stageFlags*/)

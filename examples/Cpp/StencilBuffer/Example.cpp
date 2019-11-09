@@ -295,7 +295,7 @@ private:
 
         // Render scene background
         commands->SetPipelineState(*pipelineScene);
-        commands->SetGraphicsResourceHeap(*resourceHeap);
+        commands->SetResourceHeap(*resourceHeap);
         RenderMesh(meshScene);
     }
 

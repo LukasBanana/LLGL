@@ -416,10 +416,10 @@ public:
             LLGL::PipelineLayoutDesc(
                 "cbuffer(SceneState@0):comp,"
                 #ifdef ENABLE_STORAGE_TEXTURES
-                "texture(parBase@1),"
+                "texture(parBase@1):comp,"
                 "rwtexture(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp"
                 #else
-                "buffer(parBase@1),"
+                "buffer(parBase@1):comp,"
                 "rwbuffer(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp"
                 #endif // /ENABLE_STORAGE_TEXTURES
             )
@@ -640,7 +640,7 @@ private:
             commands->PushDebugGroup("CSForces");
             {
                 commands->SetPipelineState(*computePipelines[CSForces]);
-                commands->SetComputeResourceHeap(*computeResourceHeaps[swapBufferIndex]);
+                commands->SetResourceHeap(*computeResourceHeaps[swapBufferIndex]);
                 commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
             }
             commands->PopDebugGroup();
@@ -654,7 +654,7 @@ private:
                 {
                     if (i > 0)
                         swapBufferIndex = (swapBufferIndex + 1) % 2;
-                    commands->SetComputeResourceHeap(*computeResourceHeaps[swapBufferIndex]);
+                    commands->SetResourceHeap(*computeResourceHeaps[swapBufferIndex]);
                     commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
                 }
             }
@@ -664,7 +664,7 @@ private:
             commands->PushDebugGroup("CSRelaxation");
             {
                 commands->SetPipelineState(*computePipelines[CSRelaxation]);
-                commands->SetComputeResourceHeap(*computeResourceHeaps[swapBufferIndex]);
+                commands->SetResourceHeap(*computeResourceHeaps[swapBufferIndex]);
                 commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
             }
             commands->PopDebugGroup();
@@ -699,7 +699,7 @@ private:
 
                 // Draw scene with indirect argument buffer
                 commands->SetPipelineState(*graphicsPipeline);
-                commands->SetGraphicsResourceHeap(*graphicsResourceHeap);
+                commands->SetResourceHeap(*graphicsResourceHeap);
                 commands->DrawIndexed(numClothIndices, 0);
 
                 #ifdef ENABLE_STORAGE_TEXTURES

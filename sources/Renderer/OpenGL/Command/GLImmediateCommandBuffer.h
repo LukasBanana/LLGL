@@ -102,8 +102,11 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         /* ----- Resources ----- */
 
-        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
-        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetResourceHeap(
+            ResourceHeap&           resourceHeap,
+            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined,
+            std::uint32_t           firstSet        = 0
+        ) override;
 
         void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) override;
 

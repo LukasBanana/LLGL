@@ -58,6 +58,17 @@ enum class StencilFace
     Back,
 };
 
+/**
+\brief Pipeline binding point enumeration.
+\see CommandBuffer::SetResourceHeap
+*/
+enum class PipelineBindPoint
+{
+    Undefined,  //!< Automatically determine pipeline binding point for a resource heap.
+    Graphics,   //!< Graphics pipeline binding point.
+    Compute,    //!< Compute pipeline binding point.
+};
+
 
 /* ----- Flags ----- */
 

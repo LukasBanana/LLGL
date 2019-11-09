@@ -23,6 +23,22 @@ namespace LLGL
 {
 
 
+/*
+Returns the optimal pipeline binding point for the specified layout,
+or VK_PIPELINE_BIND_POINT_MAX_ENUM if there are multiple pipelines in use.
+*/
+static VkPipelineBindPoint FindPipelineBindPoint(const VKPipelineLayout& pipelineLayout)
+{
+    for (const auto& binding : pipelineLayout.GetBindings())
+    {
+        if ((binding.stageFlags & StageFlags::AllGraphicsStages) != 0)
+            return VK_PIPELINE_BIND_POINT_GRAPHICS;
+        if ((binding.stageFlags & StageFlags::ComputeStage) != 0)
+            return VK_PIPELINE_BIND_POINT_COMPUTE;
+    }
+    return VK_PIPELINE_BIND_POINT_MAX_ENUM;
+}
+
 VKResourceHeap::VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeapDescriptor& desc) :
     device_         { device                          },
     descriptorPool_ { device, vkDestroyDescriptorPool }
@@ -33,6 +49,7 @@ VKResourceHeap::VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeap
         throw std::invalid_argument("failed to create resource view heap due to missing pipeline layout");
 
     pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
+    bindPoint_      = FindPipelineBindPoint(*pipelineLayoutVK);
 
     /* Validate binding descriptors */
     const auto& bindings = pipelineLayoutVK->GetBindings();

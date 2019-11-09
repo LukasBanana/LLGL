@@ -48,6 +48,7 @@ VkQueryType             Map( const QueryType            queryType         );
 VkAttachmentLoadOp      Map( const AttachmentLoadOp     loadOp            );
 VkAttachmentStoreOp     Map( const AttachmentStoreOp    storeOp           );
 VkStencilFaceFlags      Map( const StencilFace          stencilFace       );
+VkPipelineBindPoint     Map( const PipelineBindPoint    pipelineBindPoint );
 
 VkIndexType             ToVkIndexType(const Format format);
 VkSampleCountFlagBits   ToVkSampleCountBits(std::uint32_t samples);
