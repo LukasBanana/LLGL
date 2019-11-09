@@ -14,14 +14,18 @@ In legacy rendering APIs, such as OpenGL, shader resources were bound individual
 LLGL::PipelineLayoutDescriptor myLayoutDesc;
 myLayoutDesc.bindings = {
     LLGL::BindingDescriptor {
-        LLGL::ResourceType::ConstantBuffer,
-        LLGL::StageFlags::AllTessStages,
+        "MyConstantBuffer",
+        LLGL::ResourceType::Buffer,
+        LLGL::BindFlags::ConstantBuffer,
+        (IsMetal()
+            ? LLGL::StageFlags::ComputeStage | LLGL::StageFlags::VertexStage
+            : LLGL::StageFlags::AllTessStages),
         myConstantBufferBindingPoint
     }
 };
 LLGL::PipelineLayout* myPipelineLayout = myRenderer->CreatePipelineLayout(myLayoutDesc);
 ```
-For the tessellation tutorial, we only need a constant buffer that is bound to the tessellation control and tessellation evaluation shader stages. The descriptor field `bindings` is an STL container which we can easily initialize with a brace initializer list. The parameter `myConstantBufferBindingPoint` is just an unsigned integer that specifies the binding point. If its value is 3 for instance, the corresponding constant buffer in an HLSL shader could look like this:
+We need to specify different shader stages for the Metal backend. Although Metal supports tessellation there are no dedicated tessellation shader stages. They are laid out into a compute kernel and a so called post-tessellation vertex shader instead. For the tessellation tutorial, we only need a constant buffer that is bound to the tessellation control and tessellation evaluation shader stages. The descriptor field `bindings` is an STL container which we can easily initialize with a brace initializer list. The parameter `myConstantBufferBindingPoint` is just an unsigned integer that specifies the binding point. If its value is 3 for instance, the corresponding constant buffer in an HLSL shader could look like this:
 ```hlsl
 cbuffer MyConstantBuffer : register(b3)
 ```
@@ -47,6 +51,21 @@ myPipelineDesc.depth.testEnabled   = true;                              // Enabl
 myPipelineDesc.depth.writeEnabled  = true;                              // Enable depth writing
 myPipelineDesc.rasterizer.cullMode = LLGL::CullMode::Back;              // Enable back-face culling
 myPipelineDesc.rasterizer.frontCCW = true;                              // Front facing polygons: counter-clock-wise (CCW) winding
+```
+While most rendering APIs provide the tessellation parameters on the shader side, in Metal we need to specify some on the host application side.
+The following parameters are ignored by all other backends:
+```cpp
+// We'll use 32-bit indices
+pipelineDesc.tessellation.indexFormat       = LLGL::Format::R32UInt;
+
+// Equivalent to [partitioning("fractional_odd")] in HLSL
+pipelineDesc.tessellation.partition         = LLGL::TessellationPartition::FractionalOdd;
+
+// Equivalent to [outputtopology("triangle_ccw")] in HLSL
+pipelineDesc.tessellation.outputWindingCCW  = true;
+```
+Now we create the graphics pipeline state object (PSO):
+```cpp
 LLGL::PipelineState* myPipeline = myRenderer->CreatePipelineState(myPipelineDesc);
 ```
 There are several parameters besides the pipeline layout that are needed for the tessellation tutorial. This time we use the depth buffer to render a 3D scene and not just a flat triangle. We also enable back-face culling as a minor optimization to omit triangles that are never visible anyways. But make sure to only use this when you render meshes that are entirely closed. When tessellation shaders are used in the graphics pipeline, the primitive toplogy must be one of the `LLGL::PrimitiveTopology::Patches1`-`32` enumeration entries. The number specifies the control point count. The maximum number of control points that are supported by the host platform can be determined as shown here:
@@ -71,7 +90,7 @@ myCmdBuffer->SetIndexBuffer(*myIndexBuffer);
 
 Next, we bind the resource heap to the graphics pipeline (there is an analogous function for the compute pipeline):
 ```cpp
-myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
+myCmdBuffer->SetResourceHeap(*myResourceHeap);
 ```
 Last thing to mention which is different to the previous tutorial: we use the `DrawIndexed` function instead of `Draw`. Otherwise, the index buffer would be pointless for the draw command. If we want to render a tessellated cube, we need 6 patches each of which has 4 control points (since we used `Patches4` as topology). This means we have to generate 24 indices (24=6*4):
 ```cpp

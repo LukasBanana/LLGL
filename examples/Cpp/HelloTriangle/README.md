@@ -195,7 +195,7 @@ Next we clear the previous content of the color buffer:
 ```cpp
 myCmdBuffer->Clear(LLGL::ClearFlags::Color);
 ```
-To clear multiple attachments of the active render target, the `ClearAttachments` function can be used instead. The last state we set before rendering is the pipeline state and the vertex buffer we created earlier:
+To clear multiple attachments of the active render target, the `ClearAttachments` function can be used instead. The last state we set before rendering is the pipeline state we created earlier:
 ```cpp
 myCmdBuffer->SetPipelineState(*myPipeline);
 ```
