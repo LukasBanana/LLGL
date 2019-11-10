@@ -164,40 +164,40 @@ struct ShaderProgramDescriptor
     For a compute shader program, only a compute shader must be specified.
     With OpenGL, this shader may also have a stream output.
     */
-    Shader*                     vertexShader            = nullptr;
+    Shader* vertexShader            = nullptr;
 
     /**
     \brief Specifies the tessellation-control shader (also referred to as "Hull Shader").
     \remarks If this is used, the counter part must also be specified (i.e. \c tessEvaluationShader).
     \see tessEvaluationShader
     */
-    Shader*                     tessControlShader       = nullptr;
+    Shader* tessControlShader       = nullptr;
 
     /**
     \brief Specifies the tessellation-evaluation shader (also referred to as "Domain Shader").
     \remarks If this is used, the counter part must also be specified (i.e. \c tessControlShader).
     \see tessControlShader
     */
-    Shader*                     tessEvaluationShader    = nullptr;
+    Shader* tessEvaluationShader    = nullptr;
 
     /**
     \brief Specifies an optional geometry shader.
     \remarks This shader may also have a stream output.
     */
-    Shader*                     geometryShader          = nullptr;
+    Shader* geometryShader          = nullptr;
 
     /**
     \brief Specifies an optional fragment shader (also referred to as "Pixel Shader").
     \remarks If no fragment shader is specified, generated fragments are discarded by the output merger
     and only the stream-output functionality is used by either the vertex or geometry shader.
     */
-    Shader*                     fragmentShader          = nullptr;
+    Shader* fragmentShader          = nullptr;
 
     /**
     \brief Specifies the compute shader.
     \remarks This shader cannot be used in conjunction with any other shaders.
     */
-    Shader*                     computeShader           = nullptr;
+    Shader* computeShader           = nullptr;
 };
 
 /**

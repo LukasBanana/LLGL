@@ -120,7 +120,7 @@ void MTShaderProgram::Attach(Shader* shader)
         id<MTLFunction> shaderFunc = shaderMT->GetNative();
 
         /* Check for errors */
-        if (shaderMT->HasError())
+        if (shaderMT->HasErrors())
         {
             /* Store reference to shader with error (for later info log queries) */
             shaderWithError_ = shaderMT;

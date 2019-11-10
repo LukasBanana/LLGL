@@ -405,7 +405,7 @@ ShaderProgram* DbgRenderSystem::CreateShaderProgram(const ShaderProgramDescripto
         instanceDesc.fragmentShader         = GetInstanceShader(desc.fragmentShader);
         instanceDesc.computeShader          = GetInstanceShader(desc.computeShader);
     }
-    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc, caps_));
+    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc));
 }
 
 void DbgRenderSystem::Release(Shader& shader)

@@ -32,6 +32,11 @@ long Shader::GetStageFlags() const
     return 0;
 }
 
+bool Shader::IsPostTessellationVertex() const
+{
+    return false; // dummy
+}
+
 
 } // /namespace LLGL
 

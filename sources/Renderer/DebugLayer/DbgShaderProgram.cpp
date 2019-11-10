@@ -19,23 +19,39 @@ namespace LLGL
 DbgShaderProgram::DbgShaderProgram(
     ShaderProgram&                  instance,
     RenderingDebugger*              debugger,
-    const ShaderProgramDescriptor&  desc,
-    const RenderingCapabilities&    caps)
-:   instance  { instance },
+    const ShaderProgramDescriptor&  desc)
+:
+    instance  { instance },
     debugger_ { debugger }
 {
     /* Debug all attachments and shader composition */
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+
+        /* Validate all attached shaders */
         ValidateShaderAttachment(desc.vertexShader, ShaderType::Vertex);
         ValidateShaderAttachment(desc.tessControlShader, ShaderType::TessControl);
         ValidateShaderAttachment(desc.tessEvaluationShader, ShaderType::TessEvaluation);
         ValidateShaderAttachment(desc.geometryShader, ShaderType::Geometry);
         ValidateShaderAttachment(desc.fragmentShader, ShaderType::Fragment);
         ValidateShaderAttachment(desc.computeShader, ShaderType::Compute);
-        ValidateShaderComposition();
-        QueryInstanceAndVertexIDs(caps);
+
+        /* Validate shader composition */
+        Shader* shaders[] =
+        {
+            desc.vertexShader,
+            desc.tessControlShader,
+            desc.tessEvaluationShader,
+            desc.geometryShader,
+            desc.fragmentShader,
+            desc.computeShader
+        };
+
+        if (!ShaderProgram::ValidateShaderComposition(shaders, sizeof(shaders)/sizeof(shaders[0])))
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "invalid shader composition");
+
+        QueryInstanceAndVertexIDs();
     }
 
     /* Store all attributes of vertex layout */
@@ -95,14 +111,6 @@ const char* DbgShaderProgram::GetInstanceID() const
  * ======= Private: =======
  */
 
-#define LLGL_SHADERTYPE_MASK(TYPE)  (1 << static_cast<int>(TYPE))
-#define LLGL_VS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Vertex)
-#define LLGL_PS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Fragment)
-#define LLGL_HS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::TessControl)
-#define LLGL_DS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::TessEvaluation)
-#define LLGL_GS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Geometry)
-#define LLGL_CS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Compute)
-
 void DbgShaderProgram::ValidateShaderAttachment(Shader* shader, const ShaderType type)
 {
     if (shader != nullptr)
@@ -122,37 +130,10 @@ void DbgShaderProgram::ValidateShaderAttachment(Shader* shader, const ShaderType
                 ") and shader program attachment (" + std::string(ToString(type)) + ")"
             );
         }
-
-        /* Add shader type to list */
-        shaderTypes_.push_back(shaderDbg.GetType());
-
-        /* Update shader attachment mask */
-        shaderAttachmentMask_ |= LLGL_SHADERTYPE_MASK(shaderDbg.GetType());
     }
 }
 
-void DbgShaderProgram::ValidateShaderComposition()
-{
-    /* Validate shader composition by shader attachment bit mask */
-    switch (shaderAttachmentMask_)
-    {
-        case ( LLGL_VS_MASK                                                             ):
-        case ( LLGL_VS_MASK |                               LLGL_GS_MASK                ):
-        case ( LLGL_VS_MASK | LLGL_HS_MASK | LLGL_DS_MASK                               ):
-        case ( LLGL_VS_MASK | LLGL_HS_MASK | LLGL_DS_MASK | LLGL_GS_MASK                ):
-        case ( LLGL_VS_MASK |                                              LLGL_PS_MASK ):
-        case ( LLGL_VS_MASK |                               LLGL_GS_MASK | LLGL_PS_MASK ):
-        case ( LLGL_VS_MASK | LLGL_HS_MASK | LLGL_DS_MASK |                LLGL_PS_MASK ):
-        case ( LLGL_VS_MASK | LLGL_HS_MASK | LLGL_DS_MASK | LLGL_GS_MASK | LLGL_PS_MASK ):
-        case ( LLGL_CS_MASK ):
-            break;
-        default:
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "invalid shader composition");
-            break;
-    }
-}
-
-void DbgShaderProgram::QueryInstanceAndVertexIDs(const RenderingCapabilities& caps)
+void DbgShaderProgram::QueryInstanceAndVertexIDs()
 {
     ShaderReflection reflect;
     if (instance.Reflect(reflect))
@@ -174,14 +155,6 @@ void DbgShaderProgram::QueryInstanceAndVertexIDs(const RenderingCapabilities& ca
         }
     }
 }
-
-#undef LLGL_SHADERTYPE_MASK
-#undef LLGL_VS_MASK
-#undef LLGL_PS_MASK
-#undef LLGL_HS_MASK
-#undef LLGL_DS_MASK
-#undef LLGL_GS_MASK
-#undef LLGL_CS_MASK
 
 
 } // /namespace LLGL

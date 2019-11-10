@@ -92,6 +92,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         - For GLSL: <code>layout(local_size_x = X, local_size_y = Y, local_size_z = Z)</code>
         - For HLSL: <code>[numthreads(X, Y, Z)]</code>
         \note Only supported with: Metal.
+        \todo Replace this by a new member in ShaderDescriptor.
         */
         virtual bool SetWorkGroupSize(const Extent3D& workGroupSize) = 0;
 
@@ -102,6 +103,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \return True, if the work group size could be determined.
         Otherwise, the rendering API does not support shader reflection to query the work group size,
         or the shader program does not contain a compute shader.
+        \todo Replace this by a new member in ShaderReflection.
         */
         virtual bool GetWorkGroupSize(Extent3D& workGroupSize) const = 0;
 
@@ -126,6 +128,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \brief Validates the composition of the specified shader attachments.
         \param[in] shaders Array of Shader objects that belong to this shader program. Null pointers within the array are ignored.
         \param[in] numShaders Specifies the number of entries in the array 'shaders'. This must not be larger than the number of entries in the 'shaders' array.
+        \param[in] useMetalSemantics Specifies whether Metal semantics is enabled to allow a compute kernel and a post-tessellation vertex shader in the same shader composition.
         \return True if the shader composition is valid, otherwise false.
         \remarks For example, a composition of a compute shader and a fragment shader is invalid,
         but a composition of a vertex shader and a fragment shader is valid.

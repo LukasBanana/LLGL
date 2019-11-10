@@ -33,35 +33,55 @@ bool ShaderProgram::ValidateShaderComposition(Shader* const * shaders, std::size
     };
 
     /* Determine which shader types are attached */
+    bool hasPostTessVertexShader = false;
     int bitmask = 0;
 
     for (std::size_t i = 0; i < numShaders; ++i)
     {
         if (auto shader = shaders[i])
         {
+            /* Check if bit was already set */
             auto bit = (1 << static_cast<int>(shader->GetType()));
 
-            /* Check if bit was already set */
             if ((bitmask & bit) != 0)
                 return false;
 
             bitmask |= bit;
+
+            /* Check if a post-tessellation vertex shader is used to enable validation with Metal semantics */
+            if (shader->IsPostTessellationVertex())
+                hasPostTessVertexShader = true;
         }
     }
 
     /* Validate composition of attached shaders */
-    switch (bitmask)
+    if (hasPostTessVertexShader)
     {
-        case (BitVert                                        ):
-        case (BitVert |                     BitGeom          ):
-        case (BitVert | BitTesc | BitTese                    ):
-        case (BitVert | BitTesc | BitTese | BitGeom          ):
-        case (BitVert |                               BitFrag):
-        case (BitVert |                     BitGeom | BitFrag):
-        case (BitVert | BitTesc | BitTese |           BitFrag):
-        case (BitVert | BitTesc | BitTese | BitGeom | BitFrag):
-        case (BitComp):
-            return true;
+        switch (bitmask)
+        {
+            case (          BitVert          ):
+            case (          BitVert | BitFrag):
+            case (BitComp                    ):
+            case (BitComp | BitVert          ):
+            case (BitComp | BitVert | BitFrag):
+                return true;
+        }
+    }
+    else
+    {
+        switch (bitmask)
+        {
+            case (BitVert                                        ):
+            case (BitVert |                     BitGeom          ):
+            case (BitVert | BitTesc | BitTese                    ):
+            case (BitVert | BitTesc | BitTese | BitGeom          ):
+            case (BitVert |                               BitFrag):
+            case (BitVert |                     BitGeom | BitFrag):
+            case (BitVert | BitTesc | BitTese |           BitFrag):
+            case (BitVert | BitTesc | BitTese | BitGeom | BitFrag):
+            case (BitComp):
+                return true;
+        }
     }
 
     return false;

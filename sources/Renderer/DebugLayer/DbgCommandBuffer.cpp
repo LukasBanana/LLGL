@@ -58,13 +58,13 @@ DbgCommandBuffer::DbgCommandBuffer(
     const CommandBufferDescriptor&  desc,
     const RenderingCapabilities&    caps)
 :
-    instance      { commandBufferInstance                                             },
-    desc          { desc                                                              },
-    debugger_     { debugger                                                          },
-    profiler_     { profiler                                                          },
-    features_     { caps.features                                                     },
-    limits_       { caps.limits                                                       },
-    timerMngr_    { renderSystemInstance, commandQueueInstance, commandBufferInstance }
+    instance   { commandBufferInstance                                             },
+    desc       { desc                                                              },
+    debugger_  { debugger                                                          },
+    profiler_  { profiler                                                          },
+    features_  { caps.features                                                     },
+    limits_    { caps.limits                                                       },
+    timerMngr_ { renderSystemInstance, commandQueueInstance, commandBufferInstance }
 {
 }
 
@@ -460,7 +460,6 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
 
 /* ----- Resources ----- */
 
-//TODO: incomplete
 //TODO: also record individual resource bindings
 void DbgCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
@@ -471,8 +470,6 @@ void DbgCommandBuffer::SetResourceHeap(
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        //AssertGraphicsPipelineBound();
-        //AssertComputePipelineBound();
     }
 
     LLGL_DBG_COMMAND( "SetResourceHeap", instance.SetResourceHeap(resourceHeap, bindPoint, firstSet) );

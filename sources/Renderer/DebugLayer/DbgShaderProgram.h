@@ -49,8 +49,7 @@ class DbgShaderProgram final : public ShaderProgram
         DbgShaderProgram(
             ShaderProgram&                  instance,
             RenderingDebugger*              debugger,
-            const ShaderProgramDescriptor&  desc,
-            const RenderingCapabilities&    caps
+            const ShaderProgramDescriptor&  desc
         );
 
         // Returns the vertex layout meta data.
@@ -78,20 +77,17 @@ class DbgShaderProgram final : public ShaderProgram
     private:
 
         void ValidateShaderAttachment(Shader* shader, const ShaderType type);
-        void ValidateShaderComposition();
-        void QueryInstanceAndVertexIDs(const RenderingCapabilities& caps);
+        void QueryInstanceAndVertexIDs();
 
     private:
 
-        RenderingDebugger*      debugger_               = nullptr;
-        int                     shaderAttachmentMask_   = 0;
-        bool                    hasFragmentShader_      = false;
+        RenderingDebugger*  debugger_               = nullptr;
+        bool                hasFragmentShader_      = false;
 
-        std::vector<ShaderType> shaderTypes_;
-        VertexLayout            vertexLayout_;
+        VertexLayout        vertexLayout_;
 
-        std::string             vertexID_;
-        std::string             instanceID_;
+        std::string         vertexID_;
+        std::string         instanceID_;
 
 };
 

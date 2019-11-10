@@ -73,6 +73,11 @@ std::string MTShader::GetReport() const
     return s;
 }
 
+bool MTShader::IsPostTessellationVertex() const
+{
+    return (GetType() == ShaderType::Vertex && native_ != nil && [native_ patchType] != MTLPatchTypeNone);
+}
+
 
 /*
  * ======= Private: =======

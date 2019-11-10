@@ -30,18 +30,14 @@ class MTShader : public Shader
 
         std::string GetReport() const override;
 
+        bool IsPostTessellationVertex() const override;
+
     public:
 
         // Returns the native MTLFunction object.
         inline id<MTLFunction> GetNative() const
         {
             return native_;
-        }
-
-        // Returns true if the shader has an error report.
-        bool HasError() const
-        {
-            return (error_ != nullptr);
         }
 
         // Returns the MTLVertexDescriptor object for this shader program.
