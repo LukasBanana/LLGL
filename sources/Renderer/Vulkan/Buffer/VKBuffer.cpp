@@ -33,14 +33,12 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
 
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
     {
-        #ifdef LLGL_VK_ENABLE_EXT
         if (HasExtension(VKExt::EXT_transform_feedback))
         {
             /* Enable transform feedback with extension VK_EXT_transform_feedback */
             flags |= VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_BUFFER_BIT_EXT;
         }
         else
-        #endif
         {
             /* Error: feature not supported due to missing extension */
             throw std::runtime_error("stream output buffer not supported by Vulkan renderer");

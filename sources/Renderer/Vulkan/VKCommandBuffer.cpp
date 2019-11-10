@@ -786,7 +786,6 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    /* Ensure "VK_EXT_conditional_rendering" is supported */
     LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
 
     auto& queryHeapVK = LLGL_CAST(VKPredicateQueryHeap&, queryHeap);
@@ -830,38 +829,29 @@ void VKCommandBuffer::EndRenderCondition()
 #if 0
 void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
-    if (HasExtension(VKExt::EXT_transform_feedback))
-    {
-        auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_transform_feedback, VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
 
-        VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
-        VkDeviceSize offsets[] = { 0 };
-        VkDeviceSize sizes[] = { bufferVK.GetSize() };
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
 
-        vkCmdBindTransformFeedbackBuffersEXT(commandBuffer_, 0, 1, buffers, offsets, sizes);
-    }
-    else
-        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
+    VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
+    VkDeviceSize offsets[] = { 0 };
+    VkDeviceSize sizes[] = { bufferVK.GetSize() };
+
+    vkCmdBindTransformFeedbackBuffersEXT(commandBuffer_, 0, 1, buffers, offsets, sizes);
 }
 #endif
 
 void VKCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
 {
-    if (HasExtension(VKExt::EXT_transform_feedback))
-    {
-        //TODO: bind buffers
-        vkCmdBeginTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
-    }
-    else
-        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
+    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_transform_feedback, VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
+    //TODO: bind buffers
+    vkCmdBeginTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
 }
 
 void VKCommandBuffer::EndStreamOutput()
 {
-    if (HasExtension(VKExt::EXT_transform_feedback))
-        vkCmdEndTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
-    else
-        ThrowVKExtensionNotSupportedExcept(__FUNCTION__, "VK_EXT_transform_feedback");
+    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_transform_feedback, VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
+    vkCmdEndTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
 }
 
 /* ----- Drawing ----- */
@@ -969,7 +959,6 @@ void VKCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void VKCommandBuffer::PushDebugGroup(const char* name)
 {
-    #ifdef LLGL_VK_ENABLE_EXT
     if (HasExtension(VKExt::EXT_debug_marker))
     {
         VkDebugMarkerMarkerInfoEXT markerInfo;
@@ -984,15 +973,12 @@ void VKCommandBuffer::PushDebugGroup(const char* name)
         }
         vkCmdDebugMarkerBeginEXT(commandBuffer_, &markerInfo);
     }
-    #endif // /LLGL_VK_ENABLE_EXT
 }
 
 void VKCommandBuffer::PopDebugGroup()
 {
-    #ifdef LLGL_VK_ENABLE_EXT
     if (HasExtension(VKExt::EXT_debug_marker))
         vkCmdDebugMarkerEndEXT(commandBuffer_);
-    #endif // /LLGL_VK_ENABLE_EXT
 }
 
 /* ----- Extensions ----- */

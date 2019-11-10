@@ -39,8 +39,6 @@ DECL_VKPROC( vkCreateWin32SurfaceKHR );
 
 #endif
 
-#ifdef LLGL_VK_ENABLE_EXT
-
 /* VK_EXT_debug_marker */
 
 DECL_VKPROC( vkDebugMarkerSetObjectTagEXT  );
@@ -72,8 +70,6 @@ DECL_VKPROC( vkGetPhysicalDeviceImageFormatProperties2KHR       );
 DECL_VKPROC( vkGetPhysicalDeviceQueueFamilyProperties2KHR       );
 DECL_VKPROC( vkGetPhysicalDeviceMemoryProperties2KHR            );
 DECL_VKPROC( vkGetPhysicalDeviceSparseImageFormatProperties2KHR );
-
-#endif // /LLGL_VK_ENABLE_EXT
 
 #undef DECL_VKPROC
 
