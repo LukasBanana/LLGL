@@ -33,7 +33,7 @@ GLDepthStencilState::GLDepthStencilState(const DepthDescriptor& depthDesc, const
     GLStencilFaceState::Convert(stencilFront_, stencilDesc.front, stencilDesc.referenceDynamic);
     GLStencilFaceState::Convert(stencilBack_, stencilDesc.back, stencilDesc.referenceDynamic);
 
-    independentStencilFaces_ = (GLStencilFaceState::CompareSWO(stencilFront_, stencilBack_) == 0);
+    independentStencilFaces_ = (GLStencilFaceState::CompareSWO(stencilFront_, stencilBack_) != 0);
 }
 
 void GLDepthStencilState::Bind(GLStateManager& stateMngr)
