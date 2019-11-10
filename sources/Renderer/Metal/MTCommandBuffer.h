@@ -28,7 +28,7 @@ class MTTexture;
 class MTSampler;
 class MTRenderTarget;
 
-class MTCommandBuffer : public CommandBuffer
+class MTCommandBuffer final : public CommandBuffer
 {
 
     public:

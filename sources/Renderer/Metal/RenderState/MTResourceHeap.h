@@ -29,7 +29,7 @@ struct ResourceHeapDescriptor;
 This class emulates the behavior of a descriptor set like in Vulkan,
 by binding all shader resources within one bind call in the command buffer.
 */
-class MTResourceHeap : public ResourceHeap
+class MTResourceHeap final : public ResourceHeap
 {
 
     public:

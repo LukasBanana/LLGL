@@ -20,7 +20,7 @@ namespace LLGL
 
 class MTShader;
 
-class MTShaderProgram : public ShaderProgram
+class MTShaderProgram final : public ShaderProgram
 {
 
     public:

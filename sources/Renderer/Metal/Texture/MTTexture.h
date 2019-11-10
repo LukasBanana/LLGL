@@ -21,7 +21,7 @@ namespace LLGL
 struct SrcImageDescriptor;
 struct DstImageDescriptor;
 
-class MTTexture : public Texture
+class MTTexture final : public Texture
 {
 
     public:

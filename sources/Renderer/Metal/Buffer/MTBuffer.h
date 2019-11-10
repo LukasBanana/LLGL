@@ -19,7 +19,7 @@ namespace LLGL
 {
 
 
-class MTBuffer : public Buffer
+class MTBuffer final : public Buffer
 {
 
     public:

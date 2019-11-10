@@ -20,7 +20,7 @@ namespace LLGL
 class MTRenderPass;
 struct GraphicsPipelineDescriptor;
 
-class MTGraphicsPSO : public MTPipelineState
+class MTGraphicsPSO final : public MTPipelineState
 {
 
     public:

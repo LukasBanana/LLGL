@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class MTSampler : public Sampler
+class MTSampler final : public Sampler
 {
 
     public:

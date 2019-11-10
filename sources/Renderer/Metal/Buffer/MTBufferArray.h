@@ -21,7 +21,7 @@ namespace LLGL
 
 class Buffer;
 
-class MTBufferArray : public BufferArray
+class MTBufferArray final : public BufferArray
 {
 
     public:

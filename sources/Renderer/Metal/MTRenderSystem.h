@@ -39,7 +39,7 @@ namespace LLGL
 {
 
 
-class MTRenderSystem : public RenderSystem
+class MTRenderSystem final : public RenderSystem
 {
 
     public:

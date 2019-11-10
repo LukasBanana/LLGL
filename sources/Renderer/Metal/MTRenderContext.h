@@ -21,7 +21,7 @@ namespace LLGL
 {
 
 
-class MTRenderContext : public RenderContext
+class MTRenderContext final : public RenderContext
 {
 
     public:

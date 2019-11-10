@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class MTShader : public Shader
+class MTShader final : public Shader
 {
 
     public:

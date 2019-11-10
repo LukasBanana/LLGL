@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class MTCommandQueue : public CommandQueue
+class MTCommandQueue final : public CommandQueue
 {
 
     public:
