@@ -20,14 +20,28 @@ namespace LLGL
 
 /* ----- Internal ----- */
 
+// Generates an image buffer with floating-points for RGBA components.
 static std::vector<ColorRGBAf> GenImageDataRGBAf(std::uint32_t numPixels, const ColorRGBAf& color)
 {
     return std::vector<ColorRGBAf>(static_cast<std::size_t>(numPixels), color);
 }
 
+// Generates an image buffer with floating-points for the Red component.
 static std::vector<float> GenImageDataRf(std::uint32_t numPixels, float value)
 {
     return std::vector<float>(static_cast<std::size_t>(numPixels), value);
+}
+
+struct alignas(4) GLDepthStencilPair
+{
+    float           depth;
+    std::uint8_t    stencil;
+};
+
+// Generates an image buffer with floating-points for the Red component and an unsigned byte for the Green component.
+static std::vector<GLDepthStencilPair> GenImageDataD32fS8ui(std::uint32_t numPixels, float depth, std::uint8_t stencil)
+{
+    return std::vector<GLDepthStencilPair>(static_cast<std::size_t>(numPixels), GLDepthStencilPair{ depth, stencil });
 }
 
 [[noreturn]]
@@ -527,11 +541,40 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
             imageDesc->dataSize
         );
     }
-    else if (IsDepthStencilFormat(desc.format))
+    else if (IsStencilFormat(desc.format))
     {
         if (useClearValue)
         {
-            //TODO: add support for default initialization of stencil values
+            /* Initialize depth-stencil texture image with default depth */
+            auto image = GenImageDataD32fS8ui(desc.extent.width * desc.extent.height, desc.clearValue.depth, desc.clearValue.stencil);
+            GLTexImage2D(
+                NumMipLevels(desc),
+                FindSuitableDepthFormat(desc),
+                desc.extent.width,
+                desc.extent.height,
+                GL_DEPTH_STENCIL,
+                GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
+                image.data()
+            );
+        }
+        else
+        {
+            /* Allocate depth-stencil texture image without initial data */
+            GLTexImage2D(
+                NumMipLevels(desc),
+                FindSuitableDepthFormat(desc),
+                desc.extent.width,
+                desc.extent.height,
+                GL_DEPTH_STENCIL,
+                GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
+                nullptr
+            );
+        }
+    }
+    else if (IsDepthFormat(desc.format))
+    {
+        if (useClearValue)
+        {
             /* Initialize depth texture image with default depth */
             auto image = GenImageDataRf(desc.extent.width * desc.extent.height, desc.clearValue.depth);
             GLTexImage2D(
@@ -675,11 +718,39 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
             imageFace += imageFaceStride;
         }
     }
-    else if (IsDepthStencilFormat(desc.format))
+    else if (IsStencilFormat(desc.format))
     {
         auto internalFormat = FindSuitableDepthFormat(desc);
 
-        //TODO: add support for default initialization of stencil values
+        std::vector<GLDepthStencilPair> image;
+        const void* initialData = nullptr;
+
+        if (useClearValue)
+        {
+            /* Initialize depth texture image with default depth */
+            image       = GenImageDataD32fS8ui(desc.extent.width * desc.extent.height, desc.clearValue.depth, desc.clearValue.stencil);
+            initialData = image.data();
+        }
+
+        /* Allocate depth texture image without initial data */
+        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
+        {
+            GLTexImageCube(
+                numMipLevels,
+                internalFormat,
+                desc.extent.width,
+                desc.extent.height,
+                arrayLayer,
+                GL_DEPTH_STENCIL,
+                GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
+                initialData
+            );
+        }
+    }
+    else if (IsDepthFormat(desc.format))
+    {
+        auto internalFormat = FindSuitableDepthFormat(desc);
+
         std::vector<float> image;
         const void* initialData = nullptr;
 

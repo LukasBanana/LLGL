@@ -271,6 +271,7 @@ private:
             depthTexDesc.mipLevels      = 1;
             depthTexDesc.samples        = samples;
             depthTexDesc.type           = (depthTexDesc.samples > 1 ? LLGL::TextureType::Texture2DMS : LLGL::TextureType::Texture2D);
+            depthTexDesc.miscFlags      = LLGL::MiscFlags::NoInitialData;
         }
         renderTargetDepthTex = renderer->CreateTexture(depthTexDesc);
 

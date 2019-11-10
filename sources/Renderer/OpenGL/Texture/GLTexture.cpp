@@ -21,13 +21,20 @@ namespace LLGL
 // Returns true if a GL renderbuffer is sufficient for a texture with the specified bind flags
 static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
 {
-    /* Renderbuffers can only be used for 2D and 2D-multi-sampled textures with a single MIP-map, and only if it's only used as a attachment */
+    /*
+    Renderbuffers can only be used under the following conditions:
+    - Texture must be 2D or 2D-multisampled
+    - Only a single MIP-map level
+    - Only used as attachment
+    - No initial image data is specified
+    */
     const long bindFlags = (desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage | BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment));
     return
     (
         desc.mipLevels == 1 &&
         (desc.type == TextureType::Texture2D || desc.type == TextureType::Texture2DMS) &&
         (bindFlags == BindFlags::ColorAttachment || bindFlags == BindFlags::DepthStencilAttachment) &&
+        ((desc.miscFlags & MiscFlags::NoInitialData) != 0) &&
         (desc.cpuAccessFlags == 0)
     );
 }
