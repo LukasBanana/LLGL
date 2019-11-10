@@ -143,6 +143,49 @@ bool Window::ProcessEvents()
     return !HasQuit();
 }
 
+std::unique_ptr<Display> Window::FindResidentDisplay() const
+{
+    auto displayList = Display::InstantiateList();
+
+    const auto winPos   = GetPosition();
+    const auto winSize  = GetSize();
+    const auto winArea  = static_cast<int>(winSize.width * winSize.height);
+
+    for (auto& display : displayList)
+    {
+        auto offset = display->GetOffset();
+        auto extent = display->GetDisplayMode().resolution;
+
+        int scrX = static_cast<int>(extent.width);
+        int scrY = static_cast<int>(extent.height);
+
+        /* Calculate window boundaries relative to the current display */
+        int x1 = winPos.x - offset.x;
+        int y1 = winPos.y - offset.y;
+        int x2 = x1 + static_cast<int>(winSize.width);
+        int y2 = y1 + static_cast<int>(winSize.height);
+
+        /* Is window fully or partially inside the dispaly? */
+        if (x2 >= 0 && x1 <= scrX &&
+            y2 >= 0 && y1 <= scrY)
+        {
+            /* Is at least the half of the window inside the display? */
+            x1 = std::max(0, x1);
+            y1 = std::max(0, y1);
+
+            x2 = std::min(x2 - x1, scrX);
+            y2 = std::min(y2 - y1, scrY);
+
+            auto visArea = x2 * y2;
+
+            if (visArea * 2 >= winArea)
+                return std::move(display);
+        }
+    }
+
+    return nullptr;
+}
+
 /* --- Event handling --- */
 
 void Window::AddEventListener(const std::shared_ptr<EventListener>& eventListener)

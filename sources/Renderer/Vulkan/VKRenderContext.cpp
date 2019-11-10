@@ -163,7 +163,7 @@ bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
     CreateSwapChain(videoModeDesc, GetVsync());
 
     /* Switch fullscreen mode */
-    if (!SwitchFullscreenMode(videoModeDesc))
+    if (!SetDisplayFullscreenMode(videoModeDesc))
         return false;
 
     return true;

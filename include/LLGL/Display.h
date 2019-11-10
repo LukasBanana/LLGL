@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 
+
 namespace LLGL
 {
 
@@ -44,8 +45,6 @@ class LLGL_EXPORT Display : public Interface
 
     public:
 
-        /* ----- Global ----- */
-
         //! Instantiates a list of interfaces for all connected displays.
         static std::vector<std::unique_ptr<Display>> InstantiateList();
 
@@ -71,7 +70,7 @@ class LLGL_EXPORT Display : public Interface
         */
         static bool IsCursorShown();
 
-        /* ----- Instance ----- */
+    public:
 
         //! Returns true if this is the primary display, as configured by the host system.
         virtual bool IsPrimary() const = 0;

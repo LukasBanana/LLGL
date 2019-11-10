@@ -109,7 +109,7 @@ bool GLRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
     context_->Resize(videoModeDesc.resolution);
 
     /* Switch fullscreen mode */
-    if (!SwitchFullscreenMode(videoModeDesc))
+    if (!SetDisplayFullscreenMode(videoModeDesc))
         return false;
 
     return true;

@@ -103,7 +103,7 @@ bool D3D11RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc
     }
     #else
     /* Switch fullscreen mode */
-    if (!SwitchFullscreenMode(videoModeDesc))
+    if (!SetDisplayFullscreenMode(videoModeDesc))
         return false;
     #endif
 

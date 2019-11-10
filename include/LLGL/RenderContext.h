@@ -189,18 +189,19 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         void ShareSurfaceAndConfig(RenderContext& other);
 
         /**
-        \brief Sets the display mode for the specified display by the parameters of the video mode descriptor.
+        \brief Sets the display mode for the display this surface is resident in by the parameters of the video mode descriptor.
         \return Return value of the Display::SetDisplayMode function.
         \see Display::SetDisplayMode
+        \see Surface::FindResidentDisplay
         */
-        bool SetDisplayModeByVideoMode(Display& display, const VideoModeDescriptor& videoModeDesc);
+        bool SetDisplayMode(const VideoModeDescriptor& videoModeDesc);
 
         /**
-        \brief Switches the fullscreen mode for the primary display if the specified fullscreen mode is different to the current fullscreen setting.
-        \see SetDisplayModeByVideoMode
+        \brief Sets only the fullscreen mode  and only if the specified fullscreen mode is different to the current fullscreen setting.
+        \see SetDisplayMode
         \see GetVideoMode
         */
-        bool SwitchFullscreenMode(const VideoModeDescriptor& videoModeDesc);
+        bool SetDisplayFullscreenMode(const VideoModeDescriptor& videoModeDesc);
 
     private:
 

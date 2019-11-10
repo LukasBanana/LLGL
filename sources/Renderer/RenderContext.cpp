@@ -123,10 +123,7 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
 
     /* Switch to fullscreen mode before storing new video mode */
     if (videoModeDesc_.fullscreen)
-    {
-        if (auto primaryDisplay = Display::InstantiatePrimary())
-            SetDisplayModeByVideoMode(*primaryDisplay, videoModeDesc_);
-    }
+        SetDisplayMode(videoModeDesc_);
 }
 
 void RenderContext::ShareSurfaceAndConfig(RenderContext& other)
@@ -136,30 +133,35 @@ void RenderContext::ShareSurfaceAndConfig(RenderContext& other)
     vsyncDesc_      = other.vsyncDesc_;
 }
 
-bool RenderContext::SetDisplayModeByVideoMode(Display& display, const VideoModeDescriptor& videoModeDesc)
+bool RenderContext::SetDisplayMode(const VideoModeDescriptor& videoModeDesc)
 {
-    if (videoModeDesc.fullscreen)
+    if (surface_)
     {
-        /* Change display mode resolution to video mode setting */
-        auto displayModeDesc = display.GetDisplayMode();
-        displayModeDesc.resolution = videoModeDesc.resolution;
-        return display.SetDisplayMode(displayModeDesc);
+        if (auto display = surface_->FindResidentDisplay())
+        {
+            if (videoModeDesc.fullscreen)
+            {
+                /* Change display mode resolution to video mode setting */
+                auto displayModeDesc = display->GetDisplayMode();
+                displayModeDesc.resolution = videoModeDesc.resolution;
+                return display->SetDisplayMode(displayModeDesc);
+            }
+            else
+            {
+                /* Reset display mode to default */
+                return display->ResetDisplayMode();
+            }
+        }
     }
-    else
-    {
-        /* Reset display mode to default */
-        return display.ResetDisplayMode();
-    }
+    return false;
 }
 
-bool RenderContext::SwitchFullscreenMode(const VideoModeDescriptor& videoModeDesc)
+bool RenderContext::SetDisplayFullscreenMode(const VideoModeDescriptor& videoModeDesc)
 {
     if (GetVideoMode().fullscreen != videoModeDesc.fullscreen)
-    {
-        if (auto primaryDisplay = Display::InstantiatePrimary())
-            return SetDisplayModeByVideoMode(*primaryDisplay, videoModeDesc);
-    }
-    return true;
+        return SetDisplayMode(videoModeDesc);
+    else
+        return true;
 }
 
 
