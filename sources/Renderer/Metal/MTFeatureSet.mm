@@ -103,7 +103,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasUniforms                    = false;
     features.hasGeometryShaders             = false;
     features.hasTessellationShaders         = false;
-    features.hasTessellatorStage            = (version >= 102);
+    features.hasTessellatorStage            = true;
     features.hasComputeShaders              = true;
     features.hasInstancing                  = true;
     features.hasOffsetInstancing            = true;

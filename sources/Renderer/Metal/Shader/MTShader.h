@@ -46,6 +46,12 @@ class MTShader : public Shader
             return vertexDesc_;
         }
 
+        // Returns the number of threads per thread-group for compute kernels.
+        inline const MTLSize& GetNumThreadsPerGroup() const
+        {
+            return numThreadsPerGroup_;
+        }
+
     private:
 
         bool Compile(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
@@ -60,13 +66,14 @@ class MTShader : public Shader
 
     private:
 
-        id<MTLLibrary>          library_    = nil;
-        id<MTLFunction>         native_     = nil;
+        id<MTLLibrary>          library_            = nil;
+        id<MTLFunction>         native_             = nil;
 
-        NSError*                error_      = nullptr;
-        bool                    hasErrors_  = false;
+        NSError*                error_              = nullptr;
+        bool                    hasErrors_          = false;
+        MTLSize                 numThreadsPerGroup_ = {};
 
-        MTLVertexDescriptor*    vertexDesc_ = nullptr;
+        MTLVertexDescriptor*    vertexDesc_         = nullptr;
 
 };
 

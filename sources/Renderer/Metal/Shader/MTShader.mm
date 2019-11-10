@@ -21,7 +21,16 @@ MTShader::MTShader(id<MTLDevice> device, const ShaderDescriptor& desc) :
 {
     if (!Compile(device, desc))
         hasErrors_ = true;
+
+    /* Build vertex input layout */
     BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
+
+    /* Store work group size for compute shaders */
+    if (desc.type == ShaderType::Compute)
+    {
+        const auto& workGroupSize = desc.compute.workGroupSize;
+        numThreadsPerGroup_ = MTLSizeMake(workGroupSize.width, workGroupSize.height, workGroupSize.depth);
+    }
 }
 
 MTShader::~MTShader()

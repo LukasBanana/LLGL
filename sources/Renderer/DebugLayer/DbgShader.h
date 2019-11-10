@@ -29,6 +29,8 @@ class DbgShader final : public Shader
 
         std::string GetReport() const override;
 
+        bool IsPostTessellationVertex() const override;
+
     public:
 
         DbgShader(Shader& instance, const ShaderDescriptor& desc);

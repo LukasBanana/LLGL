@@ -18,23 +18,10 @@ namespace LLGL
 MTShaderProgram::MTShaderProgram(id<MTLDevice> device, const ShaderProgramDescriptor& desc) :
     device_ { device }
 {
+    /* Only consider vertex, fragment and compute shaders for Metal */
     Attach(desc.vertexShader);
-    Attach(desc.tessControlShader);
-    Attach(desc.tessEvaluationShader);
-    Attach(desc.geometryShader);
     Attach(desc.fragmentShader);
     Attach(desc.computeShader);
-
-    /* Grab vertex descriptor and increment reference counter */
-    if (auto vs = desc.vertexShader)
-    {
-        auto vsMT = LLGL_CAST(MTShader*, vs);
-        if (auto vertexDesc = vsMT->GetMTLVertexDesc())
-        {
-            [vertexDesc retain];
-            vertexDesc_ = vertexDesc;
-        }
-    }
 }
 
 MTShaderProgram::~MTShaderProgram()
@@ -74,32 +61,6 @@ UniformLocation MTShaderProgram::FindUniformLocation(const char* /*name*/) const
     return -1; // dummy
 }
 
-#if 0//TODO
-bool MTShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
-{
-    if (kernelFunc_ != nil && workGroupSize.width > 0 && workGroupSize.height > 0 && workGroupSize.depth > 0)
-    {
-        numThreadsPerGroup_.width  = workGroupSize.width;
-        numThreadsPerGroup_.height = workGroupSize.height;
-        numThreadsPerGroup_.depth  = workGroupSize.depth;
-        return true;
-    }
-    return false;
-}
-
-bool MTShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
-{
-    if (kernelFunc_ != nil)
-    {
-        workGroupSize.width  = static_cast<std::uint32_t>(numThreadsPerGroup_.width);
-        workGroupSize.height = static_cast<std::uint32_t>(numThreadsPerGroup_.height);
-        workGroupSize.depth  = static_cast<std::uint32_t>(numThreadsPerGroup_.depth);
-        return true;
-    }
-    return false;
-}
-#endif
-
 NSUInteger MTShaderProgram::GetNumPatchControlPoints() const
 {
     if (vertexFunc_ != nil && [vertexFunc_ patchType] != MTLPatchTypeNone)
@@ -133,19 +94,30 @@ void MTShaderProgram::Attach(Shader* shader)
             switch (shaderMT->GetType())
             {
                 case ShaderType::Vertex:
+                    /* Grab vertex descriptor and increment reference counter */
                     vertexFunc_ = shaderFunc;
+                    if (auto vertexDesc = shaderMT->GetMTLVertexDesc())
+                    {
+                        [vertexDesc retain];
+                        vertexDesc_ = vertexDesc;
+                    }
                     break;
+
                 case ShaderType::TessControl:
                 case ShaderType::TessEvaluation:
                 case ShaderType::Geometry:
                     // Ignore, shader stages not supported by Metal
                     break;
+
                 case ShaderType::Fragment:
                     fragmentFunc_ = shaderFunc;
                     break;
+
                 case ShaderType::Compute:
-                    kernelFunc_ = shaderFunc;
+                    kernelFunc_         = shaderFunc;
+                    numThreadsPerGroup_ = shaderMT->GetNumThreadsPerGroup();
                     break;
+
                 default:
                     break;
             }

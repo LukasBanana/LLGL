@@ -35,6 +35,11 @@ std::string DbgShader::GetReport() const
     return instance.GetReport();
 }
 
+bool DbgShader::IsPostTessellationVertex() const
+{
+    return instance.IsPostTessellationVertex();
+}
+
 
 } // /namespace LLGL
 
