@@ -27,7 +27,7 @@ namespace LLGL
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
 #endif
 
-typedef GLXContext (*GXLCREATECONTEXTATTRIBARBPROC)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+typedef GLXContext (*GXLCREATECONTEXTATTRIBARBPROC)(::Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
 
 /*
