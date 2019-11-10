@@ -262,10 +262,15 @@ MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
         SetPosition(desc.position);
 }
 
-void MacOSWindow::GetNativeHandle(void* nativeHandle) const
+bool MacOSWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
 {
-    auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
-    handle.window = wnd_;
+    if (nativeHandleSize == sizeof(NativeHandle))
+    {
+        auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
+        handle.window = wnd_;
+        return true;
+    }
+    return false;
 }
 
 void MacOSWindow::ResetPixelFormat()
@@ -283,17 +288,17 @@ void MacOSWindow::SetPosition(const Offset2D& position)
 {
     /* Get visible screen size (without dock and menu bar) */
     NSScreen* screen = [NSScreen mainScreen];
-    
+
     CGSize frameSize = [screen frame].size;
     NSRect visibleFrame = [screen visibleFrame];
 
     /* Calculate menu bar height */
     CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
-    
+
     /* Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS) */
     CGFloat x = (CGFloat)position.x;
     CGFloat y = frameSize.height - menuBarHeight - (CGFloat)position.y;
-    
+
     [wnd_ setFrameTopLeftPoint:NSMakePoint(x, y)];
 }
 
@@ -301,17 +306,17 @@ Offset2D MacOSWindow::GetPosition() const
 {
     /* Get visible screen size (without dock and menu bar) */
     NSScreen* screen = [NSScreen mainScreen];
-    
+
     CGSize frameSize = [screen frame].size;
     NSRect visibleFrame = [screen visibleFrame];
 
     /* Calculate menu bar height */
     CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
-    
+
     /* Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS) */
     CGRect wndRect = [wnd_ frame];
     wndRect.origin.y = frameSize.height - wndRect.size.height - menuBarHeight - wndRect.origin.y;
-    
+
     return Offset2D
     {
         static_cast<int>(wndRect.origin.x),
@@ -324,7 +329,7 @@ void MacOSWindow::SetSize(const Extent2D& size, bool useClientArea)
     /* Set either content or frame size */
     auto w = static_cast<CGFloat>(size.width);
     auto h = static_cast<CGFloat>(size.height);
-    
+
     if (useClientArea)
         [wnd_ setContentSize:NSMakeSize(w, h)];
     else
@@ -338,12 +343,12 @@ void MacOSWindow::SetSize(const Extent2D& size, bool useClientArea)
 Extent2D MacOSWindow::GetSize(bool useClientArea) const
 {
     CGSize size { 0.0f, 0.0f };
-    
+
     if (useClientArea)
         size = [[wnd_ contentView] frame].size;
     else
         size = wnd_.frame.size;
-    
+
     return Extent2D
     {
         static_cast<std::uint32_t>(size.width),
@@ -374,13 +379,13 @@ bool MacOSWindow::IsShown() const
 void MacOSWindow::SetDesc(const WindowDescriptor& desc)
 {
     MacOSWindowDelegate* wndDelegate = (MacOSWindowDelegate*)[wnd_ delegate];
-    
+
     /* Update NSWindow style, position, and size */
     if (![wndDelegate isFullscreenMode])
     {
         [wnd_ setStyleMask:GetNSWindowStyleMask(desc)];
         [wndDelegate makeResizable:(desc.resizable)];
-    
+
         #if 0
         /* Set window collection behavior for resize events */
         if (desc.resizable)
@@ -388,7 +393,7 @@ void MacOSWindow::SetDesc(const WindowDescriptor& desc)
         else
             [wnd_ setCollectionBehavior:NSWindowCollectionBehaviorDefault];
         #endif
-        
+
         //TOOD: incomplete -> must be ignored right now, otherwise window is moved on a resize event
         #if 0
         if (desc.centered)
@@ -396,7 +401,7 @@ void MacOSWindow::SetDesc(const WindowDescriptor& desc)
         else
             SetPosition(desc.position);
         #endif
-        
+
         SetSize(desc.size);
         SetTitle(desc.title);
     }
@@ -430,17 +435,17 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
         /* Initialize Cocoa framework */
         [[NSAutoreleasePool alloc] init];
         [NSApplication sharedApplication];
-        
+
         [NSApp setDelegate:(id<NSApplicationDelegate>)[
             [MacOSAppDelegate alloc]
             autorelease
         ]];
-        
+
         [NSApp finishLaunching];
-        
+
         g_appDelegateCreated = true;
     }
-    
+
     /* Create NSWindow object */
     auto w = (CGFloat)(desc.size.width);
     auto h = (CGFloat)(desc.size.height);
@@ -451,9 +456,9 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
         backing:                NSBackingStoreBuffered
         defer:                  NO
     ];
-    
+
     [wnd autorelease];
-    
+
     /* Set window application delegate */
     id wndDelegate = [
         [[MacOSWindowDelegate alloc]
@@ -462,37 +467,37 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
         autorelease
     ];
     [wnd setDelegate:wndDelegate];
-    
+
     /* Enable mouse motion events */
     [wnd setAcceptsMouseMovedEvents:YES];
-    
+
     /* Set window title */
     [wnd setTitle:ToNSString(desc.title.c_str())];
 
     /* Move window on top of screen list */
     [wnd makeKeyAndOrderFront:nil];
-    
+
     /* Center window in the middle of the screen */
     if (desc.centered)
         [wnd center];
-    
+
     #if 0
     /* Set window collection behavior for resize events */
     if (desc.resizable)
         [wnd setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary | NSWindowCollectionBehaviorManaged];
     #endif
-    
+
     /* Show window */
     if (desc.visible)
         [wnd setIsVisible:YES];
-    
+
     return wnd;
 }
 
 void MacOSWindow::OnProcessEvents()
 {
     NSEvent* event = nil;
-    
+
     /* Process NSWindow events with latest event types */
     for (;;)
     {
@@ -503,40 +508,40 @@ void MacOSWindow::OnProcessEvents()
             inMode:                         NSDefaultRunLoopMode
             dequeue:                        YES
         ];
-        
+
         if (event == nil)
             break;
-        
+
         /* Process event */
         switch ([event type])
         {
             case g_EventTypeKeyDown:
                 ProcessKeyEvent(event, true);
                 break;
-                
+
             case g_EventTypeKeyUp:
                 ProcessKeyEvent(event, false);
                 break;
-                
+
             case g_EventTypeLMouseDragged:
             case g_EventTypeRMouseDragged:
             case g_EventTypeExtMouseDragged:
             case g_EventTypeMouseMoved:
                 ProcessMouseMoveEvent(event);
                 break;
-                
+
             case g_EventTypeLMouseDown:
                 ProcessMouseKeyEvent(Key::LButton, true);
                 break;
-                
+
             case g_EventTypeLMouseUp:
                 ProcessMouseKeyEvent(Key::LButton, false);
                 break;
-                
+
             case g_EventTypeRMouseDown:
                 ProcessMouseKeyEvent(Key::RButton, true);
                 break;
-                
+
             case g_EventTypeRMouseUp:
                 ProcessMouseKeyEvent(Key::RButton, false);
                 break;
@@ -552,11 +557,11 @@ void MacOSWindow::OnProcessEvents()
             case g_EventTypeScrollWheel:
                 ProcessMouseWheelEvent(event);
                 break;
-                
+
             default:
                 break;
         }
-        
+
         //TODO: ignore key events here to avoid 'failure sound'
         #if 1
         if ([event type] != g_EventTypeKeyDown && [event type] != g_EventTypeKeyUp)
@@ -565,13 +570,13 @@ void MacOSWindow::OnProcessEvents()
         [NSApp sendEvent:event];
         #endif
     }
-    
+
     /* Check for window signales */
     if ([(MacOSWindowDelegate*)[wnd_ delegate] popResizeSignal])
     {
         /* Get size of the NSWindow's content view */
         NSRect frame = [[wnd_ contentView] frame];
-    
+
         auto w = static_cast<std::uint32_t>(frame.size.width);
         auto h = static_cast<std::uint32_t>(frame.size.height);
 
@@ -586,21 +591,21 @@ void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
     if (down)
     {
         NSString* str = [event characters];
-        
+
         if (str != nil && [str length] > 0)
         {
             unsigned int chr = [str characterAtIndex:0];
             PostChar(static_cast<wchar_t>(chr));
         }
-        
+
         //TODO: don't release? if released, app crashes on MacOS when functions keys are pressed (i.e. F1 - F12)
         //[str release];
     }
-    
+
     // Post key up/down event
     unsigned short keyCode = [event keyCode];
     Key key = MapKey(keyCode);
-    
+
     if (down)
         PostKeyDown(key);
     else
@@ -618,7 +623,7 @@ void MacOSWindow::ProcessMouseKeyEvent(Key key, bool down)
 void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
 {
     NSPoint nativePos = [event locationInWindow];
-    
+
     /* Post local mouse motion */
     const Offset2D offset
     {
@@ -626,7 +631,7 @@ void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
         static_cast<int>([[wnd_ contentView] frame].size.height - nativePos.y)
     };
     PostLocalMotion(offset);
-    
+
     /* Post global mouse motion */
     const Offset2D motion
     {
@@ -634,7 +639,7 @@ void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
         offset.y - prevMotionOffset_.y
     };
     PostGlobalMotion(motion);
-    
+
     prevMotionOffset_ = offset;
 }
 

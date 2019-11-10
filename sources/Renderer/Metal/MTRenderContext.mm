@@ -29,7 +29,7 @@ MTRenderContext::MTRenderContext(
     desc.videoMode = GetVideoMode();
 
     NativeHandle nativeHandle = {};
-    GetSurface().GetNativeHandle(&nativeHandle);
+    GetSurface().GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
     /* Create MetalKit view */
     #ifdef LLGL_OS_IOS

@@ -79,7 +79,7 @@ MyRenderer::MyRenderer(
 
     // Get native handle (HWND for Win32) from main window
     LLGL::NativeHandle mainWindowHandle;
-    mainWindow.GetNativeHandle(&mainWindowHandle);
+    mainWindow.GetNativeHandle(&mainWindowHandle, sizeof(mainWindowHandle));
 
     // Copy native handle from main window into context handle as parent window
     LLGL::NativeContextHandle mainWindowContextHandle;

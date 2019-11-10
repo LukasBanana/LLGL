@@ -25,7 +25,7 @@ class IOSCanvas : public Canvas
         IOSCanvas(const CanvasDescriptor& desc);
         ~IOSCanvas();
 
-        void GetNativeHandle(void* nativeHandle) const override;
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
 
         Extent2D GetContentSize() const override;
 
@@ -35,11 +35,13 @@ class IOSCanvas : public Canvas
         void ResetPixelFormat() override;
 
     private:
-        
+
         void OnProcessEvents() override;
-    
+
         UIViewController* CreateViewController(const CanvasDescriptor& desc);
         UIView* CreateView(const CanvasDescriptor& desc);
+
+    private:
 
         CanvasDescriptor    desc_;
 

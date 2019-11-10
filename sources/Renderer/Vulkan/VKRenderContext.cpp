@@ -202,8 +202,8 @@ void VKRenderContext::CreateGpuSurface()
     swapChain_.Release();
 
     /* Get hantive handle from context surface */
-    NativeHandle nativeHandle;
-    GetSurface().GetNativeHandle(&nativeHandle);
+    NativeHandle nativeHandle = {};
+    GetSurface().GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
     #if defined LLGL_OS_WIN32
 

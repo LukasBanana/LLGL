@@ -28,11 +28,11 @@
 - (id)initWithWindow:(LLGL::IOSCanvas*)window isResizable:(BOOL)resizable
 {
     self = [super init];
-    
+
     window_     = window;
     resizable_  = resizable;
     quit_       = FALSE;
-    
+
     return (self);
 }
 
@@ -96,10 +96,15 @@ IOSCanvas::~IOSCanvas()
 {
 }
 
-void IOSCanvas::GetNativeHandle(void* nativeHandle) const
+bool IOSCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
 {
-    //auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
-    //handle.window = wnd_;
+    if (nativeHandleSize == sizeof(NativeHandle))
+    {
+        //auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
+        //handle.window = wnd_;
+        //return true;
+    }
+    return false;
 }
 
 Extent2D IOSCanvas::GetContentSize() const

@@ -39,8 +39,8 @@ MacOSGLContext::MacOSGLContext(
     if (!CreatePixelFormat(desc, config))
         throw std::runtime_error("failed to find suitable OpenGL pixel format");
 
-    NativeHandle nativeHandle;
-    surface.GetNativeHandle(&nativeHandle);
+    NativeHandle nativeHandle = {};
+    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
     CreateNSGLContext(nativeHandle, sharedContext);
 }

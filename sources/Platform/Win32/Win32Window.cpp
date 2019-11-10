@@ -130,10 +130,15 @@ Win32Window::~Win32Window()
         DestroyWindow(wnd_);
 }
 
-void Win32Window::GetNativeHandle(void* nativeHandle) const
+bool Win32Window::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
 {
-    auto handle = reinterpret_cast<NativeHandle*>(nativeHandle);
-    handle->window = wnd_;
+    if (nativeHandleSize == sizeof(NativeHandle))
+    {
+        auto handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        handle->window = wnd_;
+        return true;
+    }
+    return false;
 }
 
 void Win32Window::ResetPixelFormat()

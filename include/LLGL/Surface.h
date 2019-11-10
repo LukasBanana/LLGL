@@ -37,19 +37,25 @@ class LLGL_EXPORT Surface : public Interface
 
         /**
         \brief Returns the native surface handle.
+        \param[out] nativeHandle Raw pointer to the platform specific structure to store the native handle. This must be of type LLGL::NativeHandle.
+        \param[in] nativeHandleSize Specifies the size (in bytes) of the native handle structure for robustness. This must be <code>sizeof(LLGL::NativeHandle)</code>.
+        \return True if the native handle was successfully retrieved. Otherwise, \c nativeHandleSize specifies an incompatible structure size.
         \remarks This must be casted to a platform specific structure:
         \code
         // Example for a custom Win32 window class
         #include <LLGL/Platform/NativeHandle.h>
         //...
-        void MyWindowClass::GetNativeHandle(void* nativeHandle) {
-            auto handle = reinterpret_cast<LLGL::NativeHandle*>(nativeHandle);
-            //handle->window = 'some HWND window handle';
+        bool MyWindowClass::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) {
+            if (nativeHandleSize == sizeof(LLGL::NativeHandle)) {
+                auto handle = reinterpret_cast<LLGL::NativeHandle*>(nativeHandle);
+                //handle->window = 'some HWND window handle';
+                return true;
+            }
+            return false;
         }
         \endcode
-        \todo Add <code>std::size_t nativeHandleSize</code> parameter.
         */
-        virtual void GetNativeHandle(void* nativeHandle) const = 0;
+        virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const = 0;
 
         /**
         \brief Returns the size of the surface context (or rather the drawing area).

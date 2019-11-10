@@ -57,8 +57,8 @@ LinuxGLContext::LinuxGLContext(
 :
     GLContext { sharedContext }
 {
-    NativeHandle nativeHandle;
-    surface.GetNativeHandle(&nativeHandle);
+    NativeHandle nativeHandle = {};
+    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
     CreateContext(desc, config, nativeHandle, sharedContext);
 }
 

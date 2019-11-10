@@ -351,10 +351,8 @@ HGLRC Win32GLContext::CreateExtContextProfile(const WGLContextParams& params, HG
 void Win32GLContext::SetupDeviceContextAndPixelFormat(const WGLContextParams& params)
 {
     /* Get native window handle */
-    NativeHandle nativeHandle;
-    nativeHandle.window = 0;
-
-    surface_.GetNativeHandle(&nativeHandle);
+    NativeHandle nativeHandle = {};
+    surface_.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
     if (!nativeHandle.window)
         throw std::runtime_error("invalid native Win32 window handle");

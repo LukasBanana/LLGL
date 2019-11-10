@@ -134,8 +134,8 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, UINT samples)
     swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, samples);
 
     /* Create swap chain for window handle */
-    NativeHandle wndHandle;
-    GetSurface().GetNativeHandle(&wndHandle);
+    NativeHandle wndHandle = {};
+    GetSurface().GetNativeHandle(&wndHandle, sizeof(wndHandle));
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     InitMemory(swapChainDesc);
