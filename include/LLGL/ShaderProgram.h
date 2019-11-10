@@ -80,33 +80,6 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         */
         virtual UniformLocation FindUniformLocation(const char* name) const = 0;
 
-        /**
-        \brief Sets the work group size of a compute shader, i.e. the number of threads per thread-group. By default (1, 1, 1).
-        \param[in] workGroupSize Specifies the number of threads per thread-group in X, Y, and Z direction.
-        Each component must be greater than zero.
-        \return True, if the work group size can be dynamically set and the values are valid.
-        Otherwise, the work group size must be specified within the shader code or the values are invalid.
-        If the return value is false, the function call has no effect.
-        \remarks Only the Metal backend supports dispatch compute kernels with dynamic work group sizes.
-        For all other renderers, the work group size must be specified within the shader code:
-        - For GLSL: <code>layout(local_size_x = X, local_size_y = Y, local_size_z = Z)</code>
-        - For HLSL: <code>[numthreads(X, Y, Z)]</code>
-        \note Only supported with: Metal.
-        \todo Replace this by a new member in ShaderDescriptor.
-        */
-        virtual bool SetWorkGroupSize(const Extent3D& workGroupSize) = 0;
-
-        /**
-        \brief Retrieves the work group size of a compute shader, i.e. the number of threads per thread-group.
-        \param[out] workGroupSize Specifies the number of threads per thread-group in X, Y, and Z direction.
-        This output parameter is not modified, if the function returns false.
-        \return True, if the work group size could be determined.
-        Otherwise, the rendering API does not support shader reflection to query the work group size,
-        or the shader program does not contain a compute shader.
-        \todo Replace this by a new member in ShaderReflection.
-        */
-        virtual bool GetWorkGroupSize(Extent3D& workGroupSize) const = 0;
-
     protected:
 
         /**

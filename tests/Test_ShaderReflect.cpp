@@ -49,8 +49,17 @@ int main()
         LLGL::ShaderReflection reflect;
         shaderProgram->Reflect(reflect);
 
-        LLGL::Extent3D workGroupSize;
-        shaderProgram->GetWorkGroupSize(workGroupSize);
+        std::cout << "Resources:" << std::endl;
+        for (const LLGL::ShaderResource& resc : reflect.resources)
+        {
+            std::cout << "  " << resc.binding.name << " @ " << resc.binding.slot << std::endl;
+        }
+
+        std::cout << "Uniforms:" << std::endl;
+        for (const LLGL::ShaderUniform& unif : reflect.uniforms)
+        {
+            std::cout << "  " << unif.name << " @ " << unif.location << std::endl;
+        }
 
         std::cout << "Vertex Input Attributes:" << std::endl;
         for (const LLGL::VertexAttribute& attr : reflect.vertex.inputAttribs)
@@ -70,17 +79,8 @@ int main()
             std::cout << "  " << attr.name << " @ " << attr.location << std::endl;
         }
 
-        std::cout << "Resources:" << std::endl;
-        for (const LLGL::ShaderResource& resc : reflect.resources)
-        {
-            std::cout << "  " << resc.binding.name << " @ " << resc.binding.slot << std::endl;
-        }
-
-        std::cout << "Uniforms:" << std::endl;
-        for (const LLGL::ShaderUniform& unif : reflect.uniforms)
-        {
-            std::cout << "  " << unif.name << " @ " << unif.location << std::endl;
-        }
+        const auto& workGroupSize = reflect.compute.workGroupSize;
+        std::cout << "Compute Work Group Size: " << workGroupSize.width << " x " << workGroupSize.height << " x " << workGroupSize.depth << std::endl;
     }
     catch (const std::exception& e)
     {

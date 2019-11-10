@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "VertexAttribute.h"
 #include "FragmentAttribute.h"
+#include "Types.h"
 #include <cstddef>
 #include <vector>
 
@@ -172,6 +173,24 @@ struct FragmentShaderAttributes
 };
 
 /**
+\brief Compute shader specific descriptor structure.
+\see ShaderDescriptor::compute
+\see ShaderReflection::compute
+*/
+struct ComputeShaderAttributes
+{
+    /**
+    \brief Specifies the number of threads per threadgroup in X, Y, and Z direction. By default (1, 1, 1).
+    \remarks Each component must be greater than zero.
+    \remarks Only the Metal backend supports dispatch compute kernels with dynamic work group sizes.
+    If not used for shader reflection, all other renderers need to specified the workgroup size within the shader code:
+    - For GLSL: <code>layout(local_size_x = X, local_size_y = Y, local_size_z = Z)</code>
+    - For HLSL: <code>[numthreads(X, Y, Z)]</code>
+    */
+    Extent3D workGroupSize = { 1, 1, 1 };
+};
+
+/**
 \brief Shader source and binary code descriptor structure.
 \see RenderSystem::CreateShader
 */
@@ -282,6 +301,13 @@ struct ShaderDescriptor
 
     //! Fragment shader specific attributes.
     FragmentShaderAttributes    fragment;
+
+    /**
+    \brief Compute shader specific attributes.
+    \remarks This member is only used to specify the number of threads per threadgroup for the Metal backend.
+    \note Only supported with: Metal.
+    */
+    ComputeShaderAttributes     compute;
 };
 
 

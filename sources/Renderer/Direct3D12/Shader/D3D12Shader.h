@@ -39,7 +39,6 @@ class D3D12Shader final : public Shader
         D3D12_SHADER_BYTECODE GetByteCode() const;
 
         bool Reflect(ShaderReflection& reflection) const;
-        bool ReflectNumThreads(Extent3D& numThreads) const;
 
         bool GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const;
         bool GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) const;
@@ -55,7 +54,6 @@ class D3D12Shader final : public Shader
         bool LoadBinary(const ShaderDescriptor& shaderDesc);
 
         HRESULT ReflectShaderByteCode(ShaderReflection& reflection) const;
-        HRESULT ReflectShaderByteCodeNumThreads(Extent3D& numThreads) const;
 
     private:
 

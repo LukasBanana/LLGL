@@ -86,16 +86,6 @@ UniformLocation DbgShaderProgram::FindUniformLocation(const char* name) const
     return instance.FindUniformLocation(name);
 }
 
-bool DbgShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
-{
-    return instance.SetWorkGroupSize(workGroupSize);
-}
-
-bool DbgShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
-{
-    return instance.GetWorkGroupSize(workGroupSize);
-}
-
 const char* DbgShaderProgram::GetVertexID() const
 {
     return (vertexID_.empty() ? nullptr : vertexID_.c_str());

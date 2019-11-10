@@ -34,9 +34,6 @@ class VKShaderProgram final : public ShaderProgram
         bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
 
-        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
-        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
-
     public:
 
         // Fills the specified array of create-info structures with the shader stages and returns the number of stages that have been written.

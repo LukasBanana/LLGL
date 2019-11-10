@@ -131,30 +131,6 @@ UniformLocation GLShaderProgram::FindUniformLocation(const char* name) const
         return -1;
 }
 
-bool GLShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
-{
-    return false; // dummy
-}
-
-bool GLShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
-{
-    #ifdef GL_ARB_compute_shader
-    if (HasExtension(GLExt::ARB_compute_shader))
-    {
-        GLint params[3] = { 0 };
-        glGetProgramiv(id_, GL_COMPUTE_WORK_GROUP_SIZE, params);
-        if (params[0] > 0 && params[1] > 0 && params[2] > 0)
-        {
-            workGroupSize.width  = static_cast<std::uint32_t>(params[0]);
-            workGroupSize.height = static_cast<std::uint32_t>(params[1]);
-            workGroupSize.depth  = static_cast<std::uint32_t>(params[2]);
-            return true;
-        }
-    }
-    #endif // /GL_ARB_compute_shader
-    return false;
-}
-
 
 /*
  * ======= Internal: =======
@@ -313,6 +289,7 @@ void GLShaderProgram::QueryReflection(ShaderReflection& reflection) const
     QueryConstantBuffers(reflection);
     QueryStorageBuffers(reflection);
     QueryUniforms(reflection);
+    QueryWorkGroupSize(reflection);
 }
 
 // Vector format and number of vectors, e.g. mat2x3 --> { RGB32Float, 2 }
@@ -776,6 +753,23 @@ void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
             reflection.uniforms.push_back(uniform);
         }
     }
+}
+
+void GLShaderProgram::QueryWorkGroupSize(ShaderReflection& reflection) const
+{
+    #ifdef GL_ARB_compute_shader
+    if (HasExtension(GLExt::ARB_compute_shader))
+    {
+        GLint params[3] = { 0 };
+        glGetProgramiv(id_, GL_COMPUTE_WORK_GROUP_SIZE, params);
+        if (params[0] > 0 && params[1] > 0 && params[2] > 0)
+        {
+            reflection.compute.workGroupSize.width  = static_cast<std::uint32_t>(params[0]);
+            reflection.compute.workGroupSize.height = static_cast<std::uint32_t>(params[1]);
+            reflection.compute.workGroupSize.depth  = static_cast<std::uint32_t>(params[2]);
+        }
+    }
+    #endif // /GL_ARB_compute_shader
 }
 
 #ifdef GL_ARB_program_interface_query

@@ -34,9 +34,6 @@ class MTShaderProgram : public ShaderProgram
         bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
 
-        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
-        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
-
     public:
 
         // Returns the number of patch control points or 0 if this shader program does not contain a post-tessellation vertex function.

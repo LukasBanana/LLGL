@@ -35,9 +35,6 @@ class D3D12ShaderProgram final : public ShaderProgram
         bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
 
-        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
-        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
-
     public:
 
         D3D12_INPUT_LAYOUT_DESC GetInputLayoutDesc() const;

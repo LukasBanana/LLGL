@@ -406,7 +406,7 @@ bool VKShader::Reflect(ShaderReflection& /*reflection*/) const
     return false; // dummy
 }
 
-bool VKShader::ReflectLocalSize(Extent3D& workGroupSize) const
+bool VKShader::ReflectLocalSize(Extent3D& /*workGroupSize*/) const
 {
     return false; // dummy
 }

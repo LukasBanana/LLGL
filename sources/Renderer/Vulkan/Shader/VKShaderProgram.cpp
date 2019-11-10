@@ -51,6 +51,8 @@ bool VKShaderProgram::Reflect(ShaderReflection& reflection) const
     {
         if (!shader->Reflect(reflection))
             return false;
+        if (shader->GetType() == ShaderType::Compute && !shader->ReflectLocalSize(reflection.compute.workGroupSize))
+            return false;
     }
 
     ShaderProgram::FinalizeShaderReflection(reflection);
@@ -60,21 +62,6 @@ bool VKShaderProgram::Reflect(ShaderReflection& reflection) const
 UniformLocation VKShaderProgram::FindUniformLocation(const char* name) const
 {
     return -1; //TODO
-}
-
-bool VKShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
-{
-    return false; // dummy
-}
-
-bool VKShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
-{
-    for (auto shader : shaders_)
-    {
-        if (shader->ReflectLocalSize(workGroupSize))
-            return true;
-    }
-    return false;
 }
 
 /* --- Extended functions --- */

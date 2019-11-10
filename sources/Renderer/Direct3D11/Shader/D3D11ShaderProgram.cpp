@@ -73,19 +73,6 @@ UniformLocation D3D11ShaderProgram::FindUniformLocation(const char* name) const
     return -1; // dummy
 }
 
-bool D3D11ShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
-{
-    return false; // dummy
-}
-
-bool D3D11ShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
-{
-    if (cs_ != nullptr)
-        return cs_->ReflectNumThreads(workGroupSize);
-    else
-        return false;
-}
-
 ComPtr<ID3D11InputLayout> D3D11ShaderProgram::GetInputLayout() const
 {
     if (vs_ != nullptr)

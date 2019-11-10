@@ -256,6 +256,15 @@ This is not a "descriptor", because it is only used as output from an interface 
 */
 struct ShaderReflection
 {
+    //! List of all shader reflection resource views.
+    std::vector<ShaderResource> resources;
+
+    /**
+    \brief List of all uniforms (a.k.a. shader constants).
+    \note Only supported with: OpenGL, Vulkan.
+    */
+    std::vector<ShaderUniform>  uniforms;
+
     /**
     \brief Reflection data that is specificly for the vertex shader.
     \remarks The shader reflection only considers the following members of the VertexAttribute structure,
@@ -266,19 +275,13 @@ struct ShaderReflection
     - \c semanticIndex
     - \c systemValue
     */
-    VertexShaderAttributes              vertex;
+    VertexShaderAttributes      vertex;
 
     //! Reflection data that is specificly for the fragment shader.
-    FragmentShaderAttributes            fragment;
+    FragmentShaderAttributes    fragment;
 
-    //! List of all shader reflection resource views.
-    std::vector<ShaderResource>         resources;
-
-    /**
-    \brief List of all uniforms (a.k.a. shader constants).
-    \note Only supported with: OpenGL, Vulkan.
-    */
-    std::vector<ShaderUniform>          uniforms;
+    //! Reflection data that is specificly for the compute shader.
+    ComputeShaderAttributes     compute;
 };
 
 

@@ -74,6 +74,7 @@ UniformLocation MTShaderProgram::FindUniformLocation(const char* /*name*/) const
     return -1; // dummy
 }
 
+#if 0//TODO
 bool MTShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
 {
     if (kernelFunc_ != nil && workGroupSize.width > 0 && workGroupSize.height > 0 && workGroupSize.depth > 0)
@@ -97,6 +98,7 @@ bool MTShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
     }
     return false;
 }
+#endif
 
 NSUInteger MTShaderProgram::GetNumPatchControlPoints() const
 {

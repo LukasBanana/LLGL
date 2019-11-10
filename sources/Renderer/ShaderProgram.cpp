@@ -97,11 +97,12 @@ static int CompareResourceViewSWO(const ShaderResource& lhs, const ShaderResourc
 
 void ShaderProgram::ClearShaderReflection(ShaderReflection& reflection)
 {
+    reflection.resources.clear();
+    reflection.uniforms.clear();
     reflection.vertex.inputAttribs.clear();
     reflection.vertex.outputAttribs.clear();
     reflection.fragment.outputAttribs.clear();
-    reflection.resources.clear();
-    reflection.uniforms.clear();
+    reflection.compute.workGroupSize = { 0, 0, 0 };
 }
 
 void ShaderProgram::FinalizeShaderReflection(ShaderReflection& reflection)

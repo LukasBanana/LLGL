@@ -32,9 +32,6 @@ class D3D11ShaderProgram final : public ShaderProgram
         bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
 
-        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
-        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
-
     public:
 
         D3D11ShaderProgram(ID3D11Device* device, const ShaderProgramDescriptor& desc);
@@ -58,17 +55,17 @@ class D3D11ShaderProgram final : public ShaderProgram
         {
             struct
             {
-                D3D11Shader*        vs_;
-                D3D11Shader*        hs_;
-                D3D11Shader*        ds_;
-                D3D11Shader*        gs_;
-                D3D11Shader*        ps_;
-                D3D11Shader*        cs_;
+                D3D11Shader*    vs_;
+                D3D11Shader*    hs_;
+                D3D11Shader*    ds_;
+                D3D11Shader*    gs_;
+                D3D11Shader*    ps_;
+                D3D11Shader*    cs_;
             };
-            D3D11Shader*            shaders_[6]     = {};
+            D3D11Shader*        shaders_[6]     = {};
         };
 
-        LinkError                   linkError_      = LinkError::NoError;
+        LinkError               linkError_      = LinkError::NoError;
 
 };
 

@@ -70,19 +70,6 @@ UniformLocation D3D12ShaderProgram::FindUniformLocation(const char* name) const
     return -1; // TODO
 }
 
-bool D3D12ShaderProgram::SetWorkGroupSize(const Extent3D& workGroupSize)
-{
-    return false; // dummy
-}
-
-bool D3D12ShaderProgram::GetWorkGroupSize(Extent3D& workGroupSize) const
-{
-    if (cs_ != nullptr)
-        return cs_->ReflectNumThreads(workGroupSize);
-    else
-        return false;
-}
-
 D3D12_INPUT_LAYOUT_DESC D3D12ShaderProgram::GetInputLayoutDesc() const
 {
     D3D12_INPUT_LAYOUT_DESC layoutDesc = {};

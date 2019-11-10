@@ -34,9 +34,6 @@ class GLShaderProgram final : public ShaderProgram
         bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
 
-        bool SetWorkGroupSize(const Extent3D& workGroupSize) override;
-        bool GetWorkGroupSize(Extent3D& workGroupSize) const override;
-
     public:
 
         GLShaderProgram(const ShaderProgramDescriptor& desc);
@@ -80,6 +77,7 @@ class GLShaderProgram final : public ShaderProgram
         void QueryConstantBuffers(ShaderReflection& reflection) const;
         void QueryStorageBuffers(ShaderReflection& reflection) const;
         void QueryUniforms(ShaderReflection& reflection) const;
+        void QueryWorkGroupSize(ShaderReflection& reflection) const;
 
         #ifdef GL_ARB_program_interface_query
         void QueryBufferProperties(ShaderResource& resource, GLenum programInterface, GLuint resourceIndex) const;
