@@ -10,10 +10,6 @@
 #include <DDSImageReader.h>
 #include <stb/stb_image.h>
 
-//TEST
-#include <thread>
-#include <chrono>
-
 
 class Example_Texturing : public ExampleBase
 {
@@ -172,32 +168,6 @@ public:
 
         // Release image data
         stbi_image_free(imageBuffer);
-
-        #if 0//TESTING
-
-        LLGL::BufferDescriptor bufDesc;
-        {
-            bufDesc.size = 4*100;
-            bufDesc.bindFlags   = LLGL::BindFlags::Storage;
-            bufDesc.format      = LLGL::Format::RGBA8UInt;
-        }
-        auto tempBuffer = renderer->CreateBuffer(bufDesc);
-        tempBuffer->SetName("tempBuffer");
-
-        commands->Begin();
-        {
-            #if 0
-            commands->FillBuffer(*tempBuffer, 0, 0xFF00FFFF, 4*60);
-            commands->FillBuffer(*tempBuffer, 4*60, 0x00FF00FF, 4*40);
-            #else
-            commands->FillBuffer(*tempBuffer, 0, 0xABCDEF12);
-            //commands->FillBuffer(*tempBuffer, 0, 0x00FF00FF);
-            #endif
-        }
-        commands->End();
-        commandQueue->Submit(*commands);
-
-        #endif // /TESTING
     }
 
     void LoadCompressedTexture(const std::string& filename)
@@ -244,33 +214,6 @@ public:
     {
         LoadCompressedTexture("../../Media/Textures/Crate-DXT1-MipMapped.dds");
         LoadUncompressedTexture("../../Media/Textures/Crate.jpg");
-
-        #if 0//TEST
-        LLGL::BufferDescriptor bufDesc;
-        {
-            bufDesc.size = 500;
-            bufDesc.cpuAccessFlags = LLGL::CPUAccessFlags::Read;
-        }
-        auto buf = renderer->CreateBuffer(bufDesc);
-
-        commands->Begin();
-        {
-            commands->FillBuffer(*buf, 0, 0xABBAABBA, 256);
-            commands->FillBuffer(*buf, 256, 0x89ABCDEF, 244);
-        }
-        commands->End();
-        commandQueue->Submit(*commands);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        std::uint32_t* data = reinterpret_cast<std::uint32_t*>(
-            renderer->MapBuffer(*buf, LLGL::CPUAccess::ReadOnly)
-        );
-
-        for (std::uint32_t i = 0; i < bufDesc.size/sizeof(std::uint32_t); ++i)
-        {
-            std::cout << std::dec << "data[" << i << "] = " << std::hex << data[i] << "\n";
-        }
-        #endif
     }
 
     void CreateSamplers()

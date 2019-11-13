@@ -28,12 +28,6 @@
 // Let the user choose a renderer module (using std::cin).
 std::string GetSelectedRendererModule(int argc, char* argv[]);
 
-// Read a text file to a string.
-std::string ReadFileContent(const std::string& filename);
-
-// Read a binary file to a buffer.
-std::vector<char> ReadFileBuffer(const std::string& filename);
-
 // Load image from file, create texture, upload image into texture, and generate MIP-maps.
 LLGL::Texture* LoadTextureWithRenderer(
     LLGL::RenderSystem& renderSys,
@@ -46,43 +40,6 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
 
 
 /*
- * Randomizer class
- */
-
-class Randomizer
-{
-
-    public:
-
-        // Constructs the randomizer with a lower and upper bound of random numbers between [0, 1].
-        inline Randomizer() :
-            Randomizer { 0.0f, 1.0f }
-        {
-        }
-
-        // Constructs the randomizer with the lower and upper bound of random numbers.
-        inline Randomizer(float min, float max) :
-            generator_    { device_() },
-            distribution_ { min, max  }
-        {
-        }
-
-        // Returns the next random number.
-        inline float Next()
-        {
-            return distribution_(generator_);
-        }
-
-    private:
-
-        std::random_device                      device_;  //Will be used to obtain a seed for the random number engine
-        std::mt19937                            generator_; //Standard mersenne_twister_engine seeded with rd()
-        std::uniform_real_distribution<float>   distribution_;
-
-};
-
-
-/*
  * Example base class
  */
 
@@ -91,10 +48,12 @@ class ExampleBase
 
 public:
 
+    // Lets the user select a renderer module from the standard input.
     static void SelectRendererModule(int argc, char* argv[]);
 
     virtual ~ExampleBase() = default;
 
+    // Runs the main loop.
     void Run();
 
 protected:
@@ -165,7 +124,8 @@ protected:
 
     friend class ResizeEventHandler;
 
-    const LLGL::ColorRGBAf                      defaultClearColor { 0.1f, 0.1f, 0.4f };
+    // Default background color for all tutorials
+    const LLGL::ColorRGBAf                      backgroundColor = { 0.1f, 0.1f, 0.4f };
 
     // Render system
     std::unique_ptr<LLGL::RenderSystem>         renderer;
@@ -179,11 +139,16 @@ protected:
     // Command queue
     LLGL::CommandQueue*                         commandQueue    = nullptr;
 
+    // User input event listener
     std::shared_ptr<LLGL::Input>                input;
 
+    // Primary timer object
     std::unique_ptr<LLGL::Timer>                timer;
+
+    // Rendering profiler (read only)
     const LLGL::RenderingProfiler&              profiler;
 
+    // Primary camera projection
     Gs::Matrix4f                                projection;
 
 protected:
@@ -202,6 +167,8 @@ protected:
     // Callback when the window has been resized. Can also be detected by using a custom window event listener.
     virtual void OnResize(const LLGL::Extent2D& resoluion);
 
+protected:
+
     // Creats a shader program and loads all specified shaders from file.
     LLGL::ShaderProgram* LoadShaderProgram(
         const std::vector<TutorialShaderDescriptor>&    shaderDescs,
@@ -217,53 +184,11 @@ protected:
     // Load standard shader program (with vertex- and fragment shaders).
     LLGL::ShaderProgram* LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats);
 
-protected:
-
     // Load image from file, create texture, upload image into texture, and generate MIP-maps.
     LLGL::Texture* LoadTexture(const std::string& filename, long bindFlags = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment));
 
     // Save texture image to a PNG file.
     bool SaveTexture(LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);
-
-protected:
-
-    template <typename VertexType>
-    LLGL::Buffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
-    {
-        return renderer->CreateBuffer(
-            LLGL::VertexBufferDesc(static_cast<std::uint32_t>(vertices.size() * sizeof(VertexType)), vertexFormat),
-            vertices.data()
-        );
-    }
-
-    template <typename IndexType>
-    LLGL::Buffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::Format format)
-    {
-        return renderer->CreateBuffer(
-            LLGL::IndexBufferDesc(static_cast<std::uint32_t>(indices.size() * sizeof(IndexType)), format),
-            indices.data()
-        );
-    }
-
-    template <typename T>
-    LLGL::Buffer* CreateConstantBuffer(const T& initialData)
-    {
-        static_assert(!std::is_pointer<T>::value, "buffer type must not be a pointer");
-        return renderer->CreateBuffer(
-            LLGL::ConstantBufferDesc(sizeof(T)),
-            &initialData
-        );
-    }
-
-    template <typename T>
-    void UpdateBuffer(LLGL::Buffer* buffer, const T& data, bool insideCmdEncoding = false)
-    {
-        GS_ASSERT(buffer != nullptr);
-        if (insideCmdEncoding)
-            commands->UpdateBuffer(*buffer, 0, &data, sizeof(data));
-        else
-            renderer->WriteBuffer(*buffer, 0, &data, sizeof(data));
-    }
 
     // Returns the aspect ratio of the render context resolution (X:Y).
     float GetAspectRatio() const;
@@ -302,6 +227,36 @@ protected:
 
     // Returns the name of the renderer module (e.g. "OpenGL" or "Direct3D11").
     static const std::string& GetModuleName();
+
+protected:
+
+    template <typename VertexType>
+    LLGL::Buffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
+    {
+        return renderer->CreateBuffer(
+            LLGL::VertexBufferDesc(static_cast<std::uint32_t>(vertices.size() * sizeof(VertexType)), vertexFormat),
+            vertices.data()
+        );
+    }
+
+    template <typename IndexType>
+    LLGL::Buffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::Format format)
+    {
+        return renderer->CreateBuffer(
+            LLGL::IndexBufferDesc(static_cast<std::uint32_t>(indices.size() * sizeof(IndexType)), format),
+            indices.data()
+        );
+    }
+
+    template <typename T>
+    LLGL::Buffer* CreateConstantBuffer(const T& initialData)
+    {
+        static_assert(!std::is_pointer<T>::value, "buffer type must not be a pointer");
+        return renderer->CreateBuffer(
+            LLGL::ConstantBufferDesc(sizeof(T)),
+            &initialData
+        );
+    }
 
 };
 

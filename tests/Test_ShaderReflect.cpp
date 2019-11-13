@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
+#include <LLGL/LLGL.h>
 #include <LLGL/Utility.h>
-#include "Helper.h"
 
 int main()
 {

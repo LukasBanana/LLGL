@@ -17,6 +17,25 @@
 
 
 /*
+ * Internal helper functions
+ */
+
+static std::string ReadFileContent(const std::string& filename)
+{
+    // Read file content into string
+    std::ifstream file(filename);
+
+    if (!file.good())
+        throw std::runtime_error("failed to open file: \"" + filename + "\"");
+
+    return std::string(
+        ( std::istreambuf_iterator<char>(file) ),
+        ( std::istreambuf_iterator<char>() )
+    );
+}
+
+
+/*
  * Global helper functions
  */
 
@@ -29,6 +48,18 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
     {
         /* Get renderer module name from command line argument */
         rendererModule = argv[1];
+
+        /* Replace shortcuts */
+        if (rendererModule == "D3D12" || rendererModule == "d3d12" || rendererModule == "DX12" || rendererModule == "dx12")
+            rendererModule = "Direct3D12";
+        else if (rendererModule == "D3D11" || rendererModule == "d3d11" || rendererModule == "DX11" || rendererModule == "dx11")
+            rendererModule = "Direct3D11";
+        else if (rendererModule == "GL" || rendererModule == "gl")
+            rendererModule = "OpenGL";
+        else if (rendererModule == "VK" || rendererModule == "vk")
+            rendererModule = "Vulkan";
+        else if (rendererModule == "MT" || rendererModule == "mt")
+            rendererModule = "Metal";
     }
     else
     {
@@ -74,37 +105,6 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
     std::cout << "selected renderer: " << rendererModule << std::endl;
 
     return rendererModule;
-}
-
-std::string ReadFileContent(const std::string& filename)
-{
-    // Read file content into string
-    std::ifstream file(filename);
-
-    if (!file.good())
-        throw std::runtime_error("failed to open file: \"" + filename + "\"");
-
-    return std::string(
-        ( std::istreambuf_iterator<char>(file) ),
-        ( std::istreambuf_iterator<char>() )
-    );
-}
-
-std::vector<char> ReadFileBuffer(const std::string& filename)
-{
-    // Read file content into buffer
-    std::ifstream file(filename, std::ios_base::binary | std::ios_base::ate);
-
-    if (!file.good())
-        throw std::runtime_error("failed to open file: \"" + filename + "\"");
-
-    auto fileSize = static_cast<size_t>(file.tellg());
-    std::vector<char> buffer(fileSize);
-
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-
-    return buffer;
 }
 
 
@@ -281,7 +281,7 @@ ExampleBase::ExampleBase(
     commandQueue = renderer->GetCommandQueue();
 
     // Initialize command buffer
-    commands->SetClearColor(defaultClearColor);
+    commands->SetClearColor(backgroundColor);
 
     // Print renderer information
     const auto& info = renderer->GetRendererInfo();

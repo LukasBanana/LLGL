@@ -67,7 +67,7 @@ std::vector<std::uint32_t> GenerateCubeTriangleIndices();
 
 // Generates 24 indices for a unit cube of 8 vertices.
 // (24 = 4 indices per quad * 1 quad per cube face * 6 faces)
-std::vector<std::uint32_t> GenerateCubeQuadlIndices();
+std::vector<std::uint32_t> GenerateCubeQuadIndices();
 
 // Generates 24 vertices for a unit cube with texture coordinates.
 std::vector<VertexPos3Tex2> GenerateTexturedCubeVertices();

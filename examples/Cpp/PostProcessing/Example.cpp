@@ -492,7 +492,7 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
-        UpdateBuffer(constantBufferScene, sceneSettings, true);
+        commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
     }
 
     void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
@@ -516,14 +516,14 @@ private:
         sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
-        UpdateBuffer(constantBufferScene, sceneSettings, true);
+        commands->UpdateBuffer(*constantBufferScene, 0, &sceneSettings, sizeof(sceneSettings));
     }
 
     void SetBlurSettings(const Gs::Vector2f& blurShift)
     {
         // Update constant buffer for blur pass
         blurSettings.blurShift = blurShift;
-        UpdateBuffer(constantBufferBlur, blurSettings, true);
+        commands->UpdateBuffer(*constantBufferBlur, 0, &blurSettings, sizeof(blurSettings));
     }
 
     void OnDrawFrame() override
@@ -594,7 +594,7 @@ private:
 
             // Clear scene render target with render pass and initial clear values
             LLGL::ClearValue clearValues[3];
-            clearValues[0].color = defaultClearColor;
+            clearValues[0].color = backgroundColor;
             clearValues[1].color = LLGL::ColorRGBAf{ 0, 0, 0, 1 };
             clearValues[2].depth = 1.0f;
 
@@ -615,7 +615,7 @@ private:
                 // Clear individual buffers in render target (color, glossiness, depth)
                 LLGL::AttachmentClear clearCmds[3] =
                 {
-                    LLGL::AttachmentClear{ defaultClearColor, 0 },
+                    LLGL::AttachmentClear{ backgroundColor, 0 },
                     LLGL::AttachmentClear{ LLGL::ColorRGBAf{ 0, 0, 0, 0 }, 1 },
                     LLGL::AttachmentClear{ 1.0f }
                 };

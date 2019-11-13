@@ -90,7 +90,7 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
-        commands->SetClearColor(defaultClearColor);
+        commands->SetClearColor(backgroundColor);
 
         // Add balls to scene
         AddBall(LLGL::ColorRGBf{ 1, 0, 0 });
@@ -287,7 +287,7 @@ private:
     {
         settings.wMatrix = mesh.transform;
         settings.albedo = mesh.color;
-        UpdateBuffer(constantBuffer, settings, true);
+        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 
@@ -302,7 +302,7 @@ private:
         Gs::Scale(settings.wMatrix, ball.scale*0.3f);
 
         // Submit data to constant buffer
-        UpdateBuffer(constantBuffer, settings, true);
+        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
         // Draw ball
         commands->Draw(meshBall.numVertices, meshBall.firstVertex);

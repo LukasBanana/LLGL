@@ -5,7 +5,9 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "Helper.h"
+#include <LLGL/LLGL.h>
+#include <Gauss/Gauss.h>
+#include <vector>
 
 // Fill an array list of 4D-vectors for testing purposes
 static std::vector<Gs::Vector4f> GetTestVector(std::size_t size)

@@ -55,7 +55,7 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
-        commands->SetClearColor(defaultClearColor);
+        commands->SetClearColor(backgroundColor);
 
         #if 0
         // Show some information
@@ -284,7 +284,7 @@ private:
     {
         settings.wMatrix = mesh.transform;
         settings.diffuse = mesh.color;
-        UpdateBuffer(constantBuffer, settings, true);
+        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 

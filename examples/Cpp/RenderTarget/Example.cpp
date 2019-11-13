@@ -421,7 +421,7 @@ private:
         commands->BeginRenderPass(*context);
         {
             // Clear color and depth buffers of active framebuffer (i.e. the screen)
-            commands->SetClearColor(defaultClearColor);
+            commands->SetClearColor(backgroundColor);
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             // Binds graphics pipeline for render context

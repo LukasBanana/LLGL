@@ -130,7 +130,7 @@ std::vector<std::uint32_t> GenerateCubeTriangleIndices()
     };
 }
 
-std::vector<std::uint32_t> GenerateCubeQuadlIndices()
+std::vector<std::uint32_t> GenerateCubeQuadIndices()
 {
     return
     {

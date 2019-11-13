@@ -5,7 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "Helper.h"
+#include <LLGL/LLGL.h>
+#include <Gauss/Gauss.h>
 #include <memory>
 #include <iostream>
 #include <string>

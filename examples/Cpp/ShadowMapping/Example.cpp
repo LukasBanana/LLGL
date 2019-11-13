@@ -63,7 +63,7 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
-        commands->SetClearColor(defaultClearColor);
+        commands->SetClearColor(backgroundColor);
 
         // Label objects for debugging
         context->SetName("BackBuffer");
@@ -343,7 +343,7 @@ private:
     {
         settings.wMatrix = mesh.transform;
         settings.diffuse = mesh.color;
-        UpdateBuffer(constantBuffer, settings, true);
+        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
         commands->Draw(mesh.numVertices, mesh.firstVertex);
     }
 

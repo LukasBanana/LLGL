@@ -5,8 +5,9 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "Helper.h"
+#include <LLGL/LLGL.h>
 #include <LLGL/Utility.h>
+#include <Gauss/Gauss.h>
 #include <chrono>
 
 #define STB_IMAGE_IMPLEMENTATION

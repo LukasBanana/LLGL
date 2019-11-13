@@ -238,7 +238,7 @@ private:
         cmdBuffer.Begin();
         {
             // Initialize clear color
-            cmdBuffer.SetClearColor(defaultClearColor);
+            cmdBuffer.SetClearColor(backgroundColor);
 
             // Set hardware buffers to draw the model
             cmdBuffer.SetVertexBuffer(*vertexBuffer);

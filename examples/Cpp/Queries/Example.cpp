@@ -203,7 +203,7 @@ public:
         settings.wvpMatrix *= matrix;
         settings.wMatrix    = matrix;
         settings.color      = color;
-        UpdateBuffer(constantBuffer, settings, true);
+        commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
     }
 
 private:
