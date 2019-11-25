@@ -372,13 +372,13 @@ struct Viewport
 
     /**
     \brief Minimum of the depth range. Must be in the range [0, 1]. By default 0.0.
-    \remarks Reverse mappings such as minDepth=1 and maxDepth=0 are also valid.
+    \remarks Reverse mappings such as <code>minDepth=1</code> and <code>maxDepth=0</code> are also valid.
     */
     float minDepth  = 0.0f;
 
     /**
     \brief Maximum of the depth range. Must be in the range [0, 1]. By default 1.0.
-    \remarks Reverse mappings such as minDepth=1 and maxDepth=0 are also valid.
+    \remarks Reverse mappings such as <code>minDepth=1</code> and <code>maxDepth=0</code> are also valid.
     */
     float maxDepth  = 1.0f;
 };

@@ -205,7 +205,7 @@ struct RenderTargetDescriptor
     must have the same size as specified by RenderTargetDescriptor::resolution, and must have been created with the binding flag BindFlags::ColorAttachment.
     \see TextureDescriptor::samples
     */
-    AttachmentDescriptor                colorAttachments[8];
+    AttachmentDescriptor                colorAttachments[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 
     /**
     \brief Specifies the list of attachment descriptors for which the corresponding multi-sampled color attachments will be resolved into after a render pass.
@@ -213,7 +213,7 @@ struct RenderTargetDescriptor
     \remarks For each attachment, for which a texture is specified, this texture must have 1 sample,
     must have the same size as specified by RenderTargetDescriptor::resolution, and must have been created with the binding flag BindFlags::ColorAttachment.
     */
-    AttachmentDescriptor                resolveAttachments[8];
+    AttachmentDescriptor                resolveAttachments[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 
     /**
     \brief Specifies the depth-stencil attachment descriptor.

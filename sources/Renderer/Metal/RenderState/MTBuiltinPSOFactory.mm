@@ -17,8 +17,8 @@ namespace LLGL
 
 MTBuiltinPSOFactory& MTBuiltinPSOFactory::Get()
 {
-    static MTBuiltinPSOFactory g_instance;
-    return g_instance;
+    static MTBuiltinPSOFactory instance;
+    return instance;
 }
 
 void MTBuiltinPSOFactory::CreateBuiltinPSOs(id<MTLDevice> device)

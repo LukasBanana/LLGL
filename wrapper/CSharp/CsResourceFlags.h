@@ -49,7 +49,9 @@ public enum class BindFlags
     Storage                 = (1 << 6),
     ColorAttachment         = (1 << 7),
     DepthStencilAttachment  = (1 << 8),
-    CombinedTextureSampler  = (1 << 9),
+    CombinedSampler         = (1 << 9),
+    CopySrc                 = (1 << 10),
+    CopyDst                 = (1 << 11),
 };
 
 [Flags]
