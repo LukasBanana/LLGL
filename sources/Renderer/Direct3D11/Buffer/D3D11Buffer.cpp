@@ -58,11 +58,6 @@ BufferDescriptor D3D11Buffer::GetDesc() const
     return bufferDesc;
 }
 
-static D3D11_MAP GetD3DMapWrite(bool mapPartial)
-{
-    return (mapPartial ? D3D11_MAP_WRITE : D3D11_MAP_WRITE_DISCARD);
-}
-
 void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset)
 {
     /* Validate parameters */
@@ -70,9 +65,12 @@ void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* da
 
     if (GetUsage() == D3D11_USAGE_DYNAMIC)
     {
+        /* Discard previous content if the entire resource will be updated */
+        const bool writeDiscard = (offset == 0 && dataSize == GetSize());
+
         /* Update partial subresource by mapping buffer from GPU into CPU memory space */
         D3D11_MAPPED_SUBRESOURCE subresource;
-        context->Map(GetNative(), 0, GetD3DMapWrite(dataSize < GetSize()), 0, &subresource);
+        context->Map(GetNative(), 0, DXGetMapWrite(writeDiscard), 0, &subresource);
         {
             ::memcpy(reinterpret_cast<char*>(subresource.pData) + offset, data, dataSize);
         }
@@ -84,22 +82,22 @@ void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* da
         {
             /* Update entire subresource */
             if (dataSize == GetSize())
-                context->UpdateSubresource(buffer_.Get(), 0, nullptr, data, 0, 0);
+                context->UpdateSubresource(GetNative(), 0, nullptr, data, 0, 0);
             else
                 throw std::out_of_range(LLGL_ASSERT_INFO("cannot update D3D11 buffer partially when it is created with static usage"));
         }
         else
         {
             /* Update sub region of buffer */
-            const D3D11_BOX destBox { offset, 0, 0, offset + dataSize, 1, 1 };
-            context->UpdateSubresource(buffer_.Get(), 0, &destBox, data, 0, 0);
+            const D3D11_BOX dstBox{ offset, 0, 0, offset + dataSize, 1, 1 };
+            context->UpdateSubresource(GetNative(), 0, &dstBox, data, 0, 0);
         }
     }
 }
 
 void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data)
 {
-    context->UpdateSubresource(buffer_.Get(), 0, nullptr, data, 0, 0);
+    context->UpdateSubresource(GetNative(), 0, nullptr, data, 0, 0);
 }
 
 static bool HasReadAccess(const CPUAccess access)
@@ -110,6 +108,16 @@ static bool HasReadAccess(const CPUAccess access)
 static bool HasWriteAccess(const CPUAccess access)
 {
     return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
+}
+
+// private
+D3D11_MAP D3D11Buffer::GetCPUAccessTypeForUsage(const CPUAccess access) const
+{
+    /* D3D11_MAP_WRITE_DISCARD can only be used for buffers with dynamic usage */
+    if (access == CPUAccess::WriteDiscard && usage_ != D3D11_USAGE_DYNAMIC)
+        return D3D11_MAP_WRITE;
+    else
+        return D3D11Types::Map(access);
 }
 
 void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access)
@@ -124,12 +132,12 @@ void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access)
             context->CopyResource(cpuAccessBuffer_.Get(), GetNative());
 
         /* Map CPU-access buffer */
-        hr = context->Map(cpuAccessBuffer_.Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
+        hr = context->Map(cpuAccessBuffer_.Get(), 0, GetCPUAccessTypeForUsage(access), 0, &mapppedSubresource);
     }
     else
     {
         /* Map buffer */
-        hr = context->Map(GetNative(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
+        hr = context->Map(GetNative(), 0, GetCPUAccessTypeForUsage(access), 0, &mapppedSubresource);
     }
 
     return (SUCCEEDED(hr) ? mapppedSubresource.pData : nullptr);
@@ -151,6 +159,27 @@ void D3D11Buffer::Unmap(ID3D11DeviceContext* context, const CPUAccess access)
         /* Unmap buffer */
         context->Unmap(GetNative(), 0);
     }
+}
+
+void D3D11Buffer::CreateSubresourceSRV(
+    ID3D11Device*               device,
+    ID3D11ShaderResourceView**  srvOutput,
+    const DXGI_FORMAT           format,
+    UINT                        firstElement,
+    UINT                        numElements,
+    bool                        isRawView)
+{
+    /* Create shader-resource-view (SRV) for subresource */
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    {
+        srvDesc.Format                  = D3D11Types::ToDXGIFormatSRV(format);
+        srvDesc.ViewDimension           = D3D11_SRV_DIMENSION_BUFFEREX;
+        srvDesc.BufferEx.FirstElement   = firstElement;
+        srvDesc.BufferEx.NumElements    = numElements;
+        srvDesc.BufferEx.Flags          = (isRawView ? D3D11_BUFFEREX_SRV_FLAG_RAW : 0);
+    }
+    auto hr = device->CreateShaderResourceView(GetNative(), &srvDesc, srvOutput);
+    DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", "for buffer subresource");
 }
 
 

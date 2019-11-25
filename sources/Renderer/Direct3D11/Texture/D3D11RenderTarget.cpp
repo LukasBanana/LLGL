@@ -370,6 +370,8 @@ void D3D11RenderTarget::AttachTextureDepthStencil(D3D11Texture& textureD3D, cons
     textureD3D.CreateSubresourceDSV(
         device_,
         depthStencilView_.ReleaseAndGetAddressOf(),
+        textureD3D.GetType(),
+        textureD3D.GetFormat(),
         attachmentDesc.mipLevel,
         attachmentDesc.arrayLayer,
         1

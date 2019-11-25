@@ -8,10 +8,12 @@
 #include "D3D11CommandBuffer.h"
 #include "D3D11RenderContext.h"
 #include "D3D11Types.h"
+#include "D3D11ResourceFlags.h"
 #include "../DXCommon/DXTypes.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
+#include "../../Core/HelperMacros.h"
 #include "../TextureUtils.h"
 #include <algorithm>
 #include <codecvt>
@@ -36,22 +38,9 @@ namespace LLGL
 {
 
 
-#define VS_STAGE(FLAG) ( ((FLAG) & StageFlags::VertexStage        ) != 0 )
-#define HS_STAGE(FLAG) ( ((FLAG) & StageFlags::TessControlStage   ) != 0 )
-#define DS_STAGE(FLAG) ( ((FLAG) & StageFlags::TessEvaluationStage) != 0 )
-#define GS_STAGE(FLAG) ( ((FLAG) & StageFlags::GeometryStage      ) != 0 )
-#define PS_STAGE(FLAG) ( ((FLAG) & StageFlags::FragmentStage      ) != 0 )
-#define CS_STAGE(FLAG) ( ((FLAG) & StageFlags::ComputeStage       ) != 0 )
-
-
 // Global array of null pointers to unbind resource slots
 static void* const  g_nullResources[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]   = {};
 static const UINT   g_zeroCounters[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT]       = {};
-
-static bool HasBufferResourceViews(const Buffer& buffer)
-{
-    return ((buffer.GetBindFlags() & (BindFlags::Sampled | BindFlags::Storage)) != 0);
-}
 
 
 D3D11CommandBuffer::D3D11CommandBuffer(
@@ -249,6 +238,221 @@ void D3D11CommandBuffer::CopyTexture(
         srcTextureD3D.CalcSubresource(srcLocation), // SrcSubresource
         &srcBox                                     // pSrcBox
     );
+}
+
+// Internal use only (see D3D11CommandBuffer::CopyTextureFromBuffer)
+struct CopyTextureFromBufferCbuffer
+{
+    std::uint32_t dstOffset[3];
+    std::uint32_t srcOffset;        // Source buffer offset: multiple of 4
+    std::uint32_t dstExtent[3];
+    std::uint32_t srcIndexStride;   // Source index stride is format size clamped to [4, inf+), or 4, 8, 12, 16
+    std::uint32_t formatSize;       // Bytes per pixel: 1, 2, 4, 8, 12, 16
+    std::uint32_t components;       // Destination color components: 1, 2, 3, 4
+    std::uint32_t componentBits;    // Bits per component: 8, 16, 32
+    std::uint32_t rowStride;
+    std::uint32_t layerStride;
+    std::uint32_t pad0[3];          // Padding to fill up current 16-byte register
+    std::uint32_t pad1[12 * 4];     // Padding to fill up constant buffer range of 256 bytes
+};
+
+// Returns a suitable array texture type if the input type allows an array texture as subresource view
+static TextureType ToArrayTextureType(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            return TextureType::Texture1DArray;
+
+        case TextureType::Texture2D:
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+            return TextureType::Texture2DArray;
+
+        default:
+            return type;
+    }
+}
+
+/*
+D3D11 does not support copying data between buffers and textures natively,
+so this function dispatches a builtin compute shader to achieve the desired effect.
+Because byte address buffers are incompatible with other buffer types (like constant buffers or structured buffers),
+an intermediate buffer must be copied from the source buffer first (i.e. CopySubresourceRegion from source buffer into ByteAddressBuffer).
+*/
+void D3D11CommandBuffer::CopyTextureFromBuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    Buffer&                 srcBuffer,
+    std::uint64_t           srcOffset,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    auto& dstTextureD3D = LLGL_CAST(D3D11Texture&, dstTexture);
+    auto& srcBufferD3D = LLGL_CAST(D3D11Buffer&, srcBuffer);
+
+    /* Check if offsets are out of bounds or destination extent is zero */
+    const auto& dstOffset = dstRegion.offset;
+    if (dstOffset.x < 0 || dstOffset.y < 0 || dstOffset.z < 0)
+        return;
+
+    if (srcOffset > UINT32_MAX)
+        return;
+
+    const auto& dstExtent = dstRegion.extent;
+    if (dstExtent.width == 0 || dstExtent.height == 0 || dstExtent.depth == 0)
+        return;
+
+    const UINT srcOffsetU32 = static_cast<UINT>(srcOffset);
+
+    /* Get destination texture attributes */
+    const auto& formatAttribs = GetFormatAttribs(D3D11Types::Unmap(dstTextureD3D.GetFormat()));
+    if ((formatAttribs.flags & (FormatFlags::IsCompressed | FormatFlags::IsPacked)) != 0 || formatAttribs.components == 0)
+        return;
+
+    /* An intermediate texture copy is required if the destination texture's format is not unsigned integer or it is normalized */
+    const bool useIntermediateDstTexture =
+    (
+        (formatAttribs.flags & FormatFlags::IsUnsignedInteger) != FormatFlags::IsUnsignedInteger ||
+        (formatAttribs.flags & FormatFlags::IsNormalized) != 0
+    );
+
+    /* Get actual row and layer stride */
+    if (rowStride == 0 || layerStride == 0)
+    {
+        if (rowStride == 0)
+            rowStride = (dstExtent.width * formatAttribs.bitSize / 8);
+        if (layerStride == 0)
+            layerStride = (dstExtent.height * rowStride);
+    }
+
+    const std::uint32_t copySize = (layerStride * dstExtent.depth);
+
+    /* Create intermediate UAV for destination texture (RWTexture1D/2D/3D) */
+    const auto& subresource = dstRegion.subresource;
+    const auto textureArrayType = ToArrayTextureType(dstTextureD3D.GetType());
+
+    D3D11NativeTexture intermediateTexture;
+    ComPtr<ID3D11UnorderedAccessView> intermediateUAV;
+
+    if (useIntermediateDstTexture)
+    {
+        /* Create an intermediate copy of the destination texture with unsigned integer format */
+        dstTextureD3D.CreateSubresourceCopyWithUIntFormat(
+            device_,
+            intermediateTexture,
+            nullptr,
+            intermediateUAV.GetAddressOf(),
+            dstRegion,
+            textureArrayType
+        );
+    }
+    else
+    {
+        /* Create intermediate UAV directly from destination texture if the texture already has an unsigned integer format */
+        dstTextureD3D.CreateSubresourceUAV(
+            device_,
+            intermediateUAV.GetAddressOf(),
+            textureArrayType,
+            dstTextureD3D.GetFormat(),
+            subresource.baseMipLevel,
+            subresource.baseArrayLayer,
+            subresource.numArrayLayers
+        );
+    }
+
+    /* Create intermediate byte-addressable buffer with SRV (ByteAddressBuffer) */
+    ComPtr<ID3D11Buffer> intermediateBuffer;
+    ComPtr<ID3D11ShaderResourceView> intermediateSRV;
+
+    CreateByteAddressBuffer(
+        device_,
+        context_.Get(),
+        intermediateBuffer.GetAddressOf(),
+        intermediateSRV.GetAddressOf(),
+        nullptr,
+        static_cast<std::uint32_t>(srcOffset),
+        copySize
+    );
+
+    /* Copy content from source buffer into the intermediate buffer */
+    const D3D11_BOX srcBox{ srcOffsetU32, 0, 0, srcOffsetU32 + copySize, 1, 1 };
+    context_->CopySubresourceRegion(intermediateBuffer.Get(), 0, 0, 0, 0, srcBufferD3D.GetNative(), 0, &srcBox);
+
+    /* Set shader parameters with intermediate constant buffer */
+    CopyTextureFromBufferCbuffer cbufferData;
+    {
+        if (useIntermediateDstTexture)
+        {
+            cbufferData.dstOffset[0]    = 0;
+            cbufferData.dstOffset[1]    = 0;
+            cbufferData.dstOffset[2]    = 0;
+        }
+        else
+        {
+            cbufferData.dstOffset[0]    = static_cast<std::uint32_t>(dstOffset.x);
+            cbufferData.dstOffset[1]    = static_cast<std::uint32_t>(dstOffset.y);
+            cbufferData.dstOffset[2]    = static_cast<std::uint32_t>(dstOffset.z);
+        }
+        cbufferData.srcOffset           = 0;
+        cbufferData.dstExtent[0]        = dstExtent.width;
+        cbufferData.dstExtent[1]        = dstExtent.height;
+        cbufferData.dstExtent[2]        = dstExtent.depth;
+        cbufferData.srcIndexStride      = std::max(4u, formatAttribs.bitSize / 8u);
+        cbufferData.formatSize          = formatAttribs.bitSize / 8;
+        cbufferData.components          = formatAttribs.components;
+        cbufferData.componentBits       = formatAttribs.bitSize / formatAttribs.components;
+        cbufferData.rowStride           = rowStride;
+        cbufferData.layerStride         = layerStride;
+    }
+    stateMngr_->SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
+
+    /* Bind destination texture and source buffer resourves */
+    ID3D11UnorderedAccessView* uavs[] = { intermediateUAV.Get() };
+    context_->CSSetUnorderedAccessViews(0, 1, uavs, nullptr);
+
+    ID3D11ShaderResourceView* srvs[] = { intermediateSRV.Get() };
+    context_->CSSetShaderResources(0, 1, srvs);
+
+    /* Dispatch compute kernels with builtin shader */
+    switch (textureArrayType)
+    {
+        case TextureType::Texture1DArray:
+            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyTexture1DFromBufferCS, dstExtent.width, dstExtent.height, 1u);
+            break;
+        case TextureType::Texture2DArray:
+            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyTexture2DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
+            break;
+        case TextureType::Texture3D:
+            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyTexture3DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
+            break;
+        default:
+            break;
+    }
+
+    /* Copy UAV content into destination texture, if an intermediate texture was used */
+    if (useIntermediateDstTexture)
+    {
+        const UINT      mipLevel    = subresource.baseMipLevel;
+        const D3D11_BOX srcBox      = { 0, 0, 0, dstExtent.width, dstExtent.height, dstExtent.depth };
+
+        for (std::uint32_t i = 0; i < subresource.numArrayLayers; ++i)
+        {
+            const UINT arrayLayer = subresource.baseArrayLayer + i;
+            context_->CopySubresourceRegion(
+                dstTextureD3D.GetNative().resource.Get(),                                       // pDstResource
+                D3D11CalcSubresource(mipLevel, arrayLayer, dstTextureD3D.GetNumMipLevels()),    // DstSubresource
+                static_cast<UINT>(dstOffset.x),                                                 // DstX
+                static_cast<UINT>(dstOffset.y),                                                 // DstY
+                static_cast<UINT>(dstOffset.z),                                                 // DstZ
+                intermediateTexture.resource.Get(),                                             // pSrcResource
+                D3D11CalcSubresource(0, i, 1),                                                  // SrcSubresource
+                &srcBox                                                                         // pSrcBox
+            );
+        }
+    }
 }
 
 void D3D11CommandBuffer::GenerateMips(Texture& texture)
@@ -731,7 +935,7 @@ void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std
 
 void D3D11CommandBuffer::SetBuffer(Buffer& buffer, std::uint32_t slot, long bindFlags, long stageFlags)
 {
-    if (HasBufferResourceViews(buffer))
+    if (DXBindFlagsNeedBufferWithRV(buffer.GetBindFlags()))
     {
         auto& bufferD3D = LLGL_CAST(D3D11BufferWithRV&, buffer);
 
@@ -739,14 +943,14 @@ void D3D11CommandBuffer::SetBuffer(Buffer& buffer, std::uint32_t slot, long bind
         if ((bindFlags & BindFlags::ConstantBuffer) != 0)
         {
             ID3D11Buffer* cbv[] = { bufferD3D.GetNative() };
-            SetConstantBuffersOnStages(slot, 1, cbv, stageFlags);
+            stateMngr_->SetConstantBuffers(slot, 1, cbv, stageFlags);
         }
 
         /* Set SRVs to specified shader stages */
         if ((bindFlags & BindFlags::Sampled) != 0)
         {
             ID3D11ShaderResourceView* srv[] = { bufferD3D.GetSRV() };
-            SetShaderResourcesOnStages(slot, 1, srv, stageFlags);
+            stateMngr_->SetShaderResources(slot, 1, srv, stageFlags);
         }
 
         /* Set UAVs to specified shader stages */
@@ -754,7 +958,7 @@ void D3D11CommandBuffer::SetBuffer(Buffer& buffer, std::uint32_t slot, long bind
         {
             ID3D11UnorderedAccessView* uav[] = { bufferD3D.GetUAV() };
             UINT auvCounts[] = { bufferD3D.GetInitialCount() };
-            SetUnorderedAccessViewsOnStages(slot, 1, uav, auvCounts, stageFlags);
+            stateMngr_->SetUnorderedAccessViews(slot, 1, uav, auvCounts, stageFlags);
         }
     }
     else
@@ -765,7 +969,7 @@ void D3D11CommandBuffer::SetBuffer(Buffer& buffer, std::uint32_t slot, long bind
         if ((bindFlags & BindFlags::ConstantBuffer) != 0)
         {
             ID3D11Buffer* cbv[] = { bufferD3D.GetNative() };
-            SetConstantBuffersOnStages(slot, 1, cbv, stageFlags);
+            stateMngr_->SetConstantBuffers(slot, 1, cbv, stageFlags);
         }
     }
 }
@@ -778,7 +982,7 @@ void D3D11CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long b
     if ((bindFlags & BindFlags::Sampled) != 0)
     {
         ID3D11ShaderResourceView* srv[] = { textureD3D.GetSRV() };
-        SetShaderResourcesOnStages(slot, 1, srv, stageFlags);
+        stateMngr_->SetShaderResources(slot, 1, srv, stageFlags);
     }
 
     /* Set texture UAV to all shader stages */
@@ -786,7 +990,7 @@ void D3D11CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long b
     {
         ID3D11UnorderedAccessView* uav[] = { textureD3D.GetUAV() };
         UINT auvCounts[] = { 0 };
-        SetUnorderedAccessViewsOnStages(slot, 1, uav, auvCounts, stageFlags);
+        stateMngr_->SetUnorderedAccessViews(slot, 1, uav, auvCounts, stageFlags);
     }
 }
 
@@ -796,56 +1000,7 @@ void D3D11CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long s
     auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
 
     ID3D11SamplerState* samplerStates[] = { samplerD3D.GetNative() };
-    SetSamplersOnStages(slot, 1, samplerStates, stageFlags);
-}
-
-void D3D11CommandBuffer::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long stageFlags)
-{
-    if (VS_STAGE(stageFlags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
-    if (HS_STAGE(stageFlags)) { context_->HSSetConstantBuffers(startSlot, count, buffers); }
-    if (DS_STAGE(stageFlags)) { context_->DSSetConstantBuffers(startSlot, count, buffers); }
-    if (GS_STAGE(stageFlags)) { context_->GSSetConstantBuffers(startSlot, count, buffers); }
-    if (PS_STAGE(stageFlags)) { context_->PSSetConstantBuffers(startSlot, count, buffers); }
-    if (CS_STAGE(stageFlags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
-}
-
-void D3D11CommandBuffer::SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long stageFlags)
-{
-    if (VS_STAGE(stageFlags)) { context_->VSSetShaderResources(startSlot, count, views); }
-    if (HS_STAGE(stageFlags)) { context_->HSSetShaderResources(startSlot, count, views); }
-    if (DS_STAGE(stageFlags)) { context_->DSSetShaderResources(startSlot, count, views); }
-    if (GS_STAGE(stageFlags)) { context_->GSSetShaderResources(startSlot, count, views); }
-    if (PS_STAGE(stageFlags)) { context_->PSSetShaderResources(startSlot, count, views); }
-    if (CS_STAGE(stageFlags)) { context_->CSSetShaderResources(startSlot, count, views); }
-}
-
-void D3D11CommandBuffer::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long stageFlags)
-{
-    if (VS_STAGE(stageFlags)) { context_->VSSetSamplers(startSlot, count, samplers); }
-    if (HS_STAGE(stageFlags)) { context_->HSSetSamplers(startSlot, count, samplers); }
-    if (DS_STAGE(stageFlags)) { context_->DSSetSamplers(startSlot, count, samplers); }
-    if (GS_STAGE(stageFlags)) { context_->GSSetSamplers(startSlot, count, samplers); }
-    if (PS_STAGE(stageFlags)) { context_->PSSetSamplers(startSlot, count, samplers); }
-    if (CS_STAGE(stageFlags)) { context_->CSSetSamplers(startSlot, count, samplers); }
-}
-
-void D3D11CommandBuffer::SetUnorderedAccessViewsOnStages(
-    UINT startSlot, UINT count, ID3D11UnorderedAccessView* const* views, const UINT* initialCounts, long stageFlags)
-{
-    if (PS_STAGE(stageFlags))
-    {
-        /* Set UAVs for pixel shader stage */
-        context_->OMSetRenderTargetsAndUnorderedAccessViews(
-            D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
-            startSlot, count, views, initialCounts
-        );
-    }
-
-    if (CS_STAGE(stageFlags))
-    {
-        /* Set UAVs for compute shader stage */
-        context_->CSSetUnorderedAccessViews(startSlot, count, views, initialCounts);
-    }
+    stateMngr_->SetSamplers(slot, 1, samplerStates, stageFlags);
 }
 
 void D3D11CommandBuffer::ResetBufferResourceSlots(std::uint32_t firstSlot, std::uint32_t numSlots, long bindFlags, long stageFlags)
@@ -885,7 +1040,7 @@ void D3D11CommandBuffer::ResetBufferResourceSlots(std::uint32_t firstSlot, std::
         numSlots    = std::min(numSlots, std::uint32_t(D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT) - firstSlot);
 
         /* Unbind constant buffers */
-        SetConstantBuffersOnStages(
+        stateMngr_->SetConstantBuffers(
             firstSlot,
             numSlots,
             reinterpret_cast<ID3D11Buffer* const*>(g_nullResources),
@@ -938,7 +1093,7 @@ void D3D11CommandBuffer::ResetSamplerResourceSlots(std::uint32_t firstSlot, std:
     numSlots    = std::min(numSlots, std::uint32_t(D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT) - firstSlot);
 
     /* Unbind sampler states */
-    SetSamplersOnStages(
+    stateMngr_->SetSamplers(
         firstSlot,
         numSlots,
         reinterpret_cast<ID3D11SamplerState* const*>(g_nullResources),
@@ -953,7 +1108,7 @@ void D3D11CommandBuffer::ResetResourceSlotsSRV(std::uint32_t firstSlot, std::uin
     numSlots    = std::min(numSlots, std::uint32_t(D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT) - firstSlot);
 
     /* Unbind SRVs */
-    SetShaderResourcesOnStages(
+    stateMngr_->SetShaderResources(
         firstSlot,
         numSlots,
         reinterpret_cast<ID3D11ShaderResourceView* const*>(g_nullResources),
@@ -968,7 +1123,7 @@ void D3D11CommandBuffer::ResetResourceSlotsUAV(std::uint32_t firstSlot, std::uin
     numSlots    = std::min(numSlots, std::uint32_t(D3D11_1_UAV_SLOT_COUNT) - firstSlot);
 
     /* Unbind UAVs */
-    SetUnorderedAccessViewsOnStages(
+    stateMngr_->SetUnorderedAccessViews(
         firstSlot,
         numSlots,
         reinterpret_cast<ID3D11UnorderedAccessView* const*>(g_nullResources),
@@ -976,13 +1131,6 @@ void D3D11CommandBuffer::ResetResourceSlotsUAV(std::uint32_t firstSlot, std::uin
         stageFlags
     );
 }
-
-#undef VS_STAGE
-#undef HS_STAGE
-#undef DS_STAGE
-#undef GS_STAGE
-#undef PS_STAGE
-#undef CS_STAGE
 
 void D3D11CommandBuffer::ResolveBoundRenderTarget()
 {
@@ -1094,6 +1242,69 @@ void D3D11CommandBuffer::ClearColorBuffers(
             ClearColorBuffer(colorBuffers[i], clearValue_.color);
         else
             return;
+    }
+}
+
+/*
+Creates a buffer copy for the HLSL type ByteAddressBuffer.
+The format must be DXGI_FORMAT_R32_TYPELESS for raw-views.
+*/
+void D3D11CommandBuffer::CreateByteAddressBuffer(
+    ID3D11Device*               device,
+    ID3D11DeviceContext*        context,
+    ID3D11Buffer**              bufferOutput,
+    ID3D11ShaderResourceView**  srvOutput,
+    ID3D11UnorderedAccessView** uavOutput,
+    UINT                        offset,
+    UINT                        size,
+    D3D11_USAGE                 usage)
+{
+    /* Determine binding flags depending on resource-view output */
+    UINT bindFlags = 0;
+    if (srvOutput != nullptr)
+        bindFlags |= D3D11_BIND_SHADER_RESOURCE;
+    if (uavOutput != nullptr)
+        bindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+
+    /* Create output buffer with raw view accesss */
+    D3D11_BUFFER_DESC descD3D;
+    {
+        descD3D.ByteWidth           = size;
+        descD3D.Usage               = usage;
+        descD3D.BindFlags           = bindFlags;
+        descD3D.CPUAccessFlags      = 0;
+        descD3D.MiscFlags           = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+        descD3D.StructureByteStride = 0;
+    }
+    auto hr = device->CreateBuffer(&descD3D, nullptr, bufferOutput);
+    DXThrowIfCreateFailed(hr, "ID3D11Buffer", "for byte addressable copy");
+
+    /* Create shader-resource-view (SRV) */
+    if (srvOutput != nullptr)
+    {
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+        {
+            srvDesc.Format                  = DXGI_FORMAT_R32_TYPELESS;
+            srvDesc.ViewDimension           = D3D11_SRV_DIMENSION_BUFFEREX;
+            srvDesc.BufferEx.FirstElement   = 0;
+            srvDesc.BufferEx.NumElements    = size / 4;
+            srvDesc.BufferEx.Flags          = D3D11_BUFFEREX_SRV_FLAG_RAW;
+        }
+        device->CreateShaderResourceView(*bufferOutput, &srvDesc, srvOutput);
+    }
+
+    /* Create optional unordered-access-view (UAV) */
+    if (uavOutput)
+    {
+        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+        {
+            uavDesc.Format              = DXGI_FORMAT_R32_TYPELESS;
+            uavDesc.ViewDimension       = D3D11_UAV_DIMENSION_BUFFER;
+            uavDesc.Buffer.FirstElement = 0;
+            uavDesc.Buffer.NumElements  = size / 4;
+            uavDesc.Buffer.Flags        = D3D11_BUFFER_UAV_FLAG_RAW;
+        }
+        device->CreateUnorderedAccessView(*bufferOutput, &uavDesc, uavOutput);
     }
 }
 

@@ -23,15 +23,25 @@ namespace LLGL
 {
 
 
-// Native objects of D3D11 shaders.
+// Union for easy handling of native D3D11 shader objects.
 union D3D11NativeShader
 {
     inline D3D11NativeShader() :
         vs { nullptr }
     {
     }
+    inline D3D11NativeShader(const D3D11NativeShader& rhs) :
+        vs { rhs.vs }
+    {
+    }
+    inline D3D11NativeShader& operator = (const D3D11NativeShader& rhs)
+    {
+        vs = rhs.vs;
+        return *this;
+    }
     inline ~D3D11NativeShader()
     {
+        vs.Reset();
     }
 
     ComPtr<ID3D11VertexShader>      vs;
@@ -77,6 +87,18 @@ class D3D11Shader final : public Shader
         {
             return inputLayout_;
         }
+
+    public:
+
+        // Creates a native D3D11 shader from the specified byte code blob.
+        static D3D11NativeShader CreateNativeShaderFromBlob(
+            ID3D11Device*           device,
+            const ShaderType        type,
+            ID3DBlob*               blob,
+            std::size_t             numStreamOutputAttribs  = 0,
+            const VertexAttribute*  streamOutputAttribs     = nullptr,
+            ID3D11ClassLinkage*     classLinkage            = nullptr
+        );
 
     private:
 

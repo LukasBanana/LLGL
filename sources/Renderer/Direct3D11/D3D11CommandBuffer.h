@@ -80,6 +80,15 @@ class D3D11CommandBuffer final : public CommandBuffer
             const Extent3D&         extent
         ) override;
 
+        void CopyTextureFromBuffer(
+            Texture&                dstTexture,
+            const TextureRegion&    dstRegion,
+            Buffer&                 srcBuffer,
+            std::uint64_t           srcOffset,
+            std::uint32_t           rowStride   = 0,
+            std::uint32_t           layerStride = 0
+        ) override;
+
         void GenerateMips(Texture& texture) override;
         void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 
@@ -225,11 +234,6 @@ class D3D11CommandBuffer final : public CommandBuffer
         void SetTexture(Texture& texture, std::uint32_t slot, long bindFlags, long stageFlags);
         void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags);
 
-        void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long stageFlags);
-        void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long stageFlags);
-        void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long stageFlags);
-        void SetUnorderedAccessViewsOnStages(UINT startSlot, UINT count, ID3D11UnorderedAccessView* const* views, const UINT* initialCounts, long stageFlags);
-
         void ResetBufferResourceSlots(std::uint32_t firstSlot, std::uint32_t numSlots, long bindFlags, long stageFlags);
         void ResetTextureResourceSlots(std::uint32_t firstSlot, std::uint32_t numSlots, long bindFlags, long stageFlags);
         void ResetSamplerResourceSlots(std::uint32_t firstSlot, std::uint32_t numSlots, long bindFlags, long stageFlags);
@@ -258,6 +262,18 @@ class D3D11CommandBuffer final : public CommandBuffer
         );
 
         void ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT offset, UINT size, const UINT (&valuesVec4)[4]);
+
+        // Creates a copy of this buffer as ByteAddressBuffer; 'size' must be a multiple of 4.
+        void CreateByteAddressBuffer(
+            ID3D11Device*               device,
+            ID3D11DeviceContext*        context,
+            ID3D11Buffer**              bufferOutput,
+            ID3D11ShaderResourceView**  srvOutput,
+            ID3D11UnorderedAccessView** uavOutput,
+            UINT                        offset,
+            UINT                        size,
+            D3D11_USAGE                 usage           = D3D11_USAGE_DEFAULT
+        );
 
     private:
 

@@ -7,7 +7,9 @@
 
 #include "D3D11RenderSystem.h"
 #include "D3D11Types.h"
+#include "D3D11ResourceFlags.h"
 #include "Texture/D3D11MipGenerator.h"
+#include "Shader/D3D11BuiltinShaderFactory.h"
 #include "../DXCommon/DXCore.h"
 #include "../CheckedCast.h"
 #include "../TextureUtils.h"
@@ -46,12 +48,14 @@ D3D11RenderSystem::D3D11RenderSystem()
 
     /* Initialize MIP-map generator singleton */
     D3D11MipGenerator::Get().InitializeDevice(device_);
+    D3D11BuiltinShaderFactory::Get().CreateBuiltinShaders(device_.Get());
 }
 
 D3D11RenderSystem::~D3D11RenderSystem()
 {
     /* Release resource of singletons first */
     D3D11MipGenerator::Get().Clear();
+    D3D11BuiltinShaderFactory::Get().Clear();
 }
 
 /* ----- Render Context ----- */
@@ -90,7 +94,7 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         /* Create command buffer with deferred context and dedicated state manager */
         return TakeOwnership(
             commandBuffers_,
-            MakeUnique<D3D11CommandBuffer>(device_.Get(), deferredContext, std::make_shared<D3D11StateManager>(deferredContext), desc)
+            MakeUnique<D3D11CommandBuffer>(device_.Get(), deferredContext, std::make_shared<D3D11StateManager>(device_.Get(), deferredContext), desc)
         );
     }
     else
@@ -110,15 +114,10 @@ void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
-static bool NeedsBufferResourceViews(long bindFlags)
-{
-    return ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0);
-}
-
 static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Make respective buffer type */
-    if (NeedsBufferResourceViews(desc.bindFlags))
+    if (DXBindFlagsNeedBufferWithRV(desc.bindFlags))
         return MakeUnique<D3D11BufferWithRV>(device, desc, initialData);
     else
         return MakeUnique<D3D11Buffer>(device, desc, initialData);
@@ -579,7 +578,7 @@ bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::
 
 void D3D11RenderSystem::CreateStateManagerAndCommandQueue()
 {
-    stateMngr_ = std::make_shared<D3D11StateManager>(context_);
+    stateMngr_ = std::make_shared<D3D11StateManager>(device_.Get(), context_);
     commandQueue_ = MakeUnique<D3D11CommandQueue>(device_.Get(), context_);
 }
 

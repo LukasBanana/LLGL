@@ -10,23 +10,24 @@
 
 
 #include "../../DXCommon/ComPtr.h"
+#include "../Shader/D3D11BuiltinShaderFactory.h"
+#include "../Buffer/D3D11IntermediateBufferPool.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <vector>
 #include <cstdint>
-#include <d3d11.h>
+#include "../Direct3D11.h"
 
 
 namespace LLGL
 {
 
 
-//TODO: rename to <D3D11CommandContext>
 class D3D11StateManager
 {
 
     public:
 
-        D3D11StateManager(ComPtr<ID3D11DeviceContext>& context);
+        D3D11StateManager(ID3D11Device* device, ComPtr<ID3D11DeviceContext>& context);
 
         void SetViewports(std::uint32_t numViewports, const Viewport* viewportArray);
         void SetScissors(std::uint32_t numScissors, const Scissor* scissorArray);
@@ -50,6 +51,53 @@ class D3D11StateManager
         void SetBlendState(ID3D11BlendState* blendState, UINT sampleMask);
         void SetBlendState(ID3D11BlendState* blendState, const FLOAT* blendFactor, UINT sampleMask);
         void SetBlendFactor(const FLOAT* blendFactor);
+
+        void SetConstantBuffers(
+            UINT                    startSlot,
+            UINT                    count,
+            ID3D11Buffer* const*    buffers,
+            long                    stageFlags
+        );
+
+        void SetConstantBuffersRange(
+            UINT                    startSlot,
+            UINT                    count,
+            ID3D11Buffer* const*    buffers,
+            const UINT*             firstConstants,
+            const UINT*             numConstants,
+            long                    stageFlags
+        );
+
+        void SetShaderResources(
+            UINT                                startSlot,
+            UINT                                count,
+            ID3D11ShaderResourceView* const*    views,
+            long                                stageFlags
+        );
+
+        void SetSamplers(
+            UINT                        startSlot,
+            UINT                        count,
+            ID3D11SamplerState* const*  samplers,
+            long                        stageFlags
+        );
+
+        void SetUnorderedAccessViews(
+            UINT                                startSlot,
+            UINT                                count,
+            ID3D11UnorderedAccessView* const*   views,
+            const UINT*                         initialCounts,
+            long                                stageFlags
+        );
+
+        // Binds an intermediate constant buffer and updates its content with the specified data.
+        void SetConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize, long stageFlags);
+
+        // Executes the specified builtin compute shader.
+        void DispatchBuiltin(const D3D11BuiltinShader builtinShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ);
+
+        // Must be called in D3D11CommandBuffer::Begin
+        void ResetIntermediateBufferPools();
 
         // Returns the ID3D11DeviceContext that this state manager is associated with.
         inline ID3D11DeviceContext* GetContext() const
@@ -87,11 +135,17 @@ class D3D11StateManager
 
     private:
 
-        ComPtr<ID3D11DeviceContext> context_;
+        ComPtr<ID3D11DeviceContext>     context_;
 
-        D3DInputAssemblyState       inputAssemblyState_;
-        D3DShaderState              shaderState_;
-        D3DRenderState              renderState_;
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+        ComPtr<ID3D11DeviceContext1>    context1_;
+        #endif
+
+        D3D11IntermediateBufferPool     intermediateCbufferPool_;
+
+        D3DInputAssemblyState           inputAssemblyState_;
+        D3DShaderState                  shaderState_;
+        D3DRenderState                  renderState_;
 
 };
 

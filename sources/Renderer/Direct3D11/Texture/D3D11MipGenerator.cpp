@@ -84,7 +84,16 @@ void D3D11MipGenerator::GenerateMipsWithSubresourceSRV(
 {
     /* Generate MIP-maps for a subresource SRV */
     ComPtr<ID3D11ShaderResourceView> srv;
-    textureD3D.CreateSubresourceSRV(device_.Get(), srv.GetAddressOf(), baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
+    textureD3D.CreateSubresourceSRV(
+        device_.Get(),
+        srv.GetAddressOf(),
+        textureD3D.GetType(),
+        textureD3D.GetFormat(),
+        baseMipLevel,
+        numMipLevels,
+        baseArrayLayer,
+        numArrayLayers
+    );
     context->GenerateMips(srv.Get());
 }
 

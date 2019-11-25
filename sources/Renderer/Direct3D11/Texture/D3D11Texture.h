@@ -19,15 +19,25 @@ namespace LLGL
 {
 
 
+// Union for easy handling of native D3D11 texture objects.
 union D3D11NativeTexture
 {
-    D3D11NativeTexture() :
+    inline D3D11NativeTexture() :
         resource { nullptr }
     {
     }
-    ~D3D11NativeTexture()
+    inline D3D11NativeTexture(const D3D11NativeTexture& rhs) :
+        resource { rhs.resource }
     {
-        // dummy
+    }
+    inline D3D11NativeTexture& operator = (const D3D11NativeTexture& rhs)
+    {
+        resource = rhs.resource;
+        return *this;
+    }
+    inline ~D3D11NativeTexture()
+    {
+        resource.Reset();
     }
 
     ComPtr<ID3D11Resource>  resource;
@@ -91,15 +101,27 @@ class D3D11Texture final : public Texture
         void CreateSubresourceCopyWithCPUAccess(
             ID3D11Device*           device,
             ID3D11DeviceContext*    context,
-            D3D11NativeTexture&     textureCopy,
+            D3D11NativeTexture&     textureOutput,
             UINT                    cpuAccessFlags,
             const TextureRegion&    region
-        ) const;
+        );
+
+        // Creates an uninitialized copy of the specified subresource of the hardware texture with an equivalent unsigned integer format.
+        void CreateSubresourceCopyWithUIntFormat(
+            ID3D11Device*               device,
+            D3D11NativeTexture&         textureOutput,
+            ID3D11ShaderResourceView**  srvOutput,
+            ID3D11UnorderedAccessView** uavOutput,
+            const TextureRegion&        region,
+            const TextureType           subresourceType
+        );
 
         // Creates a shader-resource-view (SRV) of a subresource of this texture object.
         void CreateSubresourceSRV(
             ID3D11Device*               device,
             ID3D11ShaderResourceView**  srvOutput,
+            const TextureType           type,
+            const DXGI_FORMAT           format,
             UINT                        baseMipLevel,
             UINT                        numMipLevels,
             UINT                        baseArrayLayer,
@@ -110,6 +132,19 @@ class D3D11Texture final : public Texture
         void CreateSubresourceDSV(
             ID3D11Device*               device,
             ID3D11DepthStencilView**    dsvOutput,
+            const TextureType           type,
+            const DXGI_FORMAT           format,
+            UINT                        baseMipLevel,
+            UINT                        baseArrayLayer,
+            UINT                        numArrayLayers
+        );
+
+        // Creates an unordered-access-view (UAV) of a subresource of this texture object.
+        void CreateSubresourceUAV(
+            ID3D11Device*               device,
+            ID3D11UnorderedAccessView** uavOutput,
+            const TextureType           type,
+            const DXGI_FORMAT           format,
             UINT                        baseMipLevel,
             UINT                        baseArrayLayer,
             UINT                        numArrayLayers

@@ -29,9 +29,9 @@ UINT DXGetBufferBindFlags(long bindFlags)
         flagsD3D |= D3D11_BIND_CONSTANT_BUFFER;
     if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
         flagsD3D |= D3D11_BIND_STREAM_OUTPUT;
-    if ((bindFlags & BindFlags::Sampled) != 0)
+    if ((bindFlags & (BindFlags::Sampled | BindFlags::CopySrc)) != 0)
         flagsD3D |= D3D11_BIND_SHADER_RESOURCE;
-    if ((bindFlags & BindFlags::Storage) != 0)
+    if ((bindFlags & (BindFlags::Storage | BindFlags::CopyDst)) != 0)
         flagsD3D |= D3D11_BIND_UNORDERED_ACCESS;
 
     return flagsD3D;
@@ -46,13 +46,17 @@ UINT DXGetTextureBindFlags(const TextureDescriptor& desc)
     else if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
         flagsD3D |= D3D11_BIND_RENDER_TARGET;
 
-    if ((desc.bindFlags & BindFlags::Sampled) != 0)
+    if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::CopySrc)) != 0)
         flagsD3D |= D3D11_BIND_SHADER_RESOURCE;
-
-    if ((desc.bindFlags & BindFlags::Storage) != 0)
+    if ((desc.bindFlags & (BindFlags::Storage | BindFlags::CopyDst)) != 0)
         flagsD3D |= D3D11_BIND_UNORDERED_ACCESS;
 
     return flagsD3D;
+}
+
+bool DXBindFlagsNeedBufferWithRV(long bindFlags)
+{
+    return ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0);
 }
 
 /*
@@ -94,13 +98,10 @@ UINT DXGetBufferMiscFlags(const BufferDescriptor& desc)
     if ((desc.bindFlags & BindFlags::IndirectBuffer) != 0)
         flagsD3D |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
 
-    if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-    {
-        if (IsStructuredBuffer(desc))
-            flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-        else if (IsByteAddressBuffer(desc))
-            flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
-    }
+    if (IsStructuredBuffer(desc))
+        flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    else if (IsByteAddressBuffer(desc))
+        flagsD3D |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
 
     return flagsD3D;
 }
@@ -155,6 +156,11 @@ D3D11_USAGE DXGetTextureUsage(const TextureDescriptor& desc)
     if ((desc.cpuAccessFlags & CPUAccessFlags::Write) != 0)
         return D3D11_USAGE_DYNAMIC;
     return D3D11_USAGE_DEFAULT;
+}
+
+D3D11_MAP DXGetMapWrite(bool writeDiscard)
+{
+    return (writeDiscard ? D3D11_MAP_WRITE_DISCARD : D3D11_MAP_WRITE);
 }
 
 

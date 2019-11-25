@@ -10,6 +10,7 @@
 #include "../D3D11ObjectUtils.h"
 #include "../D3D11ResourceFlags.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../DXCommon/DXTypes.h"
 #include "../../TextureUtils.h"
 
 
@@ -155,7 +156,9 @@ TextureDescriptor D3D11Texture::GetDesc() const
 }
 
 static ComPtr<ID3D11Texture1D> DXCreateTexture1D(
-    ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr)
+    ID3D11Device*                   device,
+    const D3D11_TEXTURE1D_DESC&     desc,
+    const D3D11_SUBRESOURCE_DATA*   initialData = nullptr)
 {
     ComPtr<ID3D11Texture1D> tex1D;
 
@@ -166,7 +169,9 @@ static ComPtr<ID3D11Texture1D> DXCreateTexture1D(
 }
 
 static ComPtr<ID3D11Texture2D> DXCreateTexture2D(
-    ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr)
+    ID3D11Device*                   device,
+    const D3D11_TEXTURE2D_DESC&     desc,
+    const D3D11_SUBRESOURCE_DATA*   initialData = nullptr)
 {
     ComPtr<ID3D11Texture2D> tex2D;
 
@@ -177,7 +182,9 @@ static ComPtr<ID3D11Texture2D> DXCreateTexture2D(
 }
 
 static ComPtr<ID3D11Texture3D> DXCreateTexture3D(
-    ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr)
+    ID3D11Device*                   device,
+    const D3D11_TEXTURE3D_DESC&     desc,
+    const D3D11_SUBRESOURCE_DATA*   initialData = nullptr)
 {
     ComPtr<ID3D11Texture3D> tex3D;
 
@@ -329,11 +336,10 @@ void D3D11Texture::UpdateSubresource(
 void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     ID3D11Device*           device,
     ID3D11DeviceContext*    context,
-    D3D11NativeTexture&     textureCopy,
+    D3D11NativeTexture&     textureOutput,
     UINT                    cpuAccessFlags,
-    const TextureRegion&    region) const
+    const TextureRegion&    region)
 {
-    const UINT mipLevel = region.subresource.baseMipLevel;
     D3D11_RESOURCE_DIMENSION dimension;
     native_.resource->GetType(&dimension);
 
@@ -353,7 +359,7 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
                 desc.CPUAccessFlags = cpuAccessFlags;
                 desc.MiscFlags      = 0;
             }
-            textureCopy.tex1D = DXCreateTexture1D(device, desc);
+            textureOutput.tex1D = DXCreateTexture1D(device, desc);
         }
         break;
 
@@ -372,7 +378,7 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
                 desc.CPUAccessFlags = cpuAccessFlags;
                 desc.MiscFlags      = (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE);
             }
-            textureCopy.tex2D = DXCreateTexture2D(device, desc);
+            textureOutput.tex2D = DXCreateTexture2D(device, desc);
         }
         break;
 
@@ -391,12 +397,14 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
                 desc.CPUAccessFlags = cpuAccessFlags;
                 desc.MiscFlags      = 0;
             }
-            textureCopy.tex3D = DXCreateTexture3D(device, desc);
+            textureOutput.tex3D = DXCreateTexture3D(device, desc);
         }
         break;
     }
 
     /* Copy subresource */
+    const UINT mipLevel = region.subresource.baseMipLevel;
+
     const D3D11_BOX srcBox
     {
         static_cast<UINT>(region.offset.x),
@@ -411,7 +419,7 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     {
         const UINT arrayLayer = region.subresource.baseArrayLayer + i;
         context->CopySubresourceRegion(
-            textureCopy.resource.Get(),
+            textureOutput.resource.Get(),
             D3D11CalcSubresource(0, i, 1),
             0, // DstX
             0, // DstY
@@ -423,20 +431,24 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     }
 }
 
-void D3D11Texture::CreateSubresourceSRV(
+static void CreateD3D11TextureSubresourceSRV(
     ID3D11Device*               device,
+    D3D11NativeTexture&         textureInput,
     ID3D11ShaderResourceView**  srvOutput,
+    const TextureType           type,
+    const DXGI_FORMAT           format,
     UINT                        baseMipLevel,
     UINT                        numMipLevels,
     UINT                        baseArrayLayer,
-    UINT                        numArrayLayers)
+    UINT                        numArrayLayers,
+    const char*                 errorContextInfo    = nullptr)
 {
-    /* Create SRV for subresource */
+    /* Create shader-resource-view (SRV) for subresource */
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     {
-        srvDesc.Format = D3D11Types::ToDXGIFormatSRV(GetFormat());
+        srvDesc.Format = D3D11Types::ToDXGIFormatSRV(format);
 
-        switch (GetType())
+        switch (type)
         {
             case TextureType::Texture1D:
                 srvDesc.ViewDimension                       = D3D11_SRV_DIMENSION_TEXTURE1D;
@@ -497,27 +509,241 @@ void D3D11Texture::CreateSubresourceSRV(
                 break;
         }
     }
-    auto hr = device->CreateShaderResourceView(native_.resource.Get(), &srvDesc, srvOutput);
-    DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", "for texture subresource");
+    auto hr = device->CreateShaderResourceView(textureInput.resource.Get(), &srvDesc, srvOutput);
+    DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", errorContextInfo);
+}
+
+static void CreateD3D11TextureSubresourceUAV(
+    ID3D11Device*               device,
+    D3D11NativeTexture&         textureInput,
+    ID3D11UnorderedAccessView** uavOutput,
+    const TextureType           type,
+    const DXGI_FORMAT           format,
+    UINT                        baseMipLevel,
+    UINT                        baseArrayLayer,
+    UINT                        numArrayLayers,
+    const char*                 errorContextInfo    = nullptr)
+{
+    /* Create unordered-access-view (UAV) for subresource */
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    {
+        uavDesc.Format = DXTypes::ToDXGIFormatUAV(format);
+
+        switch (type)
+        {
+            case TextureType::Texture1D:
+                uavDesc.ViewDimension                   = D3D11_UAV_DIMENSION_TEXTURE1D;
+                uavDesc.Texture1D.MipSlice              = baseMipLevel;
+                break;
+
+            case TextureType::Texture2D:
+                uavDesc.ViewDimension                   = D3D11_UAV_DIMENSION_TEXTURE2D;
+                uavDesc.Texture2D.MipSlice              = baseMipLevel;
+                break;
+
+            case TextureType::Texture3D:
+                uavDesc.ViewDimension                   = D3D11_UAV_DIMENSION_TEXTURE3D;
+                uavDesc.Texture3D.MipSlice              = baseMipLevel;
+                uavDesc.Texture3D.FirstWSlice           = baseArrayLayer;
+                uavDesc.Texture3D.WSize                 = numArrayLayers;
+                break;
+
+            case TextureType::Texture1DArray:
+                uavDesc.ViewDimension                   = D3D11_UAV_DIMENSION_TEXTURE1DARRAY;
+                uavDesc.Texture1DArray.MipSlice         = baseMipLevel;
+                uavDesc.Texture1DArray.FirstArraySlice  = baseArrayLayer;
+                uavDesc.Texture1DArray.ArraySize        = numArrayLayers;
+                break;
+
+            case TextureType::Texture2DArray:
+            case TextureType::TextureCube:
+            case TextureType::TextureCubeArray:
+                uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
+                uavDesc.Texture2DArray.MipSlice         = baseMipLevel;
+                uavDesc.Texture2DArray.FirstArraySlice  = baseArrayLayer;
+                uavDesc.Texture2DArray.ArraySize        = numArrayLayers;
+                break;
+
+            case TextureType::Texture2DMS:
+            case TextureType::Texture2DMSArray:
+                /* ignore */
+                break;
+        }
+    }
+    auto hr = device->CreateUnorderedAccessView(textureInput.resource.Get(), &uavDesc, uavOutput);
+    DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", errorContextInfo);
+}
+
+void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
+    ID3D11Device*               device,
+    D3D11NativeTexture&         textureOutput,
+    ID3D11ShaderResourceView**  srvOutput,
+    ID3D11UnorderedAccessView** uavOutput,
+    const TextureRegion&        region,
+    const TextureType           subresourceType)
+{
+    /* Determine binding flags for resource views */
+    UINT bindFlags = 0;
+    if (srvOutput != nullptr)
+        bindFlags |= D3D11_BIND_SHADER_RESOURCE;
+    if (uavOutput != nullptr)
+        bindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+
+    D3D11_RESOURCE_DIMENSION    dimension   = D3D11_RESOURCE_DIMENSION_UNKNOWN;
+    DXGI_FORMAT                 format      = DXGI_FORMAT_UNKNOWN;
+    UINT                        arraySize   = 1;
+
+    native_.resource->GetType(&dimension);
+
+    switch (dimension)
+    {
+        case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
+        {
+            /* Create temporary 1D texture with a similar descriptor */
+            D3D11_TEXTURE1D_DESC desc;
+            native_.tex1D->GetDesc(&desc);
+            format  = DXTypes::ToDXGIFormatUInt(desc.Format);
+            arraySize = desc.ArraySize;
+            {
+                desc.Width          = region.extent.width;
+                desc.MipLevels      = 1;
+                desc.ArraySize      = region.subresource.numArrayLayers;
+                desc.Format         = format;
+                desc.Usage          = D3D11_USAGE_DEFAULT;
+                desc.BindFlags      = bindFlags;
+                desc.CPUAccessFlags = 0;
+                desc.MiscFlags      = 0;
+            }
+            textureOutput.tex1D = DXCreateTexture1D(device, desc);
+        }
+        break;
+
+        case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
+        {
+            /* Query and modify descriptor for 2D texture */
+            D3D11_TEXTURE2D_DESC desc;
+            native_.tex2D->GetDesc(&desc);
+            format = DXTypes::ToDXGIFormatUInt(desc.Format);
+            arraySize = desc.ArraySize;
+            {
+                desc.Width          = region.extent.width;
+                desc.Height         = region.extent.height;
+                desc.MipLevels      = 1;
+                desc.ArraySize      = region.subresource.numArrayLayers;
+                desc.Format         = format;
+                desc.Usage          = D3D11_USAGE_DEFAULT;
+                desc.BindFlags      = bindFlags;
+                desc.CPUAccessFlags = 0;
+                desc.MiscFlags      = (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE);
+            }
+            textureOutput.tex2D = DXCreateTexture2D(device, desc);
+        }
+        break;
+
+        case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
+        {
+            /* Query and modify descriptor for 3D texture */
+            D3D11_TEXTURE3D_DESC desc;
+            native_.tex3D->GetDesc(&desc);
+            format = DXTypes::ToDXGIFormatUInt(desc.Format);
+            {
+                desc.Width          = region.extent.width;
+                desc.Height         = region.extent.height;
+                desc.Depth          = region.extent.depth;
+                desc.MipLevels      = 1;
+                desc.Format         = format;
+                desc.Usage          = D3D11_USAGE_DEFAULT;
+                desc.BindFlags      = bindFlags;
+                desc.CPUAccessFlags = 0;
+                desc.MiscFlags      = 0;
+            }
+            textureOutput.tex3D = DXCreateTexture3D(device, desc);
+        }
+        break;
+    }
+
+    /* Create SRV and UAV for entire subresource copy */
+    if (srvOutput != nullptr)
+    {
+        CreateD3D11TextureSubresourceSRV(
+            device,
+            textureOutput,
+            srvOutput,
+            subresourceType,
+            format,
+            0,
+            1,
+            0,
+            arraySize,
+            "for texture subresource copy"
+        );
+    }
+
+    if (uavOutput != nullptr)
+    {
+        CreateD3D11TextureSubresourceUAV(
+            device,
+            textureOutput,
+            uavOutput,
+            subresourceType,
+            format,
+            0,
+            0,
+            arraySize,
+            "for texture subresource copy"
+        );
+    }
+}
+
+void D3D11Texture::CreateSubresourceSRV(
+    ID3D11Device*               device,
+    ID3D11ShaderResourceView**  srvOutput,
+    const TextureType           type,
+    const DXGI_FORMAT           format,
+    UINT                        baseMipLevel,
+    UINT                        numMipLevels,
+    UINT                        baseArrayLayer,
+    UINT                        numArrayLayers)
+{
+    CreateD3D11TextureSubresourceSRV(
+        device,
+        native_,
+        srvOutput,
+        type,
+        format,
+        baseMipLevel,
+        numMipLevels,
+        baseArrayLayer,
+        numArrayLayers,
+        "for texture subresource"
+    );
 }
 
 void D3D11Texture::CreateSubresourceDSV(
     ID3D11Device*               device,
     ID3D11DepthStencilView**    dsvOutput,
+    const TextureType           type,
+    const DXGI_FORMAT           format,
     UINT                        baseMipLevel,
     UINT                        baseArrayLayer,
     UINT                        numArrayLayers)
 {
+    /* Create depth-stencil-view (DSV) for subresource */
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     {
-        dsvDesc.Format  = D3D11Types::ToDXGIFormatDSV(GetFormat());
+        dsvDesc.Format  = D3D11Types::ToDXGIFormatDSV(format);
         dsvDesc.Flags   = 0;
 
-        switch (GetType())
+        switch (type)
         {
             case TextureType::Texture1D:
                 dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE1D;
                 dsvDesc.Texture1D.MipSlice                  = baseMipLevel;
+                break;
+
+            case TextureType::Texture2D:
+                dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE2D;
+                dsvDesc.Texture2D.MipSlice                  = baseMipLevel;
                 break;
 
             case TextureType::Texture1DArray:
@@ -527,12 +753,10 @@ void D3D11Texture::CreateSubresourceDSV(
                 dsvDesc.Texture1DArray.ArraySize            = numArrayLayers;
                 break;
 
-            case TextureType::Texture2D:
-                dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE2D;
-                dsvDesc.Texture2D.MipSlice                  = baseMipLevel;
-                break;
-
+            case TextureType::Texture3D:
             case TextureType::Texture2DArray:
+            case TextureType::TextureCube:
+            case TextureType::TextureCubeArray:
                 dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
                 dsvDesc.Texture2DArray.MipSlice             = baseMipLevel;
                 dsvDesc.Texture2DArray.FirstArraySlice      = baseArrayLayer;
@@ -548,13 +772,32 @@ void D3D11Texture::CreateSubresourceDSV(
                 dsvDesc.Texture2DMSArray.FirstArraySlice    = baseArrayLayer;
                 dsvDesc.Texture2DMSArray.ArraySize          = numArrayLayers;
                 break;
-
-            default:
-                break;
         }
     }
     auto hr = device->CreateDepthStencilView(native_.resource.Get(), &dsvDesc, dsvOutput);
     DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView",  "for texture subresource");
+}
+
+void D3D11Texture::CreateSubresourceUAV(
+    ID3D11Device*               device,
+    ID3D11UnorderedAccessView** uavOutput,
+    const TextureType           type,
+    const DXGI_FORMAT           format,
+    UINT                        baseMipLevel,
+    UINT                        baseArrayLayer,
+    UINT                        numArrayLayers)
+{
+    CreateD3D11TextureSubresourceUAV(
+        device,
+        native_,
+        uavOutput,
+        type,
+        format,
+        baseMipLevel,
+        baseArrayLayer,
+        numArrayLayers,
+        "for texture subresource"
+    );
 }
 
 // Returns true if the specified texture type contains an array layer for D3D11 textures
@@ -651,7 +894,7 @@ void D3D11Texture::CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RES
     if (!srvDesc && IsDepthStencilFormat(D3D11Types::Unmap(format_)))
     {
         /* Create internal SRV for entire texture resource */
-        CreateSubresourceSRV(device, srv_.ReleaseAndGetAddressOf(), 0, numMipLevels_, 0, numArrayLayers_);
+        CreateSubresourceSRV(device, srv_.ReleaseAndGetAddressOf(), GetType(), GetFormat(), 0, numMipLevels_, 0, numArrayLayers_);
     }
     else
     {

@@ -325,6 +325,12 @@ file(GLOB FilesRendererD3D11RenderState     ${PROJECT_SOURCE_DIR}/sources/Render
 file(GLOB FilesRendererD3D11Shader          ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/*.*)
 file(GLOB FilesRendererD3D11Texture         ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Texture/*.*)
 
+set(
+    FilesRendererD3D11ShaderBuiltin
+    ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/Builtin/D3D11Builtin.h
+    ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/Builtin/D3D11Builtin.rc
+)
+
 # Test project files
 set(TestProjectsPath ${PROJECT_SOURCE_DIR}/tests)
 
@@ -357,6 +363,7 @@ set(FilesExample_ComputeShader ${EXAMPLE_PROJECTS_DIR}/ComputeShader/Example.cpp
 set(FilesExample_StreamOutput ${EXAMPLE_PROJECTS_DIR}/StreamOutput/Example.cpp)
 set(FilesExample_Instancing ${EXAMPLE_PROJECTS_DIR}/Instancing/Example.cpp)
 set(FilesExample_PostProcessing ${EXAMPLE_PROJECTS_DIR}/PostProcessing/Example.cpp)
+set(FilesExample_Mapping ${EXAMPLE_PROJECTS_DIR}/Mapping/Example.cpp)
 set(FilesExample_MultiRenderer ${EXAMPLE_PROJECTS_DIR}/MultiRenderer/Example.cpp)
 set(FilesExample_ShadowMapping ${EXAMPLE_PROJECTS_DIR}/ShadowMapping/Example.cpp)
 set(FilesExample_UnorderedAccess ${EXAMPLE_PROJECTS_DIR}/UnorderedAccess/Example.cpp)
@@ -423,6 +430,7 @@ source_group("Sources\\Direct3D11" FILES ${FilesRendererD3D11})
 source_group("Sources\\Direct3D11\\Buffer" FILES ${FilesRendererD3D11Buffer})
 source_group("Sources\\Direct3D11\\RenderState" FILES ${FilesRendererD3D11RenderState})
 source_group("Sources\\Direct3D11\\Shader" FILES ${FilesRendererD3D11Shader})
+source_group("Sources\\Direct3D11\\Shader\\Builtin" FILES ${FilesRendererD3D11ShaderBuiltin})
 source_group("Sources\\Direct3D11\\Texture" FILES ${FilesRendererD3D11Texture})
 
 source_group("Sources\\Direct3D12" FILES ${FilesRendererD3D12})
@@ -538,6 +546,7 @@ set(
     ${FilesRendererD3D11}
     ${FilesRendererD3D11Buffer}
     ${FilesRendererD3D11Shader}
+    ${FilesRendererD3D11ShaderBuiltin}
     ${FilesRendererD3D11RenderState}
     ${FilesRendererD3D11Texture}
     ${FilesRendererDXCommon}
@@ -755,6 +764,7 @@ if(GaussLib_INCLUDE_DIR)
         ADD_TEST_PROJECT(Example_StreamOutput "${FilesExample_StreamOutput}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_Instancing "${FilesExample_Instancing}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_PostProcessing "${FilesExample_PostProcessing}" "${EXAMPLE_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Example_Mapping "${FilesExample_Mapping}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_MultiRenderer "${FilesExample_MultiRenderer}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_ShadowMapping "${FilesExample_ShadowMapping}" "${EXAMPLE_PROJECT_LIBS}")
         ADD_TEST_PROJECT(Example_UnorderedAccess "${FilesExample_UnorderedAccess}" "${EXAMPLE_PROJECT_LIBS}")

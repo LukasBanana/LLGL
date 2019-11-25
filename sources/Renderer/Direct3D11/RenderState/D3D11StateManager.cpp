@@ -6,6 +6,7 @@
  */
 
 #include "D3D11StateManager.h"
+#include "../../../Core/HelperMacros.h"
 #include <algorithm>
 #include <cstddef>
 
@@ -14,9 +15,15 @@ namespace LLGL
 {
 
 
-D3D11StateManager::D3D11StateManager(ComPtr<ID3D11DeviceContext>& context) :
-    context_ { context }
+static const UINT g_cbufferChunkSize = 4096u;
+
+D3D11StateManager::D3D11StateManager(ID3D11Device* device, ComPtr<ID3D11DeviceContext>& context) :
+    context_                 { context                                                               },
+    intermediateCbufferPool_ { device, context.Get(), g_cbufferChunkSize, D3D11_BIND_CONSTANT_BUFFER }
 {
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    context_->QueryInterface(IID_PPV_ARGS(&context1_));
+    #endif
 }
 
 // Check if D3D11_VIEWPORT and Viewport structures can be safely reinterpret-casted
@@ -240,6 +247,139 @@ void D3D11StateManager::SetBlendFactor(const FLOAT* blendFactor)
         renderState_.blendFactor[3] = blendFactor[3];
         context_->OMSetBlendState(renderState_.blendState, blendFactor, renderState_.sampleMask);
     }
+}
+
+void D3D11StateManager::SetConstantBuffers(
+    UINT                    startSlot,
+    UINT                    count,
+    ID3D11Buffer* const*    buffers,
+    long                    stageFlags)
+{
+    if (LLGL_VS_STAGE(stageFlags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
+    if (LLGL_HS_STAGE(stageFlags)) { context_->HSSetConstantBuffers(startSlot, count, buffers); }
+    if (LLGL_DS_STAGE(stageFlags)) { context_->DSSetConstantBuffers(startSlot, count, buffers); }
+    if (LLGL_GS_STAGE(stageFlags)) { context_->GSSetConstantBuffers(startSlot, count, buffers); }
+    if (LLGL_PS_STAGE(stageFlags)) { context_->PSSetConstantBuffers(startSlot, count, buffers); }
+    if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
+}
+
+void D3D11StateManager::SetConstantBuffersRange(
+    UINT                    startSlot,
+    UINT                    count,
+    ID3D11Buffer* const*    buffers,
+    const UINT*             firstConstants,
+    const UINT*             numConstants,
+    long                    stageFlags)
+{
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    if (context1_ != nullptr)
+    {
+        /* Bind buffer range to shader stage */
+        if (LLGL_VS_STAGE(stageFlags)) { context1_->VSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
+        if (LLGL_HS_STAGE(stageFlags)) { context1_->HSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
+        if (LLGL_DS_STAGE(stageFlags)) { context1_->DSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
+        if (LLGL_GS_STAGE(stageFlags)) { context1_->GSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
+        if (LLGL_PS_STAGE(stageFlags)) { context1_->PSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
+        if (LLGL_CS_STAGE(stageFlags)) { context1_->CSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
+    }
+    else
+    #endif
+    {
+        /* Buffer range is not supported for D3D 11.0 */
+        for (UINT i = 0; i < count; ++i)
+        {
+            if (firstConstants[i] > 0)
+                throw std::runtime_error("constant buffer range is only supported with Direct3D 11.1 or later");
+        }
+
+        /* Bind buffer to shader stage */
+        if (LLGL_VS_STAGE(stageFlags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
+        if (LLGL_HS_STAGE(stageFlags)) { context_->HSSetConstantBuffers(startSlot, count, buffers); }
+        if (LLGL_DS_STAGE(stageFlags)) { context_->DSSetConstantBuffers(startSlot, count, buffers); }
+        if (LLGL_GS_STAGE(stageFlags)) { context_->GSSetConstantBuffers(startSlot, count, buffers); }
+        if (LLGL_PS_STAGE(stageFlags)) { context_->PSSetConstantBuffers(startSlot, count, buffers); }
+        if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
+    }
+}
+
+void D3D11StateManager::SetShaderResources(
+    UINT                                startSlot,
+    UINT                                count,
+    ID3D11ShaderResourceView* const*    views,
+    long                                stageFlags)
+{
+    if (LLGL_VS_STAGE(stageFlags)) { context_->VSSetShaderResources(startSlot, count, views); }
+    if (LLGL_HS_STAGE(stageFlags)) { context_->HSSetShaderResources(startSlot, count, views); }
+    if (LLGL_DS_STAGE(stageFlags)) { context_->DSSetShaderResources(startSlot, count, views); }
+    if (LLGL_GS_STAGE(stageFlags)) { context_->GSSetShaderResources(startSlot, count, views); }
+    if (LLGL_PS_STAGE(stageFlags)) { context_->PSSetShaderResources(startSlot, count, views); }
+    if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetShaderResources(startSlot, count, views); }
+}
+
+void D3D11StateManager::SetSamplers(
+    UINT                        startSlot,
+    UINT                        count,
+    ID3D11SamplerState* const*  samplers,
+    long                        stageFlags)
+{
+    if (LLGL_VS_STAGE(stageFlags)) { context_->VSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_HS_STAGE(stageFlags)) { context_->HSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_DS_STAGE(stageFlags)) { context_->DSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_GS_STAGE(stageFlags)) { context_->GSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_PS_STAGE(stageFlags)) { context_->PSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetSamplers(startSlot, count, samplers); }
+}
+
+void D3D11StateManager::SetUnorderedAccessViews(
+    UINT                                startSlot,
+    UINT                                count,
+    ID3D11UnorderedAccessView* const*   views,
+    const UINT*                         initialCounts,
+    long                                stageFlags)
+{
+    if (LLGL_PS_STAGE(stageFlags))
+    {
+        /* Set UAVs for pixel shader stage */
+        context_->OMSetRenderTargetsAndUnorderedAccessViews(
+            /*NumRTVs:*/                D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
+            /*ppRenderTargetViews:*/    nullptr,
+            /*pDepthStencilView:*/      nullptr,
+            /*UAVStartSlot:*/           startSlot,
+            /*NumUAVs:*/                count,
+            /*ppUnorderedAccessViews:*/ views,
+            /*pUAVInitialCounts:*/      initialCounts
+        );
+    }
+
+    if (LLGL_CS_STAGE(stageFlags))
+    {
+        /* Set UAVs for compute shader stage */
+        context_->CSSetUnorderedAccessViews(startSlot, count, views, initialCounts);
+    }
+}
+
+void D3D11StateManager::SetConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize, long stageFlags)
+{
+    /* Write data to intermediate constant buffer */
+    auto bufferRange = intermediateCbufferPool_.Write(data, dataSize);
+
+    /* Bind intermediate buffer to buffer range */
+    const UINT firstConstants[] = { bufferRange.offset / 16 };
+    const UINT numConstants[]   = { bufferRange.size / 16 };
+
+    SetConstantBuffersRange(slot, 1, &(bufferRange.native), firstConstants, numConstants, stageFlags);
+}
+
+void D3D11StateManager::DispatchBuiltin(const D3D11BuiltinShader builtinShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ)
+{
+    ID3D11ComputeShader* cs = D3D11BuiltinShaderFactory::Get().GetBulitinShader(builtinShader).cs.Get();
+    SetComputeShader(cs);
+    context_->Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+}
+
+void D3D11StateManager::ResetIntermediateBufferPools()
+{
+    intermediateCbufferPool_.Reset();
 }
 
 

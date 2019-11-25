@@ -46,6 +46,7 @@ D3D11_LOGIC_OP              Map( const LogicOp              logicOp         );
 
 Format                      Unmap( const DXGI_FORMAT format );
 
+//TODO: remove and use DXTypes namespace directly
 DXGI_FORMAT                 ToDXGIFormatDSV(const DXGI_FORMAT format);
 DXGI_FORMAT                 ToDXGIFormatSRV(const DXGI_FORMAT format);
 

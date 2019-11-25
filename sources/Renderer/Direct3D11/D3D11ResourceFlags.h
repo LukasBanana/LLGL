@@ -22,6 +22,9 @@ namespace LLGL
 UINT DXGetBufferBindFlags(long bindFlags);
 UINT DXGetTextureBindFlags(const TextureDescriptor& desc);
 
+// Returns true if a buffer with the specified binding flags has default resource views (i.e. is of type <D3D11BufferWithRV>).
+bool DXBindFlagsNeedBufferWithRV(long bindFlags);
+
 // Returns bitwise OR combined values of <D3D11_CPU_ACCESS_FLAG>
 UINT DXGetCPUAccessFlagsForMiscFlags(long miscFlags);
 UINT DXGetCPUAccessFlags(long cpuAccessFlags);
@@ -34,6 +37,9 @@ UINT DXGetTextureMiscFlags(const TextureDescriptor& desc);
 D3D11_USAGE DXGetBufferUsage(const BufferDescriptor& desc);
 D3D11_USAGE DXGetCPUAccessBufferUsage(const BufferDescriptor& desc);
 D3D11_USAGE DXGetTextureUsage(const TextureDescriptor& desc);
+
+// Returns the D3D mapping for a partial or full write.
+D3D11_MAP DXGetMapWrite(bool writeDiscard);
 
 
 } // /namespace LLGL
