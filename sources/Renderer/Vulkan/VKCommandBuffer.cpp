@@ -259,6 +259,40 @@ void VKCommandBuffer::CopyTexture(
         device_.CopyTexture(commandBuffer_, srcTextureVK, dstTextureVK, region);
 }
 
+void VKCommandBuffer::CopyTextureFromBuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    Buffer&                 srcBuffer,
+    std::uint64_t           srcOffset,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    auto& dstTextureVK = LLGL_CAST(VKTexture&, dstTexture);
+    auto& srcBufferVK = LLGL_CAST(VKBuffer&, srcBuffer);
+
+    VkBufferImageCopy region;
+    {
+        region.bufferOffset                     = srcOffset;
+        region.bufferRowLength                  = rowStride;
+        region.bufferImageHeight                = layerStride;
+        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel        = dstRegion.subresource.baseMipLevel;
+        region.imageSubresource.baseArrayLayer  = dstRegion.subresource.baseArrayLayer;
+        region.imageSubresource.layerCount      = dstRegion.subresource.numArrayLayers;
+        region.imageOffset                      = VKTypes::ToVkOffset(dstRegion.offset);
+        region.imageExtent                      = VKTypes::ToVkExtent(dstRegion.extent);
+    }
+
+    if (IsInsideRenderPass())
+    {
+        PauseRenderPass();
+        device_.CopyBufferToImage(commandBuffer_, srcBufferVK, dstTextureVK, region);
+        ResumeRenderPass();
+    }
+    else
+        device_.CopyBufferToImage(commandBuffer_, srcBufferVK, dstTextureVK, region);
+}
+
 void VKCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);

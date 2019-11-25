@@ -7,6 +7,7 @@
 
 #include "VKDevice.h"
 #include "RenderState/VKFence.h"
+#include "Buffer/VKBuffer.h"
 #include "Texture/VKTexture.h"
 #include "Memory/VKDeviceMemoryRegion.h"
 #include "Memory/VKDeviceMemory.h"
@@ -299,6 +300,22 @@ void VKDevice::CopyBufferToImage(
         region.imageExtent                      = extent;
     }
     vkCmdCopyBufferToImage(commandBuffer, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+}
+
+void VKDevice::CopyBufferToImage(
+    VkCommandBuffer             commandBuffer,
+    VKBuffer&                   srcBuffer,
+    VKTexture&                  dstTexture,
+    const VkBufferImageCopy&    region)
+{
+    vkCmdCopyBufferToImage(
+        commandBuffer,
+        srcBuffer.GetVkBuffer(),
+        dstTexture.GetVkImage(),
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        1,
+        &region
+    );
 }
 
 void VKDevice::CopyImageToBuffer(

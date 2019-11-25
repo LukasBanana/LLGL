@@ -82,6 +82,15 @@ class VKCommandBuffer final : public CommandBuffer
             const Extent3D&         extent
         ) override;
 
+        void CopyTextureFromBuffer(
+            Texture&                dstTexture,
+            const TextureRegion&    dstRegion,
+            Buffer&                 srcBuffer,
+            std::uint64_t           srcOffset,
+            std::uint32_t           rowStride   = 0,
+            std::uint32_t           layerStride = 0
+        ) override;
+
         void GenerateMips(Texture& texture) override;
         void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 

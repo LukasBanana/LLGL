@@ -20,6 +20,7 @@ namespace LLGL
 {
 
 
+class VKBuffer;
 class VKTexture;
 
 class VKDevice
@@ -96,6 +97,13 @@ class VKDevice
             const VkOffset3D&           offset,
             const VkExtent3D&           extent,
             const TextureSubresource&   subresource
+        );
+
+        void CopyBufferToImage(
+            VkCommandBuffer             commandBuffer,
+            VKBuffer&                   srcBuffer,
+            VKTexture&                  dstTexture,
+            const VkBufferImageCopy&    region
         );
 
         // Copies the source image into the destination buffer (numMipLevels must be 1).
