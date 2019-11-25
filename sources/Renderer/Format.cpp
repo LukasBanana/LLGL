@@ -177,7 +177,7 @@ static const FormatAttributes g_formatAttribs[] =
 LLGL_EXPORT const FormatAttributes& GetFormatAttribs(const Format format)
 {
     auto idx = static_cast<std::size_t>(format);
-    if (idx < sizeof(Internal::g_formatAttribs)/sizeof(Internal::g_formatAttribs[0]))
+    if (idx < (sizeof(Internal::g_formatAttribs) / sizeof(Internal::g_formatAttribs[0])))
         return Internal::g_formatAttribs[idx];
     else
         return Internal::g_formatAttribs[0];

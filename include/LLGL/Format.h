@@ -368,6 +368,12 @@ struct FormatFlags
         \see VertexAttribute::format
         */
         SupportsVertex          = (1 << 15),
+
+        //! Combines the format flags \c IsInteger and \c IsUnsigned.
+        IsUnsignedInteger       = (IsUnsigned | IsInteger),
+
+        //! Combines the format flags \c HasDepth and \c HasStencil.
+        HasDepthStencil         = (HasDepth | HasStencil),
     };
 };
 

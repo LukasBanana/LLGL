@@ -88,6 +88,15 @@ class DbgCommandBuffer final : public CommandBuffer
             const Extent3D&         extent
         ) override;
 
+        void CopyTextureFromBuffer(
+            Texture&                dstTexture,
+            const TextureRegion&    dstRegion,
+            Buffer&                 srcBuffer,
+            std::uint64_t           srcOffset,
+            std::uint32_t           rowStride   = 0,
+            std::uint32_t           layerStride = 0
+        ) override;
+
         void GenerateMips(Texture& texture) override;
         void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 
@@ -254,6 +263,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void ValidateBindFlags(long resourceFlags, long bindFlags, long validFlags, const char* resourceName = nullptr);
         void ValidateBindBufferFlags(DbgBuffer& bufferDbg, long bindFlags);
+        void ValidateBindTextureFlags(DbgTexture& textureDbg, long bindFlags);
         void ValidateIndexType(const Format format);
 
         void ValidateStageFlags(long stageFlags, long validFlags);

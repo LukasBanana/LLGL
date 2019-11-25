@@ -31,6 +31,7 @@ namespace LLGL
 {
 
 
+//TODO: move all validation functions into spearate class to make them sharable between RenderSystem and other classes
 class DbgRenderSystem final : public RenderSystem
 {
 

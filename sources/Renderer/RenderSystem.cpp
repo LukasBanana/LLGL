@@ -263,7 +263,9 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_
         BindFlags::Sampled              |
         BindFlags::Storage              |
         BindFlags::StreamOutputBuffer   |
-        BindFlags::IndirectBuffer
+        BindFlags::IndirectBuffer       |
+        BindFlags::CopySrc              |
+        BindFlags::CopyDst
     );
 
     if ((desc.bindFlags & (~validBindFlags)) != 0)

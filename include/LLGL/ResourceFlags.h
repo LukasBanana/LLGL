@@ -133,7 +133,26 @@ struct BindFlags
         \note Only supported with: OpenGL, Vulkan.
         \see ShaderResource::binding
         */
-        CombinedTextureSampler  = (1 << 9),
+        CombinedSampler         = (1 << 9),
+
+        /**
+        \brief Specifies a resource can be used as source for a copy command.
+        \see CommandBuffer::CopyBuffer
+        \see CommandBuffer::CopyBufferFromTexture
+        \see CommandBuffer::CopyTexture
+        \see CommandBuffer::CopyTextureFromBuffer
+        */
+        CopySrc                 = (1 << 10),
+
+        /**
+        \brief Specifies a resource can be used as destination for a copy or fill command.
+        \see CommandBuffer::CopyBuffer
+        \see CommandBuffer::CopyBufferFromTexture
+        \see CommandBuffer::CopyTexture
+        \see CommandBuffer::CopyTextureFromBuffer
+        \see CommandBuffer::FillBuffer
+        */
+        CopyDst                 = (1 << 11),
     };
 };
 

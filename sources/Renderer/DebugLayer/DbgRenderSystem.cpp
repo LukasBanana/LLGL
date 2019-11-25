@@ -518,10 +518,10 @@ void DbgRenderSystem::ValidateBindFlags(long flags)
 {
     const long bufferOnlyFlags =
     (
-        BindFlags::VertexBuffer             |
-        BindFlags::IndexBuffer              |
-        BindFlags::ConstantBuffer           |
-        BindFlags::StreamOutputBuffer       |
+        BindFlags::VertexBuffer         |
+        BindFlags::IndexBuffer          |
+        BindFlags::ConstantBuffer       |
+        BindFlags::StreamOutputBuffer   |
         BindFlags::IndirectBuffer
     );
 
@@ -533,10 +533,12 @@ void DbgRenderSystem::ValidateBindFlags(long flags)
 
     const long validFlags =
     (
-        bufferOnlyFlags                     |
-        textureOnlyFlags                    |
-        BindFlags::Sampled                  |
-        BindFlags::Storage
+        bufferOnlyFlags     |
+        textureOnlyFlags    |
+        BindFlags::Sampled  |
+        BindFlags::Storage  |
+        BindFlags::CopySrc  |
+        BindFlags::CopyDst
     );
 
     /* Check for unknown flags */

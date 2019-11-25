@@ -163,6 +163,8 @@ void DbgCommandBuffer::CopyBuffer(
         AssertRecording();
         ValidateBufferRange(dstBufferDbg, dstOffset, size, "destination range");
         ValidateBufferRange(srcBufferDbg, srcOffset, size, "source range");
+        ValidateBindBufferFlags(dstBufferDbg, BindFlags::CopyDst);
+        ValidateBindBufferFlags(srcBufferDbg, BindFlags::CopySrc);
     }
 
     LLGL_DBG_COMMAND( "CopyBuffer", instance.CopyBuffer(dstBufferDbg.instance, dstOffset, srcBufferDbg.instance, srcOffset, size) );
@@ -182,6 +184,7 @@ void DbgCommandBuffer::FillBuffer(
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
+        ValidateBindBufferFlags(dstBufferDbg, BindFlags::CopyDst);
 
         if (fillSize == Constants::wholeSize)
         {
@@ -215,9 +218,37 @@ void DbgCommandBuffer::CopyTexture(
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
+        ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
+        ValidateBindTextureFlags(srcTextureDbg, BindFlags::CopySrc);
     }
 
     LLGL_DBG_COMMAND( "CopyTexture", instance.CopyTexture(dstTextureDbg.instance, dstLocation, srcTextureDbg.instance, srcLocation, extent) );
+
+    profile_.textureCopies++;
+}
+
+void DbgCommandBuffer::CopyTextureFromBuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    Buffer&                 srcBuffer,
+    std::uint64_t           srcOffset,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    auto& dstTextureDbg = LLGL_CAST(DbgTexture&, dstTexture);
+    auto& srcBufferDbg = LLGL_CAST(DbgBuffer&, srcBuffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        //ValidateTextureRegion(dstTextureDbg, TextureRegion{ dstLocation.offset, dstExtent }, srcSize);
+        //ValidateBufferRange(srcBufferDbg, srcOffset, srcSize);
+        ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
+        ValidateBindBufferFlags(srcBufferDbg, BindFlags::CopySrc);
+    }
+
+    LLGL_DBG_COMMAND( "CopyTextureFromBuffer", instance.CopyTextureFromBuffer(dstTextureDbg.instance, dstRegion, srcBufferDbg.instance, srcOffset, rowStride, layerStride) );
 
     profile_.textureCopies++;
 }
@@ -534,7 +565,7 @@ void DbgCommandBuffer::SetResource(
             ValidateBindFlags(
                 textureDbg.desc.bindFlags,
                 bindFlags,
-                (BindFlags::Sampled | BindFlags::Storage | BindFlags::CombinedTextureSampler),
+                (BindFlags::Sampled | BindFlags::Storage | BindFlags::CombinedSampler),
                 GetLabelOrDefault(textureDbg.label, "LLGL::Buffer")
             );
 
@@ -1533,7 +1564,9 @@ static const char* BindFlagToString(long bindFlag)
         case BindFlags::Storage:                return "Storage";
         case BindFlags::ColorAttachment:        return "ColorAttachment";
         case BindFlags::DepthStencilAttachment: return "DepthStencilAttachment";
-        case BindFlags::CombinedTextureSampler: return "CombinedTextureSampler";
+        case BindFlags::CombinedSampler:        return "CombinedSampler";
+        case BindFlags::CopySrc:                return "CopySrc";
+        case BindFlags::CopyDst:                return "CopyDst";
         default:                                return nullptr;
     }
 }
@@ -1595,6 +1628,11 @@ void DbgCommandBuffer::ValidateBindFlags(long resourceFlags, long bindFlags, lon
 void DbgCommandBuffer::ValidateBindBufferFlags(DbgBuffer& bufferDbg, long bindFlags)
 {
     ValidateBindFlags(bufferDbg.desc.bindFlags, bindFlags, bindFlags, GetLabelOrDefault(bufferDbg.label, "LLGL::Buffer"));
+}
+
+void DbgCommandBuffer::ValidateBindTextureFlags(DbgTexture& textureDbg, long bindFlags)
+{
+    ValidateBindFlags(textureDbg.desc.bindFlags, bindFlags, bindFlags, GetLabelOrDefault(textureDbg.label, "LLGL::Texture"));
 }
 
 void DbgCommandBuffer::ValidateIndexType(const Format format)
