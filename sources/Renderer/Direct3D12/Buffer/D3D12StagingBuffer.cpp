@@ -63,11 +63,6 @@ void D3D12StagingBuffer::Create(
     offset_ = 0;
 }
 
-void D3D12StagingBuffer::Release()
-{
-    native_.Reset();
-}
-
 void D3D12StagingBuffer::Reset()
 {
     offset_ = 0;

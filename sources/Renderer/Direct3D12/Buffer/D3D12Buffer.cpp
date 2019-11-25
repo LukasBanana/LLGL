@@ -168,6 +168,7 @@ void D3D12Buffer::ClearSubresourceUInt(
             cpuDescHandle,
             offset,
             fillSize,
+            formatStride,
             values
         );
 
@@ -196,6 +197,7 @@ void D3D12Buffer::ClearSubresourceUInt(
                 cpuDescHandle,
                 offset,
                 fillSize,
+                formatStride,
                 values
             );
         }
@@ -451,6 +453,7 @@ void D3D12Buffer::ClearSubresourceWithUAV(
     D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
     UINT64                      offset,
     UINT64                      fillSize,
+    UINT                        formatStride,
     const UINT                  (&valuesVec4)[4])
 {
     if (offset == 0 && fillSize == resourceSize)
@@ -467,11 +470,14 @@ void D3D12Buffer::ClearSubresourceWithUAV(
     }
     else
     {
-        /* Fill range of buffer (use D3D12_RECT) */
+        /*
+        Fill range of buffer (use D3D12_RECT) and devide by 'formatStride'
+        to select structured elements (i.e. D3D12_BUFFER_UAV::NumElements).
+        */
         const D3D12_RECT rect =
         {
-            static_cast<LONG>(offset           ), 0,
-            static_cast<LONG>(offset + fillSize), 1
+            static_cast<LONG>((offset           ) / formatStride), 0,
+            static_cast<LONG>((offset + fillSize) / formatStride), 1
         };
         commandList->ClearUnorderedAccessViewUint(
             gpuDescHandle,

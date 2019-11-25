@@ -146,6 +146,7 @@ class D3D12Buffer : public Buffer
             D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
             UINT64                      offset,
             UINT64                      fillSize,
+            UINT                        formatStride,
             const UINT                  (&valuesVec4)[4]
         );
 

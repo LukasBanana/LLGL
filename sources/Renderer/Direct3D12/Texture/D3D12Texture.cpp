@@ -10,6 +10,7 @@
 #include "../D3D12ObjectUtils.h"
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12Types.h"
+#include "../Buffer/D3D12Buffer.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/Helper.h"
@@ -449,6 +450,22 @@ D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(const TextureLocation
         copyDesc.pResource          = GetNative();
         copyDesc.Type               = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
         copyDesc.SubresourceIndex   = CalcSubresource(location);
+    }
+    return copyDesc;
+}
+
+D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(const D3D12Buffer& srcBuffer, UINT64 srcOffset, const Extent3D& extent, UINT rowPitch) const
+{
+    D3D12_TEXTURE_COPY_LOCATION copyDesc;
+    {
+        copyDesc.pResource                            = srcBuffer.GetNative();
+        copyDesc.Type                                 = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        copyDesc.PlacedFootprint.Offset               = srcOffset;
+        copyDesc.PlacedFootprint.Footprint.Format     = GetFormat();
+        copyDesc.PlacedFootprint.Footprint.Width      = extent.width;
+        copyDesc.PlacedFootprint.Footprint.Height     = extent.height;
+        copyDesc.PlacedFootprint.Footprint.Depth      = extent.depth;
+        copyDesc.PlacedFootprint.Footprint.RowPitch   = rowPitch;
     }
     return copyDesc;
 }

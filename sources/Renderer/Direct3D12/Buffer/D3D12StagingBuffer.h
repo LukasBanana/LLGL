@@ -18,7 +18,7 @@ namespace LLGL
 
 
 /*
-Instance of this class represents a single chunk in the staging buffer pool
+Instances of this class represent a single chunk in the staging buffer pool
 to handle dynamic buffer updates during command buffer recording.
 */
 class D3D12StagingBuffer
@@ -44,9 +44,6 @@ class D3D12StagingBuffer
             UINT64          alignment   = 256u,
             D3D12_HEAP_TYPE heapType    = D3D12_HEAP_TYPE_UPLOAD
         );
-
-        // Release the native buffer resource.
-        void Release();
 
         // Resets the writing offset.
         void Reset();

@@ -18,6 +18,7 @@ namespace LLGL
 {
 
 
+class D3D12Buffer;
 class D3D12CommandContext;
 
 class D3D12Texture final : public Texture
@@ -70,6 +71,9 @@ class D3D12Texture final : public Texture
 
         // Returns the native structure for a texture copy location.
         D3D12_TEXTURE_COPY_LOCATION CalcCopyLocation(const TextureLocation& location) const;
+
+        // Returns the native structure for a placed footprint texture copy location of the specified source buffer.
+        D3D12_TEXTURE_COPY_LOCATION CalcCopyLocation(const D3D12Buffer& srcBuffer, UINT64 srcOffset, const Extent3D& extent, UINT rowPitch) const;
 
         // Returns the texture region for the specified offset and extent with respect to the type of this texture (i.e. whether or not array layers are handled by the subresource index).
         D3D12_BOX CalcRegion(const Offset3D& offset, const Extent3D& extent) const;

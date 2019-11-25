@@ -11,6 +11,7 @@
 #include "../D3D12RenderContext.h"
 #include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
+#include "../../TextureUtils.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
@@ -157,6 +158,73 @@ void D3D12CommandBuffer::CopyTexture(
     }
     commandContext_.TransitionResource(dstTextureD3D.GetResource(), dstTextureD3D.GetResource().usageState);
     commandContext_.TransitionResource(srcTextureD3D.GetResource(), srcTextureD3D.GetResource().usageState, true);
+}
+
+void D3D12CommandBuffer::CopyTextureFromBuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    Buffer&                 srcBuffer,
+    std::uint64_t           srcOffset,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    auto& dstTextureD3D = LLGL_CAST(D3D12Texture&, dstTexture);
+    auto& srcBufferD3D = LLGL_CAST(D3D12Buffer&, srcBuffer);
+
+    const TextureLocation   dstLocation { dstRegion.offset, dstRegion.subresource.baseArrayLayer, dstRegion.subresource.baseMipLevel };
+    const Extent3D          dstExtent   { CalcTextureExtent(dstTexture.GetType(), dstRegion.extent, dstRegion.subresource.numArrayLayers) };
+
+    /* Determine actual buffer row stride and required row stride */
+    UINT alignedRowStride = rowStride;
+    if (rowStride == 0)
+    {
+        rowStride = TextureBufferSize(D3D12Types::Unmap(dstTextureD3D.GetFormat()), dstExtent.width);
+        alignedRowStride = GetAlignedSize<UINT>(rowStride, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+    }
+
+    const D3D12_TEXTURE_COPY_LOCATION   dstLocationD3D  = dstTextureD3D.CalcCopyLocation(dstLocation);
+    const D3D12_TEXTURE_COPY_LOCATION   srcLocationD3D  = dstTextureD3D.CalcCopyLocation(srcBufferD3D, srcOffset, dstExtent, alignedRowStride);
+    const D3D12_BOX                     srcBox          = dstTextureD3D.CalcRegion(Offset3D{}, dstExtent);
+
+    commandContext_.TransitionResource(dstTextureD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
+    commandContext_.TransitionResource(srcBufferD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+    {
+        if (alignedRowStride != rowStride)
+        {
+            /* Copy each row individually due to unalgined row pitch */
+            for (UINT z = 0; z < dstExtent.depth; ++z)
+            {
+                for (UINT y = 0; y < dstExtent.height; ++y)
+                {
+                    commandList_->CopyTextureRegion(
+                        &dstLocationD3D,                            // pDst
+                        static_cast<UINT>(dstRegion.offset.x),      // DstX
+                        static_cast<UINT>(dstRegion.offset.y) + y,  // DstY
+                        static_cast<UINT>(dstRegion.offset.z) + z,  // DstZ
+                        &srcLocationD3D,                            // pSrc
+                        &CD3DX12_BOX(
+                            srcBox.left, srcBox.top + y, srcBox.front + z,
+                            srcBox.right, srcBox.top + y + 1, srcBox.front + z + 1
+                        )
+                    );
+                }
+            }
+        }
+        else
+        {
+            /* Copy entire texture region from buffer  */
+            commandList_->CopyTextureRegion(
+                &dstLocationD3D,                        // pDst
+                static_cast<UINT>(dstRegion.offset.x),  // DstX
+                static_cast<UINT>(dstRegion.offset.y),  // DstY
+                static_cast<UINT>(dstRegion.offset.z),  // DstZ
+                &srcLocationD3D,                        // pSrc
+                &srcBox                                 // pSrcBox
+            );
+        }
+    }
+    commandContext_.TransitionResource(dstTextureD3D.GetResource(), dstTextureD3D.GetResource().usageState);
+    commandContext_.TransitionResource(srcBufferD3D.GetResource(), srcBufferD3D.GetResource().usageState, true);
 }
 
 void D3D12CommandBuffer::GenerateMips(Texture& texture)
