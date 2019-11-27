@@ -222,6 +222,17 @@ void MTCommandBuffer::CopyTexture(
     encoderScheduler_.ResumeRenderEncoder();
 }
 
+void MTCommandBuffer::CopyTextureFromBuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    Buffer&                 srcBuffer,
+    std::uint64_t           srcOffset,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    //TODO
+}
+
 void MTCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureMT = LLGL_CAST(MTTexture&, texture);

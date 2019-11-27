@@ -231,14 +231,16 @@ struct TextureDescriptor
     */
     long            bindFlags       = (BindFlags::Sampled | BindFlags::ColorAttachment);
 
+    #if 1//TODO: remove this
     /**
     \brief CPU read/write access flags. By default 0.
     \remarks If this is 0 the texture cannot be mapped from GPU memory space into CPU memory space and vice versa.
     \see CPUAccessFlags
     \see RenderSystem::MapTexture
-    \todo Not supported yet.
+    \todo Not supported, to be removed.
     */
     long            cpuAccessFlags  = 0;
+    #endif
 
     /**
     \brief Miscellaneous texture flags. By default MiscFlags::FixedSamples and MiscFlags::GenerateMips.

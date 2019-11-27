@@ -89,4 +89,8 @@ glslangValidator -V -S vert -o UnorderedAccess/Example.450core.vert.spv Unordere
 glslangValidator -V -S frag -o UnorderedAccess/Example.450core.frag.spv UnorderedAccess/Example.450core.frag
 glslangValidator -V -S comp -o UnorderedAccess/Example.450core.comp.spv UnorderedAccess/Example.450core.comp
 
+echo ####### Mapping #######
+glslangValidator -V -S vert -o Mapping/Example.450core.vert.spv Mapping/Example.450core.vert
+glslangValidator -V -S frag -o Mapping/Example.450core.frag.spv Mapping/Example.450core.frag
+
 pause

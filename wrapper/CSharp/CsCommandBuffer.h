@@ -55,10 +55,11 @@ public ref class CommandBuffer
 
         void CopyBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, Buffer^ srcBuffer, System::UInt64 srcOffset, System::UInt64 size);
 
-        /* ----- Configuration ----- */
+        void FillBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, unsigned int value, System::UInt64 fillSize /*= Constants::wholeSize*/);
 
         #if 0
-        void SetGraphicsAPIDependentState(APIDependentStateDescriptor stateDesc);
+        void CopyTexture(Texture^ dstTexture, TextureLocation^ dstLocation, Texture^ srcTexture, TextureLocation^ srcLocation, Extent3D^ extent);
+        void CopyTextureFromBuffer(Texture^ dstTexture, TextureRegion^ dstRegion, Buffer^ srcBuffer, System::UInt64 srcOffset, unsigned int rowStride /*= 0*/, unsigned int layerStride /*= 0*/);
         #endif
 
         /* ----- Viewport and Scissor ----- */
@@ -141,9 +142,25 @@ public ref class CommandBuffer
         void DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset);
         void DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int firstInstance);
 
+        void DrawIndirect(Buffer^ buffer, System::UInt64 offset);
+        void DrawIndirect(Buffer^ buffer, System::UInt64 offset, unsigned int numCommands, unsigned int stride);
+        void DrawIndexedIndirect(Buffer^ buffer, System::UInt64 offset);
+        void DrawIndexedIndirect(Buffer^ buffer, System::UInt64 offset, unsigned int numCommands, unsigned int stride);
+
         /* ----- Compute ----- */
 
         void Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ);
+        void DispatchIndirect(Buffer^ buffer, System::UInt64 offset);
+
+        /* ----- Debugging ----- */
+
+        void PushDebugGroup(String^ name);
+        void PopDebugGroup();
+
+        /* ----- Extensions ----- */
+
+        generic <typename T>
+        void SetGraphicsAPIDependentState(T stateDesc);
 
     private:
 

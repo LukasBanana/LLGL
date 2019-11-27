@@ -6,6 +6,7 @@
  */
 
 #include "CsCommandBuffer.h"
+#include "CsHelper.h"
 #include <algorithm>
 
 
@@ -65,6 +66,11 @@ void CommandBuffer::UpdateBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, ar
 void CommandBuffer::CopyBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, Buffer^ srcBuffer, System::UInt64 srcOffset, System::UInt64 size)
 {
     native_->CopyBuffer(*(dstBuffer->NativeSub), dstOffset, *(srcBuffer->NativeSub), srcOffset, size);
+}
+
+void CommandBuffer::FillBuffer(Buffer^ dstBuffer, System::UInt64 dstOffset, unsigned int value, System::UInt64 fillSize)
+{
+    native_->FillBuffer(*(dstBuffer->NativeSub), dstOffset, value, fillSize);
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -345,12 +351,58 @@ void CommandBuffer::DrawIndexedInstanced(unsigned int numIndices, unsigned int n
     native_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
+void CommandBuffer::DrawIndirect(Buffer^ buffer, System::UInt64 offset)
+{
+    native_->DrawIndirect(*(buffer->NativeSub), offset);
+}
+
+void CommandBuffer::DrawIndirect(Buffer^ buffer, System::UInt64 offset, unsigned int numCommands, unsigned int stride)
+{
+    native_->DrawIndirect(*(buffer->NativeSub), offset, numCommands, stride);
+}
+
+void CommandBuffer::DrawIndexedIndirect(Buffer^ buffer, System::UInt64 offset)
+{
+    native_->DrawIndexedIndirect(*(buffer->NativeSub), offset);
+}
+
+void CommandBuffer::DrawIndexedIndirect(Buffer^ buffer, System::UInt64 offset, unsigned int numCommands, unsigned int stride)
+{
+    native_->DrawIndexedIndirect(*(buffer->NativeSub), offset, numCommands, stride);
+}
 
 /* ----- Compute ----- */
 
 void CommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
 {
     native_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
+}
+
+void CommandBuffer::DispatchIndirect(Buffer^ buffer, System::UInt64 offset)
+{
+    native_->DispatchIndirect(*(buffer->NativeSub), offset);
+}
+
+/* ----- Debugging ----- */
+
+void CommandBuffer::PushDebugGroup(String^ name)
+{
+    auto nameStr = ToStdString(name);
+    native_->PushDebugGroup(nameStr.c_str());
+}
+
+void CommandBuffer::PopDebugGroup()
+{
+    native_->PopDebugGroup();
+}
+
+/* ----- Extensions ----- */
+
+generic <typename T>
+void CommandBuffer::SetGraphicsAPIDependentState(T stateDesc)
+{
+    pin_ptr<T> stateDescRef = &stateDesc;
+    native_->SetGraphicsAPIDependentState(stateDescRef, sizeof(T));
 }
 
 
