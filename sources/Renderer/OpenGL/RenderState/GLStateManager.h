@@ -124,6 +124,9 @@ class GLStateManager
         //void SetSampleMask(GLuint maskNumber, GLbitfield mask);
         #endif
 
+        void SetPixelStorePack(GLint rowLength, GLint imageHeight, GLint alignment);
+        void SetPixelStoreUnpack(GLint rowLength, GLint imageHeight, GLint alignment);
+
         /* ----- Depth-stencil states ----- */
 
         void NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState);
@@ -466,6 +469,8 @@ class GLStateManager
         GLVertexArrayState              vertexArrayState_;
         GLShaderState                   shaderState_;
         GLSamplerState                  samplerState_;
+        GLPixelStore                    pixelStorePack_;
+        GLPixelStore                    pixelStoreUnpack_;
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
         GLCapabilityStateExt            capabilityStateExt_;

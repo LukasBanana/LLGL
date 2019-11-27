@@ -81,6 +81,18 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             cmd->dstTexture->CopyImageSubData(cmd->dstLevel, cmd->dstOffset, *(cmd->srcTexture), cmd->srcLevel, cmd->srcOffset, cmd->extent);
             return sizeof(*cmd);
         }
+        case GLOpcodeCopyImageToBuffer:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyImageBuffer*>(pc);
+            cmd->texture->CopyImageToBuffer(cmd->region, cmd->bufferID, cmd->offset, cmd->size, cmd->rowLength, cmd->imageHeight);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeCopyImageFromBuffer:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyImageBuffer*>(pc);
+            cmd->texture->CopyImageFromBuffer(cmd->region, cmd->bufferID, cmd->offset, cmd->size, cmd->rowLength, cmd->imageHeight);
+            return sizeof(*cmd);
+        }
         case GLOpcodeGenerateMipmap:
         {
             auto cmd = reinterpret_cast<const GLCmdGenerateMipmap*>(pc);

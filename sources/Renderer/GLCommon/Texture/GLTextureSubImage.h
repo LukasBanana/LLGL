@@ -1,12 +1,12 @@
 /*
- * GLTexSubImage.h
+ * GLTextureSubImage.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_GL_TEX_SUB_IMAGE_H
-#define LLGL_GL_TEX_SUB_IMAGE_H
+#ifndef LLGL_GL_TEXTURE_SUB_IMAGE_H
+#define LLGL_GL_TEXTURE_SUB_IMAGE_H
 
 
 #include <LLGL/ImageFlags.h>
@@ -18,8 +18,9 @@ namespace LLGL
 {
 
 
-// Uploads the image data to the specified texture region of the currently bound GL texture.
-void GLTexSubImage(
+// Uploads the image data to the specified texture region; requires extension "GL_ARB_direct_state_access".
+void GLTextureSubImage(
+    GLuint                      texID,
     const TextureType           type,
     const TextureRegion&        region,
     const SrcImageDescriptor&   imageDesc,

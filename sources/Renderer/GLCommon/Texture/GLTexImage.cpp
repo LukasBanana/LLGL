@@ -18,8 +18,6 @@ namespace LLGL
 {
 
 
-/* ----- Internal ----- */
-
 // Generates an image buffer with floating-points for RGBA components.
 static std::vector<ColorRGBAf> GenImageDataRGBAf(std::uint32_t numPixels, const ColorRGBAf& color)
 {
@@ -468,11 +466,9 @@ static void GLTexImage2DMultisampleArray(
 
 #endif
 
-/* ----- Global functions ----- */
-
 #ifdef LLGL_OPENGL
 
-void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
 
@@ -523,7 +519,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* image
 
 #endif
 
-void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
 
@@ -630,7 +626,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     }
 }
 
-void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
 
@@ -685,7 +681,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     }
 }
 
-void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     auto numMipLevels   = NumMipLevels(desc);
     bool useClearValue  = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
@@ -815,7 +811,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
 
 #ifdef LLGL_OPENGL
 
-void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
 
@@ -869,7 +865,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
 
 #endif
 
-void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
 
@@ -953,7 +949,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
 
 #ifdef LLGL_OPENGL
 
-void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
 
@@ -1008,7 +1004,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor
     }
 }
 
-void GLTexImage2DMS(const TextureDescriptor& desc)
+static void GLTexImage2DMS(const TextureDescriptor& desc)
 {
     /* Setup multi-sampled texture storage from descriptor */
     GLTexImage2DMultisample(
@@ -1020,7 +1016,7 @@ void GLTexImage2DMS(const TextureDescriptor& desc)
     );
 }
 
-void GLTexImage2DMSArray(const TextureDescriptor& desc)
+static void GLTexImage2DMSArray(const TextureDescriptor& desc)
 {
     /* Setup multi-sampled array texture storage from descriptor */
     GLTexImage2DMultisampleArray(
@@ -1034,6 +1030,57 @@ void GLTexImage2DMSArray(const TextureDescriptor& desc)
 }
 
 #endif
+
+void GLTexImage(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+{
+    switch (desc.type)
+    {
+        #ifdef LLGL_OPENGL
+        case TextureType::Texture1D:
+            GLTexImage1D(desc, imageDesc);
+            break;
+        #endif
+
+        case TextureType::Texture2D:
+            GLTexImage2D(desc, imageDesc);
+            break;
+
+        case TextureType::Texture3D:
+            GLTexImage3D(desc, imageDesc);
+            break;
+
+        case TextureType::TextureCube:
+            GLTexImageCube(desc, imageDesc);
+            break;
+
+        #ifdef LLGL_OPENGL
+        case TextureType::Texture1DArray:
+            GLTexImage1DArray(desc, imageDesc);
+            break;
+        #endif
+
+        case TextureType::Texture2DArray:
+            GLTexImage2DArray(desc, imageDesc);
+            break;
+
+        #ifdef LLGL_OPENGL
+        case TextureType::TextureCubeArray:
+            GLTexImageCubeArray(desc, imageDesc);
+            break;
+
+        case TextureType::Texture2DMS:
+            GLTexImage2DMS(desc);
+            break;
+
+        case TextureType::Texture2DMSArray:
+            GLTexImage2DMSArray(desc);
+            break;
+        #endif
+
+        default:
+            break;
+    }
+}
 
 
 } // /namespace LLGL

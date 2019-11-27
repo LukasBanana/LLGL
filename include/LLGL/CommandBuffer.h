@@ -186,7 +186,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         This buffer must have been created with the binding flag BindFlags::CopySrc.
         \param[in] srcOffset Specifies the source offset (in bytes) at which the source buffer is to be read from. This \b must be a multiple of 4.
         \param[in] rowStride Specifies an optional stride (in bytes) per row in the source buffer. By default 0.
-        \param[in] layerStride Specifies an optional stride (in bytes) per layer in the source buffer. By default 0.
+        \param[in] layerStride Specifies an optional stride (in bytes) per layer in the source buffer.
+        This \b must be a multiple of \c rowStride. If \c rowStride is zero, then \c layerStride must also be zero. By default 0.
         \remarks This is called "copy texture from buffer" instead of "copy buffer to texture"
         to be uniform with the notation <code>texture := buffer</code>, or <code>memcpy(destination, source, size)</code>.
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.

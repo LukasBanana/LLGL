@@ -229,127 +229,55 @@ void GLRenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
-{
-    if (IsMipMappedTexture(textureDesc))
-        return GL_LINEAR_MIPMAP_LINEAR;
-    else
-        return GL_LINEAR;
-}
-
-Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
-{
-    auto texture = MakeUnique<GLTexture>(textureDesc);
-
-    if (texture->IsRenderbuffer())
-        InitializeGLRenderbuffer(*texture, textureDesc);
-    else
-        InitializeGLTexture(*texture, textureDesc, imageDesc);
-
-    return TakeOwnership(textures_, std::move(texture));
-}
-
-static ImageFormat MapSwizzleImageFormat(const ImageFormat format)
-{
-    switch (format)
-    {
-        case ImageFormat::RGBA: return ImageFormat::BGRA;
-        case ImageFormat::RGB:  return ImageFormat::BGR;
-        default:                return format;
-    }
-}
-
 //private
-void GLRenderSystem::InitializeGLTexture(GLTexture& texture, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+void GLRenderSystem::ValidateGLTextureType(const TextureType type)
 {
-    /* Bind texture */
-    GLStateManager::Get().BindGLTexture(texture);
-
-    /* Initialize texture parameters for the first time */
-    auto target = GLTypes::Map(textureDesc.type);
-
-    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
-    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    /* Configure texture swizzling if format is not supported */
-    texture.InitializeTextureSwizzle({}, true);
-
-    /* Convert initial image data for texture swizzle formats */
-    SrcImageDescriptor intermediateImageDesc;
-
-    if (imageDesc != nullptr && texture.GetSwizzleFormat() == GLSwizzleFormat::BGRA)
-    {
-        intermediateImageDesc = *imageDesc;
-        intermediateImageDesc.format = MapSwizzleImageFormat(imageDesc->format);
-        imageDesc = &intermediateImageDesc;
-    }
-
-    /* Build texture storage and upload image dataa */
-    switch (textureDesc.type)
+    /* Validate texture type for this GL device */
+    switch (type)
     {
         case TextureType::Texture1D:
-            GLTexImage1D(textureDesc, imageDesc);
-            break;
-
         case TextureType::Texture2D:
-            GLTexImage2D(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture3D:
             LLGL_ASSERT_FEATURE_SUPPORT(has3DTextures);
-            GLTexImage3D(textureDesc, imageDesc);
             break;
 
         case TextureType::TextureCube:
             LLGL_ASSERT_FEATURE_SUPPORT(hasCubeTextures);
-            GLTexImageCube(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture1DArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexImage1DArray(textureDesc, imageDesc);
-            break;
-
         case TextureType::Texture2DArray:
             LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexImage2DArray(textureDesc, imageDesc);
             break;
 
         case TextureType::TextureCubeArray:
             LLGL_ASSERT_FEATURE_SUPPORT(hasCubeArrayTextures);
-            GLTexImageCubeArray(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture2DMS:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasMultiSampleTextures);
-            GLTexImage2DMS(textureDesc);
-            break;
-
         case TextureType::Texture2DMSArray:
             LLGL_ASSERT_FEATURE_SUPPORT(hasMultiSampleTextures);
-            GLTexImage2DMSArray(textureDesc);
             break;
 
         default:
             throw std::invalid_argument("failed to create texture with invalid texture type");
             break;
     }
-
-    /* Generate MIP-maps if enabled */
-    if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
-        GLMipGenerator::Get().GenerateMips(textureDesc.type);
 }
 
-//private
-void GLRenderSystem::InitializeGLRenderbuffer(GLTexture& texture, const TextureDescriptor& textureDesc)
+Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
-    GLRenderbuffer::DefineStorage(
-        texture.GetID(),
-        GLTypes::Map(textureDesc.format),
-        static_cast<GLsizei>(textureDesc.extent.width),
-        static_cast<GLsizei>(textureDesc.extent.height),
-        static_cast<GLsizei>(textureDesc.samples)
-    );
+    ValidateGLTextureType(textureDesc.type);
+
+    /* Create <GLTexture> object; will result in a GL renderbuffer or texture instance */
+    auto texture = MakeUnique<GLTexture>(textureDesc);
+
+    /* Initialize either renderbuffer or texture image storage */
+    texture->BindAndAllocStorage(textureDesc, imageDesc);
+
+    return TakeOwnership(textures_, std::move(texture));
 }
 
 #if 0//TODO
@@ -387,55 +315,14 @@ void GLRenderSystem::Release(Texture& texture)
     RemoveFromUniqueSet(textures_, &texture);
 }
 
-/* ----- "WriteTexture..." functions ----- */
-
 void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::Get().BindGLTexture(textureGL);
-
-    /* Write data into specific texture type */
-    switch (texture.GetType())
-    {
-        case TextureType::Texture1D:
-            GLTexSubImage1D(textureRegion, imageDesc);
-            break;
-
-        case TextureType::Texture2D:
-            GLTexSubImage2D(textureRegion, imageDesc);
-            break;
-
-        case TextureType::Texture3D:
-            LLGL_ASSERT_FEATURE_SUPPORT(has3DTextures);
-            GLTexSubImage3D(textureRegion, imageDesc);
-            break;
-
-        case TextureType::TextureCube:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeTextures);
-            GLTexSubImageCube(textureRegion, imageDesc);
-            break;
-
-        case TextureType::Texture1DArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexSubImage1DArray(textureRegion, imageDesc);
-            break;
-
-        case TextureType::Texture2DArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
-            GLTexSubImage2DArray(textureRegion, imageDesc);
-            break;
-
-        case TextureType::TextureCubeArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeArrayTextures);
-            GLTexSubImageCubeArray(textureRegion, imageDesc);
-            break;
-
-        default:
-            break;
-    }
+    textureGL.TextureSubImage(textureRegion, imageDesc, false);
 }
 
+//TODO: move logic of this function into <GLTexture> class
 void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);

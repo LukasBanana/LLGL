@@ -76,12 +76,12 @@ static void GLNamedRenderbufferStorage(GLuint id, GLenum internalFormat, GLsizei
 
 #endif // /GL_ARB_direct_state_access
 
-void GLRenderbuffer::BindAndDefineStorage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
+void GLRenderbuffer::BindAndAllocStorage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
 {
     GLRenderbufferStorage(id_, internalFormat, width, height, samples);
 }
 
-void GLRenderbuffer::DefineStorage(GLuint id, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
+void GLRenderbuffer::AllocStorage(GLuint id, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
 {
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))

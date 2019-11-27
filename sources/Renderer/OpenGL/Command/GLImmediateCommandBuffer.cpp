@@ -126,6 +126,26 @@ void GLImmediateCommandBuffer::CopyTexture(
     );
 }
 
+void GLImmediateCommandBuffer::CopyTextureFromBuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    Buffer&                 srcBuffer,
+    std::uint64_t           srcOffset,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    auto& dstTextureGL = LLGL_CAST(GLTexture&, dstTexture);
+    auto& srcBufferGL = LLGL_CAST(GLBuffer&, srcBuffer);
+    dstTextureGL.CopyImageFromBuffer(
+        dstRegion,
+        srcBufferGL.GetID(),
+        static_cast<GLintptr>(srcOffset),
+        dstTextureGL.GetRegionMemoryFootprint(dstRegion.extent, dstRegion.subresource),
+        static_cast<GLint>(rowStride),
+        static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0)
+    );
+}
+
 void GLImmediateCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureGL = LLGL_CAST(GLTexture&, texture);

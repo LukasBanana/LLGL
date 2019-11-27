@@ -84,6 +84,18 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLTexture::CopyImageSubData, cmd->dstTexture, cmd->dstLevel, &(cmd->dstOffset), cmd->srcTexture, cmd->srcLevel, &(cmd->srcOffset), &(cmd->extent));
             return sizeof(*cmd);
         }
+        case GLOpcodeCopyImageToBuffer:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyImageBuffer*>(pc);
+            compiler.CallMember(&GLTexture::CopyImageToBuffer, cmd->texture, &(cmd->region), cmd->bufferID, cmd->offset, cmd->size, cmd->rowLength, cmd->imageHeight);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeCopyImageFromBuffer:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyImageBuffer*>(pc);
+            compiler.CallMember(&GLTexture::CopyImageFromBuffer, cmd->texture, &(cmd->region), cmd->bufferID, cmd->offset, cmd->size, cmd->rowLength, cmd->imageHeight);
+            return sizeof(*cmd);
+        }
         case GLOpcodeGenerateMipmap:
         {
             auto cmd = reinterpret_cast<const GLCmdGenerateMipmap*>(pc);

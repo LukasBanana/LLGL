@@ -143,6 +143,13 @@ struct GLClearValue
     GLint   stencil     = 0;
 };
 
+struct GLPixelStore
+{
+    GLint rowLength     = 0;
+    GLint imageHeight   = 0;
+    GLint alignment     = 4; // Must be 1, 2, 4, or 8
+};
+
 
 } // /namespace LLGL
 

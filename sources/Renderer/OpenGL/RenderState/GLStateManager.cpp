@@ -535,6 +535,44 @@ void GLStateManager::SetLineWidth(GLfloat width)
     }
 }
 
+void GLStateManager::SetPixelStorePack(GLint rowLength, GLint imageHeight, GLint alignment)
+{
+    if (pixelStorePack_.rowLength != rowLength)
+    {
+        glPixelStorei(GL_PACK_ROW_LENGTH, rowLength);
+        pixelStorePack_.rowLength = rowLength;
+    }
+    if (pixelStorePack_.imageHeight != imageHeight)
+    {
+        glPixelStorei(GL_PACK_IMAGE_HEIGHT, imageHeight);
+        pixelStorePack_.imageHeight = imageHeight;
+    }
+    if (pixelStorePack_.alignment != alignment)
+    {
+        glPixelStorei(GL_PACK_ALIGNMENT, alignment);
+        pixelStorePack_.alignment = alignment;
+    }
+}
+
+void GLStateManager::SetPixelStoreUnpack(GLint rowLength, GLint imageHeight, GLint alignment)
+{
+    if (pixelStoreUnpack_.rowLength != rowLength)
+    {
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, rowLength);
+        pixelStoreUnpack_.rowLength = rowLength;
+    }
+    if (pixelStoreUnpack_.imageHeight != imageHeight)
+    {
+        glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, imageHeight);
+        pixelStoreUnpack_.imageHeight = imageHeight;
+    }
+    if (pixelStoreUnpack_.alignment != alignment)
+    {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+        pixelStoreUnpack_.alignment = alignment;
+    }
+}
+
 /* ----- Depth-stencil states ----- */
 
 void GLStateManager::NotifyDepthStencilStateRelease(GLDepthStencilState* depthStencilState)
@@ -1498,41 +1536,48 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
     }
 
     /* Clear depth-stencil attachment */
-    static const GLbitfield g_maskDepthStencil = (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    if ((mask & g_maskDepthStencil) == g_maskDepthStencil)
+    switch (mask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT))
     {
-        PushDepthMaskAndEnable();
+        case (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT):
         {
-            /* Clear depth and stencil buffer simultaneously */
+            PushDepthMaskAndEnable();
+            {
+                /* Clear depth and stencil buffer simultaneously */
+                if (idx < numClearValues)
+                    glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValues[idx].depth, static_cast<GLint>(clearValues[idx].stencil));
+                else
+                    glClearBufferfi(GL_DEPTH_STENCIL, 0, defaultClearValue.depth, defaultClearValue.stencil);
+            }
+            PopDepthMask();
+        }
+        break;
+
+        case GL_DEPTH_BUFFER_BIT:
+        {
+            PushDepthMaskAndEnable();
+            {
+                /* Clear only depth buffer */
+                if (idx < numClearValues)
+                    glClearBufferfv(GL_DEPTH, 0, &(clearValues[idx].depth));
+                else
+                    glClearBufferfv(GL_DEPTH, 0, &(defaultClearValue.depth));
+            }
+            PopDepthMask();
+        }
+        break;
+
+        case GL_STENCIL_BUFFER_BIT:
+        {
+            /* Clear only stencil buffer */
             if (idx < numClearValues)
-                glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValues[idx].depth, static_cast<GLint>(clearValues[idx].stencil));
+            {
+                GLint stencil = static_cast<GLint>(clearValues[idx].stencil);
+                glClearBufferiv(GL_STENCIL, 0, &stencil);
+            }
             else
-                glClearBufferfi(GL_DEPTH_STENCIL, 0, defaultClearValue.depth, defaultClearValue.stencil);
+                glClearBufferiv(GL_STENCIL, 0, &(defaultClearValue.stencil));
         }
-        PopDepthMask();
-    }
-    if ((mask & GL_DEPTH_BUFFER_BIT) != 0)
-    {
-        PushDepthMaskAndEnable();
-        {
-            /* Clear only depth buffer */
-            if (idx < numClearValues)
-                glClearBufferfv(GL_DEPTH, 0, &(clearValues[idx].depth));
-            else
-                glClearBufferfv(GL_DEPTH, 0, &(defaultClearValue.depth));
-        }
-        PopDepthMask();
-    }
-    else if ((mask & GL_STENCIL_BUFFER_BIT) != 0)
-    {
-        /* Clear only stencil buffer */
-        if (idx < numClearValues)
-        {
-            GLint stencil = static_cast<GLint>(clearValues[idx].stencil);
-            glClearBufferiv(GL_STENCIL, 0, &stencil);
-        }
-        else
-            glClearBufferiv(GL_STENCIL, 0, &(defaultClearValue.stencil));
+        break;
     }
 }
 

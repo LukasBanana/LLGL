@@ -135,8 +135,8 @@ void GLRenderContext::InitRenderStates()
     Set pixel storage to byte-alignment (default is word-alignment).
     This is required so that texture formats like RGB (which is not word-aligned) can be used.
     */
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    //glPixelStorei(GL_PACK_ALIGNMENT, 1); //???
+    stateMngr_->SetPixelStorePack(0, 0, 1);
+    stateMngr_->SetPixelStoreUnpack(0, 0, 1);
 }
 
 

@@ -64,6 +64,10 @@ struct GLContextState
 
     #endif
 
+    // Pixel store
+    GLPixelStore    pixelStorePack;
+    GLPixelStore    pixelStoreUnpack;
+
     // Buffers
     GLuint          boundBuffers[numBufferTargets];
 

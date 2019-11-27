@@ -695,7 +695,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
                 if (uniformType == UniformType::Image)
                     resource.binding.bindFlags = BindFlags::Storage;
                 else
-                    resource.binding.bindFlags = BindFlags::Sampled | BindFlags::CombinedTextureSampler;
+                    resource.binding.bindFlags = BindFlags::Sampled | BindFlags::CombinedSampler;
 
                 /* Get binding slot from uniform value */
                 GLint uniformValue      = 0;

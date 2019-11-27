@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandBufferFlags.h>
+#include <LLGL/TextureFlags.h>
 #include <LLGL/Types.h>
 #include "../RenderState/GLState.h"
 #include "../OpenGL.h"
@@ -73,6 +74,18 @@ struct GLCmdCopyImageSubData
     GLint       srcLevel;
     Offset3D    srcOffset;
     Extent3D    extent;
+};
+
+// Used for both GLOpcodeCopyImageToBuffer and GLOpcodeCopyImageFromBuffer
+struct GLCmdCopyImageBuffer
+{
+    GLTexture*      texture;
+    TextureRegion   region;
+    GLuint          bufferID;
+    GLintptr        offset;
+    GLsizei         size;
+    GLint           rowLength;
+    GLint           imageHeight;
 };
 
 struct GLCmdGenerateMipmap
