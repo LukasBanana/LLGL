@@ -46,6 +46,12 @@ static const std::uint32_t  invalidSlot     = ~0u;
 */
 static const std::uint64_t  wholeSize       = ~0ull;
 
+/**
+\brief Specifies an invalid timer ID for window events.
+\see WindowBehavior::moveAndResizeTimerID
+*/
+static const std::uint32_t invalidTimerID   = 0u;
+
 
 } // /namespace Constants
 

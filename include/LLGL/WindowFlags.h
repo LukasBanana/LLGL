@@ -10,6 +10,7 @@
 
 
 #include "Types.h"
+#include "Constants.h"
 #include <string>
 #include <cstdint>
 
@@ -17,12 +18,6 @@
 namespace LLGL
 {
 
-
-/**
-\brief Value for an invalid window timer ID.
-\todo Move global constants into class or namespace.
-*/
-static const std::uint32_t invalidWindowTimerID = 0;
 
 //! Window descriptor structure.
 struct WindowDescriptor
@@ -109,7 +104,7 @@ struct WindowBehavior
 {
     /**
     \brief Specifies whether to clear the content of the window when it is resized. By default false.
-    \remarks This is used by Win32 to erase (WM_ERASEBKGND message) or keep the background on a window resize.
+    \remarks This is used by Win32 to erase (\c WM_ERASEBKGND message) or keep the background on a window resize.
     If this is false, some kind of flickering during a window resize can be avoided.
     \note Only supported on: Win32.
     */
@@ -123,7 +118,7 @@ struct WindowBehavior
     \see Window::EventListener::OnTimer
     \see invalidWindowTimerID
     */
-    std::uint32_t   moveAndResizeTimerID    = invalidWindowTimerID;
+    std::uint32_t   moveAndResizeTimerID    = Constants::invalidTimerID;
 };
 
 

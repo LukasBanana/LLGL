@@ -270,13 +270,13 @@ enum class TessellationPartition
 
     /**
     \brief Partition with an odd, fractional number.
-    \remarks Equivalent of <code>[partitioning("fractional_odd")]</code> in HLSL and <code>layout(fractional_odd_spacing) in GLSL.
+    \remarks Equivalent of <code>[partitioning("fractional_odd")]</code> in HLSL and <code>layout(fractional_odd_spacing)</code> in GLSL.
     */
     FractionalOdd,
 
     /**
     \brief Partition with an even, fractional number.
-    \remarks Equivalent of <code>[partitioning("fractional_even")]</code> in HLSL and <code>layout(fractional_even_spacing) in GLSL.
+    \remarks Equivalent of <code>[partitioning("fractional_even")]</code> in HLSL and <code>layout(fractional_even_spacing)</code> in GLSL.
     */
     FractionalEven,
 };

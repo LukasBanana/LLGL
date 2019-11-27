@@ -387,7 +387,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
             if (auto window = GetWindowFromUserData(wnd))
             {
                 auto timerID = window->GetBehavior().moveAndResizeTimerID;
-                if (timerID != invalidWindowTimerID)
+                if (timerID != Constants::invalidTimerID)
                 {
                     /* Start timer */
                     SetTimer(wnd, timerID, USER_TIMER_MINIMUM, nullptr);
@@ -401,7 +401,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
             if (auto window = GetWindowFromUserData(wnd))
             {
                 auto timerID = window->GetBehavior().moveAndResizeTimerID;
-                if (timerID != invalidWindowTimerID)
+                if (timerID != Constants::invalidTimerID)
                 {
                     /* Stop timer */
                     KillTimer(wnd, timerID);

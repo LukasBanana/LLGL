@@ -101,7 +101,6 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \brief Validates the composition of the specified shader attachments.
         \param[in] shaders Array of Shader objects that belong to this shader program. Null pointers within the array are ignored.
         \param[in] numShaders Specifies the number of entries in the array 'shaders'. This must not be larger than the number of entries in the 'shaders' array.
-        \param[in] useMetalSemantics Specifies whether Metal semantics is enabled to allow a compute kernel and a post-tessellation vertex shader in the same shader composition.
         \return True if the shader composition is valid, otherwise false.
         \remarks For example, a composition of a compute shader and a fragment shader is invalid,
         but a composition of a vertex shader and a fragment shader is valid.
