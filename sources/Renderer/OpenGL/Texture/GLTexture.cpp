@@ -51,8 +51,7 @@ static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
         desc.mipLevels == 1 &&
         (desc.type == TextureType::Texture2D || desc.type == TextureType::Texture2DMS) &&
         (attachmentBindFlags == BindFlags::ColorAttachment || attachmentBindFlags == BindFlags::DepthStencilAttachment) &&
-        ((desc.miscFlags & MiscFlags::NoInitialData) != 0) &&
-        (desc.cpuAccessFlags == 0)
+        ((desc.miscFlags & MiscFlags::NoInitialData) != 0)
     );
 }
 
@@ -209,10 +208,9 @@ TextureDescriptor GLTexture::GetDesc() const
 {
     TextureDescriptor texDesc;
 
-    texDesc.type            = GetType();
-    texDesc.bindFlags       = 0;
-    texDesc.cpuAccessFlags  = 0;
-    texDesc.mipLevels       = static_cast<std::uint32_t>(GetNumMipLevels());
+    texDesc.type        = GetType();
+    texDesc.bindFlags   = 0;
+    texDesc.mipLevels   = static_cast<std::uint32_t>(GetNumMipLevels());
 
     /* Query hardware texture format and size */
     GLint extent[3] = {}, samples = 1;

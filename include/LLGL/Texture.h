@@ -51,7 +51,7 @@ class LLGL_EXPORT Texture : public Resource
         - \c arrayLayers
         - \c mipLevels
         - \c samples
-        \remarks All other attributes (such as \c bindFlags, \c cpuAccessFlags, \c miscFlags etc.) cannot be queried by this function.
+        \remarks All other attributes (such as \c bindFlags, \c miscFlags etc.) cannot be queried by this function.
         Those attributes are either set to zero (for flags) or the default value specified in TextureDescriptor is used.
         \see TextureDescriptor
         \see Buffer::GetDesc

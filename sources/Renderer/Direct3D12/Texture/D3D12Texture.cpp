@@ -93,12 +93,11 @@ TextureDescriptor D3D12Texture::GetDesc() const
 
     auto desc = resource_.native->GetDesc();
 
-    texDesc.type            = GetType();
-    texDesc.bindFlags       = 0;
-    texDesc.cpuAccessFlags  = 0;
-    texDesc.miscFlags       = 0;
-    texDesc.format          = D3D12Types::Unmap(desc.Format);
-    texDesc.mipLevels       = desc.MipLevels;
+    texDesc.type        = GetType();
+    texDesc.bindFlags   = 0;
+    texDesc.miscFlags   = 0;
+    texDesc.format      = D3D12Types::Unmap(desc.Format);
+    texDesc.mipLevels   = desc.MipLevels;
 
     switch (GetType())
     {

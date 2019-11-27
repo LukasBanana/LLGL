@@ -16,7 +16,6 @@ TextureDescriptor::TextureDescriptor()
 {
     Type            = TextureType::Texture2D;
     BindFlags       = SharpLLGL::BindFlags::Sampled | SharpLLGL::BindFlags::ColorAttachment;
-    CPUAccessFlags  = SharpLLGL::CPUAccessFlags::None;
     MiscFlags       = SharpLLGL::MiscFlags::FixedSamples | SharpLLGL::MiscFlags::GenerateMips;
     Format          = SharpLLGL::Format::RGBA8UNorm;
     Extent          = gcnew Extent3D(1, 1, 1);

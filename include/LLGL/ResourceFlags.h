@@ -159,7 +159,6 @@ struct BindFlags
 /**
 \brief CPU read/write access flag enumeration.
 \see BufferDescriptor::cpuAccessFlags
-\see TextureDescriptor::cpuAccessFlags
 \see CPUAccess
 */
 struct CPUAccessFlags

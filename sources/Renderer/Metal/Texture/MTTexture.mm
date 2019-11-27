@@ -130,7 +130,6 @@ TextureDescriptor MTTexture::GetDesc() const
 
     texDesc.type            = GetType();
     texDesc.bindFlags       = 0;
-    texDesc.cpuAccessFlags  = 0;
     texDesc.miscFlags       = 0;
     texDesc.mipLevels       = static_cast<std::uint32_t>([native_ mipmapLevelCount]);
     texDesc.format          = MTTypes::ToFormat([native_ pixelFormat]);

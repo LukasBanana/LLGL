@@ -158,7 +158,6 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
 
     // Store parameters in descriptors
     texDesc_.bindFlags      = LLGL::BindFlags::Sampled;
-    texDesc_.cpuAccessFlags = 0;
     texDesc_.miscFlags      = 0;
     texDesc_.extent.width   = static_cast<std::uint32_t>(header.width);
     texDesc_.extent.height  = static_cast<std::uint32_t>(header.height);

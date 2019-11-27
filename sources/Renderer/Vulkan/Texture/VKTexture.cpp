@@ -70,12 +70,11 @@ TextureDescriptor VKTexture::GetDesc() const
 {
     TextureDescriptor texDesc;
 
-    texDesc.type            = GetType();
-    texDesc.bindFlags       = 0;
-    texDesc.cpuAccessFlags  = 0;
-    texDesc.miscFlags       = 0;
-    texDesc.format          = VKTypes::Unmap(GetVkFormat());
-    texDesc.mipLevels       = numMipLevels_;
+    texDesc.type        = GetType();
+    texDesc.bindFlags   = 0;
+    texDesc.miscFlags   = 0;
+    texDesc.format      = VKTypes::Unmap(GetVkFormat());
+    texDesc.mipLevels   = numMipLevels_;
 
     switch (texDesc.type)
     {

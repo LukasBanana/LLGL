@@ -149,12 +149,9 @@ D3D11_USAGE DXGetCPUAccessBufferUsage(const BufferDescriptor& desc)
     return D3D11_USAGE_DEFAULT;
 }
 
-D3D11_USAGE DXGetTextureUsage(const TextureDescriptor& desc)
+// Originally used to select usage type if 'cpuAccessFlags' are specified, but no longer supported for textures
+D3D11_USAGE DXGetTextureUsage(const TextureDescriptor& /*desc*/)
 {
-    if ((desc.cpuAccessFlags & CPUAccessFlags::Read) != 0)
-        return D3D11_USAGE_STAGING;
-    if ((desc.cpuAccessFlags & CPUAccessFlags::Write) != 0)
-        return D3D11_USAGE_DYNAMIC;
     return D3D11_USAGE_DEFAULT;
 }
 

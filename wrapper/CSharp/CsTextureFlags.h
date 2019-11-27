@@ -54,7 +54,6 @@ public ref class TextureDescriptor
 
         property TextureType    Type;
         property BindFlags      BindFlags;
-        property CPUAccessFlags CPUAccessFlags;
         property MiscFlags      MiscFlags;
         property Format         Format;
         property Extent3D^      Extent;

@@ -428,7 +428,6 @@ static void Convert(LLGL::TextureDescriptor& dst, TextureDescriptor^ src)
     {
         dst.type            = static_cast<LLGL::TextureType>(src->Type);
         dst.bindFlags       = static_cast<long>(src->BindFlags);
-        dst.cpuAccessFlags  = static_cast<long>(src->CPUAccessFlags);
         dst.miscFlags       = static_cast<long>(src->MiscFlags);
         Convert(dst.extent, src->Extent);
         dst.arrayLayers     = src->ArrayLayers;

@@ -796,7 +796,6 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc, const S
     ValidateTextureDescMipLevels(desc);
     ValidateArrayTextureLayers(desc.type, desc.arrayLayers);
     ValidateBindFlags(desc.bindFlags);
-    ValidateCPUAccessFlags(desc.cpuAccessFlags, CPUAccessFlags::ReadWrite, "texture");
     ValidateMiscFlags(desc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::FixedSamples | MiscFlags::GenerateMips | MiscFlags::NoInitialData), "texture");
 
     /* Check if MIP-map generation is requested  */

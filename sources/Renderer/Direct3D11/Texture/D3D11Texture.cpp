@@ -101,10 +101,9 @@ TextureDescriptor D3D11Texture::GetDesc() const
     /* Initialize texture descriptor */
     TextureDescriptor texDesc;
 
-    texDesc.type            = GetType();
-    texDesc.bindFlags       = 0;
-    texDesc.cpuAccessFlags  = 0;
-    texDesc.miscFlags       = 0;
+    texDesc.type        = GetType();
+    texDesc.bindFlags   = 0;
+    texDesc.miscFlags   = 0;
 
     /* Get resource dimension to query the respective D3D descriptor */
     D3D11_RESOURCE_DIMENSION dimension;
