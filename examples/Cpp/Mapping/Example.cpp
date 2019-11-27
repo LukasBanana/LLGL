@@ -97,7 +97,7 @@ private:
             layoutDesc.bindings =
             {
                 LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, 0 },
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Sampler, 0,                        LLGL::StageFlags::FragmentStage, (IsVulkan() ? 1u : 0u) },
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Sampler, 0,                        LLGL::StageFlags::FragmentStage, (IsVulkan() || IsMetal() ? 1u : 0u) },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

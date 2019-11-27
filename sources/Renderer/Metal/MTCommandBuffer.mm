@@ -230,7 +230,46 @@ void MTCommandBuffer::CopyTextureFromBuffer(
     std::uint32_t           rowStride,
     std::uint32_t           layerStride)
 {
-    //TODO
+    auto& dstTextureMT = LLGL_CAST(MTTexture&, dstTexture);
+    auto& srcBufferMT = LLGL_CAST(MTBuffer&, srcBuffer);
+
+    /* Determine actual row and layer strides */
+    const auto format = MTTypes::ToFormat([dstTextureMT.GetNative() pixelFormat]);
+    const auto rowSize = TextureBufferSize(format, dstRegion.extent.width);
+
+    if (rowStride == 0)
+        rowStride = rowSize;
+    if (layerStride == 0)
+        layerStride = rowStride * dstRegion.extent.height;
+
+    /* Convert to Metal origin and size */
+    MTLOrigin dstOrigin;
+    MTTypes::Convert(dstOrigin, dstRegion.offset);
+
+    MTLSize srcSize;
+    MTTypes::Convert(srcSize, dstRegion.extent);
+
+    /* Encode blit commands to copy texture form buffer */
+    encoderScheduler_.PauseRenderEncoder();
+    {
+        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+        for (std::uint32_t arrayLayer = 0; arrayLayer < dstRegion.subresource.numArrayLayers; ++arrayLayer)
+        {
+            [blitEncoder
+                copyFromBuffer:         srcBufferMT.GetNative()
+                sourceOffset:           static_cast<NSUInteger>(srcOffset)
+                sourceBytesPerRow:      rowStride
+                sourceBytesPerImage:    layerStride
+                sourceSize:             srcSize
+                toTexture:              dstTextureMT.GetNative()
+                destinationSlice:       (dstRegion.subresource.baseArrayLayer + arrayLayer)
+                destinationLevel:       dstRegion.subresource.baseMipLevel
+                destinationOrigin:      dstOrigin
+            ];
+            srcOffset += layerStride;
+        }
+    }
+    encoderScheduler_.ResumeRenderEncoder();
 }
 
 void MTCommandBuffer::GenerateMips(Texture& texture)
