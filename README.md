@@ -21,16 +21,12 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 
 ## Platform Support
 
-| Platform | Remarks | CI | D3D12 | D3D11 | Vulkan | OpenGL | Metal |
-|----------|---------|:--:|:------:|:------:|:-----:|:-----:|:-----:|
-| Windows | Tested on *Windows 10* | [![Windows Build](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A |
-| GNU/Linux | Tested on *Kubuntu 16* | [![GNU/Linux Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_LINUX&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A |
-| macOS | Tested on *macOS Sierra* | [![macOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: |
-| iOS | Tested on *macOS Mojave* | [![iOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_IOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_multiplication_x: | :heavy_check_mark: |
-
-| Language Binding | Progress | Remarks |
-|------------------|:--------:|---------|
-| C# | 30% | Experimental state |
+| Platform | CI | D3D12 | D3D11 | Vulkan | OpenGL | Metal |
+|----------|:--:|:------:|:------:|:-----:|:-----:|:-----:|
+| Windows | [![Windows Build](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A |
+| GNU/Linux | [![GNU/Linux Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_LINUX&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A |
+| macOS | [![macOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: |
+| iOS | [![iOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_IOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_multiplication_x: | :heavy_check_mark: |
 
 
 ## Build Notes
