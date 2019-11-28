@@ -802,7 +802,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithClearValue(
 
             /* Update only the first MIP-map level for each array slice */
             imageDescDefault.data       = imageBuffer.get();
-            imageDescDefault.dataSize   = ImageDataSize(imageDescDefault.format, imageDescDefault.dataType, imageSize);
+            imageDescDefault.dataSize   = GetMemoryFootprint(imageDescDefault.format, imageDescDefault.dataType, imageSize);
 
             for (std::uint32_t layer = 0; layer < arrayLayers; ++layer)
             {

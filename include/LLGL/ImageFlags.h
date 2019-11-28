@@ -116,40 +116,6 @@ struct DstImageDescriptor
 */
 
 /**
-\brief Returns the size (in number of components) of the specified image format.
-\param[in] imageFormat Specifies the image format.
-\return Number of components of the specified image format, or 0 if \c imageFormat specifies a compressed color format.
-\note Compressed formats are not supported.
-\see IsCompressedFormat(const ImageFormat)
-\see ImageFormat
-*/
-LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat);
-
-/**
-\brief Returns the required data size (in bytes) of an image with the specified format, data type, and number of pixels.
-\param[in] imageFormat Specifies the image format.
-\param[in] dataType Specifies the data type of each pixel component.
-\param[in] numPixels Specifies the number of picture elements (pixels).
-\remarks The counterpart for hardware textures is the GetMemoryFootprint function.
-\see GetMemoryFootprint
-*/
-LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat imageFormat, const DataType dataType, std::uint32_t numPixels);
-
-/**
-\brief Returns true if the specified color format is a compressed format,
-i.e. either ImageFormat::CompressedRGB, or ImageFormat::CompressedRGBA.
-\see ImageFormat
-*/
-LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat);
-
-/**
-\brief Returns true if the specified color format is a depth-stencil format,
-i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
-\see ImageFormat
-*/
-LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat);
-
-/**
 \brief Converts the image format and data type of the source image (only uncompressed color formats).
 \param[in] srcImageDesc Specifies the source image descriptor.
 \param[out] dstImageDesc Specifies the destination image descriptor.

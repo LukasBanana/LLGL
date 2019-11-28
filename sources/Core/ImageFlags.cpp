@@ -543,65 +543,17 @@ static void ConvertImageBufferFormat(
     }
 }
 
-
-/* ----- Public functions ----- */
-
-LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
-{
-    switch (imageFormat)
-    {
-        case ImageFormat::Alpha:            return 1;
-        case ImageFormat::R:                return 1;
-        case ImageFormat::RG:               return 2;
-        case ImageFormat::RGB:              return 3;
-        case ImageFormat::BGR:              return 3;
-        case ImageFormat::RGBA:             return 4;
-        case ImageFormat::BGRA:             return 4;
-        case ImageFormat::ARGB:             return 4;
-        case ImageFormat::ABGR:             return 4;
-        case ImageFormat::Depth:            return 1;
-        case ImageFormat::DepthStencil:     return 2;
-        case ImageFormat::BC1:              return 0; // no conversion supported yet
-        case ImageFormat::BC2:              return 0; // no conversion supported yet
-        case ImageFormat::BC3:              return 0; // no conversion supported yet
-        case ImageFormat::BC4:              return 0; // no conversion supported yet
-        case ImageFormat::BC5:              return 0; // no conversion supported yet
-    }
-    return 0;
-}
-
-// Returns the number of bytes per pixel for the specified imagea format and data type
-static std::uint32_t GetBytesPerPixel(const ImageFormat imageFormat, const DataType dataType)
-{
-    return (ImageFormatSize(imageFormat) * DataTypeSize(dataType));
-}
-
-LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat imageFormat, const DataType dataType, std::uint32_t numPixels)
-{
-    return (GetBytesPerPixel(imageFormat, dataType) * numPixels);
-}
-
-LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat)
-{
-    return (imageFormat >= ImageFormat::BC1 && imageFormat <= ImageFormat::BC5);
-}
-
-LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat)
-{
-    return (imageFormat == ImageFormat::Depth || imageFormat == ImageFormat::DepthStencil);
-}
-
 static void ValidateSourceImageDesc(const SrcImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);
-    if (imageDesc.dataSize % GetBytesPerPixel(imageDesc.format, imageDesc.dataType) != 0)
+    if (imageDesc.dataSize % GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1) != 0)
         throw std::invalid_argument("source image data size is not a multiple of the source data type size");
 }
 
 static void ValidateDestinationImageDesc(const DstImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);
-    if (imageDesc.dataSize % GetBytesPerPixel(imageDesc.format, imageDesc.dataType) != 0)
+    if (imageDesc.dataSize % GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1) != 0)
         throw std::invalid_argument("destination image data size is not a multiple of the destination data type size");
 }
 
@@ -615,6 +567,9 @@ static void ValidateImageConversionParams(
     if (IsDepthStencilFormat(srcImageDesc.format) || IsDepthStencilFormat(dstFormat))
         throw std::invalid_argument("cannot convert depth-stencil image formats");
 }
+
+
+/* ----- Public functions ----- */
 
 LLGL_EXPORT bool ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
@@ -820,7 +775,7 @@ LLGL_EXPORT void CopyImageBufferRegion(
     if (srcImageDesc.format != dstImageDesc.format || srcImageDesc.dataType != dstImageDesc.dataType)
         throw std::invalid_argument("cannot copy image buffer region with source and destination images having different format or data type");
 
-    const auto bpp = GetBytesPerPixel(dstImageDesc.format, dstImageDesc.dataType);
+    const auto bpp = GetMemoryFootprint(dstImageDesc.format, dstImageDesc.dataType, 1);
 
     /* Validate destination image boundaries */
     const auto dstPos       = GetFlattenedImageBufferPos(dstOffset.x, dstOffset.y, dstOffset.z, dstRowStride, dstSliceStride, bpp);

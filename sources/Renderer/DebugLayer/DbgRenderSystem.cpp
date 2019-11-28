@@ -984,7 +984,7 @@ void DbgRenderSystem::ValidateImageDataSize(const DbgTexture& textureDbg, const 
     const auto& subresource         = textureRegion.subresource;
     const auto  baseSubresource     = TextureSubresource{ 0, subresource.numArrayLayers, 0, subresource.numMipLevels };
     const auto  numTexels           = NumMipTexels(textureDbg.desc.type, textureRegion.extent, baseSubresource);
-    const auto  requiredDataSize    = ImageDataSize(imageFormat, dataType, numTexels);
+    const auto  requiredDataSize    = GetMemoryFootprint(imageFormat, dataType, numTexels);
 
     /* Ignore compressed formats */
     if (requiredDataSize != 0)

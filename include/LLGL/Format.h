@@ -433,15 +433,31 @@ struct FormatAttributes
 LLGL_EXPORT const FormatAttributes& GetFormatAttribs(const Format format);
 
 /**
+\brief Returns the size (in number of components) of the specified image format.
+\param[in] imageFormat Specifies the image format.
+\return Number of components of the specified image format, or 0 if \c imageFormat specifies a compressed color format.
+\note Compressed formats are not supported.
+\see IsCompressedFormat(const ImageFormat)
+\see ImageFormat
+*/
+LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat);
+
+/**
 \brief Returns the memory footprint (in bytes) of a texture or buffer with the specified hardware format and number of elements.
 \param[in] format Specifies the texture format.
 \param[in] count Specifies the number of elements that make up the memory footprint.
 For the DXT compressed formats, this must be a multiple of 16, since these formats compress images in 4x4 texel blocks.
 \return The memory footprint size (in bytes), or zero if the input is invalid.
-\remarks The counterpart for image data is the function ImageDataSize.
-\see ImageDataSize
 */
 LLGL_EXPORT std::uint32_t GetMemoryFootprint(const Format format, std::uint32_t count);
+
+/**
+\brief Returns the required data size (in bytes) of an image with the specified format, data type, and number of pixels.
+\param[in] imageFormat Specifies the image format.
+\param[in] dataType Specifies the data type of each pixel component.
+\param[in] count Specifies the number of elements that make up the memory footprint.
+*/
+LLGL_EXPORT std::uint32_t GetMemoryFootprint(const ImageFormat imageFormat, const DataType dataType, std::uint32_t count);
 
 /**
 \brief Returns true if the specified hardware format is a compressed format,
@@ -451,11 +467,25 @@ e.g. Format::BC1UNorm, Format::BC2UNorm_sRGB, Format::BC4SNorm, etc.
 LLGL_EXPORT bool IsCompressedFormat(const Format format);
 
 /**
+\brief Returns true if the specified color format is a compressed format,
+i.e. either ImageFormat::CompressedRGB, or ImageFormat::CompressedRGBA.
+\see ImageFormat
+*/
+LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat);
+
+/**
 \brief Returns true if the specified hardware format is a depth or depth-stencil format,
 i.e. Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, or Format::D32FloatS8X24UInt.
 \see Format
 */
 LLGL_EXPORT bool IsDepthStencilFormat(const Format format);
+
+/**
+\brief Returns true if the specified color format is a depth-stencil format,
+i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
+\see ImageFormat
+*/
+LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat);
 
 /**
 \brief Returns true if the specified hardware format is a depth format,

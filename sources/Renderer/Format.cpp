@@ -193,15 +193,60 @@ std::uint32_t GetMemoryFootprint(const Format format, std::uint32_t numTexels)
         return 0;
 }
 
+LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
+{
+    switch (imageFormat)
+    {
+        case ImageFormat::Alpha:            return 1;
+        case ImageFormat::R:                return 1;
+        case ImageFormat::RG:               return 2;
+        case ImageFormat::RGB:              return 3;
+        case ImageFormat::BGR:              return 3;
+        case ImageFormat::RGBA:             return 4;
+        case ImageFormat::BGRA:             return 4;
+        case ImageFormat::ARGB:             return 4;
+        case ImageFormat::ABGR:             return 4;
+        case ImageFormat::Depth:            return 1;
+        case ImageFormat::DepthStencil:     return 2;
+        case ImageFormat::BC1:              return 0; // no conversion supported yet
+        case ImageFormat::BC2:              return 0; // no conversion supported yet
+        case ImageFormat::BC3:              return 0; // no conversion supported yet
+        case ImageFormat::BC4:              return 0; // no conversion supported yet
+        case ImageFormat::BC5:              return 0; // no conversion supported yet
+    }
+    return 0;
+}
+
+// Returns the number of bytes per pixel for the specified imagea format and data type
+static std::uint32_t GetBytesPerPixel(const ImageFormat imageFormat, const DataType dataType)
+{
+    return (ImageFormatSize(imageFormat) * DataTypeSize(dataType));
+}
+
+LLGL_EXPORT std::uint32_t GetMemoryFootprint(const ImageFormat imageFormat, const DataType dataType, std::uint32_t count)
+{
+    return (GetBytesPerPixel(imageFormat, dataType) * count);
+}
+
 LLGL_EXPORT bool IsCompressedFormat(const Format format)
 {
     return ((GetFormatAttribs(format).flags & FormatFlags::IsCompressed) != 0);
+}
+
+LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat)
+{
+    return (imageFormat >= ImageFormat::BC1 && imageFormat <= ImageFormat::BC5);
 }
 
 LLGL_EXPORT bool IsDepthStencilFormat(const Format format)
 {
     const auto& formatAttribs = GetFormatAttribs(format);
     return ((formatAttribs.flags & (FormatFlags::HasDepth | FormatFlags::HasStencil)) != 0);
+}
+
+LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat)
+{
+    return (imageFormat == ImageFormat::Depth || imageFormat == ImageFormat::DepthStencil);
 }
 
 LLGL_EXPORT bool IsDepthFormat(const Format format)

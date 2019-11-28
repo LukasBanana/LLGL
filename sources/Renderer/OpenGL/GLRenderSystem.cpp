@@ -366,7 +366,7 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
         if (useStaging)
         {
-            dataSize            = ImageDataSize(imageDesc.format, imageDesc.dataType, mipExtent.width * mipExtent.height * mipExtent.depth);
+            dataSize            = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, mipExtent.width * mipExtent.height * mipExtent.depth);
             intermediateData    = GenerateEmptyByteBuffer(dataSize, false);
             data                = intermediateData.get();
         }

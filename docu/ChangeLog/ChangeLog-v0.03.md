@@ -390,6 +390,7 @@ Format::BC2RGBA                        --> Format::BC2UNorm
 Format::BC3RGBA                        --> Format::BC3UNorm
 FrameProfile::rwStorageBufferBindings  --> FrameProfile::storageBufferBindings
 FrameProfile::sampleBufferBindings     --> FrameProfile::sampledBufferBindings
+ImageDataSize                          --> GetMemoryFootprint
 Image::QueryDstDesc                    --> Display::GetDstDesc
 Image::QuerySrcDesc                    --> Display::GetSrcDesc
 RenderingFeatures::hasCommandBufferExt --> RenderingFeatures::hasDirectResourceBinding
