@@ -18,8 +18,8 @@ namespace LLGL
 {
 
 
-D3D11Texture::D3D11Texture(const TextureType type) :
-    Texture { type }
+D3D11Texture::D3D11Texture(const TextureDescriptor& desc) :
+    Texture { desc.type, desc.bindFlags }
 {
 }
 

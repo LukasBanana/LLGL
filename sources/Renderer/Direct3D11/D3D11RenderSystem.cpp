@@ -170,7 +170,7 @@ void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
 Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     /* Create texture object and store type */
-    auto texture = MakeUnique<D3D11Texture>(textureDesc.type);
+    auto texture = MakeUnique<D3D11Texture>(textureDesc);
 
     /* Bulid generic texture */
     switch (textureDesc.type)

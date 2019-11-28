@@ -42,6 +42,15 @@ class LLGL_EXPORT Texture : public Resource
             return type_;
         }
 
+        /*
+        \brief Returns the binding flags this texture was created with.
+        \see TextureDescriptor::bindFlags
+        */
+        inline long GetBindFlags() const
+        {
+            return bindFlags_;
+        }
+
         /**
         \brief Queries a descriptor of this texture.
         \remarks This function only queries the following attributes:
@@ -75,11 +84,12 @@ class LLGL_EXPORT Texture : public Resource
 
     protected:
 
-        Texture(const TextureType type);
+        Texture(const TextureType type, long bindFlags);
 
     private:
 
         TextureType type_;
+        long        bindFlags_  = 0;
 
 };
 

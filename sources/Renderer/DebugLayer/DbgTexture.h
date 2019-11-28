@@ -30,7 +30,7 @@ class DbgTexture final : public Texture
     public:
 
         DbgTexture(Texture& instance, const TextureDescriptor& desc);
-        DbgTexture(Texture& instance, DbgTexture* sharedTexture, const TextureViewDescriptor& desc);
+        //DbgTexture(Texture& instance, DbgTexture* sharedTexture, const TextureViewDescriptor& desc);
         ~DbgTexture();
 
     public:
@@ -44,8 +44,8 @@ class DbgTexture final : public Texture
 
     private:
 
-        DbgTexture*             sharedTexture_      = nullptr;  // Reference to the shared texture (only for texture-views)
-        std::set<DbgTexture*>   sharedTextureViews_;             // List of texture views that share the image data with this texture
+        //DbgTexture*             sharedTexture_      = nullptr;  // Reference to the shared texture (only for texture-views)
+        //std::set<DbgTexture*>   sharedTextureViews_;             // List of texture views that share the image data with this texture
 
 };
 

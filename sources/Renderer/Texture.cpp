@@ -12,8 +12,9 @@ namespace LLGL
 {
 
 
-Texture::Texture(const TextureType type) :
-    type_ { type }
+Texture::Texture(const TextureType type, long bindFlags) :
+    type_      { type      },
+    bindFlags_ { bindFlags }
 {
 }
 

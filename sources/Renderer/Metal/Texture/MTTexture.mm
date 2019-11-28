@@ -68,7 +68,7 @@ static void Convert(MTLTextureDescriptor* dst, const TextureDescriptor& src)
 }
 
 MTTexture::MTTexture(id<MTLDevice> device, const TextureDescriptor& desc) :
-    Texture { desc.type }
+    Texture { desc.type, desc.bindFlags }
 {
     MTLTextureDescriptor* texDesc = [[MTLTextureDescriptor alloc] init];
     Convert(texDesc, desc);

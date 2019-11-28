@@ -21,7 +21,7 @@ VKTexture::VKTexture(
     VKDeviceMemoryManager&      deviceMemoryMngr,
     const TextureDescriptor&    desc)
 :
-    Texture       { desc.type                  },
+    Texture       { desc.type, desc.bindFlags  },
     imageWrapper_ { device                     },
     imageView_    { device, vkDestroyImageView },
     format_       { VKTypes::Map(desc.format)  }

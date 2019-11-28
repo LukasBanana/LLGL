@@ -117,12 +117,6 @@ class D3D12Texture final : public Texture
             return numArrayLayers_;
         }
 
-        // Returns the binding flags this texture was created with.
-        inline long GetBindFlags() const
-        {
-            return bindFlags_;
-        }
-
         // Returns the entire texture subresource.
         inline TextureSubresource GetWholeSubresource() const
         {
@@ -165,7 +159,6 @@ class D3D12Texture final : public Texture
         DXGI_FORMAT                     format_         = DXGI_FORMAT_UNKNOWN;
         UINT                            numMipLevels_   = 0;
         UINT                            numArrayLayers_ = 0;
-        long                            bindFlags_      = 0;
 
         ComPtr<ID3D12DescriptorHeap>    mipDescHeap_;
 

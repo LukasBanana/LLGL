@@ -60,7 +60,7 @@ class D3D11Texture final : public Texture
 
     public:
 
-        D3D11Texture(const TextureType type);
+        D3D11Texture(const TextureDescriptor& desc);
 
         /* ----- Extended internal functions ---- */
 

@@ -22,11 +22,10 @@ namespace LLGL
 
 
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
-    Texture         { desc.type                      },
+    Texture         { desc.type, desc.bindFlags      },
     format_         { D3D12Types::Map(desc.format)   },
     numMipLevels_   { NumMipLevels(desc)             },
-    numArrayLayers_ { std::max(1u, desc.arrayLayers) },
-    bindFlags_      { desc.bindFlags                 }
+    numArrayLayers_ { std::max(1u, desc.arrayLayers) }
 {
     CreateNativeTexture(device, desc);
     if (SupportsGenerateMips())

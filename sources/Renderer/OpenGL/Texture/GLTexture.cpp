@@ -68,7 +68,7 @@ static GLSwizzleFormat MapSwizzleFormat(const Format format)
 }
 
 GLTexture::GLTexture(const TextureDescriptor& desc) :
-    Texture         { desc.type                                },
+    Texture         { desc.type, desc.bindFlags                },
     numMipLevels_   { static_cast<GLsizei>(NumMipLevels(desc)) },
     isRenderbuffer_ { IsRenderbufferSufficient(desc)           },
     swizzleFormat_  { MapSwizzleFormat(desc.format)            }
