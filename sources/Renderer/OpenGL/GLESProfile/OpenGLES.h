@@ -1,12 +1,12 @@
 /*
- * OpenGLES3.h
+ * OpenGLES.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_OPENGLES3_H
-#define LLGL_OPENGLES3_H
+#ifndef LLGL_OPENGLES_H
+#define LLGL_OPENGLES_H
 
 
 #include <LLGL/Platform/Platform.h>

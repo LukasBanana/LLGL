@@ -26,7 +26,11 @@ else()
 endif()
 
 macro(ADD_DEFINE IDENT)
-    add_definitions(-D${IDENT})
+    add_definitions("-D${IDENT}")
+endmacro()
+
+macro(ADD_PROJECT_DEFINE TARGET_NAME IDENT)
+    target_compile_definitions(${TARGET_NAME} PRIVATE "-D${IDENT}")
 endmacro()
 
 macro(ADD_DEBUG_DEFINE IDENT)
@@ -107,7 +111,7 @@ option(LLGL_BUILD_TESTS "Include test projects" OFF)
 option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
 
 if(MOBILE_PLATFORM)
-    option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGL ES 3 renderer project" ON)
+    option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
 else()
     option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL renderer project" ON)
 endif()
@@ -248,6 +252,8 @@ file(GLOB FilesRendererGLPlatformBase       ${PROJECT_SOURCE_DIR}/sources/Render
 file(GLOB FilesRendererGLRenderState        ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/RenderState/*.*)
 file(GLOB FilesRendererGLShader             ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/*.*)
 file(GLOB FilesRendererGLTexture            ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/*.*)
+file(GLOB FilesRendererGLCoreProfile        ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/GLCoreProfile/*.*)
+file(GLOB FilesRendererGLESProfile          ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/GLESProfile/*.*)
 
 if(WIN32)
     file(GLOB FilesRendererGLPlatform       ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
@@ -259,7 +265,7 @@ if(WIN32)
     endif()
 elseif(APPLE)
     if(MOBILE_PLATFORM)
-        file(GLOB FilesRendererGLPlatform   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES/Platform/IOS/*.*)
+        file(GLOB FilesRendererGLPlatform   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/IOS/*.*)
         file(GLOB FilesIncludePlatform      ${PROJECT_INCLUDE_DIR}/LLGL/Platform/IOS/*.*)
         set(SUMMARY_TARGET_PLATFORM "iOS")
     else()
@@ -272,9 +278,6 @@ elseif(UNIX)
     file(GLOB FilesIncludePlatform          ${PROJECT_INCLUDE_DIR}/LLGL/Platform/Linux/*.*)
     set(SUMMARY_TARGET_PLATFORM "Linux")
 endif()
-
-# OpenGLES3 renderer files
-file(GLOB FilesRendererGLES3                ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES3/*.*)
 
 # SPIR-V renderer files
 file(GLOB FilesRendererSPIRV                ${PROJECT_SOURCE_DIR}/sources/Renderer/SPIRV/*.*)
@@ -404,8 +407,8 @@ source_group("Sources\\OpenGL\\Platform" FILES ${FilesRendererGLPlatformBase} ${
 source_group("Sources\\OpenGL\\RenderState" FILES ${FilesRendererGLRenderState})
 source_group("Sources\\OpenGL\\Shader" FILES ${FilesRendererGLShader})
 source_group("Sources\\OpenGL\\Texture" FILES ${FilesRendererGLTexture})
-
-source_group("Sources\\OpenGLES3" FILES ${FilesRendererGLES3})
+source_group("Sources\\OpenGL\\GLCoreProfile" FILES ${FilesRendererGLCoreProfile})
+source_group("Sources\\OpenGL\\GLESProfile" FILES ${FilesRendererGLESProfile})
 
 source_group("Sources\\SPIRV" FILES ${FilesRendererSPIRV})
 
@@ -495,13 +498,23 @@ set(
     ${FilesRendererGLRenderState}
     ${FilesRendererGLShader}
     ${FilesRendererGLTexture}
+    ${FilesRendererGLCoreProfile}
 )
 
 set(
     FilesGLES3
-    ${FilesRendererGLES3}
+    ${FilesRendererGL}
+    ${FilesRendererGLBuffer}
+    ${FilesRendererGLCommand}
     ${FilesRendererGLCommon}
     ${FilesRendererGLCommonTexture}
+    ${FilesRendererGLExt}
+    ${FilesRendererGLPlatform}
+    ${FilesRendererGLPlatformBase}
+    ${FilesRendererGLRenderState}
+    ${FilesRendererGLShader}
+    ${FilesRendererGLTexture}
+    ${FilesRendererGLESProfile}
 )
 
 set(
@@ -598,6 +611,7 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
         endif()
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_OPENGLES3)
+        ADD_PROJECT_DEFINE(LLGL_OpenGLES3 LLGL_OPENGLES3)
     else()
         message("Missing OpenGL ES -> LLGL_OpenGLES3 renderer will be excluded from project")
     endif()
@@ -624,6 +638,7 @@ if(LLGL_BUILD_RENDERER_OPENGL)
         target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_OPENGL)
+        ADD_PROJECT_DEFINE(LLGL_OpenGL LLGL_OPENGL)
     else()
         message("Missing OpenGL -> LLGL_OpenGL renderer will be excluded from project")
     endif()
@@ -803,7 +818,7 @@ if(LLGL_BUILD_RENDERER_OPENGL AND OpenGL_FOUND)
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3 AND OPENGLES_FOUND)
-    message("Build Renderer: OpenGL ES 3")
+    message("Build Renderer: OpenGLES 3")
     math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
 endif()
 

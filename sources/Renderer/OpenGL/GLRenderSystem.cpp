@@ -6,6 +6,7 @@
  */
 
 #include "GLRenderSystem.h"
+#include "GLProfile.h"
 #include "Texture/GLMipGenerator.h"
 #include "Ext/GLExtensions.h"
 #include "RenderState/GLStatePool.h"
@@ -673,10 +674,10 @@ void GLRenderSystem::QueryRendererInfo()
 {
     RendererInfo info;
 
-    info.rendererName           = "OpenGL " + GLGetString(GL_VERSION);
+    info.rendererName           = GLProfile::GetAPIName() + std::string(" ") + GLGetString(GL_VERSION);
     info.deviceName             = GLGetString(GL_RENDERER);
     info.vendorName             = GLGetString(GL_VENDOR);
-    info.shadingLanguageName    = "GLSL " + GLGetString(GL_SHADING_LANGUAGE_VERSION);
+    info.shadingLanguageName    = GLProfile::GetShadingLanguageName() + std::string(" ") + GLGetString(GL_SHADING_LANGUAGE_VERSION);
 
     SetRendererInfo(info);
 }
