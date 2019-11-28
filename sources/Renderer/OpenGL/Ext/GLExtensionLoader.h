@@ -9,7 +9,7 @@
 #define LLGL_GL_EXTENSION_LOADER_H
 
 
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "GLExtensionRegistry.h"
 #include <string>
 #include <array>
 #include <map>

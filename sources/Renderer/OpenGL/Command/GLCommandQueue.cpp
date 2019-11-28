@@ -13,7 +13,7 @@
 #include "../RenderState/GLQueryHeap.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../CheckedCast.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include <algorithm>
 
 

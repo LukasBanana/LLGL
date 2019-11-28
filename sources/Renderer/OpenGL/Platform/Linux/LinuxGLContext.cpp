@@ -8,7 +8,7 @@
 #include "LinuxGLContext.h"
 #include "../../Ext/GLExtensions.h"
 #include "../../Ext/GLExtensionLoader.h"
-#include "../../../GLCommon/GLCore.h"
+#include "../../GLCore.h"
 #include "../../../CheckedCast.h"
 #include "../../../../Core/Helper.h"
 #include <LLGL/Log.h>

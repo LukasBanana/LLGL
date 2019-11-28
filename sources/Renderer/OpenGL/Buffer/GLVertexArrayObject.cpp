@@ -8,9 +8,10 @@
 #include "GLVertexArrayObject.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../RenderState/GLStateManager.h"
-#include "../../GLCommon/GLTypes.h"
-#include "../../GLCommon/GLCore.h"
+#include "../GLTypes.h"
+#include "../GLCore.h"
 #include "../../../Core/Exception.h"
 
 

@@ -6,9 +6,9 @@
  */
 
 #include "GLShaderBindingLayout.h"
-#include "../../../Core/HelperMacros.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
+#include "../../../Core/HelperMacros.h"
 
 
 namespace LLGL

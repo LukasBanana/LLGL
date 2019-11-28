@@ -10,7 +10,7 @@
 #include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../CheckedCast.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../Ext/GLExtensionRegistry.h"
 
 
 namespace LLGL

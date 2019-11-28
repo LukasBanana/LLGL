@@ -8,8 +8,8 @@
 #include "GL2XVertexArray.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
-#include "../../GLCommon/GLTypes.h"
-#include "../../GLCommon/GLCore.h"
+#include "../GLTypes.h"
+#include "../GLCore.h"
 #include "../../../Core/Exception.h"
 
 

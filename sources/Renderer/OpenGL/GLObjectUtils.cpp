@@ -7,8 +7,8 @@
 
 #include "GLObjectUtils.h"
 #include "Ext/GLExtensions.h"
+#include "Ext/GLExtensionRegistry.h"
 #include "RenderState/GLStateManager.h"
-#include "../GLCommon/GLExtensionRegistry.h"
 #include <string>
 #include <cstring> // std::strlen
 

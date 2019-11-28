@@ -7,7 +7,7 @@
 
 #include "GLBufferWithVAO.h"
 #include "../RenderState/GLStateManager.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../Ext/GLExtensionRegistry.h"
 
 
 namespace LLGL

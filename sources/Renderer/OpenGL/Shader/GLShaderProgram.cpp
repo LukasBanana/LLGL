@@ -8,12 +8,12 @@
 #include "GLShaderProgram.h"
 #include "GLShader.h"
 #include "GLShaderBindingLayout.h"
+#include "../GLTypes.h"
 #include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
 #include "../../CheckedCast.h"
-#include "../../GLCommon/GLTypes.h"
 #include "../../../Core/Exception.h"
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/Constants.h>

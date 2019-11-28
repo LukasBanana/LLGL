@@ -9,7 +9,7 @@
 
 
 #include "../OpenGL.h"
-#include "../../GLCommon/GLCore.h"
+#include "../GLCore.h"
 #include <stdexcept>
 #include <string>
 

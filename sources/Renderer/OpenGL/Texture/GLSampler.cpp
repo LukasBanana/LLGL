@@ -6,10 +6,10 @@
  */
 
 #include "GLSampler.h"
+#include "../GLTypes.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
-#include "../../GLCommon/GLTypes.h"
 
 
 namespace LLGL

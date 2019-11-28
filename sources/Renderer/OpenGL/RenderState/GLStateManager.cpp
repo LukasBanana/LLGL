@@ -14,9 +14,9 @@
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"
-#include "../../GLCommon/GLImportExt.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
-#include "../../GLCommon/GLTypes.h"
+#include "../Ext/GLExtensions.h"
+#include "../Ext/GLExtensionRegistry.h"
+#include "../GLTypes.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
 #include <functional>

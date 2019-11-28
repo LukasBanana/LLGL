@@ -11,7 +11,6 @@
 
 #include <LLGL/ImageFlags.h>
 #include <LLGL/TextureFlags.h>
-//#include <LLGL/RenderSystemFlags.h>
 
 
 namespace LLGL

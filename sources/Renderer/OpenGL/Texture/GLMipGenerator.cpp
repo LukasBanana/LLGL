@@ -8,9 +8,9 @@
 #include "GLMipGenerator.h"
 #include "GLTexture.h"
 #include "../RenderState/GLStateManager.h"
+#include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
-#include "../../GLCommon/GLTypes.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../../CheckedCast.h"
 
 

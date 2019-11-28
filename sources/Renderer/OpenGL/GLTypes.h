@@ -9,7 +9,7 @@
 #define LLGL_GL_TYPES_H
 
 
-#include "GLImport.h"
+#include "OpenGL.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/ImageFlags.h>
 #include <LLGL/BufferFlags.h>

@@ -239,10 +239,6 @@ elseif(UNIX)
     file(GLOB FilesPlatform                 ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/*.*)
 endif()
 
-# OpenGL common renderer files
-file(GLOB FilesRendererGLCommon             ${PROJECT_SOURCE_DIR}/sources/Renderer/GLCommon/*.*)
-file(GLOB FilesRendererGLCommonTexture      ${PROJECT_SOURCE_DIR}/sources/Renderer/GLCommon/Texture/*.*)
-
 # OpenGL renderer files
 file(GLOB FilesRendererGL                   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
 file(GLOB FilesRendererGLBuffer             ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/*.*)
@@ -396,9 +392,6 @@ if(LLGL_ENABLE_DEBUG_LAYER)
     source_group("Sources\\Renderer\\DebugLayer" FILES ${FilesRendererDbg})
 endif()
 
-source_group("Sources\\GLCommon" FILES ${FilesRendererGLCommon})
-source_group("Sources\\GLCommon\\Texture" FILES ${FilesRendererGLCommonTexture})
-
 source_group("Sources\\OpenGL" FILES ${FilesRendererGL})
 source_group("Sources\\OpenGL\\Buffer" FILES ${FilesRendererGLBuffer})
 source_group("Sources\\OpenGL\\Command" FILES ${FilesRendererGLCommand})
@@ -490,8 +483,6 @@ set(
     ${FilesRendererGL}
     ${FilesRendererGLBuffer}
     ${FilesRendererGLCommand}
-    ${FilesRendererGLCommon}
-    ${FilesRendererGLCommonTexture}
     ${FilesRendererGLExt}
     ${FilesRendererGLPlatform}
     ${FilesRendererGLPlatformBase}
@@ -506,8 +497,6 @@ set(
     ${FilesRendererGL}
     ${FilesRendererGLBuffer}
     ${FilesRendererGLCommand}
-    ${FilesRendererGLCommon}
-    ${FilesRendererGLCommonTexture}
     ${FilesRendererGLExt}
     ${FilesRendererGLPlatform}
     ${FilesRendererGLPlatformBase}

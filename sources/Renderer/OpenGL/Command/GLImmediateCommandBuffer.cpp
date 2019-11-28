@@ -14,8 +14,8 @@
 #include "../GLRenderContext.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
-#include "../../GLCommon/GLTypes.h"
-#include "../../GLCommon/GLCore.h"
+#include "../GLTypes.h"
+#include "../GLCore.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
 

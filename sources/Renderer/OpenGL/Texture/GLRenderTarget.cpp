@@ -6,13 +6,13 @@
  */
 
 #include "GLRenderTarget.h"
+#include "../GLCore.h"
+#include "../GLTypes.h"
 #include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../../CheckedCast.h"
-#include "../../GLCommon/GLTypes.h"
-#include "../../GLCommon/GLCore.h"
 #include "../../../Core/Helper.h"
 
 

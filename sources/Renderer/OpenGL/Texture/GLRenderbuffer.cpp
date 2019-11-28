@@ -8,7 +8,7 @@
 #include "GLRenderbuffer.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensions.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../Ext/GLExtensionRegistry.h"
 
 
 namespace LLGL

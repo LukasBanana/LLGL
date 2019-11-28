@@ -8,7 +8,7 @@
 #include "GLFence.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../Ext/GLExtensionRegistry.h"
 
 
 namespace LLGL

@@ -6,9 +6,9 @@
  */
 
 #include "GLRenderingCaps.h"
+#include "GLTypes.h"
 #include "Ext/GLExtensions.h"
-#include "../GLCommon/GLExtensionRegistry.h"
-#include "../GLCommon/GLTypes.h"
+#include "Ext/GLExtensionRegistry.h"
 #include "../../Core/Helper.h"
 #include <cstdint>
 #include <limits>

@@ -7,9 +7,9 @@
 
 #include "GLBlendState.h"
 #include "../Ext/GLExtensions.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
-#include "../../GLCommon/GLCore.h"
-#include "../../GLCommon/GLTypes.h"
+#include "../Ext/GLExtensionRegistry.h"
+#include "../GLCore.h"
+#include "../GLTypes.h"
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/HelperMacros.h"
 #include "../Texture/GLRenderTarget.h"

@@ -17,17 +17,29 @@ namespace ModuleOpenGL
 {
     int GetRendererID()
     {
+        #if defined LLGL_OPENGLES3
+        return RendererID::OpenGLES3;
+        #else
         return RendererID::OpenGL;
+        #endif
     }
 
     const char* GetModuleName()
     {
+        #if defined LLGL_OPENGLES3
+        return "OpenGLES3";
+        #else
         return "OpenGL";
+        #endif
     }
 
     const char* GetRendererName()
     {
+        #if defined LLGL_OPENGLES3
+        return "OpenGLES 3";
+        #else
         return "OpenGL";
+        #endif
     }
 
     RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)

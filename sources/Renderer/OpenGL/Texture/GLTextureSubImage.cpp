@@ -7,8 +7,7 @@
 
 #include "GLTextureSubImage.h"
 #include "../GLTypes.h"
-#include "../GLImport.h"
-#include "../GLImportExt.h"
+#include "../Ext/GLExtensions.h"
 #include <array>
 #include <algorithm>
 

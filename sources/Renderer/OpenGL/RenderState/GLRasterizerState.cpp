@@ -7,9 +7,9 @@
 
 #include "GLRasterizerState.h"
 #include "../Ext/GLExtensions.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
-#include "../../GLCommon/GLCore.h"
-#include "../../GLCommon/GLTypes.h"
+#include "../Ext/GLExtensionRegistry.h"
+#include "../GLCore.h"
+#include "../GLTypes.h"
 #include "../../../Core/HelperMacros.h"
 #include "GLStateManager.h"
 #include <LLGL/PipelineStateFlags.h>

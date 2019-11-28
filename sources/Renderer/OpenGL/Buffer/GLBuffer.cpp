@@ -8,8 +8,8 @@
 #include "GLBuffer.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
-#include "../../GLCommon/GLTypes.h"
-#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../GLTypes.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/Helper.h"
 #include <memory>
 

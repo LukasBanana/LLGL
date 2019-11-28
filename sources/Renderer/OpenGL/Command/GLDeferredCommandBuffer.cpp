@@ -11,8 +11,8 @@
 
 #include "../../TextureUtils.h"
 #include "../GLRenderContext.h"
-#include "../../GLCommon/GLTypes.h"
-#include "../../GLCommon/GLCore.h"
+#include "../GLTypes.h"
+#include "../GLCore.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
 #include "../../CheckedCast.h"

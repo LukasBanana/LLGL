@@ -12,7 +12,7 @@
 #include <LLGL/Platform/Platform.h>
 
 #if defined LLGL_OS_WIN32
-#   include "../../Platform/Win32/Win32LeanAndMean.h"
+#   include "../../../Platform/Win32/Win32LeanAndMean.h"
 #   include <Windows.h>
 #   include <GL/GL.h>
 #   include <GL/glext.h>
@@ -24,7 +24,7 @@
 #elif defined LLGL_OS_MACOS
 #   include <OpenGL/gl3.h>
 #   include <OpenGL/glext.h>
-#   include "Platform/MacOS/MacOSGLExt.h"
+#   include "../Platform/MacOS/MacOSGLExt.h"
 #else
 #   error unsupported platform for OpenGL
 #endif
