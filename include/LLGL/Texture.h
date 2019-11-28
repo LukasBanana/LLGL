@@ -36,6 +36,24 @@ class LLGL_EXPORT Texture : public Resource
         //! Returns ResourceType::Texture.
         ResourceType GetResourceType() const override final;
 
+        /**
+        \brief Returns the memory footprint (in bytes) of the entire texture.
+        \remarks This function uses the member \c GetDesc and the global \c GetMemoryFootprint functions.
+        \see LLGL::GetMemoryFootprint(const Format, std::uint32_t)
+        \see LLGL::GetMemoryFootprint(const TextureType, const Format, const Extent3D&, const TextureSubresource&)
+        \see GetDesc
+        */
+        std::uint32_t GetMemoryFootprint() const;
+
+        /**
+        \brief Returns the memory footprint (in bytes) of the specified subresource and extent for this texture.
+        \remarks This function uses the member \c GetFormat and the global \c GetMemoryFootprint functions.
+        \see LLGL::GetMemoryFootprint(const Format, std::uint32_t)
+        \see LLGL::GetMemoryFootprint(const TextureType, const Format, const Extent3D&, const TextureSubresource&)
+        \see GetFormat
+        */
+        std::uint32_t GetMemoryFootprint(const Extent3D& extent, const TextureSubresource& subresource) const;
+
         //! Returns the type of this texture.
         inline TextureType GetType() const
         {

@@ -140,7 +140,7 @@ void GLImmediateCommandBuffer::CopyTextureFromBuffer(
         dstRegion,
         srcBufferGL.GetID(),
         static_cast<GLintptr>(srcOffset),
-        dstTextureGL.GetRegionMemoryFootprint(dstRegion.extent, dstRegion.subresource),
+        dstTextureGL.GetMemoryFootprint(dstRegion.extent, dstRegion.subresource),
         static_cast<GLint>(rowStride),
         static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0)
     );

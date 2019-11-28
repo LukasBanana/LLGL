@@ -21,8 +21,7 @@ namespace LLGL
 \remarks An instance of this interface provides a descriptor set (as called in Vulkan)
 or descriptor heap (as called in Direct3D 12) for graphics and compute pipelines.
 \see RenderSystem::CreateResourceHeap
-\see CommandBuffer::SetGraphicsResourceHeap
-\see CommandBuffer::SetComputeResourceHeap
+\see CommandBuffer::SetResourceHeap
 */
 class LLGL_EXPORT ResourceHeap : public RenderSystemChild
 {

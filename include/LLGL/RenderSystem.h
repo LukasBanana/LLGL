@@ -82,7 +82,7 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Returns the list of all available render system modules for the current platform.
-        \remarks For example, on Win32 this might be { "OpenGL", "Direct3D11", "Direct3D12" }, but on MacOS it might be only { "OpenGL" }.
+        \remarks For example, on Win32 this might be <code>{ "Direct3D12", "Direct3D11", "OpenGL" }</code>, but on MacOS it might be <code>{ "Metal", "OpenGL" }</code>.
         */
         static std::vector<std::string> FindModules();
 
@@ -354,8 +354,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \remarks Resources heaps are used in combination with a pipeline layout.
         The pipeline layout determines to which binding points the resources are bound.
         \see CreatePipelineLayout
-        \see CommandBuffer::SetGraphicsResourceHeap
-        \see CommandBuffer::SetComputeResourceHeap
+        \see CommandBuffer::SetResourceHeap
         */
         virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) = 0;
 

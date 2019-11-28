@@ -88,9 +88,6 @@ class GLTexture final : public Texture
         // Initializes this texture as a texture-view.
         void TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc);
 
-        // Returns the memory footprint of the specified texture region for this texture.
-        GLsizei GetRegionMemoryFootprint(const Extent3D& extent, const TextureSubresource& subresource) const;
-
         // Returns the GL_TEXTURE_TARGET parameter of this texture.
         GLenum GetGLTexTarget() const;
 

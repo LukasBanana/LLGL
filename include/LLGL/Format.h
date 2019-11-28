@@ -444,10 +444,12 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat);
 
 /**
 \brief Returns the memory footprint (in bytes) of a texture or buffer with the specified hardware format and number of elements.
-\param[in] format Specifies the texture format.
+\param[in] format Specifies the hardware format.
 \param[in] count Specifies the number of elements that make up the memory footprint.
 For the DXT compressed formats, this must be a multiple of 16, since these formats compress images in 4x4 texel blocks.
 \return The memory footprint size (in bytes), or zero if the input is invalid.
+\see GetMemoryFootprint(const TextureType, const Format, const Extent3D&, const TextureSubresource&)
+\see Texture::GetMemoryFootprint
 */
 LLGL_EXPORT std::uint32_t GetMemoryFootprint(const Format format, std::uint32_t count);
 

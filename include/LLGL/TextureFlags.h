@@ -392,33 +392,6 @@ Otherwise, the value of this member is returned.
 LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc);
 
 /**
-\brief Returns the number of MIP-map dimensions for the specified texture type. This is either 1, 2, 3, or 0 if the input is invalid.
-\remarks MIP-map dimensions <b>do count</b> array layers as a dimension, e.g. for TextureType::Texture2DArray this function returns 3.
-\see Texture::GetMipExtent
-\see NumTextureDimensions
-*/
-LLGL_EXPORT std::uint32_t NumMipDimensions(const TextureType type);
-
-/**
-\brief Returns the number of texture dimensions for the specified texture type. This is either 1, 2, 3, or 0 if the input is invalid.
-\remarks Texture dimensions <b>don't count</b> array layers as a dimension, e.g. for TextureType::Texture2DArray this function returns 2.
-\see TextureDescriptor::extent
-\see NumMipDimensions
-*/
-LLGL_EXPORT std::uint32_t NumTextureDimensions(const TextureType type);
-
-/**
-\brief Returns the MIP-map extent (including array layers) for the specified texture type, or an empty extent if \c mipLevel is out of bounds (see \c NumMipLevels).
-\param[in] type Specifies the texture type for which the MIP-map extent is to be determined.
-\param[in] extent Specifies the extent of the first MIP-map level.
-\param[in] mipLevel Specifies the MIP-map level whose extent is to be determined. The first and largest MIP-map level has index zero.
-\see Texture::GetMipExtent
-\see TextureDescriptor::extent
-\see NumMipLevels(const TextureType, const Extent3D&)
-*/
-LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel);
-
-/**
 \brief Returns the number of texture elements (texels) for the specified texture attributes, or zero extent if \c mipLevel is out of bounds (see \c NumMipLevels).
 \param[in] type Specifies the texture type for which the number of texels are to be determined.
 \param[in] extent Specifies the extent of the first MIP-map level.
@@ -451,6 +424,46 @@ The size of the MIP-map chain is determined by \c textureDesc.mipLevels.
 \see TextureDescriptor::mipLevels
 */
 LLGL_EXPORT std::uint32_t NumMipTexels(const TextureDescriptor& textureDesc, std::uint32_t mipLevel = ~0u);
+
+/**
+\brief Returns the number of MIP-map dimensions for the specified texture type. This is either 1, 2, 3, or 0 if the input is invalid.
+\remarks MIP-map dimensions <b>do count</b> array layers as a dimension, e.g. for TextureType::Texture2DArray this function returns 3.
+\see Texture::GetMipExtent
+\see NumTextureDimensions
+*/
+LLGL_EXPORT std::uint32_t NumMipDimensions(const TextureType type);
+
+/**
+\brief Returns the number of texture dimensions for the specified texture type. This is either 1, 2, 3, or 0 if the input is invalid.
+\remarks Texture dimensions <b>don't count</b> array layers as a dimension, e.g. for TextureType::Texture2DArray this function returns 2.
+\see TextureDescriptor::extent
+\see NumMipDimensions
+*/
+LLGL_EXPORT std::uint32_t NumTextureDimensions(const TextureType type);
+
+/**
+\brief Returns the MIP-map extent (including array layers) for the specified texture type, or an empty extent if \c mipLevel is out of bounds (see \c NumMipLevels).
+\param[in] type Specifies the texture type for which the MIP-map extent is to be determined.
+\param[in] extent Specifies the extent of the first MIP-map level.
+\param[in] mipLevel Specifies the MIP-map level whose extent is to be determined. The first and largest MIP-map level has index zero.
+\see Texture::GetMipExtent
+\see TextureDescriptor::extent
+\see NumMipLevels(const TextureType, const Extent3D&)
+*/
+LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel);
+
+/**
+\brief Returns the memory footprint (in bytes) of a texture subresource with the specified hardware format and extent.
+\param[in] type Specifies the texture type which determines how extent and subresource will result into the final texture dimensions.
+\param[in] format Specifies the hardware format.
+\param[in] extent Specifies the extent of the texture subresource.
+\param[in] subresource Specifies the texture subresource.
+\see GetMemoryFootprint(const Format, std::uint32_t)
+\see Texture::GetMemoryFootprint
+\see Texture::GetMipExtent
+\see Texture::GetFormat
+*/
+std::uint32_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource);
 
 /**
 \brief Returns true if the specified texture descriptor describes a texture with MIP-mapping enabled.

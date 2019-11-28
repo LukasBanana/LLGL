@@ -47,6 +47,41 @@ LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
         return textureDesc.mipLevels;
 }
 
+LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel)
+{
+    auto mipExtent = GetMipExtent(type, extent, mipLevel);
+    return (mipExtent.width * mipExtent.height * mipExtent.depth);
+}
+
+LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, const TextureSubresource& subresource)
+{
+    std::uint32_t numTexels = 0;
+
+    const auto subresourceExtent = CalcTextureExtent(type, extent, subresource.numArrayLayers);
+    for (std::uint32_t mipLevel = 0; mipLevel < subresource.numMipLevels; ++mipLevel)
+        numTexels += NumMipTexels(type, subresourceExtent, subresource.baseMipLevel + mipLevel);
+
+    return numTexels;
+}
+
+LLGL_EXPORT std::uint32_t NumMipTexels(const TextureDescriptor& textureDesc, std::uint32_t mipLevel)
+{
+    const auto extent = CalcTextureExtent(textureDesc.type, textureDesc.extent, textureDesc.arrayLayers);
+
+    if (mipLevel == ~0u)
+    {
+        std::uint32_t numTexels = 0;
+
+        const auto numMipLevels = NumMipLevels(textureDesc);
+        for (mipLevel = 0; mipLevel < numMipLevels; ++mipLevel)
+            numTexels += NumMipTexels(textureDesc.type, extent, mipLevel);
+
+        return numTexels;
+    }
+
+    return NumMipTexels(textureDesc.type, extent, mipLevel);
+}
+
 LLGL_EXPORT std::uint32_t NumMipDimensions(const TextureType type)
 {
     switch (type)
@@ -107,39 +142,10 @@ LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& e, std
     return {};
 }
 
-LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel)
+std::uint32_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource)
 {
-    auto mipExtent = GetMipExtent(type, extent, mipLevel);
-    return (mipExtent.width * mipExtent.height * mipExtent.depth);
-}
-
-LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& extent, const TextureSubresource& subresource)
-{
-    std::uint32_t numTexels = 0;
-
-    const auto subresourceExtent = CalcTextureExtent(type, extent, subresource.numArrayLayers);
-    for (std::uint32_t mipLevel = 0; mipLevel < subresource.numMipLevels; ++mipLevel)
-        numTexels += NumMipTexels(type, subresourceExtent, subresource.baseMipLevel + mipLevel);
-
-    return numTexels;
-}
-
-LLGL_EXPORT std::uint32_t NumMipTexels(const TextureDescriptor& textureDesc, std::uint32_t mipLevel)
-{
-    const auto extent = CalcTextureExtent(textureDesc.type, textureDesc.extent, textureDesc.arrayLayers);
-
-    if (mipLevel == ~0u)
-    {
-        std::uint32_t numTexels = 0;
-
-        const auto numMipLevels = NumMipLevels(textureDesc);
-        for (mipLevel = 0; mipLevel < numMipLevels; ++mipLevel)
-            numTexels += NumMipTexels(textureDesc.type, extent, mipLevel);
-
-        return numTexels;
-    }
-
-    return NumMipTexels(textureDesc.type, extent, mipLevel);
+    const auto numTexels = NumMipTexels(type, extent, subresource);
+    return GetMemoryFootprint(format, numTexels);
 }
 
 LLGL_EXPORT bool IsMipMappedTexture(const TextureDescriptor& textureDesc)

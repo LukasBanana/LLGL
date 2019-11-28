@@ -413,7 +413,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] stageFlags Specifies at which shader stages the resource is to be set.
         This can be a bitwise OR combinations of the StageFlags entries. By default StageFlags::AllStages.
         \remarks This function is only supported with the older graphics APIs and only available for convenience.
-        For best performance and complete renderer independence use SetGraphicsResourceHeap and SetComputeResourceHeap.
+        For best performance and complete renderer independence use \c SetResourceHeap.
         \remarks The following example binds a constant buffer and texture resource to the fragment shader stage:
         \code
         myCmdBuffer->SetResource(*myConstantBuffer, 1, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage);
@@ -422,6 +422,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks If direct resource binding is not supported by the render system, this function has no effect.
         \note Only supported with: OpenGL, Direct3D 11, Metal.
         \see RenderingFeatures::hasDirectResourceBinding
+        \see SetResourceHeap
         */
         virtual void SetResource(
             Resource&       resource,

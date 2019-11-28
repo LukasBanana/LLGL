@@ -595,12 +595,6 @@ void GLTexture::TextureView(GLTexture& sharedTexture, const TextureViewDescripto
     }
 }
 
-GLsizei GLTexture::GetRegionMemoryFootprint(const Extent3D& extent, const TextureSubresource& subresource) const
-{
-    const auto numTexels = NumMipTexels(GetType(), extent, subresource);
-    return static_cast<GLsizei>(GetMemoryFootprint(GetFormat(), numTexels));
-}
-
 GLenum GLTexture::GetGLTexTarget() const
 {
     return GLTypes::Map(GetType());
