@@ -58,6 +58,8 @@ class D3D11Texture final : public Texture
 
         TextureDescriptor GetDesc() const override;
 
+        Format GetFormat() const override;
+
     public:
 
         D3D11Texture(const TextureDescriptor& desc);

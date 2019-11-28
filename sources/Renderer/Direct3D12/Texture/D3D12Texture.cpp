@@ -134,6 +134,11 @@ TextureDescriptor D3D12Texture::GetDesc() const
     return texDesc;
 }
 
+Format D3D12Texture::GetFormat() const
+{
+    return D3D12Types::Unmap(GetDXFormat());
+}
+
 //TODO: make use of <D3D12StagingBufferPool> instead of <uploadBuffer>
 void D3D12Texture::UpdateSubresource(
     ID3D12Device*               device,
@@ -211,7 +216,7 @@ void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
     /* Determine required buffer size for texture subresource */
     const auto offset = CalcTextureOffset(GetType(), region.offset, region.subresource.baseArrayLayer);
     const auto extent = CalcTextureExtent(GetType(), region.extent, region.subresource.numArrayLayers);
-    const auto format = D3D12Types::Unmap(GetDXFormat());
+    const auto format = GetFormat();
 
     UINT64 bufferSize = 0;
     GetMemoryFootprintWithAlignment(format, extent, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT, rowStride, bufferSize);

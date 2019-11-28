@@ -291,8 +291,7 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
     /* Copy host visible resource to CPU accessible resource */
-    auto format = D3D11Types::Unmap(textureD3D.GetDXFormat());
-
+    const auto format = textureD3D.GetFormat();
     CopyTextureImageData(imageDesc, textureRegion.extent, format, mappedSubresource.pData, mappedSubresource.RowPitch);
 
     /* Unmap resource */

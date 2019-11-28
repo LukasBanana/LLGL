@@ -62,7 +62,9 @@ class LLGL_EXPORT Texture : public Resource
         - \c samples
         \remarks All other attributes (such as \c bindFlags, \c miscFlags etc.) cannot be queried by this function.
         Those attributes are either set to zero (for flags) or the default value specified in TextureDescriptor is used.
+        If only the texture format is required, use \c GetFormat instead.
         \see TextureDescriptor
+        \see GetFormat
         \see Buffer::GetDesc
         */
         virtual TextureDescriptor GetDesc() const = 0;
@@ -81,6 +83,15 @@ class LLGL_EXPORT Texture : public Resource
         \see LLGL::GetMipExtent
         */
         virtual Extent3D GetMipExtent(std::uint32_t mipLevel) const = 0;
+
+        /*
+        \brief Returns the hardware format of this texture.
+        \remarks This is usually the format this texture was created with.
+        However, sometimes the internal hardware format might be different from what the client programmer requested, especially with the OpenGL backend.
+        This function returns the actual internal hardware format.
+        \see TextureDescriptor::format.
+        */
+        virtual Format GetFormat() const = 0;
 
     protected:
 

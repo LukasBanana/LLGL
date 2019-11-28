@@ -169,6 +169,40 @@ Extent3D GLTexture::GetMipExtent(std::uint32_t mipLevel) const
     };
 }
 
+TextureDescriptor GLTexture::GetDesc() const
+{
+    TextureDescriptor texDesc;
+
+    texDesc.type        = GetType();
+    texDesc.bindFlags   = 0;
+    texDesc.mipLevels   = static_cast<std::uint32_t>(GetNumMipLevels());
+
+    /* Query hardware texture format and size */
+    GLint extent[3] = {}, samples = 1;
+    if (IsRenderbuffer())
+        GetRenderbufferParams(extent, &samples);
+    else
+        GetTextureParams(extent, &samples);
+
+    /*
+    Translate data from OpenGL to LLGL.
+    Note: for cube textures, depth extent can also be copied directly without transformation (no need to multiply by 6).
+    */
+    texDesc.format              = GetFormat();
+
+    texDesc.extent.width        = static_cast<std::uint32_t>(extent[0]);
+    texDesc.extent.height       = static_cast<std::uint32_t>(extent[1]);
+
+    if (GetType() == TextureType::Texture3D)
+        texDesc.extent.depth    = static_cast<std::uint32_t>(extent[2]);
+    else
+        texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[2]);
+
+    texDesc.samples             = static_cast<std::uint32_t>(samples);
+
+    return texDesc;
+}
+
 // Maps the format from Alpha swizzling to RGBA
 static Format MapGLSwizzleFormatAlpha(const Format format)
 {
@@ -204,39 +238,11 @@ static Format MapGLSwizzleFormat(const Format format, const GLSwizzleFormat swiz
     }
 }
 
-TextureDescriptor GLTexture::GetDesc() const
+Format GLTexture::GetFormat() const
 {
-    TextureDescriptor texDesc;
-
-    texDesc.type        = GetType();
-    texDesc.bindFlags   = 0;
-    texDesc.mipLevels   = static_cast<std::uint32_t>(GetNumMipLevels());
-
-    /* Query hardware texture format and size */
-    GLint extent[3] = {}, samples = 1;
-    if (IsRenderbuffer())
-        GetRenderbufferParams(extent, &samples);
-    else
-        GetTextureParams(extent, &samples);
-
-    /*
-    Translate data from OpenGL to LLGL.
-    Note: for cube textures, depth extent can also be copied directly without transformation (no need to multiply by 6).
-    */
-    const auto format           = GLTypes::UnmapFormat(GetGLInternalFormat());
-    texDesc.format              = MapGLSwizzleFormat(format, swizzleFormat_);
-
-    texDesc.extent.width        = static_cast<std::uint32_t>(extent[0]);
-    texDesc.extent.height       = static_cast<std::uint32_t>(extent[1]);
-
-    if (GetType() == TextureType::Texture3D)
-        texDesc.extent.depth    = static_cast<std::uint32_t>(extent[2]);
-    else
-        texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[2]);
-
-    texDesc.samples             = static_cast<std::uint32_t>(samples);
-
-    return texDesc;
+    /* Translate internal format depending on texture swizzle to circumvent certain inverted formats (e.g. BGRA) */
+    const auto format = GLTypes::UnmapFormat(GetGLInternalFormat());
+    return MapGLSwizzleFormat(format, swizzleFormat_);
 }
 
 static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
@@ -510,8 +516,7 @@ void GLTexture::CopyImageFromBuffer(
     GLint                   imageHeight)
 {
     /* Get image format and data type from internal texture format */
-    const auto format = GLTypes::UnmapFormat(GetGLInternalFormat());
-    const auto& formatAttribs = GetFormatAttribs(format);
+    const auto& formatAttribs = GetFormatAttribs(GetFormat());
 
     /* Read data from unpack buffer with byte offset and equal texture format */
     const SrcImageDescriptor imageDesc
@@ -592,9 +597,8 @@ void GLTexture::TextureView(GLTexture& sharedTexture, const TextureViewDescripto
 
 GLsizei GLTexture::GetRegionMemoryFootprint(const Extent3D& extent, const TextureSubresource& subresource) const
 {
-    const auto format = GLTypes::UnmapFormat(GetGLInternalFormat());
     const auto numTexels = NumMipTexels(GetType(), extent, subresource);
-    return static_cast<GLsizei>(GetMemoryFootprint(format, numTexels));
+    return static_cast<GLsizei>(GetMemoryFootprint(GetFormat(), numTexels));
 }
 
 GLenum GLTexture::GetGLTexTarget() const

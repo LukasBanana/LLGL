@@ -60,6 +60,11 @@ TextureDescriptor DbgTexture::GetDesc() const
     return instance.GetDesc();
 }
 
+Format DbgTexture::GetFormat() const
+{
+    return instance.GetFormat();
+}
+
 
 } // /namespace LLGL
 

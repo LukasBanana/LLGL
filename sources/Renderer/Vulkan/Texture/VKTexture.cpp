@@ -73,7 +73,7 @@ TextureDescriptor VKTexture::GetDesc() const
     texDesc.type        = GetType();
     texDesc.bindFlags   = 0;
     texDesc.miscFlags   = 0;
-    texDesc.format      = VKTypes::Unmap(GetVkFormat());
+    texDesc.format      = GetFormat();
     texDesc.mipLevels   = numMipLevels_;
 
     switch (texDesc.type)
@@ -115,6 +115,11 @@ TextureDescriptor VKTexture::GetDesc() const
     }
 
     return texDesc;
+}
+
+Format VKTexture::GetFormat() const
+{
+    return VKTypes::Unmap(GetVkFormat());
 }
 
 void VKTexture::CreateImageView(

@@ -39,6 +39,8 @@ class GLTexture final : public Texture
 
         TextureDescriptor GetDesc() const override;
 
+        Format GetFormat() const override;
+
     public:
 
         GLTexture(const TextureDescriptor& desc);

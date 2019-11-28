@@ -452,7 +452,7 @@ For the DXT compressed formats, this must be a multiple of 16, since these forma
 LLGL_EXPORT std::uint32_t GetMemoryFootprint(const Format format, std::uint32_t count);
 
 /**
-\brief Returns the required data size (in bytes) of an image with the specified format, data type, and number of pixels.
+\brief Returns the memory footprint (in bytes) of an image with the specified format, data type, and number of elements.
 \param[in] imageFormat Specifies the image format.
 \param[in] dataType Specifies the data type of each pixel component.
 \param[in] count Specifies the number of elements that make up the memory footprint.

@@ -30,6 +30,8 @@ class MTTexture final : public Texture
 
         TextureDescriptor GetDesc() const override;
 
+        Format GetFormat() const override;
+
     public:
 
         MTTexture(id<MTLDevice> device, const TextureDescriptor& desc);

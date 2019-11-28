@@ -35,7 +35,10 @@ class VKTexture final : public Texture
         );
 
         Extent3D GetMipExtent(std::uint32_t mipLevel) const override;
+
         TextureDescriptor GetDesc() const override;
+
+        Format GetFormat() const override;
 
     public:
 

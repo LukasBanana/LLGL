@@ -154,6 +154,11 @@ TextureDescriptor D3D11Texture::GetDesc() const
     return texDesc;
 }
 
+Format D3D11Texture::GetFormat() const
+{
+    return D3D11Types::Unmap(GetDXFormat());
+}
+
 static ComPtr<ID3D11Texture1D> DXCreateTexture1D(
     ID3D11Device*                   device,
     const D3D11_TEXTURE1D_DESC&     desc,

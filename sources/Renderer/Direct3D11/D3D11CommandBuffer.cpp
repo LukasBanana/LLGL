@@ -308,7 +308,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
     const UINT srcOffsetU32 = static_cast<UINT>(srcOffset);
 
     /* Get destination texture attributes */
-    const auto& formatAttribs = GetFormatAttribs(D3D11Types::Unmap(dstTextureD3D.GetDXFormat()));
+    const auto& formatAttribs = GetFormatAttribs(dstTextureD3D.GetFormat());
     if ((formatAttribs.flags & (FormatFlags::IsCompressed | FormatFlags::IsPacked)) != 0 || formatAttribs.components == 0)
         return;
 

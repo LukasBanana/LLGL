@@ -132,7 +132,7 @@ TextureDescriptor MTTexture::GetDesc() const
     texDesc.bindFlags       = 0;
     texDesc.miscFlags       = 0;
     texDesc.mipLevels       = static_cast<std::uint32_t>([native_ mipmapLevelCount]);
-    texDesc.format          = MTTypes::ToFormat([native_ pixelFormat]);
+    texDesc.format          = GetFormat();
     texDesc.extent.width    = static_cast<std::uint32_t>([native_ width]);
     texDesc.extent.height   = static_cast<std::uint32_t>([native_ height]);
     texDesc.extent.depth    = static_cast<std::uint32_t>([native_ depth]);
@@ -143,6 +143,11 @@ TextureDescriptor MTTexture::GetDesc() const
         texDesc.arrayLayers *= 6;
 
     return texDesc;
+}
+
+Format MTTexture::GetFormat() const
+{
+    return MTTypes::ToFormat([native_ pixelFormat]);
 }
 
 void MTTexture::WriteRegion(const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)

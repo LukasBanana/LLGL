@@ -178,7 +178,7 @@ void D3D12CommandBuffer::CopyTextureFromBuffer(
     UINT alignedRowStride = rowStride;
     if (rowStride == 0)
     {
-        rowStride = GetMemoryFootprint(D3D12Types::Unmap(dstTextureD3D.GetDXFormat()), dstExtent.width);
+        rowStride = GetMemoryFootprint(dstTextureD3D.GetFormat(), dstExtent.width);
         alignedRowStride = GetAlignedSize<UINT>(rowStride, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
     }
 

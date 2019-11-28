@@ -32,6 +32,8 @@ class D3D12Texture final : public Texture
 
         TextureDescriptor GetDesc() const override;
 
+        Format GetFormat() const override;
+
     public:
 
         D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc);

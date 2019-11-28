@@ -210,8 +210,7 @@ void D3D12RenderSystem::UpdateGpuTexture(
     }
 
     /* Check if image data conversion is necessary */
-    auto format = D3D12Types::Unmap(textureD3D.GetDXFormat());
-
+    auto format = textureD3D.GetFormat();
     const auto& formatAttribs = GetFormatAttribs(format);
     auto dataLayout = CalcSubresourceLayout(format, region.extent);
 
@@ -318,7 +317,7 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     DXThrowIfFailed(hr, "failed to map D3D12 texture copy resource");
 
     /* Copy CPU accessible buffer to output data */
-    auto format = D3D12Types::Unmap(textureD3D.GetDXFormat());
+    auto format = textureD3D.GetFormat();
     auto extent = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent, textureRegion.subresource.numArrayLayers);
 
     CopyTextureImageData(imageDesc, extent, format, mappedData, rowStride);
