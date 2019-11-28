@@ -453,18 +453,6 @@ The size of the MIP-map chain is determined by \c textureDesc.mipLevels.
 LLGL_EXPORT std::uint32_t NumMipTexels(const TextureDescriptor& textureDesc, std::uint32_t mipLevel = ~0u);
 
 /**
-\brief Returns the required buffer size (in bytes) of a texture with the specified hardware format and number of texels.
-\param[in] format Specifies the texture format.
-\param[in] numTexels Specifies the number of texture elements (texels).
-For the DXT compressed texture formats, this must be a multiple of 16, since these formats compress the image in 4x4 texel blocks.
-\return The required buffer size (in bytes), or zero if the input is invalid.
-\remarks The counterpart for image data is the function ImageDataSize.
-\see ImageDataSize
-\todo Rename to \c GetMipBufferSize
-*/
-LLGL_EXPORT std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels);
-
-/**
 \brief Returns true if the specified texture descriptor describes a texture with MIP-mapping enabled.
 \return True if the texture type is not a multi-sampled texture and the number of MIP-map levels in the descriptor is either zero or greater than one.
 \see TextureDescriptor::mipLevels

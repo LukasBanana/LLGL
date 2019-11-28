@@ -183,6 +183,16 @@ LLGL_EXPORT const FormatAttributes& GetFormatAttribs(const Format format)
         return Internal::g_formatAttribs[0];
 }
 
+std::uint32_t GetMemoryFootprint(const Format format, std::uint32_t numTexels)
+{
+    const auto& formatDesc = GetFormatAttribs(format);
+    const auto blockSize = formatDesc.blockWidth * formatDesc.blockHeight;
+    if (blockSize > 0 && numTexels % blockSize == 0)
+        return ((numTexels / blockSize * formatDesc.bitSize) / 8);
+    else
+        return 0;
+}
+
 LLGL_EXPORT bool IsCompressedFormat(const Format format)
 {
     return ((GetFormatAttribs(format).flags & FormatFlags::IsCompressed) != 0);

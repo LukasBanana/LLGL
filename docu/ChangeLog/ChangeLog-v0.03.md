@@ -398,6 +398,7 @@ RenderContext::QueryDepthStencilFormat --> RenderContext::GetDepthStencilFormat
 Resource::QueryResourceType            --> Resource::GetResourceType
 ShaderProgram::QueryInfoLog            --> ShaderProgram::GetReport
 ShaderProgram::QueryUniformLocation    --> ShaderProgram::FindUniformLocation
+TextureBufferSize                      --> GetMemoryFootprint
 Texture::QueryDesc                     --> Texture::GetDesc
 Texture::QueryMipExtent                --> Texture::GetMipExtent
 StorageBufferType::Buffer              --> StorageBufferType::TypedBuffer

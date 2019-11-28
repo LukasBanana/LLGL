@@ -192,14 +192,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         to be uniform with the notation <code>texture := buffer</code>, or <code>memcpy(destination, source, size)</code>.
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
-        \remarks Further performance penalties can be introduced if \c rowStride is not aligned to the respective rendering API restrictions.
-        \remarks If \c rowStride is 0, the source data is considered to be tightly packed for each array layer and LLGL determines the required alignment automatically.
-        \remarks If \c rowStride is not 0, it must be aligned to the respective rendering API restrictions:
-        - Direct3D 12: \c rowStride \b must be a multiple of 256.
-        - Metal: \c rowStride \b must be less than or equal to 32767 multiplied by the destination texture's format size.
-        \remarks If \c rowStride is not 0, it must be greater than or equal to the size (in bytes) of each row in the texture.
+        \remarks Further performance penalties can be introduced if \c rowStride is not aligned to the respective rendering API restrictions:
+        - Direct3D 12: \c rowStride \b should be a multiple of 256.
+        - Metal: \c rowStride \b should be less than or equal to 32767 multiplied by the destination texture's format size.
+        \remarks If \c rowStride is 0, the source data is considered to be tightly packed for each array layer and the required alignment is managed automatically.
+        \remarks If \c rowStride is not 0, it \b must be greater than or equal to the size (in bytes) of each row in the texture region with respect to the texture's format.
         \remarks The same rules of \c rowStride also apply to \c layerStride.
-        \see TextureBufferSize
+        \see GetMemoryFootprint
         */
         virtual void CopyTextureFromBuffer(
             Texture&                dstTexture,

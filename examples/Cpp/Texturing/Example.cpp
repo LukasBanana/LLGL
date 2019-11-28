@@ -180,7 +180,7 @@ public:
         auto imageDesc  = imageReader.GetImageDesc();
 
         // Create texture with MIP-map level 0
-        imageDesc.dataSize = LLGL::TextureBufferSize(texDesc.format, texDesc.extent.width * texDesc.extent.height * texDesc.extent.depth);
+        imageDesc.dataSize = LLGL::GetMemoryFootprint(texDesc.format, texDesc.extent.width * texDesc.extent.height * texDesc.extent.depth);
         colorMaps[0] = renderer->CreateTexture(texDesc, &imageDesc);
 
         // Write MIP-map levels 1...N
@@ -201,7 +201,7 @@ public:
                 region.extent.height >= formatDesc.blockHeight)
             {
                 // Update image descriptor for subresource
-                std::size_t mipLevelDataSize    = LLGL::TextureBufferSize(texDesc.format, region.extent.width * region.extent.height * region.extent.depth);
+                std::size_t mipLevelDataSize    = LLGL::GetMemoryFootprint(texDesc.format, region.extent.width * region.extent.height * region.extent.depth);
                 imageDesc.data                  = reinterpret_cast<const std::int8_t*>(imageDesc.data) + imageDesc.dataSize;
                 imageDesc.dataSize              = mipLevelDataSize;
 

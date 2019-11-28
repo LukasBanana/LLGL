@@ -263,7 +263,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Determine size of image for staging buffer */
     const auto imageSize        = NumMipTexels(textureDesc, 0);
-    const auto initialDataSize  = static_cast<VkDeviceSize>(TextureBufferSize(textureDesc.format, imageSize));
+    const auto initialDataSize  = static_cast<VkDeviceSize>(GetMemoryFootprint(textureDesc.format, imageSize));
 
     /* Set up initial image data */
     const void* initialData = nullptr;
@@ -404,7 +404,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     auto        image           = textureVK.GetVkImage();
     const auto  imageSize       = extent.width * extent.height * extent.depth;
     const void* imageData       = nullptr;
-    const auto  imageDataSize   = static_cast<VkDeviceSize>(TextureBufferSize(format, imageSize));
+    const auto  imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
 
     /* Check if image data must be converted */
     ByteBuffer intermediateData;
@@ -493,7 +493,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
     auto        image           = textureVK.GetVkImage();
     const auto  imageSize       = extent.width * extent.height * extent.depth;
-    const auto  imageDataSize   = static_cast<VkDeviceSize>(TextureBufferSize(format, imageSize));
+    const auto  imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
 
     /* Create staging buffer */
     VkBufferCreateInfo stagingCreateInfo;

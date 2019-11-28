@@ -246,6 +246,7 @@ void DbgCommandBuffer::CopyTextureFromBuffer(
         //ValidateBufferRange(srcBufferDbg, srcOffset, srcSize);
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
         ValidateBindBufferFlags(srcBufferDbg, BindFlags::CopySrc);
+        ValidateTextureBufferCopyStrides(dstTextureDbg, rowStride, layerStride, dstRegion.extent);
     }
 
     LLGL_DBG_COMMAND( "CopyTextureFromBuffer", instance.CopyTextureFromBuffer(dstTextureDbg.instance, dstRegion, srcBufferDbg.instance, srcOffset, rowStride, layerStride) );
@@ -1643,6 +1644,41 @@ void DbgCommandBuffer::ValidateIndexType(const Format format)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
         else
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(format)));
+    }
+}
+
+void DbgCommandBuffer::ValidateTextureBufferCopyStrides(DbgTexture& textureDbg, std::uint32_t rowStride, std::uint32_t layerStride, const Extent3D& extent)
+{
+    if (rowStride != 0)
+    {
+        const auto rowSize = GetMemoryFootprint(textureDbg.desc.format, extent.width);
+        if (rowStride < rowSize)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "invalid argument for texture/buffer copy command: 'rowStride' (" + std::to_string(rowStride) + ") "
+                "must be greater than or equal to the size of each row in the destination region (rowSize)"
+            );
+        }
+    }
+    if (layerStride != 0)
+    {
+        if (rowStride == 0)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "invalid argument for texture/buffer copy command: 'layerStride' (" + std::to_string(layerStride) + ") "
+                "is non-zero while 'rowStride' is zero"
+            );
+        }
+        else if (layerStride % rowStride != 0)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "invalid argument for texture/buffer copy command: 'layerStride' (" + std::to_string(layerStride) + ") "
+                "is not a multiple of 'rowStride' (" + std::to_string(rowStride) + ")"
+            );
+        }
     }
 }
 

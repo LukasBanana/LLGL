@@ -130,8 +130,8 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat);
 \param[in] imageFormat Specifies the image format.
 \param[in] dataType Specifies the data type of each pixel component.
 \param[in] numPixels Specifies the number of picture elements (pixels).
-\remarks The counterpart for texture buffers is the function TextureBufferSize.
-\see TextureBufferSize
+\remarks The counterpart for hardware textures is the GetMemoryFootprint function.
+\see GetMemoryFootprint
 */
 LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat imageFormat, const DataType dataType, std::uint32_t numPixels);
 

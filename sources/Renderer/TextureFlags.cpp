@@ -142,16 +142,6 @@ LLGL_EXPORT std::uint32_t NumMipTexels(const TextureDescriptor& textureDesc, std
     return NumMipTexels(textureDesc.type, extent, mipLevel);
 }
 
-std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)
-{
-    const auto& formatDesc = GetFormatAttribs(format);
-    const auto blockSize = formatDesc.blockWidth * formatDesc.blockHeight;
-    if (blockSize > 0 && numTexels % blockSize == 0)
-        return ((numTexels / blockSize * formatDesc.bitSize) / 8);
-    else
-        return 0;
-}
-
 LLGL_EXPORT bool IsMipMappedTexture(const TextureDescriptor& textureDesc)
 {
     return (!IsMultiSampleTexture(textureDesc.type) && (textureDesc.mipLevels == 0 || textureDesc.mipLevels > 1));
