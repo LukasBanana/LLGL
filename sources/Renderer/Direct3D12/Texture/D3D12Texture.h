@@ -100,7 +100,7 @@ class D3D12Texture final : public Texture
         }
 
         // Returns the hardware resource format.
-        inline DXGI_FORMAT GetFormat() const
+        inline DXGI_FORMAT GetDXFormat() const
         {
             return format_;
         }

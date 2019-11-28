@@ -182,7 +182,7 @@ class D3D11Texture final : public Texture
         /* ----- Hardware texture parameters ----- */
 
         // Returns the hardware resource format.
-        inline DXGI_FORMAT GetFormat() const
+        inline DXGI_FORMAT GetDXFormat() const
         {
             return format_;
         }

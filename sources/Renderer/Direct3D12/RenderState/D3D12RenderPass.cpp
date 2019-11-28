@@ -101,13 +101,13 @@ void D3D12RenderPass::BuildAttachments(
                 if (colorAttachment < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
                 {
                     /* Store texture color format and attachment index */
-                    SetRTVFormat(colorAttachment++, textureD3D->GetFormat());
+                    SetRTVFormat(colorAttachment++, textureD3D->GetDXFormat());
                 }
             }
             else
             {
                 /* Use texture depth-stencil format */
-                SetDSVFormat(textureD3D->GetFormat());
+                SetDSVFormat(textureD3D->GetDXFormat());
             }
         }
         else if (attachment.type != AttachmentType::Color)

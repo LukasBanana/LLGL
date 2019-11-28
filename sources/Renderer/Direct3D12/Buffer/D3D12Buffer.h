@@ -121,7 +121,7 @@ class D3D12Buffer : public Buffer
         }
 
         // Returns the native format of the buffer or DXGI_FORMAT_UNKNOWN; only used for storage buffers.
-        inline DXGI_FORMAT GetFormat() const
+        inline DXGI_FORMAT GetDXFormat() const
         {
             return format_;
         }

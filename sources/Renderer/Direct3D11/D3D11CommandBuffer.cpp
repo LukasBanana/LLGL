@@ -178,7 +178,7 @@ void D3D11CommandBuffer::FillBuffer(
 
         if (uav != nullptr &&
             isWholeBufferRange &&
-            DXTypes::MakeUAVClearVector(dstBufferUAV.GetFormat(), valuesVec4, value))
+            DXTypes::MakeUAVClearVector(dstBufferUAV.GetDXFormat(), valuesVec4, value))
         {
             /* Fill destination buffer directly with primary UAV */
             context_->ClearUnorderedAccessViewUint(uav, valuesVec4);
@@ -308,7 +308,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
     const UINT srcOffsetU32 = static_cast<UINT>(srcOffset);
 
     /* Get destination texture attributes */
-    const auto& formatAttribs = GetFormatAttribs(D3D11Types::Unmap(dstTextureD3D.GetFormat()));
+    const auto& formatAttribs = GetFormatAttribs(D3D11Types::Unmap(dstTextureD3D.GetDXFormat()));
     if ((formatAttribs.flags & (FormatFlags::IsCompressed | FormatFlags::IsPacked)) != 0 || formatAttribs.components == 0)
         return;
 
@@ -356,7 +356,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
             device_,
             intermediateUAV.GetAddressOf(),
             textureArrayType,
-            dstTextureD3D.GetFormat(),
+            dstTextureD3D.GetDXFormat(),
             subresource.baseMipLevel,
             subresource.baseArrayLayer,
             subresource.numArrayLayers
@@ -605,7 +605,7 @@ void D3D11CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    context_->IASetIndexBuffer(bufferD3D.GetNative(), bufferD3D.GetFormat(), 0);
+    context_->IASetIndexBuffer(bufferD3D.GetNative(), bufferD3D.GetDXFormat(), 0);
 }
 
 void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)

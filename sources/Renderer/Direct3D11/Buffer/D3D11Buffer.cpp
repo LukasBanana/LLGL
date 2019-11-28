@@ -63,7 +63,7 @@ void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* da
     /* Validate parameters */
     LLGL_ASSERT_RANGE(dataSize + offset, GetSize());
 
-    if (GetUsage() == D3D11_USAGE_DYNAMIC)
+    if (GetDXUsage() == D3D11_USAGE_DYNAMIC)
     {
         /* Discard previous content if the entire resource will be updated */
         const bool writeDiscard = (offset == 0 && dataSize == GetSize());

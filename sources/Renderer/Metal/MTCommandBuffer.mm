@@ -235,7 +235,7 @@ void MTCommandBuffer::CopyTextureFromBuffer(
 
     /* Determine actual row and layer strides */
     const auto format = MTTypes::ToFormat([dstTextureMT.GetNative() pixelFormat]);
-    const auto rowSize = TextureBufferSize(format, dstRegion.extent.width);
+    const auto rowSize = GetMemoryFootprint(format, dstRegion.extent.width);
 
     if (rowStride == 0)
         rowStride = rowSize;

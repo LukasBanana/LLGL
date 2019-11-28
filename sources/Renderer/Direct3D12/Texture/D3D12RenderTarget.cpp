@@ -146,7 +146,7 @@ void D3D12RenderTarget::CreateDescriptorHeaps(D3D12Device& device, const RenderT
         {
             /* Get texture format */
             auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
-            auto format = textureD3D.GetFormat();
+            auto format = textureD3D.GetDXFormat();
 
             /* Store color or depth-stencil format */
             if (attachment.type == AttachmentType::Color)
@@ -229,7 +229,7 @@ void D3D12RenderTarget::CreateAttachments(ID3D12Device* device, const RenderTarg
                 device,
                 attachment.type,
                 textureD3D.GetResource(),
-                textureD3D.GetFormat(),
+                textureD3D.GetDXFormat(),
                 textureD3D.GetType(),
                 attachment.mipLevel,
                 attachment.arrayLayer,

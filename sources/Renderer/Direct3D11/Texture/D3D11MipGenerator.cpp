@@ -88,7 +88,7 @@ void D3D11MipGenerator::GenerateMipsWithSubresourceSRV(
         device_.Get(),
         srv.GetAddressOf(),
         textureD3D.GetType(),
-        textureD3D.GetFormat(),
+        textureD3D.GetDXFormat(),
         baseMipLevel,
         numMipLevels,
         baseArrayLayer,

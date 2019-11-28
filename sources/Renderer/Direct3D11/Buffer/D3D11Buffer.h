@@ -66,13 +66,13 @@ class D3D11Buffer : public Buffer
         }
 
         // Returns the native buffer format (i.e. format of index buffer or typed buffer).
-        inline DXGI_FORMAT GetFormat() const
+        inline DXGI_FORMAT GetDXFormat() const
         {
             return format_;
         }
 
         // Returns the native usage type.
-        inline D3D11_USAGE GetUsage() const
+        inline D3D11_USAGE GetDXUsage() const
         {
             return usage_;
         }

@@ -290,7 +290,7 @@ void GLMipGenerator::GenerateMipsRangeWithTextureView(
     auto texID          = textureGL.GetID();
     auto texType        = textureGL.GetType();
     auto texTarget      = GLTypes::Map(texType);
-    auto internalFormat = textureGL.GetInternalFormat();
+    auto internalFormat = textureGL.GetGLInternalFormat();
 
     /* Generate new texture to be used as view (due to immutable storage) */
     GLuint texViewID = 0;

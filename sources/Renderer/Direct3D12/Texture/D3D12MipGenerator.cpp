@@ -79,18 +79,18 @@ HRESULT D3D12MipGenerator::GenerateMips(
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            GenerateMips1D(commandContext, texture.GetResource(), mipDescHeap, texture.GetFormat(), subresource);
+            GenerateMips1D(commandContext, texture.GetResource(), mipDescHeap, texture.GetDXFormat(), subresource);
             return S_OK;
 
         case TextureType::Texture2D:
         case TextureType::TextureCube:
         case TextureType::Texture2DArray:
         case TextureType::TextureCubeArray:
-            GenerateMips2D(commandContext, texture.GetResource(), mipDescHeap, texture.GetFormat(), subresource);
+            GenerateMips2D(commandContext, texture.GetResource(), mipDescHeap, texture.GetDXFormat(), subresource);
             return S_OK;
 
         case TextureType::Texture3D:
-            GenerateMips3D(commandContext, texture.GetResource(), mipDescHeap, texture.GetFormat(), subresource);
+            GenerateMips3D(commandContext, texture.GetResource(), mipDescHeap, texture.GetDXFormat(), subresource);
             return S_OK;
 
         case TextureType::Texture2DMS:

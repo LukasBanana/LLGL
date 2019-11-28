@@ -332,7 +332,7 @@ void GLResourceHeap::BuildImageTextureSegments(ResourceBindingIterator& resource
         [](Resource* resource, std::uint32_t slot) -> GLResourceBinding
         {
             auto textureGL = LLGL_CAST(GLTexture*, resource);
-            return { slot, textureGL->GetID(), GLTextureTarget::TEXTURE_1D, textureGL->GetInternalFormat() };
+            return { slot, textureGL->GetID(), GLTextureTarget::TEXTURE_1D, textureGL->GetGLInternalFormat() };
         }
     );
 

@@ -893,7 +893,7 @@ void D3D11Texture::CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RES
     if (!srvDesc && IsDepthStencilFormat(D3D11Types::Unmap(format_)))
     {
         /* Create internal SRV for entire texture resource */
-        CreateSubresourceSRV(device, srv_.ReleaseAndGetAddressOf(), GetType(), GetFormat(), 0, numMipLevels_, 0, numArrayLayers_);
+        CreateSubresourceSRV(device, srv_.ReleaseAndGetAddressOf(), GetType(), GetDXFormat(), 0, numMipLevels_, 0, numArrayLayers_);
     }
     else
     {

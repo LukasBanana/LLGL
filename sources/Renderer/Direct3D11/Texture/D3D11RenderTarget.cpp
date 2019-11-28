@@ -145,7 +145,7 @@ void D3D11RenderTarget::FindSuitableSampleDesc(const RenderTargetDescriptor& des
         {
             /* Get format from texture */
             auto textureD3D = LLGL_CAST(D3D11Texture*, texture);
-            formats[i] = textureD3D->GetFormat();
+            formats[i] = textureD3D->GetDXFormat();
         }
         else
         {
@@ -278,7 +278,7 @@ void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const Attac
     D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
     InitMemory(rtvDesc);
 
-    rtvDesc.Format = D3D11Types::ToDXGIFormatSRV(textureD3D.GetFormat());
+    rtvDesc.Format = D3D11Types::ToDXGIFormatSRV(textureD3D.GetDXFormat());
 
     /*
     If this is a multi-sample render target, but the target texture is not a multi-sample texture,
@@ -371,7 +371,7 @@ void D3D11RenderTarget::AttachTextureDepthStencil(D3D11Texture& textureD3D, cons
         device_,
         depthStencilView_.ReleaseAndGetAddressOf(),
         textureD3D.GetType(),
-        textureD3D.GetFormat(),
+        textureD3D.GetDXFormat(),
         attachmentDesc.mipLevel,
         attachmentDesc.arrayLayer,
         1

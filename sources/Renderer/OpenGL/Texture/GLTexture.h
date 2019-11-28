@@ -89,7 +89,7 @@ class GLTexture final : public Texture
         // Returns the memory footprint of the specified texture region for this texture.
         GLsizei GetRegionMemoryFootprint(const Extent3D& extent, const TextureSubresource& subresource) const;
 
-        // Returns the GLenum for the texture target of this texture type.
+        // Returns the GL_TEXTURE_TARGET parameter of this texture.
         GLenum GetGLTexTarget() const;
 
         // Returns the hardware texture ID.
@@ -99,7 +99,7 @@ class GLTexture final : public Texture
         }
 
         // Returns the GL_TEXTURE_INTERNAL_FORMAT parameter of this texture.
-        inline GLenum GetInternalFormat() const
+        inline GLenum GetGLInternalFormat() const
         {
             return internalFormat_;
         }

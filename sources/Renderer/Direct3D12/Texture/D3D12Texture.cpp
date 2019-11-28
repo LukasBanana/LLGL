@@ -193,7 +193,8 @@ void D3D12Texture::UpdateSubresource(
     commandList->ResourceBarrier(1, &resourceBarrier);
 }
 
-static void GetD3DTextureBufferSize(const Format format, const Extent3D& extent, UINT rowAlignment, UINT& rowPitch, UINT64& bufferSize)
+// Returns the memory footprint of a texture with row alignment
+static void GetMemoryFootprintWithAlignment(const Format format, const Extent3D& extent, UINT rowAlignment, UINT& rowPitch, UINT64& bufferSize)
 {
     const auto& formatAttribs = GetFormatAttribs(format);
     rowPitch    = GetAlignedSize(extent.width * formatAttribs.bitSize / (8 * formatAttribs.blockWidth), rowAlignment);
@@ -210,10 +211,10 @@ void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
     /* Determine required buffer size for texture subresource */
     const auto offset = CalcTextureOffset(GetType(), region.offset, region.subresource.baseArrayLayer);
     const auto extent = CalcTextureExtent(GetType(), region.extent, region.subresource.numArrayLayers);
-    const auto format = D3D12Types::Unmap(GetFormat());
+    const auto format = D3D12Types::Unmap(GetDXFormat());
 
     UINT64 bufferSize = 0;
-    GetD3DTextureBufferSize(format, extent, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT, rowStride, bufferSize);
+    GetMemoryFootprintWithAlignment(format, extent, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT, rowStride, bufferSize);
 
     /* Create readback buffer with texture resource descriptor */
     auto hr = device->CreateCommittedResource(
@@ -230,7 +231,7 @@ void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
     D3D12_PLACED_SUBRESOURCE_FOOTPRINT bufferFootprint;
     {
         bufferFootprint.Offset              = 0;
-        bufferFootprint.Footprint.Format    = GetFormat();
+        bufferFootprint.Footprint.Format    = GetDXFormat();
         bufferFootprint.Footprint.Width     = extent.width;
         bufferFootprint.Footprint.Height    = extent.height;
         bufferFootprint.Footprint.Depth     = extent.depth;
@@ -459,7 +460,7 @@ D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(const D3D12Buffer& sr
         copyDesc.pResource                            = srcBuffer.GetNative();
         copyDesc.Type                                 = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
         copyDesc.PlacedFootprint.Offset               = srcOffset;
-        copyDesc.PlacedFootprint.Footprint.Format     = GetFormat();
+        copyDesc.PlacedFootprint.Footprint.Format     = GetDXFormat();
         copyDesc.PlacedFootprint.Footprint.Width      = extent.width;
         copyDesc.PlacedFootprint.Footprint.Height     = extent.height;
         copyDesc.PlacedFootprint.Footprint.Depth      = extent.depth;

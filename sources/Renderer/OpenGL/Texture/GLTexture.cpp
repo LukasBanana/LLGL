@@ -223,7 +223,7 @@ TextureDescriptor GLTexture::GetDesc() const
     Translate data from OpenGL to LLGL.
     Note: for cube textures, depth extent can also be copied directly without transformation (no need to multiply by 6).
     */
-    const auto format           = GLTypes::UnmapFormat(GetInternalFormat());
+    const auto format           = GLTypes::UnmapFormat(GetGLInternalFormat());
     texDesc.format              = MapGLSwizzleFormat(format, swizzleFormat_);
 
     texDesc.extent.width        = static_cast<std::uint32_t>(extent[0]);
@@ -510,7 +510,7 @@ void GLTexture::CopyImageFromBuffer(
     GLint                   imageHeight)
 {
     /* Get image format and data type from internal texture format */
-    const auto format = GLTypes::UnmapFormat(GetInternalFormat());
+    const auto format = GLTypes::UnmapFormat(GetGLInternalFormat());
     const auto& formatAttribs = GetFormatAttribs(format);
 
     /* Read data from unpack buffer with byte offset and equal texture format */
@@ -541,7 +541,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescr
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
             /* Transfer image data directly to GL texture */
-            GLTextureSubImage(GetID(), GetType(), region, imageDesc, GetInternalFormat());
+            GLTextureSubImage(GetID(), GetType(), region, imageDesc, GetGLInternalFormat());
         }
         else
         #endif
@@ -553,7 +553,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescr
                 GLStateManager::Get().PushBoundTexture(target);
                 {
                     GLStateManager::Get().BindTexture(target, GetID());
-                    GLTexSubImage(GetType(), region, imageDesc, GetInternalFormat());
+                    GLTexSubImage(GetType(), region, imageDesc, GetGLInternalFormat());
                 }
                 GLStateManager::Get().PopBoundTexture();
             }
@@ -561,7 +561,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescr
             {
                 /* Bind texture and transfer image data to GL texture */
                 GLStateManager::Get().BindTexture(target, GetID());
-                GLTexSubImage(GetType(), region, imageDesc, GetInternalFormat());
+                GLTexSubImage(GetType(), region, imageDesc, GetGLInternalFormat());
             }
         }
     }
@@ -592,7 +592,7 @@ void GLTexture::TextureView(GLTexture& sharedTexture, const TextureViewDescripto
 
 GLsizei GLTexture::GetRegionMemoryFootprint(const Extent3D& extent, const TextureSubresource& subresource) const
 {
-    const auto format = GLTypes::UnmapFormat(GetInternalFormat());
+    const auto format = GLTypes::UnmapFormat(GetGLInternalFormat());
     const auto numTexels = NumMipTexels(GetType(), extent, subresource);
     return static_cast<GLsizei>(GetMemoryFootprint(format, numTexels));
 }
