@@ -80,7 +80,7 @@ void GLShaderBindingLayout::BindResourceSlots(GLuint program) const
     }
 
     /* Set shader-storage bindings */
-    #ifndef __APPLE__
+    #ifdef LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
     for (std::uint8_t i = 0; i < numShaderStorageBindings_; ++i)
     {
         const auto& resource = bindings_[resourceIndex++];

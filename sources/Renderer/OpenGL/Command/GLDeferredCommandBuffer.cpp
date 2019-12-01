@@ -261,8 +261,8 @@ void GLDeferredCommandBuffer::SetViewports(std::uint32_t numViewports, const Vie
         auto depthRangesGL = reinterpret_cast<GLDepthRange*>(viewportsGL + numViewports);
         for (GLsizei i = 0; i < cmd->count; ++i)
         {
-            depthRangesGL[i].minDepth = static_cast<GLdouble>(viewports[i].minDepth);
-            depthRangesGL[i].maxDepth = static_cast<GLdouble>(viewports[i].maxDepth);
+            depthRangesGL[i].minDepth = static_cast<GLclamp_t>(viewports[i].minDepth);
+            depthRangesGL[i].maxDepth = static_cast<GLclamp_t>(viewports[i].maxDepth);
         }
     }
 }
@@ -327,7 +327,7 @@ void GLDeferredCommandBuffer::SetClearDepth(float depth)
 {
     /* Encode clear command */
     auto cmd = AllocCommand<GLCmdClearDepth>(GLOpcodeClearDepth);
-    cmd->depth = static_cast<GLdouble>(depth);
+    cmd->depth = static_cast<GLclamp_t>(depth);
 
     /* Store as default clear value */
     clearValue_.depth = depth;

@@ -44,12 +44,15 @@ class GLRasterizerState
 
     private:
 
+        #ifdef LLGL_OPENGL
         GLenum      polygonMode_            = GL_FILL;
+        bool        depthClampEnabled_      = false;    // glEnable(GL_DEPTH_CLAMP)
+        #endif
+        
         GLenum      cullFace_               = 0;
         GLenum      frontFace_              = GL_CCW;
         bool        rasterizerDiscard_      = false;    // glEnable(GL_RASTERIZER_DISCARD)
         bool        scissorTestEnabled_     = false;    // glEnable(GL_SCISSOR_TEST)
-        bool        depthClampEnabled_      = false;    // glEnable(GL_DEPTH_CLAMP)
         bool        multiSampleEnabled_     = false;    // glEnable(GL_MULTISAMPLE)
         bool        lineSmoothEnabled_      = false;    // glEnable(GL_LINE_SMOOTH)
         GLfloat     lineWidth_              = 1.0f;

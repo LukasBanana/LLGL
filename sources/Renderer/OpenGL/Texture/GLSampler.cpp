@@ -50,12 +50,16 @@ void GLSampler::SetDesc(const SamplerDescriptor& desc)
     /* Set filter states */
     glSamplerParameteri(id_, GL_TEXTURE_MIN_FILTER, GetGLSamplerMinFilter(desc));
     glSamplerParameteri(id_, GL_TEXTURE_MAG_FILTER, GLTypes::Map(desc.magFilter));
+    #ifdef LLGL_OPENGL
     glSamplerParameterf(id_, GL_TEXTURE_MAX_ANISOTROPY_EXT, static_cast<float>(desc.maxAnisotropy));
+    #endif
 
     /* Set MIP-map level selection */
     glSamplerParameterf(id_, GL_TEXTURE_MIN_LOD, desc.minLOD);
     glSamplerParameterf(id_, GL_TEXTURE_MAX_LOD, desc.maxLOD);
+    #ifdef LLGL_OPENGL
     glSamplerParameterf(id_, GL_TEXTURE_LOD_BIAS, desc.mipMapLODBias);
+    #endif
 
     /* Set compare operation */
     if (desc.compareEnabled)
@@ -67,7 +71,9 @@ void GLSampler::SetDesc(const SamplerDescriptor& desc)
         glSamplerParameteri(id_, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
     /* Set border color */
+    #if defined LLGL_OPENGL || defined GL_ES_VERSION_3_2
     glSamplerParameterfv(id_, GL_TEXTURE_BORDER_COLOR, desc.borderColor.Ptr());
+    #endif
 }
 
 

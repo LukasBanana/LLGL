@@ -14,6 +14,7 @@
 #include "../GLRenderContext.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
+#include "../GLProfile.h"
 #include "../GLTypes.h"
 #include "../GLCore.h"
 #include "../../CheckedCast.h"
@@ -195,8 +196,8 @@ void GLImmediateCommandBuffer::SetViewports(std::uint32_t numViewports, const Vi
         viewportsGL[i].height   = viewports[i].height;
 
         /* Copy GL depth-range data */
-        depthRangesGL[i].minDepth = static_cast<GLdouble>(viewports[i].minDepth);
-        depthRangesGL[i].maxDepth = static_cast<GLdouble>(viewports[i].maxDepth);
+        depthRangesGL[i].minDepth = static_cast<GLclamp_t>(viewports[i].minDepth);
+        depthRangesGL[i].maxDepth = static_cast<GLclamp_t>(viewports[i].maxDepth);
     }
 
     /* Submit viewports and depth-ranges to state manager */
@@ -248,7 +249,7 @@ void GLImmediateCommandBuffer::SetClearColor(const ColorRGBAf& color)
 void GLImmediateCommandBuffer::SetClearDepth(float depth)
 {
     /* Submit clear value to GL */
-    glClearDepth(depth);
+    GLProfile::ClearDepth(static_cast<GLclamp_t>(depth));
 
     /* Store as default clear value */
     clearValue_.depth = depth;
@@ -525,26 +526,20 @@ void GLImmediateCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t quer
 
 void GLImmediateCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
+    #ifdef LLGL_GLEXT_CONDITIONAL_RENDER
     auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
     glBeginConditionalRender(queryHeapGL.GetID(query), GLTypes::Map(mode));
+    #endif
 }
 
 void GLImmediateCommandBuffer::EndRenderCondition()
 {
+    #ifdef LLGL_GLEXT_CONDITIONAL_RENDER
     glEndConditionalRender();
+    #endif
 }
 
 /* ----- Stream Output ------ */
-
-#ifndef __APPLE__
-
-[[noreturn]]
-static void ErrTransformFeedbackNotSupported(const char* funcName)
-{
-    ThrowNotSupportedExcept(funcName, "stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)");
-}
-
-#endif
 
 void GLImmediateCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
 {
@@ -561,30 +556,26 @@ void GLImmediateCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffe
     stateMngr_->BindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, 0, static_cast<GLsizei>(numBuffers), soTargets);
 
     /* Begin transform feedback section */
-    #ifdef __APPLE__
+    #ifdef LLGL_GLEXT_TRANSFORM_FEEDBACK
     glBeginTransformFeedback(renderState_.primitiveMode);
     #else
     if (HasExtension(GLExt::EXT_transform_feedback))
         glBeginTransformFeedback(renderState_.primitiveMode);
     else if (HasExtension(GLExt::NV_transform_feedback))
         glBeginTransformFeedbackNV(renderState_.primitiveMode);
-    else
-        ErrTransformFeedbackNotSupported(__FUNCTION__);
     #endif
 }
 
 void GLImmediateCommandBuffer::EndStreamOutput()
 {
     /* End transform feedback section */
-    #ifdef __APPLE__
+    #ifdef LLGL_GLEXT_TRANSFORM_FEEDBACK
     glEndTransformFeedback();
     #else
     if (HasExtension(GLExt::EXT_transform_feedback))
         glEndTransformFeedback();
     else if (HasExtension(GLExt::NV_transform_feedback))
         glEndTransformFeedbackNV();
-    else
-        ErrTransformFeedbackNotSupported(__FUNCTION__);
     #endif
 }
 
@@ -618,6 +609,7 @@ void GLImmediateCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32
 
 void GLImmediateCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    #ifdef LLGL_GLEXT_DRAW_ELEMENTS_BASE_VERTEX
     const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsBaseVertex(
         renderState_.drawMode,
@@ -626,6 +618,7 @@ void GLImmediateCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32
         reinterpret_cast<const GLvoid*>(indices),
         vertexOffset
     );
+    #endif
 }
 
 void GLImmediateCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
@@ -640,7 +633,7 @@ void GLImmediateCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uin
 
 void GLImmediateCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    #ifndef __APPLE__
+    #ifdef LLGL_GLEXT_BASE_INSTANCE
     glDrawArraysInstancedBaseInstance(
         renderState_.drawMode,
         static_cast<GLint>(firstVertex),
@@ -648,8 +641,6 @@ void GLImmediateCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uin
         static_cast<GLsizei>(numInstances),
         firstInstance
     );
-    #else
-    ErrUnsupportedGLProc("glDrawArraysInstancedBaseInstance");
     #endif
 }
 
@@ -667,6 +658,7 @@ void GLImmediateCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, st
 
 void GLImmediateCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    #ifdef LLGL_GLEXT_DRAW_ELEMENTS_BASE_VERTEX
     const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsInstancedBaseVertex(
         renderState_.drawMode,
@@ -676,11 +668,12 @@ void GLImmediateCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, st
         static_cast<GLsizei>(numInstances),
         vertexOffset
     );
+    #endif
 }
 
 void GLImmediateCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    #ifndef __APPLE__
+    #ifdef LLGL_GLEXT_BASE_INSTANCE
     const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
     glDrawElementsInstancedBaseVertexBaseInstance(
         renderState_.drawMode,
@@ -691,13 +684,12 @@ void GLImmediateCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, st
         vertexOffset,
         firstInstance
     );
-    #else
-    ErrUnsupportedGLProc("glDrawElementsInstancedBaseVertexBaseInstance");
     #endif
 }
 
 void GLImmediateCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    #ifdef LLGL_GLEXT_DRAW_INDIRECT
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
 
@@ -706,16 +698,18 @@ void GLImmediateCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset
         renderState_.drawMode,
         reinterpret_cast<const GLvoid*>(indirect)
     );
+    #endif
 }
 
 void GLImmediateCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    #ifdef LLGL_GLEXT_DRAW_INDIRECT
     /* Bind indirect argument buffer */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
 
     GLintptr indirect = static_cast<GLintptr>(offset);
-    #ifndef __APPLE__
+    #ifdef LLGL_GLEXT_MULTI_DRAW_INDIRECT
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
         /* Use native multi draw command */
@@ -727,7 +721,7 @@ void GLImmediateCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset
         );
     }
     else
-    #endif // /__APPLE__
+    #endif
     {
         /* Emulate multi draw command */
         while (numCommands-- > 0)
@@ -739,10 +733,12 @@ void GLImmediateCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset
             indirect += stride;
         }
     }
+    #endif
 }
 
 void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    #ifdef LLGL_GLEXT_DRAW_INDIRECT
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
 
@@ -752,16 +748,18 @@ void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t
         renderState_.indexBufferDataType,
         reinterpret_cast<const GLvoid*>(indirect)
     );
+    #endif
 }
 
 void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    #ifdef LLGL_GLEXT_DRAW_INDIRECT
     /* Bind indirect argument buffer */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
 
     GLintptr indirect = static_cast<GLintptr>(offset);
-    #ifndef __APPLE__
+    #ifdef LLGL_GLEXT_MULTI_DRAW_INDIRECT
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
         /* Use native multi draw command */
@@ -774,7 +772,7 @@ void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t
         );
     }
     else
-    #endif // /__APPLE__
+    #endif
     {
         /* Emulate multi draw command */
         while (numCommands-- > 0)
@@ -787,27 +785,24 @@ void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t
             indirect += stride;
         }
     }
+    #endif
 }
 
 /* ----- Compute ----- */
 
 void GLImmediateCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
-    #ifndef __APPLE__
+    #ifdef LLGL_GLEXT_COMPUTE_SHADER
     glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
-    #else
-    ErrUnsupportedGLProc("glDispatchCompute");
     #endif
 }
 
 void GLImmediateCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    #ifndef __APPLE__
+    #ifdef LLGL_GLEXT_COMPUTE_SHADER
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBuffer(GLBufferTarget::DISPATCH_INDIRECT_BUFFER, bufferGL.GetID());
     glDispatchComputeIndirect(static_cast<GLintptr>(offset));
-    #else
-    ErrUnsupportedGLProc("glDispatchComputeIndirect");
     #endif
 }
 

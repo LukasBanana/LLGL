@@ -1,0 +1,76 @@
+/*
+ * AndroidCanvas.cpp
+ * 
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#include "AndroidCanvas.h"
+#include <LLGL/Platform/NativeHandle.h>
+
+
+namespace LLGL
+{
+
+
+std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
+{
+    return std::unique_ptr<Canvas>(new AndroidCanvas(desc));
+}
+
+AndroidCanvas::AndroidCanvas(const CanvasDescriptor& desc) :
+    desc_ { desc }
+{
+}
+
+AndroidCanvas::~AndroidCanvas()
+{
+}
+
+bool AndroidCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+{
+    if (nativeHandleSize == sizeof(NativeHandle))
+    {
+        //auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
+        //handle.window = wnd_;
+        //return true;
+    }
+    return false;
+}
+
+Extent2D AndroidCanvas::GetContentSize() const
+{
+    return { 0u, 0u }; //todo...
+}
+
+void AndroidCanvas::SetTitle(const std::wstring& title)
+{
+    //todo...
+}
+
+std::wstring AndroidCanvas::GetTitle() const
+{
+    return L""; //todo...
+}
+
+void AndroidCanvas::ResetPixelFormat()
+{
+    // dummy
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void AndroidCanvas::OnProcessEvents()
+{
+    //TODO...
+}
+
+
+} // /namespace LLGL
+
+
+
+// ================================================================================

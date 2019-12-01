@@ -79,8 +79,10 @@ class GLBlendState
         GLfloat             blendColor_[4]                                  = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool                sampleAlphaToCoverage_                          = false;
         GLbitfield          sampleMask_                                     = ~0u;
+        #ifdef LLGL_OPENGL
         bool                logicOpEnabled_                                 = false;
         GLenum              logicOp_                                        = GL_COPY;
+        #endif
         GLuint              numDrawBuffers_                                 = 0;
         GLDrawBufferState   drawBuffers_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]    = {};
 

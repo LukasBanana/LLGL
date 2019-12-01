@@ -21,6 +21,7 @@ namespace LLGL
 {
 
 
+// Implementation of the <GLContext> interface for MacOS and wrapper for a native NSGL context.
 class MacOSGLContext : public GLContext
 {
 

@@ -9,19 +9,11 @@
 #define LLGL_GL_EXTENSIONS_H
 
 
-#include <LLGL/Platform/Platform.h>
-#include "../OpenGL.h"
-
-
-namespace LLGL
-{
-
-
-// Include inline header for object declarations
-#include "GLExtensionsDecl.inl"
-
-
-} // /namespace LLGL
+#ifdef LLGL_OPENGLES3
+#   include "../GLESProfile/GLESExtensions.h"
+#else
+#   include "../GLCoreProfile/GLCoreExtensions.h"
+#endif
 
 
 #endif

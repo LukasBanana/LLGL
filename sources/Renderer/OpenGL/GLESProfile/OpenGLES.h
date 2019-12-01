@@ -18,7 +18,7 @@
 #   include <GLES3/gl3.h>
 #   include <GLES3/gl3ext.h>
 #else
-#   error "Unsupported platform for OpenGL ES 3"
+#   error Unsupported platform for OpenGLES 3
 #endif
 
 

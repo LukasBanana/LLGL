@@ -146,7 +146,7 @@ void GLRenderTarget::BlitOntoFramebuffer()
         for (auto attachment : colorAttachments_)
         {
             glReadBuffer(attachment);
-            glDrawBuffer(attachment);
+            GLProfile::DrawBuffer(attachment);
             BlitFramebuffer();
         }
 
@@ -167,7 +167,7 @@ void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
         GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFramebuffer().GetID());
         {
             glReadBuffer(colorAttachments_[colorAttachmentIndex]);
-            glDrawBuffer(GL_BACK);
+            GLProfile::DrawBuffer(GL_BACK);
             BlitFramebuffer();
         }
         GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
@@ -186,9 +186,9 @@ void GLRenderTarget::SetDrawBuffers()
     Each color attachment has its own draw buffer.
     */
     if (colorAttachments_.empty())
-        glDrawBuffer(GL_NONE);
+        GLProfile::DrawBuffer(GL_NONE);
     else if (colorAttachments_.size() == 1)
-        glDrawBuffer(colorAttachments_.front());
+        GLProfile::DrawBuffer(colorAttachments_.front());
     else
         glDrawBuffers(static_cast<GLsizei>(colorAttachments_.size()), colorAttachments_.data());
 }
@@ -341,17 +341,6 @@ void GLRenderTarget::AttachDepthStencilBuffer()
     blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
-// Returns the GL internal format for the specified texture object
-static GLint GetTexInternalFormat(const GLTexture& textureGL)
-{
-    GLint internalFormat = GL_RGBA;
-    {
-        GLStateManager::Get().BindGLTexture(textureGL);
-        glGetTexLevelParameteriv(GLTypes::Map(textureGL.GetType()), 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
-    }
-    return internalFormat;
-}
-
 void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc, GLenum& internalFormat)
 {
     /* Get OpenGL texture object */
@@ -362,7 +351,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor&
     ValidateMipResolution(texture, mipLevel);
 
     /* Store internal texture format into output parameter */
-    internalFormat = static_cast<GLenum>(GetTexInternalFormat(textureGL));
+    internalFormat = textureGL.GetGLInternalFormat();
 
     /* Make color or depth-stencil attachment */
     auto attachment = MakeFramebufferAttachment(attachmentDesc.type);

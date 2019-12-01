@@ -143,7 +143,11 @@ GLenum MapOrZero(const Format format)
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return GL_DEPTH_COMPONENT16;
+        #ifdef LLGL_OPENGL
         case Format::D32Float:          return GL_DEPTH_COMPONENT32;//GL_DEPTH_COMPONENT;
+        #else
+        case Format::D32Float:          return GL_DEPTH_COMPONENT32F;
+        #endif
         case Format::D24UNormS8UInt:    return GL_DEPTH24_STENCIL8;//GL_DEPTH_STENCIL;
         case Format::D32FloatS8X24UInt: return GL_DEPTH32F_STENCIL8;
 
@@ -269,7 +273,9 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
         case ImageFormat::BGR:              return GL_BGR;
         #endif
         case ImageFormat::RGBA:             return GL_RGBA;
+        #ifdef LLGL_OPENGL
         case ImageFormat::BGRA:             return GL_BGRA;
+        #endif
         case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;
         case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
         #ifdef LLGL_OPENGL
@@ -617,19 +623,19 @@ UniformType UnmapUniformType(const GLenum uniformType)
     switch (uniformType)
     {
         /* ----- Scalars/Vectors ----- */
-        case GL_FLOAT:              return UniformType::Float;
+        case GL_FLOAT:              return UniformType::Float1;
         case GL_FLOAT_VEC2:         return UniformType::Float2;
         case GL_FLOAT_VEC3:         return UniformType::Float3;
         case GL_FLOAT_VEC4:         return UniformType::Float4;
-        case GL_INT:                return UniformType::Int;
+        case GL_INT:                return UniformType::Int1;
         case GL_INT_VEC2:           return UniformType::Int2;
         case GL_INT_VEC3:           return UniformType::Int3;
         case GL_INT_VEC4:           return UniformType::Int4;
-        case GL_UNSIGNED_INT:       return UniformType::UInt;
+        case GL_UNSIGNED_INT:       return UniformType::UInt1;
         case GL_UNSIGNED_INT_VEC2:  return UniformType::UInt2;
         case GL_UNSIGNED_INT_VEC3:  return UniformType::UInt3;
         case GL_UNSIGNED_INT_VEC4:  return UniformType::UInt4;
-        case GL_BOOL:               return UniformType::Bool;
+        case GL_BOOL:               return UniformType::Bool1;
         case GL_BOOL_VEC2:          return UniformType::Bool2;
         case GL_BOOL_VEC3:          return UniformType::Bool3;
         case GL_BOOL_VEC4:          return UniformType::Bool4;
@@ -920,7 +926,11 @@ Format UnmapFormat(const GLenum internalFormat)
 
         /* --- Depth-stencil formats --- */
         case GL_DEPTH_COMPONENT16:                      return Format::D16UNorm;
+        #ifdef LLGL_OPENGL
         case GL_DEPTH_COMPONENT32:                      /* pass */
+        #else
+        case GL_DEPTH_COMPONENT32F:
+        #endif
         case GL_DEPTH_COMPONENT:                        return Format::D32Float;
         case GL_DEPTH24_STENCIL8:                       /* pass */
         case GL_DEPTH_STENCIL:                          return Format::D24UNormS8UInt;

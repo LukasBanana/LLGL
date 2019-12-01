@@ -14,8 +14,6 @@
 #include "../RenderSystemUtils.h"
 #include "GLTypes.h"
 #include "GLCore.h"
-//#include "Texture/GLTexImage.h"
-//#include "Texture/GLTexSubImage.h"
 #include "Buffer/GLBufferWithVAO.h"
 #include "Buffer/GLBufferArrayWithVAO.h"
 #include "../CheckedCast.h"
@@ -32,6 +30,11 @@
 namespace LLGL
 {
 
+
+#ifdef LLGL_OPENGLES3
+#define LLGL_GLES3_NOT_IMPLEMENTED \
+    throw std::runtime_error("not implemented for GLES3: " + std::string(__FUNCTION__))
+#endif
 
 /* ----- Common ----- */
 
@@ -373,6 +376,7 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
             data                = intermediateData.get();
         }
 
+        #ifdef LLGL_OPENGL
         #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
@@ -398,6 +402,12 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
                 data
             );
         }
+        #else
+        
+        //TODO: copy texture to unpack buffer, then map buffer range to CPU memory
+        LLGL_GLES3_NOT_IMPLEMENTED;
+        
+        #endif
 
         /* Blit intermediate data to output data */
         if (useStaging)
@@ -585,7 +595,10 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
 
     /* Use uniform clipping space */
     GLStateManager::Get().DetermineExtensionsAndLimits();
+    
+    #ifdef LLGL_OPENGL
     GLStateManager::Get().SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
+    #endif
 
     /* Take ownership and return raw pointer */
     return TakeOwnership(renderContexts_, std::move(renderContext));
@@ -626,6 +639,8 @@ void GLRenderSystem::LoadGLExtensions(bool hasGLCoreProfile)
     }
 }
 
+#ifdef GL_KHR_debug
+
 void APIENTRY GLDebugCallback(
     GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
@@ -642,6 +657,8 @@ void APIENTRY GLDebugCallback(
     auto debugCallback = reinterpret_cast<const DebugCallback*>(userParam);
     (*debugCallback)(typeStr.str(), message);
 }
+
+#endif // /GL_KHR_debug
 
 void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
 {

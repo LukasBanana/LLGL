@@ -34,32 +34,34 @@ namespace LLGL
 static const GLenum g_stateCapsEnum[] =
 {
     GL_BLEND,
-    GL_COLOR_LOGIC_OP,
     GL_CULL_FACE,
-    GL_DEBUG_OUTPUT,
-    GL_DEBUG_OUTPUT_SYNCHRONOUS,
-    GL_DEPTH_CLAMP,
     GL_DEPTH_TEST,
     GL_DITHER,
+    GL_POLYGON_OFFSET_FILL,
+    GL_PRIMITIVE_RESTART_FIXED_INDEX,
+    GL_RASTERIZER_DISCARD,
+    GL_SAMPLE_ALPHA_TO_COVERAGE,
+    GL_SAMPLE_COVERAGE,
+    GL_SCISSOR_TEST,
+    GL_STENCIL_TEST,
+    #ifdef LLGL_OPENGL
+    GL_COLOR_LOGIC_OP,
+    GL_DEPTH_CLAMP,
+    GL_DEBUG_OUTPUT,
+    GL_DEBUG_OUTPUT_SYNCHRONOUS,
     GL_FRAMEBUFFER_SRGB,
     GL_LINE_SMOOTH,
     GL_MULTISAMPLE,
-    GL_POLYGON_OFFSET_FILL,
     GL_POLYGON_OFFSET_LINE,
     GL_POLYGON_OFFSET_POINT,
     GL_POLYGON_SMOOTH,
     GL_PRIMITIVE_RESTART,
-    GL_PRIMITIVE_RESTART_FIXED_INDEX,
-    GL_RASTERIZER_DISCARD,
-    GL_SAMPLE_ALPHA_TO_COVERAGE,
+    GL_PROGRAM_POINT_SIZE,
     GL_SAMPLE_ALPHA_TO_ONE,
-    GL_SAMPLE_COVERAGE,
     GL_SAMPLE_SHADING,
     GL_SAMPLE_MASK,
-    GL_SCISSOR_TEST,
-    GL_STENCIL_TEST,
     GL_TEXTURE_CUBE_MAP_SEAMLESS,
-    GL_PROGRAM_POINT_SIZE,
+    #endif
 };
 
 // Maps GLBufferTarget to <target> in glBindBuffer, glBindBufferBase
@@ -363,6 +365,7 @@ void GLStateManager::AssertViewportLimit(GLuint first, GLsizei count)
 
 void GLStateManager::SetViewportArray(GLuint first, GLsizei count, GLViewport* viewports)
 {
+    #ifdef GL_ARB_viewport_array
     if (first + count > 1)
     {
         AssertViewportLimit(first, count);
@@ -377,7 +380,9 @@ void GLStateManager::SetViewportArray(GLuint first, GLsizei count, GLViewport* v
 
         glViewportArrayv(first, count, reinterpret_cast<const GLfloat*>(viewports));
     }
-    else if (count == 1)
+    else
+    #endif
+    if (count == 1)
     {
         /* Set as single viewport */
         SetViewport(viewports[0]);
@@ -386,11 +391,12 @@ void GLStateManager::SetViewportArray(GLuint first, GLsizei count, GLViewport* v
 
 void GLStateManager::SetDepthRange(const GLDepthRange& depthRange)
 {
-    glDepthRange(depthRange.minDepth, depthRange.maxDepth);
+    GLProfile::DepthRange(depthRange.minDepth, depthRange.maxDepth);
 }
 
 void GLStateManager::SetDepthRangeArray(GLuint first, GLsizei count, const GLDepthRange* depthRanges)
 {
+    #ifdef GL_ARB_viewport_array
     if (first + count > 1)
     {
         AssertViewportLimit(first, count);
@@ -398,7 +404,9 @@ void GLStateManager::SetDepthRangeArray(GLuint first, GLsizei count, const GLDep
 
         glDepthRangeArrayv(first, count, reinterpret_cast<const GLdouble*>(depthRanges));
     }
-    else if (count == 1)
+    else
+    #endif
+    if (count == 1)
     {
         /* Set as single depth-range */
         SetDepthRange(depthRanges[0]);
@@ -421,6 +429,7 @@ void GLStateManager::SetScissor(GLScissor& scissor)
 
 void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* scissors)
 {
+    #ifdef GL_ARB_viewport_array
     if (first + count > 1)
     {
         AssertViewportLimit(first, count);
@@ -435,7 +444,9 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* sci
 
         glScissorArrayv(first, count, reinterpret_cast<const GLint*>(scissors));
     }
-    else if (count == 1)
+    else
+    #endif
+    if (count == 1)
     {
         /* Set as single scissor box */
         SetScissor(scissors[0]);
@@ -457,11 +468,13 @@ void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 // <face> parameter must always be 'GL_FRONT_AND_BACK' since GL 3.2+
 void GLStateManager::SetPolygonMode(GLenum mode)
 {
+    #ifdef LLGL_OPENGL
     if (commonState_.polygonMode != mode)
     {
         commonState_.polygonMode = mode;
         glPolygonMode(GL_FRONT_AND_BACK, mode);
     }
+    #endif
 }
 
 void GLStateManager::SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat clamp)
@@ -517,11 +530,13 @@ void GLStateManager::SetFrontFace(GLenum mode)
 
 void GLStateManager::SetPatchVertices(GLint patchVertices)
 {
+    #ifdef LLGL_GLEXT_TESSELLATION_SHADER
     if (commonState_.patchVertices != patchVertices)
     {
         commonState_.patchVertices = patchVertices;
         glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
     }
+    #endif
 }
 
 void GLStateManager::SetLineWidth(GLfloat width)
@@ -542,11 +557,13 @@ void GLStateManager::SetPixelStorePack(GLint rowLength, GLint imageHeight, GLint
         glPixelStorei(GL_PACK_ROW_LENGTH, rowLength);
         pixelStorePack_.rowLength = rowLength;
     }
+    #ifdef LLGL_OPENGL //TODO: emulate for GLES
     if (pixelStorePack_.imageHeight != imageHeight)
     {
         glPixelStorei(GL_PACK_IMAGE_HEIGHT, imageHeight);
         pixelStorePack_.imageHeight = imageHeight;
     }
+    #endif
     if (pixelStorePack_.alignment != alignment)
     {
         glPixelStorei(GL_PACK_ALIGNMENT, alignment);
@@ -665,11 +682,13 @@ void GLStateManager::SetBlendColor(const GLfloat* color)
 
 void GLStateManager::SetLogicOp(GLenum opcode)
 {
+    #ifdef LLGL_OPENGL
     if (commonState_.logicOpCode != opcode)
     {
         commonState_.logicOpCode = opcode;
         glLogicOp(opcode);
     }
+    #endif
 }
 
 /* ----- Buffer ----- */
@@ -1387,17 +1406,19 @@ static void AccumCommonGLLimits(GLStateManager::GLLimits& dst, const GLStateMana
 void GLStateManager::DetermineLimits()
 {
     /* Get integral limits */
-    glGetIntegerv(GL_MAX_VIEWPORTS, &limits_.maxViewports);
+    limits_.maxViewports = GLProfile::GetMaxViewports();
 
     /* Determine minimal line width range for both aliased and smooth lines */
-    GLfloat aliasedLineRange[2];
+    GLfloat aliasedLineRange[2] = {};
     glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, aliasedLineRange);
 
-    GLfloat smoothLineRange[2];
+    #ifdef LLGL_OPENGL
+    GLfloat smoothLineRange[2] = {};
     glGetFloatv(GL_SMOOTH_LINE_WIDTH_RANGE, smoothLineRange);
 
     limits_.lineWidthRange[0] = std::min(aliasedLineRange[0], smoothLineRange[0]);
     limits_.lineWidthRange[1] = std::min(aliasedLineRange[1], smoothLineRange[1]);
+    #endif
 
     /* Get extension specific limits */
     #ifdef GL_KHR_debug

@@ -10,6 +10,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../GLCore.h"
 #include "../GLTypes.h"
+#include "../GLProfile.h"
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/HelperMacros.h"
 #include "../Texture/GLRenderTarget.h"
@@ -38,11 +39,13 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
     sampleAlphaToCoverage_  = desc.alphaToCoverageEnabled;
     sampleMask_             = desc.sampleMask;
 
+    #ifdef LLGL_OPENGL
     if (desc.logicOp != LogicOp::Disabled)
     {
         logicOpEnabled_ = true;
         logicOp_        = GLTypes::Map(desc.logicOp);
     }
+    #endif
 
     if (desc.independentBlendEnabled)
     {
@@ -70,6 +73,8 @@ void GLBlendState::Bind(GLStateManager& stateMngr)
 
     stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);
 
+    #ifdef LLGL_OPENGL
+    
     if (logicOpEnabled_)
     {
         /* Enable logic pixel operation */
@@ -87,6 +92,13 @@ void GLBlendState::Bind(GLStateManager& stateMngr)
         /* Bind blend states for all draw buffers */
         BindDrawBufferStates(stateMngr);
     }
+    
+    #else // LLGL_OPENGL
+    
+    /* Bind blend states for all draw buffers */
+    BindDrawBufferStates(stateMngr);
+    
+    #endif // /LLGL_OPENGL
 }
 
 void GLBlendState::BindColorMaskOnly(GLStateManager& stateMngr)
@@ -104,8 +116,10 @@ int GLBlendState::CompareSWO(const GLBlendState& rhs) const
     LLGL_COMPARE_MEMBER_SWO     ( blendColor_[3]         );
     LLGL_COMPARE_MEMBER_SWO     ( sampleAlphaToCoverage_ );
     //LLGL_COMPARE_MEMBER_SWO     ( sampleMask_            );
+    #ifdef LLGL_OPENGL
     LLGL_COMPARE_BOOL_MEMBER_SWO( logicOpEnabled_        );
     LLGL_COMPARE_MEMBER_SWO     ( logicOp_               );
+    #endif
     LLGL_COMPARE_MEMBER_SWO     ( numDrawBuffers_        );
 
     for (decltype(numDrawBuffers_) i = 0; i < numDrawBuffers_; ++i)
@@ -145,7 +159,7 @@ void GLBlendState::BindDrawBufferStates(GLStateManager& stateMngr)
             /* Bind blend states with emulated draw buffer setting */
             for (GLuint i = 0; i < numDrawBuffers_; ++i)
             {
-                glDrawBuffer(GLTypes::ToColorAttachment(i));
+                GLProfile::DrawBuffer(GLTypes::ToColorAttachment(i));
                 BindDrawBufferState(drawBuffers_[i]);
             }
 
@@ -178,7 +192,7 @@ void GLBlendState::BindDrawBufferColorMasks(GLStateManager& stateMngr)
             /* Bind color masks with emulated draw buffer setting */
             for (GLuint i = 0; i < numDrawBuffers_; ++i)
             {
-                glDrawBuffer(GLTypes::ToColorAttachment(i));
+                GLProfile::DrawBuffer(GLTypes::ToColorAttachment(i));
                 BindDrawBufferColorMask(drawBuffers_[i]);
             }
 
@@ -204,7 +218,7 @@ void GLBlendState::BindDrawBufferState(const GLDrawBufferState& state)
 
 void GLBlendState::BindIndexedDrawBufferState(const GLDrawBufferState& state, GLuint index)
 {
-    #ifdef GL_ARB_draw_buffers_blend
+    #ifdef LLGL_GLEXT_DRAW_BUFFERS_BLEND
 
     glColorMaski(index, state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
     if (state.blendEnabled)
@@ -216,7 +230,7 @@ void GLBlendState::BindIndexedDrawBufferState(const GLDrawBufferState& state, GL
     else
         glDisablei(GL_BLEND, index);
 
-    #endif // /GL_ARB_draw_buffers_blend
+    #endif // /LLGL_GLEXT_DRAW_BUFFERS_BLEND
 }
 
 void GLBlendState::BindDrawBufferColorMask(const GLDrawBufferState& state)
@@ -226,11 +240,11 @@ void GLBlendState::BindDrawBufferColorMask(const GLDrawBufferState& state)
 
 void GLBlendState::BindIndexedDrawBufferColorMask(const GLDrawBufferState& state, GLuint index)
 {
-    #ifdef GL_EXT_draw_buffers2
+    #ifdef LLGL_GLEXT_DRAW_BUFFERS2
 
     glColorMaski(index, state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
 
-    #endif // /GL_EXT_draw_buffers2
+    #endif // /LLGL_GLEXT_DRAW_BUFFERS2
 }
 
 

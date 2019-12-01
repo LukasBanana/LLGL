@@ -67,7 +67,7 @@ class GLShaderProgram final : public ShaderProgram
         ) const;
 
         void BuildTransformFeedbackVaryingsEXT(std::size_t numVaryings, const char* const* varyings);
-        #ifndef __APPLE__
+        #ifdef GL_NV_transform_feedback
         void BuildTransformFeedbackVaryingsNV(std::size_t numVaryings, const char* const* varyings);
         #endif
 
@@ -81,7 +81,7 @@ class GLShaderProgram final : public ShaderProgram
 
         #ifdef GL_ARB_program_interface_query
         void QueryBufferProperties(ShaderResource& resource, GLenum programInterface, GLuint resourceIndex) const;
-        #endif // /GL_ARB_program_interface_query
+        #endif
 
     private:
 

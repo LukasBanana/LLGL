@@ -7,7 +7,7 @@
 
 #include "GLTexImage.h"
 #include "../GLTypes.h"
-#include "../OpenGL.h"
+#include "../GLProfile.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include <array>
@@ -186,6 +186,7 @@ static void GLTexImage2DBase(
         /* Allocate mutable texture storage of MIP levels (emulate <glTexStorage2D>) */
         if (mipLevels > 1)
         {
+            #ifdef LLGL_OPENGL
             if (target == GL_TEXTURE_1D_ARRAY || target == GL_PROXY_TEXTURE_1D_ARRAY)
             {
                 for (std::uint32_t i = 1; i < mipLevels; ++i)
@@ -195,6 +196,7 @@ static void GLTexImage2DBase(
                 }
             }
             else
+            #endif
             {
                 for (std::uint32_t i = 1; i < mipLevels; ++i)
                 {

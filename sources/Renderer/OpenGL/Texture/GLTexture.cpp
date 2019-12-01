@@ -103,6 +103,14 @@ GLTexture::GLTexture(const TextureDescriptor& desc) :
             glGenTextures(1, &id_);
         }
     }
+    
+    #ifdef LLGL_OPENGLES3
+    /* Store additional parameters for GLES */
+    extent_[0]  = static_cast<GLint>(desc.extent.width);
+    extent_[1]  = static_cast<GLint>(desc.extent.height);
+    extent_[2]  = static_cast<GLint>(desc.extent.depth);
+    samples_    = static_cast<GLint>(desc.samples);
+    #endif
 }
 
 GLTexture::~GLTexture()
@@ -401,6 +409,7 @@ static void GLCopyTexSubImage(
         {
             case TextureType::Texture1D:
             {
+                #ifdef LLGL_OPENGL
                 readFBO.Attach(srcTexture, srcLevel, srcOffset);
                 glCopyTexSubImage1D(
                     targetGL,
@@ -410,6 +419,7 @@ static void GLCopyTexSubImage(
                     0,
                     static_cast<GLsizei>(extent.width)
                 );
+                #endif
             }
             break;
 
@@ -657,13 +667,15 @@ void GLTexture::QueryInternalFormat()
         if (IsRenderbuffer())
             glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
         else
-            glGetTexLevelParameteriv(GetGLTexTarget(), 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
+            GLProfile::GetTexParameterInternalFormat(GetGLTexTarget(), &format);
     }
     internalFormat_ = static_cast<GLenum>(format);
 }
 
 void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
 {
+    #ifdef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+    
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
@@ -700,6 +712,20 @@ void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
         }
         GLStateManager::Get().PopBoundTexture();
     }
+    
+    #else // LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+    
+    if (extent != nullptr)
+    {
+        extent[0] = extent_[0];
+        extent[1] = extent_[1];
+        extent[2] = extent_[2];
+    }
+    
+    if (samples != nullptr)
+        samples[0] = samples_;
+    
+    #endif // /LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
 }
 
 void GLTexture::GetRenderbufferParams(GLint* extent, GLint* samples) const
@@ -743,6 +769,8 @@ void GLTexture::GetRenderbufferParams(GLint* extent, GLint* samples) const
 
 void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
 {
+    #ifdef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+    
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
@@ -770,6 +798,31 @@ void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
     /* Adjust depth value for cube texture to be uniform with D3D */
     if (IsCubeTexture(GetType()))
         texSize[2] *= 6;
+        
+    #else // LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+    
+    /* Calculate MIP extent from texture size and type */
+    auto GLIntToUInt32 = [](GLint x) -> std::uint32_t
+    {
+        return static_cast<std::uint32_t>(std::max(0, x));
+    };
+    
+    auto extent = LLGL::GetMipExtent(
+        GetType(),
+        Extent3D
+        {
+            GLIntToUInt32(extent_[0]),
+            GLIntToUInt32(extent_[1]),
+            GLIntToUInt32(extent_[2])
+        },
+        GLIntToUInt32(level)
+    );
+    
+    texSize[0] = extent.width;
+    texSize[1] = extent.height;
+    texSize[2] = extent.depth;
+    
+    #endif // /LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
 }
 
 void GLTexture::GetRenderbufferSize(GLint (&texSize)[3]) const

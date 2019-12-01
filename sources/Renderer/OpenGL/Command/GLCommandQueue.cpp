@@ -51,8 +51,8 @@ static bool AreQueryResultsAvailable(GLQueryHeap& queryHeapGL, std::uint32_t fir
 
     for (std::uint32_t i = 0; i < numQueries; ++i)
     {
-        GLint available = 0;
-        glGetQueryObjectiv(idList[firstQuery + i], GL_QUERY_RESULT_AVAILABLE, &available);
+        GLuint available = 0;
+        glGetQueryObjectuiv(idList[firstQuery + i], GL_QUERY_RESULT_AVAILABLE, &available);
         if (available == GL_FALSE)
             return false;
     }
@@ -71,6 +71,7 @@ static void QueryResultUInt32(GLQueryHeap& queryHeapGL, std::uint32_t firstQuery
 static void QueryResultUInt64(GLQueryHeap& queryHeapGL, std::uint32_t firstQuery, std::uint32_t numQueries, std::uint64_t* data)
 {
     const auto& idList = queryHeapGL.GetIDs();
+    #ifdef GL_ARB_timer_query
     if (HasExtension(GLExt::ARB_timer_query))
     {
         /* Get query result with 64-bit version */
@@ -78,6 +79,7 @@ static void QueryResultUInt64(GLQueryHeap& queryHeapGL, std::uint32_t firstQuery
             glGetQueryObjectui64v(idList[firstQuery + i], GL_QUERY_RESULT, &data[i]);
     }
     else
+    #endif // /GL_ARB_timer_query
     {
         /* Get query result with 32-bit version */
         for (std::uint32_t i = 0; i < numQueries; ++i)
@@ -146,7 +148,7 @@ static void QueryResultPipelineStatistics(GLQueryHeap& queryHeapGL, std::uint32_
             data->computeShaderInvocations          = params[10].ui64;
         }
     }
-    #endif
+    #endif // /GL_ARB_pipeline_statistics_query
 }
 
 bool GLCommandQueue::QueryResult(

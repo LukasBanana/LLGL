@@ -6,6 +6,7 @@
  */
 
 #include "GLBuffer.h"
+#include "../GLProfile.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../GLTypes.h"
@@ -231,7 +232,7 @@ void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset
 
         /* Read source buffer data */
         GLStateManager::Get().BindGLBuffer(readBuffer);
-        glGetBufferSubData(readBuffer.GetGLTarget(), readOffset, size, intermediateBuffer.get());
+        GLProfile::GetBufferSubData(readBuffer.GetGLTarget(), readOffset, size, intermediateBuffer.get());
 
         /* Write destination buffer data */
         GLStateManager::Get().BindGLBuffer(*this);
@@ -250,7 +251,7 @@ void* GLBuffer::MapBuffer(GLenum access)
     #endif // /GL_ARB_direct_state_access
     {
         GLStateManager::Get().BindGLBuffer(*this);
-        return glMapBuffer(GetGLTarget(), access);
+        return GLProfile::MapBuffer(GetGLTarget(), access);
     }
 }
 

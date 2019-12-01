@@ -13,7 +13,7 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Types.h>
 #include "../RenderState/GLState.h"
-#include "../OpenGL.h"
+#include "../GLProfile.h"
 #include <cstdint>
 
 
@@ -145,7 +145,7 @@ struct GLCmdClearColor
 
 struct GLCmdClearDepth
 {
-    GLdouble depth;
+    GLclamp_t depth;
 };
 
 struct GLCmdClearStencil

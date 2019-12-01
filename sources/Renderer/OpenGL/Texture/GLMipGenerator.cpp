@@ -8,6 +8,7 @@
 #include "GLMipGenerator.h"
 #include "GLTexture.h"
 #include "../RenderState/GLStateManager.h"
+#include "../GLProfile.h"
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
@@ -140,8 +141,8 @@ static void GenerateMipsRangeTexture1D(const Extent3D& extent, GLuint texID, GLi
     {
         GetNextMipSize(dstWidth);
 
-        glFramebufferTexture1D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_1D, texID, mipLevel);
-        glFramebufferTexture1D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_1D, texID, mipLevel + 1);
+        GLProfile::FramebufferTexture1D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_1D, texID, mipLevel);
+        GLProfile::FramebufferTexture1D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_1D, texID, mipLevel + 1);
 
         BlitFramebufferLinear(srcWidth, 1, dstWidth, 1);
 
@@ -164,8 +165,8 @@ static void GenerateMipsRangeTexture2D(const Extent3D& extent, GLuint texID, GLe
         GetNextMipSize(dstWidth);
         GetNextMipSize(dstHeight);
 
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texTarget, texID, mipLevel);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texTarget, texID, mipLevel + 1);
+        GLProfile::FramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texTarget, texID, mipLevel);
+        GLProfile::FramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texTarget, texID, mipLevel + 1);
 
         BlitFramebufferLinear(srcWidth, srcHeight, dstWidth, dstHeight);
 
@@ -189,8 +190,8 @@ static void GenerateMipsRangeTextureLayer(const Extent3D& extent, GLuint texID, 
         GetNextMipSize(dstWidth);
         GetNextMipSize(dstHeight);
 
-        glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, mipLevel, arrayLayer);
-        glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, mipLevel + 1, arrayLayer);
+        GLProfile::FramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, mipLevel, arrayLayer);
+        GLProfile::FramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, mipLevel + 1, arrayLayer);
 
         BlitFramebufferLinear(srcWidth, srcHeight, dstWidth, dstHeight);
 

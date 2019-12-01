@@ -9,7 +9,7 @@
 #define LLGL_GL_STATE_H
 
 
-#include "../OpenGL.h"
+#include "../GLProfile.h"
 
 
 namespace LLGL
@@ -25,32 +25,35 @@ namespace LLGL
 enum class GLState
 {
     BLEND = 0,
-    COLOR_LOGIC_OP,
     CULL_FACE,
-    DEBUG_OUTPUT,
-    DEBUG_OUTPUT_SYNCHRONOUS,
-    DEPTH_CLAMP,
     DEPTH_TEST,
     DITHER,
+    POLYGON_OFFSET_FILL,
+    PRIMITIVE_RESTART_FIXED_INDEX,
+    RASTERIZER_DISCARD,
+    SAMPLE_ALPHA_TO_COVERAGE,
+    SAMPLE_COVERAGE,
+    SCISSOR_TEST,
+    STENCIL_TEST,
+    #ifdef LLGL_OPENGL
+    COLOR_LOGIC_OP,
+    DEPTH_CLAMP,
+    DEBUG_OUTPUT,
+    DEBUG_OUTPUT_SYNCHRONOUS,
     FRAMEBUFFER_SRGB,
     LINE_SMOOTH,
     MULTISAMPLE,
-    POLYGON_OFFSET_FILL,
     POLYGON_OFFSET_LINE,
     POLYGON_OFFSET_POINT,
     POLYGON_SMOOTH,
     PRIMITIVE_RESTART,
-    PRIMITIVE_RESTART_FIXED_INDEX,
-    RASTERIZER_DISCARD,
-    SAMPLE_ALPHA_TO_COVERAGE,
+    PROGRAM_POINT_SIZE,
     SAMPLE_ALPHA_TO_ONE,
-    SAMPLE_COVERAGE,
     SAMPLE_SHADING,
     SAMPLE_MASK,
-    SCISSOR_TEST,
-    STENCIL_TEST,
     TEXTURE_CUBE_MAP_SEAMLESS,
-    PROGRAM_POINT_SIZE,
+    #endif
+    Num,
 };
 
 #ifdef LLGL_GL_ENABLE_VENDOR_EXT
@@ -58,6 +61,7 @@ enum class GLState
 enum class GLStateExt
 {
     CONSERVATIVE_RASTERIZATION = 0, // either NV or INTEL extension
+    Num,
 };
 
 #endif
@@ -78,6 +82,7 @@ enum class GLBufferTarget
     TEXTURE_BUFFER,
     TRANSFORM_FEEDBACK_BUFFER,
     UNIFORM_BUFFER,
+    Num,
 };
 
 enum class GLFramebufferTarget
@@ -85,6 +90,7 @@ enum class GLFramebufferTarget
     FRAMEBUFFER = 0,
     DRAW_FRAMEBUFFER,
     READ_FRAMEBUFFER,
+    Num,
 };
 
 enum class GLTextureTarget
@@ -100,6 +106,7 @@ enum class GLTextureTarget
     TEXTURE_BUFFER,
     TEXTURE_2D_MULTISAMPLE,
     TEXTURE_2D_MULTISAMPLE_ARRAY,
+    Num,
 };
 
 
@@ -115,8 +122,8 @@ struct GLViewport
 
 struct GLDepthRange
 {
-    GLdouble minDepth;
-    GLdouble maxDepth;
+    GLclamp_t minDepth;
+    GLclamp_t maxDepth;
 };
 
 struct GLScissor

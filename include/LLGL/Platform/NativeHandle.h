@@ -19,6 +19,8 @@
 #   include "Linux/LinuxNativeHandle.h"
 #elif defined(LLGL_OS_IOS)
 #   include "IOS/IOSNativeHandle.h"
+#elif defined(LLGL_OS_ANDROID)
+#   include "Android/AndroidNativeHandle.h"
 #endif
 
 

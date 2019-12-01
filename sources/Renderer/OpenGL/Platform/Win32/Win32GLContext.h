@@ -20,7 +20,7 @@ namespace LLGL
 {
 
 
-// Implementation of the GLContext interface for Win32 and wrapper for a WGL context.
+// Implementation of the <GLContext> interface for Windows and wrapper for a native WGL context.
 class Win32GLContext final : public GLContext
 {
 

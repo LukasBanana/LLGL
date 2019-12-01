@@ -1,13 +1,13 @@
 /*
- * GLExtensionLoader.cpp
+ * GLCoreExtensionLoader.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLExtensionLoader.h"
-#include "GLExtensions.h"
-#include "GLExtensionsProxy.h"
+#include "../Ext/GLExtensionLoader.h"
+#include "GLCoreExtensions.h"
+#include "GLCoreExtensionsProxy.h"
 #include <LLGL/Log.h>
 #include <functional>
 

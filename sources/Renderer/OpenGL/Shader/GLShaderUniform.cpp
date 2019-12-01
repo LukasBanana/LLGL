@@ -131,6 +131,8 @@ static void GLSetUniformsUInt(UniformType type, GLint location, GLsizei count, c
     }
 }
 
+#ifdef LLGL_OPENGL
+
 // Requires GL 4.0
 static void GLSetUniformsDouble(UniformType type, GLint location, GLsizei count, const GLdouble* data)
 {
@@ -183,6 +185,8 @@ static void GLSetUniformsDouble(UniformType type, GLint location, GLsizei count,
     }
 }
 
+#endif // /LLGL_OPENGL
+
 
 void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const void* data)
 {
@@ -203,7 +207,9 @@ void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const 
         case UniformType::Double2:
         case UniformType::Double3:
         case UniformType::Double4:
+            #ifdef LLGL_OPENGL
             GLSetUniformsDouble(type, location, count, reinterpret_cast<const GLdouble*>(data));
+            #endif
             break;
 
         case UniformType::Int1:
@@ -252,7 +258,9 @@ void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const 
         case UniformType::Double4x2:
         case UniformType::Double4x3:
         case UniformType::Double4x4:
+            #ifdef LLGL_OPENGL
             GLSetUniformsDouble(type, location, count, reinterpret_cast<const GLdouble*>(data));
+            #endif
             break;
 
         /* ----- Resources ----- */

@@ -126,10 +126,16 @@ void GLRenderContext::InitRenderStates()
     /* Initialize state manager */
     stateMngr_->Reset();
 
-    /* Setup default render states to be uniform between render systems */
-    stateMngr_->Enable(GLState::PRIMITIVE_RESTART_FIXED_INDEX); // D3D11 and Metal always use a fixed restart index for strip topologies
-    stateMngr_->Enable(GLState::TEXTURE_CUBE_MAP_SEAMLESS);     // D3D10+ has this per default
-    stateMngr_->SetFrontFace(GL_CW);                            // D3D10+ uses clock-wise vertex winding per default
+    /* D3D11 and Metal always use a fixed restart index for strip topologies */
+    stateMngr_->Enable(GLState::PRIMITIVE_RESTART_FIXED_INDEX);
+    
+    #ifdef LLGL_OPENGL
+    /* D3D10+ has this per default */
+    stateMngr_->Enable(GLState::TEXTURE_CUBE_MAP_SEAMLESS);
+    #endif
+    
+    /* D3D10+ uses clock-wise vertex winding per default */
+    stateMngr_->SetFrontFace(GL_CW);
 
     /*
     Set pixel storage to byte-alignment (default is word-alignment).

@@ -320,13 +320,13 @@ class GLStateManager
 
         static const std::uint32_t numTextureLayers         = 32;
         static const std::uint32_t numImageUnits            = 8;
-        static const std::uint32_t numStates                = (static_cast<std::uint32_t>(GLState::PROGRAM_POINT_SIZE) + 1);
-        static const std::uint32_t numBufferTargets         = (static_cast<std::uint32_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
-        static const std::uint32_t numFramebufferTargets    = (static_cast<std::uint32_t>(GLFramebufferTarget::READ_FRAMEBUFFER) + 1);
-        static const std::uint32_t numTextureTargets        = (static_cast<std::uint32_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+        static const std::uint32_t numStates                = static_cast<std::uint32_t>(GLState::Num);
+        static const std::uint32_t numBufferTargets         = static_cast<std::uint32_t>(GLBufferTarget::Num);
+        static const std::uint32_t numFramebufferTargets    = static_cast<std::uint32_t>(GLFramebufferTarget::Num);
+        static const std::uint32_t numTextureTargets        = static_cast<std::uint32_t>(GLTextureTarget::Num);
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        static const std::uint32_t numStatesExt             = (static_cast<std::uint32_t>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
+        static const std::uint32_t numStatesExt             = static_cast<std::uint32_t>(GLStateExt::Num);
         #endif
 
     private:
@@ -334,7 +334,9 @@ class GLStateManager
         // Common GL states
         struct GLCommonState
         {
+            #ifdef LLGL_OPENGL
             GLenum      polygonMode     = GL_FILL;
+            #endif
             GLfloat     offsetFactor    = 0.0f;
             GLfloat     offsetUnits     = 0.0f;
             GLfloat     offsetClamp     = 0.0f;
@@ -349,7 +351,9 @@ class GLStateManager
             GLboolean   cachedDepthMask = GL_TRUE;
 
             GLfloat     blendColor[4]   = { 0.0f, 0.0f, 0.0f, 0.0f };
+            #ifdef LLGL_OPENGL
             GLenum      logicOpCode     = GL_COPY;
+            #endif
         };
 
         struct GLCapabilityState

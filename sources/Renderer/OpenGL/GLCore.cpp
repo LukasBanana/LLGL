@@ -25,7 +25,7 @@ static const char* GLErrorToStr(const GLenum status)
         LLGL_CASE_TO_STR( GL_INVALID_OPERATION );
         LLGL_CASE_TO_STR( GL_INVALID_FRAMEBUFFER_OPERATION );
         LLGL_CASE_TO_STR( GL_OUT_OF_MEMORY );
-        #ifndef __APPLE__
+        #if defined LLGL_OPENGL && !defined __APPLE__
         LLGL_CASE_TO_STR( GL_STACK_OVERFLOW );
         LLGL_CASE_TO_STR( GL_STACK_UNDERFLOW );
         #endif
@@ -75,7 +75,7 @@ void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const cha
 
 std::string GLDebugSourceToStr(const GLenum source)
 {
-    #ifndef __APPLE__
+    #if defined LLGL_OPENGL && !defined __APPLE__
     switch (source)
     {
         LLGL_CASE_TO_STR( GL_DEBUG_SOURCE_API );
@@ -91,7 +91,7 @@ std::string GLDebugSourceToStr(const GLenum source)
 
 std::string GLDebugTypeToStr(const GLenum type)
 {
-    #ifndef __APPLE__
+    #if defined LLGL_OPENGL && !defined __APPLE__
     switch (type)
     {
         LLGL_CASE_TO_STR( GL_DEBUG_TYPE_ERROR );
@@ -110,7 +110,7 @@ std::string GLDebugTypeToStr(const GLenum type)
 
 std::string GLDebugSeverityToStr(const GLenum severity)
 {
-    #ifndef __APPLE__
+    #if defined LLGL_OPENGL && !defined __APPLE__
     switch (severity)
     {
         LLGL_CASE_TO_STR( GL_DEBUG_SEVERITY_HIGH );
@@ -169,7 +169,11 @@ bool GLParseVersionString(const GLubyte* s, GLint& major, GLint& minor)
 [[noreturn]]
 void ErrUnsupportedGLProc(const char* name)
 {
+    #ifdef LLGL_OPENGLES3
+    throw std::runtime_error("illegal use of unsupported OpenGLES procedure: " + std::string(name));
+    #else
     throw std::runtime_error("illegal use of unsupported OpenGL procedure: " + std::string(name));
+    #endif
 }
 
 #undef LLGL_CASE_TO_STR

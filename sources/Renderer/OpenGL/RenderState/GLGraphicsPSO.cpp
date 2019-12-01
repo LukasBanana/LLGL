@@ -155,8 +155,8 @@ void GLGraphicsPSO::BuildStaticViewports(std::size_t numViewports, const Viewpor
     {
         auto dst = byteBufferIter.Next<GLDepthRange>();
         {
-            dst->minDepth = static_cast<GLdouble>(viewports[i].minDepth);
-            dst->maxDepth = static_cast<GLdouble>(viewports[i].maxDepth);
+            dst->minDepth = static_cast<GLclamp_t>(viewports[i].minDepth);
+            dst->maxDepth = static_cast<GLclamp_t>(viewports[i].maxDepth);
         }
     }
 }

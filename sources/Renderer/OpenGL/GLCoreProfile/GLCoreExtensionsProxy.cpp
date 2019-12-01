@@ -1,5 +1,5 @@
 /*
- * GLExtensionsProxy.h
+ * GLCoreExtensionsProxy.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -9,18 +9,22 @@
 
 
 #include "../OpenGL.h"
+#include "../GLCore.h"
+#include <stdexcept>
+#include <string>
+
 
 
 namespace LLGL
 {
 
 
-#define LLGL_DECL_GL_PROXY_PROCS
+#define LLGL_DEF_GL_PROXY_PROCS
 
-// Include inline header for proxy function declarations
-#include "GLExtensionsDecl.inl"
+// Include inline header for proxy function definitions
+#include "GLCoreExtensionsDecl.inl"
 
-#undef LLGL_DECL_GL_PROXY_PROCS
+#undef LLGL_DEF_GL_PROXY_PROCS
 
 
 } // /namespace LLGL

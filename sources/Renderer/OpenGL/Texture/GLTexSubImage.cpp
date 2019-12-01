@@ -6,6 +6,7 @@
  */
 
 #include "GLTexSubImage.h"
+#include "../GLProfile.h"
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
 #include <array>
@@ -21,7 +22,7 @@ static void QueryGLInternalFormat(GLenum target, GLenum& internalFormat)
     if (internalFormat == 0)
     {
         GLint format = 0;
-        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
+        GLProfile::GetTexParameterInternalFormat(target, &format);
         internalFormat = static_cast<GLenum>(format);
     }
 }

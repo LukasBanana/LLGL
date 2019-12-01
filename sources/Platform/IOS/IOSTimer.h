@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_IOS_WINDOW_H
-#define LLGL_IOS_WINDOW_H
+#ifndef LLGL_IOS_TIMER_H
+#define LLGL_IOS_TIMER_H
 
 
 #include <LLGL/Timer.h>

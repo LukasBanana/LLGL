@@ -26,7 +26,7 @@
 #   include <OpenGL/glext.h>
 #   include "../Platform/MacOS/MacOSGLExt.h"
 #else
-#   error unsupported platform for OpenGL
+#   error Unsupported platform for OpenGL
 #endif
 
 

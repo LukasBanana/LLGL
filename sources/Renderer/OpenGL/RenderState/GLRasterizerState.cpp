@@ -24,8 +24,13 @@ static GLState ToPolygonOffsetState(const PolygonMode mode)
     switch (mode)
     {
         case PolygonMode::Fill:         return GLState::POLYGON_OFFSET_FILL;
+        #ifdef LLGL_OPENGL
         case PolygonMode::Wireframe:    return GLState::POLYGON_OFFSET_LINE;
         case PolygonMode::Points:       return GLState::POLYGON_OFFSET_POINT;
+        #else
+        case PolygonMode::Wireframe:    break;
+        case PolygonMode::Points:       break;
+        #endif
     }
     throw std::invalid_argument("failed to map 'PolygonMode' to polygon offset mode (GL_POLYGON_OFFSET_FILL, GL_POLYGON_OFFSET_LINE, or GL_POLYGON_OFFSET_POINT)");
 }
@@ -38,12 +43,15 @@ static bool IsPolygonOffsetEnabled(const DepthBiasDescriptor& desc)
 
 GLRasterizerState::GLRasterizerState(const RasterizerDescriptor& desc)
 {
+    #ifdef LLGL_OPENGL
     polygonMode_            = GLTypes::Map(desc.polygonMode);
+    depthClampEnabled_      = desc.depthClampEnabled;
+    #endif
+
     cullFace_               = GLTypes::Map(desc.cullMode);
     frontFace_              = (desc.frontCCW ? GL_CCW : GL_CW);
     rasterizerDiscard_      = desc.discardEnabled;
     scissorTestEnabled_     = desc.scissorTestEnabled;
-    depthClampEnabled_      = desc.depthClampEnabled;
     multiSampleEnabled_     = desc.multiSampleEnabled;
     lineSmoothEnabled_      = desc.antiAliasedLineEnabled;
     lineWidth_              = desc.lineWidth;
@@ -60,9 +68,18 @@ GLRasterizerState::GLRasterizerState(const RasterizerDescriptor& desc)
 
 void GLRasterizerState::Bind(GLStateManager& stateMngr)
 {
+    #ifdef LLGL_OPENGL
     stateMngr.SetPolygonMode(polygonMode_);
+    stateMngr.Set(GLState::DEPTH_CLAMP, depthClampEnabled_);
+    stateMngr.Set(GLState::MULTISAMPLE, multiSampleEnabled_);
+    stateMngr.Set(GLState::LINE_SMOOTH, lineSmoothEnabled_);
+    #endif
+    
     stateMngr.SetFrontFace(frontFace_);
+    stateMngr.SetLineWidth(lineWidth_);
+
     stateMngr.Set(GLState::RASTERIZER_DISCARD, rasterizerDiscard_);
+    stateMngr.Set(GLState::SCISSOR_TEST, scissorTestEnabled_);
 
     if (cullFace_ != 0)
     {
@@ -80,12 +97,6 @@ void GLRasterizerState::Bind(GLStateManager& stateMngr)
     else
         stateMngr.Disable(polygonOffsetMode_);
 
-    stateMngr.Set(GLState::SCISSOR_TEST, scissorTestEnabled_);
-    stateMngr.Set(GLState::DEPTH_CLAMP, depthClampEnabled_);
-    stateMngr.Set(GLState::MULTISAMPLE, multiSampleEnabled_);
-    stateMngr.Set(GLState::LINE_SMOOTH, lineSmoothEnabled_);
-    stateMngr.SetLineWidth(lineWidth_);
-
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     stateMngr.Set(GLStateExt::CONSERVATIVE_RASTERIZATION, conservativeRaster_);
     #endif
@@ -95,11 +106,14 @@ int GLRasterizerState::CompareSWO(const GLRasterizerState& rhs) const
 {
     const auto& lhs = *this;
 
+    #ifdef LLGL_OPENGL
     LLGL_COMPARE_MEMBER_SWO     ( polygonMode_          );
+    LLGL_COMPARE_BOOL_MEMBER_SWO( depthClampEnabled_    );
+    #endif
+    
     LLGL_COMPARE_MEMBER_SWO     ( cullFace_             );
     LLGL_COMPARE_MEMBER_SWO     ( frontFace_            );
     LLGL_COMPARE_BOOL_MEMBER_SWO( scissorTestEnabled_   );
-    LLGL_COMPARE_BOOL_MEMBER_SWO( depthClampEnabled_    );
     LLGL_COMPARE_BOOL_MEMBER_SWO( multiSampleEnabled_   );
     LLGL_COMPARE_BOOL_MEMBER_SWO( lineSmoothEnabled_    );
     LLGL_COMPARE_MEMBER_SWO     ( lineWidth_            );

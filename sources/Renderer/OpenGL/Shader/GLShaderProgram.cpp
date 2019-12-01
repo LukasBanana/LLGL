@@ -174,6 +174,7 @@ void GLShaderProgram::BindAttribLocations(std::size_t numVertexAttribs, const GL
 
 void GLShaderProgram::BindFragDataLocations(std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs)
 {
+    #ifdef LLGL_OPENGL
     /* Only bind if extension is supported, otherwise the sahder won't have multiple fragment outpus anyway */
     if (HasExtension(GLExt::EXT_gpu_shader4))
     {
@@ -183,6 +184,7 @@ void GLShaderProgram::BindFragDataLocations(std::size_t numFragmentAttribs, cons
             glBindFragDataLocation(id_, attr.index, attr.name);
         }
     }
+    #endif
 }
 
 void GLShaderProgram::LinkProgram(std::size_t numVaryings, const char* const* varyings)
@@ -200,7 +202,7 @@ void GLShaderProgram::LinkProgram(std::size_t numVaryings, const char* const* va
             return;
         }
 
-        #ifndef __APPLE__
+        #ifdef GL_NV_transform_feedback
         /* For GL_NV_transform_feedback (Vendor specific) the varyings must be specified AFTER linking */
         if (HasExtension(GLExt::NV_transform_feedback))
         {
@@ -251,7 +253,7 @@ void GLShaderProgram::BuildTransformFeedbackVaryingsEXT(std::size_t numVaryings,
     );
 }
 
-#ifndef __APPLE__
+#ifdef GL_NV_transform_feedback
 
 void GLShaderProgram::BuildTransformFeedbackVaryingsNV(std::size_t numVaryings, const char* const* varyings)
 {
@@ -318,6 +320,7 @@ static std::pair<Format, std::uint32_t> UnmapAttribType(GLenum type)
         case GL_UNSIGNED_INT_VEC2:  return { Format::RG32UInt,      1 };
         case GL_UNSIGNED_INT_VEC3:  return { Format::RGB32UInt,     1 };
         case GL_UNSIGNED_INT_VEC4:  return { Format::RGBA32UInt,    1 };
+        #ifdef LLGL_OPENGL
         case GL_DOUBLE:             return { Format::R64Float,      1 };
         case GL_DOUBLE_VEC2:        return { Format::RG64Float,     1 };
         case GL_DOUBLE_VEC3:        return { Format::RGB64Float,    1 };
@@ -331,6 +334,7 @@ static std::pair<Format, std::uint32_t> UnmapAttribType(GLenum type)
         case GL_DOUBLE_MAT3x4:      return { Format::RGBA64Float,   3 };
         case GL_DOUBLE_MAT4x2:      return { Format::RG64Float,     4 };
         case GL_DOUBLE_MAT4x3:      return { Format::RGB64Float,    4 };
+        #endif // /LLGL_OPENGL
     }
     return { Format::R32Float, 0 };
 }
@@ -483,7 +487,7 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
             #endif
         }
     }
-    #ifndef __APPLE__
+    #ifdef GL_NV_transform_feedback
     else if (HasExtension(GLExt::NV_transform_feedback))
     {
         /* Query active varyings */
@@ -621,7 +625,7 @@ void GLShaderProgram::QueryConstantBuffers(ShaderReflection& reflection) const
 
 void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
 {
-    #ifndef __APPLE__
+    #ifdef LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
 
     /* Query number of shader storage blocks */
     GLenum properties[3] = { 0 };

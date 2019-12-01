@@ -23,10 +23,10 @@ see https://sourceforge.net/p/predef/wiki/OperatingSystems/
 #   elif TARGET_OS_IOS != 0
 #       define LLGL_OS_IOS
 #   endif
-#elif defined __linux__
-#   define LLGL_OS_LINUX
 #elif defined __ANDROID__
 #   define LLGL_OS_ANDROID
+#elif defined __linux__
+#   define LLGL_OS_LINUX
 #endif
 
 

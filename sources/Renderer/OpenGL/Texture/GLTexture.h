@@ -141,6 +141,11 @@ class GLTexture final : public Texture
         GLsizei         numMipLevels_   = 1;
         bool            isRenderbuffer_ = false;
         GLSwizzleFormat swizzleFormat_  = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
+        
+        #ifdef LLGL_OPENGLES3
+        GLint           extent_[3]      = {};
+        GLint           samples_        = 1;
+        #endif
 
 };
 
