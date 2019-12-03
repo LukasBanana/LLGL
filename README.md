@@ -21,23 +21,26 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 
 ## Platform Support
 
-| Platform | CI | D3D12 | D3D11 | Vulkan | OpenGL | Metal |
-|----------|:--:|:------:|:------:|:-----:|:-----:|:-----:|
-| Windows | [![Windows Build](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A |
-| GNU/Linux | [![GNU/Linux Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_LINUX&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A |
-| macOS | [![macOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: |
-| iOS | [![iOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_IOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_multiplication_x: | :heavy_check_mark: |
+| Platform | CI | D3D12 | D3D11 | Vulkan | OpenGL | OpenGLES 3 | Metal |
+|----------|:--:|:-----:|:-----:|:------:|:------:|:----------:|:-----:|
+| Windows | [![Windows Build](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A | N/A |
+| GNU/Linux | [![GNU/Linux Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_LINUX&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A | N/A |
+| macOS | [![macOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_check_mark: | N/A | :heavy_check_mark: |
+| iOS | [![iOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_IOS&label=build)](https://travis-ci.org/LukasBanana/LLGL) | N/A | N/A | N/A | N/A | :heavy_multiplication_x: | :heavy_check_mark: |
+| Android | | N/A | N/A | :heavy_multiplication_x: | N/A | :heavy_check_mark: | N/A |
 
 
 ## Build Notes
 
+Build scripts are provided for [**CMake**]((https://cmake.org/)).
+
 ### Windows
 
-**Visual Studio 2015** or later is required to build LLGL on Windows.
+[**Visual Studio 2015**](https://visualstudio.microsoft.com/) or later is required to build LLGL on Windows.
 
-### macOS
+### macOS, iOS
 
-**Xcode 9** or later is required to build LLGL on macOS.
+[**Xcode 9**](https://developer.apple.com/xcode/) or later is required to build LLGL on macOS and iOS.
 
 ### GNU/Linux
 
@@ -45,6 +48,14 @@ The following development libraries are required to build LLGL on GNU/Linux:
 - **X11**: `libx11-dev`
 - **xf86vidmode**: `libxxf86vm-dev`
 - **Xrandr**: `libxrandr-dev`
+
+### Android
+
+The [Android NDK](https://developer.android.com/ndk) with at least API level 21 is required.
+The build script to generate project files is currently only supported on **GNU/Linux**
+and requires [CMake 3.10](https://cmake.org/) or later and the [Code::Blocks](http://www.codeblocks.org/) IDE.
+
+*This platform support is currently in an experimental state.*
 
 
 ## Thin Abstraction Layer
