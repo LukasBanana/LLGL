@@ -590,7 +590,7 @@ set(LLGL_DEPENDENCIES LLGL)
 
 if(LLGL_BUILD_RENDERER_OPENGLES3)
     # OpenGLES Renderer
-    include(cmake/FindOpenGLES.cmake)
+    include(cmake/FindOpenGLES3.cmake)
     if(OPENGLES_FOUND)
         include_directories(${OPENGLES_INCLUDE_DIR})
         
@@ -612,7 +612,7 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
         ADD_DEFINE(LLGL_BUILD_RENDERER_OPENGLES3)
         ADD_PROJECT_DEFINE(LLGL_OpenGLES3 LLGL_OPENGLES3)
     else()
-        message("Missing OpenGL ES -> LLGL_OpenGLES3 renderer will be excluded from project")
+        message("Missing OpenGLES -> LLGL_OpenGLES3 renderer will be excluded from project")
     endif()
 endif()
 

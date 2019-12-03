@@ -184,16 +184,16 @@ endmacro(findpkg_framework)
 IF (WIN32)
   IF (CYGWIN)
 
-    FIND_PATH(OPENGLES_INCLUDE_DIR GLES/gl.h )
+    FIND_PATH(OPENGLES_INCLUDE_DIR GLES3/gl3.h )
 
-    FIND_LIBRARY(OPENGLES_gl_LIBRARY libgles_cm )
+    FIND_LIBRARY(OPENGLES_gl_LIBRARY libgles3 )
 
   ELSE (CYGWIN)
 
     IF(MSVC)
       #The user hast to provide this atm. GLES can be emulated via Desktop OpenGL
       #using the ANGLE project found at: http://code.google.com/p/angleproject/
-      SET (OPENGLES_gl_LIBRARY import32 CACHE STRING "OpenGL ES 1.x library for win32")
+      SET (OPENGLES_gl_LIBRARY import32 CACHE STRING "OpenGL ES 3.x library for win32")
     ENDIF(MSVC)
 
   ENDIF (CYGWIN)
@@ -208,7 +208,7 @@ ELSE (WIN32)
 
   ELSE(APPLE)
 
-    FIND_PATH(OPENGLES_INCLUDE_DIR GLES/gl.h
+    FIND_PATH(OPENGLES_INCLUDE_DIR GLES3/gl3.h
       /usr/openwin/share/include
       /opt/graphics/OpenGL/include /usr/X11R6/include
       /usr/include
@@ -216,12 +216,13 @@ ELSE (WIN32)
     )
 
     FIND_LIBRARY(OPENGLES_gl_LIBRARY
-      NAMES GLES_CM GLESv1_CM
+      NAMES GLESv3
       PATHS /opt/graphics/OpenGL/lib
             /usr/openwin/lib
             /usr/shlib /usr/X11R6/lib
             /usr/lib
             /opt/vc/lib
+            "/usr/lib/${ANDROID_ARCH_ABI}-linux-android/${ANDROID_API_LEVEL}"
     )
 
     # On Unix OpenGL most certainly always requires X11.
