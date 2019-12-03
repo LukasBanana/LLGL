@@ -186,6 +186,16 @@ void ExampleBase::SelectRendererModule(int argc, char* argv[])
     rendererModule_ = GetSelectedRendererModule(argc, argv);
 }
 
+#if defined LLGL_OS_ANDROID
+
+void ExampleBase::SetAndroidApp(android_app* androidApp)
+{
+    androidApp_     = androidApp;
+    rendererModule_ = "OpenGLES3";
+}
+
+#endif
+
 void ExampleBase::Run()
 {
     LLGL::Extent2D resolution = context->GetResolution();
@@ -247,6 +257,18 @@ ExampleBase::ExampleBase(
 
     // Set up renderer descriptor
     LLGL::RenderSystemDescriptor rendererDesc = rendererModule_;
+
+    #if defined LLGL_OS_ANDROID
+    if (auto state = ExampleBase::androidApp_)
+    {
+        rendererDesc.android.activity   = state->activity;
+        rendererDesc.android.looper     = state->looper;
+        rendererDesc.android.inputQueue = state->inputQueue;
+        rendererDesc.android.window     = state->window;
+    }
+    else
+        throw std::invalid_argument("'android_app' state was not specified");
+    #endif
 
     #if defined _DEBUG && 0
     rendererDesc.debugCallback = [](const std::string& type, const std::string& message)

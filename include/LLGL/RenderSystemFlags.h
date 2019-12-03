@@ -14,6 +14,14 @@
 #include "TextureFlags.h"
 #include "Constants.h"
 #include "RendererConfiguration.h"
+
+#include "Platform/Platform.h"
+#if defined LLGL_OS_ANDROID
+#   include "Platform/Android/AndroidAppState.h"
+//#elif defined LLGL_OS_IOS
+//#   include "Platform/"
+#endif
+
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -301,15 +309,67 @@ struct RenderSystemDescriptor
     \see rendererConfigSize
     \see RendererConfigurationVulkan
     \see RendererConfigurationOpenGL
+    \see RendererConfigurationOpenGLES3
     */
     const void*     rendererConfig      = nullptr;
 
     /**
-    \brief Specifies the size (in bytes) of the structure where the 'rendererConfig' member points to (use 'sizeof' with the respective structure). By default 0.
-    \remarks If 'rendererConfig' is null then this member is ignored.
+    \brief Specifies the size (in bytes) of the structure where the \c rendererConfig member points to (use \c sizeof with the respective structure). By default 0.
+    \remarks If \c rendererConfig is null then this member is ignored.
     \see rendererConfig
     */
     std::size_t     rendererConfigSize  = 0;
+    
+    #ifdef LLGL_OS_ANDROID
+    
+    /**
+    \brief Android specific application descriptor.
+    \remarks This \b must be specified when compiling for the Android platform.
+    \remarks Here is an example for the main entry point on Android:
+    \code
+    #include <LLGL/LLGL.h>
+    #include <LLGL/Platform/Platform.h>
+    
+    ...
+    
+    void MyMain(const LLGL::RenderSystemDescriptor& desc)
+    {
+       myRenderSystem = LLGL::RenderSystem::Load(desc);
+       ... 
+    }
+    
+    #if defined LLGL_OS_ANDROID
+    
+    // Android specific main function
+    void android_main(android_app* state)
+    {
+        LLGL::RenderSystemDescriptor desc{ "OpenGLES3" };
+        {
+            desc.android.activity   = state->activity;
+            desc.android.looper     = state->looper;
+            desc.android.inputQueue = state->inputQueue; // optional
+            desc.android.window     = state->window;
+        }
+        MyMain(desc);
+    }
+    
+    #else
+    
+    // Standard C/C++ main function
+    int main()
+    {
+        MyMain("OpenGL");
+        return 0;
+    }
+    
+    #endif
+    \endcode
+    \note Only supported on: Android.
+    \see AndroidAppDescriptor
+    */
+    AndroidAppState android;
+    
+    #endif
 };
 
 /**

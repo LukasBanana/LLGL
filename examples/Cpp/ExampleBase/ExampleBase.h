@@ -11,6 +11,7 @@
 
 #include <LLGL/LLGL.h>
 #include <LLGL/Utility.h>
+#include <LLGL/Platform/Platform.h>
 #include <Gauss/Gauss.h>
 #include <iostream>
 #include <fstream>
@@ -19,6 +20,11 @@
 #include <map>
 #include <type_traits>
 #include "GeometryUtility.h"
+
+#ifdef LLGL_OS_ANDROID
+#   include <android_native_app_glue.h>
+#   include <android/log.h>
+#endif
 
 
 /*
@@ -50,6 +56,10 @@ public:
 
     // Lets the user select a renderer module from the standard input.
     static void SelectRendererModule(int argc, char* argv[]);
+
+    #if defined LLGL_OS_ANDROID
+    static void SetAndroidApp(android_app* androidApp);
+    #endif
 
     virtual ~ExampleBase() = default;
 
@@ -107,6 +117,10 @@ private:
     };
 
 private:
+
+    #if defined LLGL_OS_ANDROID
+    static android_app*                         androidApp_;
+    #endif
 
     std::unique_ptr<LLGL::RenderingProfiler>    profilerObj_;
     std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
@@ -261,12 +275,38 @@ protected:
 };
 
 
+#if defined LLGL_OS_ANDROID
+
+#define LLGL_ANDROID_STDERR(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "threaded_app", __VA_ARGS__))
+
+template <typename T>
+void RunExample(android_app* state)
+{
+    try
+    {
+        ExampleBase::SetAndroidApp(state);
+        auto tutorial = std::unique_ptr<T>(new T());
+        tutorial->Run();
+    }
+    catch (const std::exception& e)
+    {
+        LLGL_ANDROID_STDERR("%s\n", e.what());
+    }
+}
+
+#define LLGL_IMPLEMENT_EXAMPLE(CLASS)       \
+    void android_main(android_app* state)   \
+    {                                       \
+        return RunExample<CLASS>(state);    \
+    }
+
+#else // LLGL_OS_*
+
 template <typename T>
 int RunExample(int argc, char* argv[])
 {
     try
     {
-        /* Run tutorial */
         ExampleBase::SelectRendererModule(argc, argv);
         auto tutorial = std::unique_ptr<T>(new T());
         tutorial->Run();
@@ -286,6 +326,8 @@ int RunExample(int argc, char* argv[])
     {                                           \
         return RunExample<CLASS>(argc, argv);   \
     }
+
+#endif // /LLGL_OS_*
 
 
 #endif

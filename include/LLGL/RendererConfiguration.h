@@ -111,17 +111,27 @@ struct RendererConfigurationOpenGL
 
     /**
     \brief Specifies the requested OpenGL context major version. By default 0.
-    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is availabel on the host system will be choosen.
+    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is available on the host system will be choosen.
     \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
     int                     majorVersion    = 0;
 
     /**
     \brief Specifies the requested OpenGL context minor version. By default 0.
-    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is availabel on the host system will be choosen.
+    \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is available on the host system will be choosen.
     \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
     int                     minorVersion    = 0;
+};
+
+//! OpenGL ES 3 profile descriptor structure.
+struct RendererConfigurationOpenGLES3
+{
+    //! Specifies the requested OpenGL ES context major version. Must be 3. By default 3.
+    int majorVersion = 3;
+    
+    //! Specifies the requested OpenGL ES context minor version. Must be 0, 1, or 2. By default 0.
+    int minorVersion = 0;
 };
 
 

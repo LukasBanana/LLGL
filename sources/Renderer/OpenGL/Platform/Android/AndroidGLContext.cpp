@@ -86,7 +86,7 @@ bool AndroidGLContext::Activate(bool activate)
     if (activate)
         return eglMakeCurrent(display_, surface_, surface_, context_);
     else
-        return eglMakeCurrent(nullptr, nullptr, nullptr, nullptr);
+        return eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void AndroidGLContext::CreateContext(
