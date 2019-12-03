@@ -360,6 +360,11 @@ set(FilesTest_iOS ${TestProjectsPath}/Test_iOS.mm)
 # Example project files
 file(GLOB FilesExampleBase ${EXAMPLE_PROJECTS_DIR}/ExampleBase/*.*)
 
+if(ANDROID_PLATFORM)
+    set(ANDROID_APP_GLUE_DIR "${ANDROID_NDK}/sources/android/native_app_glue")
+    set(FilesAndroidNativeAppGlue "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.c" "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.h")
+endif()
+
 set(FilesExample_HelloTriangle ${EXAMPLE_PROJECTS_DIR}/HelloTriangle/Example.cpp)
 set(FilesExample_Tessellation ${EXAMPLE_PROJECTS_DIR}/Tessellation/Example.cpp)
 set(FilesExample_Texturing ${EXAMPLE_PROJECTS_DIR}/Texturing/Example.cpp)
@@ -448,6 +453,10 @@ source_group("Sources\\Direct3D12\\Shader\\Builtin" FILES ${FilesRendererD3D12Sh
 source_group("Sources\\Direct3D12\\Texture" FILES ${FilesRendererD3D12Texture})
 
 source_group("Sources" FILES ${FilesExampleBase})
+
+if(ANDROID_PLATFORM)
+    source_group("Sources\\android_native_app_glue" FILES ${FilesAndroidNativeAppGlue})
+endif()
 
 
 # === Include directories ===
@@ -581,7 +590,11 @@ if(APPLE)
         target_link_libraries(LLGL ${COCOA_LIBRARY})
     endif()
 elseif(UNIX)
-    target_link_libraries(LLGL X11 pthread Xxf86vm Xrandr)
+    if(MOBILE_PLATFORM)
+        target_link_libraries(LLGL pthread) #TODO: this is incomplete
+    else()
+        target_link_libraries(LLGL X11 pthread Xxf86vm Xrandr)
+    endif()
 endif()
 
 set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
@@ -763,6 +776,12 @@ if(GaussLib_INCLUDE_DIR)
         add_library(ExampleBase STATIC ${FilesExampleBase})
         set_target_properties(ExampleBase PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
         target_link_libraries(ExampleBase "${LLGL_DEPENDENCIES}")
+        
+        if(ANDROID_PLATFORM)
+            add_library(android_native_app_glue STATIC ${FilesAndroidNativeAppGlue})
+            target_link_libraries(ExampleBase "${android_native_app_glue}")
+            include_directories(${ANDROID_APP_GLUE_DIR})
+        endif()
         
         set(EXAMPLE_PROJECT_LIBS ${LLGL_DEPENDENCIES} ExampleBase)
         
