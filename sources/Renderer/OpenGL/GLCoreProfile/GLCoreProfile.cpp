@@ -7,6 +7,7 @@
 
 #include "../GLProfile.h"
 #include "GLCoreExtensions.h"
+#include <LLGL/RenderSystemFlags.h>
 
 
 namespace LLGL
@@ -15,6 +16,21 @@ namespace LLGL
 namespace GLProfile
 {
 
+
+int GetRendererID()
+{
+    return RendererID::OpenGL;
+}
+
+const char* GetModuleName()
+{
+    return "OpenGL";
+}
+
+const char* GetRendererName()
+{
+    return "OpenGL";
+}
 
 const char* GetAPIName()
 {

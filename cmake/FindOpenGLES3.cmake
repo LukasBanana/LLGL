@@ -222,7 +222,6 @@ ELSE (WIN32)
             /usr/shlib /usr/X11R6/lib
             /usr/lib
             /opt/vc/lib
-            "/usr/lib/${ANDROID_ARCH_ABI}-linux-android/${ANDROID_API_LEVEL}"
     )
 
     # On Unix OpenGL most certainly always requires X11.

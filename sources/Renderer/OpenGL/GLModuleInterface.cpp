@@ -7,39 +7,32 @@
 
 #include "../ModuleInterface.h"
 #include "GLRenderSystem.h"
+#include "GLProfile.h"
 
 
 namespace LLGL
 {
 
 
+#ifdef LLGL_BUILD_RENDERER_OPENGLES3
+#define ModuleOpenGL ModuleOpenGLES3
+#endif
+
 namespace ModuleOpenGL
 {
     int GetRendererID()
     {
-        #if defined LLGL_OPENGLES3
-        return RendererID::OpenGLES3;
-        #else
-        return RendererID::OpenGL;
-        #endif
+        return GLProfile::GetRendererID();
     }
 
     const char* GetModuleName()
     {
-        #if defined LLGL_OPENGLES3
-        return "OpenGLES3";
-        #else
-        return "OpenGL";
-        #endif
+        return GLProfile::GetModuleName();
     }
 
     const char* GetRendererName()
     {
-        #if defined LLGL_OPENGLES3
-        return "OpenGLES 3";
-        #else
-        return "OpenGL";
-        #endif
+        return GLProfile::GetRendererName();
     }
 
     RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)
@@ -80,6 +73,10 @@ LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
 } // /extern "C"
 
 #endif // /LLGL_BUILD_STATIC_LIB
+
+#ifdef LLGL_BUILD_RENDERER_OPENGLES3
+#undef ModuleOpenGL
+#endif
 
 
 

@@ -21,7 +21,7 @@ GLRenderContext::GLRenderContext(
     RenderContext  { desc.videoMode, desc.vsync                           },
     contextHeight_ { static_cast<GLint>(desc.videoMode.resolution.height) }
 {
-    #ifdef __linux__
+    #ifdef LLGL_OS_LINUX
 
     /* Setup surface for the render context and pass native context handle */
     NativeContextHandle windowContext;

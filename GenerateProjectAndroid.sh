@@ -16,7 +16,7 @@ if [ -z "$ANDROID_NDK_HOME" ]; then
 fi
 
 # Store intermediate variables
-ANDROID_ARCH_ABI=x86_64
+ANDROID_ABI=armeabi-v7a
 ANDROID_API_LEVEL=21
 SOURCE_DIR="."
 BUILD_DIR="build"
@@ -29,8 +29,6 @@ fi
 if [ "$#" -ge 2 ]; then
 	SOURCE_DIR=$2
 fi
-
-RELATIVE_SOURCE_DIR=$(realpath --relative-to="$BUILD_DIR" "$SOURCE_DIR")
 
 # Validate input arguments
 if [ ! -f "$ANDROID_CMAKE_TOOLCHAIN" ]; then
@@ -48,19 +46,22 @@ if [ ! -d $BUILD_DIR ]; then
 	mkdir $BUILD_DIR
 fi
 
+# Build into output directory (for CMake 10.12 or earlier)
+RELATIVE_SOURCE_DIR=$(realpath --relative-to="$BUILD_DIR" "$SOURCE_DIR")
+
 (cd $BUILD_DIR;
 
-# Build into output directory
-cmake "$RELATIVE_SOURCE_DIR" \
-	-DANDROID_API_LEVEL=$ANDROID_API_LEVEL \
-	-DANDROID_ARCH_ABI="$ANDROID_ARCH_ABI" \
-	-DCMAKE_TOOLCHAIN_FILE="$ANDROID_CMAKE_TOOLCHAIN" \
+cmake $RELATIVE_SOURCE_DIR \
+	-DCMAKE_TOOLCHAIN_FILE=$ANDROID_CMAKE_TOOLCHAIN \
 	-DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
-	-DCMAKE_SYSTEM_NAME=Android \
+	-DANDROID_ABI=$ANDROID_ABI \
+	-DANDROID_PLATFORM=$ANDROID_API_LEVEL \
+	-DANDROID_STL=c++_shared \
+	-DANDROID_CPP_FEATURES="rtti exceptions" \
 	-DLLGL_BUILD_RENDERER_OPENGLES3=ON \
 	-DLLGL_BUILD_TESTS=ON \
-	-DLLGL_BUILD_STATIC_LIB=ON \
-	-DANDROID_PLATFORM=ON \
+	-DLLGL_BUILD_STATIC_LIB=OFF \
+	-DLLGL_ANDROID_PLATFORM=ON \
 	-G "CodeBlocks - Unix Makefiles"
 
 )

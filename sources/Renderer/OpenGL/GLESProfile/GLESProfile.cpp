@@ -6,6 +6,7 @@
  */
 
 #include "../GLProfile.h"
+#include <LLGL/RenderSystemFlags.h>
 #include <cstring>
 
 
@@ -16,9 +17,24 @@ namespace GLProfile
 {
 
 
+int GetRendererID()
+{
+    return RendererID::OpenGLES3;
+}
+
+const char* GetModuleName()
+{
+    return "OpenGLES3";
+}
+
+const char* GetRendererName()
+{
+    return "OpenGL ES 3";
+}
+
 const char* GetAPIName()
 {
-    return "OpenGLES";
+    return "OpenGL ES";
 }
 
 const char* GetShadingLanguageName()

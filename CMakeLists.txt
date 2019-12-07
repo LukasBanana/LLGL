@@ -19,10 +19,10 @@ set(EXAMPLE_PROJECTS_DIR "${PROJECT_SOURCE_DIR}/examples/Cpp")
 
 # === Preprocessor definitions ===
 
-if(DEFINED IOS_PLATFORM OR DEFINED ANDROID_PLATFORM)
-    set(MOBILE_PLATFORM ON)
+if(DEFINED LLGL_IOS_PLATFORM OR DEFINED LLGL_ANDROID_PLATFORM)
+    set(LLGL_MOBILE_PLATFORM ON)
 else()
-    set(MOBILE_PLATFORM OFF)
+    set(LLGL_MOBILE_PLATFORM OFF)
 endif()
 
 macro(ADD_DEFINE IDENT)
@@ -44,6 +44,8 @@ endmacro()
 macro(ADD_TEST_PROJECT TEST_NAME TEST_FILES LIB_FILES)
     if(APPLE)
         add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
+    elseif(LLGL_ANDROID_PLATFORM)
+        add_library(${TEST_NAME} SHARED ${TEST_FILES})
     else()
         add_executable(${TEST_NAME} ${TEST_FILES})
     endif()
@@ -67,7 +69,7 @@ endif(WIN32)
 
 ADD_DEBUG_DEFINE(LLGL_DEBUG)
 
-if(MOBILE_PLATFORM)
+if(LLGL_MOBILE_PLATFORM)
     ADD_DEFINE(LLGL_MOBILE_PLATFORM)
 endif()
 
@@ -110,7 +112,7 @@ option(LLGL_BUILD_STATIC_LIB "Build LLGL as static lib (Only allows a single ren
 option(LLGL_BUILD_TESTS "Include test projects" OFF)
 option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
 
-if(MOBILE_PLATFORM)
+if(LLGL_MOBILE_PLATFORM)
     option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
 else()
     option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL renderer project" ON)
@@ -186,7 +188,7 @@ if(APPLE AND LLGL_BUILD_RENDERER_OPENGL)
     ADD_DEFINE(GL_SILENCE_DEPRECATION)
 endif()
 
-if(MOBILE_PLATFORM)
+if(LLGL_MOBILE_PLATFORM)
     set(ARCH_ARM64 ON)
     set(SUMMARY_TARGET_ARCH "ARM64")
 elseif(APPLE OR LLGL_BUILD_64BIT)
@@ -230,13 +232,13 @@ endif()
 if(WIN32)
     file(GLOB FilesPlatform                 ${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
 elseif(APPLE)
-    if(MOBILE_PLATFORM)
+    if(LLGL_MOBILE_PLATFORM)
         file(GLOB FilesPlatform             ${PROJECT_SOURCE_DIR}/sources/Platform/IOS/*.*)
     else()
         file(GLOB FilesPlatform             ${PROJECT_SOURCE_DIR}/sources/Platform/MacOS/*.*)
     endif()
 elseif(UNIX)
-    if(ANDROID_PLATFORM)
+    if(LLGL_ANDROID_PLATFORM)
         file(GLOB FilesPlatform             ${PROJECT_SOURCE_DIR}/sources/Platform/Android/*.*)
     else()
         file(GLOB FilesPlatform             ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/*.*)
@@ -264,7 +266,7 @@ if(WIN32)
         set(SUMMARY_TARGET_PLATFORM "Win32")
     endif()
 elseif(APPLE)
-    if(MOBILE_PLATFORM)
+    if(LLGL_MOBILE_PLATFORM)
         file(GLOB FilesRendererGLPlatform   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/IOS/*.*)
         file(GLOB FilesIncludePlatform      ${PROJECT_INCLUDE_DIR}/LLGL/Platform/IOS/*.*)
         set(SUMMARY_TARGET_PLATFORM "iOS")
@@ -274,7 +276,7 @@ elseif(APPLE)
         set(SUMMARY_TARGET_PLATFORM "macOS")
     endif()
 elseif(UNIX)
-    if(ANDROID_PLATFORM)
+    if(LLGL_ANDROID_PLATFORM)
         file(GLOB FilesRendererGLPlatform   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Android/*.*)
         file(GLOB FilesIncludePlatform      ${PROJECT_INCLUDE_DIR}/LLGL/Platform/Android/*.*)
         set(SUMMARY_TARGET_PLATFORM "Android")
@@ -360,7 +362,7 @@ set(FilesTest_iOS ${TestProjectsPath}/Test_iOS.mm)
 # Example project files
 file(GLOB FilesExampleBase ${EXAMPLE_PROJECTS_DIR}/ExampleBase/*.*)
 
-if(ANDROID_PLATFORM)
+if(LLGL_ANDROID_PLATFORM)
     set(ANDROID_APP_GLUE_DIR "${ANDROID_NDK}/sources/android/native_app_glue")
     set(FilesAndroidNativeAppGlue "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.c" "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.h")
 endif()
@@ -454,7 +456,7 @@ source_group("Sources\\Direct3D12\\Texture" FILES ${FilesRendererD3D12Texture})
 
 source_group("Sources" FILES ${FilesExampleBase})
 
-if(ANDROID_PLATFORM)
+if(LLGL_ANDROID_PLATFORM)
     source_group("Sources\\android_native_app_glue" FILES ${FilesAndroidNativeAppGlue})
 endif()
 
@@ -542,7 +544,7 @@ set(
     ${FilesRendererMTLBuffer}
     ${FilesRendererMTLRenderState}
     ${FilesRendererMTLShader}
-	${FilesRendererMTLShaderBuiltin}
+    ${FilesRendererMTLShaderBuiltin}
     ${FilesRendererMTLTexture}
 )
 
@@ -583,15 +585,15 @@ else()
 endif()
 
 if(APPLE)
-    if(MOBILE_PLATFORM)
+    if(LLGL_MOBILE_PLATFORM)
         target_link_libraries(LLGL PUBLIC "-framework Foundation -framework UIKit")
     else()
         find_library(COCOA_LIBRARY Cocoa)
         target_link_libraries(LLGL ${COCOA_LIBRARY})
     endif()
 elseif(UNIX)
-    if(MOBILE_PLATFORM)
-        target_link_libraries(LLGL pthread) #TODO: this is incomplete
+    if(LLGL_MOBILE_PLATFORM)
+#        target_link_libraries(LLGL stdc++) #TODO: this is incomplete
     else()
         target_link_libraries(LLGL X11 pthread Xxf86vm Xrandr)
     endif()
@@ -617,9 +619,9 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
         set_target_properties(LLGL_OpenGLES3 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
         
         if(APPLE)
-	        target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES")
-		else()
-	        target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES})
+            target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES")
+        else()
+            target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} EGL)
         endif()
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_OPENGLES3)
@@ -697,9 +699,9 @@ if(APPLE AND LLGL_BUILD_RENDERER_METAL)
         
         set_target_properties(LLGL_Metal PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
         
-        if(MOBILE_PLATFORM)
+        if(LLGL_MOBILE_PLATFORM)
             target_link_libraries(LLGL_Metal PUBLIC LLGL "-framework Foundation -framework UIKit -framework QuartzCore -framework Metal -framework MetalKit")
-	    else()
+        else()
             target_link_libraries(LLGL_Metal LLGL ${METAL_LIBRARY} ${METALKIT_LIBRARY})
         endif()
         
@@ -744,14 +746,14 @@ endif()
 
 # Test Projects
 if(APPLE)
-    if(LLGL_BUILD_TESTS AND MOBILE_PLATFORM)
+    if(LLGL_BUILD_TESTS AND LLGL_MOBILE_PLATFORM)
         ADD_TEST_PROJECT(Test_iOS "${FilesTest_iOS}" "${LLGL_DEPENDENCIES}")
     endif()
 endif()
 
 if(GaussLib_INCLUDE_DIR)
     # Test Projects
-    if(LLGL_BUILD_TESTS AND NOT MOBILE_PLATFORM)
+    if(LLGL_BUILD_TESTS AND NOT LLGL_MOBILE_PLATFORM)
         ADD_TEST_PROJECT(Test_OpenGL "${FilesTest_OpenGL}" "${LLGL_DEPENDENCIES}")
         if(WIN32)
             ADD_TEST_PROJECT(Test_D3D12 "${FilesTest_D3D12}" "${LLGL_DEPENDENCIES}")
@@ -777,7 +779,7 @@ if(GaussLib_INCLUDE_DIR)
         set_target_properties(ExampleBase PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
         target_link_libraries(ExampleBase "${LLGL_DEPENDENCIES}")
         
-        if(ANDROID_PLATFORM)
+        if(LLGL_ANDROID_PLATFORM)
             add_library(android_native_app_glue STATIC ${FilesAndroidNativeAppGlue})
             target_link_libraries(ExampleBase "${android_native_app_glue}")
             include_directories(${ANDROID_APP_GLUE_DIR})

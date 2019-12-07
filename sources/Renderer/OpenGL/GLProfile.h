@@ -24,7 +24,16 @@ namespace GLProfile
 {
 
 
-// Returns the OpenGL API name, e.g. "OpenGL" or "OpenGLES".
+// Returns the renderer ID number, e.g. RendererID::OpenGL or RendererID::OpenGLES3.
+int GetRendererID();
+
+// Returns the renderer module name, e.g. "OpenGL" or "OpenGLES3".
+const char* GetModuleName();
+
+// Returns the renderer name, e.g. "OpenGL" or "OpenGL ES 3".
+const char* GetRendererName();
+
+// Returns the OpenGL API name without version number, e.g. "OpenGL" or "OpenGL ES".
 const char* GetAPIName();
 
 // Returns the OpenGL shading language name, e.g. "GLSL" or "ESSL".
