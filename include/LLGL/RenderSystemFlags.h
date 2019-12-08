@@ -17,7 +17,7 @@
 
 #include "Platform/Platform.h"
 #if defined LLGL_OS_ANDROID
-#   include "Platform/Android/AndroidAppState.h"
+#   include <android_native_app_glue.h>
 //#elif defined LLGL_OS_IOS
 //#   include "Platform/"
 #endif
@@ -323,12 +323,11 @@ struct RenderSystemDescriptor
     #ifdef LLGL_OS_ANDROID
     
     /**
-    \brief Android specific application descriptor.
+    \brief Android specific application descriptor. This descriptor is defined by the "native app glue" from the Android NDK.
     \remarks This \b must be specified when compiling for the Android platform.
     \remarks Here is an example for the main entry point on Android:
     \code
     #include <LLGL/LLGL.h>
-    #include <LLGL/Platform/Platform.h>
     
     ...
     
@@ -344,12 +343,7 @@ struct RenderSystemDescriptor
     void android_main(android_app* state)
     {
         LLGL::RenderSystemDescriptor desc{ "OpenGLES3" };
-        {
-            desc.android.activity   = state->activity;
-            desc.android.looper     = state->looper;
-            desc.android.inputQueue = state->inputQueue; // optional
-            desc.android.window     = state->window;
-        }
+        desc.androidApp = state;
         MyMain(desc);
     }
     
@@ -365,9 +359,8 @@ struct RenderSystemDescriptor
     #endif
     \endcode
     \note Only supported on: Android.
-    \see AndroidAppDescriptor
     */
-    AndroidAppState android;
+    android_app*    androidApp;
     
     #endif
 };

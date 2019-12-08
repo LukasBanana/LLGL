@@ -118,7 +118,7 @@ private:
 
 private:
 
-    #if defined LLGL_OS_ANDROID
+    #ifdef LLGL_OS_ANDROID
     static android_app*                         androidApp_;
     #endif
 

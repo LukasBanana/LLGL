@@ -181,6 +181,10 @@ void ExampleBase::ResizeEventHandler::OnTimer(LLGL::Window& sender, std::uint32_
 
 std::string ExampleBase::rendererModule_;
 
+#ifdef LLGL_OS_ANDROID
+android_app* ExampleBase::androidApp_;
+#endif
+
 void ExampleBase::SelectRendererModule(int argc, char* argv[])
 {
     rendererModule_ = GetSelectedRendererModule(argc, argv);
@@ -260,12 +264,7 @@ ExampleBase::ExampleBase(
 
     #if defined LLGL_OS_ANDROID
     if (auto state = ExampleBase::androidApp_)
-    {
-        rendererDesc.android.activity   = state->activity;
-        rendererDesc.android.looper     = state->looper;
-        rendererDesc.android.inputQueue = state->inputQueue;
-        rendererDesc.android.window     = state->window;
-    }
+        rendererDesc.androidApp = state;
     else
         throw std::invalid_argument("'android_app' state was not specified");
     #endif

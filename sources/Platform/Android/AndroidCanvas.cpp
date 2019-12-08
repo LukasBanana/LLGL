@@ -6,6 +6,7 @@
  */
 
 #include "AndroidCanvas.h"
+#include "AndroidApp.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -65,7 +66,28 @@ void AndroidCanvas::ResetPixelFormat()
 
 void AndroidCanvas::OnProcessEvents()
 {
-    //TODO...
+    android_app* appState = AndroidApp::Get().GetState();
+    
+    /* Poll all Androdi app events */
+    int ident = 0, events = 0;
+    android_poll_source* source = nullptr;
+    
+    while ((ident = ALooper_pollAll(0, nullptr, &events, reinterpret_cast<void**>(&source))) >= 0)
+    {
+        /* Process the event */
+        if (source != nullptr)
+            source->process(appState, source);
+            
+        /* Process sensor data */
+        /*if (ident == LOOPER_ID_USER)
+        {
+            //TODO
+        }*/
+        
+        /* Check if we are exiting */
+        if (appState->destroyRequested != 0)
+            PostQuit();
+    }
 }
 
 

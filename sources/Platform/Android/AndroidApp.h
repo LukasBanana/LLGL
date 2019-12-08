@@ -9,7 +9,7 @@
 #define LLGL_ANDROID_APP_H
 
 
-#include <android/native_activity.h>
+#include <android_native_app_glue.h>
 
 
 namespace LLGL
@@ -27,18 +27,22 @@ class AndroidApp
 
         static AndroidApp& Get();
         
-        void Initialize();
+        // Initializes the Android app state. This should be called once when the device is created.
+        void Initialize(android_app* state);
 
+        // Returns the android_app instance provided by the "native app glue" entry point.
+        inline android_app* GetState() const
+        {
+            return state_;
+        }
+        
     private:
     
         AndroidApp() = default;
         
     private:
 
-        ANativeActivity*    activity_   = nullptr;
-        ALooper*            looper_     = nullptr;
-        AInputQueue*        inputQueue_ = nullptr;
-        ANativeWindow*      window_     = nullptr;
+        android_app* state_ = nullptr;
 
 };
 

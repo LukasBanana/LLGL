@@ -22,6 +22,11 @@
 #   include "DebugLayer/DbgRenderSystem.h"
 #endif
 
+#include <LLGL/Platform/Platform.h>
+#ifdef LLGL_OS_ANDROID
+#   include "../Platform/Android/AndroidApp.h"
+#endif
+
 #include "ModuleInterface.h"
 
 
@@ -136,6 +141,13 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     RenderingProfiler*              profiler,
     RenderingDebugger*              debugger)
 {
+    /* Initialize mobile specific states */
+    #if defined LLGL_OS_ANDROID
+    
+    AndroidApp::Get().Initialize(renderSystemDesc.androidApp);
+    
+    #endif
+
     #ifdef LLGL_BUILD_STATIC_LIB
 
     /* Allocate render system */

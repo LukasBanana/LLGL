@@ -18,7 +18,10 @@ AndroidApp& AndroidApp::Get()
     return instance;
 }
 
-
+void AndroidApp::Initialize(android_app* state)
+{
+    state_ = state;
+}
 
 
 } // /namespace LLGL
