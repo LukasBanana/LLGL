@@ -341,6 +341,22 @@ void VKDevice::CopyImageToBuffer(
     vkCmdCopyImageToBuffer(commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstBuffer, 1, &region);
 }
 
+void VKDevice::CopyImageToBuffer(
+    VkCommandBuffer             commandBuffer,
+    VKTexture&                  srcTexture,
+    VKBuffer&                   dstBuffer,
+    const VkBufferImageCopy&    region)
+{
+    vkCmdCopyImageToBuffer(
+        commandBuffer,
+        srcTexture.GetVkImage(),
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        dstBuffer.GetVkBuffer(),
+        1,
+        &region
+    );
+}
+
 void VKDevice::GenerateMips(
     VkCommandBuffer             commandBuffer,
     VkImage                     image,

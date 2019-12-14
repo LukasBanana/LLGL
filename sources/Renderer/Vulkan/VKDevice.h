@@ -116,6 +116,13 @@ class VKDevice
             const TextureSubresource&   subresource
         );
 
+        void CopyImageToBuffer(
+            VkCommandBuffer             commandBuffer,
+            VKTexture&                  srcTexture,
+            VKBuffer&                   dstBuffer,
+            const VkBufferImageCopy&    region
+        );
+
         void GenerateMips(
             VkCommandBuffer             commandBuffer,
             VkImage                     image,
