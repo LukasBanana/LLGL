@@ -146,7 +146,6 @@ void MTCommandBuffer::CopyBuffer(
     encoderScheduler_.ResumeRenderEncoder();
 }
 
-//TODO
 void MTCommandBuffer::CopyBufferFromTexture(
     Buffer&                 dstBuffer,
     std::uint64_t           dstOffset,
@@ -155,7 +154,46 @@ void MTCommandBuffer::CopyBufferFromTexture(
     std::uint32_t           rowStride,
     std::uint32_t           layerStride)
 {
-    throw std::runtime_error("\"CopyBufferFromTexture\" not implemented yet for Metal backend");
+    auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
+    auto& srcTextureMT = LLGL_CAST(MTTexture&, srcTexture);
+
+    /* Determine actual row and layer strides */
+    const auto format = MTTypes::ToFormat([srcTextureMT.GetNative() pixelFormat]);
+    const auto rowSize = GetMemoryFootprint(format, srcRegion.extent.width);
+
+    if (rowStride == 0)
+        rowStride = rowSize;
+    if (layerStride == 0)
+        layerStride = rowStride * srcRegion.extent.height;
+
+    /* Convert to Metal origin and size */
+    MTLOrigin srcOrigin;
+    MTTypes::Convert(srcOrigin, srcRegion.offset);
+
+    MTLSize srcSize;
+    MTTypes::Convert(srcSize, srcRegion.extent);
+
+    /* Encode blit commands to copy texture form buffer */
+    encoderScheduler_.PauseRenderEncoder();
+    {
+        auto blitEncoder = encoderScheduler_.BindBlitEncoder();
+        for (std::uint32_t arrayLayer = 0; arrayLayer < srcRegion.subresource.numArrayLayers; ++arrayLayer)
+        {
+            [blitEncoder
+                copyFromTexture:            srcTextureMT.GetNative()
+                sourceSlice:                (srcRegion.subresource.baseArrayLayer + arrayLayer)
+                sourceLevel:                srcRegion.subresource.baseMipLevel
+                sourceOrigin:               srcOrigin
+                sourceSize:                 srcSize
+                toBuffer:                   dstBufferMT.GetNative()
+                destinationOffset:          static_cast<NSUInteger>(dstOffset)
+                destinationBytesPerRow:     rowStride
+                destinationBytesPerImage:   layerStride
+            ];
+            dstOffset += layerStride;
+        }
+    }
+    encoderScheduler_.ResumeRenderEncoder();
 }
 
 void MTCommandBuffer::FillBuffer(
