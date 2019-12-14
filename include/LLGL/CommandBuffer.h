@@ -119,20 +119,40 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             std::uint64_t   size
         ) = 0;
 
-        #if 0//TODO
-
         /**
         \brief Encodes a buffer copy command that blits data from a source texture.
+        \param[in,out] dstBuffer Specifies the destination buffer whose data is to be updated.
+        This buffer must have been created with the binding flag BindFlags::CopyDst.
+        \param[in] dstOffset Specifies the destination offset (in bytes) at which the source buffer is to be updated. This \b must be a multiple of 4.
+        \param[in] srcTexture Specifies the source texture whose data is to be read from.
+        This texture must have been created with the binding flag BindFlags::CopySrc and
+        its format <b>must not</b> be compressed (see FormatFlags::IsCompressed) or packed (see FormatFlags::IsPacked).
+        \param[in] srcRegion Specifies the source region where the texture is to be read from.
+        Note that the \c numMipLevels attribute of this parameter \b must be 1.
+        \param[in] rowStride Specifies an optional stride (in bytes) per row in the source buffer. By default 0.
+        \param[in] layerStride Specifies an optional stride (in bytes) per layer in the source buffer.
+        This \b must be a multiple of \c rowStride. If \c rowStride is zero, then \c layerStride must also be zero. By default 0.
+        \remarks This is called "copy buffer from texture" instead of "copy texture to buffer"
+        to be uniform with the notation <code>buffer := texture</code>, or <code>memcpy(destination, source, size)</code>.
+        \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
+        Otherwise, render pass interruptions might be inserted by LLGL.
+        \remarks Further performance penalties can be introduced if \c rowStride is not aligned to the respective rendering API restrictions:
+        - Direct3D 12: \c rowStride \b should be a multiple of 256.
+        - Metal: \c rowStride \b should be less than or equal to 32767 multiplied by the source texture's format size.
+        \remarks If \c rowStride is 0, the source data is considered to be tightly packed for each array layer and the required alignment is managed automatically.
+        \remarks If \c rowStride is not 0, it \b must be greater than or equal to the size (in bytes) of each row in the texture region with respect to the texture's format.
+        \remarks The same rules of \c rowStride also apply to \c layerStride.
+        \see CopyTextureFromBuffer
+        \see GetMemoryFootprint
         */
         virtual void CopyBufferFromTexture(
             Buffer&                 dstBuffer,
             std::uint64_t           dstOffset,
-            std::uint64_t           dstSize,
             Texture&                srcTexture,
-            const TextureRegion&    srcRegion
+            const TextureRegion&    srcRegion,
+            std::uint32_t           rowStride   = 0,
+            std::uint32_t           layerStride = 0
         ) = 0;
-
-        #endif // /TODO
 
         /**
         \brief Fills the destination buffer with copies of the specified 32-bit value.
@@ -198,6 +218,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks If \c rowStride is 0, the source data is considered to be tightly packed for each array layer and the required alignment is managed automatically.
         \remarks If \c rowStride is not 0, it \b must be greater than or equal to the size (in bytes) of each row in the texture region with respect to the texture's format.
         \remarks The same rules of \c rowStride also apply to \c layerStride.
+        \see CopyBufferFromTexture
         \see GetMemoryFootprint
         */
         virtual void CopyTextureFromBuffer(

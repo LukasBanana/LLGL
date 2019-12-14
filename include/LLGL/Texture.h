@@ -42,6 +42,7 @@ class LLGL_EXPORT Texture : public Resource
         \see LLGL::GetMemoryFootprint(const Format, std::uint32_t)
         \see LLGL::GetMemoryFootprint(const TextureType, const Format, const Extent3D&, const TextureSubresource&)
         \see GetDesc
+        \todo Maybe make this virtual to allow memory alignment (especially for D3D12).
         */
         std::uint32_t GetMemoryFootprint() const;
 
@@ -51,6 +52,7 @@ class LLGL_EXPORT Texture : public Resource
         \see LLGL::GetMemoryFootprint(const Format, std::uint32_t)
         \see LLGL::GetMemoryFootprint(const TextureType, const Format, const Extent3D&, const TextureSubresource&)
         \see GetFormat
+        \todo Maybe make this virtual to allow memory alignment (especially for D3D12).
         */
         std::uint32_t GetMemoryFootprint(const Extent3D& extent, const TextureSubresource& subresource) const;
 

@@ -259,12 +259,25 @@ private:
         // Encode copy commands
         commands->Begin();
         {
+            // Modify texture by copying data between the two alternating destination textures
             commands->CopyTexture(
                 /*Destination:*/            *dstTextures[(dstTextureIndex + 1) % 2],
                 /*DestinationLocation:*/    LLGL::TextureLocation{ LLGL::Offset3D{ 8, 8, 0 } },
                 /*Source:*/                 *dstTextures[dstTextureIndex],
                 /*SourceLocation:*/         LLGL::TextureLocation{ LLGL::Offset3D{ 12, 10, 0 } },
                 /*Size:*/                   LLGL::Extent3D{ 32, 32, 1 }
+            );
+
+            // Store single pixel of texture back to content buffer to map texture memory to CPU space
+            commands->CopyBufferFromTexture(
+                *contentBuffer,
+                0,
+                *dstTextures[(dstTextureIndex + 1) % 2],
+                LLGL::TextureRegion
+                {
+                    LLGL::Offset3D{ 8, 8, 0 },
+                    LLGL::Extent3D{ 1, 1, 1 }
+                }
             );
         }
         commands->End();

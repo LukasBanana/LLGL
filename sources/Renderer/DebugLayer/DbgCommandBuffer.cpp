@@ -172,6 +172,34 @@ void DbgCommandBuffer::CopyBuffer(
     profile_.bufferCopies++;
 }
 
+//TODO: add remaining validation
+void DbgCommandBuffer::CopyBufferFromTexture(
+    Buffer&                 dstBuffer,
+    std::uint64_t           dstOffset,
+    Texture&                srcTexture,
+    const TextureRegion&    srcRegion,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    auto& dstBufferDbg = LLGL_CAST(DbgBuffer&, dstBuffer);
+    auto& srcTextureDbg = LLGL_CAST(DbgTexture&, srcTexture);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        ValidateBindBufferFlags(dstBufferDbg, BindFlags::CopyDst);
+        //ValidateBufferRange(dstBufferDbg, dstOffset, srcSize);
+        ValidateBindTextureFlags(srcTextureDbg, BindFlags::CopySrc);
+        //ValidateTextureRegion(srcTextureDbg, TextureRegion{ dstLocation.offset, dstExtent }, srcSize);
+        ValidateTextureBufferCopyStrides(srcTextureDbg, rowStride, layerStride, srcRegion.extent);
+    }
+
+    LLGL_DBG_COMMAND( "CopyBufferFromTexture", instance.CopyBufferFromTexture(dstBufferDbg.instance, dstOffset, srcTextureDbg.instance, srcRegion, rowStride, layerStride) );
+
+    profile_.bufferCopies++;
+}
+
 void DbgCommandBuffer::FillBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
@@ -227,6 +255,7 @@ void DbgCommandBuffer::CopyTexture(
     profile_.textureCopies++;
 }
 
+//TODO: add remaining validation
 void DbgCommandBuffer::CopyTextureFromBuffer(
     Texture&                dstTexture,
     const TextureRegion&    dstRegion,
@@ -242,10 +271,10 @@ void DbgCommandBuffer::CopyTextureFromBuffer(
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        //ValidateTextureRegion(dstTextureDbg, TextureRegion{ dstLocation.offset, dstExtent }, srcSize);
-        //ValidateBufferRange(srcBufferDbg, srcOffset, srcSize);
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
+        //ValidateTextureRegion(dstTextureDbg, TextureRegion{ dstLocation.offset, dstExtent }, srcSize);
         ValidateBindBufferFlags(srcBufferDbg, BindFlags::CopySrc);
+        //ValidateBufferRange(srcBufferDbg, srcOffset, srcSize);
         ValidateTextureBufferCopyStrides(dstTextureDbg, rowStride, layerStride, dstRegion.extent);
     }
 
