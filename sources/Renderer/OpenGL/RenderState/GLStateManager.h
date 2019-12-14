@@ -224,7 +224,7 @@ class GLStateManager
 
         void BindGLTexture(const GLTexture& texture);
 
-        void NotifyTextureRelease(GLuint texture, GLTextureTarget target);
+        void NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly = false);
 
         /* ----- Sampler ----- */
 

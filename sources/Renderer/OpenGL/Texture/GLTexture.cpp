@@ -24,6 +24,13 @@ namespace LLGL
 {
 
 
+#ifdef LLGL_OPENGLES3
+
+#define LLGL_GLES3_NOT_IMPLEMENTED \
+    throw std::runtime_error("not implemented for GLES3: " + std::string(__FUNCTION__))
+
+#endif // /LLGL_OPENGLES3
+
 // Returns true if a GL renderbuffer is sufficient for a texture with the specified bind flags
 static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
 {
@@ -103,7 +110,7 @@ GLTexture::GLTexture(const TextureDescriptor& desc) :
             glGenTextures(1, &id_);
         }
     }
-    
+
     #ifdef LLGL_OPENGLES3
     /* Store additional parameters for GLES */
     extent_[0]  = static_cast<GLint>(desc.extent.width);
@@ -384,6 +391,86 @@ static void GLCopyImageSubData(
 
 #endif // /GL_ARB_copy_image
 
+static void GLCopyTexSubImagePrimary(
+    const TextureType       type,
+    const GLTextureTarget   target,
+    GLuint                  dstTextureID,
+    GLint                   dstLevel,
+    const Offset3D&         dstOffset,
+    GLTexture&              srcTexture,
+    GLint                   srcLevel,
+    Offset3D                srcOffset,
+    const Extent3D&         extent)
+{
+    const GLenum targetGL = GLTypes::Map(type);
+
+    /* Create temporary FBO for source texture to read from GL_READ_FRAMEBUFFER in copy texture operator */
+    GLReadTextureFBO readFBO;
+    GLStateManager::Get().BindTexture(target, dstTextureID);
+
+    switch (type)
+    {
+        case TextureType::Texture1D:
+        {
+            #ifdef LLGL_OPENGL
+            readFBO.Attach(srcTexture, srcLevel, srcOffset);
+            glCopyTexSubImage1D(
+                targetGL,
+                dstLevel,
+                dstOffset.x,
+                srcOffset.x,
+                0,
+                static_cast<GLsizei>(extent.width)
+            );
+            #endif
+        }
+        break;
+
+        case TextureType::Texture1DArray:
+        case TextureType::Texture2D:
+        case TextureType::Texture2DMS:
+        {
+            readFBO.Attach(srcTexture, srcLevel, srcOffset);
+            glCopyTexSubImage2D(
+                targetGL,
+                dstLevel,
+                dstOffset.x,
+                dstOffset.y,
+                srcOffset.x,
+                srcOffset.y,
+                static_cast<GLsizei>(extent.width),
+                static_cast<GLsizei>(extent.height)
+            );
+        }
+        break;
+
+        case TextureType::Texture3D:
+        case TextureType::Texture2DArray:
+        case TextureType::Texture2DMSArray:
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+        {
+            for (decltype(extent.depth) i = 0; i < extent.depth; ++i)
+            {
+                readFBO.Attach(srcTexture, srcLevel, srcOffset);
+                glCopyTexSubImage3D(
+                    targetGL,
+                    dstLevel,
+                    dstOffset.x,
+                    dstOffset.y,
+                    dstOffset.z + i,
+                    srcOffset.x,
+                    srcOffset.y,
+                    static_cast<GLsizei>(extent.width),
+                    static_cast<GLsizei>(extent.height)
+                );
+                srcOffset.z++;
+            }
+        }
+        break;
+    }
+}
+
 static void GLCopyTexSubImage(
     GLTexture&      dstTexture,
     GLint           dstLevel,
@@ -393,79 +480,24 @@ static void GLCopyTexSubImage(
     Offset3D        srcOffset,
     const Extent3D& extent)
 {
-    const TextureType       type        = dstTexture.GetType();
-    const GLTextureTarget   target      = GLStateManager::GetTextureTarget(type);
-    const GLenum            targetGL    = GLTypes::Map(type);
+    const TextureType       type    = dstTexture.GetType();
+    const GLTextureTarget   target  = GLStateManager::GetTextureTarget(type);
 
     /* Store bound texture and framebuffer */
     GLStateManager::Get().PushBoundTexture(target);
     GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
     {
-        /* Create temporary FBO for source texture to read from GL_READ_FRAMEBUFFER in copy texture operator */
-        GLReadTextureFBO readFBO;
-        GLStateManager::Get().BindTexture(target, dstTexture.GetID());
-
-        switch (type)
-        {
-            case TextureType::Texture1D:
-            {
-                #ifdef LLGL_OPENGL
-                readFBO.Attach(srcTexture, srcLevel, srcOffset);
-                glCopyTexSubImage1D(
-                    targetGL,
-                    dstLevel,
-                    dstOffset.x,
-                    srcOffset.x,
-                    0,
-                    static_cast<GLsizei>(extent.width)
-                );
-                #endif
-            }
-            break;
-
-            case TextureType::Texture1DArray:
-            case TextureType::Texture2D:
-            case TextureType::Texture2DMS:
-            {
-                readFBO.Attach(srcTexture, srcLevel, srcOffset);
-                glCopyTexSubImage2D(
-                    targetGL,
-                    dstLevel,
-                    dstOffset.x,
-                    dstOffset.y,
-                    srcOffset.x,
-                    srcOffset.y,
-                    static_cast<GLsizei>(extent.width),
-                    static_cast<GLsizei>(extent.height)
-                );
-            }
-            break;
-
-            case TextureType::Texture3D:
-            case TextureType::Texture2DArray:
-            case TextureType::Texture2DMSArray:
-            case TextureType::TextureCube:
-            case TextureType::TextureCubeArray:
-            {
-                for (decltype(extent.depth) i = 0; i < extent.depth; ++i)
-                {
-                    readFBO.Attach(srcTexture, srcLevel, srcOffset);
-                    glCopyTexSubImage3D(
-                        targetGL,
-                        dstLevel,
-                        dstOffset.x,
-                        dstOffset.y,
-                        dstOffset.z + i,
-                        srcOffset.x,
-                        srcOffset.y,
-                        static_cast<GLsizei>(extent.width),
-                        static_cast<GLsizei>(extent.height)
-                    );
-                    srcOffset.z++;
-                }
-            }
-            break;
-        }
+        GLCopyTexSubImagePrimary(
+            type,
+            target,
+            dstTexture.GetID(),
+            dstLevel,
+            dstOffset,
+            srcTexture,
+            srcLevel,
+            srcOffset,
+            extent
+        );
     }
     /* Restore previous bound texture and framebuffer */
     GLStateManager::Get().PopBoundFramebuffer();
@@ -505,10 +537,27 @@ void GLTexture::CopyImageToBuffer(
     GLint                   rowLength,
     GLint                   imageHeight)
 {
-    if (!IsRenderbuffer())
+    /* Get image format and data type from internal texture format */
+    const auto& formatAttribs = GetFormatAttribs(GetFormat());
+
+    /* Read data from unpack buffer with byte offset and equal texture format */
+    const DstImageDescriptor imageDesc
     {
-        //TODO
+        formatAttribs.format,
+        formatAttribs.dataType,
+        reinterpret_cast<void*>(offset),
+        static_cast<std::size_t>(size)
+    };
+
+    /* Bind buffer to pixel transfer pack buffer unit */
+    GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_PACK_BUFFER, bufferID);
+    GLStateManager::Get().SetPixelStorePack(rowLength, imageHeight, 1);
+    {
+        /* Read image sub data and store into currently bound pack buffer */
+        GetTextureSubImage(region, imageDesc);
     }
+    GLStateManager::Get().SetPixelStorePack(0, 0, 1);
+    GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_PACK_BUFFER, 0);
 }
 
 /*
@@ -579,6 +628,177 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescr
                 GLTexSubImage(GetType(), region, imageDesc, GetGLInternalFormat());
             }
         }
+    }
+}
+
+#ifdef GL_ARB_get_texture_sub_image
+
+static void GLGetTextureSubImage(
+    GLTexture&                  textureGL,
+    const TextureRegion&        region,
+    const DstImageDescriptor&   imageDesc)
+{
+    /* Translate source region into actual texture dimensions */
+    const auto type         = textureGL.GetType();
+    const auto offset       = CalcTextureOffset(type, region.offset, region.subresource.baseArrayLayer);
+    const auto extent       = CalcTextureExtent(type, region.extent, region.subresource.numArrayLayers);
+    const auto mipLevel     = static_cast<GLint>(region.subresource.baseMipLevel);
+
+    /* Get image data from texture region with native GL command */
+    glGetTextureSubImage(
+        textureGL.GetID(),
+        mipLevel,
+        static_cast<GLint>(offset.x),
+        static_cast<GLint>(offset.y),
+        static_cast<GLint>(offset.z),
+        static_cast<GLsizei>(extent.width),
+        static_cast<GLsizei>(extent.height),
+        static_cast<GLsizei>(extent.depth),
+        GLTypes::Map(imageDesc.format),
+        GLTypes::Map(imageDesc.dataType),
+        static_cast<GLsizei>(imageDesc.dataSize),
+        imageDesc.data
+    );
+}
+
+#endif // /GL_ARB_get_texture_sub_image
+
+#ifdef LLGL_OPENGL
+
+static void GLGetTextureImage(
+    GLTexture&                  textureGL,
+    const TextureRegion&        region,
+    const DstImageDescriptor&   imageDesc)
+{
+    /* Get texture type and texture unit target */
+    const auto type         = textureGL.GetType();
+    const auto target       = GLStateManager::GetTextureTarget(type);
+
+    /* Translate source region into actual texture dimensions */
+    const auto offset       = CalcTextureOffset(type, region.offset, region.subresource.baseArrayLayer);
+    const auto extent       = CalcTextureExtent(type, region.extent, region.subresource.numArrayLayers);
+
+    /* Check if source region must be copied into a staging texture */
+    const auto mipExtent    = textureGL.GetMipExtent(region.subresource.baseMipLevel);
+    const bool useStaging   = (mipExtent != extent);
+
+    GLuint  srcTextureID        = textureGL.GetID();
+    GLuint  stagingTextureID    = 0;
+    GLint   mipLevel            = static_cast<GLint>(region.subresource.baseMipLevel);
+
+    if (useStaging)
+    {
+        /* Generate temporary staging texture */
+        glGenTextures(1, &stagingTextureID);
+
+        /* Allocate storage for temporary staging texture */
+        TextureDescriptor stagingTextureDesc;
+        {
+            stagingTextureDesc.type         = textureGL.GetType();
+            stagingTextureDesc.bindFlags    = BindFlags::CopySrc | BindFlags::CopyDst;
+            stagingTextureDesc.miscFlags    = MiscFlags::NoInitialData;
+            stagingTextureDesc.format       = textureGL.GetFormat();
+            stagingTextureDesc.extent       = region.extent;
+            stagingTextureDesc.arrayLayers  = region.subresource.numArrayLayers;
+            stagingTextureDesc.mipLevels    = 1;
+        };
+        GLStateManager::Get().BindTexture(target, stagingTextureID);
+        GLTexImage(stagingTextureDesc, nullptr);
+
+        /* Copy source texture region into temporary staging texture */
+        GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
+        {
+            GLCopyTexSubImagePrimary(
+                type,
+                target,
+                stagingTextureID,
+                0,
+                Offset3D{ 0, 0, 0 },
+                textureGL,
+                mipLevel,
+                offset,
+                extent
+            );
+        }
+        GLStateManager::Get().PopBoundFramebuffer();
+
+        /* Use staging texture as source for copy operation, so also reset source MIP-map level */
+        srcTextureID    = stagingTextureID;
+        mipLevel        = 0;
+    }
+
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glGetTextureImage(
+            srcTextureID,
+            mipLevel,
+            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.dataType),
+            static_cast<GLsizei>(imageDesc.dataSize),
+            imageDesc.data
+        );
+    }
+    else
+    #endif // /GL_ARB_direct_state_access
+    {
+        /* Bind texture and read image data from texture */
+        GLStateManager::Get().BindTexture(target, srcTextureID);
+        glGetTexImage(
+            GLTypes::Map(type),
+            mipLevel,
+            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.dataType),
+            imageDesc.data
+        );
+    }
+
+    /* Delete temporary staging texture */
+    if (useStaging)
+    {
+        glDeleteTextures(1, &stagingTextureID);
+        GLStateManager::Get().NotifyTextureRelease(stagingTextureID, target, true);
+    }
+}
+
+#endif // /LLGL_OPENGL
+
+void GLTexture::GetTextureSubImage(const TextureRegion& region, const DstImageDescriptor& imageDesc, bool restoreBoundTexture)
+{
+    if (!IsRenderbuffer())
+    {
+        #ifdef LLGL_OPENGL
+
+        #ifdef GL_ARB_get_texture_sub_image
+        if (HasExtension(GLExt::ARB_get_texture_sub_image))
+        {
+            /* Use native function to retrieve sub image data */
+            GLGetTextureSubImage(*this, region, imageDesc);
+        }
+        else
+        #endif // /GL_ARB_get_texture_sub_image
+        {
+            /* Emulate functionality by copying the entire texture image into an intermediate buffer */
+            const GLTextureTarget target = GLStateManager::GetTextureTarget(GetType());
+            if (restoreBoundTexture)
+            {
+                /* Bind texture and transfer image data to GL texture, then restore previously bound texture with state manager */
+                GLStateManager::Get().PushBoundTexture(target);
+                {
+                    GLGetTextureImage(*this, region, imageDesc);
+                }
+                GLStateManager::Get().PopBoundTexture();
+            }
+            else
+                GLGetTextureImage(*this, region, imageDesc);
+        }
+
+        #else
+
+        //TODO: copy texture to unpack buffer, then map buffer range to CPU memory
+        LLGL_GLES3_NOT_IMPLEMENTED;
+
+        #endif // /LLGL_OPENGL
     }
 }
 
@@ -675,7 +895,7 @@ void GLTexture::QueryInternalFormat()
 void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
 {
     #ifdef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
-    
+
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
@@ -712,19 +932,19 @@ void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
         }
         GLStateManager::Get().PopBoundTexture();
     }
-    
+
     #else // LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
-    
+
     if (extent != nullptr)
     {
         extent[0] = extent_[0];
         extent[1] = extent_[1];
         extent[2] = extent_[2];
     }
-    
+
     if (samples != nullptr)
         samples[0] = samples_;
-    
+
     #endif // /LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
 }
 
@@ -770,7 +990,7 @@ void GLTexture::GetRenderbufferParams(GLint* extent, GLint* samples) const
 void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
 {
     #ifdef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
-    
+
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
@@ -798,15 +1018,15 @@ void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
     /* Adjust depth value for cube texture to be uniform with D3D */
     if (IsCubeTexture(GetType()))
         texSize[2] *= 6;
-        
+
     #else // LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
-    
+
     /* Calculate MIP extent from texture size and type */
     auto GLIntToUInt32 = [](GLint x) -> std::uint32_t
     {
         return static_cast<std::uint32_t>(std::max(0, x));
     };
-    
+
     auto extent = LLGL::GetMipExtent(
         GetType(),
         Extent3D
@@ -817,11 +1037,11 @@ void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
         },
         GLIntToUInt32(level)
     );
-    
+
     texSize[0] = extent.width;
     texSize[1] = extent.height;
     texSize[2] = extent.depth;
-    
+
     #endif // /LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
 }
 

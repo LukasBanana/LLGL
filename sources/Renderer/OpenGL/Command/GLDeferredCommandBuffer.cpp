@@ -134,6 +134,26 @@ void GLDeferredCommandBuffer::CopyBuffer(
     }
 }
 
+void GLDeferredCommandBuffer::CopyBufferFromTexture(
+    Buffer&                 dstBuffer,
+    std::uint64_t           dstOffset,
+    Texture&                srcTexture,
+    const TextureRegion&    srcRegion,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    auto cmd = AllocCommand<GLCmdCopyImageBuffer>(GLOpcodeCopyImageToBuffer);
+    {
+        cmd->texture        = LLGL_CAST(GLTexture*, &srcTexture);
+        cmd->region         = srcRegion;
+        cmd->bufferID       = LLGL_CAST(GLBuffer&, dstBuffer).GetID();
+        cmd->offset         = static_cast<GLintptr>(dstOffset);
+        cmd->size           = cmd->texture->GetMemoryFootprint(srcRegion.extent, srcRegion.subresource);
+        cmd->rowLength      = static_cast<GLint>(rowStride);
+        cmd->imageHeight    = static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0);
+    }
+}
+
 void GLDeferredCommandBuffer::FillBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,

@@ -18,6 +18,7 @@ namespace LLGL
 
 
 struct SrcImageDescriptor;
+struct DstImageDescriptor;
 
 // Predefined texture swizzles to emulate certain texture format
 enum class GLSwizzleFormat
@@ -85,6 +86,9 @@ class GLTexture final : public Texture
         // Writes the specified image data to a subregion of this texture.
         void TextureSubImage(const TextureRegion& region, const SrcImageDescriptor& imageDesc, bool restoreBoundTexture = true);
 
+        // Reads the specified image data from a subregion of this texture.
+        void GetTextureSubImage(const TextureRegion& region, const DstImageDescriptor& imageDesc, bool restoreBoundTexture = true);
+
         // Initializes this texture as a texture-view.
         void TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc);
 
@@ -141,7 +145,7 @@ class GLTexture final : public Texture
         GLsizei         numMipLevels_   = 1;
         bool            isRenderbuffer_ = false;
         GLSwizzleFormat swizzleFormat_  = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
-        
+
         #ifdef LLGL_OPENGLES3
         GLint           extent_[3]      = {};
         GLint           samples_        = 1;

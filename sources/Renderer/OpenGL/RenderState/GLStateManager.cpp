@@ -1168,11 +1168,20 @@ void GLStateManager::BindGLTexture(const GLTexture& texture)
     BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
-void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target)
+void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly)
 {
     auto targetIdx = static_cast<std::size_t>(target);
-    for (auto& layer : textureState_.layers)
-        InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
+    if (activeLayerOnly)
+    {
+        /* Invalidate GL texture only on active layer (should only be used for internal and temporary textures) */
+        InvalidateBoundGLObject(textureState_.activeLayerRef->boundTextures[targetIdx], texture);
+    }
+    else
+    {
+        /* Invalidate GL texture on all layers */
+        for (auto& layer : textureState_.layers)
+            InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
+    }
 }
 
 /* ----- Sampler ----- */

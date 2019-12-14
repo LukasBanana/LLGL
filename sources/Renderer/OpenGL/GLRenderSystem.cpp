@@ -327,104 +327,12 @@ void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     textureGL.TextureSubImage(textureRegion, imageDesc, false);
 }
 
-//TODO: move logic of this function into <GLTexture> class
 void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
 {
+    /* Bind texture and write texture sub data */
     LLGL_ASSERT_PTR(imageDesc.data);
-
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-
-    const auto offset   = CalcTextureOffset(texture.GetType(), textureRegion.offset, textureRegion.subresource.baseArrayLayer);
-    const auto extent   = CalcTextureExtent(texture.GetType(), textureRegion.extent, textureRegion.subresource.numArrayLayers);
-    const auto mipLevel = static_cast<GLint>(textureRegion.subresource.baseMipLevel);
-
-    /* Read image data from texture */
-    #ifdef GL_ARB_get_texture_sub_image
-    if (HasExtension(GLExt::ARB_get_texture_sub_image))
-    {
-        glGetTextureSubImage(
-            textureGL.GetID(),
-            mipLevel,
-            static_cast<GLint>(offset.x),
-            static_cast<GLint>(offset.y),
-            static_cast<GLint>(offset.z),
-            static_cast<GLsizei>(extent.width),
-            static_cast<GLsizei>(extent.height),
-            static_cast<GLsizei>(extent.depth),
-            GLTypes::Map(imageDesc.format),
-            GLTypes::Map(imageDesc.dataType),
-            static_cast<GLsizei>(imageDesc.dataSize),
-            imageDesc.data
-        );
-    }
-    else
-    #endif // /GL_ARB_get_texture_sub_image
-    {
-        auto data       = imageDesc.data;
-        auto dataSize   = static_cast<std::uint32_t>(imageDesc.dataSize);
-
-        /* Determine texture MIP-map extent and use intermediate buffer if necessary */
-        ByteBuffer intermediateData;
-
-        const auto mipExtent    = textureGL.GetMipExtent(textureRegion.subresource.baseMipLevel);
-        const bool useStaging   = (mipExtent != textureRegion.extent);
-
-        if (useStaging)
-        {
-            dataSize            = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, mipExtent.width * mipExtent.height * mipExtent.depth);
-            intermediateData    = GenerateEmptyByteBuffer(dataSize, false);
-            data                = intermediateData.get();
-        }
-
-        #ifdef LLGL_OPENGL
-        #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
-        if (HasExtension(GLExt::ARB_direct_state_access))
-        {
-            glGetTextureImage(
-                textureGL.GetID(),
-                mipLevel,
-                GLTypes::Map(imageDesc.format),
-                GLTypes::Map(imageDesc.dataType),
-                static_cast<GLsizei>(dataSize),
-                data
-            );
-        }
-        else
-        #endif // /GL_ARB_direct_state_access
-        {
-            /* Bind texture and read image data from texture */
-            GLStateManager::Get().BindGLTexture(textureGL);
-            glGetTexImage(
-                GLTypes::Map(textureGL.GetType()),
-                mipLevel,
-                GLTypes::Map(imageDesc.format),
-                GLTypes::Map(imageDesc.dataType),
-                data
-            );
-        }
-        #else
-        
-        //TODO: copy texture to unpack buffer, then map buffer range to CPU memory
-        LLGL_GLES3_NOT_IMPLEMENTED;
-        
-        #endif
-
-        /* Blit intermediate data to output data */
-        if (useStaging)
-        {
-            CopyImageBufferRegion(
-                imageDesc,
-                Offset3D{ 0, 0, 0 },
-                extent.width,
-                extent.width * extent.height,
-                SrcImageDescriptor{ imageDesc.format, imageDesc.dataType, intermediateData.get(), dataSize },
-                offset,
-                mipExtent.width,
-                mipExtent.width * mipExtent.height,
-                extent
-            );
-        }
-    }
+    textureGL.GetTextureSubImage(textureRegion, imageDesc, false);
 }
 
 /* ----- Sampler States ---- */

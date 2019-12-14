@@ -16,6 +16,7 @@ namespace LLGL
 {
 
 
+//TODO: rename to "GLClampType"
 // Used by glDepthRange
 typedef GLdouble GLclamp_t;
 
