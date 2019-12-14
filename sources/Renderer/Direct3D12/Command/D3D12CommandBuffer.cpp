@@ -107,6 +107,18 @@ void D3D12CommandBuffer::CopyBuffer(
     commandContext_.TransitionResource(srcBufferD3D.GetResource(), srcBufferD3D.GetResource().usageState, true);
 }
 
+//TODO
+void D3D12CommandBuffer::CopyBufferFromTexture(
+    Buffer&                 dstBuffer,
+    std::uint64_t           dstOffset,
+    Texture&                srcTexture,
+    const TextureRegion&    srcRegion,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    throw std::runtime_error("\"CopyBufferFromTexture\" not implemented yet for D3D12 backend");
+}
+
 void D3D12CommandBuffer::FillBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,

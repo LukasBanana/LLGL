@@ -149,6 +149,18 @@ void D3D11CommandBuffer::ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT off
     context_->ClearUnorderedAccessViewUint(intermediateUAV.Get(), valuesVec4);
 }
 
+//TODO
+void D3D11CommandBuffer::CopyBufferFromTexture(
+    Buffer&                 dstBuffer,
+    std::uint64_t           dstOffset,
+    Texture&                srcTexture,
+    const TextureRegion&    srcRegion,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    throw std::runtime_error("\"CopyBufferFromTexture\" not implemented yet for D3D11 backend");
+}
+
 void D3D11CommandBuffer::FillBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,

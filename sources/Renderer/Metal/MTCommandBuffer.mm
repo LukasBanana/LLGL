@@ -146,6 +146,18 @@ void MTCommandBuffer::CopyBuffer(
     encoderScheduler_.ResumeRenderEncoder();
 }
 
+//TODO
+void MTCommandBuffer::CopyBufferFromTexture(
+    Buffer&                 dstBuffer,
+    std::uint64_t           dstOffset,
+    Texture&                srcTexture,
+    const TextureRegion&    srcRegion,
+    std::uint32_t           rowStride,
+    std::uint32_t           layerStride)
+{
+    throw std::runtime_error("\"CopyBufferFromTexture\" not implemented yet for Metal backend");
+}
+
 void MTCommandBuffer::FillBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,

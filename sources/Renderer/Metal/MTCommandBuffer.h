@@ -62,6 +62,15 @@ class MTCommandBuffer final : public CommandBuffer
             std::uint64_t   size
         ) override;
 
+        void CopyBufferFromTexture(
+            Buffer&                 dstBuffer,
+            std::uint64_t           dstOffset,
+            Texture&                srcTexture,
+            const TextureRegion&    srcRegion,
+            std::uint32_t           rowStride   = 0,
+            std::uint32_t           layerStride = 0
+        ) override;
+
         void FillBuffer(
             Buffer&         dstBuffer,
             std::uint64_t   dstOffset,
