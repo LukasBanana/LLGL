@@ -279,7 +279,6 @@ class D3D11CommandBuffer final : public CommandBuffer
             ID3D11Buffer**              bufferOutput,
             ID3D11ShaderResourceView**  srvOutput,
             ID3D11UnorderedAccessView** uavOutput,
-            UINT                        offset,
             UINT                        size,
             D3D11_USAGE                 usage           = D3D11_USAGE_DEFAULT
         );

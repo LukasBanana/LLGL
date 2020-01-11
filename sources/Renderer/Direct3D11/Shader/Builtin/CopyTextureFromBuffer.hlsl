@@ -5,22 +5,10 @@
  * See "LICENSE.txt" for license information.
  */
 
-/* Current MIP-map level configuration */
-cbuffer CopyDescriptor : register(b0)
-{
-    uint3   dstOffset;
-    uint    srcOffset;      // Source buffer offset: multiple of 4
-    uint3   dstExtent;
-    uint    srcIndexStride; // Source index stride: 4, 8, 16, 32
-    uint    formatSize;     // Bytes per pixel: 1, 2, 4, 8, 12, 16
-    uint    components;     // Destination color components: 1, 2, 3, 4
-    uint    componentBits;  // Bits per component: 8, 16, 32
-    uint    rowStride;
-    uint    layerStride;
-};
+#include "CopyTextureBuffer.hlsli"
 
 
-/* Destination texture (must have typeless format, e.g. DXGI_FORMAT_R8G8B8A8_TYPELESS) and source buffer */
+/* Source buffer and destination texture (must have typeless format, e.g. DXGI_FORMAT_R8G8B8A8_TYPELESS) */
 ByteAddressBuffer srcBuffer : register(t0);
 
 #if TEXTURE_DIM == 1
@@ -138,15 +126,15 @@ void ReadSourceBufferRGBA(inout uint4 result, uint addr)
 uint4 ReadSourceBuffer(uint idx, uint3 coord)
 {
     /* Calculate source buffer address from linear index */
-    uint addr = srcOffset + idx * srcIndexStride;
+    uint addr = bufOffset + idx * bufIndexStride;
     
     /* Add row padding */
-    uint rowSize    = dstExtent.x * formatSize;
+    uint rowSize    = texExtent.x * formatSize;
     uint rowPadding = (rowStride > rowSize ? rowStride - rowSize : 0);
     addr += rowPadding * coord.y;
     
     /* Add layer padding */
-    uint layerSize      = (rowSize + rowPadding) * dstExtent.y;
+    uint layerSize      = (rowSize + rowPadding) * texExtent.y;
     uint layerPadding   = (layerStride > layerSize ? layerStride - layerSize : 0);
     addr += layerPadding * coord.z;
     
@@ -179,7 +167,7 @@ uint4 ReadSourceBuffer(uint idx, uint3 coord)
 void WriteDestinationTexutre(uint3 coord, uint4 value)
 {
     /* Calculate texture coordinate from linear index */
-    uint3 pos = dstOffset + coord;
+    uint3 pos = texOffset + coord;
     
     /* Write components to destination texture */
     #if TEXTURE_DIM == 1
@@ -189,18 +177,17 @@ void WriteDestinationTexutre(uint3 coord, uint4 value)
     #endif
 }
 
-
 /* Primary compute kernel to up to 4 MIP-map levels at a time */
 [numthreads(1, 1, 1)]
 void CopyTextureFromBuffer(uint3 threadID : SV_DispatchThreadID)
 {
     /* Flatten global thread ID */
-    uint groupIndex = threadID.x + (threadID.y + threadID.z * dstExtent.y) * dstExtent.x;
+    uint groupIndex = threadID.x + (threadID.y + threadID.z * texExtent.y) * texExtent.x;
     
     /* Read value from source buffer */
     uint4 value = ReadSourceBuffer(groupIndex, threadID);
     
-    /* Write value to destination */
+    /* Write value to destination texture */
     WriteDestinationTexutre(threadID, value);
 }
 

@@ -27,9 +27,9 @@ void D3D11BuiltinShaderFactory::CreateBuiltinShaders(ID3D11Device* device)
     LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture1DFromBufferCS, LLGL_IDR_D3D11_COPYTEXTURE1DFROMBUFFER_CS);
     LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture2DFromBufferCS, LLGL_IDR_D3D11_COPYTEXTURE2DFROMBUFFER_CS);
     LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture3DFromBufferCS, LLGL_IDR_D3D11_COPYTEXTURE3DFROMBUFFER_CS);
-    //LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture1DCS, LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE1D_CS);
-    //LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture2DCS, LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE2D_CS);
-    //LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture3DCS, LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE3D_CS);
+    LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture1DCS, LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE1D_CS);
+    LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture2DCS, LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE2D_CS);
+    LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture3DCS, LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE3D_CS);
 }
 
 void D3D11BuiltinShaderFactory::Clear()

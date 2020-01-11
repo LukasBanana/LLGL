@@ -27,12 +27,14 @@ namespace LLGL
 \remarks Packed color formats are stored from least significant bit (LSB) to most significant bit (MSB),
 i.e. for the Format::RGB10A2UNorm the bit pattern is <code>A[31:30], B[29:20], G[19:10], R[9:0]</code> for instance.
 
-\remarks The following table illustrates the bit-size for each component of all ordinary and packed color formats (depth-stencil and compressed formats excluded),
-where <b>\c n</b> denotes unsigned normalized formats (\c UNorm),
-<b>\c s</b> denotes signed normalized formats (\c SNorm),
-<b>\c u</b> denotes unsigned integer formats (\c UInt),
-<b>\c i</b> denotes signed integer formats (\c SInt),
-and <b>\c f</b> denotes floating-point formats (\c Float):
+\remarks The following table illustrates the bit-size for each component of all ordinary and packed color formats (depth-stencil and compressed formats excluded) with the following notation:
+- <b>\c n</b> denotes unsigned normalized formats (\c UNorm)
+- <b>\c s</b> denotes signed normalized formats (\c SNorm)
+- <b>\c u</b> denotes unsigned integer formats (\c UInt)
+- <b>\c i</b> denotes signed integer formats (\c SInt)
+- <b>\c f</b> denotes floating-point formats (\c Float)
+
+\remarks
 | Format | Bits | Red | Green | Blue | Alpha | Shared |
 |--------|-----:|----:|------:|-----:|------:|-------:|
 | Format::A8UNorm         | <b>\c   8</b> |        |        |        | \c  n8 |        |

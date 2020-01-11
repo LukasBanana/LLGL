@@ -380,8 +380,8 @@ Before/After:
 ```cpp
 BindFlags::RWStorageBuffer             --> BindFlags::Storage
 BindFlags::SampleBuffer                --> BindFlags::Sampled
-CommandBuffer::SetRWStorageBuffer      --> CommandBuffer::SetStorageBuffer
-CommandBuffer::SetSampleBuffer         --> CommandBuffer::SetSampledBuffer
+CommandBuffer::SetRWStorageBuffer      --> CommandBuffer::SetResource
+CommandBuffer::SetSampleBuffer         --> CommandBuffer::SetResource
 Display::QueryList                     --> Display::InstantiateList
 Display::QueryPrimary                  --> Display::InstantiatePrimary
 Display::QuerySupportedDisplayModes    --> Display::GetSupportedDisplayModes

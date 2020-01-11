@@ -149,7 +149,48 @@ void D3D11CommandBuffer::ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT off
     context_->ClearUnorderedAccessViewUint(intermediateUAV.Get(), valuesVec4);
 }
 
-//TODO
+// Internal use only (see D3D11CommandBuffer::CopyTextureFromBuffer)
+struct CopyTextureBufferCbuffer
+{
+    std::uint32_t texOffset[3];
+    std::uint32_t bufOffset;        // Source buffer offset: multiple of 4
+    std::uint32_t texExtent[3];
+    std::uint32_t bufIndexStride;   // Source index stride is format size clamped to [4, inf+), or 4, 8, 12, 16
+    std::uint32_t formatSize;       // Bytes per pixel: 1, 2, 4, 8, 12, 16
+    std::uint32_t components;       // Destination color components: 1, 2, 3, 4
+    std::uint32_t componentBits;    // Bits per component: 8, 16, 32
+    std::uint32_t rowStride;
+    std::uint32_t layerStride;
+    std::uint32_t pad0[3];          // Padding to fill up current 16-byte register
+    std::uint32_t pad1[12 * 4];     // Padding to fill up constant buffer range of 256 bytes
+};
+
+// Returns a suitable array texture type if the input type allows an array texture as subresource view
+static TextureType ToArrayTextureType(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            return TextureType::Texture1DArray;
+
+        case TextureType::Texture2D:
+        case TextureType::TextureCube:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+            return TextureType::Texture2DArray;
+
+        default:
+            return type;
+    }
+}
+
+/*
+D3D11 does not support copying data between buffers and textures natively,
+so this function dispatches a builtin compute shader to achieve the desired effect.
+Because byte address buffers are incompatible with other buffer types (like constant buffers or structured buffers),
+an intermediate buffer must be copied to the destination buffer afterwards (i.e. CopySubresourceRegion from RWByteAddressBuffer to destination buffer).
+*/
 void D3D11CommandBuffer::CopyBufferFromTexture(
     Buffer&                 dstBuffer,
     std::uint64_t           dstOffset,
@@ -158,7 +199,190 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
     std::uint32_t           rowStride,
     std::uint32_t           layerStride)
 {
-    throw std::runtime_error("\"CopyBufferFromTexture\" not implemented yet for D3D11 backend");
+    auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
+    auto& srcTextureD3D = LLGL_CAST(D3D11Texture&, srcTexture);
+
+    /* Check if offsets are out of bounds or destination extent is zero */
+    const auto& srcOffset = srcRegion.offset;
+    if (srcOffset.x < 0 || srcOffset.y < 0 || srcOffset.z < 0)
+        return;
+
+    if (dstOffset > UINT32_MAX)
+        return;
+
+    const auto& srcExtent = srcRegion.extent;
+    if (srcExtent.width == 0 || srcExtent.height == 0 || srcExtent.depth == 0)
+        return;
+
+    const UINT dstOffsetU32 = static_cast<UINT>(dstOffset);
+
+    /* Get destination texture attributes */
+    const auto& formatAttribs = GetFormatAttribs(srcTextureD3D.GetFormat());
+    if ((formatAttribs.flags & (FormatFlags::IsCompressed | FormatFlags::IsPacked)) != 0 || formatAttribs.components == 0)
+        return;
+
+    /* An intermediate texture copy is required if the destination texture's format is not unsigned integer or it is normalized */
+    const bool useIntermediateTexture =
+    (
+        (formatAttribs.flags & FormatFlags::IsUnsignedInteger) != FormatFlags::IsUnsignedInteger ||
+        (formatAttribs.flags & FormatFlags::IsNormalized) != 0
+    );
+
+    /* Get actual row and layer stride */
+    if (rowStride == 0 || layerStride == 0)
+    {
+        if (rowStride == 0)
+            rowStride = (srcExtent.width * formatAttribs.bitSize / 8);
+        if (layerStride == 0)
+            layerStride = (srcExtent.height * rowStride);
+    }
+
+    const std::uint32_t copySize = (layerStride * srcExtent.depth);
+
+    /* Create intermediate SRV for source texture (RWTexture1D/2D/3D) */
+    const auto& subresource = srcRegion.subresource;
+    const auto textureArrayType = ToArrayTextureType(srcTextureD3D.GetType());
+
+    D3D11NativeTexture intermediateTexture;
+    ComPtr<ID3D11ShaderResourceView> intermediateSRV;
+
+    if (useIntermediateTexture)
+    {
+        /* Create an intermediate copy of the destination texture with unsigned integer format */
+        srcTextureD3D.CreateSubresourceCopyWithUIntFormat(
+            device_,
+            intermediateTexture,
+            intermediateSRV.GetAddressOf(),
+            nullptr,
+            srcRegion,
+            textureArrayType
+        );
+
+        /* Copy source texture into intermediate texture */
+        const UINT      mipLevel    = subresource.baseMipLevel;
+        const D3D11_BOX srcBox      =
+        {
+            static_cast<UINT>(srcOffset.x),
+            static_cast<UINT>(srcOffset.y),
+            static_cast<UINT>(srcOffset.z),
+            static_cast<UINT>(srcOffset.x) + srcExtent.width,
+            static_cast<UINT>(srcOffset.y) + srcExtent.height,
+            static_cast<UINT>(srcOffset.z) + srcExtent.depth
+        };
+
+        for (std::uint32_t i = 0; i < subresource.numArrayLayers; ++i)
+        {
+            const UINT arrayLayer = subresource.baseArrayLayer + i;
+            context_->CopySubresourceRegion(
+                intermediateTexture.resource.Get(),                                             // pDstResource
+                D3D11CalcSubresource(0, i, 1),                                                  // DstSubresource
+                0,                                                                              // DstX
+                0,                                                                              // DstY
+                0,                                                                              // DstZ
+                srcTextureD3D.GetNative().resource.Get(),                                       // pSrcResource
+                D3D11CalcSubresource(mipLevel, arrayLayer, srcTextureD3D.GetNumMipLevels()),    // SrcSubresource
+                &srcBox                                                                         // pSrcBox
+            );
+        }
+    }
+    else
+    {
+        /* Create intermediate UAV directly from destination texture if the texture already has an unsigned integer format */
+        srcTextureD3D.CreateSubresourceSRV(
+            device_,
+            intermediateSRV.GetAddressOf(),
+            textureArrayType,
+            srcTextureD3D.GetDXFormat(),
+            subresource.baseMipLevel,
+            1,
+            subresource.baseArrayLayer,
+            subresource.numArrayLayers
+        );
+    }
+
+    //TODO: check if intermediate UAV is necessary
+    /* Create intermediate byte-addressable buffer with UAV (RWByteAddressBuffer) */
+    ComPtr<ID3D11Buffer> intermediateBuffer;
+    ComPtr<ID3D11UnorderedAccessView> intermediateUAV;
+
+    CreateByteAddressBuffer(
+        device_,
+        context_.Get(),
+        intermediateBuffer.GetAddressOf(),
+        nullptr,
+        intermediateUAV.GetAddressOf(),
+        copySize
+    );
+
+    /* Set shader parameters with intermediate constant buffer */
+    CopyTextureBufferCbuffer cbufferData;
+    {
+        if (useIntermediateTexture)
+        {
+            cbufferData.texOffset[0]    = 0;
+            cbufferData.texOffset[1]    = 0;
+            cbufferData.texOffset[2]    = 0;
+        }
+        else
+        {
+            cbufferData.texOffset[0]    = static_cast<std::uint32_t>(srcOffset.x);
+            cbufferData.texOffset[1]    = static_cast<std::uint32_t>(srcOffset.y);
+            cbufferData.texOffset[2]    = static_cast<std::uint32_t>(srcOffset.z);
+        }
+        cbufferData.bufOffset           = 0;
+        cbufferData.texExtent[0]        = srcExtent.width;
+        cbufferData.texExtent[1]        = srcExtent.height;
+        cbufferData.texExtent[2]        = srcExtent.depth;
+        cbufferData.bufIndexStride      = std::max(4u, formatAttribs.bitSize / 8u);
+        cbufferData.formatSize          = formatAttribs.bitSize / 8;
+        cbufferData.components          = formatAttribs.components;
+        cbufferData.componentBits       = formatAttribs.bitSize / formatAttribs.components;
+        cbufferData.rowStride           = rowStride;
+        cbufferData.layerStride         = layerStride;
+    }
+    stateMngr_->SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
+
+    /* Store currently bound resource views */
+    ID3D11UnorderedAccessView* prevUAVs[1];
+    ID3D11ShaderResourceView* prevSRVs[1];
+
+    context_->CSGetUnorderedAccessViews(0, 1, prevUAVs);
+    context_->CSGetShaderResources(0, 1, prevSRVs);
+
+    /* Bind destination texture and source buffer resourves */
+    ID3D11UnorderedAccessView* intermediateUAVs[1] = { intermediateUAV.Get() };
+    ID3D11ShaderResourceView* intermediateSRVs[1] = { intermediateSRV.Get() };
+
+    context_->CSSetUnorderedAccessViews(0, 1, intermediateUAVs, nullptr);
+    context_->CSSetShaderResources(0, 1, intermediateSRVs);
+
+    /* Dispatch compute kernels with builtin shader */
+    switch (textureArrayType)
+    {
+        case TextureType::Texture1DArray:
+            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture1DCS, srcExtent.width, srcExtent.height, 1u);
+            break;
+        case TextureType::Texture2DArray:
+            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture2DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
+            break;
+        case TextureType::Texture3D:
+            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture3DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
+            break;
+        default:
+            break;
+    }
+
+    /* Restore previous resource views */
+    context_->CSSetUnorderedAccessViews(0, 1, prevUAVs, nullptr);
+    context_->CSSetShaderResources(0, 1, prevSRVs);
+
+    /* Copy UAV content into destination buffer, if an intermediate texture was used */
+    //if (useIntermediateBuffer)
+    {
+        /* Copy content from intermediate buffer to destination buffer */
+        const D3D11_BOX srcBox{ 0, 0, 0, copySize, 1, 1 };
+        context_->CopySubresourceRegion(dstBufferD3D.GetNative(), 0, dstOffsetU32, 0, 0, intermediateBuffer.Get(), 0, &srcBox);
+    }
 }
 
 void D3D11CommandBuffer::FillBuffer(
@@ -252,42 +476,6 @@ void D3D11CommandBuffer::CopyTexture(
     );
 }
 
-// Internal use only (see D3D11CommandBuffer::CopyTextureFromBuffer)
-struct CopyTextureFromBufferCbuffer
-{
-    std::uint32_t dstOffset[3];
-    std::uint32_t srcOffset;        // Source buffer offset: multiple of 4
-    std::uint32_t dstExtent[3];
-    std::uint32_t srcIndexStride;   // Source index stride is format size clamped to [4, inf+), or 4, 8, 12, 16
-    std::uint32_t formatSize;       // Bytes per pixel: 1, 2, 4, 8, 12, 16
-    std::uint32_t components;       // Destination color components: 1, 2, 3, 4
-    std::uint32_t componentBits;    // Bits per component: 8, 16, 32
-    std::uint32_t rowStride;
-    std::uint32_t layerStride;
-    std::uint32_t pad0[3];          // Padding to fill up current 16-byte register
-    std::uint32_t pad1[12 * 4];     // Padding to fill up constant buffer range of 256 bytes
-};
-
-// Returns a suitable array texture type if the input type allows an array texture as subresource view
-static TextureType ToArrayTextureType(const TextureType type)
-{
-    switch (type)
-    {
-        case TextureType::Texture1D:
-        case TextureType::Texture1DArray:
-            return TextureType::Texture1DArray;
-
-        case TextureType::Texture2D:
-        case TextureType::TextureCube:
-        case TextureType::Texture2DArray:
-        case TextureType::TextureCubeArray:
-            return TextureType::Texture2DArray;
-
-        default:
-            return type;
-    }
-}
-
 /*
 D3D11 does not support copying data between buffers and textures natively,
 so this function dispatches a builtin compute shader to achieve the desired effect.
@@ -325,7 +513,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
         return;
 
     /* An intermediate texture copy is required if the destination texture's format is not unsigned integer or it is normalized */
-    const bool useIntermediateDstTexture =
+    const bool useIntermediateTexture =
     (
         (formatAttribs.flags & FormatFlags::IsUnsignedInteger) != FormatFlags::IsUnsignedInteger ||
         (formatAttribs.flags & FormatFlags::IsNormalized) != 0
@@ -349,7 +537,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
     D3D11NativeTexture intermediateTexture;
     ComPtr<ID3D11UnorderedAccessView> intermediateUAV;
 
-    if (useIntermediateDstTexture)
+    if (useIntermediateTexture)
     {
         /* Create an intermediate copy of the destination texture with unsigned integer format */
         dstTextureD3D.CreateSubresourceCopyWithUIntFormat(
@@ -375,6 +563,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
         );
     }
 
+    //TODO: check if intermediate SRV is necessary
     /* Create intermediate byte-addressable buffer with SRV (ByteAddressBuffer) */
     ComPtr<ID3D11Buffer> intermediateBuffer;
     ComPtr<ID3D11ShaderResourceView> intermediateSRV;
@@ -385,7 +574,6 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
         intermediateBuffer.GetAddressOf(),
         intermediateSRV.GetAddressOf(),
         nullptr,
-        static_cast<std::uint32_t>(srcOffset),
         copySize
     );
 
@@ -394,25 +582,25 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
     context_->CopySubresourceRegion(intermediateBuffer.Get(), 0, 0, 0, 0, srcBufferD3D.GetNative(), 0, &srcBox);
 
     /* Set shader parameters with intermediate constant buffer */
-    CopyTextureFromBufferCbuffer cbufferData;
+    CopyTextureBufferCbuffer cbufferData;
     {
-        if (useIntermediateDstTexture)
+        if (useIntermediateTexture)
         {
-            cbufferData.dstOffset[0]    = 0;
-            cbufferData.dstOffset[1]    = 0;
-            cbufferData.dstOffset[2]    = 0;
+            cbufferData.texOffset[0]    = 0;
+            cbufferData.texOffset[1]    = 0;
+            cbufferData.texOffset[2]    = 0;
         }
         else
         {
-            cbufferData.dstOffset[0]    = static_cast<std::uint32_t>(dstOffset.x);
-            cbufferData.dstOffset[1]    = static_cast<std::uint32_t>(dstOffset.y);
-            cbufferData.dstOffset[2]    = static_cast<std::uint32_t>(dstOffset.z);
+            cbufferData.texOffset[0]    = static_cast<std::uint32_t>(dstOffset.x);
+            cbufferData.texOffset[1]    = static_cast<std::uint32_t>(dstOffset.y);
+            cbufferData.texOffset[2]    = static_cast<std::uint32_t>(dstOffset.z);
         }
-        cbufferData.srcOffset           = 0;
-        cbufferData.dstExtent[0]        = dstExtent.width;
-        cbufferData.dstExtent[1]        = dstExtent.height;
-        cbufferData.dstExtent[2]        = dstExtent.depth;
-        cbufferData.srcIndexStride      = std::max(4u, formatAttribs.bitSize / 8u);
+        cbufferData.bufOffset           = 0;
+        cbufferData.texExtent[0]        = dstExtent.width;
+        cbufferData.texExtent[1]        = dstExtent.height;
+        cbufferData.texExtent[2]        = dstExtent.depth;
+        cbufferData.bufIndexStride      = std::max(4u, formatAttribs.bitSize / 8u);
         cbufferData.formatSize          = formatAttribs.bitSize / 8;
         cbufferData.components          = formatAttribs.components;
         cbufferData.componentBits       = formatAttribs.bitSize / formatAttribs.components;
@@ -421,12 +609,19 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
     }
     stateMngr_->SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
 
-    /* Bind destination texture and source buffer resourves */
-    ID3D11UnorderedAccessView* uavs[] = { intermediateUAV.Get() };
-    context_->CSSetUnorderedAccessViews(0, 1, uavs, nullptr);
+    /* Store currently bound resource views */
+    ID3D11UnorderedAccessView* prevUAVs[1];
+    ID3D11ShaderResourceView* prevSRVs[1];
 
-    ID3D11ShaderResourceView* srvs[] = { intermediateSRV.Get() };
-    context_->CSSetShaderResources(0, 1, srvs);
+    context_->CSGetUnorderedAccessViews(0, 1, prevUAVs);
+    context_->CSGetShaderResources(0, 1, prevSRVs);
+
+    /* Bind destination texture and source buffer resourves */
+    ID3D11UnorderedAccessView* intermediateUAVs[1] = { intermediateUAV.Get() };
+    ID3D11ShaderResourceView* intermediateSRVs[1] = { intermediateSRV.Get() };
+
+    context_->CSSetUnorderedAccessViews(0, 1, intermediateUAVs, nullptr);
+    context_->CSSetShaderResources(0, 1, intermediateSRVs);
 
     /* Dispatch compute kernels with builtin shader */
     switch (textureArrayType)
@@ -444,8 +639,12 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
             break;
     }
 
+    /* Restore previous resource views */
+    context_->CSSetUnorderedAccessViews(0, 1, prevUAVs, nullptr);
+    context_->CSSetShaderResources(0, 1, prevSRVs);
+
     /* Copy UAV content into destination texture, if an intermediate texture was used */
-    if (useIntermediateDstTexture)
+    if (useIntermediateTexture)
     {
         const UINT      mipLevel    = subresource.baseMipLevel;
         const D3D11_BOX srcBox      = { 0, 0, 0, dstExtent.width, dstExtent.height, dstExtent.depth };
@@ -1267,7 +1466,6 @@ void D3D11CommandBuffer::CreateByteAddressBuffer(
     ID3D11Buffer**              bufferOutput,
     ID3D11ShaderResourceView**  srvOutput,
     ID3D11UnorderedAccessView** uavOutput,
-    UINT                        offset,
     UINT                        size,
     D3D11_USAGE                 usage)
 {

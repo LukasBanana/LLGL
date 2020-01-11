@@ -1,5 +1,6 @@
 REM Compiles all shaders with fxc
 REM Use VisualStudio command line tools to run this batch script
+
 fxc /D NPOT_TEXTURE_CLASS=0 /T cs_5_0 /E GenerateMips1DCS /Fo GenerateMips1DCS.cso GenerateMips1D.hlsl
 fxc /D NPOT_TEXTURE_CLASS=1 /T cs_5_0 /E GenerateMips1DCS /Fo GenerateMips1DCS.OddX.cso GenerateMips1D.hlsl
 fxc /D NPOT_TEXTURE_CLASS=0 /D LINEAR_TO_SRGB=1 /T cs_5_0 /E GenerateMips1DCS /Fo GenerateMips1DCS.sRGB.cso GenerateMips1D.hlsl
