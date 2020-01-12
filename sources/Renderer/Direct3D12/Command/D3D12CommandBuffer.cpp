@@ -107,7 +107,7 @@ void D3D12CommandBuffer::CopyBuffer(
     commandContext_.TransitionResource(srcBufferD3D.GetResource(), srcBufferD3D.GetResource().usageState, true);
 }
 
-//TODO
+//TODO: incomplete for unaligned row strides
 void D3D12CommandBuffer::CopyBufferFromTexture(
     Buffer&                 dstBuffer,
     std::uint64_t           dstOffset,
@@ -116,7 +116,63 @@ void D3D12CommandBuffer::CopyBufferFromTexture(
     std::uint32_t           rowStride,
     std::uint32_t           layerStride)
 {
-    throw std::runtime_error("\"CopyBufferFromTexture\" not implemented yet for D3D12 backend");
+    auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
+    auto& srcTextureD3D = LLGL_CAST(D3D12Texture&, srcTexture);
+
+    const TextureLocation   srcLocation { srcRegion.offset, srcRegion.subresource.baseArrayLayer, srcRegion.subresource.baseMipLevel };
+    const Extent3D          srcExtent   { CalcTextureExtent(srcTexture.GetType(), srcRegion.extent, srcRegion.subresource.numArrayLayers) };
+
+    /* Determine actual buffer row stride and required row stride */
+    UINT alignedRowStride = rowStride;
+    if (rowStride == 0)
+    {
+        rowStride = GetMemoryFootprint(srcTextureD3D.GetFormat(), srcExtent.width);
+        alignedRowStride = GetAlignedSize<UINT>(rowStride, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+    }
+
+    const D3D12_TEXTURE_COPY_LOCATION   dstLocationD3D  = srcTextureD3D.CalcCopyLocation(dstBufferD3D, dstOffset, srcExtent, alignedRowStride);
+    const D3D12_TEXTURE_COPY_LOCATION   srcLocationD3D  = srcTextureD3D.CalcCopyLocation(srcLocation);
+    const D3D12_BOX                     srcBox          = srcTextureD3D.CalcRegion(srcRegion.offset, srcExtent);
+
+    commandContext_.TransitionResource(dstBufferD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
+    commandContext_.TransitionResource(srcTextureD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+    {
+        if (alignedRowStride != rowStride)
+        {
+            /* Copy each row individually due to unalgined row pitch */
+            for (UINT z = 0; z < srcExtent.depth; ++z)
+            {
+                for (UINT y = 0; y < srcExtent.height; ++y)
+                {
+                    commandList_->CopyTextureRegion(
+                        &dstLocationD3D,    // pDst
+                        0,                  // DstX
+                        0,                  // DstY
+                        0,                  // DstZ
+                        &srcLocationD3D,    // pSrc
+                        &CD3DX12_BOX(       // pSrcBox
+                            srcBox.left, srcBox.top + y, srcBox.front + z,
+                            srcBox.right, srcBox.top + y + 1, srcBox.front + z + 1
+                        )
+                    );
+                }
+            }
+        }
+        else
+        {
+            /* Copy entire texture region from buffer  */
+            commandList_->CopyTextureRegion(
+                &dstLocationD3D,    // pDst
+                0,                  // DstX
+                0,                  // DstY
+                0,                  // DstZ
+                &srcLocationD3D,    // pSrc
+                &srcBox             // pSrcBox
+            );
+        }
+    }
+    commandContext_.TransitionResource(dstBufferD3D.GetResource(), dstBufferD3D.GetResource().usageState);
+    commandContext_.TransitionResource(srcTextureD3D.GetResource(), srcTextureD3D.GetResource().usageState, true);
 }
 
 void D3D12CommandBuffer::FillBuffer(
@@ -172,6 +228,7 @@ void D3D12CommandBuffer::CopyTexture(
     commandContext_.TransitionResource(srcTextureD3D.GetResource(), srcTextureD3D.GetResource().usageState, true);
 }
 
+//TODO: incomplete for unaligned row strides
 void D3D12CommandBuffer::CopyTextureFromBuffer(
     Texture&                dstTexture,
     const TextureRegion&    dstRegion,
@@ -214,7 +271,7 @@ void D3D12CommandBuffer::CopyTextureFromBuffer(
                         static_cast<UINT>(dstRegion.offset.y) + y,  // DstY
                         static_cast<UINT>(dstRegion.offset.z) + z,  // DstZ
                         &srcLocationD3D,                            // pSrc
-                        &CD3DX12_BOX(
+                        &CD3DX12_BOX(                               // pSrcBox
                             srcBox.left, srcBox.top + y, srcBox.front + z,
                             srcBox.right, srcBox.top + y + 1, srcBox.front + z + 1
                         )
