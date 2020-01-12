@@ -305,7 +305,7 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
     ComPtr<ID3D11Buffer> intermediateBuffer;
     ComPtr<ID3D11UnorderedAccessView> intermediateUAV;
 
-    CreateByteAddressBuffer(
+    CreateByteAddressBufferR32Typeless(
         device_,
         context_.Get(),
         intermediateBuffer.GetAddressOf(),
@@ -568,7 +568,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
     ComPtr<ID3D11Buffer> intermediateBuffer;
     ComPtr<ID3D11ShaderResourceView> intermediateSRV;
 
-    CreateByteAddressBuffer(
+    CreateByteAddressBufferR32Typeless(
         device_,
         context_.Get(),
         intermediateBuffer.GetAddressOf(),
@@ -1460,7 +1460,7 @@ void D3D11CommandBuffer::ClearColorBuffers(
 Creates a buffer copy for the HLSL type ByteAddressBuffer.
 The format must be DXGI_FORMAT_R32_TYPELESS for raw-views.
 */
-void D3D11CommandBuffer::CreateByteAddressBuffer(
+void D3D11CommandBuffer::CreateByteAddressBufferR32Typeless(
     ID3D11Device*               device,
     ID3D11DeviceContext*        context,
     ID3D11Buffer**              bufferOutput,
@@ -1469,6 +1469,9 @@ void D3D11CommandBuffer::CreateByteAddressBuffer(
     UINT                        size,
     D3D11_USAGE                 usage)
 {
+    /* Align size to R32 format size */
+    size = GetAlignedSize(size, 4u);
+
     /* Determine binding flags depending on resource-view output */
     UINT bindFlags = 0;
     if (srvOutput != nullptr)

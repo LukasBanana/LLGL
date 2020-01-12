@@ -273,7 +273,7 @@ class D3D11CommandBuffer final : public CommandBuffer
         void ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT offset, UINT size, const UINT (&valuesVec4)[4]);
 
         // Creates a copy of this buffer as ByteAddressBuffer; 'size' must be a multiple of 4.
-        void CreateByteAddressBuffer(
+        void CreateByteAddressBufferR32Typeless(
             ID3D11Device*               device,
             ID3D11DeviceContext*        context,
             ID3D11Buffer**              bufferOutput,

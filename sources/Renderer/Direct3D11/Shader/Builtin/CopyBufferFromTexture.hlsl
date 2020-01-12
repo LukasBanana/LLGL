@@ -34,31 +34,44 @@ uint4 ReadSourceTexutre(uint3 coord)
     #endif
 }
 
+/* Write parts of a DWORD using atomics */
+void WritePartialDWORD(uint addr, uint bitmask, uint value)
+{
+    /* Clear part we want to write using bitwise-AND, then insert value using bitwise-OR */
+    uint dummy = 0;
+    dstBuffer.InterlockedAnd(addr, ~bitmask, dummy);
+    dstBuffer.InterlockedOr(addr, value & bitmask, dummy);
+}
+
 void WriteDestinationBufferR(uint addr, uint idx, uint4 value)
 {
     switch (componentBits)
     {
         case 8:
         {
-            //TODO
-            //uint shift = (idx % 4) * 8;
-            //uint result = ((value.r >> shift) & 0xFF);
-            //dstBuffer.Store(addr, result);
+            /* Write single BYTE into a DWORD using atomics */
+            addr += idx / 4 * bufIndexStride;
+            uint shift = (idx % 4) * 8;
+            uint result = ((value.r & 0xFF) << shift);
+            uint bitmask = (0xFF << shift);
+            WritePartialDWORD(addr, bitmask, result);
         }
         break;
         
         case 16:
         {
-            //TODO
-            //uint value = dstBuffer.Store(addr);
-            //uint shift = (idx % 2) * 8;
-            //result.r = ((value >> shift) & 0xFFFF);
+            /* Write single WORD into a DWORD using atomics */
+            addr += idx / 2 * bufIndexStride;
+            uint shift = (idx % 2) * 16;
+            uint result = ((value.r & 0xFFFF) << shift);
+            uint bitmask = (0xFFFF << shift);
+            WritePartialDWORD(addr, bitmask, result);
         }
         break;
         
         case 32:
         {
-            dstBuffer.Store(addr, value.r);
+            dstBuffer.Store(addr + idx * bufIndexStride, value.r);
         }
         break;
     }
@@ -70,12 +83,16 @@ void WriteDestinationBufferRG(uint addr, uint idx, uint4 value)
     {
         case 8:
         {
-            //TODO
-            //uint value = dstBuffer.Store(addr);
-            //uint shift = ((idx / 2) % 2) * 16;
-            //value >>= shift;
-            //result.r = ((value     ) & 0xFF);
-            //result.g = ((value >> 8) & 0xFF);
+            /* Write two BYTEs into a DWORD using atomics */
+            addr += idx / 2 * bufIndexStride;
+            uint shift = (idx % 2) * 16;
+            uint result =
+            (
+                ((value.r & 0xFF)     ) |
+                ((value.g & 0xFF) << 8)
+            ) << shift;
+            uint bitmask = (0xFF << shift);
+            WritePartialDWORD(addr, bitmask, result);
         }
         break;
         
@@ -86,31 +103,31 @@ void WriteDestinationBufferRG(uint addr, uint idx, uint4 value)
                 ((value.r & 0xFFFF)      ) |
                 ((value.g & 0xFFFF) << 16)
             );
-            dstBuffer.Store(addr, result);
+            dstBuffer.Store(addr + idx * bufIndexStride, result);
         }
         break;
         
         case 32:
         {
-            dstBuffer.Store2(addr, value.rg);
+            dstBuffer.Store2(addr + idx * bufIndexStride, value.rg);
         }
         break;
     }
 }
 
-void WriteDestinationBufferRGB(uint addr, uint4 value)
+void WriteDestinationBufferRGB(uint addr, uint idx, uint4 value)
 {
     switch (componentBits)
     {
         case 32:
         {
-            dstBuffer.Store3(addr, value.rgb);
+            dstBuffer.Store3(addr + idx * bufIndexStride, value.rgb);
         }
         break;
     }
 }
 
-void WriteDestinationBufferRGBA(uint addr, uint4 value)
+void WriteDestinationBufferRGBA(uint addr, uint idx, uint4 value)
 {
     switch (componentBits)
     {
@@ -123,7 +140,7 @@ void WriteDestinationBufferRGBA(uint addr, uint4 value)
                 ((value.b & 0xFF) << 16) |
                 ((value.a & 0xFF) << 24)
             );
-            dstBuffer.Store(addr, result);
+            dstBuffer.Store(addr + idx * bufIndexStride, result);
         }
         break;
         
@@ -140,13 +157,13 @@ void WriteDestinationBufferRGBA(uint addr, uint4 value)
                 ((value.b & 0xFFFF)      ) |
                 ((value.a & 0xFFFF) << 16)
             );
-            dstBuffer.Store2(addr, result);
+            dstBuffer.Store2(addr + idx * bufIndexStride, result);
         }
         break;
         
         case 32:
         {
-            dstBuffer.Store4(addr, value);
+            dstBuffer.Store4(addr + idx * bufIndexStride, value);
         }
         break;
     }
@@ -155,8 +172,8 @@ void WriteDestinationBufferRGBA(uint addr, uint4 value)
 /* Read source buffer with dynamic format */
 void WriteDestinationBuffer(uint idx, uint3 coord, uint4 value)
 {
-    /* Calculate source buffer address from linear index */
-    uint addr = bufOffset + idx * bufIndexStride;
+    /* Start reading address at buffer offset */
+    uint addr = bufOffset;
     
     /* Add row padding */
     uint rowSize    = texExtent.x * formatSize;
@@ -180,11 +197,11 @@ void WriteDestinationBuffer(uint idx, uint3 coord, uint4 value)
             break;
         
         case 3:
-            WriteDestinationBufferRGB(addr, value);
+            WriteDestinationBufferRGB(addr, idx, value);
             break;
         
         case 4:
-            WriteDestinationBufferRGBA(addr, value);
+            WriteDestinationBufferRGBA(addr, idx, value);
             break;
     }
 }

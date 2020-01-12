@@ -20,13 +20,14 @@ RWTexture3D<uint4> dstTexture : register(u0);
 #endif
 
 
-void ReadSourceBufferR(inout uint4 result, uint addr, uint idx)
+void ReadSourceBufferR(uint addr, uint idx, inout uint4 result)
 {
     switch (componentBits)
     {
         case 8:
         {
-            uint value = srcBuffer.Load(addr);
+            /* Next 4 consecutive threads read the same DWORD and split it up into BYTE */
+            uint value = srcBuffer.Load(addr + idx / 4 * bufIndexStride);
             uint shift = (idx % 4) * 8;
             result.r = ((value >> shift) & 0xFF);
         }
@@ -34,28 +35,30 @@ void ReadSourceBufferR(inout uint4 result, uint addr, uint idx)
         
         case 16:
         {
-            uint value = srcBuffer.Load(addr);
-            uint shift = (idx % 2) * 8;
+            /* Next 2 consecutive threads read the same DWORD and split it up into WORD */
+            uint value = srcBuffer.Load(addr + idx / 2 * bufIndexStride);
+            uint shift = (idx % 2) * 16;
             result.r = ((value >> shift) & 0xFFFF);
         }
         break;
         
         case 32:
         {
-            result.r = srcBuffer.Load(addr);
+            result.r = srcBuffer.Load(addr + idx * bufIndexStride);
         }
         break;
     }
 }
 
-void ReadSourceBufferRG(inout uint4 result, uint addr, uint idx)
+void ReadSourceBufferRG(uint addr, uint idx, inout uint4 result)
 {
     switch (componentBits)
     {
         case 8:
         {
-            uint value = srcBuffer.Load(addr);
-            uint shift = ((idx / 2) % 2) * 16;
+            /* Next 2 consecutive threads read the same DWORD and split it up into WORD */
+            uint value = srcBuffer.Load(addr + idx / 2 * bufIndexStride);
+            uint shift = (idx % 2) * 16;
             value >>= shift;
             result.r = ((value     ) & 0xFF);
             result.g = ((value >> 8) & 0xFF);
@@ -64,7 +67,7 @@ void ReadSourceBufferRG(inout uint4 result, uint addr, uint idx)
         
         case 16:
         {
-            uint value = srcBuffer.Load(addr);
+            uint value = srcBuffer.Load(addr + idx * bufIndexStride);
             result.r = ((value      ) & 0xFFFF);
             result.g = ((value >> 16)         );
         }
@@ -72,31 +75,31 @@ void ReadSourceBufferRG(inout uint4 result, uint addr, uint idx)
         
         case 32:
         {
-            result.rg = srcBuffer.Load2(addr);
+            result.rg = srcBuffer.Load2(addr + idx * bufIndexStride);
         }
         break;
     }
 }
 
-void ReadSourceBufferRGB(inout uint4 result, uint addr)
+void ReadSourceBufferRGB(uint addr, uint idx, inout uint4 result)
 {
     switch (componentBits)
     {
         case 32:
         {
-            result.rgb = srcBuffer.Load3(addr);
+            result.rgb = srcBuffer.Load3(addr + idx * bufIndexStride);
         }
         break;
     }
 }
 
-void ReadSourceBufferRGBA(inout uint4 result, uint addr)
+void ReadSourceBufferRGBA(uint addr, uint idx, inout uint4 result)
 {
     switch (componentBits)
     {
         case 8:
         {
-            uint value = srcBuffer.Load(addr);
+            uint value = srcBuffer.Load(addr + idx * bufIndexStride);
             result.r = ((value      ) & 0xFF);
             result.g = ((value >>  8) & 0xFF);
             result.b = ((value >> 16) & 0xFF);
@@ -106,7 +109,7 @@ void ReadSourceBufferRGBA(inout uint4 result, uint addr)
         
         case 16:
         {
-            uint2 value = srcBuffer.Load2(addr);
+            uint2 value = srcBuffer.Load2(addr + idx * bufIndexStride);
             result.r = ((value.r      ) & 0xFFFF);
             result.g = ((value.r >> 16)         );
             result.b = ((value.g      ) & 0xFFFF);
@@ -116,7 +119,7 @@ void ReadSourceBufferRGBA(inout uint4 result, uint addr)
         
         case 32:
         {
-            result = srcBuffer.Load4(addr);
+            result = srcBuffer.Load4(addr + idx * bufIndexStride);
         }
         break;
     }
@@ -125,8 +128,8 @@ void ReadSourceBufferRGBA(inout uint4 result, uint addr)
 /* Read source buffer with dynamic format */
 uint4 ReadSourceBuffer(uint idx, uint3 coord)
 {
-    /* Calculate source buffer address from linear index */
-    uint addr = bufOffset + idx * bufIndexStride;
+    /* Start reading address at buffer offset */
+    uint addr = bufOffset;
     
     /* Add row padding */
     uint rowSize    = texExtent.x * formatSize;
@@ -144,19 +147,19 @@ uint4 ReadSourceBuffer(uint idx, uint3 coord)
     switch (components)
     {
         case 1:
-            ReadSourceBufferR(result, addr, idx);
+            ReadSourceBufferR(addr, idx, result);
             break;
         
         case 2:
-            ReadSourceBufferRG(result, addr, idx);
+            ReadSourceBufferRG(addr, idx, result);
             break;
         
         case 3:
-            ReadSourceBufferRGB(result, addr);
+            ReadSourceBufferRGB(addr, idx, result);
             break;
         
         case 4:
-            ReadSourceBufferRGBA(result, addr);
+            ReadSourceBufferRGBA(addr, idx, result);
             break;
     }
     
