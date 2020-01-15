@@ -600,6 +600,8 @@ else()
     add_library(LLGL SHARED ${FilesLLGL})
 endif()
 
+target_include_directories(LLGL PUBLIC ${PROJECT_INCLUDE_DIR})
+
 if(LLGL_ANDROID_PLATFORM)
     target_link_libraries(LLGL android log)
 elseif(LLGL_IOS_PLATFORM)
