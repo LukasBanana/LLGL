@@ -302,7 +302,7 @@ class VKCommandBuffer final : public CommandBuffer
         VkCommandBufferUsageFlags       usageFlags_                 = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VkCommandBufferLevel            bufferLevel_                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
-        VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
+        VkClearColorValue               clearColor_                 = { { 0.0f, 0.0f, 0.0f, 0.0f } };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
 
         VkRenderPass                    renderPass_                 = VK_NULL_HANDLE; // primary render pass
