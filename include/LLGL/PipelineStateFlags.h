@@ -491,7 +491,7 @@ struct StencilDescriptor
 
     /**
     \brief Specifies whether the stencil reference values will be set dynamically with the command buffer. By default false.
-    \remarks If this is true, StencilFaceDescriptor::reference in \c front and \c back are ignored
+    \remarks If this is true, StencilFaceDescriptor::reference in \c front and \c back is ignored
     and the stencil reference values must be set with the \c SetStencilReference function everytime the graphics pipeline is set.
     \see CommandBuffer::SetStencilReference
     */

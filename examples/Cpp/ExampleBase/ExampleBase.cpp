@@ -564,12 +564,15 @@ LLGL::ShaderProgram* ExampleBase::LoadStandardShaderProgram(const std::vector<LL
     return nullptr;
 }
 
-LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags)
+LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags, LLGL::Format format)
 {
+    // Get format informationm
+    const auto formatAttribs = LLGL::GetFormatAttribs(format);
+
     // Load image data from file (using STBI library, see https://github.com/nothings/stb)
     int width = 0, height = 0, components = 0;
 
-    auto imageBuffer = stbi_load(filename.c_str(), &width, &height, &components, 4);
+    auto imageBuffer = stbi_load(filename.c_str(), &width, &height, &components, static_cast<int>(formatAttribs.components));
     if (!imageBuffer)
         throw std::runtime_error("failed to load texture from file: \"" + filename + "\"");
 
@@ -577,7 +580,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
     LLGL::SrcImageDescriptor imageDesc;
     {
         // Set image color format
-        imageDesc.format    = LLGL::ImageFormat::RGBA;
+        imageDesc.format    = formatAttribs.format;
 
         // Set image data type (unsigned char = 8-bit unsigned integer)
         imageDesc.dataType  = LLGL::DataType::UInt8;
@@ -591,7 +594,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 
     // Create texture and upload image data onto hardware texture
     auto tex = renderSys.CreateTexture(
-        LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, width, height, bindFlags), &imageDesc
+        LLGL::Texture2DDesc(format, width, height, bindFlags), &imageDesc
     );
 
     // Release image data
@@ -658,9 +661,9 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
     return true;
 }
 
-LLGL::Texture* ExampleBase::LoadTexture(const std::string& filename, long bindFlags)
+LLGL::Texture* ExampleBase::LoadTexture(const std::string& filename, long bindFlags, LLGL::Format format)
 {
-    return LoadTextureWithRenderer(*renderer, filename, bindFlags);
+    return LoadTextureWithRenderer(*renderer, filename, bindFlags, format);
 }
 
 bool ExampleBase::SaveTexture(LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)

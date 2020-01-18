@@ -38,7 +38,8 @@ std::string GetSelectedRendererModule(int argc, char* argv[]);
 LLGL::Texture* LoadTextureWithRenderer(
     LLGL::RenderSystem& renderSys,
     const std::string&  filename,
-    long                bindFlags = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment)
+    long                bindFlags   = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment),
+    LLGL::Format        format      = LLGL::Format::RGBA8UNorm
 );
 
 // Save texture image to a PNG file.
@@ -199,7 +200,11 @@ protected:
     LLGL::ShaderProgram* LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats);
 
     // Load image from file, create texture, upload image into texture, and generate MIP-maps.
-    LLGL::Texture* LoadTexture(const std::string& filename, long bindFlags = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment));
+    LLGL::Texture* LoadTexture(
+        const std::string&  filename,
+        long                bindFlags   = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment),
+        LLGL::Format        format      = LLGL::Format::RGBA8UNorm
+    );
 
     // Save texture image to a PNG file.
     bool SaveTexture(LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);

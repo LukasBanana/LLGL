@@ -23,9 +23,13 @@ D3D12Shader::D3D12Shader(const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
     if (!BuildShader(desc))
-        hasErrors_ = true;
-    if (GetType() == ShaderType::Vertex || GetType() == ShaderType::Geometry)
     {
+        /* Mark this shader compilation as failed */
+        hasErrors_ = true;
+    }
+    else if (GetType() == ShaderType::Vertex || GetType() == ShaderType::Geometry)
+    {
+        /* Build input layout and stream-output descriptors for vertex/geometry shaders */
         ReserveVertexAttribs(desc);
         if (GetType() == ShaderType::Vertex)
             BuildInputLayout(static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());

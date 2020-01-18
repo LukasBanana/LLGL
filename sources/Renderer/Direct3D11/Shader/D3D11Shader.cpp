@@ -25,9 +25,15 @@ D3D11Shader::D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
     if (!BuildShader(device, desc))
+    {
+        /* Mark this shader compilation as failed */
         hasErrors_ = true;
-    if (GetType() == ShaderType::Vertex)
+    }
+    else if (GetType() == ShaderType::Vertex)
+    {
+        /* Build input layout object for vertex shaders */
         BuildInputLayout(device, static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
+    }
 }
 
 void D3D11Shader::SetName(const char* name)
