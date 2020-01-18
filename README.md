@@ -1,11 +1,11 @@
 # Low Level Graphics Library (LLGL)
 
+<p align="center">
+    <a href="https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt"><img alt="License" src="https://img.shields.io/badge/license-BSD--3%20clause-blue.svg" /></a>
+    <a href="https://gitter.im/LLGL-Project/community"><img alt="Join the chat at https://gitter.im/LLGL-Project/community" src="https://badges.gitter.im/LLGL-Project/LLGL.svg" /></a>
+</p>
+
 <p align="center"><img src="docu/LLGL_Logo.png"/></p>
-
-
-## License
-
-[3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
 
 
 ## Documentation
