@@ -1,7 +1,7 @@
 
 # === CMake lists for the LLGL - (09/07/2015) ===
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.7)
 project(LLGL)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -674,9 +674,9 @@ endif()
 
 if(NOT APPLE AND LLGL_BUILD_RENDERER_VULKAN)
     # Vulkan Renderer
-    include(cmake/FindVulkan.cmake)
-    if(VULKAN_FOUND)
-        include_directories(${VULKAN_INCLUDE_DIR})
+    find_package(Vulkan REQUIRED)
+    if(Vulkan_FOUND)
+        include_directories(${Vulkan_INCLUDE_DIR})
         
         if(LLGL_BUILD_STATIC_LIB)
             add_library(LLGL_Vulkan STATIC ${FilesVK})
@@ -686,7 +686,7 @@ if(NOT APPLE AND LLGL_BUILD_RENDERER_VULKAN)
         endif()
         
         set_target_properties(LLGL_Vulkan PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-        target_link_libraries(LLGL_Vulkan LLGL ${VULKAN_LIBRARY})
+        target_link_libraries(LLGL_Vulkan LLGL ${Vulkan_LIBRARY})
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_VULKAN)
     else()

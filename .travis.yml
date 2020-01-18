@@ -8,9 +8,12 @@ matrix:
       env: BADGE_LINUX
       before_install:
       - git clone https://github.com/LukasBanana/GaussianLib.git
-      - sudo apt-get install libx11-dev libxxf86vm-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libvulkan1 mesa-vulkan-drivers vulkan-utils
+      - wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+      - sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.1.130-xenial.list http://packages.lunarg.com/vulkan/1.1.130/lunarg-vulkan-1.1.130-xenial.list
+      - sudo apt update
+      - sudo apt-get install libx11-dev libxxf86vm-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev vulkan-sdk vulkan-tools
       before_script:
-      - cmake -DDLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_VULKAN=ON -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S .
+      - cmake -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_VULKAN=ON -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S .
       script:
       - cmake --build .
 
@@ -21,7 +24,7 @@ matrix:
       before_install:
       - git clone https://github.com/LukasBanana/GaussianLib.git
       before_script:
-      - cmake -DDLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_METAL=ON -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S . -B build_macos
+      - cmake -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_METAL=ON -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S . -B build_macos
       script:
       - cmake --build build_macos
 
