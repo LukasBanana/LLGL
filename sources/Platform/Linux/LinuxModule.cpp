@@ -69,7 +69,21 @@ LinuxModule::LinuxModule(const char* moduleFilename)
 
     /* Check if loading has failed */
     if (!handle_)
-        throw std::runtime_error("failed to load shared library (SO): \"" + std::string(moduleFilename) + "\"");
+    {
+        std::string msg = "failed to load shared library (SO): \"";
+        msg += moduleFilename;
+        msg += "\"";
+
+        /* Append error message from most recent call to 'dlopen' */
+        if (const char* err = dlerror())
+        {
+            msg += "; ";
+            msg += err;
+        }
+
+        /* Throw error message */
+        throw std::runtime_error(msg);
+    }
 }
 
 LinuxModule::~LinuxModule()
