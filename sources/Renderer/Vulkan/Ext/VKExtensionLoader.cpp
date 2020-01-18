@@ -10,7 +10,7 @@
 #include "VKExtensionRegistry.h"
 #include <LLGL/Log.h>
 #include <functional>
-#include <string>
+#include <cstring>
 
 
 namespace LLGL
@@ -169,10 +169,10 @@ bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& sup
     };
 
     #define LOAD_VKEXT(NAME) \
-        LoadExtension(VKExt::##NAME, "VK_" #NAME, Load_VK_##NAME)
+        LoadExtension(VKExt::NAME, "VK_" #NAME, Load_VK_##NAME)
 
     #define ENABLE_VKEXT(NAME) \
-        EnableExtension(VKExt::##NAME, "VK_" #NAME)
+        EnableExtension(VKExt::NAME, "VK_" #NAME)
 
     /* Multi-vendor extensions */
     LOAD_VKEXT( KHR_get_physical_device_properties2 );

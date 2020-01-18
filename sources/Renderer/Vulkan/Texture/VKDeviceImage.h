@@ -31,6 +31,10 @@ class VKDeviceImage
         VKDeviceImage(const VKPtr<VkDevice>& device);
         virtual ~VKDeviceImage() = default;
 
+        // Explicit default move constructors required for GCC (to be used in VKRenderContext c'tor)
+        VKDeviceImage(VKDeviceImage&&) = default;
+        VKDeviceImage& operator = (VKDeviceImage&&) = default;
+
         void AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
         void ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
 

@@ -25,6 +25,10 @@ class VKRenderBuffer : private VKDeviceImage
         VKRenderBuffer(const VKPtr<VkDevice>& device);
         ~VKRenderBuffer();
 
+        // Explicit default move constructors required for GCC (to be used in VKRenderContext c'tor)
+        VKRenderBuffer(VKRenderBuffer&&) = default;
+        VKRenderBuffer& operator = (VKRenderBuffer&&) = default;
+
         void Create(
             VKDeviceMemoryManager&  deviceMemoryMngr,
             const Extent2D&         extent,
