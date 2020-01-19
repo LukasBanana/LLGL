@@ -34,8 +34,7 @@ class Example_PostProcessing : public ExampleBase
     LLGL::PipelineState*    pipelineFinal       = nullptr;
 
     LLGL::ResourceHeap*     resourceHeapScene   = nullptr;
-    LLGL::ResourceHeap*     resourceHeapBlurX   = nullptr;
-    LLGL::ResourceHeap*     resourceHeapBlurY   = nullptr;
+    LLGL::ResourceHeap*     resourceHeapBlur    = nullptr;
     LLGL::ResourceHeap*     resourceHeapFinal   = nullptr;
 
     LLGL::VertexFormat      vertexFormatScene;
@@ -420,22 +419,20 @@ public:
             heapDescScene.resourceViews     = { constantBufferScene };
         }
         resourceHeapScene = renderer->CreateResourceHeap(heapDescScene);
+        resourceHeapScene->SetName("ResourceHeap.Scene");
 
-        // Create resource heap for blur-X post-processor
-        LLGL::ResourceHeapDescriptor heapDescBlurX;
+        // Create resource heap for blur-X and blur-Y post-processor
+        LLGL::ResourceHeapDescriptor heapDescBlur;
         {
-            heapDescBlurX.pipelineLayout    = layoutBlur;
-            heapDescBlurX.resourceViews     = { constantBufferBlur, glossMap, glossMapSampler };
+            heapDescBlur.pipelineLayout    = layoutBlur;
+            heapDescBlur.resourceViews     =
+            {
+                constantBufferBlur, glossMap,      glossMapSampler, // Resources for blur-X pass
+                constantBufferBlur, glossMapBlurX, glossMapSampler, // Resources for blur-Y pass
+            };
         }
-        resourceHeapBlurX = renderer->CreateResourceHeap(heapDescBlurX);
-
-        // Create resource heap for blur-Y post-processor
-        LLGL::ResourceHeapDescriptor heapDescBlurY;
-        {
-            heapDescBlurY.pipelineLayout    = layoutBlur;
-            heapDescBlurY.resourceViews     = { constantBufferBlur, glossMapBlurX, glossMapSampler };
-        }
-        resourceHeapBlurY = renderer->CreateResourceHeap(heapDescBlurY);
+        resourceHeapBlur = renderer->CreateResourceHeap(heapDescBlur);
+        resourceHeapBlur->SetName("ResourceHeap.Blur");
 
         // Create resource heap for final post-processor
         LLGL::ResourceHeapDescriptor heapDescFinal;
@@ -444,6 +441,7 @@ public:
             heapDescFinal.resourceViews     = { constantBufferScene, colorMap, glossMapBlurY, colorMapSampler, glossMapSampler };
         }
         resourceHeapFinal = renderer->CreateResourceHeap(heapDescFinal);
+        resourceHeapFinal->SetName("ResourceHeap.Final");
     }
 
     void UpdateScreenSize()
@@ -454,8 +452,7 @@ public:
         renderer->Release(*renderTargetBlurY);
 
         renderer->Release(*resourceHeapScene);
-        renderer->Release(*resourceHeapBlurX);
-        renderer->Release(*resourceHeapBlurY);
+        renderer->Release(*resourceHeapBlur);
         renderer->Release(*resourceHeapFinal);
 
         renderer->Release(*colorMap);
@@ -649,7 +646,7 @@ private:
 
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
                 commands->SetPipelineState(*pipelineBlur);
-                commands->SetResourceHeap(*resourceHeapBlurX);
+                commands->SetResourceHeap(*resourceHeapBlur, 0);
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();
@@ -659,7 +656,7 @@ private:
             commands->BeginRenderPass(*renderTargetBlurY);
             {
                 // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-                commands->SetResourceHeap(*resourceHeapBlurY);
+                commands->SetResourceHeap(*resourceHeapBlur, 1);
                 commands->Draw(3, 0);
             }
             commands->EndRenderPass();

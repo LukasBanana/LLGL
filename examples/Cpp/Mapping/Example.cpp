@@ -155,6 +155,7 @@ private:
             texDesc.bindFlags   = LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment | LLGL::BindFlags::CopyDst | LLGL::BindFlags::CopySrc;
             texDesc.miscFlags   = LLGL::MiscFlags::NoInitialData;
             texDesc.extent      = dstTextureSize;
+            //texDesc.format      = LLGL::Format::R16UNorm;
         }
         for (int i = 0; i < 2; ++i)
             dstTextures[i] = renderer->CreateTexture(texDesc);

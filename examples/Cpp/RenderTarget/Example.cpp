@@ -36,7 +36,7 @@ class Example_RenderTarget : public ExampleBase
 
     LLGL::Texture*          colorMap                = nullptr;
     LLGL::Sampler*          samplerState            = nullptr;
-    LLGL::ResourceHeap*     resourceHeaps[2]        = {};
+    LLGL::ResourceHeap*     resourceHeap            = {};
 
     LLGL::RenderTarget*     renderTarget            = nullptr;
     LLGL::Texture*          renderTargetTex         = nullptr;
@@ -76,7 +76,7 @@ public:
         CreateColorMap();
         CreateRenderTarget();
         CreatePipelines();
-        CreateResourceHeaps();
+        CreateResourceHeap();
 
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
@@ -305,21 +305,19 @@ private:
         renderTargetProj = PerspectiveProjection(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
     }
 
-    void CreateResourceHeaps()
+    void CreateResourceHeap()
     {
         // Create resource heap for render target
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
             resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews = { constantBuffer, samplerState, colorMap /*, colorMap*/ };
+            resourceHeapDesc.resourceViews =
+            {
+                constantBuffer, samplerState, colorMap, /*colorMap,*/
+                constantBuffer, samplerState, renderTargetTex, /*renderTargetTex,*/
+            };
         }
-        resourceHeaps[0] = renderer->CreateResourceHeap(resourceHeapDesc);
-
-        // Create resource heap for final render
-        {
-            resourceHeapDesc.resourceViews = { constantBuffer, samplerState, renderTargetTex /*, renderTargetTex*/ };
-        }
-        resourceHeaps[1] = renderer->CreateResourceHeap(resourceHeapDesc);
+        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
     }
 
     void UpdateModelTransform(const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
@@ -382,10 +380,10 @@ private:
             commands->SetIndexBuffer(*indexBuffer);
             commands->SetVertexBuffer(*vertexBuffer);
 
-            if (resourceHeaps[0])
+            if (resourceHeap)
             {
                 // Set graphics pipeline resources
-                commands->SetResourceHeap(*resourceHeaps[0]);
+                commands->SetResourceHeap(*resourceHeap, 0);
             }
             else
             {
@@ -432,10 +430,10 @@ private:
             //       since the previous pipeline has no dynamic viewport!
             commands->SetViewport(context->GetResolution());
 
-            if (resourceHeaps[1])
+            if (resourceHeap)
             {
                 // Set graphics pipeline resources
-                commands->SetResourceHeap(*resourceHeaps[1]);
+                commands->SetResourceHeap(*resourceHeap, 1);
             }
             else
             {
@@ -472,7 +470,7 @@ private:
             }
             commands->PopDebugGroup();
 
-            commands->PushDebugGroup("RenderScene");
+            commands->PushDebugGroup("RenderScreen");
             {
                 DrawSceneOntoScreen();
             }

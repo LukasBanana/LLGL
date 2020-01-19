@@ -14,15 +14,15 @@
 class Example_Texturing : public ExampleBase
 {
 
-    LLGL::ShaderProgram*        shaderProgram       = nullptr;
-    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
-    LLGL::PipelineState*        pipeline            = nullptr;
-    LLGL::Buffer*               vertexBuffer        = nullptr;
-    LLGL::Texture*              colorMaps[2]        = {};
-    LLGL::Sampler*              sampler[5]          = {};
-    LLGL::ResourceHeap*         resourceHeaps[6]    = {};
+    LLGL::ShaderProgram*        shaderProgram   = nullptr;
+    LLGL::PipelineLayout*       pipelineLayout  = nullptr;
+    LLGL::PipelineState*        pipeline        = nullptr;
+    LLGL::Buffer*               vertexBuffer    = nullptr;
+    LLGL::Texture*              colorMaps[2]    = {};
+    LLGL::Sampler*              sampler[5]      = {};
+    LLGL::ResourceHeap*         resourceHeap    = {};
 
-    int                         resourceIndex       = 0;
+    unsigned                    resourceIndex   = 0;
 
     std::array<std::string, 6>  resourceLabels
     {{
@@ -51,7 +51,7 @@ public:
         CreatePipelines();
         CreateTextures();
         CreateSamplers();
-        CreateResourceHeaps();
+        CreateResourceHeap();
 
         // Update resource labels
         for (int i = 0; i < 2; ++i)
@@ -243,17 +243,19 @@ public:
         sampler[4] = renderer->CreateSampler(samplerDesc);
     }
 
-    void CreateResourceHeaps()
+    void CreateResourceHeap()
     {
-        for (int i = 0; i < 6; ++i)
+        LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
-            LLGL::ResourceHeapDescriptor resourceHeapDesc;
+            resourceHeapDesc.pipelineLayout = pipelineLayout;
+            resourceHeapDesc.resourceViews.reserve(6 * 2);
+            for (int i = 0; i < 6; ++i)
             {
-                resourceHeapDesc.pipelineLayout = pipelineLayout;
-                resourceHeapDesc.resourceViews  = { sampler[i > 0 ? i - 1 : 0], colorMaps[i == 0 ? 0 : 1] };
+                resourceHeapDesc.resourceViews.push_back(sampler[i > 0 ? i - 1 : 0]);
+                resourceHeapDesc.resourceViews.push_back(colorMaps[i == 0 ? 0 : 1]);
             }
-            resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
         }
+        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
     }
 
 private:
@@ -289,7 +291,7 @@ private:
                 commands->SetPipelineState(*pipeline);
 
                 // Set graphics shader resources
-                commands->SetResourceHeap(*resourceHeaps[resourceIndex]);
+                commands->SetResourceHeap(*resourceHeap, resourceIndex);
 
                 // Draw fullscreen quad
                 commands->Draw(4, 0);

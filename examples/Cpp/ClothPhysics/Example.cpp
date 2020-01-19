@@ -73,7 +73,7 @@ class Example_ClothPhysics : public ExampleBase
     LLGL::Sampler*          linearSampler                       = nullptr;
 
     LLGL::PipelineLayout*   computeLayout                       = nullptr;
-    LLGL::ResourceHeap*     computeResourceHeaps[2]             = {}; // Swap-buffer fashion
+    LLGL::ResourceHeap*     computeResourceHeap                 = nullptr; // Contains two descriptor sets for a swap-buffer fashion
 
     LLGL::ShaderProgram*    computeShaders[NumComputeShaders]   = {};
     LLGL::PipelineState*    computePipelines[NumComputeShaders] = {};
@@ -437,24 +437,18 @@ public:
                 particleBuffers[AttribNextPos],
                 particleBuffers[AttribPrevPos],
                 particleBuffers[AttribVelocity],
-                particleBuffers[AttribNormal]
-            };
-        }
-        computeResourceHeaps[0] = renderer->CreateResourceHeap(resourceHeapDesc);
+                particleBuffers[AttribNormal],
 
-        {
-            resourceHeapDesc.resourceViews =
-            {
                 constantBuffer,
                 particleBuffers[AttribBase],
                 particleBuffers[AttribNextPos], // Swap pos with next-pos
                 particleBuffers[AttribCurrPos], // Swap next-pos with pos
                 particleBuffers[AttribPrevPos],
                 particleBuffers[AttribVelocity],
-                particleBuffers[AttribNormal]
+                particleBuffers[AttribNormal],
             };
         }
-        computeResourceHeaps[1] = renderer->CreateResourceHeap(resourceHeapDesc);
+        computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
 
         // Create compute pipeline
         for (int i = 0; i < 3; ++i)
@@ -640,7 +634,7 @@ private:
             commands->PushDebugGroup("CSForces");
             {
                 commands->SetPipelineState(*computePipelines[CSForces]);
-                commands->SetResourceHeap(*computeResourceHeaps[swapBufferIndex]);
+                commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
                 commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
             }
             commands->PopDebugGroup();
@@ -654,7 +648,7 @@ private:
                 {
                     if (i > 0)
                         swapBufferIndex = (swapBufferIndex + 1) % 2;
-                    commands->SetResourceHeap(*computeResourceHeaps[swapBufferIndex]);
+                    commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
                     commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
                 }
             }
@@ -664,7 +658,7 @@ private:
             commands->PushDebugGroup("CSRelaxation");
             {
                 commands->SetPipelineState(*computePipelines[CSRelaxation]);
-                commands->SetResourceHeap(*computeResourceHeaps[swapBufferIndex]);
+                commands->SetResourceHeap(*computeResourceHeap, swapBufferIndex);
                 commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
             }
             commands->PopDebugGroup();
