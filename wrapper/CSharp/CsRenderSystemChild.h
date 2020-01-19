@@ -16,6 +16,7 @@
 #include <LLGL/RenderPass.h>
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineState.h>
+#include <LLGL/ResourceHeap.h>
 #include "CsTextureFlags.h"
 #include "CsBufferFlags.h"
 #include "CsResourceFlags.h"
@@ -116,6 +117,11 @@ public ref class Texture : public Resource
             TextureDescriptor^ get();
         };
         #endif
+
+        property Format Format
+        {
+            SharpLLGL::Format get();
+        }
 
         Extent3D^ GetMipExtent(unsigned int mipLevel);
 
@@ -255,6 +261,11 @@ public ref class ResourceHeap
     public:
 
         ResourceHeap(LLGL::ResourceHeap* native);
+
+        property unsigned int NumDescriptorSets
+        {
+            unsigned int get();
+        };
 
     private:
 

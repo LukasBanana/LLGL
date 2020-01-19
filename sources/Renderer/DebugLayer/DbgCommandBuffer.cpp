@@ -18,6 +18,7 @@
 #include "DbgShaderProgram.h"
 #include "DbgQueryHeap.h"
 #include "DbgPipelineState.h"
+#include "DbgResourceHeap.h"
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
@@ -524,16 +525,19 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
 //TODO: also record individual resource bindings
 void DbgCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    const PipelineBindPoint bindPoint,
-    std::uint32_t           firstSet)
+    std::uint32_t           firstSet,
+    const PipelineBindPoint bindPoint)
 {
+    auto& resourceHeapDbg = LLGL_CAST(DbgResourceHeap&, resourceHeap);
+
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
+        ValidateDescriptorSetIndex(firstSet, resourceHeapDbg.GetNumDescriptorSets(), resourceHeapDbg.label.c_str());
     }
 
-    LLGL_DBG_COMMAND( "SetResourceHeap", instance.SetResourceHeap(resourceHeap, bindPoint, firstSet) );
+    LLGL_DBG_COMMAND( "SetResourceHeap", instance.SetResourceHeap(resourceHeapDbg.instance, firstSet, bindPoint) );
 
     profile_.resourceHeapBindings++;
 }
@@ -1578,6 +1582,23 @@ void DbgCommandBuffer::ValidateAttachmentLimit(std::uint32_t attachmentIndex, st
             "color attachment index out of bounds: " + std::to_string(attachmentIndex) +
             " specified but upper bound is " + std::to_string(attachmentUpperBound)
         );
+    }
+}
+
+void DbgCommandBuffer::ValidateDescriptorSetIndex(std::uint32_t setIndex, std::uint32_t setUpperBound, const char* resourceHeapName)
+{
+    if (setIndex >= setUpperBound)
+    {
+        std::string s = "descriptor set index out of bounds: " + std::to_string(setIndex) + " specified but upper bound is " + std::to_string(setUpperBound);
+
+        if (resourceHeapName != nullptr && *resourceHeapName != '\0')
+        {
+            s += " for resource heap \"";
+            s += resourceHeapName;
+            s += '\"';
+        }
+
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, s);
     }
 }
 

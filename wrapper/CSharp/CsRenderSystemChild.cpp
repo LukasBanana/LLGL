@@ -71,6 +71,11 @@ TextureType Texture::Type::get()
     return static_cast<TextureType>(NativeSub->GetType());
 }
 
+Format Texture::Format::get()
+{
+    return static_cast<SharpLLGL::Format>(NativeSub->GetFormat());
+}
+
 Extent3D^ Texture::GetMipExtent(unsigned int mipLevel)
 {
     auto nativeExtent = NativeSub->GetMipExtent(mipLevel);
@@ -180,6 +185,11 @@ LLGL::PipelineState* PipelineState::Native::get()
 ResourceHeap::ResourceHeap(LLGL::ResourceHeap* native) :
     native_ { native }
 {
+}
+
+unsigned int ResourceHeap::NumDescriptorSets::get()
+{
+    return native_->GetNumDescriptorSets();
 }
 
 LLGL::ResourceHeap* ResourceHeap::Native::get()

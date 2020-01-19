@@ -222,14 +222,14 @@ void CommandBuffer::SetResourceHeap(ResourceHeap^ resourceHeap)
     native_->SetResourceHeap(*resourceHeap->Native);
 }
 
-void CommandBuffer::SetResourceHeap(ResourceHeap^ resourceHeap, PipelineBindPoint bindPoint)
+void CommandBuffer::SetResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet)
 {
-    native_->SetResourceHeap(*resourceHeap->Native, static_cast<LLGL::PipelineBindPoint>(bindPoint));
+    native_->SetResourceHeap(*resourceHeap->Native, firstSet);
 }
 
-void CommandBuffer::SetResourceHeap(ResourceHeap^ resourceHeap, PipelineBindPoint bindPoint, unsigned int firstSet)
+void CommandBuffer::SetResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet, PipelineBindPoint bindPoint)
 {
-    native_->SetResourceHeap(*resourceHeap->Native, static_cast<LLGL::PipelineBindPoint>(bindPoint), firstSet);
+    native_->SetResourceHeap(*resourceHeap->Native, firstSet, static_cast<LLGL::PipelineBindPoint>(bindPoint));
 }
 
 /* ----- Render Passes ----- */

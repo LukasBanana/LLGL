@@ -111,10 +111,14 @@ struct BindingDescriptor
 /**
 \brief Pipeline layout descritpor structure.
 \remarks Contains all layout bindings that will be used by graphics and compute pipelines.
+\see RenderSystem::CreatePipelineLayout
 */
 struct PipelineLayoutDescriptor
 {
-    //! List of layout resource bindings.
+    /**
+    \brief List of layout resource bindings.
+    \see ResourceHeap::GetNumDescriptorSets
+    */
     std::vector<BindingDescriptor> bindings;
 };
 

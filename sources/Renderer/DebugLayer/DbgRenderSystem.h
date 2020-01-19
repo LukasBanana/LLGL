@@ -23,6 +23,7 @@
 #include "DbgShader.h"
 #include "DbgShaderProgram.h"
 #include "DbgQueryHeap.h"
+#include "DbgResourceHeap.h"
 
 #include "../ContainerTypes.h"
 
@@ -220,6 +221,7 @@ class DbgRenderSystem final : public RenderSystem
         HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
         HWObjectContainer<DbgPipelineLayout>    pipelineLayouts_;
         HWObjectContainer<DbgPipelineState>     pipelineStates_;
+        HWObjectContainer<DbgResourceHeap>      resourceHeaps_;
         //HWObjectContainer<DbgSampler>           samplers_;
         HWObjectContainer<DbgQueryHeap>         queryHeaps_;
 

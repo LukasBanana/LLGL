@@ -10,6 +10,7 @@
 
 
 #include "RenderSystemChild.h"
+#include <cstdint>
 
 
 namespace LLGL
@@ -25,7 +26,23 @@ or descriptor heap (as called in Direct3D 12) for graphics and compute pipelines
 */
 class LLGL_EXPORT ResourceHeap : public RenderSystemChild
 {
-    LLGL_DECLARE_INTERFACE( InterfaceID::ResourceHeap );
+
+        LLGL_DECLARE_INTERFACE( InterfaceID::ResourceHeap );
+
+    public:
+
+        /**
+        \brief Returns the number of descriptor sets in this heap.
+        \remarks This is determined by the number of resources in the heap divided by the number of bindings in the pipeline layout.
+        The total number of resources in the heap can therefore be determined by the following code:
+        \code
+        myResourceHeap->GetNumDescriptorSets() * myPipelineLayoutDesc.bindings.size();
+        \endcode
+        \see PipelineLayoutDescriptor::bindings
+        \see CommandBuffer::SetResourceHeap
+        */
+        virtual std::uint32_t GetNumDescriptorSets() const = 0;
+
 };
 
 

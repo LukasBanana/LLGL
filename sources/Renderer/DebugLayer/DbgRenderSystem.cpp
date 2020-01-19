@@ -327,7 +327,10 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "null pointer passed to <ResourceViewDescriptor>");
         }
     }
-    return instance_->CreateResourceHeap(instanceDesc);
+    return TakeOwnership(
+        resourceHeaps_,
+        MakeUnique<DbgResourceHeap>(*instance_->CreateResourceHeap(instanceDesc), desc)
+    );
 }
 
 void DbgRenderSystem::Release(ResourceHeap& resourceViewHeap)
@@ -1210,14 +1213,33 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& des
         auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, desc.pipelineLayout);
         const auto& bindings = pipelineLayoutDbg->desc.bindings;
 
-        if (desc.resourceViews.size() == bindings.size())
+        const auto numResourceViews = desc.resourceViews.size();
+        const auto numBindings      = bindings.size();
+
+        if (numBindings == 0)
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create resource heap with empty pipeline layout");
+        else if (numResourceViews < numBindings)
         {
-            /* Validate all resource view descriptors against their respective binding descriptor */
-            for (std::size_t i = 0, n = desc.resourceViews.size(); i < n; ++i)
-                ValidateResourceViewForBinding(desc.resourceViews[i], bindings[i]);
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot create resource heap with less resources (" + std::to_string(numResourceViews) +
+                ") than bindings in pipeline layout (" + std::to_string(numBindings) + ")"
+            );
+        }
+        else if (numResourceViews % numBindings != 0)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot create resource heap with number of resource views (" + std::to_string(numResourceViews) +
+                ") not being a multiple of bindings in pipeline layout (" + std::to_string(numBindings) + ")"
+            );
         }
         else
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "resource count mismatch between pipeline layout and resource heap descriptor");
+        {
+            /* Validate all resource view descriptors against their respective binding descriptor */
+            for (std::size_t i = 0, n = desc.resourceViews.size(), m = bindings.size(); i < n; ++i)
+                ValidateResourceViewForBinding(desc.resourceViews[i], bindings[i % m]);
+        }
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "pipeline layout must not be null");

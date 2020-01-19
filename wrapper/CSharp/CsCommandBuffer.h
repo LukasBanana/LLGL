@@ -90,8 +90,8 @@ public ref class CommandBuffer
         /* ----- Resource Heaps ----- */
 
         void SetResourceHeap(ResourceHeap^ resourceHeap);
-        void SetResourceHeap(ResourceHeap^ resourceHeap, PipelineBindPoint bindPoint);
-        void SetResourceHeap(ResourceHeap^ resourceHeap, PipelineBindPoint bindPoint, unsigned int firstSet);
+        void SetResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet);
+        void SetResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet, PipelineBindPoint bindPoint);
 
         /* ----- Render Passes ----- */
 

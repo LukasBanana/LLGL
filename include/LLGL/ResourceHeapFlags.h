@@ -94,6 +94,7 @@ struct ResourceHeapDescriptor
     /**
     \brief List of all resource view descriptors.
     \remarks These resources must be specified in the same order as they were specified when the pipeline layout was created.
+    The number of resource views \b must be a multiple of the bindings in the pipeline layout.
     \see PipelineLayoutDescriptor::bindings
     */
     std::vector<ResourceViewDescriptor> resourceViews;

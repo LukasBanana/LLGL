@@ -138,8 +138,8 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void SetResourceHeap(
             ResourceHeap&           resourceHeap,
-            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined,
-            std::uint32_t           firstSet        = 0
+            std::uint32_t           firstSet        = 0,
+            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
         ) override;
 
         void SetResource(
@@ -269,6 +269,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void ValidateVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit);
         void ValidateThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
         void ValidateAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound);
+        void ValidateDescriptorSetIndex(std::uint32_t setIndex, std::uint32_t setUpperBound, const char* resourceHeapName = nullptr);
 
         void ValidateBindFlags(long resourceFlags, long bindFlags, long validFlags, const char* resourceName = nullptr);
         void ValidateBindBufferFlags(DbgBuffer& bufferDbg, long bindFlags);
