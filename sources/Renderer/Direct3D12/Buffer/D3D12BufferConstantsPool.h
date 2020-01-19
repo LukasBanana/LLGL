@@ -52,6 +52,9 @@ class D3D12BufferConstantsPool
             D3D12StagingBufferPool& stagingBufferPool
         );
 
+        // Clears all internal resources of this buffer pool.
+        void Clear();
+
         // Returns the buffer view for the specified constants.
         D3D12BufferConstantsView FetchConstants(const D3D12BufferConstants id);
 

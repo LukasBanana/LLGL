@@ -57,17 +57,17 @@ class D3D12ShaderProgram final : public ShaderProgram
         {
             struct
             {
-                D3D12Shader*                    vs_;
-                D3D12Shader*                    hs_;
-                D3D12Shader*                    ds_;
-                D3D12Shader*                    gs_;
-                D3D12Shader*                    ps_;
-                D3D12Shader*                    cs_;
+                D3D12Shader*    vs_;
+                D3D12Shader*    hs_;
+                D3D12Shader*    ds_;
+                D3D12Shader*    gs_;
+                D3D12Shader*    ps_;
+                D3D12Shader*    cs_;
             };
-            D3D12Shader*                        shaders_[6] = {};
+            D3D12Shader*        shaders_[6] = {};
         };
 
-        LinkError                               linkError_  = LinkError::NoError;
+        LinkError               linkError_  = LinkError::NoError;
 
 };
 

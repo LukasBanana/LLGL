@@ -76,6 +76,7 @@ D3D12RenderSystem::~D3D12RenderSystem()
 
     /* Clear resources of singletons */
     D3D12MipGenerator::Get().Clear();
+    D3D12BufferConstantsPool::Get().Clear();
 }
 
 /* ----- Render Context ----- */

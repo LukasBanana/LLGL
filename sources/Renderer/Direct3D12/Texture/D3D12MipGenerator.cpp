@@ -37,11 +37,21 @@ void D3D12MipGenerator::InitializeDevice(ID3D12Device* device)
     CreateResourcesFor3DMips(device);
 }
 
+template <std::size_t N>
+void ReleasePipelinesAndRootSignature(
+    ComPtr<ID3D12RootSignature>& rootSignature,
+    ComPtr<ID3D12PipelineState> (&pipelineStates)[N])
+{
+    for (auto& pso : pipelineStates)
+        pso.Reset();
+    rootSignature.Reset();
+}
+
 void D3D12MipGenerator::Clear()
 {
-    for (auto& pso : pipelines2D_)
-        pso.Reset();
-    rootSignature2D_.Reset();
+    ReleasePipelinesAndRootSignature(rootSignature1D_, pipelines1D_);
+    ReleasePipelinesAndRootSignature(rootSignature2D_, pipelines2D_);
+    ReleasePipelinesAndRootSignature(rootSignature3D_, pipelines3D_);
 }
 
 HRESULT D3D12MipGenerator::GenerateMips(

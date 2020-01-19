@@ -38,6 +38,11 @@ void D3D12BufferConstantsPool::InitializeDevice(
     CreateImmutableBuffer(device, commandContext, stagingBufferPool, data);
 }
 
+void D3D12BufferConstantsPool::Clear()
+{
+    resource_.native.Reset();
+}
+
 D3D12BufferConstantsView D3D12BufferConstantsPool::FetchConstants(const D3D12BufferConstants id)
 {
     const auto idx = static_cast<std::size_t>(id);

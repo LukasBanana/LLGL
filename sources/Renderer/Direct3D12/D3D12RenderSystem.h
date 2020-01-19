@@ -229,35 +229,35 @@ class D3D12RenderSystem final : public RenderSystem
 
         /* ----- Common objects ----- */
 
-        ComPtr<IDXGIFactory4>                       factory_;
-        D3D12Device                                 device_;
-        D3D12CommandContext*                        commandContext_         = nullptr;
-        D3D12PipelineLayout                         defaultPipelineLayout_;
-        D3D12SignatureFactory                       cmdSignatureFactory_;
-        D3D12StagingBufferPool                      stagingBufferPool_;
+        ComPtr<IDXGIFactory4>                   factory_;
+        D3D12Device                             device_;
+        D3D12CommandContext*                    commandContext_         = nullptr;
+        D3D12PipelineLayout                     defaultPipelineLayout_;
+        D3D12SignatureFactory                   cmdSignatureFactory_;
+        D3D12StagingBufferPool                  stagingBufferPool_;
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<D3D12RenderContext>       renderContexts_;
-        HWObjectInstance<D3D12CommandQueue>         commandQueue_;
-        HWObjectContainer<D3D12CommandBuffer>       commandBuffers_;
-        HWObjectContainer<D3D12Buffer>              buffers_;
-        HWObjectContainer<BufferArray>              bufferArrays_;
-        HWObjectContainer<D3D12Texture>             textures_;
-        HWObjectContainer<D3D12Sampler>             samplers_;
-        HWObjectContainer<D3D12RenderPass>          renderPasses_;
-        HWObjectContainer<D3D12RenderTarget>        renderTargets_;
-        HWObjectContainer<D3D12Shader>              shaders_;
-        HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
-        HWObjectContainer<D3D12PipelineLayout>      pipelineLayouts_;
-        HWObjectContainer<D3D12PipelineState>       pipelineStates_;
-        HWObjectContainer<D3D12ResourceHeap>        resourceHeaps_;
-        HWObjectContainer<D3D12QueryHeap>           queryHeaps_;
-        HWObjectContainer<D3D12Fence>               fences_;
+        HWObjectContainer<D3D12RenderContext>   renderContexts_;
+        HWObjectInstance<D3D12CommandQueue>     commandQueue_;
+        HWObjectContainer<D3D12CommandBuffer>   commandBuffers_;
+        HWObjectContainer<D3D12Buffer>          buffers_;
+        HWObjectContainer<BufferArray>          bufferArrays_;
+        HWObjectContainer<D3D12Texture>         textures_;
+        HWObjectContainer<D3D12Sampler>         samplers_;
+        HWObjectContainer<D3D12RenderPass>      renderPasses_;
+        HWObjectContainer<D3D12RenderTarget>    renderTargets_;
+        HWObjectContainer<D3D12Shader>          shaders_;
+        HWObjectContainer<D3D12ShaderProgram>   shaderPrograms_;
+        HWObjectContainer<D3D12PipelineLayout>  pipelineLayouts_;
+        HWObjectContainer<D3D12PipelineState>   pipelineStates_;
+        HWObjectContainer<D3D12ResourceHeap>    resourceHeaps_;
+        HWObjectContainer<D3D12QueryHeap>       queryHeaps_;
+        HWObjectContainer<D3D12Fence>           fences_;
 
         /* ----- Other members ----- */
 
-        std::vector<VideoAdapterDescriptor>         videoAdatperDescs_;
+        std::vector<VideoAdapterDescriptor>     videoAdatperDescs_;
 
 };
 
