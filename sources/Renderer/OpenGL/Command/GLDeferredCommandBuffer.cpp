@@ -440,11 +440,12 @@ void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format
 
 void GLDeferredCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    std::uint32_t           /*firstSet*/, // <-- TODO
+    std::uint32_t           firstSet,
     const PipelineBindPoint /*bindPoint*/)
 {
     auto cmd = AllocCommand<GLCmdBindResourceHeap>(GLOpcodeBindResourceHeap);
-    cmd->resourceHeap = LLGL_CAST(GLResourceHeap*, &resourceHeap);
+    cmd->resourceHeap   = LLGL_CAST(GLResourceHeap*, &resourceHeap);
+    cmd->firstSet       = firstSet;
 }
 
 void GLDeferredCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)

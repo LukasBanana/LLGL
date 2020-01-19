@@ -257,7 +257,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeBindResourceHeap:
         {
             auto cmd = reinterpret_cast<const GLCmdBindResourceHeap*>(pc);
-            cmd->resourceHeap->Bind(stateMngr);
+            cmd->resourceHeap->Bind(stateMngr, cmd->firstSet);
             return sizeof(*cmd);
         }
         case GLOpcodeBindRenderPass:

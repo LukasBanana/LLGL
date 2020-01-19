@@ -116,9 +116,14 @@ GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc)
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Validate binding descriptors */
-    const auto& bindings = pipelineLayoutGL->GetBindings();
-    if (desc.resourceViews.size() != bindings.size())
-        throw std::invalid_argument("failed to create resource heap due to mismatch between number of resources and bindings");
+    const auto& bindings            = pipelineLayoutGL->GetBindings();
+    const auto  numBindings         = bindings.size();
+    const auto  numResourceViews    = desc.resourceViews.size();
+
+    if (numBindings == 0)
+        throw std::invalid_argument("cannot create resource heap without bindings in pipeline layout");
+    if (numResourceViews % numBindings != 0)
+        throw std::invalid_argument("failed to create resource heap because due to mismatch between number of resources and bindings");
 
     /* Determine memory barriers */
     #ifdef GL_ARB_shader_image_load_store
@@ -127,14 +132,23 @@ GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc)
     barriers_ = 0;
     #endif // /GL_ARB_shader_image_load_store
 
-    /* Build buffer segments */
-    ResourceBindingIterator resourceIterator { desc.resourceViews, bindings };
+    /* Build all resource view segments */
+    for (std::size_t i = 0; i < numResourceViews; i += numBindings)
+    {
+        /* Reset segment header, only one is required */
+        ResourceBindingIterator resourceIterator { desc.resourceViews, bindings, i };
+        ::memset(&segmentationHeader_, 0, sizeof(segmentationHeader_));
 
-    BuildConstantBufferSegments(resourceIterator);
-    BuildStorageBufferSegments(resourceIterator);
-    BuildTextureSegments(resourceIterator);
-    BuildImageTextureSegments(resourceIterator);
-    BuildSamplerSegments(resourceIterator);
+        /* Build resource view segments for current descriptor set */
+        BuildConstantBufferSegments(resourceIterator);
+        BuildStorageBufferSegments(resourceIterator);
+        BuildTextureSegments(resourceIterator);
+        BuildImageTextureSegments(resourceIterator);
+        BuildSamplerSegments(resourceIterator);
+    }
+
+    /* Store buffer stride */
+    stride_ = buffer_.size() / (numResourceViews / numBindings);
 }
 
 static void BindBuffersBaseSegment(GLStateManager& stateMngr, std::int8_t*& byteAlignedBuffer, const GLBufferTarget bufferTarget)
@@ -194,12 +208,15 @@ static void BindSamplersSegment(GLStateManager& stateMngr, std::int8_t*& byteAli
 
 std::uint32_t GLResourceHeap::GetNumDescriptorSets() const
 {
-    return 1u; //TODO
+    return (stride_ > 0 ? buffer_.size() / stride_ : 0);
 }
 
-void GLResourceHeap::Bind(GLStateManager& stateMngr)
+void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t firstSet)
 {
     auto byteAlignedBuffer = buffer_.data();
+
+    /* Increment byte buffer to first descriptor set */
+    byteAlignedBuffer += (stride_ * firstSet);
 
     #ifdef GL_ARB_shader_image_load_store
 

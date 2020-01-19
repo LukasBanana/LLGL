@@ -41,7 +41,7 @@ class GLResourceHeap final : public ResourceHeap
         GLResourceHeap(const ResourceHeapDescriptor& desc);
 
         // Binds this resource heap with the specified GL state manager.
-        void Bind(GLStateManager& stateMngr);
+        void Bind(GLStateManager& stateMngr, std::uint32_t firstSet);
 
     private:
 
@@ -67,7 +67,7 @@ class GLResourceHeap final : public ResourceHeap
 
     private:
 
-        // Header structure to describe all segments within the raw buffer.
+        // Header structure to describe all segments within the raw buffer (per descriptor set).
         struct SegmentationHeader
         {
             std::uint8_t numConstantBufferSegments  = 0;
@@ -80,8 +80,9 @@ class GLResourceHeap final : public ResourceHeap
     private:
 
         SegmentationHeader          segmentationHeader_;
-        std::vector<std::int8_t>    buffer_;
-        GLbitfield                  barriers_           = 0;
+        std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
+        std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
+        GLbitfield                  barriers_           = 0;    // Bitmask for glMemoryBarrier
 
 };
 

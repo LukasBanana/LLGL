@@ -211,6 +211,7 @@ struct GLCmdBeginTransformFeedbackNV
 struct GLCmdBindResourceHeap
 {
     GLResourceHeap* resourceHeap;
+    std::uint32_t   firstSet;
 };
 
 struct GLCmdBindRenderPass

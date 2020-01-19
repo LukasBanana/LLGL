@@ -251,7 +251,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeBindResourceHeap:
         {
             auto cmd = reinterpret_cast<const GLCmdBindResourceHeap*>(pc);
-            compiler.CallMember(&GLResourceHeap::Bind, cmd->resourceHeap, g_stateMngrArg);
+            compiler.CallMember(&GLResourceHeap::Bind, cmd->resourceHeap, g_stateMngrArg, cmd->firstSet);
             return sizeof(*cmd);
         }
         case GLOpcodeBindRenderPass:
