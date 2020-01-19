@@ -34,6 +34,10 @@ class GLResourceHeap final : public ResourceHeap
 
     public:
 
+        std::uint32_t GetNumDescriptorSets() const override;
+
+    public:
+
         GLResourceHeap(const ResourceHeapDescriptor& desc);
 
         // Binds this resource heap with the specified GL state manager.

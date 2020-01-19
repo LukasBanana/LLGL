@@ -93,11 +93,11 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
 
     /* Build vertex resource segments */
     static const long vertexStages = (StageFlags::VertexStage | StageFlags::TessEvaluationStage);
-    
+
     BuildBufferSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexBufferSegments);
     BuildTextureSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexTextureSegments);
     BuildSamplerSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexSamplerSegments);
-    
+
     if ( ( segmentationHeader_.numVertexBufferSegments  |
            segmentationHeader_.numVertexTextureSegments |
            segmentationHeader_.numVertexSamplerSegments ) != 0 )
@@ -107,11 +107,11 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
 
     /* Build fragment resource segments */
     static const long fragmentStages = (StageFlags::FragmentStage);
-    
+
     BuildBufferSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentBufferSegments);
     BuildTextureSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentTextureSegments);
     BuildSamplerSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentSamplerSegments);
-    
+
     if ( ( segmentationHeader_.numFragmentBufferSegments  |
            segmentationHeader_.numFragmentTextureSegments |
            segmentationHeader_.numFragmentSamplerSegments ) != 0 )
@@ -127,13 +127,18 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
     BuildBufferSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelBufferSegments);
     BuildTextureSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelTextureSegments);
     BuildSamplerSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelSamplerSegments);
-    
+
     if ( ( segmentationHeader_.numKernelBufferSegments  |
            segmentationHeader_.numKernelTextureSegments |
            segmentationHeader_.numKernelSamplerSegments ) != 0 )
     {
         segmentationHeader_.hasKernelResources = 1;
     }
+}
+
+std::uint32_t MTResourceHeap::GetNumDescriptorSets() const
+{
+    return 1u; //TODO
 }
 
 void MTResourceHeap::BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder)

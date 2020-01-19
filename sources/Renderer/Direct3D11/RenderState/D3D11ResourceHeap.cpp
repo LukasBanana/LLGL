@@ -125,6 +125,11 @@ D3D11ResourceHeap::D3D11ResourceHeap(const ResourceHeapDescriptor& desc)
     StoreResourceUsage();
 }
 
+std::uint32_t D3D11ResourceHeap::GetNumDescriptorSets() const
+{
+    return 1u; //TODO
+}
+
 void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context)
 {
     auto byteAlignedBuffer = buffer_.data();

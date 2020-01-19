@@ -34,6 +34,10 @@ class MTResourceHeap final : public ResourceHeap
 
     public:
 
+        std::uint32_t GetNumDescriptorSets() const override;
+
+    public:
+
         MTResourceHeap(const ResourceHeapDescriptor& desc);
 
         void BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder);

@@ -360,8 +360,8 @@ void GLImmediateCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format forma
 
 void GLImmediateCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    const PipelineBindPoint /*bindPoint*/,
-    std::uint32_t           /*firstSet*/)
+    std::uint32_t           /*firstSet*/, // <-- TODO
+    const PipelineBindPoint /*bindPoint*/)
 {
     auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
     resourceHeapGL.Bind(*stateMngr_);

@@ -33,6 +33,10 @@ class D3D11ResourceHeap final : public ResourceHeap
 
     public:
 
+        std::uint32_t GetNumDescriptorSets() const override;
+
+    public:
+
         D3D11ResourceHeap(const ResourceHeapDescriptor& desc);
 
         void BindForGraphicsPipeline(ID3D11DeviceContext* context);

@@ -514,8 +514,8 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 
 void MTCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    const PipelineBindPoint bindPoint,
-    std::uint32_t           /*firstSet*/)
+    std::uint32_t           /*firstSet*/, // <-- TODO
+    const PipelineBindPoint bindPoint)
 {
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
     if (resourceHeapMT.HasGraphicsResources() && bindPoint != PipelineBindPoint::Compute)

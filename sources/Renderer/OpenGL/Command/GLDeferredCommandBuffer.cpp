@@ -440,8 +440,8 @@ void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format
 
 void GLDeferredCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    const PipelineBindPoint /*bindPoint*/,
-    std::uint32_t           /*firstSet*/)
+    std::uint32_t           /*firstSet*/, // <-- TODO
+    const PipelineBindPoint /*bindPoint*/)
 {
     auto cmd = AllocCommand<GLCmdBindResourceHeap>(GLOpcodeBindResourceHeap);
     cmd->resourceHeap = LLGL_CAST(GLResourceHeap*, &resourceHeap);

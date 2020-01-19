@@ -192,6 +192,11 @@ static void BindSamplersSegment(GLStateManager& stateMngr, std::int8_t*& byteAli
     byteAlignedBuffer += segment->segmentSize;
 }
 
+std::uint32_t GLResourceHeap::GetNumDescriptorSets() const
+{
+    return 1u; //TODO
+}
+
 void GLResourceHeap::Bind(GLStateManager& stateMngr)
 {
     auto byteAlignedBuffer = buffer_.data();

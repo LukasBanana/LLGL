@@ -829,8 +829,8 @@ void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 
 void D3D11CommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    const PipelineBindPoint bindPoint,
-    std::uint32_t           /*firstSet*/)
+    std::uint32_t           /*firstSet*/, // <-- TODO
+    const PipelineBindPoint bindPoint)
 {
     auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
     if (bindPoint != PipelineBindPoint::Compute)

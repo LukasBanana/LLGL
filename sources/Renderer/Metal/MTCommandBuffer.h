@@ -127,8 +127,8 @@ class MTCommandBuffer final : public CommandBuffer
 
         void SetResourceHeap(
             ResourceHeap&           resourceHeap,
-            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined,
-            std::uint32_t           firstSet        = 0
+            std::uint32_t           firstSet        = 0,
+            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
         ) override;
 
         void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) override;
