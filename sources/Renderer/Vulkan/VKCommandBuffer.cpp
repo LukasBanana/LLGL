@@ -607,22 +607,23 @@ void VKCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 //private
 void VKCommandBuffer::BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet)
 {
+    const VkDescriptorSet descriptorSets[1] = { resourceHeapVK.GetVkDescriptorSets()[firstSet] };
     vkCmdBindDescriptorSets(
         commandBuffer_,
         bindingPoint,
-        resourceHeapVK.GetVkPipelineLayout(),
-        firstSet,
-        static_cast<std::uint32_t>(resourceHeapVK.GetVkDescriptorSets().size()),
-        resourceHeapVK.GetVkDescriptorSets().data(),
-        0,
+        resourceHeapVK.GetVkPipelineLayout(),   // Pipeline lauyout
+        0,                                      // First set in SPIR-V (always 0 atm.)
+        1,                                      // Number of descriptor sets (always 1 atm.)
+        descriptorSets,                         // Descriptor sets
+        0,                                      // No dynamic offsets
         nullptr
     );
 }
 
 void VKCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    const PipelineBindPoint bindPoint,
-    std::uint32_t           firstSet)
+    std::uint32_t           firstSet,
+    const PipelineBindPoint bindPoint)
 {
     auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
 

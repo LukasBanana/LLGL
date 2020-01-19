@@ -55,7 +55,6 @@ class VKPipelineLayout final : public PipelineLayout
         VkDevice                        device_                 = VK_NULL_HANDLE;
         VKPtr<VkPipelineLayout>         pipelineLayout_;
         VKPtr<VkDescriptorSetLayout>    descriptorSetLayout_;
-
         std::vector<VKLayoutBinding>    bindings_;
 
 };

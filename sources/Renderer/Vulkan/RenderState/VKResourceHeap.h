@@ -31,6 +31,10 @@ class VKResourceHeap final : public ResourceHeap
 
     public:
 
+        std::uint32_t GetNumDescriptorSets() const override;
+
+    public:
+
         VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeapDescriptor& desc);
         ~VKResourceHeap();
 
@@ -70,9 +74,26 @@ class VKResourceHeap final : public ResourceHeap
         void CreateDescriptorSets(std::uint32_t numSetLayouts, const VkDescriptorSetLayout* setLayouts);
         void UpdateDescriptorSets(const ResourceHeapDescriptor& desc, const std::vector<VKLayoutBinding>& bindings);
 
-        void FillWriteDescriptorForSampler(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container);
-        void FillWriteDescriptorForTexture(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container);
-        void FillWriteDescriptorForBuffer(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container);
+        void FillWriteDescriptorForSampler(
+            const ResourceViewDescriptor&   rvDesc,
+            VkDescriptorSet                 descSet,
+            const VKLayoutBinding&          binding,
+            VKWriteDescriptorContainer&     container
+        );
+
+        void FillWriteDescriptorForTexture(
+            const ResourceViewDescriptor&   rvDesc,
+            VkDescriptorSet                 descSet,
+            const VKLayoutBinding&          binding,
+            VKWriteDescriptorContainer&     container
+        );
+
+        void FillWriteDescriptorForBuffer(
+            const ResourceViewDescriptor&   rvDesc,
+            VkDescriptorSet                 descSet,
+            const VKLayoutBinding&          binding,
+            VKWriteDescriptorContainer&     container
+        );
 
         void CreatePipelineBarrier(const std::vector<ResourceViewDescriptor>& resourceViews, const std::vector<VKLayoutBinding>& bindings);
 
@@ -82,7 +103,7 @@ class VKResourceHeap final : public ResourceHeap
         VkPipelineLayout                pipelineLayout_ = VK_NULL_HANDLE;
         VKPtr<VkDescriptorPool>         descriptorPool_;
         std::vector<VkDescriptorSet>    descriptorSets_;
-        VKPipelineBarrier               barrier_;
+        VKPipelineBarrier               barrier_; //TODO: make it an array, one element for each descriptor set
         VkPipelineBindPoint             bindPoint_      = VK_PIPELINE_BIND_POINT_MAX_ENUM;
 
 
