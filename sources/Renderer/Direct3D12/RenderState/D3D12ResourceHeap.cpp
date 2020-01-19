@@ -43,18 +43,51 @@ D3D12ResourceHeap::D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDes
     hasGraphicsDescriptors_ = ((combinedStageFlags & StageFlags::AllGraphicsStages) != 0);
     hasComputeDescriptors_  = ((combinedStageFlags & StageFlags::ComputeStage     ) != 0);
 
+    /* Store descriptor handle strides for the respective number of resources per set */
+    const auto descHandleStrideCbvSrvUav = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    const auto descHandleStrideSampler = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+    const auto& rootParameterLayout = pipelineLayoutD3D->GetRootParameterLayout();
+
+    descriptorHandleStrides_[0] =
+    (
+        rootParameterLayout.numBufferCBV  +
+        rootParameterLayout.numBufferSRV  +
+        rootParameterLayout.numTextureSRV +
+        rootParameterLayout.numBufferUAV  +
+        rootParameterLayout.numTextureUAV
+    ) * descHandleStrideCbvSrvUav;
+
+    descriptorHandleStrides_[1] =
+    (
+        rootParameterLayout.numSamplers
+    ) * descHandleStrideSampler;
+
     /* Create descriptors */
-    std::size_t bindingIndex = 0;
-    CreateConstantBufferViews(device, desc, cpuDescHandleCbvSrvUav, bindingIndex);
-    CreateShaderResourceViews(device, desc, cpuDescHandleCbvSrvUav, bindingIndex);
-    CreateUnorderedAccessViews(device, desc, cpuDescHandleCbvSrvUav, bindingIndex);
-    CreateSamplers(device, desc, cpuDescHandleSampler);
+    std::size_t bindingIndex = 0, firstResourceIndex = 0;
+    do
+    {
+        firstResourceIndex = bindingIndex;
+        {
+            CreateConstantBufferViews (device, desc, cpuDescHandleCbvSrvUav, bindingIndex, firstResourceIndex, rootParameterLayout);
+            CreateShaderResourceViews (device, desc, cpuDescHandleCbvSrvUav, bindingIndex, firstResourceIndex, rootParameterLayout);
+            CreateUnorderedAccessViews(device, desc, cpuDescHandleCbvSrvUav, bindingIndex, firstResourceIndex, rootParameterLayout);
+            CreateSamplers            (device, desc, cpuDescHandleSampler,   bindingIndex, firstResourceIndex, rootParameterLayout);
+        }
+        ++numDescriptorSets_;
+    }
+    while (bindingIndex < desc.resourceViews.size() && firstResourceIndex < bindingIndex);
 }
 
 void D3D12ResourceHeap::SetName(const char* name)
 {
     D3D12SetObjectNameSubscript(heapTypeCbvSrvUav_.Get(), name, ".CbvSrvUav");
     D3D12SetObjectNameSubscript(heapTypeSampler_.Get(), name, ".Sampler");
+}
+
+std::uint32_t D3D12ResourceHeap::GetNumDescriptorSets() const
+{
+    return numDescriptorSets_;
 }
 
 
@@ -149,14 +182,20 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeSampler(ID3D12Devic
 static void ForEachResourceViewOfType(
     const ResourceHeapDescriptor&                   desc,
     const ResourceType                              resourceType,
-    const std::function<void(Resource& resource)>&  callback)
+    std::size_t                                     firstIndex,
+    UINT                                            numResourceViewsInLayout,
+    const std::function<bool(Resource& resource)>&  callback)
 {
-    for (const auto& resourceView : desc.resourceViews)
+    for (auto i = firstIndex; i < desc.resourceViews.size() && numResourceViewsInLayout > 0; ++i)
     {
+        const auto& resourceView = desc.resourceViews[i];
         if (auto resource = resourceView.resource)
         {
             if (resource->GetResourceType() == resourceType)
-                callback(*resource);
+            {
+                if (callback(*resource))
+                    --numResourceViewsInLayout;
+            }
         }
     }
 }
@@ -181,23 +220,29 @@ void D3D12ResourceHeap::CreateConstantBufferViews(
     ID3D12Device*                   device,
     const ResourceHeapDescriptor&   desc,
     D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-    std::size_t&                    bindingIndex)
+    std::size_t&                    bindingIndex,
+    std::size_t                     firstResourceIndex,
+    const D3D12RootParameterLayout& rootParameterLayout)
 {
-    UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    UINT descHandleStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     auto pipelineLayoutD3D = GetD3DPipelineLayout(desc);
 
     ForEachResourceViewOfType(
         desc,
         ResourceType::Buffer,
-        [&](Resource& resource)
+        firstResourceIndex,
+        rootParameterLayout.numBufferCBV,
+        [&](Resource& resource) -> bool
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::ConstantBuffer, bindingIndex))
             {
                 bufferD3D.CreateConstantBufferView(device, cpuDescHandle);
-                cpuDescHandle.ptr += cpuDescStride;
+                cpuDescHandle.ptr += descHandleStride;
+                return true;
             }
+            return false;
         }
     );
 }
@@ -206,9 +251,11 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
     ID3D12Device*                   device,
     const ResourceHeapDescriptor&   desc,
     D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-    std::size_t&                    bindingIndex)
+    std::size_t&                    bindingIndex,
+    std::size_t                     firstResourceIndex,
+    const D3D12RootParameterLayout& rootParameterLayout)
 {
-    const UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    const UINT descHandleStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     auto pipelineLayoutD3D = GetD3DPipelineLayout(desc);
 
@@ -216,14 +263,18 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
     ForEachResourceViewOfType(
         desc,
         ResourceType::Buffer,
-        [&](Resource& resource)
+        firstResourceIndex,
+        rootParameterLayout.numBufferSRV,
+        [&](Resource& resource) -> bool
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
             {
                 bufferD3D.CreateShaderResourceView(device, cpuDescHandle);
-                cpuDescHandle.ptr += cpuDescStride;
+                cpuDescHandle.ptr += descHandleStride;
+                return true;
             }
+            return false;
         }
     );
 
@@ -231,14 +282,18 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
     ForEachResourceViewOfType(
         desc,
         ResourceType::Texture,
-        [&](Resource& resource)
+        firstResourceIndex,
+        rootParameterLayout.numTextureSRV,
+        [&](Resource& resource) -> bool
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
             {
                 textureD3D.CreateShaderResourceView(device, cpuDescHandle);
-                cpuDescHandle.ptr += cpuDescStride;
+                cpuDescHandle.ptr += descHandleStride;
+                return true;
             }
+            return false;
         }
     );
 }
@@ -247,9 +302,11 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
     ID3D12Device*                   device,
     const ResourceHeapDescriptor&   desc,
     D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-    std::size_t&                    bindingIndex)
+    std::size_t&                    bindingIndex,
+    std::size_t                     firstResourceIndex,
+    const D3D12RootParameterLayout& rootParameterLayout)
 {
-    const UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    const UINT descHandleStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     auto pipelineLayoutD3D = GetD3DPipelineLayout(desc);
 
@@ -257,14 +314,18 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
     ForEachResourceViewOfType(
         desc,
         ResourceType::Buffer,
-        [&](Resource& resource)
+        firstResourceIndex,
+        rootParameterLayout.numBufferUAV,
+        [&](Resource& resource) -> bool
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
             {
                 bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle);
-                cpuDescHandle.ptr += cpuDescStride;
+                cpuDescHandle.ptr += descHandleStride;
+                return true;
             }
+            return false;
         }
     );
 
@@ -272,14 +333,18 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
     ForEachResourceViewOfType(
         desc,
         ResourceType::Texture,
-        [&](Resource& resource)
+        firstResourceIndex,
+        rootParameterLayout.numTextureUAV,
+        [&](Resource& resource) -> bool
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
             {
                 textureD3D.CreateUnorderedAccessView(device, cpuDescHandle);
-                cpuDescHandle.ptr += cpuDescStride;
+                cpuDescHandle.ptr += descHandleStride;
+                return true;
             }
+            return false;
         }
     );
 }
@@ -287,18 +352,25 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
 void D3D12ResourceHeap::CreateSamplers(
     ID3D12Device*                   device,
     const ResourceHeapDescriptor&   desc,
-    D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle)
+    D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
+    std::size_t&                    bindingIndex,
+    std::size_t                     firstResourceIndex,
+    const D3D12RootParameterLayout& rootParameterLayout)
 {
-    const UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    const UINT descHandleStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
     ForEachResourceViewOfType(
         desc,
         ResourceType::Sampler,
-        [&](Resource& resource)
+        firstResourceIndex,
+        rootParameterLayout.numSamplers,
+        [&](Resource& resource) -> bool
         {
             auto& samplerD3D = LLGL_CAST(D3D12Sampler&, resource);
             samplerD3D.CreateResourceView(device, cpuDescHandle);
-            cpuDescHandle.ptr += cpuDescStride;
+            cpuDescHandle.ptr += descHandleStride;
+            ++bindingIndex;
+            return true;
         }
     );
 }

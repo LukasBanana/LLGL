@@ -20,6 +20,7 @@ namespace LLGL
 
 
 struct ResourceHeapDescriptor;
+struct D3D12RootParameterLayout;
 
 class D3D12ResourceHeap final : public ResourceHeap
 {
@@ -27,6 +28,8 @@ class D3D12ResourceHeap final : public ResourceHeap
     public:
 
         void SetName(const char* name) override;
+
+        std::uint32_t GetNumDescriptorSets() const override;
 
     public:
 
@@ -36,6 +39,12 @@ class D3D12ResourceHeap final : public ResourceHeap
         inline ID3D12DescriptorHeap* const* GetDescriptorHeaps() const
         {
             return descriptorHeaps_;
+        }
+
+        // Returns the strides of GPU descriptor handles 
+        inline const UINT* GetDescriptorHandleStrides() const
+        {
+            return descriptorHandleStrides_;
         }
 
         // Returns the number of D3D descriptor heap (either 1 or 2).
@@ -65,27 +74,36 @@ class D3D12ResourceHeap final : public ResourceHeap
             ID3D12Device*                   device,
             const ResourceHeapDescriptor&   desc,
             D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-            std::size_t&                    bindingIndex
+            std::size_t&                    bindingIndex,
+            std::size_t                     firstResourceIndex,
+            const D3D12RootParameterLayout& rootParameterLayout
         );
 
         void CreateShaderResourceViews(
             ID3D12Device*                   device,
             const ResourceHeapDescriptor&   desc,
             D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-            std::size_t&                    bindingIndex
+            std::size_t&                    bindingIndex,
+            std::size_t                     firstResourceIndex,
+            const D3D12RootParameterLayout& rootParameterLayout
         );
 
         void CreateUnorderedAccessViews(
             ID3D12Device*                   device,
             const ResourceHeapDescriptor&   desc,
             D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-            std::size_t&                    bindingIndex
+            std::size_t&                    bindingIndex,
+            std::size_t                     firstResourceIndex,
+            const D3D12RootParameterLayout& rootParameterLayout
         );
 
         void CreateSamplers(
             ID3D12Device*                   device,
             const ResourceHeapDescriptor&   desc,
-            D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle
+            D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
+            std::size_t&                    bindingIndex,
+            std::size_t                     firstResourceIndex,
+            const D3D12RootParameterLayout& rootParameterLayout
         );
 
         void AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap);
@@ -95,11 +113,13 @@ class D3D12ResourceHeap final : public ResourceHeap
         ComPtr<ID3D12DescriptorHeap>    heapTypeCbvSrvUav_;
         ComPtr<ID3D12DescriptorHeap>    heapTypeSampler_;
 
-        ID3D12DescriptorHeap*           descriptorHeaps_[2]     = {};   // References to the ComPtr objects
-        UINT                            numDescriptorHeaps_     = 0;
+        ID3D12DescriptorHeap*           descriptorHeaps_[2]         = {};   // References to the ComPtr objects
+        UINT                            descriptorHandleStrides_[2] = {};
+        UINT                            numDescriptorHeaps_         = 0;    // Sizes of descriptor heaps array
+        UINT                            numDescriptorSets_          = 0;    // Only used for 'GetNumDescriptorSets'
 
-        bool                            hasGraphicsDescriptors_ = false;
-        bool                            hasComputeDescriptors_  = false;
+        bool                            hasGraphicsDescriptors_     = false;
+        bool                            hasComputeDescriptors_      = false;
 
 };
 

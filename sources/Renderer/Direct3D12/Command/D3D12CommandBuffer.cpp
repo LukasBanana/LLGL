@@ -530,8 +530,8 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 
 void D3D12CommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    const PipelineBindPoint bindPoint,
-    std::uint32_t           /*firstSet*/)
+    std::uint32_t           firstSet,
+    const PipelineBindPoint bindPoint)
 {
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
 
@@ -541,15 +541,21 @@ void D3D12CommandBuffer::SetResourceHeap(
     {
         /* Bind descriptor heaps */
         auto descHeaps = resourceHeapD3D.GetDescriptorHeaps();
-        commandList_->SetDescriptorHeaps(heapCount, descHeaps);
+        commandContext_.SetDescriptorHeaps(heapCount, descHeaps);
+
+        auto handleStrides = resourceHeapD3D.GetDescriptorHandleStrides();
 
         /* Bind root descriptor tables to graphics pipeline */
         for (UINT i = 0; i < heapCount; ++i)
         {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descHeaps[i]->GetGPUDescriptorHandleForHeapStart();
+
+            gpuDescHandle.ptr += handleStrides[i] * firstSet;
+
             if (resourceHeapD3D.HasGraphicsDescriptors() && bindPoint != PipelineBindPoint::Compute)
-                commandList_->SetGraphicsRootDescriptorTable(i, descHeaps[i]->GetGPUDescriptorHandleForHeapStart());
+                commandList_->SetGraphicsRootDescriptorTable(i, gpuDescHandle);
             if (resourceHeapD3D.HasComputeDescriptors() && bindPoint != PipelineBindPoint::Graphics)
-                commandList_->SetComputeRootDescriptorTable(i, descHeaps[i]->GetGPUDescriptorHandleForHeapStart());
+                commandList_->SetComputeRootDescriptorTable(i, gpuDescHandle);
         }
     }
 }

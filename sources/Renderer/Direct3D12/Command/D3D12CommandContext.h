@@ -73,8 +73,24 @@ class D3D12CommandContext
             return commandList_.Get();
         }
 
+        // Transition all subresources to the specified new state.
         void TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate = false);
+
+        #if 0 //TODO: not used yet
+        // Transition the specified subresource to the specified new state.
+        void TransitionSubresource(
+            D3D12Resource&          resource,
+            UINT                    subresource,
+            D3D12_RESOURCE_STATES   oldState,
+            D3D12_RESOURCE_STATES   newState,
+            bool                    flushImmediate = false
+        );
+        #endif
+
+        // Insert a resource barrier for an unordered access view (UAV).
         void InsertUAVBarrier(D3D12Resource& resource, bool flushImmediate = false);
+
+        // Flush all accumulated resource barriers.
         void FlushResourceBarrieres();
 
         void ResolveRenderTarget(
@@ -88,9 +104,16 @@ class D3D12CommandContext
         void SetGraphicsRootSignature(ID3D12RootSignature* rootSignature);
         void SetComputeRootSignature(ID3D12RootSignature* rootSignature);
         void SetPipelineState(ID3D12PipelineState* pipelineState);
+        void SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12DescriptorHeap* const* descriptorHeaps);
 
         void SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
         void SetComputeConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
+
+    private:
+
+        static const UINT g_maxNumAllocators        = 3;
+        static const UINT g_maxNumResourceBarrieres = 16;
+        static const UINT g_maxNumDescriptorHeaps   = 2;
 
     private:
 
@@ -103,14 +126,17 @@ class D3D12CommandContext
                     std::uint32_t   pipelineState           : 1;
                     std::uint32_t   graphicsRootSignature   : 1;
                     std::uint32_t   computeRootSignature    : 1;
+                    std::uint32_t   descriptorHeaps         : 1;
                 };
                 std::uint32_t       value;
             }
             dirtyBits;
 
-            ID3D12RootSignature*    graphicsRootSignature   = nullptr;
-            ID3D12RootSignature*    computeRootSignature    = nullptr;
-            ID3D12PipelineState*    pipelineState           = nullptr;
+            ID3D12RootSignature*    graphicsRootSignature                       = nullptr;
+            ID3D12RootSignature*    computeRootSignature                        = nullptr;
+            ID3D12PipelineState*    pipelineState                               = nullptr;
+            UINT                    numDescriptorHeaps                          = 0;
+            ID3D12DescriptorHeap*   descriptorHeaps[g_maxNumDescriptorHeaps]    = {};
         };
 
     private:
@@ -131,9 +157,6 @@ class D3D12CommandContext
         }
 
     private:
-
-        static const UINT g_maxNumAllocators        = 3;
-        static const UINT g_maxNumResourceBarrieres = 16;
 
         D3D12CommandQueue*                  commandQueue_                                   = nullptr;
 

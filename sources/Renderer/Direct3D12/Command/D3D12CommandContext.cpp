@@ -18,6 +18,10 @@ namespace LLGL
 {
 
 
+const UINT D3D12CommandContext::g_maxNumAllocators;
+const UINT D3D12CommandContext::g_maxNumResourceBarrieres;
+const UINT D3D12CommandContext::g_maxNumDescriptorHeaps;
+
 D3D12CommandContext::D3D12CommandContext()
 {
     ClearCache();
@@ -127,6 +131,30 @@ void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESO
         FlushResourceBarrieres();
 }
 
+#if 0 //TODO: not used yey
+void D3D12CommandContext::TransitionSubresource(
+    D3D12Resource&          resource,
+    UINT                    subresource,
+    D3D12_RESOURCE_STATES   oldState,
+    D3D12_RESOURCE_STATES   newState,
+    bool                    flushImmediate)
+{
+    auto& barrier = NextResourceBarrier();
+
+    /* Initialize resource barrier for resource transition */
+    barrier.Type                    = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Flags                   = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrier.Transition.pResource    = resource.native.Get();
+    barrier.Transition.Subresource  = subresource;
+    barrier.Transition.StateBefore  = oldState;
+    barrier.Transition.StateAfter   = newState;
+
+    /* Flush resource barrieres if required */
+    if (flushImmediate)
+        FlushResourceBarrieres();
+}
+#endif
+
 void D3D12CommandContext::InsertUAVBarrier(D3D12Resource& resource, bool flushImmediate)
 {
     auto& barrier = NextResourceBarrier();
@@ -203,6 +231,39 @@ void D3D12CommandContext::SetPipelineState(ID3D12PipelineState* pipelineState)
         commandList_->SetPipelineState(pipelineState);
         stateCache_.pipelineState           = pipelineState;
         stateCache_.dirtyBits.pipelineState = 0;
+    }
+}
+
+static bool CompareDescriptorHeapRefs(
+    UINT                            lhsNumDescriptorHeaps,
+    ID3D12DescriptorHeap* const*    lhsDescriptorHeaps,
+    UINT                            rhsNumDescriptorHeaps,
+    ID3D12DescriptorHeap* const*    rhsDescriptorHeaps)
+{
+    /* Compare all descriptor heaps in the arrays */
+    return
+    (
+        lhsNumDescriptorHeaps == rhsNumDescriptorHeaps &&
+        (::memcmp(lhsDescriptorHeaps, rhsDescriptorHeaps, sizeof(ID3D12DescriptorHeap* const) * lhsNumDescriptorHeaps) == 0)
+    );
+}
+
+void D3D12CommandContext::SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12DescriptorHeap* const* descriptorHeaps)
+{
+    if (numDescriptorHeaps <= g_maxNumDescriptorHeaps)
+    {
+        /* Check if the descriptor heaps are cached */
+        if (stateCache_.dirtyBits.descriptorHeaps != 0 ||
+            !CompareDescriptorHeapRefs(numDescriptorHeaps, descriptorHeaps, stateCache_.numDescriptorHeaps, stateCache_.descriptorHeaps))
+        {
+            /* Set new descriptor heaps in D3D command list */
+            commandList_->SetDescriptorHeaps(numDescriptorHeaps, descriptorHeaps);
+
+            /* Store new descriptor heaps in state cache */
+            stateCache_.numDescriptorHeaps = numDescriptorHeaps;
+            ::memcpy(stateCache_.descriptorHeaps, descriptorHeaps, sizeof(ID3D12DescriptorHeap* const) * numDescriptorHeaps);
+            stateCache_.dirtyBits.descriptorHeaps = 0;
+        }
     }
 }
 

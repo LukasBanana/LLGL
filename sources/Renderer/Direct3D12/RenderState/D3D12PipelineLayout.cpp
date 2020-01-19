@@ -61,12 +61,12 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
     rootSignature.Reset(static_cast<UINT>(desc.bindings.size()), 0);
 
     /* Build root parameter for each descriptor range type */
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::Buffer,  BindFlags::ConstantBuffer );
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Buffer,  BindFlags::Sampled        );
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Texture, BindFlags::Sampled        );
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Buffer,  BindFlags::Storage        );
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Texture, BindFlags::Storage        );
-    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0                         );
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::Buffer,  BindFlags::ConstantBuffer, rootParameterLayout_.numBufferCBV );
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Buffer,  BindFlags::Sampled,        rootParameterLayout_.numBufferSRV );
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Texture, BindFlags::Sampled,        rootParameterLayout_.numTextureSRV);
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Buffer,  BindFlags::Storage,        rootParameterLayout_.numBufferUAV );
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Texture, BindFlags::Storage,        rootParameterLayout_.numTextureUAV);
+    BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0,                         rootParameterLayout_.numSamplers  );
 
     /* Build final root signature descriptor */
     rootSignature_ = rootSignature.Finalize(device, GetRootSignatureFlags(desc), &serializedBlob_);
@@ -79,7 +79,7 @@ void D3D12PipelineLayout::ReleaseRootSignature()
 
 long D3D12PipelineLayout::GetBindFlagsByIndex(std::size_t idx) const
 {
-    return (idx < bindFlags_.size() ? bindFlags_[idx] : 0);
+    return (bindFlags_.empty() ? 0 : bindFlags_[idx % bindFlags_.size()]);
 }
 
 
@@ -92,7 +92,8 @@ void D3D12PipelineLayout::BuildRootParameter(
     D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
     const PipelineLayoutDescriptor& layoutDesc,
     const ResourceType              resourceType,
-    long                            bindFlags)
+    long                            bindFlags,
+    UINT&                           numResourceViews)
 {
     for (const auto& binding : layoutDesc.bindings)
     {
@@ -113,6 +114,9 @@ void D3D12PipelineLayout::BuildRootParameter(
 
             /* Cache binding flags in the same order root parameters are build */
             bindFlags_.push_back(binding.bindFlags);
+
+            /* Increment number of resource views for output parameter to build root parameter layout */
+            ++numResourceViews;
         }
     }
 }

@@ -230,7 +230,7 @@ void D3D12MipGenerator::GenerateMips1D(
     commandContext.SetComputeRootSignature(rootSignature1D_.Get());
 
     ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
-    commandList->SetDescriptorHeaps(1, descHeaps);
+    commandContext.SetDescriptorHeaps(1, descHeaps);
 
     auto gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
 
@@ -300,7 +300,7 @@ void D3D12MipGenerator::GenerateMips2D(
     commandContext.SetComputeRootSignature(rootSignature2D_.Get());
 
     ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
-    commandList->SetDescriptorHeaps(1, descHeaps);
+    commandContext.SetDescriptorHeaps(1, descHeaps);
 
     auto gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
 
@@ -373,7 +373,7 @@ void D3D12MipGenerator::GenerateMips3D(
     commandContext.SetComputeRootSignature(rootSignature3D_.Get());
 
     ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
-    commandList->SetDescriptorHeaps(1, descHeaps);
+    commandContext.SetDescriptorHeaps(1, descHeaps);
 
     auto gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
 

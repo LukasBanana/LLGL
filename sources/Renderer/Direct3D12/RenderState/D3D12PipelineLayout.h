@@ -22,6 +22,16 @@ namespace LLGL
 
 class D3D12RootSignatureBuilder;
 
+struct D3D12RootParameterLayout
+{
+    UINT numBufferCBV   = 0;
+    UINT numBufferSRV   = 0;
+    UINT numTextureSRV  = 0;
+    UINT numBufferUAV   = 0;
+    UINT numTextureUAV  = 0;
+    UINT numSamplers    = 0;
+};
+
 class D3D12PipelineLayout final : public PipelineLayout
 {
 
@@ -64,6 +74,11 @@ class D3D12PipelineLayout final : public PipelineLayout
             return combinedStageFlags_;
         }
 
+        inline const D3D12RootParameterLayout& GetRootParameterLayout() const
+        {
+            return rootParameterLayout_;
+        }
+
     private:
 
         void BuildRootParameter(
@@ -71,7 +86,8 @@ class D3D12PipelineLayout final : public PipelineLayout
             D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
             const PipelineLayoutDescriptor& layoutDesc,
             const ResourceType              resourceType,
-            long                            bindFlags
+            long                            bindFlags,
+            UINT&                           numResourceViews
         );
 
     private:
@@ -79,7 +95,8 @@ class D3D12PipelineLayout final : public PipelineLayout
         ComPtr<ID3D12RootSignature> rootSignature_;
         ComPtr<ID3DBlob>            serializedBlob_;
         std::vector<long>           bindFlags_;
-        long                        combinedStageFlags_ = 0;
+        long                        combinedStageFlags_     = 0;
+        D3D12RootParameterLayout    rootParameterLayout_;
 
 };
 

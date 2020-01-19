@@ -596,11 +596,19 @@ static D3D12_RESOURCE_STATES GetInitialDXResourceState(const TextureDescriptor& 
 {
     D3D12_RESOURCE_STATES flags = D3D12_RESOURCE_STATE_COMMON;
 
-    if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
-        flags |= D3D12_RESOURCE_STATE_DEPTH_READ;
-
-    if ((desc.bindFlags & BindFlags::Sampled) != 0)
-        flags |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    if ((desc.bindFlags & BindFlags::Storage) != 0)
+    {
+        /* Read/write states are prior to read-only states */
+        flags |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+    }
+    else
+    {
+        /* Combine read states */
+        if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
+            flags |= D3D12_RESOURCE_STATE_DEPTH_READ;
+        if ((desc.bindFlags & BindFlags::Sampled) != 0)
+            flags |= (D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+    }
 
     return flags;
 }
@@ -642,7 +650,8 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware texture");
 
     /* Determine resource usage */
-    resource_.SetInitialState(GetInitialDXResourceState(desc));
+    resource_.transitionState   = D3D12_RESOURCE_STATE_COPY_DEST;
+    resource_.usageState        = GetInitialDXResourceState(desc);
 }
 
 // Determine SRV dimension for descriptor heaps used in D3D12MipGenerator: either 1D array, 2D array, or 3D

@@ -293,6 +293,7 @@ static D3D12_RESOURCE_FLAGS GetD3DResourceFlags(const BufferDescriptor& desc)
     return static_cast<D3D12_RESOURCE_FLAGS>(flags);
 }
 
+//TODO: transition sources before binding
 static D3D12_RESOURCE_STATES GetD3DUsageState(long bindFlags)
 {
     D3D12_RESOURCE_STATES flagsD3D = D3D12_RESOURCE_STATE_COMMON;
@@ -307,6 +308,9 @@ static D3D12_RESOURCE_STATES GetD3DUsageState(long bindFlags)
         flagsD3D |= D3D12_RESOURCE_STATE_STREAM_OUT;
     else if ((bindFlags & BindFlags::IndirectBuffer) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+
+    //if ((bindFlags & BindFlags::Sampled) != 0)
+    //    flagsD3D |= (D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     return flagsD3D;
 }
