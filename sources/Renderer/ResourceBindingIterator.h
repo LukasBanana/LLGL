@@ -27,7 +27,8 @@ class LLGL_EXPORT ResourceBindingIterator
 
         ResourceBindingIterator(
             const std::vector<ResourceViewDescriptor>&  resourceViews,
-            const std::vector<BindingDescriptor>&       bindings
+            const std::vector<BindingDescriptor>&       bindings,
+            std::size_t                                 firstResourceIndex  = 0
         );
 
         // Resets the iteration for the specified binding parameters.
@@ -46,9 +47,10 @@ class LLGL_EXPORT ResourceBindingIterator
 
         const std::vector<ResourceViewDescriptor>&  resourceViews_;
         const std::vector<BindingDescriptor>&       bindings_;
-        std::size_t                                 iterator_           = 0;
-        std::size_t                                 count_              = 0;
-        ResourceType                                typeOfInterest_     = ResourceType::Undefined;
+        std::size_t                                 iterator_               = 0;
+        std::size_t                                 offset_                 = 0;
+        std::size_t                                 count_                  = 0;
+        ResourceType                                typeOfInterest_         = ResourceType::Undefined;
         long                                        bindFlagsOfInterest_    = ~0;
         long                                        stagesOfInterest_       = StageFlags::AllStages;
 

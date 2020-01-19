@@ -102,37 +102,55 @@ D3D11ResourceHeap::D3D11ResourceHeap(const ResourceHeapDescriptor& desc)
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Validate binding descriptors */
-    const auto& bindings = pipelineLayoutD3D->GetBindings();
-    if (desc.resourceViews.size() != bindings.size())
-        throw std::invalid_argument("failed to create resource heap due to mismatch between number of resources and bindings");
+    const auto& bindings            = pipelineLayoutD3D->GetBindings();
+    const auto  numBindings         = bindings.size();
+    const auto  numResourceViews    = desc.resourceViews.size();
+
+    if (numBindings == 0)
+        throw std::invalid_argument("cannot create resource heap without bindings in pipeline layout");
+    if (numResourceViews % numBindings != 0)
+        throw std::invalid_argument("failed to create resource heap because due to mismatch between number of resources and bindings");
 
     /* Build buffer segments (stage after stage, so the internal buffer is constructed in the correct order) */
-    ResourceBindingIterator resourceIterator { desc.resourceViews, bindings };
+    for (std::size_t i = 0; i < numResourceViews; i += numBindings)
+    {
+        /* Reset segment header, only one is required */
+        ResourceBindingIterator resourceIterator { desc.resourceViews, bindings, i };
+        ::memset(&segmentationHeader_, 0, sizeof(segmentationHeader_));
 
-    BuildSegmentsForStage(resourceIterator, StageFlags::VertexStage);
-    BuildSegmentsForStage(resourceIterator, StageFlags::TessControlStage);
-    BuildSegmentsForStage(resourceIterator, StageFlags::TessEvaluationStage);
-    BuildSegmentsForStage(resourceIterator, StageFlags::GeometryStage);
-    BuildSegmentsForStage(resourceIterator, StageFlags::FragmentStage);
+        /* Build resource view segments for GRAPHICS stages in current descriptor set */
+        BuildSegmentsForStage(resourceIterator, StageFlags::VertexStage);
+        BuildSegmentsForStage(resourceIterator, StageFlags::TessControlStage);
+        BuildSegmentsForStage(resourceIterator, StageFlags::TessEvaluationStage);
+        BuildSegmentsForStage(resourceIterator, StageFlags::GeometryStage);
+        BuildSegmentsForStage(resourceIterator, StageFlags::FragmentStage);
 
-    /* Store buffer offset for compute shader and check for boundary */
-    if (buffer_.size() > static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max()))
-        throw std::out_of_range("internal buffer for resource heap exceeded limit of 2^16 (65536) bytes");
+        /* Build resource view segments for COMPUTE stage in current descriptor set */
+        if (i == 0)
+        {
+            if (buffer_.size() > UINT16_MAX)
+                throw std::out_of_range("internal buffer for resource heap exceeded limit of 2^16 (65536) bytes");
+            bufferOffsetCS_ = static_cast<std::uint16_t>(buffer_.size());
+        }
 
-    bufferOffsetCS_ = static_cast<std::uint16_t>(buffer_.size());
-    BuildSegmentsForStage(resourceIterator, StageFlags::ComputeStage);
+        BuildSegmentsForStage(resourceIterator, StageFlags::ComputeStage);
+    }
 
+    /* Store buffer stride */
+    stride_ = buffer_.size() / (numResourceViews / numBindings);
+
+    /* Store resource usage bits in segmentation header */
     StoreResourceUsage();
 }
 
 std::uint32_t D3D11ResourceHeap::GetNumDescriptorSets() const
 {
-    return 1u; //TODO
+    return (stride_ > 0 ? buffer_.size() / stride_ : 0);
 }
 
-void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context)
+void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t firstSet)
 {
-    auto byteAlignedBuffer = buffer_.data();
+    auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet);
     if (segmentationHeader_.hasVSResources) { BindVSResources(context, byteAlignedBuffer); }
     if (segmentationHeader_.hasHSResources) { BindHSResources(context, byteAlignedBuffer); }
     if (segmentationHeader_.hasDSResources) { BindDSResources(context, byteAlignedBuffer); }
@@ -140,10 +158,9 @@ void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context)
     if (segmentationHeader_.hasPSResources) { BindPSResources(context, byteAlignedBuffer); }
 }
 
-void D3D11ResourceHeap::BindForComputePipeline(ID3D11DeviceContext* context)
+void D3D11ResourceHeap::BindForComputePipeline(ID3D11DeviceContext* context, std::uint32_t firstSet)
 {
-    auto byteAlignedBuffer = buffer_.data();
-    byteAlignedBuffer += bufferOffsetCS_;
+    auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet) + bufferOffsetCS_;
     if (segmentationHeader_.hasCSResources) { BindCSResources(context, byteAlignedBuffer); }
 }
 
@@ -552,7 +569,7 @@ void D3D11ResourceHeap::StoreResourceUsage()
         segmentationHeader_.hasCSResources = 1;
 }
 
-void D3D11ResourceHeap::BindVSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer)
+void D3D11ResourceHeap::BindVSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numVSConstantBufferSegments; ++i)
@@ -579,7 +596,7 @@ void D3D11ResourceHeap::BindVSResources(ID3D11DeviceContext* context, std::int8_
     }
 }
 
-void D3D11ResourceHeap::BindHSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer)
+void D3D11ResourceHeap::BindHSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numHSConstantBufferSegments; ++i)
@@ -606,7 +623,7 @@ void D3D11ResourceHeap::BindHSResources(ID3D11DeviceContext* context, std::int8_
     }
 }
 
-void D3D11ResourceHeap::BindDSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer)
+void D3D11ResourceHeap::BindDSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numDSConstantBufferSegments; ++i)
@@ -633,7 +650,7 @@ void D3D11ResourceHeap::BindDSResources(ID3D11DeviceContext* context, std::int8_
     }
 }
 
-void D3D11ResourceHeap::BindGSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer)
+void D3D11ResourceHeap::BindGSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numGSConstantBufferSegments; ++i)
@@ -660,7 +677,7 @@ void D3D11ResourceHeap::BindGSResources(ID3D11DeviceContext* context, std::int8_
     }
 }
 
-void D3D11ResourceHeap::BindPSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer)
+void D3D11ResourceHeap::BindPSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numPSConstantBufferSegments; ++i)
@@ -703,7 +720,7 @@ void D3D11ResourceHeap::BindPSResources(ID3D11DeviceContext* context, std::int8_
     }
 }
 
-void D3D11ResourceHeap::BindCSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer)
+void D3D11ResourceHeap::BindCSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numCSConstantBufferSegments; ++i)
@@ -741,6 +758,11 @@ void D3D11ResourceHeap::BindCSResources(ID3D11DeviceContext* context, std::int8_
         );
         byteAlignedBuffer += segment->segmentSize;
     }
+}
+
+const std::int8_t* D3D11ResourceHeap::GetSegmentationHeapStart(std::uint32_t firstSet) const
+{
+    return (buffer_.data() + stride_ * firstSet);
 }
 
 

@@ -39,8 +39,8 @@ class D3D11ResourceHeap final : public ResourceHeap
 
         D3D11ResourceHeap(const ResourceHeapDescriptor& desc);
 
-        void BindForGraphicsPipeline(ID3D11DeviceContext* context);
-        void BindForComputePipeline(ID3D11DeviceContext* context);
+        void BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t firstSet);
+        void BindForComputePipeline(ID3D11DeviceContext* context, std::uint32_t firstSet);
 
     private:
 
@@ -77,17 +77,19 @@ class D3D11ResourceHeap final : public ResourceHeap
 
         void StoreResourceUsage();
 
-        void BindVSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
-        void BindHSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
-        void BindDSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
-        void BindGSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
-        void BindPSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
-        void BindCSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
+        void BindVSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
+        void BindHSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
+        void BindDSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
+        void BindGSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
+        void BindPSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
+        void BindCSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
+
+        const std::int8_t* GetSegmentationHeapStart(std::uint32_t firstSet) const;
 
     private:
 
         /*
-        Header structure to describe all segments within the raw buffer.
+        Header structure to describe all segments within the raw buffer (per descriptor set).
         - Constant buffers       are limited to D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT ( 14) ==> 4 bits
         - Samplers               are limited to D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT             ( 16) ==> 5 bits
         - Shader resource views  are limited to D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT      (128) ==> 8 bits
@@ -131,8 +133,9 @@ class D3D11ResourceHeap final : public ResourceHeap
     private:
 
         SegmentationHeader          segmentationHeader_;
-        std::uint16_t               bufferOffsetCS_         = 0;
+        std::uint16_t               bufferOffsetCS_     = 0;
         std::vector<std::int8_t>    buffer_;
+        std::size_t                 stride_             = 0;
 
 };
 

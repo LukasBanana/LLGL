@@ -14,11 +14,14 @@ namespace LLGL
 
 
 ResourceBindingIterator::ResourceBindingIterator(
-    const std::vector<ResourceViewDescriptor>& resourceViews,
-    const std::vector<BindingDescriptor>& bindings) :
-        resourceViews_ { resourceViews                                   },
-        bindings_      { bindings                                        },
-        count_         { std::min(resourceViews.size(), bindings.size()) }
+    const std::vector<ResourceViewDescriptor>&  resourceViews,
+    const std::vector<BindingDescriptor>&       bindings,
+    std::size_t                                 firstResourceIndex)
+:
+    resourceViews_ { resourceViews                                   },
+    bindings_      { bindings                                        },
+    offset_        { firstResourceIndex                              },
+    count_         { std::min(resourceViews.size(), bindings.size()) }
 {
 }
 
@@ -62,7 +65,7 @@ Resource* ResourceBindingIterator::Next(BindingDescriptor& bindingDesc)
              ( stagesOfInterest_    == 0 || (current.stageFlags & stagesOfInterest_   ) != 0 ) )
         {
             /* Check for null pointer exception */
-            if (auto resource = resourceViews_[iterator_].resource)
+            if (auto resource = resourceViews_[offset_ + iterator_].resource)
             {
                 bindingDesc = bindings_[iterator_];
                 ++iterator_;
