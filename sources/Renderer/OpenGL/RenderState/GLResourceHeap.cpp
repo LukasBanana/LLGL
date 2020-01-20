@@ -15,6 +15,7 @@
 #include "../../CheckedCast.h"
 #include "../../ResourceBindingIterator.h"
 #include <LLGL/ResourceHeapFlags.h>
+#include <string.h>
 
 
 namespace LLGL
