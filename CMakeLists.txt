@@ -647,7 +647,7 @@ endif()
 
 if(LLGL_BUILD_RENDERER_OPENGL)
     # OpenGL Renderer
-    find_package(OpenGL)
+    find_package(OpenGL REQUIRED)
     if(OpenGL_FOUND)
         include_directories(${OPENGL_INCLUDE_DIR})
         
@@ -695,7 +695,7 @@ if(NOT APPLE AND LLGL_BUILD_RENDERER_VULKAN)
     
     if(LLGL_ENABLE_SPIRV_REFLECT)
         # SPIRV Submodule
-        include_directories("${PROJECT_SOURCE_DIR}/external/SPIRV/include")
+        include_directories("${PROJECT_SOURCE_DIR}/external/SPIRV-Headers/include")
     endif()
 endif()
 
@@ -897,7 +897,7 @@ endif()
 #endif()
 
 if(LLGL_ENABLE_SPIRV_REFLECT)
-    message("Including Submodule: SPIRV")
+    message("Including Submodule: SPIRV-Headers")
 endif()
 
 
