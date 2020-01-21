@@ -116,7 +116,7 @@ class BlobContainer final : public Blob
 
     public:
 
-        BlobContainer(T&& container);
+        explicit BlobContainer(T&& container);
 
     public:
 

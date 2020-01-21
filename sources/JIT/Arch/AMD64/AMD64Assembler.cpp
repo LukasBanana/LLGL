@@ -438,11 +438,10 @@ void AMD64Assembler::ApplySupplements()
 {
     auto& code = GetAssembly();
 
-    std::uint32_t disp32 = 0;
     for (const auto& supp : supplements_)
     {
         /* Override displacement dummy */
-        disp32 = static_cast<std::uint32_t>(code.size() - supp.rip);
+        std::uint32_t disp32 = static_cast<std::uint32_t>(code.size() - supp.rip);
         ::memcpy(&(code[supp.dstOffset]), &disp32, sizeof(disp32));
 
         /* Write supplement data */

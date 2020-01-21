@@ -319,6 +319,7 @@ void D3D12RenderTarget::CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT for
         &CD3DX12_CLEAR_VALUE(depthStencilFormat_, 1.0f, 0),
         IID_PPV_ARGS(depthStencilBuffer_.native.ReleaseAndGetAddressOf())
     );
+    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for render-target depth-stencil buffer");
 }
 
 void D3D12RenderTarget::CreateSubresource(

@@ -346,7 +346,7 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
                 nullptr,
                 IID_PPV_ARGS(colorBuffersMS_[i].native.ReleaseAndGetAddressOf())
             );
-            DXThrowIfCreateFailed(hr, "ID3D12Resource", "for multi-sampled swap-chain");
+            DXThrowIfCreateFailed(hr, "ID3D12Resource", "for swap-chain multi-sampled color buffer");
 
             colorBuffersMS_[i].SetInitialState(D3D12_RESOURCE_STATE_RENDER_TARGET);
 
@@ -395,6 +395,7 @@ void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoMode
         &CD3DX12_CLEAR_VALUE(depthStencilFormat_, 1.0f, 0),
         IID_PPV_ARGS(depthStencil_.native.ReleaseAndGetAddressOf())
     );
+    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for swap-chain depth-stencil buffer");
 
     /* Create depth-stencil view (DSV) */
     device->CreateDepthStencilView(depthStencil_.native.Get(), nullptr, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());

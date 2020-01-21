@@ -64,7 +64,7 @@ int main()
 
             public:
 
-                ResizeHandler(LLGL::RenderContext& context) :
+                explicit ResizeHandler(LLGL::RenderContext& context) :
                     context_ { context }
                 {
                 }

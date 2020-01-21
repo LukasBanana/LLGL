@@ -69,20 +69,20 @@ else
     fi
 fi
 
-if [ ! -d $OUTPUT_DIR ]; then
-    mkdir $OUTPUT_DIR
+if [ ! -d "$OUTPUT_DIR" ]; then
+    mkdir "$OUTPUT_DIR"
 fi
 
-cd $OUTPUT_DIR
+cd "$OUTPUT_DIR"
 
 # Checkout external depenencies
 GAUSSIAN_LIB_DIR="$OUTPUT_DIR/GaussianLib/include"
 
-if [ ! -d $GAUSSIAN_LIB_DIR ]; then
+if [ ! -d "$GAUSSIAN_LIB_DIR" ]; then
     git clone https://github.com/LukasBanana/GaussianLib.git
 fi
 
 # Build into output directory
-cmake -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_VULKAN=OFF -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING=$GAUSSIAN_LIB_DIR -S $SOURCE_DIR
+cmake -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_VULKAN=OFF -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR" -S "$SOURCE_DIR"
 cmake --build .
 

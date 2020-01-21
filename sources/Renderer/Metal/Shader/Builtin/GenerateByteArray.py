@@ -7,7 +7,6 @@
 
 import os
 import sys
-import struct
 
 def printHelp():
     print("help: encodes the input file to a single byte array in a C/C++ header file")
@@ -37,11 +36,12 @@ def generateHeader(filename, columns=16, dumpAddressOffset=True):
 
     print("generate '" + arrayFilename + "' and '" + arrayLenFilename + "'")
 
+    byteRange = (0, 0)
+
     with open(arrayFilename, mode="w") as output:
-        range = (0, 0)
         def writeNewline():
             if dumpAddressOffset:
-                output.write('" // 0x{0:0{2}X} - 0x{1:0{2}X}\n'.format(range[0], range[1], 8))
+                output.write('" // 0x{0:0{2}X} - 0x{1:0{2}X}\n'.format(byteRange[0], byteRange[1], 8))
             else:
                 output.write("\"\n")
         c = 0
@@ -53,13 +53,13 @@ def generateHeader(filename, columns=16, dumpAddressOffset=True):
             if c >= columns:
                 c = 0
                 writeNewline()
-                range = (range[1] + 1, range[1])
-            range = (range[0], range[1] + 1)
+                byteRange = (byteRange[1] + 1, byteRange[1])
+            byteRange = (byteRange[0], byteRange[1] + 1)
         if c > 0:
             writeNewline()
 
     with open(arrayLenFilename, mode="w") as output:
-        output.write("( " + str(range[1]) + " )\n")
+        output.write("( " + str(byteRange[1]) + " )\n")
 
 if len(sys.argv) >= 2:
     for i in range(len(sys.argv) - 1):

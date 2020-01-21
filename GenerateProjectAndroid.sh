@@ -43,17 +43,17 @@ if [ ! -f "$SOURCE_DIR/CMakeLists.txt" ]; then
 fi
 
 # Create build directory
-if [ ! -d $BUILD_DIR ]; then
-    mkdir $BUILD_DIR
+if [ ! -d "$BUILD_DIR" ]; then
+    mkdir "$BUILD_DIR"
 fi
 
 # Build into output directory (for CMake 10.12 or earlier)
 RELATIVE_SOURCE_DIR=$(realpath --relative-to="$BUILD_DIR" "$SOURCE_DIR")
 
-(cd $BUILD_DIR;
+(cd "$BUILD_DIR";
 
-cmake $RELATIVE_SOURCE_DIR \
-    -DCMAKE_TOOLCHAIN_FILE=$ANDROID_CMAKE_TOOLCHAIN \
+cmake "$RELATIVE_SOURCE_DIR" \
+    -DCMAKE_TOOLCHAIN_FILE="$ANDROID_CMAKE_TOOLCHAIN" \
     -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
     -DANDROID_ABI=$ANDROID_ABI \
     -DANDROID_PLATFORM=$ANDROID_API_LEVEL \

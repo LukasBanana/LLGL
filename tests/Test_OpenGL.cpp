@@ -91,7 +91,7 @@ int main()
         class ResizeEventHandler : public LLGL::Window::EventListener
         {
         public:
-            ResizeEventHandler(LLGL::RenderContext* context) :
+            explicit ResizeEventHandler(LLGL::RenderContext* context) :
                 context_ { context  }
             {
             }
