@@ -145,7 +145,7 @@ D3D11ResourceHeap::D3D11ResourceHeap(const ResourceHeapDescriptor& desc)
 
 std::uint32_t D3D11ResourceHeap::GetNumDescriptorSets() const
 {
-    return (stride_ > 0 ? buffer_.size() / stride_ : 0);
+    return static_cast<std::uint32_t>(stride_ > 0 ? buffer_.size() / stride_ : 0);
 }
 
 void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t firstSet)

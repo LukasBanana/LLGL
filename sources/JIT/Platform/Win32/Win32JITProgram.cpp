@@ -9,6 +9,7 @@
 #include "../../../Core/Helper.h"
 #include <cstdlib>
 #include <stdexcept>
+#include <string.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -26,8 +27,12 @@ std::unique_ptr<JITProgram> JITProgram::Create(const void* code, std::size_t siz
 Win32JITProgram::Win32JITProgram(const void* code, std::size_t size) :
     size_ { size }
 {
-    /* Copy assembly code to executable memory space */
+    /* Allocate chunk of executable memory */
     addr_ = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (addr_ == 0)
+        throw std::runtime_error("failed to allocate " + std::to_string(size) + " byte(s) of executable memory");
+
+    /* Copy assembly code to executable memory space */
     ::memcpy(addr_, code, size);
 
     /* Make assembly buffer executable */

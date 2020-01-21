@@ -209,7 +209,7 @@ static void BindSamplersSegment(GLStateManager& stateMngr, std::int8_t*& byteAli
 
 std::uint32_t GLResourceHeap::GetNumDescriptorSets() const
 {
-    return (stride_ > 0 ? buffer_.size() / stride_ : 0);
+    return static_cast<std::uint32_t>(stride_ > 0 ? buffer_.size() / stride_ : 0);
 }
 
 void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t firstSet)

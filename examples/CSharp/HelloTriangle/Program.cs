@@ -17,12 +17,8 @@ namespace LLGLExamples
 
     class HelloTriangle
     {
-        private RenderingDebugger debugger = new RenderingDebugger();
+        private readonly RenderingDebugger debugger = new RenderingDebugger();
         private RenderSystem renderer;
-        private RenderContext context;
-        private CommandQueue cmdQueue;
-        private CommandBuffer cmdBuffer;
-        private PipelineState pipeline;
 
         public void Run()
         {
@@ -42,7 +38,7 @@ namespace LLGLExamples
                     contextDesc.VideoMode.StencilBits       = 8;
                     contextDesc.Samples                     = 8;
                 }
-                context = renderer.CreateRenderContext(contextDesc);
+                var context = renderer.CreateRenderContext(contextDesc);
 
                 // Get context window
                 var window = context.Surface;
@@ -65,7 +61,7 @@ namespace LLGLExamples
                 vertexFormat.AppendAttribute(new VertexAttribute("coord", Format.RGBA32Float, 0));
                 vertexFormat.AppendAttribute(new VertexAttribute("color", Format.RGBA8UNorm, 1));
 
-                var vertices = new Vertex[]
+                var vertices = new []
                 {
                     new Vertex{ x =  0.0f, y =  0.5f, z = 0.0f, w = 1.0f, r = 255, g =   0, b =   0, a = 255 },
                     new Vertex{ x =  0.5f, y = -0.5f, z = 0.0f, w = 1.0f, r =   0, g = 255, b =   0, a = 255 },
@@ -122,7 +118,7 @@ namespace LLGLExamples
                 var shaderProgram = renderer.CreateShaderProgram(shaderProgramDesc);
 
                 if (shaderProgram.HasErrors)
-                    throw new Exception(shaderProgram.Report);
+                    throw new System.IO.InvalidDataException(shaderProgram.Report);
 
                 // Create graphics pipeline
                 var pipelineDesc = new GraphicsPipelineDescriptor();
@@ -130,11 +126,11 @@ namespace LLGLExamples
                     pipelineDesc.ShaderProgram                  = shaderProgram;
                     pipelineDesc.Rasterizer.MultiSampleEnabled  = true;
                 }
-                pipeline = renderer.CreatePipelineState(pipelineDesc);
+                var pipeline = renderer.CreatePipelineState(pipelineDesc);
 
                 // Get command queue
-                cmdQueue = renderer.CommandQueue;
-                cmdBuffer = renderer.CreateCommandBuffer();
+                var cmdQueue = renderer.CommandQueue;
+                var cmdBuffer = renderer.CreateCommandBuffer();
 
                 cmdBuffer.SetClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 
@@ -173,7 +169,7 @@ namespace LLGLExamples
         }
     };
 
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {

@@ -36,16 +36,11 @@ namespace LLGLExamples
 
     class Texturing
     {
-        private RenderingDebugger debugger = new RenderingDebugger();
+        private readonly RenderingDebugger debugger = new RenderingDebugger();
         private RenderSystem renderer;
-        private RenderContext context;
-        private CommandQueue cmdQueue;
-        private CommandBuffer cmdBuffer;
-        private PipelineState pipeline;
 
         public void Run()
         {
-
             try
             {
                 // Load renderer
@@ -61,7 +56,7 @@ namespace LLGLExamples
                     contextDesc.VideoMode.StencilBits       = 8;
                     contextDesc.Samples                     = 8;
                 }
-                context = renderer.CreateRenderContext(contextDesc);
+                var context = renderer.CreateRenderContext(contextDesc);
 
                 // Get context window
                 var window = context.Surface;
@@ -86,7 +81,7 @@ namespace LLGLExamples
 
                 const float uvScale = 10.0f;
 
-                var vertices = new Vertex[]
+                var vertices = new []
                 {
                     new Vertex(-0.5f, -0.5f, 0.0f, uvScale),
                     new Vertex(-0.5f, +0.5f, 0.0f, 0.0f),
@@ -146,7 +141,7 @@ namespace LLGLExamples
                 var shaderProgram = renderer.CreateShaderProgram(shaderProgramDesc);
 
                 if (shaderProgram.HasErrors)
-                    throw new Exception(shaderProgram.Report);
+                    throw new System.IO.InvalidDataException(shaderProgram.Report);
 
                 // Create pipeline layout
                 var pipelineLayout = renderer.CreatePipelineLayout("texture(0):frag, sampler(0):frag");
@@ -160,7 +155,7 @@ namespace LLGLExamples
                     pipelineDesc.Blend.Targets[0].BlendEnabled  = true;
                     pipelineDesc.Rasterizer.MultiSampleEnabled  = true;
                 }
-                pipeline = renderer.CreatePipelineState(pipelineDesc);
+                var pipeline = renderer.CreatePipelineState(pipelineDesc);
 
                 // Create texture
                 var imageDesc = new SrcImageDescriptor<RGBA>();
@@ -197,8 +192,8 @@ namespace LLGLExamples
                 var resourceHeap = renderer.CreateResourceHeap(resourceHeapDesc);
 
                 // Get command queue
-                cmdQueue = renderer.CommandQueue;
-                cmdBuffer = renderer.CreateCommandBuffer();
+                var cmdQueue = renderer.CommandQueue;
+                var cmdBuffer = renderer.CreateCommandBuffer();
 
                 cmdBuffer.SetClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 
@@ -215,7 +210,7 @@ namespace LLGLExamples
                             cmdBuffer.SetViewport(new Viewport(0, 0, context.Resolution.Width, context.Resolution.Height));
 
                             cmdBuffer.SetPipelineState(pipeline);
-                            cmdBuffer.SetGraphicsResourceHeap(resourceHeap);
+                            cmdBuffer.SetResourceHeap(resourceHeap);
 
                             cmdBuffer.Draw(4, 0);
                         }
@@ -240,7 +235,7 @@ namespace LLGLExamples
         }
     };
 
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {

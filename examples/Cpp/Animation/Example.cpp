@@ -12,9 +12,9 @@ class Example_Animation : public ExampleBase
 {
 
     LLGL::PipelineLayout*       pipelineLayout          = nullptr;
-    LLGL::ResourceHeap*         resourceHeap            = {};
+    LLGL::ResourceHeap*         resourceHeap            = nullptr;
     LLGL::ShaderProgram*        shaderProgram           = nullptr;
-    LLGL::PipelineState*        pipelineScene           = {};
+    LLGL::PipelineState*        pipelineScene           = nullptr;
 
     LLGL::Buffer*               vertexBuffer            = nullptr;
     LLGL::Buffer*               constantBuffer          = nullptr;

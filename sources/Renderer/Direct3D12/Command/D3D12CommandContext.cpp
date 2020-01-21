@@ -59,6 +59,9 @@ void D3D12CommandContext::Create(
 
     if (initialClose)
         commandList_->Close();
+
+    /* Clear cache alongside device object initialization */
+    ClearCache();
 }
 
 void D3D12CommandContext::Close()

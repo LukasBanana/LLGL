@@ -40,7 +40,7 @@ std::uint32_t DbgResourceHeap::GetNumDescriptorSets() const
 
 std::uint32_t DbgResourceHeap::GetNumDescriptorSetsSafe() const
 {
-    return (desc.resourceViews.size() / numBindings);
+    return static_cast<std::uint32_t>(desc.resourceViews.size() / numBindings);
 }
 
 

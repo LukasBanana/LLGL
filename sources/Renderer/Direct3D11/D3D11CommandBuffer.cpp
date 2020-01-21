@@ -14,6 +14,7 @@
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
+#include "../../Core/Assertion.h"
 #include "../TextureUtils.h"
 #include <algorithm>
 #include <codecvt>
@@ -1469,6 +1470,8 @@ void D3D11CommandBuffer::CreateByteAddressBufferR32Typeless(
     UINT                        size,
     D3D11_USAGE                 usage)
 {
+    LLGL_ASSERT_PTR(bufferOutput);
+
     /* Align size to R32 format size */
     size = GetAlignedSize(size, 4u);
 
@@ -1507,7 +1510,7 @@ void D3D11CommandBuffer::CreateByteAddressBufferR32Typeless(
     }
 
     /* Create optional unordered-access-view (UAV) */
-    if (uavOutput)
+    if (uavOutput != nullptr)
     {
         D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
         {
