@@ -12,6 +12,7 @@
 #include <LLGL/ResourceHeap.h>
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
+#include <vector>
 #include <cstddef>
 
 
@@ -35,13 +36,16 @@ class D3D12ResourceHeap final : public ResourceHeap
 
         D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDescriptor& desc);
 
+        // Inserts the resource barriers for the specified descritpor set into the command list.
+        void InsertResourceBarriers(ID3D12GraphicsCommandList* commandList, UINT firstSet);
+
         // Returns the array of D3D descriptor heaps.
         inline ID3D12DescriptorHeap* const* GetDescriptorHeaps() const
         {
             return descriptorHeaps_;
         }
 
-        // Returns the strides of GPU descriptor handles 
+        // Returns the strides of GPU descriptor handles.
         inline const UINT* GetDescriptorHandleStrides() const
         {
             return descriptorHandleStrides_;
@@ -108,18 +112,26 @@ class D3D12ResourceHeap final : public ResourceHeap
 
         void AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap);
 
+        void AppendUAVBarrier(ID3D12Resource* resource);
+
+        UINT GetBarrierOffset(UINT firstSet) const;
+        UINT GetBarrierCount(UINT firstSet) const;
+
     private:
 
-        ComPtr<ID3D12DescriptorHeap>    heapTypeCbvSrvUav_;
-        ComPtr<ID3D12DescriptorHeap>    heapTypeSampler_;
+        ComPtr<ID3D12DescriptorHeap>        heapTypeCbvSrvUav_;
+        ComPtr<ID3D12DescriptorHeap>        heapTypeSampler_;
 
-        ID3D12DescriptorHeap*           descriptorHeaps_[2]         = {};   // References to the ComPtr objects
-        UINT                            descriptorHandleStrides_[2] = {};
-        UINT                            numDescriptorHeaps_         = 0;    // Sizes of descriptor heaps array
-        UINT                            numDescriptorSets_          = 0;    // Only used for 'GetNumDescriptorSets'
+        ID3D12DescriptorHeap*               descriptorHeaps_[2]         = {};   // References to the ComPtr objects
+        UINT                                descriptorHandleStrides_[2] = {};
+        UINT                                numDescriptorHeaps_         = 0;    // Sizes of descriptor heaps array
+        UINT                                numDescriptorSets_          = 0;    // Only used for 'GetNumDescriptorSets'
 
-        bool                            hasGraphicsDescriptors_     = false;
-        bool                            hasComputeDescriptors_      = false;
+        std::vector<D3D12_RESOURCE_BARRIER> barriers_;                          // UAV barriers (TODO: also transition barriers)
+        std::vector<UINT>                   barrierOffsets_;                    // Offsets into the barrier array for each descriptor set; array is either empty or has N+1 elements
+
+        bool                                hasGraphicsDescriptors_     = false;
+        bool                                hasComputeDescriptors_      = false;
 
 };
 

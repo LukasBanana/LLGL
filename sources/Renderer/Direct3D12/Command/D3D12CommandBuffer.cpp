@@ -557,6 +557,9 @@ void D3D12CommandBuffer::SetResourceHeap(
             if (resourceHeapD3D.HasComputeDescriptors() && bindPoint != PipelineBindPoint::Graphics)
                 commandList_->SetComputeRootDescriptorTable(i, gpuDescHandle);
         }
+
+        /* Insert resource barriers for the specified descriptor set */
+        resourceHeapD3D.InsertResourceBarriers(commandList_, firstSet);
     }
 }
 

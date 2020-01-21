@@ -30,6 +30,72 @@ static const D3D12PipelineLayout* GetD3DPipelineLayout(const ResourceHeapDescrip
     return LLGL_CAST(const D3D12PipelineLayout*, desc.pipelineLayout);
 }
 
+static bool RequiresResourceBarriers(long bindFlags)
+{
+    return ((bindFlags & BindFlags::Storage) != 0);
+}
+
+// Returns true if the specified list of resource views contains at least one resource that requires a UAV resource barrier
+static bool RequiresResourceBarriers(const std::vector<ResourceViewDescriptor>& resourceViews)
+{
+    for (const auto& rvDesc : resourceViews)
+    {
+        if (const auto* resource = rvDesc.resource)
+        {
+            switch (resource->GetResourceType())
+            {
+                case ResourceType::Buffer:
+                {
+                    if (RequiresResourceBarriers(LLGL_CAST(const Buffer*, resource)->GetBindFlags()))
+                        return true;
+                }
+                break;
+
+                case ResourceType::Texture:
+                {
+                    if (RequiresResourceBarriers(LLGL_CAST(const Texture*, resource)->GetBindFlags()))
+                        return true;
+                }
+                break;
+
+                default:
+                break;
+            }
+        }
+    }
+    return false;
+}
+
+// Returns the native D3D resource from the descriptor if the resource contains a UAV
+static ID3D12Resource* GetD3DResourceWithUAV(const ResourceViewDescriptor& rvDesc)
+{
+    if (auto resource = rvDesc.resource)
+    {
+        switch (resource->GetResourceType())
+        {
+            case ResourceType::Buffer:
+            {
+                auto bufferD3D = LLGL_CAST(const D3D12Buffer*, resource);
+                if (RequiresResourceBarriers(bufferD3D->GetBindFlags()))
+                    return bufferD3D->GetNative();
+            }
+            break;
+
+            case ResourceType::Texture:
+            {
+                auto textureD3D = LLGL_CAST(const D3D12Texture*, resource);
+                if (RequiresResourceBarriers(textureD3D->GetBindFlags()))
+                    return textureD3D->GetNative();
+            }
+            break;
+
+            default:
+            break;
+        }
+    }
+    return nullptr;
+}
+
 D3D12ResourceHeap::D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDescriptor& desc)
 {
     /* Create descriptor heaps */
@@ -77,6 +143,41 @@ D3D12ResourceHeap::D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDes
         ++numDescriptorSets_;
     }
     while (bindingIndex < desc.resourceViews.size() && firstResourceIndex < bindingIndex);
+
+    /* Check if any ressource barriers are required */
+    if (RequiresResourceBarriers(desc.resourceViews))
+    {
+        /* Append UAV resource barrier for each resource that has the 'BindFlags::Storage' bit */
+        const auto numResourceViews = desc.resourceViews.size();
+        const auto numBindings      = numResourceViews / numDescriptorSets_;
+
+        for (std::size_t i = 0; i < numResourceViews; i += numBindings)
+        {
+            const UINT barrierOffset = static_cast<UINT>(barriers_.size());
+            {
+                for (std::size_t j = 0; j < numBindings; ++j)
+                {
+                    if (auto resource = GetD3DResourceWithUAV(desc.resourceViews[i + j]))
+                        AppendUAVBarrier(resource);
+                }
+            }
+            barrierOffsets_.push_back(barrierOffset);
+        }
+
+        /* Append end-offset for resource barriers (if they are used) */
+        barrierOffsets_.push_back(static_cast<UINT>(barriers_.size()));
+    }
+}
+
+void D3D12ResourceHeap::InsertResourceBarriers(ID3D12GraphicsCommandList* commandList, UINT firstSet)
+{
+    if (!barriers_.empty())
+    {
+        /* Insert all resource barriers that are required for the specified descriptor set */
+        const UINT numBarriers = GetBarrierCount(firstSet);
+        if (numBarriers > 0)
+            commandList->ResourceBarrier(numBarriers, &(barriers_[GetBarrierOffset(firstSet)]));
+    }
 }
 
 void D3D12ResourceHeap::SetName(const char* name)
@@ -378,6 +479,27 @@ void D3D12ResourceHeap::CreateSamplers(
 void D3D12ResourceHeap::AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap)
 {
     descriptorHeaps_[numDescriptorHeaps_++] = descriptorHeap;
+}
+
+void D3D12ResourceHeap::AppendUAVBarrier(ID3D12Resource* resource)
+{
+    D3D12_RESOURCE_BARRIER barrier;
+    {
+        barrier.Type            = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+        barrier.Flags           = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        barrier.UAV.pResource   = resource;
+    }
+    barriers_.push_back(barrier);
+}
+
+UINT D3D12ResourceHeap::GetBarrierOffset(UINT firstSet) const
+{
+    return barrierOffsets_[firstSet];
+}
+
+UINT D3D12ResourceHeap::GetBarrierCount(UINT firstSet) const
+{
+    return (barrierOffsets_[firstSet + 1] - barrierOffsets_[firstSet]);
 }
 
 
