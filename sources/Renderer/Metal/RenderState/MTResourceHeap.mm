@@ -84,78 +84,74 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Validate binding descriptors */
-    const auto& bindings = pipelineLayoutMT->GetBindings();
-    if (desc.resourceViews.size() != bindings.size())
-        throw std::invalid_argument("failed to create resource heap due to mismatch between number of resources and bindings");
+    const auto& bindings            = pipelineLayoutMT->GetBindings();
+    const auto  numBindings         = bindings.size();
+    const auto  numResourceViews    = desc.resourceViews.size();
+
+    if (numBindings == 0)
+        throw std::invalid_argument("cannot create resource heap without bindings in pipeline layout");
+    if (numResourceViews % numBindings != 0)
+        throw std::invalid_argument("failed to create resource heap because due to mismatch between number of resources and bindings");
 
     /* Build buffer segments */
-    ResourceBindingIterator resourceIterator { desc.resourceViews, bindings };
-
-    /* Build vertex resource segments */
     static const long vertexStages = (StageFlags::VertexStage | StageFlags::TessEvaluationStage);
-
-    BuildBufferSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexBufferSegments);
-    BuildTextureSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexTextureSegments);
-    BuildSamplerSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexSamplerSegments);
-
-    if ( ( segmentationHeader_.numVertexBufferSegments  |
-           segmentationHeader_.numVertexTextureSegments |
-           segmentationHeader_.numVertexSamplerSegments ) != 0 )
-    {
-        segmentationHeader_.hasVertexResources = 1;
-    }
-
-    /* Build fragment resource segments */
     static const long fragmentStages = (StageFlags::FragmentStage);
-
-    BuildBufferSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentBufferSegments);
-    BuildTextureSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentTextureSegments);
-    BuildSamplerSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentSamplerSegments);
-
-    if ( ( segmentationHeader_.numFragmentBufferSegments  |
-           segmentationHeader_.numFragmentTextureSegments |
-           segmentationHeader_.numFragmentSamplerSegments ) != 0 )
-    {
-        segmentationHeader_.hasFragmentResources = 1;
-    }
-
-    /* Build kernel resource segments (and store buffer offset to kernel segments) */
     static const long kernelStages = (StageFlags::ComputeStage | StageFlags::TessControlStage);
 
-    bufferOffsetKernel_ = static_cast<std::uint16_t>(buffer_.size());
-
-    BuildBufferSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelBufferSegments);
-    BuildTextureSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelTextureSegments);
-    BuildSamplerSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelSamplerSegments);
-
-    if ( ( segmentationHeader_.numKernelBufferSegments  |
-           segmentationHeader_.numKernelTextureSegments |
-           segmentationHeader_.numKernelSamplerSegments ) != 0 )
+    for (std::size_t i = 0; i < numResourceViews; i += numBindings)
     {
-        segmentationHeader_.hasKernelResources = 1;
+        ResourceBindingIterator resourceIterator { desc.resourceViews, bindings, i };
+        ::memset(&segmentationHeader_, 0, sizeof(segmentationHeader_));
+
+        /* Build vertex resource segments */
+        BuildBufferSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexBufferSegments);
+        BuildTextureSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexTextureSegments);
+        BuildSamplerSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexSamplerSegments);
+
+        /* Build fragment resource segments */
+        BuildBufferSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentBufferSegments);
+        BuildTextureSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentTextureSegments);
+        BuildSamplerSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentSamplerSegments);
+
+        /* Build kernel resource segments (and store buffer offset to kernel segments) */
+        if (i == 0)
+        {
+            if (buffer_.size() > UINT16_MAX)
+                throw std::out_of_range("internal buffer for resource heap exceeded limit of 2^16 (65536) bytes");
+            bufferOffsetKernel_ = static_cast<std::uint16_t>(buffer_.size());
+        }
+
+        BuildBufferSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelBufferSegments);
+        BuildTextureSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelTextureSegments);
+        BuildSamplerSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelSamplerSegments);
     }
+
+    /* Store buffer stride */
+    stride_ = buffer_.size() / (numResourceViews / numBindings);
+
+    /* Store resource usage bits in segmentation header */
+    StoreResourceUsage();
 }
 
 std::uint32_t MTResourceHeap::GetNumDescriptorSets() const
 {
-    return 1u; //TODO
+    return (stride_ > 0 ? buffer_.size() / stride_ : 0);
 }
 
-void MTResourceHeap::BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder)
+void MTResourceHeap::BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, std::uint32_t firstSet)
 {
-    auto byteAlignedBuffer = buffer_.data();
+    auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet);
     if (segmentationHeader_.hasVertexResources)
         BindVertexResources(renderEncoder, byteAlignedBuffer);
     if (segmentationHeader_.hasFragmentResources)
         BindFragmentResources(renderEncoder, byteAlignedBuffer);
 }
 
-void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder)
+void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder, std::uint32_t firstSet)
 {
     if (segmentationHeader_.hasKernelResources)
     {
-        auto byteAlignedBuffer = buffer_.data();
-        byteAlignedBuffer += bufferOffsetKernel_;
+        auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet) + bufferOffsetKernel_;
         BindKernelResources(computeEncoder, byteAlignedBuffer);
     }
 }
@@ -377,7 +373,7 @@ static id<MTLSamplerState> const* CastToMTLSamplerStates(const std::int8_t* byte
     return reinterpret_cast<MTSamplerStateArrayType>(byteAlignedBuffer);
 }
 
-void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder, std::int8_t*& byteAlignedBuffer)
+void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numVertexBufferSegments; ++i)
@@ -414,7 +410,7 @@ void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder,
     }
 }
 
-void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, std::int8_t*& byteAlignedBuffer)
+void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numFragmentBufferSegments; ++i)
@@ -451,7 +447,7 @@ void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncode
     }
 }
 
-void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, std::int8_t*& byteAlignedBuffer)
+void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all buffers */
     for (std::uint8_t i = 0; i < segmentationHeader_.numKernelBufferSegments; ++i)
@@ -486,6 +482,35 @@ void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder
         ];
         byteAlignedBuffer += segment->segmentSize;
     }
+}
+
+void MTResourceHeap::StoreResourceUsage()
+{
+    if ( ( segmentationHeader_.numVertexBufferSegments  |
+           segmentationHeader_.numVertexTextureSegments |
+           segmentationHeader_.numVertexSamplerSegments ) != 0 )
+    {
+        segmentationHeader_.hasVertexResources = 1;
+    }
+
+    if ( ( segmentationHeader_.numFragmentBufferSegments  |
+           segmentationHeader_.numFragmentTextureSegments |
+           segmentationHeader_.numFragmentSamplerSegments ) != 0 )
+    {
+        segmentationHeader_.hasFragmentResources = 1;
+    }
+
+    if ( ( segmentationHeader_.numKernelBufferSegments  |
+           segmentationHeader_.numKernelTextureSegments |
+           segmentationHeader_.numKernelSamplerSegments ) != 0 )
+    {
+        segmentationHeader_.hasKernelResources = 1;
+    }
+}
+
+const std::int8_t* MTResourceHeap::GetSegmentationHeapStart(std::uint32_t firstSet) const
+{
+    return (buffer_.data() + stride_ * firstSet);
 }
 
 

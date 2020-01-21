@@ -57,13 +57,13 @@ class MTEncoderScheduler
         void SetVertexBuffer(id<MTLBuffer> buffer, NSUInteger offset);
         void SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount);
         void SetGraphicsPSO(MTGraphicsPSO* pipelineState);
-        void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap);
+        void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t firstSet);
         void SetBlendColor(const float* blendColor);
         void SetStencilRef(std::uint32_t ref, const StencilFace face);
 
         // Converts, binds, and stores the respective state in the internal compute encoder state.
         void SetComputePSO(MTComputePSO* pipelineState);
-        void SetComputeResourceHeap(MTResourceHeap* resourceHeap);
+        void SetComputeResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t firstSet);
 
         // Rebinds the currently bounds resource heap to the specified compute encoder (used for tessellation encoding).
         void RebindResourceHeap(id<MTLComputeCommandEncoder> computeEncoder);
@@ -118,6 +118,7 @@ class MTEncoderScheduler
 
             MTGraphicsPSO*  graphicsPSO                                         = nullptr;
             MTResourceHeap* graphicsResourceHeap                                = nullptr;
+            std::uint32_t   graphicsResourceSet                                 = 0;
 
             float           blendColor[4]                                       = { 0.0f, 0.0f, 0.0f, 0.0f };
             bool            blendColorDynamic                                   = false;
@@ -129,8 +130,9 @@ class MTEncoderScheduler
 
         struct MTComputeEncoderState
         {
-            MTComputePSO*   computePSO                                          = nullptr;
-            MTResourceHeap* computeResourceHeap                                 = nullptr;
+            MTComputePSO*   computePSO          = nullptr;
+            MTResourceHeap* computeResourceHeap = nullptr;
+            std::uint32_t   computeResourceSet  = 0;
         };
 
     private:

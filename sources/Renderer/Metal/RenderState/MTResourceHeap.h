@@ -40,8 +40,8 @@ class MTResourceHeap final : public ResourceHeap
 
         MTResourceHeap(const ResourceHeapDescriptor& desc);
 
-        void BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder);
-        void BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder);
+        void BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, std::uint32_t firstSet);
+        void BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder, std::uint32_t firstSet);
 
         bool HasGraphicsResources() const;
         bool HasComputeResources() const;
@@ -64,9 +64,13 @@ class MTResourceHeap final : public ResourceHeap
         void BuildSegment1(MTResourceBindingIter it, NSUInteger count);
         void BuildSegment2(MTResourceBindingIter it, NSUInteger count);
 
-        void BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder, std::int8_t*& byteAlignedBuffer);
-        void BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, std::int8_t*& byteAlignedBuffer);
-        void BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, std::int8_t*& byteAlignedBuffer);
+        void BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer);
+        void BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer);
+        void BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer);
+
+        void StoreResourceUsage();
+
+        const std::int8_t* GetSegmentationHeapStart(std::uint32_t firstSet) const;
 
     private:
 
@@ -94,7 +98,8 @@ class MTResourceHeap final : public ResourceHeap
 
         SegmentationHeader          segmentationHeader_;
         std::uint16_t               bufferOffsetKernel_ = 0;
-        std::vector<std::int8_t>    buffer_;
+        std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
+        std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
 
 };
 

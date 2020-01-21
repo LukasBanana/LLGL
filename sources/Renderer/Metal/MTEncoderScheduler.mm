@@ -176,10 +176,11 @@ void MTEncoderScheduler::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
     }
 }
 
-void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap)
+void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t firstSet)
 {
-    renderEncoderState_.graphicsResourceHeap = resourceHeap;
-    renderDirtyBits_.graphicsResourceHeap = 1;
+    renderEncoderState_.graphicsResourceHeap    = resourceHeap;
+    renderEncoderState_.graphicsResourceSet     = firstSet;
+    renderDirtyBits_.graphicsResourceHeap       = 1;
 }
 
 void MTEncoderScheduler::SetBlendColor(const float* blendColor)
@@ -215,16 +216,22 @@ void MTEncoderScheduler::SetComputePSO(MTComputePSO* pipelineState)
     computeDirtyBits_.computePSO = 1;
 }
 
-void MTEncoderScheduler::SetComputeResourceHeap(MTResourceHeap* resourceHeap)
+void MTEncoderScheduler::SetComputeResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t firstSet)
 {
-    computeEncoderState_.computeResourceHeap = resourceHeap;
-    computeDirtyBits_.computeResourceHeap = 1;
+    computeEncoderState_.computeResourceHeap    = resourceHeap;
+    computeEncoderState_.computeResourceSet     = firstSet;
+    computeDirtyBits_.computeResourceHeap       = 1;
 }
 
 void MTEncoderScheduler::RebindResourceHeap(id<MTLComputeCommandEncoder> computeEncoder)
 {
     if (computeEncoderState_.computeResourceHeap != nullptr)
-        computeEncoderState_.computeResourceHeap->BindComputeResources(computeEncoder);
+    {
+        computeEncoderState_.computeResourceHeap->BindComputeResources(
+            computeEncoder,
+            computeEncoderState_.computeResourceSet
+        );
+    }
 }
 
 id<MTLRenderCommandEncoder> MTEncoderScheduler::GetRenderEncoderAndFlushState()
@@ -296,7 +303,10 @@ void MTEncoderScheduler::SubmitRenderEncoderState()
     if (renderEncoderState_.graphicsResourceHeap != nullptr && renderDirtyBits_.graphicsResourceHeap != 0)
     {
         /* Bind resource heap */
-        renderEncoderState_.graphicsResourceHeap->BindGraphicsResources(renderEncoder_);
+        renderEncoderState_.graphicsResourceHeap->BindGraphicsResources(
+            renderEncoder_,
+            renderEncoderState_.graphicsResourceSet
+        );
     }
     if (renderEncoderState_.blendColorDynamic && renderDirtyBits_.blendColor != 0)
     {
@@ -348,7 +358,10 @@ void MTEncoderScheduler::SubmitComputeEncoderState()
     if (computeEncoderState_.computeResourceHeap != nullptr && computeEncoderState_.computeResourceHeap != 0)
     {
         /* Bind resource heap */
-        computeEncoderState_.computeResourceHeap->BindComputeResources(computeEncoder_);
+        computeEncoderState_.computeResourceHeap->BindComputeResources(
+            computeEncoder_,
+            computeEncoderState_.computeResourceSet
+        );
     }
 
     /* Reset all dirty bits */
