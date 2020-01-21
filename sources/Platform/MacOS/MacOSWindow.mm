@@ -499,77 +499,8 @@ void MacOSWindow::OnProcessEvents()
     NSEvent* event = nil;
 
     /* Process NSWindow events with latest event types */
-    for (;;)
-    {
-        /* Get next event from queue */
-        event = [
-            NSApp nextEventMatchingMask:    g_EventMaskAny
-            untilDate:                      [NSDate distantPast]
-            inMode:                         NSDefaultRunLoopMode
-            dequeue:                        YES
-        ];
-
-        if (event == nil)
-            break;
-
-        /* Process event */
-        switch ([event type])
-        {
-            case g_EventTypeKeyDown:
-                ProcessKeyEvent(event, true);
-                break;
-
-            case g_EventTypeKeyUp:
-                ProcessKeyEvent(event, false);
-                break;
-
-            case g_EventTypeLMouseDragged:
-            case g_EventTypeRMouseDragged:
-            case g_EventTypeExtMouseDragged:
-            case g_EventTypeMouseMoved:
-                ProcessMouseMoveEvent(event);
-                break;
-
-            case g_EventTypeLMouseDown:
-                ProcessMouseKeyEvent(Key::LButton, true);
-                break;
-
-            case g_EventTypeLMouseUp:
-                ProcessMouseKeyEvent(Key::LButton, false);
-                break;
-
-            case g_EventTypeRMouseDown:
-                ProcessMouseKeyEvent(Key::RButton, true);
-                break;
-
-            case g_EventTypeRMouseUp:
-                ProcessMouseKeyEvent(Key::RButton, false);
-                break;
-
-            case g_EventTypeExtMouseDown:
-                ProcessMouseKeyEvent(Key::MButton, true);
-                break;
-
-            case g_EventTypeExtMouseUp:
-                ProcessMouseKeyEvent(Key::MButton, false);
-                break;
-
-            case g_EventTypeScrollWheel:
-                ProcessMouseWheelEvent(event);
-                break;
-
-            default:
-                break;
-        }
-
-        //TODO: ignore key events here to avoid 'failure sound'
-        #if 1
-        if ([event type] != g_EventTypeKeyDown && [event type] != g_EventTypeKeyUp)
-            [NSApp sendEvent:event];
-        #else
-        [NSApp sendEvent:event];
-        #endif
-    }
+    while ((event = [wnd_ nextEventMatchingMask:g_EventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES]) != nil)
+        ProcessEvent(event);
 
     /* Check for window signales */
     if ([(MacOSWindowDelegate*)[wnd_ delegate] popResizeSignal])
@@ -583,6 +514,66 @@ void MacOSWindow::OnProcessEvents()
         /* Notify event listeners about resize */
         PostResize({ w, h });
     }
+}
+
+void MacOSWindow::ProcessEvent(NSEvent* event)
+{
+    switch ([event type])
+    {
+        case g_EventTypeKeyDown:
+            ProcessKeyEvent(event, true);
+            break;
+
+        case g_EventTypeKeyUp:
+            ProcessKeyEvent(event, false);
+            break;
+
+        case g_EventTypeLMouseDragged:
+        case g_EventTypeRMouseDragged:
+        case g_EventTypeExtMouseDragged:
+        case g_EventTypeMouseMoved:
+            ProcessMouseMoveEvent(event);
+            break;
+
+        case g_EventTypeLMouseDown:
+            ProcessMouseKeyEvent(Key::LButton, true);
+            break;
+
+        case g_EventTypeLMouseUp:
+            ProcessMouseKeyEvent(Key::LButton, false);
+            break;
+
+        case g_EventTypeRMouseDown:
+            ProcessMouseKeyEvent(Key::RButton, true);
+            break;
+
+        case g_EventTypeRMouseUp:
+            ProcessMouseKeyEvent(Key::RButton, false);
+            break;
+
+        case g_EventTypeExtMouseDown:
+            ProcessMouseKeyEvent(Key::MButton, true);
+            break;
+
+        case g_EventTypeExtMouseUp:
+            ProcessMouseKeyEvent(Key::MButton, false);
+            break;
+
+        case g_EventTypeScrollWheel:
+            ProcessMouseWheelEvent(event);
+            break;
+
+        default:
+            break;
+    }
+
+    //TODO: ignore key events here to avoid 'failure sound'
+    #if 1
+    if ([event type] != g_EventTypeKeyDown && [event type] != g_EventTypeKeyUp)
+        [NSApp sendEvent:event];
+    #else
+    [NSApp sendEvent:event];
+    #endif
 }
 
 void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)

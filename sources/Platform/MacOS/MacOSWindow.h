@@ -55,12 +55,15 @@ class MacOSWindow : public Window
 
         void OnProcessEvents() override;
 
+        void ProcessEvent(NSEvent* event);
         void ProcessKeyEvent(NSEvent* event, bool down);
         void ProcessMouseKeyEvent(Key key, bool down);
         void ProcessMouseMoveEvent(NSEvent* event);
         void ProcessMouseWheelEvent(NSEvent* event);
 
         NSWindow* CreateNSWindow(const WindowDescriptor& desc);
+
+    private:
 
         NSWindow*   wnd_                = nullptr;
         Offset2D    prevMotionOffset_;
