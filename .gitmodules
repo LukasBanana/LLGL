@@ -1,3 +1,4 @@
-[submodule "external/SPIRV"]
+[submodule "external/SPIRV-Headers"]
 	path = external/SPIRV-Headers
 	url = https://github.com/LukasBanana/SPIRV-Headers.git
+	branch = master
