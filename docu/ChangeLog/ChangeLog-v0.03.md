@@ -483,7 +483,10 @@ myCmdBuffer->SetResource(*myColorMap, 1, LLGL::BindFlags::Sampled, LLGL::StageFl
 ## Resource heap binding
 
 The `SetGraphicsResourceHeap` and `SetComputeResourceHeap` functions have been merged into a single function named `SetResourceHeap`.
-The second parameter is optional and can be used when a resource heap contains resources for both the graphics and compute pipeline to avoid unnecessary bindings.
+The new parameter is optional and can be used when a resource heap contains resources for both the graphics and compute pipeline to avoid unnecessary bindings.
+Moreover, the second parameter `firstSet` can finally be used for all backends. It specifies which set of descriptors is to be bound.
+From now on, the number of descriptors must be a multiple of pipeline layout bindings instead of being equal to the number of bindings.
+This enables the resource heaps to be used as actual heaps with an arbitrary number of resources.
 
 Before:
 ```cpp
@@ -501,8 +504,8 @@ After:
 // Interface:
 void CommandBuffer::SetResourceHeap(
     LLGL::ResourceHeap&             resourceHeap,
-    const LLGL::PipelineBindPoint   bindPoint       = LLGL::PipelineBindPoint::Undefined,
-    std::uint32_t                   firstSet        = 0
+    std::uint32_t                   firstSet        = 0,
+    const LLGL::PipelineBindPoint   bindPoint       = LLGL::PipelineBindPoint::Undefined
 );
 
 // Usage:
