@@ -75,9 +75,6 @@ struct MTResourceBinding
 
 MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
 {
-    /* Initialize segmentation header */
-    InitMemory(segmentationHeader_);
-
     /* Get pipeline layout object */
     auto pipelineLayoutMT = LLGL_CAST(MTPipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutMT)
@@ -101,17 +98,17 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
     for (std::size_t i = 0; i < numResourceViews; i += numBindings)
     {
         ResourceBindingIterator resourceIterator { desc.resourceViews, bindings, i };
-        ::memset(&segmentationHeader_, 0, sizeof(segmentationHeader_));
+        InitMemory(segmentation_);
 
         /* Build vertex resource segments */
-        BuildBufferSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexBufferSegments);
-        BuildTextureSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexTextureSegments);
-        BuildSamplerSegments(resourceIterator, vertexStages, segmentationHeader_.numVertexSamplerSegments);
+        BuildBufferSegments(resourceIterator, vertexStages, segmentation_.numVertexBufferSegments);
+        BuildTextureSegments(resourceIterator, vertexStages, segmentation_.numVertexTextureSegments);
+        BuildSamplerSegments(resourceIterator, vertexStages, segmentation_.numVertexSamplerSegments);
 
         /* Build fragment resource segments */
-        BuildBufferSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentBufferSegments);
-        BuildTextureSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentTextureSegments);
-        BuildSamplerSegments(resourceIterator, fragmentStages, segmentationHeader_.numFragmentSamplerSegments);
+        BuildBufferSegments(resourceIterator, fragmentStages, segmentation_.numFragmentBufferSegments);
+        BuildTextureSegments(resourceIterator, fragmentStages, segmentation_.numFragmentTextureSegments);
+        BuildSamplerSegments(resourceIterator, fragmentStages, segmentation_.numFragmentSamplerSegments);
 
         /* Build kernel resource segments (and store buffer offset to kernel segments) */
         if (i == 0)
@@ -121,9 +118,9 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
             bufferOffsetKernel_ = static_cast<std::uint16_t>(buffer_.size());
         }
 
-        BuildBufferSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelBufferSegments);
-        BuildTextureSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelTextureSegments);
-        BuildSamplerSegments(resourceIterator, kernelStages, segmentationHeader_.numKernelSamplerSegments);
+        BuildBufferSegments(resourceIterator, kernelStages, segmentation_.numKernelBufferSegments);
+        BuildTextureSegments(resourceIterator, kernelStages, segmentation_.numKernelTextureSegments);
+        BuildSamplerSegments(resourceIterator, kernelStages, segmentation_.numKernelSamplerSegments);
     }
 
     /* Store buffer stride */
@@ -141,15 +138,15 @@ std::uint32_t MTResourceHeap::GetNumDescriptorSets() const
 void MTResourceHeap::BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, std::uint32_t firstSet)
 {
     auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet);
-    if (segmentationHeader_.hasVertexResources)
+    if (segmentation_.hasVertexResources)
         BindVertexResources(renderEncoder, byteAlignedBuffer);
-    if (segmentationHeader_.hasFragmentResources)
+    if (segmentation_.hasFragmentResources)
         BindFragmentResources(renderEncoder, byteAlignedBuffer);
 }
 
 void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder, std::uint32_t firstSet)
 {
-    if (segmentationHeader_.hasKernelResources)
+    if (segmentation_.hasKernelResources)
     {
         auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet) + bufferOffsetKernel_;
         BindKernelResources(computeEncoder, byteAlignedBuffer);
@@ -158,12 +155,12 @@ void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEn
 
 bool MTResourceHeap::HasGraphicsResources() const
 {
-    return ((segmentationHeader_.hasVertexResources | segmentationHeader_.hasFragmentResources) != 0);
+    return ((segmentation_.hasVertexResources | segmentation_.hasFragmentResources) != 0);
 }
 
 bool MTResourceHeap::HasComputeResources() const
 {
-    return (segmentationHeader_.hasKernelResources != 0);
+    return (segmentation_.hasKernelResources != 0);
 }
 
 
@@ -376,7 +373,7 @@ static id<MTLSamplerState> const* CastToMTLSamplerStates(const std::int8_t* byte
 void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numVertexBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numVertexBufferSegments; ++i)
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
         [cmdEncoder
@@ -388,7 +385,7 @@ void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder,
     }
 
     /* Bind all textures */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numVertexTextureSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numVertexTextureSegments; ++i)
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
         [cmdEncoder
@@ -399,7 +396,7 @@ void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder,
     }
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numVertexSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numVertexSamplerSegments; ++i)
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
         [cmdEncoder
@@ -413,7 +410,7 @@ void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder,
 void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numFragmentBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numFragmentBufferSegments; ++i)
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
         [cmdEncoder
@@ -425,7 +422,7 @@ void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncode
     }
 
     /* Bind all textures */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numFragmentTextureSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numFragmentTextureSegments; ++i)
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
         [cmdEncoder
@@ -436,7 +433,7 @@ void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncode
     }
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numFragmentSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numFragmentSamplerSegments; ++i)
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
         [cmdEncoder
@@ -450,7 +447,7 @@ void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncode
 void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numKernelBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numKernelBufferSegments; ++i)
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
         [cmdEncoder
@@ -462,7 +459,7 @@ void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder
     }
 
     /* Bind all textures */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numKernelTextureSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numKernelTextureSegments; ++i)
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
         [cmdEncoder
@@ -473,7 +470,7 @@ void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder
     }
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numKernelSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numKernelSamplerSegments; ++i)
     {
         auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
         [cmdEncoder
@@ -486,25 +483,25 @@ void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder
 
 void MTResourceHeap::StoreResourceUsage()
 {
-    if ( ( segmentationHeader_.numVertexBufferSegments  |
-           segmentationHeader_.numVertexTextureSegments |
-           segmentationHeader_.numVertexSamplerSegments ) != 0 )
+    if ( ( segmentation_.numVertexBufferSegments  |
+           segmentation_.numVertexTextureSegments |
+           segmentation_.numVertexSamplerSegments ) != 0 )
     {
-        segmentationHeader_.hasVertexResources = 1;
+        segmentation_.hasVertexResources = 1;
     }
 
-    if ( ( segmentationHeader_.numFragmentBufferSegments  |
-           segmentationHeader_.numFragmentTextureSegments |
-           segmentationHeader_.numFragmentSamplerSegments ) != 0 )
+    if ( ( segmentation_.numFragmentBufferSegments  |
+           segmentation_.numFragmentTextureSegments |
+           segmentation_.numFragmentSamplerSegments ) != 0 )
     {
-        segmentationHeader_.hasFragmentResources = 1;
+        segmentation_.hasFragmentResources = 1;
     }
 
-    if ( ( segmentationHeader_.numKernelBufferSegments  |
-           segmentationHeader_.numKernelTextureSegments |
-           segmentationHeader_.numKernelSamplerSegments ) != 0 )
+    if ( ( segmentation_.numKernelBufferSegments  |
+           segmentation_.numKernelTextureSegments |
+           segmentation_.numKernelSamplerSegments ) != 0 )
     {
-        segmentationHeader_.hasKernelResources = 1;
+        segmentation_.hasKernelResources = 1;
     }
 }
 

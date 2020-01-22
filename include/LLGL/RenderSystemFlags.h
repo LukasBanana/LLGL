@@ -319,26 +319,26 @@ struct RenderSystemDescriptor
     \see rendererConfig
     */
     std::size_t     rendererConfigSize  = 0;
-    
+
     #ifdef LLGL_OS_ANDROID
-    
+
     /**
     \brief Android specific application descriptor. This descriptor is defined by the "native app glue" from the Android NDK.
     \remarks This \b must be specified when compiling for the Android platform.
     \remarks Here is an example for the main entry point on Android:
     \code
     #include <LLGL/LLGL.h>
-    
+
     ...
-    
+
     void MyMain(const LLGL::RenderSystemDescriptor& desc)
     {
        myRenderSystem = LLGL::RenderSystem::Load(desc);
-       ... 
+       ...
     }
-    
+
     #if defined LLGL_OS_ANDROID
-    
+
     // Android specific main function
     void android_main(android_app* state)
     {
@@ -346,22 +346,22 @@ struct RenderSystemDescriptor
         desc.androidApp = state;
         MyMain(desc);
     }
-    
+
     #else
-    
+
     // Standard C/C++ main function
     int main()
     {
         MyMain("OpenGL");
         return 0;
     }
-    
+
     #endif
     \endcode
     \note Only supported on: Android.
     */
     android_app*    androidApp;
-    
+
     #endif
 };
 

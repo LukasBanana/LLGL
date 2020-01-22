@@ -138,10 +138,10 @@ GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc)
     {
         /* Reset segment header, only one is required */
         ResourceBindingIterator resourceIterator { desc.resourceViews, bindings, i };
-        ::memset(&segmentationHeader_, 0, sizeof(segmentationHeader_));
+        ::memset(&segmentation_, 0, sizeof(segmentation_));
 
         /* Build resource view segments for current descriptor set */
-        BuildConstantBufferSegments(resourceIterator);
+        BuildUniformBufferSegments(resourceIterator);
         BuildStorageBufferSegments(resourceIterator);
         BuildTextureSegments(resourceIterator);
         BuildImageTextureSegments(resourceIterator);
@@ -228,23 +228,23 @@ void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t firstSet)
     #endif // /GL_ARB_shader_image_load_store
 
     /* Bind all constant buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numConstantBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numUniformBufferSegments; ++i)
         BindBuffersBaseSegment(stateMngr, byteAlignedBuffer, GLBufferTarget::UNIFORM_BUFFER);
 
     /* Bind all shader storage buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numStorageBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numStorageBufferSegments; ++i)
         BindBuffersBaseSegment(stateMngr, byteAlignedBuffer, GLBufferTarget::SHADER_STORAGE_BUFFER);
 
     /* Bind all textures */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numTextureSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numTextureSegments; ++i)
         BindTexturesSegment(stateMngr, byteAlignedBuffer);
 
     /* Bind all image texture units */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numImageTextureSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numImageTextureSegments; ++i)
         BindImageTexturesSegment(stateMngr, byteAlignedBuffer);
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numSamplerSegments; ++i)
         BindSamplersSegment(stateMngr, byteAlignedBuffer);
 }
 
@@ -305,12 +305,12 @@ void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterat
     );
 }
 
-void GLResourceHeap::BuildConstantBufferSegments(ResourceBindingIterator& resourceIterator)
+void GLResourceHeap::BuildUniformBufferSegments(ResourceBindingIterator& resourceIterator)
 {
     BuildBufferSegments(
         resourceIterator,
         BindFlags::ConstantBuffer,
-        segmentationHeader_.numConstantBufferSegments
+        segmentation_.numUniformBufferSegments
     );
 }
 
@@ -319,7 +319,7 @@ void GLResourceHeap::BuildStorageBufferSegments(ResourceBindingIterator& resourc
     BuildBufferSegments(
         resourceIterator,
         (BindFlags::Sampled | BindFlags::Storage),
-        segmentationHeader_.numStorageBufferSegments
+        segmentation_.numStorageBufferSegments
     );
 }
 
@@ -341,7 +341,7 @@ void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceItera
     BuildAllSegments(
         resourceBindings,
         std::bind(&GLResourceHeap::BuildSegment2Target, this, std::placeholders::_1, std::placeholders::_2),
-        segmentationHeader_.numTextureSegments
+        segmentation_.numTextureSegments
     );
 }
 
@@ -363,7 +363,7 @@ void GLResourceHeap::BuildImageTextureSegments(ResourceBindingIterator& resource
     BuildAllSegments(
         resourceBindings,
         std::bind(&GLResourceHeap::BuildSegment2Format, this, std::placeholders::_1, std::placeholders::_2),
-        segmentationHeader_.numImageTextureSegments
+        segmentation_.numImageTextureSegments
     );
 }
 
@@ -385,7 +385,7 @@ void GLResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceItera
     BuildAllSegments(
         resourceBindings,
         std::bind(&GLResourceHeap::BuildSegment1, this, std::placeholders::_1, std::placeholders::_2),
-        segmentationHeader_.numSamplerSegments
+        segmentation_.numSamplerSegments
     );
 }
 

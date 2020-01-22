@@ -89,13 +89,13 @@ class D3D11ResourceHeap final : public ResourceHeap
     private:
 
         /*
-        Header structure to describe all segments within the raw buffer (per descriptor set).
+        Describes the segments within the raw buffer (per descriptor set).
         - Constant buffers       are limited to D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT ( 14) ==> 4 bits
         - Samplers               are limited to D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT             ( 16) ==> 5 bits
         - Shader resource views  are limited to D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT      (128) ==> 8 bits
         - Unordered access views are limited to D3D11_1_UAV_SLOT_COUNT                            ( 64) ==> 7 bits
         */
-        struct SegmentationHeader
+        struct BufferSegmentation
         {
             std::uint8_t hasVSResources                     : 1;
             std::uint8_t numVSConstantBufferSegments        : 4;
@@ -132,7 +132,7 @@ class D3D11ResourceHeap final : public ResourceHeap
 
     private:
 
-        SegmentationHeader          segmentationHeader_;
+        BufferSegmentation          segmentation_;
         std::uint16_t               bufferOffsetCS_     = 0;
         std::vector<std::int8_t>    buffer_;
         std::size_t                 stride_             = 0;

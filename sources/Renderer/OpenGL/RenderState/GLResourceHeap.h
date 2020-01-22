@@ -49,7 +49,7 @@ class GLResourceHeap final : public ResourceHeap
         using BuildSegmentFunc = std::function<void(GLResourceBindingIter begin, GLsizei count)>;
 
         void BuildBufferSegments(ResourceBindingIterator& resourceIterator, long bindFlags, std::uint8_t& numSegments);
-        void BuildConstantBufferSegments(ResourceBindingIterator& resourceIterator);
+        void BuildUniformBufferSegments(ResourceBindingIterator& resourceIterator);
         void BuildStorageBufferSegments(ResourceBindingIterator& resourceIterator);
         void BuildTextureSegments(ResourceBindingIterator& resourceIterator);
         void BuildImageTextureSegments(ResourceBindingIterator& resourceIterator);
@@ -67,10 +67,11 @@ class GLResourceHeap final : public ResourceHeap
 
     private:
 
-        // Header structure to describe all segments within the raw buffer (per descriptor set).
-        struct SegmentationHeader
+        // Describes the segments within the raw buffer (per descriptor set).
+        struct BufferSegmentation
         {
-            std::uint8_t numConstantBufferSegments  = 0;
+            std::uint8_t numTextureViews            = 0; // Number of GL texture objects generated with glTextureView
+            std::uint8_t numUniformBufferSegments   = 0;
             std::uint8_t numStorageBufferSegments   = 0;
             std::uint8_t numTextureSegments         = 0;
             std::uint8_t numImageTextureSegments    = 0;
@@ -79,7 +80,7 @@ class GLResourceHeap final : public ResourceHeap
 
     private:
 
-        SegmentationHeader          segmentationHeader_;
+        BufferSegmentation          segmentation_;
         std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
         std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
         GLbitfield                  barriers_           = 0;    // Bitmask for glMemoryBarrier

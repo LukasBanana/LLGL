@@ -75,7 +75,7 @@ class MTResourceHeap final : public ResourceHeap
     private:
 
         // Header structure to describe all segments within the raw buffer.
-        struct SegmentationHeader
+        struct BufferSegmentation
         {
             std::uint8_t hasVertexResources         : 1;
             std::uint8_t hasFragmentResources       : 1;
@@ -96,7 +96,7 @@ class MTResourceHeap final : public ResourceHeap
 
     private:
 
-        SegmentationHeader          segmentationHeader_;
+        BufferSegmentation          segmentation_;
         std::uint16_t               bufferOffsetKernel_ = 0;
         std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
         std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set

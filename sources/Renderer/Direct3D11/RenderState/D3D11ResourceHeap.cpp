@@ -93,9 +93,6 @@ struct D3DResourceBinding
 
 D3D11ResourceHeap::D3D11ResourceHeap(const ResourceHeapDescriptor& desc)
 {
-    /* Initialize segmentation header */
-    InitMemory(segmentationHeader_);
-
     /* Get pipeline layout object */
     auto pipelineLayoutD3D = LLGL_CAST(D3D11PipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutD3D)
@@ -116,7 +113,7 @@ D3D11ResourceHeap::D3D11ResourceHeap(const ResourceHeapDescriptor& desc)
     {
         /* Reset segment header, only one is required */
         ResourceBindingIterator resourceIterator { desc.resourceViews, bindings, i };
-        ::memset(&segmentationHeader_, 0, sizeof(segmentationHeader_));
+        InitMemory(segmentation_);
 
         /* Build resource view segments for GRAPHICS stages in current descriptor set */
         BuildSegmentsForStage(resourceIterator, StageFlags::VertexStage);
@@ -151,17 +148,17 @@ std::uint32_t D3D11ResourceHeap::GetNumDescriptorSets() const
 void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t firstSet)
 {
     auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet);
-    if (segmentationHeader_.hasVSResources) { BindVSResources(context, byteAlignedBuffer); }
-    if (segmentationHeader_.hasHSResources) { BindHSResources(context, byteAlignedBuffer); }
-    if (segmentationHeader_.hasDSResources) { BindDSResources(context, byteAlignedBuffer); }
-    if (segmentationHeader_.hasGSResources) { BindGSResources(context, byteAlignedBuffer); }
-    if (segmentationHeader_.hasPSResources) { BindPSResources(context, byteAlignedBuffer); }
+    if (segmentation_.hasVSResources) { BindVSResources(context, byteAlignedBuffer); }
+    if (segmentation_.hasHSResources) { BindHSResources(context, byteAlignedBuffer); }
+    if (segmentation_.hasDSResources) { BindDSResources(context, byteAlignedBuffer); }
+    if (segmentation_.hasGSResources) { BindGSResources(context, byteAlignedBuffer); }
+    if (segmentation_.hasPSResources) { BindPSResources(context, byteAlignedBuffer); }
 }
 
 void D3D11ResourceHeap::BindForComputePipeline(ID3D11DeviceContext* context, std::uint32_t firstSet)
 {
     auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet) + bufferOffsetCS_;
-    if (segmentationHeader_.hasCSResources) { BindCSResources(context, byteAlignedBuffer); }
+    if (segmentation_.hasCSResources) { BindCSResources(context, byteAlignedBuffer); }
 }
 
 
@@ -236,12 +233,12 @@ void D3D11ResourceHeap::BuildConstantBufferSegments(ResourceBindingIterator& res
 
     switch (stage)
     {
-        case StageFlags::VertexStage:           segmentationHeader_.numVSConstantBufferSegments = numSegments; break;
-        case StageFlags::TessControlStage:      segmentationHeader_.numHSConstantBufferSegments = numSegments; break;
-        case StageFlags::TessEvaluationStage:   segmentationHeader_.numDSConstantBufferSegments = numSegments; break;
-        case StageFlags::GeometryStage:         segmentationHeader_.numGSConstantBufferSegments = numSegments; break;
-        case StageFlags::FragmentStage:         segmentationHeader_.numPSConstantBufferSegments = numSegments; break;
-        case StageFlags::ComputeStage:          segmentationHeader_.numCSConstantBufferSegments = numSegments; break;
+        case StageFlags::VertexStage:           segmentation_.numVSConstantBufferSegments = numSegments; break;
+        case StageFlags::TessControlStage:      segmentation_.numHSConstantBufferSegments = numSegments; break;
+        case StageFlags::TessEvaluationStage:   segmentation_.numDSConstantBufferSegments = numSegments; break;
+        case StageFlags::GeometryStage:         segmentation_.numGSConstantBufferSegments = numSegments; break;
+        case StageFlags::FragmentStage:         segmentation_.numPSConstantBufferSegments = numSegments; break;
+        case StageFlags::ComputeStage:          segmentation_.numCSConstantBufferSegments = numSegments; break;
     }
 }
 
@@ -298,12 +295,12 @@ void D3D11ResourceHeap::BuildShaderResourceViewSegments(ResourceBindingIterator&
 
     switch (stage)
     {
-        case StageFlags::VertexStage:           segmentationHeader_.numVSShaderResourceViewSegments = numSegments; break;
-        case StageFlags::TessControlStage:      segmentationHeader_.numHSShaderResourceViewSegments = numSegments; break;
-        case StageFlags::TessEvaluationStage:   segmentationHeader_.numDSShaderResourceViewSegments = numSegments; break;
-        case StageFlags::GeometryStage:         segmentationHeader_.numGSShaderResourceViewSegments = numSegments; break;
-        case StageFlags::FragmentStage:         segmentationHeader_.numPSShaderResourceViewSegments = numSegments; break;
-        case StageFlags::ComputeStage:          segmentationHeader_.numCSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::VertexStage:           segmentation_.numVSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::TessControlStage:      segmentation_.numHSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::TessEvaluationStage:   segmentation_.numDSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::GeometryStage:         segmentation_.numGSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::FragmentStage:         segmentation_.numPSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::ComputeStage:          segmentation_.numCSShaderResourceViewSegments = numSegments; break;
     }
 }
 
@@ -362,8 +359,8 @@ void D3D11ResourceHeap::BuildUnorderedAccessViewSegments(ResourceBindingIterator
 
     switch (stage)
     {
-        case StageFlags::FragmentStage: segmentationHeader_.numPSUnorderedAccessViewSegments = numSegments; break;
-        case StageFlags::ComputeStage:  segmentationHeader_.numCSUnorderedAccessViewSegments = numSegments; break;
+        case StageFlags::FragmentStage: segmentation_.numPSUnorderedAccessViewSegments = numSegments; break;
+        case StageFlags::ComputeStage:  segmentation_.numCSUnorderedAccessViewSegments = numSegments; break;
         default:                        break;
     }
 }
@@ -392,12 +389,12 @@ void D3D11ResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceIt
 
     switch (stage)
     {
-        case StageFlags::VertexStage:           segmentationHeader_.numVSSamplerSegments = numSegments; break;
-        case StageFlags::TessControlStage:      segmentationHeader_.numHSSamplerSegments = numSegments; break;
-        case StageFlags::TessEvaluationStage:   segmentationHeader_.numDSSamplerSegments = numSegments; break;
-        case StageFlags::GeometryStage:         segmentationHeader_.numGSSamplerSegments = numSegments; break;
-        case StageFlags::FragmentStage:         segmentationHeader_.numPSSamplerSegments = numSegments; break;
-        case StageFlags::ComputeStage:          segmentationHeader_.numCSSamplerSegments = numSegments; break;
+        case StageFlags::VertexStage:           segmentation_.numVSSamplerSegments = numSegments; break;
+        case StageFlags::TessControlStage:      segmentation_.numHSSamplerSegments = numSegments; break;
+        case StageFlags::TessEvaluationStage:   segmentation_.numDSSamplerSegments = numSegments; break;
+        case StageFlags::GeometryStage:         segmentation_.numGSSamplerSegments = numSegments; break;
+        case StageFlags::FragmentStage:         segmentation_.numPSSamplerSegments = numSegments; break;
+        case StageFlags::ComputeStage:          segmentation_.numCSSamplerSegments = numSegments; break;
     }
 }
 
@@ -545,12 +542,12 @@ static ID3D11UnorderedAccessView* const* CastToD3D11UnorderedAccessView(const st
 void D3D11ResourceHeap::StoreResourceUsage()
 {
     /* Store information for which stages any resources have been specified */
-    #define LLGL_STORE_STAGE_RESOURCE_USAGE(STAGE)                              \
-        if ( segmentationHeader_.num##STAGE##SamplerSegments            > 0 ||  \
-             segmentationHeader_.num##STAGE##ConstantBufferSegments     > 0 ||  \
-             segmentationHeader_.num##STAGE##ShaderResourceViewSegments > 0 )   \
-        {                                                                       \
-            segmentationHeader_.has##STAGE##Resources = 1;                      \
+    #define LLGL_STORE_STAGE_RESOURCE_USAGE(STAGE)                          \
+        if ( segmentation_.num##STAGE##SamplerSegments            > 0 ||    \
+             segmentation_.num##STAGE##ConstantBufferSegments     > 0 ||    \
+             segmentation_.num##STAGE##ShaderResourceViewSegments > 0 )     \
+        {                                                                   \
+            segmentation_.has##STAGE##Resources = 1;                        \
         }
 
     LLGL_STORE_STAGE_RESOURCE_USAGE(VS);
@@ -563,16 +560,16 @@ void D3D11ResourceHeap::StoreResourceUsage()
     #undef LLGL_STORE_STAGE_RESOURCE_USAGE
 
     /* Extend the determination for unordered access views */
-    if (segmentationHeader_.numPSUnorderedAccessViewSegments > 0)
-        segmentationHeader_.hasPSResources = 1;
-    if (segmentationHeader_.numCSUnorderedAccessViewSegments > 0)
-        segmentationHeader_.hasCSResources = 1;
+    if (segmentation_.numPSUnorderedAccessViewSegments > 0)
+        segmentation_.hasPSResources = 1;
+    if (segmentation_.numCSUnorderedAccessViewSegments > 0)
+        segmentation_.hasCSResources = 1;
 }
 
 void D3D11ResourceHeap::BindVSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numVSConstantBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numVSConstantBufferSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->VSSetConstantBuffers(segment->startSlot, segment->numViews, CastToD3D11Buffers(byteAlignedBuffer));
@@ -580,7 +577,7 @@ void D3D11ResourceHeap::BindVSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numVSSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numVSSamplerSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->VSSetSamplers(segment->startSlot, segment->numViews, CastToD3D11SamplerStates(byteAlignedBuffer));
@@ -588,7 +585,7 @@ void D3D11ResourceHeap::BindVSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all shader resource views (SRV) */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numVSShaderResourceViewSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numVSShaderResourceViewSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->VSSetShaderResources(segment->startSlot, segment->numViews, CastToD3D11ShaderResourceViews(byteAlignedBuffer));
@@ -599,7 +596,7 @@ void D3D11ResourceHeap::BindVSResources(ID3D11DeviceContext* context, const std:
 void D3D11ResourceHeap::BindHSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numHSConstantBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numHSConstantBufferSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->HSSetConstantBuffers(segment->startSlot, segment->numViews, CastToD3D11Buffers(byteAlignedBuffer));
@@ -607,7 +604,7 @@ void D3D11ResourceHeap::BindHSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numHSSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numHSSamplerSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->HSSetSamplers(segment->startSlot, segment->numViews, CastToD3D11SamplerStates(byteAlignedBuffer));
@@ -615,7 +612,7 @@ void D3D11ResourceHeap::BindHSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all shader resource views (SRV) */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numHSShaderResourceViewSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numHSShaderResourceViewSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->HSSetShaderResources(segment->startSlot, segment->numViews, CastToD3D11ShaderResourceViews(byteAlignedBuffer));
@@ -626,7 +623,7 @@ void D3D11ResourceHeap::BindHSResources(ID3D11DeviceContext* context, const std:
 void D3D11ResourceHeap::BindDSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numDSConstantBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numDSConstantBufferSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->DSSetConstantBuffers(segment->startSlot, segment->numViews, CastToD3D11Buffers(byteAlignedBuffer));
@@ -634,7 +631,7 @@ void D3D11ResourceHeap::BindDSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numDSSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numDSSamplerSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->DSSetSamplers(segment->startSlot, segment->numViews, CastToD3D11SamplerStates(byteAlignedBuffer));
@@ -642,7 +639,7 @@ void D3D11ResourceHeap::BindDSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all shader resource views (SRV) */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numDSShaderResourceViewSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numDSShaderResourceViewSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->DSSetShaderResources(segment->startSlot, segment->numViews, CastToD3D11ShaderResourceViews(byteAlignedBuffer));
@@ -653,7 +650,7 @@ void D3D11ResourceHeap::BindDSResources(ID3D11DeviceContext* context, const std:
 void D3D11ResourceHeap::BindGSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numGSConstantBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numGSConstantBufferSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->GSSetConstantBuffers(segment->startSlot, segment->numViews, CastToD3D11Buffers(byteAlignedBuffer));
@@ -661,7 +658,7 @@ void D3D11ResourceHeap::BindGSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numGSSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numGSSamplerSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->GSSetSamplers(segment->startSlot, segment->numViews, CastToD3D11SamplerStates(byteAlignedBuffer));
@@ -669,7 +666,7 @@ void D3D11ResourceHeap::BindGSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all shader resource views (SRV) */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numGSShaderResourceViewSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numGSShaderResourceViewSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->GSSetShaderResources(segment->startSlot, segment->numViews, CastToD3D11ShaderResourceViews(byteAlignedBuffer));
@@ -680,7 +677,7 @@ void D3D11ResourceHeap::BindGSResources(ID3D11DeviceContext* context, const std:
 void D3D11ResourceHeap::BindPSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numPSConstantBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numPSConstantBufferSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->PSSetConstantBuffers(segment->startSlot, segment->numViews, CastToD3D11Buffers(byteAlignedBuffer));
@@ -688,7 +685,7 @@ void D3D11ResourceHeap::BindPSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numPSSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numPSSamplerSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->PSSetSamplers(segment->startSlot, segment->numViews, CastToD3D11SamplerStates(byteAlignedBuffer));
@@ -696,7 +693,7 @@ void D3D11ResourceHeap::BindPSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all shader resource views (SRV) */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numPSShaderResourceViewSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numPSShaderResourceViewSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->PSSetShaderResources(segment->startSlot, segment->numViews, CastToD3D11ShaderResourceViews(byteAlignedBuffer));
@@ -704,7 +701,7 @@ void D3D11ResourceHeap::BindPSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all unordered access views (UAV) */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numPSUnorderedAccessViewSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numPSUnorderedAccessViewSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment2*>(byteAlignedBuffer);
         context->OMSetRenderTargetsAndUnorderedAccessViews(
@@ -723,7 +720,7 @@ void D3D11ResourceHeap::BindPSResources(ID3D11DeviceContext* context, const std:
 void D3D11ResourceHeap::BindCSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer)
 {
     /* Bind all constant buffers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numCSConstantBufferSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numCSConstantBufferSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->CSSetConstantBuffers(segment->startSlot, segment->numViews, CastToD3D11Buffers(byteAlignedBuffer));
@@ -731,7 +728,7 @@ void D3D11ResourceHeap::BindCSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numCSSamplerSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numCSSamplerSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->CSSetSamplers(segment->startSlot, segment->numViews, CastToD3D11SamplerStates(byteAlignedBuffer));
@@ -739,7 +736,7 @@ void D3D11ResourceHeap::BindCSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all shader resource views (SRV) */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numCSShaderResourceViewSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numCSShaderResourceViewSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment1*>(byteAlignedBuffer);
         context->CSSetShaderResources(segment->startSlot, segment->numViews, CastToD3D11ShaderResourceViews(byteAlignedBuffer));
@@ -747,7 +744,7 @@ void D3D11ResourceHeap::BindCSResources(ID3D11DeviceContext* context, const std:
     }
 
     /* Bind all unordered access views (UAV) */
-    for (std::uint8_t i = 0; i < segmentationHeader_.numCSUnorderedAccessViewSegments; ++i)
+    for (std::uint8_t i = 0; i < segmentation_.numCSUnorderedAccessViewSegments; ++i)
     {
         auto segment = reinterpret_cast<const D3DResourceViewHeapSegment2*>(byteAlignedBuffer);
         context->CSSetUnorderedAccessViews(

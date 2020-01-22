@@ -124,12 +124,15 @@ struct RendererConfigurationOpenGL
     int                     minorVersion    = 0;
 };
 
-//! OpenGL ES 3 profile descriptor structure.
+/**
+\brief OpenGL ES 3 profile descriptor structure.
+\todo Replace with RendererConfigurationOpenGL and make use of OpenGLContextProfile::ESProfile.
+*/
 struct RendererConfigurationOpenGLES3
 {
     //! Specifies the requested OpenGL ES context major version. Must be 3. By default 3.
     int majorVersion = 3;
-    
+
     //! Specifies the requested OpenGL ES context minor version. Must be 0, 1, or 2. By default 0.
     int minorVersion = 0;
 };
