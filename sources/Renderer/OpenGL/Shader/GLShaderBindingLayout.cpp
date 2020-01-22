@@ -95,6 +95,9 @@ int GLShaderBindingLayout::CompareSWO(const GLShaderBindingLayout& rhs) const
 {
     const auto& lhs = *this;
 
+    /* Compare number of bindings first; if equal we can use one of the arrays only */
+    LLGL_COMPARE_MEMBER_SWO( bindings_.size() );
+
     for (std::size_t i = 0, n = bindings_.size(); i < n; ++i)
     {
         LLGL_COMPARE_MEMBER_SWO( bindings_[i].slot );
