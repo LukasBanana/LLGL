@@ -32,46 +32,46 @@ enum class TextureType
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12, Metal.
     */
     Texture1D,
-    
+
     //! 2-Dimensional texture.
     Texture2D,
-    
+
     //! 3-Dimensional texture.
     Texture3D,
-    
+
     /**
     \brief Cube texture.
     \see TextureDescriptor::arrayLayers
     */
     TextureCube,
-    
+
     /**
     \brief 1-Dimensional texture.
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12, Metal.
     \see TextureDescriptor::arrayLayers
     */
     Texture1DArray,
-    
+
     /**
     \brief 2-Dimensional array texture.
     \see TextureDescriptor::arrayLayers
     */
     Texture2DArray,
-    
+
     /**
     \brief Cube array texture.
     \see TextureDescriptor::arrayLayers
     \note Only supported with: OpenGL, OpenGLES 3.2, Vulkan, Direct3D 11, Direct3D 12, Metal.
     */
     TextureCubeArray,
-    
+
     /**
     \brief 2-Dimensional multi-sample texture.
     \note Only supported with: OpenGL, OpenGLES 3.1, Vulkan, Direct3D 11, Direct3D 12, Metal.
     \see TextureDescriptor::samples
     */
     Texture2DMS,
-    
+
     /**
     \brief 2-Dimensional multi-sample array texture.
     \note Only supported with: OpenGL, OpenGLES 3.2, Vulkan, Direct3D 11, Direct3D 12, Metal.

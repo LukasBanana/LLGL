@@ -26,6 +26,8 @@
 #include <cstdint>
 
 
+//TODO: separate this header into multiple "*Utils.h" files, such as "ContainerUtils.h"
+
 namespace LLGL
 {
 
@@ -164,7 +166,7 @@ SubType* TakeOwnership(std::list<std::unique_ptr<BaseType>>& objectSet, std::uni
     return ref;
 }
 
-// Similar to std::unqiue but with predicate is allowed to modify elements.
+// Similar to std::unqiue but with predicate that allows to modify elements.
 template <typename ForwardIt, typename BinaryPredicate>
 static ForwardIt UniqueMerge(ForwardIt begin, ForwardIt end, BinaryPredicate pred)
 {

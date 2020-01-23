@@ -71,10 +71,10 @@ enum class GLExt
     ARB_vertex_shader,
     ARB_viewport_array,
     ARB_ES2_compatibility,
-    
+
     /* Khronos group extensions (KHR) */
     KHR_debug,
-    
+
     /* Multi-vendor extensions (EXT) */
     EXT_blend_color,
     EXT_blend_equation_separate,
@@ -87,15 +87,15 @@ enum class GLExt
     EXT_texture3D,                      // GL 1.2
     EXT_texture_array,                  // no procedures
     EXT_transform_feedback,
-    
-    /* OpenGLES specific extensions (LES) */
+
+    /* OpenGLES specific extensions (GLES) */
     OES_tessellation_shader,            // GLES 3.2
-    
+
     /* NVIDIA specific extensions (NV) */
     NV_conditional_render,              //TODO: part of GL 3.0 core profile
     NV_conservative_raster,             // no procedures
     NV_transform_feedback,
-    
+
     /* Intel sepcific extensions (INTEL) */
     INTEL_conservative_rasterization,   // no procedures
 

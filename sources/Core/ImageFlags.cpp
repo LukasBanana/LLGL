@@ -177,12 +177,10 @@ static void ConvertImageBufferDataTypeWorker(
     std::size_t                 idxBegin,
     std::size_t                 idxEnd)
 {
-    double value = 0.0;
-
     for (auto i = idxBegin; i < idxEnd; ++i)
     {
         /* Read normalized variant from source buffer */
-        value = ReadNormalizedTypedVariant(srcDataType, srcBuffer, i);
+        double value = ReadNormalizedTypedVariant(srcDataType, srcBuffer, i);
 
         /* Write normalized variant to destination buffer */
         WriteNormalizedTypedVariant(dstDataType, dstBuffer, i, value);

@@ -36,7 +36,7 @@ class Example_RenderTarget : public ExampleBase
 
     LLGL::Texture*          colorMap                = nullptr;
     LLGL::Sampler*          samplerState            = nullptr;
-    LLGL::ResourceHeap*     resourceHeap            = {};
+    LLGL::ResourceHeap*     resourceHeap            = nullptr;
 
     LLGL::RenderTarget*     renderTarget            = nullptr;
     LLGL::Texture*          renderTargetTex         = nullptr;

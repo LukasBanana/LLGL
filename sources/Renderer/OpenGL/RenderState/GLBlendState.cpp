@@ -74,7 +74,7 @@ void GLBlendState::Bind(GLStateManager& stateMngr)
     stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);
 
     #ifdef LLGL_OPENGL
-    
+
     if (logicOpEnabled_)
     {
         /* Enable logic pixel operation */
@@ -92,12 +92,12 @@ void GLBlendState::Bind(GLStateManager& stateMngr)
         /* Bind blend states for all draw buffers */
         BindDrawBufferStates(stateMngr);
     }
-    
+
     #else // LLGL_OPENGL
-    
+
     /* Bind blend states for all draw buffers */
     BindDrawBufferStates(stateMngr);
-    
+
     #endif // /LLGL_OPENGL
 }
 
