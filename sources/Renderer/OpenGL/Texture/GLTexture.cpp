@@ -6,6 +6,7 @@
  */
 
 #include "GLTexture.h"
+#include "GLTextureViewPool.h"
 #include "GLRenderbuffer.h"
 #include "GLReadTextureFBO.h"
 #include "GLMipGenerator.h"
@@ -124,13 +125,14 @@ GLTexture::~GLTexture()
 {
     if (IsRenderbuffer())
     {
-        glDeleteRenderbuffers(1, &id_);
-        GLStateManager::Get().NotifyRenderbufferRelease(id_);
+        /* Delete renderbuffer and notify state manager */
+        GLStateManager::Get().DeleteRenderbuffer(id_);
     }
     else
     {
-        glDeleteTextures(1, &id_);
-        GLStateManager::Get().NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
+        /* Delete texture and notify state manager as well as texture-view pool since this could be the source for a texture-view */
+        GLStateManager::Get().DeleteTexture(id_, GLStateManager::GetTextureTarget(GetType()));
+        GLTextureViewPool::Get().NotifyTextureRelease(id_);
     }
 }
 
@@ -754,11 +756,7 @@ static void GLGetTextureImage(
     }
 
     /* Delete temporary staging texture */
-    if (useStaging)
-    {
-        glDeleteTextures(1, &stagingTextureID);
-        GLStateManager::Get().NotifyTextureRelease(stagingTextureID, target, true);
-    }
+    GLStateManager::Get().DeleteTexture(stagingTextureID, target, true);
 }
 
 #endif // /LLGL_OPENGL
@@ -799,29 +797,6 @@ void GLTexture::GetTextureSubImage(const TextureRegion& region, const DstImageDe
         LLGL_GLES3_NOT_IMPLEMENTED;
 
         #endif // /LLGL_OPENGL
-    }
-}
-
-void GLTexture::TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc)
-{
-    if (!IsRenderbuffer())
-    {
-        #ifdef GL_ARB_texture_view
-        if (HasExtension(GLExt::ARB_texture_view))
-        {
-            /* Initialize texture with texture-view description */
-            glTextureView(
-                GetID(),
-                GLTypes::Map(textureViewDesc.type),
-                sharedTexture.GetID(),
-                GLTypes::Map(textureViewDesc.format),
-                textureViewDesc.subresource.baseMipLevel,
-                textureViewDesc.subresource.numMipLevels,
-                textureViewDesc.subresource.baseArrayLayer,
-                textureViewDesc.subresource.numArrayLayers
-            );
-        }
-        #endif // /GL_ARB_texture_view
     }
 }
 

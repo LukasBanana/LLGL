@@ -21,13 +21,13 @@ struct GLContextState
 {
     static const GLuint numTextureLayers    = 32;
     static const GLuint numImageUnits       = 8;
-    static const GLuint numCaps             = (static_cast<GLuint>(GLState::PROGRAM_POINT_SIZE) + 1);
-    static const GLuint numBufferTargets    = (static_cast<GLuint>(GLBufferTarget::UNIFORM_BUFFER) + 1);
-    static const GLuint numFboTargets       = (static_cast<GLuint>(GLFramebufferTarget::READ_FRAMEBUFFER) + 1);
-    static const GLuint numTextureTargets   = (static_cast<GLuint>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+    static const GLuint numCaps             = static_cast<GLuint>(GLState::Num);
+    static const GLuint numBufferTargets    = static_cast<GLuint>(GLBufferTarget::Num);
+    static const GLuint numFboTargets       = static_cast<GLuint>(GLFramebufferTarget::Num);
+    static const GLuint numTextureTargets   = static_cast<GLuint>(GLTextureTarget::Num);
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-    static const GLuint numCapsExt          = (static_cast<GLuint>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
+    static const GLuint numCapsExt          = static_cast<GLuint>(GLStateExt::Num);
     #endif
 
     // Rasterizer state

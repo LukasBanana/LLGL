@@ -8,6 +8,7 @@
 #include "GLRenderSystem.h"
 #include "GLProfile.h"
 #include "Texture/GLMipGenerator.h"
+#include "Texture/GLTextureViewPool.h"
 #include "Ext/GLExtensions.h"
 #include "Ext/GLExtensionRegistry.h"
 #include "RenderState/GLStatePool.h"
@@ -48,6 +49,7 @@ GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 GLRenderSystem::~GLRenderSystem()
 {
     /* Clear all render state containers first, the rest will be deleted automatically */
+    GLTextureViewPool::Get().Clear();
     GLMipGenerator::Get().Clear();
     GLStatePool::Get().Clear();
 }

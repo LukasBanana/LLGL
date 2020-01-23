@@ -27,6 +27,25 @@ struct SubresourceLayout
     std::uint32_t dataSize      = 0; // Bytes per resource
 };
 
+// Compressed version of <TextureViewDescriptor> structure for faster insertion sort.
+struct CompressedTexView
+{
+    union
+    {
+        struct
+        {
+            std::uint32_t type      : 4;
+            std::uint32_t format    : 8;
+            std::uint32_t numMips   : 8;
+            std::uint32_t swizzle   : 12;
+        };
+        std::uint32_t base;
+    };
+    std::uint32_t firstMip;
+    std::uint32_t numLayers;
+    std::uint32_t firstLayer;
+};
+
 
 /* ----- Functions ----- */
 
@@ -44,6 +63,12 @@ LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc);
 
 // Returns the samples clamped to the range [1, LLGL_MAX_NUM_SAMPLES].
 LLGL_EXPORT std::uint32_t GetClampedSamples(std::uint32_t samples);
+
+// Converts the source texture-view descriptor into a compressed version.
+LLGL_EXPORT void CompressTextureViewDesc(CompressedTexView& dst, const TextureViewDescriptor& src);
+
+// Compares the two texture views in a strict-weak-order (SWO).
+LLGL_EXPORT int CompareCompressedTexViewSWO(const CompressedTexView& lhs, const CompressedTexView& rhs);
 
 
 } // /namespace LLGL

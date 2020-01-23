@@ -89,9 +89,6 @@ class GLTexture final : public Texture
         // Reads the specified image data from a subregion of this texture.
         void GetTextureSubImage(const TextureRegion& region, const DstImageDescriptor& imageDesc, bool restoreBoundTexture = true);
 
-        // Initializes this texture as a texture-view.
-        void TextureView(GLTexture& sharedTexture, const TextureViewDescriptor& textureViewDesc);
-
         // Returns the GL_TEXTURE_TARGET parameter of this texture.
         GLenum GetGLTexTarget() const;
 

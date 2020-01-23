@@ -960,9 +960,13 @@ void GLStateManager::PopBoundRenderbuffer()
     renderbufferState_.boundRenderbufferStack.pop();
 }
 
-void GLStateManager::NotifyRenderbufferRelease(GLuint renderbuffer)
+void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
 {
-    InvalidateBoundGLObject(renderbufferState_.boundRenderbuffer, renderbuffer);
+    if (renderbuffer != 0)
+    {
+        glDeleteRenderbuffers(1, &renderbuffer);
+        InvalidateBoundGLObject(renderbufferState_.boundRenderbuffer, renderbuffer);
+    }
 }
 
 /* ----- Texture ----- */
@@ -1168,19 +1172,12 @@ void GLStateManager::BindGLTexture(const GLTexture& texture)
     BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
-void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly)
+void GLStateManager::DeleteTexture(GLuint texture, GLTextureTarget target, bool activeLayerOnly)
 {
-    auto targetIdx = static_cast<std::size_t>(target);
-    if (activeLayerOnly)
+    if (texture != 0)
     {
-        /* Invalidate GL texture only on active layer (should only be used for internal and temporary textures) */
-        InvalidateBoundGLObject(textureState_.activeLayerRef->boundTextures[targetIdx], texture);
-    }
-    else
-    {
-        /* Invalidate GL texture on all layers */
-        for (auto& layer : textureState_.layers)
-            InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
+        glDeleteTextures(1, &texture);
+        NotifyTextureRelease(texture, target, activeLayerOnly);
     }
 }
 
@@ -1389,6 +1386,22 @@ void GLStateManager::SetActiveTextureLayer(std::uint32_t layer)
 {
     textureState_.activeTexture     = layer;
     textureState_.activeLayerRef    = &(textureState_.layers[textureState_.activeTexture]);
+}
+
+void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly)
+{
+    auto targetIdx = static_cast<std::size_t>(target);
+    if (activeLayerOnly)
+    {
+        /* Invalidate GL texture only on active layer (should only be used for internal and temporary textures) */
+        InvalidateBoundGLObject(textureState_.activeLayerRef->boundTextures[targetIdx], texture);
+    }
+    else
+    {
+        /* Invalidate GL texture on all layers */
+        for (auto& layer : textureState_.layers)
+            InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
+    }
 }
 
 static void AccumCommonGLLimits(GLStateManager::GLLimits& dst, const GLStateManager::GLLimits& src)

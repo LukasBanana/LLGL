@@ -202,7 +202,7 @@ class GLStateManager
         void PushBoundRenderbuffer();
         void PopBoundRenderbuffer();
 
-        void NotifyRenderbufferRelease(GLuint renderbuffer);
+        void DeleteRenderbuffer(GLuint renderbuffer);
 
         /* ----- Texture ----- */
 
@@ -224,7 +224,7 @@ class GLStateManager
 
         void BindGLTexture(const GLTexture& texture);
 
-        void NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly = false);
+        void DeleteTexture(GLuint texture, GLTextureTarget target, bool activeLayerOnly = false);
 
         /* ----- Sampler ----- */
 
@@ -278,6 +278,7 @@ class GLStateManager
         void AssertExtViewportArray();
 
         void SetActiveTextureLayer(std::uint32_t layer);
+        void NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly);
 
         void DetermineLimits();
 

@@ -7,6 +7,7 @@
 
 #include "GLStatePool.h"
 #include "GLStateManager.h"
+#include "../../../Core/ContainerUtils.h"
 #include <functional>
 
 
@@ -25,55 +26,31 @@ std::shared_ptr<T> FindCompatibleStateObject(
     const T&                            compareObject,
     std::size_t&                        index)
 {
-    std::size_t first = 0, last = container.size();
-    int order = 0;
-
-    while (first < last)
-    {
-        /* Compare centered object in the container with 'compareObject' */
-        index = (first + last)/2;
-
-        /* Check if current state object is compatible */
-        order = compareObject.CompareSWO(*container[index]);
-
-        if (order > 0)
+    auto* entry = Utils::FindInSortedArray<std::shared_ptr<T>>(
+        container.data(),
+        container.size(),
+        [&compareObject](const std::shared_ptr<T>& rhs)
         {
-            /* Search in upper range */
-            first = index + 1;
-        }
-        else if (order < 0)
-        {
-            /* Search in lower range */
-            last = index;
-        }
-        else
-            return container[index];
-    }
-
-    /* Check if item must be inserted after last index */
-    if (order > 0)
-        ++index;
-
-    return nullptr;
+            return compareObject.CompareSWO(*rhs.get());
+        },
+        &index
+    );
+    return (entry != nullptr ? *entry : nullptr);
 }
 
 template <typename T, typename... Args>
 std::shared_ptr<T> CreateRenderStateObject(std::vector<std::shared_ptr<T>>& container, Args&&... args)
 {
-    /* Try to find blend state with same parameter */
-    T stateToCompare { std::forward<Args>(args)... };
+    /* Try to find render state object with same parameter */
+    T stateToCompare{ std::forward<Args>(args)... };
 
     std::size_t insertionIndex = 0;
     if (auto sharedState = FindCompatibleStateObject(container, stateToCompare, insertionIndex))
         return sharedState;
 
-    /* Allocate new blend state with insertion sort */
+    /* Allocate new render state object with insertion sort */
     auto newState = std::make_shared<T>(stateToCompare);
-
-    if (insertionIndex < container.size())
-        container.insert(container.begin() + insertionIndex, newState);
-    else
-        container.push_back(newState);
+    container.insert(container.begin() + insertionIndex, newState);
 
     return newState;
 }

@@ -45,12 +45,7 @@ void GLRenderbuffer::GenRenderbuffer()
 
 void GLRenderbuffer::DeleteRenderbuffer()
 {
-    if (id_ != 0)
-    {
-        glDeleteRenderbuffers(1, &id_);
-        GLStateManager::Get().NotifyRenderbufferRelease(id_);
-        id_ = 0;
-    }
+    GLStateManager::Get().DeleteRenderbuffer(id_);
 }
 
 static void GLRenderbufferStorage(GLuint id, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)

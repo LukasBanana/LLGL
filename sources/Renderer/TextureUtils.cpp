@@ -8,6 +8,7 @@
 #include "TextureUtils.h"
 #include <LLGL/StaticLimits.h>
 #include "../Core/Helper.h"
+#include "../Core/HelperMacros.h"
 
 
 namespace LLGL
@@ -90,6 +91,44 @@ LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc)
 LLGL_EXPORT std::uint32_t GetClampedSamples(std::uint32_t samples)
 {
     return Clamp(samples, 1u, LLGL_MAX_NUM_SAMPLES);
+}
+
+// Compresses the specified texture swizzle parameter into 3 bits
+static std::uint32_t CompressTextureSwizzle3Bits(const TextureSwizzle swizzle)
+{
+    return ((static_cast<std::uint32_t>(swizzle) - static_cast<std::uint32_t>(TextureSwizzle::Zero)) & 0x7);
+}
+
+// Compresses the specified texture swizzle parameters into 12 bits
+static std::uint32_t CompressTextureSwizzleRGBA12Bits(const TextureSwizzleRGBA& swizzle)
+{
+    return
+    (
+        (CompressTextureSwizzle3Bits(swizzle.r) << 9) |
+        (CompressTextureSwizzle3Bits(swizzle.g) << 6) |
+        (CompressTextureSwizzle3Bits(swizzle.b) << 3) |
+        (CompressTextureSwizzle3Bits(swizzle.a)     )
+    );
+}
+
+LLGL_EXPORT void CompressTextureViewDesc(CompressedTexView& dst, const TextureViewDescriptor& src)
+{
+    dst.type        = static_cast<std::uint32_t>(src.type);
+    dst.format      = static_cast<std::uint32_t>(src.format);
+    dst.numMips     = src.subresource.numMipLevels;
+    dst.swizzle     = CompressTextureSwizzleRGBA12Bits(src.swizzle);
+    dst.firstMip    = src.subresource.baseMipLevel;
+    dst.numLayers   = src.subresource.numArrayLayers;
+    dst.firstLayer  = src.subresource.baseArrayLayer;
+}
+
+LLGL_EXPORT int CompareCompressedTexViewSWO(const CompressedTexView& lhs, const CompressedTexView& rhs)
+{
+    LLGL_COMPARE_MEMBER_SWO( base       );
+    LLGL_COMPARE_MEMBER_SWO( firstMip   );
+    LLGL_COMPARE_MEMBER_SWO( numLayers  );
+    LLGL_COMPARE_MEMBER_SWO( firstLayer );
+    return 0;
 }
 
 
