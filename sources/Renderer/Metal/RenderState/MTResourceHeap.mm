@@ -177,14 +177,14 @@ static std::vector<MTResourceBinding> CollectMTResourceBindings(
     const MTResourceBindingFunc&    resourceFunc)
 {
     /* Collect all binding points of the specified resource type */
-    BindingDescriptor bindingDesc;
+    const BindingDescriptor* bindingDesc = nullptr;
     resourceIterator.Reset(resourceType, 0, affectedStage);
 
     std::vector<MTResourceBinding> resourceBindings;
     resourceBindings.reserve(resourceIterator.GetCount());
 
-    while (auto resource = resourceIterator.Next(bindingDesc))
-        resourceBindings.push_back(resourceFunc(resource, static_cast<NSUInteger>(bindingDesc.slot)));
+    while (auto resource = resourceIterator.Next(&bindingDesc))
+        resourceBindings.push_back(resourceFunc(resource, static_cast<NSUInteger>(bindingDesc->slot)));
 
     /* Sort resources by slot index */
     std::sort(

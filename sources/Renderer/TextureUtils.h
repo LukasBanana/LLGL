@@ -10,6 +10,7 @@
 
 
 #include <LLGL/TextureFlags.h>
+#include <LLGL/ResourceHeapFlags.h>
 
 
 namespace LLGL
@@ -69,6 +70,17 @@ LLGL_EXPORT void CompressTextureViewDesc(CompressedTexView& dst, const TextureVi
 
 // Compares the two texture views in a strict-weak-order (SWO).
 LLGL_EXPORT int CompareCompressedTexViewSWO(const CompressedTexView& lhs, const CompressedTexView& rhs);
+
+// Returns true if the texture-view in the specified resource-view descriptor is enabled.
+inline bool IsTextureViewEnabled(const ResourceViewDescriptor& rvDesc)
+{
+    return
+    (
+        rvDesc.textureView.format != Format::Undefined    &&
+        rvDesc.textureView.subresource.numMipLevels   > 0 &&
+        rvDesc.textureView.subresource.numArrayLayers > 0
+    );
+}
 
 
 } // /namespace LLGL

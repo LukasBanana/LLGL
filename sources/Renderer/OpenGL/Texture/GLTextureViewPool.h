@@ -20,6 +20,7 @@ namespace LLGL
 {
 
 
+// Class to manage create/reuse/delete of GL texture views; used by <GLResourceHeap>
 class GLTextureViewPool
 {
 
@@ -45,7 +46,7 @@ class GLTextureViewPool
         Returns the ID of a GL texture view for the specified source texture and descriptor,
         or 0 if the extension "GL_ARB_texture_view" is not supported.
         */
-        GLuint CreateTextureView(GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc);
+        GLuint CreateTextureView(GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc, bool restoreBoundTexture = true);
 
         // Release the texture view that was created with CreateTextureView.
         void ReleaseTextureView(GLuint texID);
@@ -75,7 +76,7 @@ class GLTextureViewPool
         static int CompareTextureViewSWO(const GLTextureView& lhs, const GLTextureView& rhs);
 
         // Creats a new GL texture view and stores it in the specified view entry.
-        GLuint CreateGLTextureView(GLTextureView& texView, const TextureViewDescriptor& textureViewDesc, bool isSharedTex);
+        GLuint CreateGLTextureView(GLTextureView& texView, const TextureViewDescriptor& textureViewDesc, bool isSharedTex, bool restoreBoundTexture);
 
         // Deletes the specified GL texture view.
         void DeleteGLTextureView(GLTextureView& texView);

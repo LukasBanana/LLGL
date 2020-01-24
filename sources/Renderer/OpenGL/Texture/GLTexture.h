@@ -19,6 +19,7 @@ namespace LLGL
 
 struct SrcImageDescriptor;
 struct DstImageDescriptor;
+struct TextureViewDescriptor;
 
 // Predefined texture swizzles to emulate certain texture format
 enum class GLSwizzleFormat
@@ -27,6 +28,8 @@ enum class GLSwizzleFormat
     BGRA,   // GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA
     Alpha,  // GL_ZERO, GL_ZERO, GL_ZERO, GL_RED
 };
+
+GLSwizzleFormat MapGLSwizzleFormat(const Format format);
 
 // OpenGL texture class that manages a GL textures and renderbuffers (if the texture is only used as attachment but not for sampling).
 class GLTexture final : public Texture
@@ -49,9 +52,6 @@ class GLTexture final : public Texture
 
         // Initializes the texture storage with an optional image data; the texture will be bound to the current active texture unit.
         void BindAndAllocStorage(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr);
-
-        // Initialize the texture swizzle parameters; the texture must already be bound to an active texture layer.
-        void InitializeTextureSwizzle(const TextureSwizzleRGBA& swizzle = {}, bool ignoreIdentitySwizzle = false);
 
         // Copies the specified source texture into this texture.
         void CopyImageSubData(
@@ -121,6 +121,16 @@ class GLTexture final : public Texture
         {
             return swizzleFormat_;
         }
+
+    public:
+
+        // Initialize the texture swizzle parameters; the texture must already be bound to an active texture layer.
+        static void TexParameterSwizzle(
+            const TextureType           type,
+            const Format                format,
+            const TextureSwizzleRGBA&   swizzle,
+            bool                        ignoreIdentitySwizzle   = false
+        );
 
     private:
 

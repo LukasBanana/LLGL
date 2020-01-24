@@ -48,7 +48,7 @@ void GLTextureViewPool::Clear()
     numReusableEntries_ = 0;
 }
 
-GLuint GLTextureViewPool::CreateTextureView(GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc)
+GLuint GLTextureViewPool::CreateTextureView(GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc, bool restoreBoundTexture)
 {
     #ifdef GL_ARB_texture_view
 
@@ -77,12 +77,12 @@ GLuint GLTextureViewPool::CreateTextureView(GLuint sourceTexID, const TextureVie
     if (sharedTexView != nullptr)
     {
         /* Create a shared GL texture view from the descriptor */
-        return CreateGLTextureView(*sharedTexView, textureViewDesc, true);
+        return CreateGLTextureView(*sharedTexView, textureViewDesc, true, restoreBoundTexture);
     }
     else
     {
         /* Create new GL texture view and store it with insertion sort */
-        GLuint texID = CreateGLTextureView(texView, textureViewDesc, false);
+        GLuint texID = CreateGLTextureView(texView, textureViewDesc, false, restoreBoundTexture);
         textureViews_.insert(textureViews_.begin() + insertionIndex, texView);
         return texID;
     }
@@ -154,7 +154,13 @@ int GLTextureViewPool::CompareTextureViewSWO(const GLTextureView& lhs, const GLT
     return CompareCompressedTexViewSWO(lhs.view, rhs.view);
 }
 
-static GLuint GenGLTextureView(GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc)
+static void InitializeTextureViewSwizzle(GLuint texID, const GLTextureTarget target, const TextureViewDescriptor& textureViewDesc)
+{
+    GLStateManager::Get().BindTexture(target, texID);
+    GLTexture::TexParameterSwizzle(textureViewDesc.type, textureViewDesc.format, textureViewDesc.swizzle);
+}
+
+static GLuint GenGLTextureView(GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc, bool restoreBoundTexture)
 {
     GLuint texID = 0;
 
@@ -174,6 +180,23 @@ static GLuint GenGLTextureView(GLuint sourceTexID, const TextureViewDescriptor& 
             textureViewDesc.subresource.baseArrayLayer,
             textureViewDesc.subresource.numArrayLayers
         );
+
+        /* Initialize texture swizzle */
+        const auto target = GLStateManager::GetTextureTarget(textureViewDesc.type);
+        if (restoreBoundTexture)
+        {
+            /* Initialize texture view with swizzle parameters and store/restore bound texture slot */
+            GLStateManager::Get().PushBoundTexture(target);
+            {
+                InitializeTextureViewSwizzle(texID, target, textureViewDesc);
+            }
+            GLStateManager::Get().PopBoundTexture();
+        }
+        else
+        {
+            /* Initialize texture view with swizzle parameters */
+            InitializeTextureViewSwizzle(texID, target, textureViewDesc);
+        }
     }
 
     #endif // /GL_ARB_texture_view
@@ -181,21 +204,21 @@ static GLuint GenGLTextureView(GLuint sourceTexID, const TextureViewDescriptor& 
     return texID;
 }
 
-GLuint GLTextureViewPool::CreateGLTextureView(GLTextureView& texView, const TextureViewDescriptor& textureViewDesc, bool isSharedTex)
+GLuint GLTextureViewPool::CreateGLTextureView(GLTextureView& texView, const TextureViewDescriptor& textureViewDesc, bool isSharedTex, bool restoreBoundTexture)
 {
     if (isSharedTex)
     {
         if (texView.texID == 0)
         {
             /* Create new GL texture view if ID is invalid */
-            GLuint texID = GenGLTextureView(texView.sourceTexID, textureViewDesc);
+            GLuint texID = GenGLTextureView(texView.sourceTexID, textureViewDesc, restoreBoundTexture);
             RetainSharedGLTextureView(texView, texID);
         }
     }
     else
     {
         /* Create a new GL texture view and initialize reference counter */
-        texView.texID = GenGLTextureView(texView.sourceTexID, textureViewDesc);
+        texView.texID = GenGLTextureView(texView.sourceTexID, textureViewDesc, restoreBoundTexture);
     }
 
     /* Increment reference counter for the shared texture view */

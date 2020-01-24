@@ -176,16 +176,16 @@ static std::vector<D3DResourceBinding> CollectD3DResourceBindings(
     const D3DResourceBindingFunc&   resourceFunc)
 {
     /* Collect all binding points of the specified resource type */
-    BindingDescriptor bindingDesc;
+    const BindingDescriptor* bindingDesc = nullptr;
     resourceIterator.Reset(resourceType, bindFlags, affectedStage);
 
     std::vector<D3DResourceBinding> resourceBindings;
     resourceBindings.reserve(resourceIterator.GetCount());
 
-    while (auto resource = resourceIterator.Next(bindingDesc))
+    while (auto resource = resourceIterator.Next(&bindingDesc))
     {
         D3DResourceBinding binding = {};
-        if (resourceFunc(binding, resource, bindingDesc.slot, bindingDesc.stageFlags))
+        if (resourceFunc(binding, resource, bindingDesc->slot, bindingDesc->stageFlags))
             resourceBindings.push_back(binding);
     }
 

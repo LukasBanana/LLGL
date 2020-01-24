@@ -28,14 +28,15 @@ class LLGL_EXPORT ResourceBindingIterator
         ResourceBindingIterator(
             const std::vector<ResourceViewDescriptor>&  resourceViews,
             const std::vector<BindingDescriptor>&       bindings,
-            std::size_t                                 firstResourceIndex  = 0
+            std::size_t                                 firstResourceIndex  = 0,
+            bool                                        iterateAllSegments  = false
         );
 
         // Resets the iteration for the specified binding parameters.
         void Reset(const ResourceType typeOfInterest, long bindFlagsOfInterest = 0, long stagesOfInterest = 0);
 
         // Returns the next resource of the current type of interest, or null if there are no more resources of that type.
-        Resource* Next(BindingDescriptor& bindingDesc);
+        Resource* Next(const BindingDescriptor** bindingDesc = nullptr, const ResourceViewDescriptor** rvDesc = nullptr);
 
         // Returns the number of all resource.
         inline std::size_t GetCount() const

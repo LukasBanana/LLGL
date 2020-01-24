@@ -40,11 +40,7 @@ struct ResourceViewDescriptor
         resource { resource }
     {
         /* Invalidate subresource views */
-        textureView.format                      = Format::Undefined;
-        textureView.subresource.baseArrayLayer  = 0;
-        textureView.subresource.numArrayLayers  = 0;
-        textureView.subresource.baseMipLevel    = 0;
-        textureView.subresource.numMipLevels    = 0;
+        textureView.format = Format::Undefined;
     }
 
     //! Constructor to initialize a descriptor with a texture subresource view.
@@ -69,8 +65,10 @@ struct ResourceViewDescriptor
     /**
     \brief Optional texture view descriptor.
     \remarks Can be used to declare a subresource view of a texture resource.
-    \remarks This attribute is ignored if either \c numMipLevels or \c numArrayLayers of the TextureSubresource structure is zero.
-    \todo Not implemented yet.
+    \remarks This attribute is ignored if one of the following sub members has the respective value listed below:
+    - \c textureView.format is Format::Undefined
+    - \c textureView.subresource.numMipLevels is 0
+    - \c textureView.subresource.numArrayLayers is 0
     */
     TextureViewDescriptor   textureView;
 

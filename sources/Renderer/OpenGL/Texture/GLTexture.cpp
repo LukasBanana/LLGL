@@ -336,15 +336,19 @@ static void InitializeGLTextureSwizzle(GLenum target, const TextureSwizzleRGBA& 
     glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, GLTypes::Map(swizzle.a));
 }
 
-void GLTexture::InitializeTextureSwizzle(const TextureSwizzleRGBA& swizzle, bool ignoreIdentitySwizzle)
+static void InitializeGLTextureSwizzleWithFormat(
+    const TextureType           type,
+    const GLSwizzleFormat       swizzleFormat,
+    const TextureSwizzleRGBA&   swizzle,
+    bool                        ignoreIdentitySwizzle)
 {
     /* Ignore initialization if default values can be used */
-    if (swizzleFormat_ == GLSwizzleFormat::RGBA && ignoreIdentitySwizzle)
+    if (swizzleFormat == GLSwizzleFormat::RGBA && ignoreIdentitySwizzle)
         return;
 
     /* Map swizzle parameters according for permutation format */
-    const auto target = GetGLTexTarget();
-    switch (swizzleFormat_)
+    const auto target = GLTypes::Map(type);
+    switch (swizzleFormat)
     {
         case GLSwizzleFormat::RGBA:
             InitializeGLTextureSwizzle(target, swizzle);
@@ -358,6 +362,15 @@ void GLTexture::InitializeTextureSwizzle(const TextureSwizzleRGBA& swizzle, bool
             InitializeGLTextureSwizzle(target, GetTextureSwizzlePermutationAlpha(swizzle));
             break;
     }
+}
+
+void GLTexture::TexParameterSwizzle(
+    const TextureType           type,
+    const Format                format,
+    const TextureSwizzleRGBA&   swizzle,
+    bool                        ignoreIdentitySwizzle)
+{
+    InitializeGLTextureSwizzleWithFormat(type, MapSwizzleFormat(format), swizzle, ignoreIdentitySwizzle);
 }
 
 #ifdef GL_ARB_copy_image
@@ -822,7 +835,7 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     /* Configure texture swizzling if format is not supported */
-    InitializeTextureSwizzle({}, true);
+    InitializeGLTextureSwizzleWithFormat(GetType(), swizzleFormat_, {}, true);
 
     /* Convert initial image data for texture swizzle formats */
     SrcImageDescriptor intermediateImageDesc;

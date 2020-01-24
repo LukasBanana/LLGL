@@ -16,13 +16,16 @@ namespace LLGL
 ResourceBindingIterator::ResourceBindingIterator(
     const std::vector<ResourceViewDescriptor>&  resourceViews,
     const std::vector<BindingDescriptor>&       bindings,
-    std::size_t                                 firstResourceIndex)
+    std::size_t                                 firstResourceIndex,
+    bool                                        iterateAllSegments)
 :
-    resourceViews_ { resourceViews                                   },
-    bindings_      { bindings                                        },
-    offset_        { firstResourceIndex                              },
-    count_         { std::min(resourceViews.size(), bindings.size()) }
+    resourceViews_ { resourceViews        },
+    bindings_      { bindings             },
+    offset_        { firstResourceIndex   },
+    count_         { resourceViews.size() }
 {
+    if (!iterateAllSegments)
+        count_ = std::min(count_, bindings.size());
 }
 
 void ResourceBindingIterator::Reset(const ResourceType typeOfInterest, long bindFlagsOfInterest, long stagesOfInterest)
@@ -54,20 +57,24 @@ static void ErrNullPointerResource(const ResourceType t)
     );
 }
 
-Resource* ResourceBindingIterator::Next(BindingDescriptor& bindingDesc)
+Resource* ResourceBindingIterator::Next(const BindingDescriptor** bindingDesc, const ResourceViewDescriptor** rvDesc)
 {
     while (iterator_ < count_)
     {
         /* Search for resource type of interest */
-        const auto& current = bindings_[iterator_];
+        const auto& current = bindings_[iterator_ % bindings_.size()];
         if ( current.type == typeOfInterest_ &&
              ( bindFlagsOfInterest_ == 0 || (current.bindFlags  & bindFlagsOfInterest_) != 0 ) &&
              ( stagesOfInterest_    == 0 || (current.stageFlags & stagesOfInterest_   ) != 0 ) )
         {
             /* Check for null pointer exception */
-            if (auto resource = resourceViews_[offset_ + iterator_].resource)
+            const auto& resourceViewDesc = resourceViews_[offset_ + iterator_];
+            if (auto resource = resourceViewDesc.resource)
             {
-                bindingDesc = bindings_[iterator_];
+                if (bindingDesc != nullptr)
+                    *bindingDesc = &current;
+                if (rvDesc != nullptr)
+                    *rvDesc = &resourceViewDesc;
                 ++iterator_;
                 return resource;
             }

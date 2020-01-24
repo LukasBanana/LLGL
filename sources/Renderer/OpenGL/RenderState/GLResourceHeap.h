@@ -39,6 +39,7 @@ class GLResourceHeap final : public ResourceHeap
     public:
 
         GLResourceHeap(const ResourceHeapDescriptor& desc);
+        ~GLResourceHeap();
 
         // Binds this resource heap with the specified GL state manager.
         void Bind(GLStateManager& stateMngr, std::uint32_t firstSet);
@@ -65,12 +66,19 @@ class GLResourceHeap final : public ResourceHeap
         void BuildSegment2Target(GLResourceBindingIter it, GLsizei count);
         void BuildSegment2Format(GLResourceBindingIter it, GLsizei count);
 
+        void WriteSegmentationHeapEnd(const void* data, std::size_t size);
+
+        GLuint GetTextureViewID(std::size_t idx) const;
+
+        std::size_t GetSegmentationHeapSize() const;
+
+        const std::int8_t* GetSegmentationHeapStart(std::uint32_t firstSet) const;
+
     private:
 
         // Describes the segments within the raw buffer (per descriptor set).
         struct BufferSegmentation
         {
-            std::uint8_t numTextureViews            = 0; // Number of GL texture objects generated with glTextureView
             std::uint8_t numUniformBufferSegments   = 0;
             std::uint8_t numStorageBufferSegments   = 0;
             std::uint8_t numTextureSegments         = 0;
@@ -83,6 +91,7 @@ class GLResourceHeap final : public ResourceHeap
         BufferSegmentation          segmentation_;
         std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
         std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
+        std::size_t                 numTextureViews_    = 0;    // Number of GL texture objects generated with glTextureView
         GLbitfield                  barriers_           = 0;    // Bitmask for glMemoryBarrier
 
 };
