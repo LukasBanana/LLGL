@@ -76,7 +76,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \remarks This is a helper function when only one or a few number of uniform locations are meant to be determined.
         If more uniforms are involved, use the Reflect function.
         \see Reflect
-        \note Only supported with: OpenGL, Vulkan, Direct3D 12.
+        \note Only supported with: OpenGL.
         */
         virtual UniformLocation FindUniformLocation(const char* name) const = 0;
 

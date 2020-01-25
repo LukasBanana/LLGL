@@ -32,6 +32,11 @@ void D3D12PipelineLayout::SetName(const char* name)
     D3D12SetObjectName(rootSignature_.Get(), name);
 }
 
+std::uint32_t D3D12PipelineLayout::GetNumBindings() const
+{
+    return static_cast<std::uint32_t>(bindFlags_.size());
+}
+
 static D3D12_ROOT_SIGNATURE_FLAGS GetRootSignatureFlags(const PipelineLayoutDescriptor& layoutDesc)
 {
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;

@@ -17,6 +17,11 @@ BasicPipelineLayout::BasicPipelineLayout(const PipelineLayoutDescriptor& desc) :
 {
 }
 
+std::uint32_t BasicPipelineLayout::GetNumBindings() const
+{
+    return static_cast<std::uint32_t>(bindings_.size());
+}
+
 
 } // /namespace LLGL
 

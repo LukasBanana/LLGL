@@ -36,9 +36,9 @@ class LLGL_EXPORT ResourceHeap : public RenderSystemChild
         \remarks This is determined by the number of resources in the heap divided by the number of bindings in the pipeline layout.
         The total number of resources in the heap can therefore be determined by the following code:
         \code
-        myResourceHeap->GetNumDescriptorSets() * myPipelineLayoutDesc.bindings.size();
+        myResourceHeap->GetNumDescriptorSets() * myPipelineLayout->GetNumBindings();
         \endcode
-        \see PipelineLayoutDescriptor::bindings
+        \see PipelineLayout::GetNumBindings
         \see CommandBuffer::SetResourceHeap
         */
         virtual std::uint32_t GetNumDescriptorSets() const = 0;

@@ -133,6 +133,11 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     }
 }
 
+std::uint32_t VKPipelineLayout::GetNumBindings() const
+{
+    return static_cast<std::uint32_t>(bindings_.size());
+}
+
 
 } // /namespace LLGL
 

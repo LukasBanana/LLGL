@@ -10,6 +10,7 @@
 
 
 #include "RenderSystemChild.h"
+#include <cstdint>
 
 
 namespace LLGL
@@ -26,7 +27,18 @@ or descriptor heaps (as called in Direct3D 12) for graphics and compute pipeline
 */
 class LLGL_EXPORT PipelineLayout : public RenderSystemChild
 {
-    LLGL_DECLARE_INTERFACE( InterfaceID::PipelineLayout );
+
+        LLGL_DECLARE_INTERFACE( InterfaceID::PipelineLayout );
+
+    public:
+
+        /**
+        \brief Returns the number of resource bindings in this pipeline layout.
+        \see PipelineLayoutDescriptor::bindings
+        \see ResourceHeap::GetNumDescriptorSets
+        */
+        virtual std::uint32_t GetNumBindings() const = 0;
+
 };
 
 

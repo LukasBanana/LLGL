@@ -32,13 +32,19 @@ class VKPipelineLayout final : public PipelineLayout
 
     public:
 
+        std::uint32_t GetNumBindings() const override;
+
+    public:
+
         VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc);
 
+        // Returns the native VkPipelineLayout object.
         inline VkPipelineLayout GetVkPipelineLayout() const
         {
             return pipelineLayout_.Get();
         }
 
+        // Returns the native VkDescriptorSetLayout object.
         inline VkDescriptorSetLayout GetVkDescriptorSetLayout() const
         {
             return descriptorSetLayout_.Get();

@@ -24,6 +24,11 @@ void DbgPipelineLayout::SetName(const char* name)
     DbgSetObjectName(*this, name);
 }
 
+std::uint32_t DbgPipelineLayout::GetNumBindings() const
+{
+    return instance.GetNumBindings();
+}
+
 
 } // /namespace LLGL
 

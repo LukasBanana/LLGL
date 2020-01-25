@@ -24,6 +24,10 @@ class LLGL_EXPORT BasicPipelineLayout : public PipelineLayout
 
     public:
 
+        std::uint32_t GetNumBindings() const override;
+
+    public:
+
         BasicPipelineLayout(const PipelineLayoutDescriptor& desc);
 
         // Returns the copied list of binding descriptors.

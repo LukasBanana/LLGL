@@ -25,6 +25,8 @@ class DbgPipelineLayout final : public PipelineLayout
 
         void SetName(const char* name) override;
 
+        std::uint32_t GetNumBindings() const override;
+
     public:
 
         DbgPipelineLayout(PipelineLayout& instance, const PipelineLayoutDescriptor& desc);
