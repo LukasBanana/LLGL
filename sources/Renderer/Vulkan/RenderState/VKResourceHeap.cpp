@@ -13,6 +13,7 @@
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../VKContainers.h"
+#include "../../TextureUtils.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 #include <LLGL/ResourceHeapFlags.h>
@@ -40,7 +41,6 @@ static VkPipelineBindPoint FindPipelineBindPoint(const VKPipelineLayout& pipelin
 }
 
 VKResourceHeap::VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeapDescriptor& desc) :
-    device_         { device                          },
     descriptorPool_ { device, vkDestroyDescriptorPool }
 {
     /* Get pipeline layout object */
@@ -66,27 +66,18 @@ VKResourceHeap::VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeap
     descriptorSets_.resize(numDescriptorSets, VK_NULL_HANDLE);
 
     /* Create resource descriptor pool */
-    CreateDescriptorPool(desc, bindings);
+    CreateDescriptorPool(device, desc, bindings);
 
     /* Create resource descriptor set for pipeline layout */
     std::vector<VkDescriptorSetLayout> setLayouts;
     setLayouts.resize(numDescriptorSets, pipelineLayoutVK->GetVkDescriptorSetLayout());
-    CreateDescriptorSets(static_cast<std::uint32_t>(numDescriptorSets), setLayouts.data());
+    CreateDescriptorSets(device, static_cast<std::uint32_t>(numDescriptorSets), setLayouts.data());
 
     /* Update write descriptors in descriptor set */
-    UpdateDescriptorSets(desc, bindings);
+    UpdateDescriptorSets(device, desc, bindings);
 
     /* Create pipeline barrier for resource views that require it, e.g. those with storage binding flags */
     CreatePipelineBarrier(desc.resourceViews, pipelineLayoutVK->GetBindings());
-}
-
-VKResourceHeap::~VKResourceHeap()
-{
-    //INFO: is automatically deleted when pool is deleted
-    #if 0
-    auto result = vkFreeDescriptorSets(device_, descriptorPool_, 1, &descriptorSet_);
-    VKThrowIfFailed(result, "failed to release Vulkan descriptor sets");
-    #endif
 }
 
 std::uint32_t VKResourceHeap::GetNumDescriptorSets() const
@@ -141,7 +132,10 @@ static void CompressDescriptorPoolSizes(std::vector<VkDescriptorPoolSize>& poolS
 }
 
 //TODO: enhance pool size accumulation
-void VKResourceHeap::CreateDescriptorPool(const ResourceHeapDescriptor& desc, const std::vector<VKLayoutBinding>& bindings)
+void VKResourceHeap::CreateDescriptorPool(
+    const VKPtr<VkDevice>&              device,
+    const ResourceHeapDescriptor&       desc,
+    const std::vector<VKLayoutBinding>& bindings)
 {
     /* Initialize descriptor pool sizes */
     const auto numResourceViews = desc.resourceViews.size();
@@ -167,11 +161,14 @@ void VKResourceHeap::CreateDescriptorPool(const ResourceHeapDescriptor& desc, co
         poolCreateInfo.poolSizeCount    = static_cast<std::uint32_t>(poolSizes.size());
         poolCreateInfo.pPoolSizes       = poolSizes.data();
     }
-    auto result = vkCreateDescriptorPool(device_, &poolCreateInfo, nullptr, descriptorPool_.ReleaseAndGetAddressOf());
+    auto result = vkCreateDescriptorPool(device, &poolCreateInfo, nullptr, descriptorPool_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan descriptor pool");
 }
 
-void VKResourceHeap::CreateDescriptorSets(std::uint32_t numSetLayouts, const VkDescriptorSetLayout* setLayouts)
+void VKResourceHeap::CreateDescriptorSets(
+    const VKPtr<VkDevice>&          device,
+    std::uint32_t                   numSetLayouts,
+    const VkDescriptorSetLayout*    setLayouts)
 {
     /* Allocate descriptor set */
     VkDescriptorSetAllocateInfo allocInfo;
@@ -182,11 +179,14 @@ void VKResourceHeap::CreateDescriptorSets(std::uint32_t numSetLayouts, const VkD
         allocInfo.descriptorSetCount    = numSetLayouts;
         allocInfo.pSetLayouts           = setLayouts;
     }
-    auto result = vkAllocateDescriptorSets(device_, &allocInfo, descriptorSets_.data());
+    auto result = vkAllocateDescriptorSets(device, &allocInfo, descriptorSets_.data());
     VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
 }
 
-void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, const std::vector<VKLayoutBinding>& bindings)
+void VKResourceHeap::UpdateDescriptorSets(
+    const VKPtr<VkDevice>&              device,
+    const ResourceHeapDescriptor&       desc,
+    const std::vector<VKLayoutBinding>& bindings)
 {
     /* Allocate local storage for buffer and image descriptors */
     const auto numResourceViews = desc.resourceViews.size();
@@ -210,12 +210,12 @@ void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, co
                 break;
 
             case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-                FillWriteDescriptorForTexture(rvDesc, descSet, binding, container);
+                FillWriteDescriptorForTexture(device, rvDesc, descSet, binding, container);
                 break;
 
             case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
             case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-                FillWriteDescriptorForBuffer(rvDesc, descSet, binding, container);
+                FillWriteDescriptorForBuffer(device, rvDesc, descSet, binding, container);
                 break;
 
             default:
@@ -230,7 +230,7 @@ void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, co
     if (container.numWriteDescriptors > 0)
     {
         vkUpdateDescriptorSets(
-            device_,
+            device,
             container.numWriteDescriptors,      // Number of write descriptor
             container.writeDescriptors.data(),  // Descriptors to be written
             0,                                  // No copy descriptors
@@ -270,6 +270,7 @@ void VKResourceHeap::FillWriteDescriptorForSampler(
 }
 
 void VKResourceHeap::FillWriteDescriptorForTexture(
+    const VKPtr<VkDevice>&          device,
     const ResourceViewDescriptor&   rvDesc,
     VkDescriptorSet                 descSet,
     const VKLayoutBinding&          binding,
@@ -281,7 +282,7 @@ void VKResourceHeap::FillWriteDescriptorForTexture(
     auto imageInfo = container.NextImageInfo();
     {
         imageInfo->sampler       = VK_NULL_HANDLE;
-        imageInfo->imageView     = textureVK->GetVkImageView();
+        imageInfo->imageView     = GetOrCreateImageView(device, *textureVK, rvDesc);
         imageInfo->imageLayout   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
 
@@ -300,6 +301,7 @@ void VKResourceHeap::FillWriteDescriptorForTexture(
 }
 
 void VKResourceHeap::FillWriteDescriptorForBuffer(
+    const VKPtr<VkDevice>&          /*device*/,
     const ResourceViewDescriptor&   rvDesc,
     VkDescriptorSet                 descSet,
     const VKLayoutBinding&          binding,
@@ -329,7 +331,9 @@ void VKResourceHeap::FillWriteDescriptorForBuffer(
     }
 }
 
-void VKResourceHeap::CreatePipelineBarrier(const std::vector<ResourceViewDescriptor>& resourceViews, const std::vector<VKLayoutBinding>& bindings)
+void VKResourceHeap::CreatePipelineBarrier(
+    const std::vector<ResourceViewDescriptor>&  resourceViews,
+    const std::vector<VKLayoutBinding>&         bindings)
 {
     const auto numBindings = bindings.size();
     for (std::size_t i = 0; i < resourceViews.size(); ++i)
@@ -354,6 +358,25 @@ void VKResourceHeap::CreatePipelineBarrier(const std::vector<ResourceViewDescrip
                 }
             }
         }
+    }
+}
+
+VkImageView VKResourceHeap::GetOrCreateImageView(
+    const VKPtr<VkDevice>&          device,
+    VKTexture&                      texture,
+    const ResourceViewDescriptor&   rvDesc)
+{
+    if (IsTextureViewEnabled(rvDesc))
+    {
+        /* Creates a new image view for the specified subresource descriptor */
+        imageViews_.emplace_back(device, vkDestroyImageView);
+        texture.CreateImageView(device, rvDesc.textureView, imageViews_.back().ReleaseAndGetAddressOf());
+        return imageViews_.back();
+    }
+    else
+    {
+        /* Returns the standard image view */
+        return texture.GetVkImageView();
     }
 }
 

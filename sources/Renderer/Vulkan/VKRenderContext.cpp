@@ -28,6 +28,16 @@ static const std::vector<const char*> g_deviceExtensions
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
+static VKPtr<VkImageView> NullVkImageView(const VKPtr<VkDevice>& device)
+{
+    return VKPtr<VkImageView>{ device, vkDestroyImageView };
+}
+
+static VKPtr<VkFramebuffer> NullVkFramebuffer(const VKPtr<VkDevice>& device)
+{
+    return VKPtr<VkFramebuffer>{ device, vkDestroyFramebuffer };
+}
+
 VKRenderContext::VKRenderContext(
     const VKPtr<VkInstance>&        instance,
     VkPhysicalDevice                physicalDevice,
@@ -36,18 +46,26 @@ VKRenderContext::VKRenderContext(
     RenderContextDescriptor         desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext        { desc.videoMode, desc.vsync      },
-    instance_            { instance                        },
-    physicalDevice_      { physicalDevice                  },
-    device_              { device                          },
-    deviceMemoryMngr_    { deviceMemoryMngr                },
-    surface_             { instance, vkDestroySurfaceKHR   },
-    swapChain_           { device, vkDestroySwapchainKHR   },
-    swapChainRenderPass_ { device                          },
-    swapChainSamples_    { GetClampedSamples(desc.samples) },
-    secondaryRenderPass_ { device                          },
-    depthStencilBuffer_  { device                          },
-    colorBuffers_        { device, device, device          }
+    RenderContext            { desc.videoMode, desc.vsync      },
+    instance_                { instance                        },
+    physicalDevice_          { physicalDevice                  },
+    device_                  { device                          },
+    deviceMemoryMngr_        { deviceMemoryMngr                },
+    surface_                 { instance, vkDestroySurfaceKHR   },
+    swapChain_               { device, vkDestroySwapchainKHR   },
+    swapChainRenderPass_     { device                          },
+    swapChainSamples_        { GetClampedSamples(desc.samples) },
+    swapChainImageViews_     { NullVkImageView(device_),
+                               NullVkImageView(device_),
+                               NullVkImageView(device_)        },
+    swapChainFramebuffers_   { NullVkFramebuffer(device_),
+                               NullVkFramebuffer(device_),
+                               NullVkFramebuffer(device_)      },
+    secondaryRenderPass_     { device                          },
+    depthStencilBuffer_      { device                          },
+    colorBuffers_            { device, device, device          },
+    imageAvailableSemaphore_ { device, vkDestroySemaphore      },
+    renderFinishedSemaphore_ { device, vkDestroySemaphore      }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
     desc.videoMode = GetVideoMode();

@@ -42,6 +42,7 @@ class VKTexture final : public Texture
 
     public:
 
+        // Creates an additional texture view of the specified texture range and uses the same format as this texture object.
         void CreateImageView(
             VkDevice        device,
             std::uint32_t   baseMipLevel,
@@ -51,6 +52,14 @@ class VKTexture final : public Texture
             VkImageView*    imageViewRef
         );
 
+        // Creates an additional texture view with the specififed view descriptor.
+        void CreateImageView(
+            VkDevice                        device,
+            const TextureViewDescriptor&    textureViewDesc,
+            VkImageView*                    imageViewRef
+        );
+
+        // Creates the standard image view that is stored within this texture object.
         void CreateInternalImageView(VkDevice device);
 
         // Returns the image ascpect flags for the VkFormat of this texture.

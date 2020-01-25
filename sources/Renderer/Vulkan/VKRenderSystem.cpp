@@ -58,8 +58,9 @@ static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long cpuAccessFlags)
 /* ----- Common ----- */
 
 VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    instance_            { vkDestroyInstance                        },
-    debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
+    instance_              { vkDestroyInstance                        },
+    debugReportCallback_   { instance_, DestroyDebugReportCallbackEXT },
+    defaultPipelineLayout_ { device_, vkDestroyPipelineLayout         }
 {
     /* Extract optional renderer configuartion */
     auto rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);

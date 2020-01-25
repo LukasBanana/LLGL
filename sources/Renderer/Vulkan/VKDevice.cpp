@@ -23,7 +23,8 @@ namespace LLGL
 /* ----- Common ----- */
 
 VKDevice::VKDevice() :
-    device_ { vkDestroyDevice }
+    device_      { vkDestroyDevice               },
+    commandPool_ { device_, vkDestroyCommandPool }
 {
 }
 
@@ -104,7 +105,7 @@ void VKDevice::CreateLogicalDevice(
 
 VKPtr<VkCommandPool> VKDevice::CreateCommandPool()
 {
-    VKPtr<VkCommandPool> commandPool;
+    VKPtr<VkCommandPool> commandPool{ device_, vkDestroyCommandPool };
 
     /* Create staging command pool */
     VkCommandPoolCreateInfo createInfo;

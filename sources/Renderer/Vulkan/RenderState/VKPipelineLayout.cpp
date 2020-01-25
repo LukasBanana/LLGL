@@ -80,7 +80,6 @@ maybe move the VkPipelineLayout object into "VKGraphicsPipeline",
 in this case the "PipelineLayout" interface might need a renaming
 */
 VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc) :
-    device_              { device                               },
     pipelineLayout_      { device, vkDestroyPipelineLayout      },
     descriptorSetLayout_ { device, vkDestroyDescriptorSetLayout }
 {

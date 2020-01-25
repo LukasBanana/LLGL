@@ -143,6 +143,24 @@ void VKTexture::CreateImageView(
     );
 }
 
+void VKTexture::CreateImageView(
+    VkDevice                        device,
+    const TextureViewDescriptor&    textureViewDesc,
+    VkImageView*                    imageViewRef)
+{
+    imageWrapper_.CreateVkImageView(
+        device,
+        VKTypes::Map(textureViewDesc.type),
+        VKTypes::Map(textureViewDesc.format),
+        GetAspectFlags(),
+        textureViewDesc.subresource.baseMipLevel,
+        textureViewDesc.subresource.numMipLevels,
+        textureViewDesc.subresource.baseArrayLayer,
+        textureViewDesc.subresource.numArrayLayers,
+        imageViewRef
+    );
+}
+
 void VKTexture::CreateInternalImageView(VkDevice device)
 {
     CreateImageView(device, 0, GetNumMipLevels(), 0, GetNumArrayLayers(), imageView_.ReleaseAndGetAddressOf());
