@@ -15,6 +15,7 @@
 #include "../Texture/GLTextureViewPool.h"
 #include "../../CheckedCast.h"
 #include "../../ResourceBindingIterator.h"
+#include "../GLTypes.h"
 #include <LLGL/ResourceHeapFlags.h>
 #include <string.h>
 
@@ -156,19 +157,11 @@ GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc)
     #endif // /GL_ARB_shader_image_load_store
 
     /* Create all texture views */
+    for (std::size_t i = 0; i < numResourceViews; i += numBindings)
     {
-        const ResourceViewDescriptor* rvDesc = nullptr;
-        ResourceBindingIterator resourceIterator{ desc.resourceViews, bindings, 0, true };
-        resourceIterator.Reset(ResourceType::Texture, BindFlags::Sampled);
-
-        while (auto resource = resourceIterator.Next(nullptr, &rvDesc))
-        {
-            if (auto textureGL = GetAsTextureView(*rvDesc))
-            {
-                GLuint texID = GLTextureViewPool::Get().CreateTextureView(textureGL->GetID(), rvDesc->textureView);
-                WriteSegmentationHeapEnd(&texID, sizeof(texID));
-            }
-        }
+        ResourceBindingIterator resourceIterator{ desc.resourceViews, bindings, i };
+        BuildTextureViews(resourceIterator, BindFlags::Sampled);
+        BuildTextureViews(resourceIterator, BindFlags::Storage);
     }
 
     /* Build all resource view segments */
@@ -327,6 +320,20 @@ static std::vector<GLResourceBinding> CollectGLResourceBindings(
     return resourceBindings;
 }
 
+void GLResourceHeap::BuildTextureViews(ResourceBindingIterator& resourceIterator, long bindFlags)
+{
+    const ResourceViewDescriptor* rvDesc = nullptr;
+    resourceIterator.Reset(ResourceType::Texture, bindFlags);
+    while (auto resource = resourceIterator.Next(nullptr, &rvDesc))
+    {
+        if (auto textureGL = GetAsTextureView(*rvDesc))
+        {
+            GLuint texID = GLTextureViewPool::Get().CreateTextureView(textureGL->GetID(), rvDesc->textureView);
+            WriteSegmentationHeapEnd(&texID, sizeof(texID));
+        }
+    }
+}
+
 void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterator, long bindFlags, std::uint8_t& numSegments)
 {
     /* Collect all buffers */
@@ -376,7 +383,6 @@ void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceItera
         BindFlags::Sampled,
         [this](Resource* resource, const ResourceViewDescriptor& rvDesc, std::uint32_t slot) -> GLResourceBinding
         {
-            auto textureGL = LLGL_CAST(GLTexture*, resource);
             if (IsTextureViewEnabled(rvDesc))
             {
                 /* Generate resource binding for custom texture-view subresource */
@@ -386,6 +392,7 @@ void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceItera
             else
             {
                 /* Generate resource binding for texture resource */
+                auto textureGL = LLGL_CAST(GLTexture*, resource);
                 return { slot, textureGL->GetID(), GLStateManager::GetTextureTarget(textureGL->GetType()), 0 };
             }
         }
@@ -406,10 +413,20 @@ void GLResourceHeap::BuildImageTextureSegments(ResourceBindingIterator& resource
         resourceIterator,
         ResourceType::Texture,
         BindFlags::Storage,
-        [](Resource* resource, const ResourceViewDescriptor& /*rvDesc*/, std::uint32_t slot) -> GLResourceBinding
+        [this](Resource* resource, const ResourceViewDescriptor& rvDesc, std::uint32_t slot) -> GLResourceBinding
         {
-            auto textureGL = LLGL_CAST(GLTexture*, resource);
-            return { slot, textureGL->GetID(), GLTextureTarget::TEXTURE_1D, textureGL->GetGLInternalFormat() };
+            if (IsTextureViewEnabled(rvDesc))
+            {
+                /* Generate resource binding for custom texture-view subresource */
+                GLuint texID = GetTextureViewID(this->numTextureViews_++);
+                return { slot, texID, GLTextureTarget::TEXTURE_1D, GLTypes::Map(rvDesc.textureView.format) };
+            }
+            else
+            {
+                /* Generate resource binding for texture resource */
+                auto textureGL = LLGL_CAST(GLTexture*, resource);
+                return { slot, textureGL->GetID(), GLTextureTarget::TEXTURE_1D, textureGL->GetGLInternalFormat() };
+            }
         }
     );
 

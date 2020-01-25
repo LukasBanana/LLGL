@@ -49,6 +49,8 @@ class GLResourceHeap final : public ResourceHeap
         using GLResourceBindingIter = std::vector<GLResourceBinding>::const_iterator;
         using BuildSegmentFunc = std::function<void(GLResourceBindingIter begin, GLsizei count)>;
 
+        void BuildTextureViews(ResourceBindingIterator& resourceIterator, long bindFlags);
+
         void BuildBufferSegments(ResourceBindingIterator& resourceIterator, long bindFlags, std::uint8_t& numSegments);
         void BuildUniformBufferSegments(ResourceBindingIterator& resourceIterator);
         void BuildStorageBufferSegments(ResourceBindingIterator& resourceIterator);
