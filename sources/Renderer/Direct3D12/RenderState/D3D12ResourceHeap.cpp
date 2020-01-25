@@ -14,6 +14,7 @@
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
+#include "../../TextureUtils.h"
 #include <LLGL/Resource.h>
 #include <LLGL/ResourceHeapFlags.h>
 #include <functional>
@@ -280,12 +281,14 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeSampler(ID3D12Devic
     return {};
 }
 
+using D3DResourceViewFunc = std::function<bool(Resource& resource, const ResourceViewDescriptor& rvDesc)>;
+
 static void ForEachResourceViewOfType(
-    const ResourceHeapDescriptor&                   desc,
-    const ResourceType                              resourceType,
-    std::size_t                                     firstIndex,
-    UINT                                            numResourceViewsInLayout,
-    const std::function<bool(Resource& resource)>&  callback)
+    const ResourceHeapDescriptor&   desc,
+    const ResourceType              resourceType,
+    std::size_t                     firstIndex,
+    UINT                            numResourceViewsInLayout,
+    const D3DResourceViewFunc&      callback)
 {
     for (auto i = firstIndex; i < desc.resourceViews.size() && numResourceViewsInLayout > 0; ++i)
     {
@@ -294,7 +297,7 @@ static void ForEachResourceViewOfType(
         {
             if (resource->GetResourceType() == resourceType)
             {
-                if (callback(*resource))
+                if (callback(*resource, resourceView))
                     --numResourceViewsInLayout;
             }
         }
@@ -334,7 +337,7 @@ void D3D12ResourceHeap::CreateConstantBufferViews(
         ResourceType::Buffer,
         firstResourceIndex,
         rootParameterLayout.numBufferCBV,
-        [&](Resource& resource) -> bool
+        [&](Resource& resource, const ResourceViewDescriptor& /*rvDesc*/) -> bool
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::ConstantBuffer, bindingIndex))
@@ -366,7 +369,7 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
         ResourceType::Buffer,
         firstResourceIndex,
         rootParameterLayout.numBufferSRV,
-        [&](Resource& resource) -> bool
+        [&](Resource& resource, const ResourceViewDescriptor& /*rvDesc*/) -> bool
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
@@ -385,12 +388,15 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
         ResourceType::Texture,
         firstResourceIndex,
         rootParameterLayout.numTextureSRV,
-        [&](Resource& resource) -> bool
+        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
             {
-                textureD3D.CreateShaderResourceView(device, cpuDescHandle);
+                if (IsTextureViewEnabled(rvDesc))
+                    textureD3D.CreateShaderResourceView(device, rvDesc.textureView, cpuDescHandle);
+                else
+                    textureD3D.CreateShaderResourceView(device, cpuDescHandle);
                 cpuDescHandle.ptr += descHandleStride;
                 return true;
             }
@@ -417,7 +423,7 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
         ResourceType::Buffer,
         firstResourceIndex,
         rootParameterLayout.numBufferUAV,
-        [&](Resource& resource) -> bool
+        [&](Resource& resource, const ResourceViewDescriptor& /*rvDesc*/) -> bool
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
@@ -436,12 +442,15 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
         ResourceType::Texture,
         firstResourceIndex,
         rootParameterLayout.numTextureUAV,
-        [&](Resource& resource) -> bool
+        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
             {
-                textureD3D.CreateUnorderedAccessView(device, cpuDescHandle);
+                if (IsTextureViewEnabled(rvDesc))
+                    textureD3D.CreateUnorderedAccessView(device, rvDesc.textureView, cpuDescHandle);
+                else
+                    textureD3D.CreateUnorderedAccessView(device, cpuDescHandle);
                 cpuDescHandle.ptr += descHandleStride;
                 return true;
             }
@@ -465,7 +474,7 @@ void D3D12ResourceHeap::CreateSamplers(
         ResourceType::Sampler,
         firstResourceIndex,
         rootParameterLayout.numSamplers,
-        [&](Resource& resource) -> bool
+        [&](Resource& resource, const ResourceViewDescriptor& /*rvDesc*/) -> bool
         {
             auto& samplerD3D = LLGL_CAST(D3D12Sampler&, resource);
             samplerD3D.CreateResourceView(device, cpuDescHandle);
