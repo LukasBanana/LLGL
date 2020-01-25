@@ -175,6 +175,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.features.hasMultiSampleTextures            = true;
     caps.features.hasTextureViews                   = true;
     caps.features.hasTextureViewSwizzle             = true;
+    caps.features.hasBufferViews                    = true;
     caps.features.hasSamplers                       = true;
     caps.features.hasConstantBuffers                = true;
     caps.features.hasStorageBuffers                 = true;

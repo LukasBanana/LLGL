@@ -143,6 +143,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features, GLint version)
     features.hasMultiSampleTextures         = (version >= 310); // GLES 3.1
     features.hasTextureViews                = false;
     features.hasTextureViewSwizzle          = false;
+    features.hasBufferViews                 = true;
     features.hasSamplers                    = (version >= 300); // GLES 3.0
     features.hasConstantBuffers             = (version >= 300); // GLES 3.0
     features.hasStorageBuffers              = (version >= 300); // GLES 3.0
@@ -167,7 +168,7 @@ static void GLGetFeatureLimits(RenderingLimits& limits, GLint version)
     /* Determine minimal line width range for both aliased and smooth lines */
     GLfloat aliasedLineRange[2];
     glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, aliasedLineRange);
-    
+
     //limits.lineWidthRange[0]              = ???
     //limits.lineWidthRange[1]              = ???
 
@@ -176,7 +177,7 @@ static void GLGetFeatureLimits(RenderingLimits& limits, GLint version)
     limits.maxColorAttachments              = GLGetUInt(GL_MAX_DRAW_BUFFERS);
     //limits.maxPatchVertices               = ???
     //limits.maxAnisotropy                  = ???
-    
+
     #ifdef GL_ES_VERSION_3_1
     limits.maxComputeShaderWorkGroups[0]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
     limits.maxComputeShaderWorkGroups[1]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);

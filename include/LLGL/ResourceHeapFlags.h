@@ -50,14 +50,14 @@ struct ResourceViewDescriptor
     {
     }
 
-    #if 0//TODO
     //! Constructor to initialize a descriptor with a buffer subresource view.
     inline ResourceViewDescriptor(Buffer* buffer, const BufferViewDescriptor& subresourceDesc) :
         resource   { buffer          },
         bufferView { subresourceDesc }
     {
+        /* Invalidate subresource views */
+        textureView.format = Format::Undefined;
     }
-    #endif
 
     //! Pointer to the hardware resoudce.
     Resource*               resource    = nullptr;
@@ -65,17 +65,23 @@ struct ResourceViewDescriptor
     /**
     \brief Optional texture view descriptor.
     \remarks Can be used to declare a subresource view of a texture resource.
-    \remarks This attribute is ignored if one of the following sub members has the respective value listed below:
+    \remarks This attribute is ignored if \e one of the following sub members has the respective value listed below:
     - \c textureView.format is Format::Undefined
     - \c textureView.subresource.numMipLevels is 0
     - \c textureView.subresource.numArrayLayers is 0
     */
     TextureViewDescriptor   textureView;
 
-    #if 0//TODO
-    //! Optional buffer view descriptor.
+    /**
+    \brief Optional buffer view descriptor.
+    \remarks Can be used to declare a subresource view of a buffer resource.
+    \remarks This attribute is ignored if \e all of the following sub members have the respective value listed below:
+    - \c bufferView.format is Format::Undefined;
+    - \c bufferView.offset is 0.
+    - \c bufferView.size is \c Constants::wholeSize.
+    \todo Not implemented yet.
+    */
     BufferViewDescriptor    bufferView;
-    #endif
 };
 
 /**

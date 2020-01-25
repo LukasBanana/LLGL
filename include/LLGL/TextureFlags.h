@@ -345,7 +345,7 @@ struct TextureDescriptor
 
 /**
 \brief Texture view descriptor structure.
-\remarks Contains all information about type, format, and dimension to create a texture view that shares the image data of another texture.
+\remarks Contains all information about type, format, and dimension to create a texture view that shares the image data of another texture resource.
 \see ResourceViewDescriptor::textureView
 \see RenderingFeatures::hasTextureViews
 */

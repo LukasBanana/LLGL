@@ -416,7 +416,7 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether texture views are supported.
-    \remarks Texture views can share their image data with another texture resource.
+    \remarks Texture views can share their image data with another texture resource in a different range and format.
     \see TextureViewDescriptor
     */
     bool hasTextureViews                = false;
@@ -427,6 +427,13 @@ struct RenderingFeatures
     \see TextureViewDescriptor::swizzle
     */
     bool hasTextureViewSwizzle          = false;
+
+    /**
+    \brief Specifies whether buffer views are supported.
+    \remarks Buffer views can shared their data with another buffer resource in a different range and format.
+    \see BufferViewDescriptor
+    */
+    bool hasBufferViews                 = false;
 
     //! Specifies whether samplers are supported.
     bool hasSamplers                    = false;

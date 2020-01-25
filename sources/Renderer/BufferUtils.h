@@ -10,6 +10,7 @@
 
 
 #include <LLGL/BufferFlags.h>
+#include <LLGL/ResourceHeapFlags.h>
 
 
 namespace LLGL
@@ -23,6 +24,17 @@ Returns the final stride (in bytes) for a storage buffer, i.e. either by <stride
 If <format> is undefined, then 1 is returned for byte address buffers.
 */
 LLGL_EXPORT std::uint32_t GetStorageBufferStride(const BufferDescriptor& desc);
+
+// Returns true if the buffer-view in the specified resource-view descriptor is enabled.
+inline bool IsBufferViewEnabled(const ResourceViewDescriptor& rvDesc)
+{
+    return
+    (
+        rvDesc.bufferView.format != Format::Undefined   ||
+        rvDesc.bufferView.offset != 0                   ||
+        rvDesc.bufferView.size   != Constants::wholeSize
+    );
+}
 
 
 } // /namespace LLGL

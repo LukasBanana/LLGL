@@ -13,6 +13,7 @@
 #include "ResourceFlags.h"
 #include "VertexAttribute.h"
 #include "RenderSystemFlags.h"
+#include "Constants.h"
 #include <string>
 #include <cstdint>
 
@@ -89,6 +90,40 @@ struct BufferDescriptor
     \see VertexShaderAttributes::inputAttribs
     */
     std::vector<VertexAttribute>    vertexAttribs;
+};
+
+/**
+\brief Buffer view descriptor structure.
+\remarks Contains all information about format and memory range to create a buffer view that shares the data of another buffer resource.
+\see ResourceViewDescriptor::bufferView
+\see RenderingFeatures::hasBufferViews
+*/
+struct BufferViewDescriptor
+{
+    /**
+    \brief Specifies the format of the buffer view. By default Format::Undefined.
+    \remarks If the buffer resource was created with a \c stride greater than zero, this must be Format::Undefined.
+    \see BufferDescriptor::format
+    \see BufferDescriptor::stride
+    */
+    Format          format  = Format::Undefined;
+
+    /**
+    \brief Specifies the memory offset (in bytes) into the buffer resource. By default 0.
+    \remarks If \c size is equal to \c Constants::wholeSize, the offset is ignored and the entire buffer resource will be occupied by this buffer view.
+    \remarks If \c format is Format::Undefined, this \b must be aligned to the \c stride the buffer resource was created with.
+    \remarks If \c format is \e not Format::Undefined, this \b must be aligned to the size of \c format.
+    \see GetFormatAttribs
+    */
+    std::uint64_t   offset  = 0;
+
+    /**
+    \brief Specifies the memory offset (in bytes) into the buffer resource. By default \c Constants::wholeSize.
+    \remarks If \c size is \e not \c Constants::wholeSize and \c format is Format::Undefined, this \b must be aligned to the \c stride the buffer resource was created with.
+    \remarks If \c size is \e not \c Constants::wholeSize and \c format is \e not Format::Undefined, this \b must be aligned to the size of \c format.
+    \see GetFormatAttribs
+    */
+    std::uint64_t   size    = Constants::wholeSize;
 };
 
 
