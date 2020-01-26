@@ -424,6 +424,7 @@ struct RenderingFeatures
     /**
     \brief Specifies whether texture views can have swizzling (a.k.a. component mapping).
     \remarks This feature implies that \c hasTextureViews is true.
+    \note Only supported with: Direct3D 12, Vulkan, OpenGL, Metal.
     \see TextureViewDescriptor::swizzle
     */
     bool hasTextureViewSwizzle          = false;

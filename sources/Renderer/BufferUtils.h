@@ -10,7 +10,6 @@
 
 
 #include <LLGL/BufferFlags.h>
-#include <LLGL/ResourceHeapFlags.h>
 
 
 namespace LLGL
@@ -26,13 +25,13 @@ If <format> is undefined, then 1 is returned for byte address buffers.
 LLGL_EXPORT std::uint32_t GetStorageBufferStride(const BufferDescriptor& desc);
 
 // Returns true if the buffer-view in the specified resource-view descriptor is enabled.
-inline bool IsBufferViewEnabled(const ResourceViewDescriptor& rvDesc)
+inline bool IsBufferViewEnabled(const BufferViewDescriptor& bufferViewDesc)
 {
     return
     (
-        rvDesc.bufferView.format != Format::Undefined   ||
-        rvDesc.bufferView.offset != 0                   ||
-        rvDesc.bufferView.size   != Constants::wholeSize
+        bufferViewDesc.format != Format::Undefined   ||
+        bufferViewDesc.offset != 0                   ||
+        bufferViewDesc.size   != Constants::wholeSize
     );
 }
 

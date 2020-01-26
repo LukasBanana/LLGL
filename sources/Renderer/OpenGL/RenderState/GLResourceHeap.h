@@ -91,9 +91,11 @@ class GLResourceHeap final : public ResourceHeap
     private:
 
         BufferSegmentation          segmentation_;
-        std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
-        std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
+
         std::size_t                 numTextureViews_    = 0;    // Number of GL texture objects generated with glTextureView
+        std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
+        std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
+
         GLbitfield                  barriers_           = 0;    // Bitmask for glMemoryBarrier
 
 };

@@ -7,8 +7,10 @@
 
 #include "DbgRenderSystem.h"
 #include "DbgCore.h"
-#include "../../Core/Helper.h"
+#include "../BufferUtils.h"
+#include "../TextureUtils.h"
 #include "../CheckedCast.h"
+#include "../../Core/Helper.h"
 #include <LLGL/Strings.h>
 #include <LLGL/ImageFlags.h>
 #include <LLGL/StaticLimits.h>
@@ -1245,14 +1247,14 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& des
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "pipeline layout must not be null");
 }
 
-void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescriptor& resourceViewDesc, const BindingDescriptor& bindingDesc)
+void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescriptor& rvDesc, const BindingDescriptor& bindingDesc)
 {
     /* Validate stage flags against shader program */
     if (bindingDesc.stageFlags == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stages are specified for binding descriptor");
 
     /* Validate resource binding flags */
-    if (auto resource = resourceViewDesc.resource)
+    if (auto resource = rvDesc.resource)
     {
         switch (resource->GetResourceType())
         {
@@ -1260,6 +1262,8 @@ void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescripto
             {
                 auto bufferDbg = LLGL_CAST(DbgBuffer*, resource);
                 ValidateBufferForBinding(*bufferDbg, bindingDesc);
+                //if (IsBufferViewEnabled(rvDesc.bufferView))
+                //    ValidateBufferView(*bufferDbg, rvDesc.bufferView);
             }
             break;
 
@@ -1267,6 +1271,8 @@ void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescripto
             {
                 auto textureDbg = LLGL_CAST(DbgTexture*, resource);
                 ValidateTextureForBinding(*textureDbg, bindingDesc);
+                if (IsTextureViewEnabled(rvDesc.textureView))
+                    ValidateTextureView(*textureDbg, rvDesc.textureView);
             }
             break;
 

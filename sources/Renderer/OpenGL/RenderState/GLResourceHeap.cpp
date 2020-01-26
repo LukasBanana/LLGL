@@ -109,7 +109,7 @@ static GLbitfield GetMemoryBarrierBitfield(const std::vector<ResourceViewDescrip
 // Returns the resource of the specified descriptor as <GLTexture> if it describes a texture-view.
 static GLTexture* GetAsTextureView(const ResourceViewDescriptor& rvDesc)
 {
-    if (IsTextureViewEnabled(rvDesc))
+    if (IsTextureViewEnabled(rvDesc.textureView))
     {
         if (auto* resource = rvDesc.resource)
         {
@@ -289,7 +289,14 @@ void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t firstSet)
  * ======= Private: =======
  */
 
-using GLResourceBindingFunc = std::function<void(GLResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& rvDesc, std::uint32_t slot)>;
+using GLResourceBindingFunc = std::function<
+    void(
+        GLResourceBinding&              binding,
+        Resource*                       resource,
+        const ResourceViewDescriptor&   rvDesc,
+        std::uint32_t                   slot
+    )
+>;
 
 static std::vector<GLResourceBinding> CollectGLResourceBindings(
     ResourceBindingIterator&        resourceIterator,
@@ -390,7 +397,7 @@ void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceItera
         [this](GLResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& rvDesc, std::uint32_t slot)
         {
             binding.slot = slot;
-            if (IsTextureViewEnabled(rvDesc))
+            if (IsTextureViewEnabled(rvDesc.textureView))
             {
                 /* Generate resource binding for custom texture-view subresource */
                 binding.object = GetTextureViewID(this->numTextureViews_++);
@@ -424,7 +431,7 @@ void GLResourceHeap::BuildImageTextureSegments(ResourceBindingIterator& resource
         [this](GLResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& rvDesc, std::uint32_t slot)
         {
             binding.slot = slot;
-            if (IsTextureViewEnabled(rvDesc))
+            if (IsTextureViewEnabled(rvDesc.textureView))
             {
                 /* Generate resource binding for custom texture-view subresource */
                 binding.object = GetTextureViewID(this->numTextureViews_++);

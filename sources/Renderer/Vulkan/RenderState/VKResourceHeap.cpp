@@ -366,7 +366,7 @@ VkImageView VKResourceHeap::GetOrCreateImageView(
     VKTexture&                      texture,
     const ResourceViewDescriptor&   rvDesc)
 {
-    if (IsTextureViewEnabled(rvDesc))
+    if (IsTextureViewEnabled(rvDesc.textureView))
     {
         /* Creates a new image view for the specified subresource descriptor */
         imageViews_.emplace_back(device, vkDestroyImageView);

@@ -176,7 +176,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateAttachmentDesc(const AttachmentDescriptor& desc);
 
         void ValidateResourceHeapDesc(const ResourceHeapDescriptor& desc);
-        void ValidateResourceViewForBinding(const ResourceViewDescriptor& resourceViewDesc, const BindingDescriptor& bindingDesc);
+        void ValidateResourceViewForBinding(const ResourceViewDescriptor& rvDesc, const BindingDescriptor& bindingDesc);
         void ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc);
         void ValidateTextureForBinding(const DbgTexture& textureDbg, const BindingDescriptor& bindingDesc);
 

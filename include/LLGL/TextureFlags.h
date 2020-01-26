@@ -384,7 +384,10 @@ struct TextureViewDescriptor
     */
     Format              format          = Format::RGBA8UNorm;
 
-    //! Specifies the texture subresource, i.e. MIP-map level and array layer range. By default only the first MIP-map level and first array layer is addressed.
+    /**
+    \brief Specifies the texture subresource, i.e. MIP-map level and array layer range. By default only the first MIP-map level and first array layer is addressed.
+    \remarks For texture subresources that are bound with the binding flag BindFlags::Storage, \c numMipLevels \b must be 1.
+    */
     TextureSubresource  subresource;
 
     /**

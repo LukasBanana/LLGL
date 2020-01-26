@@ -11,6 +11,7 @@
 
 #include <LLGL/ResourceHeap.h>
 #include <LLGL/ResourceFlags.h>
+#include "../../DXCommon/ComPtr.h"
 #include <vector>
 #include <functional>
 #include <d3d11.h>
@@ -20,8 +21,10 @@ namespace LLGL
 {
 
 
+class D3D11Texture;
 class ResourceBindingIterator;
 struct ResourceHeapDescriptor;
+struct TextureViewDescriptor;
 struct D3DResourceBinding;
 
 /*
@@ -84,6 +87,9 @@ class D3D11ResourceHeap final : public ResourceHeap
         void BindPSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
         void BindCSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
 
+        ID3D11ShaderResourceView* GetOrCreateTextureSRV(D3D11Texture& texture, const TextureViewDescriptor& textureViewDesc);
+        ID3D11UnorderedAccessView* GetOrCreateTextureUAV(D3D11Texture& texture, const TextureViewDescriptor& textureViewDesc);
+
         const std::int8_t* GetSegmentationHeapStart(std::uint32_t firstSet) const;
 
     private:
@@ -132,10 +138,14 @@ class D3D11ResourceHeap final : public ResourceHeap
 
     private:
 
-        BufferSegmentation          segmentation_;
-        std::uint16_t               bufferOffsetCS_     = 0;
-        std::vector<std::int8_t>    buffer_;
-        std::size_t                 stride_             = 0;
+        BufferSegmentation                              segmentation_;
+
+        std::size_t                                     stride_         = 0;
+        std::uint16_t                                   bufferOffsetCS_ = 0;
+        std::vector<std::int8_t>                        buffer_;
+
+        std::vector<ComPtr<ID3D11ShaderResourceView>>   srvs_;
+        std::vector<ComPtr<ID3D11UnorderedAccessView>>  uavs_;
 
 };
 

@@ -393,7 +393,7 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
             {
-                if (IsTextureViewEnabled(rvDesc))
+                if (IsTextureViewEnabled(rvDesc.textureView))
                     textureD3D.CreateShaderResourceView(device, rvDesc.textureView, cpuDescHandle);
                 else
                     textureD3D.CreateShaderResourceView(device, cpuDescHandle);
@@ -447,7 +447,7 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
             {
-                if (IsTextureViewEnabled(rvDesc))
+                if (IsTextureViewEnabled(rvDesc.textureView))
                     textureD3D.CreateUnorderedAccessView(device, rvDesc.textureView, cpuDescHandle);
                 else
                     textureD3D.CreateUnorderedAccessView(device, cpuDescHandle);
