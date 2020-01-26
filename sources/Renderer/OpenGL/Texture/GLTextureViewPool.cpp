@@ -154,11 +154,15 @@ int GLTextureViewPool::CompareTextureViewSWO(const GLTextureView& lhs, const GLT
     return CompareCompressedTexViewSWO(lhs.view, rhs.view);
 }
 
+#ifdef GL_ARB_texture_view
+
 static void InitializeTextureViewSwizzle(GLuint texID, const GLTextureTarget target, const TextureViewDescriptor& textureViewDesc)
 {
     GLStateManager::Get().BindTexture(target, texID);
     GLTexture::TexParameterSwizzle(textureViewDesc.type, textureViewDesc.format, textureViewDesc.swizzle);
 }
+
+#endif // /GL_ARB_texture_view
 
 static GLuint GenGLTextureView(GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc, bool restoreBoundTexture)
 {

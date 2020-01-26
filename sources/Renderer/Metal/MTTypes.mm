@@ -474,6 +474,21 @@ MTLBlendFactor ToMTLBlendFactor(const BlendOp blendOp)
     MapFailed("BlendOp", "MTLBlendFactor");
 }
 
+API_AVAILABLE(macos(10.15), ios(13.0))
+MTLTextureSwizzle ToMTLTextureSwizzle(const TextureSwizzle swizzle)
+{
+    switch (swizzle)
+    {
+        case TextureSwizzle::Zero:  return MTLTextureSwizzleZero;
+        case TextureSwizzle::One:   return MTLTextureSwizzleOne;
+        case TextureSwizzle::Red:   return MTLTextureSwizzleRed;
+        case TextureSwizzle::Green: return MTLTextureSwizzleGreen;
+        case TextureSwizzle::Blue:  return MTLTextureSwizzleBlue;
+        case TextureSwizzle::Alpha: return MTLTextureSwizzleAlpha;
+    }
+    MapFailed("TextureSwizzle", "MTLTextureSwizzle");
+}
+
 Format ToFormat(const MTLPixelFormat pixelFormat)
 {
     switch (pixelFormat)
@@ -580,6 +595,15 @@ void Convert(MTLSize& dst, const Extent3D& src)
     dst.width   = static_cast<NSUInteger>(src.width );
     dst.height  = static_cast<NSUInteger>(src.height);
     dst.depth   = static_cast<NSUInteger>(src.depth );
+}
+
+API_AVAILABLE(macos(10.15), ios(13.0))
+void Convert(MTLTextureSwizzleChannels& dst, const TextureSwizzleRGBA& src)
+{
+    dst.red     = ToMTLTextureSwizzle(src.r);
+    dst.green   = ToMTLTextureSwizzle(src.g);
+    dst.blue    = ToMTLTextureSwizzle(src.b);
+    dst.alpha   = ToMTLTextureSwizzle(src.a);
 }
 
 

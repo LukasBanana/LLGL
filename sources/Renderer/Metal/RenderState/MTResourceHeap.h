@@ -21,9 +21,11 @@ namespace LLGL
 {
 
 
+class MTTexture;
 class ResourceBindingIterator;
 struct MTResourceBinding;
 struct ResourceHeapDescriptor;
+struct TextureViewDescriptor;
 
 /*
 This class emulates the behavior of a descriptor set like in Vulkan,
@@ -39,6 +41,7 @@ class MTResourceHeap final : public ResourceHeap
     public:
 
         MTResourceHeap(const ResourceHeapDescriptor& desc);
+        ~MTResourceHeap();
 
         void BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, std::uint32_t firstSet);
         void BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder, std::uint32_t firstSet);
@@ -70,6 +73,8 @@ class MTResourceHeap final : public ResourceHeap
 
         void StoreResourceUsage();
 
+        id<MTLTexture> GetOrCreateTexture(MTTexture& textureMT, const TextureViewDescriptor& textureViewDesc);
+
         const std::int8_t* GetSegmentationHeapStart(std::uint32_t firstSet) const;
 
     private:
@@ -97,9 +102,12 @@ class MTResourceHeap final : public ResourceHeap
     private:
 
         BufferSegmentation          segmentation_;
+
+        std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
         std::uint16_t               bufferOffsetKernel_ = 0;
         std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
-        std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
+
+        std::vector<id<MTLTexture>> textureViews_;
 
 };
 

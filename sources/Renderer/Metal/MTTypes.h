@@ -17,6 +17,7 @@
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/RenderPassFlags.h>
+#include <LLGL/TextureFlags.h>
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/Platform/Platform.h>
@@ -50,10 +51,16 @@ MTLStoreAction                          ToMTLStoreAction            ( const Atta
 MTLBlendOperation                       ToMTLBlendOperation         ( const BlendArithmetic         blendArithmetic   );
 MTLBlendFactor                          ToMTLBlendFactor            ( const BlendOp                 blendOp           );
 
+API_AVAILABLE(macos(10.15), ios(13.0))
+MTLTextureSwizzle                       ToMTLTextureSwizzle         ( const TextureSwizzle          swizzle           );
+
 Format                                  ToFormat                    ( const MTLPixelFormat          pixelFormat       );
 
 void Convert(MTLOrigin& dst, const Offset3D& src);
 void Convert(MTLSize& dst, const Extent3D& src);
+
+API_AVAILABLE(macos(10.15), ios(13.0))
+void Convert(MTLTextureSwizzleChannels& dst, const TextureSwizzleRGBA& src);
 
 
 } // /namespace MTTypes

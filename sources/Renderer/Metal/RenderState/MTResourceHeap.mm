@@ -7,9 +7,11 @@
 
 #include "MTResourceHeap.h"
 #include "MTPipelineLayout.h"
+#include "../MTTypes.h"
 #include "../Buffer/MTBuffer.h"
 #include "../Texture/MTSampler.h"
 #include "../Texture/MTTexture.h"
+#include "../../TextureUtils.h"
 #include "../../CheckedCast.h"
 #include "../../ResourceBindingIterator.h"
 #include "../../../Core/Helper.h"
@@ -130,6 +132,12 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
     StoreResourceUsage();
 }
 
+MTResourceHeap::~MTResourceHeap()
+{
+    for (auto& tex : textureViews_)
+        [tex release];
+}
+
 std::uint32_t MTResourceHeap::GetNumDescriptorSets() const
 {
     return (stride_ > 0 ? buffer_.size() / stride_ : 0);
@@ -168,7 +176,14 @@ bool MTResourceHeap::HasComputeResources() const
  * ======= Private: =======
  */
 
-using MTResourceBindingFunc = std::function<MTResourceBinding(Resource* resource, NSUInteger slot)>;
+using MTResourceBindingFunc = std::function<
+    void(
+        MTResourceBinding&              binding,
+        Resource*                       resource,
+        const ResourceViewDescriptor&   rvDesc,
+        NSUInteger                      slot
+    )
+>;
 
 static std::vector<MTResourceBinding> CollectMTResourceBindings(
     ResourceBindingIterator&        resourceIterator,
@@ -178,13 +193,18 @@ static std::vector<MTResourceBinding> CollectMTResourceBindings(
 {
     /* Collect all binding points of the specified resource type */
     const BindingDescriptor* bindingDesc = nullptr;
+    const ResourceViewDescriptor* rvDesc = nullptr;
     resourceIterator.Reset(resourceType, 0, affectedStage);
 
     std::vector<MTResourceBinding> resourceBindings;
     resourceBindings.reserve(resourceIterator.GetCount());
 
-    while (auto resource = resourceIterator.Next(&bindingDesc))
-        resourceBindings.push_back(resourceFunc(resource, static_cast<NSUInteger>(bindingDesc->slot)));
+    while (auto resource = resourceIterator.Next(&bindingDesc, &rvDesc))
+    {
+        MTResourceBinding binding = {};
+        resourceFunc(binding, resource, *rvDesc, static_cast<NSUInteger>(bindingDesc->slot));
+        resourceBindings.push_back(binding);
+    }
 
     /* Sort resources by slot index */
     std::sort(
@@ -205,10 +225,12 @@ void MTResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterat
         resourceIterator,
         ResourceType::Buffer,
         stage,
-        [](Resource* resource, NSUInteger slot) -> MTResourceBinding
+        [](MTResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& /*rvDesc*/, NSUInteger slot)
         {
             auto bufferMT = LLGL_CAST(MTBuffer*, resource);
-            return { slot, bufferMT->GetNative(), 0 };
+            binding.slot    = slot;
+            binding.object  = bufferMT->GetNative();
+            binding.offset  = 0;
         }
     );
 
@@ -227,10 +249,12 @@ void MTResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceItera
         resourceIterator,
         ResourceType::Texture,
         stage,
-        [](Resource* resource, NSUInteger slot) -> MTResourceBinding
+        [this](MTResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& rvDesc, NSUInteger slot)
         {
             auto textureMT = LLGL_CAST(MTTexture*, resource);
-            return { slot, textureMT->GetNative(), 0 };
+            binding.slot    = slot;
+            binding.object  = this->GetOrCreateTexture(*textureMT, rvDesc.textureView);
+            binding.offset  = 0;
         }
     );
 
@@ -249,10 +273,12 @@ void MTResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceItera
         resourceIterator,
         ResourceType::Sampler,
         stage,
-        [](Resource* resource, NSUInteger slot) -> MTResourceBinding
+        [](MTResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& /*rvDesc*/, NSUInteger slot)
         {
             auto samplerMT = LLGL_CAST(MTSampler*, resource);
-            return { slot, samplerMT->GetNative(), 0 };
+            binding.slot    = slot;
+            binding.object  = samplerMT->GetNative();
+            binding.offset  = 0;
         }
     );
 
@@ -502,6 +528,73 @@ void MTResourceHeap::StoreResourceUsage()
            segmentation_.numKernelSamplerSegments ) != 0 )
     {
         segmentation_.hasKernelResources = 1;
+    }
+}
+
+static void ValidateTexViewNoSwizzle(MTTexture& /*textureMT*/, const TextureViewDescriptor& desc)
+{
+    if (!IsTextureSwizzleIdentity(desc.swizzle))
+        throw std::runtime_error("cannot create texture-view with swizzling for this version of the Metal API");
+}
+
+static void ValidateTexViewNoTypeAndRange(MTTexture& textureMT, const TextureViewDescriptor& desc)
+{
+    id<MTLTexture> tex = textureMT.GetNative();
+    if (MTTypes::ToMTLTextureType(desc.type) != [tex textureType])
+        throw std::runtime_error("cannot create texture-view of different type for this version of the Metal API");
+    if (desc.subresource.baseMipLevel != 0 || desc.subresource.numMipLevels != [tex mipmapLevelCount])
+        throw std::runtime_error("cannot create texture-view of different MIP-level range for this version of the Metal API");
+    if (desc.subresource.baseArrayLayer != 0 || desc.subresource.numArrayLayers != [tex arrayLength])
+        throw std::runtime_error("cannot create texture-view of different array-layer range for this version of the Metal API");
+}
+
+id<MTLTexture> MTResourceHeap::GetOrCreateTexture(MTTexture& textureMT, const TextureViewDescriptor& textureViewDesc)
+{
+    if (IsTextureViewEnabled(textureViewDesc))
+    {
+        /* Create texture view from source texture */
+        const auto& subresource = textureViewDesc.subresource;
+        id<MTLTexture> textureView = nil;
+
+        if (@available(macOS 10.15, iOS 13.0, *))
+        {
+            MTLTextureSwizzleChannels swizzle;
+            MTTypes::Convert(swizzle, textureViewDesc.swizzle);
+            textureView = [textureMT.GetNative()
+                newTextureViewWithPixelFormat:  MTTypes::ToMTLPixelFormat(textureViewDesc.format)
+                textureType:                    MTTypes::ToMTLTextureType(textureViewDesc.type)
+                levels:                         NSMakeRange(subresource.baseMipLevel, subresource.numMipLevels)
+                slices:                         NSMakeRange(subresource.baseArrayLayer, subresource.numArrayLayers)
+                swizzle:                        swizzle
+            ];
+        }
+        else if (@available(macOS 10.11, iOS 9.0, *))
+        {
+            ValidateTexViewNoSwizzle(textureMT, textureViewDesc);
+            textureView = [textureMT.GetNative()
+                newTextureViewWithPixelFormat:  MTTypes::ToMTLPixelFormat(textureViewDesc.format)
+                textureType:                    MTTypes::ToMTLTextureType(textureViewDesc.type)
+                levels:                         NSMakeRange(subresource.baseMipLevel, subresource.numMipLevels)
+                slices:                         NSMakeRange(subresource.baseArrayLayer, subresource.numArrayLayers)
+            ];
+        }
+        else
+        {
+            ValidateTexViewNoSwizzle(textureMT, textureViewDesc);
+            ValidateTexViewNoTypeAndRange(textureMT, textureViewDesc);
+            textureView = [textureMT.GetNative()
+                newTextureViewWithPixelFormat:  MTTypes::ToMTLPixelFormat(textureViewDesc.format)
+            ];
+        }
+
+        /* Store and return texture view */
+        textureViews_.push_back(textureView);
+        return textureView;
+    }
+    else
+    {
+        /* Return native <MTLTexture> of original texture object */
+        return textureMT.GetNative();
     }
 }
 
