@@ -14,7 +14,7 @@
 #include "../../DXCommon/ComPtr.h"
 #include <vector>
 #include <functional>
-#include <d3d11.h>
+#include "../Direct3D11.h"
 
 
 namespace LLGL
@@ -22,9 +22,11 @@ namespace LLGL
 
 
 class D3D11Texture;
+class D3D11BufferWithRV;
 class ResourceBindingIterator;
 struct ResourceHeapDescriptor;
 struct TextureViewDescriptor;
+struct BufferViewDescriptor;
 struct D3DResourceBinding;
 
 /*
@@ -40,10 +42,20 @@ class D3D11ResourceHeap final : public ResourceHeap
 
     public:
 
-        D3D11ResourceHeap(const ResourceHeapDescriptor& desc);
+        D3D11ResourceHeap(const ResourceHeapDescriptor& desc, bool hasDeviceContextD3D11_1);
 
         void BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t firstSet);
         void BindForComputePipeline(ID3D11DeviceContext* context, std::uint32_t firstSet);
+
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+
+        void BindForGraphicsPipeline1(ID3D11DeviceContext1* context1, std::uint32_t firstSet);
+        void BindForComputePipeline1(ID3D11DeviceContext1* context1, std::uint32_t firstSet);
+
+        #endif
+
+        // Returns true if this resource heap contains non-default constant-buffer ranges (requires feature level D3D_FEATURE_LEVEL_11_1).
+        bool HasCbufferRanges() const;
 
     private:
 
@@ -51,6 +63,7 @@ class D3D11ResourceHeap final : public ResourceHeap
         using BuildSegmentFunc = std::function<void(D3DResourceBindingIter begin, UINT count)>;
 
         void BuildSegmentsForStage(ResourceBindingIterator& resourceIterator, long stage);
+        void BuildConstantBufferRangeSegments(ResourceBindingIterator& resourceIterator, long stage);
         void BuildConstantBufferSegments(ResourceBindingIterator& resourceIterator, long stage);
         void BuildShaderResourceViewSegments(ResourceBindingIterator& resourceIterator, long stage);
         void BuildUnorderedAccessViewSegments(ResourceBindingIterator& resourceIterator, long stage);
@@ -75,8 +88,15 @@ class D3D11ResourceHeap final : public ResourceHeap
             std::uint8_t&                           numSegments
         );
 
+        void BuildAllSegmentsType3(
+            const std::vector<D3DResourceBinding>&  resourceBindings,
+            long                                    affectedStage,
+            std::uint8_t&                           numSegments
+        );
+
         void BuildSegment1(D3DResourceBindingIter it, UINT count);
         void BuildSegment2(D3DResourceBindingIter it, UINT count);
+        void BuildSegment3(D3DResourceBindingIter it, UINT count);
 
         void StoreResourceUsage();
 
@@ -87,8 +107,22 @@ class D3D11ResourceHeap final : public ResourceHeap
         void BindPSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
         void BindCSResources(ID3D11DeviceContext* context, const std::int8_t*& byteAlignedBuffer);
 
-        ID3D11ShaderResourceView* GetOrCreateTextureSRV(D3D11Texture& texture, const TextureViewDescriptor& textureViewDesc);
-        ID3D11UnorderedAccessView* GetOrCreateTextureUAV(D3D11Texture& texture, const TextureViewDescriptor& textureViewDesc);
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+
+        void BindVSConstantBuffersRange(ID3D11DeviceContext1* context1, const std::int8_t*& byteAlignedBuffer);
+        void BindHSConstantBuffersRange(ID3D11DeviceContext1* context1, const std::int8_t*& byteAlignedBuffer);
+        void BindDSConstantBuffersRange(ID3D11DeviceContext1* context1, const std::int8_t*& byteAlignedBuffer);
+        void BindGSConstantBuffersRange(ID3D11DeviceContext1* context1, const std::int8_t*& byteAlignedBuffer);
+        void BindPSConstantBuffersRange(ID3D11DeviceContext1* context1, const std::int8_t*& byteAlignedBuffer);
+        void BindCSConstantBuffersRange(ID3D11DeviceContext1* context1, const std::int8_t*& byteAlignedBuffer);
+
+        #endif
+
+        ID3D11ShaderResourceView* GetOrCreateTextureSRV(D3D11Texture& textureD3D, const TextureViewDescriptor& textureViewDesc);
+        ID3D11UnorderedAccessView* GetOrCreateTextureUAV(D3D11Texture& textureD3D, const TextureViewDescriptor& textureViewDesc);
+
+        ID3D11ShaderResourceView* GetOrCreateBufferSRV(D3D11BufferWithRV& bufferD3D, const BufferViewDescriptor& bufferViewDesc);
+        ID3D11UnorderedAccessView* GetOrCreateBufferUAV(D3D11BufferWithRV& bufferD3D, const BufferViewDescriptor& bufferViewDesc);
 
         const std::int8_t* GetSegmentationHeapStart(std::uint32_t firstSet) const;
 
@@ -103,37 +137,45 @@ class D3D11ResourceHeap final : public ResourceHeap
         */
         struct BufferSegmentation
         {
-            std::uint8_t hasVSResources                     : 1;
-            std::uint8_t numVSConstantBufferSegments        : 4;
-            std::uint8_t numVSSamplerSegments               : 5;
-            std::uint8_t numVSShaderResourceViewSegments;
+            std::uint32_t hasConstantBufferRanges           : 1;
 
-            std::uint8_t hasHSResources                     : 1;
-            std::uint8_t numHSConstantBufferSegments        : 4;
-            std::uint8_t numHSSamplerSegments               : 5;
-            std::uint8_t numHSShaderResourceViewSegments;
+            std::uint32_t hasVSResources                    : 1;
+            std::uint32_t numVSConstantBufferSegments       : 4;
+            std::uint32_t numVSConstantBufferRangeSegments  : 4;
+            std::uint32_t numVSSamplerSegments              : 5;
+            std::uint32_t numVSShaderResourceViewSegments   : 8;
 
-            std::uint8_t hasDSResources                     : 1;
-            std::uint8_t numDSConstantBufferSegments        : 4;
-            std::uint8_t numDSSamplerSegments               : 5;
-            std::uint8_t numDSShaderResourceViewSegments;
+            std::uint32_t hasHSResources                    : 1;
+            std::uint32_t numHSConstantBufferSegments       : 4;
+            std::uint32_t numHSConstantBufferRangeSegments  : 4;
+            std::uint32_t numHSSamplerSegments              : 5;
+            std::uint32_t numHSShaderResourceViewSegments   : 8;
 
-            std::uint8_t hasGSResources                     : 1;
-            std::uint8_t numGSConstantBufferSegments        : 4;
-            std::uint8_t numGSSamplerSegments               : 5;
-            std::uint8_t numGSShaderResourceViewSegments;
+            std::uint32_t hasDSResources                    : 1;
+            std::uint32_t numDSConstantBufferSegments       : 4;
+            std::uint32_t numDSConstantBufferRangeSegments  : 4;
+            std::uint32_t numDSSamplerSegments              : 5;
+            std::uint32_t numDSShaderResourceViewSegments   : 8;
 
-            std::uint8_t hasCSResources                     : 1;
-            std::uint8_t numPSUnorderedAccessViewSegments   : 7;
-            std::uint8_t numPSConstantBufferSegments        : 4;
-            std::uint8_t numPSSamplerSegments               : 5;
-            std::uint8_t numPSShaderResourceViewSegments;
+            std::uint32_t hasGSResources                    : 1;
+            std::uint32_t numGSConstantBufferSegments       : 4;
+            std::uint32_t numGSConstantBufferRangeSegments  : 4;
+            std::uint32_t numGSSamplerSegments              : 5;
+            std::uint32_t numGSShaderResourceViewSegments   : 8;
 
-            std::uint8_t hasPSResources                     : 1;
-            std::uint8_t numCSUnorderedAccessViewSegments   : 7;
-            std::uint8_t numCSConstantBufferSegments        : 4;
-            std::uint8_t numCSSamplerSegments               : 5;
-            std::uint8_t numCSShaderResourceViewSegments;
+            std::uint32_t hasCSResources                    : 1;
+            std::uint32_t numPSUnorderedAccessViewSegments  : 7;
+            std::uint32_t numPSConstantBufferSegments       : 4;
+            std::uint32_t numPSConstantBufferRangeSegments  : 4;
+            std::uint32_t numPSSamplerSegments              : 5;
+            std::uint32_t numPSShaderResourceViewSegments   : 8;
+
+            std::uint32_t hasPSResources                    : 1;
+            std::uint32_t numCSUnorderedAccessViewSegments  : 7;
+            std::uint32_t numCSConstantBufferSegments       : 4;
+            std::uint32_t numCSConstantBufferRangeSegments  : 4;
+            std::uint32_t numCSSamplerSegments              : 5;
+            std::uint32_t numCSShaderResourceViewSegments   : 8;
         };
 
     private:

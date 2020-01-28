@@ -61,6 +61,7 @@ D3D11CommandBuffer::D3D11CommandBuffer(
         isSecondaryCmdBuffer_ = true;
 
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    context_->QueryInterface(IID_PPV_ARGS(&context1_));
     context_->QueryInterface(IID_PPV_ARGS(&annotation_));
     #endif
 }
@@ -834,10 +835,23 @@ void D3D11CommandBuffer::SetResourceHeap(
     const PipelineBindPoint bindPoint)
 {
     auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
-    if (bindPoint != PipelineBindPoint::Compute)
-        resourceHeapD3D.BindForGraphicsPipeline(context_.Get(), firstSet);
-    if (bindPoint != PipelineBindPoint::Graphics)
-        resourceHeapD3D.BindForComputePipeline(context_.Get(), firstSet);
+
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    if (context1_.Get() != nullptr && resourceHeapD3D.HasCbufferRanges())
+    {
+        if (bindPoint != PipelineBindPoint::Compute)
+            resourceHeapD3D.BindForGraphicsPipeline1(context1_.Get(), firstSet);
+        if (bindPoint != PipelineBindPoint::Graphics)
+            resourceHeapD3D.BindForComputePipeline1(context1_.Get(), firstSet);
+    }
+    else
+    #endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
+    {
+        if (bindPoint != PipelineBindPoint::Compute)
+            resourceHeapD3D.BindForGraphicsPipeline(context_.Get(), firstSet);
+        if (bindPoint != PipelineBindPoint::Graphics)
+            resourceHeapD3D.BindForComputePipeline(context_.Get(), firstSet);
+    }
 }
 
 void D3D11CommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)

@@ -293,8 +293,17 @@ class D3D11CommandBuffer final : public CommandBuffer
 
     private:
 
+        // Device object to create on-demand objects like temporary SRVs and UAVs
         ID3D11Device*                       device_                 = nullptr;
+
+        // Primary D3D11 context for most commands
         ComPtr<ID3D11DeviceContext>         context_;
+
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+        // Extended D3D11 context to bind constant-buffer ranges (Direct3D 11.1)
+        ComPtr<ID3D11DeviceContext1>        context1_;
+        #endif
+
         ComPtr<ID3D11CommandList>           commandList_;
 
         bool                                hasDeferredContext_     = false;

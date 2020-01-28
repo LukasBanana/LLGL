@@ -34,6 +34,20 @@ namespace LLGL
 {
 
 
+#if 0 //WIP
+/*
+Returns true if the D3D runtime supports command lists natively.
+Otherwise, they will be emulated by the D3D runtime.
+See https://docs.microsoft.com/en-us/windows/win32/api/d3d11_1/nf-d3d11_1-id3d11devicecontext1-vssetconstantbuffers1#remarks
+*/
+static bool D3DSupportsDriverCommandLists(ID3D11Device* device, ID3D11DeviceContext* context)
+{
+    D3D11_FEATURE_DATA_THREADING threadingCaps = { FALSE, FALSE };
+    HRESULT hr = device->CheckFeatureSupport(D3D11_FEATURE_THREADING, &threadingCaps, sizeof(threadingCaps));
+    return (SUCCEEDED(hr) && threadingCaps.DriverCommandLists != FALSE);
+}
+#endif
+
 D3D11RenderSystem::D3D11RenderSystem()
 {
     /* Create DXGU factory, query video adapters, and create D3D11 device */
@@ -49,6 +63,8 @@ D3D11RenderSystem::D3D11RenderSystem()
     /* Initialize MIP-map generator singleton */
     D3D11MipGenerator::Get().InitializeDevice(device_);
     D3D11BuiltinShaderFactory::Get().CreateBuiltinShaders(device_.Get());
+
+    //D3DSupportsDriverCommandLists(device_.Get(), context_.Get());
 }
 
 D3D11RenderSystem::~D3D11RenderSystem()
@@ -314,7 +330,8 @@ void D3D11RenderSystem::Release(Sampler& sampler)
 
 ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<D3D11ResourceHeap>(desc));
+    const bool hasDeviceContextD3D11_1 = (GetMinorVersion() >= 1);
+    return TakeOwnership(resourceHeaps_, MakeUnique<D3D11ResourceHeap>(desc, hasDeviceContextD3D11_1));
 }
 
 void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
