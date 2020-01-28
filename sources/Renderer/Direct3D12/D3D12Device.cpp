@@ -156,6 +156,10 @@ DXGI_SAMPLE_DESC D3D12Device::FindSuitableSampleDesc(std::size_t numFormats, con
 
 void D3D12Device::DenyLowSeverityWarnings()
 {
+    /*
+    Disable D3D debug warnings when RTVs or DSVs are cleared with different values
+    than the resource was initialized with, as this can happen constantly.
+    */
     D3D12_MESSAGE_SEVERITY severities[] =
     {
         D3D12_MESSAGE_SEVERITY_INFO,

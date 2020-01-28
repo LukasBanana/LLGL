@@ -187,6 +187,13 @@ static void GLGetFeatureLimits(RenderingLimits& limits, GLint version)
     limits.maxComputeShaderWorkGroupSize[2] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
     #endif
 
+    limits.minConstantBufferAlignment       = GLGetUInt(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT);
+
+    #ifdef GL_ES_VERSION_3_1
+    limits.minSampledBufferAlignment        = GLGetUInt(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT);
+    limits.minStorageBufferAlignment        = limits.minSampledBufferAlignment; // Use SSBO for both sampled and storage buffers
+    #endif
+
     /* Query viewport limits */
     limits.maxViewports                     = 1;
 

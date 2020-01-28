@@ -120,7 +120,7 @@ class VKResourceHeap final : public ResourceHeap
         // Returns the image view for the specified texture or creates one if the texture-view is enabled.
         VkImageView GetOrCreateImageView(
             const VKPtr<VkDevice>&          device,
-            VKTexture&                      texture,
+            VKTexture&                      textureVK,
             const ResourceViewDescriptor&   rvDesc
         );
 

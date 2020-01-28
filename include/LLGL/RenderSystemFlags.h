@@ -673,11 +673,32 @@ struct RenderingLimits
     std::uint32_t   maxStreamOutputs                    = 0;
 
     /**
-    \brief Specifies the maimum tessellation factor.
+    \brief Specifies the maximum tessellation factor.
     \remarks Metal for example supports 64 on macOS and 16 on iOS.
     \see TessellationDescriptor::maxTessFactor
     */
     std::uint32_t   maxTessFactor                       = 0;
+
+    /**
+    \brief Specifies the minimum alignment (in bytes) for Constant Buffer Views (CBV). By default 256.
+    \see BufferViewDescriptor::offset
+    \see BufferViewDescriptor::size
+    */
+    std::uint64_t   minConstantBufferAlignment          = 256;
+
+    /**
+    \brief Specifies the minimum alignment (in bytes) for sampled buffers, aka. Shader Resource Views (SRV). By default 1.
+    \see BufferViewDescriptor::offset
+    \see BufferViewDescriptor::size
+    */
+    std::uint64_t   minSampledBufferAlignment           = 1;
+
+    /**
+    \brief Specifies the minimum alignment (in bytes) for storage buffers, aka. Unordered Access Views (UAV). By default 1.
+    \see BufferViewDescriptor::offset
+    \see BufferViewDescriptor::size
+    */
+    std::uint64_t   minStorageBufferAlignment           = 1;
 };
 
 /**

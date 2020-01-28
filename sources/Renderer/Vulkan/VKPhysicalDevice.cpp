@@ -218,6 +218,9 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;
     caps.limits.maxStreamOutputs                    = 0; //TODO
     caps.limits.maxTessFactor                       = limits.maxTessellationGenerationLevel;
+    caps.limits.minConstantBufferAlignment          = limits.minUniformBufferOffsetAlignment;
+    caps.limits.minSampledBufferAlignment           = limits.minStorageBufferOffsetAlignment; // Use SSBO for both sampled and storage buffers
+    caps.limits.minStorageBufferAlignment           = limits.minStorageBufferOffsetAlignment;
 
     /* Store graphics pipeline spcific limitations */
     pipelineLimits.lineWidthRange[0]    = limits.lineWidthRange[0];

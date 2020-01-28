@@ -363,20 +363,20 @@ void VKResourceHeap::CreatePipelineBarrier(
 
 VkImageView VKResourceHeap::GetOrCreateImageView(
     const VKPtr<VkDevice>&          device,
-    VKTexture&                      texture,
+    VKTexture&                      textureVK,
     const ResourceViewDescriptor&   rvDesc)
 {
     if (IsTextureViewEnabled(rvDesc.textureView))
     {
         /* Creates a new image view for the specified subresource descriptor */
         imageViews_.emplace_back(device, vkDestroyImageView);
-        texture.CreateImageView(device, rvDesc.textureView, imageViews_.back().ReleaseAndGetAddressOf());
+        textureVK.CreateImageView(device, rvDesc.textureView, imageViews_.back().ReleaseAndGetAddressOf());
         return imageViews_.back();
     }
     else
     {
         /* Returns the standard image view */
-        return texture.GetVkImageView();
+        return textureVK.GetVkImageView();
     }
 }
 
