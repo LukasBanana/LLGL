@@ -28,6 +28,24 @@ class D3D11BufferWithRV final : public D3D11Buffer
 
         D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
+        // Creates a shader-resource-view (SRV) of a subresource of this buffer object.
+        void CreateSubresourceSRV(
+            ID3D11Device*               device,
+            ID3D11ShaderResourceView**  srvOutput,
+            DXGI_FORMAT                 format,
+            UINT                        firstElement,
+            UINT                        numElements
+        );
+
+        // Creates an unordered-access-view (UAV) of a subresource of this buffer object.
+        void CreateSubresourceUAV(
+            ID3D11Device*               device,
+            ID3D11UnorderedAccessView** uavOutput,
+            DXGI_FORMAT                 format,
+            UINT                        firstElement,
+            UINT                        numElements
+        );
+
         // Returns the native SRV object.
         inline ID3D11ShaderResourceView* GetSRV() const
         {
@@ -48,13 +66,14 @@ class D3D11BufferWithRV final : public D3D11Buffer
 
     private:
 
-        void CreateShaderResourceView(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
-        void CreateUnorderedAccessView(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements, UINT flags);
+        void CreateInternalSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
+        void CreateInternalUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
 
     private:
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;
+        UINT                                uavFlags_       = 0;
         UINT                                initialCount_   = std::numeric_limits<UINT>::max();
 
 };

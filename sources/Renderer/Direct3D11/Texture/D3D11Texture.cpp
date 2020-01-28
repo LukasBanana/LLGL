@@ -437,7 +437,7 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
 
 static void CreateD3D11TextureSubresourceSRV(
     ID3D11Device*               device,
-    D3D11NativeTexture&         textureInput,
+    ID3D11Resource*             resource,
     ID3D11ShaderResourceView**  srvOutput,
     const TextureType           type,
     const DXGI_FORMAT           format,
@@ -445,7 +445,7 @@ static void CreateD3D11TextureSubresourceSRV(
     UINT                        numMipLevels,
     UINT                        baseArrayLayer,
     UINT                        numArrayLayers,
-    const char*                 errorContextInfo    = nullptr)
+    const char*                 errorContextInfo = nullptr)
 {
     /* Create shader-resource-view (SRV) for subresource */
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -513,20 +513,20 @@ static void CreateD3D11TextureSubresourceSRV(
                 break;
         }
     }
-    auto hr = device->CreateShaderResourceView(textureInput.resource.Get(), &srvDesc, srvOutput);
+    auto hr = device->CreateShaderResourceView(resource, &srvDesc, srvOutput);
     DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", errorContextInfo);
 }
 
 static void CreateD3D11TextureSubresourceUAV(
     ID3D11Device*               device,
-    D3D11NativeTexture&         textureInput,
+    ID3D11Resource*             resource,
     ID3D11UnorderedAccessView** uavOutput,
     const TextureType           type,
     const DXGI_FORMAT           format,
     UINT                        baseMipLevel,
     UINT                        baseArrayLayer,
     UINT                        numArrayLayers,
-    const char*                 errorContextInfo    = nullptr)
+    const char*                 errorContextInfo = nullptr)
 {
     /* Create unordered-access-view (UAV) for subresource */
     D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -574,7 +574,7 @@ static void CreateD3D11TextureSubresourceUAV(
                 break;
         }
     }
-    auto hr = device->CreateUnorderedAccessView(textureInput.resource.Get(), &uavDesc, uavOutput);
+    auto hr = device->CreateUnorderedAccessView(resource, &uavDesc, uavOutput);
     DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", errorContextInfo);
 }
 
@@ -671,7 +671,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
     {
         CreateD3D11TextureSubresourceSRV(
             device,
-            textureOutput,
+            textureOutput.resource.Get(),
             srvOutput,
             subresourceType,
             format,
@@ -687,7 +687,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
     {
         CreateD3D11TextureSubresourceUAV(
             device,
-            textureOutput,
+            textureOutput.resource.Get(),
             uavOutput,
             subresourceType,
             format,
@@ -697,30 +697,6 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
             "for texture subresource copy"
         );
     }
-}
-
-void D3D11Texture::CreateSubresourceSRV(
-    ID3D11Device*               device,
-    ID3D11ShaderResourceView**  srvOutput,
-    const TextureType           type,
-    const DXGI_FORMAT           format,
-    UINT                        baseMipLevel,
-    UINT                        numMipLevels,
-    UINT                        baseArrayLayer,
-    UINT                        numArrayLayers)
-{
-    CreateD3D11TextureSubresourceSRV(
-        device,
-        native_,
-        srvOutput,
-        type,
-        format,
-        baseMipLevel,
-        numMipLevels,
-        baseArrayLayer,
-        numArrayLayers,
-        "for texture subresource"
-    );
 }
 
 void D3D11Texture::CreateSubresourceDSV(
@@ -782,6 +758,30 @@ void D3D11Texture::CreateSubresourceDSV(
     DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView",  "for texture subresource");
 }
 
+void D3D11Texture::CreateSubresourceSRV(
+    ID3D11Device*               device,
+    ID3D11ShaderResourceView**  srvOutput,
+    const TextureType           type,
+    const DXGI_FORMAT           format,
+    UINT                        baseMipLevel,
+    UINT                        numMipLevels,
+    UINT                        baseArrayLayer,
+    UINT                        numArrayLayers)
+{
+    CreateD3D11TextureSubresourceSRV(
+        device,
+        native_.resource.Get(),
+        srvOutput,
+        type,
+        format,
+        baseMipLevel,
+        numMipLevels,
+        baseArrayLayer,
+        numArrayLayers,
+        "for texture subresource"
+    );
+}
+
 void D3D11Texture::CreateSubresourceUAV(
     ID3D11Device*               device,
     ID3D11UnorderedAccessView** uavOutput,
@@ -793,7 +793,7 @@ void D3D11Texture::CreateSubresourceUAV(
 {
     CreateD3D11TextureSubresourceUAV(
         device,
-        native_,
+        native_.resource.Get(),
         uavOutput,
         type,
         format,

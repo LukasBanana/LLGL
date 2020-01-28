@@ -50,7 +50,8 @@ static UINT GetUAVFlags(const BufferDescriptor& desc)
 }
 
 D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
-    D3D11Buffer   { device, desc, initialData }
+    D3D11Buffer   { device, desc, initialData },
+    uavFlags_     { GetUAVFlags(desc)         }
 {
     /* Determine stride size either for structured buffers or regular buffers */
     const UINT stride = GetStorageBufferStride(desc);
@@ -60,10 +61,10 @@ D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescripto
     auto numElements    = static_cast<UINT>(desc.size) / stride;
 
     if ((desc.bindFlags & BindFlags::Sampled) != 0)
-        CreateShaderResourceView(device, format, 0, numElements);
+        CreateInternalSRV(device, format, 0, numElements);
 
     if ((desc.bindFlags & BindFlags::Storage) != 0)
-        CreateUnorderedAccessView(device, format, 0, numElements, GetUAVFlags(desc));
+        CreateInternalUAV(device, format, 0, numElements);
 }
 
 void D3D11BufferWithRV::SetName(const char* name)
@@ -75,12 +76,14 @@ void D3D11BufferWithRV::SetName(const char* name)
         D3D11SetObjectNameSubscript(uav_.Get(), name, ".UAV");
 }
 
-
-/*
- * ======= Private: =======
- */
-
-void D3D11BufferWithRV::CreateShaderResourceView(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements)
+static void CreateD3D11BufferSubresourceSRV(
+    ID3D11Device*               device,
+    ID3D11Resource*             resource,
+    ID3D11ShaderResourceView**  srvOutput,
+    DXGI_FORMAT                 format,
+    UINT                        firstElement,
+    UINT                        numElements,
+    const char*                 errorContextInfo = nullptr)
 {
     /* Initialize descriptor and create SRV */
     D3D11_SHADER_RESOURCE_VIEW_DESC desc;
@@ -90,11 +93,37 @@ void D3D11BufferWithRV::CreateShaderResourceView(ID3D11Device* device, DXGI_FORM
         desc.Buffer.FirstElement    = firstElement;
         desc.Buffer.NumElements     = numElements;
     }
-    auto hr = device->CreateShaderResourceView(GetNative(), &desc, srv_.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 shader-resource-view (SRV) for storage buffer");
+    auto hr = device->CreateShaderResourceView(resource, &desc, srvOutput);
+    DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", errorContextInfo);
 }
 
-void D3D11BufferWithRV::CreateUnorderedAccessView(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements, UINT flags)
+void D3D11BufferWithRV::CreateSubresourceSRV(
+    ID3D11Device*               device,
+    ID3D11ShaderResourceView**  srvOutput,
+    DXGI_FORMAT                 format,
+    UINT                        firstElement,
+    UINT                        numElements)
+{
+    CreateD3D11BufferSubresourceSRV(
+        device,
+        GetNative(),
+        srvOutput,
+        format,
+        firstElement,
+        numElements,
+        "for buffer subresource"
+    );
+}
+
+static void CreateD3D11BufferSubresourceUAV(
+    ID3D11Device*               device,
+    ID3D11Resource*             resource,
+    ID3D11UnorderedAccessView** uavOutput,
+    DXGI_FORMAT                 format,
+    UINT                        firstElement,
+    UINT                        numElements,
+    UINT                        flags,
+    const char*                 errorContextInfo = nullptr)
 {
     /* Initialize descriptor and create UAV */
     D3D11_UNORDERED_ACCESS_VIEW_DESC desc;
@@ -105,8 +134,59 @@ void D3D11BufferWithRV::CreateUnorderedAccessView(ID3D11Device* device, DXGI_FOR
         desc.Buffer.NumElements     = numElements;
         desc.Buffer.Flags           = flags;
     }
-    auto hr = device->CreateUnorderedAccessView(GetNative(), &desc, uav_.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 unordered-acces-view (UAV) for storage buffer");
+    auto hr = device->CreateUnorderedAccessView(resource, &desc, uavOutput);
+    DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", errorContextInfo);
+}
+
+void D3D11BufferWithRV::CreateSubresourceUAV(
+    ID3D11Device*               device,
+    ID3D11UnorderedAccessView** uavOutput,
+    DXGI_FORMAT                 format,
+    UINT                        firstElement,
+    UINT                        numElements)
+{
+    CreateD3D11BufferSubresourceUAV(
+        device,
+        GetNative(),
+        uavOutput,
+        format,
+        firstElement,
+        numElements,
+        uavFlags_,
+        "for buffer subresource"
+    );
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void D3D11BufferWithRV::CreateInternalSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements)
+{
+    CreateD3D11BufferSubresourceSRV(
+        device,
+        GetNative(),
+        srv_.ReleaseAndGetAddressOf(),
+        format,
+        firstElement,
+        numElements,
+        "for buffer"
+    );
+}
+
+void D3D11BufferWithRV::CreateInternalUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements)
+{
+    CreateD3D11BufferSubresourceUAV(
+        device,
+        GetNative(),
+        uav_.ReleaseAndGetAddressOf(),
+        format,
+        firstElement,
+        numElements,
+        uavFlags_,
+        "for buffer"
+    );
 }
 
 

@@ -118,6 +118,17 @@ class D3D11Texture final : public Texture
             const TextureType           subresourceType
         );
 
+        // Creates a depth-stencil-view (DSV) of a subresource of this texture object.
+        void CreateSubresourceDSV(
+            ID3D11Device*               device,
+            ID3D11DepthStencilView**    dsvOutput,
+            const TextureType           type,
+            const DXGI_FORMAT           format,
+            UINT                        baseMipLevel,
+            UINT                        baseArrayLayer,
+            UINT                        numArrayLayers
+        );
+
         // Creates a shader-resource-view (SRV) of a subresource of this texture object.
         void CreateSubresourceSRV(
             ID3D11Device*               device,
@@ -126,17 +137,6 @@ class D3D11Texture final : public Texture
             const DXGI_FORMAT           format,
             UINT                        baseMipLevel,
             UINT                        numMipLevels,
-            UINT                        baseArrayLayer,
-            UINT                        numArrayLayers
-        );
-
-        // Creates a depth-stencil-view (DSV) of a subresource of this texture object.
-        void CreateSubresourceDSV(
-            ID3D11Device*               device,
-            ID3D11DepthStencilView**    dsvOutput,
-            const TextureType           type,
-            const DXGI_FORMAT           format,
-            UINT                        baseMipLevel,
             UINT                        baseArrayLayer,
             UINT                        numArrayLayers
         );
