@@ -740,11 +740,52 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
         /* Bind each individual buffer, and store last bound buffer */
         bufferState_.boundBuffers[targetIdx] = buffers[count - 1];
 
-        while (count-- > 0)
+        for (GLsizei i = 0; i < count; ++i)
+            glBindBufferBase(targetGL, first + i, buffers[i]);
+    }
+}
+
+void GLStateManager::BindBufferRange(GLBufferTarget target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size)
+{
+    /* Always bind buffer with a base index */
+    auto targetIdx = static_cast<std::size_t>(target);
+    glBindBufferRange(g_bufferTargetsEnum[targetIdx], index, buffer, offset, size);
+    bufferState_.boundBuffers[targetIdx] = buffer;
+}
+
+void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers, const GLintptr* offsets, const GLsizeiptr* sizes)
+{
+    /* Always bind buffers with a base index */
+    auto targetIdx = static_cast<std::size_t>(target);
+    auto targetGL = g_bufferTargetsEnum[targetIdx];
+
+    #ifdef GL_ARB_multi_bind
+    if (HasExtension(GLExt::ARB_multi_bind))
+    {
+        /*
+        Bind buffer array, but don't reset the currently bound buffer.
+        The spec. of GL_ARB_multi_bind says, that the generic binding point is not modified by this function!
+        */
+        glBindBuffersRange(targetGL, first, count, buffers, offsets, sizes);
+    }
+    else
+    #endif // /GL_ARB_multi_bind
+    if (count > 0)
+    {
+        /* Bind each individual buffer, and store last bound buffer */
+        bufferState_.boundBuffers[targetIdx] = buffers[count - 1];
+
+        #ifdef GL_NV_transform_feedback
+        if (HasExtension(GLExt::NV_transform_feedback))
         {
-            glBindBufferBase(targetGL, first, *buffers);
-            ++buffers;
-            ++first;
+            for (GLsizei i = 0; i < count; ++i)
+                glBindBufferRangeNV(targetGL, first + i, buffers[i], offsets[i], sizes[i]);
+        }
+        else
+        #endif // /GL_NV_transform_feedback
+        {
+            for (GLsizei i = 0; i < count; ++i)
+                glBindBufferRange(targetGL, first + i, buffers[i], offsets[i], sizes[i]);
         }
     }
 }
@@ -1037,13 +1078,10 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
     #endif
     {
         /* Bind each texture layer individually */
-        while (count-- > 0)
+        for (GLsizei i = 0; i < count; ++i)
         {
-            ActiveTexture(first);
-            BindTexture(*targets, *textures);
-            ++targets;
-            ++textures;
-            ++first;
+            ActiveTexture(first + i);
+            BindTexture(targets[i], textures[i]);
         }
     }
 }
@@ -1071,12 +1109,11 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
     #endif // /GL_ARB_multi_bind
     {
         /* Unbind all targets for each texture layer individually */
-        while (count-- > 0)
+        for (GLsizei i = 0; i < count; ++i)
         {
-            ActiveTexture(first);
+            ActiveTexture(first + i);
             for (std::size_t target = 0; target < numTextureTargets; ++target)
                 BindTexture(static_cast<GLTextureTarget>(target), 0);
-            ++first;
         }
     }
 }

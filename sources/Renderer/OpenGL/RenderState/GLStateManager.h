@@ -159,6 +159,8 @@ class GLStateManager
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
         void BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers);
+        void BindBufferRange(GLBufferTarget target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size);
+        void BindBuffersRange(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers, const GLintptr* offsets, const GLsizeiptr* sizes);
         void UnbindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count);
 
         void BindVertexArray(GLuint vertexArray);
