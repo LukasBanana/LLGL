@@ -38,9 +38,13 @@ class D3D12Buffer : public Buffer
 
         // Creates a resource views within the native buffer object:
         void CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
+        void CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const BufferViewDescriptor& bufferViewDesc);
+
         void CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
-        void CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, UINT firstElement, UINT numElements, UINT elementStride);
+        void CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const BufferViewDescriptor& bufferViewDesc);
+
         void CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
+        void CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const BufferViewDescriptor& bufferViewDesc);
 
         /*
         Clears the buffer subresource with an intermediate UAV descriptor heap.
@@ -138,6 +142,31 @@ class D3D12Buffer : public Buffer
         void CreateIndexBufferView(const BufferDescriptor& desc);
         void CreateStreamOutputBufferView(const BufferDescriptor& desc);
 
+        void CreateConstantBufferViewPrimary(
+            ID3D12Device*               device,
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+            UINT64                      offset,
+            UINT                        size
+        );
+
+        void CreateShaderResourceViewPrimary(
+            ID3D12Device*               device,
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+            UINT64                      firstElement,
+            UINT                        numElements,
+            UINT                        stride,
+            DXGI_FORMAT                 format
+        );
+
+        void CreateUnorderedAccessViewPrimary(
+            ID3D12Device*               device,
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+            UINT64                      firstElement,
+            UINT                        numElements,
+            UINT                        stride,
+            DXGI_FORMAT                 format
+        );
+
         void ClearSubresourceWithUAV(
             ID3D12GraphicsCommandList*  commandList,
             ID3D12Resource*             resource,
@@ -150,6 +179,12 @@ class D3D12Buffer : public Buffer
             const UINT                  (&valuesVec4)[4]
         );
 
+        /*
+        Returns the stride (in bytes) of the specified format for a resource view.
+        If format is Format::Undefined, the primary buffer stride will be used.
+        */
+        UINT GetStrideForView(const Format format) const;
+
     private:
 
         D3D12Resource                   resource_;
@@ -161,11 +196,12 @@ class D3D12Buffer : public Buffer
         UINT64                          bufferSize_                 = 0;
         UINT64                          internalSize_               = 0;
         UINT                            alignment_                  = 1;
-        UINT                            structStride_               = 1;
+        UINT                            stride_                     = 1;
+        DXGI_FORMAT                     format_                     = DXGI_FORMAT_UNKNOWN;
+
         D3D12_VERTEX_BUFFER_VIEW        vertexBufferView_           = {};
         D3D12_INDEX_BUFFER_VIEW         indexBufferView_            = {};
         D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferView_               = {};
-        DXGI_FORMAT                     format_                     = DXGI_FORMAT_UNKNOWN;
 
         D3D12_RANGE                     mappedRange_                = {};
         CPUAccess                       mappedCPUaccess_            = CPUAccess::ReadOnly;

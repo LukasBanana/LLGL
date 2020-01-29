@@ -270,7 +270,7 @@ void D3D12Texture::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESC
     );
 }
 
-void D3D12Texture::CreateShaderResourceView(ID3D12Device* device, const TextureViewDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+void D3D12Texture::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const TextureViewDescriptor& desc)
 {
     CreateShaderResourceViewPrimary(
         device,
@@ -375,7 +375,7 @@ void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DES
     );
 }
 
-void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, const TextureViewDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const TextureViewDescriptor& desc)
 {
     CreateUnorderedAccessViewPrimary(
         device,

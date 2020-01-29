@@ -15,6 +15,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
 #include "../../TextureUtils.h"
+#include "../../BufferUtils.h"
 #include <LLGL/Resource.h>
 #include <LLGL/ResourceHeapFlags.h>
 #include <functional>
@@ -337,12 +338,15 @@ void D3D12ResourceHeap::CreateConstantBufferViews(
         ResourceType::Buffer,
         firstResourceIndex,
         rootParameterLayout.numBufferCBV,
-        [&](Resource& resource, const ResourceViewDescriptor& /*rvDesc*/) -> bool
+        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::ConstantBuffer, bindingIndex))
             {
-                bufferD3D.CreateConstantBufferView(device, cpuDescHandle);
+                if (IsBufferViewEnabled(rvDesc.bufferView))
+                    bufferD3D.CreateConstantBufferView(device, cpuDescHandle, rvDesc.bufferView);
+                else
+                    bufferD3D.CreateConstantBufferView(device, cpuDescHandle);
                 cpuDescHandle.ptr += descHandleStride;
                 return true;
             }
@@ -369,12 +373,15 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
         ResourceType::Buffer,
         firstResourceIndex,
         rootParameterLayout.numBufferSRV,
-        [&](Resource& resource, const ResourceViewDescriptor& /*rvDesc*/) -> bool
+        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
             {
-                bufferD3D.CreateShaderResourceView(device, cpuDescHandle);
+                if (IsBufferViewEnabled(rvDesc.bufferView))
+                    bufferD3D.CreateShaderResourceView(device, cpuDescHandle, rvDesc.bufferView);
+                else
+                    bufferD3D.CreateShaderResourceView(device, cpuDescHandle);
                 cpuDescHandle.ptr += descHandleStride;
                 return true;
             }
@@ -394,7 +401,7 @@ void D3D12ResourceHeap::CreateShaderResourceViews(
             if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
             {
                 if (IsTextureViewEnabled(rvDesc.textureView))
-                    textureD3D.CreateShaderResourceView(device, rvDesc.textureView, cpuDescHandle);
+                    textureD3D.CreateShaderResourceView(device, cpuDescHandle, rvDesc.textureView);
                 else
                     textureD3D.CreateShaderResourceView(device, cpuDescHandle);
                 cpuDescHandle.ptr += descHandleStride;
@@ -423,12 +430,15 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
         ResourceType::Buffer,
         firstResourceIndex,
         rootParameterLayout.numBufferUAV,
-        [&](Resource& resource, const ResourceViewDescriptor& /*rvDesc*/) -> bool
+        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
         {
             auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
             if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
             {
-                bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle);
+                if (IsBufferViewEnabled(rvDesc.bufferView))
+                    bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle, rvDesc.bufferView);
+                else
+                    bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle);
                 cpuDescHandle.ptr += descHandleStride;
                 return true;
             }
@@ -448,7 +458,7 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(
             if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
             {
                 if (IsTextureViewEnabled(rvDesc.textureView))
-                    textureD3D.CreateUnorderedAccessView(device, rvDesc.textureView, cpuDescHandle);
+                    textureD3D.CreateUnorderedAccessView(device, cpuDescHandle, rvDesc.textureView);
                 else
                     textureD3D.CreateUnorderedAccessView(device, cpuDescHandle);
                 cpuDescHandle.ptr += descHandleStride;

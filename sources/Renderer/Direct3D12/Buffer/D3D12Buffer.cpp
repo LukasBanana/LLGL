@@ -26,9 +26,15 @@ namespace LLGL
 static const UINT64 g_soBufferFillSizeLen   = sizeof(UINT64);
 static const UINT64 g_cBufferAlignment      = 256u;
 
+// Returns DXGI_FORMAT_UNKNOWN for a structured buffer, or maps the format attribute to DXGI_FORMAT enum.
+static DXGI_FORMAT GetDXFormatForBuffer(const BufferDescriptor& desc)
+{
+    return (IsStructuredBuffer(desc) ? DXGI_FORMAT_UNKNOWN : D3D12Types::Map(desc.format));
+}
+
 D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
-    Buffer  { desc.bindFlags               },
-    format_ { D3D12Types::Map(desc.format) }
+    Buffer  { desc.bindFlags             },
+    format_ { GetDXFormatForBuffer(desc) }
 {
     /* Constant buffers must be aligned to 256 bytes */
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
@@ -74,46 +80,108 @@ BufferDescriptor D3D12Buffer::GetDesc() const
 
 void D3D12Buffer::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
 {
+    CreateConstantBufferViewPrimary(
+        device,
+        cpuDescHandle,
+        0,
+        static_cast<UINT>(GetBufferSize())
+    );
+}
+
+void D3D12Buffer::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const BufferViewDescriptor& bufferViewDesc)
+{
+    CreateConstantBufferViewPrimary(
+        device,
+        cpuDescHandle,
+        bufferViewDesc.offset,
+        static_cast<UINT>(std::min(bufferViewDesc.size, GetBufferSize()))
+    );
+}
+
+//private
+void D3D12Buffer::CreateConstantBufferViewPrimary(
+    ID3D12Device*               device,
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+    UINT64                      offset,
+    UINT                        size)
+{
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
     {
-        cbvDesc.BufferLocation  = GetNative()->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes     = static_cast<UINT>(GetBufferSize());
+        cbvDesc.BufferLocation  = GetNative()->GetGPUVirtualAddress() + offset;
+        cbvDesc.SizeInBytes     = size;
     }
     device->CreateConstantBufferView(&cbvDesc, cpuDescHandle);
 }
 
 void D3D12Buffer::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
 {
-    CreateShaderResourceView(device, cpuDescHandle, 0, static_cast<UINT>(bufferSize_ / structStride_), structStride_);
+    CreateShaderResourceViewPrimary(device, cpuDescHandle, 0, static_cast<UINT>(GetBufferSize() / stride_), stride_, format_);
 }
 
-void D3D12Buffer::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, UINT firstElement, UINT numElements, UINT elementStride)
+void D3D12Buffer::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const BufferViewDescriptor& bufferViewDesc)
+{
+    const UINT      stride          = GetStrideForView(bufferViewDesc.format);
+    const UINT64    firstElement    = bufferViewDesc.offset / stride;
+    const UINT      numElements     = static_cast<UINT>(std::min(bufferViewDesc.size, GetBufferSize()) / stride);
+
+    CreateShaderResourceViewPrimary(device, cpuDescHandle, firstElement, numElements, stride, D3D12Types::Map(bufferViewDesc.format));
+}
+
+//private
+void D3D12Buffer::CreateShaderResourceViewPrimary(
+    ID3D12Device*               device,
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+    UINT64                      firstElement,
+    UINT                        numElements,
+    UINT                        stride,
+    DXGI_FORMAT                 format)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
     {
-        srvDesc.Format                      = DXGI_FORMAT_UNKNOWN;
+        srvDesc.Format                      = format;
         srvDesc.ViewDimension               = D3D12_SRV_DIMENSION_BUFFER;
         srvDesc.Shader4ComponentMapping     = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Buffer.FirstElement         = firstElement;
         srvDesc.Buffer.NumElements          = numElements;
-        srvDesc.Buffer.StructureByteStride  = elementStride;
-        srvDesc.Buffer.Flags                = D3D12_BUFFER_SRV_FLAG_NONE;
+        srvDesc.Buffer.StructureByteStride  = (format == DXGI_FORMAT_UNKNOWN ? stride : 0);
+        srvDesc.Buffer.Flags                = D3D12_BUFFER_SRV_FLAG_NONE; //TODO: D3D12_BUFFER_SRV_FLAG_RAW
     }
     device->CreateShaderResourceView(GetNative(), &srvDesc, cpuDescHandle);
 }
 
-//TODO: support counter resource
 void D3D12Buffer::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+{
+    CreateUnorderedAccessViewPrimary(device, cpuDescHandle, 0, static_cast<UINT>(GetBufferSize() / stride_), stride_, format_);
+}
+
+void D3D12Buffer::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const BufferViewDescriptor& bufferViewDesc)
+{
+    const UINT      stride          = GetStrideForView(bufferViewDesc.format);
+    const UINT64    firstElement    = bufferViewDesc.offset / stride;
+    const UINT      numElements     = static_cast<UINT>(std::min(bufferViewDesc.size, GetBufferSize()) / stride);
+
+    CreateUnorderedAccessViewPrimary(device, cpuDescHandle, firstElement, numElements, stride, D3D12Types::Map(bufferViewDesc.format));
+}
+
+//private
+//TODO: support counter resource
+void D3D12Buffer::CreateUnorderedAccessViewPrimary(
+    ID3D12Device*               device,
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle,
+    UINT64                      firstElement,
+    UINT                        numElements,
+    UINT                        stride,
+    DXGI_FORMAT                 format)
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc;
     {
-        uavDesc.Format                      = DXGI_FORMAT_UNKNOWN;
+        uavDesc.Format                      = format;
         uavDesc.ViewDimension               = D3D12_UAV_DIMENSION_BUFFER;
-        uavDesc.Buffer.FirstElement         = 0;
-        uavDesc.Buffer.NumElements          = static_cast<UINT>(bufferSize_ / structStride_);
-        uavDesc.Buffer.StructureByteStride  = structStride_;
+        uavDesc.Buffer.FirstElement         = firstElement;
+        uavDesc.Buffer.NumElements          = numElements;
+        uavDesc.Buffer.StructureByteStride  = (format == DXGI_FORMAT_UNKNOWN ? stride : 0);
         uavDesc.Buffer.CounterOffsetInBytes = 0;
-        uavDesc.Buffer.Flags                = D3D12_BUFFER_UAV_FLAG_NONE;
+        uavDesc.Buffer.Flags                = D3D12_BUFFER_UAV_FLAG_NONE; //TODO: D3D12_BUFFER_UAV_FLAG_RAW
     }
     device->CreateUnorderedAccessView(GetNative(), nullptr, &uavDesc, cpuDescHandle);
 }
@@ -319,8 +387,8 @@ static D3D12_RESOURCE_STATES GetD3DUsageState(long bindFlags)
 void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& desc)
 {
     /* Store buffer attributes */
-    bufferSize_     = GetAlignedSize<UINT64>(desc.size, alignment_);
-    structStride_   = GetStorageBufferStride(desc);
+    bufferSize_ = GetAlignedSize<UINT64>(desc.size, alignment_);
+    stride_     = GetStorageBufferStride(desc);
 
     /* Determine actual resource size */
     internalSize_ = bufferSize_;
@@ -492,6 +560,17 @@ void D3D12Buffer::ClearSubresourceWithUAV(
             &rect
         );
     }
+}
+
+UINT D3D12Buffer::GetStrideForView(const Format format) const
+{
+    if (format != Format::Undefined)
+    {
+        /* Ignore format block size here, we only consider the entire chunk of a format entry */
+        const auto& formatAttrib = GetFormatAttribs(format);
+        return (formatAttrib.bitSize / 8);
+    }
+    return stride_;
 }
 
 
