@@ -79,7 +79,6 @@ struct ResourceViewDescriptor
     - \c bufferView.format is Format::Undefined;
     - \c bufferView.offset is 0.
     - \c bufferView.size is \c Constants::wholeSize.
-    \todo Not implemented yet.
     */
     BufferViewDescriptor    bufferView;
 };

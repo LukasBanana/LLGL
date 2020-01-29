@@ -14,6 +14,7 @@
 #include "../VKCore.h"
 #include "../VKContainers.h"
 #include "../../TextureUtils.h"
+#include "../../BufferUtils.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 #include <LLGL/ResourceHeapFlags.h>
@@ -312,9 +313,17 @@ void VKResourceHeap::FillWriteDescriptorForBuffer(
     /* Initialize buffer information */
     auto bufferInfo = container.NextBufferInfo();
     {
-        bufferInfo->buffer    = bufferVK->GetVkBuffer();
-        bufferInfo->offset    = 0;
-        bufferInfo->range     = bufferVK->GetSize();
+        bufferInfo->buffer = bufferVK->GetVkBuffer();
+        if (rvDesc.bufferView.size == Constants::wholeSize)
+        {
+            bufferInfo->offset  = 0;
+            bufferInfo->range   = bufferVK->GetSize();
+        }
+        else
+        {
+            bufferInfo->offset  = rvDesc.bufferView.offset;
+            bufferInfo->range   = rvDesc.bufferView.size;
+        }
     }
 
     /* Initialize write descriptor */
