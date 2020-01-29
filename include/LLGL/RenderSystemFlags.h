@@ -680,25 +680,25 @@ struct RenderingLimits
     std::uint32_t   maxTessFactor                       = 0;
 
     /**
-    \brief Specifies the minimum alignment (in bytes) for Constant Buffer Views (CBV). By default 256.
+    \brief Specifies the minimum alignment (in bytes) for Constant Buffer Views (CBV).
     \see BufferViewDescriptor::offset
     \see BufferViewDescriptor::size
     */
-    std::uint64_t   minConstantBufferAlignment          = 256;
+    std::uint64_t   minConstantBufferAlignment          = 0;
 
     /**
-    \brief Specifies the minimum alignment (in bytes) for sampled buffers, aka. Shader Resource Views (SRV). By default 1.
+    \brief Specifies the minimum alignment (in bytes) for sampled buffers, aka. Shader Resource Views (SRV).
     \see BufferViewDescriptor::offset
     \see BufferViewDescriptor::size
     */
-    std::uint64_t   minSampledBufferAlignment           = 1;
+    std::uint64_t   minSampledBufferAlignment           = 0;
 
     /**
-    \brief Specifies the minimum alignment (in bytes) for storage buffers, aka. Unordered Access Views (UAV). By default 1.
+    \brief Specifies the minimum alignment (in bytes) for storage buffers, aka. Unordered Access Views (UAV).
     \see BufferViewDescriptor::offset
     \see BufferViewDescriptor::size
     */
-    std::uint64_t   minStorageBufferAlignment           = 1;
+    std::uint64_t   minStorageBufferAlignment           = 0;
 };
 
 /**

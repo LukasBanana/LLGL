@@ -127,9 +127,9 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     limits.maxViewportSize[1]               = 16384u; //???
     limits.maxColorAttachments              = 8u;
 
-    limits.maxComputeShaderWorkGroups[0]    = 512; //???
-    limits.maxComputeShaderWorkGroups[1]    = 512; //???
-    limits.maxComputeShaderWorkGroups[2]    = 512; //???
+    limits.maxComputeShaderWorkGroups[0]    = 512u; //???
+    limits.maxComputeShaderWorkGroups[1]    = 512u; //???
+    limits.maxComputeShaderWorkGroups[2]    = 512u; //???
 
     MTLSize workGroupSize = [device maxThreadsPerThreadgroup];
     limits.maxComputeShaderWorkGroupSize[0] = static_cast<std::uint32_t>(workGroupSize.width);
@@ -137,10 +137,14 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     limits.maxComputeShaderWorkGroupSize[2] = static_cast<std::uint32_t>(workGroupSize.depth);
 
     #ifdef LLGL_OS_IOS
-    limits.maxTessFactor                    = 16;
+    limits.maxTessFactor                    = 16u;
     #else
-    limits.maxTessFactor                    = 64;
+    limits.maxTessFactor                    = 64u;
     #endif
+
+    caps.limits.minConstantBufferAlignment  = 256u; //???
+    caps.limits.minSampledBufferAlignment   = 32u;  //???
+    caps.limits.minStorageBufferAlignment   = 32u;  //???
 }
 
 

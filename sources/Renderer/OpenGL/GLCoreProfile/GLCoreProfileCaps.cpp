@@ -230,9 +230,19 @@ static void GLGetFeatureLimits(RenderingLimits& limits)
     limits.maxComputeShaderWorkGroupSize[0] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
     limits.maxComputeShaderWorkGroupSize[1] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
     limits.maxComputeShaderWorkGroupSize[2] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
-    limits.minConstantBufferAlignment       = GLGetUInt(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT);
-    limits.minSampledBufferAlignment        = GLGetUInt(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT);
-    limits.minStorageBufferAlignment        = limits.minSampledBufferAlignment; // Use SSBO for both sampled and storage buffers
+
+    #ifdef GL_ARB_uniform_buffer_object
+    if (HasExtension(GLExt::ARB_uniform_buffer_object))
+        limits.minConstantBufferAlignment   = GLGetUInt(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT);
+    #endif // /GL_ARB_uniform_buffer_object
+
+    #ifdef GL_ARB_shader_storage_buffer_object
+    if (HasExtension(GLExt::ARB_shader_storage_buffer_object))
+    {
+        limits.minSampledBufferAlignment    = GLGetUInt(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT);
+        limits.minStorageBufferAlignment    = limits.minSampledBufferAlignment; // Use SSBO for both sampled and storage buffers
+    }
+    #endif // /GL_ARB_shader_storage_buffer_object
 
     /* Query viewport limits */
     limits.maxViewports                     = GLGetUInt(GL_MAX_VIEWPORTS);
