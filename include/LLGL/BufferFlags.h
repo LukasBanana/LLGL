@@ -122,6 +122,7 @@ struct BufferViewDescriptor
 
     /**
     \brief Specifies the memory offset (in bytes) into the buffer resource. By default \c Constants::wholeSize.
+    \remarks If \c size is \c Constants::wholeSize, then \c offset is ignored and the whole buffer range will be used.
     \remarks If \c size is \e not \c Constants::wholeSize and \c format is Format::Undefined, this \b must be aligned to the \c stride the buffer resource was created with.
     \remarks If \c size is \e not \c Constants::wholeSize and \c format is \e not Format::Undefined, this \b must be aligned to the size of \c format.
     \see RenderingLimits::minConstantBufferAlignment

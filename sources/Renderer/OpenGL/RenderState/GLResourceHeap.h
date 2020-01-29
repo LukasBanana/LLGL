@@ -52,6 +52,7 @@ class GLResourceHeap final : public ResourceHeap
         void BuildTextureViews(ResourceBindingIterator& resourceIterator, long bindFlags);
 
         void BuildBufferSegments(ResourceBindingIterator& resourceIterator, long bindFlags, std::uint8_t& numSegments);
+        void BuildBufferRangeSegments(ResourceBindingIterator& resourceIterator, long bindFlags, std::uint8_t& numSegments);
         void BuildUniformBufferSegments(ResourceBindingIterator& resourceIterator);
         void BuildStorageBufferSegments(ResourceBindingIterator& resourceIterator);
         void BuildTextureSegments(ResourceBindingIterator& resourceIterator);
@@ -67,6 +68,7 @@ class GLResourceHeap final : public ResourceHeap
         void BuildSegment1(GLResourceBindingIter it, GLsizei count);
         void BuildSegment2Target(GLResourceBindingIter it, GLsizei count);
         void BuildSegment2Format(GLResourceBindingIter it, GLsizei count);
+        void BuildSegment3(GLResourceBindingIter it, GLsizei count);
 
         void WriteSegmentationHeapEnd(const void* data, std::size_t size);
 
@@ -81,11 +83,13 @@ class GLResourceHeap final : public ResourceHeap
         // Describes the segments within the raw buffer (per descriptor set).
         struct BufferSegmentation
         {
-            std::uint8_t numUniformBufferSegments   = 0;
-            std::uint8_t numStorageBufferSegments   = 0;
-            std::uint8_t numTextureSegments         = 0;
-            std::uint8_t numImageTextureSegments    = 0;
-            std::uint8_t numSamplerSegments         = 0;
+            std::uint8_t numUniformBufferSegments       = 0;
+            std::uint8_t numUniformBufferRangeSegments  = 0;
+            std::uint8_t numStorageBufferSegments       = 0;
+            std::uint8_t numStorageBufferRangeSegments  = 0;
+            std::uint8_t numTextureSegments             = 0;
+            std::uint8_t numImageTextureSegments        = 0;
+            std::uint8_t numSamplerSegments             = 0;
         };
 
     private:

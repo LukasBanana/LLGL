@@ -270,16 +270,6 @@ void GLBuffer::UnmapBuffer()
     }
 }
 
-void GLBuffer::SetIndexType(const Format format)
-{
-    indexType16Bits_ = (format == Format::R16UInt);
-}
-
-
-/*
- * ======= Private: =======
- */
-
 void GLBuffer::GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) const
 {
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
@@ -329,6 +319,11 @@ void GLBuffer::GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) c
         }
         GLStateManager::Get().PopBoundBuffer();
     }
+}
+
+void GLBuffer::SetIndexType(const Format format)
+{
+    indexType16Bits_ = (format == Format::R16UInt);
 }
 
 

@@ -45,6 +45,9 @@ class GLBuffer : public Buffer
         void* MapBuffer(GLenum access);
         void UnmapBuffer();
 
+        // Returns the specified buffer parameters; null pointers are ignored.
+        void GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) const;
+
         // Returns the hardware buffer ID.
         inline GLuint GetID() const
         {
@@ -71,10 +74,6 @@ class GLBuffer : public Buffer
         {
             return indexType16Bits_;
         }
-
-    private:
-
-        void GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) const;
 
     private:
 

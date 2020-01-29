@@ -57,11 +57,21 @@ struct GLResourceViewHeapSegment1
     GLsizei     count;          // TODO: maybe use std::uint8_t for optimization
 };
 
-// Resource view heap (RVH) segment structure with two dynamic sub-buffers, one for <GLTextureTarget> and one for <GLuint>
+// Resource view heap (RVH) segment structure with two dynamic sub-buffers, one for <GLTextureTarget> and one for <GLuint>; used for 'GLStateManager::BindTextures'.
 struct GLResourceViewHeapSegment2
 {
     std::size_t segmentSize;
     std::size_t offsetEnd0; // Byte offset after the first sub-buffer, following the second sub-buffer
+    GLuint      first;
+    GLsizei     count;
+};
+
+// Resource view heap (RVH) segment structure with three dynamic sub-buffers, one for <GLuint>, one for <GLintptr>, and one for <GLsizeiptr>; used for 'GLStateManager::BindBuffersRange'.
+struct GLResourceViewHeapSegment3
+{
+    std::size_t segmentSize;
+    std::size_t offsetEnd0; // Byte offset after the first sub-buffer, following the second sub-buffer
+    std::size_t offsetEnd1; // Byte offset after the second sub-buffer, following the third sub-buffer
     GLuint      first;
     GLsizei     count;
 };
@@ -73,12 +83,21 @@ struct GLResourceBinding
     GLuint          object;
     GLTextureTarget target; // Only used for textures and image texture units
     GLenum          format; // Only used for image texture units
+    GLintptr        offset; // Only used for buffer ranges
+    GLsizeiptr      size;   // Only used for buffer ranges
 };
 
 
 /*
  * Internal functions
  */
+
+// Returns true if the specified buffer view is enabled for OpenGL bindings
+static bool IsGLBufferViewEnabled(const BufferViewDescriptor& bufferViewDesc)
+{
+    /* For OpenGL buffer binding, only the range is relevant, no format is considerd */
+    return (bufferViewDesc.size != Constants::wholeSize);
+}
 
 #ifdef GL_ARB_shader_image_load_store
 
@@ -205,6 +224,22 @@ static void BindBuffersBaseSegment(GLStateManager& stateMngr, const std::int8_t*
     byteAlignedBuffer += segment->segmentSize;
 }
 
+static void BindBuffersRangeSegment(GLStateManager& stateMngr, const std::int8_t*& byteAlignedBuffer, const GLBufferTarget bufferTarget)
+{
+    const auto segment = reinterpret_cast<const GLResourceViewHeapSegment3*>(byteAlignedBuffer);
+    {
+        stateMngr.BindBuffersRange(
+            bufferTarget,
+            segment->first,
+            segment->count,
+            reinterpret_cast<const GLuint*>(byteAlignedBuffer + sizeof(GLResourceViewHeapSegment3)),
+            reinterpret_cast<const GLintptr*>(byteAlignedBuffer + segment->offsetEnd0),
+            reinterpret_cast<const GLsizeiptr*>(byteAlignedBuffer + segment->offsetEnd1)
+        );
+    }
+    byteAlignedBuffer += segment->segmentSize;
+}
+
 static void BindTexturesSegment(GLStateManager& stateMngr, const std::int8_t*& byteAlignedBuffer)
 {
     const auto segment = reinterpret_cast<const GLResourceViewHeapSegment2*>(byteAlignedBuffer);
@@ -266,10 +301,14 @@ void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t firstSet)
     /* Bind all constant buffers */
     for (std::uint8_t i = 0; i < segmentation_.numUniformBufferSegments; ++i)
         BindBuffersBaseSegment(stateMngr, byteAlignedBuffer, GLBufferTarget::UNIFORM_BUFFER);
+    for (std::uint8_t i = 0; i < segmentation_.numUniformBufferRangeSegments; ++i)
+        BindBuffersRangeSegment(stateMngr, byteAlignedBuffer, GLBufferTarget::UNIFORM_BUFFER);
 
     /* Bind all shader storage buffers */
     for (std::uint8_t i = 0; i < segmentation_.numStorageBufferSegments; ++i)
         BindBuffersBaseSegment(stateMngr, byteAlignedBuffer, GLBufferTarget::SHADER_STORAGE_BUFFER);
+    for (std::uint8_t i = 0; i < segmentation_.numStorageBufferRangeSegments; ++i)
+        BindBuffersRangeSegment(stateMngr, byteAlignedBuffer, GLBufferTarget::SHADER_STORAGE_BUFFER);
 
     /* Bind all textures */
     for (std::uint8_t i = 0; i < segmentation_.numTextureSegments; ++i)
@@ -331,6 +370,28 @@ static std::vector<GLResourceBinding> CollectGLResourceBindings(
     return resourceBindings;
 }
 
+// Returns true if the specified resource bindings require a buffer range instead of the entire buffer
+static bool RequiresRangeForGLResourceBindings(
+    ResourceBindingIterator&        resourceIterator,
+    ResourceType                    resourceType,
+    long                            resourceBindFlags)
+{
+    /* Collect all binding points of the specified resource type */
+    const ResourceViewDescriptor* rvDesc = nullptr;
+    resourceIterator.Reset(resourceType, resourceBindFlags);
+
+    std::vector<GLResourceBinding> resourceBindings;
+    resourceBindings.reserve(resourceIterator.GetCount());
+
+    while (resourceIterator.Next(nullptr, &rvDesc) != nullptr)
+    {
+        if (IsGLBufferViewEnabled(rvDesc->bufferView))
+            return true;
+    }
+
+    return false;
+}
+
 void GLResourceHeap::BuildTextureViews(ResourceBindingIterator& resourceIterator, long bindFlags)
 {
     const ResourceViewDescriptor* rvDesc = nullptr;
@@ -357,7 +418,6 @@ void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterat
             auto bufferGL = LLGL_CAST(GLBuffer*, resource);
             binding.slot    = slot;
             binding.object  = bufferGL->GetID();
-            binding.target  = GLTextureTarget::TEXTURE_1D;
         }
     );
 
@@ -369,22 +429,61 @@ void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterat
     );
 }
 
+void GLResourceHeap::BuildBufferRangeSegments(ResourceBindingIterator& resourceIterator, long bindFlags, std::uint8_t& numSegments)
+{
+    /* Collect all buffers */
+    auto resourceBindings = CollectGLResourceBindings(
+        resourceIterator,
+        ResourceType::Buffer,
+        bindFlags,
+        [](GLResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& rvDesc, std::uint32_t slot)
+        {
+            auto bufferGL = LLGL_CAST(GLBuffer*, resource);
+            binding.slot    = slot;
+            binding.object  = bufferGL->GetID();
+
+            if (IsGLBufferViewEnabled(rvDesc.bufferView))
+            {
+                /* Fill specified range for binding */
+                binding.offset  = static_cast<GLintptr>(rvDesc.bufferView.offset);
+                binding.size    = static_cast<GLsizeiptr>(rvDesc.bufferView.size);
+            }
+            else
+            {
+                /* Get buffer size and fill entire range for binding */
+                GLint bufferSize = 0;
+                bufferGL->GetBufferParams(&bufferSize, nullptr, nullptr);
+
+                binding.offset  = 0;
+                binding.size    = bufferSize;
+            }
+        }
+    );
+
+    /* Build all resource segments for type <GLResourceViewHeapSegment3> */
+    BuildAllSegments(
+        resourceBindings,
+        std::bind(&GLResourceHeap::BuildSegment3, this, std::placeholders::_1, std::placeholders::_2),
+        numSegments
+    );
+}
+
 void GLResourceHeap::BuildUniformBufferSegments(ResourceBindingIterator& resourceIterator)
 {
-    BuildBufferSegments(
-        resourceIterator,
-        BindFlags::ConstantBuffer,
-        segmentation_.numUniformBufferSegments
-    );
+    const long bindFlags = BindFlags::ConstantBuffer;
+    if (RequiresRangeForGLResourceBindings(resourceIterator, ResourceType::Buffer, bindFlags))
+        BuildBufferRangeSegments(resourceIterator, bindFlags, segmentation_.numUniformBufferRangeSegments);
+    else
+        BuildBufferSegments(resourceIterator, bindFlags, segmentation_.numUniformBufferSegments);
 }
 
 void GLResourceHeap::BuildStorageBufferSegments(ResourceBindingIterator& resourceIterator)
 {
-    BuildBufferSegments(
-        resourceIterator,
-        (BindFlags::Sampled | BindFlags::Storage),
-        segmentation_.numStorageBufferSegments
-    );
+    const long bindFlags = (BindFlags::Sampled | BindFlags::Storage);
+    if (RequiresRangeForGLResourceBindings(resourceIterator, ResourceType::Buffer, bindFlags))
+        BuildBufferRangeSegments(resourceIterator, bindFlags, segmentation_.numStorageBufferRangeSegments);
+    else
+        BuildBufferSegments(resourceIterator, bindFlags, segmentation_.numStorageBufferSegments);
 }
 
 void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceIterator)
@@ -595,6 +694,45 @@ void GLResourceHeap::BuildSegment2Format(GLResourceBindingIter it, GLsizei count
     it = begin;
     for (GLsizei i = 0; i < count; ++i, ++it)
         segmentIDs[i] = it->object;
+}
+
+void GLResourceHeap::BuildSegment3(GLResourceBindingIter it, GLsizei count)
+{
+    std::size_t startOffset = buffer_.size();
+
+    /* Allocate space for segment */
+    const std::size_t segmentOffsetEnd0 = sizeof(GLResourceViewHeapSegment3) + sizeof(GLuint) * count;
+    const std::size_t segmentOffsetEnd1 = segmentOffsetEnd0 + sizeof(GLintptr) * count;
+    const std::size_t segmentSize       = segmentOffsetEnd1 + sizeof(GLsizeiptr) * count;
+    buffer_.resize(startOffset + segmentSize);
+
+    /* Write segment header */
+    auto segment = reinterpret_cast<GLResourceViewHeapSegment3*>(&buffer_[startOffset]);
+    {
+        segment->segmentSize    = segmentSize;
+        segment->offsetEnd0     = segmentOffsetEnd0;
+        segment->offsetEnd1     = segmentOffsetEnd1;
+        segment->first          = it->slot;
+        segment->count          = count;
+    }
+
+    /* Write first part of segment body (of type <GLuint>) */
+    auto segmentIDs = reinterpret_cast<GLuint*>(&buffer_[startOffset + sizeof(GLResourceViewHeapSegment3)]);
+    auto begin = it;
+    for (GLsizei i = 0; i < count; ++i, ++it)
+        segmentIDs[i] = it->object;
+
+    /* Write second part of segment body (of type <GLintptr>) */
+    auto segmentOffsets = reinterpret_cast<GLintptr*>(&buffer_[startOffset + segmentOffsetEnd0]);
+    it = begin;
+    for (GLsizei i = 0; i < count; ++i, ++it)
+        segmentOffsets[i] = it->offset;
+
+    /* Write second part of segment body (of type <GLsizeiptr>) */
+    auto segmentSizes = reinterpret_cast<GLsizeiptr*>(&buffer_[startOffset + segmentOffsetEnd1]);
+    it = begin;
+    for (GLsizei i = 0; i < count; ++i, ++it)
+        segmentSizes[i] = it->size;
 }
 
 void GLResourceHeap::WriteSegmentationHeapEnd(const void* data, std::size_t size)
