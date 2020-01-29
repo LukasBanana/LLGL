@@ -17,6 +17,9 @@
 // Enable depth texture instead of depth buffer for render target
 //#define ENABLE_DEPTH_TEXTURE
 
+// Enables constant buffer view (CBV) ranges
+//#define ENABLE_CBUFFER_RANGE
+
 
 #ifndef ENABLE_MULTISAMPLING
 #undef ENABLE_CUSTOM_MULTISAMPLING
@@ -49,6 +52,11 @@ class Example_RenderTarget : public ExampleBase
 
     Gs::Vector2f            rotation;
 
+    #ifdef ENABLE_CBUFFER_RANGE
+    std::uint64_t           cbufferAlignment        = 0;
+    std::vector<char>       cbufferData;
+    #endif
+
     const LLGL::Extent2D    renderTargetSize        = LLGL::Extent2D(
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
         64, 64
@@ -57,13 +65,11 @@ class Example_RenderTarget : public ExampleBase
         #endif
     );
 
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f        wvpMatrix;
         int                 useTexture2DMS = 0;
-        int                 _pad0[3];
-    }
-    settings;
+    };
 
 public:
 
@@ -102,7 +108,23 @@ private:
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
         indexBuffer = CreateIndexBuffer(GenerateTexturedCubeTriangleIndices(), LLGL::Format::R32UInt);
-        constantBuffer = CreateConstantBuffer(settings);
+
+        #ifdef ENABLE_CBUFFER_RANGE
+
+        // Allocate CPU local buffer for shader settings with alignment (usually 256 bytes for constant buffers)
+        const auto& caps = renderer->GetRenderingCaps();
+        cbufferAlignment = std::max(sizeof(Settings), static_cast<std::size_t>(caps.limits.minConstantBufferAlignment));
+        cbufferData.resize(static_cast<std::size_t>(cbufferAlignment * 2));
+
+        // Create constant buffer for two <Settings> entries with alignment
+        constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(cbufferAlignment * 2));
+
+        #else
+
+        // Create constant buffer for a single <Settings> entry
+        constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(Settings)));
+
+        #endif
 
         return vertexFormat;
     }
@@ -316,11 +338,27 @@ private:
                 constantBuffer, samplerState, colorMap, /*colorMap,*/
                 constantBuffer, samplerState, renderTargetTex, /*renderTargetTex,*/
             };
+
+            #ifdef ENABLE_CBUFFER_RANGE
+
+            auto& cbufferView0 = resourceHeapDesc.resourceViews[0].bufferView;
+            {
+                cbufferView0.offset = 0;
+                cbufferView0.size   = cbufferAlignment;
+            }
+
+            auto& cbufferView1 = resourceHeapDesc.resourceViews[3].bufferView;
+            {
+                cbufferView1.offset = cbufferAlignment;
+                cbufferView1.size   = cbufferAlignment;
+            }
+
+            #endif // /ENABLE_CBUFFER_RANGE
         }
         resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
     }
 
-    void UpdateModelTransform(const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
+    void UpdateModelTransform(Settings& settings, const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
     {
         settings.wvpMatrix = proj;
         Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
@@ -328,6 +366,40 @@ private:
     }
 
     static const auto shaderStages = LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage;
+
+    void UpdateSettingsForTexture(Settings& settings)
+    {
+        // Update model transformation with render-target projection
+        UpdateModelTransform(settings, renderTargetProj, rotation.y, Gs::Vector3f(1));
+
+        if (IsOpenGL())
+        {
+            /*
+            Now flip the Y-axis (0 for X-axis, 1 for Y-axis, 2 for Z-axis) of the
+            world-view-projection matrix to render vertically flipped into the render-target
+            */
+            Gs::FlipAxis(settings.wvpMatrix, 1);
+        }
+
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+
+        // Disable multi-sample texture in fragment shader
+        settings.useTexture2DMS = 0;
+
+        #endif // /ENABLE_CUSTOM_MULTISAMPLING
+    }
+
+    void UpdateSettingsForScreen(Settings& settings)
+    {
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+
+        // Enable multi-sample texture in fragment shader
+        settings.useTexture2DMS = 1;
+
+        #endif // ENABLE_CUSTOM_MULTISAMPLING
+
+        UpdateModelTransform(settings, projection, rotation.x);
+    }
 
     void UpdateScene()
     {
@@ -344,27 +416,14 @@ private:
 
     void DrawSceneIntoTexture()
     {
-        // Update model transformation with render-target projection
-        UpdateModelTransform(renderTargetProj, rotation.y, Gs::Vector3f(1));
-
-        if (IsOpenGL())
-        {
-            /*
-            Now flip the Y-axis (0 for X-axis, 1 for Y-axis, 2 for Z-axis) of the
-            world-view-projection matrix to render vertically flipped into the render-target
-            */
-            Gs::FlipAxis(settings.wvpMatrix, 1);
-        }
-
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-        // Disable multi-sample texture in fragment shader
-        settings.useTexture2DMS = 0;
-
-        #endif
+        #ifndef ENABLE_CBUFFER_RANGE
 
         // Update constant buffer with current settings
+        Settings settings;
+        UpdateSettingsForTexture(settings);
         commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
+
+        #endif // /ENABLE_CBUFFER_RANGE
 
         // Begin render pass for render target
         commands->BeginRenderPass(*renderTarget);
@@ -401,16 +460,14 @@ private:
 
     void DrawSceneOntoScreen()
     {
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-        // Enable multi-sample texture in fragment shader
-        settings.useTexture2DMS = 1;
-
-        #endif // ENABLE_CUSTOM_MULTISAMPLING
+        #ifndef ENABLE_CBUFFER_RANGE
 
         // Update model transformation with standard projection
-        UpdateModelTransform(projection, rotation.x);
+        Settings settings;
+        UpdateSettingsForScreen(settings);
         commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
+
+        #endif // /ENABLE_CBUFFER_RANGE
 
         // Generate MIP-maps again after texture has been written by the render-target
         commands->GenerateMips(*renderTargetTex);
@@ -456,6 +513,17 @@ private:
         commands->EndRenderPass();
     }
 
+    #ifdef ENABLE_CBUFFER_RANGE
+
+    Settings& GetCbufferData(std::size_t idx)
+    {
+        // Returns address to the CPU local constant buffer data with alignment
+        const auto offset = static_cast<std::size_t>(cbufferAlignment) * idx;
+        return *reinterpret_cast<Settings*>(&(cbufferData[offset]));
+    }
+
+    #endif // /ENABLE_CBUFFER_RANGE
+
     void OnDrawFrame() override
     {
         // Update scene by user input
@@ -463,6 +531,15 @@ private:
 
         commands->Begin();
         {
+            #ifdef ENABLE_CBUFFER_RANGE
+
+            // Update constant buffer with all settings at once
+            UpdateSettingsForTexture(GetCbufferData(0));
+            UpdateSettingsForScreen(GetCbufferData(1));
+            commands->UpdateBuffer(*constantBuffer, 0, cbufferData.data(), static_cast<std::uint16_t>(cbufferData.size()));
+
+            #endif // /ENABLE_CBUFFER_RANGE
+
             // Draw scene into texture, then draw scene onto screen
             commands->PushDebugGroup("RenderTexture");
             {
