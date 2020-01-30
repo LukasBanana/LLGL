@@ -36,7 +36,7 @@ static std::string GetProgramPath()
 std::string Module::GetModuleFilename(const char* moduleName)
 {
     /* Extend module name to Linux shared library name (SO) */
-    std::string s = GetProgramPath();
+    std::string s = ""; //GetProgramPath();
     s += "libLLGL_";
     s += moduleName;
     #ifdef LLGL_DEBUG
