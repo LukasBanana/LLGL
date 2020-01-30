@@ -7,7 +7,6 @@ project(LLGL)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
 # === Build path ===
 
 set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
@@ -647,6 +646,8 @@ endif()
 
 if(LLGL_BUILD_RENDERER_OPENGL)
     # OpenGL Renderer
+    # set OpenGL preference
+    set(OpenGL_GL_PREFERENCE "GLVND")
     find_package(OpenGL REQUIRED)
     if(OpenGL_FOUND)
         include_directories(${OPENGL_INCLUDE_DIR})
