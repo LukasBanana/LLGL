@@ -37,9 +37,9 @@ static void GLTexSubImage1DBase(
     const SrcImageDescriptor&   imageDesc,
     GLenum                      internalFormat)
 {
+    QueryGLInternalFormat(target, internalFormat);
     if (IsCompressedFormat(imageDesc.format))
     {
-        QueryGLInternalFormat(target, internalFormat);
         glCompressedTexSubImage1D(
             target,
             static_cast<GLint>(mipLevel),
@@ -57,7 +57,7 @@ static void GLTexSubImage1DBase(
             static_cast<GLint>(mipLevel),
             x,
             static_cast<GLsizei>(width),
-            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
             GLTypes::Map(imageDesc.dataType),
             imageDesc.data
         );
@@ -76,9 +76,9 @@ static void GLTexSubImage2DBase(
     const SrcImageDescriptor&   imageDesc,
     GLenum                      internalFormat)
 {
+    QueryGLInternalFormat(target, internalFormat);
     if (IsCompressedFormat(imageDesc.format))
     {
-        QueryGLInternalFormat(target, internalFormat);
         glCompressedTexSubImage2D(
             target,
             static_cast<GLint>(mipLevel),
@@ -100,7 +100,7 @@ static void GLTexSubImage2DBase(
             y,
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
-            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
             GLTypes::Map(imageDesc.dataType),
             imageDesc.data
         );
@@ -119,9 +119,9 @@ static void GLTexSubImage3DBase(
     const SrcImageDescriptor&   imageDesc,
     GLenum                      internalFormat)
 {
+    QueryGLInternalFormat(target, internalFormat);
     if (IsCompressedFormat(imageDesc.format))
     {
-        QueryGLInternalFormat(target, internalFormat);
         glCompressedTexSubImage3D(
             target,
             static_cast<GLint>(mipLevel),
@@ -147,7 +147,7 @@ static void GLTexSubImage3DBase(
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
-            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
             GLTypes::Map(imageDesc.dataType),
             imageDesc.data
         );

@@ -42,6 +42,24 @@ static std::vector<GLDepthStencilPair> GenImageDataD32fS8ui(std::uint32_t numPix
     return std::vector<GLDepthStencilPair>(static_cast<std::size_t>(numPixels), GLDepthStencilPair{ depth, stencil });
 }
 
+// Returns true if the specified hardware format requires an integer type, e.g. GL_RGBA_INTEGER
+static bool IsIntegerTypedFormat(const Format format)
+{
+    return ((GetFormatAttribs(format).flags & (FormatFlags::IsInteger | FormatFlags::IsNormalized)) == FormatFlags::IsInteger);
+}
+
+// Returns true if the 'clearValue' member is enabled if no initial image data is specified, i.e. MiscFlags::NoInitialData is NOT specified
+static bool IsClearValueEnabled(const TextureDescriptor& desc)
+{
+    return ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
+}
+
+// Returns true if a GL texture with the specified descriptor can be default initialized with an RGBA float format, i.e. GL_RGBA and GL_FLOAT.
+static bool CanInitializeTexWithRGBAf(const TextureDescriptor& desc)
+{
+    return (IsClearValueEnabled(desc) && !IsCompressedFormat(desc.format) && !IsIntegerTypedFormat(desc.format));
+}
+
 [[noreturn]]
 static void ErrIllegalUseOfDepthFormat()
 {
@@ -472,8 +490,6 @@ static void GLTexImage2DMultisampleArray(
 
 static void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
-
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
@@ -481,7 +497,7 @@ static void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor
             NumMipLevels(desc),
             desc.format,
             desc.extent.width,
-            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
             GLTypes::Map(imageDesc->dataType),
             imageDesc->data,
             imageDesc->dataSize
@@ -492,19 +508,7 @@ static void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor
         /* Throw runtime error for illegal use of depth-stencil format */
         ErrIllegalUseOfDepthFormat();
     }
-    else if (IsCompressedFormat(desc.format) || !useClearValue)
-    {
-        /* Allocate texture without initial data */
-        GLTexImage1D(
-            NumMipLevels(desc),
-            desc.format,
-            desc.extent.width,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr
-        );
-    }
-    else
+    else if (CanInitializeTexWithRGBAf(desc))
     {
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(desc.extent.width, desc.clearValue.color);
@@ -517,14 +521,24 @@ static void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor
             image.data()
         );
     }
+    else
+    {
+        /* Allocate texture without initial data */
+        GLTexImage1D(
+            NumMipLevels(desc),
+            desc.format,
+            desc.extent.width,
+            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GL_UNSIGNED_BYTE,
+            nullptr
+        );
+    }
 }
 
 #endif
 
 static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
-
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
@@ -533,7 +547,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor
             desc.format,
             desc.extent.width,
             desc.extent.height,
-            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
             GLTypes::Map(imageDesc->dataType),
             imageDesc->data,
             imageDesc->dataSize
@@ -541,7 +555,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor
     }
     else if (IsStencilFormat(desc.format))
     {
-        if (useClearValue)
+        if (IsClearValueEnabled(desc))
         {
             /* Initialize depth-stencil texture image with default depth */
             auto image = GenImageDataD32fS8ui(desc.extent.width * desc.extent.height, desc.clearValue.depth, desc.clearValue.stencil);
@@ -571,7 +585,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor
     }
     else if (IsDepthFormat(desc.format))
     {
-        if (useClearValue)
+        if (IsClearValueEnabled(desc))
         {
             /* Initialize depth texture image with default depth */
             auto image = GenImageDataRf(desc.extent.width * desc.extent.height, desc.clearValue.depth);
@@ -599,20 +613,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor
             );
         }
     }
-    else if (IsCompressedFormat(desc.format) || !useClearValue)
-    {
-        /* Allocate texture without initial data */
-        GLTexImage2D(
-            NumMipLevels(desc),
-            desc.format,
-            desc.extent.width,
-            desc.extent.height,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr
-        );
-    }
-    else
+    else if (CanInitializeTexWithRGBAf(desc))
     {
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height, desc.clearValue.color);
@@ -626,12 +627,23 @@ static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor
             image.data()
         );
     }
+    else
+    {
+        /* Allocate texture without initial data */
+        GLTexImage2D(
+            NumMipLevels(desc),
+            desc.format,
+            desc.extent.width,
+            desc.extent.height,
+            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GL_UNSIGNED_BYTE,
+            nullptr
+        );
+    }
 }
 
 static void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
-
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
@@ -641,7 +653,7 @@ static void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor
             desc.extent.width,
             desc.extent.height,
             desc.extent.depth,
-            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
             GLTypes::Map(imageDesc->dataType),
             imageDesc->data,
             imageDesc->dataSize
@@ -652,21 +664,7 @@ static void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor
         /* Throw runtime error for illegal use of depth-stencil format */
         ErrIllegalUseOfDepthFormat();
     }
-    else if (IsCompressedFormat(desc.format) || !useClearValue)
-    {
-        /* Allocate texture without initial data */
-        GLTexImage3D(
-            NumMipLevels(desc),
-            desc.format,
-            desc.extent.width,
-            desc.extent.height,
-            desc.extent.depth,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr
-        );
-    }
-    else
+    else if (CanInitializeTexWithRGBAf(desc))
     {
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height * desc.extent.depth, desc.clearValue.color);
@@ -681,12 +679,25 @@ static void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor
             image.data()
         );
     }
+    else
+    {
+        /* Allocate texture without initial data */
+        GLTexImage3D(
+            NumMipLevels(desc),
+            desc.format,
+            desc.extent.width,
+            desc.extent.height,
+            desc.extent.depth,
+            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GL_UNSIGNED_BYTE,
+            nullptr
+        );
+    }
 }
 
 static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    auto numMipLevels   = NumMipLevels(desc);
-    bool useClearValue  = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
+    const auto numMipLevels = NumMipLevels(desc);
 
     if (imageDesc)
     {
@@ -697,7 +708,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
         if (IsCompressedFormat(desc.format))
             imageFaceStride = static_cast<std::uint32_t>(imageDesc->dataSize);
 
-        auto dataFormatGL       = GLTypes::Map(imageDesc->format);
+        auto dataFormatGL       = GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format));
         auto dataTypeGL         = GLTypes::Map(imageDesc->dataType);
 
         for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
@@ -723,7 +734,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
         std::vector<GLDepthStencilPair> image;
         const void* initialData = nullptr;
 
-        if (useClearValue)
+        if (IsClearValueEnabled(desc))
         {
             /* Initialize depth texture image with default depth */
             image       = GenImageDataD32fS8ui(desc.extent.width * desc.extent.height, desc.clearValue.depth, desc.clearValue.stencil);
@@ -752,7 +763,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
         std::vector<float> image;
         const void* initialData = nullptr;
 
-        if (useClearValue)
+        if (IsClearValueEnabled(desc))
         {
             /* Initialize depth texture image with default depth */
             image       = GenImageDataRf(desc.extent.width * desc.extent.height, desc.clearValue.depth);
@@ -774,24 +785,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
             );
         }
     }
-    else if (IsCompressedFormat(desc.format) || !useClearValue)
-    {
-        /* Allocate texture without initial data */
-        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
-        {
-            GLTexImageCube(
-                numMipLevels,
-                desc.format,
-                desc.extent.width,
-                desc.extent.height,
-                arrayLayer,
-                GL_RGBA,
-                GL_UNSIGNED_BYTE,
-                nullptr
-            );
-        }
-    }
-    else
+    else if (CanInitializeTexWithRGBAf(desc))
     {
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height, desc.clearValue.color);
@@ -809,14 +803,29 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
             );
         }
     }
+    else
+    {
+        /* Allocate texture without initial data */
+        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
+        {
+            GLTexImageCube(
+                numMipLevels,
+                desc.format,
+                desc.extent.width,
+                desc.extent.height,
+                arrayLayer,
+                (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+                GL_UNSIGNED_BYTE,
+                nullptr
+            );
+        }
+    }
 }
 
 #ifdef LLGL_OPENGL
 
 static void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
-
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
@@ -825,7 +834,7 @@ static void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescr
             desc.format,
             desc.extent.width,
             desc.arrayLayers,
-            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
             GLTypes::Map(imageDesc->dataType),
             imageDesc->data,
             imageDesc->dataSize
@@ -836,20 +845,7 @@ static void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescr
         /* Throw runtime error for illegal use of depth-stencil format */
         ErrIllegalUseOfDepthFormat();
     }
-    else if (IsCompressedFormat(desc.format) || !useClearValue)
-    {
-        /* Allocate texture without initial data */
-        GLTexImage1DArray(
-            NumMipLevels(desc),
-            desc.format,
-            desc.extent.width,
-            desc.arrayLayers,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr
-        );
-    }
-    else
+    else if (CanInitializeTexWithRGBAf(desc))
     {
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(desc.extent.width * desc.arrayLayers, desc.clearValue.color);
@@ -863,14 +859,25 @@ static void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescr
             image.data()
         );
     }
+    else
+    {
+        /* Allocate texture without initial data */
+        GLTexImage1DArray(
+            NumMipLevels(desc),
+            desc.format,
+            desc.extent.width,
+            desc.arrayLayers,
+            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GL_UNSIGNED_BYTE,
+            nullptr
+        );
+    }
 }
 
 #endif
 
 static void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
-
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
@@ -880,15 +887,47 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescr
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
             GLTypes::Map(imageDesc->dataType),
             imageDesc->data,
             imageDesc->dataSize
         );
     }
-    else if (IsDepthStencilFormat(desc.format))
+    else if (IsStencilFormat(desc.format))
     {
-        if (useClearValue)
+        if (IsClearValueEnabled(desc))
+        {
+            /* Initialize depth-stencil texture image with default depth */
+            auto image = GenImageDataD32fS8ui(desc.extent.width * desc.extent.height * desc.arrayLayers, desc.clearValue.depth, desc.clearValue.stencil);
+            GLTexImage2DArray(
+                NumMipLevels(desc),
+                FindSuitableDepthFormat(desc),
+                desc.extent.width,
+                desc.extent.height,
+                desc.arrayLayers,
+                GL_DEPTH_STENCIL,
+                GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
+                image.data()
+            );
+        }
+        else
+        {
+            /* Allocate depth-stencil texture image without initial data */
+            GLTexImage2DArray(
+                NumMipLevels(desc),
+                FindSuitableDepthFormat(desc),
+                desc.extent.width,
+                desc.extent.height,
+                desc.arrayLayers,
+                GL_DEPTH_STENCIL,
+                GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
+                nullptr
+            );
+        }
+    }
+    else if (IsDepthFormat(desc.format))
+    {
+        if (IsClearValueEnabled(desc))
         {
             /* Initialize depth texture image with default depth */
             auto image = GenImageDataRf(desc.extent.width * desc.extent.height * desc.arrayLayers, desc.clearValue.depth);
@@ -918,21 +957,7 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescr
             );
         }
     }
-    else if (IsCompressedFormat(desc.format) || !useClearValue)
-    {
-        /* Allocate texture without initial data */
-        GLTexImage2DArray(
-            NumMipLevels(desc),
-            desc.format,
-            desc.extent.width,
-            desc.extent.height,
-            desc.arrayLayers,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr
-        );
-    }
-    else
+    else if (CanInitializeTexWithRGBAf(desc))
     {
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height * desc.arrayLayers, desc.clearValue.color);
@@ -947,13 +972,27 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescr
             image.data()
         );
     }
+    else
+    {
+        /* Allocate texture without initial data */
+        GLTexImage2DArray(
+            NumMipLevels(desc),
+            desc.format,
+            desc.extent.width,
+            desc.extent.height,
+            desc.arrayLayers,
+            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GL_UNSIGNED_BYTE,
+            nullptr
+        );
+    }
 }
 
 #ifdef LLGL_OPENGL
 
 static void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    bool useClearValue = ((desc.miscFlags & MiscFlags::NoInitialData) == 0);
+    bool useClearValue = IsClearValueEnabled(desc);
 
     if (imageDesc)
     {
@@ -964,7 +1003,7 @@ static void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDes
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
             GLTypes::Map(imageDesc->dataType),
             imageDesc->data,
             imageDesc->dataSize
@@ -975,21 +1014,7 @@ static void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDes
         /* Throw runtime error for illegal use of depth-stencil format */
         ErrIllegalUseOfDepthFormat();
     }
-    else if (IsCompressedFormat(desc.format) || !useClearValue)
-    {
-        /* Allocate texture without initial data */
-        GLTexImageCubeArray(
-            NumMipLevels(desc),
-            desc.format,
-            desc.extent.width,
-            desc.extent.height,
-            desc.arrayLayers,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr
-        );
-    }
-    else
+    else if (CanInitializeTexWithRGBAf(desc))
     {
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height * desc.arrayLayers, desc.clearValue.color);
@@ -1002,6 +1027,20 @@ static void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDes
             GL_RGBA,
             GL_FLOAT,
             image.data()
+        );
+    }
+    else
+    {
+        /* Allocate texture without initial data */
+        GLTexImageCubeArray(
+            NumMipLevels(desc),
+            desc.format,
+            desc.extent.width,
+            desc.extent.height,
+            desc.arrayLayers,
+            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GL_UNSIGNED_BYTE,
+            nullptr
         );
     }
 }

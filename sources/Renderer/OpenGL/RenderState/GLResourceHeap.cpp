@@ -139,13 +139,6 @@ static GLTexture* GetAsTextureView(const ResourceViewDescriptor& rvDesc)
     return nullptr;
 }
 
-#if 0 //TODO
-static GLBuffer* GetAsBufferView(const ResourceViewDescriptor& rvDesc)
-{
-    return nullptr;
-}
-#endif
-
 
 /*
  * GLResourceHeap class

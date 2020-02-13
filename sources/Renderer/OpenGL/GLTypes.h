@@ -36,7 +36,7 @@ GLenum Map( const TextureType           textureType         );
 GLenum Map( const TextureSwizzle        textureSwizzle      );
 GLenum Map( const Format                format              );
 GLenum Map( const ImageFormat           imageFormat         );
-//GLenum Map( const ImageFormat           imageFormat, bool integerFormat );
+GLenum Map( const ImageFormat           imageFormat, bool isIntegerType );
 GLenum Map( const CompareOp             compareOp           );
 GLenum Map( const StencilOp             stencilOp           );
 GLenum Map( const BlendOp               blendOp             );
@@ -66,6 +66,9 @@ GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology);
 UniformType UnmapUniformType( const GLenum uniformType    );
 Format      UnmapFormat     ( const GLenum internalFormat );
 DataType    UnmapDataType   ( const GLenum type           );
+
+// Returns true if the specified GL internal format has an integer type (e.g. GL_R32UI).
+bool IsIntegerTypedFormat(GLenum internalFormat);
 
 
 } // /namespace GLTypes

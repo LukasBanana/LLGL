@@ -290,7 +290,7 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
     MapFailed("ImageFormat");
 }
 
-/*static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
+static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
@@ -314,20 +314,20 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
         default:                            break;
     }
     MapFailed("ImageFormat");
-}*/
+}
 
 GLenum Map(const ImageFormat imageFormat)
 {
     return MapImageFormat(imageFormat);
 }
 
-/*GLenum Map(const ImageFormat imageFormat, bool integerFormat)
+GLenum Map(const ImageFormat imageFormat, bool isIntegerType)
 {
-    if (integerFormat)
+    if (isIntegerType)
         return MapIntegerImageFormat(imageFormat);
     else
         return MapImageFormat(imageFormat);
-}*/
+}
 
 GLenum Map(const CompareOp compareOp)
 {
@@ -978,6 +978,40 @@ DataType UnmapDataType(const GLenum type)
         #endif
     }
     UnmapFailed("DataType");
+}
+
+bool IsIntegerTypedFormat(GLenum internalFormat)
+{
+    switch (internalFormat)
+    {
+        case GL_R8UI:
+        case GL_R8I:
+        case GL_R16UI:
+        case GL_R16I:
+        case GL_R32I:
+        case GL_R32UI:
+        case GL_RG8UI:
+        case GL_RG8I:
+        case GL_RG16UI:
+        case GL_RG16I:
+        case GL_RG32UI:
+        case GL_RG32I:
+        case GL_RGB8UI:
+        case GL_RGB8I:
+        case GL_RGB16UI:
+        case GL_RGB16I:
+        case GL_RGB32UI:
+        case GL_RGB32I:
+        case GL_RGBA8UI:
+        case GL_RGBA8I:
+        case GL_RGBA16UI:
+        case GL_RGBA16I:
+        case GL_RGBA32UI:
+        case GL_RGBA32I:
+            return true;
+        default:
+            return false;
+    }
 }
 
 

@@ -73,7 +73,7 @@ void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const cha
     }
 }
 
-std::string GLDebugSourceToStr(const GLenum source)
+const char* GLDebugSourceToStr(const GLenum source)
 {
     #if defined LLGL_OPENGL && !defined __APPLE__
     switch (source)
@@ -89,7 +89,7 @@ std::string GLDebugSourceToStr(const GLenum source)
     return "";
 }
 
-std::string GLDebugTypeToStr(const GLenum type)
+const char* GLDebugTypeToStr(const GLenum type)
 {
     #if defined LLGL_OPENGL && !defined __APPLE__
     switch (type)
@@ -108,7 +108,7 @@ std::string GLDebugTypeToStr(const GLenum type)
     return "";
 }
 
-std::string GLDebugSeverityToStr(const GLenum severity)
+const char* GLDebugSeverityToStr(const GLenum severity)
 {
     #if defined LLGL_OPENGL && !defined __APPLE__
     switch (severity)
@@ -132,12 +132,10 @@ static bool GLParseInt(const GLubyte*& s, GLint& n)
 {
     if (*s >= '0' && *s <= '9')
     {
-        n = 0;
-        while (*s >= '0' && *s <= '9')
+        for (n = 0; *s >= '0' && *s <= '9'; ++s)
         {
             n *= 10;
             n += (*s - '0');
-            ++s;
         }
         return true;
     }

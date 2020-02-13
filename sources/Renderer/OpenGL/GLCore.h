@@ -21,13 +21,13 @@ namespace LLGL
 void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const char* info = nullptr);
 
 // Converts the GL debug source into a string.
-std::string GLDebugSourceToStr(const GLenum source);
+const char* GLDebugSourceToStr(const GLenum source);
 
 // Converts the GL debug type into a string.
-std::string GLDebugTypeToStr(const GLenum type);
+const char* GLDebugTypeToStr(const GLenum type);
 
 // Converts the GL debug severity into a string.
-std::string GLDebugSeverityToStr(const GLenum severity);
+const char* GLDebugSeverityToStr(const GLenum severity);
 
 // Converts the boolean value into a GLboolean value.
 GLboolean GLBoolean(bool value);

@@ -515,7 +515,7 @@ LLGL_EXPORT bool IsStencilFormat(const Format format);
 LLGL_EXPORT bool IsNormalizedFormat(const Format format);
 
 /**
-\brief Returns true if the specified hardware format is an integral format (like Format::RGBA8UInt, Format::R8SInt etc.).
+\brief Returns true if the specified hardware format is an integral format (like Format::RGBA8UInt, Format::RGBA8UNorm, Format::R8SInt etc.).
 \remarks This also includes all normalized formats.
 \see IsNormalizedFormat
 \see Format

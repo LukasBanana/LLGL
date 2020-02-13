@@ -82,8 +82,8 @@ struct BindingDescriptor
 
     /**
     \brief Specifies to which kind of resource slot the resource will be bound. By default 0.
-    \remarks When a Buffer is bound to a constant buffer slot for instance, the BindFlags::ConstantBuffer is requried.
-    For texture resources, the bind flags are optional and only required to bind a read/write texture, e.g. \c image2D in GLSL or \c RWTexture2D in HLSL, using the BindFlags::Storage flag.
+    \remarks When a Buffer is bound to a constant buffer slot for instance, the binding flag BindFlags::ConstantBuffer is required.
+    When a Texture is bound to a sampled texture slot, the binding flag BindFlags::Sampled is required and so on.
     \see BindFlags
     */
     long            bindFlags   = 0;
