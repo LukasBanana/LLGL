@@ -11,6 +11,7 @@
 
 ## Documentation
 
+- **NOTE:** *This repository receives bug fixes only, but no major updates. Pull requests may still be accepted.*
 - **Version**: 0.03 Beta (see [ChangeLog](docu/ChangeLog))
 - [Getting Started with LLGL](docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF)
 with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
