@@ -230,7 +230,14 @@ void ExampleBase::Run()
         }
 
         // Draw current frame
+        #ifdef LLGL_OS_MACOS
+        @autoreleasepool
+        {
+            OnDrawFrame();
+        }
+        #else
         OnDrawFrame();
+        #endif
 
         // Check if resolution has changed
         auto currentResolution = context->GetResolution();

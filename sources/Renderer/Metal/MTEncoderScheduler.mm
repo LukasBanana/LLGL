@@ -101,6 +101,7 @@ void MTEncoderScheduler::ResumeRenderEncoder()
             renderPassDesc.stencilAttachment.loadAction = MTLLoadActionLoad;
         }
         BindRenderEncoder(renderPassDesc);
+        [renderPassDesc release];
         isRenderEncoderPaused_ = false;
     }
 }

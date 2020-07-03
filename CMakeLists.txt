@@ -380,6 +380,10 @@ if(LLGL_ANDROID_PLATFORM)
     set(FilesAndroidNativeAppGlue "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.c" "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.h")
 endif()
 
+if(APPLE)
+    set_source_files_properties(${EXAMPLE_PROJECTS_DIR}/ExampleBase/ExampleBase.cpp PROPERTIES COMPILE_FLAGS -xobjective-c++)
+endif()
+
 set(FilesExample_HelloTriangle ${EXAMPLE_PROJECTS_DIR}/HelloTriangle/Example.cpp)
 set(FilesExample_Tessellation ${EXAMPLE_PROJECTS_DIR}/Tessellation/Example.cpp)
 set(FilesExample_Texturing ${EXAMPLE_PROJECTS_DIR}/Texturing/Example.cpp)
