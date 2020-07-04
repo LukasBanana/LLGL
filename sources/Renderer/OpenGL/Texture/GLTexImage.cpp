@@ -992,8 +992,6 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescr
 
 static void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    bool useClearValue = IsClearValueEnabled(desc);
-
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
