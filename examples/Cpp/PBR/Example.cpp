@@ -218,7 +218,7 @@ private:
         auto bufSize = static_cast<std::size_t>(w*h*4);
 
         imageData.resize(offset + bufSize);
-        std::copy(buf, buf + bufSize, &(imageData[offset]));
+        ::memcpy(&(imageData[offset]), buf, bufSize);
 
         // Release image data
         stbi_image_free(buf);

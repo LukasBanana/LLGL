@@ -197,22 +197,22 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
-        case ImageFormat::Alpha:            return 1;
-        case ImageFormat::R:                return 1;
-        case ImageFormat::RG:               return 2;
-        case ImageFormat::RGB:              return 3;
-        case ImageFormat::BGR:              return 3;
-        case ImageFormat::RGBA:             return 4;
-        case ImageFormat::BGRA:             return 4;
-        case ImageFormat::ARGB:             return 4;
-        case ImageFormat::ABGR:             return 4;
-        case ImageFormat::Depth:            return 1;
-        case ImageFormat::DepthStencil:     return 2;
-        case ImageFormat::BC1:              return 0; // no conversion supported yet
-        case ImageFormat::BC2:              return 0; // no conversion supported yet
-        case ImageFormat::BC3:              return 0; // no conversion supported yet
-        case ImageFormat::BC4:              return 0; // no conversion supported yet
-        case ImageFormat::BC5:              return 0; // no conversion supported yet
+        case ImageFormat::Alpha:        return 1;
+        case ImageFormat::R:            return 1;
+        case ImageFormat::RG:           return 2;
+        case ImageFormat::RGB:          return 3;
+        case ImageFormat::BGR:          return 3;
+        case ImageFormat::RGBA:         return 4;
+        case ImageFormat::BGRA:         return 4;
+        case ImageFormat::ARGB:         return 4;
+        case ImageFormat::ABGR:         return 4;
+        case ImageFormat::Depth:        return 1;
+        case ImageFormat::DepthStencil: return 2;
+        case ImageFormat::BC1:          return 0; // no conversion supported yet
+        case ImageFormat::BC2:          return 0; // no conversion supported yet
+        case ImageFormat::BC3:          return 0; // no conversion supported yet
+        case ImageFormat::BC4:          return 0; // no conversion supported yet
+        case ImageFormat::BC5:          return 0; // no conversion supported yet
     }
     return 0;
 }

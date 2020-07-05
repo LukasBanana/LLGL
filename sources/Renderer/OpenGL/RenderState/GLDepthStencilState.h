@@ -68,12 +68,12 @@ class GLDepthStencilState
 
     private:
 
-        // depth states
+        // Depth states
         bool                depthTestEnabled_           = false;    // glEnable(GL_DEPTH_TEST)
         GLboolean           depthMask_                  = GL_FALSE; // glDepthMask(GL_TRUE)
         GLenum              depthFunc_                  = GL_LESS;
 
-        // stencil states
+        // Stencil states
         bool                stencilTestEnabled_         = false;    // glEnable(GL_STENCIL_TEST)
         bool                independentStencilFaces_    = false;
         bool                referenceDynamic_           = false;

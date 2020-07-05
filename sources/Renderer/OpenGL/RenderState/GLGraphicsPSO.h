@@ -59,20 +59,20 @@ class GLGraphicsPSO final : public GLPipelineState
 
     private:
 
-        // input-assembler state
-        GLenum                      drawMode_               = GL_TRIANGLES; // for glDraw*
-        GLenum                      primitiveMode_          = GL_TRIANGLES; // for glBeginTransformFeedback*
-        GLint                       patchVertices_          = 0;
+        // Input-assembler state
+        GLenum                  drawMode_           = GL_TRIANGLES; // for glDraw*
+        GLenum                  primitiveMode_      = GL_TRIANGLES; // for glBeginTransformFeedback*
+        GLint                   patchVertices_      = 0;
 
-        // state objects
-        GLDepthStencilStateSPtr     depthStencilState_;
-        GLRasterizerStateSPtr       rasterizerState_;
-        GLBlendStateSPtr            blendState_;
+        // State objects
+        GLDepthStencilStateSPtr depthStencilState_;
+        GLRasterizerStateSPtr   rasterizerState_;
+        GLBlendStateSPtr        blendState_;
 
-        // packed byte buffer for static viewports and scissors
-        std::unique_ptr<char[]>     staticStateBuffer_;
-        GLsizei                     numStaticViewports_     = 0;
-        GLsizei                     numStaticScissors_      = 0;
+        // Packed byte buffer for static viewports and scissors
+        std::unique_ptr<char[]> staticStateBuffer_;
+        GLsizei                 numStaticViewports_ = 0;
+        GLsizei                 numStaticScissors_  = 0;
 
 };
 

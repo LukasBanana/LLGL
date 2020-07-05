@@ -238,7 +238,7 @@ private:
             auto imageBufferOffset = arrayImageBuffer.size();
             arrayImageBuffer.resize(imageBufferOffset + imageBufferSize);
 
-            std::copy(imageBuffer, imageBuffer + imageBufferSize, arrayImageBuffer.data() + imageBufferOffset);
+            ::memcpy(arrayImageBuffer.data() + imageBufferOffset, imageBuffer, imageBufferSize);
 
             // Release temporary image data
             stbi_image_free(imageBuffer);
