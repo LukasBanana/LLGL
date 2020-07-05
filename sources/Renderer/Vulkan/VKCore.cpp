@@ -39,14 +39,55 @@ static const char* VKErrorToStr(const VkResult errorCode)
         LLGL_CASE_TO_STR( VK_ERROR_TOO_MANY_OBJECTS );
         LLGL_CASE_TO_STR( VK_ERROR_FORMAT_NOT_SUPPORTED );
         LLGL_CASE_TO_STR( VK_ERROR_FRAGMENTED_POOL );
+        #if VK_HEADER_VERSION >= 131
+        LLGL_CASE_TO_STR( VK_ERROR_UNKNOWN );
+        #endif
+        #ifdef VK_VERSION_1_1
+        LLGL_CASE_TO_STR( VK_ERROR_OUT_OF_POOL_MEMORY );
+        LLGL_CASE_TO_STR( VK_ERROR_INVALID_EXTERNAL_HANDLE );
+        #endif // VK_VERSION_1_1
+        #ifdef VK_VERSION_1_2
+        LLGL_CASE_TO_STR( VK_ERROR_FRAGMENTATION );
+        LLGL_CASE_TO_STR( VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS );
+        #endif // VK_VERSION_1_2
+        #ifdef VK_KHR_surface
         LLGL_CASE_TO_STR( VK_ERROR_SURFACE_LOST_KHR );
         LLGL_CASE_TO_STR( VK_ERROR_NATIVE_WINDOW_IN_USE_KHR );
+        #endif // VK_KHR_surface
+        #ifdef VK_KHR_swapchain
         LLGL_CASE_TO_STR( VK_SUBOPTIMAL_KHR );
         LLGL_CASE_TO_STR( VK_ERROR_OUT_OF_DATE_KHR );
+        #endif // VK_KHR_swapchain
+        #ifdef VK_KHR_display_swapchain
         LLGL_CASE_TO_STR( VK_ERROR_INCOMPATIBLE_DISPLAY_KHR );
+        #endif // VK_KHR_display_swapchain
+        #ifdef VK_EXT_debug_report
         LLGL_CASE_TO_STR( VK_ERROR_VALIDATION_FAILED_EXT );
+        #endif // VK_EXT_debug_report
+        #ifdef VK_NV_glsl_shader
         LLGL_CASE_TO_STR( VK_ERROR_INVALID_SHADER_NV );
-        LLGL_CASE_TO_STR( VK_RESULT_RANGE_SIZE );
+        #endif // VK_NV_glsl_shader
+        #ifdef VK_KHR_ray_tracing
+        LLGL_CASE_TO_STR( VK_ERROR_INCOMPATIBLE_VERSION_KHR );
+        #endif // VK_KHR_ray_tracing
+        #ifdef VK_EXT_image_drm_format_modifier
+        LLGL_CASE_TO_STR( VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT );
+        #endif // VK_EXT_image_drm_format_modifier
+        #ifdef VK_EXT_global_priority
+        LLGL_CASE_TO_STR( VK_ERROR_NOT_PERMITTED_EXT );
+        #endif // VK_EXT_global_priority
+        #ifdef VK_EXT_full_screen_exclusive
+        LLGL_CASE_TO_STR( VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT );
+        #endif // VK_EXT_full_screen_exclusive
+        #ifdef VK_KHR_deferred_host_operations
+        LLGL_CASE_TO_STR( VK_THREAD_IDLE_KHR );
+        LLGL_CASE_TO_STR( VK_THREAD_DONE_KHR );
+        LLGL_CASE_TO_STR( VK_OPERATION_DEFERRED_KHR );
+        LLGL_CASE_TO_STR( VK_OPERATION_NOT_DEFERRED_KHR );
+        #endif // VK_KHR_deferred_host_operations
+        #ifdef VK_EXT_pipeline_creation_cache_control
+        LLGL_CASE_TO_STR( VK_PIPELINE_COMPILE_REQUIRED_EXT );
+        #endif // VK_EXT_pipeline_creation_cache_control
     }
     return nullptr;
 }
