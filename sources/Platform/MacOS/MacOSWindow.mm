@@ -496,23 +496,26 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
 
 void MacOSWindow::OnProcessEvents()
 {
-    NSEvent* event = nil;
-
-    /* Process NSWindow events with latest event types */
-    while ((event = [wnd_ nextEventMatchingMask:g_EventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES]) != nil)
-        ProcessEvent(event);
-
-    /* Check for window signales */
-    if ([(MacOSWindowDelegate*)[wnd_ delegate] popResizeSignal])
+    @autoreleasepool
     {
-        /* Get size of the NSWindow's content view */
-        NSRect frame = [[wnd_ contentView] frame];
+        NSEvent* event = nil;
 
-        auto w = static_cast<std::uint32_t>(frame.size.width);
-        auto h = static_cast<std::uint32_t>(frame.size.height);
+        /* Process NSWindow events with latest event types */
+        while ((event = [wnd_ nextEventMatchingMask:g_EventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES]) != nil)
+            ProcessEvent(event);
 
-        /* Notify event listeners about resize */
-        PostResize({ w, h });
+        /* Check for window signales */
+        if ([(MacOSWindowDelegate*)[wnd_ delegate] popResizeSignal])
+        {
+            /* Get size of the NSWindow's content view */
+            NSRect frame = [[wnd_ contentView] frame];
+
+            auto w = static_cast<std::uint32_t>(frame.size.width);
+            auto h = static_cast<std::uint32_t>(frame.size.height);
+
+            /* Notify event listeners about resize */
+            PostResize({ w, h });
+        }
     }
 }
 
