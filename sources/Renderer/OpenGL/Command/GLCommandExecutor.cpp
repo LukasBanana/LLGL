@@ -213,7 +213,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeBindElementArrayBufferToVAO:
         {
             auto cmd = reinterpret_cast<const GLCmdBindElementArrayBufferToVAO*>(pc);
-            stateMngr.BindElementArrayBufferToVAO(cmd->id);
+            stateMngr.BindElementArrayBufferToVAO(cmd->id, cmd->indexType16Bits);
             return sizeof(*cmd);
         }
         case GLOpcodeBindBufferBase:

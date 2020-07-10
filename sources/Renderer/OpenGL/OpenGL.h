@@ -69,6 +69,13 @@
 #   define LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
 #endif
 
+// At most one of these should be defined to indicate which API
+// we'll be using to implement fixed-index primitive restart.
+#if defined GL_ES_VERSION_2_0 || defined GL_VERSION_4_3
+#   define LLGL_PRIMITIVE_RESTART_FIXED_INDEX
+#elif defined GL_VERSION_3_1
+#   define LLGL_PRIMITIVE_RESTART
+#endif
 
 #endif
 

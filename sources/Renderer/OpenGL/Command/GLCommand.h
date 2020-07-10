@@ -177,6 +177,7 @@ struct GLCmdBindGL2XVertexArray
 struct GLCmdBindElementArrayBufferToVAO
 {
     GLuint id;
+    bool   indexType16Bits;
 };
 
 struct GLCmdBindBufferBase

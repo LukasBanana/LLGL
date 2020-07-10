@@ -207,7 +207,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeBindElementArrayBufferToVAO:
         {
             auto cmd = reinterpret_cast<const GLCmdBindElementArrayBufferToVAO*>(pc);
-            compiler.CallMember(&GLStateManager::BindElementArrayBufferToVAO, g_stateMngrArg, cmd->id);
+            compiler.CallMember(&GLStateManager::BindElementArrayBufferToVAO, g_stateMngrArg, cmd->id, cmd->indexType16Bits);
             return sizeof(*cmd);
         }
         case GLOpcodeBindBufferBase:
