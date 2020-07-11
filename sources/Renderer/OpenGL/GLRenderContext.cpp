@@ -126,9 +126,13 @@ void GLRenderContext::InitRenderStates()
     /* Initialize state manager */
     stateMngr_->Reset();
 
-    /* D3D11 and Metal always use a fixed restart index for strip topologies */
+    /* D3D11, Vulkan, and Metal always use a fixed restart index for strip topologies */
+    #ifdef LLGL_PRIMITIVE_RESTART_FIXED_INDEX
     stateMngr_->Enable(GLState::PRIMITIVE_RESTART_FIXED_INDEX);
-    
+    #elif defined LLGL_PRIMITIVE_RESTART
+    stateMngr_->Enable(GLState::PRIMITIVE_RESTART);
+    #endif
+
     #ifdef LLGL_OPENGL
     /* D3D10+ has this per default */
     stateMngr_->Enable(GLState::TEXTURE_CUBE_MAP_SEAMLESS);

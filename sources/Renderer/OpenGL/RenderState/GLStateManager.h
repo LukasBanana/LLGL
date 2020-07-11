@@ -12,6 +12,7 @@
 #include "GLState.h"
 #include <LLGL/TextureFlags.h>
 #include <LLGL/CommandBufferFlags.h>
+#include "../OpenGL.h"
 #include <array>
 #include <stack>
 #include <cstdint>
@@ -120,6 +121,7 @@ class GLStateManager
         void SetFrontFace(GLenum mode);
         void SetPatchVertices(GLint patchVertices);
         void SetLineWidth(GLfloat width);
+        void SetPrimitiveRestartIndex(bool indexType16Bits);
         #if 0//TODO
         //void SetSampleMask(GLuint maskNumber, GLbitfield mask);
         #endif
@@ -173,7 +175,7 @@ class GLStateManager
         \brief Binds the specified GL_ELEMENT_ARRAY_BUFFER (i.e. index buffer) to the next VAO (or the current one).
         \see BindVertexArray
         */
-        void BindElementArrayBufferToVAO(GLuint buffer);
+        void BindElementArrayBufferToVAO(GLuint buffer, bool indexType16Bits);
 
         void PushBoundBuffer(GLBufferTarget target);
         void PopBoundBuffer();
@@ -357,6 +359,9 @@ class GLStateManager
             #ifdef LLGL_OPENGL
             GLenum      logicOpCode     = GL_COPY;
             #endif
+            #ifdef LLGL_PRIMITIVE_RESTART
+            GLuint      primitiveRestartIndex = 0;
+            #endif
         };
 
         struct GLCapabilityState
@@ -442,6 +447,7 @@ class GLStateManager
         {
             GLuint boundVertexArray         = 0;
             GLuint boundElementArrayBuffer  = 0;
+            bool   boundElementArrayBufferIndexType16Bits = false;
         };
 
         struct GLShaderState

@@ -207,7 +207,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasRenderCondition             = true;
 }
 
-static void GLGetFeatureLimits(RenderingLimits& limits)
+static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimits& limits)
 {
     /* Determine minimal line width range for both aliased and smooth lines */
     GLfloat aliasedLineRange[2];
@@ -224,12 +224,16 @@ static void GLGetFeatureLimits(RenderingLimits& limits)
     limits.maxColorAttachments              = GLGetUInt(GL_MAX_DRAW_BUFFERS);
     limits.maxPatchVertices                 = GLGetUInt(GL_MAX_PATCH_VERTICES);
     limits.maxAnisotropy                    = static_cast<std::uint32_t>(GLGetFloat(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
-    limits.maxComputeShaderWorkGroups[0]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
-    limits.maxComputeShaderWorkGroups[1]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
-    limits.maxComputeShaderWorkGroups[2]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
-    limits.maxComputeShaderWorkGroupSize[0] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
-    limits.maxComputeShaderWorkGroupSize[1] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
-    limits.maxComputeShaderWorkGroupSize[2] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
+
+    if (features.hasComputeShaders)
+    {
+        limits.maxComputeShaderWorkGroups[0]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
+        limits.maxComputeShaderWorkGroups[1]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
+        limits.maxComputeShaderWorkGroups[2]    = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
+        limits.maxComputeShaderWorkGroupSize[0] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
+        limits.maxComputeShaderWorkGroupSize[1] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
+        limits.maxComputeShaderWorkGroupSize[2] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
+    }
 
     #ifdef GL_ARB_uniform_buffer_object
     if (HasExtension(GLExt::ARB_uniform_buffer_object))
@@ -345,7 +349,7 @@ void GLQueryRenderingCaps(RenderingCapabilities& caps)
     GLGetRenderingAttribs(caps);
     GLGetSupportedTextureFormats(caps.textureFormats);
     GLGetSupportedFeatures(caps.features);
-    GLGetFeatureLimits(caps.limits);
+    GLGetFeatureLimits(caps.features, caps.limits);
     GLGetTextureLimits(caps.features, caps.limits);
 }
 

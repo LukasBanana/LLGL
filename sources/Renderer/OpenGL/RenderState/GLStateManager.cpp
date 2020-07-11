@@ -550,6 +550,18 @@ void GLStateManager::SetLineWidth(GLfloat width)
     }
 }
 
+void GLStateManager::SetPrimitiveRestartIndex(bool indexType16Bits)
+{
+    #ifdef LLGL_PRIMITIVE_RESTART
+    GLuint index = (indexType16Bits ? 0xFFFF : 0xFFFFFFFF);
+    if (commonState_.primitiveRestartIndex != index)
+    {
+        commonState_.primitiveRestartIndex = index;
+        glPrimitiveRestartIndex(index);
+    }
+    #endif
+}
+
 void GLStateManager::SetPixelStorePack(GLint rowLength, GLint imageHeight, GLint alignment)
 {
     if (pixelStorePack_.rowLength != rowLength)
@@ -822,6 +834,9 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
                     GLBufferTarget::ELEMENT_ARRAY_BUFFER,
                     vertexArrayState_.boundElementArrayBuffer
                 );
+                #ifdef LLGL_PRIMITIVE_RESTART
+                SetPrimitiveRestartIndex(vertexArrayState_.boundElementArrayBufferIndexType16Bits);
+                #endif
             }
         }
     }
@@ -837,7 +852,7 @@ void GLStateManager::NotifyVertexArrayRelease(GLuint vertexArray)
     InvalidateBoundGLObject(vertexArrayState_.boundVertexArray, vertexArray);
 }
 
-void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer)
+void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16Bits)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     if (!HasExtension(GLExt::ARB_vertex_array_object))
@@ -850,10 +865,16 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer)
     {
         /* Always store buffer ID to bind the index buffer the next time "BindVertexArray" is called */
         vertexArrayState_.boundElementArrayBuffer = buffer;
+        vertexArrayState_.boundElementArrayBufferIndexType16Bits = indexType16Bits;
 
         /* If a valid VAO is currently being bound, bind the specified buffer directly */
         if (vertexArrayState_.boundVertexArray != 0)
+        {
             BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
+            #ifdef LLGL_PRIMITIVE_RESTART
+            SetPrimitiveRestartIndex(indexType16Bits);
+            #endif
+        }
     }
 }
 

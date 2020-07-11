@@ -425,6 +425,7 @@ void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer)
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     auto cmd = AllocCommand<GLCmdBindElementArrayBufferToVAO>(GLOpcodeBindElementArrayBufferToVAO);
     cmd->id = bufferGL.GetID();
+    cmd->indexType16Bits = bufferGL.IsIndexType16Bits();
     SetIndexFormat(renderState_, bufferGL.IsIndexType16Bits(), 0);
 }
 

@@ -69,6 +69,14 @@ DECL_GLPROC(PFNGLGETSTRINGIPROC,                                    glGetStringi
 
 #endif
 
+#if defined(GL_VERSION_3_1) && !defined(GL_GLEXT_PROTOTYPES)
+
+/* GL 3.1 extensions (for Core Profile) */
+
+DECL_GLPROC(PFNGLPRIMITIVERESTARTINDEXPROC,                         glPrimitiveRestartIndex,                        void,           (GLuint));
+
+#endif
+
 /* GL_EXT_blend_func_separate */
 
 DECL_GLPROC(PFNGLBLENDFUNCSEPARATEPROC,                             glBlendFuncSeparate,                            void,           (GLenum, GLenum, GLenum, GLenum));
