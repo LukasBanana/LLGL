@@ -121,7 +121,7 @@ class GLStateManager
         void SetFrontFace(GLenum mode);
         void SetPatchVertices(GLint patchVertices);
         void SetLineWidth(GLfloat width);
-        void SetPrimitiveRestartIndex(bool indexType16Bits);
+        void SetPrimitiveRestartIndex(GLuint index);
         #if 0//TODO
         //void SetSampleMask(GLuint maskNumber, GLbitfield mask);
         #endif
@@ -447,7 +447,7 @@ class GLStateManager
         {
             GLuint boundVertexArray         = 0;
             GLuint boundElementArrayBuffer  = 0;
-            bool   boundElementArrayBufferIndexType16Bits = false;
+            bool   indexType16Bits          = false;
         };
 
         struct GLShaderState

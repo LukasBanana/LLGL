@@ -550,14 +550,16 @@ void GLStateManager::SetLineWidth(GLfloat width)
     }
 }
 
-void GLStateManager::SetPrimitiveRestartIndex(bool indexType16Bits)
+void GLStateManager::SetPrimitiveRestartIndex(GLuint index)
 {
     #ifdef LLGL_PRIMITIVE_RESTART
-    GLuint index = (indexType16Bits ? 0xFFFF : 0xFFFFFFFF);
-    if (commonState_.primitiveRestartIndex != index)
+    if (HasExtension(GLExt::ARB_compatibility))
     {
-        commonState_.primitiveRestartIndex = index;
-        glPrimitiveRestartIndex(index);
+        if (commonState_.primitiveRestartIndex != index)
+        {
+            commonState_.primitiveRestartIndex = index;
+            glPrimitiveRestartIndex(index);
+        }
     }
     #endif
 }
@@ -807,6 +809,12 @@ void GLStateManager::UnbindBuffersBase(GLBufferTarget target, GLuint first, GLsi
     BindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, first, count, g_nullResources);
 }
 
+// Returns the maximum index value for the specified index data type.
+static GLuint GetPrimitiveRestartIndex(bool indexType16Bits)
+{
+    return (indexType16Bits ? 0xFFFF : 0xFFFFFFFF);
+}
+
 void GLStateManager::BindVertexArray(GLuint vertexArray)
 {
     /* Only bind VAO if it has changed */
@@ -835,7 +843,7 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
                     vertexArrayState_.boundElementArrayBuffer
                 );
                 #ifdef LLGL_PRIMITIVE_RESTART
-                SetPrimitiveRestartIndex(vertexArrayState_.boundElementArrayBufferIndexType16Bits);
+                SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(vertexArrayState_.indexType16Bits));
                 #endif
             }
         }
@@ -864,15 +872,15 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16
     #endif // /LLGL_GL_ENABLE_OPENGL2X
     {
         /* Always store buffer ID to bind the index buffer the next time "BindVertexArray" is called */
-        vertexArrayState_.boundElementArrayBuffer = buffer;
-        vertexArrayState_.boundElementArrayBufferIndexType16Bits = indexType16Bits;
+        vertexArrayState_.boundElementArrayBuffer   = buffer;
+        vertexArrayState_.indexType16Bits           = indexType16Bits;
 
         /* If a valid VAO is currently being bound, bind the specified buffer directly */
         if (vertexArrayState_.boundVertexArray != 0)
         {
             BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
             #ifdef LLGL_PRIMITIVE_RESTART
-            SetPrimitiveRestartIndex(indexType16Bits);
+            SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(vertexArrayState_.indexType16Bits));
             #endif
         }
     }

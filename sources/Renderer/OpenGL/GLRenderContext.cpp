@@ -137,7 +137,7 @@ void GLRenderContext::InitRenderStates()
     /* D3D10+ has this per default */
     stateMngr_->Enable(GLState::TEXTURE_CUBE_MAP_SEAMLESS);
     #endif
-    
+
     /* D3D10+ uses clock-wise vertex winding per default */
     stateMngr_->SetFrontFace(GL_CW);
 

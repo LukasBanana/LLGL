@@ -71,6 +71,7 @@ enum class GLExt
     ARB_vertex_shader,
     ARB_viewport_array,
     ARB_ES2_compatibility,
+    ARB_compatibility,                  // GL 3.1
 
     /* Khronos group extensions (KHR) */
     KHR_debug,

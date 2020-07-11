@@ -111,6 +111,18 @@ bool LoadCreateContextProcs()
     #endif
 }
 
+/* --- Core profile extensions extensions --- */
+
+#if defined(GL_VERSION_3_1) && !defined(GL_GLEXT_PROTOTYPES)
+
+static bool Load_GL_ARB_compatibility(bool usePlaceholder)
+{
+    LOAD_GLPROC( glPrimitiveRestartIndex );
+    return true;
+}
+
+#endif
+
 /* --- Hardware buffer extensions --- */
 
 static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceholder)
@@ -967,14 +979,24 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     /* Add standard extensions */
     if (coreProfile)
     {
-        extensions[ "GL_ARB_shader_objects"       ] = false;
-        extensions[ "GL_ARB_shader_objects_21"    ] = false;
-        extensions[ "GL_ARB_shader_objects_30"    ] = false;
-        extensions[ "GL_ARB_vertex_buffer_object" ] = false;
-        extensions[ "GL_ARB_vertex_shader"        ] = false;
-        extensions[ "GL_EXT_texture3D"            ] = false;
-        extensions[ "GL_EXT_copy_texture"         ] = false;
+        static const std::string coreProfileDefaultExtenions[] =
+        {
+            "GL_ARB_compatibility",
+            "GL_ARB_shader_objects",
+            "GL_ARB_shader_objects_21",
+            "GL_ARB_shader_objects_30",
+            "GL_ARB_vertex_buffer_object",
+            "GL_ARB_vertex_shader",
+            "GL_EXT_texture3D",
+            "GL_EXT_copy_texture",
+        };
+        for (const auto& ext : coreProfileDefaultExtenions)
+            extensions[ext] = false;
     }
+
+    #if defined(GL_VERSION_3_1) && !defined(GL_GLEXT_PROTOTYPES)
+    LOAD_GLEXT( ARB_compatibility );
+    #endif
 
     /* Load hardware buffer extensions */
     LOAD_GLEXT( ARB_vertex_buffer_object         );

@@ -35,6 +35,7 @@ while (myWindow->ProcessEvents()) {
     // Rendering goes here ...
 }
 \endcode
+\todo Make Window::EventListener a member of Input instead of extending it. Also add a member of Canvas::EventListener and add touch event functions.
 */
 class LLGL_EXPORT Input : public Window::EventListener
 {

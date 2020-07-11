@@ -71,7 +71,7 @@ DECL_GLPROC(PFNGLGETSTRINGIPROC,                                    glGetStringi
 
 #if defined(GL_VERSION_3_1) && !defined(GL_GLEXT_PROTOTYPES)
 
-/* GL 3.1 extensions (for Core Profile) */
+/* GL_ARB_compatibility */
 
 DECL_GLPROC(PFNGLPRIMITIVERESTARTINDEXPROC,                         glPrimitiveRestartIndex,                        void,           (GLuint));
 

@@ -203,6 +203,7 @@ void GLBlendState::BindDrawBufferColorMasks(GLStateManager& stateMngr)
     }
 }
 
+//TODO: GL_BLEND should be enabled/disabled with state manager
 void GLBlendState::BindDrawBufferState(const GLDrawBufferState& state)
 {
     glColorMask(state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
@@ -216,6 +217,7 @@ void GLBlendState::BindDrawBufferState(const GLDrawBufferState& state)
         glDisable(GL_BLEND);
 }
 
+//TODO: GL_BLEND should be enabled/disabled with state manager
 void GLBlendState::BindIndexedDrawBufferState(const GLDrawBufferState& state, GLuint index)
 {
     #ifdef LLGL_GLEXT_DRAW_BUFFERS_BLEND

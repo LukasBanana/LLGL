@@ -23,7 +23,7 @@ class Example_Instancing : public ExampleBase
     LLGL::PipelineState*        pipeline[2]         = {};
 
     LLGL::PipelineLayout*       pipelineLayout      = nullptr;
-    LLGL::ResourceHeap*         resourceHeaps[2]    = {};
+    LLGL::ResourceHeap*         resourceHeap        = nullptr;
 
     // Two vertex buffer, one for per-vertex data, one for per-instance data
     LLGL::Buffer*               vertexBuffers[2]    = {};
@@ -75,8 +75,7 @@ public:
         pipelineLayout->SetName("PipelineLayout");
         samplers[0]->SetName("LinearSampler");
         samplers[1]->SetName("ClampedSampler");
-        resourceHeaps[0]->SetName("LinearSampler.ResourceHeap");
-        resourceHeaps[1]->SetName("ClampedSampler.ResourceHeap");
+        resourceHeap->SetName("ResourceHeap");
 
         // Show info
         std::cout << "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene" << std::endl;
@@ -293,20 +292,20 @@ private:
         {
             pipelineLayout = renderer->CreatePipelineLayout(
                 LLGL::PipelineLayoutDesc("cbuffer(2):vert:frag, texture(3):frag, sampler(4):frag")
-                //LLGL::PipelineLayoutDesc("cbuffer(1):vert:frag, texture(3):frag, sampler(4):frag")
             );
         }
 
         // Create resource view heap
-        for (std::size_t i = 0; i < 2; ++i)
+        LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
-            LLGL::ResourceHeapDescriptor resourceHeapDesc;
+            resourceHeapDesc.pipelineLayout = pipelineLayout;
+            resourceHeapDesc.resourceViews  =
             {
-                resourceHeapDesc.pipelineLayout = pipelineLayout;
-                resourceHeapDesc.resourceViews  = { constantBuffer, arrayTexture, samplers[i] };
-            }
-            resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
+                constantBuffer, arrayTexture, samplers[0],
+                constantBuffer, arrayTexture, samplers[1],
+            };
         }
+        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
 
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -403,13 +402,13 @@ private:
                 commands->SetPipelineState(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
                 // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-                commands->SetResourceHeap(*resourceHeaps[0]);
+                commands->SetResourceHeap(*resourceHeap, 0);
                 commands->DrawInstanced(4, 0, numPlantInstances);
 
                 // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
                 if (renderer->GetRenderingCaps().features.hasOffsetInstancing)
                 {
-                    commands->SetResourceHeap(*resourceHeaps[1]);
+                    commands->SetResourceHeap(*resourceHeap, 1);
                     commands->DrawInstanced(4, 4, 1, numPlantInstances);
                 }
             }
