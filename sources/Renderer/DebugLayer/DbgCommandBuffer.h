@@ -343,6 +343,8 @@ class DbgCommandBuffer final : public CommandBuffer
             bool                    anyNonEmptyVertexBuffer                 = false;
             bool                    anyShaderAttributes                     = false;
             DbgBuffer*              indexBuffer                             = nullptr;
+            std::uint64_t           indexBufferFormatSize                   = 0;
+            std::uint64_t           indexBufferOffset                       = 0;
             DbgBuffer*              streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]  = {};
             std::uint32_t           numStreamOutputs                        = 0;
             DbgPipelineState*       pipelineState                           = nullptr;

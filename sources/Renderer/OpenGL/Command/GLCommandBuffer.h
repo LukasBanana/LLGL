@@ -30,7 +30,7 @@ class GLCommandBuffer : public CommandBuffer
     protected:
 
         // Configures the attributes of 'renderState' for the type of index buffers.
-        void SetIndexFormat(GLRenderState& renderState, bool index16Bits, std::uint64_t offset);
+        void SetIndexFormat(GLRenderState& renderState, bool indexType16Bits, std::uint64_t offset);
 
 };
 

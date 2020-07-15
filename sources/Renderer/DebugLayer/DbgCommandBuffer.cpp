@@ -491,9 +491,13 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
+
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndexBuffer);
         ValidateIndexType(bufferDbg.desc.format);
-        bindings_.indexBuffer = (&bufferDbg);
+
+        bindings_.indexBuffer           = (&bufferDbg);
+        bindings_.indexBufferFormatSize = 0;
+        bindings_.indexBufferOffset     = 0;
     }
 
     LLGL_DBG_COMMAND( "SetIndexBuffer", instance.SetIndexBuffer(bufferDbg.instance) );
@@ -510,9 +514,22 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
+
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndexBuffer);
         ValidateIndexType(format);
-        bindings_.indexBuffer = (&bufferDbg);
+
+        bindings_.indexBuffer           = (&bufferDbg);
+        bindings_.indexBufferFormatSize = (GetFormatAttribs(format).bitSize / 8);
+        bindings_.indexBufferOffset     = offset;
+
+        if (offset > bufferDbg.desc.size)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "index buffer offset out of bounds: " + std::to_string(offset) +
+                " specified but limit is " + std::to_string(bufferDbg.desc.size)
+            );
+        }
     }
 
     LLGL_DBG_COMMAND( "SetIndexBuffer", instance.SetIndexBuffer(bufferDbg.instance, format, offset) );
@@ -1546,7 +1563,22 @@ void DbgCommandBuffer::ValidateDrawIndexedCmd(
     ValidateInstanceID(firstInstance);
 
     if (bindings_.indexBuffer)
-        ValidateVertexLimit(numVertices + firstIndex, static_cast<std::uint32_t>(bindings_.indexBuffer->elements));
+    {
+        if (bindings_.indexBufferFormatSize > 0)
+        {
+            ValidateVertexLimit(
+                numVertices + firstIndex,
+                static_cast<std::uint32_t>((bindings_.indexBuffer->desc.size - bindings_.indexBufferOffset) / bindings_.indexBufferFormatSize)
+            );
+        }
+        else
+        {
+            ValidateVertexLimit(
+                numVertices + firstIndex,
+                static_cast<std::uint32_t>(bindings_.indexBuffer->elements)
+            );
+        }
+    }
 }
 
 void DbgCommandBuffer::ValidateVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit)

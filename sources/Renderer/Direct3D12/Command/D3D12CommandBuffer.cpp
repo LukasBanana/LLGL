@@ -522,7 +522,7 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
         indexBufferView.BufferLocation  += offset;
         indexBufferView.SizeInBytes     -= static_cast<UINT>(offset);
         indexBufferView.Format          = D3D12Types::Map(format);
-        commandList_->IASetIndexBuffer(&(bufferD3D.GetIndexBufferView()));
+        commandList_->IASetIndexBuffer(&indexBufferView);
     }
 }
 

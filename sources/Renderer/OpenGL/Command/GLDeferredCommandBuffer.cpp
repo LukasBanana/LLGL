@@ -432,9 +432,11 @@ void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer)
 void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    const bool indexType16Bits = (format == Format::R16UInt);
     auto cmd = AllocCommand<GLCmdBindElementArrayBufferToVAO>(GLOpcodeBindElementArrayBufferToVAO);
     cmd->id = bufferGL.GetID();
-    SetIndexFormat(renderState_, format == Format::R16UInt, offset);
+    cmd->indexType16Bits = indexType16Bits;
+    SetIndexFormat(renderState_, indexType16Bits, offset);
 }
 
 /* ----- Resource Heaps ----- */

@@ -13,10 +13,10 @@ namespace LLGL
 {
 
 
-void GLCommandBuffer::SetIndexFormat(GLRenderState& renderState, bool index16Bits, std::uint64_t offset)
+void GLCommandBuffer::SetIndexFormat(GLRenderState& renderState, bool indexType16Bits, std::uint64_t offset)
 {
     /* Store new index buffer data in global render state */
-    if (index16Bits)
+    if (indexType16Bits)
     {
         renderState.indexBufferDataType = GL_UNSIGNED_SHORT;
         renderState.indexBufferStride   = 2;

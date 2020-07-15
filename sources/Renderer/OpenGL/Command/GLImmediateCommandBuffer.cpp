@@ -352,8 +352,9 @@ void GLImmediateCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format forma
 {
     /* Bind index buffer deferred (can only be bound to the active VAO) */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindElementArrayBufferToVAO(bufferGL.GetID(), bufferGL.IsIndexType16Bits());
-    SetIndexFormat(renderState_, format == Format::R16UInt, offset);
+    const bool indexType16Bits = (format == Format::R16UInt);
+    stateMngr_->BindElementArrayBufferToVAO(bufferGL.GetID(), indexType16Bits);
+    SetIndexFormat(renderState_, indexType16Bits, offset);
 }
 
 /* ----- Resource Heaps ----- */
