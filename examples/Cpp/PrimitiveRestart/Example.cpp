@@ -15,10 +15,12 @@ class Example_PrimitiveRestart : public ExampleBase
     LLGL::ShaderProgram*    shaderProgram   = nullptr;
     LLGL::PipelineState*    pipeline        = nullptr;
     LLGL::Buffer*           vertexBuffer    = nullptr;
-    LLGL::Buffer*           indexBuffer16   = nullptr;
-    LLGL::Buffer*           indexBuffer32   = nullptr;
+    LLGL::Buffer*           indexBuffer     = nullptr;
 
+    std::uint64_t           indexOffset16   = 0;
     std::uint32_t           indexCount16    = 0;
+
+    std::uint64_t           indexOffset32   = 0;
     std::uint32_t           indexCount32    = 0;
 
 public:
@@ -40,53 +42,70 @@ private:
         LLGL::ColorRGBAub   color;
     };
 
-    template <typename T>
-    static void AddSquare(float centerX, float centerY, float size, std::vector<Vertex>& vertices, std::vector<T>& indices)
+    void AddSquare(
+        float                       centerX,
+        float                       centerY,
+        float                       size,
+        std::vector<Vertex>&        vertices,
+        std::vector<std::uint16_t>& indices,
+        std::uint32_t&              indexCount,
+        bool                        indexType16Bits)
     {
         float left = centerX - size / 2.0f;
         float right = centerX + size / 2.0f;
         float top = centerY + size / 2.0f;
         float bottom = centerY - size / 2.0f;
 
-        const T startIndex = static_cast<T>(vertices.size());
+        const auto startIndex = vertices.size();
         vertices.push_back({{ right, top    }, { 255,   0,   0, 255 } });
         vertices.push_back({{ right, bottom }, {   0, 255,   0, 255 } });
         vertices.push_back({{ left,  top    }, {   0,   0, 255, 255 } });
         vertices.push_back({{ left,  bottom }, { 255, 255, 255, 255 } });
 
-        if (!indices.empty())
-            indices.push_back(T(0xFFFFFFFF));
-        indices.push_back(startIndex);
-        indices.push_back(startIndex + 1);
-        indices.push_back(startIndex + 2);
-        indices.push_back(startIndex + 3);
+        auto AddIndex = [&indices, &indexCount, indexType16Bits](std::size_t idx)
+        {
+            if (indexType16Bits)
+            {
+                // Add single 16-bit index to buffer
+                indices.push_back(static_cast<std::uint16_t>(idx & 0xFFFF));
+            }
+            else
+            {
+                // Add split 32-bit index to buffer
+                indices.push_back(static_cast<std::uint16_t>(idx & 0xFFFF));
+                indices.push_back(static_cast<std::uint16_t>((idx >> 16) & 0xFFFF));
+            }
+
+            // Only count a single index, even if we have to add two 16-bit entries for a single 32-bit index.
+            ++indexCount;
+        };
+
+        AddIndex(startIndex);
+        AddIndex(startIndex + 1);
+        AddIndex(startIndex + 2);
+        AddIndex(startIndex + 3);
+        AddIndex(0xFFFFFFFF);
     }
 
     std::vector<LLGL::VertexFormat> CreateBuffers()
     {
         std::vector<Vertex>         vertices;
-        std::vector<std::uint16_t>  indices16;
-        std::vector<std::uint32_t>  indices32;
+        std::vector<std::uint16_t>  indices;
 
-        AddSquare( .5f,  .5f, 0.8f, vertices, indices16);
-        AddSquare(-.5f,  .5f, 0.8f, vertices, indices16);
+        // Add 16-bit indices
+        indexOffset16 = indices.size() * sizeof(std::uint16_t);
+        AddSquare( .5f,  .5f, 0.8f, vertices, indices, indexCount16, /*indexType16Bits:*/ true);
+        AddSquare(-.5f,  .5f, 0.8f, vertices, indices, indexCount16, /*indexType16Bits:*/ true);
 
-        AddSquare( .5f, -.5f, 0.8f, vertices, indices32);
-        AddSquare(-.5f, -.5f, 0.8f, vertices, indices32);
+        // Add 32-bit indices
+        indexOffset32 = indices.size() * sizeof(std::uint16_t);
+        AddSquare( .5f, -.5f, 0.8f, vertices, indices, indexCount32, /*indexType16Bits:*/ false);
+        AddSquare(-.5f, -.5f, 0.8f, vertices, indices, indexCount32, /*indexType16Bits:*/ false);
 
-        indexCount16 = static_cast<std::uint32_t>(indices16.size());
-        indexCount32 = static_cast<std::uint32_t>(indices32.size());
-
-        // Vertex format
+        // Setup vertex format: 2D float vector for position, 4D unsigned byte vector for color
         LLGL::VertexFormat vertexFormat;
-
-        // Append 2D float vector for position attribute
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
-
-        // Append 3D unsigned byte vector for color
         vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
-
-        // Update stride in case out vertex structure is not 4-byte aligned
         vertexFormat.SetStride(sizeof(Vertex));
 
         // Create vertex buffer
@@ -98,21 +117,13 @@ private:
         }
         vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices.data());
 
+        // Create index buffer (contains both 16 and 32 bit indices)
+        LLGL::BufferDescriptor indexBufferDesc;
         {
-            LLGL::BufferDescriptor indexBufferDesc16;
-            indexBufferDesc16.size           = indices16.size() * sizeof(std::uint16_t);
-            indexBufferDesc16.format         = LLGL::Format::R16UInt;
-            indexBufferDesc16.bindFlags      = LLGL::BindFlags::IndexBuffer;
-            indexBuffer16 = renderer->CreateBuffer(indexBufferDesc16, indices16.data());
+            indexBufferDesc.size       = indices.size() * sizeof(std::uint16_t);
+            indexBufferDesc.bindFlags  = LLGL::BindFlags::IndexBuffer;
         }
-
-        {
-            LLGL::BufferDescriptor indexBufferDesc32;
-            indexBufferDesc32.size           = indices32.size() * sizeof(std::uint32_t);
-            indexBufferDesc32.format         = LLGL::Format::R32UInt;
-            indexBufferDesc32.bindFlags      = LLGL::BindFlags::IndexBuffer;
-            indexBuffer32 = renderer->CreateBuffer(indexBufferDesc32, indices32.data());
-        }
+        indexBuffer = renderer->CreateBuffer(indexBufferDesc, indices.data());
 
         return { vertexFormat };
     }
@@ -153,13 +164,13 @@ private:
 
                 if (indexCount16 > 0)
                 {
-                    commands->SetIndexBuffer(*indexBuffer16);
+                    commands->SetIndexBuffer(*indexBuffer, LLGL::Format::R16UInt, indexOffset16);
                     commands->DrawIndexed(indexCount16, 0);
                 }
 
                 if (indexCount32 > 0)
                 {
-                    commands->SetIndexBuffer(*indexBuffer32);
+                    commands->SetIndexBuffer(*indexBuffer, LLGL::Format::R32UInt, indexOffset32);
                     commands->DrawIndexed(indexCount32, 0);
                 }
             }
