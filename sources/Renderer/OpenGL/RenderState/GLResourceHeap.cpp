@@ -663,7 +663,7 @@ void GLResourceHeap::BuildSegment2Format(GLResourceBindingIter it, GLsizei count
     std::size_t startOffset = buffer_.size();
 
     /* Allocate space for segment */
-    const std::size_t segmentOffsetEnd0 = sizeof(GLResourceViewHeapSegment2) + sizeof(GLTextureTarget) * count;
+    const std::size_t segmentOffsetEnd0 = sizeof(GLResourceViewHeapSegment2) + sizeof(GLenum) * count;
     const std::size_t segmentSize       = segmentOffsetEnd0 + sizeof(GLuint) * count;
     buffer_.resize(startOffset + segmentSize);
 
@@ -676,7 +676,7 @@ void GLResourceHeap::BuildSegment2Format(GLResourceBindingIter it, GLsizei count
         segment->count          = count;
     }
 
-    /* Write first part of segment body (of type <GLTextureTarget>) */
+    /* Write first part of segment body (of type <GLenum>) */
     auto segmentTargets = reinterpret_cast<GLenum*>(&buffer_[startOffset + sizeof(GLResourceViewHeapSegment2)]);
     auto begin = it;
     for (GLsizei i = 0; i < count; ++i, ++it)
