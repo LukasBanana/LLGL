@@ -41,7 +41,7 @@ Texture2DArray<float4>      srcMipLevel         : register(t0);
 SamplerState                linearClampSampler  : register(s0);
 
 
-/* Primary compute kernel to up to 4 MIP-map levels at a time */
+/* Primary compute kernel to generate up to 4 MIP-map levels at a time */
 [RootSignature(
     "RootFlags(0),"
     "RootConstants(b0, num32BitConstants = 5),"

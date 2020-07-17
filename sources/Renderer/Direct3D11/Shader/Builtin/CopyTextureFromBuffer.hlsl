@@ -180,7 +180,7 @@ void WriteDestinationTexutre(uint3 coord, uint4 value)
     #endif
 }
 
-/* Primary compute kernel to up to 4 MIP-map levels at a time */
+/* Primary compute kernel to copy buffer value into texel */
 [numthreads(1, 1, 1)]
 void CopyTextureFromBuffer(uint3 threadID : SV_DispatchThreadID)
 {

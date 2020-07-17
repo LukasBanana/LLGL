@@ -206,8 +206,7 @@ void WriteDestinationBuffer(uint idx, uint3 coord, uint4 value)
     }
 }
 
-
-/* Primary compute kernel to up to 4 MIP-map levels at a time */
+/* Primary compute kernel to copy texel into buffer value */
 [numthreads(1, 1, 1)]
 void CopyBufferFromTexture(uint3 threadID : SV_DispatchThreadID)
 {
