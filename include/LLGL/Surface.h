@@ -65,6 +65,29 @@ class LLGL_EXPORT Surface : public Interface
         virtual Extent2D GetContentSize() const = 0;
 
         /**
+        \brief Returns the resolution of the surface content area in pixels.
+        \return The pixel resolution of the surface.
+        \remarks On Retina Macs the pixel resolution of the surface may be larger than the content size. The drawables
+        of the surface must be sized to the pixel resolution to ensure the highest resolution drawing. The pixel resolution
+        of a surface may change even when the content size does not e.g. when the surface is moved to a different
+        monitor. If this occurs a resize event will be sent.
+        \see Surface::GetContentSizeForPixelResolution
+        \see RenderContext::SetDrawableResolution
+        */
+        virtual Extent2D GetPixelResolution() const;
+
+        /**
+        \brief Returns the content size of the surface for a given pixel resolution.
+        \param[in] resolution The desired pixel resolution for the surface.
+        \return The content size at which the surface will have the given pixel resolution.
+        \remarks On Retina Macs the pixel resolution of the surface may be larger than the content size. This call
+        maps from a resolution to the equivalent content size. The mapping may change over time e.g. if the surface
+        is moved from one monitor to another.
+        \see Surface::GetPixelResolution
+        */
+        virtual Extent2D GetContentSizeForPixelResolution(const Extent2D& contentSize) const;
+
+        /**
         \brief Adapts the surface to fits the needs for the specified video mode descriptor.
         \param[in,out] videoModeDesc Specifies the input and output video mode descriptor.
         \return If the video mode descriptor has been accepted with no modifications and this surface has been updated then the return value is true.

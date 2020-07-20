@@ -150,15 +150,12 @@ void ExampleBase::ResizeEventHandler::OnResize(LLGL::Window& sender, const LLGL:
 {
     if (clientAreaSize.width >= 4 && clientAreaSize.height >= 4)
     {
-        // Update video mode
-        auto videoMode = context_->GetVideoMode();
-        {
-            videoMode.resolution = clientAreaSize;
-        }
-        context_->SetVideoMode(videoMode);
+        // Update the buffer resolution
+        auto resolution = sender.GetPixelResolution();
+        context_->SetDrawableResolution(resolution);
 
         // Update projection matrix
-        auto aspectRatio = static_cast<float>(videoMode.resolution.width) / static_cast<float>(videoMode.resolution.height);
+        auto aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
         projection_ = tutorial_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
         // Re-draw frame
@@ -251,7 +248,7 @@ void ExampleBase::Run()
 
 ExampleBase::ExampleBase(
     const std::wstring&     title,
-    const LLGL::Extent2D&   resolution,
+    const LLGL::Extent2D&   contentSize,
     std::uint32_t           samples,
     bool                    vsync,
     bool                    debugger)
@@ -293,14 +290,22 @@ ExampleBase::ExampleBase(
     if (!debugger)
         debuggerObj_.reset();
 
+    // Create a surface to draw on.
+    LLGL::WindowDescriptor windowDesc;
+    {
+        windowDesc.size                     = contentSize;
+        windowDesc.centered                 = true;
+    }
+    std::shared_ptr<LLGL::Surface> surface = LLGL::Window::Create(windowDesc);
+
     // Create render context
     LLGL::RenderContextDescriptor contextDesc;
     {
-        contextDesc.videoMode.resolution    = resolution;
+        contextDesc.videoMode.resolution    = surface->GetPixelResolution();
         contextDesc.vsync.enabled           = vsync;
         contextDesc.samples                 = samples;
     }
-    context = renderer->CreateRenderContext(contextDesc);
+    context = renderer->CreateRenderContext(contextDesc, surface);
 
     // Create command buffer
     commands = renderer->CreateCommandBuffer();

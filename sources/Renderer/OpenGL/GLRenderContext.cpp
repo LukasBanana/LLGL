@@ -101,17 +101,20 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 
 bool GLRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
-    /* Update context height */
-    contextHeight_ = static_cast<GLint>(videoModeDesc.resolution.height);
-    stateMngr_->NotifyRenderTargetHeight(contextHeight_);
-
-    /* Notify GL context of a resize */
-    context_->Resize(videoModeDesc.resolution);
-
     /* Switch fullscreen mode */
     if (!SetDisplayFullscreenMode(videoModeDesc))
         return false;
+    return true;
+}
 
+bool GLRenderContext::OnSetDrawableResolution(const Extent2D& resolution)
+{
+    /* Update context height */
+    contextHeight_ = static_cast<GLint>(resolution.height);
+    stateMngr_->NotifyRenderTargetHeight(contextHeight_);
+
+    /* Notify GL context of a resize */
+    context_->Resize(resolution);
     return true;
 }
 

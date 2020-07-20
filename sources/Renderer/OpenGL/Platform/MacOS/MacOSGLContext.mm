@@ -43,6 +43,8 @@ MacOSGLContext::MacOSGLContext(
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
     CreateNSGLContext(nativeHandle, sharedContext);
+
+    Resize(desc.videoMode.resolution);
 }
 
 MacOSGLContext::~MacOSGLContext()
@@ -68,6 +70,11 @@ bool MacOSGLContext::SwapBuffers()
 
 void MacOSGLContext::Resize(const Extent2D& resolution)
 {
+    GLint dim[2];
+    dim[0] = static_cast<GLint>(resolution.width);
+    dim[1] = static_cast<GLint>(resolution.height);
+    [ctx_ setValues:dim forParameter:NSOpenGLContextParameterSurfaceBackingSize];
+
     [ctx_ update];
 }
 

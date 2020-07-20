@@ -170,7 +170,7 @@ protected:
 
     ExampleBase(
         const std::wstring&     title,
-        const LLGL::Extent2D&   resolution  = { 800, 600 },
+        const LLGL::Extent2D&   contentSize = { 800, 600 },
         std::uint32_t           samples     = 8,
         bool                    vsync       = true,
         bool                    debugger    = true

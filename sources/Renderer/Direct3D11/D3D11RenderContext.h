@@ -63,6 +63,7 @@ class D3D11RenderContext final : public RenderContext
     private:
 
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
+        bool OnSetDrawableResolution(const Extent2D& resolution) override;
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void CreateSwapChain(IDXGIFactory* factory, UINT samples);

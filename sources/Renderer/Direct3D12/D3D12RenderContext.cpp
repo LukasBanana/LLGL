@@ -192,6 +192,16 @@ bool D3D12RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc
     return true;
 }
 
+bool D3D12RenderContext::OnSetDrawableResolution(const Extent2D& resolution)
+{
+    //TODO It would be sufficient to resize the existing resources.
+    auto newMode = GetVideoMode();
+    newMode.resolution = resolution;
+    /* Re-create resource that depend on the window size */
+    CreateWindowSizeDependentResources(newMode);
+    return true;
+}
+
 bool D3D12RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);

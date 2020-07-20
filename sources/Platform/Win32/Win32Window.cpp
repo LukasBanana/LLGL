@@ -284,8 +284,9 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
     /* Check if anything changed */
     auto position           = GetPosition();
     auto size               = GetSize();
+    auto newPosition        = (desc.centered ? GetScreenCenteredPosition(desc.size) : desc.position);
 
-    bool positionChanged    = (desc.position.x != position.x || desc.position.y != position.y);
+    bool positionChanged    = (newPosition.x != position.x || newPosition.y != position.y);
     bool sizeChanged        = (desc.size.width != size.width || desc.size.height != size.height);
 
     if (flagsChanged || positionChanged || sizeChanged)

@@ -55,6 +55,13 @@ bool DbgRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
     return result;
 }
 
+bool DbgRenderContext::OnSetDrawableResolution(const Extent2D& resolution)
+{
+    auto result = instance.SetDrawableResolution(resolution);
+    ShareSurfaceAndConfig(instance);
+    return result;
+}
+
 bool DbgRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
     auto result = instance.SetVsync(vsyncDesc);

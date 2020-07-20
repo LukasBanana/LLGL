@@ -117,7 +117,7 @@ bool Window::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
     auto windowDesc = GetDesc();
 
     /* Adapt window size and position */
-    windowDesc.size = videoModeDesc.resolution;
+    windowDesc.size = GetContentSizeForPixelResolution(videoModeDesc.resolution);
 
     if (videoModeDesc.fullscreen)
     {

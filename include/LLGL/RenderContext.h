@@ -126,6 +126,15 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         }
 
         /**
+        \brief Set the resolution, in pixels, of the drawing buffers. Call this routine when processing
+        a resize event to update the  drawables for the new surface size.
+        \param[in] resolution Specifies the desired resolution of the drawing buffers.
+        \return True on success, otherwise the previous resolution remains.
+        \see Surface::GetPixelResolution
+         */
+        bool SetDrawableResolution(const Extent2D& resolution);
+
+        /**
         \brief Sets the new vertical-sychronization (V-sync) configuration for this render context.
         \param[in] vsyncDesc Specifies the descriptor of the new V-sync configuration.
         \return True on success, otherwise the specified V-sync is invalid.
@@ -158,6 +167,14 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         \see Surface::AdaptForVideoMode
         */
         virtual bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) = 0;
+
+        /**
+        \brief Callback to change the pixel size of the drawing buffers.
+        \param[in] resolution Specifies the new drawing buffer resolution.
+        \return True on success, otherwise the previous resolution  remains.
+        \see SetDrawableResolution
+        */
+        virtual bool OnSetDrawableResolution(const Extent2D& resolution) = 0;
 
         /**
         \brief Callback when the V-sync is about to get changed.

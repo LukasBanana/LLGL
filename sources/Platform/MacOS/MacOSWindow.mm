@@ -143,8 +143,6 @@ static const auto g_EventTypeScrollWheel        = NSScrollWheel;
 
 - (void)windowDidResize:(NSNotification*)notification
 {
-    //TODO: callback (here PostResize) must currently not be called while the NSEvent polling has not finished!
-    #if 0
     /* Get size of the NSWindow's content view */
     NSWindow* sender = [notification object];
     NSRect frame = [[sender contentView] frame];
@@ -154,9 +152,6 @@ static const auto g_EventTypeScrollWheel        = NSScrollWheel;
 
     /* Notify event listeners about resize */
     window_->PostResize({ w, h });
-    #else
-    resizeSignaled_ = YES;
-    #endif
 }
 
 - (NSApplicationPresentationOptions)window:(NSWindow*)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
@@ -284,6 +279,28 @@ Extent2D MacOSWindow::GetContentSize() const
     return GetSize(true);
 }
 
+Extent2D MacOSWindow::GetPixelResolution() const
+{
+    auto size = wnd_.contentView.bounds.size;
+    size.width *= wnd_.backingScaleFactor;
+    size.height *= wnd_.backingScaleFactor;
+
+    return Extent2D
+    {
+        static_cast<std::uint32_t>(size.width + 0.5),
+        static_cast<std::uint32_t>(size.height + 0.5)
+    };
+}
+
+Extent2D MacOSWindow::GetContentSizeForPixelResolution(const Extent2D& resolution) const
+{
+    return Extent2D
+    {
+        static_cast<std::uint32_t>(resolution.width / wnd_.backingScaleFactor + 0.5),
+        static_cast<std::uint32_t>(resolution.height / wnd_.backingScaleFactor + 0.5)
+    };
+}
+
 void MacOSWindow::SetPosition(const Offset2D& position)
 {
     /* Get visible screen size (without dock and menu bar) */
@@ -394,13 +411,10 @@ void MacOSWindow::SetDesc(const WindowDescriptor& desc)
             [wnd_ setCollectionBehavior:NSWindowCollectionBehaviorDefault];
         #endif
 
-        //TOOD: incomplete -> must be ignored right now, otherwise window is moved on a resize event
-        #if 0
         if (desc.centered)
             [wnd_ center];
         else
             SetPosition(desc.position);
-        #endif
 
         SetSize(desc.size);
         SetTitle(desc.title);

@@ -64,6 +64,19 @@ bool RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
     return false;
 }
 
+bool RenderContext::SetDrawableResolution(const Extent2D &resolution)
+{
+    if (resolution != surface_->GetPixelResolution())
+        return false;
+    
+    if (OnSetDrawableResolution(resolution))
+    {
+        videoModeDesc_.resolution = resolution;
+        return true;
+    }
+    return false;
+}
+
 bool RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 {
     if (vsyncDesc_ != vsyncDesc)
@@ -89,7 +102,7 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
     if (surface)
     {
         /* Get and output resolution from specified window */
-        videoModeDesc.resolution = surface->GetContentSize();
+        videoModeDesc.resolution = surface->GetPixelResolution();
         surface_ = surface;
     }
     else
@@ -164,7 +177,6 @@ bool RenderContext::SetDisplayFullscreenMode(const VideoModeDescriptor& videoMod
         return true;
 }
 
-
 /*
  * ======= Private: =======
  */
@@ -203,7 +215,7 @@ bool RenderContext::SetVideoModePrimary(const VideoModeDescriptor& videoModeDesc
 
     if (!videoModeDesc_.fullscreen)
         RestoreSurfacePosition();
-
+    
     return result;
 }
 

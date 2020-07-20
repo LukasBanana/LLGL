@@ -73,6 +73,7 @@ class D3D12RenderContext final : public RenderContext
     private:
 
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
+        bool OnSetDrawableResolution(const Extent2D& resolution) override;
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void QueryDeviceParameters(const D3D12Device& device, std::uint32_t samples);

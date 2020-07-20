@@ -44,6 +44,8 @@ endmacro()
 macro(ADD_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
     if(APPLE)
         add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
+        set_target_properties(${TEST_NAME} PROPERTIES
+            MACOSX_BUNDLE_INFO_PLIST ${EXAMPLE_PROJECTS_DIR}/MacOS/HighResolution.plist)
     elseif(LLGL_ANDROID_PLATFORM)
         add_library(${TEST_NAME} SHARED ${TEST_FILES})
         target_link_libraries(${TEST_NAME} log)
