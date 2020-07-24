@@ -38,7 +38,7 @@ class Display;
 \brief Render context interface.
 \remarks Each render context has its own surface and back buffer (or rather swap-chain) to draw into.
 \see RenderSystem::CreateRenderContext
-\see CommandBuffer::SetRenderTarget(RenderContext&)
+\see CommandBuffer::BeginRenderPass
 */
 class LLGL_EXPORT RenderContext : public RenderTarget
 {

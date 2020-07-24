@@ -241,17 +241,18 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void GenerateMips(Texture& texture) = 0;
 
         /**
-        \brief Generates the specified range of MIP-maps for the specified texture.
+        \brief Generates a range of MIP-maps for the specified texture.
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
         This texture must have been created with the binding flags BindFlags::Sampled and BindFlags::ColorAttachment.
         \param[in] subresource Specifies the texture subresource, i.e. the range of MIP-maps that are to be updated.
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
         \remarks This function guarantees to generate only the MIP-maps in the specified range (specified by \c subresource).
-        However, this function may introduce a performance penalty compared to generating MIP-maps using a texture view.
+        However, this function \e may introduce a performance penalty compared to generating the full MIP chain if texture views are not natively supported by the backend.
         It is therefore recommended to use this function only if the range of MIP-maps is significantly smaller than the entire MIP chain,
         e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
         \see GenerateMips(Texture&)
+        \see RenderingFeatures::hasTextureViews
         */
         virtual void GenerateMips(Texture& texture, const TextureSubresource& subresource) = 0;
 

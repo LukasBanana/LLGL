@@ -19,8 +19,7 @@ namespace LLGL
 
 /**
 \brief Pipeline layout interface.
-\remarks An instance of this interface provides all descriptor sets (as called in Vulkan)
-or descriptor heaps (as called in Direct3D 12) for graphics and compute pipelines.
+\remarks An instance of this interface provides a layout for resource binding in a graphics or compute pipeline.
 \see RenderSystem::CreatePipelineLayout
 \see GraphicsPipelineDescriptor::pipelineLayout
 \see ResourceHeapDescriptor::pipelineLayout
