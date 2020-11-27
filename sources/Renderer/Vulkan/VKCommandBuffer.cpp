@@ -333,6 +333,7 @@ void VKCommandBuffer::GenerateMips(Texture& texture)
     device_.GenerateMips(
         commandBuffer_,
         textureVK.GetVkImage(),
+        textureVK.GetVkFormat(),
         textureVK.GetVkExtent(),
         TextureSubresource{ 0, textureVK.GetNumArrayLayers(), 0, textureVK.GetNumMipLevels() }
     );
@@ -351,6 +352,7 @@ void VKCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& s
         device_.GenerateMips(
             commandBuffer_,
             textureVK.GetVkImage(),
+            textureVK.GetVkFormat(),
             textureVK.GetVkExtent(),
             subresource
         );

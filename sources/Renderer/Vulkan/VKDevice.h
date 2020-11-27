@@ -94,6 +94,7 @@ class VKDevice
             VkCommandBuffer             commandBuffer,
             VkBuffer                    srcBuffer,
             VkImage                     dstImage,
+            VkFormat                    format,
             const VkOffset3D&           offset,
             const VkExtent3D&           extent,
             const TextureSubresource&   subresource
@@ -111,6 +112,7 @@ class VKDevice
             VkCommandBuffer             commandBuffer,
             VkImage                     srcImage,
             VkBuffer                    dstBuffer,
+            VkFormat                    format,
             const VkOffset3D&           offset,
             const VkExtent3D&           extent,
             const TextureSubresource&   subresource
@@ -126,7 +128,8 @@ class VKDevice
         void GenerateMips(
             VkCommandBuffer             commandBuffer,
             VkImage                     image,
-            const VkExtent3D&           imageExtent,
+            VkFormat                    format,
+            const VkExtent3D&           extent,
             const TextureSubresource&   subresource
         );
 

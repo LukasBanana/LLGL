@@ -346,6 +346,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             cmdBuffer,
             stagingBuffer.GetVkBuffer(),
             textureVK->GetVkImage(),
+            textureVK->GetVkFormat(),
             VkOffset3D{ 0, 0, 0 },
             textureVK->GetVkExtent(),
             subresource
@@ -366,6 +367,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             device_.GenerateMips(
                 cmdBuffer,
                 textureVK->GetVkImage(),
+                textureVK->GetVkFormat(),
                 textureVK->GetVkExtent(),
                 subresource
             );
@@ -463,6 +465,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
             cmdBuffer,
             stagingBuffer.GetVkBuffer(),
             image,
+            textureVK.GetVkFormat(),
             VkOffset3D{ offset.x, offset.y, offset.z },
             VkExtent3D{ extent.width, extent.height, extent.depth },
             subresource
@@ -517,6 +520,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
             cmdBuffer,
             image,
             stagingBuffer.GetVkBuffer(),
+            textureVK.GetVkFormat(),
             VkOffset3D{ offset.x, offset.y, offset.z },
             VkExtent3D{ extent.width, extent.height, extent.depth },
             textureRegion.subresource

@@ -65,7 +65,7 @@ myBufferDesc.miscFlags      = LLGL::MiscFlags::DynamicUsage;
 
 ## `TextureDescriptor` interface
 
-Textures still have a unique type, but also use the new flags enumerations `BindFlags`, `CPUAccessFlags`, and `MiscFlags`.
+Textures still have a unique type, but also use the new flags enumerations `BindFlags` and `MiscFlags`.
 
 Before:
 ```cpp
@@ -90,7 +90,6 @@ After:
 // Interface:
 TextureType TextureDescriptor::type;
 long        TextureDescriptor::bindFlags;
-long        TextureDescriptor::cpuAccessFlags;
 long        TextureDescriptor::miscFlags;
 Format      TextureDescriptor::format;
 /* ... */
@@ -101,7 +100,6 @@ myTexDesc.type              = LLGL::TextureType::Texture2DMS;
 myTexDesc.bindFlags         = LLGL::BindFlags::ColorAttachment |
                               LLGL::BindFlags::Sampled         |
                               LLGL::BindFlags::Storage;
-myTexDesc.cpuAccessFlags    = 0;
 myTexDesc.miscFlags         = LLGL::MiscFlags::FixedSamples;
 ```
 
@@ -749,7 +747,7 @@ Before:
 enum class LLGL::PrimitiveType;
 void LLGL::CommandBuffer::SetStreamOutputBuffer(Buffer& buffer);
 void LLGL::CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray);
-void LLGL::CommandBuffer::BeginStreamOutput();
+void LLGL::CommandBuffer::BeginStreamOutput(PrimitiveType primitiveType);
 void LLGL::CommandBuffer::EndStreamOutput();
 
 // Usage:

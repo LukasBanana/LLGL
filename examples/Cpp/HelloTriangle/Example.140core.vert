@@ -1,4 +1,4 @@
-// GLSL shader version 1.40 core (for OpenGL 3.2 Core Profile)
+// GLSL shader version 1.40 core (for OpenGL 3.1 Core Profile)
 #version 140
 
 // Vertex attributes (these names must match our vertex format attributes)

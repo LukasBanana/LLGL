@@ -6,6 +6,7 @@
  */
 
 #include "VKDevice.h"
+#include "VKTypes.h"
 #include "RenderState/VKFence.h"
 #include "Buffer/VKBuffer.h"
 #include "Texture/VKTexture.h"
@@ -182,10 +183,24 @@ void VKDevice::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
         vkFreeCommandBuffers(device_, commandPool_, 1, &cmdBuffer);
 }
 
+// Returns the image aspect for the specified Vulkan format
+static VkImageAspectFlags GetImageAspectForVkFormat(VkFormat format)
+{
+    const Format fmt = VKTypes::Unmap(format);
+    if (IsDepthStencilFormat(fmt))
+    {
+        if (IsStencilFormat(fmt))
+            return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+        else
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
+    return VK_IMAGE_ASPECT_COLOR_BIT;
+}
+
 void VKDevice::TransitionImageLayout(
     VkCommandBuffer             commandBuffer,
     VkImage                     image,
-    VkFormat                    /*format*/,
+    VkFormat                    format,
     VkImageLayout               oldLayout,
     VkImageLayout               newLayout,
     const TextureSubresource&   subresource)
@@ -202,7 +217,7 @@ void VKDevice::TransitionImageLayout(
         barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
         barrier.image                           = image;
-        barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.aspectMask     = GetImageAspectForVkFormat(format);
         barrier.subresourceRange.baseMipLevel   = subresource.baseMipLevel;
         barrier.subresourceRange.levelCount     = subresource.numMipLevels;
         barrier.subresourceRange.baseArrayLayer = subresource.baseArrayLayer;
@@ -210,8 +225,8 @@ void VKDevice::TransitionImageLayout(
     }
 
     /* Initialize pipeline state flags */
-    VkPipelineStageFlags srcStageMask = 0;
-    VkPipelineStageFlags dstStageMask = 0;
+    VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
     if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
     {
@@ -284,6 +299,7 @@ void VKDevice::CopyBufferToImage(
     VkCommandBuffer             commandBuffer,
     VkBuffer                    srcBuffer,
     VkImage                     dstImage,
+    VkFormat                    format,
     const VkOffset3D&           offset,
     const VkExtent3D&           extent,
     const TextureSubresource&   subresource)
@@ -293,7 +309,7 @@ void VKDevice::CopyBufferToImage(
         region.bufferOffset                     = 0;
         region.bufferRowLength                  = 0;
         region.bufferImageHeight                = 0;
-        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.aspectMask      = GetImageAspectForVkFormat(format);
         region.imageSubresource.mipLevel        = subresource.baseMipLevel;
         region.imageSubresource.baseArrayLayer  = subresource.baseArrayLayer;
         region.imageSubresource.layerCount      = subresource.numArrayLayers;
@@ -323,6 +339,7 @@ void VKDevice::CopyImageToBuffer(
     VkCommandBuffer             commandBuffer,
     VkImage                     srcImage,
     VkBuffer                    dstBuffer,
+    VkFormat                    format,
     const VkOffset3D&           offset,
     const VkExtent3D&           extent,
     const TextureSubresource&   subresource)
@@ -332,7 +349,7 @@ void VKDevice::CopyImageToBuffer(
         region.bufferOffset                     = 0;
         region.bufferRowLength                  = 0;
         region.bufferImageHeight                = 0;
-        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.aspectMask      = GetImageAspectForVkFormat(format);
         region.imageSubresource.mipLevel        = subresource.baseMipLevel;
         region.imageSubresource.baseArrayLayer  = subresource.baseArrayLayer;
         region.imageSubresource.layerCount      = subresource.numArrayLayers;
@@ -361,20 +378,23 @@ void VKDevice::CopyImageToBuffer(
 void VKDevice::GenerateMips(
     VkCommandBuffer             commandBuffer,
     VkImage                     image,
-    const VkExtent3D&           imageExtent,
+    VkFormat                    format,
+    const VkExtent3D&           extent,
     const TextureSubresource&   subresource)
 {
     TransitionImageLayout(
         commandBuffer,
         image,
         VK_FORMAT_UNDEFINED,
-        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         subresource
     );
 
     /* Initialize image memory barrier */
     VkImageMemoryBarrier barrier;
+
+    const VkImageAspectFlags aspectMask = GetImageAspectForVkFormat(format);
 
     barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.pNext                           = nullptr;
@@ -385,7 +405,7 @@ void VKDevice::GenerateMips(
     barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
     barrier.image                           = image;
-    barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.aspectMask     = aspectMask;
     barrier.subresourceRange.baseMipLevel   = subresource.baseMipLevel;
     barrier.subresourceRange.levelCount     = 1;
     barrier.subresourceRange.baseArrayLayer = subresource.baseArrayLayer;
@@ -394,7 +414,7 @@ void VKDevice::GenerateMips(
     /* Blit each MIP-map from previous (lower) MIP level */
     for (std::uint32_t arrayLayer = 0; arrayLayer < subresource.numArrayLayers; ++arrayLayer)
     {
-        auto currExtent = imageExtent;
+        auto currExtent = extent;
 
         for (std::uint32_t mipLevel = 1; mipLevel < subresource.numMipLevels; ++mipLevel)
         {
@@ -424,7 +444,7 @@ void VKDevice::GenerateMips(
             /* Blit previous MIP level into next higher MIP level (with smaller extent) */
             VkImageBlit blit;
 
-            blit.srcSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.srcSubresource.aspectMask      = aspectMask;
             blit.srcSubresource.mipLevel        = subresource.baseMipLevel + mipLevel - 1;
             blit.srcSubresource.baseArrayLayer  = subresource.baseArrayLayer + arrayLayer;
             blit.srcSubresource.layerCount      = 1;
@@ -432,7 +452,7 @@ void VKDevice::GenerateMips(
             blit.srcOffsets[1].x                = static_cast<std::int32_t>(currExtent.width);
             blit.srcOffsets[1].y                = static_cast<std::int32_t>(currExtent.height);
             blit.srcOffsets[1].z                = static_cast<std::int32_t>(currExtent.depth);
-            blit.dstSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.dstSubresource.aspectMask      = aspectMask;
             blit.dstSubresource.mipLevel        = subresource.baseMipLevel + mipLevel;
             blit.dstSubresource.baseArrayLayer  = subresource.baseArrayLayer + arrayLayer;
             blit.dstSubresource.layerCount      = 1;

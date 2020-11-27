@@ -1,4 +1,4 @@
-// GLSL shader version 1.40 (for OpenGL 3.2 Core Profile)
+// GLSL shader version 1.40 (for OpenGL 3.1 Core Profile)
 #version 140
 
 // Fragment input from the vertex shader

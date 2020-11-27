@@ -39,7 +39,7 @@ static void Convert(
     dst.storeOp         = VKTypes::Map(src.storeOp);
     dst.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     dst.stencilStoreOp  = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    dst.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
+    dst.initialLayout   = (src.loadOp == AttachmentLoadOp::Load ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_UNDEFINED);
     dst.finalLayout     = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 }
 
@@ -81,7 +81,7 @@ static void Convert(
     dst.storeOp         = VKTypes::Map(srcDepth.storeOp);
     dst.stencilLoadOp   = VKTypes::Map(srcStencil.loadOp);
     dst.stencilStoreOp  = VKTypes::Map(srcStencil.storeOp);
-    dst.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
+    dst.initialLayout   = (srcDepth.loadOp == AttachmentLoadOp::Load || srcStencil.loadOp == AttachmentLoadOp::Load ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_UNDEFINED);
     dst.finalLayout     = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 }
 

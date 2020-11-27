@@ -140,7 +140,7 @@ static void Convert(
     dst.storeOp         = VK_ATTACHMENT_STORE_OP_STORE;
     dst.stencilLoadOp   = (loadContent && HasStencilComponent(src.type) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
     dst.stencilStoreOp  = (HasStencilComponent(src.type) ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE);
-    dst.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
+    dst.initialLayout   = (loadContent ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED);
     dst.finalLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
@@ -157,7 +157,7 @@ static void SetVkAttachmentDescForColor(
     dst.storeOp         = VK_ATTACHMENT_STORE_OP_STORE;
     dst.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     dst.stencilStoreOp  = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    dst.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
+    dst.initialLayout   = (loadContent ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED);
     dst.finalLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
