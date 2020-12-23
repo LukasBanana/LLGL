@@ -929,10 +929,10 @@ void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
 
         for (UINT i = 0; i < numScissorRects; ++i)
         {
-            scissorRects[i].left    = 0;
-            scissorRects[i].top     = 0;
-            scissorRects[i].right   = std::numeric_limits<LONG>::max();
-            scissorRects[i].bottom  = std::numeric_limits<LONG>::max();
+            scissorRects[i].left    = D3D12_VIEWPORT_BOUNDS_MIN;
+            scissorRects[i].top     = D3D12_VIEWPORT_BOUNDS_MIN;
+            scissorRects[i].right   = D3D12_VIEWPORT_BOUNDS_MAX;
+            scissorRects[i].bottom  = D3D12_VIEWPORT_BOUNDS_MAX;
         }
 
         commandList_->RSSetScissorRects(numScissorRects, scissorRects);
