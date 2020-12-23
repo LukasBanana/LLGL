@@ -275,6 +275,10 @@ class GLStateManager
 
     private:
 
+        struct GLIntermediateBufferWriteMasks;
+
+    private:
+
         void AdjustViewport(GLViewport& viewport);
         void AdjustScissor(GLScissor& scissor);
 
@@ -292,11 +296,10 @@ class GLStateManager
 
         /* ----- Stacks ----- */
 
-        void PushDepthMaskAndEnable();
-        void PopDepthMask();
-
-        void PushColorMaskAndEnable();
-        void PopColorMask();
+        void PrepareColorMaskForClear(GLIntermediateBufferWriteMasks& intermediateMasks);
+        void PrepareDepthMaskForClear(GLIntermediateBufferWriteMasks& intermediateMasks);
+        void PrepareStencilMaskForClear(GLIntermediateBufferWriteMasks& intermediateMasks);
+        void RestoreWriteMasks(GLIntermediateBufferWriteMasks& intermediateMasks);
 
         /* ----- Render pass ----- */
 
@@ -314,11 +317,12 @@ class GLStateManager
         );
 
         std::uint32_t ClearColorBuffers(
-            const std::uint8_t* colorBuffers,
-            std::uint32_t       numClearValues,
-            const ClearValue*   clearValues,
-            std::uint32_t&      idx,
-            const GLClearValue& defaultClearValue
+            const std::uint8_t*             colorBuffers,
+            std::uint32_t                   numClearValues,
+            const ClearValue*               clearValues,
+            std::uint32_t&                  idx,
+            const GLClearValue&             defaultClearValue,
+            GLIntermediateBufferWriteMasks& intermediateMasks
         );
 
     private:
@@ -353,7 +357,6 @@ class GLStateManager
 
             GLenum      depthFunc       = GL_LESS;
             GLboolean   depthMask       = GL_TRUE;
-            GLboolean   cachedDepthMask = GL_TRUE;
 
             GLfloat     blendColor[4]   = { 0.0f, 0.0f, 0.0f, 0.0f };
             #ifdef LLGL_OPENGL
@@ -495,7 +498,6 @@ class GLStateManager
         GLDepthStencilState*            boundDepthStencilState_ = nullptr;
         GLRasterizerState*              boundRasterizerState_   = nullptr;
         GLBlendState*                   boundBlendState_        = nullptr;
-        bool                            colorMaskOnStack_       = false;
 
 };
 

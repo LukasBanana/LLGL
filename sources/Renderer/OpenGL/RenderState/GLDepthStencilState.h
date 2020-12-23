@@ -42,6 +42,9 @@ class GLDepthStencilState
         // Binds only the stencil reference together with the remaining parameters for the glStencilFunc* call.
         void BindStencilRefOnly(GLint ref, GLenum face = GL_FRONT_AND_BACK);
 
+        // Binds only the stencil write mask.
+        void BindStencilWriteMaskOnly();
+
         // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
         int CompareSWO(const GLDepthStencilState& rhs) const;
 

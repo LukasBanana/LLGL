@@ -100,6 +100,20 @@ void GLDepthStencilState::BindStencilRefOnly(GLint ref, GLenum face)
     }
 }
 
+void GLDepthStencilState::BindStencilWriteMaskOnly()
+{
+    if (stencilTestEnabled_)
+    {
+        if (independentStencilFaces_)
+        {
+            glStencilMaskSeparate(GL_FRONT, stencilFront_.writeMask);
+            glStencilMaskSeparate(GL_BACK, stencilBack_.writeMask);
+        }
+        else
+            glStencilMask(stencilFront_.writeMask);
+    }
+}
+
 int GLDepthStencilState::CompareSWO(const GLDepthStencilState& rhs) const
 {
     const auto& lhs = *this;
