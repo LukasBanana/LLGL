@@ -18,7 +18,7 @@
 #include "../../Core/Assertion.h"
 #include <sstream>
 #include <iomanip>
-#include <limits>
+#include <limits.h>
 
 #include "Buffer/D3D11Buffer.h"
 #include "Buffer/D3D11BufferArray.h"
@@ -141,7 +141,7 @@ static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const 
 
 Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<UINT>::max()));
+    AssertCreateBuffer(desc, UINT_MAX);
     return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 
@@ -652,7 +652,7 @@ void D3D11RenderSystem::QueryRenderingCaps()
         caps.limits.maxViewports                    = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
         caps.limits.maxViewportSize[0]              = D3D11_VIEWPORT_BOUNDS_MAX;
         caps.limits.maxViewportSize[1]              = D3D11_VIEWPORT_BOUNDS_MAX;
-        caps.limits.maxBufferSize                   = std::numeric_limits<UINT>::max();
+        caps.limits.maxBufferSize                   = UINT_MAX;
         caps.limits.maxConstantBufferSize           = D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
     }
     SetRenderingCaps(caps);

@@ -120,8 +120,6 @@ static const GLenum g_textureLayersEnum[] =
     GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
 };
 
-static const GLuint g_GLInvalidId = std::numeric_limits<GLuint>::max();
-
 // Global array of null pointers to unbind resource slots
 static GLuint g_nullResources[GLStateManager::g_maxNumResourceSlots] = {};
 
@@ -132,8 +130,9 @@ static GLuint g_nullResources[GLStateManager::g_maxNumResourceSlots] = {};
 
 static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObjectId)
 {
+    /* Invalidate bound ID by setting it to maximum value */
     if (boundId == releasedObjectId)
-        boundId = g_GLInvalidId;
+        boundId = UINT_MAX;
 }
 
 

@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/Types.h>
-#include <limits>
+#include <limits.h>
 #include <algorithm>
 
 
@@ -18,7 +18,7 @@ namespace LLGL
 
 static std::uint32_t AddUInt32Clamped(std::uint32_t lhs, std::uint32_t rhs)
 {
-    const auto xMax = std::numeric_limits<std::uint32_t>::max();
+    const std::uint32_t xMax = UINT_MAX;
 
     std::uint64_t x = lhs;
     x += rhs;
@@ -79,8 +79,8 @@ LLGL_EXPORT Extent3D operator - (const Extent3D& lhs, const Extent3D& rhs)
 
 static std::int32_t ClampToInt32(std::int64_t x)
 {
-    const auto xMin = static_cast<std::int64_t>(std::numeric_limits<std::int32_t>::min());
-    const auto xMax = static_cast<std::int64_t>(std::numeric_limits<std::int32_t>::max());
+    const std::int64_t xMin = INT_MIN;
+    const std::int64_t xMax = INT_MAX;
 
     x = std::max(xMin, std::min(x, xMax));
 

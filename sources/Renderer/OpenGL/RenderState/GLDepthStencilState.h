@@ -13,7 +13,7 @@
 #include <LLGL/StaticLimits.h>
 #include "../OpenGL.h"
 #include <memory>
-#include <limits>
+#include <limits.h>
 
 
 namespace LLGL
@@ -60,8 +60,8 @@ class GLDepthStencilState
             GLenum  dppass      = GL_KEEP;
             GLenum  func        = GL_ALWAYS;
             GLint   ref         = 0;
-            GLuint  mask        = std::numeric_limits<GLuint>::max();
-            GLuint  writeMask   = std::numeric_limits<GLuint>::max();
+            GLuint  mask        = UINT_MAX;
+            GLuint  writeMask   = UINT_MAX;
         };
 
     private:

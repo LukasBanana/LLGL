@@ -13,6 +13,7 @@
 #include <LLGL/ForwardDecls.h>
 #include "../../DXCommon/ComPtr.h"
 #include <d3d11.h>
+#include <limits.h>
 #include <memory>
 
 
@@ -97,7 +98,7 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
         UINT                            stencilRef_         = 0;
         bool                            blendFactorDynamic_ = false;
         FLOAT                           blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
-        UINT                            sampleMask_         = std::numeric_limits<UINT>::max();
+        UINT                            sampleMask_         = UINT_MAX;
 
         std::unique_ptr<char[]>         staticStateBuffer_;
         UINT                            numStaticViewports_ = 0;

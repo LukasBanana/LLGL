@@ -12,6 +12,7 @@
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
 #include "../TextureUtils.h"
+#include <limits.h>
 #include <set>
 
 
@@ -539,7 +540,7 @@ VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresen
 
 VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, std::uint32_t width, std::uint32_t height) const
 {
-    if (surfaceCaps.currentExtent.width == std::numeric_limits<std::uint32_t>::max())
+    if (surfaceCaps.currentExtent.width == UINT_MAX)
     {
         return VkExtent2D
         {

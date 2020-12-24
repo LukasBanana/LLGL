@@ -15,6 +15,7 @@
 #include <set>
 #include <algorithm>
 #include <string.h>
+#include <limits.h>
 
 
 namespace LLGL
@@ -175,7 +176,7 @@ void VKDevice::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
         vkQueueSubmit(graphicsQueue_, 1, &submitInfo, fence.GetVkFence());
 
         /* Wait for fence to be signaled */
-        fence.Wait(device_, std::numeric_limits<std::uint64_t>::max());
+        fence.Wait(device_, ULLONG_MAX);
     }
 
     /* Release command buffer (if enabled) */

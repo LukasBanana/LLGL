@@ -15,7 +15,7 @@
 #include "../../Core/Helper.h"
 #include "../../Core/Assertion.h"
 #include "D3DX12/d3dx12.h"
-#include <limits>
+#include <limits.h>
 #include <codecvt>
 
 #include "Buffer/D3D12Buffer.h"
@@ -139,7 +139,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
 
 Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<UINT64>::max()));
+    AssertCreateBuffer(desc, ULLONG_MAX);
     return TakeOwnership(buffers_, CreateGpuBuffer(desc, initialData));
 }
 
@@ -670,7 +670,7 @@ void D3D12RenderSystem::QueryRenderingCaps()
         caps.limits.maxViewports                    = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
         caps.limits.maxViewportSize[0]              = D3D12_VIEWPORT_BOUNDS_MAX;
         caps.limits.maxViewportSize[1]              = D3D12_VIEWPORT_BOUNDS_MAX;
-        caps.limits.maxBufferSize                   = std::numeric_limits<UINT64>::max();
+        caps.limits.maxBufferSize                   = ULLONG_MAX;
         caps.limits.maxConstantBufferSize           = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
     }
     SetRenderingCaps(caps);

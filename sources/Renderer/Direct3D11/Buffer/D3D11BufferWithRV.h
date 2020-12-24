@@ -10,6 +10,7 @@
 
 
 #include "D3D11Buffer.h"
+#include <limits.h>
 
 
 namespace LLGL
@@ -74,7 +75,7 @@ class D3D11BufferWithRV final : public D3D11Buffer
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;
         UINT                                uavFlags_       = 0;
-        UINT                                initialCount_   = std::numeric_limits<UINT>::max();
+        UINT                                initialCount_   = UINT_MAX;
 
 };
 
