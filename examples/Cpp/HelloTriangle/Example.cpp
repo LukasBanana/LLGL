@@ -101,14 +101,7 @@ int main(int argc, char* argv[])
 
         if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
         {
-            #if 0
-            if (contextDesc.profileOpenGL.contextProfile == LLGL::OpenGLContextProfile::CompatibilityProfile)
-            {
-                vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.120.vert" };
-                fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.120.frag" };
-            }
-            else
-            #endif
+            if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL_140) != languages.end())
             {
                 #ifdef __APPLE__
                 vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.140core.vert" };
@@ -117,6 +110,11 @@ int main(int argc, char* argv[])
                 vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.vert" };
                 fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.frag" };
                 #endif
+            }
+            else
+            {
+                vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.120.vert" };
+                fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.120.frag" };
             }
         }
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())

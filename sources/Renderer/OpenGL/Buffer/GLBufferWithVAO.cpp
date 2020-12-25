@@ -66,7 +66,7 @@ void GLBufferWithVAO::BuildVertexArrayWithVAO()
 void GLBufferWithVAO::BuildVertexArrayWithEmulator()
 {
     /* Build each vertex attribute */
-    for (const auto& attrib : vertexFormat_.attributes)
+    for (const auto& attrib : vertexAttribs_)
         vertexArrayGL2X_.BuildVertexAttribute(GetID(), attrib);
     vertexArrayGL2X_.Finalize();
 }
