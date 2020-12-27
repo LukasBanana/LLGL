@@ -3,10 +3,10 @@
 
 // Vertex attributes (these names must match our vertex format attributes)
 in vec2 position;
-in vec3 color;
+in vec4 color;
 
 // Vertex output to the fragment shader
-out vec3 vertexColor;
+out vec4 vertexColor;
 
 // Vertex shader main function
 void main()

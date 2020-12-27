@@ -2,10 +2,10 @@
 #version 120
 
 // Fragment input from the vertex shader
-varying vec3 vertexColor;
+varying vec4 vertexColor;
 
 // Fragment shader main function
 void main()
 {
-	gl_FragColor = vec4(vertexColor, 1);
+	gl_FragColor = vertexColor;
 }

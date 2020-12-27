@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
         // Vertex data structure
         struct Vertex
         {
-            Gs::Vector2f        position;
-            LLGL::ColorRGBAub   color;
+            float   position[2];
+            uint8_t color[4];
         };
 
         // Vertex data (3 vertices for our triangle)
