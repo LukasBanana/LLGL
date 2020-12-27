@@ -95,7 +95,7 @@ void GL2XVertexArray::Bind(GLStateManager& stateMngr) const
     for (const auto& attr : attribs_)
     {
         stateMngr.BindBuffer(GLBufferTarget::ARRAY_BUFFER, attr.buffer);
-        glVertexAttribPointer(attr.index, attr.size, attr.type, attr.normalized, attr.size, attr.pointer);
+        glVertexAttribPointer(attr.index, attr.size, attr.type, attr.normalized, attr.stride, attr.pointer);
         glEnableVertexAttribArray(attr.index);
     }
 
