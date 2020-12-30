@@ -23,7 +23,7 @@ static void QueryGLInternalFormat(GLuint texID, GLenum& internalFormat)
     if (internalFormat == 0)
     {
         GLint format = 0;
-        glGetNamedRenderbufferParameteriv(texID, GL_TEXTURE_INTERNAL_FORMAT, &format);
+        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
         internalFormat = static_cast<GLenum>(format);
     }
 }
