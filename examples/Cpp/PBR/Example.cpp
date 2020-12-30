@@ -126,6 +126,22 @@ private:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        {
+            shaderProgramSky = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.Sky.vert" },
+                    { LLGL::ShaderType::Fragment, "Example.Sky.frag" },
+                }
+            );
+            shaderProgramMeshes = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "Example.Mesh.vert" },
+                    { LLGL::ShaderType::Fragment, "Example.Mesh.frag" },
+                },
+                { vertexFormat }
+            );
+        }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             shaderProgramSky = LoadShaderProgram(
@@ -149,13 +165,26 @@ private:
     void CreatePipelines()
     {
         // Create pipeline layout for skybox
-        layoutSky = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc(
-                "cbuffer(1):frag:vert,"
-                "sampler(2):frag,"
-                "texture(3):frag,"
-            )
-        );
+        if (IsOpenGL())
+        {
+            layoutSky = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc(
+                    "cbuffer(Settings@1):frag:vert,"
+                    "sampler(skyBox@2):frag,"
+                    "texture(2):frag,"
+                )
+            );
+        }
+        else
+        {
+            layoutSky = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc(
+                    "cbuffer(1):frag:vert,"
+                    "sampler(2):frag,"
+                    "texture(3):frag,"
+                )
+            );
+        }
 
         // Create graphics pipeline for skybox
         LLGL::GraphicsPipelineDescriptor pipelineDescSky;
@@ -169,17 +198,38 @@ private:
         pipelineSky = renderer->CreatePipelineState(pipelineDescSky);
 
         // Create pipeline layout for meshes
-        layoutMeshes = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc(
-                "cbuffer(1):frag:vert,"
-                "sampler(2):frag,"
-                "texture(3):frag,"
-                "texture(4):frag,"
-                "texture(5):frag,"
-                "texture(6):frag,"
-                "texture(7):frag,"
-            )
-        );
+        if (IsOpenGL())
+        {
+            layoutMeshes = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc(
+                    "cbuffer(Settings@1):frag:vert,"
+                    "sampler(skyBox@2):frag,"
+                    "sampler(colorMaps@3):frag,"
+                    "sampler(normalMaps@4):frag,"
+                    "sampler(roughnessMaps@5):frag,"
+                    "sampler(metallicMaps@6):frag,"
+                    "texture(2):frag,"
+                    "texture(3):frag,"
+                    "texture(4):frag,"
+                    "texture(5):frag,"
+                    "texture(6):frag,"
+                )
+            );
+        }
+        else
+        {
+            layoutMeshes = renderer->CreatePipelineLayout(
+                LLGL::PipelineLayoutDesc(
+                    "cbuffer(1):frag:vert,"
+                    "sampler(2):frag,"
+                    "texture(3):frag,"
+                    "texture(4):frag,"
+                    "texture(5):frag,"
+                    "texture(6):frag,"
+                    "texture(7):frag,"
+                )
+            );
+        }
 
         // Create graphics pipeline for meshes
         LLGL::GraphicsPipelineDescriptor pipelineDescMeshes;
@@ -365,17 +415,37 @@ private:
         // Create resource heap for meshes
         LLGL::ResourceHeapDescriptor heapDescMeshes;
         {
-            heapDescMeshes.pipelineLayout   = layoutMeshes;
-            heapDescMeshes.resourceViews    =
+            heapDescMeshes.pipelineLayout = layoutMeshes;
+            if (IsOpenGL())
             {
-                constantBuffer,
-                linearSampler,
-                skyboxArray,
-                colorMapArray,
-                normalMapArray,
-                roughnessMapArray,
-                metallicMapArray,
-            };
+                heapDescMeshes.resourceViews =
+                {
+                    constantBuffer,
+                    linearSampler,
+                    linearSampler,
+                    linearSampler,
+                    linearSampler,
+                    linearSampler,
+                    skyboxArray,
+                    colorMapArray,
+                    normalMapArray,
+                    roughnessMapArray,
+                    metallicMapArray,
+                };
+            }
+            else
+            {
+                heapDescMeshes.resourceViews =
+                {
+                    constantBuffer,
+                    linearSampler,
+                    skyboxArray,
+                    colorMapArray,
+                    normalMapArray,
+                    roughnessMapArray,
+                    metallicMapArray,
+                };
+            }
         }
         resourceHeapMeshes = renderer->CreateResourceHeap(heapDescMeshes);
     }
