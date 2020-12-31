@@ -18,7 +18,7 @@ namespace LLGL
 
 
 // Allocates the texture storage with optional initial image data for the currently bound GL texture.
-void GLTexImage(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
+bool GLTexImage(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
 
 
 } // /namespace LLGL

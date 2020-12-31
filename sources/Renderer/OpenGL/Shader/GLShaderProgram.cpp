@@ -584,6 +584,9 @@ static long GetStageFlagsFromResourceProperties(GLsizei count, const GLenum* pro
 
 void GLShaderProgram::QueryConstantBuffers(ShaderReflection& reflection) const
 {
+    if (!HasExtension(GLExt::ARB_uniform_buffer_object))
+        return;
+
     /* Query active uniform blocks */
     std::vector<char> blockName;
     GLint numUniformBlocks = 0, maxNameLength = 0;
@@ -627,6 +630,9 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
 {
     #ifdef LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
 
+    if (!HasExtension(GLExt::ARB_shader_storage_buffer_object) || !HasExtension(GLExt::ARB_program_interface_query))
+        return;
+
     /* Query number of shader storage blocks */
     GLenum properties[3] = { 0 };
     properties[0] = GL_NUM_ACTIVE_VARIABLES;
@@ -663,7 +669,7 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
         reflection.resources.push_back(resource);
     }
 
-    #endif
+    #endif // /LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
 }
 
 void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const

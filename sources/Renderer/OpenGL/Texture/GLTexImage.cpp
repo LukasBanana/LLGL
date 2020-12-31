@@ -1070,8 +1070,13 @@ static void GLTexImage2DMSArray(const TextureDescriptor& desc)
 
 #endif
 
-void GLTexImage(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+bool GLTexImage(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
+    //TODO: on-the-fly decompression would be awesome (if GL_ARB_texture_compression is unsupported), but a lot of work :-/
+    /* If compressed format is requested, GL_ARB_texture_compression must be supported */
+    if (IsCompressedFormat(desc.format) && !HasExtension(GLExt::ARB_texture_compression))
+        return false;
+
     switch (desc.type)
     {
         #ifdef LLGL_OPENGL
@@ -1117,8 +1122,10 @@ void GLTexImage(const TextureDescriptor& desc, const SrcImageDescriptor* imageDe
         #endif
 
         default:
-            break;
+            return false;
     }
+
+    return true;
 }
 
 

@@ -9,6 +9,7 @@
 #include "../GLProfile.h"
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include <array>
 #include <algorithm>
 
@@ -426,12 +427,17 @@ static void GLTexSubImageCubeArray(const TextureRegion& region, const SrcImageDe
 
 #endif
 
-void GLTexSubImage(
+bool GLTexSubImage(
     const TextureType           type,
     const TextureRegion&        region,
     const SrcImageDescriptor&   imageDesc,
     GLenum                      internalFormat)
 {
+    //TODO: on-the-fly decompression would be awesome (if GL_ARB_texture_compression is unsupported), but a lot of work :-/
+    /* If compressed format is requested, GL_ARB_texture_compression must be supported */
+    if (IsCompressedFormat(imageDesc.format) && !HasExtension(GLExt::ARB_texture_compression))
+        return false;
+
     switch (type)
     {
         #ifdef LLGL_OPENGL
@@ -469,8 +475,10 @@ void GLTexSubImage(
         #endif
 
         default:
-            break;
+            return false;
     }
+
+    return true;
 }
 
 

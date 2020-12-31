@@ -19,7 +19,7 @@ namespace LLGL
 
 
 // Uploads the image data to the specified texture region of the currently bound GL texture.
-void GLTexSubImage(
+bool GLTexSubImage(
     const TextureType           type,
     const TextureRegion&        region,
     const SrcImageDescriptor&   imageDesc,
