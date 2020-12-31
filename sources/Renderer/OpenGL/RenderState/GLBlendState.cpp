@@ -106,10 +106,8 @@ void GLBlendState::BindColorMaskOnly(GLStateManager& stateMngr)
     BindDrawBufferColorMasks(stateMngr);
 }
 
-int GLBlendState::CompareSWO(const GLBlendState& rhs) const
+int GLBlendState::CompareSWO(const GLBlendState& lhs, const GLBlendState& rhs)
 {
-    const auto& lhs = *this;
-
     LLGL_COMPARE_MEMBER_SWO     ( blendColor_[0]         );
     LLGL_COMPARE_MEMBER_SWO     ( blendColor_[1]         );
     LLGL_COMPARE_MEMBER_SWO     ( blendColor_[2]         );
@@ -122,7 +120,7 @@ int GLBlendState::CompareSWO(const GLBlendState& rhs) const
     #endif
     LLGL_COMPARE_MEMBER_SWO     ( numDrawBuffers_        );
 
-    for (decltype(numDrawBuffers_) i = 0; i < numDrawBuffers_; ++i)
+    for (decltype(numDrawBuffers_) i = 0; i < lhs.numDrawBuffers_; ++i)
     {
         auto order = GLDrawBufferState::CompareSWO(lhs.drawBuffers_[i], rhs.drawBuffers_[i]);
         if (order != 0)

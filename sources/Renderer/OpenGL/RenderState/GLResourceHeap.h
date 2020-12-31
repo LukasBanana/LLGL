@@ -58,6 +58,9 @@ class GLResourceHeap final : public ResourceHeap
         void BuildTextureSegments(ResourceBindingIterator& resourceIterator);
         void BuildImageTextureSegments(ResourceBindingIterator& resourceIterator);
         void BuildSamplerSegments(ResourceBindingIterator& resourceIterator);
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        void BuildGL2XSamplerSegments(ResourceBindingIterator& resourceIterator);
+        #endif
 
         void BuildAllSegments(
             const std::vector<GLResourceBinding>&   resourceBindings,
@@ -69,6 +72,9 @@ class GLResourceHeap final : public ResourceHeap
         void BuildSegment2Target(GLResourceBindingIter it, GLsizei count);
         void BuildSegment2Format(GLResourceBindingIter it, GLsizei count);
         void BuildSegment3(GLResourceBindingIter it, GLsizei count);
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        void BuildSegment2GL2XSampler(GLResourceBindingIter it, GLsizei count);
+        #endif
 
         void WriteSegmentationHeapEnd(const void* data, std::size_t size);
 

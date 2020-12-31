@@ -39,8 +39,10 @@ class GLRasterizerState
 
         void Bind(GLStateManager& stateMngr);
 
+    public:
+
         // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
-        int CompareSWO(const GLRasterizerState& rhs) const;
+        static int CompareSWO(const GLRasterizerState& lhs, const GLRasterizerState& rhs);
 
     private:
 
@@ -48,7 +50,7 @@ class GLRasterizerState
         GLenum      polygonMode_            = GL_FILL;
         bool        depthClampEnabled_      = false;    // glEnable(GL_DEPTH_CLAMP)
         #endif
-        
+
         GLenum      cullFace_               = 0;
         GLenum      frontFace_              = GL_CCW;
         bool        rasterizerDiscard_      = false;    // glEnable(GL_RASTERIZER_DISCARD)

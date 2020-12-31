@@ -74,7 +74,7 @@ void GLRasterizerState::Bind(GLStateManager& stateMngr)
     stateMngr.Set(GLState::MULTISAMPLE, multiSampleEnabled_);
     stateMngr.Set(GLState::LINE_SMOOTH, lineSmoothEnabled_);
     #endif
-    
+
     stateMngr.SetFrontFace(frontFace_);
     stateMngr.SetLineWidth(lineWidth_);
 
@@ -102,15 +102,13 @@ void GLRasterizerState::Bind(GLStateManager& stateMngr)
     #endif
 }
 
-int GLRasterizerState::CompareSWO(const GLRasterizerState& rhs) const
+int GLRasterizerState::CompareSWO(const GLRasterizerState& lhs, const GLRasterizerState& rhs)
 {
-    const auto& lhs = *this;
-
     #ifdef LLGL_OPENGL
     LLGL_COMPARE_MEMBER_SWO     ( polygonMode_          );
     LLGL_COMPARE_BOOL_MEMBER_SWO( depthClampEnabled_    );
     #endif
-    
+
     LLGL_COMPARE_MEMBER_SWO     ( cullFace_             );
     LLGL_COMPARE_MEMBER_SWO     ( frontFace_            );
     LLGL_COMPARE_BOOL_MEMBER_SWO( scissorTestEnabled_   );

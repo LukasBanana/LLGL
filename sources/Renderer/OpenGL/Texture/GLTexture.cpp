@@ -10,6 +10,9 @@
 #include "GLRenderbuffer.h"
 #include "GLReadTextureFBO.h"
 #include "GLMipGenerator.h"
+#ifdef LLGL_GL_ENABLE_OPENGL2X
+#   include "GL2XSampler.h"
+#endif
 #include "../GLTypes.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
@@ -817,6 +820,19 @@ GLenum GLTexture::GetGLTexTarget() const
 {
     return GLTypes::Map(GetType());
 }
+
+#ifdef LLGL_GL_ENABLE_OPENGL2X
+
+void GLTexture::BindTexParameters(const GL2XSampler& sampler)
+{
+    if (&sampler != boundSampler_)
+    {
+        sampler.BindTexParameters(GetGLTexTarget(), boundSampler_);
+        boundSampler_ = &sampler;
+    }
+}
+
+#endif // /LLGL_GL_ENABLE_OPENGL2X
 
 
 /*

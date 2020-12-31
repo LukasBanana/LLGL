@@ -91,7 +91,7 @@ void GL2XVertexArray::Finalize()
 
 void GL2XVertexArray::Bind(GLStateManager& stateMngr) const
 {
-    /* Enable all vertex arrays */
+    /* Enable required vertex arrays */
     for (const auto& attr : attribs_)
     {
         stateMngr.BindBuffer(GLBufferTarget::ARRAY_BUFFER, attr.buffer);
@@ -99,6 +99,7 @@ void GL2XVertexArray::Bind(GLStateManager& stateMngr) const
         glEnableVertexAttribArray(attr.index);
     }
 
+    //TODO: add case for disabling attrib arrays inbetween, e.g. when only index 0 and 2 is used (rare case probably)
     /* Disable remaining vertex arrays */
     stateMngr.DisableVertexAttribArrays(attribIndexEnd_);
 }

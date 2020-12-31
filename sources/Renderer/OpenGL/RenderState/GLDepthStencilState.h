@@ -45,8 +45,10 @@ class GLDepthStencilState
         // Binds only the stencil write mask.
         void BindStencilWriteMaskOnly();
 
+    public:
+
         // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
-        int CompareSWO(const GLDepthStencilState& rhs) const;
+        static int CompareSWO(const GLDepthStencilState& lhs, const GLDepthStencilState& rhs);
 
     private:
 

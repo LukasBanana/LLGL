@@ -26,6 +26,9 @@
 #include "Texture/GLTexture.h"
 #include "Texture/GLSampler.h"
 #include "Texture/GLRenderTarget.h"
+#ifdef LLGL_GL_ENABLE_OPENGL2X
+#   include "Texture/GL2XSampler.h"
+#endif
 
 #include "RenderState/GLQueryHeap.h"
 #include "RenderState/GLFence.h"
@@ -181,6 +184,9 @@ class GLRenderSystem final : public RenderSystem
         HWObjectContainer<GLBufferArray>        bufferArrays_;
         HWObjectContainer<GLTexture>            textures_;
         HWObjectContainer<GLSampler>            samplers_;
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        HWObjectContainer<GL2XSampler>          samplersGL2X_;
+        #endif
         HWObjectContainer<GLRenderPass>         renderPasses_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;
         HWObjectContainer<GLShader>             shaders_;

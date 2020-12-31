@@ -91,25 +91,23 @@ void GLShaderBindingLayout::BindResourceSlots(GLuint program) const
     #endif
 }
 
-int GLShaderBindingLayout::CompareSWO(const GLShaderBindingLayout& rhs) const
+bool GLShaderBindingLayout::HasBindings() const
 {
-    const auto& lhs = *this;
+    return ((numUniformBindings_ | numUniformBlockBindings_ | numShaderStorageBindings_) != 0);
+}
 
+int GLShaderBindingLayout::CompareSWO(const GLShaderBindingLayout& lhs, const GLShaderBindingLayout& rhs)
+{
     /* Compare number of bindings first; if equal we can use one of the arrays only */
     LLGL_COMPARE_MEMBER_SWO( bindings_.size() );
 
-    for (std::size_t i = 0, n = bindings_.size(); i < n; ++i)
+    for (std::size_t i = 0, n = lhs.bindings_.size(); i < n; ++i)
     {
         LLGL_COMPARE_MEMBER_SWO( bindings_[i].slot );
         LLGL_COMPARE_MEMBER_SWO( bindings_[i].name );
     }
 
     return 0;
-}
-
-bool GLShaderBindingLayout::HasBindings() const
-{
-    return ((numUniformBindings_ | numUniformBlockBindings_ | numShaderStorageBindings_) != 0);
 }
 
 

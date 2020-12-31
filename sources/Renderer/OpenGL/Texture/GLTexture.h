@@ -20,6 +20,7 @@ namespace LLGL
 struct SrcImageDescriptor;
 struct DstImageDescriptor;
 struct TextureViewDescriptor;
+class GL2XSampler;
 
 // Predefined texture swizzles to emulate certain texture format
 enum class GLSwizzleFormat
@@ -28,8 +29,6 @@ enum class GLSwizzleFormat
     BGRA,   // GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA
     Alpha,  // GL_ZERO, GL_ZERO, GL_ZERO, GL_RED
 };
-
-GLSwizzleFormat MapGLSwizzleFormat(const Format format);
 
 // OpenGL texture class that manages a GL textures and renderbuffers (if the texture is only used as attachment but not for sampling).
 class GLTexture final : public Texture
@@ -92,6 +91,11 @@ class GLTexture final : public Texture
         // Returns the GL_TEXTURE_TARGET parameter of this texture.
         GLenum GetGLTexTarget() const;
 
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        // Binds the texture parameters of the specified sampler to this texture.
+        void BindTexParameters(const GL2XSampler& sampler);
+        #endif
+
         // Returns the hardware texture ID.
         inline GLuint GetID() const
         {
@@ -147,15 +151,19 @@ class GLTexture final : public Texture
 
     private:
 
-        GLuint          id_             = 0;                        // GL object name for texture or renderbuffer
-        GLenum          internalFormat_ = 0;
-        GLsizei         numMipLevels_   = 1;
-        bool            isRenderbuffer_ = false;
-        GLSwizzleFormat swizzleFormat_  = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
+        GLuint              id_             = 0;                        // GL object name for texture or renderbuffer
+        GLenum              internalFormat_ = 0;
+        GLsizei             numMipLevels_   = 1;
+        bool                isRenderbuffer_ = false;
+        GLSwizzleFormat     swizzleFormat_  = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
 
         #ifdef LLGL_OPENGLES3
-        GLint           extent_[3]      = {};
-        GLint           samples_        = 1;
+        GLint               extent_[3]      = {};
+        GLint               samples_        = 1;
+        #endif
+
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        const GL2XSampler*  boundSampler_   = nullptr;                  // Sampler currently bound to this texture
         #endif
 
 };

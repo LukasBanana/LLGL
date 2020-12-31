@@ -25,8 +25,6 @@
 #include "../Shader/GLShaderUniform.h"
 
 #include "../Texture/GLTexture.h"
-#include "../Texture/GLSampler.h"
-#include "../Texture/GLRenderTarget.h"
 #include "../Texture/GLMipGenerator.h"
 
 #include "../Buffer/GLBufferWithVAO.h"

@@ -114,31 +114,29 @@ void GLDepthStencilState::BindStencilWriteMaskOnly()
     }
 }
 
-int GLDepthStencilState::CompareSWO(const GLDepthStencilState& rhs) const
+int GLDepthStencilState::CompareSWO(const GLDepthStencilState& lhs, const GLDepthStencilState& rhs)
 {
-    const auto& lhs = *this;
-
     LLGL_COMPARE_BOOL_MEMBER_SWO( depthTestEnabled_ );
-    if (depthTestEnabled_)
+    if (lhs.depthTestEnabled_)
     {
         LLGL_COMPARE_MEMBER_SWO( depthMask_ );
         LLGL_COMPARE_MEMBER_SWO( depthFunc_ );
     }
 
     LLGL_COMPARE_BOOL_MEMBER_SWO( stencilTestEnabled_ );
-    if (stencilTestEnabled_)
+    if (lhs.stencilTestEnabled_)
     {
         LLGL_COMPARE_BOOL_MEMBER_SWO( independentStencilFaces_ );
 
         {
-            auto order = GLStencilFaceState::CompareSWO(stencilFront_, rhs.stencilFront_);
+            auto order = GLStencilFaceState::CompareSWO(lhs.stencilFront_, rhs.stencilFront_);
             if (order != 0)
                 return order;
         }
 
-        if (!independentStencilFaces_)
+        if (!lhs.independentStencilFaces_)
         {
-            auto order = GLStencilFaceState::CompareSWO(stencilBack_, rhs.stencilBack_);
+            auto order = GLStencilFaceState::CompareSWO(lhs.stencilBack_, rhs.stencilBack_);
             if (order != 0)
                 return order;
         }

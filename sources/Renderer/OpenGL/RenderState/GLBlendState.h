@@ -41,8 +41,10 @@ class GLBlendState
         // Binds only the color masks for all draw buffers of this blend state.
         void BindColorMaskOnly(GLStateManager& stateMngr);
 
+    public:
+
         // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
-        int CompareSWO(const GLBlendState& rhs) const;
+        static int CompareSWO(const GLBlendState& lhs, const GLBlendState& rhs);
 
     private:
 

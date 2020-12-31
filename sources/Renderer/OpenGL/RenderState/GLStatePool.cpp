@@ -29,9 +29,9 @@ std::shared_ptr<T> FindCompatibleStateObject(
     auto* entry = Utils::FindInSortedArray<std::shared_ptr<T>>(
         container.data(),
         container.size(),
-        [&compareObject](const std::shared_ptr<T>& rhs)
+        [&compareObject](const std::shared_ptr<T>& rhs) -> int
         {
-            return compareObject.CompareSWO(*rhs.get());
+            return T::CompareSWO(compareObject, *rhs.get());
         },
         &index
     );

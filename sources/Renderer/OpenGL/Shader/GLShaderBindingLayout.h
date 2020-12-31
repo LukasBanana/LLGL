@@ -40,11 +40,13 @@ class GLShaderBindingLayout
         // Binds the resource slots to the specified GL shader program.
         void BindResourceSlots(GLuint program) const;
 
-        // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
-        int CompareSWO(const GLShaderBindingLayout& rhs) const;
-
         // Returns true if this layout has at least one binding slot.
         bool HasBindings() const;
+
+    public:
+
+        // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
+        static int CompareSWO(const GLShaderBindingLayout& lhs, const GLShaderBindingLayout& rhs);
 
     private:
 
