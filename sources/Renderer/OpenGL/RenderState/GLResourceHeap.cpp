@@ -148,13 +148,6 @@ static GLTexture* GetAsTextureView(const ResourceViewDescriptor& rvDesc)
     return nullptr;
 }
 
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-static bool UseGL2XSamplers()
-{
-    return !HasExtension(GLExt::ARB_sampler_objects);
-}
-#endif
-
 
 /*
  * GLResourceHeap class
@@ -343,7 +336,7 @@ void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t firstSet)
         BindBuffersRangeSegment(stateMngr, byteAlignedBuffer, GLBufferTarget::SHADER_STORAGE_BUFFER);
 
     #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (UseGL2XSamplers())
+    if (!HasNativeSamplers())
     {
         /* Bind all textures */
         for (std::uint8_t i = 0; i < segmentation_.numTextureSegments; ++i)
@@ -532,7 +525,7 @@ void GLResourceHeap::BuildStorageBufferSegments(ResourceBindingIterator& resourc
 void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceIterator)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (!UseGL2XSamplers())
+    if (HasNativeSamplers())
     #endif
     {
         /* Collect all textures with sampled binding */
@@ -605,7 +598,7 @@ void GLResourceHeap::BuildImageTextureSegments(ResourceBindingIterator& resource
 void GLResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceIterator)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (!UseGL2XSamplers())
+    if (HasNativeSamplers())
     #endif
     {
         /* Collect all samplers */
@@ -635,7 +628,7 @@ void GLResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceItera
 void GLResourceHeap::BuildGL2XSamplerSegments(ResourceBindingIterator& resourceIterator)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (UseGL2XSamplers())
+    if (!HasNativeSamplers())
     #endif
     {
         /* Collect all sampler states first */

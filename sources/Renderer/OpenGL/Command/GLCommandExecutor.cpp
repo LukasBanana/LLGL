@@ -443,10 +443,22 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             stateMngr.BindGLTexture(*(cmd->texture));
             return sizeof(*cmd);
         }
+        case GLOpcodeBindImageTexture:
+        {
+            auto cmd = reinterpret_cast<const GLCmdBindImageTexture*>(pc);
+            stateMngr.BindImageTexture(cmd->unit, cmd->level, cmd->format, cmd->texture);
+            return sizeof(*cmd);
+        }
         case GLOpcodeBindSampler:
         {
             auto cmd = reinterpret_cast<const GLCmdBindSampler*>(pc);
-            stateMngr.BindSampler(cmd->slot, cmd->sampler);
+            stateMngr.BindSampler(cmd->layer, cmd->sampler);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeBindGL2XSampler:
+        {
+            auto cmd = reinterpret_cast<const GLCmdBindGL2XSampler*>(pc);
+            stateMngr.BindGL2XSampler(cmd->layer, *(cmd->samplerGL2X));
             return sizeof(*cmd);
         }
         case GLOpcodeUnbindResources:

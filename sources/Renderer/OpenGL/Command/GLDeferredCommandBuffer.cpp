@@ -23,6 +23,7 @@
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
 #include "../Texture/GLRenderTarget.h"
+#include "../Texture/GL2XSampler.h"
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
@@ -386,7 +387,7 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer)
     {
         auto& bufferWithVAO = LLGL_CAST(const GLBufferWithVAO&, buffer);
         #ifdef LLGL_GL_ENABLE_OPENGL2X
-        if (!HasExtension(GLExt::ARB_vertex_array_object))
+        if (!HasNativeVAO())
         {
             auto cmd = AllocCommand<GLCmdBindGL2XVertexArray>(GLOpcodeBindGL2XVertexArray);
             cmd->vertexArrayGL2X = &(bufferWithVAO.GetVertexArrayGL2X());
@@ -406,7 +407,7 @@ void GLDeferredCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     {
         auto& bufferArrayWithVAO = LLGL_CAST(const GLBufferArrayWithVAO&, bufferArray);
         #ifdef LLGL_GL_ENABLE_OPENGL2X
-        if (!HasExtension(GLExt::ARB_vertex_array_object))
+        if (!HasNativeVAO())
         {
             auto cmd = AllocCommand<GLCmdBindGL2XVertexArray>(GLOpcodeBindGL2XVertexArray);
             cmd->vertexArrayGL2X = &(bufferArrayWithVAO.GetVertexArrayGL2X());
@@ -478,17 +479,27 @@ void GLDeferredCommandBuffer::SetResource(Resource& resource, std::uint32_t slot
             if ((bindFlags & BindFlags::Sampled) != 0)
                 BindTexture(textureGL, slot);
 
-            //TODO: support image storage types (e.g. <image2D> in GLSL)
-            /*if ((bindFlags & BindFlags::Storage) != 0)
-            {
-            }*/
+            /* Bind storage texture resource */
+            if ((bindFlags & BindFlags::Storage) != 0)
+                BindImageTexture(textureGL, slot);
         }
         break;
 
         case ResourceType::Sampler:
         {
-            auto& samplerGL = LLGL_CAST(GLSampler&, resource);
-            BindSampler(samplerGL, slot);
+            #ifdef LLGL_GL_ENABLE_OPENGL2X
+            /* If GL_ARB_sampler_objects is not supported, use emulated sampler states */
+            if (!HasNativeSamplers())
+            {
+                auto& samplerGL2X = LLGL_CAST(GL2XSampler&, resource);
+                BindGL2XSampler(samplerGL2X, slot);
+            }
+            else
+            #endif
+            {
+                auto& samplerGL = LLGL_CAST(GLSampler&, resource);
+                BindSampler(samplerGL, slot);
+            }
         }
         break;
     }
@@ -1012,7 +1023,7 @@ bool GLDeferredCommandBuffer::IsPrimary() const
  * ======= Private: =======
  */
 
-void GLDeferredCommandBuffer::BindBufferBase(const GLBufferTarget bufferTarget, GLBuffer& bufferGL, std::uint32_t slot)
+void GLDeferredCommandBuffer::BindBufferBase(const GLBufferTarget bufferTarget, const GLBuffer& bufferGL, std::uint32_t slot)
 {
     auto cmd = AllocCommand<GLCmdBindBufferBase>(GLOpcodeBindBufferBase);
     {
@@ -1022,7 +1033,7 @@ void GLDeferredCommandBuffer::BindBufferBase(const GLBufferTarget bufferTarget, 
     }
 }
 
-void GLDeferredCommandBuffer::BindBuffersBase(const GLBufferTarget bufferTarget, std::uint32_t first, std::uint32_t count, Buffer* const * buffers)
+void GLDeferredCommandBuffer::BindBuffersBase(const GLBufferTarget bufferTarget, std::uint32_t first, std::uint32_t count, const Buffer *const *const buffers)
 {
     if (count > 1)
     {
@@ -1035,7 +1046,7 @@ void GLDeferredCommandBuffer::BindBuffersBase(const GLBufferTarget bufferTarget,
             auto bufferIDs = reinterpret_cast<GLuint*>(cmd + 1);
             for (std::uint32_t i = 0; i < count; ++i)
             {
-                auto bufferGL = LLGL_CAST(GLBuffer*, buffers[i]);
+                auto bufferGL = LLGL_CAST(const GLBuffer*, buffers[i]);
                 bufferIDs[i] = bufferGL->GetID();
             }
         }
@@ -1043,7 +1054,7 @@ void GLDeferredCommandBuffer::BindBuffersBase(const GLBufferTarget bufferTarget,
     else if (count == 1)
     {
         /* Encode as single binding with <BindBufferBase> */
-        auto bufferGL = LLGL_CAST(GLBuffer*, buffers[0]);
+        auto bufferGL = LLGL_CAST(const GLBuffer*, buffers[0]);
         BindBufferBase(bufferTarget, *bufferGL, first);
     }
 }
@@ -1057,12 +1068,32 @@ void GLDeferredCommandBuffer::BindTexture(GLTexture& textureGL, std::uint32_t sl
     }
 }
 
-void GLDeferredCommandBuffer::BindSampler(GLSampler& samplerGL, std::uint32_t slot)
+void GLDeferredCommandBuffer::BindImageTexture(const GLTexture& textureGL, std::uint32_t slot)
+{
+    auto cmd = AllocCommand<GLCmdBindImageTexture>(GLOpcodeBindImageTexture);
+    {
+        cmd->unit       = slot;
+        cmd->level      = 0;
+        cmd->format     = textureGL.GetGLInternalFormat();
+        cmd->texture    = textureGL.GetID();
+    }
+}
+
+void GLDeferredCommandBuffer::BindSampler(const GLSampler& samplerGL, std::uint32_t slot)
 {
     auto cmd = AllocCommand<GLCmdBindSampler>(GLOpcodeBindSampler);
     {
-        cmd->slot       = slot;
+        cmd->layer      = slot;
         cmd->sampler    = samplerGL.GetID();
+    }
+}
+
+void GLDeferredCommandBuffer::BindGL2XSampler(const GL2XSampler& samplerGL2X, std::uint32_t slot)
+{
+    auto cmd = AllocCommand<GLCmdBindGL2XSampler>(GLOpcodeBindGL2XSampler);
+    {
+        cmd->layer          = slot;
+        cmd->samplerGL2X    = &samplerGL2X;
     }
 }
 

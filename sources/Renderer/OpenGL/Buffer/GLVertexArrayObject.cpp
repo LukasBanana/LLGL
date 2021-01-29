@@ -21,13 +21,13 @@ namespace LLGL
 
 GLVertexArrayObject::GLVertexArrayObject()
 {
-    if (HasExtension(GLExt::ARB_vertex_array_object))
+    if (HasNativeVAO())
         glGenVertexArrays(1, &id_);
 }
 
 GLVertexArrayObject::~GLVertexArrayObject()
 {
-    if (HasExtension(GLExt::ARB_vertex_array_object))
+    if (HasNativeVAO())
     {
         glDeleteVertexArrays(1, &id_);
         GLStateManager::Get().NotifyVertexArrayRelease(id_);
@@ -36,7 +36,7 @@ GLVertexArrayObject::~GLVertexArrayObject()
 
 void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute)
 {
-    if (!HasExtension(GLExt::ARB_vertex_array_object))
+    if (!HasNativeVAO())
         ThrowNotSupportedExcept(__FUNCTION__, "OpenGL extension 'GL_ARB_vertex_array_object'");
 
     /* Get data type and components of vector type */

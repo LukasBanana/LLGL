@@ -26,6 +26,7 @@
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLMipGenerator.h"
+#include "../Texture/GL2XSampler.h"
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
@@ -426,10 +427,22 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLStateManager::BindGLTexture, g_stateMngrArg, cmd->texture);
             return sizeof(*cmd);
         }
+        case GLOpcodeBindImageTexture:
+        {
+            auto cmd = reinterpret_cast<const GLCmdBindImageTexture*>(pc);
+            compiler.CallMember(&GLStateManager::BindImageTexture, g_stateMngrArg, cmd->unit, cmd->level, cmd->format, cmd->texture);
+            return sizeof(*cmd);
+        }
         case GLOpcodeBindSampler:
         {
             auto cmd = reinterpret_cast<const GLCmdBindSampler*>(pc);
-            compiler.CallMember(&GLStateManager::BindSampler, g_stateMngrArg, cmd->slot, cmd->sampler);
+            compiler.CallMember(&GLStateManager::BindSampler, g_stateMngrArg, cmd->layer, cmd->sampler);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeBindGL2XSampler:
+        {
+            auto cmd = reinterpret_cast<const GLCmdBindGL2XSampler*>(pc);
+            compiler.CallMember(&GLStateManager::BindGL2XSampler, g_stateMngrArg, cmd->layer, cmd->samplerGL2X);
             return sizeof(*cmd);
         }
         case GLOpcodeUnbindResources:

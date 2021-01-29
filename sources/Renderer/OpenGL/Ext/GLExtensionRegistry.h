@@ -111,6 +111,12 @@ void RegisterExtension(GLExt extension);
 // Returns true if the specified OpenGL extension is supported.
 bool HasExtension(const GLExt extension);
 
+// Returns ture if GL_ARB_sampler_objects is supported. Shortcut for 'HasExtension(GLExt::ARB_sampler_objects)'.
+bool HasNativeSamplers();
+
+// Returns true if GL_ARB_vertex_array_object is supported. Shortcut for 'HasExtension(GLExt::ARB_vertex_array_object)'.
+bool HasNativeVAO();
+
 
 } // /namespace LLGL
 

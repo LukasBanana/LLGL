@@ -25,6 +25,16 @@ bool HasExtension(const GLExt extension)
     return g_registeredExtensions[static_cast<std::size_t>(extension)];
 }
 
+bool HasNativeSamplers()
+{
+    return HasExtension(GLExt::ARB_sampler_objects);
+}
+
+bool HasNativeVAO()
+{
+    return HasExtension(GLExt::ARB_vertex_array_object);
+}
+
 
 } // /namespace LLGL
 

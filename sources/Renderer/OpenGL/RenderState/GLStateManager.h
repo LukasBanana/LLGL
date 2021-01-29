@@ -32,6 +32,7 @@ class GLDepthStencilState;
 class GLRasterizerState;
 class GLBlendState;
 class GLRenderPass;
+class GL2XSampler;
 
 // OpenGL state machine manager that keeps track of certain GL states.
 class GLStateManager
@@ -226,7 +227,7 @@ class GLStateManager
         void PushBoundTexture(GLTextureTarget target);
         void PopBoundTexture();
 
-        void BindGLTexture(const GLTexture& texture);
+        void BindGLTexture(GLTexture& texture);
 
         void DeleteTexture(GLuint texture, GLTextureTarget target, bool activeLayerOnly = false);
 
@@ -237,6 +238,8 @@ class GLStateManager
         void UnbindSamplers(GLuint first, GLsizei count);
 
         void NotifySamplerRelease(GLuint sampler);
+
+        void BindGL2XSampler(GLuint layer, const GL2XSampler& sampler);
 
         /* ----- Shader Program ----- */
 
@@ -444,6 +447,9 @@ class GLStateManager
             std::array<GLTextureLayer, numTextureLayers>    layers;
             std::stack<StackEntry>                          boundTextureStack;
             GLTextureLayer*                                 activeLayerRef      = nullptr;
+            #ifdef LLGL_GL_ENABLE_OPENGL2X
+            std::array<GLTexture*, numTextureLayers>        boundGLTextures;
+            #endif
         };
 
         struct GLVertexArrayState
@@ -460,7 +466,10 @@ class GLStateManager
 
         struct GLSamplerState
         {
-            std::array<GLuint, numTextureLayers> boundSamplers;
+            std::array<GLuint, numTextureLayers>                boundSamplers;
+            #ifdef LLGL_GL_ENABLE_OPENGL2X
+            std::array<const GL2XSampler*, numTextureLayers>    boundGL2XSamplers;
+            #endif
         };
 
     private:

@@ -5,8 +5,6 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-
 #include "GL2XSampler.h"
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
@@ -171,8 +169,6 @@ int GL2XSampler::CompareSWO(const GL2XSampler& lhs, const GL2XSampler& rhs)
 
 
 } // /namespace LLGL
-
-#endif
 
 
 

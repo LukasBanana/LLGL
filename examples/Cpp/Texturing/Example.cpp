@@ -39,12 +39,6 @@ public:
     Example_Texturing() :
         ExampleBase { L"LLGL Example: Texturing" }
     {
-        // Check if samplers are supported
-        const auto& renderCaps = renderer->GetRenderingCaps();
-
-        if (!renderCaps.features.hasSamplers)
-            throw std::runtime_error("samplers are not supported by this renderer");
-
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
         shaderProgram = LoadStandardShaderProgram({ vertexFormat });
@@ -245,6 +239,24 @@ public:
 
     void CreateResourceHeap()
     {
+        #if 0//TESTING
+        uint8_t imageData = 255;
+        LLGL::SrcImageDescriptor imageDesc;
+        {
+            imageDesc.format    = LLGL::ImageFormat::R;
+            imageDesc.dataType  = LLGL::DataType::UInt8;
+            imageDesc.data      = &imageData;
+            imageDesc.dataSize  = 1;
+        }
+        LLGL::TextureDescriptor texDesc;
+        {
+            texDesc.extent = { 1, 1, 1 };
+            texDesc.format = LLGL::Format::R8UInt;
+        }
+        auto texUint = renderer->CreateTexture(texDesc, &imageDesc);
+        texUint->SetName("texUint");
+        #endif
+
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
             resourceHeapDesc.pipelineLayout = pipelineLayout;
@@ -252,7 +264,7 @@ public:
             for (int i = 0; i < 6; ++i)
             {
                 resourceHeapDesc.resourceViews.push_back(sampler[i > 0 ? i - 1 : 0]);
-                resourceHeapDesc.resourceViews.push_back(colorMaps[i == 0 ? 0 : 1]);
+                resourceHeapDesc.resourceViews.push_back(/*i == 0 ? texUint : */colorMaps[i == 0 ? 0 : 1]);
             }
         }
         resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);

@@ -625,7 +625,7 @@ myVertexShaderDesc.vertex.inputAttribs.insert(
 
 ## Storage buffer description
 
-The interleaved structure `BufferDescriptor::StorageBuffer` has been removed and a storage buffer is no described with the general purpose attributes.
+The interleaved structure `BufferDescriptor::StorageBuffer` has been removed and a storage buffer is now described with the general purpose attributes.
 
 Before:
 ```cpp
@@ -720,7 +720,7 @@ After:
 // Interface:
 void LLGL::RenderSystem::ReadTexture(
     LLGL::Texture&                  texture,
-    const LLGL::TextureRegion       textureRegion,
+    const LLGL::TextureRegion&      textureRegion,
     const LLGL::DstImageDescriptor& imageDesc
 );
 

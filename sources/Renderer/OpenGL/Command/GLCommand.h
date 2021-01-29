@@ -32,6 +32,7 @@ class GLRenderTarget;
 class GLRenderPass;
 class GLDeferredCommandBuffer;
 class GL2XVertexArray;
+class GL2XSampler;
 
 
 struct GLCmdBufferSubData
@@ -391,14 +392,28 @@ struct GLCmdDispatchComputeIndirect
 
 struct GLCmdBindTexture
 {
-    std::uint32_t       slot;
-    const GLTexture*    texture;
+    std::uint32_t   slot;
+    GLTexture*      texture;
+};
+
+struct GLCmdBindImageTexture
+{
+    GLuint  unit;
+    GLint   level;
+    GLenum  format;
+    GLuint  texture;
 };
 
 struct GLCmdBindSampler
 {
-    std::uint32_t   slot;
-    GLuint          sampler;
+    GLuint layer;
+    GLuint sampler;
+};
+
+struct GLCmdBindGL2XSampler
+{
+    GLuint              layer;
+    const GL2XSampler*  samplerGL2X;
 };
 
 struct GLCmdUnbindResources

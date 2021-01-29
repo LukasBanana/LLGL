@@ -25,7 +25,7 @@ GLBufferArrayWithVAO::GLBufferArrayWithVAO(long bindFlags) :
 void GLBufferArrayWithVAO::SetName(const char* name)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (HasExtension(GLExt::ARB_vertex_array_object))
+    if (HasNativeVAO())
     #endif
     {
         /* Set label for VAO */
@@ -36,7 +36,7 @@ void GLBufferArrayWithVAO::SetName(const char* name)
 void GLBufferArrayWithVAO::BuildVertexArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (!HasExtension(GLExt::ARB_vertex_array_object))
+    if (!HasNativeVAO())
     {
         /* Build vertex array with emulator (for GL 2.x compatibility) */
         BuildVertexArrayWithEmulator(numBuffers, bufferArray);

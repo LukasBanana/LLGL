@@ -437,6 +437,7 @@ struct RenderingFeatures
     bool hasBufferViews                 = false;
 
     //! Specifies whether samplers are supported.
+    //! \todo Rename to \c hasNativeSamplerStates or remove entirely.
     bool hasSamplers                    = false;
 
     /**

@@ -33,6 +33,7 @@ class GLRenderTarget;
 class GLRenderContext;
 class GLStateManager;
 class GLRenderPass;
+class GL2XSampler;
 
 class GLDeferredCommandBuffer final : public GLCommandBuffer
 {
@@ -267,10 +268,12 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
     private:
 
-        void BindBufferBase(const GLBufferTarget bufferTarget, GLBuffer& bufferGL, std::uint32_t slot);
-        void BindBuffersBase(const GLBufferTarget bufferTarget, std::uint32_t first, std::uint32_t count, Buffer* const * buffers);
+        void BindBufferBase(const GLBufferTarget bufferTarget, const GLBuffer& bufferGL, std::uint32_t slot);
+        void BindBuffersBase(const GLBufferTarget bufferTarget, std::uint32_t first, std::uint32_t count, const Buffer *const *const buffers);
         void BindTexture(GLTexture& textureGL, std::uint32_t slot);
-        void BindSampler(GLSampler& samplerGL, std::uint32_t slot);
+        void BindImageTexture(const GLTexture& textureGL, std::uint32_t slot);
+        void BindSampler(const GLSampler& samplerGL, std::uint32_t slot);
+        void BindGL2XSampler(const GL2XSampler& samplerGL2X, std::uint32_t slot);
 
         /* Allocates only an opcode for empty commands */
         void AllocOpCode(const GLOpcode opcode);

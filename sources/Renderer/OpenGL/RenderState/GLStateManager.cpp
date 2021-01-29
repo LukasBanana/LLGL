@@ -14,6 +14,7 @@
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"
+#include "../Texture/GL2XSampler.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../GLTypes.h"
@@ -174,6 +175,10 @@ GLStateManager::GLStateManager()
     Fill(bufferState_.boundBuffers, 0);
     Fill(framebufferState_.boundFramebuffers, 0);
     Fill(samplerState_.boundSamplers, 0);
+    #ifdef LLGL_GL_ENABLE_OPENGL2X
+    Fill(textureState_.boundGLTextures, nullptr);
+    Fill(samplerState_.boundGL2XSamplers, nullptr);
+    #endif
 
     for (auto& layer : textureState_.layers)
         Fill(layer.boundTextures, 0);
@@ -833,7 +838,7 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
         /* Only perform deferred binding of element array buffer if VAOs are supported */
-        if (HasExtension(GLExt::ARB_vertex_array_object))
+        if (HasNativeVAO())
         #endif // /LLGL_GL_ENABLE_OPENGL2X
         {
             /*
@@ -870,7 +875,7 @@ void GLStateManager::NotifyVertexArrayRelease(GLuint vertexArray)
 void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16Bits)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (!HasExtension(GLExt::ARB_vertex_array_object))
+    if (!HasNativeVAO())
     {
         /* Bind element array buffer directly (for GL 2.x compatibility) */
         BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
@@ -1240,9 +1245,20 @@ void GLStateManager::PopBoundTexture()
     textureState_.boundTextureStack.pop();
 }
 
-void GLStateManager::BindGLTexture(const GLTexture& texture)
+void GLStateManager::BindGLTexture(GLTexture& texture)
 {
+    /* Bind native texture */
     BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
+
+    #ifdef LLGL_GL_ENABLE_OPENGL2X
+    /* Manage reference for emulated sampler binding */
+    if (textureState_.boundGLTextures[textureState_.activeTexture] != &texture)
+    {
+        textureState_.boundGLTextures[textureState_.activeTexture] = &texture;
+        if (auto samplerGL2X = samplerState_.boundGL2XSamplers[textureState_.activeTexture])
+            texture.BindTexParameters(*samplerGL2X);
+    }
+    #endif
 }
 
 void GLStateManager::DeleteTexture(GLuint texture, GLTextureTarget target, bool activeLayerOnly)
@@ -1299,6 +1315,21 @@ void GLStateManager::NotifySamplerRelease(GLuint sampler)
 {
     for (auto& boundSampler : samplerState_.boundSamplers)
         InvalidateBoundGLObject(boundSampler, sampler);
+}
+
+void GLStateManager::BindGL2XSampler(GLuint layer, const GL2XSampler& sampler)
+{
+    #ifdef LLGL_GL_ENABLE_OPENGL2X
+    #ifdef LLGL_DEBUG
+    LLGL_ASSERT_UPPER_BOUND(layer, numTextureLayers);
+    #endif
+    if (samplerState_.boundGL2XSamplers[layer] != &sampler)
+    {
+        samplerState_.boundGL2XSamplers[layer] = &sampler;
+        if (auto texture = textureState_.boundGLTextures[layer])
+            texture->BindTexParameters(sampler);
+    }
+    #endif
 }
 
 /* ----- Shader binding ----- */

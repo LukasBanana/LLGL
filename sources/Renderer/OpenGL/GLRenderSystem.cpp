@@ -343,7 +343,7 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     /* If GL_ARB_sampler_objects is not supported, use emulated sampler states */
-    if (!HasExtension(GLExt::ARB_sampler_objects))
+    if (!HasNativeSamplers())
     {
         auto samplerGL2X = MakeUnique<GL2XSampler>();
         samplerGL2X->SetDesc(desc);
@@ -362,7 +362,7 @@ void GLRenderSystem::Release(Sampler& sampler)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     /* If GL_ARB_sampler_objects is not supported, release emulated sampler states */
-    if (!HasExtension(GLExt::ARB_sampler_objects))
+    if (!HasNativeSamplers())
         RemoveFromUniqueSet(samplersGL2X_, &sampler);
     else
         RemoveFromUniqueSet(samplers_, &sampler);

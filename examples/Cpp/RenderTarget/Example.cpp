@@ -18,11 +18,18 @@
 //#define ENABLE_DEPTH_TEXTURE
 
 // Enables constant buffer view (CBV) ranges
-//#define ENABLE_CBUFFER_RANGE
+#define ENABLE_CBUFFER_RANGE
+
+// Enables the resource heap. Otherwise, all resources are bound to the graphics pipeline individually.
+//#define ENABLE_RESOURCE_HEAP
 
 
-#ifndef ENABLE_MULTISAMPLING
+#if defined ENABLE_CUSTOM_MULTISAMPLING && !defined ENABLE_MULTISAMPLING
 #undef ENABLE_CUSTOM_MULTISAMPLING
+#endif
+
+#if defined ENABLE_CBUFFER_RANGE && !defined ENABLE_RESOURCE_HEAP
+#undef ENABLE_CBUFFER_RANGE
 #endif
 
 class Example_RenderTarget : public ExampleBase
@@ -39,7 +46,9 @@ class Example_RenderTarget : public ExampleBase
 
     LLGL::Texture*          colorMap                = nullptr;
     LLGL::Sampler*          samplerState            = nullptr;
+    #ifdef ENABLE_RESOURCE_HEAP
     LLGL::ResourceHeap*     resourceHeap            = nullptr;
+    #endif
 
     LLGL::RenderTarget*     renderTarget            = nullptr;
     LLGL::Texture*          renderTargetTex         = nullptr;
@@ -82,7 +91,9 @@ public:
         CreateColorMap();
         CreateRenderTarget();
         CreatePipelines();
+        #ifdef ENABLE_RESOURCE_HEAP
         CreateResourceHeap();
+        #endif
 
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
@@ -327,6 +338,8 @@ private:
         renderTargetProj = PerspectiveProjection(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
     }
 
+    #ifdef ENABLE_RESOURCE_HEAP
+
     void CreateResourceHeap()
     {
         // Create resource heap for render target
@@ -357,6 +370,8 @@ private:
         }
         resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
     }
+
+    #endif // /ENABLE_RESOURCE_HEAP
 
     void UpdateModelTransform(Settings& settings, const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
     {
@@ -439,16 +454,18 @@ private:
             commands->SetIndexBuffer(*indexBuffer);
             commands->SetVertexBuffer(*vertexBuffer);
 
+            #ifdef ENABLE_RESOURCE_HEAP
             if (resourceHeap)
             {
                 // Set graphics pipeline resources
                 commands->SetResourceHeap(*resourceHeap, 0);
             }
             else
+            #endif // /ENABLE_RESOURCE_HEAP
             {
                 // Set resource directly
                 commands->SetResource(*constantBuffer, 3, LLGL::BindFlags::ConstantBuffer, shaderStages);
-                commands->SetResource(*colorMap, 2, LLGL::BindFlags::Sampled, shaderStages);
+                commands->SetResource(*colorMap, 1, LLGL::BindFlags::Sampled, shaderStages);
                 commands->SetResource(*samplerState, 1, 0, shaderStages);
             }
 
@@ -487,24 +504,17 @@ private:
             //       since the previous pipeline has no dynamic viewport!
             commands->SetViewport(context->GetResolution());
 
+            #ifdef ENABLE_RESOURCE_HEAP
             if (resourceHeap)
             {
                 // Set graphics pipeline resources
                 commands->SetResourceHeap(*resourceHeap, 1);
             }
             else
+            #endif // /ENABLE_RESOURCE_HEAP
             {
-                #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-                // Set multi-sample render-target texture
-                commands->SetResource(*renderTargetTex, 1, LLGL::BindFlags::Sampled, shaderStages);
-
-                #else
-
                 // Set render-target texture
-                commands->SetResource(*renderTargetTex, 2, LLGL::BindFlags::Sampled, shaderStages);
-
-                #endif // /ENABLE_CUSTOM_MULTISAMPLING
+                commands->SetResource(*renderTargetTex, 1, LLGL::BindFlags::Sampled, shaderStages);
             }
 
             // Draw scene

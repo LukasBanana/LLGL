@@ -24,6 +24,7 @@
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
+#include "../Texture/GL2XSampler.h"
 #include "../Texture/GLRenderTarget.h"
 #include "../Texture/GLMipGenerator.h"
 
@@ -304,7 +305,7 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
         auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
-        if (!HasExtension(GLExt::ARB_vertex_array_object))
+        if (!HasNativeVAO())
         {
             /* Bind vertex array with emulator (for GL 2.x compatibility) */
             vertexBufferGL.GetVertexArrayGL2X().Bind(*stateMngr_);
@@ -326,7 +327,7 @@ void GLImmediateCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
         auto& vertexBufferArrayGL = LLGL_CAST(GLBufferArrayWithVAO&, bufferArray);
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
-        if (!HasExtension(GLExt::ARB_vertex_array_object))
+        if (!HasNativeVAO())
         {
             /* Bind vertex array with emulator (for GL 2.x compatibility) */
             vertexBufferArrayGL.GetVertexArrayGL2X().Bind(*stateMngr_);
@@ -398,17 +399,27 @@ void GLImmediateCommandBuffer::SetResource(Resource& resource, std::uint32_t slo
                 stateMngr_->BindGLTexture(textureGL);
             }
 
-            //TODO: support image storage types (e.g. <image2D> in GLSL)
-            /*if ((bindFlags & BindFlags::Storage) != 0)
-            {
-            }*/
+            /* Bind storage texture resource */
+            if ((bindFlags & BindFlags::Storage) != 0)
+                stateMngr_->BindImageTexture(slot, 0, textureGL.GetGLInternalFormat(), textureGL.GetID());
         }
         break;
 
         case ResourceType::Sampler:
         {
-            auto& samplerGL = LLGL_CAST(GLSampler&, resource);
-            stateMngr_->BindSampler(slot, samplerGL.GetID());
+            #ifdef LLGL_GL_ENABLE_OPENGL2X
+            /* If GL_ARB_sampler_objects is not supported, use emulated sampler states */
+            if (!HasNativeSamplers())
+            {
+                auto& samplerGL2X = LLGL_CAST(const GL2XSampler&, resource);
+                stateMngr_->BindGL2XSampler(slot, samplerGL2X);
+            }
+            else
+            #endif
+            {
+                auto& samplerGL = LLGL_CAST(const GLSampler&, resource);
+                stateMngr_->BindSampler(slot, samplerGL.GetID());
+            }
         }
         break;
     }

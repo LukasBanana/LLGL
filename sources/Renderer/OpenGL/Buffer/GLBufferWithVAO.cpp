@@ -28,7 +28,7 @@ void GLBufferWithVAO::BuildVertexArray(std::size_t numVertexAttribs, const Verte
         vertexAttribs_.clear();
 
     #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (!HasExtension(GLExt::ARB_vertex_array_object))
+    if (!HasNativeVAO())
     {
         /* Build vertex array with emulator (for GL 2.x compatibility) */
         BuildVertexArrayWithEmulator();

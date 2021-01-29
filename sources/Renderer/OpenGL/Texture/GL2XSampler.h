@@ -9,8 +9,6 @@
 #define LLGL_GL2X_SAMPLER_H
 
 
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-
 #include "../OpenGL.h"
 #include <LLGL/Sampler.h>
 
@@ -56,8 +54,6 @@ class GL2XSampler final : public Sampler
 
 
 } // /namespace LLGL
-
-#endif
 
 
 #endif

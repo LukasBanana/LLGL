@@ -896,6 +896,12 @@ void GLTexture::QueryInternalFormat()
     internalFormat_ = static_cast<GLenum>(format);
 }
 
+// Binds the specified GL texture temporarily. Only used to gather texture information, not to bind texture for the graphics or compute pipeline.
+static void BindGLTextureNonPersistent(const GLTexture& textureGL)
+{
+    GLStateManager::Get().BindTexture(GLStateManager::GetTextureTarget(textureGL.GetType()), textureGL.GetID());
+}
+
 void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
 {
     #ifdef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
@@ -921,7 +927,7 @@ void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
         GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
         {
             /* Bind texture and query attributes */
-            GLStateManager::Get().BindGLTexture(*this);
+            BindGLTextureNonPersistent(*this);
             auto target = GLGetTextureParamTarget(GetType());
 
             if (extent != nullptr)
@@ -1010,7 +1016,7 @@ void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
         GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
         {
             /* Bind texture and query attributes */
-            GLStateManager::Get().BindGLTexture(*this);
+            BindGLTextureNonPersistent(*this);
             auto target = GLGetTextureParamTarget(GetType());
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH,  &texSize[0]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &texSize[1]);
