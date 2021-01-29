@@ -61,6 +61,18 @@
 #define GL_MAX_COMPUTE_WORK_GROUP_SIZE 0x91BF
 #endif
 
+#ifndef GL_COMPARE_R_TO_TEXTURE
+#define GL_COMPARE_R_TO_TEXTURE 0x884E
+#endif
+
+#ifndef GL_CLAMP
+#define GL_CLAMP 0x2900
+#endif
+
+#ifndef GL_TEXTURE_MAX_ANISOTROPY
+#define GL_TEXTURE_MAX_ANISOTROPY 0x84FE
+#endif
+
 
 #endif
 
