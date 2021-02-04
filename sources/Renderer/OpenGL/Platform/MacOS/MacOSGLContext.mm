@@ -138,7 +138,7 @@ bool MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc, cons
             NSOpenGLPFAColorSize,       24,
             NSOpenGLPFAAlphaSize,       8,
             //NSOpenGLPFAMultisample,
-            NSOpenGLPFASampleBuffers,   (desc.samples > 1 ? 1u : 0u),
+            NSOpenGLPFASampleBuffers,   (samples_ > 1 ? 1u : 0u),
             NSOpenGLPFASamples,         samples_,
             0
         };
