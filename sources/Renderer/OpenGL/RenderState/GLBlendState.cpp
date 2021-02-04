@@ -49,14 +49,14 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
 
     if (desc.independentBlendEnabled)
     {
-        GLDrawBufferState::Convert(drawBuffers_[0], desc.targets[0]);
-        numDrawBuffers_ = 1;
-    }
-    else
-    {
         numDrawBuffers_ = numColorAttachments;
         for (std::uint32_t i = 0; i < numColorAttachments; ++i)
             GLDrawBufferState::Convert(drawBuffers_[i], desc.targets[i]);
+    }
+    else
+    {
+        GLDrawBufferState::Convert(drawBuffers_[0], desc.targets[0]);
+        numDrawBuffers_ = 1;
     }
 
     #if 0//TODO
