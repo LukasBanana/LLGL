@@ -13,7 +13,7 @@
 #include <LLGL/StaticLimits.h>
 #include "../OpenGL.h"
 #include <memory>
-#include <cstdlib>
+#include <cstdint>
 
 
 namespace LLGL
