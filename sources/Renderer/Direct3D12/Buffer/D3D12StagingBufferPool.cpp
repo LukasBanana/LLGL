@@ -42,15 +42,12 @@ void D3D12StagingBufferPool::WriteStaged(
     const void*             data,
     UINT64                  dataSize)
 {
-    /* Check if a new chunk must be allocated */
+    /* Find a chunk that fits the requested data size or allocate a new chunk */
+    while (chunkIdx_ < chunks_.size() && !chunks_[chunkIdx_].Capacity(dataSize))
+        ++chunkIdx_;
+
     if (chunkIdx_ == chunks_.size())
         AllocChunk(dataSize);
-    else if (!chunks_[chunkIdx_].Capacity(dataSize))
-    {
-        ++chunkIdx_;
-        if (chunkIdx_ == chunks_.size())
-            AllocChunk(dataSize);
-    }
 
     /* Write data to current chunk */
     commandContext.TransitionResource(dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST, true);
