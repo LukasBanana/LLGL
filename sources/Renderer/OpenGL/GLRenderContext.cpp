@@ -129,8 +129,6 @@ void GLRenderContext::InitRenderStates()
     /* D3D11, Vulkan, and Metal always use a fixed restart index for strip topologies */
     #ifdef LLGL_PRIMITIVE_RESTART_FIXED_INDEX
     stateMngr_->Enable(GLState::PRIMITIVE_RESTART_FIXED_INDEX);
-    #elif defined LLGL_PRIMITIVE_RESTART
-    stateMngr_->Enable(GLState::PRIMITIVE_RESTART);
     #endif
 
     #ifdef LLGL_OPENGL

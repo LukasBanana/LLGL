@@ -876,6 +876,9 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     #define ENABLE_GLEXT(NAME) \
         RegisterExtension(GLExt::NAME)
 
+    /* Enable basic GL functionality (such as glPrimitiveRestartIndex) */
+    ENABLE_GLEXT( ARB_compatibility                );
+
     /* Enable hardware buffer extensions */
     ENABLE_GLEXT( ARB_vertex_buffer_object         );
     ENABLE_GLEXT( ARB_vertex_array_object          );

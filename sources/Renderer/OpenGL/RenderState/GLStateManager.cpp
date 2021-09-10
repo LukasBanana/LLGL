@@ -847,16 +847,32 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
             */
             bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
 
-            /* Bind deferred index buffer */
-            if (vertexArray != 0 && vertexArrayState_.boundElementArrayBuffer != 0)
+            if (vertexArray != 0)
             {
-                BindBuffer(
-                    GLBufferTarget::ELEMENT_ARRAY_BUFFER,
-                    vertexArrayState_.boundElementArrayBuffer
-                );
                 #ifdef LLGL_PRIMITIVE_RESTART
-                SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(vertexArrayState_.indexType16Bits));
-                #endif
+
+                if (vertexArrayState_.boundElementArrayBuffer != 0)
+                {
+                    /* Bind deferred index buffer and enable primitive restart index */
+                    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, vertexArrayState_.boundElementArrayBuffer);
+                    Enable(GLState::PRIMITIVE_RESTART);
+                    SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(vertexArrayState_.indexType16Bits));
+                }
+                else
+                {
+                    /* Disable primitive restart index if no index buffer is bound */
+                    Disable(GLState::PRIMITIVE_RESTART);
+                }
+
+                #else // LLGL_PRIMITIVE_RESTART
+
+                if (vertexArrayState_.boundElementArrayBuffer != 0)
+                {
+                    /* Bind deferred index buffer */
+                    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, vertexArrayState_.boundElementArrayBuffer);
+                }
+
+                #endif // /LLGL_PRIMITIVE_RESTART
             }
         }
     }
@@ -888,13 +904,30 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16
         vertexArrayState_.indexType16Bits           = indexType16Bits;
 
         /* If a valid VAO is currently being bound, bind the specified buffer directly */
+        #ifdef LLGL_PRIMITIVE_RESTART
+
         if (vertexArrayState_.boundVertexArray != 0)
         {
+            /* Bind index buffer and enable primitive restart index */
             BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
-            #ifdef LLGL_PRIMITIVE_RESTART
+            Enable(GLState::PRIMITIVE_RESTART);
             SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(vertexArrayState_.indexType16Bits));
-            #endif
         }
+        else
+        {
+            /* Disable primitive restart index */
+            Disable(GLState::PRIMITIVE_RESTART);
+        }
+
+        #else
+
+        if (vertexArrayState_.boundVertexArray != 0)
+        {
+            /* Bind index buffer */
+            BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
+        }
+
+        #endif
     }
 }
 
