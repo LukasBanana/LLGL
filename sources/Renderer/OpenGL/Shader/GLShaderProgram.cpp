@@ -25,6 +25,60 @@ namespace LLGL
 {
 
 
+#ifdef __APPLE__
+
+// Helper class to manage shared GL objects only necessary workaround issues with Mac implementation of OpenGL.
+class SharedGLShader
+{
+
+    public:
+
+        // Returns the native GL shader object and increments the reference counter.
+        GLuint GetOrCreate(GLenum type, const char* source);
+
+        // Decrements the reference counter and destroys the GL object once the counter reaches zero.
+        void Release();
+
+    private:
+
+        GLuint      id_         = 0;
+        std::size_t refCount_   = 0;
+
+};
+
+GLuint SharedGLShader::GetOrCreate(GLenum type, const char* source)
+{
+    if (id_ == 0)
+    {
+        /* Create shader and compile with specified source */
+        id_ = glCreateShader(type);
+        GLShader::CompileGLShader(id_, source);
+
+        /* Check for errors */
+        if (!GLShader::GetGLCompileStatus(id_))
+            throw std::runtime_error(GLShader::GetGLShaderLog(id_));
+    }
+    ++refCount_;
+    return id_;
+}
+
+void SharedGLShader::Release()
+{
+    if (id_ != 0)
+    {
+        --refCount_;
+        if (refCount_ == 0)
+        {
+            glDeleteShader(id_);
+            id_ = 0;
+        }
+    }
+}
+
+static SharedGLShader g_nullFragmentShader;
+
+#endif // /__APPLE__
+
 GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
     id_ { glCreateProgram() }
 {
@@ -35,6 +89,23 @@ GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
     Attach(desc.fragmentShader);
     Attach(desc.computeShader);
 
+    #ifdef __APPLE__
+    /*
+    Mac implementation of OpenGL violates GL spec and always requires a fragment shader,
+    so we create a dummy if not specified by client.
+    */
+    if (desc.fragmentShader == nullptr)
+    {
+        const GLchar* nullFragmentShaderSource =
+            "#version 330 core\n"
+            "void main() {}\n"
+        ;
+        const GLuint nullFragmentShader = g_nullFragmentShader.GetOrCreate(GL_FRAGMENT_SHADER, nullFragmentShaderSource);
+        glAttachShader(GetID(), nullFragmentShader);
+        hasNullFragmentShader_ = true;
+    }
+    #endif
+
     /* Build input layout for vertex shader */
     if (auto vs = desc.vertexShader)
     {
@@ -42,7 +113,7 @@ GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
         BindAttribLocations(vsGL->GetNumVertexAttribs(), vsGL->GetVertexAttribs());
     }
 
-    /* Build input layout for vertex shader */
+    /* Build output layout for fragment shader */
     if (auto fs = desc.fragmentShader)
     {
         auto fsGL = LLGL_CAST(GLShader*, fs);
@@ -78,6 +149,10 @@ GLShaderProgram::~GLShaderProgram()
 {
     glDeleteProgram(id_);
     GLStateManager::Get().NotifyShaderProgramRelease(id_);
+    #ifdef __APPLE__
+    if (hasNullFragmentShader_)
+        g_nullFragmentShader.Release();
+    #endif
 }
 
 void GLShaderProgram::SetName(const char* name)

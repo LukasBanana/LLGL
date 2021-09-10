@@ -46,32 +46,12 @@ void GLShader::SetName(const char* name)
 
 bool GLShader::HasErrors() const
 {
-    GLint status = 0;
-    glGetShaderiv(id_, GL_COMPILE_STATUS, &status);
-    return (status == GL_FALSE);
+    return !GLShader::GetGLCompileStatus(id_);
 }
 
 std::string GLShader::GetReport() const
 {
-    /* Query info log length */
-    GLint infoLogLength = 0;
-    glGetShaderiv(id_, GL_INFO_LOG_LENGTH, &infoLogLength);
-
-    if (infoLogLength > 0)
-    {
-        /* Store info log in byte buffer (because GL writes it's own null-terminator character!) */
-        std::vector<char> infoLog;
-        infoLog.resize(infoLogLength, '\0');
-
-        /* Query info log output */
-        GLsizei charsWritten = 0;
-        glGetShaderInfoLog(id_, infoLogLength, &charsWritten, infoLog.data());
-
-        /* Convert byte buffer to string */
-        return std::string(infoLog.data());
-    }
-
-    return "";
+    return GLShader::GetGLShaderLog(id_);
 }
 
 const GLShaderAttribute* GLShader::GetVertexAttribs() const
@@ -98,6 +78,43 @@ const GLShaderAttribute* GLShader::GetFragmentAttribs() const
 std::size_t GLShader::GetNumFragmentAttribs() const
 {
     return (shaderAttribs_.size() - numVertexAttribs_);
+}
+
+void GLShader::CompileGLShader(GLuint shader, const char* source)
+{
+    const GLchar* strings[1] = { source };
+    glShaderSource(shader, 1, strings, nullptr);
+    glCompileShader(shader);
+}
+
+bool GLShader::GetGLCompileStatus(GLuint shader)
+{
+    GLint status = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    return (status != GL_FALSE);
+}
+
+std::string GLShader::GetGLShaderLog(GLuint shader)
+{
+    /* Query info log length */
+    GLint infoLogLength = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+    if (infoLogLength > 0)
+    {
+        /* Store info log in byte buffer (because GL writes it's own null-terminator character!) */
+        std::vector<char> infoLog;
+        infoLog.resize(infoLogLength, '\0');
+
+        /* Query info log output */
+        GLsizei charsWritten = 0;
+        glGetShaderInfoLog(shader, infoLogLength, &charsWritten, infoLog.data());
+
+        /* Convert byte buffer to string */
+        return std::string(infoLog.data());
+    }
+
+    return "";
 }
 
 
@@ -204,22 +221,13 @@ void GLShader::BuildTransformFeedbackVaryings(std::size_t numVaryings, const Ver
 void GLShader::CompileSource(const ShaderDescriptor& shaderDesc)
 {
     /* Get source code */
-    std::string fileContent;
-    const GLchar* strings[1];
-
     if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
     {
-        fileContent = ReadFileString(shaderDesc.source);
-        strings[0]  = fileContent.c_str();
+        const std::string fileContent = ReadFileString(shaderDesc.source);
+        GLShader::CompileGLShader(id_, fileContent.c_str());
     }
     else
-    {
-        strings[0] = shaderDesc.source;
-    }
-
-    /* Load shader source code, then compile shader */
-    glShaderSource(id_, 1, strings, nullptr);
-    glCompileShader(id_);
+        GLShader::CompileGLShader(id_, shaderDesc.source);
 }
 
 void GLShader::LoadBinary(const ShaderDescriptor& shaderDesc)

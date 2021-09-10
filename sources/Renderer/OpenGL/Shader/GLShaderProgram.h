@@ -85,7 +85,11 @@ class GLShaderProgram final : public ShaderProgram
 
     private:
 
-        GLuint id_ = 0;
+        GLuint  id_                     = 0;
+
+        #ifdef __APPLE__
+        bool    hasNullFragmentShader_  = false;
+        #endif
 
     private:
 
