@@ -130,6 +130,7 @@ class VKPtr
         // Moves the specified VKPtr handler into this handler.
         VKPtr<T>& operator = (VKPtr&& rhs)
         {
+            Release();
             object_ = rhs.object_;
             rhs.object_ = VK_NULL_HANDLE;
             return *this;
