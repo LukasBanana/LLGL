@@ -1169,7 +1169,7 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
         for (GLsizei i = 0; i < count; ++i)
         {
             auto& boundTextures = textureState_.layers[i].boundTextures;
-            std::fill(std::begin(boundTextures), std::end(boundTextures), 0);
+            ::memset(boundTextures.data(), 0, boundTextures.size() * sizeof(GLuint));
         }
 
         /*

@@ -841,7 +841,7 @@ LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize, bool init
     auto buffer = MakeUniqueArray<char>(bufferSize);
 
     if (initialize)
-        std::fill(buffer.get(), buffer.get() + bufferSize, 0);
+        ::memset(buffer.get(), 0, bufferSize);
 
     return buffer;
 }

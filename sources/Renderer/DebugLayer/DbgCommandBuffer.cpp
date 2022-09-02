@@ -1962,7 +1962,7 @@ void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std
 void DbgCommandBuffer::ResetFrameProfile()
 {
     /* Reset all counters of frame profile */
-    std::fill(std::begin(profile_.values), std::end(profile_.values), 0);
+    ::memset(profile_.values, 0, sizeof(profile_.values));
 }
 
 void DbgCommandBuffer::ResetBindings()
