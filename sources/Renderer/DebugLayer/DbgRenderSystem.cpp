@@ -1388,24 +1388,6 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
     }
 
     ValidateBlendDescriptor(desc.blend, hasFragmentShader);
-    ValidatePrimitiveTopology(desc.primitiveTopology);
-}
-
-void DbgRenderSystem::ValidatePrimitiveTopology(const PrimitiveTopology primitiveTopology)
-{
-    switch (primitiveTopology)
-    {
-        case PrimitiveTopology::LineLoop:
-            if (GetRendererID() != RendererID::OpenGL)
-                LLGL_DBG_ERROR_NOT_SUPPORTED("primitive topology 'LLGL::PrimitiveTopology::LineLoop'");
-            break;
-        case PrimitiveTopology::TriangleFan:
-            if (GetRendererID() != RendererID::OpenGL && GetRendererID() != RendererID::Vulkan)
-                LLGL_DBG_ERROR_NOT_SUPPORTED("primitive topology 'LLGL::PrimitiveTopology::TriangleFan'");
-            break;
-        default:
-            break;
-    }
 }
 
 void DbgRenderSystem::Assert3DTextures()

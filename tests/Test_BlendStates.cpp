@@ -113,7 +113,7 @@ int main()
         pipeline[1] = renderer->CreatePipelineState(pipelineDesc);
 
         {
-            pipelineDesc.primitiveTopology = LLGL::PrimitiveTopology::LineLoop;
+            pipelineDesc.primitiveTopology = LLGL::PrimitiveTopology::LineStrip;
         }
         pipeline[2] = renderer->CreatePipelineState(pipelineDesc);
 

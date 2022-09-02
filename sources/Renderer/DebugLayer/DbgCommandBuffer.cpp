@@ -1442,11 +1442,6 @@ void DbgCommandBuffer::ValidateNumVertices(std::uint32_t numVertices)
                 WarnImproperVertices("line strip", numVertices);
             break;
 
-        case PrimitiveTopology::LineLoop:
-            if (numVertices < 2)
-                WarnImproperVertices("line loop", numVertices);
-            break;
-
         case PrimitiveTopology::LineListAdjacency:
             if (numVertices % 2 != 0)
                 WarnImproperVertices("line list adjacency", (numVertices % 2));
@@ -1465,10 +1460,6 @@ void DbgCommandBuffer::ValidateNumVertices(std::uint32_t numVertices)
         case PrimitiveTopology::TriangleStrip:
             if (numVertices < 3)
                 WarnImproperVertices("triangle strip", numVertices);
-            break;
-        case PrimitiveTopology::TriangleFan:
-            if (numVertices < 3)
-                WarnImproperVertices("triangle fan", numVertices);
             break;
 
         case PrimitiveTopology::TriangleListAdjacency:

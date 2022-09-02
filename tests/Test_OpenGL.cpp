@@ -116,9 +116,9 @@ int main()
         const Gs::Vector2f vertices[] =
         {
             { 0, 0 }, { 110, 100 },
+            { 0, 0 }, { 100, 200 },
             { 0, 0 }, { 200, 100 },
             { 0, 0 }, { 200, 200 },
-            { 0, 0 }, { 100, 200 },
         };
 
         LLGL::BufferDescriptor vertexBufferDesc;
@@ -304,7 +304,7 @@ int main()
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram                  = &shaderProgram;
-            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleFan;
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
 
             pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
 

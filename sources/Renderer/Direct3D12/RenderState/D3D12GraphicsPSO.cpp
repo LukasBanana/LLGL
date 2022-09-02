@@ -316,14 +316,12 @@ static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopo
 
         case PrimitiveTopology::LineList:
         case PrimitiveTopology::LineStrip:
-        case PrimitiveTopology::LineLoop:
         case PrimitiveTopology::LineListAdjacency:
         case PrimitiveTopology::LineStripAdjacency:
             return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
 
         case PrimitiveTopology::TriangleList:
         case PrimitiveTopology::TriangleStrip:
-        case PrimitiveTopology::TriangleFan:
         case PrimitiveTopology::TriangleListAdjacency:
         case PrimitiveTopology::TriangleStripAdjacency:
             return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;

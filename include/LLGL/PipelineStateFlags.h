@@ -44,12 +44,6 @@ enum class PrimitiveTopology
     LineStrip,
 
     /**
-    \brief Line loop, which is similar to LineStrip but the first and last vertices generate yet another line primitive.
-    \note Only supported with: OpenGL.
-    */
-    LineLoop,
-
-    /**
     \brief Adjacency line list, which is similar to LineList but each end point has a corresponding adjacent vertex that is accessible in a geometry shader.
     \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
     */
@@ -66,12 +60,6 @@ enum class PrimitiveTopology
 
     //! Triangle strip, where each vertex generates a new triangle primitive with an alternative triangle winding.
     TriangleStrip,
-
-    /**
-    \brief Triangle fan, where each vertex generates a new triangle primitive while all share the same first vertex.
-    \note Only supported with: OpenGL, Vulkan.
-    */
-    TriangleFan,
 
     /**
     \brief Adjacency triangle list, which is similar to TriangleList but each triangle edge has a corresponding adjacent vertex that is accessible in a geometry shader.
@@ -538,38 +526,38 @@ struct DepthBiasDescriptor
 struct RasterizerDescriptor
 {
     //! Polygon render mode. By default PolygonMode::Fill.
-    PolygonMode             polygonMode                 = PolygonMode::Fill;
+    PolygonMode         polygonMode                 = PolygonMode::Fill;
 
     //! Polygon face culling mode. By default CullMode::Disabled.
-    CullMode                cullMode                    = CullMode::Disabled;
+    CullMode            cullMode                    = CullMode::Disabled;
 
     //! Specifies the parameters to bias fragment depth values.
-    DepthBiasDescriptor     depthBias;
+    DepthBiasDescriptor depthBias;
 
     //! If enabled, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding. By default disabled.
-    bool                    frontCCW                    = false;
+    bool                frontCCW                    = false;
 
     /**
     \brief If enabled, primitives are discarded after optional stream-outputs but before the rasterization stage. By default disabled.
     \note Only supported with: OpenGL, Vulkan, Metal.
     */
-    bool                    discardEnabled              = false;
+    bool                discardEnabled              = false;
 
     //! If enabled, there is effectively no near and far clipping plane. By default disabled.
-    bool                    depthClampEnabled           = false;
+    bool                depthClampEnabled           = false;
 
     /**
     \brief Specifies whether scissor test is enabled or disabled. By default disabled.
     \see CommandBuffer::SetScissor
     \see CommandBuffer::SetScissors
     */
-    bool                    scissorTestEnabled          = false;
+    bool                scissorTestEnabled          = false;
 
     //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    bool                    multiSampleEnabled          = false;
+    bool                multiSampleEnabled          = false;
 
     //! Specifies whether lines are rendered with or without anti-aliasing. By default disabled.
-    bool                    antiAliasedLineEnabled      = false;
+    bool                antiAliasedLineEnabled      = false;
 
     /**
     \brief If true, conservative rasterization is enabled. By default disabled.
@@ -583,7 +571,7 @@ struct RasterizerDescriptor
     \see https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VK_EXT_conservative_rasterization.html
     \see RenderingFeatures::hasConservativeRasterization
     */
-    bool                    conservativeRasterization   = false;
+    bool                conservativeRasterization   = false;
 
     /**
     \brief Specifies the width of all generated line primitives. By default 1.0.
@@ -592,7 +580,7 @@ struct RasterizerDescriptor
     \note Only supported with: OpenGL, Vulkan.
     \see RenderingLimits::lineWidthRange
     */
-    float                   lineWidth                   = 1.0f;
+    float               lineWidth                   = 1.0f;
 };
 
 /**
@@ -641,7 +629,7 @@ struct BlendDescriptor
     \remarks This is useful when multi-sampling is enabled and alpha tests are implemented in a fragment shader (e.g. to render fences, plants, or other transparent geometries).
     \see sampleMask
     */
-    bool                                alphaToCoverageEnabled  = false;
+    bool                    alphaToCoverageEnabled  = false;
 
     /**
     \brief Specifies whether to enable independent blending in simultaneous color attachments. By default false.
@@ -650,14 +638,14 @@ struct BlendDescriptor
     i.e. <code>targets[0]</code> and all remaining entries <code>targets[1..7]</code> are ignored.
     \see targets
     */
-    bool                                independentBlendEnabled = false;
+    bool                    independentBlendEnabled = false;
 
     /**
     \brief Specifies the sample bitmask if alpha coverage is enabled. By default \c 0xFFFFFFFF.
     \remarks If \c alphaToCoverageEnabled is false, this field is ignored.
     \see alphaToCoverageEnabled
     */
-    std::uint32_t                       sampleMask              = ~0u;
+    std::uint32_t           sampleMask              = ~0u;
 
     /**
     \brief Specifies the logic fragment operation. By default LogicOp::Disabled.
@@ -668,7 +656,7 @@ struct BlendDescriptor
     \see blendEnabled
     \see RenderingFeatures::hasLogicOp
     */
-    LogicOp                             logicOp                 = LogicOp::Disabled;
+    LogicOp                 logicOp                 = LogicOp::Disabled;
 
     /**
     \brief Specifies the blending color factor. By default (0, 0, 0, 0).
@@ -678,7 +666,7 @@ struct BlendDescriptor
     \see BlendOp::InvBlendFactor
     \see CommandBuffer::SetBlendFactor
     */
-    ColorRGBAf                          blendFactor             = { 0.0f, 0.0f, 0.0f, 0.0f };
+    ColorRGBAf              blendFactor             = { 0.0f, 0.0f, 0.0f, 0.0f };
 
     /**
     \brief Specifies whether the blend factor will be set dynamically with the command buffer. By default false.
@@ -686,7 +674,7 @@ struct BlendDescriptor
     and the blending factors must be set with the \c SetBlendFactor function everytime the graphics pipeline is set.
     \see CommandBuffer::SetBlendFactor
     */
-    bool                                blendFactorDynamic      = false;
+    bool                    blendFactorDynamic      = false;
 
     /**
     \brief Render-target blend states for the respective color attachments. A maximum of 8 targets is supported.
@@ -694,7 +682,7 @@ struct BlendDescriptor
     i.e. <code>targets[0]</code> and all remaining entries <code>targets[1..7]</code> are ignored.
     \see independentBlendEnabled
     */
-    BlendTargetDescriptor               targets[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    BlendTargetDescriptor   targets[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 };
 
 /**

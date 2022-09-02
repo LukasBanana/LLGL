@@ -183,7 +183,6 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateColorMaskIsDisabled(const BlendTargetDescriptor& desc, std::size_t idx);
         void ValidateBlendDescriptor(const BlendDescriptor& desc, bool hasFragmentShader);
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc);
-        void ValidatePrimitiveTopology(const PrimitiveTopology primitiveTopology);
 
         void Assert3DTextures();
         void AssertCubeTextures();
