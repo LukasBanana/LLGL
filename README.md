@@ -59,6 +59,19 @@ and requires [CMake 3.10](https://cmake.org/) or later and the [Code::Blocks](ht
 
 *This platform support is currently in an experimental state.*
 
+## Installing LuaBridge (vcpkg)
+
+Alternatively, you can build and install LLGL using [vcpkg](https://github.com/Microsoft/vcpkg/) dependency manager:
+
+```
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    ./vcpkg install llgl
+```
+
+The llgl port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
 
 ## Thin Abstraction Layer
 
