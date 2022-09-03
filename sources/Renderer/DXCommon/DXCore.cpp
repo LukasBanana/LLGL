@@ -195,7 +195,7 @@ Cont GetBlobDataTmpl(ID3DBlob* blob)
     Cont container;
     {
         container.resize(size);
-        std::copy(data, data + size, &container[0]);
+        ::memcpy(&container[0], data, size);
     }
     return container;
 }

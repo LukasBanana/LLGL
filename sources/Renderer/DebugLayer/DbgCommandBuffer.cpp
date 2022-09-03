@@ -1236,7 +1236,7 @@ void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::
 void DbgCommandBuffer::NextProfile(FrameProfile& outputProfile)
 {
     /* Copy frame profile values to output profile */
-    std::copy(std::begin(profile_.values), std::end(profile_.values), std::begin(outputProfile.values));
+    ::memcpy(outputProfile.values, profile_.values, sizeof(profile_.values));
     outputProfile.timeRecords = std::move(profile_.timeRecords);
 }
 

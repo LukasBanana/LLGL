@@ -44,7 +44,7 @@ Image::Image(const Extent3D& extent, const ImageFormat format, const DataType da
 Image::Image(const Image& rhs) :
     Image { rhs.GetExtent(), rhs.GetFormat(), rhs.GetDataType() }
 {
-    std::copy(rhs.data_.get(), rhs.data_.get() + rhs.GetDataSize(), data_.get());
+    ::memcpy(data_.get(), rhs.data_.get(), rhs.GetDataSize());
 }
 
 Image::Image(Image&& rhs) :
@@ -64,7 +64,7 @@ Image& Image::operator = (const Image& rhs)
     format_     = rhs.GetFormat();
     dataType_   = rhs.GetDataType();
     data_       = GenerateEmptyByteBuffer(GetDataSize(), false);
-    std::copy(rhs.data_.get(), rhs.data_.get() + rhs.GetDataSize(), data_.get());
+    ::memcpy(data_.get(), rhs.data_.get(), rhs.GetDataSize());
     return *this;
 }
 
