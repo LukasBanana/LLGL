@@ -192,8 +192,8 @@ void GLImmediateCommandBuffer::GenerateMips(Texture& texture, const TextureSubre
 void GLImmediateCommandBuffer::SetViewport(const Viewport& viewport)
 {
     /* Setup GL viewport and depth-range */
-    GLViewport viewportGL{ viewport.x, viewport.y, viewport.width, viewport.height };
-    GLDepthRange depthRangeGL{ viewport.minDepth, viewport.maxDepth };
+    const GLViewport viewportGL{ viewport.x, viewport.y, viewport.width, viewport.height };
+    const GLDepthRange depthRangeGL{ viewport.minDepth, viewport.maxDepth };
 
     /* Set final state */
     stateMngr_->SetViewport(viewportGL);
@@ -229,7 +229,7 @@ void GLImmediateCommandBuffer::SetViewports(std::uint32_t numViewports, const Vi
 void GLImmediateCommandBuffer::SetScissor(const Scissor& scissor)
 {
     /* Setup and submit GL scissor to state manager */
-    GLScissor scissorGL{ scissor.x, scissor.y, scissor.width, scissor.height };
+    const GLScissor scissorGL{ scissor.x, scissor.y, scissor.width, scissor.height };
     stateMngr_->SetScissor(scissorGL);
 }
 

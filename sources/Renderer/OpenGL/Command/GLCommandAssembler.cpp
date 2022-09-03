@@ -123,10 +123,8 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         {
             auto cmd = reinterpret_cast<const GLCmdViewport*>(pc);
             {
-                compiler.Call(::memcpy, JITStackPtr{ 0 }, &(cmd->viewport), sizeof(GLViewport));
-                compiler.CallMember(&GLStateManager::SetViewport, g_stateMngrArg, JITStackPtr{ 0 });
-                compiler.Call(::memcpy, JITStackPtr{ 0 }, &(cmd->depthRange), sizeof(GLDepthRange));
-                compiler.CallMember(&GLStateManager::SetDepthRange, g_stateMngrArg, JITStackPtr{ 0 });
+                compiler.CallMember(&GLStateManager::SetViewport, g_stateMngrArg, &(cmd->viewport));
+                compiler.CallMember(&GLStateManager::SetDepthRange, g_stateMngrArg, &(cmd->depthRange));
             }
             return sizeof(*cmd);
         }
@@ -135,10 +133,8 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             auto cmd = reinterpret_cast<const GLCmdViewportArray*>(pc);
             auto cmdData = reinterpret_cast<const std::int8_t*>(cmd + 1);
             {
-                compiler.Call(::memcpy, JITStackPtr{ 0 }, cmdData, sizeof(GLViewport)*cmd->count);
-                compiler.CallMember(&GLStateManager::SetViewportArray, g_stateMngrArg, cmd->first, cmd->count, JITStackPtr{ 0 });
-                compiler.Call(::memcpy, JITStackPtr{ 0 }, cmdData + sizeof(GLViewport)*cmd->count, sizeof(GLDepthRange));
-                compiler.CallMember(&GLStateManager::SetDepthRangeArray, g_stateMngrArg, cmd->first, cmd->count, JITStackPtr{ 0 });
+                compiler.CallMember(&GLStateManager::SetViewportArray, g_stateMngrArg, cmd->first, cmd->count, cmdData);
+                compiler.CallMember(&GLStateManager::SetDepthRangeArray, g_stateMngrArg, cmd->first, cmd->count, (cmdData + sizeof(GLViewport)*cmd->count));
             }
             return (sizeof(*cmd) + sizeof(GLViewport)*cmd->count + sizeof(GLDepthRange)*cmd->count);
         }
@@ -146,8 +142,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         {
             auto cmd = reinterpret_cast<const GLCmdScissor*>(pc);
             {
-                compiler.Call(::memcpy, JITStackPtr{ 0 }, &(cmd->scissor), sizeof(GLScissor));
-                compiler.CallMember(&GLStateManager::SetScissor, g_stateMngrArg, JITStackPtr{ 0 });
+                compiler.CallMember(&GLStateManager::SetScissor, g_stateMngrArg, &(cmd->scissor));
             }
             return sizeof(*cmd);
         }
@@ -156,8 +151,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             auto cmd = reinterpret_cast<const GLCmdScissorArray*>(pc);
             auto cmdData = reinterpret_cast<const std::int8_t*>(cmd + 1);
             {
-                compiler.Call(::memcpy, JITStackPtr{ 0 }, cmdData, sizeof(GLScissor)*cmd->count);
-                compiler.CallMember(&GLStateManager::SetScissorArray, g_stateMngrArg, cmd->first, cmd->count, JITStackPtr{ 0 });
+                compiler.CallMember(&GLStateManager::SetScissorArray, g_stateMngrArg, cmd->first, cmd->count, cmdData);
             }
             return (sizeof(*cmd) + sizeof(GLScissor)*cmd->count);
         }

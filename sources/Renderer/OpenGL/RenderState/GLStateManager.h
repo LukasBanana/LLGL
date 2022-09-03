@@ -106,14 +106,14 @@ class GLStateManager
 
         /* ----- Common states ----- */
 
-        void SetViewport(GLViewport& viewport);
-        void SetViewportArray(GLuint first, GLsizei count, GLViewport* viewports);
+        void SetViewport(const GLViewport& viewport);
+        void SetViewportArray(GLuint first, GLsizei count, const GLViewport* viewports);
 
         void SetDepthRange(const GLDepthRange& depthRange);
         void SetDepthRangeArray(GLuint first, GLsizei count, const GLDepthRange* depthRanges);
 
-        void SetScissor(GLScissor& scissor);
-        void SetScissorArray(GLuint first, GLsizei count, GLScissor* scissors);
+        void SetScissor(const GLScissor& scissor);
+        void SetScissorArray(GLuint first, GLsizei count, const GLScissor* scissors);
 
         void SetClipControl(GLenum origin, GLenum depth);
         void SetPolygonMode(GLenum mode);
@@ -282,8 +282,10 @@ class GLStateManager
 
     private:
 
-        void AdjustViewport(GLViewport& viewport);
-        void AdjustScissor(GLScissor& scissor);
+        bool NeedsAdjustedViewport() const;
+
+        void AdjustViewport(GLViewport& outViewport, const GLViewport& inViewport);
+        void AdjustScissor(GLScissor& outScissor, const GLScissor& inScissor);
 
         void AssertViewportLimit(GLuint first, GLsizei count);
         void AssertExtViewportArray();

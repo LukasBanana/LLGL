@@ -30,7 +30,7 @@ enum class GLSwizzleFormat
     Alpha,  // GL_ZERO, GL_ZERO, GL_ZERO, GL_RED
 };
 
-// OpenGL texture class that manages a GL textures and renderbuffers (if the texture is only used as attachment but not for sampling).
+// OpenGL texture class that manages a GL texture or renderbuffer (if the texture is only used as attachment but not for sampling).
 class GLTexture final : public Texture
 {
 

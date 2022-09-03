@@ -121,11 +121,8 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdViewport*>(pc);
             {
-                GLViewport viewport = cmd->viewport;
-                stateMngr.SetViewport(viewport);
-
-                GLDepthRange depthRange = cmd->depthRange;
-                stateMngr.SetDepthRange(depthRange);
+                stateMngr.SetViewport(cmd->viewport);
+                stateMngr.SetDepthRange(cmd->depthRange);
             }
             return sizeof(*cmd);
         }
@@ -134,17 +131,8 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             auto cmd = reinterpret_cast<const GLCmdViewportArray*>(pc);
             auto cmdData = reinterpret_cast<const std::int8_t*>(cmd + 1);
             {
-                union
-                {
-                    GLViewport viewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
-                    GLDepthRange depthRanges[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
-                };
-
-                ::memcpy(viewports, cmdData, sizeof(GLViewport)*cmd->count);
-                stateMngr.SetViewportArray(cmd->first, cmd->count, viewports);
-
-                ::memcpy(depthRanges, cmdData + sizeof(GLViewport)*cmd->count, sizeof(GLDepthRange)*cmd->count);
-                stateMngr.SetDepthRangeArray(cmd->first, cmd->count, depthRanges);
+                stateMngr.SetViewportArray(cmd->first, cmd->count, reinterpret_cast<const GLViewport*>(cmdData));
+                stateMngr.SetDepthRangeArray(cmd->first, cmd->count, reinterpret_cast<const GLDepthRange*>(cmdData + sizeof(GLViewport)*cmd->count));
             }
             return (sizeof(*cmd) + sizeof(GLViewport)*cmd->count + sizeof(GLDepthRange)*cmd->count);
         }
@@ -152,8 +140,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdScissor*>(pc);
             {
-                GLScissor scissor = cmd->scissor;
-                stateMngr.SetScissor(scissor);
+                stateMngr.SetScissor(cmd->scissor);
             }
             return sizeof(*cmd);
         }
@@ -162,9 +149,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             auto cmd = reinterpret_cast<const GLCmdScissorArray*>(pc);
             auto cmdData = reinterpret_cast<const std::int8_t*>(cmd + 1);
             {
-                GLScissor scissors[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
-                ::memcpy(scissors, cmdData, sizeof(GLScissor)*cmd->count);
-                stateMngr.SetScissorArray(cmd->first, cmd->count, scissors);
+                stateMngr.SetScissorArray(cmd->first, cmd->count, reinterpret_cast<const GLScissor*>(cmdData));
             }
             return (sizeof(*cmd) + sizeof(GLScissor)*cmd->count);
         }

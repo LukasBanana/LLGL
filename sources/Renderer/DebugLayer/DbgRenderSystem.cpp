@@ -169,11 +169,10 @@ void DbgRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, co
     {
         LLGL_DBG_SOURCE;
 
-        /* Make a rough approximation if the buffer is now being initialized */
-        if (!dstBufferDbg.initialized)
+        if (dataSize > 0)
         {
-            if (dstOffset == 0)
-                dstBufferDbg.initialized = true;
+            /* Assume buffer to be initialized even if only partially as we cannot keep track of each bit inside the buffer */
+            dstBufferDbg.initialized = true;
         }
 
         ValidateBufferBoundary(dstBufferDbg.desc.size, dstOffset, dataSize);

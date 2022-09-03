@@ -1774,6 +1774,11 @@ void DbgCommandBuffer::ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t o
             std::to_string(offset + size) + " specified but limit is " + std::to_string(bufferDbg.desc.size)
         );
     }
+    else if (size > 0)
+    {
+        /* Assume buffer to be initialized even if only partially as we cannot keep track of each bit inside the buffer */
+        bufferDbg.initialized = true;
+    }
 }
 
 void DbgCommandBuffer::ValidateAddressAlignment(std::uint64_t address, std::uint64_t alignment, const char* addressName)

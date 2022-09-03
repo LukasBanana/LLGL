@@ -210,12 +210,12 @@ void GLStateManager::NotifyRenderTargetHeight(GLint height)
 void GLStateManager::SetGraphicsAPIDependentState(const OpenGLDependentStateDescriptor& stateDesc)
 {
     /* Check for necessary updates */
-    bool updateFrontFace = (apiDependentState_.invertFrontFace != stateDesc.invertFrontFace);
+    bool hasFrontFaceChanged = (apiDependentState_.invertFrontFace != stateDesc.invertFrontFace);
 
     /* Store new graphics state */
     apiDependentState_ = stateDesc;
 
-    if (updateFrontFace)
+    if (hasFrontFaceChanged)
     {
         /* Update front face and reset bound rasterizer state */
         SetFrontFace(commonState_.frontFaceAct);
@@ -345,23 +345,43 @@ bool GLStateManager::IsEnabled(GLStateExt state) const
 /* ----- Common states ----- */
 
 //private
-void GLStateManager::AdjustViewport(GLViewport& viewport)
+bool GLStateManager::NeedsAdjustedViewport() const
 {
-    viewport.y = static_cast<GLfloat>(renderTargetHeight_) - viewport.height - viewport.y;
+    return emulateClipControl_ && !apiDependentState_.originLowerLeft;
 }
 
-void GLStateManager::SetViewport(GLViewport& viewport)
+//private
+void GLStateManager::AdjustViewport(GLViewport& outViewport, const GLViewport& inViewport)
+{
+    outViewport.x       = inViewport.x;
+    outViewport.y       = static_cast<GLfloat>(renderTargetHeight_) - inViewport.height - inViewport.y;
+    outViewport.width   = inViewport.width;
+    outViewport.height  = inViewport.height;
+}
+
+void GLStateManager::SetViewport(const GLViewport& viewport)
 {
     /* Adjust viewport for vertical-flipped screen space origin */
-    if (emulateClipControl_ && !apiDependentState_.originLowerLeft)
-        AdjustViewport(viewport);
-
-    glViewport(
-        static_cast<GLint>(viewport.x),
-        static_cast<GLint>(viewport.y),
-        static_cast<GLsizei>(viewport.width),
-        static_cast<GLsizei>(viewport.height)
-    );
+    if (NeedsAdjustedViewport())
+    {
+        GLViewport adjustedViewport;
+        AdjustViewport(adjustedViewport, viewport);
+        glViewport(
+            static_cast<GLint>(adjustedViewport.x),
+            static_cast<GLint>(adjustedViewport.y),
+            static_cast<GLsizei>(adjustedViewport.width),
+            static_cast<GLsizei>(adjustedViewport.height)
+        );
+    }
+    else
+    {
+        glViewport(
+            static_cast<GLint>(viewport.x),
+            static_cast<GLint>(viewport.y),
+            static_cast<GLsizei>(viewport.width),
+            static_cast<GLsizei>(viewport.height)
+        );
+    }
 }
 
 void GLStateManager::AssertViewportLimit(GLuint first, GLsizei count)
@@ -375,7 +395,7 @@ void GLStateManager::AssertViewportLimit(GLuint first, GLsizei count)
     }
 }
 
-void GLStateManager::SetViewportArray(GLuint first, GLsizei count, GLViewport* viewports)
+void GLStateManager::SetViewportArray(GLuint first, GLsizei count, const GLViewport* viewports)
 {
     #ifdef GL_ARB_viewport_array
     if (first + count > 1)
@@ -384,13 +404,17 @@ void GLStateManager::SetViewportArray(GLuint first, GLsizei count, GLViewport* v
         AssertExtViewportArray();
 
         /* Adjust viewports for vertical-flipped screen space origin */
-        if (emulateClipControl_ && !apiDependentState_.originLowerLeft)
+        if (NeedsAdjustedViewport())
         {
-            for (GLsizei i = 0; i < count; ++i)
-                AdjustViewport(viewports[i]);
-        }
+            GLViewport adjustedViewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
 
-        glViewportArrayv(first, count, reinterpret_cast<const GLfloat*>(viewports));
+            for (GLsizei i = 0; i < count; ++i)
+                AdjustViewport(adjustedViewports[i], viewports[i]);
+
+            glViewportArrayv(first, count, reinterpret_cast<const GLfloat*>(adjustedViewports));
+        }
+        else
+            glViewportArrayv(first, count, reinterpret_cast<const GLfloat*>(viewports));
     }
     else
     #endif
@@ -426,20 +450,27 @@ void GLStateManager::SetDepthRangeArray(GLuint first, GLsizei count, const GLDep
 }
 
 //private
-void GLStateManager::AdjustScissor(GLScissor& scissor)
+void GLStateManager::AdjustScissor(GLScissor& outScissor, const GLScissor& inScissor)
 {
-    scissor.y = renderTargetHeight_ - scissor.height - scissor.y;
+    outScissor.x        = inScissor.x;
+    outScissor.y        = renderTargetHeight_ - inScissor.height - inScissor.y;
+    outScissor.width    = inScissor.width;
+    outScissor.height   = inScissor.height;
 }
 
-void GLStateManager::SetScissor(GLScissor& scissor)
+void GLStateManager::SetScissor(const GLScissor& scissor)
 {
     if (emulateClipControl_)
-        AdjustScissor(scissor);
-
-    glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
+    {
+        GLScissor adjustedScissor;
+        AdjustScissor(adjustedScissor, scissor);
+        glScissor(adjustedScissor.x, adjustedScissor.y, adjustedScissor.width, adjustedScissor.height);
+    }
+    else
+        glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
 }
 
-void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* scissors)
+void GLStateManager::SetScissorArray(GLuint first, GLsizei count, const GLScissor* scissors)
 {
     #ifdef GL_ARB_viewport_array
     if (first + count > 1)
@@ -448,13 +479,17 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* sci
         AssertExtViewportArray();
 
         /* Adjust viewports for vertical-flipped screen space origin */
-        if (emulateClipControl_ && !apiDependentState_.originLowerLeft)
+        if (NeedsAdjustedViewport())
         {
-            for (GLsizei i = 0; i < count; ++i)
-                AdjustScissor(scissors[0]);
-        }
+            GLScissor adjustedScissors[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
 
-        glScissorArrayv(first, count, reinterpret_cast<const GLint*>(scissors));
+            for (GLsizei i = 0; i < count; ++i)
+                AdjustScissor(adjustedScissors[i], scissors[i]);
+
+            glScissorArrayv(first, count, reinterpret_cast<const GLint*>(adjustedScissors));
+        }
+        else
+            glScissorArrayv(first, count, reinterpret_cast<const GLint*>(scissors));
     }
     else
     #endif
