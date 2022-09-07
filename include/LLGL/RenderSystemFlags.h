@@ -632,7 +632,7 @@ struct RenderingLimits
     std::uint32_t   maxComputeShaderWorkGroupSize[3]    = { 0, 0, 0 };
 
     /**
-    \brief Specifies the maximum number of viewports and scissor rectangles. Most render systems have a maximum of 16.
+    \brief Specifies the maximum number of viewports and scissor rectangles the render system supports. Upper limit is specified by \c LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS.
     \see CommandBuffer::SetViewports
     \see CommandBuffer::SetScissors
     \see GraphicsPipelineDescriptor::viewports

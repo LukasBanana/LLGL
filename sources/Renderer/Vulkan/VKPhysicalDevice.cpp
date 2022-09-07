@@ -10,6 +10,7 @@
 #include "VKCore.h"
 #include "RenderState/VKGraphicsPSO.h"
 #include "../../Core/Vendor.h"
+#include <LLGL/StaticLimits.h>
 #include <string>
 #include <cstring>
 #include <set>
@@ -211,7 +212,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.limits.maxComputeShaderWorkGroupSize[0]    = limits.maxComputeWorkGroupSize[0];
     caps.limits.maxComputeShaderWorkGroupSize[1]    = limits.maxComputeWorkGroupSize[1];
     caps.limits.maxComputeShaderWorkGroupSize[2]    = limits.maxComputeWorkGroupSize[2];
-    caps.limits.maxViewports                        = limits.maxViewports;
+    caps.limits.maxViewports                        = std::min(limits.maxViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
     caps.limits.maxViewportSize[0]                  = limits.maxViewportDimensions[0];
     caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
     caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();

@@ -31,8 +31,6 @@ namespace LLGL
 {
 
 
-static const std::uint32_t g_maxNumViewportsPerBatch = 16;
-
 // Returns the maximum for a indirect multi draw command
 static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDevice)
 {
@@ -361,71 +359,31 @@ void VKCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& s
 
 /* ----- Viewport and Scissor ----- */
 
-#if 0//TODO: currently unused
-// Check if VkViewport and Viewport structures can be safely reinterpret-casted
-static constexpr bool IsCompatibleToVkViewport()
-{
-    return
-    (
-        sizeof(VkViewport)             == sizeof(Viewport)             &&
-        offsetof(VkViewport, x       ) == offsetof(Viewport, x       ) &&
-        offsetof(VkViewport, y       ) == offsetof(Viewport, y       ) &&
-        offsetof(VkViewport, width   ) == offsetof(Viewport, width   ) &&
-        offsetof(VkViewport, height  ) == offsetof(Viewport, height  ) &&
-        offsetof(VkViewport, minDepth) == offsetof(Viewport, minDepth) &&
-        offsetof(VkViewport, maxDepth) == offsetof(Viewport, maxDepth)
-    );
-}
-#endif
-
 void VKCommandBuffer::SetViewport(const Viewport& viewport)
 {
-    #if 0
-    if (IsCompatibleToVkViewport())
-    {
-        /* Cast viewport to VkViewport type */
-        vkCmdSetViewport(commandBuffer_, 0, 1, reinterpret_cast<const VkViewport*>(&viewport));
-    }
-    else
-    #endif
-    {
-        /* Convert viewport to VkViewport type */
-        VkViewport viewportVK;
-        VKTypes::Convert(viewportVK, viewport);
-        vkCmdSetViewport(commandBuffer_, 0, 1, &viewportVK);
-    }
+    /* Convert viewport to VkViewport type */
+    VkViewport viewportVK;
+    VKTypes::Convert(viewportVK, viewport);
+    vkCmdSetViewport(commandBuffer_, 0, 1, &viewportVK);
 }
 
 void VKCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    #if 0
-    if (IsCompatibleToVkViewport())
-    {
-        /* Cast viewport to VkViewport types */
-        vkCmdSetViewport(commandBuffer_, 0, numViewports, reinterpret_cast<const VkViewport*>(viewports));
-    }
-    else
-    #endif
-    {
-        VkViewport viewportsVK[g_maxNumViewportsPerBatch];
+    VkViewport viewportsVK[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
 
-        for (std::uint32_t i = 0, first = 0, count = 0; i < numViewports; numViewports -= count)
-        {
-            /* Convert viewport to VkViewport types */
-            count = std::min(numViewports, g_maxNumViewportsPerBatch);
+    /* Convert viewport to VkViewport types */
+    numViewports = std::min(numViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
+    for (std::uint32_t i = 0; i < numViewports; ++i)
+        VKTypes::Convert(viewportsVK[i], viewports[i]);
 
-            for (first = i; i < first + count; ++i)
-                VKTypes::Convert(viewportsVK[i - first], viewports[i]);
-
-            vkCmdSetViewport(commandBuffer_, first, count, viewportsVK);
-        }
-    }
+    vkCmdSetViewport(commandBuffer_, 0, numViewports, viewportsVK);
 }
 
 void VKCommandBuffer::SetScissor(const Scissor& scissor)
 {
     if (scissorEnabled_)
     {
+        /* Convert scissor to VkRect2D type */
         VkRect2D scissorVK;
         VKTypes::Convert(scissorVK, scissor);
         vkCmdSetScissor(commandBuffer_, 0, 1, &scissorVK);
@@ -436,18 +394,14 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 {
     if (scissorEnabled_)
     {
-        VkRect2D scissorsVK[g_maxNumViewportsPerBatch];
+        /* Convert scissor to VkRect2D types */
+        VkRect2D scissorsVK[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
 
-        for (std::uint32_t i = 0, first = 0, count = 0; i < numScissors; numScissors -= count)
-        {
-            /* Convert viewport to VkViewport types */
-            count = std::min(numScissors, g_maxNumViewportsPerBatch);
+        numScissors = std::min(numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
+        for (std::uint32_t i = 0; i < numScissors; ++i)
+            VKTypes::Convert(scissorsVK[i], scissors[i]);
 
-            for (first = i; i < first + count; ++i)
-                VKTypes::Convert(scissorsVK[i - first], scissors[i]);
-
-            vkCmdSetScissor(commandBuffer_, first, count, scissorsVK);
-        }
+        vkCmdSetScissor(commandBuffer_, 0, numScissors, scissorsVK);
     }
 }
 
@@ -680,12 +634,12 @@ void VKCommandBuffer::BeginRenderPass(
         auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderTarget);
 
         /* Store information about framebuffer attachments */
-        renderPass_             = renderContextVK.GetSwapChainRenderPass().GetVkRenderPass();
-        secondaryRenderPass_    = renderContextVK.GetSecondaryVkRenderPass();
-        framebuffer_            = renderContextVK.GetVkFramebuffer();
-        framebufferExtent_      = renderContextVK.GetVkExtent();
-        numColorAttachments_    = renderContextVK.GetNumColorAttachments();
-        hasDSVAttachment_       = (renderContextVK.HasDepthAttachment() || renderContextVK.HasStencilAttachment());
+        renderPass_                     = renderContextVK.GetSwapChainRenderPass().GetVkRenderPass();
+        secondaryRenderPass_            = renderContextVK.GetSecondaryVkRenderPass();
+        framebuffer_                    = renderContextVK.GetVkFramebuffer();
+        framebufferRenderArea_.extent   = renderContextVK.GetVkExtent();
+        numColorAttachments_            = renderContextVK.GetNumColorAttachments();
+        hasDSVAttachment_               = (renderContextVK.HasDepthAttachment() || renderContextVK.HasStencilAttachment());
     }
     else
     {
@@ -693,12 +647,12 @@ void VKCommandBuffer::BeginRenderPass(
         auto& renderTargetVK = LLGL_CAST(VKRenderTarget&, renderTarget);
 
         /* Store information about framebuffer attachments */
-        renderPass_             = renderTargetVK.GetVkRenderPass();
-        secondaryRenderPass_    = renderTargetVK.GetSecondaryVkRenderPass();
-        framebuffer_            = renderTargetVK.GetVkFramebuffer();
-        framebufferExtent_      = renderTargetVK.GetVkExtent();
-        numColorAttachments_    = renderTargetVK.GetNumColorAttachments();
-        hasDSVAttachment_       = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
+        renderPass_                     = renderTargetVK.GetVkRenderPass();
+        secondaryRenderPass_            = renderTargetVK.GetSecondaryVkRenderPass();
+        framebuffer_                    = renderTargetVK.GetVkFramebuffer();
+        framebufferRenderArea_.extent   = renderTargetVK.GetVkExtent();
+        numColorAttachments_            = renderTargetVK.GetNumColorAttachments();
+        hasDSVAttachment_               = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
     }
 
     scissorRectInvalidated_ = true;
@@ -723,8 +677,7 @@ void VKCommandBuffer::BeginRenderPass(
         beginInfo.pNext             = nullptr;
         beginInfo.renderPass        = renderPass_;
         beginInfo.framebuffer       = framebuffer_;
-        beginInfo.renderArea.offset = { 0, 0 };
-        beginInfo.renderArea.extent = framebufferExtent_;
+        beginInfo.renderArea        = framebufferRenderArea_;
         beginInfo.clearValueCount   = numClearValuesVK;
         beginInfo.pClearValues      = clearValuesVK;
     }
@@ -766,12 +719,7 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         if (!scissorEnabled_ && scissorRectInvalidated_ && graphicsPSO.HasDynamicScissor())
         {
             /* Set scissor to render target resolution */
-            VkRect2D scissorRect;
-            {
-                scissorRect.offset = { 0, 0 };
-                scissorRect.extent = framebufferExtent_;
-            }
-            vkCmdSetScissor(commandBuffer_, 0, 1, &scissorRect);
+            vkCmdSetScissor(commandBuffer_, 0, 1, &framebufferRenderArea_);
 
             /* Avoid scissor update with each graphics pipeline binding (as long as render pass does not change) */
             scissorRectInvalidated_ = false;
@@ -1128,9 +1076,7 @@ void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, 
         /* Clear framebuffer attachments at the entire image region */
         VkClearRect clearRect;
         {
-            clearRect.rect.offset.x     = 0;
-            clearRect.rect.offset.y     = 0;
-            clearRect.rect.extent       = framebufferExtent_;
+            clearRect.rect              = framebufferRenderArea_;
             clearRect.baseArrayLayer    = 0;
             clearRect.layerCount        = 1;
         }
@@ -1210,8 +1156,7 @@ void VKCommandBuffer::ResumeRenderPass()
         beginInfo.pNext             = nullptr;
         beginInfo.renderPass        = secondaryRenderPass_;
         beginInfo.framebuffer       = framebuffer_;
-        beginInfo.renderArea.offset = { 0, 0 };
-        beginInfo.renderArea.extent = framebufferExtent_;
+        beginInfo.renderArea        = framebufferRenderArea_;
         beginInfo.clearValueCount   = 0;
         beginInfo.pClearValues      = nullptr;
     }

@@ -308,7 +308,7 @@ class VKCommandBuffer final : public CommandBuffer
         VkRenderPass                    renderPass_                 = VK_NULL_HANDLE; // primary render pass
         VkRenderPass                    secondaryRenderPass_        = VK_NULL_HANDLE; // to pause/resume render pass (load and store content)
         VkFramebuffer                   framebuffer_                = VK_NULL_HANDLE; // active framebuffer handle
-        VkExtent2D                      framebufferExtent_          = { 0, 0 };
+        VkRect2D                        framebufferRenderArea_      = { { 0, 0 }, { 0, 0 } };
         std::uint32_t                   numColorAttachments_        = 0;
         bool                            hasDSVAttachment_           = false;
 
