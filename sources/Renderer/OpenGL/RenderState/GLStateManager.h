@@ -255,8 +255,7 @@ class GLStateManager
             RenderTarget&       renderTarget,
             const RenderPass*   renderPass,
             std::uint32_t       numClearValues,
-            const ClearValue*   clearValues,
-            const GLClearValue& defaultClearValue
+            const ClearValue*   clearValues
         );
 
         void Clear(long flags);
@@ -317,8 +316,7 @@ class GLStateManager
         void ClearAttachmentsWithRenderPass(
             const GLRenderPass& renderPassGL,
             std::uint32_t       numClearValues,
-            const ClearValue*   clearValues,
-            const GLClearValue& defaultClearValue
+            const ClearValue*   clearValues
         );
 
         std::uint32_t ClearColorBuffers(

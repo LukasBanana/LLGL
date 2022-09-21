@@ -126,6 +126,37 @@ struct ClearFlags
 */
 struct ClearValue
 {
+    ClearValue() = default;
+    ClearValue(const ClearValue&) = default;
+    ClearValue& operator = (const ClearValue&) = default;
+
+    //! Constructor for color, depth, and stencil values.
+    inline ClearValue(const ColorRGBAf& color, float depth = 1.0f, std::uint32_t stencil = 0) :
+        color   { color   },
+        depth   { depth   },
+        stencil { stencil }
+    {
+    }
+
+    //! Constructor for the depth value only.
+    inline ClearValue(float depth) :
+        depth { depth }
+    {
+    }
+
+    //! Constructor for the stencil value only.
+    inline ClearValue(std::uint32_t stencil) :
+        stencil { stencil }
+    {
+    }
+
+    //! Constructor for the depth and stencil values.
+    inline ClearValue(float depth, std::uint32_t stencil) :
+        depth   { depth   },
+        stencil { stencil }
+    {
+    }
+
     //! Specifies the clear value to clear a color attachment. By default (0.0, 0.0, 0.0, 0.0).
     ColorRGBAf      color   = { 0.0f, 0.0f, 0.0f, 0.0f };
 

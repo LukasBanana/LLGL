@@ -383,53 +383,6 @@ void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sci
     LLGL_DBG_COMMAND( "SetScissors", instance.SetScissors(numScissors, scissors) );
 }
 
-/* ----- Clear ----- */
-
-void DbgCommandBuffer::SetClearColor(const ColorRGBAf& color)
-{
-    LLGL_DBG_COMMAND( "SetClearColor", instance.SetClearColor(color) );
-}
-
-void DbgCommandBuffer::SetClearDepth(float depth)
-{
-    LLGL_DBG_COMMAND( "SetClearDepth", instance.SetClearDepth(depth) );
-}
-
-void DbgCommandBuffer::SetClearStencil(std::uint32_t stencil)
-{
-    LLGL_DBG_COMMAND( "SetClearStencil", instance.SetClearStencil(stencil) );
-}
-
-void DbgCommandBuffer::Clear(long flags)
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        AssertInsideRenderPass();
-    }
-
-    LLGL_DBG_COMMAND( "Clear", instance.Clear(flags) );
-
-    profile_.attachmentClears++;
-}
-
-void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        AssertInsideRenderPass();
-        for (std::uint32_t i = 0; i < numAttachments; ++i)
-            ValidateAttachmentClear(attachments[i]);
-    }
-
-    LLGL_DBG_COMMAND( "ClearAttachments", instance.ClearAttachments(numAttachments, attachments) );
-
-    profile_.attachmentClears++;
-}
-
 /* ----- Buffers ------ */
 
 void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
@@ -719,6 +672,36 @@ void DbgCommandBuffer::EndRenderPass()
     }
 
     instance.EndRenderPass();
+}
+
+void DbgCommandBuffer::Clear(long flags, const ClearValue& clearValue)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        AssertInsideRenderPass();
+    }
+
+    LLGL_DBG_COMMAND( "Clear", instance.Clear(flags, clearValue) );
+
+    profile_.attachmentClears++;
+}
+
+void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        AssertInsideRenderPass();
+        for (std::uint32_t i = 0; i < numAttachments; ++i)
+            ValidateAttachmentClear(attachments[i]);
+    }
+
+    LLGL_DBG_COMMAND( "ClearAttachments", instance.ClearAttachments(numAttachments, attachments) );
+
+    profile_.attachmentClears++;
 }
 
 /* ----- Pipeline States ----- */

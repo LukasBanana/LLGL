@@ -405,123 +405,6 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
     }
 }
 
-/* ----- Clear ----- */
-
-static void ToVkClearColor(VkClearColorValue& dst, const ColorRGBAf& src)
-{
-    dst.float32[0] = src.r;
-    dst.float32[1] = src.g;
-    dst.float32[2] = src.b;
-    dst.float32[3] = src.a;
-}
-
-void VKCommandBuffer::SetClearColor(const ColorRGBAf& color)
-{
-    ToVkClearColor(clearColor_, color);
-}
-
-void VKCommandBuffer::SetClearDepth(float depth)
-{
-    clearDepthStencil_.depth = depth;
-}
-
-void VKCommandBuffer::SetClearStencil(std::uint32_t stencil)
-{
-    clearDepthStencil_.stencil = stencil;
-}
-
-static VkImageAspectFlags GetDepthStencilAspectMask(long flags)
-{
-    VkImageAspectFlags aspectMask = 0;
-
-    if ((flags & ClearFlags::Depth) != 0)
-        aspectMask |= VK_IMAGE_ASPECT_DEPTH_BIT;
-    if ((flags & ClearFlags::Stencil) != 0)
-        aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-
-    return aspectMask;
-}
-
-void VKCommandBuffer::Clear(long flags)
-{
-    VkClearAttachment attachments[LLGL_MAX_NUM_ATTACHMENTS];
-
-    std::uint32_t numAttachments = 0;
-
-    /* Fill clear descriptors for color attachments */
-    if ((flags & ClearFlags::Color) != 0)
-    {
-        numAttachments = std::min(numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS);
-        for (std::uint32_t i = 0; i < numAttachments; ++i)
-        {
-            auto& attachment = attachments[i];
-            {
-                attachment.aspectMask       = VK_IMAGE_ASPECT_COLOR_BIT;
-                attachment.colorAttachment  = i;
-                attachment.clearValue.color = clearColor_;
-            }
-        }
-    }
-
-    /* Fill clear descriptor for depth-stencil attachment */
-    if ((flags & ClearFlags::DepthStencil) != 0 && hasDSVAttachment_)
-    {
-        auto& attachment = attachments[numAttachments++];
-        {
-            attachment.aspectMask               = GetDepthStencilAspectMask(flags);
-            attachment.colorAttachment          = 0; // ignored
-            attachment.clearValue.depthStencil  = clearDepthStencil_;
-        }
-    }
-
-    /* Clear all framebuffer attachments */
-    ClearFramebufferAttachments(numAttachments, attachments);
-}
-
-void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
-{
-    /* Convert clear attachment descriptors */
-    VkClearAttachment attachmentsVK[LLGL_MAX_NUM_ATTACHMENTS];
-
-    std::uint32_t numAttachmentsVK = 0;
-
-    for (std::uint32_t i = 0, n = std::min(numAttachments, LLGL_MAX_NUM_ATTACHMENTS); i < n; ++i)
-    {
-        auto& dst = attachmentsVK[numAttachmentsVK];
-        const auto& src = attachments[i];
-
-        if ((src.flags & ClearFlags::Color) != 0)
-        {
-            /* Convert color clear command */
-            dst.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-            dst.colorAttachment = src.colorAttachment;
-            ToVkClearColor(dst.clearValue.color, src.clearValue.color);
-            ++numAttachmentsVK;
-        }
-        else if (hasDSVAttachment_)
-        {
-            /* Convert depth-stencil clear command */
-            dst.aspectMask      = 0;
-            dst.colorAttachment = 0;
-
-            if ((src.flags & ClearFlags::Depth) != 0)
-            {
-                dst.aspectMask                      |= VK_IMAGE_ASPECT_DEPTH_BIT;
-                dst.clearValue.depthStencil.depth   = src.clearValue.depth;
-            }
-            if ((src.flags & ClearFlags::Stencil) != 0)
-            {
-                dst.aspectMask                      |= VK_IMAGE_ASPECT_STENCIL_BIT;
-                dst.clearValue.depthStencil.stencil = src.clearValue.stencil;
-            }
-
-            ++numAttachmentsVK;
-        }
-    }
-
-    ClearFramebufferAttachments(numAttachmentsVK, attachmentsVK);
-}
-
 /* ----- Input Assembly ------ */
 
 void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
@@ -700,6 +583,109 @@ void VKCommandBuffer::EndRenderPass()
     recordState_ = RecordState::OutsideRenderPass;
 }
 
+static void ToVkClearColor(VkClearColorValue& dst, const ColorRGBAf& src)
+{
+    dst.float32[0] = src.r;
+    dst.float32[1] = src.g;
+    dst.float32[2] = src.b;
+    dst.float32[3] = src.a;
+}
+
+static VkImageAspectFlags GetDepthStencilAspectMask(long flags)
+{
+    VkImageAspectFlags aspectMask = 0;
+
+    if ((flags & ClearFlags::Depth) != 0)
+        aspectMask |= VK_IMAGE_ASPECT_DEPTH_BIT;
+    if ((flags & ClearFlags::Stencil) != 0)
+        aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+    return aspectMask;
+}
+
+void VKCommandBuffer::Clear(long flags, const ClearValue& clearValue)
+{
+    VkClearAttachment attachments[LLGL_MAX_NUM_ATTACHMENTS];
+
+    std::uint32_t numAttachments = 0;
+
+    /* Fill clear descriptors for color attachments */
+    if ((flags & ClearFlags::Color) != 0)
+    {
+        VkClearColorValue clearColor;
+        ToVkClearColor(clearColor, clearValue.color);
+
+        numAttachments = std::min(numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS);
+        for (std::uint32_t i = 0; i < numAttachments; ++i)
+        {
+            auto& attachment = attachments[i];
+            {
+                attachment.aspectMask       = VK_IMAGE_ASPECT_COLOR_BIT;
+                attachment.colorAttachment  = i;
+                attachment.clearValue.color = clearColor;
+            }
+        }
+    }
+
+    /* Fill clear descriptor for depth-stencil attachment */
+    if ((flags & ClearFlags::DepthStencil) != 0 && hasDSVAttachment_)
+    {
+        auto& attachment = attachments[numAttachments++];
+        {
+            attachment.aspectMask                       = GetDepthStencilAspectMask(flags);
+            attachment.colorAttachment                  = 0; // ignored
+            attachment.clearValue.depthStencil.depth    = clearValue.depth;
+            attachment.clearValue.depthStencil.stencil  = clearValue.stencil;
+        }
+    }
+
+    /* Clear all framebuffer attachments */
+    ClearFramebufferAttachments(numAttachments, attachments);
+}
+
+void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
+{
+    /* Convert clear attachment descriptors */
+    VkClearAttachment attachmentsVK[LLGL_MAX_NUM_ATTACHMENTS];
+
+    std::uint32_t numAttachmentsVK = 0;
+
+    for (std::uint32_t i = 0, n = std::min(numAttachments, LLGL_MAX_NUM_ATTACHMENTS); i < n; ++i)
+    {
+        auto& dst = attachmentsVK[numAttachmentsVK];
+        const auto& src = attachments[i];
+
+        if ((src.flags & ClearFlags::Color) != 0)
+        {
+            /* Convert color clear command */
+            dst.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+            dst.colorAttachment = src.colorAttachment;
+            ToVkClearColor(dst.clearValue.color, src.clearValue.color);
+            ++numAttachmentsVK;
+        }
+        else if (hasDSVAttachment_)
+        {
+            /* Convert depth-stencil clear command */
+            dst.aspectMask      = 0;
+            dst.colorAttachment = 0;
+
+            if ((src.flags & ClearFlags::Depth) != 0)
+            {
+                dst.aspectMask                      |= VK_IMAGE_ASPECT_DEPTH_BIT;
+                dst.clearValue.depthStencil.depth   = src.clearValue.depth;
+            }
+            if ((src.flags & ClearFlags::Stencil) != 0)
+            {
+                dst.aspectMask                      |= VK_IMAGE_ASPECT_STENCIL_BIT;
+                dst.clearValue.depthStencil.stencil = src.clearValue.stencil;
+            }
+
+            ++numAttachmentsVK;
+        }
+    }
+
+    ClearFramebufferAttachments(numAttachmentsVK, attachmentsVK);
+}
 
 /* ----- Pipeline States ----- */
 
@@ -1103,6 +1089,9 @@ void VKCommandBuffer::ConvertRenderPassClearValues(
     auto depthStencilIndex  = renderPass.GetDepthStencilIndex();
     bool multiSampleEnabled = (renderPass.GetSampleCountBits() > VK_SAMPLE_COUNT_1_BIT);
 
+    const VkClearColorValue         defaultClearColor           = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+    const VkClearDepthStencilValue  defaultClearDepthStencil    = { 1.0f, 0 };
+
     std::uint32_t dstIndex = 0, srcIndex = 0;
 
     for (std::uint32_t i = 0; i < dstClearValuesCount; ++i)
@@ -1129,11 +1118,11 @@ void VKCommandBuffer::ConvertRenderPassClearValues(
             }
             else
             {
-                /* Set global clear parameters (from SetClearColor, SetClearDepth, SetClearStencil) */
+                /* Set default clear parameters */
                 if (i == depthStencilIndex)
-                    dst.depthStencil = clearDepthStencil_;
+                    dst.depthStencil = defaultClearDepthStencil;
                 else
-                    dst.color = clearColor_;
+                    dst.color = defaultClearColor;
             }
         }
     }

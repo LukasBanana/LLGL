@@ -110,15 +110,6 @@ class D3D12CommandBuffer final : public CommandBuffer
         void SetScissor(const Scissor& scissor) override;
         void SetScissors(std::uint32_t numScissors, const Scissor* scissors) override;
 
-        /* ----- Clear ----- */
-
-        void SetClearColor(const ColorRGBAf& color) override;
-        void SetClearDepth(float depth) override;
-        void SetClearStencil(std::uint32_t stencil) override;
-
-        void Clear(long flags) override;
-        void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) override;
-
         /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
@@ -155,6 +146,9 @@ class D3D12CommandBuffer final : public CommandBuffer
         ) override;
 
         void EndRenderPass() override;
+
+        void Clear(long flags, const ClearValue& clearValue = {}) override;
+        void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) override;
 
         /* ----- Pipeline States ----- */
 
@@ -282,8 +276,6 @@ class D3D12CommandBuffer final : public CommandBuffer
         UINT                            rtvDescSize_            = 0;
         D3D12_CPU_DESCRIPTOR_HANDLE     dsvDescHandle_          = {};
         UINT                            dsvDescSize_            = 0;
-
-        ClearValue                      clearValue_;
 
         bool                            scissorEnabled_         = false;
         UINT                            numBoundScissorRects_   = 0;

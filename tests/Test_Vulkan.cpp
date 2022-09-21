@@ -238,9 +238,6 @@ int main()
         auto frameTimer = LLGL::Timer::Create();
         auto printTime = std::chrono::system_clock::now();
 
-        // Set clear color
-        commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
-
         //auto fence = renderer->CreateFence();
 
         // Main loop
@@ -266,7 +263,7 @@ int main()
 
                 commands->BeginRenderPass(*context);
                 {
-                    commands->Clear(LLGL::ClearFlags::ColorDepth);
+                    commands->Clear(LLGL::ClearFlags::ColorDepth, { LLGL::ColorRGBAf{ 0.2f, 0.2f, 0.4f, 1.0f } });
 
                     // Draw scene
                     #ifdef TEST_QUERY

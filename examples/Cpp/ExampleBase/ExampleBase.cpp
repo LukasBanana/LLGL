@@ -308,9 +308,6 @@ ExampleBase::ExampleBase(
     // Get command queue
     commandQueue = renderer->GetCommandQueue();
 
-    // Initialize command buffer
-    commands->SetClearColor(backgroundColor);
-
     // Print renderer information
     const auto& info = renderer->GetRendererInfo();
     const auto contextRes = context->GetResolution();

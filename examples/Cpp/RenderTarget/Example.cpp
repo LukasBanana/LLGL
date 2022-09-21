@@ -21,7 +21,7 @@
 #define ENABLE_CBUFFER_RANGE
 
 // Enables the resource heap. Otherwise, all resources are bound to the graphics pipeline individually.
-//#define ENABLE_RESOURCE_HEAP
+#define ENABLE_RESOURCE_HEAP
 
 
 #if defined ENABLE_CUSTOM_MULTISAMPLING && !defined ENABLE_MULTISAMPLING
@@ -444,8 +444,7 @@ private:
         commands->BeginRenderPass(*renderTarget);
         {
             // Clear color and depth buffers of active framebuffer (i.e. the render target)
-            commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
+            commands->Clear(LLGL::ClearFlags::ColorDepth, { LLGL::ColorRGBAf{ 0.2f, 0.7f, 0.1f } });
 
             // Bind graphics pipeline for render target
             commands->SetPipelineState(*pipelines[0]);
@@ -493,8 +492,7 @@ private:
         commands->BeginRenderPass(*context);
         {
             // Clear color and depth buffers of active framebuffer (i.e. the screen)
-            commands->SetClearColor(backgroundColor);
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
+            commands->Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
 
             // Binds graphics pipeline for render context
             commands->SetPipelineState(*pipelines[1]);

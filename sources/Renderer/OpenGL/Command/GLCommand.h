@@ -221,7 +221,6 @@ struct GLCmdBindRenderPass
     RenderTarget*       renderTarget;
     const GLRenderPass* renderPass;
     std::uint32_t       numClearValues;
-    GLClearValue        defaultClearValue;
 //  const ClearValue*   clearValues[numClearValues];
 };
 

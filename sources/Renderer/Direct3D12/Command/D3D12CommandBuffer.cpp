@@ -393,21 +393,6 @@ void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* s
 
 /* ----- Clear ----- */
 
-void D3D12CommandBuffer::SetClearColor(const ColorRGBAf& color)
-{
-    clearValue_.color = color;
-}
-
-void D3D12CommandBuffer::SetClearDepth(float depth)
-{
-    clearValue_.depth = depth;
-}
-
-void D3D12CommandBuffer::SetClearStencil(std::uint32_t stencil)
-{
-    clearValue_.stencil = (stencil & 0xff);
-}
-
 static D3D12_CLEAR_FLAGS GetClearFlagsDSV(long flags)
 {
     UINT clearFlagsDSV = 0;
@@ -420,7 +405,7 @@ static D3D12_CLEAR_FLAGS GetClearFlagsDSV(long flags)
     return static_cast<D3D12_CLEAR_FLAGS>(clearFlagsDSV);
 }
 
-void D3D12CommandBuffer::Clear(long flags)
+void D3D12CommandBuffer::Clear(long flags, const ClearValue& clearValue)
 {
     if (rtvDescHandle_.ptr != 0)
     {
@@ -430,7 +415,7 @@ void D3D12CommandBuffer::Clear(long flags)
             auto rtvDescHandle = rtvDescHandle_;
             for (UINT i = 0; i < numColorBuffers_; ++i)
             {
-                commandList_->ClearRenderTargetView(rtvDescHandle, clearValue_.color.Ptr(), 0, nullptr);
+                commandList_->ClearRenderTargetView(rtvDescHandle, clearValue.color.Ptr(), 0, nullptr);
                 rtvDescHandle.ptr += rtvDescSize_;
             }
         }
@@ -444,8 +429,8 @@ void D3D12CommandBuffer::Clear(long flags)
             commandList_->ClearDepthStencilView(
                 dsvDescHandle_,
                 clearFlagsDSV,
-                clearValue_.depth,
-                static_cast<UINT8>(clearValue_.stencil),
+                clearValue.depth,
+                static_cast<UINT8>(clearValue.stencil & 0xFF),
                 0,
                 nullptr
             );
@@ -1050,6 +1035,7 @@ void D3D12CommandBuffer::ClearRenderTargetViews(
     }
 
     /* Use default clear values */
+    const FLOAT defaultClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     for (; i < numColorBuffers_; ++i)
     {
         /* Check if attachment list has ended */
@@ -1060,7 +1046,7 @@ void D3D12CommandBuffer::ClearRenderTargetViews(
             if (targetIndex < numColorBuffers_)
             {
                 rtvDescHandle.ptr = rtvDescHandle_.ptr + rtvDescSize_ * targetIndex;
-                commandList_->ClearRenderTargetView(rtvDescHandle, clearValue_.color.Ptr(), numRects, rects);
+                commandList_->ClearRenderTargetView(rtvDescHandle, defaultClearColor, numRects, rects);
             }
         }
         else
@@ -1077,18 +1063,13 @@ void D3D12CommandBuffer::ClearDepthStencilView(
     const D3D12_RECT*   rects)
 {
     /* Get clear values */
-    FLOAT depth;
-    UINT8 stencil;
+    FLOAT depth     = 1.0f;
+    UINT8 stencil   = 0;
 
     if (idx < numClearValues)
     {
         depth   = clearValues[idx].depth;
         stencil = static_cast<UINT8>(clearValues[idx].stencil & 0xff);
-    }
-    else
-    {
-        depth   = clearValue_.depth;
-        stencil = static_cast<UINT8>(clearValue_.stencil);
     }
 
     /* Clear depth-stencil view */

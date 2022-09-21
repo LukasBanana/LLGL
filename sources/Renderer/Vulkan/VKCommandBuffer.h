@@ -111,15 +111,6 @@ class VKCommandBuffer final : public CommandBuffer
         void SetScissor(const Scissor& scissor) override;
         void SetScissors(std::uint32_t numScissors, const Scissor* scissors) override;
 
-        /* ----- Clear ----- */
-
-        void SetClearColor(const ColorRGBAf& color) override;
-        void SetClearDepth(float depth) override;
-        void SetClearStencil(std::uint32_t stencil) override;
-
-        void Clear(long flags) override;
-        void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) override;
-
         /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
@@ -161,6 +152,9 @@ class VKCommandBuffer final : public CommandBuffer
         ) override;
 
         void EndRenderPass() override;
+
+        void Clear(long flags, const ClearValue& clearValue = {}) override;
+        void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) override;
 
         /* ----- Pipeline States ----- */
 
@@ -301,9 +295,6 @@ class VKCommandBuffer final : public CommandBuffer
 
         VkCommandBufferUsageFlags       usageFlags_                 = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VkCommandBufferLevel            bufferLevel_                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-
-        VkClearColorValue               clearColor_                 = { { 0.0f, 0.0f, 0.0f, 0.0f } };
-        VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
 
         VkRenderPass                    renderPass_                 = VK_NULL_HANDLE; // primary render pass
         VkRenderPass                    secondaryRenderPass_        = VK_NULL_HANDLE; // to pause/resume render pass (load and store content)

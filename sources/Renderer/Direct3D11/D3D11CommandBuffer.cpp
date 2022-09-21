@@ -709,87 +709,6 @@ void D3D11CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* s
     stateMngr_->SetScissors(numScissors, scissors);
 }
 
-/* ----- Clear ----- */
-
-void D3D11CommandBuffer::SetClearColor(const ColorRGBAf& color)
-{
-    clearValue_.color = color;
-}
-
-void D3D11CommandBuffer::SetClearDepth(float depth)
-{
-    clearValue_.depth = depth;
-}
-
-void D3D11CommandBuffer::SetClearStencil(std::uint32_t stencil)
-{
-    clearValue_.stencil = (stencil & 0xff);
-}
-
-static UINT GetClearFlagsDSV(long flags)
-{
-    UINT clearFlagsDSV = 0;
-
-    if ((flags & ClearFlags::Depth) != 0)
-        clearFlagsDSV |= D3D11_CLEAR_DEPTH;
-    if ((flags & ClearFlags::Stencil) != 0)
-        clearFlagsDSV |= D3D11_CLEAR_STENCIL;
-
-    return clearFlagsDSV;
-}
-
-void D3D11CommandBuffer::Clear(long flags)
-{
-    /* Clear color buffers */
-    if ((flags & ClearFlags::Color) != 0)
-    {
-        for (auto rtv : framebufferView_.rtvList)
-            context_->ClearRenderTargetView(rtv, clearValue_.color.Ptr());
-    }
-
-    /* Clear depth-stencil buffer */
-    if (framebufferView_.dsv != nullptr)
-    {
-        if (auto clearFlagsDSV = GetClearFlagsDSV(flags))
-        {
-            context_->ClearDepthStencilView(
-                framebufferView_.dsv,
-                clearFlagsDSV,
-                clearValue_.depth,
-                static_cast<UINT8>(clearValue_.stencil)
-            );
-        }
-    }
-}
-
-void D3D11CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
-{
-    for (; numAttachments-- > 0; ++attachments)
-    {
-        if ((attachments->flags & ClearFlags::Color) != 0)
-        {
-            if (attachments->colorAttachment < framebufferView_.rtvList.size())
-            {
-                /* Clear color attachment */
-                ClearColorBuffer(attachments->colorAttachment, attachments->clearValue.color);
-            }
-        }
-        else if (framebufferView_.dsv != nullptr)
-        {
-            /* Clear depth and stencil buffer simultaneously */
-            if (auto clearFlagsDSV = GetClearFlagsDSV(attachments->flags))
-            {
-                context_->ClearDepthStencilView(
-                    framebufferView_.dsv,
-                    clearFlagsDSV,
-                    attachments->clearValue.depth,
-                    static_cast<UINT8>(attachments->clearValue.stencil & 0xff)
-                );
-            }
-        }
-    }
-}
-
 /* ----- Input Assembly ------ */
 
 void D3D11CommandBuffer::SetVertexBuffer(Buffer& buffer)
@@ -924,6 +843,70 @@ void D3D11CommandBuffer::BeginRenderPass(
 void D3D11CommandBuffer::EndRenderPass()
 {
     // dummy
+}
+
+static UINT GetClearFlagsDSV(long flags)
+{
+    UINT clearFlagsDSV = 0;
+
+    if ((flags & ClearFlags::Depth) != 0)
+        clearFlagsDSV |= D3D11_CLEAR_DEPTH;
+    if ((flags & ClearFlags::Stencil) != 0)
+        clearFlagsDSV |= D3D11_CLEAR_STENCIL;
+
+    return clearFlagsDSV;
+}
+
+void D3D11CommandBuffer::Clear(long flags, const ClearValue& clearValue)
+{
+    /* Clear color buffers */
+    if ((flags & ClearFlags::Color) != 0)
+    {
+        for (auto rtv : framebufferView_.rtvList)
+            context_->ClearRenderTargetView(rtv, clearValue.color.Ptr());
+    }
+
+    /* Clear depth-stencil buffer */
+    if (framebufferView_.dsv != nullptr)
+    {
+        if (auto clearFlagsDSV = GetClearFlagsDSV(flags))
+        {
+            context_->ClearDepthStencilView(
+                framebufferView_.dsv,
+                clearFlagsDSV,
+                clearValue.depth,
+                static_cast<UINT8>(clearValue.stencil & 0xFF)
+            );
+        }
+    }
+}
+
+void D3D11CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
+{
+    for (; numAttachments-- > 0; ++attachments)
+    {
+        if ((attachments->flags & ClearFlags::Color) != 0)
+        {
+            if (attachments->colorAttachment < framebufferView_.rtvList.size())
+            {
+                /* Clear color attachment */
+                ClearColorBuffer(attachments->colorAttachment, attachments->clearValue.color);
+            }
+        }
+        else if (framebufferView_.dsv != nullptr)
+        {
+            /* Clear depth and stencil buffer simultaneously */
+            if (auto clearFlagsDSV = GetClearFlagsDSV(attachments->flags))
+            {
+                context_->ClearDepthStencilView(
+                    framebufferView_.dsv,
+                    clearFlagsDSV,
+                    attachments->clearValue.depth,
+                    static_cast<UINT8>(attachments->clearValue.stencil & 0xff)
+                );
+            }
+        }
+    }
 }
 
 /* ----- Pipeline States ----- */
@@ -1420,8 +1403,8 @@ void D3D11CommandBuffer::ClearAttachmentsWithRenderPass(
         if (auto clearFlagsDSV = renderPassD3D.GetClearFlagsDSV())
         {
             /* Get clear values */
-            FLOAT depth     = clearValue_.depth;
-            UINT8 stencil   = static_cast<UINT8>(clearValue_.stencil);
+            FLOAT depth     = 1.0f;
+            UINT8 stencil   = 0;
 
             if (idx < numClearValues)
             {
@@ -1461,11 +1444,12 @@ void D3D11CommandBuffer::ClearColorBuffers(
     }
 
     /* Use default clear values */
+    const ColorRGBAf defaultClearColor;
     for (; i < n; ++i)
     {
         /* Check if attachment list has ended */
         if (colorBuffers[i] != 0xFF)
-            ClearColorBuffer(colorBuffers[i], clearValue_.color);
+            ClearColorBuffer(colorBuffers[i], defaultClearColor);
         else
             return;
     }

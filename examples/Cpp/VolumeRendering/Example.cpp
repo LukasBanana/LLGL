@@ -423,8 +423,7 @@ private:
             // Render maximum scene depth into render target
             commands->BeginRenderPass(*depthRangeRenderTarget);
             {
-                commands->SetClearDepth(0.0f);
-                commands->Clear(LLGL::ClearFlags::ColorDepth);
+                commands->Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor, 0.0f });
                 commands->SetViewport(depthRangeRenderTarget->GetResolution());
 
                 // Render depth-range pass
@@ -443,8 +442,7 @@ private:
             // Render everything directly into the render context
             commands->BeginRenderPass(*context);
             {
-                commands->SetClearDepth(1.0f);
-                commands->Clear(LLGL::ClearFlags::ColorDepth);
+                commands->Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor, 1.0f });
                 commands->SetViewport(context->GetResolution());
 
                 // Render Z-pre pass

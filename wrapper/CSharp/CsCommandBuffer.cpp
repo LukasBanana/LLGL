@@ -129,58 +129,6 @@ void CommandBuffer::SetScissors(array<Scissor^>^ scissors)
     native_->SetScissors(numScissors, nativeScissors);
 }
 
-/* ----- Clear ----- */
-
-void CommandBuffer::SetClearColor(ColorRGBA<float>^ color)
-{
-    native_->SetClearColor({ color->R, color->G, color->B, color->A });
-}
-
-void CommandBuffer::SetClearColor(float r, float g, float b, float a)
-{
-    native_->SetClearColor({ r, g, b, a });
-}
-
-void CommandBuffer::SetClearDepth(float depth)
-{
-    native_->SetClearDepth(depth);
-}
-
-void CommandBuffer::SetClearStencil(unsigned int stencil)
-{
-    native_->SetClearStencil(stencil);
-}
-
-void CommandBuffer::Clear(ClearFlags flags)
-{
-    native_->Clear(static_cast<long>(flags));
-}
-
-static void Convert(LLGL::ClearValue& dst, ClearValue^ src)
-{
-    Convert(dst.color, src->Color);
-    dst.depth   = src->Depth;
-    dst.stencil = src->Stencil;
-}
-
-static void Convert(LLGL::AttachmentClear& dst, AttachmentClear^ src)
-{
-    dst.flags           = static_cast<long>(src->Flags);
-    dst.colorAttachment = src->ColorAttachment;
-    Convert(dst.clearValue, src->ClearValue);
-}
-
-void CommandBuffer::ClearAttachments(array<AttachmentClear^>^ attachments)
-{
-    LLGL::AttachmentClear nativeAttachments[g_maxNumAttachments];
-
-    auto numAttachments = static_cast<std::uint32_t>(std::min(attachments->Length, g_maxNumAttachments));
-    for (std::uint32_t i = 0; i < numAttachments; ++i)
-        Convert(nativeAttachments[i], attachments[i]);
-
-    native_->ClearAttachments(numAttachments, nativeAttachments);
-}
-
 /* ----- Input Assembly ------ */
 
 static LLGL::Buffer* GetNative(Buffer^ buffer)
@@ -247,6 +195,13 @@ void CommandBuffer::BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ rend
     );
 }
 
+static void Convert(LLGL::ClearValue& dst, ClearValue^ src)
+{
+    Convert(dst.color, src->Color);
+    dst.depth   = src->Depth;
+    dst.stencil = src->Stencil;
+}
+
 void CommandBuffer::BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ renderPass, array<ClearValue^>^ clearValues)
 {
     LLGL::ClearValue nativeClearValues[10];
@@ -266,6 +221,35 @@ void CommandBuffer::BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ rend
 void CommandBuffer::EndRenderPass()
 {
     native_->EndRenderPass();
+}
+
+void CommandBuffer::Clear(ClearFlags flags, ClearValue^ clearValue)
+{
+    LLGL::ClearValue nativeClearValue;
+    {
+        nativeClearValue.color      = { clearValue->Color->R, clearValue->Color->G, clearValue->Color->B, clearValue->Color->A };
+        nativeClearValue.depth      = clearValue->Depth;
+        nativeClearValue.stencil    = clearValue->Stencil;
+    }
+    native_->Clear(static_cast<long>(flags), nativeClearValue);
+}
+
+static void Convert(LLGL::AttachmentClear& dst, AttachmentClear^ src)
+{
+    dst.flags           = static_cast<long>(src->Flags);
+    dst.colorAttachment = src->ColorAttachment;
+    Convert(dst.clearValue, src->ClearValue);
+}
+
+void CommandBuffer::ClearAttachments(array<AttachmentClear^>^ attachments)
+{
+    LLGL::AttachmentClear nativeAttachments[g_maxNumAttachments];
+
+    auto numAttachments = static_cast<std::uint32_t>(std::min(attachments->Length, g_maxNumAttachments));
+    for (std::uint32_t i = 0; i < numAttachments; ++i)
+        Convert(nativeAttachments[i], attachments[i]);
+
+    native_->ClearAttachments(numAttachments, nativeAttachments);
 }
 
 /* ----- Pipeline States ----- */

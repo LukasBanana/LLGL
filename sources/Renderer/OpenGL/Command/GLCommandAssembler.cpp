@@ -250,7 +250,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeBindRenderPass:
         {
             auto cmd = reinterpret_cast<const GLCmdBindRenderPass*>(pc);
-            compiler.CallMember(&GLStateManager::BindRenderPass, g_stateMngrArg, cmd->renderTarget, cmd->renderPass, cmd->numClearValues, (cmd + 1), &(cmd->defaultClearValue));
+            compiler.CallMember(&GLStateManager::BindRenderPass, g_stateMngrArg, cmd->renderTarget, cmd->renderPass, cmd->numClearValues, (cmd + 1));
             return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
         }
         case GLOpcodeBindPipelineState:

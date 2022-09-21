@@ -70,17 +70,6 @@ public ref class CommandBuffer
         void SetScissor(Scissor^ scissor);
         void SetScissors(array<Scissor^>^ scissors);
 
-        /* ----- Clear ----- */
-
-        void SetClearColor(ColorRGBA<float>^ color);
-        void SetClearColor(float r, float g, float b, float a);
-        void SetClearDepth(float depth);
-        void SetClearStencil(unsigned int stencil);
-
-        void Clear(ClearFlags flags);
-
-        void ClearAttachments(array<AttachmentClear^>^ attachments);
-
         /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer^ buffer);
@@ -100,6 +89,9 @@ public ref class CommandBuffer
         void BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ renderPass, array<ClearValue^>^ clearValues);
 
         void EndRenderPass();
+
+        void Clear(ClearFlags flags, ClearValue^ clearValue);
+        void ClearAttachments(array<AttachmentClear^>^ attachments);
 
         /* ----- Pipeline States ----- */
 

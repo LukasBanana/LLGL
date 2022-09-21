@@ -324,61 +324,6 @@ void GLDeferredCommandBuffer::SetScissors(std::uint32_t numScissors, const Sciss
     }
 }
 
-/* ----- Clear ----- */
-
-void GLDeferredCommandBuffer::SetClearColor(const ColorRGBAf& color)
-{
-    /* Encode clear command */
-    auto cmd = AllocCommand<GLCmdClearColor>(GLOpcodeClearColor);
-    {
-        cmd->color[0] = color.r;
-        cmd->color[1] = color.g;
-        cmd->color[2] = color.b;
-        cmd->color[3] = color.a;
-    }
-
-    /* Store as default clear value */
-    clearValue_.color[0] = color.r;
-    clearValue_.color[1] = color.g;
-    clearValue_.color[2] = color.b;
-    clearValue_.color[3] = color.a;
-}
-
-void GLDeferredCommandBuffer::SetClearDepth(float depth)
-{
-    /* Encode clear command */
-    auto cmd = AllocCommand<GLCmdClearDepth>(GLOpcodeClearDepth);
-    cmd->depth = static_cast<GLclamp_t>(depth);
-
-    /* Store as default clear value */
-    clearValue_.depth = depth;
-}
-
-void GLDeferredCommandBuffer::SetClearStencil(std::uint32_t stencil)
-{
-    /* Encode clear command */
-    auto cmd = AllocCommand<GLCmdClearStencil>(GLOpcodeClearStencil);
-    cmd->stencil = static_cast<GLint>(stencil);
-
-    /* Store as default clear value */
-    clearValue_.stencil = cmd->stencil;
-}
-
-void GLDeferredCommandBuffer::Clear(long flags)
-{
-    auto cmd = AllocCommand<GLCmdClear>(GLOpcodeClear);
-    cmd->flags = flags;
-}
-
-void GLDeferredCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
-{
-    auto cmd = AllocCommand<GLCmdClearBuffers>(GLOpcodeClearBuffers, sizeof(AttachmentClear)*numAttachments);
-    {
-        cmd->numAttachments = numAttachments;
-        ::memcpy(cmd + 1, attachments, sizeof(AttachmentClear)*numAttachments);
-    }
-}
-
 /* ----- Input Assembly ------ */
 
 void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer)
@@ -567,10 +512,9 @@ void GLDeferredCommandBuffer::BeginRenderPass(
 {
     auto cmd = AllocCommand<GLCmdBindRenderPass>(GLOpcodeBindRenderPass, sizeof(ClearValue)*numClearValues);
     {
-        cmd->renderTarget       = &renderTarget;
-        cmd->renderPass         = (renderPass != nullptr ? LLGL_CAST(const GLRenderPass*, renderPass) : nullptr);
-        cmd->numClearValues     = numClearValues;
-        cmd->defaultClearValue  = clearValue_;
+        cmd->renderTarget   = &renderTarget;
+        cmd->renderPass     = (renderPass != nullptr ? LLGL_CAST(const GLRenderPass*, renderPass) : nullptr);
+        cmd->numClearValues = numClearValues;
         ::memcpy(cmd + 1, clearValues, sizeof(ClearValue)*numClearValues);
     }
 }
@@ -578,6 +522,48 @@ void GLDeferredCommandBuffer::BeginRenderPass(
 void GLDeferredCommandBuffer::EndRenderPass()
 {
     // dummy
+}
+
+void GLDeferredCommandBuffer::Clear(long flags, const ClearValue& clearValue)
+{
+    if (flags != 0)
+    {
+        if ((flags & ClearFlags::Color) != 0)
+        {
+            auto cmd = AllocCommand<GLCmdClearColor>(GLOpcodeClearColor);
+            cmd->color[0] = clearValue.color.r;
+            cmd->color[1] = clearValue.color.g;
+            cmd->color[2] = clearValue.color.b;
+            cmd->color[3] = clearValue.color.a;
+        }
+
+        if ((flags & ClearFlags::Depth) != 0)
+        {
+            auto cmd = AllocCommand<GLCmdClearDepth>(GLOpcodeClearDepth);
+            cmd->depth = static_cast<GLclamp_t>(clearValue.depth);
+        }
+
+        if ((flags & ClearFlags::Stencil) != 0)
+        {
+            auto cmd = AllocCommand<GLCmdClearStencil>(GLOpcodeClearStencil);
+            cmd->stencil = static_cast<GLint>(clearValue.stencil);
+        }
+
+        auto cmd = AllocCommand<GLCmdClear>(GLOpcodeClear);
+        cmd->flags = flags;
+    }
+}
+
+void GLDeferredCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
+{
+    if (numAttachments > 0)
+    {
+        auto cmd = AllocCommand<GLCmdClearBuffers>(GLOpcodeClearBuffers, sizeof(AttachmentClear)*numAttachments);
+        {
+            cmd->numAttachments = numAttachments;
+            ::memcpy(cmd + 1, attachments, sizeof(AttachmentClear)*numAttachments);
+        }
+    }
 }
 
 /* ----- Pipeline States ----- */

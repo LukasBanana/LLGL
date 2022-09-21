@@ -1427,8 +1427,7 @@ void GLStateManager::BindRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
-    const ClearValue*   clearValues,
-    const GLClearValue& defaultClearValue)
+    const ClearValue*   clearValues)
 {
     /* Bind render target/context */
     if (renderTarget.IsRenderContext())
@@ -1440,7 +1439,7 @@ void GLStateManager::BindRenderPass(
     if (renderPass)
     {
         auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
-        ClearAttachmentsWithRenderPass(*renderPassGL, numClearValues, clearValues, defaultClearValue);
+        ClearAttachmentsWithRenderPass(*renderPassGL, numClearValues, clearValues);
     }
 }
 
@@ -1739,9 +1738,9 @@ void GLStateManager::BindAndBlitRenderContext(GLRenderContext& renderContextGL)
 void GLStateManager::ClearAttachmentsWithRenderPass(
     const GLRenderPass& renderPassGL,
     std::uint32_t       numClearValues,
-    const ClearValue*   clearValues,
-    const GLClearValue& defaultClearValue)
+    const ClearValue*   clearValues)
 {
+    const GLClearValue defaultClearValue;
     auto mask = renderPassGL.GetClearMask();
 
     GLIntermediateBufferWriteMasks intermediateMasks;

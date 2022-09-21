@@ -38,7 +38,7 @@ class RenderContext;
 /**
 \brief Command buffer interface used for storing and encoding GPU commands.
 \remarks This is the main interface to encode graphics, compute, and blit commands to be submitted to the GPU.
-You can assume that all states that can be changed with a setter function are not persistent across several encoding sections, unless the opposite is mentioned.
+All states that can be changed with a setter function are not persistent across several encoding sections.
 Before any command can be encoded, the command buffer must be set into encode mode, which is done by the CommandBuffer::Begin function.
 \see RenderSystem::CreateCommandBuffer
 */
@@ -305,65 +305,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetScissors(std::uint32_t numScissors, const Scissor* scissors) = 0;
 
-        /* ----- Clear ----- */
-
-        /**
-        \brief Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
-        \note This state is guaranteed to be persistent and can be used outside of command buffer encoding.
-        \see Clear
-        */
-        virtual void SetClearColor(const ColorRGBAf& color) = 0;
-
-        /**
-        \brief Sets the new value to clear the depth buffer with. By default 1.0.
-        \note This state is guaranteed to be persistent and can be used outside of command buffer encoding.
-        \see Clear
-        */
-        virtual void SetClearDepth(float depth) = 0;
-
-        /**
-        \brief Sets the new value to clear the stencil buffer. By default 0.
-        \param[in] stencil Specifies the value to clear the stencil buffer.
-        This value is masked with <code>2^m-1</code>, where \c m is the number of bits in the stencil buffer (e.g. <code>stencil & 0xFF</code> for an 8-bit stencil buffer).
-        \note This state is guaranteed to be persistent and can be used outside of command buffer encoding.
-        \see Clear
-        */
-        virtual void SetClearStencil(std::uint32_t stencil) = 0;
-
-        /**
-        \brief Clears the specified group of attachments of the active render target.
-        \param[in] flags Specifies the clear buffer flags.
-        This can be a bitwise OR combination of the ClearFlags enumeration entries.
-        If this contains the ClearFlags::Color bit, all color attachments of the active render target are cleared with the color previously set by \c SetClearColor.
-        \remarks To specify the clear values for each buffer type, use the respective <code>SetClear...</code> function.
-        To clear only a specific render-target color buffer, use the \c ClearAttachments function.
-        Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
-        For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
-        i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
-        For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
-        \see ClearFlags
-        \see SetClearColor
-        \see SetClearDepth
-        \see SetClearStencil
-        \see ClearAttachments
-        \see BeginRenderPass
-        */
-        virtual void Clear(long flags) = 0;
-
-        /**
-        \brief Clears the specified attachments of the active render target.
-        \param[in] numAttachments Specifies the number of attachments to clear.
-        \param[in] attachments Pointer to the array of attachment clear commands. This <b>must not</b> be null!
-        \remarks To clear all color buffers with the same value, use the \c Clear function.
-        Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
-        For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
-        i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
-        For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
-        \see Clear
-        \see BeginRenderPass
-        */
-        virtual void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) = 0;
-
         /* ----- Input Assembly ------ */
 
         /**
@@ -488,7 +429,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         This render pass object must be compatible with the render pass object the specified render target was created with.
         \param[in] numClearValues Specifies the number of clear values that are specified in the \c clearValues parameter.
         This \em should be greater than or equal to the number of render pass attachments whose load operation (i.e. AttachmentFormatDescriptor::loadOp) is set to AttachmentLoadOp::Clear.
-        Otherwise, the default values from \c SetClearColor, \c SetClearDepth, and \c SetClearStencil are used.
+        Otherwise, the following default values are used: (0, 0, 0, 0) for color, 1 for depth, 0 for stencil.
         \param[in] clearValues Optional pointer to the array of clear values.
         If \c numClearValues is not zero, this must be a valid pointer to an array of at least \c numClearValues entries.
         Each entry in the array is used to clear the attachment whose load operation is set to AttachmentLoadOp::Clear,
@@ -547,6 +488,38 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see BeginRenderPass
         */
         virtual void EndRenderPass() = 0;
+
+        /**
+        \brief Clears the specified group of attachments of the active render target.
+        \param[in] flags Specifies the clear buffer flags.
+        This can be a bitwise OR combination of the ClearFlags enumeration entries.
+        If this contains the ClearFlags::Color bit, all color attachments of the active render target are cleared with the color specified by \c clearValue.
+        \param[in] clearValue Specifies the value to which the attachments will be cleared.
+        \remarks To specify the clear values for each buffer type, use the respective <code>SetClear...</code> function.
+        To clear only a specific render-target color buffer, use the \c ClearAttachments function.
+        Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
+        For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
+        i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
+        For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
+        \see ClearFlags
+        \see ClearAttachments
+        \see BeginRenderPass
+        */
+        virtual void Clear(long flags, const ClearValue& clearValue = {}) = 0;
+
+        /**
+        \brief Clears the specified attachments of the active render target.
+        \param[in] numAttachments Specifies the number of attachments to clear.
+        \param[in] attachments Pointer to the array of attachment clear commands. This <b>must not</b> be null!
+        \remarks To clear all color buffers with the same value, use the \c Clear function.
+        Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
+        For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
+        i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
+        For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
+        \see Clear
+        \see BeginRenderPass
+        */
+        virtual void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) = 0;
 
         /* ----- Pipeline States ----- */
 

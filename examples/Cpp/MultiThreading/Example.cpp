@@ -237,9 +237,6 @@ private:
         auto& cmdBuffer = *primaryCmdBuffer;
         cmdBuffer.Begin();
         {
-            // Initialize clear color
-            cmdBuffer.SetClearColor(backgroundColor);
-
             // Set hardware buffers to draw the model
             cmdBuffer.SetVertexBuffer(*vertexBuffer);
             cmdBuffer.SetIndexBuffer(*indexBuffer);
@@ -248,7 +245,7 @@ private:
             cmdBuffer.BeginRenderPass(*context);
             {
                 // Clear color- and depth buffers, and set viewport
-                cmdBuffer.Clear(LLGL::ClearFlags::ColorDepth);
+                cmdBuffer.Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
                 cmdBuffer.SetViewport(context->GetVideoMode().resolution);
 
                 // Draw scene with secondary command buffers

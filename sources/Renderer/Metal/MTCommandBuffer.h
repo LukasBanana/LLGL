@@ -106,15 +106,6 @@ class MTCommandBuffer final : public CommandBuffer
         void SetScissor(const Scissor& scissor) override;
         void SetScissors(std::uint32_t numScissors, const Scissor* scissors) override;
 
-        /* ----- Clear ----- */
-
-        void SetClearColor(const ColorRGBAf& color) override;
-        void SetClearDepth(float depth) override;
-        void SetClearStencil(std::uint32_t stencil) override;
-
-        void Clear(long flags) override;
-        void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) override;
-
         /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
@@ -151,6 +142,9 @@ class MTCommandBuffer final : public CommandBuffer
         ) override;
 
         void EndRenderPass() override;
+
+        void Clear(long flags, const ClearValue& clearValue = {}) override;
+        void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) override;
 
         /* ----- Pipeline States ----- */
 
@@ -253,15 +247,6 @@ class MTCommandBuffer final : public CommandBuffer
 
     private:
 
-        struct MTClearValue
-        {
-            MTLClearColor   color   = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
-            double          depth   = 1.0;
-            std::uint32_t   stencil = 0;
-        };
-
-    private:
-
         id<MTLDevice>                   device_                 = nil;
         id<MTLCommandQueue>             cmdQueue_               = nil;
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
@@ -277,8 +262,6 @@ class MTCommandBuffer final : public CommandBuffer
         NSUInteger                      indexTypeSize_          = 4;
         NSUInteger                      numPatchControlPoints_  = 0;
         const MTLSize*                  numThreadsPerGroup_     = nullptr;
-
-        MTClearValue                    clearValue_;
 
         MTStagingBufferPool             stagingBufferPool_;
 

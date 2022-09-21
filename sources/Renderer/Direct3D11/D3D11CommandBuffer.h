@@ -109,15 +109,6 @@ class D3D11CommandBuffer final : public CommandBuffer
         void SetScissor(const Scissor& scissor) override;
         void SetScissors(std::uint32_t numScissors, const Scissor* scissors) override;
 
-        /* ----- Clear ----- */
-
-        void SetClearColor(const ColorRGBAf& color) override;
-        void SetClearDepth(float depth) override;
-        void SetClearStencil(std::uint32_t stencil) override;
-
-        void Clear(long flags) override;
-        void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) override;
-
         /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
@@ -154,6 +145,9 @@ class D3D11CommandBuffer final : public CommandBuffer
         ) override;
 
         void EndRenderPass() override;
+
+        void Clear(long flags, const ClearValue& clearValue = {}) override;
+        void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) override;
 
         /* ----- Pipeline States ----- */
 
@@ -317,8 +311,6 @@ class D3D11CommandBuffer final : public CommandBuffer
 
         D3D11FramebufferView                framebufferView_;
         D3D11RenderTarget*                  boundRenderTarget_      = nullptr;
-
-        ClearValue                          clearValue_;
 
 };
 

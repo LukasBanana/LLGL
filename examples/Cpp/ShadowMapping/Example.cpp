@@ -63,8 +63,6 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
-        commands->SetClearColor(backgroundColor);
-
         // Label objects for debugging
         context->SetName("BackBuffer");
 
@@ -374,7 +372,7 @@ private:
         // Render scene onto screen
         commands->BeginRenderPass(*context);
         {
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
+            commands->Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
             commands->SetViewport(context->GetResolution());
             commands->SetPipelineState(*pipelineScene);
             commands->SetResourceHeap(*resourceHeapScene);

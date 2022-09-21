@@ -248,7 +248,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeBindRenderPass:
         {
             auto cmd = reinterpret_cast<const GLCmdBindRenderPass*>(pc);
-            stateMngr.BindRenderPass(*(cmd->renderTarget), cmd->renderPass, cmd->numClearValues, reinterpret_cast<const ClearValue*>(cmd + 1), cmd->defaultClearValue);
+            stateMngr.BindRenderPass(*(cmd->renderTarget), cmd->renderPass, cmd->numClearValues, reinterpret_cast<const ClearValue*>(cmd + 1));
             return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
         }
         case GLOpcodeBindPipelineState:

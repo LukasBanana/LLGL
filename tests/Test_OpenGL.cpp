@@ -365,8 +365,7 @@ int main()
 
                 commands->BeginRenderPass(*context);
                 {
-                    commands->SetClearColor({ 0.3f, 0.3f, 1 });
-                    commands->Clear(LLGL::ClearFlags::Color);
+                    commands->Clear(LLGL::ClearFlags::Color, { LLGL::ColorRGBAf{ 0.3f, 0.3f, 1 } });
 
                     commands->SetPipelineState(pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
@@ -384,8 +383,7 @@ int main()
                     {
                         commands->EndRenderPass();
                         commands->BeginRenderPass(*renderTarget);
-                        commands->SetClearColor({ 1, 1, 1, 1 });
-                        commands->Clear(LLGL::ClearFlags::Color);
+                        commands->Clear(LLGL::ClearFlags::Color, { LLGL::ColorRGBAf{ 1, 1, 1, 1 } });
                     }
 
                     #ifndef __linux__

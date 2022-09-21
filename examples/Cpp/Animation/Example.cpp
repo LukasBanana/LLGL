@@ -90,8 +90,6 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
-        commands->SetClearColor(backgroundColor);
-
         // Add balls to scene
         AddBall(LLGL::ColorRGBf{ 1, 0, 0 });
         AddBall(LLGL::ColorRGBf{ 0, 1, 0 }, 5, 0.33f);
@@ -334,7 +332,7 @@ private:
             // Render everything directly into the render context
             commands->BeginRenderPass(*context);
             {
-                commands->Clear(LLGL::ClearFlags::All);
+                commands->Clear(LLGL::ClearFlags::All, { backgroundColor });
                 commands->SetViewport(context->GetResolution());
                 RenderScene();
             }

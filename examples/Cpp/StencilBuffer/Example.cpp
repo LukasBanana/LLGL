@@ -55,8 +55,6 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
-        commands->SetClearColor(backgroundColor);
-
         #if 0
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
@@ -291,7 +289,7 @@ private:
     void RenderScene()
     {
         // Clear entire framebuffer, i.e. color, depth, and stencil buffers
-        commands->Clear(LLGL::ClearFlags::All);
+        commands->Clear(LLGL::ClearFlags::All, { backgroundColor });
 
         // Render scene background
         commands->SetPipelineState(*pipelineScene);

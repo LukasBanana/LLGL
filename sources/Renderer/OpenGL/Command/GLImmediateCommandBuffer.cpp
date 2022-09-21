@@ -253,48 +253,6 @@ void GLImmediateCommandBuffer::SetScissors(std::uint32_t numScissors, const Scis
     stateMngr_->SetScissorArray(0, count, scissorsGL);
 }
 
-/* ----- Clear ----- */
-
-void GLImmediateCommandBuffer::SetClearColor(const ColorRGBAf& color)
-{
-    /* Submit clear value to GL */
-    glClearColor(color.r, color.g, color.b, color.a);
-
-    /* Store as default clear value */
-    clearValue_.color[0] = color.r;
-    clearValue_.color[1] = color.g;
-    clearValue_.color[2] = color.b;
-    clearValue_.color[3] = color.a;
-}
-
-void GLImmediateCommandBuffer::SetClearDepth(float depth)
-{
-    /* Submit clear value to GL */
-    GLProfile::ClearDepth(static_cast<GLclamp_t>(depth));
-
-    /* Store as default clear value */
-    clearValue_.depth = depth;
-}
-
-void GLImmediateCommandBuffer::SetClearStencil(std::uint32_t stencil)
-{
-    /* Submit clear value to GL */
-    glClearStencil(static_cast<GLint>(stencil));
-
-    /* Store as default clear value */
-    clearValue_.stencil = static_cast<GLint>(stencil);
-}
-
-void GLImmediateCommandBuffer::Clear(long flags)
-{
-    stateMngr_->Clear(flags);
-}
-
-void GLImmediateCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
-{
-    stateMngr_->ClearBuffers(numAttachments, attachments);
-}
-
 /* ----- Input Assembly ------ */
 
 void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
@@ -479,12 +437,38 @@ void GLImmediateCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    stateMngr_->BindRenderPass(renderTarget, renderPass, numClearValues, clearValues, clearValue_);
+    stateMngr_->BindRenderPass(renderTarget, renderPass, numClearValues, clearValues);
 }
 
 void GLImmediateCommandBuffer::EndRenderPass()
 {
     // dummy
+}
+
+void GLImmediateCommandBuffer::Clear(long flags, const ClearValue& clearValue)
+{
+    if ((flags & ClearFlags::Color) != 0)
+    {
+        glClearColor(
+            clearValue.color.r,
+            clearValue.color.g,
+            clearValue.color.b,
+            clearValue.color.a
+        );
+    }
+
+    if ((flags & ClearFlags::Depth) != 0)
+        GLProfile::ClearDepth(static_cast<GLclamp_t>(clearValue.depth));
+
+    if ((flags & ClearFlags::Stencil) != 0)
+        glClearStencil(static_cast<GLint>(clearValue.stencil));
+
+    stateMngr_->Clear(flags);
+}
+
+void GLImmediateCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
+{
+    stateMngr_->ClearBuffers(numAttachments, attachments);
 }
 
 /* ----- Pipeline States ----- */

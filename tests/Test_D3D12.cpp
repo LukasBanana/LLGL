@@ -171,9 +171,6 @@ int main()
         }
         auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
-        commands->SetClearColor({ 0.1f, 0.1f, 0.4f });
-        //context->SetClearColor({ 0, 0, 0 });
-
         #if 0
 
         // Create texture
@@ -210,7 +207,7 @@ int main()
             {
                 commands->BeginRenderPass(*context);
                 {
-                    commands->Clear(LLGL::ClearFlags::Color);
+                    commands->Clear(LLGL::ClearFlags::Color, { LLGL::ColorRGBAf{ 0.1f, 0.1f, 0.4f } });
                     commands->SetViewport(contextDesc.videoMode.resolution);
 
                     commands->SetPipelineState(*pipeline);

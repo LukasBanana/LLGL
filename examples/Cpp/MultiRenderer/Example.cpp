@@ -237,8 +237,7 @@ void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
         cmdBuffer->BeginRenderPass(*context);
         {
             // Clear color buffer
-            cmdBuffer->SetClearColor({ 0.1f, 0.1f, 0.4f });
-            cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth);
+            cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth, { LLGL::ColorRGBAf{ 0.1f, 0.1f, 0.4f } });
 
             // Set viewport
             cmdBuffer->SetViewport(viewport);
