@@ -23,6 +23,7 @@
 - [`ReadTexture` interface](#readtexture-interface)
 - [Stream-output interface](#stream-output-interface)
 - [Pipeline state interface](#pipeline-state-interface)
+- [Clear attachments interface](#clear-attachments-interface)
 - [Removed features](#removed-features)
 
 
@@ -798,6 +799,35 @@ void                    LLGL::CommandBuffer::SetPipelineState(PipelineState& pip
 LLGL::PipelineState* myGfxPipeline = myRenderer->CreatePipelineState(/* ... */);
 /* ... */
 myCmdBuffer->SetPipelineState(*myGfxPipeline);
+```
+
+
+## Clear attachments interface
+
+The command buffer does not longer carry any state, i.e. `SetClearColor`, `SetClearDepth`, and `SetClearStencil` have been removed
+and replaced by a new parameter to specify the clear value at the `Clear` function. Otherwise, the `ClearAttachments` function can be used.
+
+Before:
+```cpp
+// Interface:
+void SetClearColor(const ColorRGBAf& color);
+void SetClearDepth(float depth);
+void SetClearStencil(std::uint32_t stencil);
+void Clear(long flags);
+
+// Usage:
+myCmdBuffer->SetClearColor(backgroundColor);
+/* ... */
+myCmdBuffer->Clear(LLGL::ClearFlags::Color);
+```
+
+After:
+```cpp
+// Interface:
+void Clear(long flags, const ClearValue& clearValue = {});
+
+// Usage:
+myCmdBuffer->Clear(LLGL::ClearFlags::Color, { backgroundColor });
 ```
 
 
