@@ -164,7 +164,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeClearDepth:
         {
             auto cmd = reinterpret_cast<const GLCmdClearDepth*>(pc);
-            compiler.Call(glClearDepth, cmd->depth);
+            compiler.Call(GLProfile::ClearDepth, cmd->depth);
             return sizeof(*cmd);
         }
         case GLOpcodeClearStencil:
