@@ -36,13 +36,17 @@ int main(int argc, char* argv[])
         auto commands = renderer->CreateCommandBuffer();
 
         // Create input handler
-        auto input = std::make_shared<LLGL::Input>();
+        std::shared_ptr<LLGL::Input> inputs[2] =
+        {
+            std::make_shared<LLGL::Input>(),
+            std::make_shared<LLGL::Input>()
+        };
 
         auto& window1 = static_cast<LLGL::Window&>(context1->GetSurface());
         auto& window2 = static_cast<LLGL::Window&>(context2->GetSurface());
 
-        window1.AddEventListener(input);
-        window2.AddEventListener(input);
+        window1.AddEventListener(inputs[0]);
+        window2.AddEventListener(inputs[1]);
 
         // Set window titles
         window1.SetTitle(L"LLGL Example: Multi Context (1)");
@@ -205,7 +209,7 @@ int main(int argc, char* argv[])
             LLGL::Viewport { 320.0f, 0.0f, 320.0f, 480.0f },
         };
 
-        bool enableLogicOp = false;
+        bool enableLogicOp[2] = { false, false };
 
         if (logicOpSupported)
             std::cout << "Press SPACE to enabled/disable logic fragment operations" << std::endl;
@@ -215,21 +219,33 @@ int main(int argc, char* argv[])
         std::uint32_t numInstances = (geomShader != nullptr ? 1 : 2);
 
         // Enter main loop
-        while ( ( window1.ProcessEvents() || window2.ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
+        while (!(inputs[0]->KeyPressed(LLGL::Key::Escape) || inputs[1]->KeyPressed(LLGL::Key::Escape)))
         {
+            // Process events of both windows and quit when both windows are closed
+            const bool win1Processed = window1.ProcessEvents();
+            const bool win2Processed = window2.ProcessEvents();
+
+            if (!(win1Processed || win2Processed))
+                break;
+
             // Switch between pipeline states
-            if (input->KeyDown(LLGL::Key::Space))
+            for (int i = 0; i < 2; ++i)
             {
-                if (logicOpSupported)
+                if (inputs[i]->KeyDown(LLGL::Key::Space))
                 {
-                    enableLogicOp = !enableLogicOp;
-                    if (enableLogicOp)
-                        std::cout << "Logic Fragment Operation Enabled" << std::endl;
+                    if (logicOpSupported)
+                    {
+                        std::cout << "Logic Fragment Operation ";
+                        enableLogicOp[i] = !enableLogicOp[i];
+                        if (enableLogicOp)
+                            std::cout << "Enabled";
+                        else
+                            std::cout << "Disabled";
+                        std::cout << " (Window " << (i + 1) << ")" << std::endl;
+                    }
                     else
-                        std::cout << "Logic Fragment Operation Disabled" << std::endl;
+                        std::cout << "Logic Fragment Operation Not Supported" << std::endl;
                 }
-                else
-                    std::cout << "Logic Fragment Operation Not Supported" << std::endl;
             }
 
             // Start encoding commands
@@ -238,28 +254,37 @@ int main(int argc, char* argv[])
                 // Set global render states: viewports, vertex buffer, and graphics pipeline
                 commands->SetViewports(2, viewports);
                 commands->SetVertexBuffer(*vertexBuffer);
-                commands->SetPipelineState(*pipeline[enableLogicOp ? 1 : 0]);
 
                 // Draw triangle with 3 vertices in 1st render context
-                commands->BeginRenderPass(*context1);
+                if (window1.IsShown())
                 {
-                    commands->DrawInstanced(3, 0, numInstances);
+                    commands->SetPipelineState(*pipeline[enableLogicOp[0] ? 1 : 0]);
+                    commands->BeginRenderPass(*context1);
+                    {
+                        commands->DrawInstanced(3, 0, numInstances);
+                    }
+                    commands->EndRenderPass();
                 }
-                commands->EndRenderPass();
 
                 // Draw quad with 4 vertices in 2nd render context
-                commands->BeginRenderPass(*context2);
+                if (window2.IsShown())
                 {
-                    commands->DrawInstanced(4, 3, numInstances);
+                    commands->SetPipelineState(*pipeline[enableLogicOp[1] ? 1 : 0]);
+                    commands->BeginRenderPass(*context2);
+                    {
+                        commands->DrawInstanced(4, 3, numInstances);
+                    }
+                    commands->EndRenderPass();
                 }
-                commands->EndRenderPass();
             }
             commands->End();
             commandQueue->Submit(*commands);
 
             // Present the results on the screen
-            context1->Present();
-            context2->Present();
+            if (window1.IsShown())
+                context1->Present();
+            if (window2.IsShown())
+                context2->Present();
         }
     }
     catch (const std::exception& e)

@@ -342,7 +342,7 @@ void Win32Window::OnProcessEvents()
     /* Peek all queued messages */
     MSG message;
 
-    while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE))
+    while (PeekMessage(&message, wnd_, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&message);
         DispatchMessage(&message);
