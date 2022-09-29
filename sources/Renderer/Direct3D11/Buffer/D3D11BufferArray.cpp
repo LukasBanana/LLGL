@@ -8,6 +8,7 @@
 #include "D3D11BufferArray.h"
 #include "D3D11Buffer.h"
 #include "../../CheckedCast.h"
+#include "../../BufferUtils.h"
 #include "../../../Core/Helper.h"
 
 
@@ -15,8 +16,8 @@ namespace LLGL
 {
 
 
-D3D11BufferArray::D3D11BufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { bindFlags }
+D3D11BufferArray::D3D11BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
 {
     /* Store the pointer of each ID3D11Buffer, strides, and offests inside the arrays */
     buffers_.resize(numBuffers);

@@ -131,22 +131,20 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
 
-    const auto bindFlags = (*bufferArray)->GetBindFlags();
-
     /* Create temporary buffer array with buffer instances */
     std::vector<Buffer*>    bufferInstanceArray(numBuffers);
     std::vector<DbgBuffer*> bufferDbgArray(numBuffers);
 
     for (std::uint32_t i = 0; i < numBuffers; ++i)
     {
-        auto bufferDbg          = LLGL_CAST(DbgBuffer*, (*(bufferArray++)));
+        auto bufferDbg          = LLGL_CAST(DbgBuffer*, bufferArray[i]);
         bufferInstanceArray[i]  = &(bufferDbg->instance);
         bufferDbgArray[i]       = bufferDbg;
     }
 
     /* Create native buffer and debug buffer */
     auto bufferArrayInstance    = instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
-    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, bindFlags, std::move(bufferDbgArray));
+    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, GetCombinedBindFlags(numBuffers, bufferArray), std::move(bufferDbgArray));
 
     return TakeOwnership(bufferArrays_, std::move(bufferArrayDbg));
 }

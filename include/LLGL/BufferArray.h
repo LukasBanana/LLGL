@@ -29,7 +29,7 @@ class LLGL_EXPORT BufferArray : public RenderSystemChild
     public:
 
         /**
-        \brief Returns the binding flags this buffer array was created with.
+        \brief Returns a bitwise-OR combination of the binding flags of all sub-buffers.
         \see BufferDescriptor::bindFlags
         */
         inline long GetBindFlags() const

@@ -8,6 +8,7 @@
 #include "MTBufferArray.h"
 #include "MTBuffer.h"
 #include "../../CheckedCast.h"
+#include "../../BufferUtils.h"
 #include "../../../Core/Helper.h"
 
 
@@ -15,8 +16,8 @@ namespace LLGL
 {
 
 
-MTBufferArray::MTBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { bindFlags }
+MTBufferArray::MTBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
 {
     /* Store id<MTLBuffer> of each buffer object inside the array */
     idArray_.reserve(numBuffers);

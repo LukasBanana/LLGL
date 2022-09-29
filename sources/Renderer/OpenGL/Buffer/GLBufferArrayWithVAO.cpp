@@ -17,23 +17,8 @@ namespace LLGL
 {
 
 
-GLBufferArrayWithVAO::GLBufferArrayWithVAO(long bindFlags) :
-    GLBufferArray { bindFlags }
-{
-}
-
-void GLBufferArrayWithVAO::SetName(const char* name)
-{
-    #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (HasNativeVAO())
-    #endif
-    {
-        /* Set label for VAO */
-        GLSetObjectLabel(GL_VERTEX_ARRAY, vao_.GetID(), name);
-    }
-}
-
-void GLBufferArrayWithVAO::BuildVertexArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
+GLBufferArrayWithVAO::GLBufferArrayWithVAO(std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    GLBufferArray { numBuffers, bufferArray }
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     if (!HasNativeVAO())
@@ -46,6 +31,17 @@ void GLBufferArrayWithVAO::BuildVertexArray(std::uint32_t numBuffers, Buffer* co
     {
         /* Build vertex array with native VAO */
         BuildVertexArrayWithVAO(numBuffers, bufferArray);
+    }
+}
+
+void GLBufferArrayWithVAO::SetName(const char* name)
+{
+    #ifdef LLGL_GL_ENABLE_OPENGL2X
+    if (HasNativeVAO())
+    #endif
+    {
+        /* Set label for VAO */
+        GLSetObjectLabel(GL_VERTEX_ARRAY, vao_.GetID(), name);
     }
 }
 

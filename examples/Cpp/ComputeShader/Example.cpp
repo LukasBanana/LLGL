@@ -303,7 +303,7 @@ private:
             commands->BeginRenderPass(*context);
             {
                 // Clear color buffer and set viewport
-                commands->Clear(LLGL::ClearFlags::Color);
+                commands->Clear(LLGL::ClearFlags::Color, backgroundColor);
                 commands->SetViewport(context->GetVideoMode().resolution);
 
                 // Set vertex buffer

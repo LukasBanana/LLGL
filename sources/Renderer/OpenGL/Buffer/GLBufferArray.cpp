@@ -8,6 +8,7 @@
 #include "GLBufferArray.h"
 #include "GLBuffer.h"
 #include "../../CheckedCast.h"
+#include "../../BufferUtils.h"
 #include "../../../Core/Helper.h"
 
 
@@ -15,13 +16,8 @@ namespace LLGL
 {
 
 
-GLBufferArray::GLBufferArray(long bindFlags) :
-    BufferArray { bindFlags }
-{
-}
-
-GLBufferArray::GLBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { bindFlags }
+GLBufferArray::GLBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
 {
     BuildArray(numBuffers, bufferArray);
 }

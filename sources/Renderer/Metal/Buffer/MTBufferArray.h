@@ -27,15 +27,15 @@ class MTBufferArray final : public BufferArray
     public:
 
         using NativeType = id<MTLBuffer>;
-    
-        MTBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray);
+
+        MTBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer IDs.
         inline const std::vector<NativeType>& GetIDArray() const
         {
             return idArray_;
         }
-    
+
         // Returns the array of buffer offsets.
         inline const std::vector<NSUInteger>& GetOffsets() const
         {

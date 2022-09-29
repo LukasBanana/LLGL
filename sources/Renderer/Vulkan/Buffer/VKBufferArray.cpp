@@ -8,6 +8,7 @@
 #include "VKBufferArray.h"
 #include "VKBuffer.h"
 #include "../../CheckedCast.h"
+#include "../../BufferUtils.h"
 #include "../../../Core/Helper.h"
 
 
@@ -15,8 +16,8 @@ namespace LLGL
 {
 
 
-VKBufferArray::VKBufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { bindFlags }
+VKBufferArray::VKBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
 {
     /* Store the object of each VKBuffer inside the array and  */
     buffers_.reserve(numBuffers);

@@ -148,8 +148,7 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
 BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    auto bindFlags = bufferArray[0]->GetBindFlags();
-    return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(bindFlags, numBuffers, bufferArray));
+    return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(numBuffers, bufferArray));
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)

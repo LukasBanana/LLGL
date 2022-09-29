@@ -25,7 +25,7 @@ class D3D12BufferArray final : public BufferArray
 
     public:
 
-        D3D12BufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray);
+        D3D12BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of vertex buffer views.
         inline const std::vector<D3D12_VERTEX_BUFFER_VIEW>& GetVertexBufferViews() const

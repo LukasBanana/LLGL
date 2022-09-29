@@ -174,8 +174,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 BufferArray* VKRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    auto refBindFlags = bufferArray[0]->GetBindFlags();
-    return TakeOwnership(bufferArrays_, MakeUnique<VKBufferArray>(refBindFlags, numBuffers, bufferArray));
+    return TakeOwnership(bufferArrays_, MakeUnique<VKBufferArray>(numBuffers, bufferArray));
 }
 
 void VKRenderSystem::Release(Buffer& buffer)

@@ -143,16 +143,10 @@ Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, CreateGpuBuffer(desc, initialData));
 }
 
-static std::unique_ptr<BufferArray> MakeD3D12BufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray)
-{
-    return MakeUnique<D3D12BufferArray>(bindFlags, numBuffers, bufferArray);
-}
-
 BufferArray* D3D12RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    auto refBindFlags = bufferArray[0]->GetBindFlags();
-    return TakeOwnership(bufferArrays_, MakeD3D12BufferArray(refBindFlags, numBuffers, bufferArray));
+    return TakeOwnership(bufferArrays_, MakeUnique<D3D12BufferArray>(numBuffers, bufferArray));
 }
 
 void D3D12RenderSystem::Release(Buffer& buffer)

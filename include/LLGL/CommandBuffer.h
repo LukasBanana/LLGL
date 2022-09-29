@@ -358,7 +358,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] bindPoint Specifies to which pipeline the resource heap is meant be bound. By default PipelineBindPoint::Undefined.
         If this is PipelineBindPoint::Undefined, the resource heap is automatically bound to the graphics and/or compute pipeline.
         Use this parameter if a resource heap has one or more resources that are in both the graphics and compute pipeline to avoid unnecessary bindings.
-        \remarks Any previously bound resources are invalid after this call.
+        \remarks Any previous resource bindings are invalid after this call.
         \see ResourceHeap::GetNumDescriptorSets
         */
         virtual void SetResourceHeap(

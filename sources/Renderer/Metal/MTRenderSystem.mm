@@ -78,7 +78,7 @@ Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 BufferArray* MTRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return TakeOwnership(bufferArrays_, MakeUnique<MTBufferArray>(bufferArray[0]->GetBindFlags(), numBuffers, bufferArray));
+    return TakeOwnership(bufferArrays_, MakeUnique<MTBufferArray>(numBuffers, bufferArray));
 }
 
 void MTRenderSystem::Release(Buffer& buffer)

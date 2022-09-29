@@ -18,6 +18,7 @@
 #include "Buffer/GLBufferWithVAO.h"
 #include "Buffer/GLBufferArrayWithVAO.h"
 #include "../CheckedCast.h"
+#include "../BufferUtils.h"
 #include "../TextureUtils.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Assertion.h"
@@ -190,20 +191,29 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& desc, const voi
     }
 }
 
+// Returns true if at least one of the buffers in the specified array has a VertexBuffer binding flag.
+static bool IsBufferArrayWithVertexBufferBinding(std::uint32_t numBuffers, Buffer* const * bufferArray)
+{
+    for (std::uint32_t i = 0; i < numBuffers; ++i)
+    {
+        if ((bufferArray[i]->GetBindFlags() & BindFlags::VertexBuffer) != 0)
+            return true;
+    }
+    return false;
+}
+
 BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
 
-    auto refBindFlags = bufferArray[0]->GetBindFlags();
-    if ((refBindFlags & BindFlags::VertexBuffer) != 0)
+    if (IsBufferArrayWithVertexBufferBinding(numBuffers, bufferArray))
     {
         /* Create vertex buffer array and build VAO */
-        auto vertexBufferArray = MakeUnique<GLBufferArrayWithVAO>(refBindFlags);
-        vertexBufferArray->BuildVertexArray(numBuffers, bufferArray);
+        auto vertexBufferArray = MakeUnique<GLBufferArrayWithVAO>(numBuffers, bufferArray);
         return TakeOwnership(bufferArrays_, std::move(vertexBufferArray));
     }
 
-    return TakeOwnership(bufferArrays_, MakeUnique<GLBufferArray>(refBindFlags, numBuffers, bufferArray));
+    return TakeOwnership(bufferArrays_, MakeUnique<GLBufferArray>(numBuffers, bufferArray));
 }
 
 void GLRenderSystem::Release(Buffer& buffer)

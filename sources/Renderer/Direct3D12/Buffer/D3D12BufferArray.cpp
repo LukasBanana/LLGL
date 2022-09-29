@@ -8,6 +8,7 @@
 #include "D3D12BufferArray.h"
 #include "D3D12Buffer.h"
 #include "../../CheckedCast.h"
+#include "../../BufferUtils.h"
 #include "../../../Core/Helper.h"
 
 
@@ -15,8 +16,8 @@ namespace LLGL
 {
 
 
-D3D12BufferArray::D3D12BufferArray(long bindFlags, std::uint32_t numBuffers, Buffer* const * bufferArray) :
-    BufferArray { bindFlags }
+D3D12BufferArray::D3D12BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
+    BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
 {
     /* Store the strides and offests of each D3D12VertexBuffer inside the arrays */
     vertexBufferViews_.reserve(numBuffers);
