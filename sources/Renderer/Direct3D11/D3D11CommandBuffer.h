@@ -22,6 +22,7 @@ namespace LLGL
 {
 
 
+class D3D11Buffer;
 class D3D11StateManager;
 class D3D11RenderTarget;
 class D3D11RenderContext;
@@ -279,10 +280,12 @@ class D3D11CommandBuffer final : public CommandBuffer
 
     private:
 
+        // Wrapper structure for the framebuffer resource views.
         struct D3D11FramebufferView
         {
-            std::vector<ID3D11RenderTargetView*>    rtvList;
-            ID3D11DepthStencilView*                 dsv = nullptr;
+            UINT                            numRenderTargetViews    = 0;
+            ID3D11RenderTargetView* const * renderTargetViews       = nullptr;
+            ID3D11DepthStencilView*         depthStencilView        = nullptr;
         };
 
     private:

@@ -80,8 +80,8 @@ class D3D11RenderContext final : public RenderContext
 
         D3D11BackBuffer             backBuffer_;
 
-        DXGI_FORMAT                 colorFormat_        = DXGI_FORMAT_UNKNOWN;
-        DXGI_FORMAT                 depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT                 colorFormat_            = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT                 depthStencilFormat_     = DXGI_FORMAT_UNKNOWN;
 
 };
 
