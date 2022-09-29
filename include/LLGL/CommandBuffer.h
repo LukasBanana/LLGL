@@ -372,7 +372,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] resource Specifies the resource to set.
         \param[in] slot Specifies the slot index where to put the resource.
         \param[in] bindFlags Specifies to types of binding points for this resource.
-        This can be a bitwise OR combinations of the BindFlags entries.
+        This can be a bitwise OR combination of the BindFlags entries.
+        Input and output binding flags cannot be used together when a resource is bound, e.g. a texture cannot be sampled while it is written to.
         \param[in] stageFlags Specifies at which shader stages the resource is to be set.
         This can be a bitwise OR combinations of the StageFlags entries. By default StageFlags::AllStages.
         \remarks This function is only supported with the older graphics APIs and only available for convenience.

@@ -8,6 +8,7 @@
 #include "DbgCommandBuffer.h"
 #include "DbgCore.h"
 #include "../CheckedCast.h"
+#include "../ResourceUtils.h"
 #include "../../Core/Helper.h"
 
 #include "DbgRenderContext.h"
@@ -1678,6 +1679,16 @@ void DbgCommandBuffer::ValidateBindFlags(long resourceFlags, long bindFlags, lon
             ErrorType::InvalidArgument,
             std::string(resourceName != nullptr ? resourceName : "resource") +
             " was not created with the the following bind flags: " + BindFlagsToStringList(missingFlags)
+        );
+    }
+
+    /* Validate resource is not bound as both input and output */
+    if (HasInputBindFlags(bindFlags) && HasOutputBindFlags(bindFlags))
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot bind " + std::string(resourceName != nullptr ? resourceName : "resource") +
+            " as both input and output"
         );
     }
 }

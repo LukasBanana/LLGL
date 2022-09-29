@@ -82,6 +82,7 @@ struct BindingDescriptor
 
     /**
     \brief Specifies to which kind of resource slot the resource will be bound. By default 0.
+    \remarks Input and output binding flags cannot be used together when a resource is bound, e.g. a texture cannot be sampled while it is written to.
     \remarks When a Buffer is bound to a constant buffer slot for instance, the binding flag BindFlags::ConstantBuffer is required.
     When a Texture is bound to a sampled texture slot, the binding flag BindFlags::Sampled is required and so on.
     \see BindFlags

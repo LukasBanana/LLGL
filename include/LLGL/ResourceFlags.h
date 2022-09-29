@@ -51,6 +51,11 @@ enum class ResourceType
 
 /**
 \brief Flags for Buffer and Texture resources that describe for which purposes they will be used.
+\remarks Resources can be created with both input and output binding flags, but they cannot be used together when the resource is bound. See the following table for compatibility:
+| Binding type | Binding flags |
+|--------------|---------------|
+| Input | BindFlags::Sampled, BindFlags::CopySrc, BindFlags::VertexBuffer, BindFlags::IndexBuffer, BindFlags::ConstantBuffer, BindFlags::IndirectBuffer |
+| Output | BindFlags::Storage, BindFlags::CopyDst, BindFlags::ColorAttachment, BindFlags::DepthStencilAttachment, BindFlags::StreamOutputBuffer |
 \see BufferDescriptor::bindFlags
 \see TextureDescriptor::bindFlags
 \see BindingDescriptor::bindFlags

@@ -10,6 +10,7 @@
 #include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/Helper.h"
 #include "../Ext/GLExtensionRegistry.h"
 
 
@@ -63,12 +64,12 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
     /* Bind VAO */
     GLStateManager::Get().BindVertexArray(GetVaoID());
     {
-        while (numBuffers-- > 0)
+        while (auto bufferGL = NextArrayResource<GLBuffer>(numBuffers, bufferArray))
         {
-            if (((*bufferArray)->GetBindFlags() & BindFlags::VertexBuffer) != 0)
+            if ((bufferGL->GetBindFlags() & BindFlags::VertexBuffer) != 0)
             {
                 /* Bind VBO */
-                auto vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, (*bufferArray++));
+                auto vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, bufferGL);
                 GLStateManager::Get().BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBufferGL->GetID());
 
                 /* Build each vertex attribute */
