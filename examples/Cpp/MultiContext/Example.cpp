@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
                     {
                         std::cout << "Logic Fragment Operation ";
                         enableLogicOp[i] = !enableLogicOp[i];
-                        if (enableLogicOp)
+                        if (enableLogicOp[i])
                             std::cout << "Enabled";
                         else
                             std::cout << "Disabled";
