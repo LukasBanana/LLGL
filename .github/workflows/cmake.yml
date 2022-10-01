@@ -1,0 +1,32 @@
+name: CMake
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  BUILD_TYPE: Debug
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Checkout Dependencies
+      run: |
+        git clone https://github.com/LukasBanana/GaussianLib.git
+        wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.1.130-xenial.list http://packages.lunarg.com/vulkan/1.1.130/lunarg-vulkan-1.1.130-xenial.list
+        sudo apt update
+        sudo apt-get install libx11-dev libxxf86vm-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev vulkan-sdk vulkan-tools
+
+    - name: Configure CMake
+      run: cmake -S . -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_VULKAN=ON -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      
