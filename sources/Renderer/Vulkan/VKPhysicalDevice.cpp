@@ -132,7 +132,7 @@ static std::vector<Format> GetDefaultSupportedVKTextureFormats()
     };
 }
 
-static std::initializer_list<Format> GetCompressedVKTextureFormatsS3TC()
+static std::vector<Format> GetCompressedVKTextureFormatsS3TC()
 {
     return
     {
@@ -165,7 +165,10 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.textureFormats                             = GetDefaultSupportedVKTextureFormats();
 
     if (features_.textureCompressionBC != VK_FALSE)
-        caps.textureFormats.insert(caps.textureFormats.end(), GetCompressedVKTextureFormatsS3TC());
+    {
+        const auto compressedTextureFormats = GetCompressedVKTextureFormatsS3TC();
+        caps.textureFormats.insert(caps.textureFormats.end(), compressedTextureFormats.begin(), compressedTextureFormats.end());
+    }
 
     /* Query features */
     caps.features.hasRenderTargets                  = true;
