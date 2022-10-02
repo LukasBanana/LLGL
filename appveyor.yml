@@ -63,22 +63,22 @@ environment:
       CONFIG: Release
 
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-      GENERATOR: "Visual Studio 16 2022"
+      GENERATOR: "Visual Studio 17 2022"
       ARCH: "Win32"
       CONFIG: Debug
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-      GENERATOR: "Visual Studio 16 2022"
+      GENERATOR: "Visual Studio 17 2022"
       ARCH: "Win32"
       CONFIG: Release
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-      GENERATOR: "Visual Studio 16 2022"
+      GENERATOR: "Visual Studio 17 2022"
       ARCH: "x64"
       CONFIG: Debug
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-      GENERATOR: "Visual Studio 16 2022"
+      GENERATOR: "Visual Studio 17 2022"
       ARCH: "x64"
       CONFIG: Release
 
