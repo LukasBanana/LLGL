@@ -18,7 +18,7 @@ namespace LLGL
 
 static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 {
-    if (auto display = Display::InstantiatePrimary())
+    if (auto display = Display::GetPrimary())
     {
         const auto resolution = display->GetDisplayMode().resolution;
         return
@@ -123,7 +123,7 @@ void LinuxWindow::Show(bool show)
     }
     else
         XUnmapWindow(display_, wnd_);
-        
+
     if (desc_.borderless)
         XSetInputFocus(display_, (show ? wnd_ : None), RevertToParent, CurrentTime);
 }
@@ -170,7 +170,7 @@ void LinuxWindow::OnProcessEvents()
             case ButtonRelease:
                 ProcessMouseKeyEvent(event.xbutton, false);
                 break;
-                
+
             case Expose:
                 ProcessExposeEvent();
                 break;
@@ -182,7 +182,7 @@ void LinuxWindow::OnProcessEvents()
             case DestroyNotify:
                 PostQuit();
                 break;
-                
+
             case ClientMessage:
                 ProcessClientMessage(event.xclient);
                 break;
@@ -216,20 +216,20 @@ void LinuxWindow::OpenWindow()
 
     if (!display_)
         throw std::runtime_error("failed to open X11 display");
-        
+
     /* Setup common parameters for window creation */
     ::Window    rootWnd     = (nativeHandle != nullptr ? nativeHandle->parentWindow : DefaultRootWindow(display_));
     int         screen      = (nativeHandle != nullptr ? nativeHandle->screen : DefaultScreen(display_));
     ::Visual*   visual      = (nativeHandle != nullptr ? nativeHandle->visual->visual : DefaultVisual(display_, screen));
     int         depth       = (nativeHandle != nullptr ? nativeHandle->visual->depth : DefaultDepth(display_, screen));
     int         borderSize  = 0;
-    
+
     /* Setup window attributes */
     XSetWindowAttributes attribs;
     attribs.background_pixel    = WhitePixel(display_, screen);
     attribs.border_pixel        = 0;
     attribs.event_mask          = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
-    
+
     unsigned long valueMask     = CWEventMask | CWBorderPixel;//(CWColormap | CWEventMask | CWOverrideRedirect)
 
     if (nativeHandle)
@@ -239,7 +239,7 @@ void LinuxWindow::OpenWindow()
     }
     else
         valueMask |= CWBackPixel;
-        
+
     if (desc_.borderless) //WARNING -> input no longer works
     {
         valueMask |= CWOverrideRedirect;
@@ -265,23 +265,23 @@ void LinuxWindow::OpenWindow()
         valueMask,
         (&attribs)
     );
-    
+
     /* Set title and show window (if enabled) */
     SetTitle(desc_.title);
 
     /* Show window */
     if (desc_.visible)
         Show();
-    
+
     /* Prepare borderless window */
     if (desc_.borderless)
     {
         XGrabKeyboard(display_, wnd_, True, GrabModeAsync, GrabModeAsync, CurrentTime);
         XGrabPointer(display_, wnd_, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, wnd_, None, CurrentTime);
     }
-    
+
     /* Enable WM_DELETE_WINDOW protocol */
-    closeWndAtom_ = XInternAtom(display_, "WM_DELETE_WINDOW", False); 
+    closeWndAtom_ = XInternAtom(display_, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(display_, wnd_, &closeWndAtom_, 1);
 }
 
@@ -320,13 +320,13 @@ void LinuxWindow::ProcessExposeEvent()
 {
     XWindowAttributes attribs;
     XGetWindowAttributes(display_, wnd_, &attribs);
-    
+
     const Extent2D size
     {
         static_cast<std::uint32_t>(attribs.width),
         static_cast<std::uint32_t>(attribs.height)
     };
-    
+
     PostResize(size);
 }
 

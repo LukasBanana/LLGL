@@ -13,16 +13,26 @@ namespace LLGL
 {
 
 
-std::vector<std::unique_ptr<Display>> Display::InstantiateList()
+std::size_t Display::Count()
 {
-    std::vector<std::unique_ptr<Display>> displayList;
-    displayList.push_back(Display::InstantiatePrimary());
+    return 1;
+}
+
+Display* const * Display::GetList()
+{
+    static Display* displayList[] = { GetPrimary(), nullptr };
     return displayList;
 }
 
-std::unique_ptr<Display> Display::InstantiatePrimary()
+Display* Display::Get(std::size_t index)
 {
-    return MakeUnique<IOSDisplay>();
+    return (index == 0 ? GetPrimary() : nullptr);
+}
+
+Display* Display::GetPrimary()
+{
+    static std::unique_ptr<Display> primaryDisplay = MakeUnique<IOSDisplay>();
+    return primaryDisplay.get();
 }
 
 bool Display::ShowCursor(bool show)
@@ -33,6 +43,16 @@ bool Display::ShowCursor(bool show)
 bool Display::IsCursorShown()
 {
     return false;
+}
+
+bool Display::SetCursorPosition(const Offset2D& position)
+{
+    return false;
+}
+
+Offset2D Display::GetCursorPosition()
+{
+    return { 0, 0 };
 }
 
 

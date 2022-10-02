@@ -35,11 +35,78 @@ static bool MatchDisplayMode(const DisplayModeDescriptor& displayModeDesc, CGDis
     );
 }
 
+static bool HasMonitorListChanged()
+{
+    //TODO
+    return false;
+}
+
+static bool UpdateDisplayList()
+{
+    if (HasMonitorListChanged())
+    {
+        //TODO
+        return true;
+    }
+    return false;
+}
+
 
 /*
  * Display class
  */
 
+std::size_t Display::Count()
+{
+    #if 0 //TODO
+    UpdateDisplayList();
+    return g_displayList.size();
+    #else
+    return 0;
+    #endif
+}
+
+Display* const * Display::GetList()
+{
+    #if 0 //TODO
+    if (UpdateDisplayList())
+    {
+        /* Update reference list and append null terminator to array */
+        g_displayRefList.clear();
+        g_displayRefList.reserve(g_displayList.size() + 1);
+        for (const auto& entry : g_displayList)
+            g_displayRefList.push_back(entry.display.get());
+        g_displayRefList.push_back(nullptr);
+    }
+    else if (g_displayRefList.empty())
+        g_displayRefList = { nullptr };
+    return g_displayRefList.data();
+    #else
+    return nullptr;
+    #endif
+}
+
+Display* Display::Get(std::size_t index)
+{
+    #if 0 //TODO
+    UpdateDisplayList();
+    return (index < g_displayList.size() ? g_displayList[index].display.get() : nullptr);
+    #else
+    return nullptr;
+    #endif
+}
+
+Display* Display::GetPrimary()
+{
+    #if 0 //TODO
+    UpdateDisplayList();
+    return g_primaryDisplay;
+    #else
+    return nullptr;
+    #endif
+}
+
+#if 0
 std::vector<std::unique_ptr<Display>> Display::InstantiateList()
 {
     static const std::uint32_t maxNumDisplays = 16;
@@ -62,6 +129,7 @@ std::unique_ptr<Display> Display::InstantiatePrimary()
 {
     return MakeUnique<MacOSDisplay>(CGMainDisplayID());
 }
+#endif
 
 static bool g_cursorVisible = true;
 
@@ -81,6 +149,18 @@ bool Display::ShowCursor(bool show)
 bool Display::IsCursorShown()
 {
     return g_cursorVisible;
+}
+
+bool Display::SetCursorPosition(const Offset2D& position)
+{
+    //TODO
+    return false;
+}
+
+Offset2D Display::GetCursorPosition()
+{
+    //TODO
+    return { 0, 0 };
 }
 
 

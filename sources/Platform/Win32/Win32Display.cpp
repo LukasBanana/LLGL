@@ -9,6 +9,7 @@
 #include "../../Core/Helper.h"
 #include <locale>
 #include <codecvt>
+#include <algorithm>
 
 
 namespace LLGL
@@ -19,8 +20,32 @@ namespace LLGL
  * Internals
  */
 
-// Thread local reference to the output list of the Display::InstantiateList function
-thread_local static std::vector<std::unique_ptr<Display>>* g_displayListRef;
+struct Win32DisplayContainer
+{
+    Win32DisplayContainer() = default;
+    Win32DisplayContainer(
+        std::unique_ptr<Win32Display>&& display,
+        int                             cacheIndex)
+    :
+        display    { std::forward<std::unique_ptr<Win32Display>&&>(display) },
+        cacheIndex { cacheIndex                                             }
+    {
+    }
+
+    std::unique_ptr<Win32Display>   display;
+    int                             cacheIndex;
+};
+
+static std::vector<Win32DisplayContainer>   g_displayList;
+static std::vector<Display*>                g_displayRefList;
+static Win32Display*                        g_primaryDisplay;
+static int                                  g_displayCacheIndex;
+
+struct MonitorChangedInfo
+{
+    std::size_t numRegisteredMonitors;
+    std::size_t numUnregisteredMonitors;
+};
 
 static void Convert(DisplayModeDescriptor& dst, const DEVMODE& src)
 {
@@ -36,14 +61,82 @@ static void Convert(DEVMODE& dst, const DisplayModeDescriptor& src)
     dst.dmDisplayFrequency  = static_cast<DWORD>(src.refreshRate);
 }
 
+static BOOL CALLBACK Win32MonitorChangedEnumProc(HMONITOR monitor, HDC hDC, LPRECT rect, LPARAM data)
+{
+    auto& info = *reinterpret_cast<MonitorChangedInfo*>(data);
+    auto it = std::find_if(
+        g_displayList.begin(), g_displayList.end(),
+        [monitor](const Win32DisplayContainer& entry) -> bool
+        {
+            return (entry.display->GetNative() == monitor);
+        }
+    );
+    if (it != g_displayList.end())
+        info.numRegisteredMonitors++;
+    else
+        info.numUnregisteredMonitors++;
+    return TRUE;
+}
+
+static bool HasMonitorListChanged()
+{
+    /* Check if there are any unregistered monitors or if we lost any monitors */
+    MonitorChangedInfo info = { 0, 0 };
+    EnumDisplayMonitors(nullptr, nullptr, Win32MonitorChangedEnumProc, reinterpret_cast<LPARAM>(&info));
+    return (info.numUnregisteredMonitors > 0 || info.numRegisteredMonitors != g_displayList.size());
+}
+
 static BOOL CALLBACK Win32MonitorEnumProc(HMONITOR monitor, HDC hDC, LPRECT rect, LPARAM data)
 {
-    if (g_displayListRef)
+    auto it = std::find_if(
+        g_displayList.begin(), g_displayList.end(),
+        [monitor](const Win32DisplayContainer& entry) -> bool
+        {
+            return (entry.display->GetNative() == monitor);
+        }
+    );
+    if (it != g_displayList.end())
     {
-        g_displayListRef->push_back(MakeUnique<Win32Display>(monitor));
-        return TRUE;
+        /* Update cache index */
+        it->cacheIndex = g_displayCacheIndex;
     }
-    return FALSE;
+    else
+    {
+        /* Allocate new display object */
+        auto display = MakeUnique<Win32Display>(monitor);
+        if (display->IsPrimary())
+            g_primaryDisplay = display.get();
+        g_displayList.emplace_back(std::move(display), g_displayCacheIndex);
+    }
+    return TRUE;
+}
+
+static bool UpdateDisplayList()
+{
+    if (HasMonitorListChanged())
+    {
+        /* Clear primary display */
+        g_primaryDisplay = nullptr;
+
+        /* Move to next cache index to determine which display entry is outdated */
+        g_displayCacheIndex = (g_displayCacheIndex + 1) % 2;
+
+        /* Gather new monitors */
+        EnumDisplayMonitors(nullptr, nullptr, Win32MonitorEnumProc, 0);
+
+        /* Remove outdated entries from the map */
+        RemoveAllFromListIf(
+            g_displayList,
+            [](const Win32DisplayContainer& entry) -> bool
+            {
+                /* Add entry to reference list if cache index matches, otherwise remove from list */
+                return (entry.cacheIndex != g_displayCacheIndex);
+            }
+        );
+
+        return true;
+    }
+    return false;
 }
 
 static bool IsCursorVisible(bool& visible)
@@ -63,23 +156,38 @@ static bool IsCursorVisible(bool& visible)
  * Display class
  */
 
-std::vector<std::unique_ptr<Display>> Display::InstantiateList()
+std::size_t Display::Count()
 {
-    std::vector<std::unique_ptr<Display>> displayList;
-
-    g_displayListRef = (&displayList);
-    {
-        EnumDisplayMonitors(nullptr, nullptr, Win32MonitorEnumProc, 0);
-    }
-    g_displayListRef = nullptr;
-
-    return displayList;
+    UpdateDisplayList();
+    return g_displayList.size();
 }
 
-std::unique_ptr<Display> Display::InstantiatePrimary()
+Display* const * Display::GetList()
 {
-    auto monitor = MonitorFromPoint({}, MONITOR_DEFAULTTOPRIMARY);
-    return MakeUnique<Win32Display>(monitor);
+    if (UpdateDisplayList())
+    {
+        /* Update reference list and append null terminator to array */
+        g_displayRefList.clear();
+        g_displayRefList.reserve(g_displayList.size() + 1);
+        for (const auto& entry : g_displayList)
+            g_displayRefList.push_back(entry.display.get());
+        g_displayRefList.push_back(nullptr);
+    }
+    else if (g_displayRefList.empty())
+        g_displayRefList = { nullptr };
+    return g_displayRefList.data();
+}
+
+Display* Display::Get(std::size_t index)
+{
+    UpdateDisplayList();
+    return (index < g_displayList.size() ? g_displayList[index].display.get() : nullptr);
+}
+
+Display* Display::GetPrimary()
+{
+    UpdateDisplayList();
+    return g_primaryDisplay;
 }
 
 bool Display::ShowCursor(bool show)
@@ -107,6 +215,20 @@ bool Display::IsCursorShown()
     bool visible = true;
     IsCursorVisible(visible);
     return visible;
+}
+
+bool Display::SetCursorPosition(const Offset2D& position)
+{
+    return (::SetCursorPos(position.x, position.y) != FALSE);
+}
+
+Offset2D Display::GetCursorPosition()
+{
+    POINT pos;
+    if (::GetCursorPos(&pos) != FALSE)
+        return { pos.x, pos.y };
+    else
+        return { 0, 0 };
 }
 
 

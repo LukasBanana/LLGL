@@ -59,9 +59,9 @@ bool Canvas::ProcessEvents()
     return !HasQuit();
 }
 
-std::unique_ptr<Display> Canvas::FindResidentDisplay() const
+Display* Canvas::FindResidentDisplay() const
 {
-    return Display::InstantiatePrimary();
+    return Display::GetPrimary();
 }
 
 /* --- Event handling --- */

@@ -188,7 +188,7 @@ class LLGL_EXPORT Window : public Surface
         bool ProcessEvents() override final;
 
         //! Searches the entire list of displays until a display is found where more than the half of this window's client area is visible.
-        std::unique_ptr<Display> FindResidentDisplay() const override final;
+        Display* FindResidentDisplay() const override final;
 
         /* --- Event handling --- */
 

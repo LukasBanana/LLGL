@@ -89,11 +89,11 @@ class LLGL_EXPORT Surface : public Interface
         virtual bool ProcessEvents() = 0;
 
         /**
-        \brief Instantiates the Display interface where this surface is resident in.
+        \brief Returns the Display interface where this surface is resident in.
         \remarks A surface is considered resident in a display if more than the half of its client area is visible in that display.
         \return New instance of a Display where this surface is resident or null if there no display has been found.
         */
-        virtual std::unique_ptr<Display> FindResidentDisplay() const = 0;
+        virtual Display* FindResidentDisplay() const = 0;
 
 };
 

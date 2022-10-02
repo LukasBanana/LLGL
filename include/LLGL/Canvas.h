@@ -99,8 +99,8 @@ class LLGL_EXPORT Canvas : public Surface
         */
         bool ProcessEvents() override final;
 
-        //! Always returns Display::InstantiatePrimary.
-        std::unique_ptr<Display> FindResidentDisplay() const override final;
+        //! Always returns Display::GetPrimary.
+        Display* FindResidentDisplay() const override final;
 
         /* --- Event handling --- */
 

@@ -37,6 +37,14 @@ class Win32Display final : public Display
 
         std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const override;
 
+    public:
+
+        // Returns the native display handle as HMONITOR.
+        HMONITOR GetNative() const
+        {
+            return monitor_;
+        }
+
     private:
 
         void GetInfo(MONITORINFO& info) const;

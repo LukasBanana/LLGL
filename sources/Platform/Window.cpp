@@ -143,15 +143,13 @@ bool Window::ProcessEvents()
     return !HasQuit();
 }
 
-std::unique_ptr<Display> Window::FindResidentDisplay() const
+Display* Window::FindResidentDisplay() const
 {
-    auto displayList = Display::InstantiateList();
-
     const auto winPos   = GetPosition();
     const auto winSize  = GetSize();
     const auto winArea  = static_cast<int>(winSize.width * winSize.height);
 
-    for (auto& display : displayList)
+    for (auto displayList = Display::GetList(); auto display = *displayList; ++displayList)
     {
         auto offset = display->GetOffset();
         auto extent = display->GetDisplayMode().resolution;
@@ -179,7 +177,7 @@ std::unique_ptr<Display> Window::FindResidentDisplay() const
             auto visArea = x2 * y2;
 
             if (visArea * 2 >= winArea)
-                return std::move(display);
+                return display;
         }
     }
 

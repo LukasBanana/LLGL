@@ -19,8 +19,7 @@ int main(int argc, char* argv[])
     {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> utf8converter;
 
-        auto displayList = LLGL::Display::InstantiateList();
-        for (const auto& display : displayList)
+        for (std::size_t i = 0; auto display = LLGL::Display::Get(i); ++i)
         {
             auto displayOffset  = display->GetOffset();
             auto displayMode    = display->GetDisplayMode();
