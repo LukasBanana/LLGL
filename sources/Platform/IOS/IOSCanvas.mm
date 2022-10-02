@@ -6,6 +6,7 @@
  */
 
 #include "IOSCanvas.h"
+#include "../../Core/Helper.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -82,7 +83,7 @@ namespace LLGL
 
 std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 {
-    return std::unique_ptr<Canvas>(new IOSCanvas(desc));
+    return MakeUnique<IOSCanvas>(desc);
 }
 
 IOSCanvas::IOSCanvas(const CanvasDescriptor& desc) :

@@ -10,6 +10,7 @@
 
 #include "MacOSWindow.h"
 #include "MapKey.h"
+#include "../../Core/Helper.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <cstdlib>
 
@@ -252,7 +253,7 @@ static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
-    return std::unique_ptr<Window>(new MacOSWindow(desc));
+    return MakeUnique<MacOSWindow>(desc);
 }
 
 MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :

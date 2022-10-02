@@ -7,6 +7,7 @@
 
 #include "AndroidCanvas.h"
 #include "AndroidApp.h"
+#include "../../Core/Helper.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -16,7 +17,7 @@ namespace LLGL
 
 std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 {
-    return std::unique_ptr<Canvas>(new AndroidCanvas(desc));
+    return MakeUnique<AndroidCanvas>(desc);
 }
 
 AndroidCanvas::AndroidCanvas(const CanvasDescriptor& desc) :

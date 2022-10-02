@@ -6,6 +6,7 @@
  */
 
 #include "IOSTimer.h"
+#include "../../Core/Helper.h"
 
 
 namespace LLGL
@@ -14,7 +15,7 @@ namespace LLGL
     
 std::unique_ptr<Timer> Timer::Create()
 {
-    return std::unique_ptr<Timer>(new IOSTimer());
+    return MakeUnique<IOSTimer>();
 }
 
 IOSTimer::IOSTimer()

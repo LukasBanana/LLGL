@@ -6,6 +6,7 @@
  */
 
 #include "Win32Timer.h"
+#include "../../Core/Helper.h"
 #include <algorithm>
 
 
@@ -21,7 +22,7 @@ This is caused by unexpected data across the PCI to ISA bridge, aka south bridge
 
 std::unique_ptr<Timer> Timer::Create()
 {
-    return std::unique_ptr<Win32Timer>(new Win32Timer{});
+    return MakeUnique<Win32Timer>();
 }
 
 Win32Timer::Win32Timer()

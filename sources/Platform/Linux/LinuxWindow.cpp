@@ -9,6 +9,7 @@
 #include <LLGL/Display.h>
 #include "LinuxWindow.h"
 #include "MapKey.h"
+#include "../../Core/Helper.h"
 #include <exception>
 
 
@@ -32,7 +33,7 @@ static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
-    return std::unique_ptr<Window>(new LinuxWindow(desc));
+    return MakeUnique<LinuxWindow>(desc);
 }
 
 LinuxWindow::LinuxWindow(const WindowDescriptor& desc) :

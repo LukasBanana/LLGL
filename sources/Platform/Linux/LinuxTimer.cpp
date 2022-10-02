@@ -6,6 +6,7 @@
  */
 
 #include "LinuxTimer.h"
+#include "../../Core/Helper.h"
 #include <algorithm>
 #include <cstdint>
 
@@ -16,7 +17,7 @@ namespace LLGL
 
 std::unique_ptr<Timer> Timer::Create()
 {
-    return std::unique_ptr<Timer>(new LinuxTimer {});
+    return MakeUnique<LinuxTimer>();
 }
 
 LinuxTimer::LinuxTimer()

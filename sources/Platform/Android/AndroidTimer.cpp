@@ -6,15 +6,16 @@
  */
 
 #include "AndroidTimer.h"
+#include "../../Core/Helper.h"
 
 
 namespace LLGL
 {
 
-    
+
 std::unique_ptr<Timer> Timer::Create()
 {
-    return std::unique_ptr<Timer>(new AndroidTimer());
+    return MakeUnique<AndroidTimer>();
 }
 
 AndroidTimer::AndroidTimer()
@@ -39,8 +40,8 @@ bool AndroidTimer::IsRunning() const
 {
     return false;
 }
-    
-    
+
+
 } // /namespace LLGL
 
 

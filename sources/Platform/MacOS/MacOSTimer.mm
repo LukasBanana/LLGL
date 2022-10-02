@@ -6,15 +6,16 @@
  */
 
 #include "MacOSTimer.h"
+#include "../../Core/Helper.h"
 
 
 namespace LLGL
 {
 
-    
+
 std::unique_ptr<Timer> Timer::Create()
 {
-    return std::unique_ptr<Timer>(new MacOSTimer());
+    return MakeUnique<MacOSTimer>();
 }
 
 MacOSTimer::MacOSTimer()
@@ -51,8 +52,8 @@ bool MacOSTimer::IsRunning() const
 {
     return running_;
 }
-    
-    
+
+
 } // /namespace LLGL
 
 
