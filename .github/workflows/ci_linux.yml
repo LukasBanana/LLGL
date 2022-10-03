@@ -1,4 +1,4 @@
-name: CMake
+name: Build Linux
 
 on:
   push:
