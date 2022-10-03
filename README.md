@@ -27,8 +27,8 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 |----------|:--:|:-----:|:-----:|:------:|:------:|:----------:|:-----:|
 | <img src="docu/Icons/windows.svg" height="20" /> Windows | [![Windows Build](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A | N/A |
 | <img src="docu/Icons/linux.svg" height="20" /> GNU/Linux | [![GNU/Linux Build Status](https://github.com/LukasBanana/LLGL/actions/workflows/ci_linux.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_linux.yml) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A | N/A |
-| <img src="docu/Icons/macos.svg" height="20" /> macOS | [![macOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_MACOS=&label=build)](https://travis-ci.com/LukasBanana/LLGL) | N/A | N/A | N/A | :heavy_check_mark: | N/A | :heavy_check_mark: |
-| <img src="docu/Icons/ios.svg" height="20" /> iOS | [![iOS Build Status](http://badges.herokuapp.com/travis/LukasBanana/LLGL?env=BADGE_IOS=&label=build)](https://travis-ci.com/LukasBanana/LLGL) | N/A | N/A | N/A | N/A | :heavy_multiplication_x: | :heavy_check_mark: |
+| <img src="docu/Icons/macos.svg" height="20" /> macOS | [![macOS Build Status](https://github.com/LukasBanana/LLGL/actions/workflows/ci_macos.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_macos.yml) | N/A | N/A | N/A | :heavy_check_mark: | N/A | :heavy_check_mark: |
+| <img src="docu/Icons/ios.svg" height="20" /> iOS | [![iOS Build Status](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml) | N/A | N/A | N/A | N/A | :heavy_multiplication_x: | :heavy_check_mark: |
 | <img src="docu/Icons/android.svg" height="20" /> Android | | N/A | N/A | :heavy_multiplication_x: | N/A | :heavy_check_mark: | N/A |
 
 
