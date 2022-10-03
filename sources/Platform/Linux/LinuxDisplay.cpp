@@ -16,6 +16,31 @@
 namespace LLGL
 {
 
+    
+static std::vector<std::unique_ptr<LinuxDisplay>>   g_displayList;
+static std::vector<Display*>                        g_displayRefList;
+static Display*                                     g_primaryDisplay;
+
+static bool UpdateDisplayList()
+{
+    static auto sharedX11Display = std::make_shared<LinuxSharedX11Display>();
+        
+    const int screenCount = ScreenCount(sharedX11Display->GetNative());
+    if (screenCount >= 0 && static_cast<std::size_t>(screenCount) != g_displayList.size())
+    {
+        g_displayList.resize(static_cast<std::size_t>(screenCount));
+        for (int i = 0; i < screenCount; ++i)
+        {
+            g_displayList[i] = MakeUnique<LinuxDisplay>(sharedX11Display, i);
+            if (i == DefaultScreen(sharedX11Display->GetNative()))
+                g_primaryDisplay = g_displayList[i].get();
+        }
+        return true;
+    }
+    
+    return false;
+}
+
 
 /*
  * LinuxSharedX11Display class
@@ -40,82 +65,37 @@ LinuxSharedX11Display::~LinuxSharedX11Display()
 
 std::size_t Display::Count()
 {
-    #if 0 //TODO
     UpdateDisplayList();
     return g_displayList.size();
-    #else
-    return 0;
-    #endif
 }
 
 Display* const * Display::GetList()
 {
-    #if 0 //TODO
     if (UpdateDisplayList())
     {
         /* Update reference list and append null terminator to array */
         g_displayRefList.clear();
         g_displayRefList.reserve(g_displayList.size() + 1);
-        for (const auto& entry : g_displayList)
-            g_displayRefList.push_back(entry.display.get());
+        for (const auto& display : g_displayList)
+            g_displayRefList.push_back(display.get());
         g_displayRefList.push_back(nullptr);
     }
     else if (g_displayRefList.empty())
         g_displayRefList = { nullptr };
     return g_displayRefList.data();
-    #else
-    return nullptr;
-    #endif
 }
 
 Display* Display::Get(std::size_t index)
 {
-    #if 0 //TODO
     UpdateDisplayList();
-    return (index < g_displayList.size() ? g_displayList[index].display.get() : nullptr);
-    #else
-    return nullptr;
-    #endif
+    return (index < g_displayList.size() ? g_displayList[index].get() : nullptr);
 }
 
 Display* Display::GetPrimary()
 {
-    #if 0 //TODO
     UpdateDisplayList();
     return g_primaryDisplay;
-    #else
-    return nullptr;
-    #endif
 }
-
-#if 0
-std::vector<std::unique_ptr<Display>> Display::InstantiateList()
-{
-    std::vector<std::unique_ptr<Display>> displayList;
-
-    /* Allocate shared X11 display handler */
-    auto sharedX11Display   = std::make_shared<LinuxSharedX11Display>();
-    auto dpy                = sharedX11Display->GetNative();
-
-    for (int i = 0, n = ScreenCount(dpy); i < n; ++i)
-    {
-        /* Make new display with current screen index */
-        displayList.emplace_back(MakeUnique<LinuxDisplay>(sharedX11Display, i));
-    }
-
-    return displayList;
-}
-
-std::unique_ptr<Display> Display::InstantiatePrimary()
-{
-    /* Allocate single X11 display handler */
-    auto sharedX11Display   = std::make_shared<LinuxSharedX11Display>();
-    auto dpy                = sharedX11Display->GetNative();
-
-    /* Make new display with default screen index */
-    return MakeUnique<LinuxDisplay>(sharedX11Display, DefaultScreen(dpy));
-}
-#endif
 
 bool Display::ShowCursor(bool show)
 {
