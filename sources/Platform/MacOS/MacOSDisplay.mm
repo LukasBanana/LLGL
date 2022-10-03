@@ -13,16 +13,42 @@ namespace LLGL
 {
 
 
+static const std::uint32_t                          g_maxNumDisplays = 16;
+static std::vector<std::unique_ptr<MacOSDisplay>>   g_displayList;
+static std::vector<Display*>                        g_displayRefList;
+static MacOSDisplay*                                g_primaryDisplay;
+
+
 /*
  * Internal functions
  */
 
+static std::uint32_t GetDisplayModeRefreshRate(CGDisplayModeRef displayMode, CGDirectDisplayID displayID)
+{
+    std::uint32_t refreshRate = static_cast<std::uint32_t>(CGDisplayModeGetRefreshRate(displayMode) + 0.5);
+
+    /* Built-in displays return 0 */
+    if (refreshRate == 0)
+    {
+        CVDisplayLinkRef displayLink = nullptr;
+        CVDisplayLinkCreateWithCGDisplay(displayID, &displayLink);
+        {
+            CVTime time = CVDisplayLinkGetNominalOutputVideoRefreshPeriod(displayLink);
+            if ((time.flags & kCVTimeIsIndefinite) == 0 && time.timeValue != 0)
+                refreshRate = static_cast<std::uint32_t>(static_cast<double>(time.timeScale) / static_cast<double>(time.timeValue) + 0.5);
+        }
+        CVDisplayLinkRelease(displayLink);
+    }
+
+    return refreshRate;
+}
+
 // Converts a CGDisplayMode to a descriptor structure
-static void Convert(DisplayModeDescriptor& dst, CGDisplayModeRef src)
+static void Convert(DisplayModeDescriptor& dst, CGDisplayModeRef src, CGDirectDisplayID displayID)
 {
     dst.resolution.width    = static_cast<std::uint32_t>(CGDisplayModeGetWidth(src));
     dst.resolution.height   = static_cast<std::uint32_t>(CGDisplayModeGetHeight(src));
-    dst.refreshRate         = static_cast<std::uint32_t>(CGDisplayModeGetRefreshRate(src));
+    dst.refreshRate         = GetDisplayModeRefreshRate(src, displayID);
 }
 
 // Returns true if the specified descriptor matches the display mode
@@ -35,20 +61,37 @@ static bool MatchDisplayMode(const DisplayModeDescriptor& displayModeDesc, CGDis
     );
 }
 
-static bool HasMonitorListChanged()
-{
-    //TODO
-    return false;
-}
-
 static bool UpdateDisplayList()
 {
-    if (HasMonitorListChanged())
+    bool changed = false;
+
+    /* Retrieve all active display IDs */
+    CGDirectDisplayID displayIDArray[g_maxNumDisplays];
+    std::uint32_t numDisplays = 0;
+
+    if (CGGetActiveDisplayList(g_maxNumDisplays, displayIDArray, &numDisplays) == kCGErrorSuccess)
     {
-        //TODO
-        return true;
+        /* Check if number of displays has changed */
+        if (numDisplays != g_displayList.size())
+        {
+            g_displayList.resize(numDisplays);
+            changed = true;
+        }
+
+        /* Allocate new display for each ID */
+        for (std::uint32_t i = 0; i < numDisplays; ++i)
+        {
+            if (g_displayList[i] == nullptr || g_displayList[i]->GetID() != displayIDArray[i])
+            {
+                g_displayList[i] = MakeUnique<MacOSDisplay>(displayIDArray[i]);
+                if (g_displayList[i]->IsPrimary())
+                    g_primaryDisplay = g_displayList[i].get();
+                changed = true;
+            }
+        }
     }
-    return false;
+
+    return changed;
 }
 
 
@@ -58,78 +101,38 @@ static bool UpdateDisplayList()
 
 std::size_t Display::Count()
 {
-    #if 0 //TODO
-    UpdateDisplayList();
-    return g_displayList.size();
-    #else
-    return 0;
-    #endif
+    std::uint32_t numDisplays = 0;
+    CGGetActiveDisplayList(g_maxNumDisplays, nullptr, &numDisplays);
+    return numDisplays;
 }
 
 Display* const * Display::GetList()
 {
-    #if 0 //TODO
     if (UpdateDisplayList())
     {
         /* Update reference list and append null terminator to array */
         g_displayRefList.clear();
         g_displayRefList.reserve(g_displayList.size() + 1);
-        for (const auto& entry : g_displayList)
-            g_displayRefList.push_back(entry.display.get());
+        for (const auto& display : g_displayList)
+            g_displayRefList.push_back(display.get());
         g_displayRefList.push_back(nullptr);
     }
     else if (g_displayRefList.empty())
         g_displayRefList = { nullptr };
     return g_displayRefList.data();
-    #else
-    return nullptr;
-    #endif
 }
 
 Display* Display::Get(std::size_t index)
 {
-    #if 0 //TODO
     UpdateDisplayList();
-    return (index < g_displayList.size() ? g_displayList[index].display.get() : nullptr);
-    #else
-    return nullptr;
-    #endif
+    return (index < g_displayList.size() ? g_displayList[index].get() : nullptr);
 }
 
 Display* Display::GetPrimary()
 {
-    #if 0 //TODO
     UpdateDisplayList();
     return g_primaryDisplay;
-    #else
-    return nullptr;
-    #endif
 }
-
-#if 0
-std::vector<std::unique_ptr<Display>> Display::InstantiateList()
-{
-    static const std::uint32_t maxNumDisplays = 16;
-
-    CGDirectDisplayID displayIDArray[maxNumDisplays] = {};
-    std::uint32_t numDisplays = 0;
-
-    std::vector<std::unique_ptr<Display>> displayList;
-
-    if (CGGetActiveDisplayList(maxNumDisplays, displayIDArray, &numDisplays) == kCGErrorSuccess)
-    {
-        for (std::uint32_t i = 0; i < numDisplays; ++i)
-            displayList.emplace_back(MakeUnique<MacOSDisplay>(displayIDArray[i]));
-    }
-
-    return displayList;
-}
-
-std::unique_ptr<Display> Display::InstantiatePrimary()
-{
-    return MakeUnique<MacOSDisplay>(CGMainDisplayID());
-}
-#endif
 
 static bool g_cursorVisible = true;
 
@@ -233,7 +236,7 @@ DisplayModeDescriptor MacOSDisplay::GetDisplayMode() const
     DisplayModeDescriptor displayModeDesc;
     {
         CGDisplayModeRef modeRef = CGDisplayCopyDisplayMode(displayID_);
-        Convert(displayModeDesc, modeRef);
+        Convert(displayModeDesc, modeRef, displayID_);
         CGDisplayModeRelease(modeRef);
     }
     return displayModeDesc;
@@ -249,7 +252,7 @@ std::vector<DisplayModeDescriptor> MacOSDisplay::GetSupportedDisplayModes() cons
     {
         DisplayModeDescriptor modeDesc;
         CGDisplayModeRef modeRef = (CGDisplayModeRef)CFArrayGetValueAtIndex(modeArrayRef, i);
-        Convert(modeDesc, modeRef);
+        Convert(modeDesc, modeRef, displayID_);
         displayModeDescs.push_back(modeDesc);
     }
 

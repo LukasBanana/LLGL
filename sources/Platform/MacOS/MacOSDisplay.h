@@ -38,6 +38,14 @@ class MacOSDisplay : public Display
 
         std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const override;
 
+    public:
+
+        // Returns the native display ID.
+        inline CGDirectDisplayID GetID() const
+        {
+            return displayID_;
+        }
+
     private:
 
         CGDirectDisplayID   displayID_              = 0;
