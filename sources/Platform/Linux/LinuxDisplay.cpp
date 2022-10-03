@@ -21,9 +21,15 @@ static std::vector<std::unique_ptr<LinuxDisplay>>   g_displayList;
 static std::vector<Display*>                        g_displayRefList;
 static Display*                                     g_primaryDisplay;
 
-static bool UpdateDisplayList()
+static std::shared_ptr<LinuxSharedX11Display> GetSharedX11Display()
 {
     static auto sharedX11Display = std::make_shared<LinuxSharedX11Display>();
+    return sharedX11Display;
+}
+
+static bool UpdateDisplayList()
+{
+    auto sharedX11Display = GetSharedX11Display();
         
     const int screenCount = ScreenCount(sharedX11Display->GetNative());
     if (screenCount >= 0 && static_cast<std::size_t>(screenCount) != g_displayList.size())
@@ -111,14 +117,45 @@ bool Display::IsCursorShown()
 
 bool Display::SetCursorPosition(const Offset2D& position)
 {
-    //TODO
-    return false;
+    auto sharedX11Display = GetSharedX11Display();
+    ::Display* dpy = sharedX11Display->GetNative();
+    Window rootWnd = DefaultRootWindow(dpy);
+    XWarpPointer(
+        /*display*/     dpy,
+        /*src_w*/       None,
+        /*dest_w*/      rootWnd,
+        /*src_x*/       0,
+        /*src_y*/       0,
+        /*src_width*/   0,
+        /*src_height*/  0,
+        /*dest_x*/      position.x,
+        /*dest_y*/      position.y
+    );
+    XFlush(dpy);
+    return true;
 }
 
 Offset2D Display::GetCursorPosition()
 {
-    //TODO
-    return { 0, 0 };
+    auto sharedX11Display = GetSharedX11Display();
+    ::Display* dpy = sharedX11Display->GetNative();
+    Window rootWnd = DefaultRootWindow(dpy);
+    Window rootWndReturn, childWndReturn;
+    unsigned int mask;
+    Offset2D rootPosition = { 0, 0 };
+    Offset2D childPosition = { 0, 0 };
+    XQueryPointer(
+        /*display*/         dpy,
+        /*w*/               rootWnd,
+        /*root_return*/     &rootWndReturn,
+        /*child_return*/    &childWndReturn,
+        /*root_x_return*/   &rootPosition.x,
+        /*root_y_return*/   &rootPosition.y,
+        /*win_x_return*/    &childPosition.x,
+        /*win_y_return*/    &childPosition.y,
+        /*mask_return*/     &mask
+    );
+    return rootPosition;
 }
 
 
