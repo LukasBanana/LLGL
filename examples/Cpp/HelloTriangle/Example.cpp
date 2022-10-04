@@ -210,11 +210,8 @@ int main(int argc, char* argv[])
             #endif
         }
 
-        // Get command queue to record and submit command buffers
-        LLGL::CommandQueue* queue = renderer->GetCommandQueue();
-
         // Create command buffer to submit subsequent graphics commands to the GPU
-        LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
+        LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer(LLGL::CommandBufferFlags::ImmediateSubmit);
 
         #ifdef ENABLE_TIMER
         auto timer = LLGL::Timer::Create();
@@ -258,7 +255,6 @@ int main(int argc, char* argv[])
                 commands->EndRenderPass();
             }
             commands->End();
-            queue->Submit(*commands);
 
             // Present the result on the screen
             context->Present();

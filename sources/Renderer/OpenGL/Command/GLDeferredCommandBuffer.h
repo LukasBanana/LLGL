@@ -13,6 +13,7 @@
 #include "GLCommandOpcode.h"
 #include "../RenderState/GLState.h"
 #include "../OpenGL.h"
+#include "../../VirtualCommandBuffer.h"
 #include <memory>
 #include <vector>
 
@@ -35,12 +36,14 @@ class GLStateManager;
 class GLRenderPass;
 class GL2XSampler;
 
+using GLVirtualCommandBuffer = VirtualCommandBuffer<GLOpcode>;
+
 class GLDeferredCommandBuffer final : public GLCommandBuffer
 {
 
     public:
 
-        GLDeferredCommandBuffer(long flags, std::size_t reservedSize = 0);
+        GLDeferredCommandBuffer(long flags, std::size_t initialBufferSize = 1024);
 
         /* ----- Encoding ----- */
 
@@ -227,7 +230,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         bool IsPrimary() const;
 
         // Returns the internal command buffer as raw byte buffer.
-        inline const std::vector<std::uint8_t>& GetRawBuffer() const
+        inline const GLVirtualCommandBuffer& GetVirtualCommandBuffer() const
         {
             return buffer_;
         }
@@ -270,11 +273,11 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void BindGL2XSampler(const GL2XSampler& samplerGL2X, std::uint32_t slot);
 
         /* Allocates only an opcode for empty commands */
-        void AllocOpCode(const GLOpcode opcode);
+        void AllocOpcode(const GLOpcode opcode);
 
         /* Allocates a new command and stores the specified opcode */
-        template <typename T>
-        T* AllocCommand(const GLOpcode opcode, std::size_t extraSize = 0);
+        template <typename TCommand>
+        TCommand* AllocCommand(const GLOpcode opcode, std::size_t payloadSize = 0);
 
     private:
 
@@ -282,7 +285,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         GLuint                      boundShaderProgram_ = 0;
 
         long                        flags_              = 0;
-        std::vector<std::uint8_t>   buffer_;
+        GLVirtualCommandBuffer      buffer_;
 
         #ifdef LLGL_ENABLE_JIT_COMPILER
         std::unique_ptr<JITProgram> executable_;

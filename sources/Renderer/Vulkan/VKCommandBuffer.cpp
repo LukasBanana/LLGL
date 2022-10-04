@@ -6,6 +6,7 @@
  */
 
 #include "VKCommandBuffer.h"
+#include "VKCommandQueue.h"
 #include "VKPhysicalDevice.h"
 #include "VKRenderContext.h"
 #include "VKTypes.h"
@@ -52,23 +53,32 @@ static std::uint32_t GetNumVkCommandBuffers(const CommandBufferDescriptor& desc)
 VKCommandBuffer::VKCommandBuffer(
     const VKPhysicalDevice&         physicalDevice,
     VKDevice&                       device,
-    VkQueue                         graphicsQueue,
+    VkQueue                         commandQueue,
     const QueueFamilyIndices&       queueFamilyIndices,
     const CommandBufferDescriptor&  desc)
 :
     device_               { device                                  },
+    commandQueue_         { commandQueue                            },
     commandPool_          { device, vkDestroyCommandPool            },
     queuePresentFamily_   { queueFamilyIndices.presentFamily        },
     maxDrawIndirectCount_ { GetMaxDrawIndirectCount(physicalDevice) }
 {
     /* Translate creation flags */
-    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+    if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
     {
-        usageFlags_     = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        bufferLevel_    = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+        immediateSubmit_    = true;
+        usageFlags_         = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     }
-    else if ((desc.flags & CommandBufferFlags::MultiSubmit) != 0)
-        usageFlags_ = 0;
+    else
+    {
+        if ((desc.flags & CommandBufferFlags::Secondary) != 0)
+            bufferLevel_ = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+
+        if ((desc.flags & CommandBufferFlags::Secondary) != 0)
+            usageFlags_ |= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        if ((desc.flags & CommandBufferFlags::MultiSubmit) == 0)
+            usageFlags_ |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    }
 
     /* Determine number of internal command buffers */
     const auto bufferCount = GetNumVkCommandBuffers(desc);
@@ -76,7 +86,7 @@ VKCommandBuffer::VKCommandBuffer(
     /* Create native command buffer objects */
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
     CreateCommandBuffers(bufferCount);
-    CreateRecordingFences(graphicsQueue, bufferCount);
+    CreateRecordingFences(commandQueue, bufferCount);
 
     /* Acquire first native command buffer */
     AcquireNextBuffer();
@@ -131,6 +141,13 @@ void VKCommandBuffer::End()
 
     /* Store new record state */
     recordState_ = RecordState::ReadyForSubmit;
+
+    /* Execute command buffer right after encoding for immediate command buffers */
+    if (IsImmediateCmdBuffer())
+    {
+        auto result = VKSubmitCommandBuffer(commandQueue_, commandBuffer_, GetQueueSubmitFence());
+        VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
+    }
 }
 
 void VKCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -912,9 +929,10 @@ void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::ui
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     if (maxDrawIndirectCount_ < numCommands)
     {
+        /* Encode multiple indirect draw commands if limit is exceeded */
         while (numCommands > 0)
         {
-            std::uint32_t drawCount = (numCommands % maxDrawIndirectCount_);
+            const std::uint32_t drawCount = (numCommands % maxDrawIndirectCount_);
             vkCmdDrawIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, drawCount, stride);
             numCommands -= drawCount;
             offset += stride;
@@ -935,9 +953,10 @@ void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     if (maxDrawIndirectCount_ < numCommands)
     {
+        /* Encode multiple indirect draw commands if limit is exceeded */
         while (numCommands > 0)
         {
-            std::uint32_t drawCount = (numCommands % maxDrawIndirectCount_);
+            const std::uint32_t drawCount = (numCommands % maxDrawIndirectCount_);
             vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, drawCount, 0);
             numCommands -= drawCount;
             offset += stride;
@@ -1029,7 +1048,7 @@ void VKCommandBuffer::CreateCommandBuffers(std::uint32_t bufferCount)
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
 }
 
-void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::uint32_t numFences)
+void VKCommandBuffer::CreateRecordingFences(VkQueue commandQueue, std::uint32_t numFences)
 {
     recordingFenceList_.reserve(numFences);
 
@@ -1049,7 +1068,7 @@ void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::uint32_t
             VKThrowIfFailed(result, "failed to create Vulkan fence");
 
             /* Initial fence signal */
-            vkQueueSubmit(graphicsQueue, 0, nullptr, fence);
+            vkQueueSubmit(commandQueue, 0, nullptr, fence);
         }
         recordingFenceList_.emplace_back(std::move(fence));
     }

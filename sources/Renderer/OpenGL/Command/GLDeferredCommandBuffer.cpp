@@ -47,10 +47,10 @@ namespace LLGL
 {
 
 
-GLDeferredCommandBuffer::GLDeferredCommandBuffer(long flags, std::size_t reservedSize) :
-    flags_ { flags }
+GLDeferredCommandBuffer::GLDeferredCommandBuffer(long flags, std::size_t initialBufferSize) :
+    flags_  { flags             },
+    buffer_ { initialBufferSize }
 {
-    buffer_.reserve(reservedSize);
 }
 
 /* ----- Encoding ----- */
@@ -58,7 +58,7 @@ GLDeferredCommandBuffer::GLDeferredCommandBuffer(long flags, std::size_t reserve
 void GLDeferredCommandBuffer::Begin()
 {
     /* Reset internal command buffer */
-    buffer_.clear();
+    buffer_.Clear();
     boundShaderProgram_ = 0;
 
     #ifdef LLGL_ENABLE_JIT_COMPILER
@@ -78,6 +78,12 @@ void GLDeferredCommandBuffer::End()
     /* Generate native assembly only if command buffer will be submitted multiple times */
     if ((GetFlags() & CommandBufferFlags::MultiSubmit) != 0)
         executable_ = AssembleGLDeferredCommandBuffer(*this);
+
+    #else
+
+    /* Pack virtual command buffer if it has to be traversed multiple times */
+    if ((GetFlags() & CommandBufferFlags::MultiSubmit) != 0)
+        buffer_.Pack();
 
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
@@ -664,7 +670,7 @@ void GLDeferredCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::ui
 
 void GLDeferredCommandBuffer::EndRenderCondition()
 {
-    AllocOpCode(GLOpcodeEndConditionalRender);
+    AllocOpcode(GLOpcodeEndConditionalRender);
 }
 
 /* ----- Stream Output ------ */
@@ -708,12 +714,12 @@ void GLDeferredCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer
 void GLDeferredCommandBuffer::EndStreamOutput()
 {
     #ifdef __APPLE__
-    AllocOpCode(GLOpcodeEndTransformFeedback);
+    AllocOpcode(GLOpcodeEndTransformFeedback);
     #else
     if (HasExtension(GLExt::EXT_transform_feedback))
-        AllocOpCode(GLOpcodeEndTransformFeedback);
+        AllocOpcode(GLOpcodeEndTransformFeedback);
     else if (HasExtension(GLExt::NV_transform_feedback))
-        AllocOpCode(GLOpcodeEndTransformFeedbackNV);
+        AllocOpcode(GLOpcodeEndTransformFeedbackNV);
     else
         ErrTransformFeedbackNotSupported(__FUNCTION__);
     #endif
@@ -977,7 +983,7 @@ void GLDeferredCommandBuffer::PopDebugGroup()
 {
     #ifdef GL_KHR_debug
     if (HasExtension(GLExt::KHR_debug))
-        AllocOpCode(GLOpcodePopDebugGroup);
+        AllocOpcode(GLOpcodePopDebugGroup);
     #endif // /GL_KHR_debug
 }
 
@@ -1001,7 +1007,7 @@ bool GLDeferredCommandBuffer::IsImmediateCmdBuffer() const
 
 bool GLDeferredCommandBuffer::IsPrimary() const
 {
-    return ((GetFlags() & CommandBufferFlags::DeferredSubmit) == 0);
+    return ((GetFlags() & CommandBufferFlags::Secondary) == 0);
 }
 
 
@@ -1083,21 +1089,15 @@ void GLDeferredCommandBuffer::BindGL2XSampler(const GL2XSampler& samplerGL2X, st
     }
 }
 
-void GLDeferredCommandBuffer::AllocOpCode(const GLOpcode opcode)
+void GLDeferredCommandBuffer::AllocOpcode(const GLOpcode opcode)
 {
-    buffer_.push_back(opcode);
+    buffer_.AllocOpcode(opcode);
 }
 
-template <typename T>
-T* GLDeferredCommandBuffer::AllocCommand(const GLOpcode opcode, std::size_t extraSize)
+template <typename TCommand>
+TCommand* GLDeferredCommandBuffer::AllocCommand(const GLOpcode opcode, std::size_t payloadSize)
 {
-    /* Resize internal buffer for opcode, command structure, and extra size */
-    auto offset = buffer_.size();
-    {
-        buffer_.resize(offset + sizeof(opcode) + sizeof(T) + extraSize);
-        buffer_[offset] = opcode;
-    }
-    return reinterpret_cast<T*>(&(buffer_[offset + sizeof(opcode)]));
+    return buffer_.AllocCommand<TCommand>(opcode, payloadSize);
 }
 
 

@@ -483,22 +483,23 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
     }
 }
 
-static void ExecuteGLCommandsEmulated(const std::vector<std::uint8_t>& rawBuffer, GLStateManager& stateMngr)
+static void ExecuteGLCommandsEmulated(const GLVirtualCommandBuffer& virtualCmdBuffer, GLStateManager& stateMngr)
 {
     /* Initialize program counter to execute virtual GL commands */
-    auto pc     = rawBuffer.data();
-    auto pcEnd  = rawBuffer.data() + rawBuffer.size();
-
-    GLOpcode opcode;
-
-    while (pc < pcEnd)
+    for (const auto& chunk : virtualCmdBuffer)
     {
-        /* Read opcode */
-        opcode = *reinterpret_cast<const GLOpcode*>(pc);
-        pc += sizeof(GLOpcode);
+        auto pc     = chunk.data;
+        auto pcEnd  = chunk.data + chunk.size;
 
-        /* Execute command and increment program counter */
-        pc += ExecuteGLCommand(opcode, pc, stateMngr);
+        while (pc < pcEnd)
+        {
+            /* Read opcode */
+            const GLOpcode opcode = *reinterpret_cast<const GLOpcode*>(pc);
+            pc += sizeof(GLOpcode);
+
+            /* Execute command and increment program counter */
+            pc += ExecuteGLCommand(opcode, pc, stateMngr);
+        }
     }
 }
 
@@ -524,7 +525,7 @@ void ExecuteGLDeferredCommandBuffer(const GLDeferredCommandBuffer& cmdBuffer, GL
     #endif // /LLGL_ENABLE_JIT_COMPILER
     {
         /* Emulate execution of GL commands */
-        ExecuteGLCommandsEmulated(cmdBuffer.GetRawBuffer(), stateMngr);
+        ExecuteGLCommandsEmulated(cmdBuffer.GetVirtualCommandBuffer(), stateMngr);
     }
 }
 

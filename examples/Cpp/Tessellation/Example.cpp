@@ -297,7 +297,7 @@ private:
             commands->BeginRenderPass(*context);
 
             // Clear color- and depth buffers
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
+            commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
             #endif
             {
                 // Set viewport

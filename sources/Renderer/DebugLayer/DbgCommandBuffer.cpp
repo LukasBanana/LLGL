@@ -118,8 +118,8 @@ void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 
         ValidateBindFlags(
             commandBufferDbg.desc.flags,
-            CommandBufferFlags::DeferredSubmit,
-            CommandBufferFlags::DeferredSubmit,
+            CommandBufferFlags::Secondary,
+            CommandBufferFlags::Secondary,
             "LLGL::CommandBuffer"
         );
     }

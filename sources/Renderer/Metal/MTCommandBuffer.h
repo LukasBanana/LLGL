@@ -35,7 +35,7 @@ class MTCommandBuffer final : public CommandBuffer
 
         /* ----- Common ----- */
 
-        MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue);
+        MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue, const CommandBufferDescriptor& desc);
         ~MTCommandBuffer();
 
         /* ----- Encoding ----- */
@@ -220,6 +220,12 @@ class MTCommandBuffer final : public CommandBuffer
             return cmdBuffer_;
         }
 
+        // Returns true if this is an immediate command buffer.
+        inline bool IsImmediateCmdBuffer() const
+        {
+            return immediateSubmit_;
+        }
+
     private:
 
         void SetIndexType(bool indexType16Bits);
@@ -264,6 +270,8 @@ class MTCommandBuffer final : public CommandBuffer
         const MTLSize*                  numThreadsPerGroup_     = nullptr;
 
         MTStagingBufferPool             stagingBufferPool_;
+
+        bool                            immediateSubmit_        = false;
 
         // Tessellator stage objects
         MTTessFactorBuffer              tessFactorBuffer_;

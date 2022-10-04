@@ -150,10 +150,11 @@ LLGL::PipelineState* myPipeline = myRenderer->CreatePipelineState(myPipelineDesc
 ```
 The members `depth`, `stencil`, `rasterizer`, and `blend` from the  `GraphicsPipelineDescriptor` structure can be used to specify a lot more configurations for a graphics pipeline. But for now, we leave them as is.
 
-The command buffer is used to submit draw and compute commands to the command queue. In LLGL, there is only a single command queue instance:
+The command buffer is used to submit draw and compute commands to the command queue.
+For this tutorial, we only create an immediate command buffer, so we don't have to submit the commands explicitly to the command queue.
+Using CommandBufferFlags::ImmediateSubmit tells LLGL to submit the command buffer immediately after we are done recording out commands:
 ```cpp
-LLGL::CommandQueue* myCmdQueue = myRenderer->GetCommandQueue();
-LLGL::CommandBuffer* myCmdBuffer = myRenderer->CreateCommandBuffer();
+LLGL::CommandBuffer* myCmdBuffer = myRenderer->CreateCommandBuffer(LLGL::CommandBufferFlags::ImmediateSubmit);
 ```
 
 
@@ -210,9 +211,8 @@ Before we can present the result, we need to end the render pass as well as enco
 myCmdBuffer->EndRenderPass();
 myCmdBuffer->End();
 ```
-The last thing we have to do is to submit the encoded command buffer to the command queue and present the result on the screen:
+The last thing we have to do is to present the result on the screen:
 ```cpp
-myCmdQueue->Submit(*myCmdBuffer);
 myContext->Present();
 ```
 

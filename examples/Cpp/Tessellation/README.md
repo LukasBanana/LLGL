@@ -7,6 +7,23 @@
 This tutorial requires that you have already read the [Hello Triangle](../HelloTriangle) tutorial.
 
 
+## Command Queue
+
+In the last tutorial we created an immediate command buffer, but in this one we will use a regular command buffer that we have to submit explicitly to the command queue:
+```cpp
+LLGL::CommandQueue* myCmdQueue = myRenderer->GetCommandQueue();
+LLGL::CommandBuffer* myCmdBuffer = myRenderer->CreateCommandBuffer();
+```
+In LLGL, there is only one instance of the command queue, which we can retrieve via `GetCommandQueue`.
+After we are done recording draw and compute commands, we have to submit the command buffer to the command queue like so:
+```cpp
+myCmdBuffer->Begin();
+/* Record GPU commands here ... */
+myCmdBuffer->End();
+myCmdQueue->Submit(*myCmdBuffer);
+```
+
+
 ## Shader Resources
 
 In legacy rendering APIs, such as OpenGL, shader resources were bound individually like with `glBindTexture`. Recent extensions allowed to bind multiple textures or uniform buffers at once. With modern rendering APIs there is only the option to bind one or more heaps of resources. This is either called "descriptor heap" (Direct3D 12) or "descriptor set" (Vulkan). In LLGL, this is managed by the `ResourceHeap` interface. But before we can create such a resource heap, we need a pipeline layout that specifies at which binding points the resources in the heap will be bound to a graphics or compute pipeline. This is done with the `PipelineLayout` interface and created as follows:

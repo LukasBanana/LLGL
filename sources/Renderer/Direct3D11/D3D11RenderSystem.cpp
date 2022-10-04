@@ -100,7 +100,7 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    if ((desc.flags & (CommandBufferFlags::DeferredSubmit | CommandBufferFlags::MultiSubmit)) != 0)
+    if ((desc.flags & (CommandBufferFlags::Secondary | CommandBufferFlags::MultiSubmit)) != 0)
     {
         /* Create deferred D3D11 device context */
         ComPtr<ID3D11DeviceContext> deferredContext;

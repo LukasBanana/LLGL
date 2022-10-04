@@ -17,6 +17,23 @@ namespace LLGL
 {
 
 
+VkResult VKSubmitCommandBuffer(VkQueue commandQueue, VkCommandBuffer commandBuffer, VkFence fence)
+{
+    VkSubmitInfo submitInfo;
+    {
+        submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.pNext                = nullptr;
+        submitInfo.waitSemaphoreCount   = 0;
+        submitInfo.pWaitSemaphores      = nullptr;
+        submitInfo.pWaitDstStageMask    = 0;
+        submitInfo.commandBufferCount   = 1;
+        submitInfo.pCommandBuffers      = &commandBuffer;
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores    = nullptr;
+    }
+    return vkQueueSubmit(commandQueue, 1, &submitInfo, fence);
+}
+
 VKCommandQueue::VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue queue) :
     device_ { device },
     native_ { queue  }
@@ -28,24 +45,15 @@ VKCommandQueue::VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue queue) :
 void VKCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
     auto& commandBufferVK = LLGL_CAST(VKCommandBuffer&, commandBuffer);
-
-    VkCommandBuffer commandBuffers[] = { commandBufferVK.GetVkCommandBuffer() };
-
-    /* Submit command buffer to graphics queue */
-    VkSubmitInfo submitInfo;
+    if (!commandBufferVK.IsImmediateCmdBuffer())
     {
-        submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.pNext                = nullptr;
-        submitInfo.waitSemaphoreCount   = 0;
-        submitInfo.pWaitSemaphores      = nullptr;
-        submitInfo.pWaitDstStageMask    = 0;
-        submitInfo.commandBufferCount   = 1;
-        submitInfo.pCommandBuffers      = commandBuffers;
-        submitInfo.signalSemaphoreCount = 0;
-        submitInfo.pSignalSemaphores    = nullptr;
+        auto result = VKSubmitCommandBuffer(
+            native_,
+            commandBufferVK.GetVkCommandBuffer(),
+            commandBufferVK.GetQueueSubmitFence()
+        );
+        VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }
-    auto result = vkQueueSubmit(native_, 1, &submitInfo, commandBufferVK.GetQueueSubmitFence());
-    VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
 }
 
 /* ----- Queries ----- */

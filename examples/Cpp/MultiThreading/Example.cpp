@@ -285,7 +285,7 @@ private:
         #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS
 
         // Create secondary command buffers
-        cmdBufferDesc.flags = (LLGL::CommandBufferFlags::DeferredSubmit | LLGL::CommandBufferFlags::MultiSubmit);
+        cmdBufferDesc.flags = (LLGL::CommandBufferFlags::Secondary | LLGL::CommandBufferFlags::MultiSubmit);
 
         // Start encoding secondary command buffers in parallel
         std::thread workerThread[2];

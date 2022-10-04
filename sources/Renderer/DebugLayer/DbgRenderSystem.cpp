@@ -85,6 +85,7 @@ CommandQueue* DbgRenderSystem::GetCommandQueue()
 
 CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
+    ValidateCommandBufferDesc(desc);
     return TakeOwnership(
         commandBuffers_,
         MakeUnique<DbgCommandBuffer>(
@@ -598,6 +599,20 @@ void DbgRenderSystem::ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAc
             );
         }
     }
+}
+
+void DbgRenderSystem::ValidateCommandBufferDesc(const CommandBufferDescriptor& desc)
+{
+    /* Validate flags */
+    if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
+    {
+        if ((desc.flags & (CommandBufferFlags::Secondary | CommandBufferFlags::MultiSubmit)) != 0)
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create immediate command buffer with Secondary or MultiSubmit flags");
+    }
+
+    /* Validate number of native buffers */
+    if (desc.numNativeBuffers == 0)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create command buffer with zero native buffers");
 }
 
 void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSizeOut)

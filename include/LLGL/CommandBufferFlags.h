@@ -74,6 +74,8 @@ enum class PipelineBindPoint
 
 /**
 \brief Command buffer creation flags.
+\remarks A default command buffer is a primary command buffer (No \c Secondary flag) that has to be submitted explicitly (No \c ImmediateSubmit flag)
+and can only be submitted once until it is encoded again (No \c MultiSubmit flag).
 \see CommandBufferDescriptor::flags
 */
 struct CommandBufferFlags
@@ -83,18 +85,27 @@ struct CommandBufferFlags
         /**
         \brief Specifies that the encoded command buffer will be submitted as a secondary command buffer.
         \remarks If this is specified, the command buffer must be submitted using the \c Execute function of a primary command buffer.
+        \remakrs This cannot be used in combination with the \c ImmediateSubmit flag.
         \see CommandBuffer::Execute
-        \todo Rename to \c Secondary
         */
-        DeferredSubmit  = (1 << 0),
+        Secondary       = (1 << 0),
 
         /**
         \brief Specifies that the encoded command buffer can be submitted multiple times.
         \remarks If this is not specified, the command buffer must be encoded again after it has been submitted to the command queue.
+        \remakrs This cannot be used in combination with the \c ImmediateSubmit flag.
         \see CommandQueue::Submit(CommandBuffer&)
-        \todo Rename to \c Restore
         */
         MultiSubmit     = (1 << 1),
+
+        /**
+        \brief Specifies that the encoded command buffer is an immediate command buffer.
+        \remarks If this specified, the command buffer is submitted immediately after encoding is done
+        and calling CommandQueue::Submit on such a command buffer has no effect.
+        \remarks This cannot be used in combination with the \c Secondary or \c MultiSubmit flags.
+        \see CommandBuffer::End
+        */
+        ImmediateSubmit = (1 << 2),
     };
 };
 
@@ -272,6 +283,23 @@ struct MetalDependentStateDescriptor
 */
 struct CommandBufferDescriptor
 {
+    CommandBufferDescriptor() = default;
+    CommandBufferDescriptor(const CommandBufferDescriptor&) = default;
+    CommandBufferDescriptor& operator = (const CommandBufferDescriptor&) = default;
+
+    //! Constructs the command buffer descriptor with the specified flags.
+    inline CommandBufferDescriptor(long flags) :
+        flags { flags }
+    {
+    }
+
+    //! Constructs the command buffer descriptor with the specified flags and number of native buffers.
+    inline CommandBufferDescriptor(long flags, std::uint32_t numNativeBuffers) :
+        flags            { flags            },
+        numNativeBuffers { numNativeBuffers }
+    {
+    }
+
     /**
     \brief Specifies the creation flags for the command buffer. By default 0.
     \remarks If no flags are specified (i.e. the default value),

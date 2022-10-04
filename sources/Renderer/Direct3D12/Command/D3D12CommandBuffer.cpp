@@ -43,8 +43,9 @@ namespace LLGL
 
 
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
-    cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())           },
-    stagingBufferPool_   { renderSystem.GetDevice().GetNative(), USHRT_MAX }
+    cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())                     },
+    stagingBufferPool_   { renderSystem.GetDevice().GetNative(), USHRT_MAX           },
+    immediateSubmit_     { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0) }
 {
     CreateCommandContext(renderSystem, desc);
 }
@@ -68,6 +69,10 @@ void D3D12CommandBuffer::End()
     /* Close command context and reset intermediate states */
     commandContext_.Close();
     numBoundScissorRects_ = 0;
+
+    /* Execute command list right after encoding for immediate command buffers */
+    if (IsImmediateCmdBuffer())
+        Execute();
 }
 
 void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -883,7 +888,7 @@ void D3D12CommandBuffer::Execute()
 
 static D3D12_COMMAND_LIST_TYPE GetD3DCommandListType(const CommandBufferDescriptor& desc)
 {
-    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+    if ((desc.flags & CommandBufferFlags::Secondary) != 0)
         return D3D12_COMMAND_LIST_TYPE_BUNDLE;
     else
         return D3D12_COMMAND_LIST_TYPE_DIRECT;

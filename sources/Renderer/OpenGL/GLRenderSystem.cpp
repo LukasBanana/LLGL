@@ -87,20 +87,20 @@ CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
     /* Get state manager from shared render context */
     if (auto sharedContext = GetSharedRenderContext())
     {
-        if ((desc.flags & (CommandBufferFlags::DeferredSubmit | CommandBufferFlags::MultiSubmit)) != 0)
-        {
-            /* Create deferred command buffer */
-            return TakeOwnership(
-                commandBuffers_,
-                MakeUnique<GLDeferredCommandBuffer>(desc.flags)
-            );
-        }
-        else
+        if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
         {
             /* Create immediate command buffer */
             return TakeOwnership(
                 commandBuffers_,
                 MakeUnique<GLImmediateCommandBuffer>(sharedContext->GetStateManager())
+            );
+        }
+        else
+        {
+            /* Create deferred command buffer */
+            return TakeOwnership(
+                commandBuffers_,
+                MakeUnique<GLDeferredCommandBuffer>(desc.flags)
             );
         }
     }

@@ -41,7 +41,8 @@ void D3D12CommandQueue::Submit(CommandBuffer& commandBuffer)
 {
     /* Execute command list */
     auto& commandBufferD3D = LLGL_CAST(D3D12CommandBuffer&, commandBuffer);
-    commandBufferD3D.Execute();
+    if (!commandBufferD3D.IsImmediateCmdBuffer())
+        commandBufferD3D.Execute();
 }
 
 /* ----- Queries ----- */

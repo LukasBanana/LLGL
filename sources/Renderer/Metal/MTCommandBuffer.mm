@@ -36,11 +36,12 @@ static const NSUInteger g_minFillBufferForKernel = 64;
 // Default value when no compute PSO is bound.
 static const MTLSize g_defaultNumThreadsPerGroup { 1, 1, 1 };
 
-MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue) :
-    device_            { device            },
-    cmdQueue_          { cmdQueue          },
-    stagingBufferPool_ { device, USHRT_MAX },
-    tessFactorBuffer_  { device            }
+MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue, const CommandBufferDescriptor& desc) :
+    device_            { device                                                    },
+    cmdQueue_          { cmdQueue                                                  },
+    stagingBufferPool_ { device, USHRT_MAX                                         },
+    immediateSubmit_   { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0) },
+    tessFactorBuffer_  { device                                                    }
 {
     const NSUInteger maxCmdBuffers = 3;
     cmdBufferSemaphore_ = dispatch_semaphore_create(maxCmdBuffers);
@@ -84,6 +85,10 @@ void MTCommandBuffer::End()
 {
     encoderScheduler_.Flush();
     PresentDrawables();
+
+    /* Commit native buffer right after encoding for immediate command buffers */
+    if (IsImmediateCmdBuffer())
+        [cmdBuffer_ commit];
 }
 
 void MTCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)

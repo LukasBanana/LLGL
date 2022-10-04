@@ -58,9 +58,9 @@ CommandQueue* MTRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
+CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(device_, commandQueue_->GetNative()));
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(device_, commandQueue_->GetNative(), desc));
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)

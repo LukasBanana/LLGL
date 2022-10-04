@@ -21,10 +21,9 @@ namespace LLGL
 
 /**
 \brief Command queue interface.
-\remarks This class is mainly used for modern rendering APIs (such as Direct3D 12 and Vulkan)
-to submit one ore more command buffers (or command lists) into the command queue.
-For older rendering APIs (such as Direct3D 11 and OpenGL) submitting a command buffer has no effect.
-It also provides the functionality to submit small sized objects such as fences into the command queue.
+\remarks This class is used to submit one or more command buffers (aka. command lists)
+into the command queue as well as CPU/GPU synchronization objects (aka. fences).
+For immediate command buffers, the CommandQueue::Submit function has no effect.
 */
 class LLGL_EXPORT CommandQueue : public RenderSystemChild
 {
@@ -37,6 +36,8 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
 
         /**
         \brief Submits the specified command buffer to the command queue.
+        \param[in] commandBuffer Specifies the command buffer that is to be submitted.
+        If the command buffer was created with the CommandBufferFlags::ImmediateSubmit flag, this function has no effect.
         \remarks This must only be called with a command buffer that has already been encoded via the \c Begin and \c End functions:
         \code
         myCmdBuffer->Begin();

@@ -31,18 +31,20 @@ MTCommandQueue::~MTCommandQueue()
 void MTCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
     auto& commandBufferMT = LLGL_CAST(MTCommandBuffer&, commandBuffer);
-
-    /* Commit command buffer into queue */
-    id<MTLCommandBuffer> cmdBuffer = commandBufferMT.GetNative();
-    [cmdBuffer commit];
-
-    /* Hold reference to last submitted command buffer */
-    /*if (lastSubmittedCmdBuffer_ != cmdBuffer)
+    if (!commandBufferMT.IsImmediateCmdBuffer())
     {
-        if (lastSubmittedCmdBuffer_ != nil)
-            [lastSubmittedCmdBuffer_ release];
-        lastSubmittedCmdBuffer_ = [cmdBuffer retain];
-    }*/
+        /* Commit command buffer into queue */
+        id<MTLCommandBuffer> cmdBuffer = commandBufferMT.GetNative();
+        [cmdBuffer commit];
+
+        /* Hold reference to last submitted command buffer */
+        /*if (lastSubmittedCmdBuffer_ != cmdBuffer)
+        {
+            if (lastSubmittedCmdBuffer_ != nil)
+                [lastSubmittedCmdBuffer_ release];
+            lastSubmittedCmdBuffer_ = [cmdBuffer retain];
+        }*/
+    }
 }
 
 /* ----- Queries ----- */

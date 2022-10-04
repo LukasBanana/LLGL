@@ -56,9 +56,9 @@ D3D11CommandBuffer::D3D11CommandBuffer(
     stateMngr_ { stateMngr }
 {
     /* Store information whether the command buffer has an immediate or deferred context */
-    if ((desc.flags & (CommandBufferFlags::DeferredSubmit | CommandBufferFlags::MultiSubmit)) != 0)
+    if ((desc.flags & (CommandBufferFlags::Secondary | CommandBufferFlags::MultiSubmit)) != 0)
         hasDeferredContext_ = true;
-    if ((desc.flags & CommandBufferFlags::DeferredSubmit) != 0)
+    if ((desc.flags & CommandBufferFlags::Secondary) != 0)
         isSecondaryCmdBuffer_ = true;
 
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1

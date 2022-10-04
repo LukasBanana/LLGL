@@ -242,8 +242,8 @@ enum class ImageFormat
     BGR,            //!< Three color components: Blue, Green, Red.
     RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
     BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
-    ARGB,           //!< Four color components: Alpha, Red, Green, Blue. Old format, mainly used in Direct3D 9.
-    ABGR,           //!< Four color components: Alpha, Blue, Green, Red. Old format, mainly used in Direct3D 9.
+    ARGB,           //!< Four color components: Alpha, Red, Green, Blue. Legacy format, mainly used in Direct3D 9.
+    ABGR,           //!< Four color components: Alpha, Blue, Green, Red. Legacy format, mainly used in Direct3D 9.
 
     /* Depth-stencil formats */
     Depth,          //!< Depth component.

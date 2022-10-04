@@ -229,6 +229,12 @@ class D3D12CommandBuffer final : public CommandBuffer
             return commandList_;
         }
 
+        // Returns true if this is an immediate command buffer.
+        inline bool IsImmediateCmdBuffer() const
+        {
+            return immediateSubmit_;
+        }
+
     private:
 
         void CreateCommandContext(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc);
@@ -271,6 +277,8 @@ class D3D12CommandBuffer final : public CommandBuffer
         const D3D12SignatureFactory*    cmdSignatureFactory_    = nullptr;
 
         D3D12StagingBufferPool          stagingBufferPool_;
+
+        bool                            immediateSubmit_        = false;
 
         D3D12_CPU_DESCRIPTOR_HANDLE     rtvDescHandle_          = {};
         UINT                            rtvDescSize_            = 0;

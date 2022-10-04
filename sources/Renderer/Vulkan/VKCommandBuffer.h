@@ -37,7 +37,7 @@ class VKCommandBuffer final : public CommandBuffer
         VKCommandBuffer(
             const VKPhysicalDevice&         physicalDevice,
             VKDevice&                       device,
-            VkQueue                         graphicsQueue,
+            VkQueue                         commandQueue,
             const QueueFamilyIndices&       queueFamilyIndices,
             const CommandBufferDescriptor&  desc
         );
@@ -238,6 +238,12 @@ class VKCommandBuffer final : public CommandBuffer
             return recordingFence_;
         }
 
+        // Returns true if this is an immediate command buffer, otherwise it is a deferred command buffer.
+        inline bool IsImmediateCmdBuffer() const
+        {
+            return immediateSubmit_;
+        }
+
     private:
 
         enum class RecordState
@@ -252,7 +258,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         void CreateCommandPool(std::uint32_t queueFamilyIndex);
         void CreateCommandBuffers(std::uint32_t bufferCount);
-        void CreateRecordingFences(VkQueue graphicsQueue, std::uint32_t numFences);
+        void CreateRecordingFences(VkQueue commandQueue, std::uint32_t numFences);
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
 
@@ -282,6 +288,9 @@ class VKCommandBuffer final : public CommandBuffer
     private:
 
         VKDevice&                       device_;
+
+        VkQueue                         commandQueue_               = VK_NULL_HANDLE;
+
         VKPtr<VkCommandPool>            commandPool_;
 
         std::vector<VkCommandBuffer>    commandBufferList_;
@@ -293,8 +302,9 @@ class VKCommandBuffer final : public CommandBuffer
 
         RecordState                     recordState_                = RecordState::Undefined;
 
-        VkCommandBufferUsageFlags       usageFlags_                 = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        VkCommandBufferUsageFlags       usageFlags_                 = 0;
         VkCommandBufferLevel            bufferLevel_                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        bool                            immediateSubmit_            = false;
 
         VkRenderPass                    renderPass_                 = VK_NULL_HANDLE; // primary render pass
         VkRenderPass                    secondaryRenderPass_        = VK_NULL_HANDLE; // to pause/resume render pass (load and store content)
