@@ -615,7 +615,7 @@ elseif(APPLE)
     find_library(COCOA_LIBRARY Cocoa)
     target_link_libraries(LLGL ${COCOA_LIBRARY} "-framework CoreVideo")
 elseif(UNIX)
-    target_link_libraries(LLGL X11 pthread Xxf86vm Xrandr)
+    target_link_libraries(LLGL X11 pthread Xrandr)
 endif()
 
 set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")

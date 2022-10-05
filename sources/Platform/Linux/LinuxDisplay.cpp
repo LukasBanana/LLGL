@@ -9,7 +9,6 @@
 #include "../../Core/Helper.h"
 #include <locale>
 #include <codecvt>
-#include <X11/extensions/xf86vmode.h>
 #include <X11/extensions/Xrandr.h>
 
 
@@ -200,7 +199,28 @@ bool LinuxDisplay::ResetDisplayMode()
 
 bool LinuxDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
 {
-    //TODO
+    auto dpy = GetNative();
+    auto rootWnd = RootWindow(dpy, screen_);
+
+    /* Get all screen sizes from X11 extension Xrandr */
+    int numSizes = 0;
+    auto scrSizes = XRRSizes(GetNative(), screen_, &numSizes);
+
+    for (int i = 0; i < numSizes; ++i)
+    {
+        /* Check if specified display mode resolution matches this screen configuration */
+        if (displayModeDesc.resolution.width  == static_cast<std::uint32_t>(scrSizes[i].width) &&
+            displayModeDesc.resolution.height == static_cast<std::uint32_t>(scrSizes[i].height))
+        {
+            if (auto scrCfg = XRRGetScreenInfo(dpy, rootWnd))
+            {
+                auto status = XRRSetScreenConfig(dpy, scrCfg, rootWnd, i, RR_Rotate_0, 0);
+                XRRFreeScreenConfigInfo(scrCfg);
+                return (status != 0);
+            }
+        }
+    }
+
     return false;
 }
 
