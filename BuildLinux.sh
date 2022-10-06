@@ -21,11 +21,6 @@ if [ $? -ne 0 ]; then
     REQUIRED_PKG="${REQUIRED_PKG} libx11-dev"
 fi
 
-dpkg -s "libxxf86vm-dev" 2>&1 >/dev/null
-if [ $? -ne 0 ]; then
-    REQUIRED_PKG="${REQUIRED_PKG} libxxf86vm-dev"
-fi
-
 dpkg -s "libxrandr-dev" 2>&1 >/dev/null
 if [ $? -ne 0 ]; then
     REQUIRED_PKG="${REQUIRED_PKG} libxrandr-dev"

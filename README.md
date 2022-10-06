@@ -48,7 +48,6 @@ Build scripts are provided for [**CMake**]((https://cmake.org/)).
 
 The following development libraries are required to build LLGL on GNU/Linux:
 - **X11**: `libx11-dev`
-- **xf86vidmode**: `libxxf86vm-dev`
 - **Xrandr**: `libxrandr-dev`
 
 ### Android
