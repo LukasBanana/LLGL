@@ -87,7 +87,7 @@ private:
 
     float Random(float a, float b) const
     {
-        auto rnd = static_cast<float>(rand()) / RAND_MAX;
+        auto rnd = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         return a + (b - a) * rnd;
     }
 
