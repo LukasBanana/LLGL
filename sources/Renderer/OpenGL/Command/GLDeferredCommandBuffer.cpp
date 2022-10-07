@@ -271,7 +271,7 @@ void GLDeferredCommandBuffer::SetViewports(std::uint32_t numViewports, const Vie
     #endif // /LLGL_ENABLE_JIT_COMPILER
 
     /* Encode GL command */
-    auto cmd = AllocCommand<GLCmdViewportArray>(GLOpcodeViewportArray, sizeof(GLViewport)*numViewports);
+    auto cmd = AllocCommand<GLCmdViewportArray>(GLOpcodeViewportArray, (sizeof(GLViewport) + sizeof(GLDepthRange))*numViewports);
     {
         cmd->first = 0;
         cmd->count = static_cast<GLsizei>(numViewports);
