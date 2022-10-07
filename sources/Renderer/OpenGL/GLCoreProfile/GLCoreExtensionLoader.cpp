@@ -861,6 +861,40 @@ GLExtensionList QueryExtensions(bool coreProfile)
     return extensions;
 }
 
+// Includes all GL extensions that are considered default for core profiles
+static void IncludeDefaultCoreProfileExtensions(GLExtensionList& extensions)
+{
+    static const std::string coreProfileDefaultExtenions[] =
+    {
+        "GL_ARB_compatibility",
+        "GL_ARB_shader_objects",
+        "GL_ARB_shader_objects_21",
+        "GL_ARB_shader_objects_30",
+        "GL_ARB_vertex_buffer_object",
+        "GL_ARB_vertex_shader",
+        "GL_EXT_texture3D",
+        "GL_EXT_copy_texture",
+        "GL_EXT_blend_func_separate",   // GL 2.0
+        "GL_EXT_stencil_two_side",      // GL 2.0
+    };
+    for (const auto& ext : coreProfileDefaultExtenions)
+        extensions[ext] = false;
+}
+
+// Includes all GL extensions that are implied by other extensions
+static void IncludeImpliedExtensions(GLExtensionList& extensions)
+{
+    auto ImplyExtension = [&extensions](const char* originExtension, const std::initializer_list<const char*>& impliedExtensions)
+    {
+        if (extensions.find(originExtension) != extensions.end())
+        {
+            for (auto ext : impliedExtensions)
+                extensions[ext] = false;
+        }
+    };
+    ImplyExtension("GL_ARB_gpu_shader5", { "GL_ARB_geometry_shader4" });
+}
+
 // Global member to store if the extension have already been loaded
 static bool g_extAlreadyLoaded = false;
 
@@ -981,22 +1015,9 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
 
     /* Add standard extensions */
     if (coreProfile)
-    {
-        static const std::string coreProfileDefaultExtenions[] =
-        {
-            "GL_ARB_compatibility",
-            "GL_ARB_shader_objects",
-            "GL_ARB_shader_objects_21",
-            "GL_ARB_shader_objects_30",
-            "GL_ARB_vertex_buffer_object",
-            "GL_ARB_vertex_shader",
-            "GL_EXT_texture3D",
-            "GL_EXT_copy_texture",
-            "GL_EXT_stencil_two_side", // GL 2.0
-        };
-        for (const auto& ext : coreProfileDefaultExtenions)
-            extensions[ext] = false;
-    }
+        IncludeDefaultCoreProfileExtensions(extensions);
+
+    IncludeImpliedExtensions(extensions);
 
     #if defined(GL_VERSION_3_1) && !defined(GL_GLEXT_PROTOTYPES)
     LOAD_GLEXT( ARB_compatibility );
