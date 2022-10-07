@@ -893,6 +893,7 @@ static void IncludeImpliedExtensions(GLExtensionList& extensions)
         }
     };
     ImplyExtension("GL_ARB_gpu_shader5", { "GL_ARB_geometry_shader4" });
+    ImplyExtension("GL_ARB_occlusion_query2", { "GL_ARB_occlusion_query" });
 }
 
 // Global member to store if the extension have already been loaded
