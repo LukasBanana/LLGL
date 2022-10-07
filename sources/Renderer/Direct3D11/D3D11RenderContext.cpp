@@ -25,9 +25,9 @@ D3D11RenderContext::D3D11RenderContext(
     const RenderContextDescriptor& desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext { desc.videoMode, desc.vsync },
-    device_       { device                     },
-    context_      { context                    }
+    RenderContext { desc    },
+    device_       { device  },
+    context_      { context }
 {
     /* Setup surface for the render context */
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
@@ -36,8 +36,8 @@ D3D11RenderContext::D3D11RenderContext(
     CreateSwapChain(factory, desc.samples);
     CreateBackBuffer(GetVideoMode());
 
-    /* Initialize v-sync */
-    OnSetVsync(desc.vsync);
+    /* Initialize v-sync interval */
+    SetPresentSyncInterval(desc.vsyncInterval);
 }
 
 void D3D11RenderContext::SetName(const char* name)
@@ -110,10 +110,9 @@ bool D3D11RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc
     return true;
 }
 
-bool D3D11RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
+bool D3D11RenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
 {
-    swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
-    return true;
+    return SetPresentSyncInterval(vsyncInterval);
 }
 
 
@@ -121,11 +120,30 @@ bool D3D11RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
  * ======= Private: =======
  */
 
+bool D3D11RenderContext::SetPresentSyncInterval(UINT syncInterval)
+{
+    /* IDXGISwapChain::Present expects a sync interval in the range [0, 4] */
+    if (syncInterval <= 4)
+    {
+        swapChainInterval_ = syncInterval;
+        return true;
+    }
+    return false;
+}
+
+static UINT GetPrimaryDisplayRefreshRate()
+{
+    if (auto display = Display::GetPrimary())
+        return display->GetDisplayMode().refreshRate;
+    else
+        return 60; // Assume most common refresh rate
+}
+
 void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, UINT samples)
 {
     /* Get current settings */
     const auto& videoMode = GetVideoMode();
-    const auto& vsync = GetVsync();
+    const DXGI_RATIONAL refreshRate{ GetPrimaryDisplayRefreshRate(), 1 };
 
     /* Pick and store color format */
     colorFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM
@@ -140,17 +158,16 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, UINT samples)
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     InitMemory(swapChainDesc);
     {
-        swapChainDesc.BufferDesc.Width                      = videoMode.resolution.width;
-        swapChainDesc.BufferDesc.Height                     = videoMode.resolution.height;
-        swapChainDesc.BufferDesc.Format                     = colorFormat_;
-        swapChainDesc.BufferDesc.RefreshRate.Numerator      = vsync.refreshRate;
-        swapChainDesc.BufferDesc.RefreshRate.Denominator    = vsync.interval;
-        swapChainDesc.SampleDesc                            = swapChainSampleDesc_;
-        swapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount                           = (videoMode.swapChainSize == 3 ? 2 : 1);
-        swapChainDesc.OutputWindow                          = wndHandle.window;
-        swapChainDesc.Windowed                              = TRUE;//(videoMode.fullscreen ? FALSE : TRUE);
-        swapChainDesc.SwapEffect                            = DXGI_SWAP_EFFECT_DISCARD;
+        swapChainDesc.BufferDesc.Width          = videoMode.resolution.width;
+        swapChainDesc.BufferDesc.Height         = videoMode.resolution.height;
+        swapChainDesc.BufferDesc.Format         = colorFormat_;
+        swapChainDesc.BufferDesc.RefreshRate    = refreshRate;
+        swapChainDesc.SampleDesc                = swapChainSampleDesc_;
+        swapChainDesc.BufferUsage               = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.BufferCount               = (videoMode.swapChainSize == 3 ? 2 : 1);
+        swapChainDesc.OutputWindow              = wndHandle.window;
+        swapChainDesc.Windowed                  = TRUE;//(videoMode.fullscreen ? FALSE : TRUE);
+        swapChainDesc.SwapEffect                = DXGI_SWAP_EFFECT_DISCARD;
     }
     auto hr = factory->CreateSwapChain(device_.Get(), &swapChainDesc, swapChain_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");

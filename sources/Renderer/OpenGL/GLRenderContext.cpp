@@ -18,7 +18,7 @@ GLRenderContext::GLRenderContext(
     const std::shared_ptr<Surface>&     surface,
     GLRenderContext*                    sharedRenderContext)
 :
-    RenderContext  { desc.videoMode, desc.vsync                           },
+    RenderContext  { desc                                                 },
     contextHeight_ { static_cast<GLint>(desc.videoMode.resolution.height) }
 {
     #ifdef LLGL_OS_LINUX
@@ -43,7 +43,7 @@ GLRenderContext::GLRenderContext(
     context_ = GLContext::Create(desc, config, GetSurface(), sharedGLContext);
 
     /* Setup swap interval (for v-sync) */
-    OnSetVsync(desc.vsync);
+    SetSwapInterval(static_cast<int>(desc.vsyncInterval));
 
     /* Get state manager and notify about the current render context */
     stateMngr_ = context_->GetStateManager();
@@ -101,12 +101,12 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 
 bool GLRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
+    /* Notify GL context of a resize */
+    context_->Resize(videoModeDesc.resolution);
+
     /* Update context height */
     contextHeight_ = static_cast<GLint>(videoModeDesc.resolution.height);
     stateMngr_->NotifyRenderTargetHeight(contextHeight_);
-
-    /* Notify GL context of a resize */
-    context_->Resize(videoModeDesc.resolution);
 
     /* Switch fullscreen mode */
     if (!SetDisplayFullscreenMode(videoModeDesc))
@@ -115,9 +115,13 @@ bool GLRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
     return true;
 }
 
-bool GLRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
+bool GLRenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
 {
-    int swapInterval = (vsyncDesc.enabled ? static_cast<int>(vsyncDesc.interval) : 0);
+    return SetSwapInterval(static_cast<int>(vsyncInterval));
+}
+
+bool GLRenderContext::SetSwapInterval(int swapInterval)
+{
     return context_->SetSwapInterval(swapInterval);
 }
 

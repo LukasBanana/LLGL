@@ -73,7 +73,9 @@ class D3D12RenderContext final : public RenderContext
     private:
 
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
+        bool OnSetVsyncInterval(std::uint32_t vsyncInterval) override;
+
+        bool SetPresentSyncInterval(UINT syncInterval);
 
         void QueryDeviceParameters(const D3D12Device& device, std::uint32_t samples);
 

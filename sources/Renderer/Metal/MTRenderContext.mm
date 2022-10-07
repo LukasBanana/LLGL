@@ -66,8 +66,8 @@ MTRenderContext::MTRenderContext(
     view_.depthStencilPixelFormat   = renderPass_.GetDepthStencilFormat();
     view_.sampleCount               = renderPass_.GetSampleCount();
 
-    if (desc.vsync.enabled)
-        view_.preferredFramesPerSecond = static_cast<NSInteger>(desc.vsync.refreshRate);
+    /* Initialize v-sync interval */
+    SetSyncInterval(desc.vsyncInterval);
 }
 
 void MTRenderContext::Present()
@@ -105,9 +105,28 @@ bool MTRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
     return true; // do nothing
 }
 
-bool MTRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
+bool MTRenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
 {
-    return false; //todo
+    SetSyncInterval(vsyncInterval);
+    return true;
+}
+
+void MTRenderContext::SetSyncInterval(std::uint32_t vsyncInterval)
+{
+    static const NSInteger defaultRefreshRate = 60;
+    if (vsyncInterval > 0)
+    {
+        /* Apply v-sync interval to display refresh rate */
+        if (auto display = Display::GetPrimary())
+            view_.preferredFramesPerSecond = static_cast<NSInteger>(display->GetDisplayMode().refreshRate / vsyncInterval);
+        else
+            view_.preferredFramesPerSecond = defaultRefreshRate / static_cast<NSInteger>(vsyncInterval);
+    }
+    else
+    {
+        /* Set preferred frame rate to default value */
+        view_.preferredFramesPerSecond = defaultRefreshRate;
+    }
 }
 
 

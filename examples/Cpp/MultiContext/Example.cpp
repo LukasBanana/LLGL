@@ -25,8 +25,8 @@ int main(int argc, char* argv[])
         LLGL::RenderContextDescriptor contextDesc;
         {
             contextDesc.videoMode.resolution    = { 640, 480 };
-            contextDesc.vsync.enabled           = true;
             contextDesc.samples                 = 8;
+            contextDesc.vsyncInterval           = 1;
         }
         auto context1 = renderer->CreateRenderContext(contextDesc);
         auto context2 = renderer->CreateRenderContext(contextDesc);

@@ -85,7 +85,7 @@ class VKRenderContext final : public RenderContext
     private:
 
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
+        bool OnSetVsyncInterval(std::uint32_t vsyncInterval) override;
 
         void CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore);
         void CreatePresentSemaphores();
@@ -95,7 +95,7 @@ class VKRenderContext final : public RenderContext
         void CreateSecondaryRenderPass();
 
         void CreateSwapChainRenderPass();
-        void CreateSwapChain(const VideoModeDescriptor& videoModeDesc, const VsyncDescriptor& vsyncDesc);
+        void CreateSwapChain(const VideoModeDescriptor& videoModeDesc, std::uint32_t vsyncInterval);
         void CreateSwapChainImageViews();
         void CreateSwapChainFramebuffers();
 
@@ -104,7 +104,7 @@ class VKRenderContext final : public RenderContext
         void ReleaseRenderBuffers();
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
-        VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, const VsyncDescriptor& vsyncDesc) const;
+        VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, std::uint32_t vsyncInterval) const;
         VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, std::uint32_t width, std::uint32_t height) const;
         VkFormat PickDepthStencilFormat() const;
         VkFormat PickDepthFormat() const;

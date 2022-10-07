@@ -4,6 +4,7 @@
 
 - [`BufferDescriptor` interface](#bufferdescriptor-interface)
 - [`TextureDescriptor` interface](#texturedescriptor-interface)
+- [`VsyncDescriptor` interface](#vsyncdescriptor-interface)
 - [MIP-map generation](#mip-map-generation)
 - [Index buffer format](#index-buffer-format)
 - [Storage buffer binding](#storage-buffer-binding)
@@ -102,6 +103,38 @@ myTexDesc.bindFlags         = LLGL::BindFlags::ColorAttachment |
                               LLGL::BindFlags::Sampled         |
                               LLGL::BindFlags::Storage;
 myTexDesc.miscFlags         = LLGL::MiscFlags::FixedSamples;
+```
+
+
+## `VsyncDescriptor` interface
+
+The `VsyncDescriptor` structure has been replaced by a single integer value named `vsyncInterval`.
+The refresh rate can no longer be specified with the v-sync configuration as it has always been display dependent.
+A different refresh rate has to be configured through the `Display` interface (see `Display::SetDisplayMode`).
+
+Before:
+```cpp
+// Interface:
+bool          VsyncDescriptor::enabled;
+std::uint32_t VsyncDescriptor::refreshRate;
+std::uint32_t VsyncDescriptor::interval;
+bool RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc);
+
+// Usage:
+VsyncDescriptor vsync;
+vsync.enabled = true;
+myRenderContext->SetVsync(vsync);
+```
+
+After:
+```cpp
+// Interface:
+std::uint32_t RenderContextDescriptor::vsyncInterval;
+bool RenderContext::SetVsyncInterval(std::uint32_t vsyncInterval);
+/* ... */
+
+// Usage:
+myRenderContext->SetVsyncInterval(1);
 ```
 
 

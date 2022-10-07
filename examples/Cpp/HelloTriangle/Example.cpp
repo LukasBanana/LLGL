@@ -32,10 +32,10 @@ int main(int argc, char* argv[])
         LLGL::RenderContextDescriptor contextDesc;
         {
             contextDesc.videoMode.resolution    = { 800, 600 };
-            contextDesc.vsync.enabled           = true;
             #ifdef ENABLE_MULTISAMPLING
             contextDesc.samples                 = 8; // check if LLGL adapts sample count that is too high
             #endif
+            contextDesc.vsyncInterval           = 1;
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
 

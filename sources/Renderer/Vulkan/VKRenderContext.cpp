@@ -47,7 +47,7 @@ VKRenderContext::VKRenderContext(
     RenderContextDescriptor         desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext            { desc.videoMode, desc.vsync      },
+    RenderContext            { desc                            },
     instance_                { instance                        },
     physicalDevice_          { physicalDevice                  },
     device_                  { device                          },
@@ -78,7 +78,7 @@ VKRenderContext::VKRenderContext(
         CreateDepthStencilBuffer(desc.videoMode);
 
     CreateSwapChainRenderPass();
-    CreateSwapChain(desc.videoMode, desc.vsync);
+    CreateSwapChain(desc.videoMode, desc.vsyncInterval);
 
     CreateSecondaryRenderPass();
 }
@@ -181,7 +181,7 @@ bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
         CreateDepthStencilBuffer(videoModeDesc);
 
     /* Recreate only swap-chain but keep render pass (independent of swap-chain object) */
-    CreateSwapChain(videoModeDesc, GetVsync());
+    CreateSwapChain(videoModeDesc, GetVsyncInterval());
 
     /* Switch fullscreen mode */
     if (!SetDisplayFullscreenMode(videoModeDesc))
@@ -190,10 +190,10 @@ bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
     return true;
 }
 
-bool VKRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
+bool VKRenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
 {
     /* Recreate swap-chain with new vsnyc settings */
-    CreateSwapChain(GetVideoMode(), vsyncDesc);
+    CreateSwapChain(GetVideoMode(), vsyncInterval);
     return true;
 }
 
@@ -298,7 +298,7 @@ void VKRenderContext::CreateSwapChainRenderPass()
     CreateRenderPass(swapChainRenderPass_, false);
 }
 
-void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, const VsyncDescriptor& vsyncDesc)
+void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, std::uint32_t vsyncInterval)
 {
     /* Pick swap-chain extent by resolution */
     swapChainExtent_ = PickSwapExtent(
@@ -323,7 +323,7 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, 
     vkGetDeviceQueue(device_, queueFamilyIndices.presentFamily, 0, &presentQueue_);
 
     /* Pick swap-chain presentation mode (with v-sync parameters) */
-    auto presentMode = PickSwapPresentMode(surfaceSupportDetails_.presentModes, vsyncDesc);
+    auto presentMode = PickSwapPresentMode(surfaceSupportDetails_.presentModes, vsyncInterval);
 
     /* Create swap-chain */
     VkSwapchainCreateInfoKHR createInfo;
@@ -524,9 +524,9 @@ VkSurfaceFormatKHR VKRenderContext::PickSwapSurfaceFormat(const std::vector<VkSu
     return surfaceFormats.front();
 }
 
-VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, const VsyncDescriptor& vsyncDesc) const
+VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, std::uint32_t vsyncInterval) const
 {
-    if (!vsyncDesc.enabled)
+    if (vsyncInterval == 0)
     {
         /* Check if MAILBOX or IMMEDIATE presentation mode is available, to avoid vertical synchronization */
         for (const auto& mode : presentModes)

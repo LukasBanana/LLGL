@@ -35,7 +35,7 @@ int main()
         contextDesc.multiSampling.samples   = 8;
         #endif
 
-        contextDesc.vsync.enabled           = true;
+        contextDesc.vsyncInterval           = 1;
 
         auto context = renderer->CreateRenderContext(contextDesc);
 

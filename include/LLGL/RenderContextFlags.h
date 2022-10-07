@@ -22,31 +22,6 @@ namespace LLGL
 /* ----- Structures ----- */
 
 /**
-\brief Vertical-synchronization (Vsync) descriptor structure.
-\todo Maybe remove this entire structure and only use a "vsyncInterval" parameter.
-*/
-struct VsyncDescriptor
-{
-    /**
-    \brief Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
-    \todo Remove this member and use \c interval only. Set \c interval to zero to disable v-sync.
-    */
-    bool            enabled     = false;
-
-    /**
-    \brief Refresh rate (in Hz). By default 60.
-    \note Only supported with: Direct3D 11, Direct3D 12, Metal.
-    */
-    std::uint32_t   refreshRate = 60;
-
-    /**
-    \brief Synchronisation interval. Can be 1, 2, 3, or 4. By default 1.
-    \remarks If Vsync is disabled, this value is implicitly zero.
-    */
-    std::uint32_t   interval    = 1;
-};
-
-/**
 \brief Video mode descriptor structure.
 \remarks This is mainly used to set the video mode of a RenderContext object.
 The counterpart for a physical display mode is the DisplayModeDescriptor structure.
@@ -104,8 +79,8 @@ struct VideoModeDescriptor
 */
 struct RenderContextDescriptor
 {
-    //! Vertical-synchronization (Vsync) descriptor.
-    VsyncDescriptor         vsync;
+    //! Video mode descriptor.
+    VideoModeDescriptor     videoMode;
 
     /**
     \brief Number of samples for the swap-chain buffers. By default 1.
@@ -113,20 +88,19 @@ struct RenderContextDescriptor
     The actual number of samples can be queried by the \c GetSamples function of the RenderTarget interface.
     \see RenderTarget::GetSamples
     */
-    std::uint32_t           samples     = 1;
+    std::uint32_t           samples         = 1;
 
-    //! Video mode descriptor.
-    VideoModeDescriptor     videoMode;
+    /**
+    \brief Vertical synchronisation (V-sync) interval.
+    \remarks This is typically 0 to disable V-sync or 1 to enable V-sync, but higher values are possible, too.
+    A value of 2 for instance effectively halves the frame refresh rate that the active display is capable of,
+    e.g. a display with a refresh rate of 60 Hz and a V-sync value of 2 limits the frame rate to 30 Hz.
+    */
+    std::uint32_t           vsyncInterval   = 0;
 };
 
 
 /* ----- Operators ----- */
-
-//! Compares the two specified V-sync descriptors on equality.
-LLGL_EXPORT bool operator == (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs);
-
-//! Compares the two specified V-sync descriptors on inequality.
-LLGL_EXPORT bool operator != (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs);
 
 //! Compares the two specified video mode descriptors on equality.
 LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);

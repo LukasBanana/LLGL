@@ -15,21 +15,6 @@ namespace LLGL
 
 /* ----- Operators ----- */
 
-LLGL_EXPORT bool operator == (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs)
-{
-    return
-    (
-        LLGL_COMPARE_MEMBER_EQ( enabled     ) &&
-        LLGL_COMPARE_MEMBER_EQ( refreshRate ) &&
-        LLGL_COMPARE_MEMBER_EQ( interval    )
-    );
-}
-
-LLGL_EXPORT bool operator != (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs)
-{
-    return !(lhs == rhs);
-}
-
 LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs)
 {
     return

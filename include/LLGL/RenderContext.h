@@ -126,16 +126,16 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         }
 
         /**
-        \brief Sets the new vertical-sychronization (V-sync) configuration for this render context.
-        \param[in] vsyncDesc Specifies the descriptor of the new V-sync configuration.
-        \return True on success, otherwise the specified V-sync is invalid.
+        \brief Sets the new vertical sychronization (V-sync) interval for this swap chain.
+        \param[in] vsyncInterval Specifies the new V-sync interface.
+        \return True on success, otherwise the V-sync value is invalid for this swap chain.
         */
-        bool SetVsync(const VsyncDescriptor& vsyncDesc);
+        bool SetVsyncInterval(std::uint32_t vsyncInterval);
 
         //! Returns the V-snyc configuration for this render context.
-        inline const VsyncDescriptor& GetVsync() const
+        inline std::uint32_t GetVsyncInterval() const
         {
-            return vsyncDesc_;
+            return vsyncInterval_;
         }
 
     protected:
@@ -144,7 +144,7 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         RenderContext() = default;
 
         //! Constructor to initialize the render context with the specified video mode and V-sync.
-        RenderContext(const VideoModeDescriptor& initialVideoMode, const VsyncDescriptor& initialVsync);
+        RenderContext(const RenderContextDescriptor& desc);
 
         /**
         \brief Callback when the video mode is about to get changed.
@@ -164,7 +164,7 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         \param[in] vsyncDesc Specifies the descriptor of the new V-sync configuration.
         \return True on success, otherwise the previous V-sync configuration remains.
         */
-        virtual bool OnSetVsync(const VsyncDescriptor& vsyncDesc) = 0;
+        virtual bool OnSetVsyncInterval(std::uint32_t vsyncInterval) = 0;
 
         /**
         \brief Sets the render context surface or creates one if 'surface' is null, and switches to fullscreen mode if enabled.
@@ -217,7 +217,7 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         std::shared_ptr<Surface>    surface_;
 
         VideoModeDescriptor         videoModeDesc_;
-        VsyncDescriptor             vsyncDesc_;
+        std::uint32_t               vsyncInterval_      = 0;
 
         std::unique_ptr<Offset2D>   cachedSurfacePos_;
 

@@ -40,7 +40,7 @@ int main()
         contextDesc.videoMode.swapChainSize = 2;
         //contextDesc.videoMode.fullscreen    = true;
         contextDesc.samples                 = 8;
-        contextDesc.vsync.enabled           = true;
+        contextDesc.vsyncInterval           = 1;
 
         const auto resolution = contextDesc.videoMode.resolution;
         const Gs::Vector2f viewportSize { static_cast<float>(resolution.width), static_cast<float>(resolution.height) };
@@ -246,8 +246,8 @@ int main()
             // Update user input
             if (input->KeyDown(LLGL::Key::F1))
             {
-                contextDesc.vsync.enabled = !contextDesc.vsync.enabled;
-                context->SetVsync(contextDesc.vsync);
+                contextDesc.vsyncInterval = 1 - contextDesc.vsyncInterval;
+                context->SetVsyncInterval(contextDesc.vsyncInterval);
             }
 
             // Render scene

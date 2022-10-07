@@ -12,13 +12,6 @@ namespace SharpLLGL
 {
 
 
-VsyncDescriptor::VsyncDescriptor()
-{
-    Enabled     = true;
-    RefreshRate = 60;
-    Interval    = 1;
-}
-
 VideoModeDescriptor::VideoModeDescriptor()
 {
     Resolution      = gcnew Extent2D();
@@ -38,9 +31,9 @@ RendererConfigurationOpenGL::RendererConfigurationOpenGL()
 
 RenderContextDescriptor::RenderContextDescriptor()
 {
-    Vsync       = gcnew VsyncDescriptor();
-    Samples     = 1;
-    VideoMode   = gcnew VideoModeDescriptor();
+    VideoMode       = gcnew VideoModeDescriptor();
+    Samples         = 1;
+    VsyncInterval   = 0;
 }
 
 

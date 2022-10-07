@@ -95,7 +95,6 @@ struct VideoAdapterDescriptor;
 struct VideoModeDescriptor;
 struct VideoOutputDescriptor;
 struct Viewport;
-struct VsyncDescriptor;
 struct WindowBehavior;
 struct WindowDescriptor;
 

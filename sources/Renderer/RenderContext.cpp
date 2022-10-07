@@ -17,9 +17,9 @@ namespace LLGL
 {
 
 
-RenderContext::RenderContext(const VideoModeDescriptor& initialVideoMode, const VsyncDescriptor& initialVsync) :
-    videoModeDesc_ { initialVideoMode },
-    vsyncDesc_     { initialVsync     }
+RenderContext::RenderContext(const RenderContextDescriptor& desc) :
+    videoModeDesc_ { desc.videoMode     },
+    vsyncInterval_ { desc.vsyncInterval }
 {
 }
 
@@ -64,14 +64,14 @@ bool RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
     return false;
 }
 
-bool RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
+bool RenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
-    if (vsyncDesc_ != vsyncDesc)
+    if (vsyncInterval_ != vsyncInterval)
     {
         /* Call primary V-sync function */
-        if (OnSetVsync(vsyncDesc))
+        if (OnSetVsyncInterval(vsyncInterval))
         {
-            vsyncDesc_ = vsyncDesc;
+            vsyncInterval_ = vsyncInterval;
             return true;
         }
         return false;
@@ -130,7 +130,7 @@ void RenderContext::ShareSurfaceAndConfig(RenderContext& other)
 {
     surface_        = other.surface_;
     videoModeDesc_  = other.videoModeDesc_;
-    vsyncDesc_      = other.vsyncDesc_;
+    vsyncInterval_  = other.vsyncInterval_;
 }
 
 bool RenderContext::SetDisplayMode(const VideoModeDescriptor& videoModeDesc)

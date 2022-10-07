@@ -31,7 +31,7 @@ D3D12RenderContext::D3D12RenderContext(
     const RenderContextDescriptor&  desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext     { desc.videoMode, desc.vsync },
+    RenderContext     { desc                       },
     renderSystem_     { renderSystem               },
     frameFence_       { renderSystem.GetDXDevice() }
 {
@@ -45,8 +45,8 @@ D3D12RenderContext::D3D12RenderContext(
     QueryDeviceParameters(renderSystem.GetDevice(), desc.samples);
     CreateWindowSizeDependentResources(GetVideoMode());
 
-    /* Initialize v-sync */
-    OnSetVsync(desc.vsync);
+    /* Initialize v-sync interval */
+    SetPresentSyncInterval(desc.vsyncInterval);
 
     /* Create default render pass */
     defaultRenderPass_.BuildAttachments(1, &colorFormat_, depthStencilFormat_, swapChainSampleDesc_);
@@ -192,10 +192,21 @@ bool D3D12RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc
     return true;
 }
 
-bool D3D12RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
+bool D3D12RenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
 {
-    swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
+    SetPresentSyncInterval(vsyncInterval);
     return true;
+}
+
+bool D3D12RenderContext::SetPresentSyncInterval(UINT syncInterval)
+{
+    /* IDXGISwapChain::Present expects a sync interval in the range [0, 4] */
+    if (syncInterval <= 4)
+    {
+        swapChainInterval_ = syncInterval;
+        return true;
+    }
+    return false;
 }
 
 void D3D12RenderContext::QueryDeviceParameters(const D3D12Device& device, std::uint32_t samples)

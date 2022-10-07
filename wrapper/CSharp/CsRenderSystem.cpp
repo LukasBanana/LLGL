@@ -255,16 +255,6 @@ const RenderSystemConfiguration& GetConfiguration()
 
 /* ----- Render Context ----- */
 
-static void Convert(LLGL::VsyncDescriptor& dst, VsyncDescriptor^ src)
-{
-    if (src)
-    {
-        dst.enabled     = src->Enabled;
-        dst.refreshRate = src->RefreshRate;
-        dst.interval    = src->Interval;
-    }
-}
-
 static void Convert(LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
 {
     if (src)
@@ -293,9 +283,9 @@ static void Convert(LLGL::RenderContextDescriptor& dst, RenderContextDescriptor^
 {
     if (src)
     {
-        Convert(dst.vsync, src->Vsync);
-        dst.samples = src->Samples;
         Convert(dst.videoMode, src->VideoMode);
+        dst.samples         = src->Samples;
+        dst.vsyncInterval   = src->VsyncInterval;
     }
 }
 

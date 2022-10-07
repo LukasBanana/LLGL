@@ -38,7 +38,7 @@ int main()
         contextDesc.videoMode.resolution        = { 800, 600 };
         //contextDesc.videoMode.fullscreen        = true;
         contextDesc.samples                     = 8;
-        contextDesc.vsync.enabled               = true;
+        contextDesc.vsyncInterval               = 1;
 
         /*contextDesc.profileOpenGL.extProfile    = true;
         contextDesc.profileOpenGL.coreProfile   = true;

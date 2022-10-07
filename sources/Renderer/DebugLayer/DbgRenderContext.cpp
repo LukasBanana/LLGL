@@ -55,9 +55,9 @@ bool DbgRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
     return result;
 }
 
-bool DbgRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
+bool DbgRenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
 {
-    auto result = instance.SetVsync(vsyncDesc);
+    auto result = instance.SetVsyncInterval(vsyncInterval);
     ShareSurfaceAndConfig(instance);
     return result;
 }

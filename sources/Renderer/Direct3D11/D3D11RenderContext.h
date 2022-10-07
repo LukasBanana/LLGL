@@ -63,7 +63,9 @@ class D3D11RenderContext final : public RenderContext
     private:
 
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
+        bool OnSetVsyncInterval(std::uint32_t vsyncInterval) override;
+
+        bool SetPresentSyncInterval(UINT syncInterval);
 
         void CreateSwapChain(IDXGIFactory* factory, UINT samples);
         void CreateBackBuffer(const VideoModeDescriptor& videoModeDesc);

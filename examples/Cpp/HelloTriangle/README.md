@@ -160,10 +160,16 @@ LLGL::CommandBuffer* myCmdBuffer = myRenderer->CreateCommandBuffer(LLGL::Command
 
 ## Render Loop
 
-Our render loop can be implemented with a simple `while`-statement in which is update the window events. For this we need the instance of the `Window` interface, which was created when we called `CreateRenderContext`:
+Our render loop can be implemented with a simple `while`-statement in which we update the window events. The base interface `Surface` is sufficient for this task.
+Having that said, if we want to do a little bit more like changing the window title, adding event listeners, or even just showing the window (since it's initially hidden),
+we need an instance of the `Window` interface, which was created when we called `CreateRenderContext`:
 ```cpp
 // Cast "Window" from base class "Surface" (only on desktop platforms such as Windows, GNU/Linux, and macOS)
 LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window>(myContext->GetSurface());
+
+// Set window title (aka. caption) and show window
+myWindow.SetTitle(L"Hello Triangle");
+myWindow.Show();
 
 // Process window events (such as user input)
 while (myWindow.ProcessEvents()) {

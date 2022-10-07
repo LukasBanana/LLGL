@@ -55,10 +55,10 @@ public ref class RenderContext : public RenderTarget
             void set(VideoModeDescriptor^ value);
         }
 
-        property VsyncDescriptor^ Vsync
+        property unsigned int VsyncInterval
         {
-            VsyncDescriptor^ get();
-            void set(VsyncDescriptor^ value);
+            unsigned int get();
+            void set(unsigned int value);
         };
 
     private:

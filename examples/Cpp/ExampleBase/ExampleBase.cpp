@@ -297,8 +297,8 @@ ExampleBase::ExampleBase(
     LLGL::RenderContextDescriptor contextDesc;
     {
         contextDesc.videoMode.resolution    = resolution;
-        contextDesc.vsync.enabled           = vsync;
         contextDesc.samples                 = samples;
+        contextDesc.vsyncInterval           = (vsync ? 1 : 0);
     }
     context = renderer->CreateRenderContext(contextDesc);
 

@@ -71,32 +71,14 @@ void RenderContext::VideoMode::set(VideoModeDescriptor^ value)
     static_cast<LLGL::RenderContext*>(Native)->SetVideoMode(nativeDesc);
 }
 
-static void Convert(VsyncDescriptor^ dst, const LLGL::VsyncDescriptor& src)
+unsigned int RenderContext::VsyncInterval::get()
 {
-    dst->Enabled        = src.enabled;
-    dst->RefreshRate    = src.refreshRate;
-    dst->Interval       = src.interval;
+    return static_cast<LLGL::RenderContext*>(Native)->GetVsyncInterval();
 }
 
-VsyncDescriptor^ RenderContext::Vsync::get()
+void RenderContext::VsyncInterval::set(unsigned int value)
 {
-    auto managedDesc = gcnew VsyncDescriptor();
-    Convert(managedDesc, static_cast<LLGL::RenderContext*>(Native)->GetVsync());
-    return managedDesc;
-}
-
-static void Convert(LLGL::VsyncDescriptor& dst, VsyncDescriptor^ src)
-{
-    dst.enabled     = src->Enabled;
-    dst.refreshRate = src->RefreshRate;
-    dst.interval    = src->Interval;
-}
-
-void RenderContext::Vsync::set(VsyncDescriptor^ value)
-{
-    LLGL::VsyncDescriptor nativeDesc;
-    Convert(nativeDesc, value);
-    static_cast<LLGL::RenderContext*>(Native)->SetVsync(nativeDesc);
+    static_cast<LLGL::RenderContext*>(Native)->SetVsyncInterval(value);
 }
 
 

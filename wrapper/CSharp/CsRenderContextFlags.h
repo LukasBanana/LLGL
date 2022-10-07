@@ -28,19 +28,6 @@ public enum class OpenGLContextProfile
 
 /* ----- Structures ----- */
 
-public ref class VsyncDescriptor
-{
-
-    public:
-
-        VsyncDescriptor();
-
-        property bool           Enabled;
-        property unsigned int   RefreshRate;
-        property unsigned int   Interval;
-
-};
-
 public ref class VideoModeDescriptor
 {
 
@@ -77,9 +64,9 @@ public ref class RenderContextDescriptor
 
         RenderContextDescriptor();
 
-        property VsyncDescriptor^       Vsync;
-        property unsigned int           Samples;
         property VideoModeDescriptor^   VideoMode;
+        property unsigned int           Samples;
+        property unsigned int           VsyncInterval;
 
 };
 
