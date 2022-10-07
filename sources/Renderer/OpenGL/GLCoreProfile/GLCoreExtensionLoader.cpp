@@ -992,6 +992,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
             "GL_ARB_vertex_shader",
             "GL_EXT_texture3D",
             "GL_EXT_copy_texture",
+            "GL_EXT_stencil_two_side", // GL 2.0
         };
         for (const auto& ext : coreProfileDefaultExtenions)
             extensions[ext] = false;
