@@ -189,29 +189,13 @@ void GLGraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scissor* 
 
 void GLGraphicsPSO::SetStaticViewports(GLStateManager& stateMngr, ByteBufferIterator& byteBufferIter)
 {
-    /* Copy viewports to intermediate array (must be adjusted when framebuffer is bound) */
-    GLViewport intermediateViewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
-    ::memcpy(
-        intermediateViewports,
-        byteBufferIter.Next<GLViewport>(numStaticViewports_),
-        numStaticViewports_ * sizeof(GLViewport)
-    );
-    stateMngr.SetViewportArray(0, numStaticViewports_, intermediateViewports);
-
-    /* Set depth ranges */
+    stateMngr.SetViewportArray(0, numStaticViewports_, byteBufferIter.Next<GLViewport>(numStaticViewports_));
     stateMngr.SetDepthRangeArray(0, numStaticViewports_, byteBufferIter.Next<GLDepthRange>(numStaticViewports_));
 }
 
 void GLGraphicsPSO::SetStaticScissors(GLStateManager& stateMngr, ByteBufferIterator& byteBufferIter)
 {
-    /* Copy scissors to intermediate array (must be adjusted when framebuffer is bound) */
-    GLScissor intermediateScissors[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
-    ::memcpy(
-        intermediateScissors,
-        byteBufferIter.Next<GLScissor>(numStaticScissors_),
-        numStaticScissors_ * sizeof(GLScissor)
-    );
-    stateMngr.SetScissorArray(0, numStaticScissors_, intermediateScissors);
+    stateMngr.SetScissorArray(0, numStaticScissors_, byteBufferIter.Next<GLScissor>(numStaticScissors_));
 }
 
 
