@@ -56,7 +56,7 @@ class Win32GLContext final : public GLContext
         void CreateContext(const WGLContextParams& params, Win32GLContext* sharedContext = nullptr);
         void DeleteContext();
 
-        void DeleteGLContext(HGLRC& renderContext);
+        void DeleteGLContext(HGLRC& hGLRC);
 
         HGLRC CreateGLContext(const WGLContextParams& params, bool useExtProfile, Win32GLContext* sharedContext = nullptr);
         HGLRC CreateStdContextProfile();
@@ -78,8 +78,8 @@ class Win32GLContext final : public GLContext
         UINT                pixelFormatsMSCount_                = 0;
         int                 samples_                            = 1;
 
-        HDC                 hDC_                                = 0;        // Device context handle.
-        HGLRC               hGLRC_                              = 0;        // OpenGL render context handle.
+        HDC                 hDC_                                = nullptr;  // Device context handle.
+        HGLRC               hGLRC_                              = nullptr;  // OpenGL render context handle.
 
         Surface&            surface_;
 

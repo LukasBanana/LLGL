@@ -229,59 +229,59 @@ void Win32GLContext::DeleteContext()
     if (!hasSharedContext_)
     {
         /* Deactivate context before deletion */
-        if (GLContext::Active() == this)
+        if (GLContext::GetCurrent() == this)
             Activate(false);
 
         DeleteGLContext(hGLRC_);
     }
 }
 
-void Win32GLContext::DeleteGLContext(HGLRC& renderContext)
+void Win32GLContext::DeleteGLContext(HGLRC& hGLRC)
 {
     /* Delete GL render context */
-    if (!wglDeleteContext(renderContext))
+    if (!wglDeleteContext(hGLRC))
         Log::PostReport(Log::ReportType::Error, "failed to delete OpenGL render context");
     else
-        renderContext = 0;
+        hGLRC = nullptr;
 }
 
 HGLRC Win32GLContext::CreateGLContext(const WGLContextParams& params, bool useExtProfile, Win32GLContext* sharedContext)
 {
     /* Create hardware render context */
-    HGLRC renderContext = 0;
+    HGLRC hGLRC = nullptr;
 
     if (!sharedContext || !sharedContext->hGLRC_)
     {
         /* Create own hardware context */
         hasSharedContext_ = false;
         if (useExtProfile)
-            renderContext = CreateExtContextProfile(params, sharedContext != nullptr ? sharedContext->hGLRC_ : nullptr);
+            hGLRC = CreateExtContextProfile(params, sharedContext != nullptr ? sharedContext->hGLRC_ : nullptr);
         else
-            renderContext = CreateStdContextProfile();
+            hGLRC = CreateStdContextProfile();
     }
     else
     {
         /* Use shared render context */
         hasSharedContext_ = true;
-        renderContext = sharedContext->hGLRC_;
+        hGLRC = sharedContext->hGLRC_;
     }
 
-    if (!renderContext)
+    if (!hGLRC)
         return 0;
 
     /* Activate new render context */
-    if (wglMakeCurrent(hDC_, renderContext) != TRUE)
+    if (wglMakeCurrent(hDC_, hGLRC) != TRUE)
     {
         /* Print error and delete unusable render context */
         Log::PostReport(Log::ReportType::Error, "failed to active OpenGL render context (wglMakeCurrent)");
-        DeleteGLContext(renderContext);
+        DeleteGLContext(hGLRC);
         return 0;
     }
 
     /* Query GL version of current render context */
     //QueryGLVersion();
 
-    return renderContext;
+    return hGLRC;
 }
 
 HGLRC Win32GLContext::CreateStdContextProfile()
@@ -333,19 +333,19 @@ HGLRC Win32GLContext::CreateExtContextProfile(const WGLContextParams& params, HG
     };
 
     /* Create OpenGL "Core Profile" or "Compatibility Profile" render context */
-    HGLRC renderContext = wglCreateContextAttribsARB(hDC_, sharedGLRC, attribList);
+    HGLRC hGLRC = wglCreateContextAttribsARB(hDC_, sharedGLRC, attribList);
 
     /* Check for errors */
-    DWORD error = GetLastError();
+    const DWORD error = GetLastError();
 
     if (error == ERROR_INVALID_VERSION_ARB)
         Log::PostReport(Log::ReportType::Error, "invalid version for OpenGL profile");
     else if (error == ERROR_INVALID_PROFILE_ARB)
         Log::PostReport(Log::ReportType::Error, "invalid OpenGL profile");
     else
-        return renderContext;
+        return hGLRC;
 
-    return 0;
+    return nullptr;
 }
 
 void Win32GLContext::SetupDeviceContextAndPixelFormat(const WGLContextParams& params)
@@ -432,8 +432,7 @@ void Win32GLContext::SelectPixelFormat(const WGLContextParams& params)
             throw std::runtime_error("failed to select pixel format");
 
         /* Set pixel format */
-        auto wasFormatSelected = SetPixelFormat(hDC_, pixelFormat_, &formatDesc);
-
+        const BOOL wasFormatSelected = SetPixelFormat(hDC_, pixelFormat_, &formatDesc);
         if (!wasFormatSelected)
         {
             if (wasStandardFormatUsed)
@@ -477,7 +476,7 @@ bool Win32GLContext::SetupAntiAliasing(const WGLContextParams& params)
         };
 
         /* Choose new pixel format with anti-aliasing */
-        BOOL result = wglChoosePixelFormatARB(
+        const BOOL result = wglChoosePixelFormatARB(
             hDC_,
             attribsInt,
             attribsFlt,
