@@ -37,7 +37,11 @@ class GLRasterizerState
 
         GLRasterizerState(const RasterizerDescriptor& desc);
 
+        // Binds the entire rasterizer state.
         void Bind(GLStateManager& stateMngr);
+
+        // Binds the front facing only.
+        void BindFrontFaceOnly(GLStateManager& stateMngr);
 
     public:
 

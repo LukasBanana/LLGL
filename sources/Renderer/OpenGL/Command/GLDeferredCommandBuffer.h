@@ -215,10 +215,6 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
-        /* ----- Extensions ----- */
-
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
-
     public:
 
         /* ----- Internal ----- */

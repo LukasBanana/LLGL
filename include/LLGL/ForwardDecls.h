@@ -58,7 +58,7 @@ struct DrawIndirectArguments;
 struct DstImageDescriptor;
 struct FragmentAttribute;
 struct GraphicsPipelineDescriptor;
-struct OpenGLDependentStateDescriptor;
+struct MetalDependentStateDescriptor;
 struct PipelineLayoutDescriptor;
 struct QueryHeapDescriptor;
 struct QueryPipelineStatistics;

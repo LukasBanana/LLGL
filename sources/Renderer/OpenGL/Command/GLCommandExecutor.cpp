@@ -111,12 +111,6 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             ExecuteGLDeferredCommandBuffer(*(cmd->commandBuffer), stateMngr);
             return sizeof(*cmd);
         }
-        case GLOpcodeSetAPIDepState:
-        {
-            auto cmd = reinterpret_cast<const GLCmdSetAPIDepState*>(pc);
-            stateMngr.SetGraphicsAPIDependentState(cmd->desc);
-            return sizeof(*cmd);
-        }
         case GLOpcodeViewport:
         {
             auto cmd = reinterpret_cast<const GLCmdViewport*>(pc);

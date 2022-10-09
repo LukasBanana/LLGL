@@ -13,10 +13,6 @@
 #define GL_MIRROR_CLAMP_TO_EDGE 0x8743
 #endif
 
-#ifndef GL_ZERO_TO_ONE
-#define GL_ZERO_TO_ONE 0x935F
-#endif
-
 #ifndef GL_DEBUG_OUTPUT
 #define GL_DEBUG_OUTPUT 0x92E0
 #endif
@@ -71,6 +67,30 @@
 
 #ifndef GL_TEXTURE_MAX_ANISOTROPY
 #define GL_TEXTURE_MAX_ANISOTROPY 0x84FE
+#endif
+
+#ifndef GL_CLIP_ORIGIN
+#define GL_CLIP_ORIGIN 0x935C
+#endif
+
+#ifndef GL_CLIP_DEPTH_MODE
+#define GL_CLIP_DEPTH_MODE 0x935D
+#endif
+
+#ifndef GL_LOWER_LEFT
+#define GL_LOWER_LEFT 0x8CA1
+#endif
+
+#ifndef GL_UPPER_LEFT
+#define GL_UPPER_LEFT 0x8CA2
+#endif
+
+#ifndef GL_NEGATIVE_ONE_TO_ONE
+#define GL_NEGATIVE_ONE_TO_ONE 0x935E
+#endif
+
+#ifndef GL_ZERO_TO_ONE
+#define GL_ZERO_TO_ONE 0x935F
 #endif
 
 

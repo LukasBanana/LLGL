@@ -530,14 +530,10 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
 {
     /* Create devices that require an active GL context */
     if (renderContexts_.empty())
-        CreateGLContextDependentDevices(*renderContext);
+        CreateGLContextDependentDevices(renderContext->GetStateManager());
 
     /* Use uniform clipping space */
     GLStateManager::Get().DetermineExtensionsAndLimits();
-    
-    #ifdef LLGL_OPENGL
-    GLStateManager::Get().SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
-    #endif
 
     /* Take ownership and return raw pointer */
     return TakeOwnership(renderContexts_, std::move(renderContext));
@@ -548,7 +544,7 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
  * ======= Private: =======
  */
 
-void GLRenderSystem::CreateGLContextDependentDevices(GLRenderContext& renderContext)
+void GLRenderSystem::CreateGLContextDependentDevices(const std::shared_ptr<GLStateManager>& stateManager)
 {
     const bool hasGLCoreProfile = (config_.contextProfile == OpenGLContextProfile::CoreProfile);
 
@@ -560,7 +556,7 @@ void GLRenderSystem::CreateGLContextDependentDevices(GLRenderContext& renderCont
         SetDebugCallback(debugCallback_);
 
     /* Create command queue instance */
-    commandQueue_ = MakeUnique<GLCommandQueue>(renderContext.GetStateManager());
+    commandQueue_ = MakeUnique<GLCommandQueue>(stateManager);
 }
 
 void GLRenderSystem::LoadGLExtensions(bool hasGLCoreProfile)

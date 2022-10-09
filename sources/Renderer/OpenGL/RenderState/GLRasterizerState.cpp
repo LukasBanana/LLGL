@@ -102,6 +102,11 @@ void GLRasterizerState::Bind(GLStateManager& stateMngr)
     #endif
 }
 
+void GLRasterizerState::BindFrontFaceOnly(GLStateManager& stateMngr)
+{
+    stateMngr.SetFrontFace(frontFace_);
+}
+
 int GLRasterizerState::CompareSWO(const GLRasterizerState& lhs, const GLRasterizerState& rhs)
 {
     #ifdef LLGL_OPENGL

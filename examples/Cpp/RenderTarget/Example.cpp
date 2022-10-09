@@ -233,21 +233,6 @@ private:
             #else
             pipelineDesc.rasterizer.multiSampleEnabled = false;
             #endif
-
-            if (IsOpenGL())
-            {
-                /*
-                Set front face to counter-clock wise (CCW) to be uniform between OpenGL and Direct3D:
-                A huge difference between OpenGL and Direct3D is,
-                that OpenGL stores image data from the lower-left to the upper-right in a texture,
-                but Direct3D stores image data from the upper-left to the lower-right in a texture.
-                The default screen-space origin of LLGL is the upper-left, so when rendering into a texture,
-                we need to render vertically flipped when OpenGL is used.
-                To do this we flip the Y-axis of the world-view-projection matrix and invert the front-facing,
-                so that the face-culling works as excepted.
-                */
-                pipelineDesc.rasterizer.frontCCW = true;
-            }
         }
         pipelines[0] = renderer->CreatePipelineState(pipelineDesc);
     }

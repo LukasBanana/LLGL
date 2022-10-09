@@ -159,7 +159,7 @@ class GLRenderSystem final : public RenderSystem
 
     private:
 
-        void CreateGLContextDependentDevices(GLRenderContext& renderContext);
+        void CreateGLContextDependentDevices(const std::shared_ptr<GLStateManager>& stateManager);
 
         void LoadGLExtensions(bool hasGLCoreProfile);
         void SetDebugCallback(const DebugCallback& debugCallback);

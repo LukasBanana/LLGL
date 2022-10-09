@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-static GLContext* g_activeGLContext = nullptr;
+static GLContext* g_currentGLContext = nullptr;
 
 GLContext::GLContext(GLContext* sharedContext)
 {
@@ -31,7 +31,7 @@ bool GLContext::MakeCurrent(GLContext* context)
 {
     bool result = true;
 
-    if (g_activeGLContext != context)
+    if (g_currentGLContext != context)
     {
         if (context)
         {
@@ -39,23 +39,23 @@ bool GLContext::MakeCurrent(GLContext* context)
             GLStateManager::active_ = context->stateMngr_.get();
             result = context->Activate(true);
         }
-        else if (g_activeGLContext)
+        else if (g_currentGLContext)
         {
             /* Deactivate previous GL context: MakeCurrent(null) */
             GLStateManager::active_ = nullptr;
-            result = g_activeGLContext->Activate(false);
+            result = g_currentGLContext->Activate(false);
         }
 
         /* Store pointer to new GL context */
-        g_activeGLContext = context;
+        g_currentGLContext = context;
     }
 
     return result;
 }
 
-GLContext* GLContext::Active()
+GLContext* GLContext::GetCurrent()
 {
-    return g_activeGLContext;
+    return g_currentGLContext;
 }
 
 

@@ -271,9 +271,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Sets an array of viewports.
         \param[in] numViewports Specifies the number of viewports to set. Most render system have a limit of 16 viewports.
         \param[in] viewports Pointer to the array of viewports. This <b>must not</b> be null!
-        \remarks This function behaves differently on the OpenGL render system, depending on the state configured with the \c SetGraphicsAPIDependentState function.
-        If OpenGLDependentStateDescriptor::originLowerLeft is \c false, the origin of each viewport is on the upper-left (like for all other render systems).
-        If OpenGLDependentStateDescriptor::originLowerLeft is \c true, the origin of each viewport is on the lower-left.
         \remarks This must only be used if the currently bound graphics pipeline state was created with \c viewports being empty. Otherwise, the behavior is undefined.
         \see GraphicsPipelineDescriptor::viewports
         \see SetGraphicsAPIDependentState
@@ -866,16 +863,15 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] stateDesc Specifies a pointer to the renderer spcific state descriptor. If this is a null pointer, the function has no effect.
         \param[in] stateDescSize Specifies the size (in bytes) of the renderer spcific state descriptor structure.
         If this value is not equal to the state descriptor structure that is required for the respective renderer, the function has no effect.
-        \remarks This can be used to work around several differences between the low-level graphics APIs,
-        e.g. for a uniform render target behavior between OpenGL and Direct3D.
+        \remarks This can be used to work around several differences between the low-level graphics APIs, e.g. for internal buffer binding slots.
         Here is a usage example:
         \code
-        LLGL::OpenGLDependentStateDescriptor myOpenGLStateDesc;
-        myOpenGLStateDesc.invertFrontFace = true;
-        myCmdBuffer->SetGraphicsAPIDependentState(&myOpenGLStateDesc, sizeof(myOpenGLStateDesc));
+        LLGL::MetalDependentStateDescriptor myMetalStateDesc;
+        myMetalStateDesc.tessFactorBufferSlot = 1;
+        myCmdBuffer->SetGraphicsAPIDependentState(&myMetalStateDesc, sizeof(myMetalStateDesc));
         \endcode
         \note Invalid arguments are ignored by this function silently (except for corrupted pointers).
-        \see OpenGLDependentStateDescriptor
+        \see MetalDependentStateDescriptor
         */
         virtual void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) = 0;
 

@@ -207,22 +207,6 @@ void GLStateManager::NotifyRenderTargetHeight(GLint height)
     //TODO...
 }
 
-void GLStateManager::SetGraphicsAPIDependentState(const OpenGLDependentStateDescriptor& stateDesc)
-{
-    /* Check for necessary updates */
-    bool hasFrontFaceChanged = (apiDependentState_.invertFrontFace != stateDesc.invertFrontFace);
-
-    /* Store new graphics state */
-    apiDependentState_ = stateDesc;
-
-    if (hasFrontFaceChanged)
-    {
-        /* Update front face and reset bound rasterizer state */
-        SetFrontFace(commonState_.frontFaceAct);
-        boundRasterizerState_ = nullptr;
-    }
-}
-
 /* ----- Boolean states ----- */
 
 void GLStateManager::Reset()
@@ -347,7 +331,7 @@ bool GLStateManager::IsEnabled(GLStateExt state) const
 //private
 bool GLStateManager::NeedsAdjustedViewport() const
 {
-    return emulateClipControl_ && !apiDependentState_.originLowerLeft;
+    return flipViewportYPos_;
 }
 
 //private
@@ -460,7 +444,7 @@ void GLStateManager::AdjustScissor(GLScissor& outScissor, const GLScissor& inSci
 
 void GLStateManager::SetScissor(const GLScissor& scissor)
 {
-    if (emulateClipControl_)
+    if (NeedsAdjustedViewport())
     {
         GLScissor adjustedScissor;
         AdjustScissor(adjustedScissor, scissor);
@@ -502,14 +486,35 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, const GLScisso
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 {
-    #if 0
-    if (HasExtension(GLExt::ARB_clip_control))
-        glClipControl(origin, depth);
-    else
-        emulateClipControl_ = (origin == GL_UPPER_LEFT);
-    #else
-    emulateClipControl_ = (origin == GL_UPPER_LEFT);
-    #endif
+    if (commonState_.clipOrigin != origin || commonState_.clipDepthMode != depth)
+    {
+        #ifdef GL_ARB_clip_control
+        if (HasExtension(GLExt::ARB_clip_control))
+        {
+            /* Use GL extension to transform clipping space */
+            glClipControl(origin, depth);
+
+            /* Clip control flips NDC space, but we always have to flip the viewport */
+            flipViewportYPos_ = true;
+        }
+        else
+        #endif
+        {
+            const bool isOriginUpperLeft = (origin == GL_UPPER_LEFT);
+
+            /* Emulate clipping space modification; this has to be addressed by transforming gl_Position in each vertex shader */
+            emulateOriginUpperLeft_ = isOriginUpperLeft;
+            emulateDepthModeZeroToOne_ = (depth == GL_ZERO_TO_ONE);
+
+            /* Flip viewport if origin is emulated and set to upper-left corner */
+            flipViewportYPos_ = isOriginUpperLeft;
+
+            /* Flip front-facing when emulating upper-left origin */
+            FlipFrontFacing(!isOriginUpperLeft);
+        }
+        commonState_.clipOrigin     = origin;
+        commonState_.clipDepthMode  = depth;
+    }
 }
 
 // <face> parameter must always be 'GL_FRONT_AND_BACK' since GL 3.2+
@@ -564,7 +569,7 @@ void GLStateManager::SetFrontFace(GLenum mode)
     commonState_.frontFaceAct = mode;
 
     /* Check if mode must be inverted */
-    if (apiDependentState_.invertFrontFace)
+    if (flipFrontFacing_)
         mode = (mode == GL_CW ? GL_CCW : GL_CW);
 
     /* Set front face */
@@ -697,15 +702,27 @@ void GLStateManager::SetStencilRef(GLint ref, GLenum face)
 void GLStateManager::NotifyRasterizerStateRelease(GLRasterizerState* rasterizerState)
 {
     if (boundRasterizerState_ == rasterizerState)
+    {
         boundRasterizerState_ = nullptr;
+        frontFacingDirtyBit_ = false;
+    }
 }
 
 void GLStateManager::BindRasterizerState(GLRasterizerState* rasterizerState)
 {
-    if (rasterizerState != nullptr && rasterizerState != boundRasterizerState_)
+    if (rasterizerState != nullptr)
     {
-        rasterizerState->Bind(*this);
-        boundRasterizerState_ = rasterizerState;
+        if (rasterizerState != boundRasterizerState_)
+        {
+            rasterizerState->Bind(*this);
+            boundRasterizerState_ = rasterizerState;
+            frontFacingDirtyBit_ = false;
+        }
+        else if (frontFacingDirtyBit_)
+        {
+            rasterizerState->BindFrontFaceOnly(*this);
+            frontFacingDirtyBit_ = false;
+        }
     }
 }
 
@@ -1033,9 +1050,15 @@ void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
 {
     framebufferState_.boundRenderTarget = renderTarget;
     if (renderTarget)
+    {
         BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTarget->GetFramebuffer().GetID());
+        SetClipControl(GL_LOWER_LEFT, commonState_.clipDepthMode);
+    }
     else
+    {
         BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+        SetClipControl(GL_UPPER_LEFT, commonState_.clipDepthMode);
+    }
 }
 
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
@@ -1563,6 +1586,18 @@ void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target
         /* Invalidate GL texture on all layers */
         for (auto& layer : textureState_.layers)
             InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
+    }
+}
+
+void GLStateManager::FlipFrontFacing(bool isFlipped)
+{
+    /* Check for necessary updates */
+    if (flipFrontFacing_ != isFlipped)
+    {
+        /* Update front face and mark it as outdated for next rastierizer state binding */
+        flipFrontFacing_ = isFlipped;
+        SetFrontFace(commonState_.frontFaceAct);
+        frontFacingDirtyBit_ = true;
     }
 }
 

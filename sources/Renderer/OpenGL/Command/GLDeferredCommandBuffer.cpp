@@ -987,17 +987,6 @@ void GLDeferredCommandBuffer::PopDebugGroup()
     #endif // /GL_KHR_debug
 }
 
-/* ----- Extensions ----- */
-
-void GLDeferredCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
-{
-    if (stateDesc != nullptr && stateDescSize == sizeof(OpenGLDependentStateDescriptor))
-    {
-        auto cmd = AllocCommand<GLCmdSetAPIDepState>(GLOpcodeSetAPIDepState);
-        cmd->desc = *reinterpret_cast<const OpenGLDependentStateDescriptor*>(stateDesc);
-    }
-}
-
 /* ----- Internal ----- */
 
 bool GLDeferredCommandBuffer::IsImmediateCmdBuffer() const

@@ -848,18 +848,6 @@ void GLImmediateCommandBuffer::PopDebugGroup()
     #endif // /GL_KHR_debug
 }
 
-/* ----- Extensions ----- */
-
-void GLImmediateCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
-{
-    if (stateDesc != nullptr && stateDescSize == sizeof(OpenGLDependentStateDescriptor))
-    {
-        stateMngr_->SetGraphicsAPIDependentState(
-            *reinterpret_cast<const OpenGLDependentStateDescriptor*>(stateDesc)
-        );
-    }
-}
-
 /* ----- Internal ----- */
 
 bool GLImmediateCommandBuffer::IsImmediateCmdBuffer() const

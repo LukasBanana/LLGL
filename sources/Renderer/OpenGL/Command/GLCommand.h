@@ -108,11 +108,6 @@ struct GLCmdExecute
     const GLDeferredCommandBuffer* commandBuffer;
 };
 
-struct GLCmdSetAPIDepState
-{
-    OpenGLDependentStateDescriptor desc;
-};
-
 struct GLCmdViewport
 {
     GLViewport      viewport;

@@ -239,29 +239,6 @@ struct AttachmentClear
 };
 
 /**
-\brief Graphics API dependent state descriptor for the OpenGL renderer.
-\remarks This descriptor is used to compensate a few differences between OpenGL and the other rendering APIs.
-\see CommandBuffer::SetGraphicsAPIDependentState
-\todo Move into namespace \c OpenGL
-*/
-struct OpenGLDependentStateDescriptor
-{
-    /**
-    \brief Specifies whether the screen-space origin is on the lower-left. By default false.
-    \remarks If this is true, the viewports and scissor rectangles of OpenGL are \b not emulated to the upper-left,
-    which is the default to be uniform with other rendering APIs such as Direct3D and Vulkan.
-    */
-    bool originLowerLeft = false;
-
-    /**
-    \brief Specifies whether to invert front-facing. By default false.
-    \remarks If this is true, the front facing (either \c GL_CW or \c GL_CCW) will be inverted,
-    i.e. \c CCW becomes \c CW, and \c CW becomes \c CCW.
-    */
-    bool invertFrontFace = false;
-};
-
-/**
 \brief Graphics API dependent state descriptor for the Metal renderer.
 \remarks This descriptor is used to compensate a few differences between Metal and the other rendering APIs.
 \see CommandBuffer::SetGraphicsAPIDependentState

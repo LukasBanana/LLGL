@@ -52,8 +52,8 @@ class GLContext
         // Makes the specified GLContext current. If null, the current context will be deactivated.
         static bool MakeCurrent(GLContext* context);
 
-        // Returns the active GLContext instance.
-        static GLContext* Active();
+        // Returns the current GLContext.
+        static GLContext* GetCurrent();
 
         // Returns the state manager that is associated with this context.
         inline const std::shared_ptr<GLStateManager>& GetStateManager() const

@@ -76,9 +76,6 @@ class GLStateManager
         // Notifies the state manager about a new render-target height.
         void NotifyRenderTargetHeight(GLint height);
 
-        // Sets and applies the specified OpenGL specific render state.
-        void SetGraphicsAPIDependentState(const OpenGLDependentStateDescriptor& stateDesc);
-
         /* ----- Boolean states ----- */
 
         // Resets all internal states by querying the values from OpenGL.
@@ -292,6 +289,8 @@ class GLStateManager
         void SetActiveTextureLayer(std::uint32_t layer);
         void NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly);
 
+        void FlipFrontFacing(bool isFlipped);
+
         void DetermineLimits();
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
@@ -368,6 +367,9 @@ class GLStateManager
             #ifdef LLGL_PRIMITIVE_RESTART
             GLuint      primitiveRestartIndex = 0;
             #endif
+
+            GLenum      clipOrigin      = GL_LOWER_LEFT;
+            GLenum      clipDepthMode   = GL_NEGATIVE_ONE_TO_ONE;
         };
 
         struct GLCapabilityState
@@ -476,37 +478,40 @@ class GLStateManager
 
         friend class GLContext;
 
-        static GLStateManager*          active_;
-        static GLLimits                 commonLimits_;          // Common denominator of limitations for all GL contexts
+        static GLStateManager*  active_;
+        static GLLimits         commonLimits_;          // Common denominator of limitations for all GL contexts
 
     private:
 
-        GLLimits                        limits_;                // Limitations of this GL context
+        GLLimits                limits_;                // Limitations of this GL context
 
-        OpenGLDependentStateDescriptor  apiDependentState_;
-
-        GLCommonState                   commonState_;
-        GLCapabilityState               capabilityState_;
-        GLBufferState                   bufferState_;
-        GLFramebufferState              framebufferState_;
-        GLRenderbufferState             renderbufferState_;
-        GLTextureState                  textureState_;
-        GLVertexArrayState              vertexArrayState_;
-        GLShaderState                   shaderState_;
-        GLSamplerState                  samplerState_;
-        GLPixelStore                    pixelStorePack_;
-        GLPixelStore                    pixelStoreUnpack_;
+        GLCommonState           commonState_;
+        GLCapabilityState       capabilityState_;
+        GLBufferState           bufferState_;
+        GLFramebufferState      framebufferState_;
+        GLRenderbufferState     renderbufferState_;
+        GLTextureState          textureState_;
+        GLVertexArrayState      vertexArrayState_;
+        GLShaderState           shaderState_;
+        GLSamplerState          samplerState_;
+        GLPixelStore            pixelStorePack_;
+        GLPixelStore            pixelStoreUnpack_;
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        GLCapabilityStateExt            capabilityStateExt_;
+        GLCapabilityStateExt    capabilityStateExt_;
         #endif
 
-        bool                            emulateClipControl_     = false;
-        GLint                           renderTargetHeight_     = 0;
+        bool                    flipViewportYPos_           = false;
+        bool                    flipFrontFacing_            = false;
+        bool                    emulateOriginUpperLeft_     = false;
+        bool                    emulateDepthModeZeroToOne_  = false;
+        GLint                   renderTargetHeight_         = 0;
 
-        GLDepthStencilState*            boundDepthStencilState_ = nullptr;
-        GLRasterizerState*              boundRasterizerState_   = nullptr;
-        GLBlendState*                   boundBlendState_        = nullptr;
+        GLDepthStencilState*    boundDepthStencilState_     = nullptr;
+        GLRasterizerState*      boundRasterizerState_       = nullptr;
+        GLBlendState*           boundBlendState_            = nullptr;
+
+        bool                    frontFacingDirtyBit_        = false;
 
 };
 

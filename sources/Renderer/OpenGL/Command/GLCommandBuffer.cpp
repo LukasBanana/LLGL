@@ -29,6 +29,13 @@ void GLCommandBuffer::SetIndexFormat(GLRenderState& renderState, bool indexType1
     renderState.indexBufferOffset = static_cast<GLsizeiptr>(offset);
 }
 
+/* ----- Extensions ----- */
+
+void GLCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+{
+    // dummy
+}
+
 
 } // /namespace LLGL
 
