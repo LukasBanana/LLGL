@@ -175,7 +175,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdClearBuffers*>(pc);
             stateMngr.ClearBuffers(cmd->numAttachments, reinterpret_cast<const AttachmentClear*>(cmd + 1));
-            return sizeof(*cmd);
+            return (sizeof(*cmd) + sizeof(AttachmentClear)*cmd->numAttachments);
         }
         case GLOpcodeBindVertexArray:
         {
