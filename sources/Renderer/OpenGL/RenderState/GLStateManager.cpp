@@ -138,19 +138,24 @@ static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObject
 
 
 /*
- * GLStateManager static members
+ * GLContextState static members
  */
 
-const std::uint32_t         GLStateManager::numTextureLayers;
-const std::uint32_t         GLStateManager::numImageUnits;
-const std::uint32_t         GLStateManager::numStates;
-const std::uint32_t         GLStateManager::numBufferTargets;
-const std::uint32_t         GLStateManager::numFramebufferTargets;
-const std::uint32_t         GLStateManager::numTextureTargets;
+const std::uint32_t         GLContextState::numTextureLayers;
+const std::uint32_t         GLContextState::numImageUnits;
+const std::uint32_t         GLContextState::numCaps;
+const std::uint32_t         GLContextState::numBufferTargets;
+const std::uint32_t         GLContextState::numFboTargets;
+const std::uint32_t         GLContextState::numTextureTargets;
 
 #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-const std::uint32_t         GLStateManager::numStatesExt;
+const std::uint32_t         GLContextState::numCapsExt;
 #endif // /LLGL_GL_ENABLE_VENDOR_EXT
+
+
+/*
+ * GLStateManager static members
+ */
 
 GLStateManager*             GLStateManager::active_;
 GLStateManager::GLLimits    GLStateManager::commonLimits_;
@@ -170,21 +175,6 @@ struct GLStateManager::GLIntermediateBufferWriteMasks
 
 GLStateManager::GLStateManager()
 {
-    /* Initialize all states with zero */
-    Fill(capabilityState_.values, false);
-    Fill(bufferState_.boundBuffers, 0);
-    Fill(framebufferState_.boundFramebuffers, 0);
-    Fill(samplerState_.boundSamplers, 0);
-    #ifdef LLGL_GL_ENABLE_OPENGL2X
-    Fill(textureState_.boundGLTextures, nullptr);
-    Fill(samplerState_.boundGL2XSamplers, nullptr);
-    #endif
-
-    for (auto& layer : textureState_.layers)
-        Fill(layer.boundTextures, 0);
-
-    SetActiveTextureLayer(0);
-
     /* Make this the active state manager if there is no previous one */
     if (GLStateManager::active_ == nullptr)
         GLStateManager::active_ = this;
@@ -212,16 +202,16 @@ void GLStateManager::NotifyRenderTargetHeight(GLint height)
 void GLStateManager::Reset()
 {
     /* Query all states from OpenGL */
-    for (std::size_t i = 0; i < numStates; ++i)
-        capabilityState_.values[i] = (glIsEnabled(g_stateCapsEnum[i]) != GL_FALSE);
+    for (std::size_t i = 0; i < GLContextState::numCaps; ++i)
+        contextState_.capabilities[i] = (glIsEnabled(g_stateCapsEnum[i]) != GL_FALSE);
 }
 
 void GLStateManager::Set(GLState state, bool value)
 {
     auto idx = static_cast<std::size_t>(state);
-    if (capabilityState_.values[idx] != value)
+    if (contextState_.capabilities[idx] != value)
     {
-        capabilityState_.values[idx] = value;
+        contextState_.capabilities[idx] = value;
         if (value)
             glEnable(g_stateCapsEnum[idx]);
         else
@@ -232,9 +222,9 @@ void GLStateManager::Set(GLState state, bool value)
 void GLStateManager::Enable(GLState state)
 {
     auto idx = static_cast<std::size_t>(state);
-    if (!capabilityState_.values[idx])
+    if (!contextState_.capabilities[idx])
     {
-        capabilityState_.values[idx] = true;
+        contextState_.capabilities[idx] = true;
         glEnable(g_stateCapsEnum[idx]);
     }
 }
@@ -242,9 +232,9 @@ void GLStateManager::Enable(GLState state)
 void GLStateManager::Disable(GLState state)
 {
     auto idx = static_cast<std::size_t>(state);
-    if (capabilityState_.values[idx])
+    if (contextState_.capabilities[idx])
     {
-        capabilityState_.values[idx] = false;
+        contextState_.capabilities[idx] = false;
         glDisable(g_stateCapsEnum[idx]);
     }
 }
@@ -252,26 +242,26 @@ void GLStateManager::Disable(GLState state)
 bool GLStateManager::IsEnabled(GLState state) const
 {
     auto idx = static_cast<std::size_t>(state);
-    return capabilityState_.values[idx];
+    return contextState_.capabilities[idx];
 }
 
 void GLStateManager::PushState(GLState state)
 {
-    capabilityState_.valueStack.push(
+    capabilitiesStack_.push(
         {
             state,
-            capabilityState_.values[static_cast<std::size_t>(state)]
+            contextState_.capabilities[static_cast<std::size_t>(state)]
         }
     );
 }
 
 void GLStateManager::PopState()
 {
-    const auto& state = capabilityState_.valueStack.top();
+    const auto& state = capabilitiesStack_.top();
     {
         Set(state.state, state.enabled);
     }
-    capabilityState_.valueStack.pop();
+    capabilitiesStack_.pop();
 }
 
 void GLStateManager::PopStates(std::size_t count)
@@ -285,7 +275,7 @@ void GLStateManager::PopStates(std::size_t count)
 void GLStateManager::Set(GLStateExt state, bool value)
 {
     auto idx = static_cast<std::size_t>(state);
-    auto& val = capabilityStateExt_.values[idx];
+    auto& val = contextState_.capabilitiesExt[idx];
     if (val.cap != 0 && val.enabled != value)
     {
         val.enabled = value;
@@ -299,7 +289,7 @@ void GLStateManager::Set(GLStateExt state, bool value)
 void GLStateManager::Enable(GLStateExt state)
 {
     auto idx = static_cast<std::size_t>(state);
-    auto& val = capabilityStateExt_.values[idx];
+    auto& val = contextState_.capabilitiesExt[idx];
     if (val.cap != 0 && !val.enabled)
     {
         val.enabled = true;
@@ -310,7 +300,7 @@ void GLStateManager::Enable(GLStateExt state)
 void GLStateManager::Disable(GLStateExt state)
 {
     auto idx = static_cast<std::size_t>(state);
-    auto& val = capabilityStateExt_.values[idx];
+    auto& val = contextState_.capabilitiesExt[idx];
     if (val.cap != 0 && val.enabled)
     {
         val.enabled = false;
@@ -321,7 +311,7 @@ void GLStateManager::Disable(GLStateExt state)
 bool GLStateManager::IsEnabled(GLStateExt state) const
 {
     auto idx = static_cast<std::size_t>(state);
-    return capabilityStateExt_.values[idx].enabled;
+    return contextState_.capabilitiesExt[idx].enabled;
 }
 
 #endif
@@ -490,7 +480,7 @@ void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
     if (HasExtension(GLExt::ARB_clip_control))
     {
         /* Use GL extension to transform clipping space */
-        if (commonState_.clipOrigin != origin || commonState_.clipDepthMode != depth)
+        if (contextState_.clipOrigin != origin || contextState_.clipDepthMode != depth)
             glClipControl(origin, depth);
 
         /* Clip control flips NDC space, but we always have to flip the viewport */
@@ -513,17 +503,17 @@ void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
     }
 
     /* Store clipping state */
-    commonState_.clipOrigin     = origin;
-    commonState_.clipDepthMode  = depth;
+    contextState_.clipOrigin    = origin;
+    contextState_.clipDepthMode = depth;
 }
 
 // <face> parameter must always be 'GL_FRONT_AND_BACK' since GL 3.2+
 void GLStateManager::SetPolygonMode(GLenum mode)
 {
     #ifdef LLGL_OPENGL
-    if (commonState_.polygonMode != mode)
+    if (contextState_.polygonMode != mode)
     {
-        commonState_.polygonMode = mode;
+        contextState_.polygonMode = mode;
         glPolygonMode(GL_FRONT_AND_BACK, mode);
     }
     #endif
@@ -534,21 +524,21 @@ void GLStateManager::SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat cla
     #ifdef GL_ARB_polygon_offset_clamp
     if (HasExtension(GLExt::ARB_polygon_offset_clamp))
     {
-        if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units || commonState_.offsetClamp != clamp)
+        if (contextState_.offsetFactor != factor || contextState_.offsetUnits != units || contextState_.offsetClamp != clamp)
         {
-            commonState_.offsetFactor   = factor;
-            commonState_.offsetUnits    = units;
-            commonState_.offsetClamp    = clamp;
+            contextState_.offsetFactor  = factor;
+            contextState_.offsetUnits   = units;
+            contextState_.offsetClamp   = clamp;
             glPolygonOffsetClamp(factor, units, clamp);
         }
     }
     else
     #endif
     {
-        if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units)
+        if (contextState_.offsetFactor != factor || contextState_.offsetUnits != units)
         {
-            commonState_.offsetFactor   = factor;
-            commonState_.offsetUnits    = units;
+            contextState_.offsetFactor  = factor;
+            contextState_.offsetUnits   = units;
             glPolygonOffset(factor, units);
         }
     }
@@ -556,9 +546,9 @@ void GLStateManager::SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat cla
 
 void GLStateManager::SetCullFace(GLenum face)
 {
-    if (commonState_.cullFace != face)
+    if (contextState_.cullFace != face)
     {
-        commonState_.cullFace = face;
+        contextState_.cullFace = face;
         glCullFace(face);
     }
 }
@@ -566,7 +556,7 @@ void GLStateManager::SetCullFace(GLenum face)
 void GLStateManager::SetFrontFace(GLenum mode)
 {
     /* Store actual input front face (without inversion) */
-    commonState_.frontFaceAct = mode;
+    frontFaceInternal_ = mode;
 
     /* Check if mode must be inverted */
     if (flipFrontFacing_)
@@ -579,9 +569,9 @@ void GLStateManager::SetFrontFace(GLenum mode)
 void GLStateManager::SetPatchVertices(GLint patchVertices)
 {
     #ifdef LLGL_GLEXT_TESSELLATION_SHADER
-    if (commonState_.patchVertices != patchVertices)
+    if (contextState_.patchVertices != patchVertices)
     {
-        commonState_.patchVertices = patchVertices;
+        contextState_.patchVertices = patchVertices;
         glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
     }
     #endif
@@ -591,9 +581,9 @@ void GLStateManager::SetLineWidth(GLfloat width)
 {
     /* Clamp width silently into limited range */
     width = std::max(limits_.lineWidthRange[0], std::min(width, limits_.lineWidthRange[1]));
-    if (commonState_.lineWidth != width)
+    if (contextState_.lineWidth != width)
     {
-        commonState_.lineWidth = width;
+        contextState_.lineWidth = width;
         glLineWidth(width);
     }
 }
@@ -603,9 +593,9 @@ void GLStateManager::SetPrimitiveRestartIndex(GLuint index)
     #ifdef LLGL_PRIMITIVE_RESTART
     if (HasExtension(GLExt::ARB_compatibility))
     {
-        if (commonState_.primitiveRestartIndex != index)
+        if (contextState_.primitiveRestartIndex != index)
         {
-            commonState_.primitiveRestartIndex = index;
+            contextState_.primitiveRestartIndex = index;
             glPrimitiveRestartIndex(index);
         }
     }
@@ -614,41 +604,41 @@ void GLStateManager::SetPrimitiveRestartIndex(GLuint index)
 
 void GLStateManager::SetPixelStorePack(GLint rowLength, GLint imageHeight, GLint alignment)
 {
-    if (pixelStorePack_.rowLength != rowLength)
+    if (contextState_.pixelStorePack.rowLength != rowLength)
     {
         glPixelStorei(GL_PACK_ROW_LENGTH, rowLength);
-        pixelStorePack_.rowLength = rowLength;
+        contextState_.pixelStorePack.rowLength = rowLength;
     }
     #ifdef LLGL_OPENGL //TODO: emulate for GLES
-    if (pixelStorePack_.imageHeight != imageHeight)
+    if (contextState_.pixelStorePack.imageHeight != imageHeight)
     {
         glPixelStorei(GL_PACK_IMAGE_HEIGHT, imageHeight);
-        pixelStorePack_.imageHeight = imageHeight;
+        contextState_.pixelStorePack.imageHeight = imageHeight;
     }
     #endif
-    if (pixelStorePack_.alignment != alignment)
+    if (contextState_.pixelStorePack.alignment != alignment)
     {
         glPixelStorei(GL_PACK_ALIGNMENT, alignment);
-        pixelStorePack_.alignment = alignment;
+        contextState_.pixelStorePack.alignment = alignment;
     }
 }
 
 void GLStateManager::SetPixelStoreUnpack(GLint rowLength, GLint imageHeight, GLint alignment)
 {
-    if (pixelStoreUnpack_.rowLength != rowLength)
+    if (contextState_.pixelStoreUnpack.rowLength != rowLength)
     {
         glPixelStorei(GL_UNPACK_ROW_LENGTH, rowLength);
-        pixelStoreUnpack_.rowLength = rowLength;
+        contextState_.pixelStoreUnpack.rowLength = rowLength;
     }
-    if (pixelStoreUnpack_.imageHeight != imageHeight)
+    if (contextState_.pixelStoreUnpack.imageHeight != imageHeight)
     {
         glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, imageHeight);
-        pixelStoreUnpack_.imageHeight = imageHeight;
+        contextState_.pixelStoreUnpack.imageHeight = imageHeight;
     }
-    if (pixelStoreUnpack_.alignment != alignment)
+    if (contextState_.pixelStoreUnpack.alignment != alignment)
     {
         glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
-        pixelStoreUnpack_.alignment = alignment;
+        contextState_.pixelStoreUnpack.alignment = alignment;
     }
 }
 
@@ -671,18 +661,18 @@ void GLStateManager::BindDepthStencilState(GLDepthStencilState* depthStencilStat
 
 void GLStateManager::SetDepthFunc(GLenum func)
 {
-    if (commonState_.depthFunc != func)
+    if (contextState_.depthFunc != func)
     {
-        commonState_.depthFunc = func;
+        contextState_.depthFunc = func;
         glDepthFunc(func);
     }
 }
 
 void GLStateManager::SetDepthMask(GLboolean flag)
 {
-    if (commonState_.depthMask != flag)
+    if (contextState_.depthMask != flag)
     {
-        commonState_.depthMask = flag;
+        contextState_.depthMask = flag;
         glDepthMask(flag);
     }
 }
@@ -741,15 +731,15 @@ void GLStateManager::BindBlendState(GLBlendState* blendState)
 
 void GLStateManager::SetBlendColor(const GLfloat* color)
 {
-    if ( color[0] != commonState_.blendColor[0] ||
-         color[1] != commonState_.blendColor[1] ||
-         color[2] != commonState_.blendColor[2] ||
-         color[3] != commonState_.blendColor[3] )
+    if ( color[0] != contextState_.blendColor[0] ||
+         color[1] != contextState_.blendColor[1] ||
+         color[2] != contextState_.blendColor[2] ||
+         color[3] != contextState_.blendColor[3] )
     {
-        commonState_.blendColor[0] = color[0];
-        commonState_.blendColor[1] = color[1];
-        commonState_.blendColor[2] = color[2];
-        commonState_.blendColor[3] = color[3];
+        contextState_.blendColor[0] = color[0];
+        contextState_.blendColor[1] = color[1];
+        contextState_.blendColor[2] = color[2];
+        contextState_.blendColor[3] = color[3];
         glBlendColor(color[0], color[1], color[2], color[3]);
     }
 }
@@ -757,9 +747,9 @@ void GLStateManager::SetBlendColor(const GLfloat* color)
 void GLStateManager::SetLogicOp(GLenum opcode)
 {
     #ifdef LLGL_OPENGL
-    if (commonState_.logicOpCode != opcode)
+    if (contextState_.logicOpCode != opcode)
     {
-        commonState_.logicOpCode = opcode;
+        contextState_.logicOpCode = opcode;
         glLogicOp(opcode);
     }
     #endif
@@ -777,10 +767,10 @@ void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 {
     /* Only bind buffer if the buffer has changed */
     auto targetIdx = static_cast<std::size_t>(target);
-    if (bufferState_.boundBuffers[targetIdx] != buffer)
+    if (contextState_.boundBuffers[targetIdx] != buffer)
     {
         glBindBuffer(g_bufferTargetsEnum[targetIdx], buffer);
-        bufferState_.boundBuffers[targetIdx] = buffer;
+        contextState_.boundBuffers[targetIdx] = buffer;
     }
 }
 
@@ -789,7 +779,7 @@ void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint 
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
     glBindBufferBase(g_bufferTargetsEnum[targetIdx], index, buffer);
-    bufferState_.boundBuffers[targetIdx] = buffer;
+    contextState_.boundBuffers[targetIdx] = buffer;
 }
 
 void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers)
@@ -812,7 +802,7 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
     if (count > 0)
     {
         /* Bind each individual buffer, and store last bound buffer */
-        bufferState_.boundBuffers[targetIdx] = buffers[count - 1];
+        contextState_.boundBuffers[targetIdx] = buffers[count - 1];
 
         for (GLsizei i = 0; i < count; ++i)
             glBindBufferBase(targetGL, first + i, buffers[i]);
@@ -824,7 +814,7 @@ void GLStateManager::BindBufferRange(GLBufferTarget target, GLuint index, GLuint
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
     glBindBufferRange(g_bufferTargetsEnum[targetIdx], index, buffer, offset, size);
-    bufferState_.boundBuffers[targetIdx] = buffer;
+    contextState_.boundBuffers[targetIdx] = buffer;
 }
 
 void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers, const GLintptr* offsets, const GLsizeiptr* sizes)
@@ -847,7 +837,7 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
     if (count > 0)
     {
         /* Bind each individual buffer, and store last bound buffer */
-        bufferState_.boundBuffers[targetIdx] = buffers[count - 1];
+        contextState_.boundBuffers[targetIdx] = buffers[count - 1];
 
         #ifdef GL_NV_transform_feedback
         if (HasExtension(GLExt::NV_transform_feedback))
@@ -878,11 +868,11 @@ static GLuint GetPrimitiveRestartIndex(bool indexType16Bits)
 void GLStateManager::BindVertexArray(GLuint vertexArray)
 {
     /* Only bind VAO if it has changed */
-    if (vertexArrayState_.boundVertexArray != vertexArray)
+    if (contextState_.boundVertexArray != vertexArray)
     {
         /* Bind VAO */
         glBindVertexArray(vertexArray);
-        vertexArrayState_.boundVertexArray = vertexArray;
+        contextState_.boundVertexArray = vertexArray;
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
         /* Only perform deferred binding of element array buffer if VAOs are supported */
@@ -893,18 +883,18 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
             Always reset index buffer binding
             -> see https://www.opengl.org/wiki/Vertex_Specification#Index_buffers
             */
-            bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
+            contextState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
 
             if (vertexArray != 0)
             {
                 #ifdef LLGL_PRIMITIVE_RESTART
 
-                if (vertexArrayState_.boundElementArrayBuffer != 0)
+                if (contextState_.boundElementArrayBuffer != 0)
                 {
                     /* Bind deferred index buffer and enable primitive restart index */
-                    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, vertexArrayState_.boundElementArrayBuffer);
+                    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, contextState_.boundElementArrayBuffer);
                     Enable(GLState::PRIMITIVE_RESTART);
-                    SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(vertexArrayState_.indexType16Bits));
+                    SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(indexType16Bits_));
                 }
                 else
                 {
@@ -914,10 +904,10 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
 
                 #else // LLGL_PRIMITIVE_RESTART
 
-                if (vertexArrayState_.boundElementArrayBuffer != 0)
+                if (contextState_.boundElementArrayBuffer != 0)
                 {
                     /* Bind deferred index buffer */
-                    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, vertexArrayState_.boundElementArrayBuffer);
+                    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, contextState_.boundElementArrayBuffer);
                 }
 
                 #endif // /LLGL_PRIMITIVE_RESTART
@@ -933,7 +923,7 @@ void GLStateManager::BindGLBuffer(const GLBuffer& buffer)
 
 void GLStateManager::NotifyVertexArrayRelease(GLuint vertexArray)
 {
-    InvalidateBoundGLObject(vertexArrayState_.boundVertexArray, vertexArray);
+    InvalidateBoundGLObject(contextState_.boundVertexArray, vertexArray);
 }
 
 void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16Bits)
@@ -948,18 +938,18 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16
     #endif // /LLGL_GL_ENABLE_OPENGL2X
     {
         /* Always store buffer ID to bind the index buffer the next time "BindVertexArray" is called */
-        vertexArrayState_.boundElementArrayBuffer   = buffer;
-        vertexArrayState_.indexType16Bits           = indexType16Bits;
+        contextState_.boundElementArrayBuffer   = buffer;
+        indexType16Bits_                        = indexType16Bits;
 
         /* If a valid VAO is currently being bound, bind the specified buffer directly */
         #ifdef LLGL_PRIMITIVE_RESTART
 
-        if (vertexArrayState_.boundVertexArray != 0)
+        if (contextState_.boundVertexArray != 0)
         {
             /* Bind index buffer and enable primitive restart index */
             BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
             Enable(GLState::PRIMITIVE_RESTART);
-            SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(vertexArrayState_.indexType16Bits));
+            SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(indexType16Bits_));
         }
         else
         {
@@ -969,7 +959,7 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16
 
         #else
 
-        if (vertexArrayState_.boundVertexArray != 0)
+        if (contextState_.boundVertexArray != 0)
         {
             /* Bind index buffer */
             BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
@@ -981,27 +971,27 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16
 
 void GLStateManager::PushBoundBuffer(GLBufferTarget target)
 {
-    bufferState_.boundBufferStack.push(
+    bufferStack_.push(
         {
             target,
-            bufferState_.boundBuffers[static_cast<std::size_t>(target)]
+            contextState_.boundBuffers[static_cast<std::size_t>(target)]
         }
     );
 }
 
 void GLStateManager::PopBoundBuffer()
 {
-    const auto& state = bufferState_.boundBufferStack.top();
+    const auto& state = bufferStack_.top();
     {
         BindBuffer(state.target, state.buffer);
     }
-    bufferState_.boundBufferStack.pop();
+    bufferStack_.pop();
 }
 
 void GLStateManager::NotifyBufferRelease(GLuint buffer, GLBufferTarget target)
 {
     auto targetIdx = static_cast<std::size_t>(target);
-    InvalidateBoundGLObject(bufferState_.boundBuffers[targetIdx], buffer);
+    InvalidateBoundGLObject(contextState_.boundBuffers[targetIdx], buffer);
 }
 
 void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
@@ -1033,27 +1023,27 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
 void GLStateManager::DisableVertexAttribArrays(GLuint firstIndex)
 {
     /* Disable remaining vertex-attrib-arrays */
-    for (GLuint i = firstIndex; i < bufferState_.lastVertexAttribArray; ++i)
+    for (GLuint i = firstIndex; i < lastVertexAttribArray_; ++i)
         glDisableVertexAttribArray(i);
 
     /* Store new highest vertex-attrib-array index */
-    bufferState_.lastVertexAttribArray = firstIndex;
+    lastVertexAttribArray_ = firstIndex;
 }
 
 /* ----- Framebuffer ----- */
 
 void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
 {
-    framebufferState_.boundRenderTarget = renderTarget;
+    boundRenderTarget_ = renderTarget;
     if (renderTarget)
     {
         BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTarget->GetFramebuffer().GetID());
-        SetClipControl(GL_LOWER_LEFT, commonState_.clipDepthMode);
+        SetClipControl(GL_LOWER_LEFT, contextState_.clipDepthMode);
     }
     else
     {
         BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
-        SetClipControl(GL_UPPER_LEFT, commonState_.clipDepthMode);
+        SetClipControl(GL_UPPER_LEFT, contextState_.clipDepthMode);
     }
 }
 
@@ -1061,72 +1051,72 @@ void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuf
 {
     /* Only bind framebuffer if the framebuffer has changed */
     auto targetIdx = static_cast<std::size_t>(target);
-    if (framebufferState_.boundFramebuffers[targetIdx] != framebuffer)
+    if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
     {
-        framebufferState_.boundFramebuffers[targetIdx] = framebuffer;
+        contextState_.boundFramebuffers[targetIdx] = framebuffer;
         glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
     }
 }
 
 void GLStateManager::PushBoundFramebuffer(GLFramebufferTarget target)
 {
-    framebufferState_.boundFramebufferStack.push(
+    framebufferStack_.push(
         {
             target,
-            framebufferState_.boundFramebuffers[static_cast<std::size_t>(target)]
+            contextState_.boundFramebuffers[static_cast<std::size_t>(target)]
         }
     );
 }
 
 void GLStateManager::PopBoundFramebuffer()
 {
-    const auto& state = framebufferState_.boundFramebufferStack.top();
+    const auto& state = framebufferStack_.top();
     {
         BindFramebuffer(state.target, state.framebuffer);
     }
-    framebufferState_.boundFramebufferStack.pop();
+    framebufferStack_.pop();
 }
 
 void GLStateManager::NotifyFramebufferRelease(GLuint framebuffer)
 {
-    for (auto& boundFramebuffer : framebufferState_.boundFramebuffers)
+    for (auto& boundFramebuffer : contextState_.boundFramebuffers)
         InvalidateBoundGLObject(boundFramebuffer, framebuffer);
 }
 
 void GLStateManager::NotifyGLRenderTargetRelease(GLRenderTarget* renderTarget)
 {
-    if (framebufferState_.boundRenderTarget == renderTarget)
-        framebufferState_.boundRenderTarget = nullptr;
+    if (boundRenderTarget_ == renderTarget)
+        boundRenderTarget_ = nullptr;
 }
 
 GLRenderTarget* GLStateManager::GetBoundRenderTarget() const
 {
-    return framebufferState_.boundRenderTarget;
+    return boundRenderTarget_;
 }
 
 /* ----- Renderbuffer ----- */
 
 void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 {
-    if (renderbufferState_.boundRenderbuffer != renderbuffer)
+    if (contextState_.boundRenderbuffer != renderbuffer)
     {
-        renderbufferState_.boundRenderbuffer = renderbuffer;
+        contextState_.boundRenderbuffer = renderbuffer;
         glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
     }
 }
 
 void GLStateManager::PushBoundRenderbuffer()
 {
-    renderbufferState_.boundRenderbufferStack.push(renderbufferState_.boundRenderbuffer);
+    renderbufferState_.push({ contextState_.boundRenderbuffer });
 }
 
 void GLStateManager::PopBoundRenderbuffer()
 {
-    const auto& state = renderbufferState_.boundRenderbufferStack.top();
+    const auto& state = renderbufferState_.top();
     {
-        BindRenderbuffer(state);
+        BindRenderbuffer(state.renderbuffer);
     }
-    renderbufferState_.boundRenderbufferStack.pop();
+    renderbufferState_.pop();
 }
 
 void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
@@ -1134,7 +1124,7 @@ void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
     if (renderbuffer != 0)
     {
         glDeleteRenderbuffers(1, &renderbuffer);
-        InvalidateBoundGLObject(renderbufferState_.boundRenderbuffer, renderbuffer);
+        InvalidateBoundGLObject(contextState_.boundRenderbuffer, renderbuffer);
     }
 }
 
@@ -1158,16 +1148,16 @@ GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
     throw std::invalid_argument("failed to convert texture type to OpenGL texture target");
 }
 
-void GLStateManager::ActiveTexture(std::uint32_t layer)
+void GLStateManager::ActiveTexture(GLuint layer)
 {
     #ifdef LLGL_DEBUG
-    LLGL_ASSERT_UPPER_BOUND(layer, numTextureLayers);
+    LLGL_ASSERT_UPPER_BOUND(layer, GLContextState::numTextureLayers);
     #endif
 
-    if (textureState_.activeTexture != layer)
+    if (contextState_.activeTexture != layer)
     {
         /* Active specified texture layer and store reference to bound textures array */
-        SetActiveTextureLayer(layer);
+        contextState_.activeTexture = layer;
         glActiveTexture(g_textureLayersEnum[layer]);
     }
 }
@@ -1176,9 +1166,10 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
 {
     /* Only bind texutre if the texture has changed */
     auto targetIdx = static_cast<std::size_t>(target);
-    if (textureState_.activeLayerRef->boundTextures[targetIdx] != texture)
+    auto textureLayer = GetActiveTextureLayer();
+    if (textureLayer->boundTextures[targetIdx] != texture)
     {
-        textureState_.activeLayerRef->boundTextures[targetIdx] = texture;
+        textureLayer->boundTextures[targetIdx] = texture;
         glBindTexture(g_textureTargetsEnum[targetIdx], texture);
     }
 }
@@ -1192,7 +1183,7 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
         for (GLsizei i = 0; i < count; ++i)
         {
             auto targetIdx = static_cast<std::size_t>(targets[i]);
-            textureState_.layers[i + first].boundTextures[targetIdx] = textures[i];
+            contextState_.textureLayers[i + first].boundTextures[targetIdx] = textures[i];
         }
 
         /*
@@ -1222,8 +1213,8 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
         /* Reset bound textures */
         for (GLsizei i = 0; i < count; ++i)
         {
-            auto& boundTextures = textureState_.layers[i].boundTextures;
-            ::memset(boundTextures.data(), 0, boundTextures.size() * sizeof(GLuint));
+            auto& boundTextures = contextState_.textureLayers[i].boundTextures;
+            ::memset(boundTextures, 0, sizeof(boundTextures));
         }
 
         /*
@@ -1240,7 +1231,7 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
         for (GLsizei i = 0; i < count; ++i)
         {
             ActiveTexture(first + i);
-            for (std::size_t target = 0; target < numTextureTargets; ++target)
+            for (std::size_t target = 0; target < GLContextState::numTextureTargets; ++target)
                 BindTexture(static_cast<GLTextureTarget>(target), 0);
         }
     }
@@ -1302,34 +1293,34 @@ void GLStateManager::UnbindImageTextures(GLuint first, GLsizei count)
     }
 }
 
-void GLStateManager::PushBoundTexture(std::uint32_t layer, GLTextureTarget target)
+void GLStateManager::PushBoundTexture(GLuint layer, GLTextureTarget target)
 {
     #ifdef LLGL_DEBUG
-    LLGL_ASSERT_UPPER_BOUND(layer, numTextureLayers);
+    LLGL_ASSERT_UPPER_BOUND(layer, GLContextState::numTextureLayers);
     #endif
 
-    textureState_.boundTextureStack.push(
+    textureState_.push(
         {
             layer,
             target,
-            (textureState_.layers[layer].boundTextures[static_cast<std::size_t>(target)])
+            (contextState_.textureLayers[layer].boundTextures[static_cast<std::size_t>(target)])
         }
     );
 }
 
 void GLStateManager::PushBoundTexture(GLTextureTarget target)
 {
-    PushBoundTexture(textureState_.activeTexture, target);
+    PushBoundTexture(contextState_.activeTexture, target);
 }
 
 void GLStateManager::PopBoundTexture()
 {
-    const auto& state = textureState_.boundTextureStack.top();
+    const auto& state = textureState_.top();
     {
         ActiveTexture(state.layer);
         BindTexture(state.target, state.texture);
     }
-    textureState_.boundTextureStack.pop();
+    textureState_.pop();
 }
 
 void GLStateManager::BindGLTexture(GLTexture& texture)
@@ -1339,10 +1330,10 @@ void GLStateManager::BindGLTexture(GLTexture& texture)
 
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     /* Manage reference for emulated sampler binding */
-    if (textureState_.boundGLTextures[textureState_.activeTexture] != &texture)
+    if (boundGLTextures_[contextState_.activeTexture] != &texture)
     {
-        textureState_.boundGLTextures[textureState_.activeTexture] = &texture;
-        if (auto samplerGL2X = samplerState_.boundGL2XSamplers[textureState_.activeTexture])
+        boundGLTextures_[contextState_.activeTexture] = &texture;
+        if (auto samplerGL2X = boundGL2XSamplers_[contextState_.activeTexture])
             texture.BindTexParameters(*samplerGL2X);
     }
     #endif
@@ -1362,12 +1353,12 @@ void GLStateManager::DeleteTexture(GLuint texture, GLTextureTarget target, bool 
 void GLStateManager::BindSampler(GLuint layer, GLuint sampler)
 {
     #ifdef LLGL_DEBUG
-    LLGL_ASSERT_UPPER_BOUND(layer, numTextureLayers);
+    LLGL_ASSERT_UPPER_BOUND(layer, GLContextState::numTextureLayers);
     #endif
 
-    if (samplerState_.boundSamplers[layer] != sampler)
+    if (contextState_.boundSamplers[layer] != sampler)
     {
-        samplerState_.boundSamplers[layer] = sampler;
+        contextState_.boundSamplers[layer] = sampler;
         glBindSampler(layer, sampler);
     }
 }
@@ -1379,7 +1370,7 @@ void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* sam
     {
         /* Store bound samplers */
         for (GLsizei i = 0; i < count; ++i)
-            samplerState_.boundSamplers[i + first] = samplers[i];
+            contextState_.boundSamplers[i + first] = samplers[i];
 
         /* Bind all samplers at once */
         glBindSamplers(first, count, samplers);
@@ -1400,7 +1391,7 @@ void GLStateManager::UnbindSamplers(GLuint first, GLsizei count)
 
 void GLStateManager::NotifySamplerRelease(GLuint sampler)
 {
-    for (auto& boundSampler : samplerState_.boundSamplers)
+    for (auto& boundSampler : contextState_.boundSamplers)
         InvalidateBoundGLObject(boundSampler, sampler);
 }
 
@@ -1408,12 +1399,12 @@ void GLStateManager::BindGL2XSampler(GLuint layer, const GL2XSampler& sampler)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     #ifdef LLGL_DEBUG
-    LLGL_ASSERT_UPPER_BOUND(layer, numTextureLayers);
+    LLGL_ASSERT_UPPER_BOUND(layer, GLContextState::numTextureLayers);
     #endif
-    if (samplerState_.boundGL2XSamplers[layer] != &sampler)
+    if (boundGL2XSamplers_[layer] != &sampler)
     {
-        samplerState_.boundGL2XSamplers[layer] = &sampler;
-        if (auto texture = textureState_.boundGLTextures[layer])
+        boundGL2XSamplers_[layer] = &sampler;
+        if (auto texture = boundGLTextures_[layer])
             texture->BindTexParameters(sampler);
     }
     #endif
@@ -1423,21 +1414,21 @@ void GLStateManager::BindGL2XSampler(GLuint layer, const GL2XSampler& sampler)
 
 void GLStateManager::BindShaderProgram(GLuint program)
 {
-    if (shaderState_.boundProgram != program)
+    if (contextState_.boundProgram != program)
     {
-        shaderState_.boundProgram = program;
+        contextState_.boundProgram = program;
         glUseProgram(program);
     }
 }
 
 void GLStateManager::NotifyShaderProgramRelease(GLuint program)
 {
-    InvalidateBoundGLObject(shaderState_.boundProgram, program);
+    InvalidateBoundGLObject(contextState_.boundProgram, program);
 }
 
 GLuint GLStateManager::GetBoundShaderProgram() const
 {
-    return shaderState_.boundProgram;
+    return contextState_.boundProgram;
 }
 
 /* ----- Render pass ----- */
@@ -1563,10 +1554,9 @@ void GLStateManager::AssertExtViewportArray()
     }
 }
 
-void GLStateManager::SetActiveTextureLayer(std::uint32_t layer)
+GLContextState::TextureLayer* GLStateManager::GetActiveTextureLayer()
 {
-    textureState_.activeTexture     = layer;
-    textureState_.activeLayerRef    = &(textureState_.layers[textureState_.activeTexture]);
+    return &(contextState_.textureLayers[contextState_.activeTexture]);
 }
 
 void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly)
@@ -1575,21 +1565,21 @@ void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target
     if (activeLayerOnly)
     {
         /* Invalidate GL texture only on active layer (should only be used for internal and temporary textures) */
-        InvalidateBoundGLObject(textureState_.activeLayerRef->boundTextures[targetIdx], texture);
+        InvalidateBoundGLObject(GetActiveTextureLayer()->boundTextures[targetIdx], texture);
     }
     else
     {
         /* Invalidate GL texture on all layers */
-        for (auto& layer : textureState_.layers)
+        for (auto& layer : contextState_.textureLayers)
             InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
     }
 }
 
 void GLStateManager::SetFrontFaceInternal(GLenum mode)
 {
-    if (commonState_.frontFace != mode)
+    if (contextState_.frontFace != mode)
     {
-        commonState_.frontFace = mode;
+        contextState_.frontFace = mode;
         glFrontFace(mode);
     }
 }
@@ -1598,7 +1588,7 @@ void GLStateManager::FlipFrontFacing(bool isFlipped)
 {
     /* Update front face and mark it as outdated for next rastierizer state binding */
     flipFrontFacing_ = isFlipped;
-    SetFrontFace(commonState_.frontFaceAct);
+    SetFrontFace(frontFaceInternal_);
     frontFacingDirtyBit_ = true;
 }
 
@@ -1653,7 +1643,7 @@ void GLStateManager::DetermineLimits()
     /* Get maximum number of texture layers */
     GLint maxTextureImageUnits = 0;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureImageUnits);
-    limits_.maxTextureLayers = std::min(GLStateManager::numTextureLayers, static_cast<GLuint>(maxTextureImageUnits));
+    limits_.maxTextureLayers = std::min(GLContextState::numTextureLayers, static_cast<GLuint>(maxTextureImageUnits));
 
     /* Get maximum number of image units */
     #ifdef GL_ARB_shader_image_load_store
@@ -1661,7 +1651,7 @@ void GLStateManager::DetermineLimits()
     {
         GLint maxImageUnits = 0;
         glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
-        limits_.maxImageUnits = std::min(GLStateManager::numImageUnits, static_cast<GLuint>(maxImageUnits));
+        limits_.maxImageUnits = std::min(GLContextState::numImageUnits, static_cast<GLuint>(maxImageUnits));
     }
     #endif // /GL_ARB_shader_image_load_store
 
@@ -1679,7 +1669,7 @@ void GLStateManager::DetermineVendorSpecificExtensions()
     auto InitStateExt = [&](GLStateExt state, const GLExt extension, GLenum cap)
     {
         auto idx = static_cast<std::size_t>(state);
-        auto& val = capabilityStateExt_.values[idx];
+        auto& val = contextState_.capabilitiesExt[idx];
         if (val.cap == 0 && HasExtension(extension))
         {
             val.cap     = cap;
@@ -1717,7 +1707,7 @@ void GLStateManager::PrepareDepthMaskForClear(GLIntermediateBufferWriteMasks& in
 {
     if (!intermediateMasks.isDepthMaskInvalidated)
     {
-        intermediateMasks.storedDepthMask = commonState_.depthMask;
+        intermediateMasks.storedDepthMask = contextState_.depthMask;
         SetDepthMask(GL_TRUE);
         intermediateMasks.isDepthMaskInvalidated = true;
     }

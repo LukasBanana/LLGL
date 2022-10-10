@@ -112,6 +112,7 @@ enum class GLTextureTarget
 
 /* ----- Structures ----- */
 
+// Must be a POD structure.
 struct GLViewport
 {
     GLfloat x;
@@ -120,12 +121,14 @@ struct GLViewport
     GLfloat height; // default is context height
 };
 
+// Must be a POD structure.
 struct GLDepthRange
 {
     GLclamp_t minDepth;
     GLclamp_t maxDepth;
 };
 
+// Must be a POD structure.
 struct GLScissor
 {
     GLint   x;
@@ -155,6 +158,13 @@ struct GLPixelStore
     GLint rowLength     = 0;
     GLint imageHeight   = 0;
     GLint alignment     = 4; // Must be 1, 2, 4, or 8
+};
+
+struct GLImageUnit
+{
+    GLuint  texture = 0;
+    GLenum  format  = 0;
+    GLenum  access  = 0;
 };
 
 

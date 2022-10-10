@@ -10,6 +10,7 @@
 
 
 #include "GLState.h"
+#include "GLContextState.h"
 #include <LLGL/TextureFlags.h>
 #include <LLGL/CommandBufferFlags.h>
 #include "../OpenGL.h"
@@ -210,7 +211,7 @@ class GLStateManager
 
         static GLTextureTarget GetTextureTarget(const TextureType type);
 
-        void ActiveTexture(std::uint32_t layer);
+        void ActiveTexture(GLuint layer);
 
         void BindTexture(GLTextureTarget target, GLuint texture);
         void BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures);
@@ -220,7 +221,7 @@ class GLStateManager
         void BindImageTextures(GLuint first, GLsizei count, const GLenum* formats, const GLuint* textures);
         void UnbindImageTextures(GLuint first, GLsizei count);
 
-        void PushBoundTexture(std::uint32_t layer, GLTextureTarget target);
+        void PushBoundTexture(GLuint layer, GLTextureTarget target);
         void PushBoundTexture(GLTextureTarget target);
         void PopBoundTexture();
 
@@ -286,7 +287,7 @@ class GLStateManager
         void AssertViewportLimit(GLuint first, GLsizei count);
         void AssertExtViewportArray();
 
-        void SetActiveTextureLayer(std::uint32_t layer);
+        GLContextState::TextureLayer* GetActiveTextureLayer();
         void NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly);
 
         void SetFrontFaceInternal(GLenum mode);
@@ -330,149 +331,34 @@ class GLStateManager
 
     private:
 
-        static const std::uint32_t numTextureLayers         = 32;
-        static const std::uint32_t numImageUnits            = 8;
-        static const std::uint32_t numStates                = static_cast<std::uint32_t>(GLState::Num);
-        static const std::uint32_t numBufferTargets         = static_cast<std::uint32_t>(GLBufferTarget::Num);
-        static const std::uint32_t numFramebufferTargets    = static_cast<std::uint32_t>(GLFramebufferTarget::Num);
-        static const std::uint32_t numTextureTargets        = static_cast<std::uint32_t>(GLTextureTarget::Num);
-
-        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        static const std::uint32_t numStatesExt             = static_cast<std::uint32_t>(GLStateExt::Num);
-        #endif
-
-    private:
-
-        // Common GL states
-        struct GLCommonState
+        struct CapabilityStackEntry
         {
-            #ifdef LLGL_OPENGL
-            GLenum      polygonMode     = GL_FILL;
-            #endif
-            GLfloat     offsetFactor    = 0.0f;
-            GLfloat     offsetUnits     = 0.0f;
-            GLfloat     offsetClamp     = 0.0f;
-            GLenum      cullFace        = GL_BACK;
-            GLenum      frontFace       = GL_CCW;
-            GLenum      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
-            GLint       patchVertices   = 0;
-            GLfloat     lineWidth       = 1.0f;
-
-            GLenum      depthFunc       = GL_LESS;
-            GLboolean   depthMask       = GL_TRUE;
-
-            GLfloat     blendColor[4]   = { 0.0f, 0.0f, 0.0f, 0.0f };
-            #ifdef LLGL_OPENGL
-            GLenum      logicOpCode     = GL_COPY;
-            #endif
-            #ifdef LLGL_PRIMITIVE_RESTART
-            GLuint      primitiveRestartIndex = 0;
-            #endif
-
-            GLenum      clipOrigin      = GL_LOWER_LEFT;
-            GLenum      clipDepthMode   = GL_NEGATIVE_ONE_TO_ONE;
+            GLState state;
+            bool    enabled;
         };
 
-        struct GLCapabilityState
+        struct BufferStackEntry
         {
-            struct StackEntry
-            {
-                GLState state;
-                bool    enabled;
-            };
-
-            std::array<bool, numStates> values;
-            std::stack<StackEntry>      valueStack;
+            GLBufferTarget  target;
+            GLuint          buffer;
         };
 
-        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-
-        struct GLCapabilityStateExt
+        struct TextureStackEntry
         {
-            struct ValueEntry
-            {
-                GLenum  cap     = 0;
-                bool    enabled = false;
-            };
-
-            std::array<ValueEntry, numStatesExt> values;
+            GLuint          layer;
+            GLTextureTarget target;
+            GLuint          texture;
         };
 
-        #endif
-
-        struct GLBufferState
+        struct FramebufferStackEntry
         {
-            struct StackEntry
-            {
-                GLBufferTarget  target;
-                GLuint          buffer;
-            };
-
-            std::array<GLuint, numBufferTargets>    boundBuffers;
-            std::stack<StackEntry>                  boundBufferStack;
-            GLuint                                  lastVertexAttribArray   = 0;
+            GLFramebufferTarget target;
+            GLuint              framebuffer;
         };
 
-        struct GLFramebufferState
+        struct RenderbufferStackEntry
         {
-            struct StackEntry
-            {
-                GLFramebufferTarget target;
-                GLuint              framebuffer;
-            };
-
-            std::array<GLuint, numFramebufferTargets>   boundFramebuffers;
-            std::stack<StackEntry>                      boundFramebufferStack;
-            GLRenderTarget*                             boundRenderTarget       = nullptr;
-        };
-
-        struct GLRenderbufferState
-        {
-            GLuint              boundRenderbuffer = 0;
-            std::stack<GLuint>  boundRenderbufferStack;
-        };
-
-        struct GLTextureLayer
-        {
-            std::array<GLuint, numTextureTargets> boundTextures;
-        };
-
-        struct GLTextureState
-        {
-            struct StackEntry
-            {
-                std::uint32_t   layer;
-                GLTextureTarget target;
-                GLuint          texture;
-            };
-
-            std::uint32_t                                   activeTexture       = 0;
-            std::array<GLTextureLayer, numTextureLayers>    layers;
-            std::stack<StackEntry>                          boundTextureStack;
-            GLTextureLayer*                                 activeLayerRef      = nullptr;
-            #ifdef LLGL_GL_ENABLE_OPENGL2X
-            std::array<GLTexture*, numTextureLayers>        boundGLTextures;
-            #endif
-        };
-
-        struct GLVertexArrayState
-        {
-            GLuint boundVertexArray         = 0;
-            GLuint boundElementArrayBuffer  = 0;
-            bool   indexType16Bits          = false;
-        };
-
-        struct GLShaderState
-        {
-            GLuint boundProgram = 0;
-        };
-
-        struct GLSamplerState
-        {
-            std::array<GLuint, numTextureLayers>                boundSamplers;
-            #ifdef LLGL_GL_ENABLE_OPENGL2X
-            std::array<const GL2XSampler*, numTextureLayers>    boundGL2XSamplers;
-            #endif
+            GLuint renderbuffer;
         };
 
     private:
@@ -484,35 +370,39 @@ class GLStateManager
 
     private:
 
-        GLLimits                limits_;                // Limitations of this GL context
+        GLLimits                            limits_;                // Limitations of this GL context
 
-        GLCommonState           commonState_;
-        GLCapabilityState       capabilityState_;
-        GLBufferState           bufferState_;
-        GLFramebufferState      framebufferState_;
-        GLRenderbufferState     renderbufferState_;
-        GLTextureState          textureState_;
-        GLVertexArrayState      vertexArrayState_;
-        GLShaderState           shaderState_;
-        GLSamplerState          samplerState_;
-        GLPixelStore            pixelStorePack_;
-        GLPixelStore            pixelStoreUnpack_;
+        GLContextState                      contextState_;
 
-        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        GLCapabilityStateExt    capabilityStateExt_;
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        GLTexture*                          boundGLTextures_[GLContextState::numTextureLayers]      = {};
+        const GL2XSampler*                  boundGL2XSamplers_[GLContextState::numTextureLayers]    = {};
         #endif
 
-        bool                    flipViewportYPos_           = false;
-        bool                    flipFrontFacing_            = false;
-        bool                    emulateOriginUpperLeft_     = false;
-        bool                    emulateDepthModeZeroToOne_  = false;
-        GLint                   renderTargetHeight_         = 0;
+        GLRenderTarget*                     boundRenderTarget_          = nullptr;
 
-        GLDepthStencilState*    boundDepthStencilState_     = nullptr;
-        GLRasterizerState*      boundRasterizerState_       = nullptr;
-        GLBlendState*           boundBlendState_            = nullptr;
+        bool                                indexType16Bits_            = false;
+        GLuint                              lastVertexAttribArray_      = 0;
 
-        bool                    frontFacingDirtyBit_        = false;
+        GLenum                              frontFaceInternal_          = GL_CCW; // actual front face input (without possible inversion)
+
+        bool                                flipViewportYPos_           = false;
+        bool                                flipFrontFacing_            = false;
+        bool                                emulateOriginUpperLeft_     = false;
+        bool                                emulateDepthModeZeroToOne_  = false;
+        GLint                               renderTargetHeight_         = 0;
+
+        GLDepthStencilState*                boundDepthStencilState_     = nullptr;
+        GLRasterizerState*                  boundRasterizerState_       = nullptr;
+        GLBlendState*                       boundBlendState_            = nullptr;
+
+        bool                                frontFacingDirtyBit_        = false;
+
+        std::stack<CapabilityStackEntry>    capabilitiesStack_;
+        std::stack<BufferStackEntry>        bufferStack_;
+        std::stack<TextureStackEntry>       textureState_;
+        std::stack<FramebufferStackEntry>   framebufferStack_;
+        std::stack<RenderbufferStackEntry>  renderbufferState_;
 
 };
 

@@ -9,6 +9,7 @@
 #define LLGL_GL_CONTEXT_STATE_H
 
 
+#include "../OpenGL.h"
 #include "GLState.h"
 
 
@@ -31,7 +32,9 @@ struct GLContextState
     #endif
 
     // Rasterizer state
+    #ifdef LLGL_OPENGL
     GLenum          polygonMode                         = GL_FILL;
+    #endif
     GLfloat         offsetFactor                        = 0.0f;
     GLfloat         offsetUnits                         = 0.0f;
     GLfloat         offsetClamp                         = 0.0f;
@@ -43,14 +46,22 @@ struct GLContextState
     // Depth-stencil state
     GLenum          depthFunc                           = GL_LESS;
     GLboolean       depthMask                           = GL_TRUE;
-    GLboolean       cachedDepthMask                     = GL_TRUE;
 
     // Blend state
     GLfloat         blendColor[4]                       = { 0.0f, 0.0f, 0.0f, 0.0f };
+    #ifdef LLGL_OPENGL
     GLenum          logicOpCode                         = GL_COPY;
+    #endif
+    #ifdef LLGL_PRIMITIVE_RESTART
+    GLuint          primitiveRestartIndex               = 0;
+    #endif
+
+    // Clip control
+    GLenum          clipOrigin                          = GL_LOWER_LEFT;
+    GLenum          clipDepthMode                       = GL_NEGATIVE_ONE_TO_ONE;
 
     // Capabilities
-    bool            capabilities[numCaps];
+    bool            capabilities[numCaps]               = {};
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
@@ -60,7 +71,7 @@ struct GLContextState
         bool        enabled = false;
     };
 
-    ExtensionState  capabilitiesExt[numCapsExt];
+    ExtensionState  capabilitiesExt[numCapsExt]         = {};
 
     #endif
 
@@ -69,32 +80,25 @@ struct GLContextState
     GLPixelStore    pixelStoreUnpack;
 
     // Buffers
-    GLuint          boundBuffers[numBufferTargets];
+    GLuint          boundBuffers[numBufferTargets]      = {};
 
     // Framebuffer Objects (FBO)
-    GLuint          boundFramebuffers[numFboTargets];
+    GLuint          boundFramebuffers[numFboTargets]    = {};
 
     // Renerbuffer Objects (RBO)
     GLuint          boundRenderbuffer                   = 0;
 
     // Textures
-    struct GLTextureLayer
+    struct TextureLayer
     {
-        GLuint      boundTextures[numTextureTargets];
+        GLuint      boundTextures[numTextureTargets]    = {};
     };
 
     GLuint          activeTexture                       = 0;
-    GLTextureLayer  textureLayers[numTextureLayers];
+    TextureLayer    textureLayers[numTextureLayers];
 
     // Images
-    struct GLImageUnit
-    {
-        GLuint      texture;
-        GLenum      format;
-        GLenum      access;
-    };
-
-    GLImageUnit     imageUnits[numImageUnits];
+    GLImageUnit     imageUnits[numImageUnits]           = {};
 
     // Vertex Array Objects (VAO)
     GLuint          boundVertexArray                    = 0;

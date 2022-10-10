@@ -386,8 +386,8 @@ struct GLCmdDispatchComputeIndirect
 
 struct GLCmdBindTexture
 {
-    std::uint32_t   slot;
-    GLTexture*      texture;
+    GLuint      slot;
+    GLTexture*  texture;
 };
 
 struct GLCmdBindImageTexture
