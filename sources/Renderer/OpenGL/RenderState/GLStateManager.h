@@ -289,6 +289,7 @@ class GLStateManager
         void SetActiveTextureLayer(std::uint32_t layer);
         void NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly);
 
+        void SetFrontFaceInternal(GLenum mode);
         void FlipFrontFacing(bool isFlipped);
 
         void DetermineLimits();

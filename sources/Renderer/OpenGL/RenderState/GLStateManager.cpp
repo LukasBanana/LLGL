@@ -486,35 +486,35 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, const GLScisso
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 {
-    if (commonState_.clipOrigin != origin || commonState_.clipDepthMode != depth)
+    #ifdef GL_ARB_clip_control
+    if (HasExtension(GLExt::ARB_clip_control))
     {
-        #ifdef GL_ARB_clip_control
-        if (HasExtension(GLExt::ARB_clip_control))
-        {
-            /* Use GL extension to transform clipping space */
+        /* Use GL extension to transform clipping space */
+        if (commonState_.clipOrigin != origin || commonState_.clipDepthMode != depth)
             glClipControl(origin, depth);
 
-            /* Clip control flips NDC space, but we always have to flip the viewport */
-            flipViewportYPos_ = true;
-        }
-        else
-        #endif
-        {
-            const bool isOriginUpperLeft = (origin == GL_UPPER_LEFT);
-
-            /* Emulate clipping space modification; this has to be addressed by transforming gl_Position in each vertex shader */
-            emulateOriginUpperLeft_ = isOriginUpperLeft;
-            emulateDepthModeZeroToOne_ = (depth == GL_ZERO_TO_ONE);
-
-            /* Flip viewport if origin is emulated and set to upper-left corner */
-            flipViewportYPos_ = isOriginUpperLeft;
-
-            /* Flip front-facing when emulating upper-left origin */
-            FlipFrontFacing(!isOriginUpperLeft);
-        }
-        commonState_.clipOrigin     = origin;
-        commonState_.clipDepthMode  = depth;
+        /* Clip control flips NDC space, but we always have to flip the viewport */
+        flipViewportYPos_ = true;
     }
+    else
+    #endif
+    {
+        const bool isOriginUpperLeft = (origin == GL_UPPER_LEFT);
+
+        /* Emulate clipping space modification; this has to be addressed by transforming gl_Position in each vertex shader */
+        emulateOriginUpperLeft_ = isOriginUpperLeft;
+        emulateDepthModeZeroToOne_ = (depth == GL_ZERO_TO_ONE);
+
+        /* Flip viewport if origin is emulated and set to upper-left corner */
+        flipViewportYPos_ = isOriginUpperLeft;
+
+        /* Flip front-facing when emulating upper-left origin */
+        FlipFrontFacing(!isOriginUpperLeft);
+    }
+
+    /* Store clipping state */
+    commonState_.clipOrigin     = origin;
+    commonState_.clipDepthMode  = depth;
 }
 
 // <face> parameter must always be 'GL_FRONT_AND_BACK' since GL 3.2+
@@ -572,12 +572,8 @@ void GLStateManager::SetFrontFace(GLenum mode)
     if (flipFrontFacing_)
         mode = (mode == GL_CW ? GL_CCW : GL_CW);
 
-    /* Set front face */
-    if (commonState_.frontFace != mode)
-    {
-        commonState_.frontFace = mode;
-        glFrontFace(mode);
-    }
+    /* Set the internal front face mode */
+    SetFrontFaceInternal(mode);
 }
 
 void GLStateManager::SetPatchVertices(GLint patchVertices)
@@ -1589,16 +1585,21 @@ void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target
     }
 }
 
+void GLStateManager::SetFrontFaceInternal(GLenum mode)
+{
+    if (commonState_.frontFace != mode)
+    {
+        commonState_.frontFace = mode;
+        glFrontFace(mode);
+    }
+}
+
 void GLStateManager::FlipFrontFacing(bool isFlipped)
 {
-    /* Check for necessary updates */
-    if (flipFrontFacing_ != isFlipped)
-    {
-        /* Update front face and mark it as outdated for next rastierizer state binding */
-        flipFrontFacing_ = isFlipped;
-        SetFrontFace(commonState_.frontFaceAct);
-        frontFacingDirtyBit_ = true;
-    }
+    /* Update front face and mark it as outdated for next rastierizer state binding */
+    flipFrontFacing_ = isFlipped;
+    SetFrontFace(commonState_.frontFaceAct);
+    frontFacingDirtyBit_ = true;
 }
 
 static void AccumCommonGLLimits(GLStateManager::GLLimits& dst, const GLStateManager::GLLimits& src)
