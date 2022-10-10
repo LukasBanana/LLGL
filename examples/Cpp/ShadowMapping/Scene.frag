@@ -28,7 +28,7 @@ void main()
     // Project world position into shadow-map space
     vec4 shadowPos = vpShadowMatrix * vWorldPos;
     shadowPos /= shadowPos.w;
-    shadowPos = shadowPos * 0.5 + 0.5;
+    shadowPos.xyz = shadowPos.xyz * vec3(0.5, -0.5, 0.5) + 0.5;
     
     // Sample shadow map
     #ifdef ENABLE_PCF

@@ -96,7 +96,7 @@ void main()
     
     // Project depth back into scene
     vec2 screenPos = xsv_NDC0.xy;
-    vec2 texCoord = screenPos * vec2(0.5) + vec2(0.5);
+    vec2 texCoord = screenPos * vec2(0.5, -0.5) + vec2(0.5);
     float maxDepth = float(texture(depthRangeTexture, texCoord));
     vec4 maxDepthPos = vec4(screenPos.x, screenPos.y, maxDepth*2.0 - 1.0, 1.0);
     UnprojectDepth(maxDepthPos);
