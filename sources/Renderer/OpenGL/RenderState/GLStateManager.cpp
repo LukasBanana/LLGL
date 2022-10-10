@@ -496,10 +496,10 @@ void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
         emulateDepthModeZeroToOne_ = (depth == GL_ZERO_TO_ONE);
 
         /* Flip viewport if origin is emulated and set to upper-left corner */
-        flipViewportYPos_ = isOriginUpperLeft;
+        flipViewportYPos_ = !isOriginUpperLeft;
 
         /* Flip front-facing when emulating upper-left origin */
-        FlipFrontFacing(!isOriginUpperLeft);
+        FlipFrontFacing(isOriginUpperLeft);
     }
 
     /* Store clipping state */
@@ -1038,12 +1038,12 @@ void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
     if (renderTarget)
     {
         BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTarget->GetFramebuffer().GetID());
-        SetClipControl(GL_LOWER_LEFT, contextState_.clipDepthMode);
+        SetClipControl(GL_UPPER_LEFT, contextState_.clipDepthMode);
     }
     else
     {
         BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
-        SetClipControl(GL_UPPER_LEFT, contextState_.clipDepthMode);
+        SetClipControl(GL_LOWER_LEFT, contextState_.clipDepthMode);
     }
 }
 
