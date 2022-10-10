@@ -456,7 +456,7 @@ void RenderSystem::CopyTextureImageData(
         ByteBuffer unpaddedData;
         if (rowStride != 0 && dstPitch != rowStride)
         {
-            unpaddedData = GenerateEmptyByteBuffer(srcImageSize, false);
+            unpaddedData = AllocateByteBuffer(srcImageSize, UninitializeTag{});
             CopyRowAlignedData(unpaddedData.get(), data, srcImageSize, dstPitch, rowStride);
             data = unpaddedData.get();
         }

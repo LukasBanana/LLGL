@@ -836,14 +836,16 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
     return imageBuffer;
 }
 
-LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize, bool initialize)
+LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize)
 {
-    auto buffer = MakeUniqueArray<char>(bufferSize);
-
-    if (initialize)
-        ::memset(buffer.get(), 0, bufferSize);
-
+    auto buffer = AllocateByteBuffer(bufferSize, UninitializeTag{});
+    ::memset(buffer.get(), 0, bufferSize);
     return buffer;
+}
+
+LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize, UninitializeTag)
+{
+    return MakeUniqueArray<char>(bufferSize);
 }
 
 

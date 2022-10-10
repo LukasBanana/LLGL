@@ -18,10 +18,10 @@ namespace LLGL
 /* ----- Common ----- */
 
 Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType) :
-    extent_   { extent                                        },
-    format_   { format                                        },
-    dataType_ { dataType                                      },
-    data_     { GenerateEmptyByteBuffer(GetDataSize(), false) }
+    extent_   { extent                                               },
+    format_   { format                                               },
+    dataType_ { dataType                                             },
+    data_     { AllocateByteBuffer(GetDataSize(), UninitializeTag{}) }
 {
 }
 
@@ -63,7 +63,7 @@ Image& Image::operator = (const Image& rhs)
     extent_     = rhs.GetExtent();
     format_     = rhs.GetFormat();
     dataType_   = rhs.GetDataType();
-    data_       = GenerateEmptyByteBuffer(GetDataSize(), false);
+    data_       = AllocateByteBuffer(GetDataSize(), UninitializeTag{});
     ::memcpy(data_.get(), rhs.data_.get(), rhs.GetDataSize());
     return *this;
 }
@@ -96,7 +96,7 @@ void Image::Resize(const Extent3D& extent)
     /* Allocate new image buffer or release it if the extent is zero */
     extent_ = extent;
     if (extent.width > 0 && extent.height > 0 && extent.depth > 0)
-        data_ = GenerateEmptyByteBuffer(GetDataSize(), false);
+        data_ = AllocateByteBuffer(GetDataSize(), UninitializeTag{});
     else
         data_.reset();
 }
@@ -140,7 +140,7 @@ void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Of
         {
             /* Resize image buffer with uninitialized image buffer */
             extent_ = extent;
-            data_   = GenerateEmptyByteBuffer(GetDataSize(), false);
+            data_   = AllocateByteBuffer(GetDataSize(), UninitializeTag{});
         }
 
         /* Copy previous image into new image */

@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "Format.h"
+#include "Tags.h"
 #include "RenderSystemFlags.h"
 #include "TextureFlags.h"
 #include "ColorRGBA.h"
@@ -233,12 +234,20 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 /**
 \brief Generates a new byte buffer with zeros in each byte.
 \param[in] bufferSize Specifies the size (in bytes) of the buffer.
-\param[in] initialize Specifies whether to initialize the byte buffer with zeros. By default true.
 \return The new allocated and initialized byte buffer.
 \remarks Use GenerateImageBuffer to generate an image buffer with a fill color.
 \see GenerateImageBuffer
+\see AllocateByteBuffer(std::size_t, UninitializeTag)
 */
-LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize, bool initialize = true);
+LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize);
+
+/**
+\brief Generates a new and uninitialized byte buffer.
+\param[in] bufferSize Specifies the size (in bytes) of the buffer.
+\return The new allocated and uninitialized byte buffer.
+\see AllocateByteBuffer(std::size_t)
+*/
+LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize, UninitializeTag);
 
 /** @} */
 

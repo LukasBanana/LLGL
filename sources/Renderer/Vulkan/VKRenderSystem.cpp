@@ -309,7 +309,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             intermediateData = GenerateImageBuffer(formatAttribs.format, formatAttribs.dataType, imageSize, fillColor);
         }
         else
-            intermediateData = GenerateEmptyByteBuffer(static_cast<std::size_t>(initialDataSize));
+            intermediateData = AllocateByteBuffer(static_cast<std::size_t>(initialDataSize), UninitializeTag{});
 
         initialData = intermediateData.get();
     }

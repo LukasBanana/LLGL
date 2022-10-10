@@ -41,8 +41,8 @@ class BlobManaged final : public Blob
 };
 
 BlobManaged::BlobManaged(const void* data, std::size_t size) :
-    data_ { GenerateEmptyByteBuffer(size, false) },
-    size_ { size                                 }
+    data_ { AllocateByteBuffer(size, UninitializeTag{}) },
+    size_ { size                                        }
 {
     ::memcpy(data_.get(), data, size);
 }
@@ -191,7 +191,7 @@ std::unique_ptr<Blob> Blob::CreateFromFile(const char* filename)
     file.seekg(0, std::ios::beg);
 
     /* Read binary file into container */
-    auto buffer = GenerateEmptyByteBuffer(static_cast<std::size_t>(fileSize), false);
+    auto buffer = AllocateByteBuffer(static_cast<std::size_t>(fileSize), UninitializeTag{});
     file.read(buffer.get(), fileSize);
 
     /* Return blob that manages the read buffer */

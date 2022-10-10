@@ -210,7 +210,7 @@ void MTTexture::ReadRegion(const TextureRegion& textureRegion, const DstImageDes
     {
         /* Generate intermediate buffer for conversion */
         auto intermediateDataSize   = layout.dataSize * textureRegion.extent.depth;
-        auto intermediateData       = GenerateEmptyByteBuffer(intermediateDataSize, false);
+        auto intermediateData       = AllocateByteBuffer(intermediateDataSize, UninitializeTag{});
 
         for (std::uint32_t arrayLayer = 0; arrayLayer < textureRegion.subresource.numArrayLayers; ++arrayLayer)
         {

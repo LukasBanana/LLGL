@@ -124,7 +124,7 @@ class LLGL_EXPORT Image
         \brief Resets all image attributes to the specified values.
         \note If the specified data does not manage an image buffer of the specified extent and format, the behavior is undefined.
         \see GenerateImageBuffer
-        \see GenerateEmptyByteBuffer
+        \see AllocateByteBuffer
         */
         void Reset(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data);
 
