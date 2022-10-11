@@ -52,10 +52,10 @@ GLuint SharedGLShader::GetOrCreate(GLenum type, const char* source)
     {
         /* Create shader and compile with specified source */
         id_ = glCreateShader(type);
-        GLShader::CompileGLShader(id_, source);
+        GLShader::CompileShaderSource(id_, source);
 
         /* Check for errors */
-        if (!GLShader::GetGLCompileStatus(id_))
+        if (!GLShader::GetCompileStatus(id_))
             throw std::runtime_error(GLShader::GetGLShaderLog(id_));
     }
     ++refCount_;
@@ -82,12 +82,13 @@ static SharedGLShader g_nullFragmentShader;
 GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
     id_ { glCreateProgram() }
 {
-    Attach(desc.vertexShader);
-    Attach(desc.tessControlShader);
-    Attach(desc.tessEvaluationShader);
-    Attach(desc.geometryShader);
-    Attach(desc.fragmentShader);
-    Attach(desc.computeShader);
+    /* Attach all specified shaders to this shader program */
+    AttachShader(desc.vertexShader);
+    AttachShader(desc.tessControlShader);
+    AttachShader(desc.tessEvaluationShader);
+    AttachShader(desc.geometryShader);
+    AttachShader(desc.fragmentShader);
+    AttachShader(desc.computeShader);
 
     #ifdef __APPLE__
     /*
@@ -226,13 +227,12 @@ void GLShaderProgram::BindResourceSlots(const GLShaderBindingLayout& bindingLayo
  * ======= Private: =======
  */
 
-void GLShaderProgram::Attach(Shader* shader)
+void GLShaderProgram::AttachShader(Shader* shader)
 {
     if (shader != nullptr)
     {
-        auto shaderGL = LLGL_CAST(GLShader*, shader);
-
         /* Attach shader to shader program */
+        auto shaderGL = LLGL_CAST(GLShader*, shader);
         glAttachShader(id_, shaderGL->GetID());
     }
 }

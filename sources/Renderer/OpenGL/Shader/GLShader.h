@@ -38,10 +38,13 @@ class GLShader final : public Shader
     public:
 
         // Compiles a native GL shader from source.
-        static void CompileGLShader(GLuint shader, const char* source);
+        static void CompileShaderSource(GLuint shader, const char* source);
+
+        // Compiles a native GL shader from source and adds the specified macro definitions at the top of the source but after the '#version'-directive.
+        static void CompileShaderSourceWithDefines(GLuint shader, const char* source, const ShaderMacro* defines);
 
         // Returns true if the native GL shader was compiled successfully.
-        static bool GetGLCompileStatus(GLuint shader);
+        static bool GetCompileStatus(GLuint shader);
 
         // Returns the native GL shader log and returns true on success. Otherwise, there is no log available.
         static std::string GetGLShaderLog(GLuint shader);

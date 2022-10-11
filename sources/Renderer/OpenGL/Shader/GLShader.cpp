@@ -6,6 +6,7 @@
  */
 
 #include "GLShader.h"
+#include "GLShaderMacroPatcher.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
@@ -46,7 +47,7 @@ void GLShader::SetName(const char* name)
 
 bool GLShader::HasErrors() const
 {
-    return !GLShader::GetGLCompileStatus(id_);
+    return !GLShader::GetCompileStatus(id_);
 }
 
 std::string GLShader::GetReport() const
@@ -80,14 +81,26 @@ std::size_t GLShader::GetNumFragmentAttribs() const
     return (shaderAttribs_.size() - numVertexAttribs_);
 }
 
-void GLShader::CompileGLShader(GLuint shader, const char* source)
+void GLShader::CompileShaderSource(GLuint shader, const char* source)
 {
     const GLchar* strings[1] = { source };
     glShaderSource(shader, 1, strings, nullptr);
     glCompileShader(shader);
 }
 
-bool GLShader::GetGLCompileStatus(GLuint shader)
+void GLShader::CompileShaderSourceWithDefines(GLuint shader, const char* source, const ShaderMacro* defines)
+{
+    if (defines != nullptr && defines->name != nullptr)
+    {
+        GLShaderMacroPatcher patcher{ source };
+        patcher.AddDefines(defines);
+        GLShader::CompileShaderSource(shader, patcher.GetSource());
+    }
+    else
+        GLShader::CompileShaderSource(shader, source);
+}
+
+bool GLShader::GetCompileStatus(GLuint shader)
 {
     GLint status = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
@@ -224,10 +237,10 @@ void GLShader::CompileSource(const ShaderDescriptor& shaderDesc)
     if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
     {
         const std::string fileContent = ReadFileString(shaderDesc.source);
-        GLShader::CompileGLShader(id_, fileContent.c_str());
+        GLShader::CompileShaderSourceWithDefines(id_, fileContent.c_str(), shaderDesc.defines);
     }
     else
-        GLShader::CompileGLShader(id_, shaderDesc.source);
+        GLShader::CompileShaderSourceWithDefines(id_, shaderDesc.source, shaderDesc.defines);
 }
 
 void GLShader::LoadBinary(const ShaderDescriptor& shaderDesc)

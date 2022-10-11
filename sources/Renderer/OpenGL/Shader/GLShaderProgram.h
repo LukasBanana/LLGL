@@ -53,7 +53,7 @@ class GLShaderProgram final : public ShaderProgram
 
     private:
 
-        void Attach(Shader* shader);
+        void AttachShader(Shader* shader);
         void BindAttribLocations(std::size_t numVertexAttribs, const GLShaderAttribute* vertexAttribs);
         void BindFragDataLocations(std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs);
         void LinkProgram(std::size_t numVaryings, const char* const* varyings);

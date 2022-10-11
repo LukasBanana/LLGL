@@ -272,9 +272,9 @@ struct ShaderDescriptor
 
     /**
     \brief Optional array of macro definitions. By default null.
-    \remarks This must either be null or a null-terminated array of ShaderMacro entries.
-    For those shader compilers that provide a mechanism to add external macro definitions, this can be used to generate multiple shader permutations.
-    \remarks Here is a brief example how to use:
+    \remarks Shader macros can only be defined if \c sourceType refers to source code,
+    i.e. ShaderSourceType::CodeString or ShaderSourceType::CodeFile. Otherwise, this field is ignored.
+    \remarks This must either be null or a null-terminated array of ShaderMacro entries as shown here:
     \code
     const LLGL::ShaderMacro myDefines[] = {
         { "ENABLE_SHADER_PASS_FOO", "1" }, // first macro
@@ -284,7 +284,6 @@ struct ShaderDescriptor
     LLGL::ShaderDescriptor myShaderDesc;
     myShaderDesc.defines = myDefines;
     \endcode
-    \note Only supported with: HLSL, Metal.
     */
     const ShaderMacro*          defines         = nullptr;
 
