@@ -41,7 +41,7 @@ class GLShaderMacroPatcher
     private:
 
         std::string source_;
-        std::size_t posAfterVersion_ = std::string::npos;
+        std::size_t macroInsertPos_ = 0;
 
 };
 
