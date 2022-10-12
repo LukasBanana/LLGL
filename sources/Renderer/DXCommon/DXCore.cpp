@@ -466,16 +466,16 @@ UINT DXGetCompilerFlags(int flags)
     if ((flags & ShaderCompileFlags::Debug) != 0)
         dxFlags |= D3DCOMPILE_DEBUG;
 
-    if ((flags & ShaderCompileFlags::O1) != 0)
+    if ((flags & ShaderCompileFlags::NoOptimization) != 0)
+        dxFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
+    else if ((flags & ShaderCompileFlags::OptimizationLevel1) != 0)
         dxFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL1;
-    else if ((flags & ShaderCompileFlags::O2) != 0)
+    else if ((flags & ShaderCompileFlags::OptimizationLevel2) != 0)
         dxFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL2;
-    else if ((flags & ShaderCompileFlags::O3) != 0)
+    else if ((flags & ShaderCompileFlags::OptimizationLevel3) != 0)
         dxFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
-    else
-        dxFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;//D3DCOMPILE_OPTIMIZATION_LEVEL0;
 
-    if ((flags & ShaderCompileFlags::WarnError) != 0)
+    if ((flags & ShaderCompileFlags::WarningsAreErrors) != 0)
         dxFlags |= D3DCOMPILE_WARNINGS_ARE_ERRORS;
 
     return dxFlags;

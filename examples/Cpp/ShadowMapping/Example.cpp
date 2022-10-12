@@ -112,7 +112,7 @@ private:
         // Load shader program
         if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            shaderProgramShadowMap = LoadShaderProgram(
+            shaderProgramShadowMap = LoadShaderProgramAndPatchClippingOrigin(
                 {
                     { LLGL::ShaderType::Vertex, "ShadowMap.vert" }
                 },

@@ -41,7 +41,13 @@ class GLShader final : public Shader
         static void CompileShaderSource(GLuint shader, const char* source);
 
         // Compiles a native GL shader from source and adds the specified macro definitions at the top of the source but after the '#version'-directive.
-        static void CompileShaderSourceWithDefines(GLuint shader, const char* source, const ShaderMacro* defines);
+        static void CompileShaderSourceWithOptions(
+            GLuint              shader,
+            const char*         source,
+            const ShaderMacro*  defines,
+            bool                pragmaOptimizeOff   = false,
+            const char*         vertexTransformStmt = nullptr
+        );
 
         // Returns true if the native GL shader was compiled successfully.
         static bool GetCompileStatus(GLuint shader);

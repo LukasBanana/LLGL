@@ -56,17 +56,86 @@ enum class ShaderSourceType
 
 /**
 \brief Shader compilation flags enumeration.
-\note Only supported with: Direct3D 11, Direct3D 12.
+\see ShaderDescriptor::flags
 */
 struct ShaderCompileFlags
 {
     enum
     {
-        Debug       = (1 << 0), //!< Insert debug information.
-        O1          = (1 << 1), //!< Optimization level 1.
-        O2          = (1 << 2), //!< Optimization level 2.
-        O3          = (1 << 3), //!< Optimization level 3.
-        WarnError   = (1 << 4), //!< Warnings are treated as errors.
+        /**
+        \brief Generate debug information.
+        \remarks This compile option is equivalent to the command line arguments <tt>fxc /Od</tt>, <tt>dxc -Od</tt>, <tt>metal -O0</tt>.
+        \note Only supported with: HLSL, Metal.
+        */
+        Debug                   = (1 << 0),
+
+        /**
+        \brief Disable optimizations.
+        \remarks This compile option is equivalent to command line arguments <tt>fxc /Od</tt>, <tt>dxc -Od</tt>, <tt>metal -O0</tt>.
+        \note Only supported with: HLSL, Metal, GLSL (adds <tt>#pragma optimize(off)</tt> after the <tt>#version</tt>-directive).
+        */
+        NoOptimization          = (1 << 1),
+
+        /**
+        \brief Optimization level 1.
+        \remarks This compile option is equivalent to command line arguments <tt>fxc /O1</tt>, <tt>dxc -O1</tt>, <tt>metal -O1</tt>.
+        \note Only supported with: HLSL, Metal.
+        */
+        OptimizationLevel1      = (1 << 2),
+
+        /**
+        \brief Optimization level 2.
+        \remarks This compile option is equivalent to command line arguments <tt>fxc /O2</tt>, <tt>dxc -O2</tt>, <tt>metal -O2</tt>.
+        \note Only supported with: HLSL, Metal.
+        */
+        OptimizationLevel2      = (1 << 3),
+
+        /**
+        \brief Optimization level 3.
+        \remarks This compile option is equivalent to command line arguments <tt>fxc /O3</tt>, <tt>dxc -O3</tt>, <tt>metal -O3</tt>.
+        \note Only supported with: HLSL, Metal.
+        */
+        OptimizationLevel3      = (1 << 4),
+
+        /**
+        \brief Warnings are treated as errors.
+        \remarks This compile option is equivalent to command line arguments <tt>fxc /WX</tt>, <tt>dxc -WX</tt>, <tt>metal -Werror</tt>.
+        \note Only supported with: HLSL, Metal.
+        */
+        WarningsAreErrors       = (1 << 5),
+
+        /**
+        \brief Patches the GLSL shader source to accommodate a flipped coordinate system from lower-left to upper-left and vice-versa,
+        effectively injecting <tt>gl_Position.y = -gl_Position.y;</tt> statements into a vertex shader.
+        \remarks This can be used to maintain the same vertex shader logic between GLSL and other shading languages when the screen origin is lower-left (see ScreenOrigin::LowerLeft).
+        This flag should also only be used for shaders that render into an OpenGL texture as their coordinate system is reversed compared to the other rendering APIs.
+        What shader stage should this flag be used with depends on what shader stage is the last to modify vertex positions before they are passed to the clipping stage,
+        i.e. either vertex, tessellation-evaluation, or geometry shaders.
+        \note Since there is no preprocessing performed prior to scanning the shader source, control-flow modifying macros are not recognized.
+        For example, using macros that change the control flow in the main entry point or
+        even obfuscate the declaration of the entry point will not be scanned correctly by this feature.
+        If in doubt, write your own adjustment in the shader source like this:
+        \code
+        void main() {
+          // Vertex shader body ...
+          #if FLIP_POSITION_Y
+          gl_Position.y = -gl_Position.y;
+          #endif
+        }
+        \endcode
+        Then define the macro \c FLIP_POSITION_Y on the API side like this and pass it to all vertex
+        (or tessellation-evaluation or geometry) shaders that will be used for render targets,
+        i.e. those shaders that render into a teture instead of a Window or Canvas:
+        \code
+        const LLGL::ShaderMacro myDefinesForRenderTargetShaders[] = {
+          { "FLIP_POSITION_Y", myRenderer->GetRenderingCaps().screenOrigin == LLGL::ScreenOrigin::LowerLeft ? "1" : "0" },
+          { nullptr, nullptr } // Null terminating entry
+        };
+        \endcode
+        \note Only supported with: GLSL.
+        \see RenderingCapabilities::screenOrigin
+        */
+        PatchClippingOrigin     = (1 << 6),
     };
 };
 
@@ -290,7 +359,6 @@ struct ShaderDescriptor
     /**
     \brief Optional compilation flags. By default 0.
     \remarks This can be a bitwise OR combination of the ShaderCompileFlags enumeration entries.
-    \note Only supported with: HLSL.
     \see ShaderCompileFlags
     */
     long                        flags           = 0;

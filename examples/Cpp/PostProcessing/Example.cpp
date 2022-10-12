@@ -163,7 +163,7 @@ public:
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             // Load scene shader program
-            shaderProgramScene = LoadShaderProgram(
+            shaderProgramScene = LoadShaderProgramAndPatchClippingOrigin(
                 {
                     { LLGL::ShaderType::Vertex,   "Scene.vert" },
                     { LLGL::ShaderType::Fragment, "Scene.frag" }
@@ -172,7 +172,7 @@ public:
             );
 
             // Load blur shader program
-            shaderProgramBlur = LoadShaderProgram(
+            shaderProgramBlur = LoadShaderProgramAndPatchClippingOrigin(
                 {
                     { LLGL::ShaderType::Vertex,   "PostProcess.vert" },
                     { LLGL::ShaderType::Fragment, "Blur.frag"        }

@@ -67,14 +67,16 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
 // see https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf
 void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapabilities& caps)
 {
+    /* Set clipping origin and depth range */
+    caps.screenOrigin   = ScreenOrigin::UpperLeft;
+    caps.clippingRange  = ClippingRange::ZeroToOne;
+
+    /* Query supported hardware texture formats */
     caps.textureFormats = GetDefaultSupportedMTTextureFormats();
 
-    auto& features = caps.features;
-    auto& limits = caps.limits;
-
+    /* Specify supported shading languages */
     const int version = FeatureSetToVersion(fset);
 
-    /* Specify supported shading languages */
     caps.shadingLanguages = { ShadingLanguage::Metal, ShadingLanguage::Metal_1_0 };
 
     if (version >= 101)
@@ -88,6 +90,8 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     }
 
     /* Specify features */
+    auto& features = caps.features;
+
     features.hasDirectResourceBinding       = false;//true; //TODO: not supported yet
     features.hasRenderTargets               = true;
     features.has3DTextures                  = true;
@@ -115,6 +119,8 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasLogicOp                     = false;
 
     /* Specify limits */
+    auto& limits = caps.limits;
+
     limits.maxBufferSize                    = [device maxBufferLength];
     limits.maxConstantBufferSize            = 65536u;
     limits.max1DTextureSize                 = 16384u;

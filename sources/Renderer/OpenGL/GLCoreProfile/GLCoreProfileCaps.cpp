@@ -128,7 +128,7 @@ static std::vector<Format> GetDefaultSupportedGLTextureFormats()
 static void GLGetRenderingAttribs(RenderingCapabilities& caps)
 {
     /* Set fixed states for this renderer */
-    caps.screenOrigin       = ScreenOrigin::LowerLeft;
+    caps.screenOrigin       = (HasExtension(GLExt::ARB_clip_control) ? ScreenOrigin::UpperLeft : ScreenOrigin::LowerLeft);
     caps.clippingRange      = ClippingRange::MinusOneToOne;
     caps.shadingLanguages   = GLQueryShadingLanguages();
 }

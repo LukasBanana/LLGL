@@ -119,13 +119,13 @@ enum class ScreenOrigin
 {
     /**
     \brief Specifies a screen origin in the lower-left.
-    \note Native screen origin in: OpenGL.
+    \note Native screen origin in: OpenGL (If \c GL_ARB_clip_control is \e not supported).
     */
     LowerLeft,
 
     /**
     \brief Specifies a screen origin in the upper-left.
-    \note Native screen origin in: Direct3D 11, Direct3D 12, Vulkan.
+    \note Native screen origin in: Direct3D 11, Direct3D 12, Vulkan, OpenGL (If \c GL_ARB_clip_control \e is supported), Metal.
     */
     UpperLeft,
 };
@@ -144,7 +144,7 @@ enum class ClippingRange
 
     /**
     \brief Specifies the clipping depth range [0, 1].
-    \note Native clipping depth range in: Direct3D 11, Direct3D 12, Vulkan.
+    \note Native clipping depth range in: Direct3D 11, Direct3D 12, Vulkan, Metal.
     */
     ZeroToOne,
 };
@@ -708,16 +708,12 @@ struct RenderingLimits
 */
 struct RenderingCapabilities
 {
-    #if 1
     /**
     \brief Screen coordinate system origin.
-    \remarks This determines the coordinate space of viewports, scissors, and framebuffers.
+    \remarks This determines the native coordinate space of viewports, scissors, and framebuffers.
+    If the native screen origin is lower-left, LLGL emulates it to always maintain the upper-left as the screen origin.
     */
     ScreenOrigin                    screenOrigin        = ScreenOrigin::UpperLeft;
-    #else//TODO: use these members:
-    ScreenOrigin                    screenSpaceOrigin   = ScreenOrigin::UpperLeft;
-    ScreenOrigin                    textureSpaceOrigin  = ScreenOrigin::UpperLeft;
-    #endif
 
     //! Specifies the clipping depth range.
     ClippingRange                   clippingRange       = ClippingRange::ZeroToOne;
@@ -731,7 +727,7 @@ struct RenderingCapabilities
     std::vector<ShadingLanguage>    shadingLanguages;
 
     /**
-    \brief Specifies the list of supported texture formats.
+    \brief Specifies the list of supported hardware texture formats.
     \see Format
     */
     std::vector<Format>             textureFormats;

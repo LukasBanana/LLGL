@@ -6,7 +6,7 @@
  */
 
 #include "GLShader.h"
-#include "GLShaderMacroPatcher.h"
+#include "GLShaderSourcePatcher.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
@@ -88,12 +88,22 @@ void GLShader::CompileShaderSource(GLuint shader, const char* source)
     glCompileShader(shader);
 }
 
-void GLShader::CompileShaderSourceWithDefines(GLuint shader, const char* source, const ShaderMacro* defines)
+void GLShader::CompileShaderSourceWithOptions(
+    GLuint              shader,
+    const char*         source,
+    const ShaderMacro*  defines,
+    bool                pragmaOptimizeOff,
+    const char*         vertexTransformStmt)
 {
-    if (defines != nullptr && defines->name != nullptr)
+    const bool hasDefines = (defines != nullptr && defines->name != nullptr);
+    const bool hasVertexStmt = (vertexTransformStmt != nullptr);
+    if (hasDefines || pragmaOptimizeOff || hasVertexStmt)
     {
-        GLShaderMacroPatcher patcher{ source };
+        GLShaderSourcePatcher patcher{ source };
         patcher.AddDefines(defines);
+        if (pragmaOptimizeOff)
+            patcher.AddPragmaDirective("optimize(off)");
+        patcher.AddFinalVertexTransformStatements(vertexTransformStmt);
         GLShader::CompileShaderSource(shader, patcher.GetSource());
     }
     else
@@ -233,14 +243,29 @@ void GLShader::BuildTransformFeedbackVaryings(std::size_t numVaryings, const Ver
 
 void GLShader::CompileSource(const ShaderDescriptor& shaderDesc)
 {
+    /* Generate statement to flip vertex Y-coordinate if requested */
+    const char* vertexTransformStmt = nullptr;
+    if ((shaderDesc.flags & ShaderCompileFlags::PatchClippingOrigin) != 0)
+    {
+        if (GetType() == ShaderType::Vertex ||
+            GetType() == ShaderType::TessEvaluation ||
+            GetType() == ShaderType::Geometry)
+        {
+            vertexTransformStmt = "gl_Position.y = -gl_Position.y;";
+        }
+    }
+
+    /* Add '#pragma optimize(off)'-directive to source if optimization is disabled */
+    const bool pragmaOptimizeOff = ((shaderDesc.flags & ShaderCompileFlags::NoOptimization) != 0);
+
     /* Get source code */
     if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
     {
         const std::string fileContent = ReadFileString(shaderDesc.source);
-        GLShader::CompileShaderSourceWithDefines(id_, fileContent.c_str(), shaderDesc.defines);
+        GLShader::CompileShaderSourceWithOptions(id_, fileContent.c_str(), shaderDesc.defines, pragmaOptimizeOff, vertexTransformStmt);
     }
     else
-        GLShader::CompileShaderSourceWithDefines(id_, shaderDesc.source, shaderDesc.defines);
+        GLShader::CompileShaderSourceWithOptions(id_, shaderDesc.source, shaderDesc.defines, pragmaOptimizeOff, vertexTransformStmt);
 }
 
 void GLShader::LoadBinary(const ShaderDescriptor& shaderDesc)

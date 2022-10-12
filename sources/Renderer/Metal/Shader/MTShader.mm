@@ -110,7 +110,7 @@ static MTLCompileOptions* ToMTLCompileOptions(const ShaderDescriptor& shaderDesc
     MTLCompileOptions* opt = [MTLCompileOptions alloc];
 
     [opt setLanguageVersion:GetMTLLanguageVersion(shaderDesc)];
-    if ((shaderDesc.flags & (ShaderCompileFlags::O1 | ShaderCompileFlags::O2 | ShaderCompileFlags::O3)) != 0)
+    if ((shaderDesc.flags & (ShaderCompileFlags::OptimizationLevel1 | ShaderCompileFlags::OptimizationLevel2 | ShaderCompileFlags::OptimizationLevel3)) != 0)
         [opt setFastMathEnabled:YES];
 
     return opt;

@@ -297,36 +297,6 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     return TakeOwnership(textures_, std::move(texture));
 }
 
-#if 0//TODO
-Texture* GLRenderSystem::CreateTextureView(Texture& sharedTexture, const TextureViewDescriptor& textureViewDesc)
-{
-    LLGL_ASSERT_FEATURE_SUPPORT(hasTextureViews);
-
-    auto& sharedTextureGL = LLGL_CAST(GLTexture&, sharedTexture);
-    auto texture = MakeUnique<GLTexture>(textureViewDesc.type);
-
-    /* Initialize texture as texture-view */
-    texture->TextureView(sharedTextureGL, textureViewDesc);
-
-    /* Initialize texture swizzle (if specified) */
-    if (!IsTextureSwizzleIdentity(textureViewDesc.swizzle))
-    {
-        /* Bind texture */
-        GLStateManager::Get().BindGLTexture(*texture);
-
-        /* Initialize texture parameters for the first time */
-        auto target = GLTypes::Map(textureViewDesc.type);
-
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_R, GLTypes::Map(textureViewDesc.swizzle.r));
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, GLTypes::Map(textureViewDesc.swizzle.g));
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, GLTypes::Map(textureViewDesc.swizzle.b));
-        glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, GLTypes::Map(textureViewDesc.swizzle.a));
-    }
-
-    return TakeOwnership(textures_, std::move(texture));
-}
-#endif
-
 void GLRenderSystem::Release(Texture& texture)
 {
     RemoveFromUniqueSet(textures_, &texture);

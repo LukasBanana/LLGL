@@ -143,9 +143,9 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
 {
     /* Initialize mobile specific states */
     #if defined LLGL_OS_ANDROID
-    
+
     AndroidApp::Get().Initialize(renderSystemDesc.androidApp);
-    
+
     #endif
 
     #ifdef LLGL_BUILD_STATIC_LIB

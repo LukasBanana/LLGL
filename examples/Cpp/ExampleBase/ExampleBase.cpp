@@ -384,12 +384,14 @@ void ExampleBase::OnResize(const LLGL::Extent2D& resoluion)
     // dummy
 }
 
-LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
+// private
+LLGL::ShaderProgram* ExampleBase::LoadShaderProgramInternal(
     const std::vector<TutorialShaderDescriptor>&    shaderDescs,
     const std::vector<LLGL::VertexFormat>&          vertexFormats,
     const LLGL::VertexFormat&                       streamOutputFormat,
     const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs,
-    const LLGL::ShaderMacro*                        defines)
+    const LLGL::ShaderMacro*                        defines,
+    bool                                            patchClippingOrigin)
 {
     ShaderProgramRecall recall;
 
@@ -405,6 +407,19 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
         );
     }
 
+    // Determine what shader stages needs to patch the clipping origin
+    LLGL::ShaderType shaderToPatchClippingOrigin = LLGL::ShaderType::Undefined;
+    for (const auto& desc : shaderDescs)
+    {
+        if (desc.type == LLGL::ShaderType::Vertex           ||
+            desc.type == LLGL::ShaderType::TessEvaluation   ||
+            desc.type == LLGL::ShaderType::Geometry)
+        {
+            if (static_cast<int>(shaderToPatchClippingOrigin) < static_cast<int>(desc.type))
+                shaderToPatchClippingOrigin = desc.type;
+        }
+    }
+
     // Store vertex output attributs
     recall.vertexAttribs.outputAttribs = streamOutputFormat.attributes;
     recall.fragmentAttribs.outputAttribs = fragmentAttribs;
@@ -414,11 +429,18 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
         // Create shader
         auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
         {
+            // Forward macro definitions
             shaderDesc.defines = defines;
+
+            // Forward vertex and fragment attributes
             if (desc.type == LLGL::ShaderType::Vertex || desc.type == LLGL::ShaderType::Geometry)
                 shaderDesc.vertex = recall.vertexAttribs;
             else if (desc.type == LLGL::ShaderType::Fragment)
                 shaderDesc.fragment = recall.fragmentAttribs;
+
+            // Append flag to patch clipping origin for the previously selected shader type if the native screen origin is *not* upper-left
+            if (patchClippingOrigin && IsScreenOriginLowerLeft() && desc.type == shaderToPatchClippingOrigin)
+                shaderDesc.flags |= LLGL::ShaderCompileFlags::PatchClippingOrigin;
         }
         auto shader = renderer->CreateShader(shaderDesc);
 
@@ -442,6 +464,26 @@ LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
     shaderPrograms_[shaderProgram] = recall;
 
     return shaderProgram;
+}
+
+LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
+    const std::vector<TutorialShaderDescriptor>&    shaderDescs,
+    const std::vector<LLGL::VertexFormat>&          vertexFormats,
+    const LLGL::VertexFormat&                       streamOutputFormat,
+    const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs,
+    const LLGL::ShaderMacro*                        defines)
+{
+    return LoadShaderProgramInternal(shaderDescs, vertexFormats, streamOutputFormat, fragmentAttribs, defines, false);
+}
+
+LLGL::ShaderProgram* ExampleBase::LoadShaderProgramAndPatchClippingOrigin(
+    const std::vector<TutorialShaderDescriptor>&    shaderDescs,
+    const std::vector<LLGL::VertexFormat>&          vertexFormats,
+    const LLGL::VertexFormat&                       streamOutputFormat,
+    const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs,
+    const LLGL::ShaderMacro*                        defines)
+{
+    return LoadShaderProgramInternal(shaderDescs, vertexFormats, streamOutputFormat, fragmentAttribs, defines, true);
 }
 
 bool ExampleBase::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
@@ -710,6 +752,11 @@ bool ExampleBase::IsMetal() const
 bool ExampleBase::IsLoadingDone() const
 {
     return loadingDone_;
+}
+
+bool ExampleBase::IsScreenOriginLowerLeft() const
+{
+    return (renderer->GetRenderingCaps().screenOrigin == LLGL::ScreenOrigin::LowerLeft);
 }
 
 Gs::Matrix4f ExampleBase::PerspectiveProjection(float aspectRatio, float near, float far, float fov)

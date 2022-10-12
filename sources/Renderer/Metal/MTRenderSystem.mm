@@ -306,7 +306,7 @@ void MTRenderSystem::CreateDeviceResources()
     device_ = MTLCreateSystemDefaultDevice();
     if (device_ == nil)
         throw std::runtime_error("failed to create Metal device");
-    
+
     /* Initialize renderer information */
     RendererInfo info;
     {

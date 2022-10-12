@@ -182,10 +182,31 @@ protected:
     // Callback when the window has been resized. Can also be detected by using a custom window event listener.
     virtual void OnResize(const LLGL::Extent2D& resoluion);
 
+private:
+
+    // Internal function to load a shader program
+    LLGL::ShaderProgram* LoadShaderProgramInternal(
+        const std::vector<TutorialShaderDescriptor>&    shaderDescs,
+        const std::vector<LLGL::VertexFormat>&          vertexFormats,
+        const LLGL::VertexFormat&                       streamOutputFormat,
+        const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs,
+        const LLGL::ShaderMacro*                        defines,
+        bool                                            patchClippingOrigin
+    );
+
 protected:
 
     // Creats a shader program and loads all specified shaders from file.
     LLGL::ShaderProgram* LoadShaderProgram(
+        const std::vector<TutorialShaderDescriptor>&    shaderDescs,
+        const std::vector<LLGL::VertexFormat>&          vertexFormats       = {},
+        const LLGL::VertexFormat&                       streamOutputFormat  = {},
+        const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs     = {},
+        const LLGL::ShaderMacro*                        defines             = nullptr
+    );
+
+    // Creats a shader program, loads all specified shaders from file, and adds 'ShaderCompileFlags::PatchClippingOrigin' to the compile flags.
+    LLGL::ShaderProgram* LoadShaderProgramAndPatchClippingOrigin(
         const std::vector<TutorialShaderDescriptor>&    shaderDescs,
         const std::vector<LLGL::VertexFormat>&          vertexFormats       = {},
         const LLGL::VertexFormat&                       streamOutputFormat  = {},
@@ -226,6 +247,9 @@ protected:
 
     // Used by the window resize handler
     bool IsLoadingDone() const;
+
+    // Returns true if the screen origin of the selected renderer is lower-left. See RenderingCapabilities::screenOrigin.
+    bool IsScreenOriginLowerLeft() const;
 
     // Returns a perspective projection with the specified parameters for the respective renderer.
     Gs::Matrix4f PerspectiveProjection(float aspectRatio, float near, float far, float fov);
