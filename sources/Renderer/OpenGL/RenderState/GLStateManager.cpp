@@ -476,27 +476,24 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, const GLScisso
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 {
+    const bool isOriginUpperLeft = (origin == GL_UPPER_LEFT);
+
+    /* Flip viewport if origin is emulated and set to upper-left corner */
+    flipViewportYPos_ = !isOriginUpperLeft;
+
     #ifdef GL_ARB_clip_control
     if (HasExtension(GLExt::ARB_clip_control))
     {
         /* Use GL extension to transform clipping space */
         if (contextState_.clipOrigin != origin || contextState_.clipDepthMode != depth)
             glClipControl(origin, depth);
-
-        /* Clip control flips NDC space, but we always have to flip the viewport */
-        flipViewportYPos_ = true;
     }
     else
     #endif
     {
-        const bool isOriginUpperLeft = (origin == GL_UPPER_LEFT);
-
         /* Emulate clipping space modification; this has to be addressed by transforming gl_Position in each vertex shader */
         emulateOriginUpperLeft_ = isOriginUpperLeft;
         emulateDepthModeZeroToOne_ = (depth == GL_ZERO_TO_ONE);
-
-        /* Flip viewport if origin is emulated and set to upper-left corner */
-        flipViewportYPos_ = !isOriginUpperLeft;
 
         /* Flip front-facing when emulating upper-left origin */
         FlipFrontFacing(isOriginUpperLeft);
