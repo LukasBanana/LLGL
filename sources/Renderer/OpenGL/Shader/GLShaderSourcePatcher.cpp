@@ -188,8 +188,8 @@ struct SourceScanState
 
     void Append(const char* to)
     {
-        patched.append(lastPatched, currentIndentRange[0]);
-        lastPatched = currentIndentRange[0];
+        patched.append(lastPatched, to);
+        lastPatched = to;
     }
 
     void AppendStatement(const char* statement, bool currentIndent = false)
