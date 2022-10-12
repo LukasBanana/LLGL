@@ -161,6 +161,9 @@ void ExampleBase::ResizeEventHandler::OnResize(LLGL::Window& sender, const LLGL:
         auto aspectRatio = static_cast<float>(videoMode.resolution.width) / static_cast<float>(videoMode.resolution.height);
         projection_ = tutorial_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
+        // Notify application about resize event
+        tutorial_.OnResize(clientAreaSize);
+
         // Re-draw frame
         if (tutorial_.IsLoadingDone())
             tutorial_.OnDrawFrame();
@@ -202,7 +205,6 @@ void ExampleBase::SetAndroidApp(android_app* androidApp)
 
 void ExampleBase::Run()
 {
-    LLGL::Extent2D resolution = context->GetResolution();
     bool showTimeRecords = false;
 
     while (context->GetSurface().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
@@ -238,14 +240,6 @@ void ExampleBase::Run()
         #else
         OnDrawFrame();
         #endif
-
-        // Check if resolution has changed
-        auto currentResolution = context->GetResolution();
-        if (resolution != currentResolution)
-        {
-            OnResize(currentResolution);
-            resolution = currentResolution;
-        }
     }
 }
 
@@ -276,7 +270,7 @@ ExampleBase::ExampleBase(
         throw std::invalid_argument("'android_app' state was not specified");
     #endif
 
-    #if defined _DEBUG && 0
+    #if defined _DEBUG && 1
     rendererDesc.debugCallback = [](const std::string& type, const std::string& message)
     {
         std::cerr << type << ": " << message << std::endl;

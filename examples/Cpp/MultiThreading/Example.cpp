@@ -231,7 +231,8 @@ private:
     void EncodePrimaryCommandBuffer(const std::string& threadName)
     {
         // Print thread start
-        PrintThreadsafe(logMutex, "Enter thread: " + threadName);
+        if (!threadName.empty())
+            PrintThreadsafe(logMutex, "Enter thread: " + threadName);
 
         // Encode command buffer
         auto& cmdBuffer = *primaryCmdBuffer;
@@ -270,7 +271,8 @@ private:
         cmdBuffer.End();
 
         // Print thread end
-        PrintThreadsafe(logMutex, "Leave thread: " + threadName);
+        if (!threadName.empty())
+            PrintThreadsafe(logMutex, "Leave thread: " + threadName);
     }
 
     void CreateCommandBuffers()
@@ -359,6 +361,12 @@ private:
         commandQueue->Submit(*primaryCmdBuffer);
         measure.Stop();
         context->Present();
+    }
+
+    void OnResize(const LLGL::Extent2D& /*resoluion*/) override
+    {
+        // Encode primary command buffer again to update resolution in constant buffer
+        EncodePrimaryCommandBuffer("");
     }
 
     void OnDrawFrame() override

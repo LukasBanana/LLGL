@@ -523,6 +523,11 @@ private:
         commands->UpdateBuffer(*constantBufferBlur, 0, &blurSettings, sizeof(blurSettings));
     }
 
+    void OnResize(const LLGL::Extent2D& /*resolution*/) override
+    {
+        UpdateScreenSize();
+    }
+
     void OnDrawFrame() override
     {
         #ifdef DEBUG_FPS
@@ -569,16 +574,9 @@ private:
             std::flush(std::cout);
         }
 
-        // Check if screen size has changed (this could also be done with an event listener)
-        static LLGL::Extent2D screenSize { 800, 600 };
-
-        if (screenSize != context->GetVideoMode().resolution)
-        {
-            screenSize = context->GetVideoMode().resolution;
-            UpdateScreenSize();
-        }
-
         // Initialize viewports
+        const auto screenSize = context->GetVideoMode().resolution;
+
         const LLGL::Viewport viewportFull{ { 0, 0 }, screenSize };
         const LLGL::Viewport viewportQuarter{ { 0, 0 }, { screenSize.width / 4, screenSize.height/ 4 } };
 
