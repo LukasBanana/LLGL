@@ -861,6 +861,8 @@ GLExtensionList QueryExtensions(bool coreProfile)
     return extensions;
 }
 
+#ifndef __APPLE__
+
 // Includes all GL extensions that are considered default for core profiles
 static void IncludeDefaultCoreProfileExtensions(GLExtensionList& extensions)
 {
@@ -895,6 +897,8 @@ static void IncludeImpliedExtensions(GLExtensionList& extensions)
     ImplyExtension("GL_ARB_gpu_shader5", { "GL_ARB_geometry_shader4" });
     ImplyExtension("GL_ARB_occlusion_query2", { "GL_ARB_occlusion_query" });
 }
+
+#endif // /__APPLE__
 
 // Global member to store if the extension have already been loaded
 static bool g_extAlreadyLoaded = false;
@@ -972,7 +976,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
 
     #undef ENABLE_GLEXT
 
-    #else
+    #else // __APPLE__
 
     auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc, GLExt extensionID) -> void
     {
@@ -1115,7 +1119,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     #undef LOAD_GLEXT
     #undef ENABLE_GLEXT
 
-    #endif
+    #endif // /__APPLE__
 
     g_extAlreadyLoaded = true;
 }
