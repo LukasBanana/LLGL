@@ -52,13 +52,13 @@ static bool ScanToken(const char*& s, const char* token)
 
 static void SkipUntilToken(const char*& s, char tokenChar)
 {
-    while (!ScanToken(s, tokenChar))
+    while (*s != '\0' && !ScanToken(s, tokenChar))
         ++s;
 }
 
 static void SkipUntilToken(const char*& s, char tokenChar0, char tokenChar1)
 {
-    while (!ScanToken(s, tokenChar0, tokenChar1))
+    while (*s != '\0' && !ScanToken(s, tokenChar0, tokenChar1))
         ++s;
 }
 
