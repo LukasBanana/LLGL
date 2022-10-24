@@ -13,7 +13,7 @@
 #include "RenderContextFlags.h"
 #include "PipelineStateFlags.h"
 #include <cstdint>
-#include <algorithm>
+#include <string.h>
 
 
 namespace LLGL
@@ -48,7 +48,7 @@ struct FrameProfile
     //! Clears all counter values.
     inline void Clear()
     {
-        std::fill(std::begin(values), std::end(values), 0);
+        ::memset(values, 0, sizeof(values));
         timeRecords.clear();
     }
 
@@ -203,12 +203,6 @@ struct FrameProfile
             std::uint32_t textureReads;
 
             /**
-            \brief Counter for all texture write operations outside of command encoding.
-            \todo Not available yet.
-            */
-            std::uint32_t textureMappings;
-
-            /**
             \brief Counter for all command buffer sections that are enclosed by a call to \c BeginRenderPass and \c EndRenderPass.
             \see CommandBuffer::BeginRenderPass
             \see CommandBuffer::EndRenderPass
@@ -273,7 +267,7 @@ struct FrameProfile
         };
 
         //! All proflile values as linear array.
-        std::uint32_t values[34];
+        std::uint32_t values[33];
     };
 
     /**
