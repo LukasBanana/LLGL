@@ -56,10 +56,12 @@ D3D11CommandBuffer::D3D11CommandBuffer(
     stateMngr_ { stateMngr }
 {
     /* Store information whether the command buffer has an immediate or deferred context */
-    if ((desc.flags & (CommandBufferFlags::Secondary | CommandBufferFlags::MultiSubmit)) != 0)
+    if ((desc.flags & CommandBufferFlags::ImmediateSubmit) == 0)
+    {
         hasDeferredContext_ = true;
-    if ((desc.flags & CommandBufferFlags::Secondary) != 0)
-        isSecondaryCmdBuffer_ = true;
+        if ((desc.flags & CommandBufferFlags::Secondary) != 0)
+            isSecondaryCmdBuffer_ = true;
+    }
 
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     context_->QueryInterface(IID_PPV_ARGS(&context1_));
@@ -1348,13 +1350,31 @@ void D3D11CommandBuffer::ResolveBoundRenderTarget()
         boundRenderTarget_->ResolveSubresources(context_.Get());
 }
 
-void D3D11CommandBuffer::BindFramebufferView()
+void D3D11CommandBuffer::BindFramebufferView(
+    UINT                            numRenderTargetViews,
+    ID3D11RenderTargetView* const * renderTargetViews,
+    ID3D11DepthStencilView*         depthStencilView)
 {
+    /* Set output-merger render target views */
     context_->OMSetRenderTargets(
-        framebufferView_.numRenderTargetViews,
-        framebufferView_.renderTargetViews,
-        framebufferView_.depthStencilView
+        numRenderTargetViews,
+        renderTargetViews,
+        depthStencilView
     );
+
+    /* Store new render-target configuration */
+    framebufferView_.numRenderTargetViews   = numRenderTargetViews;
+    framebufferView_.renderTargetViews      = renderTargetViews;
+    framebufferView_.depthStencilView       = depthStencilView;
+}
+
+void D3D11CommandBuffer::ResetDeferredCommandList()
+{
+    if (commandList_)
+    {
+        context_->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
+        commandList_.Reset();
+    }
 }
 
 void D3D11CommandBuffer::BindRenderTarget(D3D11RenderTarget& renderTargetD3D)
@@ -1363,11 +1383,11 @@ void D3D11CommandBuffer::BindRenderTarget(D3D11RenderTarget& renderTargetD3D)
     ResolveBoundRenderTarget();
 
     /* Set RTV list and DSV in framebuffer view */
-    framebufferView_.numRenderTargetViews   = static_cast<UINT>(renderTargetD3D.GetRenderTargetViews().size());
-    framebufferView_.renderTargetViews      = renderTargetD3D.GetRenderTargetViews().data();
-    framebufferView_.depthStencilView       = renderTargetD3D.GetDepthStencilView();
-
-    BindFramebufferView();
+    BindFramebufferView(
+        static_cast<UINT>(renderTargetD3D.GetRenderTargetViews().size()),
+        renderTargetD3D.GetRenderTargetViews().data(),
+        renderTargetD3D.GetDepthStencilView()
+    );
 
     /* Store current render target */
     boundRenderTarget_ = &renderTargetD3D;
@@ -1379,13 +1399,7 @@ void D3D11CommandBuffer::BindRenderContext(D3D11RenderContext& renderContextD3D)
     ResolveBoundRenderTarget();
 
     /* Set default RTVs to OM-stage */
-    const auto& backBuffer = renderContextD3D.GetBackBuffer();
-
-    framebufferView_.numRenderTargetViews   = 1;
-    framebufferView_.renderTargetViews      = backBuffer.rtv.GetAddressOf();
-    framebufferView_.depthStencilView       = backBuffer.dsv.Get();
-
-    BindFramebufferView();
+    renderContextD3D.BindFramebufferView(this);
 
     /* Reset reference to render target */
     boundRenderTarget_ = nullptr;

@@ -220,6 +220,15 @@ class D3D11CommandBuffer final : public CommandBuffer
 
         /* ----- Internal ----- */
 
+        // Calls OMSetRenderTargets and stores the references to these resource views.
+        void BindFramebufferView(
+            UINT                            numRenderTargetViews,
+            ID3D11RenderTargetView* const * renderTargetViews,
+            ID3D11DepthStencilView*         depthStencilView
+        );
+
+        void ResetDeferredCommandList();
+
         // Returns the native command list for deferred contexts or null if there is none.
         inline ID3D11CommandList* GetDeferredCommandList() const
         {
@@ -246,7 +255,6 @@ class D3D11CommandBuffer final : public CommandBuffer
         void ResetResourceSlotsUAV(std::uint32_t firstSlot, std::uint32_t numSlots, long stageFlags);
 
         void ResolveBoundRenderTarget();
-        void BindFramebufferView();
         void BindRenderTarget(D3D11RenderTarget& renderTargetD3D);
         void BindRenderContext(D3D11RenderContext& renderContextD3D);
 

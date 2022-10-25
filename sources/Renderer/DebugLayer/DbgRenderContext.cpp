@@ -6,6 +6,7 @@
  */
 
 #include "DbgRenderContext.h"
+#include "DbgCore.h"
 
 
 namespace LLGL
@@ -16,6 +17,11 @@ DbgRenderContext::DbgRenderContext(RenderContext& instance) :
     instance { instance }
 {
     ShareSurfaceAndConfig(instance);
+}
+
+void DbgRenderContext::SetName(const char* name)
+{
+    DbgSetObjectName(*this, name);
 }
 
 void DbgRenderContext::Present()

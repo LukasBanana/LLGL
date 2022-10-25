@@ -80,7 +80,7 @@ RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescrip
 {
     return TakeOwnership(
         renderContexts_,
-        MakeUnique<D3D11RenderContext>(factory_.Get(), device_, context_, desc, surface)
+        MakeUnique<D3D11RenderContext>(factory_.Get(), device_, desc, surface)
     );
 }
 
@@ -100,7 +100,15 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    if ((desc.flags & (CommandBufferFlags::Secondary | CommandBufferFlags::MultiSubmit)) != 0)
+    if ((desc.flags & (CommandBufferFlags::ImmediateSubmit)) != 0)
+    {
+        /* Create command buffer with immediate context */
+        return TakeOwnership(
+            commandBuffers_,
+            MakeUnique<D3D11CommandBuffer>(device_.Get(), context_, stateMngr_, desc)
+        );
+    }
+    else
     {
         /* Create deferred D3D11 device context */
         ComPtr<ID3D11DeviceContext> deferredContext;
@@ -111,14 +119,6 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         return TakeOwnership(
             commandBuffers_,
             MakeUnique<D3D11CommandBuffer>(device_.Get(), deferredContext, std::make_shared<D3D11StateManager>(device_.Get(), deferredContext), desc)
-        );
-    }
-    else
-    {
-        /* Create command buffer with immediate context */
-        return TakeOwnership(
-            commandBuffers_,
-            MakeUnique<D3D11CommandBuffer>(device_.Get(), context_, stateMngr_, desc)
         );
     }
 }
@@ -170,14 +170,13 @@ void D3D11RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, 
 void* D3D11RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    mappedBufferCPUAccess_ = access;
-    return bufferD3D.Map(context_.Get(), mappedBufferCPUAccess_);
+    return bufferD3D.Map(context_.Get(), access);
 }
 
 void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    bufferD3D.Unmap(context_.Get(), mappedBufferCPUAccess_);
+    bufferD3D.Unmap(context_.Get());
 }
 
 /* ----- Textures ----- */

@@ -35,7 +35,7 @@ class D3D11Buffer : public Buffer
         void UpdateSubresource(ID3D11DeviceContext* context, const void* data);
 
         void* Map(ID3D11DeviceContext* context, const CPUAccess access);
-        void Unmap(ID3D11DeviceContext* context, const CPUAccess access);
+        void Unmap(ID3D11DeviceContext* context);
 
         // Creates a shader-resource-view (SRV) of a subresource of this buffer object.
         void CreateSubresourceSRV(
@@ -89,10 +89,12 @@ class D3D11Buffer : public Buffer
         ComPtr<ID3D11Buffer>    buffer_;
         ComPtr<ID3D11Buffer>    cpuAccessBuffer_;
 
-        UINT                    size_               = 0;
-        UINT                    stride_             = 0;
-        DXGI_FORMAT             format_             = DXGI_FORMAT_UNKNOWN;
-        D3D11_USAGE             usage_              = D3D11_USAGE_DEFAULT;
+        UINT                    size_                   = 0;
+        UINT                    stride_                 = 0;
+        DXGI_FORMAT             format_                 = DXGI_FORMAT_UNKNOWN;
+        D3D11_USAGE             usage_                  = D3D11_USAGE_DEFAULT;
+
+        bool                    isWriteAccessMapped_    = false;
 
 };
 

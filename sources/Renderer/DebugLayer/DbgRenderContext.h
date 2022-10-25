@@ -23,6 +23,8 @@ class DbgRenderContext final : public RenderContext
 
     public:
 
+        void SetName(const char* name) override;
+
         void Present() override;
 
         std::uint32_t GetSamples() const override;
@@ -38,7 +40,8 @@ class DbgRenderContext final : public RenderContext
 
     public:
 
-        RenderContext& instance;
+        RenderContext&  instance;
+        std::string     label;
 
     private:
 

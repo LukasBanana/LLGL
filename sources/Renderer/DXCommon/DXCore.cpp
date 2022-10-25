@@ -592,6 +592,10 @@ Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BY
 
 DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits)
 {
+    /* Only return unknown format if depth-stencil is explicitly disabled */
+    if (depthBits == 0 && stencilBits == 0)
+        return DXGI_FORMAT_UNKNOWN;
+
     if (depthBits == 32)
     {
         if (stencilBits == 8)
@@ -599,10 +603,11 @@ DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits)
         else
             return DXGI_FORMAT_D32_FLOAT;
     }
-    else if (depthBits == 24 || stencilBits == 8)
-        return DXGI_FORMAT_D24_UNORM_S8_UINT;
-    else
+    else if (depthBits == 16)
         return DXGI_FORMAT_D16_UNORM;
+
+    /* Return standard D24S8 depth buffer format by default */
+    return DXGI_FORMAT_D24_UNORM_S8_UINT;
 }
 
 

@@ -19,15 +19,13 @@ namespace LLGL
 
 
 D3D11RenderContext::D3D11RenderContext(
-    IDXGIFactory* factory,
-    const ComPtr<ID3D11Device>& device,
-    const ComPtr<ID3D11DeviceContext>& context,
-    const RenderContextDescriptor& desc,
+    IDXGIFactory*                   factory,
+    const ComPtr<ID3D11Device>&     device,
+    const RenderContextDescriptor&  desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext { desc    },
-    device_       { device  },
-    context_      { context }
+    RenderContext { desc   },
+    device_       { device }
 {
     /* Setup surface for the render context */
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
@@ -45,18 +43,24 @@ void D3D11RenderContext::SetName(const char* name)
     if (name != nullptr)
     {
         /* Set label for each back-buffer object */
-        D3D11SetObjectName(backBuffer_.colorBuffer.Get(), name);
-        D3D11SetObjectNameSubscript(backBuffer_.rtv.Get(), name, ".RTV");
-        D3D11SetObjectNameSubscript(backBuffer_.depthStencil.Get(), name, ".DS");
-        D3D11SetObjectNameSubscript(backBuffer_.dsv.Get(), name, ".DSV");
+        D3D11SetObjectName(colorBuffer_.Get(), name);
+        D3D11SetObjectNameSubscript(renderTargetView_.Get(), name, ".RTV");
+        if (depthBuffer_)
+        {
+            D3D11SetObjectNameSubscript(depthBuffer_.Get(), name, ".DS");
+            D3D11SetObjectNameSubscript(depthStencilView_.Get(), name, ".DSV");
+        }
     }
     else
     {
         /* Reset all back-buffer labels */
-        D3D11SetObjectName(backBuffer_.colorBuffer.Get(), nullptr);
-        D3D11SetObjectName(backBuffer_.rtv.Get(), nullptr);
-        D3D11SetObjectName(backBuffer_.depthStencil.Get(), nullptr);
-        D3D11SetObjectName(backBuffer_.dsv.Get(), nullptr);
+        D3D11SetObjectName(colorBuffer_.Get(), nullptr);
+        D3D11SetObjectName(renderTargetView_.Get(), nullptr);
+        if (depthBuffer_)
+        {
+            D3D11SetObjectName(depthBuffer_.Get(), nullptr);
+            D3D11SetObjectName(depthStencilView_.Get(), nullptr);
+        }
     }
 }
 
@@ -84,6 +88,21 @@ const RenderPass* D3D11RenderContext::GetRenderPass() const
 {
     return nullptr; // dummy
 }
+
+void D3D11RenderContext::BindFramebufferView(D3D11CommandBuffer* commandBuffer)
+{
+    /* Bind framebuffer of this swap-chain in command buffer */
+    if (commandBuffer != nullptr)
+        commandBuffer->BindFramebufferView(1, renderTargetView_.GetAddressOf(), depthStencilView_.Get());
+
+    /* Store reference to last used command buffer */
+    bindingCommandBuffer_ = commandBuffer;
+}
+
+
+/*
+ * ======= Private: =======
+ */
 
 //TODO: depth-stencil and color format does not change, only resizing is considered!
 bool D3D11RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
@@ -114,11 +133,6 @@ bool D3D11RenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
 {
     return SetPresentSyncInterval(vsyncInterval);
 }
-
-
-/*
- * ======= Private: =======
- */
 
 bool D3D11RenderContext::SetPresentSyncInterval(UINT syncInterval)
 {
@@ -177,20 +191,18 @@ void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDe
 {
     HRESULT hr = 0;
 
-    /* Pick and store depth-stencil format */
-    depthStencilFormat_ = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
-
     /* Get back buffer from swap chain */
-    hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(backBuffer_.colorBuffer.ReleaseAndGetAddressOf()));
+    hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(colorBuffer_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to get D3D11 back buffer from swap chain");
 
     /* Create back buffer RTV */
-    hr = device_->CreateRenderTargetView(backBuffer_.colorBuffer.Get(), nullptr, backBuffer_.rtv.ReleaseAndGetAddressOf());
+    hr = device_->CreateRenderTargetView(colorBuffer_.Get(), nullptr, renderTargetView_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV) for back buffer");
 
-    #if 0//TODO: allow to avoid a depth-buffer
-    if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
-    #endif
+    /* Pick and store depth-stencil format */
+    depthStencilFormat_ = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
+
+    if (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN)
     {
         /* Create depth stencil texture */
         D3D11_TEXTURE2D_DESC texDesc;
@@ -206,37 +218,30 @@ void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDe
             texDesc.CPUAccessFlags  = 0;
             texDesc.MiscFlags       = 0;
         }
-        hr = device_->CreateTexture2D(&texDesc, nullptr, backBuffer_.depthStencil.ReleaseAndGetAddressOf());
+        hr = device_->CreateTexture2D(&texDesc, nullptr, depthBuffer_.ReleaseAndGetAddressOf());
         DXThrowIfFailed(hr, "failed to create D3D11 depth-texture for swap-chain");
 
         /* Create DSV */
-        hr = device_->CreateDepthStencilView(backBuffer_.depthStencil.Get(), nullptr, backBuffer_.dsv.ReleaseAndGetAddressOf());
+        hr = device_->CreateDepthStencilView(depthBuffer_.Get(), nullptr, depthStencilView_.ReleaseAndGetAddressOf());
         DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil-view (DSV) for swap-chain");
     }
 }
 
 void D3D11RenderContext::ResizeBackBuffer(const VideoModeDescriptor& videoModeDesc)
 {
-    /* Check if the current RTV and DSV is from this render context */
-    /*ID3D11RenderTargetView* rtv = nullptr;
-    ID3D11DepthStencilView* dsv = nullptr;
-
-    context_->OMGetRenderTargets(1, &rtv, &dsv);
-
-    bool rtvFromThis = (rtv == backBuffer_.rtv.Get() && dsv == backBuffer_.dsv.Get());
-
-    auto r1 = rtv->Release();
-    auto r2 = dsv->Release();*/
-
-    /* Unset render targets (if the current RTV and DSV was from this render context) */
-    //if (rtvFromThis)
-        context_->OMSetRenderTargets(0, nullptr, nullptr);
+    /* Unset render targets for last used command buffer context */
+    if (bindingCommandBuffer_ != nullptr)
+        bindingCommandBuffer_->BindFramebufferView(0, nullptr, nullptr);
 
     /* Release buffers */
-    backBuffer_.colorBuffer.Reset();
-    backBuffer_.rtv.Reset();
-    backBuffer_.depthStencil.Reset();
-    backBuffer_.dsv.Reset();
+    colorBuffer_.Reset();
+    renderTargetView_.Reset();
+    depthBuffer_.Reset();
+    depthStencilView_.Reset();
+
+    /* Reset command list for deferred device contexts to ensure all outstanding references to the backbuffer are cleared */
+    if (bindingCommandBuffer_ != nullptr)
+        bindingCommandBuffer_->ResetDeferredCommandList();
 
     /* Resize swap-chain buffers, let DXGI find out the client area, and preserve buffer count and format */
     auto hr = swapChain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
@@ -244,13 +249,6 @@ void D3D11RenderContext::ResizeBackBuffer(const VideoModeDescriptor& videoModeDe
 
     /* Recreate back buffer and reset default render target */
     CreateBackBuffer(videoModeDesc);
-
-    /* Reset render target (if the previous RTV and DSV was from this render context) */
-    //if (rtvFromThis)
-    /*{
-        ID3D11RenderTargetView* rtvList[] = { backBuffer_.rtv.Get() };
-        context_->OMSetRenderTargets(1, rtvList, backBuffer_.dsv.Get());
-    }*/
 }
 
 

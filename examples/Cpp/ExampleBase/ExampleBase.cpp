@@ -296,6 +296,8 @@ ExampleBase::ExampleBase(
     }
     context = renderer->CreateRenderContext(contextDesc);
 
+    context->SetName("SwapChain");
+
     // Create command buffer
     commands = renderer->CreateCommandBuffer();
 

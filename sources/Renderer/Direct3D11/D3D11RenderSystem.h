@@ -271,8 +271,6 @@ class D3D11RenderSystem final : public RenderSystem
 
         std::vector<VideoAdapterDescriptor>     videoAdatperDescs_;
 
-        CPUAccess                               mappedBufferCPUAccess_  = CPUAccess::ReadOnly; // <-- TODO: move this into <D3D11Buffer> class
-
 };
 
 
