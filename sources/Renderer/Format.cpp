@@ -42,8 +42,8 @@ static const long UInt          = Integer | Unsigned;
 static const long SInt          = Integer;
 static const long UNorm         = UInt | Norm;
 static const long SNorm         = SInt | Norm;
-static const long SFloat        = Unsigned;
-static const long UFloat        = 0;
+static const long SFloat        = 0;
+static const long UFloat        = Unsigned;
 
 // Declaration of all hardware format descriptors
 static const FormatAttributes g_formatAttribs[] =
