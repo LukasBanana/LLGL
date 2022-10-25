@@ -17,9 +17,19 @@ namespace LLGL
 
 static const UINT g_cbufferChunkSize = 4096u;
 
-D3D11StateManager::D3D11StateManager(ID3D11Device* device, ComPtr<ID3D11DeviceContext>& context) :
-    context_                 { context                                                               },
-    intermediateCbufferPool_ { device, context.Get(), g_cbufferChunkSize, D3D11_BIND_CONSTANT_BUFFER }
+D3D11StateManager::D3D11StateManager(
+    ID3D11Device*                       device,
+    const ComPtr<ID3D11DeviceContext>&  context,
+    ID3D11DeviceContext*                cbufferPoolDeviceContext)
+:
+    context_ { context },
+    intermediateCbufferPool_
+    {
+        device,
+        (cbufferPoolDeviceContext != nullptr ? cbufferPoolDeviceContext : context.Get()),
+        g_cbufferChunkSize,
+        D3D11_BIND_CONSTANT_BUFFER
+    }
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     context_->QueryInterface(IID_PPV_ARGS(&context1_));

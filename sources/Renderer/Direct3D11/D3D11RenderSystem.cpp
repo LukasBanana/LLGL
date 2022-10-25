@@ -118,7 +118,7 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         /* Create command buffer with deferred context and dedicated state manager */
         return TakeOwnership(
             commandBuffers_,
-            MakeUnique<D3D11CommandBuffer>(device_.Get(), deferredContext, std::make_shared<D3D11StateManager>(device_.Get(), deferredContext), desc)
+            MakeUnique<D3D11CommandBuffer>(device_.Get(), deferredContext, std::make_shared<D3D11StateManager>(device_.Get(), deferredContext, context_.Get()), desc)
         );
     }
 }

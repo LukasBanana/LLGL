@@ -27,7 +27,11 @@ class D3D11StateManager
 
     public:
 
-        D3D11StateManager(ID3D11Device* device, ComPtr<ID3D11DeviceContext>& context);
+        D3D11StateManager(
+            ID3D11Device*                       device,
+            const ComPtr<ID3D11DeviceContext>&  context,
+            ID3D11DeviceContext*                cbufferPoolDeviceContext = nullptr
+        );
 
         void SetViewports(std::uint32_t numViewports, const Viewport* viewportArray);
         void SetScissors(std::uint32_t numScissors, const Scissor* scissorArray);
