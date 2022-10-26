@@ -76,7 +76,7 @@ std::size_t Display::Count()
 
 Display* const * Display::GetList()
 {
-    if (UpdateDisplayList())
+    if (UpdateDisplayList() || g_displayRefList.empty())
     {
         /* Update reference list and append null terminator to array */
         g_displayRefList.clear();
@@ -85,8 +85,6 @@ Display* const * Display::GetList()
             g_displayRefList.push_back(display.get());
         g_displayRefList.push_back(nullptr);
     }
-    else if (g_displayRefList.empty())
-        g_displayRefList = { nullptr };
     return g_displayRefList.data();
 }
 
