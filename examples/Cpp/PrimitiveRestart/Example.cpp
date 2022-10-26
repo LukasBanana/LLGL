@@ -38,8 +38,8 @@ private:
     // Vertex data structure
     struct Vertex
     {
-        Gs::Vector2f        position;
-        LLGL::ColorRGBAub   color;
+        float           position[2];
+        std::uint8_t    color[4];
     };
 
     void AddSquare(
@@ -93,12 +93,12 @@ private:
         std::vector<std::uint16_t>  indices;
 
         // Add 16-bit indices
-        indexOffset16 = indices.size() * sizeof(std::uint16_t);
+        indexOffset16 = indices.size() * sizeof(indices[0]);
         AddSquare( .5f,  .5f, 0.8f, vertices, indices, indexCount16, /*indexType16Bits:*/ true);
         AddSquare(-.5f,  .5f, 0.8f, vertices, indices, indexCount16, /*indexType16Bits:*/ true);
 
         // Add 32-bit indices
-        indexOffset32 = indices.size() * sizeof(std::uint16_t);
+        indexOffset32 = indices.size() * sizeof(indices[0]);
         AddSquare( .5f, -.5f, 0.8f, vertices, indices, indexCount32, /*indexType16Bits:*/ false);
         AddSquare(-.5f, -.5f, 0.8f, vertices, indices, indexCount32, /*indexType16Bits:*/ false);
 
@@ -160,10 +160,12 @@ private:
             commands->BeginRenderPass(*context);
             {
                 // Clear color buffer
-                commands->Clear(LLGL::ClearFlags::Color);
+                commands->Clear(LLGL::ClearFlags::Color, backgroundColor);
 
                 if (indexCount16 > 0)
                 {
+                    // TODO: This does not work for D3D12 at the moment as the primitive restart index
+                    //       (aka. strip cut value) needs to be specified at PSO creation time.
                     commands->SetIndexBuffer(*indexBuffer, LLGL::Format::R16UInt, indexOffset16);
                     commands->DrawIndexed(indexCount16, 0);
                 }
