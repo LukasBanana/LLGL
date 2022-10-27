@@ -17,11 +17,6 @@ RenderTarget::RenderTarget(LLGL::RenderTarget* native) :
 {
 }
 
-bool RenderTarget::IsRenderContext::get()
-{
-    return native_->IsRenderContext();
-}
-
 Extent2D^ RenderTarget::Resolution::get()
 {
     auto extent = native_->GetResolution();

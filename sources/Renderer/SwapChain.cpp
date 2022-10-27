@@ -201,11 +201,6 @@ bool RenderContext::ResetDisplayFullscreenMode()
  * ======= Private: =======
  */
 
-bool RenderContext::OnIsRenderContext() const
-{
-    return true;
-}
-
 void RenderContext::StoreSurfacePosition()
 {
     #ifndef LLGL_MOBILE_PLATFORM

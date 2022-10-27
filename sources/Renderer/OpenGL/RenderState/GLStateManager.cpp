@@ -20,6 +20,7 @@
 #include "../GLTypes.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
+#include <LLGL/TypeInfo.h>
 #include <functional>
 
 
@@ -1437,7 +1438,7 @@ void GLStateManager::BindRenderPass(
     const ClearValue*   clearValues)
 {
     /* Bind render target/context */
-    if (renderTarget.IsRenderContext())
+    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
         BindAndBlitRenderContext(LLGL_CAST(GLRenderContext&, renderTarget));
     else
         BindAndBlitRenderTarget(LLGL_CAST(GLRenderTarget&, renderTarget));

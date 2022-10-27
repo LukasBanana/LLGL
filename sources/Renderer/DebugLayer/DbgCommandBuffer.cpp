@@ -24,6 +24,7 @@
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
 #include <LLGL/Strings.h>
+#include <LLGL/TypeInfo.h>
 #include <algorithm>
 
 
@@ -639,7 +640,7 @@ void DbgCommandBuffer::BeginRenderPass(
         states_.insideRenderPass = true;
     }
 
-    if (renderTarget.IsRenderContext())
+    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
     {
         auto& renderContextDbg = LLGL_CAST(DbgRenderContext&, renderTarget);
 

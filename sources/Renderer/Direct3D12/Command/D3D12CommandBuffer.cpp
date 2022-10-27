@@ -30,6 +30,8 @@
 #include "../RenderState/D3D12GraphicsPSO.h"
 #include "../RenderState/D3D12ComputePSO.h"
 
+#include <LLGL/TypeInfo.h>
+
 #include "../D3DX12/d3dx12.h"
 #include <pix.h>
 
@@ -583,7 +585,7 @@ void D3D12CommandBuffer::BeginRenderPass(
     boundRenderTarget_ = &(renderTarget);
 
     /* Bind render target/context */
-    if (renderTarget.IsRenderContext())
+    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
         BindRenderContext(LLGL_CAST(D3D12RenderContext&, renderTarget));
     else
         BindRenderTarget(LLGL_CAST(D3D12RenderTarget&, renderTarget));
@@ -600,7 +602,7 @@ void D3D12CommandBuffer::EndRenderPass()
 {
     if (boundRenderTarget_)
     {
-        if (boundRenderTarget_->IsRenderContext())
+        if (LLGL::IsInstanceOf<RenderContext>(*boundRenderTarget_))
         {
             auto renderContextD3D = LLGL_CAST(D3D12RenderContext*, boundRenderTarget_);
             renderContextD3D->ResolveRenderTarget(commandContext_);

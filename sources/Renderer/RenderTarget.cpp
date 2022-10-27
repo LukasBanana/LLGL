@@ -15,18 +15,6 @@ namespace LLGL
 {
 
 
-bool RenderTarget::IsRenderContext() const
-{
-    return OnIsRenderContext();
-}
-
-//private
-bool RenderTarget::OnIsRenderContext() const
-{
-    return false;
-}
-
-
 /*
  * ======= Protected: =======
  */

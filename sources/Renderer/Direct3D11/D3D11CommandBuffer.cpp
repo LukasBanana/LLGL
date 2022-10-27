@@ -13,6 +13,7 @@
 #include "../CheckedCast.h"
 #include "../ResourceUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/TypeInfo.h>
 #include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
 #include "../../Core/Assertion.h"
@@ -830,7 +831,7 @@ void D3D11CommandBuffer::BeginRenderPass(
     const ClearValue*   clearValues)
 {
     /* Bind render target/context */
-    if (renderTarget.IsRenderContext())
+    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
         BindRenderContext(LLGL_CAST(D3D11RenderContext&, renderTarget));
     else
         BindRenderTarget(LLGL_CAST(D3D11RenderTarget&, renderTarget));

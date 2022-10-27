@@ -27,10 +27,10 @@ namespace LLGL
         bool IsInstanceOf(int id) const override
 
 //! Implements the base functions for all LLGL interfaces.
-#define LLGL_IMPLEMENT_INTERFACE(SELF, BASE)                                \
-    bool SELF::IsInstanceOf(int id) const                                   \
-    {                                                                       \
-        return (id == SELF::GetInterfaceID() || BASE::IsInstanceOf(id));    \
+#define LLGL_IMPLEMENT_INTERFACE(SELF, BASE)                                                                \
+    bool SELF::IsInstanceOf(int id) const                                                                   \
+    {                                                                                                       \
+        return (id == SELF::GetInterfaceID() || (id < SELF::GetInterfaceID() && BASE::IsInstanceOf(id)));   \
     }
 
 

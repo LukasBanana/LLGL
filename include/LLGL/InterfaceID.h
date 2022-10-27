@@ -17,6 +17,8 @@ namespace LLGL
 
 /**
 \brief Enumeration of all interfaces in LLGL.
+\remarks The ID for a base class must always have a smaller value than the ID of its sub classes.
+Therefore, all base classes must be declared before their sub classes in this enumeration.
 \see Interface::IsInstanceOf
 \see Interface::AsInstanceOf
 */

@@ -17,6 +17,30 @@ namespace LLGL
 
 
 /**
+\brief Returns whether the specified object is an instance of the interface specified by template parameter <T>.
+\remarks The typename \c T must be a sub class of Interface and implement the following function:
+\code
+static InterfaceID GetInterfaceID();
+\endcode
+\see Interface::IsInstanceOf
+*/
+template <typename T>
+inline bool IsInstanceOf(const Interface* obj)
+{
+    return (obj != nullptr && obj->IsInstanceOf(T::GetInterfaceID()));
+}
+
+/**
+\brief Const-reference version of IsInstanceOf.
+\see IsInstanceOf(const Interface*)
+*/
+template <typename T>
+inline bool IsInstanceOf(const Interface& obj)
+{
+    return obj.IsInstanceOf(T::GetInterfaceID());
+}
+
+/**
 \brief Returns a constant pointer to this instance of type <code>const T*</code> if it implements the specified interface.
 \remarks The typename \c T must be a sub class of Interface and implement the following function:
 \code
@@ -34,7 +58,7 @@ if (const LLGL::Window* myWindow = LLGL::CastTo<LLGL::Window>(mySurface))
 template <typename T>
 inline const T* CastTo(const Interface* obj)
 {
-    return (obj != nullptr && obj->IsInstanceOf(T::GetInterfaceID()) ? static_cast<const T*>(obj) : nullptr);
+    return (IsInstanceOf<T>(obj) ? static_cast<const T*>(obj) : nullptr);
 }
 
 /**
@@ -55,7 +79,7 @@ if (LLGL::Window* myWindow = LLGL::CastTo<LLGL::Window>(mySurface))
 template <typename T>
 inline T* CastTo(Interface* obj)
 {
-    return (obj != nullptr && obj->IsInstanceOf(T::GetInterfaceID()) ? static_cast<T*>(obj) : nullptr);
+    return (IsInstanceOf<T>(obj) ? static_cast<T*>(obj) : nullptr);
 }
 
 /**
@@ -73,7 +97,7 @@ const LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window>(mySurface);
 template <typename T>
 inline const T& CastTo(const Interface& obj)
 {
-    if (!obj.IsInstanceOf(T::GetInterfaceID()))
+    if (!IsInstanceOf<T>(obj))
         throw std::bad_cast();
     return static_cast<const T&>(obj);
 }
@@ -93,7 +117,7 @@ LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window&>(mySurface);
 template <typename T>
 inline T& CastTo(Interface& obj)
 {
-    if (!obj.IsInstanceOf(T::GetInterfaceID()))
+    if (!IsInstanceOf<T>(obj))
         throw std::bad_cast();
     return static_cast<T&>(obj);
 }

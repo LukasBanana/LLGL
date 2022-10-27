@@ -186,8 +186,6 @@ class LLGL_EXPORT RenderContext : public RenderTarget
 
     private:
 
-        bool OnIsRenderContext() const override final;
-
         void StoreSurfacePosition();
         void RestoreSurfacePosition();
 

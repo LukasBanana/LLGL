@@ -25,6 +25,7 @@
 #include "../CheckedCast.h"
 #include "../../Core/Exception.h"
 #include <LLGL/StaticLimits.h>
+#include <LLGL/TypeInfo.h>
 #include <cstddef>
 
 
@@ -528,7 +529,7 @@ void VKCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    if (renderTarget.IsRenderContext())
+    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
     {
         /* Get Vulkan render context object */
         auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderTarget);

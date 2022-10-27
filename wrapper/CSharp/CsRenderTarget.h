@@ -34,11 +34,6 @@ public ref class RenderTarget
 
         RenderTarget(LLGL::RenderTarget* native);
 
-        property bool IsRenderContext
-        {
-            bool get();
-        }
-
         property Extent2D^ Resolution
         {
             Extent2D^ get();

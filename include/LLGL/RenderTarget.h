@@ -37,12 +37,6 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
     public:
 
         /**
-        \brief Returns true if this render target is an instance of RenderContext.
-        \todo Replace by IsInstanceOf
-        */
-        bool IsRenderContext() const;
-
-        /**
         \brief Returns the render target resolution.
         \remarks This is either determined by the resolution specified in the render target descriptor, or by the video mode of the render context.
         \see RenderContext::ResizeBuffers
@@ -109,14 +103,6 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \see ValidateResolution
         */
         void ValidateMipResolution(const Texture& texture, std::uint32_t mipLevel);
-
-    private:
-
-        // Only RenderContext is supposed to override "OnIsRenderContext".
-        friend class RenderContext;
-
-        // Returns true if this render target is an instance of RenderContext. By default false.
-        virtual bool OnIsRenderContext() const;
 
 };
 
