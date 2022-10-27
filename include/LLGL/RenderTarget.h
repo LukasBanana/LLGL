@@ -45,7 +45,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         /**
         \brief Returns the render target resolution.
         \remarks This is either determined by the resolution specified in the render target descriptor, or by the video mode of the render context.
-        \see RenderContext::GetVideoMode
+        \see RenderContext::ResizeBuffers
         \see RenderTargetDescriptor::resolution
         \see SwapChainDescriptor::resolution
         */

@@ -47,21 +47,16 @@ struct WindowDescriptor
     // Alternative 1
     class MyEventListener : public LLGL::Window::EventListener {
         void OnResize(Window& sender, const Extent2D& clientAreaSize) override {
-            auto myVideoMode = myRenderContext->GetVideoMode();
-            myVideoMode.resolution = clientAreaSize;
-            myRenderContext->SetVideoMode(myVideoMode);
+            myRenderContext->ResizeBuffers(clientAreaSize);
         }
     };
     myWindow->AddEventListener(std::make_shared<MyEventListener>());
 
     // Alternative 2
-    auto myVideoMode = myRenderContext->GetVideoMode();
-    myVideoMode.resolution = myWindow->GetContentSize();
-    myRenderContext->SetVideoMode(myVideoMode);
-    myCmdBuffer->SetRenderTarget(*myRenderContext);
+    myRenderContext->ResizeBuffers(myWindow->GetContentSize());
+    myCmdBuffer->BeginRenderPass(*myRenderContext);
     \endcode
     \note Not updating the render context on a resized window is undefined behavior.
-    \see RenderContext::SetVideoMode
     \see Surface::GetContentSize
     \see Window::EventListener::OnResize
     */

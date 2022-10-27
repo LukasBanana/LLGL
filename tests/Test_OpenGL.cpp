@@ -391,10 +391,6 @@ int main()
                     {
                         windowDesc.borderless = !windowDesc.borderless;
 
-                        /*auto videoMode = swapChainDesc.videoMode;
-                        videoMode.fullscreen = windowDesc.borderless;
-                        LLGL::Desktop::SetVideoMode(videoMode);*/
-
                         windowDesc.centered = true;//!windowDesc.borderless;
                         windowDesc.position = { 0, 0 };
                         windowDesc.resizable = true;

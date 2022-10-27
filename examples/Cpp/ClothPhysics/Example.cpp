@@ -680,7 +680,7 @@ private:
             {
                 // Clear color buffer and set viewport
                 commands->Clear(LLGL::ClearFlags::ColorDepth);
-                commands->SetViewport(context->GetVideoMode().resolution);
+                commands->SetViewport(context->GetResolution());
 
                 // Set vertex and index buffers
                 #ifdef ENABLE_STORAGE_TEXTURES

@@ -51,7 +51,7 @@ class LLGL_EXPORT RenderContext : public RenderTarget
 
         /**
         \brief Returns the resolution of the current video mode.
-        \see GetVideoMode
+        \see ResizeBuffers
         */
         Extent2D GetResolution() const final;
 
@@ -81,7 +81,6 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         \brief Returns the color format of this render context.
         \remarks This may depend on the settings specified for the video mode.
         A common value for a render context color format is Format::BGRA8UNorm.
-        \see SetVideoMode
         \see AttachmentFormatDescriptor::format
         \see Format
         */
@@ -90,7 +89,6 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         /**
         \brief Returns the depth-stencil format of this render context.
         \remarks This may depend on the settings specified for the video mode.
-        \see SetVideoMode
         \see AttachmentFormatDescriptor::format
         \see Format
         */
@@ -158,7 +156,6 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         \param[in] windowContext Optional pointer to a NativeContextHandle structure. This is only used for desktop platforms.
         \see WindowDescriptor::windowContext
         \see Surface::GetContentSize
-        \see GetVideoMode
         \see SwitchFullscreenMode
         */
         void SetOrCreateSurface(const std::shared_ptr<Surface>& surface, const Extent2D& size, bool fullscreen, const void* windowContext);
