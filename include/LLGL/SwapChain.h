@@ -1,16 +1,16 @@
 /*
- * RenderContext.h
+ * SwapChain.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_RENDER_CONTEXT_H
-#define LLGL_RENDER_CONTEXT_H
+#ifndef LLGL_SWAP_CHAIN_H
+#define LLGL_SWAP_CHAIN_H
 
 
 #include "RenderTarget.h"
-#include "RenderContextFlags.h"
+#include "SwapChainFlags.h"
 #include "RenderSystemFlags.h"
 #include "Surface.h"
 

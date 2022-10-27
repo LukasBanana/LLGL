@@ -1,11 +1,11 @@
 /*
- * VKRenderContext.cpp
+ * VKSwapChain.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "VKRenderContext.h"
+#include "VKSwapChain.h"
 #include "VKCore.h"
 #include "VKTypes.h"
 #include "Memory/VKDeviceMemoryManager.h"

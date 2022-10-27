@@ -10,7 +10,7 @@
 
 
 #include "Export.h"
-#include "RenderContextFlags.h"
+#include "SwapChainFlags.h"
 #include "PipelineStateFlags.h"
 #include <cstdint>
 #include <string.h>

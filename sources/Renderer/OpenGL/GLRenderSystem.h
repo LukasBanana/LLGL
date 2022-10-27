@@ -15,7 +15,7 @@
 
 #include "Command/GLCommandQueue.h"
 #include "Command/GLCommandBuffer.h"
-#include "GLRenderContext.h"
+#include "GLSwapChain.h"
 
 #include "Buffer/GLBuffer.h"
 #include "Buffer/GLBufferArray.h"

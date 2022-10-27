@@ -13,7 +13,7 @@
 #include <LLGL/VideoAdapter.h>
 
 #include "D3D12Device.h"
-#include "D3D12RenderContext.h"
+#include "D3D12SwapChain.h"
 #include "Command/D3D12CommandQueue.h"
 #include "Command/D3D12CommandBuffer.h"
 #include "Command/D3D12CommandContext.h"

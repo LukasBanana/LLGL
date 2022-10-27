@@ -6,7 +6,7 @@
  */
 
 #include "D3D11CommandBuffer.h"
-#include "D3D11RenderContext.h"
+#include "D3D11SwapChain.h"
 #include "D3D11Types.h"
 #include "D3D11ResourceFlags.h"
 #include "../DXCommon/DXTypes.h"

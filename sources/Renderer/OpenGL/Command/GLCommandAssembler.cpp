@@ -13,7 +13,7 @@
 #include "GLDeferredCommandBuffer.h"
 #include "../../../JIT/JITCompiler.h"
 
-#include "../GLRenderContext.h"
+#include "../GLSwapChain.h"
 #include "../GLTypes.h"
 #include "../GLCore.h"
 #include "../Ext/GLExtensions.h"

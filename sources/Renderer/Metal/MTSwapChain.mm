@@ -1,11 +1,11 @@
 /*
- * MTRenderContext.mm
+ * MTSwapChain.mm
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "MTRenderContext.h"
+#include "MTSwapChain.h"
 #include "MTTypes.h"
 #include "../TextureUtils.h"
 #include <LLGL/Platform/NativeHandle.h>

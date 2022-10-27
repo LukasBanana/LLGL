@@ -11,7 +11,7 @@
 #include "../ResourceUtils.h"
 #include "../../Core/Helper.h"
 
-#include "DbgRenderContext.h"
+#include "DbgSwapChain.h"
 #include "DbgBuffer.h"
 #include "DbgBufferArray.h"
 #include "DbgTexture.h"

@@ -17,7 +17,7 @@
 
 #include "VKCommandQueue.h"
 #include "VKCommandBuffer.h"
-#include "VKRenderContext.h"
+#include "VKSwapChain.h"
 
 #include "Buffer/VKBuffer.h"
 #include "Buffer/VKBufferArray.h"

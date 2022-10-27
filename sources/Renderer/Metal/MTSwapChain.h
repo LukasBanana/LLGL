@@ -1,18 +1,18 @@
 /*
- * MTRenderContext.h
+ * MTSwapChain.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_MT_RENDER_CONTEXT_H
-#define LLGL_MT_RENDER_CONTEXT_H
+#ifndef LLGL_MT_SWAP_CHAIN_H
+#define LLGL_MT_SWAP_CHAIN_H
 
 
 #import <MetalKit/MetalKit.h>
 
 #include <LLGL/Window.h>
-#include <LLGL/RenderContext.h>
+#include <LLGL/SwapChain.h>
 #include <LLGL/Platform/Platform.h>
 #include "RenderState/MTRenderPass.h"
 

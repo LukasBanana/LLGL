@@ -1,11 +1,11 @@
 /*
- * D3D11RenderContext.cpp
+ * D3D11SwapChain.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D11RenderContext.h"
+#include "D3D11SwapChain.h"
 #include "D3D11RenderSystem.h"
 #include "D3D11ObjectUtils.h"
 #include "../DXCommon/DXTypes.h"

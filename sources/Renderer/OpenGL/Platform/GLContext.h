@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Surface.h>
-#include <LLGL/RenderContextFlags.h>
+#include <LLGL/SwapChainFlags.h>
 #include <LLGL/RendererConfiguration.h>
 #include <memory>
 #include "../RenderState/GLStateManager.h"

@@ -1,11 +1,11 @@
 /*
- * D3D12RenderContext.cpp
+ * D3D12SwapChain.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D12RenderContext.h"
+#include "D3D12SwapChain.h"
 #include "D3D12RenderSystem.h"
 #include "D3D12Types.h"
 #include "D3D12ObjectUtils.h"

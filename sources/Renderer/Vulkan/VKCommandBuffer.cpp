@@ -8,7 +8,7 @@
 #include "VKCommandBuffer.h"
 #include "VKCommandQueue.h"
 #include "VKPhysicalDevice.h"
-#include "VKRenderContext.h"
+#include "VKSwapChain.h"
 #include "VKTypes.h"
 #include "Ext/VKExtensionRegistry.h"
 #include "Ext/VKExtensions.h"

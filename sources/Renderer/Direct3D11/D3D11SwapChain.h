@@ -1,15 +1,15 @@
 /*
- * D3D11RenderContext.h
+ * D3D11SwapChain.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_D3D11_RENDER_CONTEXT_H
-#define LLGL_D3D11_RENDER_CONTEXT_H
+#ifndef LLGL_D3D11_SWAP_CHAIN_H
+#define LLGL_D3D11_SWAP_CHAIN_H
 
 
-#include <LLGL/RenderContext.h>
+#include <LLGL/SwapChain.h>
 #include "../DXCommon/ComPtr.h"
 #include <d3d11.h>
 #include <dxgi.h>

@@ -10,7 +10,7 @@
 #include <LLGL/StaticLimits.h>
 
 #include "../../TextureUtils.h"
-#include "../GLRenderContext.h"
+#include "../GLSwapChain.h"
 #include "../GLTypes.h"
 #include "../GLCore.h"
 #include "../Ext/GLExtensions.h"

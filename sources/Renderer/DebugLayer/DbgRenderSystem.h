@@ -10,7 +10,7 @@
 
 
 #include <LLGL/RenderSystem.h>
-#include "DbgRenderContext.h"
+#include "DbgSwapChain.h"
 #include "DbgCommandBuffer.h"
 #include "DbgCommandQueue.h"
 

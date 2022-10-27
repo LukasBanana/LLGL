@@ -1,11 +1,11 @@
 /*
- * RenderContext.cpp
+ * SwapChain.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/RenderContext.h>
+#include <LLGL/SwapChain.h>
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
 #include <LLGL/Display.h>

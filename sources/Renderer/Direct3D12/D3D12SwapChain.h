@@ -1,16 +1,16 @@
 /*
- * D3D12RenderContext.h
+ * D3D12SwapChain.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_D3D12_RENDER_CONTEXT_H
-#define LLGL_D3D12_RENDER_CONTEXT_H
+#ifndef LLGL_D3D12_SWAP_CHAIN_H
+#define LLGL_D3D12_SWAP_CHAIN_H
 
 
 #include <LLGL/Window.h>
-#include <LLGL/RenderContext.h>
+#include <LLGL/SwapChain.h>
 #include <cstddef>
 #include "D3D12Resource.h"
 #include "RenderState/D3D12Fence.h"

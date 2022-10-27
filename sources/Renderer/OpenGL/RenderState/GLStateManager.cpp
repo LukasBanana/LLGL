@@ -10,7 +10,7 @@
 #include "GLDepthStencilState.h"
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
-#include "../GLRenderContext.h"
+#include "../GLSwapChain.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"

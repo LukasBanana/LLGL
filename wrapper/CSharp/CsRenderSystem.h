@@ -11,8 +11,8 @@
 #include <vector>
 #include <LLGL/RenderSystem.h>
 #include "CsRenderSystemFlags.h"
-#include "CsRenderContext.h"
-#include "CsRenderContextFlags.h"
+#include "CsSwapChain.h"
+#include "CsSwapChainFlags.h"
 #include "CsBufferFlags.h"
 #include "CsTextureFlags.h"
 #include "CsImageFlags.h"

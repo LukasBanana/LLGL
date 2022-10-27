@@ -11,7 +11,7 @@
 #include <LLGL/StaticLimits.h>
 
 #include "../../TextureUtils.h"
-#include "../GLRenderContext.h"
+#include "../GLSwapChain.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionLoader.h"
 #include "../GLProfile.h"

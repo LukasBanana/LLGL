@@ -1,16 +1,16 @@
 /*
- * GLRenderContext.h
+ * GLSwapChain.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_GL_RENDER_CONTEXT_H
-#define LLGL_GL_RENDER_CONTEXT_H
+#ifndef LLGL_GL_SWAP_CHAIN_H
+#define LLGL_GL_SWAP_CHAIN_H
 
 
 #include <LLGL/Window.h>
-#include <LLGL/RenderContext.h>
+#include <LLGL/SwapChain.h>
 #include <LLGL/RendererConfiguration.h>
 #include "OpenGL.h"
 #include "RenderState/GLStateManager.h"

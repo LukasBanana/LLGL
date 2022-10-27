@@ -1,15 +1,15 @@
 /*
- * DbgRenderContext.h
+ * DbgSwapChain.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_DBG_RENDER_CONTEXT_H
-#define LLGL_DBG_RENDER_CONTEXT_H
+#ifndef LLGL_DBG_SWAP_CHAIN_H
+#define LLGL_DBG_SWAP_CHAIN_H
 
 
-#include <LLGL/RenderContext.h>
+#include <LLGL/SwapChain.h>
 
 
 namespace LLGL

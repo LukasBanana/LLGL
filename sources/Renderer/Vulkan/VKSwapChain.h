@@ -1,16 +1,16 @@
 /*
- * VKRenderContext.h
+ * VKSwapChain.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_VK_RENDER_CONTEXT_H
-#define LLGL_VK_RENDER_CONTEXT_H
+#ifndef LLGL_VK_SWAP_CHAIN_H
+#define LLGL_VK_SWAP_CHAIN_H
 
 
 #include <LLGL/Window.h>
-#include <LLGL/RenderContext.h>
+#include <LLGL/SwapChain.h>
 #include "VKCore.h"
 #include "VKPtr.h"
 #include "RenderState/VKRenderPass.h"

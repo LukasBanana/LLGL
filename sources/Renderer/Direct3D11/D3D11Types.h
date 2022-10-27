@@ -11,7 +11,7 @@
 
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/PipelineStateFlags.h>
-#include <LLGL/RenderContextFlags.h>
+#include <LLGL/SwapChainFlags.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/BufferFlags.h>

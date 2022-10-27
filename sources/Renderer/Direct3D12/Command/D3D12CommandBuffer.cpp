@@ -8,7 +8,7 @@
 #include "D3D12CommandBuffer.h"
 #include "D3D12SignatureFactory.h"
 #include "../D3D12ObjectUtils.h"
-#include "../D3D12RenderContext.h"
+#include "../D3D12SwapChain.h"
 #include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
 #include "../../TextureUtils.h"

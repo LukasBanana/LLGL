@@ -1,5 +1,5 @@
 /*
- * CsRenderContext.h
+ * CsSwapChain.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -8,9 +8,9 @@
 #pragma once
 
 #include <vcclr.h>
-#include <LLGL/RenderContext.h>
+#include <LLGL/SwapChain.h>
 #include "CsRenderTarget.h"
-#include "CsRenderContextFlags.h"
+#include "CsSwapChainFlags.h"
 #include "CsWindow.h"
 
 #using <System.dll>
