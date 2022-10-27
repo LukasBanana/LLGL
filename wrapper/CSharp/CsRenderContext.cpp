@@ -33,47 +33,28 @@ Window^ RenderContext::Surface::get()
     return surface_;
 }
 
+bool RenderContext::ResizeBuffers(Extent2D^ Resolution, ResizeBuffersFlags Flags)
+{
+    return static_cast<LLGL::RenderContext*>(Native)->ResizeBuffers({ Resolution->Width, Resolution->Height }, static_cast<long>(Flags));
+}
+
+bool RenderContext::SwitchFullscreen(bool Enable)
+{
+    return static_cast<LLGL::RenderContext*>(Native)->SwitchFullscreen(Enable);
+}
+
 /* ----- Configuration ----- */
 
-static void Convert(VideoModeDescriptor^ dst, const LLGL::VideoModeDescriptor& src)
+static void Convert(SwapChainDescriptor^ dst, const LLGL::SwapChainDescriptor& src)
 {
     dst->Resolution->Width  = src.resolution.width;
     dst->Resolution->Height = src.resolution.height;
+    dst->Samples            = src.samples;
     dst->ColorBits          = src.colorBits;
     dst->DepthBits          = src.depthBits;
     dst->StencilBits        = src.stencilBits;
+    dst->SwapBuffers        = src.swapBuffers;
     dst->Fullscreen         = src.fullscreen;
-    dst->SwapChainSize      = src.swapChainSize;
-}
-
-VideoModeDescriptor^ RenderContext::VideoMode::get()
-{
-    auto managedDesc = gcnew VideoModeDescriptor();
-    Convert(managedDesc, static_cast<LLGL::RenderContext*>(Native)->GetVideoMode());
-    return managedDesc;
-}
-
-static void Convert(LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
-{
-    dst.resolution.width    = src->Resolution->Width;
-    dst.resolution.height   = src->Resolution->Height;
-    dst.colorBits           = src->ColorBits;
-    dst.depthBits           = src->DepthBits;
-    dst.stencilBits         = src->StencilBits;
-    dst.fullscreen          = src->Fullscreen;
-    dst.swapChainSize       = src->SwapChainSize;
-}
-
-void RenderContext::VideoMode::set(VideoModeDescriptor^ value)
-{
-    LLGL::VideoModeDescriptor nativeDesc;
-    Convert(nativeDesc, value);
-    static_cast<LLGL::RenderContext*>(Native)->SetVideoMode(nativeDesc);
-}
-
-unsigned int RenderContext::VsyncInterval::get()
-{
-    return static_cast<LLGL::RenderContext*>(Native)->GetVsyncInterval();
 }
 
 void RenderContext::VsyncInterval::set(unsigned int value)

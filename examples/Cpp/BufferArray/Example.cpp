@@ -126,10 +126,10 @@ private:
             commands->BeginRenderPass(*context);
             {
                 // Clear color buffer
-                commands->Clear(LLGL::ClearFlags::Color);
+                commands->Clear(LLGL::ClearFlags::Color, backgroundColor);
 
                 // Set viewports
-                commands->SetViewport(context->GetVideoMode().resolution);
+                commands->SetViewport(context->GetResolution());
 
                 // Set graphics pipeline state
                 commands->SetPipelineState(*pipeline);

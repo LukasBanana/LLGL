@@ -304,7 +304,7 @@ private:
             {
                 // Clear color buffer and set viewport
                 commands->Clear(LLGL::ClearFlags::Color, backgroundColor);
-                commands->SetViewport(context->GetVideoMode().resolution);
+                commands->SetViewport(context->GetResolution());
 
                 // Set vertex buffer
                 commands->SetVertexBufferArray(*vertexBufferArray);

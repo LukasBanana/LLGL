@@ -21,21 +21,19 @@ namespace LLGL
 D3D11RenderContext::D3D11RenderContext(
     IDXGIFactory*                   factory,
     const ComPtr<ID3D11Device>&     device,
-    const RenderContextDescriptor&  desc,
+    const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext { desc   },
-    device_       { device }
+    RenderContext       { desc                                                       },
+    device_             { device                                                     },
+    depthStencilFormat_ { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits) }
 {
     /* Setup surface for the render context */
-    SetOrCreateSurface(surface, desc.videoMode, nullptr);
+    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     /* Create D3D objects */
-    CreateSwapChain(factory, desc.samples);
-    CreateBackBuffer(GetVideoMode());
-
-    /* Initialize v-sync interval */
-    SetPresentSyncInterval(desc.vsyncInterval);
+    CreateSwapChain(factory, desc.resolution, desc.samples, desc.swapBuffers);
+    CreateBackBuffer();
 }
 
 void D3D11RenderContext::SetName(const char* name)
@@ -89,6 +87,11 @@ const RenderPass* D3D11RenderContext::GetRenderPass() const
     return nullptr; // dummy
 }
 
+bool D3D11RenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+{
+    return SetPresentSyncInterval(vsyncInterval);
+}
+
 void D3D11RenderContext::BindFramebufferView(D3D11CommandBuffer* commandBuffer)
 {
     /* Bind framebuffer of this swap-chain in command buffer */
@@ -104,34 +107,10 @@ void D3D11RenderContext::BindFramebufferView(D3D11CommandBuffer* commandBuffer)
  * ======= Private: =======
  */
 
-//TODO: depth-stencil and color format does not change, only resizing is considered!
-bool D3D11RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
+bool D3D11RenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
 {
-    const auto& prevVideoMode = GetVideoMode();
-
-    /* Resize back buffer */
-    if (prevVideoMode.resolution != videoModeDesc.resolution)
-        ResizeBackBuffer(videoModeDesc);
-
-    /* Switch fullscreen mode */
-    #if 0
-    if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
-    {
-        auto hr = swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
-        return SUCCEEDED(hr);
-    }
-    #else
-    /* Switch fullscreen mode */
-    if (!SetDisplayFullscreenMode(videoModeDesc))
-        return false;
-    #endif
-
+    ResizeBackBuffer(resolution);
     return true;
-}
-
-bool D3D11RenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
-{
-    return SetPresentSyncInterval(vsyncInterval);
 }
 
 bool D3D11RenderContext::SetPresentSyncInterval(UINT syncInterval)
@@ -153,10 +132,9 @@ static UINT GetPrimaryDisplayRefreshRate()
         return 60; // Assume most common refresh rate
 }
 
-void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, UINT samples)
+void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers)
 {
     /* Get current settings */
-    const auto& videoMode = GetVideoMode();
     const DXGI_RATIONAL refreshRate{ GetPrimaryDisplayRefreshRate(), 1 };
 
     /* Pick and store color format */
@@ -172,13 +150,13 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, UINT samples)
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     InitMemory(swapChainDesc);
     {
-        swapChainDesc.BufferDesc.Width          = videoMode.resolution.width;
-        swapChainDesc.BufferDesc.Height         = videoMode.resolution.height;
+        swapChainDesc.BufferDesc.Width          = resolution.width;
+        swapChainDesc.BufferDesc.Height         = resolution.height;
         swapChainDesc.BufferDesc.Format         = colorFormat_;
         swapChainDesc.BufferDesc.RefreshRate    = refreshRate;
         swapChainDesc.SampleDesc                = swapChainSampleDesc_;
         swapChainDesc.BufferUsage               = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount               = (videoMode.swapChainSize == 3 ? 2 : 1);
+        swapChainDesc.BufferCount               = (swapBuffers >= 3 ? 2 : 1);
         swapChainDesc.OutputWindow              = wndHandle.window;
         swapChainDesc.Windowed                  = TRUE;//(videoMode.fullscreen ? FALSE : TRUE);
         swapChainDesc.SwapEffect                = DXGI_SWAP_EFFECT_DISCARD;
@@ -187,7 +165,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, UINT samples)
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 }
 
-void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDesc)
+void D3D11RenderContext::CreateBackBuffer()
 {
     HRESULT hr = 0;
 
@@ -199,16 +177,17 @@ void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDe
     hr = device_->CreateRenderTargetView(colorBuffer_.Get(), nullptr, renderTargetView_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV) for back buffer");
 
-    /* Pick and store depth-stencil format */
-    depthStencilFormat_ = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
+    /* Retrieve back-buffer dimension */
+    D3D11_TEXTURE2D_DESC colorBufferDesc;
+    colorBuffer_->GetDesc(&colorBufferDesc);
 
     if (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN)
     {
         /* Create depth stencil texture */
         D3D11_TEXTURE2D_DESC texDesc;
         {
-            texDesc.Width           = videoModeDesc.resolution.width;
-            texDesc.Height          = videoModeDesc.resolution.height;
+            texDesc.Width           = colorBufferDesc.Width;
+            texDesc.Height          = colorBufferDesc.Height;
             texDesc.MipLevels       = 1;
             texDesc.ArraySize       = 1;
             texDesc.Format          = depthStencilFormat_;
@@ -227,7 +206,7 @@ void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDe
     }
 }
 
-void D3D11RenderContext::ResizeBackBuffer(const VideoModeDescriptor& videoModeDesc)
+void D3D11RenderContext::ResizeBackBuffer(const Extent2D& resolution)
 {
     /* Unset render targets for last used command buffer context */
     if (bindingCommandBuffer_ != nullptr)
@@ -244,11 +223,11 @@ void D3D11RenderContext::ResizeBackBuffer(const VideoModeDescriptor& videoModeDe
         bindingCommandBuffer_->ResetDeferredCommandList();
 
     /* Resize swap-chain buffers, let DXGI find out the client area, and preserve buffer count and format */
-    auto hr = swapChain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+    auto hr = swapChain_->ResizeBuffers(0, resolution.width, resolution.height, DXGI_FORMAT_UNKNOWN, 0);
     DXThrowIfFailed(hr, "failed to resize DXGI swap-chain buffers");
 
     /* Recreate back buffer and reset default render target */
-    CreateBackBuffer(videoModeDesc);
+    CreateBackBuffer();
 }
 
 

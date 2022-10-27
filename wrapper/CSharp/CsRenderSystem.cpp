@@ -253,21 +253,7 @@ const RenderSystemConfiguration& GetConfiguration()
 
 #endif
 
-/* ----- Render Context ----- */
-
-static void Convert(LLGL::VideoModeDescriptor& dst, VideoModeDescriptor^ src)
-{
-    if (src)
-    {
-        dst.resolution.width    = src->Resolution->Width;
-        dst.resolution.height   = src->Resolution->Height;
-        dst.colorBits           = src->ColorBits;
-        dst.depthBits           = src->DepthBits;
-        dst.stencilBits         = src->StencilBits;
-        dst.fullscreen          = src->Fullscreen;
-        dst.swapChainSize       = src->SwapChainSize;
-    }
-}
+/* ----- Swap-chain ----- */
 
 static void Convert(LLGL::RendererConfigurationOpenGL& dst, RendererConfigurationOpenGL^ src)
 {
@@ -279,24 +265,27 @@ static void Convert(LLGL::RendererConfigurationOpenGL& dst, RendererConfiguratio
     }
 }
 
-static void Convert(LLGL::RenderContextDescriptor& dst, RenderContextDescriptor^ src)
+static void Convert(LLGL::SwapChainDescriptor& dst, SwapChainDescriptor^ src)
 {
     if (src)
     {
-        Convert(dst.videoMode, src->VideoMode);
-        dst.samples         = src->Samples;
-        dst.vsyncInterval   = src->VsyncInterval;
+        dst.resolution.width    = src->Resolution->Width;
+        dst.resolution.height   = src->Resolution->Height;
+        dst.samples             = src->Samples;
+        dst.colorBits           = src->ColorBits;
+        dst.depthBits           = src->DepthBits;
+        dst.stencilBits         = src->StencilBits;
+        dst.swapBuffers         = src->SwapBuffers;
+        dst.fullscreen          = src->Fullscreen;
     }
 }
 
-RenderContext^ RenderSystem::CreateRenderContext(RenderContextDescriptor^ desc)
+RenderContext^ RenderSystem::CreateSwapChain(SwapChainDescriptor^ desc)
 {
-    LLGL::RenderContextDescriptor nativeDesc;
+    LLGL::SwapChainDescriptor nativeDesc;
     Convert(nativeDesc, desc);
-    return gcnew RenderContext(native_->CreateRenderContext(nativeDesc));
+    return gcnew RenderContext(native_->CreateSwapChain(nativeDesc));
 }
-
-//RenderContext^ RenderSystem::CreateRenderContext(RenderContextDescriptor^ desc, Surface^ surface);
 
 void RenderSystem::Release(RenderContext^ renderContext)
 {

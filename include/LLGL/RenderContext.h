@@ -97,6 +97,37 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         virtual Format GetDepthStencilFormat() const = 0;
 
         /**
+        \brief Resizes all swap buffers of this swap-chain.
+        \param[in] resolution Specifies the new resolution.
+        \param[in] flags Optional flags to specify whether the swap-chain's surface is to be adjusted as well and to toggle fullscreen mode.
+        \see GetResolution
+        \see ResizeBuffersFlags
+        */
+        bool ResizeBuffers(const Extent2D& resolution, long flags = 0);
+
+        /**
+        \brief Sets the new vertical sychronization (V-sync) interval for this swap chain.
+        \param[in] vsyncInterval Specifies the new V-sync interface.
+        \return True on success, otherwise the V-sync value is invalid for this swap chain.
+        \remarks This is typically 0 to disable V-sync or 1 to enable V-sync, but higher values are possible, too.
+        A value of 2 for instance effectively halves the frame refresh rate that the active display is capable of,
+        e.g. a display with a refresh rate of 60 Hz and a V-sync value of 2 limits the frame rate to 30 Hz.
+        */
+        virtual bool SetVsyncInterval(std::uint32_t vsyncInterval) = 0;
+
+        /* ----- Surface & Display ----- */
+
+        /**
+        \brief Puts the display, the swap-chain's surface is resident in, into fullscreen mode or puts it back into normal mode.
+        \param[in] enable If true, puts the display into fullscreen mode (Display::SetDisplayMode). Otherwise, puts the display back into normal mode (Display::ResetDisplayMode).
+        \return True on success, otherwise the display does not support the resolution of this swap-chain.
+        \remarks When switchting back from fullscreen into normal mode, this function restores the previous position of the swap-chain's surface.
+        \see Display::SetDisplayMode
+        \see Display::ResetDisplayMode
+        */
+        bool SwitchFullscreen(bool enable);
+
+        /**
         \brief Returns the surface which is used to present the content on the screen.
         \remarks On desktop platforms, this can be statically casted to 'LLGL::Window&',
         and on mobile platforms, this can be statically casted to 'LLGL::Canvas&':
@@ -109,78 +140,28 @@ class LLGL_EXPORT RenderContext : public RenderTarget
             return *surface_;
         }
 
-        /* ----- Configuration ----- */
-
-        /**
-        \brief Sets the new video mode for this render context.
-        \param[in] videoModeDesc Specifies the descriptor of the new video mode.
-        \return True on success, otherwise the specified video mode was invalid (e.g. if the resolution contains a zero).
-        \remarks When the video mode is changed from fullscreen to non-fullscreen, the previous surface position is restored.
-        */
-        bool SetVideoMode(const VideoModeDescriptor& videoModeDesc);
-
-        //! Returns the video mode for this render context.
-        inline const VideoModeDescriptor& GetVideoMode() const
-        {
-            return videoModeDesc_;
-        }
-
-        /**
-        \brief Sets the new vertical sychronization (V-sync) interval for this swap chain.
-        \param[in] vsyncInterval Specifies the new V-sync interface.
-        \return True on success, otherwise the V-sync value is invalid for this swap chain.
-        */
-        bool SetVsyncInterval(std::uint32_t vsyncInterval);
-
-        //! Returns the V-snyc configuration for this render context.
-        inline std::uint32_t GetVsyncInterval() const
-        {
-            return vsyncInterval_;
-        }
-
     protected:
 
         //! Default constructor with no effect.
         RenderContext() = default;
 
         //! Constructor to initialize the render context with the specified video mode and V-sync.
-        RenderContext(const RenderContextDescriptor& desc);
-
-        /**
-        \brief Callback when the video mode is about to get changed.
-        \param[in] videoModeDesc Specifies the descriptor of the new video mode.
-        \return True on success, otherwise the previous video mode remains.
-        \remarks Only if the function returns true, the new video mode will be stored in the member returned by 'GetVideoMode'.
-        This callback is only called when the parameter of 'SetVideoMode' differs from the previous video mode.
-        \note This video mode may differ from the one passed by 'SetVideoMode' if the platform specific 'Surface' object has modified it for its requirements.
-        \see SetVideoMode
-        \see GetVideoMode
-        \see Surface::AdaptForVideoMode
-        */
-        virtual bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) = 0;
-
-        /**
-        \brief Callback when the V-sync is about to get changed.
-        \param[in] vsyncDesc Specifies the descriptor of the new V-sync configuration.
-        \return True on success, otherwise the previous V-sync configuration remains.
-        */
-        virtual bool OnSetVsyncInterval(std::uint32_t vsyncInterval) = 0;
+        RenderContext(const SwapChainDescriptor& desc);
 
         /**
         \brief Sets the render context surface or creates one if 'surface' is null, and switches to fullscreen mode if enabled.
         \param[in] surface Optional shared pointer to a surface which will be used as main render target.
         If this is null, a new surface is created for this render context.
-        \param[in] videoModeDesc Specifies the video mode descriptor.
-        The resolution of this video mode is only used if 'surface' is null,
-        otherwise the resolution is determined by the content size of the specified surface (i.e. with the Surface::GetContentSize function).
-        To determine the final video mode, use the GetVideoMode function.
+        \param[in] size Specifies the surface content size. This is only used if \c surface is null.
+        Otherwise, the size is determined by the content size of the specified surface (i.e. with the Surface::GetContentSize function).
+        \param[in] fullscreen Specifies whether to put the surface into fullscreen mode.
         \param[in] windowContext Optional pointer to a NativeContextHandle structure. This is only used for desktop platforms.
         \see WindowDescriptor::windowContext
         \see Surface::GetContentSize
         \see GetVideoMode
         \see SwitchFullscreenMode
         */
-        void SetOrCreateSurface(const std::shared_ptr<Surface>& surface, VideoModeDescriptor videoModeDesc, const void* windowContext);
+        void SetOrCreateSurface(const std::shared_ptr<Surface>& surface, const Extent2D& size, bool fullscreen, const void* windowContext);
 
         /**
         \brief Shares the surface and video mode with another render context.
@@ -189,25 +170,26 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         void ShareSurfaceAndConfig(RenderContext& other);
 
         /**
-        \brief Sets the display mode for the display this surface is resident in by the parameters of the video mode descriptor.
-        \return Return value of the Display::SetDisplayMode function.
-        \see Display::SetDisplayMode
-        \see Surface::FindResidentDisplay
+        \brief Puts the display the swap-chain's surface is resident in into fullscreen mode.
+        \see ResetDisplayFullscreenMode
         */
-        bool SetDisplayMode(const VideoModeDescriptor& videoModeDesc);
+        bool SetDisplayFullscreenMode(const Extent2D& resolution);
 
         /**
-        \brief Sets only the fullscreen mode  and only if the specified fullscreen mode is different to the current fullscreen setting.
-        \see SetDisplayMode
-        \see GetVideoMode
+        \brief Puts the display the swap-chain's surface is resident in back into normal mode.
+        \see SetDisplayFullscreenMode
         */
-        bool SetDisplayFullscreenMode(const VideoModeDescriptor& videoModeDesc);
+        bool ResetDisplayFullscreenMode();
+
+        /**
+        \breif Primary function to resize all swap buffers.
+        \see ResizeBuffers
+        */
+        virtual bool ResizeBuffersPrimary(const Extent2D& resolution) = 0;
 
     private:
 
         bool OnIsRenderContext() const override final;
-
-        bool SetVideoModePrimary(const VideoModeDescriptor& videoModeDesc);
 
         void StoreSurfacePosition();
         void RestoreSurfacePosition();
@@ -216,10 +198,10 @@ class LLGL_EXPORT RenderContext : public RenderTarget
 
         std::shared_ptr<Surface>    surface_;
 
-        VideoModeDescriptor         videoModeDesc_;
-        std::uint32_t               vsyncInterval_      = 0;
+        Extent2D                    resolution_;
 
-        std::unique_ptr<Offset2D>   cachedSurfacePos_;
+        Offset2D                    normalModeSurfacePos_;
+        bool                        normalModeSurfacePosStored_ = false;
 
 };
 

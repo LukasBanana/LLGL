@@ -176,7 +176,7 @@ class LLGL_EXPORT Window : public Surface
         \see GetDesc
         \see SetDesc
         */
-        bool AdaptForVideoMode(VideoModeDescriptor& videoModeDesc) override;
+        bool AdaptForVideoMode(Extent2D* resolution, bool* fullscreen) override;
 
         /**
         \brief Processes the events for this window (i.e. mouse movement, key presses etc.).

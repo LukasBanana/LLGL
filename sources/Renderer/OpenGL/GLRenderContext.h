@@ -36,7 +36,7 @@ class GLRenderContext final : public RenderContext
         /* ----- Common ----- */
 
         GLRenderContext(
-            RenderContextDescriptor             desc,
+            const SwapChainDescriptor&          desc,
             const RendererConfigurationOpenGL&  config,
             const std::shared_ptr<Surface>&     surface,
             GLRenderContext*                    sharedRenderContext
@@ -50,6 +50,8 @@ class GLRenderContext final : public RenderContext
         Format GetDepthStencilFormat() const override;
 
         const RenderPass* GetRenderPass() const override;
+
+        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
 
     public:
 
@@ -73,19 +75,14 @@ class GLRenderContext final : public RenderContext
 
     private:
 
-        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        bool OnSetVsyncInterval(std::uint32_t vsyncInterval) override;
+        bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         bool SetSwapInterval(int swapInterval);
 
         void InitRenderStates();
 
         #ifdef __linux__
-        void GetNativeContextHandle(
-            NativeContextHandle&        windowContext,
-            const VideoModeDescriptor&  videoModeDesc,
-            std::uint32_t&              samples
-        );
+        void ChooseGLXVisualAndGetX11WindowContext(const SwapChainDescriptor& desc, NativeContextHandle& windowContext);
         #endif
 
     private:

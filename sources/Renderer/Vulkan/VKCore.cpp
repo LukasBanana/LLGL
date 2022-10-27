@@ -298,10 +298,12 @@ QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFla
     return indices;
 }
 
-VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const std::initializer_list<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const VkFormat* candidates, std::size_t numCandidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
-    for (auto format : candidates)
+    for (std::size_t i = 0; i < numCandidates; ++i)
     {
+        auto format = candidates[i];
+
         /* Query physics device properties of current image format */
         VkFormatProperties properties;
         vkGetPhysicalDeviceFormatProperties(device, format, &properties);

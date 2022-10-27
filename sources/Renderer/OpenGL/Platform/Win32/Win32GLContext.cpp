@@ -25,7 +25,7 @@ namespace LLGL
  */
 
 std::unique_ptr<GLContext> GLContext::Create(
-    const RenderContextDescriptor&      desc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     Surface&                            surface,
     GLContext*                          sharedContext)
@@ -40,32 +40,31 @@ std::unique_ptr<GLContext> GLContext::Create(
  */
 
 Win32GLContext::Win32GLContext(
-    const RenderContextDescriptor&      desc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     Surface&                            surface,
     Win32GLContext*                     sharedContext)
 :
     GLContext { sharedContext                                     },
-    samples_  { static_cast<int>(GetClampedSamples(desc.samples)) },
-    surface_  { surface                                           }
+    samples_  { static_cast<int>(GetClampedSamples(desc.samples)) }
 {
     /* Initialize context parameters */
     WGLContextParams contextParams;
     {
         contextParams.profile       = config;
-        contextParams.colorBits     = desc.videoMode.colorBits;
-        contextParams.depthBits     = desc.videoMode.depthBits;
-        contextParams.stencilBits   = desc.videoMode.stencilBits;
+        contextParams.colorBits     = desc.colorBits;
+        contextParams.depthBits     = desc.depthBits;
+        contextParams.stencilBits   = desc.stencilBits;
     }
 
     /* Create WGL context */
     if (sharedContext)
     {
         auto sharedContextWGL = LLGL_CAST(Win32GLContext*, sharedContext);
-        CreateContext(contextParams, sharedContextWGL);
+        CreateContext(contextParams, surface, sharedContextWGL);
     }
     else
-        CreateContext(contextParams);
+        CreateContext(contextParams, surface);
 }
 
 Win32GLContext::~Win32GLContext()
@@ -120,7 +119,7 @@ TODO:
 - When anti-aliasing and extended-profile-selection is enabled,
   maximal 2 contexts should be created (and not 3).
 */
-void Win32GLContext::CreateContext(const WGLContextParams& params, Win32GLContext* sharedContext)
+void Win32GLContext::CreateContext(const WGLContextParams& params, Surface& surface, Win32GLContext* sharedContext)
 {
     const bool hasMultiSampling = (samples_ > 1);
 
@@ -129,7 +128,7 @@ void Win32GLContext::CreateContext(const WGLContextParams& params, Win32GLContex
         CopyPixelFormat(*sharedContext);
 
     /* First setup device context and choose pixel format */
-    SetupDeviceContextAndPixelFormat(params);
+    SetupDeviceContextAndPixelFormat(params, surface);
 
     /* Create standard render context first */
     auto stdRenderContext = CreateGLContext(params, false, sharedContext);
@@ -151,7 +150,7 @@ void Win32GLContext::CreateContext(const WGLContextParams& params, Win32GLContex
             because a pixel format can be choosen only once for a Win32 window,
             then update device context and pixel format
             */
-            RecreateWindow(params);
+            RecreateWindow(params, surface);
 
             /* Create a new render context -> now with anti-aliasing pixel format */
             stdRenderContext = CreateGLContext(params, false, sharedContext);
@@ -348,11 +347,11 @@ HGLRC Win32GLContext::CreateExtContextProfile(const WGLContextParams& params, HG
     return nullptr;
 }
 
-void Win32GLContext::SetupDeviceContextAndPixelFormat(const WGLContextParams& params)
+void Win32GLContext::SetupDeviceContextAndPixelFormat(const WGLContextParams& params, Surface& surface)
 {
     /* Get native window handle */
     NativeHandle nativeHandle = {};
-    surface_.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
+    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
     if (!nativeHandle.window)
         throw std::runtime_error("invalid native Win32 window handle");
@@ -425,6 +424,24 @@ void Win32GLContext::SelectPixelFormat(const WGLContextParams& params)
                 ErrAntiAliasingNotSupported();
 
             wasStandardFormatUsed = true;
+
+            /* Deduce color and depth-stencil formats by pixel format descriptor */
+            PIXELFORMATDESCRIPTOR selectedFormatDesc;
+            DescribePixelFormat(hDC_, pixelFormat_, sizeof(selectedFormatDesc), &selectedFormatDesc);
+            DeduceColorFormat(
+                selectedFormatDesc.cRedBits,
+                selectedFormatDesc.cRedShift,
+                selectedFormatDesc.cGreenBits,
+                selectedFormatDesc.cGreenShift,
+                selectedFormatDesc.cBlueBits,
+                selectedFormatDesc.cBlueShift,
+                selectedFormatDesc.cAlphaBits,
+                selectedFormatDesc.cAlphaShift
+            );
+            DeduceDepthStencilFormat(
+                selectedFormatDesc.cDepthBits,
+                selectedFormatDesc.cStencilBits
+            );
         }
 
         /* Check for errors */
@@ -514,11 +531,11 @@ void Win32GLContext::CopyPixelFormat(Win32GLContext& sourceContext)
     ::memcpy(pixelFormatsMS_, sourceContext.pixelFormatsMS_, sizeof(pixelFormatsMS_));
 }
 
-void Win32GLContext::RecreateWindow(const WGLContextParams& params)
+void Win32GLContext::RecreateWindow(const WGLContextParams& params, Surface& surface)
 {
     /* Recreate window with current descriptor, then update device context and pixel format */
-    surface_.ResetPixelFormat();
-    SetupDeviceContextAndPixelFormat(params);
+    surface.ResetPixelFormat();
+    SetupDeviceContextAndPixelFormat(params, surface);
 }
 
 

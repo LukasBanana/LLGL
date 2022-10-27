@@ -19,7 +19,7 @@ namespace LLGL
 
 
 std::unique_ptr<GLContext> GLContext::Create(
-    const RenderContextDescriptor&      desc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     Surface&                            surface,
     GLContext*                          sharedContext)
@@ -29,7 +29,7 @@ std::unique_ptr<GLContext> GLContext::Create(
 }
 
 MacOSGLContext::MacOSGLContext(
-    const RenderContextDescriptor&      desc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     Surface&                            surface,
     MacOSGLContext*                     sharedContext)
@@ -123,7 +123,7 @@ static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const RendererConfi
     throw std::runtime_error("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)");
 }
 
-bool MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc, const RendererConfigurationOpenGL& config)
+bool MacOSGLContext::CreatePixelFormat(const SwapChainDescriptor& desc, const RendererConfigurationOpenGL& config)
 {
     /* Find suitable pixel format (for samples > 0) */
     for (samples_ = GetClampedSamples(desc.samples); samples_ > 0; --samples_)
@@ -133,8 +133,8 @@ bool MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc, cons
             NSOpenGLPFAAccelerated,
             NSOpenGLPFADoubleBuffer,
             NSOpenGLPFAOpenGLProfile,   TranslateNSOpenGLProfile(config),
-            NSOpenGLPFADepthSize,       static_cast<std::uint32_t>(desc.videoMode.depthBits),
-            NSOpenGLPFAStencilSize,     static_cast<std::uint32_t>(desc.videoMode.stencilBits),
+            NSOpenGLPFADepthSize,       static_cast<std::uint32_t>(desc.depthBits),
+            NSOpenGLPFAStencilSize,     static_cast<std::uint32_t>(desc.stencilBits),
             NSOpenGLPFAColorSize,       24,
             NSOpenGLPFAAlphaSize,       8,
             //NSOpenGLPFAMultisample,
@@ -146,7 +146,11 @@ bool MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc, cons
         /* Allocate NS-OpenGL pixel format */
         pixelFormat_ = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
         if (pixelFormat_)
+        {
+            SetDefaultColorFormat();
+            DeduceDepthStencilFormat(desc.depthBits, desc.stencilBits);
             return true;
+        }
     }
     return false;
 }

@@ -30,7 +30,7 @@ class MTRenderContext final : public RenderContext
 
         MTRenderContext(
             id<MTLDevice>                   device,
-            RenderContextDescriptor         desc,
+            const SwapChainDescriptor&      desc,
             const std::shared_ptr<Surface>& surface
         );
 
@@ -43,6 +43,8 @@ class MTRenderContext final : public RenderContext
 
         const RenderPass* GetRenderPass() const override;
 
+        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
+
     public:
 
         // Returns the native MTKView object.
@@ -53,10 +55,7 @@ class MTRenderContext final : public RenderContext
 
     private:
 
-        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        bool OnSetVsyncInterval(std::uint32_t vsyncInterval) override;
-
-        void SetSyncInterval(std::uint32_t vsyncInterval);
+        bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
     private:
 

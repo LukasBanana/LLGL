@@ -17,9 +17,8 @@ namespace LLGL
 {
 
 
-RenderContext::RenderContext(const RenderContextDescriptor& desc) :
-    videoModeDesc_ { desc.videoMode     },
-    vsyncInterval_ { desc.vsyncInterval }
+RenderContext::RenderContext(const SwapChainDescriptor& desc) :
+    resolution_ { desc.resolution }
 {
 }
 
@@ -27,7 +26,7 @@ RenderContext::RenderContext(const RenderContextDescriptor& desc) :
 
 Extent2D RenderContext::GetResolution() const
 {
-    return GetVideoMode().resolution;
+    return resolution_;
 }
 
 std::uint32_t RenderContext::GetNumColorAttachments() const
@@ -45,38 +44,75 @@ bool RenderContext::HasStencilAttachment() const
     return IsStencilFormat(GetDepthStencilFormat());
 }
 
-/* ----- Configuration ----- */
-
-static bool IsVideoModeValid(const VideoModeDescriptor& videoModeDesc)
+bool RenderContext::ResizeBuffers(const Extent2D& resolution, long flags)
 {
-    return (videoModeDesc.resolution.width > 0 && videoModeDesc.resolution.height > 0 && videoModeDesc.swapChainSize > 0);
-}
+    const bool toggleFullscreen = ((flags & (ResizeBuffersFlags::FullscreenMode | ResizeBuffersFlags::WindowedMode)) != 0);
+    const bool adaptSurface     = (toggleFullscreen || (flags & ResizeBuffersFlags::AdaptSurface) != 0);
 
-bool RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
-{
-    if (IsVideoModeValid(videoModeDesc))
+    if (adaptSurface)
     {
-        if (videoModeDesc_ != videoModeDesc)
-            return SetVideoModePrimary(videoModeDesc);
-        else
-            return true;
+        /* Reset fullscreen mode or store surface position for windowed mode */
+        bool fullscreen = ((flags & ResizeBuffersFlags::FullscreenMode) != 0);
+
+        if (toggleFullscreen)
+        {
+            if (fullscreen)
+                StoreSurfacePosition();
+            else
+                ResetDisplayFullscreenMode();
+        }
+
+        /* Adapt surface for new resolution */
+        auto size = resolution;
+        if (GetSurface().AdaptForVideoMode(&size, (toggleFullscreen ? &fullscreen : nullptr)))
+        {
+            if (ResizeBuffersPrimary(size))
+            {
+                resolution_ = size;
+                return true;
+            }
+        }
+
+        /* Switch to fullscreen or restore surface position for windowed mode */
+        if (toggleFullscreen)
+        {
+            if (fullscreen)
+                SetDisplayFullscreenMode(size);
+            else
+                RestoreSurfacePosition();
+        }
     }
+    else
+    {
+        /* Only resize swap buffers */
+        if (ResizeBuffersPrimary(resolution))
+        {
+            resolution_ = resolution;
+            return true;
+        }
+    }
+
     return false;
 }
 
-bool RenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+/* ----- Configuration ----- */
+
+bool RenderContext::SwitchFullscreen(bool enable)
 {
-    if (vsyncInterval_ != vsyncInterval)
+    bool result = false;
+    if (enable)
     {
-        /* Call primary V-sync function */
-        if (OnSetVsyncInterval(vsyncInterval))
-        {
-            vsyncInterval_ = vsyncInterval;
-            return true;
-        }
-        return false;
+        StoreSurfacePosition();
+        GetSurface().AdaptForVideoMode(nullptr, &enable);
+        result = SetDisplayFullscreenMode(GetResolution());
     }
-    return true;
+    else
+    {
+        result = ResetDisplayFullscreenMode();
+        GetSurface().AdaptForVideoMode(nullptr, &enable);
+        RestoreSurfacePosition();
+    }
+    return result;
 }
 
 
@@ -84,12 +120,15 @@ bool RenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
  * ======= Protected: =======
  */
 
-void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, VideoModeDescriptor videoModeDesc, const void* windowContext)
+void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, const Extent2D& size, bool fullscreen, const void* windowContext)
 {
+    /* Use specified surface size as resolution by default */
+    Extent2D resolution = size;
+
     if (surface)
     {
         /* Get and output resolution from specified window */
-        videoModeDesc.resolution = surface->GetContentSize();
+        resolution = surface->GetContentSize();
         surface_ = surface;
     }
     else
@@ -108,9 +147,9 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
         /* Create new window for this render context */
         WindowDescriptor windowDesc;
         {
-            windowDesc.size             = videoModeDesc.resolution;
-            windowDesc.borderless       = videoModeDesc.fullscreen;
-            windowDesc.centered         = !videoModeDesc.fullscreen;
+            windowDesc.size             = size;
+            windowDesc.borderless       = fullscreen;
+            windowDesc.centered         = !fullscreen;
             windowDesc.windowContext    = windowContext;
         }
         surface_ = Window::Create(windowDesc);
@@ -118,50 +157,43 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
         #endif
     }
 
-    /* Store video mode settings */
-    videoModeDesc_ = videoModeDesc;
-
     /* Switch to fullscreen mode before storing new video mode */
-    if (videoModeDesc_.fullscreen)
-        SetDisplayMode(videoModeDesc_);
+    if (fullscreen)
+        SetDisplayFullscreenMode(resolution);
 }
 
 void RenderContext::ShareSurfaceAndConfig(RenderContext& other)
 {
-    surface_        = other.surface_;
-    videoModeDesc_  = other.videoModeDesc_;
-    vsyncInterval_  = other.vsyncInterval_;
+    surface_    = other.surface_;
+    resolution_ = other.resolution_;
 }
 
-bool RenderContext::SetDisplayMode(const VideoModeDescriptor& videoModeDesc)
+bool RenderContext::SetDisplayFullscreenMode(const Extent2D& resolution)
 {
     if (surface_)
     {
         if (auto display = surface_->FindResidentDisplay())
         {
-            if (videoModeDesc.fullscreen)
-            {
-                /* Change display mode resolution to video mode setting */
-                auto displayModeDesc = display->GetDisplayMode();
-                displayModeDesc.resolution = videoModeDesc.resolution;
-                return display->SetDisplayMode(displayModeDesc);
-            }
-            else
-            {
-                /* Reset display mode to default */
-                return display->ResetDisplayMode();
-            }
+            /* Change display mode resolution to video mode setting */
+            auto displayModeDesc = display->GetDisplayMode();
+            displayModeDesc.resolution = resolution;
+            return display->SetDisplayMode(displayModeDesc);
         }
     }
     return false;
 }
 
-bool RenderContext::SetDisplayFullscreenMode(const VideoModeDescriptor& videoModeDesc)
+bool RenderContext::ResetDisplayFullscreenMode()
 {
-    if (GetVideoMode().fullscreen != videoModeDesc.fullscreen)
-        return SetDisplayMode(videoModeDesc);
-    else
-        return true;
+    if (surface_)
+    {
+        if (auto display = surface_->FindResidentDisplay())
+        {
+            /* Reset display mode to default */
+            return display->ResetDisplayMode();
+        }
+    }
+    return false;
 }
 
 
@@ -174,55 +206,26 @@ bool RenderContext::OnIsRenderContext() const
     return true;
 }
 
-bool RenderContext::SetVideoModePrimary(const VideoModeDescriptor& videoModeDesc)
-{
-    bool result = true;
-
-    auto& surface = GetSurface();
-
-    /* Store current surface position if the render context is in windowed mode */
-    if (!videoModeDesc_.fullscreen && videoModeDesc.fullscreen)
-        StoreSurfacePosition();
-
-    /* Adapt surface for the new video mode */
-    auto finalVideoMode = videoModeDesc;
-    surface.AdaptForVideoMode(finalVideoMode);
-
-    /* Call primary video mode function */
-    if (OnSetVideoMode(finalVideoMode))
-    {
-        /* Store video mode on success */
-        videoModeDesc_ = finalVideoMode;
-    }
-    else
-    {
-        /* Reset surface for previous video mode */
-        surface.AdaptForVideoMode(videoModeDesc_);
-        result = false;
-    }
-
-    if (!videoModeDesc_.fullscreen)
-        RestoreSurfacePosition();
-
-    return result;
-}
-
 void RenderContext::StoreSurfacePosition()
 {
     #ifndef LLGL_MOBILE_PLATFORM
-    auto& window = static_cast<Window&>(GetSurface());
-    cachedSurfacePos_ = MakeUnique<Offset2D>(window.GetPosition());
+    if (!normalModeSurfacePosStored_)
+    {
+        auto& window = static_cast<Window&>(GetSurface());
+        normalModeSurfacePos_       = window.GetPosition();
+        normalModeSurfacePosStored_ = true;
+    }
     #endif
 }
 
 void RenderContext::RestoreSurfacePosition()
 {
     #ifndef LLGL_MOBILE_PLATFORM
-    if (cachedSurfacePos_)
+    if (normalModeSurfacePosStored_)
     {
         auto& window = static_cast<Window&>(GetSurface());
-        window.SetPosition(*cachedSurfacePos_);
-        cachedSurfacePos_.reset();
+        window.SetPosition(normalModeSurfacePos_);
+        normalModeSurfacePosStored_ = false;
     }
     #endif
 }

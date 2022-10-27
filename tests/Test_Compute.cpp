@@ -34,11 +34,11 @@ int main()
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("OpenGL", profiler.get(), debugger.get());
 
-        // Create render context
-        LLGL::RenderContextDescriptor contextDesc;
-        contextDesc.videoMode.resolution = { 800, 600 };
+        // Create swap-chain
+        LLGL::SwapChainDescriptor swapChainDesc;
+        swapChainDesc.resolution = { 800, 600 };
 
-        /*auto context = */renderer->CreateRenderContext(contextDesc);
+        /*auto swapChain = */renderer->CreateSwapChain(swapChainDesc);
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();

@@ -39,14 +39,14 @@ MTRenderSystem::~MTRenderSystem()
 
 /* ----- Render Context ----- */
 
-RenderContext* MTRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
+RenderContext* MTRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
     return TakeOwnership(renderContexts_, MakeUnique<MTRenderContext>(device_, desc, surface));
 }
 
-void MTRenderSystem::Release(RenderContext& renderContext)
+void MTRenderSystem::Release(RenderContext& swapChain)
 {
-    RemoveFromUniqueSet(renderContexts_, &renderContext);
+    RemoveFromUniqueSet(renderContexts_, &swapChain);
 }
 
 /* ----- Command queues ----- */

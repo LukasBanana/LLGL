@@ -27,7 +27,7 @@ class Win32GLContext final : public GLContext
     public:
 
         Win32GLContext(
-            const RenderContextDescriptor&      desc,
+            const SwapChainDescriptor&          desc,
             const RendererConfigurationOpenGL&  config,
             Surface&                            surface,
             Win32GLContext*                     sharedContext
@@ -53,7 +53,7 @@ class Win32GLContext final : public GLContext
 
         bool Activate(bool activate) override;
 
-        void CreateContext(const WGLContextParams& params, Win32GLContext* sharedContext = nullptr);
+        void CreateContext(const WGLContextParams& params, Surface& surface, Win32GLContext* sharedContext = nullptr);
         void DeleteContext();
 
         void DeleteGLContext(HGLRC& hGLRC);
@@ -62,12 +62,12 @@ class Win32GLContext final : public GLContext
         HGLRC CreateStdContextProfile();
         HGLRC CreateExtContextProfile(const WGLContextParams& params, HGLRC sharedGLRC = nullptr);
 
-        void SetupDeviceContextAndPixelFormat(const WGLContextParams& params);
+        void SetupDeviceContextAndPixelFormat(const WGLContextParams& params, Surface& surface);
         void SelectPixelFormat(const WGLContextParams& params);
         bool SetupAntiAliasing(const WGLContextParams& params);
         void CopyPixelFormat(Win32GLContext& sourceContext);
 
-        void RecreateWindow(const WGLContextParams& params);
+        void RecreateWindow(const WGLContextParams& params, Surface& surface);
 
     private:
 
@@ -80,8 +80,6 @@ class Win32GLContext final : public GLContext
 
         HDC                 hDC_                                = nullptr;  // Device context handle.
         HGLRC               hGLRC_                              = nullptr;  // OpenGL render context handle.
-
-        Surface&            surface_;
 
         bool                hasSharedContext_                   = false;
 

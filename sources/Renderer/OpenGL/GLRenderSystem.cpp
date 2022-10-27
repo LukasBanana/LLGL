@@ -63,14 +63,14 @@ GLRenderContext* GLRenderSystem::GetSharedRenderContext() const
     return (!renderContexts_.empty() ? renderContexts_.begin()->get() : nullptr);
 }
 
-RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
+RenderContext* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
     return AddRenderContext(MakeUnique<GLRenderContext>(desc, config_, surface, GetSharedRenderContext()));
 }
 
-void GLRenderSystem::Release(RenderContext& renderContext)
+void GLRenderSystem::Release(RenderContext& swapChain)
 {
-    RemoveFromUniqueSet(renderContexts_, &renderContext);
+    RemoveFromUniqueSet(renderContexts_, &swapChain);
 }
 
 /* ----- Command queues ----- */

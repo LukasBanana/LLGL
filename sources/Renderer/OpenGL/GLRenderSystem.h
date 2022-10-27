@@ -57,11 +57,11 @@ class GLRenderSystem final : public RenderSystem
         GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~GLRenderSystem();
 
-        /* ----- Render Context ----- */
+        /* ----- Swap-chain ----- */
 
-        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
-        void Release(RenderContext& renderContext) override;
+        void Release(RenderContext& swapChain) override;
 
         /* ----- Command queues ----- */
 

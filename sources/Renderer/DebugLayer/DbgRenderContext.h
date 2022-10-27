@@ -32,6 +32,8 @@ class DbgRenderContext final : public RenderContext
         Format GetColorFormat() const override;
         Format GetDepthStencilFormat() const override;
 
+        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
+
         const RenderPass* GetRenderPass() const override;
 
     public:
@@ -45,8 +47,7 @@ class DbgRenderContext final : public RenderContext
 
     private:
 
-        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        bool OnSetVsyncInterval(std::uint32_t vsyncInterval) override;
+        bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
 };
 

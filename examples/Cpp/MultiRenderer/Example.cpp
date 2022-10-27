@@ -97,12 +97,12 @@ MyRenderer::MyRenderer(
     subWindow = LLGL::Window::Create(windowDesc);
 
     // Create render context with viewport size
-    LLGL::RenderContextDescriptor contextDesc;
+    LLGL::SwapChainDescriptor swapChainDesc;
     {
-        contextDesc.videoMode.resolution    = windowDesc.size;
-        contextDesc.samples                 = samples;
+        swapChainDesc.resolution    = windowDesc.size;
+        swapChainDesc.samples       = samples;
     }
-    context = renderer->CreateRenderContext(contextDesc, subWindow);
+    context = renderer->CreateSwapChain(swapChainDesc, subWindow);
 }
 
 void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, const std::vector<std::uint32_t>& indices)

@@ -27,7 +27,7 @@ class AndroidGLContext : public GLContext
     public:
 
         AndroidGLContext(
-            const RenderContextDescriptor&      desc,
+            const SwapChainDescriptor&          desc,
             const RendererConfigurationOpenGL&  config,
             Surface&                            surface,
             AndroidGLContext*                   sharedContext
@@ -44,7 +44,7 @@ class AndroidGLContext : public GLContext
         bool Activate(bool activate) override;
 
         void CreateContext(
-            const RenderContextDescriptor&      contextDesc,
+            const SwapChainDescriptor&          contextDesc,
             const RendererConfigurationOpenGL&  config,
             const NativeHandle&                 nativeHandle,
             AndroidGLContext*                   sharedContext

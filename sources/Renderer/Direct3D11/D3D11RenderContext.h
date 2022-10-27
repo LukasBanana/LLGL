@@ -29,7 +29,7 @@ class D3D11RenderContext final : public RenderContext
         D3D11RenderContext(
             IDXGIFactory*                   factory,
             const ComPtr<ID3D11Device>&     device,
-            const RenderContextDescriptor&  desc,
+            const SwapChainDescriptor&      desc,
             const std::shared_ptr<Surface>& surface
         );
 
@@ -44,6 +44,8 @@ class D3D11RenderContext final : public RenderContext
 
         const RenderPass* GetRenderPass() const override;
 
+        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
+
     public:
 
         // Binds the framebuffer view of this swap-chain and stores a references to this command buffer.
@@ -51,14 +53,13 @@ class D3D11RenderContext final : public RenderContext
 
     private:
 
-        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        bool OnSetVsyncInterval(std::uint32_t vsyncInterval) override;
+        bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         bool SetPresentSyncInterval(UINT syncInterval);
 
-        void CreateSwapChain(IDXGIFactory* factory, UINT samples);
-        void CreateBackBuffer(const VideoModeDescriptor& videoModeDesc);
-        void ResizeBackBuffer(const VideoModeDescriptor& videoModeDesc);
+        void CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers);
+        void CreateBackBuffer();
+        void ResizeBackBuffer(const Extent2D& resolution);
 
     private:
 

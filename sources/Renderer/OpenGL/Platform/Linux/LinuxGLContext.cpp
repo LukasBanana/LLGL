@@ -35,7 +35,7 @@ typedef GLXContext (*GXLCREATECONTEXTATTRIBARBPROC)(::Display*, GLXFBConfig, GLX
  */
 
 std::unique_ptr<GLContext> GLContext::Create(
-    const RenderContextDescriptor&      desc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     Surface&                            surface,
     GLContext*                          sharedContext)
@@ -50,12 +50,13 @@ std::unique_ptr<GLContext> GLContext::Create(
  */
 
 LinuxGLContext::LinuxGLContext(
-    const RenderContextDescriptor&      desc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     Surface&                            surface,
     LinuxGLContext*                     sharedContext)
 :
-    GLContext { sharedContext }
+    GLContext { sharedContext },
+    samples_  { desc.samples  }
 {
     NativeHandle nativeHandle = {};
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
@@ -106,14 +107,12 @@ bool LinuxGLContext::Activate(bool activate)
 }
 
 void LinuxGLContext::CreateContext(
-    const RenderContextDescriptor&      contextDesc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     const NativeHandle&                 nativeHandle,
     LinuxGLContext*                     sharedContext)
 {
     GLXContext glcShared = (sharedContext != nullptr ? sharedContext->glc_ : nullptr);
-
-    samples_ = contextDesc.samples;
 
     /* Get X11 display, window, and visual information */
     display_    = nativeHandle.display;
@@ -131,7 +130,7 @@ void LinuxGLContext::CreateContext(
     if (config.contextProfile == OpenGLContextProfile::CoreProfile)
     {
         /* Create core profile */
-        glc_ = CreateContextCoreProfile(glcShared, config.majorVersion, config.minorVersion);
+        glc_ = CreateContextCoreProfile(glcShared, config.majorVersion, config.minorVersion, desc.depthBits, desc.stencilBits);
     }
 
     if (glc_)
@@ -142,11 +141,19 @@ void LinuxGLContext::CreateContext(
 
         /* Valid core profile created, so we can delete the intermediate GLX context */
         glXDestroyContext(display_, intermediateGlc);
+        
+        /* Deduce color and depth-stencil formats */
+        SetDefaultColorFormat();
+        DeduceDepthStencilFormat(desc.depthBits, desc.stencilBits);
     }
     else
     {
         /* No core profile created, so we use the intermediate GLX context */
         glc_ = intermediateGlc;
+        
+        /* Set fixed color and depth-stencil formats as default values */
+        SetDefaultColorFormat();
+        SetDefaultDepthStencilFormat();
     }
 }
 
@@ -155,7 +162,7 @@ void LinuxGLContext::DeleteContext()
     glXDestroyContext(display_, glc_);
 }
 
-GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int major, int minor)
+GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits)
 {
     /* Query supported GL versions */
     if (major == 0 && minor == 0)
@@ -194,8 +201,8 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
             GLX_GREEN_SIZE,     8,
             GLX_BLUE_SIZE,      8,
             GLX_ALPHA_SIZE,     8,
-            GLX_DEPTH_SIZE,     24,
-            GLX_STENCIL_SIZE,   8,
+            GLX_DEPTH_SIZE,     depthBits,
+            GLX_STENCIL_SIZE,   stencilBits,
             //GLX_SAMPLE_BUFFERS, 1,
             //GLX_SAMPLES,        1,//static_cast<int>(desc_.samples),
             None

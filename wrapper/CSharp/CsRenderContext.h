@@ -42,6 +42,10 @@ public ref class RenderContext : public RenderTarget
         Format GetDepthStencilFormat();
         #endif
 
+        bool ResizeBuffers(Extent2D^ Resolution, ResizeBuffersFlags Flags);
+
+        bool SwitchFullscreen(bool Enable);
+
         property Window^ Surface
         {
             Window^ get();
@@ -49,15 +53,8 @@ public ref class RenderContext : public RenderTarget
 
         /* ----- Configuration ----- */
 
-        property VideoModeDescriptor^ VideoMode
-        {
-            VideoModeDescriptor^ get();
-            void set(VideoModeDescriptor^ value);
-        }
-
         property unsigned int VsyncInterval
         {
-            unsigned int get();
             void set(unsigned int value);
         };
 

@@ -27,7 +27,7 @@ class LinuxGLContext : public GLContext
     public:
 
         LinuxGLContext(
-            const RenderContextDescriptor&      desc,
+            const SwapChainDescriptor&          desc,
             const RendererConfigurationOpenGL&  config,
             Surface&                            surface,
             LinuxGLContext*                     sharedContext
@@ -44,14 +44,14 @@ class LinuxGLContext : public GLContext
         bool Activate(bool activate) override;
 
         void CreateContext(
-            const RenderContextDescriptor&      contextDesc,
+            const SwapChainDescriptor&          desc,
             const RendererConfigurationOpenGL&  config,
             const NativeHandle&                 nativeHandle,
             LinuxGLContext*                     sharedContext
         );
         void DeleteContext();
 
-        GLXContext CreateContextCoreProfile(GLXContext glcShared, int major, int minor);
+        GLXContext CreateContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
         GLXContext CreateContextCompatibilityProfile(GLXContext glcShared);
 
     private:

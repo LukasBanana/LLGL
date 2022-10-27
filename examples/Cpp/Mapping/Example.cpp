@@ -325,7 +325,7 @@ private:
             {
                 // Clear color buffer and set viewport
                 commands->Clear(LLGL::ClearFlags::Color);
-                commands->SetViewport(context->GetVideoMode().resolution);
+                commands->SetViewport(context->GetResolution());
 
                 // Set graphics pipeline and vertex buffer
                 commands->SetPipelineState(*pipeline);

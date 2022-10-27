@@ -21,7 +21,7 @@ namespace LLGL
  */
 
 std::unique_ptr<GLContext> GLContext::Create(
-    const RenderContextDescriptor&      desc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     Surface&                            surface,
     GLContext*                          sharedContext)
@@ -36,7 +36,7 @@ std::unique_ptr<GLContext> GLContext::Create(
  */
 
 AndroidGLContext::AndroidGLContext(
-    const RenderContextDescriptor&      desc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     Surface&                            surface,
     AndroidGLContext*                   sharedContext)
@@ -90,13 +90,13 @@ bool AndroidGLContext::Activate(bool activate)
 }
 
 void AndroidGLContext::CreateContext(
-    const RenderContextDescriptor&      contextDesc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     const NativeHandle&                 nativeHandle,
     AndroidGLContext*                   sharedContext)
 {
     EGLContext sharedEGLContext = (sharedContext != nullptr ? sharedContext->context_ : EGL_NO_CONTEXT);
-    samples_ = contextDesc.samples;
+    samples_ = desc.samples;
 
     /* Initialize EGL display connection (ignore major/minor output parameters) */
     eglInitialize(display_, nullptr, nullptr);
@@ -111,8 +111,8 @@ void AndroidGLContext::CreateContext(
             EGL_GREEN_SIZE,     8,
             EGL_BLUE_SIZE,      8,
             //EGL_ALPHA_SIZE,     8,
-            EGL_DEPTH_SIZE,     contextDesc.videoMode.depthBits,
-            EGL_STENCIL_SIZE,   contextDesc.videoMode.stencilBits,
+            EGL_DEPTH_SIZE,     desc.depthBits,
+            EGL_STENCIL_SIZE,   desc.stencilBits,
             EGL_SAMPLE_BUFFERS, (samples_ > 1 ? 1 : 0),
             EGL_SAMPLES,        (samples_ > 1 ? static_cast<EGLint>(samples_) : 1),
             EGL_NONE
@@ -124,7 +124,11 @@ void AndroidGLContext::CreateContext(
         
         /* Reduce number of sample if configuration failed */
         if (success == EGL_TRUE && numConfigs >= 1)
+        {
+            SetDefaultColorFormat();
+            DeduceDepthStencilFormat(desc.depthBits, desc.stencilBits);
             break;
+        }
         else
             --samples_;
     }

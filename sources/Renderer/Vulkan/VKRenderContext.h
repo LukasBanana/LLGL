@@ -37,7 +37,7 @@ class VKRenderContext final : public RenderContext
             VkPhysicalDevice                physicalDevice,
             const VKPtr<VkDevice>&          device,
             VKDeviceMemoryManager&          deviceMemoryMngr,
-            RenderContextDescriptor         desc,
+            const SwapChainDescriptor&      desc,
             const std::shared_ptr<Surface>& surface
         );
 
@@ -49,6 +49,8 @@ class VKRenderContext final : public RenderContext
         Format GetDepthStencilFormat() const override;
 
         const RenderPass* GetRenderPass() const override;
+
+        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
 
     public:
 
@@ -84,8 +86,7 @@ class VKRenderContext final : public RenderContext
 
     private:
 
-        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        bool OnSetVsyncInterval(std::uint32_t vsyncInterval) override;
+        bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         void CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore);
         void CreatePresentSemaphores();
@@ -95,19 +96,21 @@ class VKRenderContext final : public RenderContext
         void CreateSecondaryRenderPass();
 
         void CreateSwapChainRenderPass();
-        void CreateSwapChain(const VideoModeDescriptor& videoModeDesc, std::uint32_t vsyncInterval);
+        void CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyncInterval);
         void CreateSwapChainImageViews();
         void CreateSwapChainFramebuffers();
 
-        void CreateDepthStencilBuffer(const VideoModeDescriptor& videoModeDesc);
-        void CreateColorBuffers(const VideoModeDescriptor& videoModeDesc);
+        void CreateDepthStencilBuffer(const Extent2D& resolution);
+        void CreateColorBuffers(const Extent2D& resolution);
         void ReleaseRenderBuffers();
+
+        void CreateResolutionDependentResources(const Extent2D& resolution);
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
         VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, std::uint32_t vsyncInterval) const;
-        VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, std::uint32_t width, std::uint32_t height) const;
-        VkFormat PickDepthStencilFormat() const;
-        VkFormat PickDepthFormat() const;
+        VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, const Extent2D& resolution) const;
+        VkFormat PickDepthStencilFormat(int depthBits, int stencilBits) const;
+        std::uint32_t PickSwapChainSize(std::uint32_t swapBuffers) const;
 
         void AcquireNextPresentImage();
 
@@ -135,8 +138,10 @@ class VKRenderContext final : public RenderContext
 
         std::uint32_t           numSwapChainBuffers_                            = 1;
         std::uint32_t           presentImageIndex_                              = 0;
+        std::uint32_t           vsyncInterval_                                  = 0;
 
         VKRenderPass            secondaryRenderPass_;
+        VkFormat                depthStencilFormat_                             = VK_FORMAT_UNDEFINED;
         VKDepthStencilBuffer    depthStencilBuffer_;
         VKColorBuffer           colorBuffers_[g_maxNumColorBuffers];
 

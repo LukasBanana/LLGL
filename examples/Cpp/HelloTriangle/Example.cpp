@@ -6,10 +6,11 @@
  */
 
 #include <ExampleBase.h>
+#include <LLGL/Strings.h>
 #include <chrono>
 
 
-// Enable multi-sampling render context
+// Enable multi-sampling
 #define ENABLE_MULTISAMPLING
 
 // Enable timer to show render times every second
@@ -28,27 +29,33 @@ int main(int argc, char* argv[])
         // Load render system module
         std::unique_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load(rendererModule);
 
-        // Create render context
-        LLGL::RenderContextDescriptor contextDesc;
+        // Create swap-chain
+        LLGL::SwapChainDescriptor swapChainDesc;
         {
-            contextDesc.videoMode.resolution    = { 800, 600 };
+            swapChainDesc.resolution    = { 800, 600 };
+            swapChainDesc.depthBits     = 0; // We don't need a depth buffer for this example
+            swapChainDesc.stencilBits   = 0; // We don't need a stencil buffer for this example
             #ifdef ENABLE_MULTISAMPLING
-            contextDesc.samples                 = 8; // check if LLGL adapts sample count that is too high
+            swapChainDesc.samples       = 8; // check if LLGL adapts sample count that is too high
             #endif
-            contextDesc.vsyncInterval           = 1;
         }
-        LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
+        LLGL::RenderContext* swapChain = renderer->CreateSwapChain(swapChainDesc);
 
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
 
-        std::cout << "Renderer:         " << info.rendererName << std::endl;
-        std::cout << "Device:           " << info.deviceName << std::endl;
-        std::cout << "Vendor:           " << info.vendorName << std::endl;
-        std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
+        std::cout << "Renderer:             " << info.rendererName << std::endl;
+        std::cout << "Device:               " << info.deviceName << std::endl;
+        std::cout << "Vendor:               " << info.vendorName << std::endl;
+        std::cout << "Shading Language:     " << info.shadingLanguageName << std::endl;
+        std::cout << "Swap Chain Format:    " << LLGL::ToString(swapChain->GetColorFormat()) << std::endl;
+        std::cout << "Depth/Stencil Format: " << LLGL::ToString(swapChain->GetDepthStencilFormat()) << std::endl;
+
+        // Enable V-sync
+        swapChain->SetVsyncInterval(1);
 
         // Set window title and show window
-        auto& window = LLGL::CastTo<LLGL::Window>(context->GetSurface());
+        auto& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
 
         window.SetTitle(L"LLGL Example: Hello Triangle");
         window.Show();
@@ -180,9 +187,9 @@ int main(int argc, char* argv[])
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
                 pipelineDesc.shaderProgram                  = shaderProgram;
-                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 #ifdef ENABLE_MULTISAMPLING
-                pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
+                pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc.samples > 1);
                 #endif
             }
 
@@ -235,7 +242,7 @@ int main(int argc, char* argv[])
             commands->Begin();
             {
                 // Set viewport and scissor rectangle
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
 
                 // Set graphics pipeline
                 commands->SetPipelineState(*pipeline);
@@ -243,8 +250,8 @@ int main(int argc, char* argv[])
                 // Set vertex buffer
                 commands->SetVertexBuffer(*vertexBuffer);
 
-                // Set the render context as the initial render target
-                commands->BeginRenderPass(*context);
+                // Set the swap-chain as the initial render target
+                commands->BeginRenderPass(*swapChain);
                 {
                     // Clear color buffer
                     commands->Clear(LLGL::ClearFlags::Color);
@@ -257,7 +264,7 @@ int main(int argc, char* argv[])
             commands->End();
 
             // Present the result on the screen
-            context->Present();
+            swapChain->Present();
         }
     }
     catch (const std::exception& e)

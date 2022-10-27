@@ -65,12 +65,12 @@ class LLGL_EXPORT Surface : public Interface
         virtual Extent2D GetContentSize() const = 0;
 
         /**
-        \brief Adapts the surface to fits the needs for the specified video mode descriptor.
-        \param[in,out] videoModeDesc Specifies the input and output video mode descriptor.
-        \return If the video mode descriptor has been accepted with no modifications and this surface has been updated then the return value is true.
-        Otherwise the video mode descriptor has been modified to the value this surface supports and the return value is false.
+        \brief Adapts the surface to fits the needs for the specified video mode.
+        \param[in,out] resolution Optional pointer to the input and output resolution.
+        \return If the video mode has been accepted with no modifications and this surface has been updated then the return value is true.
+        Otherwise, \c resolution and/or \c fullscreen arguments have been modified to the value this surface supports and the return value is false.
         */
-        virtual bool AdaptForVideoMode(VideoModeDescriptor& videoModeDesc) = 0;
+        virtual bool AdaptForVideoMode(Extent2D* resolution, bool* fullscreen) = 0;
 
         /**
         \brief Resets the internal pixel format of the surface.

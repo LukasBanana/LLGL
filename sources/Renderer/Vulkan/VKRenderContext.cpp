@@ -44,7 +44,7 @@ VKRenderContext::VKRenderContext(
     VkPhysicalDevice                physicalDevice,
     const VKPtr<VkDevice>&          device,
     VKDeviceMemoryManager&          deviceMemoryMngr,
-    RenderContextDescriptor         desc,
+    const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
 :
     RenderContext            { desc                            },
@@ -68,19 +68,21 @@ VKRenderContext::VKRenderContext(
     imageAvailableSemaphore_ { device, vkDestroySemaphore      },
     renderFinishedSemaphore_ { device, vkDestroySemaphore      }
 {
-    SetOrCreateSurface(surface, desc.videoMode, nullptr);
-    desc.videoMode = GetVideoMode();
+    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     CreatePresentSemaphores();
     CreateGpuSurface();
 
-    if (desc.videoMode.depthBits > 0 || desc.videoMode.stencilBits > 0)
-        CreateDepthStencilBuffer(desc.videoMode);
+    /* Pick image count for swap-chain and depth-stencil format */
+    numSwapChainBuffers_ = PickSwapChainSize(desc.swapBuffers);
+    depthStencilFormat_ = PickDepthStencilFormat(desc.depthBits, desc.stencilBits);
 
+    /* Create Vulkan swap-chain and render pass */
     CreateSwapChainRenderPass();
-    CreateSwapChain(desc.videoMode, desc.vsyncInterval);
-
     CreateSecondaryRenderPass();
+
+    /* Create Vulkan swap-chain, depth-stencil buffer, and multisampling color buffers */
+    CreateResolutionDependentResources(desc.resolution);
 }
 
 void VKRenderContext::Present()
@@ -139,7 +141,7 @@ Format VKRenderContext::GetColorFormat() const
 
 Format VKRenderContext::GetDepthStencilFormat() const
 {
-    return VKTypes::Unmap(depthStencilBuffer_.GetVkFormat());
+    return VKTypes::Unmap(depthStencilFormat_);
 }
 
 const RenderPass* VKRenderContext::GetRenderPass() const
@@ -147,11 +149,23 @@ const RenderPass* VKRenderContext::GetRenderPass() const
     return (&swapChainRenderPass_);
 }
 
+bool VKRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+{
+    /* Recreate swap-chain with new vsnyc settings */
+    if (vsyncInterval_ != vsyncInterval)
+    {
+        CreateSwapChain(GetResolution(), vsyncInterval);
+        CreateSwapChainFramebuffers();
+        vsyncInterval_ = vsyncInterval;
+    }
+    return true;
+}
+
 /* --- Extended functions --- */
 
 bool VKRenderContext::HasDepthStencilBuffer() const
 {
-    return (depthStencilBuffer_.GetVkFormat() != VK_FORMAT_UNDEFINED);
+    return (depthStencilFormat_ != VK_FORMAT_UNDEFINED);
 }
 
 bool VKRenderContext::HasMultiSampling() const
@@ -164,36 +178,23 @@ bool VKRenderContext::HasMultiSampling() const
  * ======= Private: =======
  */
 
-bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
+bool VKRenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
 {
-    const auto& prevVideoMode = GetVideoMode();
+    /* Check if new resolution would actually change the swap-chain extent */
+    if (swapChainExtent_.width  != resolution.width ||
+        swapChainExtent_.height != resolution.height)
+    {
+        /* Wait until graphics queue is idle before resources are destroyed and recreated */
+        vkQueueWaitIdle(graphicsQueue_);
 
-    /* Wait until graphics queue is idle before resources are destroyed and recreated */
-    vkQueueWaitIdle(graphicsQueue_);
+        /* Recreate presenting semaphores and Vulkan surface */
+        CreatePresentSemaphores();
+        CreateGpuSurface();
 
-    /* Recreate presenting semaphores and Vulkan surface */
-    CreatePresentSemaphores();
-    CreateGpuSurface();
-
-    /* Recreate (or just release) depth-stencil buffer */
-    ReleaseRenderBuffers();
-    if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
-        CreateDepthStencilBuffer(videoModeDesc);
-
-    /* Recreate only swap-chain but keep render pass (independent of swap-chain object) */
-    CreateSwapChain(videoModeDesc, GetVsyncInterval());
-
-    /* Switch fullscreen mode */
-    if (!SetDisplayFullscreenMode(videoModeDesc))
-        return false;
-
-    return true;
-}
-
-bool VKRenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
-{
-    /* Recreate swap-chain with new vsnyc settings */
-    CreateSwapChain(GetVideoMode(), vsyncInterval);
+        /* Recreate color and depth-stencil buffers */
+        ReleaseRenderBuffers();
+        CreateResolutionDependentResources(resolution);
+    }
     return true;
 }
 
@@ -298,22 +299,10 @@ void VKRenderContext::CreateSwapChainRenderPass()
     CreateRenderPass(swapChainRenderPass_, false);
 }
 
-void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, std::uint32_t vsyncInterval)
+void VKRenderContext::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyncInterval)
 {
     /* Pick swap-chain extent by resolution */
-    swapChainExtent_ = PickSwapExtent(
-        surfaceSupportDetails_.caps,
-        videoModeDesc.resolution.width,
-        videoModeDesc.resolution.height
-    );
-
-    /* Determine required image count for swap-chain */
-    numSwapChainBuffers_ = surfaceSupportDetails_.caps.minImageCount;
-
-    if (surfaceSupportDetails_.caps.maxImageCount > 0)
-        numSwapChainBuffers_ = std::max(numSwapChainBuffers_, std::min(videoModeDesc.swapChainSize, surfaceSupportDetails_.caps.maxImageCount));
-
-    numSwapChainBuffers_ = std::min(numSwapChainBuffers_, g_maxNumColorBuffers);
+    swapChainExtent_ = PickSwapExtent(surfaceSupportDetails_.caps, resolution);
 
     /* Get device queues for graphics and presentation */
     VkSurfaceKHR surface = surface_.Get();
@@ -368,12 +357,8 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, 
     result = vkGetSwapchainImagesKHR(device_, swapChain_, &numSwapChainBuffers_, swapChainImages_);
     VKThrowIfFailed(result, "failed to query Vulkan swap-chain images");
 
-    /* Create all swap-chain dependent resources */
-    if (HasMultiSampling())
-        CreateColorBuffers(videoModeDesc);
-
+    /* Create swap-chain image views */
     CreateSwapChainImageViews();
-    CreateSwapChainFramebuffers();
 
     /* Acquire first image for presentation */
     AcquireNextPresentImage();
@@ -471,30 +456,18 @@ void VKRenderContext::CreateSwapChainFramebuffers()
     }
 }
 
-void VKRenderContext::CreateDepthStencilBuffer(const VideoModeDescriptor& videoModeDesc)
+void VKRenderContext::CreateDepthStencilBuffer(const Extent2D& resolution)
 {
     const auto sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
-    depthStencilBuffer_.Create(
-        deviceMemoryMngr_,
-        videoModeDesc.resolution,
-        (videoModeDesc.stencilBits > 0 ? PickDepthStencilFormat() : PickDepthFormat()),
-        sampleCountBits
-    );
+    depthStencilBuffer_.Create(deviceMemoryMngr_, resolution, depthStencilFormat_, sampleCountBits);
 }
 
-void VKRenderContext::CreateColorBuffers(const VideoModeDescriptor& videoModeDesc)
+void VKRenderContext::CreateColorBuffers(const Extent2D& resolution)
 {
     /* Create VkImage objects for each swap-chain buffer */
     const auto sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
     for (std::uint32_t i = 0; i < numSwapChainBuffers_; ++i)
-    {
-        colorBuffers_[i].Create(
-            deviceMemoryMngr_,
-            videoModeDesc.resolution,
-            swapChainFormat_.format,
-            sampleCountBits
-        );
-    }
+        colorBuffers_[i].Create(deviceMemoryMngr_, resolution, swapChainFormat_.format, sampleCountBits);
 }
 
 void VKRenderContext::ReleaseRenderBuffers()
@@ -505,6 +478,19 @@ void VKRenderContext::ReleaseRenderBuffers()
         for (std::uint32_t i = 0; i < numSwapChainBuffers_; ++i)
             colorBuffers_[i].Release();
     }
+}
+
+void VKRenderContext::CreateResolutionDependentResources(const Extent2D& resolution)
+{
+    CreateSwapChain(resolution, vsyncInterval_);
+
+    if (HasMultiSampling())
+        CreateColorBuffers(resolution);
+
+    if (depthStencilFormat_ != VK_FORMAT_UNDEFINED)
+        CreateDepthStencilBuffer(resolution);
+
+    CreateSwapChainFramebuffers();
 }
 
 VkSurfaceFormatKHR VKRenderContext::PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const
@@ -538,47 +524,45 @@ VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresen
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, std::uint32_t width, std::uint32_t height) const
+VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, const Extent2D& resolution) const
 {
-    if (surfaceCaps.currentExtent.width == UINT_MAX)
+    return VkExtent2D
     {
-        return VkExtent2D
-        {
-            std::max(surfaceCaps.minImageExtent.width,  std::min(surfaceCaps.maxImageExtent.width,  width )),
-            std::max(surfaceCaps.minImageExtent.height, std::min(surfaceCaps.maxImageExtent.height, height))
-        };
+        std::max(surfaceCaps.minImageExtent.width,  std::min(surfaceCaps.maxImageExtent.width,  resolution.width )),
+        std::max(surfaceCaps.minImageExtent.height, std::min(surfaceCaps.maxImageExtent.height, resolution.height))
+    };
+}
+
+static std::vector<VkFormat> GetDepthStencilFormatPreference(int depthBits, int stencilBits)
+{
+    if (stencilBits == 0)
+    {
+        if (depthBits == 32)
+            return { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D16_UNORM };
     }
-    return surfaceCaps.currentExtent;
+    else
+    {
+        if (depthBits == 32)
+            return { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT };
+    }
+    return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM };
 }
 
-VkFormat VKRenderContext::PickDepthStencilFormat() const
+VkFormat VKRenderContext::PickDepthStencilFormat(int depthBits, int stencilBits) const
 {
+    const auto formats = GetDepthStencilFormatPreference(depthBits, stencilBits);
     return VKFindSupportedImageFormat(
         physicalDevice_,
-        {
-            VK_FORMAT_D32_SFLOAT_S8_UINT,
-            VK_FORMAT_D24_UNORM_S8_UINT,
-            VK_FORMAT_D16_UNORM_S8_UINT
-        },
+        formats.data(),
+        formats.size(),
         VK_IMAGE_TILING_OPTIMAL,
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
     );
 }
 
-VkFormat VKRenderContext::PickDepthFormat() const
+std::uint32_t VKRenderContext::PickSwapChainSize(std::uint32_t swapBuffers) const
 {
-    return VKFindSupportedImageFormat(
-        physicalDevice_,
-        {
-            VK_FORMAT_D32_SFLOAT,
-            VK_FORMAT_D24_UNORM_S8_UINT,
-            VK_FORMAT_D32_SFLOAT_S8_UINT,
-            VK_FORMAT_D16_UNORM,
-            VK_FORMAT_D16_UNORM_S8_UINT
-        },
-        VK_IMAGE_TILING_OPTIMAL,
-        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-    );
+    return std::max(surfaceSupportDetails_.caps.minImageCount, std::min(swapBuffers, surfaceSupportDetails_.caps.maxImageCount));
 }
 
 void VKRenderContext::AcquireNextPresentImage()

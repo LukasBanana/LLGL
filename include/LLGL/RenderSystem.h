@@ -179,20 +179,24 @@ class LLGL_EXPORT RenderSystem : public Interface
             return config_;
         }
 
-        /* ----- Render Context ----- */
+        /* ----- Swap-chain ----- */
 
         /**
-        \brief Creates a new render context and returns the raw pointer.
-        \param[in] desc Specifies the render context descriptor, which contains the video mode, vsync, multi-sampling settings etc.
+        \brief Creates a new swap-chain. At least one swap-chain is required to render into an output surface.
+        \param[in] desc Specifies the swap-chain descriptor, which contains resolution, bit depth, multi-sampling settings etc.
         \param[in] surface Optional shared pointer to a surface for the render context.
-        If this is null, the render context will create its own platform specific surface, which can be accessed by RenderContext::GetSurface.
-        The default surface is not shown automatically.
+        If this is null, the swap-chain will create its own platform specific surface, which can be accessed by RenderContext::GetSurface.
+        The default surface on desktop platforms (i.e. Window interface) is not shown automatically, i.e. the Window::Show function has to be invoked to show the surface.
         \see RenderContext::GetSurface
+        \see Window::Show
         */
-        virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = {}) = 0;
+        virtual RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = {}) = 0;
 
-        //! Releases the specified render context. This will all release all resources, that are associated with this render context.
-        virtual void Release(RenderContext& renderContext) = 0;
+        /**
+        \brief Releases the specified swap-chain. After this call, the specified object must no longer be used.
+        \see CreateSwapChain
+        */
+        virtual void Release(RenderContext& swapChain) = 0;
 
         /* ----- Command queues ----- */
 

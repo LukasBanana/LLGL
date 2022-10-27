@@ -28,7 +28,7 @@ class MacOSGLContext : public GLContext
     public:
 
         MacOSGLContext(
-            const RenderContextDescriptor&      desc,
+            const SwapChainDescriptor&          desc,
             const RendererConfigurationOpenGL&  config,
             Surface&                            surface,
             MacOSGLContext*                     sharedContext
@@ -44,7 +44,7 @@ class MacOSGLContext : public GLContext
 
         bool Activate(bool activate) override;
 
-        bool CreatePixelFormat(const RenderContextDescriptor& desc, const RendererConfigurationOpenGL& config);
+        bool CreatePixelFormat(const SwapChainDescriptor& desc, const RendererConfigurationOpenGL& config);
 
         void CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext);
         void DeleteNSGLContext();

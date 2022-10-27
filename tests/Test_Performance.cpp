@@ -160,12 +160,12 @@ class PerformanceTest
             // Load renderer
             renderer = LLGL::RenderSystem::Load(rendererModule);
 
-            // Create render context
-            LLGL::RenderContextDescriptor contextDesc;
+            // Create swap-chain
+            LLGL::SwapChainDescriptor swapChainDesc;
             {
-                contextDesc.videoMode.resolution = { 640, 480 };
+                swapChainDesc.resolution = { 640, 480 };
             }
-            context = renderer->CreateRenderContext(contextDesc);
+            context = renderer->CreateSwapChain(swapChainDesc);
 
             // Create command buffer
             commands = renderer->CreateCommandBuffer();

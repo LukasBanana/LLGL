@@ -33,22 +33,21 @@ int main()
         std::cout << "Vendor:           " << info.vendorName << std::endl;
         std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
 
-        // Create render context
-        LLGL::RenderContextDescriptor contextDesc;
+        // Create swap-chain
+        LLGL::SwapChainDescriptor swapChainDesc;
 
-        contextDesc.videoMode.resolution    = { 800, 600 };
-        contextDesc.videoMode.swapChainSize = 2;
-        //contextDesc.videoMode.fullscreen    = true;
-        contextDesc.samples                 = 8;
-        contextDesc.vsyncInterval           = 1;
+        swapChainDesc.resolution    = { 800, 600 };
+        swapChainDesc.swapBuffers   = 2;
+        //swapChainDesc.fullscreen    = true;
+        swapChainDesc.samples       = 8;
 
-        const auto resolution = contextDesc.videoMode.resolution;
+        const auto resolution = swapChainDesc.resolution;
         const Gs::Vector2f viewportSize { static_cast<float>(resolution.width), static_cast<float>(resolution.height) };
 
         LLGL::WindowDescriptor windowDesc;
         {
-            windowDesc.size         = contextDesc.videoMode.resolution;
-            windowDesc.resizable    = true;
+            windowDesc.size         = swapChainDesc.resolution;
+            windowDesc.resizable    = false;
             windowDesc.centered     = true;
             windowDesc.visible      = true;
         }
@@ -56,7 +55,7 @@ int main()
 
         window->SetTitle(L"LLGL Vulkan Test");
 
-        auto context = renderer->CreateRenderContext(contextDesc, window);
+        auto swapChain = renderer->CreateSwapChain(swapChainDesc, window);
 
         // Add resize event handler
         class ResizeHandler : public LLGL::Window::EventListener
@@ -64,25 +63,23 @@ int main()
 
             public:
 
-                explicit ResizeHandler(LLGL::RenderContext& context) :
-                    context_ { context }
+                explicit ResizeHandler(LLGL::RenderContext& swapChain) :
+                    swapChain_ { swapChain }
                 {
                 }
 
                 void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override
                 {
-                    auto videoMode = context_.GetVideoMode();
-                    videoMode.resolution = clientAreaSize;
-                    context_.SetVideoMode(videoMode);
+                    swapChain_.ResizeBuffers(clientAreaSize);
                 }
 
             private:
 
-                LLGL::RenderContext& context_;
+                LLGL::RenderContext& swapChain_;
 
         };
 
-        window->AddEventListener(std::make_shared<ResizeHandler>(*context));
+        window->AddEventListener(std::make_shared<ResizeHandler>(*swapChain));
 
         // Get command queue
         auto queue = renderer->GetCommandQueue();
@@ -216,7 +213,7 @@ int main()
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram      = shaderProgram;
-            pipelineDesc.renderPass         = context->GetRenderPass();
+            pipelineDesc.renderPass         = swapChain->GetRenderPass();
             pipelineDesc.pipelineLayout     = pipelineLayout;
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
 
@@ -240,14 +237,17 @@ int main()
 
         //auto fence = renderer->CreateFence();
 
+        int vsyncInterval = 1;
+        swapChain->SetVsyncInterval(vsyncInterval);
+
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
             // Update user input
             if (input->KeyDown(LLGL::Key::F1))
             {
-                contextDesc.vsyncInterval = 1 - contextDesc.vsyncInterval;
-                context->SetVsyncInterval(contextDesc.vsyncInterval);
+                vsyncInterval = 1 - vsyncInterval;
+                swapChain->SetVsyncInterval(vsyncInterval);
             }
 
             // Render scene
@@ -261,8 +261,9 @@ int main()
                 Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.002f);
                 commands->UpdateBuffer(*constBufferMatrices, 0, &matrices, sizeof(matrices));
 
-                commands->BeginRenderPass(*context);
+                commands->BeginRenderPass(*swapChain);
                 {
+                    commands->SetViewport(swapChain->GetResolution());
                     commands->Clear(LLGL::ClearFlags::ColorDepth, { LLGL::ColorRGBAf{ 0.2f, 0.2f, 0.4f, 1.0f } });
 
                     // Draw scene
@@ -288,7 +289,7 @@ int main()
                 commands->UpdateBuffer(*constBufferMatrices, 0, &matrices, sizeof(matrices));
                 Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.05f);
 
-                commands->BeginRenderPass(*context);
+                commands->BeginRenderPass(*swapChain);
                 {
                     // Draw scene again
                     commands->Draw(4, 0);
@@ -299,7 +300,7 @@ int main()
             queue->Submit(*commands);
 
             // Present result on screen
-            context->Present();
+            swapChain->Present();
         }
     }
     catch (const std::exception& e)

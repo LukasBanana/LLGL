@@ -47,11 +47,13 @@ class D3D12RenderContext final : public RenderContext
 
         const RenderPass* GetRenderPass() const override;
 
+        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
+
     public:
 
         D3D12RenderContext(
             D3D12RenderSystem&              renderSystem,
-            const RenderContextDescriptor&  desc,
+            const SwapChainDescriptor&      desc,
             const std::shared_ptr<Surface>& surface
         );
 
@@ -72,47 +74,46 @@ class D3D12RenderContext final : public RenderContext
 
     private:
 
-        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        bool OnSetVsyncInterval(std::uint32_t vsyncInterval) override;
+        bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         bool SetPresentSyncInterval(UINT syncInterval);
 
         void QueryDeviceParameters(const D3D12Device& device, std::uint32_t samples);
 
-        void CreateWindowSizeDependentResources(const VideoModeDescriptor& videoModeDesc);
-        void CreateColorBufferRTVs(const VideoModeDescriptor& videoModeDesc);
-        void CreateDepthStencil(const VideoModeDescriptor& videoModeDesc);
+        void CreateResolutionDependentResources(const Extent2D& resolution);
+        void CreateColorBufferRTVs(const Extent2D& resolution);
+        void CreateDepthStencil(const Extent2D& resolution);
 
         void MoveToNextFrame();
 
     private:
 
-        static const UINT g_maxSwapChainSize = 3;
+        static const UINT maxSwapBuffers = 3;
 
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
-        D3D12CommandQueue*              commandQueue_                           = nullptr;
+        D3D12CommandQueue*              commandQueue_                       = nullptr;
         D3D12RenderPass                 defaultRenderPass_;
 
-        ComPtr<IDXGISwapChain3>         swapChain_;
-        UINT                            swapChainInterval_                      = 0;
-        DXGI_SAMPLE_DESC                swapChainSampleDesc_                    = { 1, 0 };
+        ComPtr<IDXGISwapChain3>         swapChainDXGI_;
+        DXGI_SAMPLE_DESC                sampleDesc_                         = { 1, 0 };
+        UINT                            syncInterval_                       = 0;
 
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
-        UINT                            rtvDescSize_                            = 0;
+        UINT                            rtvDescSize_                        = 0;
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
 
-        D3D12Resource                   colorBuffers_[g_maxSwapChainSize];
-        D3D12Resource                   colorBuffersMS_[g_maxSwapChainSize];
-        DXGI_FORMAT                     colorFormat_                            = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM;
+        D3D12Resource                   colorBuffers_[maxSwapBuffers];
+        D3D12Resource                   colorBuffersMS_[maxSwapBuffers];
+        DXGI_FORMAT                     colorFormat_                        = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM;
 
         D3D12Resource                   depthStencil_;
-        DXGI_FORMAT                     depthStencilFormat_                     = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT                     depthStencilFormat_                 = DXGI_FORMAT_UNKNOWN;
 
-        UINT64                          frameFenceValues_[g_maxSwapChainSize]   = {};
+        UINT64                          frameFenceValues_[maxSwapBuffers]   = {};
         D3D12Fence                      frameFence_;
 
-        UINT                            numFrames_                              = 0;
-        UINT                            currentFrame_                           = 0;
+        UINT                            numFrames_                          = 0;
+        UINT                            currentFrame_                       = 0;
 
 };
 

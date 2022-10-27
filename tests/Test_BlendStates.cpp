@@ -35,15 +35,16 @@ int main()
         auto renderer = LLGL::RenderSystem::Load("OpenGL");
 
         // Create render context
-        LLGL::RenderContextDescriptor contextDesc;
+        LLGL::SwapChainDescriptor swapChainDesc;
 
-        contextDesc.videoMode.resolution    = { 800, 600 };
-        contextDesc.vsyncInterval           = 1;
+        swapChainDesc.resolution = { 800, 600 };
 
-        auto context = renderer->CreateRenderContext(contextDesc);
+        auto swapChain = renderer->CreateSwapChain(swapChainDesc);
+
+        swapChain->SetVsyncInterval(1);
 
         // Setup window title
-        auto& window = static_cast<LLGL::Window&>(context->GetSurface());
+        auto& window = static_cast<LLGL::Window&>(swapChain->GetSurface());
 
         auto title = "LLGL Test 10 ( " + renderer->GetName() + " )";
         window.SetTitle(std::wstring(title.begin(), title.end()));
@@ -130,7 +131,7 @@ int main()
         // Scene parameters
         std::size_t pipelineIndex = 0;
 
-        const auto& resolution = context->GetResolution();
+        const auto& resolution = swapChain->GetResolution();
         auto w = resolution.width / 2;
         auto h = resolution.height / 2;
         auto x = static_cast<std::int32_t>(w);
@@ -172,7 +173,7 @@ int main()
             commands->Begin();
             {
                 commands->SetVertexBuffer(*vertexBuffer);
-                commands->BeginRenderPass(*context);
+                commands->BeginRenderPass(*swapChain);
                 {
                     commands->Clear(LLGL::ClearFlags::Color);
                     for (int i = 0; i < 4; ++i)
@@ -187,7 +188,7 @@ int main()
             commands->End();
             commandQueue->Submit(*commands);
 
-            context->Present();
+            swapChain->Present();
         }
     }
     catch (const std::exception& e)

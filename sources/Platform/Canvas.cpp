@@ -46,7 +46,7 @@ bool Canvas::HasQuit() const
     return quit_;
 }
 
-bool Canvas::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
+bool Canvas::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
 {
     /* Default implementation of this function always return false for the Canvas class */
     return false;

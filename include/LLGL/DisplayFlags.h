@@ -22,9 +22,8 @@ namespace LLGL
 /**
 \brief Display mode descriptor structure.
 \remarks Describes the attributes of a physical display.
-The counterpart for a virtual video mode is the VideoModeDescriptor structure.
 \see VideoOutputDescriptor::displayModes
-\see VideoModeDescriptor
+\see SwapChainDescriptor
 */
 struct DisplayModeDescriptor
 {

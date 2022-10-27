@@ -150,15 +150,13 @@ void ExampleBase::ResizeEventHandler::OnResize(LLGL::Window& sender, const LLGL:
 {
     if (clientAreaSize.width >= 4 && clientAreaSize.height >= 4)
     {
-        // Update video mode
-        auto videoMode = context_->GetVideoMode();
-        {
-            videoMode.resolution = clientAreaSize;
-        }
-        context_->SetVideoMode(videoMode);
+        const auto& resolution = clientAreaSize;
+
+        // Update swap buffers
+        context_->ResizeBuffers(resolution);
 
         // Update projection matrix
-        auto aspectRatio = static_cast<float>(videoMode.resolution.width) / static_cast<float>(videoMode.resolution.height);
+        auto aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
         projection_ = tutorial_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
         // Notify application about resize event
@@ -206,6 +204,8 @@ void ExampleBase::SetAndroidApp(android_app* androidApp)
 void ExampleBase::Run()
 {
     bool showTimeRecords = false;
+    bool fullscreen = false;
+    const auto initialResolution = context->GetResolution();
 
     while (context->GetSurface().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
     {
@@ -229,6 +229,20 @@ void ExampleBase::Run()
                 showTimeRecords = true;
             }
             profilerObj_->NextProfile();
+        }
+
+        // Check to switch to fullscreen
+        if (input->KeyDown(LLGL::Key::F5))
+        {
+            if (auto display = context->GetSurface().FindResidentDisplay())
+            {
+                const auto resolution = display->GetDisplayMode().resolution;
+                fullscreen = !fullscreen;
+                if (fullscreen)
+                    context->ResizeBuffers(resolution, LLGL::ResizeBuffersFlags::FullscreenMode);
+                else
+                    context->ResizeBuffers(initialResolution, LLGL::ResizeBuffersFlags::WindowedMode);
+            }
         }
 
         // Draw current frame
@@ -288,14 +302,14 @@ ExampleBase::ExampleBase(
         debuggerObj_.reset();
 
     // Create render context
-    LLGL::RenderContextDescriptor contextDesc;
+    LLGL::SwapChainDescriptor swapChainDesc;
     {
-        contextDesc.videoMode.resolution    = resolution;
-        contextDesc.samples                 = samples;
-        contextDesc.vsyncInterval           = (vsync ? 1 : 0);
+        swapChainDesc.resolution    = resolution;
+        swapChainDesc.samples       = samples;
     }
-    context = renderer->CreateRenderContext(contextDesc);
+    context = renderer->CreateSwapChain(swapChainDesc);
 
+    context->SetVsyncInterval(vsync ? 1 : 0);
     context->SetName("SwapChain");
 
     // Create command buffer
@@ -715,7 +729,7 @@ bool ExampleBase::SaveTexture(LLGL::Texture& texture, const std::string& filenam
 
 float ExampleBase::GetAspectRatio() const
 {
-    auto resolution = context->GetVideoMode().resolution;
+    const auto resolution = context->GetResolution();
     return (static_cast<float>(resolution.width) / static_cast<float>(resolution.height));
 }
 

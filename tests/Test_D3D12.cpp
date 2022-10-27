@@ -24,22 +24,18 @@ int main()
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("Direct3D12", profiler.get(), debugger.get());
 
-        // Create render context
-        LLGL::RenderContextDescriptor contextDesc;
+        // Create swap-chain
+        LLGL::SwapChainDescriptor swapChainDesc;
 
-        contextDesc.videoMode.resolution    = { 800, 600 };
-        //contextDesc.videoMode.fullscreen    = true;
+        swapChainDesc.resolution    = { 800, 600 };
+        //swapChainDesc.fullscreen    = true;
+        //swapChainDesc.samples       = 8;
 
-        #if 0
-        contextDesc.multiSampling.enabled   = true;
-        contextDesc.multiSampling.samples   = 8;
-        #endif
+        auto swapChain = renderer->CreateSwapChain(swapChainDesc);
 
-        contextDesc.vsyncInterval           = 1;
+        swapChain->SetVsyncInterval(1);
 
-        auto context = renderer->CreateRenderContext(contextDesc);
-
-        auto& window = LLGL::CastTo<LLGL::Window>(context->GetSurface());
+        auto& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
 
         auto title = "LLGL Test 3 ( " + renderer->GetName() + " )";
         window.SetTitle(std::wstring(title.begin(), title.end()));
@@ -166,7 +162,7 @@ int main()
             #endif
 
             #if 0
-            pipelineDesc.rasterizer.multiSampling    = contextDesc.multiSampling;
+            pipelineDesc.rasterizer.multiSampling    = swapChainDesc.multiSampling;
             #endif
         }
         auto pipeline = renderer->CreatePipelineState(pipelineDesc);
@@ -205,10 +201,10 @@ int main()
         {
             commands->Begin();
             {
-                commands->BeginRenderPass(*context);
+                commands->BeginRenderPass(*swapChain);
                 {
                     commands->Clear(LLGL::ClearFlags::Color, { LLGL::ColorRGBAf{ 0.1f, 0.1f, 0.4f } });
-                    commands->SetViewport(contextDesc.videoMode.resolution);
+                    commands->SetViewport(swapChain->GetResolution());
 
                     commands->SetPipelineState(*pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
@@ -221,7 +217,7 @@ int main()
             commands->End();
             commandQueue->Submit(*commands);
 
-            context->Present();
+            swapChain->Present();
         }
     }
     catch (const std::exception& e)

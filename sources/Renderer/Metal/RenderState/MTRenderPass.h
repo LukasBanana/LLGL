@@ -35,7 +35,7 @@ class MTRenderPass final : public RenderPass
 
         MTRenderPass(const RenderPassDescriptor& desc);
         MTRenderPass(const RenderTargetDescriptor& desc);
-        MTRenderPass(const RenderContextDescriptor& desc);
+        MTRenderPass(const SwapChainDescriptor& desc);
 
     public:
 

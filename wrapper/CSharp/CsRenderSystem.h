@@ -112,11 +112,11 @@ public ref class RenderSystem
 
         #endif
 
-        /* ----- Render Context ----- */
+        /* ----- Swap-chain ----- */
 
-        RenderContext^ CreateRenderContext(RenderContextDescriptor^ desc);
+        RenderContext^ CreateSwapChain(SwapChainDescriptor^ desc);
 
-        //RenderContext^ CreateRenderContext(RenderContextDescriptor^ desc, Surface^ surface);
+        //RenderContext^ CreateSwapChain(SwapChainDescriptor^ desc, Surface^ surface);
 
         void Release(RenderContext^ renderContext);
 

@@ -265,7 +265,7 @@ public:
     void CreateTextures()
     {
         // Create empty color and gloss map
-        auto resolution = context->GetVideoMode().resolution;
+        auto resolution = context->GetResolution();
 
         LLGL::TextureDescriptor texDesc;
         {
@@ -290,7 +290,7 @@ public:
 
     void CreateRenderTargets()
     {
-        auto resolution = context->GetVideoMode().resolution;
+        auto resolution = context->GetResolution();
 
         // Create render-target for scene rendering
         LLGL::RenderTargetDescriptor renderTargetDesc;
@@ -575,7 +575,7 @@ private:
         }
 
         // Initialize viewports
-        const auto screenSize = context->GetVideoMode().resolution;
+        const auto screenSize = context->GetResolution();
 
         const LLGL::Viewport viewportFull{ { 0, 0 }, screenSize };
         const LLGL::Viewport viewportQuarter{ { 0, 0 }, { screenSize.width / 4, screenSize.height/ 4 } };

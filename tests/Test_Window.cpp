@@ -70,14 +70,6 @@ int main()
             window->SetTitle(
                 windowDesc.title + L" ( " + std::wstring(renderer->GetName().begin(), renderer->GetName().end()) + L" )"
             );
-
-            /*#ifdef __APPLE__
-            LLGL::VideoModeDescriptor videoMode;
-            {
-                videoMode.fullscreen = true;
-            }
-            LLGL::Desktop::SetVideoMode(videoMode);
-            #endif*/
         }
         catch (const std::exception& e)
         {

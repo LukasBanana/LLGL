@@ -13,7 +13,7 @@
 
 
 // Enables/disables the use of two secondary command buffers
-//#define ENABLE_SECONDARY_COMMAND_BUFFERS
+#define ENABLE_SECONDARY_COMMAND_BUFFERS
 
 class Measure
 {
@@ -247,7 +247,7 @@ private:
             {
                 // Clear color- and depth buffers, and set viewport
                 cmdBuffer.Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
-                cmdBuffer.SetViewport(context->GetVideoMode().resolution);
+                cmdBuffer.SetViewport(context->GetResolution());
 
                 // Draw scene with secondary command buffers
                 #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS

@@ -111,7 +111,7 @@ public ref class Window
         }
 
         #if 0
-        bool AdaptForVideoMode(VideoModeDescriptor^ videoModeDesc);
+        bool AdaptForVideoMode(Extent2D^ Resolution, bool^ Fullscreen);
         #endif
 
         bool ProcessEvents();

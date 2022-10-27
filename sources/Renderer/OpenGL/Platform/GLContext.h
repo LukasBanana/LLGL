@@ -11,6 +11,7 @@
 
 #include <LLGL/Surface.h>
 #include <LLGL/RenderContextFlags.h>
+#include <LLGL/RendererConfiguration.h>
 #include <memory>
 #include "../RenderState/GLStateManager.h"
 
@@ -39,11 +40,25 @@ class GLContext
 
     public:
 
+        // Returns the color format for this GL context.
+        inline Format GetColorFormat() const
+        {
+            return colorFormat_;
+        }
+
+        // Returns the depth-stencil format for this GL context.
+        inline Format GetDepthStencilFormat() const
+        {
+            return depthStencilFormat_;
+        }
+
+    public:
+
         virtual ~GLContext();
 
         // Creates a platform specific GLContext instance.
         static std::unique_ptr<GLContext> Create(
-            const RenderContextDescriptor&      desc,
+            const SwapChainDescriptor&          desc,
             const RendererConfigurationOpenGL&  config,
             Surface&                            surface,
             GLContext*                          sharedContext
@@ -68,9 +83,25 @@ class GLContext
         // Activates or deactivates this GLContext (Win32: wglMakeCurrent, X11: glXMakeCurrent).
         virtual bool Activate(bool activate) = 0;
 
+    protected:
+
+        // Deduces the color format by the specified component bits and shifting.
+        void DeduceColorFormat(int rBits, int rShift, int gBits, int gShift, int bBits, int bShift, int aBits, int aShift);
+
+        // Deduces the depth-stencil format by the specified bit sizes.
+        void DeduceDepthStencilFormat(int depthBits, int stencilBits);
+
+        // Sets the color format to RGBA8UNorm.
+        void SetDefaultColorFormat();
+
+        // Sets the depth-stencil format to D24UNormS8UInt;
+        void SetDefaultDepthStencilFormat();
+
     private:
 
         std::shared_ptr<GLStateManager> stateMngr_;
+        Format                          colorFormat_        = Format::Undefined;
+        Format                          depthStencilFormat_ = Format::Undefined;
 
 };
 

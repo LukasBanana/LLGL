@@ -55,11 +55,11 @@ class D3D11RenderSystem final : public RenderSystem
         D3D11RenderSystem();
         ~D3D11RenderSystem();
 
-        /* ----- Render Context ------ */
+        /* ----- Swap-chain ------ */
 
-        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
-        void Release(RenderContext& renderContext) override;
+        void Release(RenderContext& swapChain) override;
 
         /* ----- Command queues ----- */
 

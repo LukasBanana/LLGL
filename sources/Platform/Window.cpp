@@ -111,28 +111,34 @@ bool Window::HasQuit() const
     return quit_;
 }
 
-bool Window::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
+bool Window::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
 {
-    /* Query current window descriptor */
-    auto windowDesc = GetDesc();
-
-    /* Adapt window size and position */
-    windowDesc.size = videoModeDesc.resolution;
-
-    if (videoModeDesc.fullscreen)
+    if (resolution != nullptr || fullscreen != nullptr)
     {
-        windowDesc.borderless   = true;
-        windowDesc.position     = { 0, 0 };
-    }
-    else
-    {
-        windowDesc.borderless   = false;
-        windowDesc.centered     = true;
-    }
+        /* Query current window descriptor */
+        auto windowDesc = GetDesc();
 
-    /* Set new window descriptor and return with success */
-    SetDesc(windowDesc);
+        /* Adapt window size and position */
+        if (resolution != nullptr)
+            windowDesc.size = *resolution;
 
+        if (fullscreen != nullptr)
+        {
+            if (*fullscreen)
+            {
+                windowDesc.borderless   = true;
+                windowDesc.position     = { 0, 0 };
+            }
+            else
+            {
+                windowDesc.borderless   = false;
+                windowDesc.centered     = true;
+            }
+        }
+
+        /* Set new window descriptor and return with success */
+        SetDesc(windowDesc);
+    }
     return true;
 }
 

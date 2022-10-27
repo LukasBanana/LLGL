@@ -28,28 +28,27 @@ namespace LLGL
 
 D3D12RenderContext::D3D12RenderContext(
     D3D12RenderSystem&              renderSystem,
-    const RenderContextDescriptor&  desc,
+    const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext     { desc                       },
-    renderSystem_     { renderSystem               },
-    frameFence_       { renderSystem.GetDXDevice() }
+    RenderContext       { desc                                                       },
+    renderSystem_       { renderSystem                                               },
+    frameFence_         { renderSystem.GetDXDevice()                                 },
+    depthStencilFormat_ { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits) },
+    numFrames_          { std::max(1u, std::min(desc.swapBuffers, maxSwapBuffers))   }
 {
     /* Store reference to command queue */
     commandQueue_ = LLGL_CAST(D3D12CommandQueue*, renderSystem_.GetCommandQueue());
 
     /* Setup surface for the render context */
-    SetOrCreateSurface(surface, GetVideoMode(), nullptr);
+    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     /* Create device resources and window dependent resource */
     QueryDeviceParameters(renderSystem.GetDevice(), desc.samples);
-    CreateWindowSizeDependentResources(GetVideoMode());
-
-    /* Initialize v-sync interval */
-    SetPresentSyncInterval(desc.vsyncInterval);
+    CreateResolutionDependentResources(desc.resolution);
 
     /* Create default render pass */
-    defaultRenderPass_.BuildAttachments(1, &colorFormat_, depthStencilFormat_, swapChainSampleDesc_);
+    defaultRenderPass_.BuildAttachments(1, &colorFormat_, depthStencilFormat_, sampleDesc_);
 }
 
 D3D12RenderContext::~D3D12RenderContext()
@@ -64,7 +63,7 @@ void D3D12RenderContext::SetName(const char* name)
     D3D12SetObjectNameSubscript(dsvDescHeap_.Get(), name, ".DSV");
 
     std::string subscript;
-    for (UINT i = 0; i < g_maxSwapChainSize; ++i)
+    for (UINT i = 0; i < maxSwapBuffers; ++i)
     {
         subscript = (".BackBuffer" + std::to_string(i));
         D3D12SetObjectNameSubscript(colorBuffers_[i].Get(), name, subscript.c_str());
@@ -79,7 +78,7 @@ void D3D12RenderContext::SetName(const char* name)
 void D3D12RenderContext::Present()
 {
     /* Present swap-chain with vsync interval */
-    auto hr = swapChain_->Present(swapChainInterval_, 0);
+    auto hr = swapChainDXGI_->Present(syncInterval_, 0);
     DXThrowIfFailed(hr, "failed to present DXGI swap chain");
 
     /* Advance frame counter */
@@ -88,7 +87,7 @@ void D3D12RenderContext::Present()
 
 std::uint32_t D3D12RenderContext::GetSamples() const
 {
-    return swapChainSampleDesc_.Count;
+    return sampleDesc_.Count;
 }
 
 Format D3D12RenderContext::GetColorFormat() const
@@ -104,6 +103,11 @@ Format D3D12RenderContext::GetDepthStencilFormat() const
 const RenderPass* D3D12RenderContext::GetRenderPass() const
 {
     return (&defaultRenderPass_);
+}
+
+bool D3D12RenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+{
+    return SetPresentSyncInterval(vsyncInterval);
 }
 
 /* --- Extended functions --- */
@@ -159,7 +163,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForDSV() c
 
 bool D3D12RenderContext::HasMultiSampling() const
 {
-    return (swapChainSampleDesc_.Count > 1);
+    return (sampleDesc_.Count > 1);
 }
 
 bool D3D12RenderContext::HasDepthBuffer() const
@@ -177,24 +181,9 @@ void D3D12RenderContext::SyncGPU()
  * ======= Private: =======
  */
 
-bool D3D12RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
+bool D3D12RenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
 {
-    const auto& prevVideoMode = GetVideoMode();
-
-    /* Re-create resource that depend on the window size */
-    if (prevVideoMode.resolution != videoModeDesc.resolution)
-        CreateWindowSizeDependentResources(videoModeDesc);
-
-    /* Switch fullscreen mode */
-    if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
-        swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
-
-    return true;
-}
-
-bool D3D12RenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
-{
-    SetPresentSyncInterval(vsyncInterval);
+    CreateResolutionDependentResources(resolution);
     return true;
 }
 
@@ -203,7 +192,7 @@ bool D3D12RenderContext::SetPresentSyncInterval(UINT syncInterval)
     /* IDXGISwapChain::Present expects a sync interval in the range [0, 4] */
     if (syncInterval <= 4)
     {
-        swapChainInterval_ = syncInterval;
+        syncInterval_ = syncInterval;
         return true;
     }
     return false;
@@ -213,13 +202,13 @@ void D3D12RenderContext::QueryDeviceParameters(const D3D12Device& device, std::u
 {
     /* Find suitable sample descriptor */
     if (samples > 1)
-        swapChainSampleDesc_ = device.FindSuitableSampleDesc(colorFormat_, samples);
+        sampleDesc_ = device.FindSuitableSampleDesc(colorFormat_, samples);
 
     /* Store size of RTV descriptor */
     rtvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 }
 
-void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescriptor& videoModeDesc)
+void D3D12RenderContext::CreateResolutionDependentResources(const Extent2D& resolution)
 {
     /* Wait until all previous GPU work is complete */
     SyncGPU();
@@ -236,20 +225,14 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     rtvDescHeap_.Reset();
     dsvDescHeap_.Reset();
 
-    /* Setup swap chain meta data */
-    numFrames_ = std::max(1u, std::min(videoModeDesc.swapChainSize, g_maxSwapChainSize));
-
     /* Get framebuffer size */
-    auto framebufferWidth   = videoModeDesc.resolution.width;
-    auto framebufferHeight  = videoModeDesc.resolution.height;
-
-    if (swapChain_)
+    if (swapChainDXGI_)
     {
         /* Resize swap chain */
-        auto hr = swapChain_->ResizeBuffers(
+        auto hr = swapChainDXGI_->ResizeBuffers(
             numFrames_,
-            framebufferWidth,
-            framebufferHeight,
+            resolution.width,
+            resolution.height,
             colorFormat_,
             0
         );
@@ -270,8 +253,8 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
         {
-            swapChainDesc.Width                 = framebufferWidth;
-            swapChainDesc.Height                = framebufferHeight;
+            swapChainDesc.Width                 = resolution.width;
+            swapChainDesc.Height                = resolution.height;
             swapChainDesc.Format                = colorFormat_;
             swapChainDesc.Stereo                = FALSE;
             swapChainDesc.SampleDesc.Count      = 1; // always 1 because D3D12 does not allow (directly) multi-sampled swap-chains
@@ -285,23 +268,21 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
         }
         auto swapChain = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
 
-        swapChain.As(&swapChain_);
+        swapChain.As(&swapChainDXGI_);
     }
 
     /* Create color buffer render target views (RTV) */
-    CreateColorBufferRTVs(videoModeDesc);
+    CreateColorBufferRTVs(resolution);
 
     /* Update current back buffer index */
-    currentFrame_ = swapChain_->GetCurrentBackBufferIndex();
+    currentFrame_ = swapChainDXGI_->GetCurrentBackBufferIndex();
 
     /* Create depth-stencil buffer (is used) */
-    if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
-        CreateDepthStencil(videoModeDesc);
-    else
-        depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
+    if (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN)
+        CreateDepthStencil(resolution);
 }
 
-void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoModeDesc)
+void D3D12RenderContext::CreateColorBufferRTVs(const Extent2D& resolution)
 {
     auto device = renderSystem_.GetDXDevice();
 
@@ -321,7 +302,7 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
     for (UINT i = 0; i < numFrames_; ++i)
     {
         /* Get render target resource from swap-chain buffer */
-        auto hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(colorBuffers_[i].native.ReleaseAndGetAddressOf()));
+        auto hr = swapChainDXGI_->GetBuffer(i, IID_PPV_ARGS(colorBuffers_[i].native.ReleaseAndGetAddressOf()));
         DXThrowIfCreateFailed(hr, "ID3D12Resource", "for swap-chain color buffer");
 
         colorBuffers_[i].SetInitialState(D3D12_RESOURCE_STATE_PRESENT);
@@ -337,12 +318,12 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
         /* Create multi-sampled render targets */
         auto tex2DMSDesc = CD3DX12_RESOURCE_DESC::Tex2D(
             colorFormat_,
-            videoModeDesc.resolution.width,
-            videoModeDesc.resolution.height,
+            resolution.width,
+            resolution.height,
             1, // arraySize
             1, // mipLevels
-            swapChainSampleDesc_.Count,
-            swapChainSampleDesc_.Quality,
+            sampleDesc_.Count,
+            sampleDesc_.Quality,
             D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
         );
 
@@ -369,12 +350,9 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
     }
 }
 
-void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoModeDesc)
+void D3D12RenderContext::CreateDepthStencil(const Extent2D& resolution)
 {
     auto device = renderSystem_.GetDXDevice();
-
-    /* Pick-depth stencil format */
-    depthStencilFormat_ = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
 
     /* Create DSV descriptor heap */
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
@@ -389,12 +367,12 @@ void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoMode
     /* Create depth-stencil buffer */
     auto tex2DDesc = CD3DX12_RESOURCE_DESC::Tex2D(
         depthStencilFormat_,
-        videoModeDesc.resolution.width,
-        videoModeDesc.resolution.height,
+        resolution.width,
+        resolution.height,
         1, // arraySize
         1, // mipLevels
-        swapChainSampleDesc_.Count,
-        swapChainSampleDesc_.Quality,
+        sampleDesc_.Count,
+        sampleDesc_.Quality,
         (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
     );
 
@@ -418,7 +396,7 @@ void D3D12RenderContext::MoveToNextFrame()
     commandQueue_->SignalFence(frameFence_, frameFenceValues_[currentFrame_]);
 
     /* Advance frame index */
-    currentFrame_ = swapChain_->GetCurrentBackBufferIndex();
+    currentFrame_ = swapChainDXGI_->GetCurrentBackBufferIndex();
 
     /* Wait until the fence value of the next frame is signaled, so we know the next frame is ready to start */
     frameFence_.WaitForValue(frameFenceValues_[currentFrame_]);

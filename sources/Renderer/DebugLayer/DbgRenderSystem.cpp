@@ -49,12 +49,12 @@ void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
     instance_->SetConfiguration(config);
 }
 
-/* ----- Render Context ----- */
+/* ----- Swap-chain ----- */
 
-RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
+RenderContext* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
     /* Create primary render context */
-    auto renderContextInstance = instance_->CreateRenderContext(desc, surface);
+    auto renderContextInstance = instance_->CreateSwapChain(desc, surface);
 
     if (!commandQueue_)
     {

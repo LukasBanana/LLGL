@@ -44,11 +44,11 @@ class DbgRenderSystem final : public RenderSystem
 
         void SetConfiguration(const RenderSystemConfiguration& config) override;
 
-        /* ----- Render Context ------ */
+        /* ----- Swap-chain ------ */
 
-        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
-        void Release(RenderContext& renderContext) override;
+        void Release(RenderContext& swapChain) override;
 
         /* ----- Command queues ----- */
 

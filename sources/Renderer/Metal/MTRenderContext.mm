@@ -19,14 +19,13 @@ namespace LLGL
 
 MTRenderContext::MTRenderContext(
     id<MTLDevice>                   device,
-    RenderContextDescriptor         desc,
+    const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
 :
     renderPass_ { desc }
 {
     /* Create surface */
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
-    desc.videoMode = GetVideoMode();
 
     NativeHandle nativeHandle = {};
     GetSurface().GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
@@ -65,9 +64,6 @@ MTRenderContext::MTRenderContext(
     view_.colorPixelFormat          = renderPass_.GetColorAttachments()[0].pixelFormat;
     view_.depthStencilPixelFormat   = renderPass_.GetDepthStencilFormat();
     view_.sampleCount               = renderPass_.GetSampleCount();
-
-    /* Initialize v-sync interval */
-    SetSyncInterval(desc.vsyncInterval);
 }
 
 void MTRenderContext::Present()
@@ -95,23 +91,7 @@ const RenderPass* MTRenderContext::GetRenderPass() const
     return (&renderPass_);
 }
 
-
-/*
- * ======= Private: =======
- */
-
-bool MTRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
-{
-    return true; // do nothing
-}
-
-bool MTRenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
-{
-    SetSyncInterval(vsyncInterval);
-    return true;
-}
-
-void MTRenderContext::SetSyncInterval(std::uint32_t vsyncInterval)
+bool MTRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
     static const NSInteger defaultRefreshRate = 60;
     if (vsyncInterval > 0)
@@ -127,6 +107,17 @@ void MTRenderContext::SetSyncInterval(std::uint32_t vsyncInterval)
         /* Set preferred frame rate to default value */
         view_.preferredFramesPerSecond = defaultRefreshRate;
     }
+    return true;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool MTRenderContext::ResizeBuffersPrimary(const Extent2D& /*resolution*/)
+{
+    return true; // do nothing
 }
 
 

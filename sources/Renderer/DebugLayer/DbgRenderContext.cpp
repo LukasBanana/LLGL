@@ -44,28 +44,19 @@ Format DbgRenderContext::GetDepthStencilFormat() const
     return instance.GetDepthStencilFormat();
 }
 
+bool DbgRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+{
+    return instance.SetVsyncInterval(vsyncInterval);
+}
+
 const RenderPass* DbgRenderContext::GetRenderPass() const
 {
     return instance.GetRenderPass();
 }
 
-
-/*
- * ======= Private: =======
- */
-
-bool DbgRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
+bool DbgRenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
 {
-    auto result = instance.SetVideoMode(videoModeDesc);
-    ShareSurfaceAndConfig(instance);
-    return result;
-}
-
-bool DbgRenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
-{
-    auto result = instance.SetVsyncInterval(vsyncInterval);
-    ShareSurfaceAndConfig(instance);
-    return result;
+    return instance.ResizeBuffers(resolution);
 }
 
 

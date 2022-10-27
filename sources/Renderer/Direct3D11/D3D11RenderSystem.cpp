@@ -76,7 +76,7 @@ D3D11RenderSystem::~D3D11RenderSystem()
 
 /* ----- Render Context ----- */
 
-RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
+RenderContext* D3D11RenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
     return TakeOwnership(
         renderContexts_,
@@ -84,9 +84,9 @@ RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescrip
     );
 }
 
-void D3D11RenderSystem::Release(RenderContext& renderContext)
+void D3D11RenderSystem::Release(RenderContext& swapChain)
 {
-    RemoveFromUniqueSet(renderContexts_, &renderContext);
+    RemoveFromUniqueSet(renderContexts_, &swapChain);
 }
 
 /* ----- Command queues ----- */

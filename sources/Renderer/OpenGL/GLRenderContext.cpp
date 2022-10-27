@@ -13,37 +13,31 @@ namespace LLGL
 
 
 GLRenderContext::GLRenderContext(
-    RenderContextDescriptor             desc,
+    const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     const std::shared_ptr<Surface>&     surface,
     GLRenderContext*                    sharedRenderContext)
 :
-    RenderContext  { desc                                                 },
-    contextHeight_ { static_cast<GLint>(desc.videoMode.resolution.height) }
+    RenderContext  { desc                                       },
+    contextHeight_ { static_cast<GLint>(desc.resolution.height) }
 {
     #ifdef LLGL_OS_LINUX
 
     /* Setup surface for the render context and pass native context handle */
     NativeContextHandle windowContext;
-    GetNativeContextHandle(windowContext, desc.videoMode, desc.samples);
-    SetOrCreateSurface(surface, desc.videoMode, &windowContext);
+    ChooseGLXVisualAndGetX11WindowContext(desc, windowContext);
+    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, &windowContext);
 
     #else
 
     /* Setup surface for the render context */
-    SetOrCreateSurface(surface, desc.videoMode, nullptr);
+    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     #endif
-
-    /* Update video mode of descriptor after surface has been set or created */
-    desc.videoMode = GetVideoMode();
 
     /* Create platform dependent OpenGL context */
     GLContext* sharedGLContext = (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr);
     context_ = GLContext::Create(desc, config, GetSurface(), sharedGLContext);
-
-    /* Setup swap interval (for v-sync) */
-    SetSwapInterval(static_cast<int>(desc.vsyncInterval));
 
     /* Get state manager and notify about the current render context */
     stateMngr_ = context_->GetStateManager();
@@ -66,19 +60,22 @@ std::uint32_t GLRenderContext::GetSamples() const
 
 Format GLRenderContext::GetColorFormat() const
 {
-    /* Return fixed value, not much of control for an OpenGL context */
-    return Format::RGBA8UNorm;
+    return context_->GetColorFormat();
 }
 
 Format GLRenderContext::GetDepthStencilFormat() const
 {
-    /* Return fixed value, not much of control for an OpenGL context */
-    return Format::D24UNormS8UInt;
+    return context_->GetDepthStencilFormat();
 }
 
 const RenderPass* GLRenderContext::GetRenderPass() const
 {
     return nullptr; // dummy
+}
+
+bool GLRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+{
+    return SetSwapInterval(static_cast<int>(vsyncInterval));
 }
 
 bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
@@ -99,25 +96,16 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
  * ======= Private: =======
  */
 
-bool GLRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
+bool GLRenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Notify GL context of a resize */
-    context_->Resize(videoModeDesc.resolution);
+    context_->Resize(resolution);
 
     /* Update context height */
-    contextHeight_ = static_cast<GLint>(videoModeDesc.resolution.height);
+    contextHeight_ = static_cast<GLint>(resolution.height);
     stateMngr_->NotifyRenderTargetHeight(contextHeight_);
 
-    /* Switch fullscreen mode */
-    if (!SetDisplayFullscreenMode(videoModeDesc))
-        return false;
-
     return true;
-}
-
-bool GLRenderContext::OnSetVsyncInterval(std::uint32_t vsyncInterval)
-{
-    return SetSwapInterval(static_cast<int>(vsyncInterval));
 }
 
 bool GLRenderContext::SetSwapInterval(int swapInterval)

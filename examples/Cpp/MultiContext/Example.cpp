@@ -22,14 +22,17 @@ int main(int argc, char* argv[])
         std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
 
         // Create two render contexts
-        LLGL::RenderContextDescriptor contextDesc;
+        LLGL::SwapChainDescriptor swapChainDesc;
         {
-            contextDesc.videoMode.resolution    = { 640, 480 };
-            contextDesc.samples                 = 8;
-            contextDesc.vsyncInterval           = 1;
+            swapChainDesc.resolution    = { 640, 480 };
+            swapChainDesc.samples       = 8;
         }
-        auto context1 = renderer->CreateRenderContext(contextDesc);
-        auto context2 = renderer->CreateRenderContext(contextDesc);
+        auto swapChain1 = renderer->CreateSwapChain(swapChainDesc);
+        auto swapChain2 = renderer->CreateSwapChain(swapChainDesc);
+
+        // Enable V-sync
+        swapChain1->SetVsyncInterval(1);
+        swapChain2->SetVsyncInterval(1);
 
         // Get command queue and create command buffer
         auto commandQueue = renderer->GetCommandQueue();
@@ -42,8 +45,8 @@ int main(int argc, char* argv[])
             std::make_shared<LLGL::Input>()
         };
 
-        auto& window1 = static_cast<LLGL::Window&>(context1->GetSurface());
-        auto& window2 = static_cast<LLGL::Window&>(context2->GetSurface());
+        auto& window1 = static_cast<LLGL::Window&>(swapChain1->GetSurface());
+        auto& window2 = static_cast<LLGL::Window&>(swapChain2->GetSurface());
 
         window1.AddEventListener(inputs[0]);
         window2.AddEventListener(inputs[1]);
@@ -187,14 +190,14 @@ int main(int argc, char* argv[])
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram                  = shaderProgram;
-            pipelineDesc.renderPass                     = context1->GetRenderPass();
+            pipelineDesc.renderPass                     = swapChain1->GetRenderPass();
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
+            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc.samples > 1);
         }
         pipeline[0] = renderer->CreatePipelineState(pipelineDesc);
 
         {
-            pipelineDesc.renderPass                     = context2->GetRenderPass();
+            pipelineDesc.renderPass                     = swapChain2->GetRenderPass();
 
             // Only enable logic operations if it's supported, otherwise an exception is thrown
             if (logicOpSupported)
@@ -259,7 +262,7 @@ int main(int argc, char* argv[])
                 if (window1.IsShown())
                 {
                     commands->SetPipelineState(*pipeline[enableLogicOp[0] ? 1 : 0]);
-                    commands->BeginRenderPass(*context1);
+                    commands->BeginRenderPass(*swapChain1);
                     {
                         commands->DrawInstanced(3, 0, numInstances);
                     }
@@ -270,7 +273,7 @@ int main(int argc, char* argv[])
                 if (window2.IsShown())
                 {
                     commands->SetPipelineState(*pipeline[enableLogicOp[1] ? 1 : 0]);
-                    commands->BeginRenderPass(*context2);
+                    commands->BeginRenderPass(*swapChain2);
                     {
                         commands->DrawInstanced(4, 3, numInstances);
                     }
@@ -282,9 +285,9 @@ int main(int argc, char* argv[])
 
             // Present the results on the screen
             if (window1.IsShown())
-                context1->Present();
+                swapChain1->Present();
             if (window2.IsShown())
-                context2->Present();
+                swapChain2->Present();
         }
     }
     catch (const std::exception& e)

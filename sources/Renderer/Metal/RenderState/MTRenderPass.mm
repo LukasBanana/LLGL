@@ -137,17 +137,17 @@ static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBi
 }
 
 // RenderContext initializer
-MTRenderPass::MTRenderPass(const RenderContextDescriptor& desc) :
+MTRenderPass::MTRenderPass(const SwapChainDescriptor& desc) :
     sampleCount_ { GetClampedSamples(desc.samples) }
 {
-    const MTLPixelFormat colorFormat        = GetColorMTLPixelFormat(desc.videoMode.colorBits);
-    const MTLPixelFormat depthStencilFormat = GetDepthStencilMTLPixelFormat(desc.videoMode.depthBits, desc.videoMode.stencilBits);
+    const MTLPixelFormat colorFormat        = GetColorMTLPixelFormat(desc.colorBits);
+    const MTLPixelFormat depthStencilFormat = GetDepthStencilMTLPixelFormat(desc.depthBits, desc.stencilBits);
 
     colorAttachments_ = { MakeDefaultMTAttachmentFormat(colorFormat) };
 
-    if (desc.videoMode.depthBits > 0)
+    if (desc.depthBits > 0)
         depthAttachment_ = MakeDefaultMTAttachmentFormat(depthStencilFormat);
-    if (desc.videoMode.stencilBits > 0)
+    if (desc.stencilBits > 0)
         stencilAttachment_ = MakeDefaultMTAttachmentFormat(depthStencilFormat);
 }
 

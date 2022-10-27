@@ -20,10 +20,10 @@ int main()
         auto renderer = LLGL::RenderSystem::Load("Vulkan", profiler.get(), debugger.get());
 
         // Create render context
-        LLGL::RenderContextDescriptor contextDesc;
-        contextDesc.videoMode.resolution = { 800, 600 };
+        LLGL::SwapChainDescriptor swapChainDesc;
+        swapChainDesc.resolution = { 800, 600 };
 
-        auto context = renderer->CreateRenderContext(contextDesc);
+        auto swapChain = renderer->CreateSwapChain(swapChainDesc);
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();

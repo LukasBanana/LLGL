@@ -301,7 +301,7 @@ private:
             #endif
             {
                 // Set viewport
-                commands->SetViewport(context->GetVideoMode().resolution);
+                commands->SetViewport(context->GetResolution());
 
                 // Set graphics pipeline with the shader
                 commands->SetPipelineState(*pipeline[showWireframe ? 1 : 0]);

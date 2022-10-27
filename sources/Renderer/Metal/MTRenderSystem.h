@@ -49,11 +49,11 @@ class MTRenderSystem final : public RenderSystem
         MTRenderSystem();
         ~MTRenderSystem();
 
-        /* ----- Render Context ----- */
+        /* ----- Swap-chain ----- */
 
-        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
-        void Release(RenderContext& renderContext) override;
+        void Release(RenderContext& swapChain) override;
 
         /* ----- Command queues ----- */
 

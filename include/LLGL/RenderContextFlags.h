@@ -1,17 +1,15 @@
 /*
- * RenderContextFlags.h
+ * SwapChainFlags.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_RENDER_CONTEXT_FLAGS_H
-#define LLGL_RENDER_CONTEXT_FLAGS_H
+#ifndef LLGL_SWAP_CHAIN_FLAGS_H
+#define LLGL_SWAP_CHAIN_FLAGS_H
 
 
-#include "Export.h"
 #include "Types.h"
-#include "PipelineStateFlags.h"
 #include <cstdint>
 
 
@@ -19,16 +17,48 @@ namespace LLGL
 {
 
 
+/* ----- Flags ----- */
+
+/**
+\brief Swap-chain resize buffers flags.
+\see RenderContext::ResizeBuffers
+*/
+struct ResizeBuffersFlags
+{
+    enum
+    {
+        /**
+        \brief Adapts the swap-chain's surface for the new resolution.
+        \see Surface::AdaptForVideoMode
+        */
+        AdaptSurface    = (1 << 0),
+
+        /**
+        \brief Puts the swap-chain into fullscreen mode.
+        \remarks This implies AdaptSurface but cannot be used in combination with the WindowedMode flag.
+        \see WindowedMode
+        \see RenderContext::SwitchFullscreen
+        */
+        FullscreenMode  = (1 << 1),
+
+        /**
+        \brief Puts the swap-chain into windowed mode.
+        \remarks This implies AdaptSurface but cannot be used in combination with the FullscreenMode flag.
+        \see FullscreenMode
+        \see RenderContext::SwitchFullscreen
+        */
+        WindowedMode    = (1 << 2),
+    };
+};
+
+
 /* ----- Structures ----- */
 
 /**
-\brief Video mode descriptor structure.
-\remarks This is mainly used to set the video mode of a RenderContext object.
-The counterpart for a physical display mode is the DisplayModeDescriptor structure.
-\see RenderContext::SetVideoMode
-\see DisplayModeDescriptor
+\brief Swap chain descriptor structure.
+\see RenderSystem::CreateSwapChain
 */
-struct VideoModeDescriptor
+struct SwapChainDescriptor
 {
     /**
     \brief Screen resolution (in pixels).
@@ -61,52 +91,24 @@ struct VideoModeDescriptor
     */
     int             stencilBits     = 8;
 
-    //! Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
-    bool            fullscreen      = false;
-
-    /**
-    \brief Number of swap-chain buffers. By default 2 (for double-buffering).
-    \remarks This is only a hint to the renderer and there is no guarantee how many buffers are finally used for the swap chain.
-    Especially OpenGL does not support custom swap chain sizes.
-    If this value is 0, the video mode is invalid.
-    */
-    std::uint32_t   swapChainSize   = 2;
-};
-
-/**
-\brief Render context descriptor structure.
-\see RenderSystem::CreateRenderContext
-*/
-struct RenderContextDescriptor
-{
-    //! Video mode descriptor.
-    VideoModeDescriptor     videoMode;
-
     /**
     \brief Number of samples for the swap-chain buffers. By default 1.
     \remarks If the specified number of samples is not supported, LLGL will silently reduce it.
     The actual number of samples can be queried by the \c GetSamples function of the RenderTarget interface.
     \see RenderTarget::GetSamples
     */
-    std::uint32_t           samples         = 1;
+    std::uint32_t   samples         = 1;
 
     /**
-    \brief Vertical synchronisation (V-sync) interval.
-    \remarks This is typically 0 to disable V-sync or 1 to enable V-sync, but higher values are possible, too.
-    A value of 2 for instance effectively halves the frame refresh rate that the active display is capable of,
-    e.g. a display with a refresh rate of 60 Hz and a V-sync value of 2 limits the frame rate to 30 Hz.
+    \brief Number of swap buffers. By default 2 (for double-buffering).
+    \remarks This is only a hint to the renderer and there is no guarantee how many buffers are finally used for the swap chain.
+    Especially OpenGL does not support custom swap chain sizes.
     */
-    std::uint32_t           vsyncInterval   = 0;
+    std::uint32_t   swapBuffers     = 2;
+
+    //! Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
+    bool            fullscreen      = false;
 };
-
-
-/* ----- Operators ----- */
-
-//! Compares the two specified video mode descriptors on equality.
-LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
-
-//! Compares the two specified video mode descriptors on inequality.
-LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
 
 
 } // /namespace LLGL

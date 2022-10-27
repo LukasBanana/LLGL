@@ -26,21 +26,34 @@ public enum class OpenGLContextProfile
 };
 
 
+/* ----- Flags ----- */
+
+[Flags]
+public enum class ResizeBuffersFlags
+{
+    None            = 0,
+    AdaptSurface    = (1 << 0),
+    FullscreenMode  = (1 << 1),
+    WindowedMode    = (1 << 2),
+};
+
+
 /* ----- Structures ----- */
 
-public ref class VideoModeDescriptor
+public ref class SwapChainDescriptor
 {
 
     public:
 
-        VideoModeDescriptor();
+        SwapChainDescriptor();
 
-        property Extent2D^       Resolution;
-        property int             ColorBits;
-        property int             DepthBits;
-        property int             StencilBits;
-        property bool            Fullscreen;
-        property unsigned int    SwapChainSize;
+        property Extent2D^      Resolution;
+        property unsigned int   Samples;
+        property int            ColorBits;
+        property int            DepthBits;
+        property int            StencilBits;
+        property unsigned int   SwapBuffers;
+        property bool           Fullscreen;
 
 };
 
@@ -54,19 +67,6 @@ public ref class RendererConfigurationOpenGL
         property OpenGLContextProfile   ContextProfile;
         property int                    MajorVersion;
         property int                    MinorVersion;
-
-};
-
-public ref class RenderContextDescriptor
-{
-
-    public:
-
-        RenderContextDescriptor();
-
-        property VideoModeDescriptor^   VideoMode;
-        property unsigned int           Samples;
-        property unsigned int           VsyncInterval;
 
 };
 

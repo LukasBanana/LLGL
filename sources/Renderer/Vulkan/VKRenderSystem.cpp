@@ -93,7 +93,7 @@ VKRenderSystem::~VKRenderSystem()
 
 /* ----- Render Context ----- */
 
-RenderContext* VKRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
+RenderContext* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
     return TakeOwnership(
         renderContexts_,
@@ -101,9 +101,9 @@ RenderContext* VKRenderSystem::CreateRenderContext(const RenderContextDescriptor
     );
 }
 
-void VKRenderSystem::Release(RenderContext& renderContext)
+void VKRenderSystem::Release(RenderContext& swapChain)
 {
-    RemoveFromUniqueSet(renderContexts_, &renderContext);
+    RemoveFromUniqueSet(renderContexts_, &swapChain);
 }
 
 /* ----- Command queues ----- */

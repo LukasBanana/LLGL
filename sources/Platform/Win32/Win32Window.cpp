@@ -290,9 +290,6 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
 
     if (flagsChanged || positionChanged || sizeChanged)
     {
-        /* Temporary reset user data to avoid recursive resize events */
-        SetUserData(wnd_, nullptr);
-
         UINT flags = SWP_NOZORDER;
 
         if (flagsChanged)
@@ -331,9 +328,6 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
             static_cast<int>(appearance.size.height),
             flags
         );
-
-        /* Reset user data */
-        SetUserData(wnd_, this);
     }
 }
 

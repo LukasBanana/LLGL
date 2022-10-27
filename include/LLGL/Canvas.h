@@ -89,7 +89,7 @@ class LLGL_EXPORT Canvas : public Surface
         virtual bool HasQuit() const;
 
         //! This default implementation ignores the video mode descriptor completely and always return false.
-        bool AdaptForVideoMode(VideoModeDescriptor& videoModeDesc) override;
+        bool AdaptForVideoMode(Extent2D* resolution, bool* fullscreen) override;
 
         /**
         \brief Processes the events for this canvas (i.e. touch input, key presses etc.).

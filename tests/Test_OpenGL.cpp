@@ -32,17 +32,17 @@ int main()
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("OpenGL", profiler.get(), debugger.get());
 
-        // Create render context
-        LLGL::RenderContextDescriptor contextDesc;
+        // Create swap-chain
+        LLGL::SwapChainDescriptor swapChainDesc;
 
-        contextDesc.videoMode.resolution        = { 800, 600 };
-        //contextDesc.videoMode.fullscreen        = true;
-        contextDesc.samples                     = 8;
-        contextDesc.vsyncInterval               = 1;
+        swapChainDesc.resolution    = { 800, 600 };
+        swapChainDesc.samples       = 8;
+        //swapChainDesc.fullscreen    = true;
 
-        /*contextDesc.profileOpenGL.extProfile    = true;
-        contextDesc.profileOpenGL.coreProfile   = true;
-        contextDesc.profileOpenGL.version       = LLGL::OpenGLVersion::OpenGL_3_0;*/
+        LLGL::RendererConfigurationOpenGL rendererConfig;
+        rendererConfig.contextProfile   = LLGL::OpenGLContextProfile::CoreProfile;
+        rendererConfig.majorVersion     = 3;
+        rendererConfig.minorVersion     = 0;
 
         #if 0
         contextDesc.debugCallback = [](const std::string& type, const std::string& message)
@@ -61,14 +61,14 @@ int main()
 
         LLGL::WindowDescriptor windowDesc;
         {
-            windowDesc.size             = contextDesc.videoMode.resolution;
-            windowDesc.borderless       = contextDesc.videoMode.fullscreen;
-            windowDesc.centered         = !contextDesc.videoMode.fullscreen;
-            windowDesc.resizable        = true;
+            windowDesc.size         = swapChainDesc.resolution;
+            windowDesc.borderless   = swapChainDesc.fullscreen;
+            windowDesc.centered     = !swapChainDesc.fullscreen;
+            windowDesc.resizable    = true;
         }
         auto window = std::shared_ptr<LLGL::Window>(LLGL::Window::Create(windowDesc));
 
-        auto context = renderer->CreateRenderContext(contextDesc, window);
+        auto swapChain = renderer->CreateSwapChain(swapChainDesc, window);
 
         #endif
 
@@ -91,21 +91,19 @@ int main()
         class ResizeEventHandler : public LLGL::Window::EventListener
         {
         public:
-            explicit ResizeEventHandler(LLGL::RenderContext* context) :
-                context_ { context  }
+            explicit ResizeEventHandler(LLGL::RenderContext* swapChain) :
+                swapChain_ { swapChain  }
             {
             }
             void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override
             {
-                auto videoMode = context_->GetVideoMode();
-                videoMode.resolution = clientAreaSize;
-                context_->SetVideoMode(videoMode);
+                swapChain_->ResizeBuffers(clientAreaSize);
             }
         private:
-            LLGL::RenderContext* context_;
+            LLGL::RenderContext* swapChain_;
         };
 
-        auto resizeEventHandler = std::make_shared<ResizeEventHandler>(context);
+        auto resizeEventHandler = std::make_shared<ResizeEventHandler>(swapChain);
         window->AddEventListener(resizeEventHandler);
 
         // Create vertex buffer
@@ -282,7 +280,7 @@ int main()
 
         renderTarget = renderer->CreateRenderTarget(8);
 
-        auto renderTargetSize = contextDesc.videoMode.resolution;
+        auto renderTargetSize = swapChainDesc.videoMode.resolution;
 
         LLGL::TextureDescriptor texDesc;
         {
@@ -306,7 +304,7 @@ int main()
             pipelineDesc.shaderProgram                  = &shaderProgram;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
 
-            pipelineDesc.rasterizer.multiSampleEnabled  = (contextDesc.samples > 1);
+            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc.samples > 1);
 
             pipelineDesc.blend.targets[0].dstColor      = LLGL::BlendOp::Zero;
         }
@@ -361,9 +359,9 @@ int main()
                 commands->SetResource(sampler, 0, 0);
                 //#endif
 
-                commands->SetViewport(LLGL::Viewport{ {}, context->GetResolution() });
+                commands->SetViewport(swapChain->GetResolution());
 
-                commands->BeginRenderPass(*context);
+                commands->BeginRenderPass(*swapChain);
                 {
                     commands->Clear(LLGL::ClearFlags::Color, { LLGL::ColorRGBAf{ 0.3f, 0.3f, 1 } });
 
@@ -371,8 +369,8 @@ int main()
                     commands->SetVertexBuffer(*vertexBuffer);
 
                     auto projection = Gs::ProjectionMatrix4f::Planar(
-                        static_cast<Gs::Real>(context->GetVideoMode().resolution.width),
-                        static_cast<Gs::Real>(context->GetVideoMode().resolution.height)
+                        static_cast<Gs::Real>(swapChain->GetResolution().width),
+                        static_cast<Gs::Real>(swapChain->GetResolution().height)
                     );
                     commands->SetUniform(shaderProgram.FindUniformLocation("projection"), projection.Ptr(), sizeof(projection));
 
@@ -393,7 +391,7 @@ int main()
                     {
                         windowDesc.borderless = !windowDesc.borderless;
 
-                        /*auto videoMode = contextDesc.videoMode;
+                        /*auto videoMode = swapChainDesc.videoMode;
                         videoMode.fullscreen = windowDesc.borderless;
                         LLGL::Desktop::SetVideoMode(videoMode);*/
 
@@ -403,9 +401,9 @@ int main()
                         windowDesc.visible = true;
                         window->SetDesc(windowDesc);
 
-                        context->SetVideoMode(contextDesc.videoMode);
+                        swapChain->SwitchFullscreen(true);
 
-                        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, contextDesc.videoMode.resolution });
+                        commands->SetViewport(swapChainDesc.resolution);
                     }
 
                     #endif
@@ -464,7 +462,7 @@ int main()
                     if (renderTarget && renderTargetTex)
                     {
                         commands->EndRenderPass();
-                        commands->BeginRenderPass(*context);
+                        commands->BeginRenderPass(*swapChain);
                         commands->SetResource(*renderTargetTex, 0, LLGL::BindFlags::Sampled);
                         commands->Draw(4, 0);
                     }
@@ -474,7 +472,7 @@ int main()
             commands->End();
             commandQueue->Submit(*commands);
 
-            context->Present();
+            swapChain->Present();
         }
     }
     catch (const std::exception& e)

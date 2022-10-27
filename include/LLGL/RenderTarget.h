@@ -47,7 +47,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \remarks This is either determined by the resolution specified in the render target descriptor, or by the video mode of the render context.
         \see RenderContext::GetVideoMode
         \see RenderTargetDescriptor::resolution
-        \see VideoModeDescriptor::resolution
+        \see SwapChainDescriptor::resolution
         */
         virtual Extent2D GetResolution() const = 0;
 
@@ -56,7 +56,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \remarks If a certain number of samples is not supported by the rendering API, LLGL will reduce the amount of samples.
         This function returns the actual number of samples the hardware object was created with.
         \see RenderTargetDescriptor::samples
-        \see VideoModeDescriptor::samples
+        \see SwapChainDescriptor::samples
         */
         virtual std::uint32_t GetSamples() const = 0;
 
