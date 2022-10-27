@@ -138,7 +138,7 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
         /* Create new canvas for this render context */
         CanvasDescriptor canvasDesc;
         {
-            canvasDesc.borderless = videoModeDesc.fullscreen;
+            canvasDesc.borderless = fullscreen;
         }
         surface_ = Canvas::Create(canvasDesc);
 

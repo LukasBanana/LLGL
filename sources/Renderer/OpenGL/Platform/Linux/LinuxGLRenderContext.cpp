@@ -23,7 +23,10 @@ namespace LLGL
  * ======= Private: =======
  */
 
-void GLRenderContext::ChooseGLXVisualAndGetX11WindowContext(const SwapChainDescriptor& desc, NativeContextHandle& windowContext)
+void GLRenderContext::ChooseGLXVisualAndGetX11WindowContext(
+    const SwapChainDescriptor&  desc,
+    std::uint32_t&              samples,
+    NativeContextHandle&        windowContext)
 {
     /* Open X11 display */
     windowContext.display = XOpenDisplay(nullptr);
@@ -36,7 +39,7 @@ void GLRenderContext::ChooseGLXVisualAndGetX11WindowContext(const SwapChainDescr
     GLXFBConfig framebufferConfig = 0;
 
     /* Find suitable multi-sample format (for samples > 1) */
-    for (samples = GetClampedSamples(samples); samples > 1; --samples)
+    for (samples = GetClampedSamples(desc.samples); samples > 1; --samples)
     {
         /* Create framebuffer configuration for multi-sampling */
         const int framebufferAttribs[] =

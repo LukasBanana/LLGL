@@ -82,7 +82,11 @@ class GLRenderContext final : public RenderContext
         void InitRenderStates();
 
         #ifdef __linux__
-        void ChooseGLXVisualAndGetX11WindowContext(const SwapChainDescriptor& desc, NativeContextHandle& windowContext);
+        void ChooseGLXVisualAndGetX11WindowContext(
+            const SwapChainDescriptor&  desc,
+            std::uint32_t&              samples,
+            NativeContextHandle&        windowContext
+        );
         #endif
 
     private:

@@ -21,23 +21,29 @@ GLRenderContext::GLRenderContext(
     RenderContext  { desc                                       },
     contextHeight_ { static_cast<GLint>(desc.resolution.height) }
 {
+    GLContext* sharedGLContext = (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr);
+
     #ifdef LLGL_OS_LINUX
+
+    auto finalSwapChainDesc = desc;
 
     /* Setup surface for the render context and pass native context handle */
     NativeContextHandle windowContext;
-    ChooseGLXVisualAndGetX11WindowContext(desc, windowContext);
+    ChooseGLXVisualAndGetX11WindowContext(desc, finalSwapChainDesc.samples, windowContext);
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, &windowContext);
+
+    /* Create platform dependent OpenGL context with modified descriptor in case multisamples have changed */
+    context_ = GLContext::Create(finalSwapChainDesc, config, GetSurface(), sharedGLContext);
 
     #else
 
     /* Setup surface for the render context */
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
-    #endif
-
     /* Create platform dependent OpenGL context */
-    GLContext* sharedGLContext = (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr);
     context_ = GLContext::Create(desc, config, GetSurface(), sharedGLContext);
+
+    #endif
 
     /* Get state manager and notify about the current render context */
     stateMngr_ = context_->GetStateManager();
