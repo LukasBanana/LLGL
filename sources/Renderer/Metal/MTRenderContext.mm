@@ -25,7 +25,7 @@ MTRenderContext::MTRenderContext(
     renderPass_ { desc }
 {
     /* Create surface */
-    SetOrCreateSurface(surface, desc.videoMode, nullptr);
+    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     NativeHandle nativeHandle = {};
     GetSurface().GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
