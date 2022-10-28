@@ -6,7 +6,7 @@
  */
 
 #include "MTCommandBuffer.h"
-#include "MTRenderContext.h"
+#include "MTSwapChain.h"
 #include "MTTypes.h"
 #include "Buffer/MTBuffer.h"
 #include "Buffer/MTBufferArray.h"
@@ -19,6 +19,7 @@
 #include "Texture/MTRenderTarget.h"
 #include "Shader/MTShaderProgram.h"
 #include "../CheckedCast.h"
+#include <LLGL/TypeInfo.h>
 #include <algorithm>
 #include <limits.h>
 
@@ -470,14 +471,14 @@ void MTCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    if (renderTarget.IsRenderContext())
+    if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         /* Put current drawable into queue */
-        auto& renderContextMT = LLGL_CAST(MTRenderContext&, renderTarget);
-        QueueDrawable(renderContextMT.GetMTKView().currentDrawable);
+        auto& swapChainMT = LLGL_CAST(MTSwapChain&, renderTarget);
+        QueueDrawable(swapChainMT.GetMTKView().currentDrawable);
 
         /* Get next render pass descriptor from MetalKit view */
-        MTKView* view = renderContextMT.GetMTKView();
+        MTKView* view = swapChainMT.GetMTKView();
         encoderScheduler_.BindRenderEncoder(view.currentRenderPassDescriptor, true);
     }
     else

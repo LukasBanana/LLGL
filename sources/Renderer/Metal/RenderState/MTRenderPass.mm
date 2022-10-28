@@ -8,7 +8,7 @@
 #include "MTRenderPass.h"
 #include <LLGL/RenderPassFlags.h>
 #include <LLGL/RenderTargetFlags.h>
-#include <LLGL/RenderContextFlags.h>
+#include <LLGL/SwapChainFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include "../MTTypes.h"
 #include "../Texture/MTTexture.h"
@@ -136,7 +136,7 @@ static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBi
     #endif
 }
 
-// RenderContext initializer
+// Swap-chain initializer
 MTRenderPass::MTRenderPass(const SwapChainDescriptor& desc) :
     sampleCount_ { GetClampedSamples(desc.samples) }
 {

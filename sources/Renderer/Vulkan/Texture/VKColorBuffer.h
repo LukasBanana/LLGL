@@ -23,7 +23,7 @@ class VKColorBuffer final : private VKRenderBuffer
 
         VKColorBuffer(const VKPtr<VkDevice>& device);
 
-        // Explicit default move constructors required for GCC (to be used in VKRenderContext c'tor)
+        // Explicit default move constructors required for GCC (to be used in VKSwapChain c'tor)
         VKColorBuffer(VKColorBuffer&&) = default;
         VKColorBuffer& operator = (VKColorBuffer&&) = default;
 
