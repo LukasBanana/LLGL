@@ -1,11 +1,11 @@
 /*
- * LinuxGLRenderContext.cpp
+ * LinuxGLSwapChain.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "../../GLRenderContext.h"
+#include "../../GLSwapChain.h"
 #include "../../Ext/GLExtensions.h"
 #include "../../Ext/GLExtensionLoader.h"
 #include "../../../TextureUtils.h"
@@ -23,7 +23,7 @@ namespace LLGL
  * ======= Private: =======
  */
 
-void GLRenderContext::ChooseGLXVisualAndGetX11WindowContext(
+void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(
     const SwapChainDescriptor&  desc,
     std::uint32_t&              samples,
     NativeContextHandle&        windowContext)
