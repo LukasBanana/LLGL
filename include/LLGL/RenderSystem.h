@@ -146,7 +146,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Returns basic renderer information.
         \remarks The validity of these information is only guaranteed if this function is called
-        after a valid render context has been created. Otherwise the behavior is undefined!
+        after a valid swap-chain has been created. Otherwise the behavior is undefined!
         */
         inline const RendererInfo& GetRendererInfo() const
         {
@@ -156,7 +156,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Returns the rendering capabilities.
         \remarks The validity of these information is only guaranteed if this function is called
-        after a valid render context has been created. Otherwise the behavior is undefined!
+        after a valid swap-chain has been created. Otherwise the behavior is undefined!
         */
         inline const RenderingCapabilities& GetRenderingCaps() const
         {
@@ -184,19 +184,19 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Creates a new swap-chain. At least one swap-chain is required to render into an output surface.
         \param[in] desc Specifies the swap-chain descriptor, which contains resolution, bit depth, multi-sampling settings etc.
-        \param[in] surface Optional shared pointer to a surface for the render context.
-        If this is null, the swap-chain will create its own platform specific surface, which can be accessed by RenderContext::GetSurface.
+        \param[in] surface Optional shared pointer to a surface for the swap-chain.
+        If this is null, the swap-chain will create its own platform specific surface, which can be accessed by SwapChain::GetSurface.
         The default surface on desktop platforms (i.e. Window interface) is not shown automatically, i.e. the Window::Show function has to be invoked to show the surface.
-        \see RenderContext::GetSurface
+        \see SwapChain::GetSurface
         \see Window::Show
         */
-        virtual RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = {}) = 0;
+        virtual SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = {}) = 0;
 
         /**
         \brief Releases the specified swap-chain. After this call, the specified object must no longer be used.
         \see CreateSwapChain
         */
-        virtual void Release(RenderContext& swapChain) = 0;
+        virtual void Release(SwapChain& swapChain) = 0;
 
         /* ----- Command queues ----- */
 

@@ -91,19 +91,19 @@ VKRenderSystem::~VKRenderSystem()
     device_.WaitIdle();
 }
 
-/* ----- Render Context ----- */
+/* ----- Swap-chain ----- */
 
-RenderContext* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
     return TakeOwnership(
-        renderContexts_,
-        MakeUnique<VKRenderContext>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, desc, surface)
+        swapChains_,
+        MakeUnique<VKSwapChain>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, desc, surface)
     );
 }
 
-void VKRenderSystem::Release(RenderContext& swapChain)
+void VKRenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(renderContexts_, &swapChain);
+    RemoveFromUniqueSet(swapChains_, &swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -655,7 +655,7 @@ PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescrip
         MakeUnique<VKGraphicsPSO>(
             device_,
             defaultPipelineLayout_,
-            (!renderContexts_.empty() ? (*renderContexts_.begin())->GetRenderPass() : nullptr),
+            (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
             desc,
             gfxPipelineLimits_
         )

@@ -1438,8 +1438,8 @@ void GLStateManager::BindRenderPass(
     const ClearValue*   clearValues)
 {
     /* Bind render target/context */
-    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
-        BindAndBlitRenderContext(LLGL_CAST(GLRenderContext&, renderTarget));
+    if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
+        BindAndBlitSwapChain(LLGL_CAST(GLSwapChain&, renderTarget));
     else
         BindAndBlitRenderTarget(LLGL_CAST(GLRenderTarget&, renderTarget));
 
@@ -1751,12 +1751,12 @@ void GLStateManager::BindAndBlitRenderTarget(GLRenderTarget& renderTargetGL)
     NotifyRenderTargetHeight(static_cast<GLint>(renderTargetGL.GetResolution().height));
 }
 
-void GLStateManager::BindAndBlitRenderContext(GLRenderContext& renderContextGL)
+void GLStateManager::BindAndBlitSwapChain(GLSwapChain& swapChainGL)
 {
     /* Blit previously bound render target, unbind FBO, and make context current */
     BlitBoundRenderTarget();
     BindGLRenderTarget(nullptr);
-    GLRenderContext::GLMakeCurrent(&renderContextGL);
+    GLSwapChain::GLMakeCurrent(&swapChainGL);
 }
 
 void GLStateManager::ClearAttachmentsWithRenderPass(

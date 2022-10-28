@@ -294,9 +294,9 @@ private:
                 // Start with qeometry query
                 commands->BeginQuery(*geometryQuery);
                 {
-                    commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
+                    commands->SetViewport(swapChain->GetResolution());
 
-                    commands->BeginRenderPass(*context);
+                    commands->BeginRenderPass(*swapChain);
                     {
                         RenderBoundingBoxes();
                         RenderScene();
@@ -319,7 +319,7 @@ private:
         }
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

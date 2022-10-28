@@ -26,7 +26,7 @@ namespace LLGL
 class RenderTarget;
 class RenderPass;
 class GLRenderTarget;
-class GLRenderContext;
+class GLSwapChain;
 class GLBuffer;
 class GLTexture;
 class GLDepthStencilState;
@@ -312,7 +312,7 @@ class GLStateManager
         void BlitBoundRenderTarget();
 
         void BindAndBlitRenderTarget(GLRenderTarget& renderTargetGL);
-        void BindAndBlitRenderContext(GLRenderContext& renderContextGL);
+        void BindAndBlitSwapChain(GLSwapChain& swapChainGL);
 
         void ClearAttachmentsWithRenderPass(
             const GLRenderPass& renderPassGL,

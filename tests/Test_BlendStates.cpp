@@ -34,7 +34,7 @@ int main()
         }
         auto renderer = LLGL::RenderSystem::Load("OpenGL");
 
-        // Create render context
+        // Create swap-chain
         LLGL::SwapChainDescriptor swapChainDesc;
 
         swapChainDesc.resolution = { 800, 600 };

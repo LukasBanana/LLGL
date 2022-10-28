@@ -82,12 +82,12 @@ struct AttachmentFormatDescriptor
 
     /**
     \brief Specifies the render target attachment format. By default Format::Undefined.
-    \remarks If the render pass is used for a render context, the appropriate color format can be determined by the RenderContext::GetColorFormat function,
-    and the appropriate depth-stencil format can be determined by the RenderContext::GetDepthStencilFormat function.
+    \remarks If the render pass is used for a swap-chain, the appropriate color format can be determined by the SwapChain::GetColorFormat function,
+    and the appropriate depth-stencil format can be determined by the SwapChain::GetDepthStencilFormat function.
     If the render pass is used for render targets, the format depends on the render target attachments.
     If this is undefined, the corresponding attachment is not used.
-    \see RenderContext::GetColorFormat
-    \see RenderContext::GetDepthStencilFormat
+    \see SwapChain::GetColorFormat
+    \see SwapChain::GetDepthStencilFormat
     */
     Format                  format  = Format::Undefined;
 
@@ -118,7 +118,7 @@ struct RenderPassDescriptor
 {
     /**
     \brief Specifies the color attachments used within the render pass.
-    \remarks A render context usually uses a BGRA format instead of an RGBA format.
+    \remarks A swap-chain usually uses a BGRA format instead of an RGBA format.
     \see RenderingLimits::maxColorAttachments
     \see Format::BGRA8UNorm
     \see Format::BGRA8sRGB

@@ -122,14 +122,14 @@ private:
             // Set buffer array
             commands->SetVertexBufferArray(*vertexBufferArray);
 
-            // Set the render context as the initial render target
-            commands->BeginRenderPass(*context);
+            // Set the swap-chain as the initial render target
+            commands->BeginRenderPass(*swapChain);
             {
                 // Clear color buffer
                 commands->Clear(LLGL::ClearFlags::Color, backgroundColor);
 
                 // Set viewports
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
 
                 // Set graphics pipeline state
                 commands->SetPipelineState(*pipeline);
@@ -143,7 +143,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

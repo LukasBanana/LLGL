@@ -21,14 +21,14 @@ namespace LLGL
 {
 
 
-class MTRenderContext final : public RenderContext
+class MTSwapChain final : public SwapChain
 {
 
     public:
 
         /* ----- Common ----- */
 
-        MTRenderContext(
+        MTSwapChain(
             id<MTLDevice>                   device,
             const SwapChainDescriptor&      desc,
             const std::shared_ptr<Surface>& surface

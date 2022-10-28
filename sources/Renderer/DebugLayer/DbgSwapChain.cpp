@@ -13,48 +13,48 @@ namespace LLGL
 {
 
 
-DbgRenderContext::DbgRenderContext(RenderContext& instance) :
+DbgSwapChain::DbgSwapChain(SwapChain& instance) :
     instance { instance }
 {
     ShareSurfaceAndConfig(instance);
 }
 
-void DbgRenderContext::SetName(const char* name)
+void DbgSwapChain::SetName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }
 
-void DbgRenderContext::Present()
+void DbgSwapChain::Present()
 {
     instance.Present();
 }
 
-std::uint32_t DbgRenderContext::GetSamples() const
+std::uint32_t DbgSwapChain::GetSamples() const
 {
     return instance.GetSamples();
 }
 
-Format DbgRenderContext::GetColorFormat() const
+Format DbgSwapChain::GetColorFormat() const
 {
     return instance.GetColorFormat();
 }
 
-Format DbgRenderContext::GetDepthStencilFormat() const
+Format DbgSwapChain::GetDepthStencilFormat() const
 {
     return instance.GetDepthStencilFormat();
 }
 
-bool DbgRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+bool DbgSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
     return instance.SetVsyncInterval(vsyncInterval);
 }
 
-const RenderPass* DbgRenderContext::GetRenderPass() const
+const RenderPass* DbgSwapChain::GetRenderPass() const
 {
     return instance.GetRenderPass();
 }
 
-bool DbgRenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
+bool DbgSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     return instance.ResizeBuffers(resolution);
 }

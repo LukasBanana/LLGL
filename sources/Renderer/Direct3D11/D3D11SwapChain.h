@@ -21,12 +21,12 @@ namespace LLGL
 
 class D3D11CommandBuffer;
 
-class D3D11RenderContext final : public RenderContext
+class D3D11SwapChain final : public SwapChain
 {
 
     public:
 
-        D3D11RenderContext(
+        D3D11SwapChain(
             IDXGIFactory*                   factory,
             const ComPtr<ID3D11Device>&     device,
             const SwapChainDescriptor&      desc,

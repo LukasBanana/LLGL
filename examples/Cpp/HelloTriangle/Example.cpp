@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
             swapChainDesc.samples       = 8; // check if LLGL adapts sample count that is too high
             #endif
         }
-        LLGL::RenderContext* swapChain = renderer->CreateSwapChain(swapChainDesc);
+        LLGL::SwapChain* swapChain = renderer->CreateSwapChain(swapChainDesc);
 
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();

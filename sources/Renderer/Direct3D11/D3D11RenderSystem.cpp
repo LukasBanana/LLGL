@@ -74,19 +74,19 @@ D3D11RenderSystem::~D3D11RenderSystem()
     D3D11BuiltinShaderFactory::Get().Clear();
 }
 
-/* ----- Render Context ----- */
+/* ----- Swap-chain ----- */
 
-RenderContext* D3D11RenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* D3D11RenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
     return TakeOwnership(
-        renderContexts_,
-        MakeUnique<D3D11RenderContext>(factory_.Get(), device_, desc, surface)
+        swapChains_,
+        MakeUnique<D3D11SwapChain>(factory_.Get(), device_, desc, surface)
     );
 }
 
-void D3D11RenderSystem::Release(RenderContext& swapChain)
+void D3D11RenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(renderContexts_, &swapChain);
+    RemoveFromUniqueSet(swapChains_, &swapChain);
 }
 
 /* ----- Command queues ----- */

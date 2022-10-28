@@ -291,13 +291,13 @@ private:
             // Set vertex buffer
             commands->SetVertexBuffer(*vertexBuffer);
 
-            commands->BeginRenderPass(*context);
+            commands->BeginRenderPass(*swapChain);
             {
                 // Clear color buffer
                 commands->Clear(LLGL::ClearFlags::Color);
 
                 // Set viewports
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
 
                 // Set graphics pipeline and vertex buffer
                 commands->SetPipelineState(*pipeline);
@@ -314,7 +314,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

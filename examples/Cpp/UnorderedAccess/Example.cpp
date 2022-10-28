@@ -237,10 +237,10 @@ private:
             commands->SetResourceHeap(*graphicsResourceHeap);
 
             // Draw scene
-            commands->BeginRenderPass(*context);
+            commands->BeginRenderPass(*swapChain);
             {
                 commands->Clear(LLGL::ClearFlags::Color);
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
                 commands->Draw(4, 0);
             }
             commands->EndRenderPass();
@@ -252,7 +252,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

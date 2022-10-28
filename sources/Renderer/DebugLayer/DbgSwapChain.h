@@ -18,7 +18,7 @@ namespace LLGL
 
 class DbgBuffer;
 
-class DbgRenderContext final : public RenderContext
+class DbgSwapChain final : public SwapChain
 {
 
     public:
@@ -38,12 +38,12 @@ class DbgRenderContext final : public RenderContext
 
     public:
 
-        DbgRenderContext(RenderContext& instance);
+        DbgSwapChain(SwapChain& instance);
 
     public:
 
-        RenderContext&  instance;
-        std::string     label;
+        SwapChain&  instance;
+        std::string label;
 
     private:
 

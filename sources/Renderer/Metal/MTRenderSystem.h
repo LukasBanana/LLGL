@@ -16,7 +16,7 @@
 
 #include "MTCommandQueue.h"
 #include "MTCommandBuffer.h"
-#include "MTRenderContext.h"
+#include "MTSwapChain.h"
 
 #include "Buffer/MTBuffer.h"
 #include "Buffer/MTBufferArray.h"
@@ -51,9 +51,9 @@ class MTRenderSystem final : public RenderSystem
 
         /* ----- Swap-chain ----- */
 
-        RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
-        void Release(RenderContext& swapChain) override;
+        void Release(SwapChain& swapChain) override;
 
         /* ----- Command queues ----- */
 
@@ -164,7 +164,7 @@ class MTRenderSystem final : public RenderSystem
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<MTRenderContext>  renderContexts_;
+        HWObjectContainer<MTSwapChain>      swapChains_;
         HWObjectInstance<MTCommandQueue>    commandQueue_;
         HWObjectContainer<MTCommandBuffer>  commandBuffers_;
         HWObjectContainer<MTBuffer>         buffers_;

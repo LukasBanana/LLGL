@@ -33,7 +33,7 @@ namespace LLGL
 {
 
 
-class RenderContext;
+class SwapChain;
 
 /**
 \brief Command buffer interface used for storing and encoding GPU commands.

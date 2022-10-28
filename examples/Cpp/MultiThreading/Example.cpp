@@ -242,12 +242,12 @@ private:
             cmdBuffer.SetVertexBuffer(*vertexBuffer);
             cmdBuffer.SetIndexBuffer(*indexBuffer);
 
-            // Set the render context as the initial render target
-            cmdBuffer.BeginRenderPass(*context);
+            // Set the swap-chain as the initial render target
+            cmdBuffer.BeginRenderPass(*swapChain);
             {
                 // Clear color- and depth buffers, and set viewport
                 cmdBuffer.Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
-                cmdBuffer.SetViewport(context->GetResolution());
+                cmdBuffer.SetViewport(swapChain->GetResolution());
 
                 // Draw scene with secondary command buffers
                 #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS
@@ -360,7 +360,7 @@ private:
         measure.Start();
         commandQueue->Submit(*primaryCmdBuffer);
         measure.Stop();
-        context->Present();
+        swapChain->Present();
     }
 
     void OnResize(const LLGL::Extent2D& /*resoluion*/) override

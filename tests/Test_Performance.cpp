@@ -60,7 +60,7 @@ class PerformanceTest
     private:
 
         std::unique_ptr<LLGL::RenderSystem> renderer;
-        LLGL::RenderContext*                context         = nullptr;
+        LLGL::SwapChain*                    swapChain       = nullptr;
         LLGL::CommandQueue*                 commandQueue    = nullptr;
         LLGL::CommandBuffer*                commands        = nullptr;
 
@@ -165,7 +165,7 @@ class PerformanceTest
             {
                 swapChainDesc.resolution = { 640, 480 };
             }
-            context = renderer->CreateSwapChain(swapChainDesc);
+            swapChain = renderer->CreateSwapChain(swapChainDesc);
 
             // Create command buffer
             commands = renderer->CreateCommandBuffer();

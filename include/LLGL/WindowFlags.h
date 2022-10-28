@@ -34,29 +34,29 @@ struct WindowDescriptor
     //! Specifies whether the window is visible at creation time. By default false.
     bool            visible             = false;
 
-    //! Specifies whether the window is borderless. This is required for a fullscreen render context. By default false.
+    //! Specifies whether the window is borderless. This is required for a fullscreen swap-chain. By default false.
     bool            borderless          = false;
 
     /**
     \brief Specifies whether the window can be resized. By default false.
-    \remarks For every window representing the surface for a RenderContext which has been resized,
-    the video mode of that RenderContext must be updated with the resolution of the surface's content size.
-    This can be done by setting the video mode with the new resolution before the respective render context is set as render target,
+    \remarks For every window representing the surface for a SwapChain which has been resized,
+    the video mode of that SwapChain must be updated with the resolution of the surface's content size.
+    This can be done by setting the video mode with the new resolution before the respective swap-chain is bound as render target,
     or it can be handled by a window event listener on the 'OnResize' callback:
     \code
     // Alternative 1
     class MyEventListener : public LLGL::Window::EventListener {
         void OnResize(Window& sender, const Extent2D& clientAreaSize) override {
-            myRenderContext->ResizeBuffers(clientAreaSize);
+            mySwapChain->ResizeBuffers(clientAreaSize);
         }
     };
     myWindow->AddEventListener(std::make_shared<MyEventListener>());
 
     // Alternative 2
-    myRenderContext->ResizeBuffers(myWindow->GetContentSize());
-    myCmdBuffer->BeginRenderPass(*myRenderContext);
+    mySwapChain->ResizeBuffers(myWindow->GetContentSize());
+    myCmdBuffer->BeginRenderPass(*mySwapChain);
     \endcode
-    \note Not updating the render context on a resized window is undefined behavior.
+    \note Not updating the swap-chain on a resized window is undefined behavior.
     \see Surface::GetContentSize
     \see Window::EventListener::OnResize
     */

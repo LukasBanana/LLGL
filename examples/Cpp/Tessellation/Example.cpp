@@ -151,11 +151,11 @@ public:
         {
             renderPassDesc.colorAttachments =
             {
-                LLGL::AttachmentFormatDescriptor{ context->GetColorFormat(), LLGL::AttachmentLoadOp::Clear },
+                LLGL::AttachmentFormatDescriptor{ swapChain->GetColorFormat(), LLGL::AttachmentLoadOp::Clear },
             };
             renderPassDesc.depthAttachment =
             (
-                LLGL::AttachmentFormatDescriptor{ context->GetDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear }
+                LLGL::AttachmentFormatDescriptor{ swapChain->GetDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear }
             );
             renderPassDesc.samples = GetMultiSampleDesc().SampleCount();
         }
@@ -198,7 +198,7 @@ public:
             #ifdef ENABLE_RENDER_PASS
             pipelineDesc.renderPass                     = renderPass;
             #else
-            pipelineDesc.renderPass                     = context->GetRenderPass();
+            pipelineDesc.renderPass                     = swapChain->GetRenderPass();
             #endif
             pipelineDesc.pipelineLayout                 = pipelineLayout;
 
@@ -290,18 +290,18 @@ private:
             commands->SetVertexBuffer(*vertexBuffer);
             commands->SetIndexBuffer(*indexBuffer);
 
-            // Set the render context as the initial render target
+            // Set the swap-chain as the initial render target
             #ifdef ENABLE_RENDER_PASS
-            commands->BeginRenderPass(*context, renderPass);
+            commands->BeginRenderPass(*swapChain, renderPass);
             #else
-            commands->BeginRenderPass(*context);
+            commands->BeginRenderPass(*swapChain);
 
             // Clear color- and depth buffers
             commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
             #endif
             {
                 // Set viewport
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
 
                 // Set graphics pipeline with the shader
                 commands->SetPipelineState(*pipeline[showWireframe ? 1 : 0]);
@@ -326,7 +326,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
     void OnDrawFrame() override

@@ -59,9 +59,9 @@ class GLRenderSystem final : public RenderSystem
 
         /* ----- Swap-chain ----- */
 
-        RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
-        void Release(RenderContext& swapChain) override;
+        void Release(SwapChain& swapChain) override;
 
         /* ----- Command queues ----- */
 
@@ -155,7 +155,7 @@ class GLRenderSystem final : public RenderSystem
 
     protected:
 
-        RenderContext* AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext);
+        SwapChain* AddSwapChain(std::unique_ptr<GLSwapChain>&& swapChain);
 
     private:
 
@@ -167,7 +167,7 @@ class GLRenderSystem final : public RenderSystem
         void QueryRendererInfo();
         void QueryRenderingCaps();
 
-        GLRenderContext* GetSharedRenderContext() const;
+        GLSwapChain* GetSharedGLContextSwapChain() const;
 
         GLBuffer* CreateGLBuffer(const BufferDescriptor& desc, const void* initialData);
 
@@ -177,7 +177,7 @@ class GLRenderSystem final : public RenderSystem
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<GLRenderContext>      renderContexts_;
+        HWObjectContainer<GLSwapChain>          swapChains_;
         HWObjectInstance<GLCommandQueue>        commandQueue_;
         HWObjectContainer<GLCommandBuffer>      commandBuffers_;
         HWObjectContainer<GLBuffer>             buffers_;

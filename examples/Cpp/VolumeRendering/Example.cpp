@@ -231,7 +231,7 @@ private:
         noiseTexture = renderer->CreateTexture(texDesc, &imageDesc);
 
         // Create render target texture for depth-range
-        CreateDepthRangeTextureAndRenderTarget(context->GetResolution());
+        CreateDepthRangeTextureAndRenderTarget(swapChain->GetResolution());
     }
 
     void CreateSamplers()
@@ -290,7 +290,7 @@ private:
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
                 pipelineDesc.shaderProgram              = shaderProgramDepthOnly;
-                pipelineDesc.renderPass                 = context->GetRenderPass();
+                pipelineDesc.renderPass                 = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout             = pipelineLayoutCbuffer;
                 pipelineDesc.depth.testEnabled          = true;
                 pipelineDesc.depth.writeEnabled         = true;
@@ -307,7 +307,7 @@ private:
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
                 pipelineDesc.shaderProgram              = shaderProgramFinalPass;
-                pipelineDesc.renderPass                 = context->GetRenderPass();
+                pipelineDesc.renderPass                 = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout             = pipelineLayoutFinalPass;
                 pipelineDesc.depth.testEnabled          = true;
                 pipelineDesc.depth.writeEnabled         = false;
@@ -439,11 +439,11 @@ private:
 
             commands->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
 
-            // Render everything directly into the render context
-            commands->BeginRenderPass(*context);
+            // Render everything directly into the swap-chain
+            commands->BeginRenderPass(*swapChain);
             {
                 commands->Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor, 1.0f });
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
 
                 // Render Z-pre pass
                 commands->PushDebugGroup("Z-Pre Pass");
@@ -471,7 +471,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

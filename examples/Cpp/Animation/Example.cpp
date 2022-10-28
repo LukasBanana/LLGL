@@ -159,7 +159,7 @@ private:
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
                 pipelineDesc.shaderProgram                  = shaderProgram;
-                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayout;
                 pipelineDesc.depth.testEnabled              = true;
                 pipelineDesc.depth.writeEnabled             = true;
@@ -329,11 +329,11 @@ private:
             // Bind common input assembly
             commands->SetVertexBuffer(*vertexBuffer);
 
-            // Render everything directly into the render context
-            commands->BeginRenderPass(*context);
+            // Render everything directly into the swap-chain
+            commands->BeginRenderPass(*swapChain);
             {
                 commands->Clear(LLGL::ClearFlags::All, { backgroundColor });
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
                 RenderScene();
             }
             commands->EndRenderPass();
@@ -342,7 +342,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

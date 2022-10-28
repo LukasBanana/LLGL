@@ -26,34 +26,34 @@ struct InterfaceID
 {
     enum
     {
-        Interface,              //!< \see Interface
-        Display,                //!< \see Display
-        RenderSystem,           //!< \see RenderSystem
-        RenderSystemChild,      //!< \see RenderSystemChild
-        Buffer,                 //!< \see Buffer
-        BufferArray,            //!< \see BufferArray
-        CommandBuffer,          //!< \see CommandBuffer
-        CommandQueue,           //!< \see CommandQueue
-        Fence,                  //!< \see Fence
-        PipelineLayout,         //!< \see PipelineLayout
-        PipelineState,          //!< \see PipelineState
-        QueryHeap,              //!< \see QueryHeap
-        RenderPass,             //!< \see RenderPass
-        RenderTarget,           //!< \see RenderTarget
-        RenderContext,          //!< \see RenderContext
-        Resource,               //!< \see Resource
-        ResourceHeap,           //!< \see ResourceHeap
-        Sampler,                //!< \see Sampler
-        Shader,                 //!< \see Shader
-        ShaderProgram,          //!< \see ShaderProgram
-        Texture,                //!< \see Texture
-        Surface,                //!< \see Surface
-        Canvas,                 //!< \see Canvas
-        Canvas_EventListener,   //!< \see Canvas::EventListener
-        Window,                 //!< \see Window
-        Window_EventListener,   //!< \see Window::EventListener
-        Input,                  //!< \see Input
-        Timer,                  //!< \see Timer
+        Interface,              //!< Base class of all public interfaces in LLGL. \see Interface
+        Display,                //!< Extends Interface. \see Display
+        Surface,                //!< Extends Interface. \see Surface
+        Canvas,                 //!< Extends Interface. \see Canvas
+        Canvas_EventListener,   //!< Extends Interface. \see Canvas::EventListener
+        Window,                 //!< Extends Interface. \see Window
+        Window_EventListener,   //!< Extends Interface. \see Window::EventListener
+        Input,                  //!< Extends Interface. \see Input
+        Timer,                  //!< Extends Interface. \see Timer
+        RenderSystem,           //!< Extends Interface. \see RenderSystem
+        RenderSystemChild,      //!< Extends Interface. \see RenderSystemChild
+        Buffer,                 //!< Extends RenderSystemChild. \see Buffer
+        BufferArray,            //!< Extends RenderSystemChild. \see BufferArray
+        CommandBuffer,          //!< Extends RenderSystemChild. \see CommandBuffer
+        CommandQueue,           //!< Extends RenderSystemChild. \see CommandQueue
+        Fence,                  //!< Extends RenderSystemChild. \see Fence
+        PipelineLayout,         //!< Extends RenderSystemChild. \see PipelineLayout
+        PipelineState,          //!< Extends RenderSystemChild. \see PipelineState
+        QueryHeap,              //!< Extends RenderSystemChild. \see QueryHeap
+        RenderPass,             //!< Extends RenderSystemChild. \see RenderPass
+        Resource,               //!< Extends RenderSystemChild. \see Resource
+        ResourceHeap,           //!< Extends RenderSystemChild. \see ResourceHeap
+        Sampler,                //!< Extends RenderSystemChild. \see Sampler
+        Shader,                 //!< Extends RenderSystemChild. \see Shader
+        ShaderProgram,          //!< Extends RenderSystemChild. \see ShaderProgram
+        Texture,                //!< Extends RenderSystemChild. \see Texture
+        RenderTarget,           //!< Extends RenderSystemChild. \see RenderTarget
+        SwapChain,              //!< Extends RenderTarget. \see SwapChain
 
         /**
         \brief Maximum reserved ID for interfaces.

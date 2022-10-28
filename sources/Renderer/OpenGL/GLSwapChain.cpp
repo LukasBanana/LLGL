@@ -12,22 +12,22 @@ namespace LLGL
 {
 
 
-GLRenderContext::GLRenderContext(
+GLSwapChain::GLSwapChain(
     const SwapChainDescriptor&          desc,
     const RendererConfigurationOpenGL&  config,
     const std::shared_ptr<Surface>&     surface,
-    GLRenderContext*                    sharedRenderContext)
+    GLSwapChain*                        sharedSwapChain)
 :
-    RenderContext  { desc                                       },
+    SwapChain      { desc                                       },
     contextHeight_ { static_cast<GLint>(desc.resolution.height) }
 {
-    GLContext* sharedGLContext = (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr);
+    GLContext* sharedGLContext = (sharedSwapChain != nullptr ? sharedSwapChain->context_.get() : nullptr);
 
     #ifdef LLGL_OS_LINUX
 
     auto finalSwapChainDesc = desc;
 
-    /* Setup surface for the render context and pass native context handle */
+    /* Setup surface for the swap-chain and pass native context handle */
     NativeContextHandle windowContext;
     ChooseGLXVisualAndGetX11WindowContext(desc, finalSwapChainDesc.samples, windowContext);
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, &windowContext);
@@ -37,7 +37,7 @@ GLRenderContext::GLRenderContext(
 
     #else
 
-    /* Setup surface for the render context */
+    /* Setup surface for the swap-chain */
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     /* Create platform dependent OpenGL context */
@@ -50,47 +50,47 @@ GLRenderContext::GLRenderContext(
     stateMngr_->NotifyRenderTargetHeight(contextHeight_);
 
     /* Initialize render states for the first time */
-    if (!sharedRenderContext)
+    if (!sharedSwapChain)
         InitRenderStates();
 }
 
-void GLRenderContext::Present()
+void GLSwapChain::Present()
 {
     context_->SwapBuffers();
 }
 
-std::uint32_t GLRenderContext::GetSamples() const
+std::uint32_t GLSwapChain::GetSamples() const
 {
     return context_->GetSamples();
 }
 
-Format GLRenderContext::GetColorFormat() const
+Format GLSwapChain::GetColorFormat() const
 {
     return context_->GetColorFormat();
 }
 
-Format GLRenderContext::GetDepthStencilFormat() const
+Format GLSwapChain::GetDepthStencilFormat() const
 {
     return context_->GetDepthStencilFormat();
 }
 
-const RenderPass* GLRenderContext::GetRenderPass() const
+const RenderPass* GLSwapChain::GetRenderPass() const
 {
     return nullptr; // dummy
 }
 
-bool GLRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+bool GLSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
     return SetSwapInterval(static_cast<int>(vsyncInterval));
 }
 
-bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
+bool GLSwapChain::GLMakeCurrent(GLSwapChain* swapChain)
 {
-    if (renderContext)
+    if (swapChain)
     {
         /* Make OpenGL context of the specified render contex current and notify the state manager */
-        auto result = GLContext::MakeCurrent(renderContext->context_.get());
-        GLStateManager::Get().NotifyRenderTargetHeight(renderContext->contextHeight_);
+        auto result = GLContext::MakeCurrent(swapChain->context_.get());
+        GLStateManager::Get().NotifyRenderTargetHeight(swapChain->contextHeight_);
         return result;
     }
     else
@@ -102,7 +102,7 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
  * ======= Private: =======
  */
 
-bool GLRenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
+bool GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Notify GL context of a resize */
     context_->Resize(resolution);
@@ -114,12 +114,12 @@ bool GLRenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
     return true;
 }
 
-bool GLRenderContext::SetSwapInterval(int swapInterval)
+bool GLSwapChain::SetSwapInterval(int swapInterval)
 {
     return context_->SetSwapInterval(swapInterval);
 }
 
-void GLRenderContext::InitRenderStates()
+void GLSwapChain::InitRenderStates()
 {
     /* Initialize state manager */
     stateMngr_->Reset();

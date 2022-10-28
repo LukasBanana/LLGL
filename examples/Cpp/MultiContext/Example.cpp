@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 
         std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
 
-        // Create two render contexts
+        // Create two swap-chains
         LLGL::SwapChainDescriptor swapChainDesc;
         {
             swapChainDesc.resolution    = { 640, 480 };
@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
                 commands->SetViewports(2, viewports);
                 commands->SetVertexBuffer(*vertexBuffer);
 
-                // Draw triangle with 3 vertices in 1st render context
+                // Draw triangle with 3 vertices in 1st swap-chain
                 if (window1.IsShown())
                 {
                     commands->SetPipelineState(*pipeline[enableLogicOp[0] ? 1 : 0]);
@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
                     commands->EndRenderPass();
                 }
 
-                // Draw quad with 4 vertices in 2nd render context
+                // Draw quad with 4 vertices in 2nd swap-chain
                 if (window2.IsShown())
                 {
                     commands->SetPipelineState(*pipeline[enableLogicOp[1] ? 1 : 0]);

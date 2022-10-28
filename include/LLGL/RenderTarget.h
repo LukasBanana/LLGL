@@ -24,10 +24,10 @@ class Texture;
 \brief Render target interface.
 \remarks A render target in the broader sense is a composition of Texture objects which can be specified as the destination for drawing operations.
 After a texture has been attached to a render target, its image content is undefined until something has been rendered into the render target.
-The only interface that inherits from this interface is RenderContext, a special case of render targets used to present the result on the screen.
+The only interface that inherits from this interface is SwapChain, a special case of render targets used to present the result on the screen.
 \see RenderSystem::CreateRenderTarget
-\see CommandBuffer::SetRenderTarget(RenderTarget&)
-\see RenderContext
+\see CommandBuffer::BeginRenderPass
+\see SwapChain
 */
 class LLGL_EXPORT RenderTarget : public RenderSystemChild
 {
@@ -38,8 +38,8 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
 
         /**
         \brief Returns the render target resolution.
-        \remarks This is either determined by the resolution specified in the render target descriptor, or by the video mode of the render context.
-        \see RenderContext::ResizeBuffers
+        \remarks This is either determined by the resolution specified in the render target descriptor or swap-chain descriptor.
+        \see SwapChain::ResizeBuffers
         \see RenderTargetDescriptor::resolution
         \see SwapChainDescriptor::resolution
         */
@@ -56,8 +56,8 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
 
         /**
         \brief Returns the number of color attachments of this render target. This can also be zero.
-        \remarks For a render context, this will always be 1.
-        \see RenderContext::GetColorFormat
+        \remarks For a swap-chain, this will always be 1.
+        \see SwapChain::GetColorFormat
         */
         virtual std::uint32_t GetNumColorAttachments() const = 0;
 
@@ -66,7 +66,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \remarks The return value depends on whether the rendering API supports depth-stencil formats where the depth and stencil components can be strictly separated.
         For example, if the render target was created with only a stencil attachment,
         LLGL may still create a depth-stencil buffer that results in both a depth and stencil component in one attachment.
-        \see RenderContext::GetDepthStencilFormat
+        \see SwapChain::GetDepthStencilFormat
         */
         virtual bool HasDepthAttachment() const = 0;
 
@@ -75,7 +75,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \remarks The return value depends on whether the rendering API supports depth-stencil formats where the depth and stencil components can be strictly separated.
         For example, if the render target was created with only a stencil attachment,
         LLGL may still create a depth-stencil buffer that results in both a depth and stencil component in one attachment.
-        \see RenderContext::GetDepthStencilFormat
+        \see SwapChain::GetDepthStencilFormat
         */
         virtual bool HasStencilAttachment() const = 0;
 

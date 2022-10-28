@@ -640,20 +640,20 @@ void DbgCommandBuffer::BeginRenderPass(
         states_.insideRenderPass = true;
     }
 
-    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
+    if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
-        auto& renderContextDbg = LLGL_CAST(DbgRenderContext&, renderTarget);
+        auto& swapChainDbg = LLGL_CAST(DbgSwapChain&, renderTarget);
 
-        bindings_.renderContext = &renderContextDbg;
+        bindings_.swapChain     = &swapChainDbg;
         bindings_.renderTarget  = nullptr;
 
-        instance.BeginRenderPass(renderContextDbg.instance, renderPass, numClearValues, clearValues);
+        instance.BeginRenderPass(swapChainDbg.instance, renderPass, numClearValues, clearValues);
     }
     else
     {
         auto& renderTargetDbg = LLGL_CAST(DbgRenderTarget&, renderTarget);
 
-        bindings_.renderContext = nullptr;
+        bindings_.swapChain     = nullptr;
         bindings_.renderTarget  = &renderTargetDbg;
 
         instance.BeginRenderPass(renderTargetDbg.instance, renderPass, numClearValues, clearValues);
@@ -1333,7 +1333,7 @@ void DbgCommandBuffer::ValidateViewport(const Viewport& viewport)
 
 void DbgCommandBuffer::ValidateAttachmentClear(const AttachmentClear& attachment)
 {
-    if (bindings_.renderContext != nullptr)
+    if (bindings_.swapChain != nullptr)
     {
         if ((attachment.flags & ClearFlags::Color) != 0)
             ValidateAttachmentLimit(attachment.colorAttachment, 1);

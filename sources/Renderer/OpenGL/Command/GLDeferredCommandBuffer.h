@@ -31,7 +31,7 @@ class GLBufferArray;
 class GLTexture;
 class GLSampler;
 class GLRenderTarget;
-class GLRenderContext;
+class GLSwapChain;
 class GLStateManager;
 class GLRenderPass;
 class GL2XSampler;

@@ -31,7 +31,7 @@ class D3D12CommandQueue;
 class D3D12CommandBuffer;
 class D3D12CommandContext;
 
-class D3D12RenderContext final : public RenderContext
+class D3D12SwapChain final : public SwapChain
 {
 
     public:
@@ -51,13 +51,13 @@ class D3D12RenderContext final : public RenderContext
 
     public:
 
-        D3D12RenderContext(
+        D3D12SwapChain(
             D3D12RenderSystem&              renderSystem,
             const SwapChainDescriptor&      desc,
             const std::shared_ptr<Surface>& surface
         );
 
-        ~D3D12RenderContext();
+        ~D3D12SwapChain();
 
         // Returns the native color buffer resource from the swap-chain that is currently being used.
         D3D12Resource& GetCurrentColorBuffer();

@@ -52,10 +52,10 @@ LLGL_IMPLEMENT_INTERFACE( PipelineLayout,           RenderSystemChild       )
 LLGL_IMPLEMENT_INTERFACE( PipelineState,            RenderSystemChild       )
 LLGL_IMPLEMENT_INTERFACE( QueryHeap,                RenderSystemChild       )
 LLGL_IMPLEMENT_INTERFACE( RenderTarget,             RenderSystemChild       )
-LLGL_IMPLEMENT_INTERFACE( RenderContext,            RenderTarget            )
 LLGL_IMPLEMENT_INTERFACE( RenderPass,               RenderSystemChild       )
 LLGL_IMPLEMENT_INTERFACE( Shader,                   RenderSystemChild       )
 LLGL_IMPLEMENT_INTERFACE( ShaderProgram,            RenderSystemChild       )
+LLGL_IMPLEMENT_INTERFACE( SwapChain,                RenderTarget            )
 
 
 } // /namespace LLGL

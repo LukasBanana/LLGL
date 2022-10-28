@@ -533,10 +533,10 @@ private:
     void RenderScene()
     {
         commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
-        commands->BeginRenderPass(*context);
+        commands->BeginRenderPass(*swapChain);
         {
             commands->Clear(LLGL::ClearFlags::ColorDepth);
-            commands->SetViewport(context->GetResolution());
+            commands->SetViewport(swapChain->GetResolution());
             commands->SetVertexBuffer(*vertexBuffer);
 
             RenderSkybox();
@@ -556,7 +556,7 @@ private:
         commands->End();
 
         commandQueue->Submit(*commands);
-        context->Present();
+        swapChain->Present();
     }
 
 };

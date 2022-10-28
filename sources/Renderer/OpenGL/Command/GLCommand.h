@@ -27,7 +27,7 @@ class GLTexture;
 class GLResourceHeap;
 class GLPipelineState;
 class GLQueryHeap;
-class GLRenderContext;
+class GLSwapChain;
 class GLRenderTarget;
 class GLRenderPass;
 class GLDeferredCommandBuffer;

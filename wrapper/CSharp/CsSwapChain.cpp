@@ -13,34 +13,34 @@ namespace SharpLLGL
 {
 
 
-RenderContext::RenderContext(LLGL::RenderContext* instance) :
+SwapChain::SwapChain(LLGL::SwapChain* instance) :
     RenderTarget { instance }
 {
 }
 
-void RenderContext::Present()
+void SwapChain::Present()
 {
-    static_cast<LLGL::RenderContext*>(Native::get())->Present();
+    static_cast<LLGL::SwapChain*>(Native::get())->Present();
 }
 
-Window^ RenderContext::Surface::get()
+Window^ SwapChain::Surface::get()
 {
     if (!surface_)
     {
-        auto& window = static_cast<LLGL::Window&>(static_cast<LLGL::RenderContext*>(Native::get())->GetSurface());
+        auto& window = static_cast<LLGL::Window&>(static_cast<LLGL::SwapChain*>(Native::get())->GetSurface());
         surface_ = gcnew Window(&window);
     }
     return surface_;
 }
 
-bool RenderContext::ResizeBuffers(Extent2D^ Resolution, ResizeBuffersFlags Flags)
+bool SwapChain::ResizeBuffers(Extent2D^ Resolution, ResizeBuffersFlags Flags)
 {
-    return static_cast<LLGL::RenderContext*>(Native)->ResizeBuffers({ Resolution->Width, Resolution->Height }, static_cast<long>(Flags));
+    return static_cast<LLGL::SwapChain*>(Native)->ResizeBuffers({ Resolution->Width, Resolution->Height }, static_cast<long>(Flags));
 }
 
-bool RenderContext::SwitchFullscreen(bool Enable)
+bool SwapChain::SwitchFullscreen(bool Enable)
 {
-    return static_cast<LLGL::RenderContext*>(Native)->SwitchFullscreen(Enable);
+    return static_cast<LLGL::SwapChain*>(Native)->SwitchFullscreen(Enable);
 }
 
 /* ----- Configuration ----- */
@@ -57,9 +57,9 @@ static void Convert(SwapChainDescriptor^ dst, const LLGL::SwapChainDescriptor& s
     dst->Fullscreen         = src.fullscreen;
 }
 
-void RenderContext::VsyncInterval::set(unsigned int value)
+void SwapChain::VsyncInterval::set(unsigned int value)
 {
-    static_cast<LLGL::RenderContext*>(Native)->SetVsyncInterval(value);
+    static_cast<LLGL::SwapChain*>(Native)->SetVsyncInterval(value);
 }
 
 

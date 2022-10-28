@@ -64,7 +64,7 @@ public:
         CreateResourceHeaps();
 
         // Label objects for debugging
-        context->SetName("BackBuffer");
+        swapChain->SetName("BackBuffer");
 
         vertexBuffer->SetName("Buffer.Vertices");
         constantBuffer->SetName("Buffer.Constants");
@@ -264,7 +264,7 @@ private:
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
                 pipelineDesc.shaderProgram                  = shaderProgramScene;
-                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayoutScene;
                 pipelineDesc.depth.testEnabled              = true;
                 pipelineDesc.depth.writeEnabled             = true;
@@ -370,10 +370,10 @@ private:
     void RenderScene()
     {
         // Render scene onto screen
-        commands->BeginRenderPass(*context);
+        commands->BeginRenderPass(*swapChain);
         {
             commands->Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
-            commands->SetViewport(context->GetResolution());
+            commands->SetViewport(swapChain->GetResolution());
             commands->SetPipelineState(*pipelineScene);
             commands->SetResourceHeap(*resourceHeapScene);
             RenderAllMeshes();
@@ -407,7 +407,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

@@ -280,16 +280,16 @@ static void Convert(LLGL::SwapChainDescriptor& dst, SwapChainDescriptor^ src)
     }
 }
 
-RenderContext^ RenderSystem::CreateSwapChain(SwapChainDescriptor^ desc)
+SwapChain^ RenderSystem::CreateSwapChain(SwapChainDescriptor^ desc)
 {
     LLGL::SwapChainDescriptor nativeDesc;
     Convert(nativeDesc, desc);
-    return gcnew RenderContext(native_->CreateSwapChain(nativeDesc));
+    return gcnew SwapChain(native_->CreateSwapChain(nativeDesc));
 }
 
-void RenderSystem::Release(RenderContext^ renderContext)
+void RenderSystem::Release(SwapChain^ swapChain)
 {
-    native_->Release(*reinterpret_cast<LLGL::RenderContext*>(renderContext->Native));
+    native_->Release(*reinterpret_cast<LLGL::SwapChain*>(swapChain->Native));
 }
 
 /* ----- Command queues ----- */

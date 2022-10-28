@@ -68,7 +68,7 @@ D3D12RenderSystem::~D3D12RenderSystem()
     Release render targets first, to ensure the GPU is no longer
     referencing resources that are about to be released
     */
-    renderContexts_.clear();
+    swapChains_.clear();
 
     /* Clear shaders explicitly to release all ComPtr<ID3DBlob> objects */
     shaders_.clear();
@@ -79,16 +79,16 @@ D3D12RenderSystem::~D3D12RenderSystem()
     D3D12BufferConstantsPool::Get().Clear();
 }
 
-/* ----- Render Context ----- */
+/* ----- Swap-chain ----- */
 
-RenderContext* D3D12RenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* D3D12RenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(renderContexts_, MakeUnique<D3D12RenderContext>(*this, desc, surface));
+    return TakeOwnership(swapChains_, MakeUnique<D3D12SwapChain>(*this, desc, surface));
 }
 
-void D3D12RenderSystem::Release(RenderContext& swapChain)
+void D3D12RenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(renderContexts_, &swapChain);
+    RemoveFromUniqueSet(swapChains_, &swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -682,9 +682,9 @@ void D3D12RenderSystem::ExecuteCommandListAndSync()
 
 const D3D12RenderPass* D3D12RenderSystem::GetDefaultRenderPass() const
 {
-    if (!renderContexts_.empty())
+    if (!swapChains_.empty())
     {
-        if (auto renderPass = (*renderContexts_.begin())->GetRenderPass())
+        if (auto renderPass = (*swapChains_.begin())->GetRenderPass())
             return LLGL_CAST(const D3D12RenderPass*, renderPass);
     }
     return nullptr;

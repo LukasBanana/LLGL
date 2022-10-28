@@ -51,10 +51,10 @@ void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 
 /* ----- Swap-chain ----- */
 
-RenderContext* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    /* Create primary render context */
-    auto renderContextInstance = instance_->CreateSwapChain(desc, surface);
+    /* Create primary swap-chain */
+    auto swapChainInstance = instance_->CreateSwapChain(desc, surface);
 
     if (!commandQueue_)
     {
@@ -66,12 +66,12 @@ RenderContext* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc,
         commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
     }
 
-    return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(*renderContextInstance));
+    return TakeOwnership(swapChains_, MakeUnique<DbgSwapChain>(*swapChainInstance));
 }
 
-void DbgRenderSystem::Release(RenderContext& renderContext)
+void DbgRenderSystem::Release(SwapChain& swapChain)
 {
-    ReleaseDbg(renderContexts_, renderContext);
+    ReleaseDbg(swapChains_, swapChain);
 }
 
 /* ----- Command queues ----- */

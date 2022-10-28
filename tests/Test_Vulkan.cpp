@@ -63,7 +63,7 @@ int main()
 
             public:
 
-                explicit ResizeHandler(LLGL::RenderContext& swapChain) :
+                explicit ResizeHandler(LLGL::SwapChain& swapChain) :
                     swapChain_ { swapChain }
                 {
                 }
@@ -75,7 +75,7 @@ int main()
 
             private:
 
-                LLGL::RenderContext& swapChain_;
+                LLGL::SwapChain& swapChain_;
 
         };
 

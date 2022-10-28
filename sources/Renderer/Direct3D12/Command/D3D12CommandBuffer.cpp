@@ -585,8 +585,8 @@ void D3D12CommandBuffer::BeginRenderPass(
     boundRenderTarget_ = &(renderTarget);
 
     /* Bind render target/context */
-    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
-        BindRenderContext(LLGL_CAST(D3D12RenderContext&, renderTarget));
+    if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
+        BindSwapChain(LLGL_CAST(D3D12SwapChain&, renderTarget));
     else
         BindRenderTarget(LLGL_CAST(D3D12RenderTarget&, renderTarget));
 
@@ -602,10 +602,10 @@ void D3D12CommandBuffer::EndRenderPass()
 {
     if (boundRenderTarget_)
     {
-        if (LLGL::IsInstanceOf<RenderContext>(*boundRenderTarget_))
+        if (LLGL::IsInstanceOf<SwapChain>(*boundRenderTarget_))
         {
-            auto renderContextD3D = LLGL_CAST(D3D12RenderContext*, boundRenderTarget_);
-            renderContextD3D->ResolveRenderTarget(commandContext_);
+            auto swapChainD3D = LLGL_CAST(D3D12SwapChain*, boundRenderTarget_);
+            swapChainD3D->ResolveRenderTarget(commandContext_);
         }
         else
         {
@@ -951,11 +951,11 @@ void D3D12CommandBuffer::BindRenderTarget(D3D12RenderTarget& renderTargetD3D)
         commandList_->OMSetRenderTargets(numColorBuffers_, &rtvDescHandle_, TRUE, nullptr);
 }
 
-void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
+void D3D12CommandBuffer::BindSwapChain(D3D12SwapChain& swapChainD3D)
 {
     /* Indicate that the back buffer will be used as render target */
     commandContext_.TransitionResource(
-        renderContextD3D.GetCurrentColorBuffer(),
+        swapChainD3D.GetCurrentColorBuffer(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         true
     );
@@ -963,8 +963,8 @@ void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
     /* Set current back buffer as RTV and optional DSV */
     numColorBuffers_ = 1;
 
-    rtvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForRTV();
-    dsvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForDSV();
+    rtvDescHandle_ = swapChainD3D.GetCPUDescriptorHandleForRTV();
+    dsvDescHandle_ = swapChainD3D.GetCPUDescriptorHandleForDSV();
 
     if (dsvDescHandle_.ptr != 0)
         commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, &dsvDescHandle_);

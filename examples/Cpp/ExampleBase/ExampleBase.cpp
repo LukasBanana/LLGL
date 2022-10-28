@@ -139,9 +139,9 @@ ExampleBase::TutorialShaderDescriptor::TutorialShaderDescriptor(
  * ResizeEventHandler class
  */
 
-ExampleBase::ResizeEventHandler::ResizeEventHandler(ExampleBase& tutorial, LLGL::RenderContext* context, Gs::Matrix4f& projection) :
+ExampleBase::ResizeEventHandler::ResizeEventHandler(ExampleBase& tutorial, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection) :
     tutorial_   { tutorial   },
-    context_    { context    },
+    swapChain_  { swapChain  },
     projection_ { projection }
 {
 }
@@ -153,7 +153,7 @@ void ExampleBase::ResizeEventHandler::OnResize(LLGL::Window& sender, const LLGL:
         const auto& resolution = clientAreaSize;
 
         // Update swap buffers
-        context_->ResizeBuffers(resolution);
+        swapChain_->ResizeBuffers(resolution);
 
         // Update projection matrix
         auto aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
@@ -205,9 +205,9 @@ void ExampleBase::Run()
 {
     bool showTimeRecords = false;
     bool fullscreen = false;
-    const auto initialResolution = context->GetResolution();
+    const auto initialResolution = swapChain->GetResolution();
 
-    while (context->GetSurface().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+    while (swapChain->GetSurface().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
     {
         // Update profiler (if debugging is enabled)
         if (debuggerObj_)
@@ -234,14 +234,14 @@ void ExampleBase::Run()
         // Check to switch to fullscreen
         if (input->KeyDown(LLGL::Key::F5))
         {
-            if (auto display = context->GetSurface().FindResidentDisplay())
+            if (auto display = swapChain->GetSurface().FindResidentDisplay())
             {
                 const auto resolution = display->GetDisplayMode().resolution;
                 fullscreen = !fullscreen;
                 if (fullscreen)
-                    context->ResizeBuffers(resolution, LLGL::ResizeBuffersFlags::FullscreenMode);
+                    swapChain->ResizeBuffers(resolution, LLGL::ResizeBuffersFlags::FullscreenMode);
                 else
-                    context->ResizeBuffers(initialResolution, LLGL::ResizeBuffersFlags::WindowedMode);
+                    swapChain->ResizeBuffers(initialResolution, LLGL::ResizeBuffersFlags::WindowedMode);
             }
         }
 
@@ -301,16 +301,16 @@ ExampleBase::ExampleBase(
     if (!debugger)
         debuggerObj_.reset();
 
-    // Create render context
+    // Create swap-chain
     LLGL::SwapChainDescriptor swapChainDesc;
     {
         swapChainDesc.resolution    = resolution;
         swapChainDesc.samples       = samples;
     }
-    context = renderer->CreateSwapChain(swapChainDesc);
+    swapChain = renderer->CreateSwapChain(swapChainDesc);
 
-    context->SetVsyncInterval(vsync ? 1 : 0);
-    context->SetName("SwapChain");
+    swapChain->SetVsyncInterval(vsync ? 1 : 0);
+    swapChain->SetName("SwapChain");
 
     // Create command buffer
     commands = renderer->CreateCommandBuffer();
@@ -320,7 +320,7 @@ ExampleBase::ExampleBase(
 
     // Print renderer information
     const auto& info = renderer->GetRendererInfo();
-    const auto contextRes = context->GetResolution();
+    const auto swapChainRes = swapChain->GetResolution();
 
     std::cout << "render system:" << std::endl;
     std::cout << "  renderer:           " << info.rendererName << std::endl;
@@ -328,11 +328,11 @@ ExampleBase::ExampleBase(
     std::cout << "  vendor:             " << info.vendorName << std::endl;
     std::cout << "  shading language:   " << info.shadingLanguageName << std::endl;
     std::cout << std::endl;
-    std::cout << "render context:" << std::endl;
-    std::cout << "  resolution:         " << contextRes.width << " x " << contextRes.height << std::endl;
-    std::cout << "  samples:            " << context->GetSamples() << std::endl;
-    std::cout << "  colorFormat:        " << LLGL::ToString(context->GetColorFormat()) << std::endl;
-    std::cout << "  depthStencilFormat: " << LLGL::ToString(context->GetDepthStencilFormat()) << std::endl;
+    std::cout << "swap-chain:" << std::endl;
+    std::cout << "  resolution:         " << swapChainRes.width << " x " << swapChainRes.height << std::endl;
+    std::cout << "  samples:            " << swapChain->GetSamples() << std::endl;
+    std::cout << "  colorFormat:        " << LLGL::ToString(swapChain->GetColorFormat()) << std::endl;
+    std::cout << "  depthStencilFormat: " << LLGL::ToString(swapChain->GetDepthStencilFormat()) << std::endl;
     std::cout << std::endl;
 
     if (!info.extensionNames.empty())
@@ -346,7 +346,7 @@ ExampleBase::ExampleBase(
     #ifdef LLGL_MOBILE_PLATFORM
 
     // Set canvas title
-    auto& canvas = LLGL::CastTo<LLGL::Canvas>(context->GetSurface());
+    auto& canvas = LLGL::CastTo<LLGL::Canvas>(swapChain->GetSurface());
 
     auto rendererName = renderer->GetName();
     canvas.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
@@ -354,7 +354,7 @@ ExampleBase::ExampleBase(
     #else // LLGL_MOBILE_PLATFORM
 
     // Set window title
-    auto& window = LLGL::CastTo<LLGL::Window>(context->GetSurface());
+    auto& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
 
     auto rendererName = renderer->GetName();
     window.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
@@ -375,7 +375,7 @@ ExampleBase::ExampleBase(
     window.SetBehavior(behavior);
 
     // Add window resize listener
-    window.AddEventListener(std::make_shared<ResizeEventHandler>(*this, context, projection));
+    window.AddEventListener(std::make_shared<ResizeEventHandler>(*this, swapChain, projection));
 
     // Show window
     window.Show();
@@ -729,7 +729,7 @@ bool ExampleBase::SaveTexture(LLGL::Texture& texture, const std::string& filenam
 
 float ExampleBase::GetAspectRatio() const
 {
-    const auto resolution = context->GetResolution();
+    const auto resolution = swapChain->GetResolution();
     return (static_cast<float>(resolution.width) / static_cast<float>(resolution.height));
 }
 

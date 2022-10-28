@@ -57,9 +57,9 @@ class D3D11RenderSystem final : public RenderSystem
 
         /* ----- Swap-chain ------ */
 
-        RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
-        void Release(RenderContext& swapChain) override;
+        void Release(SwapChain& swapChain) override;
 
         /* ----- Command queues ----- */
 
@@ -250,7 +250,7 @@ class D3D11RenderSystem final : public RenderSystem
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<D3D11RenderContext>   renderContexts_;
+        HWObjectContainer<D3D11SwapChain>       swapChains_;
         HWObjectInstance<D3D11CommandQueue>     commandQueue_;
         HWObjectContainer<D3D11CommandBuffer>   commandBuffers_;
         HWObjectContainer<D3D11Buffer>          buffers_;

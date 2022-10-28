@@ -22,7 +22,7 @@ class MyRenderer
     std::unique_ptr<LLGL::RenderSystem> renderer;
     std::shared_ptr<LLGL::Window>       subWindow;
 
-    LLGL::RenderContext*                context         = nullptr;
+    LLGL::SwapChain*                    swapChain       = nullptr;
     LLGL::CommandQueue*                 cmdQueue        = nullptr;
     LLGL::CommandBuffer*                cmdBuffer       = nullptr;
     LLGL::Buffer*                       constantBuffer  = nullptr;
@@ -85,7 +85,7 @@ MyRenderer::MyRenderer(
     LLGL::NativeContextHandle mainWindowContextHandle;
     mainWindowContextHandle.parentWindow = mainWindowHandle.window;
 
-    // Create sub window for render context
+    // Create sub window for swap-chain
     LLGL::WindowDescriptor windowDesc;
     {
         windowDesc.position         = subWindowOffset;
@@ -96,13 +96,13 @@ MyRenderer::MyRenderer(
     }
     subWindow = LLGL::Window::Create(windowDesc);
 
-    // Create render context with viewport size
+    // Create swap-chain with viewport size
     LLGL::SwapChainDescriptor swapChainDesc;
     {
         swapChainDesc.resolution    = windowDesc.size;
         swapChainDesc.samples       = samples;
     }
-    context = renderer->CreateSwapChain(swapChainDesc, subWindow);
+    swapChain = renderer->CreateSwapChain(swapChainDesc, subWindow);
 }
 
 void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, const std::vector<std::uint32_t>& indices)
@@ -234,7 +234,7 @@ void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
         cmdBuffer->SetVertexBuffer(*vertexBuffer);
         cmdBuffer->SetIndexBuffer(*indexBuffer);
 
-        cmdBuffer->BeginRenderPass(*context);
+        cmdBuffer->BeginRenderPass(*swapChain);
         {
             // Clear color buffer
             cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth, { LLGL::ColorRGBAf{ 0.1f, 0.1f, 0.4f } });
@@ -255,7 +255,7 @@ void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
     cmdQueue->Submit(*cmdBuffer);
 
     // Present the result on the screen
-    context->Present();
+    swapChain->Present();
 }
 
 Gs::Matrix4f MyRenderer::BuildPerspectiveProjection(float aspectRatio, float nearPlane, float farPlane, float fieldOfView) const

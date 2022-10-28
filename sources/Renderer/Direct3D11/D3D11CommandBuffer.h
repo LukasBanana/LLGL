@@ -25,7 +25,7 @@ namespace LLGL
 class D3D11Buffer;
 class D3D11StateManager;
 class D3D11RenderTarget;
-class D3D11RenderContext;
+class D3D11SwapChain;
 class D3D11RenderPass;
 
 class D3D11CommandBuffer final : public CommandBuffer
@@ -256,7 +256,7 @@ class D3D11CommandBuffer final : public CommandBuffer
 
         void ResolveBoundRenderTarget();
         void BindRenderTarget(D3D11RenderTarget& renderTargetD3D);
-        void BindRenderContext(D3D11RenderContext& renderContextD3D);
+        void BindSwapChain(D3D11SwapChain& swapChainD3D);
 
         void ClearAttachmentsWithRenderPass(
             const D3D11RenderPass&  renderPassD3D,

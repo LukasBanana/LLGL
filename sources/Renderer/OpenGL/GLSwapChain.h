@@ -28,18 +28,18 @@ namespace LLGL
 
 class GLRenderTarget;
 
-class GLRenderContext final : public RenderContext
+class GLSwapChain final : public SwapChain
 {
 
     public:
 
         /* ----- Common ----- */
 
-        GLRenderContext(
+        GLSwapChain(
             const SwapChainDescriptor&          desc,
             const RendererConfigurationOpenGL&  config,
             const std::shared_ptr<Surface>&     surface,
-            GLRenderContext*                    sharedRenderContext
+            GLSwapChain*                        sharedSwapChain
         );
 
         void Present() override;
@@ -55,9 +55,9 @@ class GLRenderContext final : public RenderContext
 
     public:
 
-        /* ----- GLRenderContext specific functions ----- */
+        /* ----- GLSwapChain specific functions ----- */
 
-        static bool GLMakeCurrent(GLRenderContext* renderContext);
+        static bool GLMakeCurrent(GLSwapChain* swapChain);
 
         inline const std::shared_ptr<GLStateManager>& GetStateManager() const
         {

@@ -22,7 +22,7 @@ struct CanvasDescriptor
     //! Canvas title as UTF16 string.
     std::wstring    title;
 
-    //! Specifies whether the canvas is borderless. This is required for a fullscreen render context.
+    //! Specifies whether the canvas is borderless. This is required for a fullscreen swap-chain.
     bool            borderless = false;
 };
 

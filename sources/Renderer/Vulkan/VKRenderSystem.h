@@ -59,9 +59,9 @@ class VKRenderSystem final : public RenderSystem
 
         /* ----- Swap-chain ----- */
 
-        RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
-        void Release(RenderContext& swapChain) override;
+        void Release(SwapChain& swapChain) override;
 
         /* ----- Command queues ----- */
 
@@ -192,7 +192,7 @@ class VKRenderSystem final : public RenderSystem
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<VKRenderContext>      renderContexts_;
+        HWObjectContainer<VKSwapChain>          swapChains_;
         HWObjectInstance<VKCommandQueue>        commandQueue_;
         HWObjectContainer<VKCommandBuffer>      commandBuffers_;
         HWObjectContainer<VKBuffer>             buffers_;

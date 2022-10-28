@@ -53,7 +53,7 @@ int main()
 
         #ifdef __linux__
 
-        auto context = renderer->CreateRenderContext(contextDesc);
+        auto swapChain = renderer->CreateSwapChain(swapChainDesc);
 
         auto window = static_cast<LLGL::Window*>(&(context->GetSurface()));
 
@@ -91,7 +91,7 @@ int main()
         class ResizeEventHandler : public LLGL::Window::EventListener
         {
         public:
-            explicit ResizeEventHandler(LLGL::RenderContext* swapChain) :
+            explicit ResizeEventHandler(LLGL::SwapChain* swapChain) :
                 swapChain_ { swapChain  }
             {
             }
@@ -100,7 +100,7 @@ int main()
                 swapChain_->ResizeBuffers(clientAreaSize);
             }
         private:
-            LLGL::RenderContext* swapChain_;
+            LLGL::SwapChain* swapChain_;
         };
 
         auto resizeEventHandler = std::make_shared<ResizeEventHandler>(swapChain);

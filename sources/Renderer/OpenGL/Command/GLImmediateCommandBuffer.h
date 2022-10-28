@@ -20,7 +20,7 @@ namespace LLGL
 
 
 class GLRenderTarget;
-class GLRenderContext;
+class GLSwapChain;
 class GLStateManager;
 class GLRenderPass;
 

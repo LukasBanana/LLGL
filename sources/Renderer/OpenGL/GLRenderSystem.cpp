@@ -55,22 +55,22 @@ GLRenderSystem::~GLRenderSystem()
     GLStatePool::Get().Clear();
 }
 
-/* ----- Render Context ----- */
+/* ----- Swap-chain ----- */
 
 // private
-GLRenderContext* GLRenderSystem::GetSharedRenderContext() const
+GLSwapChain* GLRenderSystem::GetSharedGLContextSwapChain() const
 {
-    return (!renderContexts_.empty() ? renderContexts_.begin()->get() : nullptr);
+    return (!swapChains_.empty() ? swapChains_.begin()->get() : nullptr);
 }
 
-RenderContext* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return AddRenderContext(MakeUnique<GLRenderContext>(desc, config_, surface, GetSharedRenderContext()));
+    return AddSwapChain(MakeUnique<GLSwapChain>(desc, config_, surface, GetSharedGLContextSwapChain()));
 }
 
-void GLRenderSystem::Release(RenderContext& swapChain)
+void GLRenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(renderContexts_, &swapChain);
+    RemoveFromUniqueSet(swapChains_, &swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -84,15 +84,15 @@ CommandQueue* GLRenderSystem::GetCommandQueue()
 
 CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    /* Get state manager from shared render context */
-    if (auto sharedContext = GetSharedRenderContext())
+    /* Get state manager from swap-chain with shared GL context */
+    if (auto sharedGLContextSwapChain = GetSharedGLContextSwapChain())
     {
         if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
         {
             /* Create immediate command buffer */
             return TakeOwnership(
                 commandBuffers_,
-                MakeUnique<GLImmediateCommandBuffer>(sharedContext->GetStateManager())
+                MakeUnique<GLImmediateCommandBuffer>(sharedGLContextSwapChain->GetStateManager())
             );
         }
         else
@@ -496,17 +496,17 @@ void GLRenderSystem::Release(Fence& fence)
  * ======= Protected: =======
  */
 
-RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext)
+SwapChain* GLRenderSystem::AddSwapChain(std::unique_ptr<GLSwapChain>&& swapChain)
 {
     /* Create devices that require an active GL context */
-    if (renderContexts_.empty())
-        CreateGLContextDependentDevices(renderContext->GetStateManager());
+    if (swapChains_.empty())
+        CreateGLContextDependentDevices(swapChain->GetStateManager());
 
     /* Use uniform clipping space */
     GLStateManager::Get().DetermineExtensionsAndLimits();
 
     /* Take ownership and return raw pointer */
-    return TakeOwnership(renderContexts_, std::move(renderContext));
+    return TakeOwnership(swapChains_, std::move(swapChain));
 }
 
 

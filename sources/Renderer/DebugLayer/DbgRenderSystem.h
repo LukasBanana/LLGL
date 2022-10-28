@@ -46,9 +46,9 @@ class DbgRenderSystem final : public RenderSystem
 
         /* ----- Swap-chain ------ */
 
-        RenderContext* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
-        void Release(RenderContext& swapChain) override;
+        void Release(SwapChain& swapChain) override;
 
         /* ----- Command queues ----- */
 
@@ -210,7 +210,7 @@ class DbgRenderSystem final : public RenderSystem
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<DbgRenderContext>     renderContexts_;
+        HWObjectContainer<DbgSwapChain>         swapChains_;
         HWObjectInstance<DbgCommandQueue>       commandQueue_;
         HWObjectContainer<DbgCommandBuffer>     commandBuffers_;
         HWObjectContainer<DbgBuffer>            buffers_;

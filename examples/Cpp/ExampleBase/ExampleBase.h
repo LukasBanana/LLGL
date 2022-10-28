@@ -96,16 +96,16 @@ private:
 
         public:
 
-            ResizeEventHandler(ExampleBase& tutorial, LLGL::RenderContext* context, Gs::Matrix4f& projection);
+            ResizeEventHandler(ExampleBase& tutorial, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection);
 
             void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override;
             void OnTimer(LLGL::Window& sender, std::uint32_t timerID) override;
 
         private:
 
-            ExampleBase&            tutorial_;
-            LLGL::RenderContext*    context_;
-            Gs::Matrix4f&           projection_;
+            ExampleBase&        tutorial_;
+            LLGL::SwapChain*    swapChain_;
+            Gs::Matrix4f&       projection_;
 
     };
 
@@ -145,8 +145,8 @@ protected:
     // Render system
     std::unique_ptr<LLGL::RenderSystem>         renderer;
 
-    // Main render context
-    LLGL::RenderContext*                        context         = nullptr;
+    // Main swap-chain
+    LLGL::SwapChain*                            swapChain       = nullptr;
 
     // Main command buffer
     LLGL::CommandBuffer*                        commands        = nullptr;
@@ -230,7 +230,7 @@ protected:
     // Save texture image to a PNG file.
     bool SaveTexture(LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);
 
-    // Returns the aspect ratio of the render context resolution (X:Y).
+    // Returns the aspect ratio of the swap-chain resolution (X:Y).
     float GetAspectRatio() const;
 
     // Returns ture if OpenGL is used as rendering API.
@@ -260,7 +260,7 @@ protected:
     // Returns true if the specified shading language is supported.
     bool Supported(const LLGL::ShadingLanguage shadingLanguage) const;
 
-    // Returns the number of samples that was used when the render context was created.
+    // Returns the number of samples that was used when the swap-chain was created.
     inline std::uint32_t GetSampleCount() const
     {
         return samples_;

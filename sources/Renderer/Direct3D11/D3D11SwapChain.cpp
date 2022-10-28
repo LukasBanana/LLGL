@@ -18,17 +18,17 @@ namespace LLGL
 {
 
 
-D3D11RenderContext::D3D11RenderContext(
+D3D11SwapChain::D3D11SwapChain(
     IDXGIFactory*                   factory,
     const ComPtr<ID3D11Device>&     device,
     const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext       { desc                                                       },
+    SwapChain           { desc                                                       },
     device_             { device                                                     },
     depthStencilFormat_ { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits) }
 {
-    /* Setup surface for the render context */
+    /* Setup surface for the swap-chain */
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     /* Create D3D objects */
@@ -36,7 +36,7 @@ D3D11RenderContext::D3D11RenderContext(
     CreateBackBuffer();
 }
 
-void D3D11RenderContext::SetName(const char* name)
+void D3D11SwapChain::SetName(const char* name)
 {
     if (name != nullptr)
     {
@@ -62,37 +62,37 @@ void D3D11RenderContext::SetName(const char* name)
     }
 }
 
-void D3D11RenderContext::Present()
+void D3D11SwapChain::Present()
 {
     swapChain_->Present(swapChainInterval_, 0);
 }
 
-std::uint32_t D3D11RenderContext::GetSamples() const
+std::uint32_t D3D11SwapChain::GetSamples() const
 {
     return swapChainSampleDesc_.Count;
 }
 
-Format D3D11RenderContext::GetColorFormat() const
+Format D3D11SwapChain::GetColorFormat() const
 {
     return DXTypes::Unmap(colorFormat_);
 }
 
-Format D3D11RenderContext::GetDepthStencilFormat() const
+Format D3D11SwapChain::GetDepthStencilFormat() const
 {
     return DXTypes::Unmap(depthStencilFormat_);
 }
 
-const RenderPass* D3D11RenderContext::GetRenderPass() const
+const RenderPass* D3D11SwapChain::GetRenderPass() const
 {
     return nullptr; // dummy
 }
 
-bool D3D11RenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+bool D3D11SwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
     return SetPresentSyncInterval(vsyncInterval);
 }
 
-void D3D11RenderContext::BindFramebufferView(D3D11CommandBuffer* commandBuffer)
+void D3D11SwapChain::BindFramebufferView(D3D11CommandBuffer* commandBuffer)
 {
     /* Bind framebuffer of this swap-chain in command buffer */
     if (commandBuffer != nullptr)
@@ -107,13 +107,13 @@ void D3D11RenderContext::BindFramebufferView(D3D11CommandBuffer* commandBuffer)
  * ======= Private: =======
  */
 
-bool D3D11RenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
+bool D3D11SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     ResizeBackBuffer(resolution);
     return true;
 }
 
-bool D3D11RenderContext::SetPresentSyncInterval(UINT syncInterval)
+bool D3D11SwapChain::SetPresentSyncInterval(UINT syncInterval)
 {
     /* IDXGISwapChain::Present expects a sync interval in the range [0, 4] */
     if (syncInterval <= 4)
@@ -132,7 +132,7 @@ static UINT GetPrimaryDisplayRefreshRate()
         return 60; // Assume most common refresh rate
 }
 
-void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers)
+void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers)
 {
     /* Get current settings */
     const DXGI_RATIONAL refreshRate{ GetPrimaryDisplayRefreshRate(), 1 };
@@ -165,7 +165,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory, const Extent2D& 
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 }
 
-void D3D11RenderContext::CreateBackBuffer()
+void D3D11SwapChain::CreateBackBuffer()
 {
     HRESULT hr = 0;
 
@@ -206,7 +206,7 @@ void D3D11RenderContext::CreateBackBuffer()
     }
 }
 
-void D3D11RenderContext::ResizeBackBuffer(const Extent2D& resolution)
+void D3D11SwapChain::ResizeBackBuffer(const Extent2D& resolution)
 {
     /* Unset render targets for last used command buffer context */
     if (bindingCommandBuffer_ != nullptr)

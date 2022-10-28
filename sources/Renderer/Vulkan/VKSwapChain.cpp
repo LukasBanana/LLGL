@@ -22,7 +22,7 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-const std::uint32_t VKRenderContext::g_maxNumColorBuffers;
+const std::uint32_t VKSwapChain::maxNumColorBuffers;
 
 static const std::vector<const char*> g_deviceExtensions
 {
@@ -39,7 +39,7 @@ static VKPtr<VkFramebuffer> NullVkFramebuffer(const VKPtr<VkDevice>& device)
     return VKPtr<VkFramebuffer>{ device, vkDestroyFramebuffer };
 }
 
-VKRenderContext::VKRenderContext(
+VKSwapChain::VKSwapChain(
     const VKPtr<VkInstance>&        instance,
     VkPhysicalDevice                physicalDevice,
     const VKPtr<VkDevice>&          device,
@@ -47,7 +47,7 @@ VKRenderContext::VKRenderContext(
     const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext            { desc                            },
+    SwapChain                { desc                            },
     instance_                { instance                        },
     physicalDevice_          { physicalDevice                  },
     device_                  { device                          },
@@ -85,7 +85,7 @@ VKRenderContext::VKRenderContext(
     CreateResolutionDependentResources(desc.resolution);
 }
 
-void VKRenderContext::Present()
+void VKSwapChain::Present()
 {
     /* Initialize semaphores */
     VkSemaphore waitSemaphorse[] = { imageAvailableSemaphore_ };
@@ -129,27 +129,27 @@ void VKRenderContext::Present()
     AcquireNextPresentImage();
 }
 
-std::uint32_t VKRenderContext::GetSamples() const
+std::uint32_t VKSwapChain::GetSamples() const
 {
     return swapChainSamples_;
 }
 
-Format VKRenderContext::GetColorFormat() const
+Format VKSwapChain::GetColorFormat() const
 {
     return VKTypes::Unmap(swapChainFormat_.format);
 }
 
-Format VKRenderContext::GetDepthStencilFormat() const
+Format VKSwapChain::GetDepthStencilFormat() const
 {
     return VKTypes::Unmap(depthStencilFormat_);
 }
 
-const RenderPass* VKRenderContext::GetRenderPass() const
+const RenderPass* VKSwapChain::GetRenderPass() const
 {
     return (&swapChainRenderPass_);
 }
 
-bool VKRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+bool VKSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
     /* Recreate swap-chain with new vsnyc settings */
     if (vsyncInterval_ != vsyncInterval)
@@ -163,12 +163,12 @@ bool VKRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
 
 /* --- Extended functions --- */
 
-bool VKRenderContext::HasDepthStencilBuffer() const
+bool VKSwapChain::HasDepthStencilBuffer() const
 {
     return (depthStencilFormat_ != VK_FORMAT_UNDEFINED);
 }
 
-bool VKRenderContext::HasMultiSampling() const
+bool VKSwapChain::HasMultiSampling() const
 {
     return (swapChainSamples_ > 1);
 }
@@ -178,7 +178,7 @@ bool VKRenderContext::HasMultiSampling() const
  * ======= Private: =======
  */
 
-bool VKRenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
+bool VKSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Check if new resolution would actually change the swap-chain extent */
     if (swapChainExtent_.width  != resolution.width ||
@@ -198,7 +198,7 @@ bool VKRenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
     return true;
 }
 
-void VKRenderContext::CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore)
+void VKSwapChain::CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore)
 {
     /* Create semaphore (no flags) */
     VkSemaphoreCreateInfo createInfo;
@@ -211,14 +211,14 @@ void VKRenderContext::CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore)
     VKThrowIfFailed(result, "failed to create Vulkan semaphore");
 }
 
-void VKRenderContext::CreatePresentSemaphores()
+void VKSwapChain::CreatePresentSemaphores()
 {
     /* Create presentation semaphorse */
     CreateGpuSemaphore(imageAvailableSemaphore_);
     CreateGpuSemaphore(renderFinishedSemaphore_);
 }
 
-void VKRenderContext::CreateGpuSurface()
+void VKSwapChain::CreateGpuSurface()
 {
     /* All previous swap-chains must be destroyed before VkSurfaceKHR can be destroyed */
     swapChain_.Release();
@@ -239,7 +239,7 @@ void VKRenderContext::CreateGpuSurface()
         createInfo.hwnd         = nativeHandle.window;
     }
     auto result = vkCreateWin32SurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Win32 surface for Vulkan render context");
+    VKThrowIfFailed(result, "failed to create Win32 surface for Vulkan swap-chain");
 
     #elif defined LLGL_OS_LINUX
 
@@ -252,7 +252,7 @@ void VKRenderContext::CreateGpuSurface()
         createInfo.window   = nativeHandle.window;
     }
     auto result = vkCreateXlibSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Xlib surface for Vulkan render context");
+    VKThrowIfFailed(result, "failed to create Xlib surface for Vulkan swap-chain");
 
     #endif
 
@@ -261,7 +261,7 @@ void VKRenderContext::CreateGpuSurface()
     swapChainFormat_        = PickSwapSurfaceFormat(surfaceSupportDetails_.formats);
 }
 
-void VKRenderContext::CreateRenderPass(VKRenderPass& renderPass, bool isSecondary)
+void VKSwapChain::CreateRenderPass(VKRenderPass& renderPass, bool isSecondary)
 {
     RenderPassDescriptor renderPassDesc;
     {
@@ -289,17 +289,17 @@ void VKRenderContext::CreateRenderPass(VKRenderPass& renderPass, bool isSecondar
     renderPass.CreateVkRenderPass(device_, renderPassDesc);
 }
 
-void VKRenderContext::CreateSecondaryRenderPass()
+void VKSwapChain::CreateSecondaryRenderPass()
 {
     CreateRenderPass(secondaryRenderPass_, true);
 }
 
-void VKRenderContext::CreateSwapChainRenderPass()
+void VKSwapChain::CreateSwapChainRenderPass()
 {
     CreateRenderPass(swapChainRenderPass_, false);
 }
 
-void VKRenderContext::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyncInterval)
+void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyncInterval)
 {
     /* Pick swap-chain extent by resolution */
     swapChainExtent_ = PickSwapExtent(surfaceSupportDetails_.caps, resolution);
@@ -364,7 +364,7 @@ void VKRenderContext::CreateSwapChain(const Extent2D& resolution, std::uint32_t 
     AcquireNextPresentImage();
 }
 
-void VKRenderContext::CreateSwapChainImageViews()
+void VKSwapChain::CreateSwapChainImageViews()
 {
     /* Initialize image-view descriptor */
     VkImageViewCreateInfo createInfo;
@@ -402,7 +402,7 @@ void VKRenderContext::CreateSwapChainImageViews()
     }
 }
 
-void VKRenderContext::CreateSwapChainFramebuffers()
+void VKSwapChain::CreateSwapChainFramebuffers()
 {
     /* Initialize image view attachments */
     VkImageView attachments[3] = {};
@@ -456,13 +456,13 @@ void VKRenderContext::CreateSwapChainFramebuffers()
     }
 }
 
-void VKRenderContext::CreateDepthStencilBuffer(const Extent2D& resolution)
+void VKSwapChain::CreateDepthStencilBuffer(const Extent2D& resolution)
 {
     const auto sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
     depthStencilBuffer_.Create(deviceMemoryMngr_, resolution, depthStencilFormat_, sampleCountBits);
 }
 
-void VKRenderContext::CreateColorBuffers(const Extent2D& resolution)
+void VKSwapChain::CreateColorBuffers(const Extent2D& resolution)
 {
     /* Create VkImage objects for each swap-chain buffer */
     const auto sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
@@ -470,7 +470,7 @@ void VKRenderContext::CreateColorBuffers(const Extent2D& resolution)
         colorBuffers_[i].Create(deviceMemoryMngr_, resolution, swapChainFormat_.format, sampleCountBits);
 }
 
-void VKRenderContext::ReleaseRenderBuffers()
+void VKSwapChain::ReleaseRenderBuffers()
 {
     depthStencilBuffer_.Release();
     if (HasMultiSampling())
@@ -480,7 +480,7 @@ void VKRenderContext::ReleaseRenderBuffers()
     }
 }
 
-void VKRenderContext::CreateResolutionDependentResources(const Extent2D& resolution)
+void VKSwapChain::CreateResolutionDependentResources(const Extent2D& resolution)
 {
     CreateSwapChain(resolution, vsyncInterval_);
 
@@ -493,7 +493,7 @@ void VKRenderContext::CreateResolutionDependentResources(const Extent2D& resolut
     CreateSwapChainFramebuffers();
 }
 
-VkSurfaceFormatKHR VKRenderContext::PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const
+VkSurfaceFormatKHR VKSwapChain::PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const
 {
     if (surfaceFormats.empty())
         throw std::runtime_error("no Vulkan surface formats available");
@@ -510,7 +510,7 @@ VkSurfaceFormatKHR VKRenderContext::PickSwapSurfaceFormat(const std::vector<VkSu
     return surfaceFormats.front();
 }
 
-VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, std::uint32_t vsyncInterval) const
+VkPresentModeKHR VKSwapChain::PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, std::uint32_t vsyncInterval) const
 {
     if (vsyncInterval == 0)
     {
@@ -524,7 +524,7 @@ VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresen
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, const Extent2D& resolution) const
+VkExtent2D VKSwapChain::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, const Extent2D& resolution) const
 {
     return VkExtent2D
     {
@@ -548,7 +548,7 @@ static std::vector<VkFormat> GetDepthStencilFormatPreference(int depthBits, int 
     return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM };
 }
 
-VkFormat VKRenderContext::PickDepthStencilFormat(int depthBits, int stencilBits) const
+VkFormat VKSwapChain::PickDepthStencilFormat(int depthBits, int stencilBits) const
 {
     const auto formats = GetDepthStencilFormatPreference(depthBits, stencilBits);
     return VKFindSupportedImageFormat(
@@ -560,12 +560,12 @@ VkFormat VKRenderContext::PickDepthStencilFormat(int depthBits, int stencilBits)
     );
 }
 
-std::uint32_t VKRenderContext::PickSwapChainSize(std::uint32_t swapBuffers) const
+std::uint32_t VKSwapChain::PickSwapChainSize(std::uint32_t swapBuffers) const
 {
     return std::max(surfaceSupportDetails_.caps.minImageCount, std::min(swapBuffers, surfaceSupportDetails_.caps.maxImageCount));
 }
 
-void VKRenderContext::AcquireNextPresentImage()
+void VKSwapChain::AcquireNextPresentImage()
 {
     /* Get next image for presentation */
     vkAcquireNextImageKHR(

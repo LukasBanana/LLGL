@@ -831,8 +831,8 @@ void D3D11CommandBuffer::BeginRenderPass(
     const ClearValue*   clearValues)
 {
     /* Bind render target/context */
-    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
-        BindRenderContext(LLGL_CAST(D3D11RenderContext&, renderTarget));
+    if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
+        BindSwapChain(LLGL_CAST(D3D11SwapChain&, renderTarget));
     else
         BindRenderTarget(LLGL_CAST(D3D11RenderTarget&, renderTarget));
 
@@ -1394,13 +1394,13 @@ void D3D11CommandBuffer::BindRenderTarget(D3D11RenderTarget& renderTargetD3D)
     boundRenderTarget_ = &renderTargetD3D;
 }
 
-void D3D11CommandBuffer::BindRenderContext(D3D11RenderContext& renderContextD3D)
+void D3D11CommandBuffer::BindSwapChain(D3D11SwapChain& swapChainD3D)
 {
     /* Resolve previously bound render target (in case mutli-sampling is used) */
     ResolveBoundRenderTarget();
 
     /* Set default RTVs to OM-stage */
-    renderContextD3D.BindFramebufferView(this);
+    swapChainD3D.BindFramebufferView(this);
 
     /* Reset reference to render target */
     boundRenderTarget_ = nullptr;

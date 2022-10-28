@@ -300,11 +300,11 @@ private:
         commands->Begin();
         {
             // Draw scene
-            commands->BeginRenderPass(*context);
+            commands->BeginRenderPass(*swapChain);
             {
                 // Clear color buffer and set viewport
                 commands->Clear(LLGL::ClearFlags::Color, backgroundColor);
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
 
                 // Set vertex buffer
                 commands->SetVertexBufferArray(*vertexBufferArray);
@@ -321,7 +321,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

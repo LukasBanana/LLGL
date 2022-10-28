@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-MTRenderContext::MTRenderContext(
+MTSwapChain::MTSwapChain(
     id<MTLDevice>                   device,
     const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
@@ -66,32 +66,32 @@ MTRenderContext::MTRenderContext(
     view_.sampleCount               = renderPass_.GetSampleCount();
 }
 
-void MTRenderContext::Present()
+void MTSwapChain::Present()
 {
     [view_ draw];
 }
 
-std::uint32_t MTRenderContext::GetSamples() const
+std::uint32_t MTSwapChain::GetSamples() const
 {
     return static_cast<std::uint32_t>(renderPass_.GetSampleCount());
 }
 
-Format MTRenderContext::GetColorFormat() const
+Format MTSwapChain::GetColorFormat() const
 {
     return MTTypes::ToFormat(view_.colorPixelFormat);
 }
 
-Format MTRenderContext::GetDepthStencilFormat() const
+Format MTSwapChain::GetDepthStencilFormat() const
 {
     return MTTypes::ToFormat(view_.depthStencilPixelFormat);
 }
 
-const RenderPass* MTRenderContext::GetRenderPass() const
+const RenderPass* MTSwapChain::GetRenderPass() const
 {
     return (&renderPass_);
 }
 
-bool MTRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+bool MTSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
     static const NSInteger defaultRefreshRate = 60;
     if (vsyncInterval > 0)
@@ -115,7 +115,7 @@ bool MTRenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
  * ======= Private: =======
  */
 
-bool MTRenderContext::ResizeBuffersPrimary(const Extent2D& /*resolution*/)
+bool MTSwapChain::ResizeBuffersPrimary(const Extent2D& /*resolution*/)
 {
     return true; // do nothing
 }

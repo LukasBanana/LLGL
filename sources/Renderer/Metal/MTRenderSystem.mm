@@ -37,16 +37,16 @@ MTRenderSystem::~MTRenderSystem()
     [device_ release];
 }
 
-/* ----- Render Context ----- */
+/* ----- Swap-chain ----- */
 
-RenderContext* MTRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* MTRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(renderContexts_, MakeUnique<MTRenderContext>(device_, desc, surface));
+    return TakeOwnership(swapChains_, MakeUnique<MTSwapChain>(device_, desc, surface));
 }
 
-void MTRenderSystem::Release(RenderContext& swapChain)
+void MTRenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(renderContexts_, &swapChain);
+    RemoveFromUniqueSet(swapChains_, &swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -473,9 +473,9 @@ MTLFeatureSet MTRenderSystem::QueryHighestFeatureSet() const
 
 const MTRenderPass* MTRenderSystem::GetDefaultRenderPass() const
 {
-    if (!renderContexts_.empty())
+    if (!swapChains_.empty())
     {
-        if (auto renderPass = (*renderContexts_.begin())->GetRenderPass())
+        if (auto renderPass = (*swapChains_.begin())->GetRenderPass())
             return LLGL_CAST(const MTRenderPass*, renderPass);
     }
     return nullptr;

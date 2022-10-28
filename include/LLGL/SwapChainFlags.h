@@ -21,7 +21,7 @@ namespace LLGL
 
 /**
 \brief Swap-chain resize buffers flags.
-\see RenderContext::ResizeBuffers
+\see SwapChain::ResizeBuffers
 */
 struct ResizeBuffersFlags
 {
@@ -37,7 +37,7 @@ struct ResizeBuffersFlags
         \brief Puts the swap-chain into fullscreen mode.
         \remarks This implies AdaptSurface but cannot be used in combination with the WindowedMode flag.
         \see WindowedMode
-        \see RenderContext::SwitchFullscreen
+        \see SwapChain::SwitchFullscreen
         */
         FullscreenMode  = (1 << 1),
 
@@ -45,7 +45,7 @@ struct ResizeBuffersFlags
         \brief Puts the swap-chain into windowed mode.
         \remarks This implies AdaptSurface but cannot be used in combination with the FullscreenMode flag.
         \see FullscreenMode
-        \see RenderContext::SwitchFullscreen
+        \see SwapChain::SwitchFullscreen
         */
         WindowedMode    = (1 << 2),
     };
@@ -70,24 +70,24 @@ struct SwapChainDescriptor
     /**
     \brief Number of bits for each pixel in the color buffer. Should be 24 or 32. By default 32.
     \remarks This is only a hint to the renderer and there is no guarantee which hardware format is finally used for the color buffer.
-    To determine the actual color format of a render context, use the RenderContext::GetColorFormat function.
-    \see RenderContext::GetColorFormat
+    To determine the actual color format of a swap-chain, use the SwapChain::GetColorFormat function.
+    \see SwapChain::GetColorFormat
     */
     int             colorBits       = 32;
 
     /**
     \brief Number of bits for each pixel in the depth buffer. Should be 24, 32, or zero to disable depth buffer. By default 24.
     \remarks This is only a hint to the renderer and there is no guarantee which hardware format is finally used for the depth buffer.
-    To determine the actual depth-stencil format of a render context, use the RenderContext::GetDepthStencilFormat function.
-    \see RenderContext::GetDepthStencilFormat
+    To determine the actual depth-stencil format of a swap-chain, use the SwapChain::GetDepthStencilFormat function.
+    \see SwapChain::GetDepthStencilFormat
     */
     int             depthBits       = 24;
 
     /**
     \brief Number of bits for each pixel in the stencil buffer. Should be 8, or zero to disable stencil buffer. By default 8.
     \remarks This is only a hint to the renderer and there is no guarantee which hardware format is finally used for the stencil buffer.
-    To determine the actual depth-stencil format of a render context, use the RenderContext::GetDepthStencilFormat function.
-    \see RenderContext::GetDepthStencilFormat
+    To determine the actual depth-stencil format of a swap-chain, use the SwapChain::GetDepthStencilFormat function.
+    \see SwapChain::GetDepthStencilFormat
     */
     int             stencilBits     = 8;
 

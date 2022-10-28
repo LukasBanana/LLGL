@@ -26,14 +26,14 @@ namespace SharpLLGL
 {
 
 
-public ref class RenderContext : public RenderTarget
+public ref class SwapChain : public RenderTarget
 {
 
     public:
 
         /* ----- Common ----- */
 
-        RenderContext(LLGL::RenderContext* instance);
+        SwapChain(LLGL::SwapChain* instance);
 
         void Present();
 

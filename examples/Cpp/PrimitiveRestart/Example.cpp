@@ -134,7 +134,7 @@ private:
         {
             pipelineDesc.shaderProgram                  = shaderProgram;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.renderPass                     = context->GetRenderPass();
+            pipelineDesc.renderPass                     = swapChain->GetRenderPass();
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreatePipelineState(pipelineDesc);
@@ -148,7 +148,7 @@ private:
         commands->Begin();
         {
             // Set viewport and scissor rectangle
-            commands->SetViewport(context->GetResolution());
+            commands->SetViewport(swapChain->GetResolution());
 
             // Set graphics pipeline
             commands->SetPipelineState(*pipeline);
@@ -156,8 +156,8 @@ private:
             // Set vertex buffer
             commands->SetVertexBuffer(*vertexBuffer);
 
-            // Set the render context as the initial render target
-            commands->BeginRenderPass(*context);
+            // Set the swap-chain as the initial render target
+            commands->BeginRenderPass(*swapChain);
             {
                 // Clear color buffer
                 commands->Clear(LLGL::ClearFlags::Color, backgroundColor);
@@ -182,7 +182,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present the result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

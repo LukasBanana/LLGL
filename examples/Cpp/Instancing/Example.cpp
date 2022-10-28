@@ -389,14 +389,14 @@ private:
             // Upload new data to the constant buffer on the GPU
             commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
-            // Set the render context as the initial render target
-            commands->BeginRenderPass(*context);
+            // Set the swap-chain as the initial render target
+            commands->BeginRenderPass(*swapChain);
             {
                 // Clear color- and depth buffers
                 commands->Clear(LLGL::ClearFlags::ColorDepth);
 
                 // Set viewport
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
 
                 // Set graphics pipeline state
                 commands->SetPipelineState(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
@@ -418,7 +418,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

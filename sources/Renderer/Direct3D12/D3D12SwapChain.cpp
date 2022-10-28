@@ -26,12 +26,12 @@ namespace LLGL
 {
 
 
-D3D12RenderContext::D3D12RenderContext(
+D3D12SwapChain::D3D12SwapChain(
     D3D12RenderSystem&              renderSystem,
     const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
 :
-    RenderContext       { desc                                                       },
+    SwapChain           { desc                                                       },
     renderSystem_       { renderSystem                                               },
     frameFence_         { renderSystem.GetDXDevice()                                 },
     depthStencilFormat_ { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits) },
@@ -40,7 +40,7 @@ D3D12RenderContext::D3D12RenderContext(
     /* Store reference to command queue */
     commandQueue_ = LLGL_CAST(D3D12CommandQueue*, renderSystem_.GetCommandQueue());
 
-    /* Setup surface for the render context */
+    /* Setup surface for the swap-chain */
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     /* Create device resources and window dependent resource */
@@ -51,13 +51,13 @@ D3D12RenderContext::D3D12RenderContext(
     defaultRenderPass_.BuildAttachments(1, &colorFormat_, depthStencilFormat_, sampleDesc_);
 }
 
-D3D12RenderContext::~D3D12RenderContext()
+D3D12SwapChain::~D3D12SwapChain()
 {
     /* Ensure the GPU is no longer referencing resources that are about to be released */
     MoveToNextFrame();
 }
 
-void D3D12RenderContext::SetName(const char* name)
+void D3D12SwapChain::SetName(const char* name)
 {
     D3D12SetObjectNameSubscript(rtvDescHeap_.Get(), name, ".RTV");
     D3D12SetObjectNameSubscript(dsvDescHeap_.Get(), name, ".DSV");
@@ -75,7 +75,7 @@ void D3D12RenderContext::SetName(const char* name)
     D3D12SetObjectNameSubscript(depthStencil_.Get(), name, ".DS");
 }
 
-void D3D12RenderContext::Present()
+void D3D12SwapChain::Present()
 {
     /* Present swap-chain with vsync interval */
     auto hr = swapChainDXGI_->Present(syncInterval_, 0);
@@ -85,34 +85,34 @@ void D3D12RenderContext::Present()
     MoveToNextFrame();
 }
 
-std::uint32_t D3D12RenderContext::GetSamples() const
+std::uint32_t D3D12SwapChain::GetSamples() const
 {
     return sampleDesc_.Count;
 }
 
-Format D3D12RenderContext::GetColorFormat() const
+Format D3D12SwapChain::GetColorFormat() const
 {
     return DXTypes::Unmap(colorFormat_);
 }
 
-Format D3D12RenderContext::GetDepthStencilFormat() const
+Format D3D12SwapChain::GetDepthStencilFormat() const
 {
     return DXTypes::Unmap(depthStencilFormat_);
 }
 
-const RenderPass* D3D12RenderContext::GetRenderPass() const
+const RenderPass* D3D12SwapChain::GetRenderPass() const
 {
     return (&defaultRenderPass_);
 }
 
-bool D3D12RenderContext::SetVsyncInterval(std::uint32_t vsyncInterval)
+bool D3D12SwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
     return SetPresentSyncInterval(vsyncInterval);
 }
 
 /* --- Extended functions --- */
 
-D3D12Resource& D3D12RenderContext::GetCurrentColorBuffer()
+D3D12Resource& D3D12SwapChain::GetCurrentColorBuffer()
 {
     if (HasMultiSampling())
         return colorBuffersMS_[currentFrame_];
@@ -120,7 +120,7 @@ D3D12Resource& D3D12RenderContext::GetCurrentColorBuffer()
         return colorBuffers_[currentFrame_];
 }
 
-void D3D12RenderContext::ResolveRenderTarget(D3D12CommandContext& commandContext)
+void D3D12SwapChain::ResolveRenderTarget(D3D12CommandContext& commandContext)
 {
     if (HasMultiSampling())
     {
@@ -144,7 +144,7 @@ void D3D12RenderContext::ResolveRenderTarget(D3D12CommandContext& commandContext
     }
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForRTV() const
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12SwapChain::GetCPUDescriptorHandleForRTV() const
 {
     return CD3DX12_CPU_DESCRIPTOR_HANDLE(
         rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(),
@@ -153,7 +153,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForRTV() c
     );
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForDSV() const
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12SwapChain::GetCPUDescriptorHandleForDSV() const
 {
     if (dsvDescHeap_)
         return dsvDescHeap_->GetCPUDescriptorHandleForHeapStart();
@@ -161,17 +161,17 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForDSV() c
         return {};
 }
 
-bool D3D12RenderContext::HasMultiSampling() const
+bool D3D12SwapChain::HasMultiSampling() const
 {
     return (sampleDesc_.Count > 1);
 }
 
-bool D3D12RenderContext::HasDepthBuffer() const
+bool D3D12SwapChain::HasDepthBuffer() const
 {
     return (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN);
 }
 
-void D3D12RenderContext::SyncGPU()
+void D3D12SwapChain::SyncGPU()
 {
     renderSystem_.SyncGPU(frameFenceValues_[currentFrame_]);
 }
@@ -181,13 +181,13 @@ void D3D12RenderContext::SyncGPU()
  * ======= Private: =======
  */
 
-bool D3D12RenderContext::ResizeBuffersPrimary(const Extent2D& resolution)
+bool D3D12SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     CreateResolutionDependentResources(resolution);
     return true;
 }
 
-bool D3D12RenderContext::SetPresentSyncInterval(UINT syncInterval)
+bool D3D12SwapChain::SetPresentSyncInterval(UINT syncInterval)
 {
     /* IDXGISwapChain::Present expects a sync interval in the range [0, 4] */
     if (syncInterval <= 4)
@@ -198,7 +198,7 @@ bool D3D12RenderContext::SetPresentSyncInterval(UINT syncInterval)
     return false;
 }
 
-void D3D12RenderContext::QueryDeviceParameters(const D3D12Device& device, std::uint32_t samples)
+void D3D12SwapChain::QueryDeviceParameters(const D3D12Device& device, std::uint32_t samples)
 {
     /* Find suitable sample descriptor */
     if (samples > 1)
@@ -208,7 +208,7 @@ void D3D12RenderContext::QueryDeviceParameters(const D3D12Device& device, std::u
     rtvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 }
 
-void D3D12RenderContext::CreateResolutionDependentResources(const Extent2D& resolution)
+void D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resolution)
 {
     /* Wait until all previous GPU work is complete */
     SyncGPU();
@@ -282,7 +282,7 @@ void D3D12RenderContext::CreateResolutionDependentResources(const Extent2D& reso
         CreateDepthStencil(resolution);
 }
 
-void D3D12RenderContext::CreateColorBufferRTVs(const Extent2D& resolution)
+void D3D12SwapChain::CreateColorBufferRTVs(const Extent2D& resolution)
 {
     auto device = renderSystem_.GetDXDevice();
 
@@ -350,7 +350,7 @@ void D3D12RenderContext::CreateColorBufferRTVs(const Extent2D& resolution)
     }
 }
 
-void D3D12RenderContext::CreateDepthStencil(const Extent2D& resolution)
+void D3D12SwapChain::CreateDepthStencil(const Extent2D& resolution)
 {
     auto device = renderSystem_.GetDXDevice();
 
@@ -390,7 +390,7 @@ void D3D12RenderContext::CreateDepthStencil(const Extent2D& resolution)
     device->CreateDepthStencilView(depthStencil_.native.Get(), nullptr, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
 }
 
-void D3D12RenderContext::MoveToNextFrame()
+void D3D12SwapChain::MoveToNextFrame()
 {
     /* Schedule signal command into the queue */
     commandQueue_->SignalFence(frameFence_, frameFenceValues_[currentFrame_]);

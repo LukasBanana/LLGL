@@ -178,14 +178,14 @@ private:
             commands->SetVertexBuffer(*vertexBuffer);
             commands->SetIndexBuffer(*indexBuffer);
 
-            // Begin render pass for context
-            commands->BeginRenderPass(*context);
+            // Begin render pass for swap-chain
+            commands->BeginRenderPass(*swapChain);
             {
                 // Clear color and depth buffers
                 commands->Clear(LLGL::ClearFlags::ColorDepth);
 
-                // Set viewport to context resolution
-                commands->SetViewport(context->GetResolution());
+                // Set viewport to swap-chain resolution
+                commands->SetViewport(swapChain->GetResolution());
 
                 // Set graphics pipeline state
                 commands->SetPipelineState(*pipeline);
@@ -222,7 +222,7 @@ private:
         //commandQueue->WaitIdle();
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

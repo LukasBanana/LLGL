@@ -114,11 +114,11 @@ public ref class RenderSystem
 
         /* ----- Swap-chain ----- */
 
-        RenderContext^ CreateSwapChain(SwapChainDescriptor^ desc);
+        SwapChain^ CreateSwapChain(SwapChainDescriptor^ desc);
 
-        //RenderContext^ CreateSwapChain(SwapChainDescriptor^ desc, Surface^ surface);
+        //SwapChain^ CreateSwapChain(SwapChainDescriptor^ desc, Surface^ surface);
 
-        void Release(RenderContext^ renderContext);
+        void Release(SwapChain^ swapChain);
 
         /* ----- Command queues ----- */
 

@@ -35,15 +35,15 @@ namespace LLGL
 class Display;
 
 /**
-\brief Render context interface.
-\remarks Each render context has its own surface and back buffer (or rather swap-chain) to draw into.
-\see RenderSystem::CreateRenderContext
+\brief Swap-chain interface.
+\remarks Each swap-chain has its own surface and swap buffers to draw into.
+\see RenderSystem::CreateSwapChain
 \see CommandBuffer::BeginRenderPass
 */
-class LLGL_EXPORT RenderContext : public RenderTarget
+class LLGL_EXPORT SwapChain : public RenderTarget
 {
 
-        LLGL_DECLARE_INTERFACE( InterfaceID::RenderContext );
+        LLGL_DECLARE_INTERFACE( InterfaceID::SwapChain );
 
     public:
 
@@ -55,18 +55,18 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         */
         Extent2D GetResolution() const final;
 
-        //! Returns 1, since each render context has always a single color attachment.
+        //! Returns 1, since each swap-chain has always a single color attachment.
         std::uint32_t GetNumColorAttachments() const final;
 
         /**
-        \brief Returns true if this render context has a depth format.
+        \brief Returns true if this swap-chain has a depth format.
         \see GetDepthStencilFormat
         \see IsDepthFormat
         */
         bool HasDepthAttachment() const final;
 
         /**
-        \brief Returns true if this render context has a stencil format.
+        \brief Returns true if this swap-chain has a stencil format.
         \see GetDepthStencilFormat
         \see IsStencilFormat
         */
@@ -74,20 +74,20 @@ class LLGL_EXPORT RenderContext : public RenderTarget
 
         /* ----- Back Buffer ----- */
 
-        //! Swaps the back buffer with the front buffer to present it on the screen (or rather on this render context).
+        //! Swaps the back buffer with the front buffer to present it on the screen (or rather on this swap-chain).
         virtual void Present() = 0;
 
         /**
-        \brief Returns the color format of this render context.
+        \brief Returns the color format of this swap-chain.
         \remarks This may depend on the settings specified for the video mode.
-        A common value for a render context color format is Format::BGRA8UNorm.
+        A common value for a swap-chain color format is Format::BGRA8UNorm.
         \see AttachmentFormatDescriptor::format
         \see Format
         */
         virtual Format GetColorFormat() const = 0;
 
         /**
-        \brief Returns the depth-stencil format of this render context.
+        \brief Returns the depth-stencil format of this swap-chain.
         \remarks This may depend on the settings specified for the video mode.
         \see AttachmentFormatDescriptor::format
         \see Format
@@ -130,7 +130,7 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         \remarks On desktop platforms, this can be statically casted to 'LLGL::Window&',
         and on mobile platforms, this can be statically casted to 'LLGL::Canvas&':
         \code
-        auto& myWindow = static_cast<LLGL::Window&>(myRenderContext->GetSurface());
+        auto& myWindow = static_cast<LLGL::Window&>(mySwapChain->GetSurface());
         \endcode
         */
         inline Surface& GetSurface() const
@@ -141,15 +141,15 @@ class LLGL_EXPORT RenderContext : public RenderTarget
     protected:
 
         //! Default constructor with no effect.
-        RenderContext() = default;
+        SwapChain() = default;
 
-        //! Constructor to initialize the render context with the specified video mode and V-sync.
-        RenderContext(const SwapChainDescriptor& desc);
+        //! Constructor to initialize the swap-chain with the specified video mode and V-sync.
+        SwapChain(const SwapChainDescriptor& desc);
 
         /**
-        \brief Sets the render context surface or creates one if 'surface' is null, and switches to fullscreen mode if enabled.
+        \brief Sets the swap-chain surface or creates one if 'surface' is null, and switches to fullscreen mode if enabled.
         \param[in] surface Optional shared pointer to a surface which will be used as main render target.
-        If this is null, a new surface is created for this render context.
+        If this is null, a new surface is created for this swap-chain.
         \param[in] size Specifies the surface content size. This is only used if \c surface is null.
         Otherwise, the size is determined by the content size of the specified surface (i.e. with the Surface::GetContentSize function).
         \param[in] fullscreen Specifies whether to put the surface into fullscreen mode.
@@ -161,10 +161,10 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         void SetOrCreateSurface(const std::shared_ptr<Surface>& surface, const Extent2D& size, bool fullscreen, const void* windowContext);
 
         /**
-        \brief Shares the surface and video mode with another render context.
+        \brief Shares the surface and resolution with another swap-chain.
         \note This is only used by the renderer debug layer.
         */
-        void ShareSurfaceAndConfig(RenderContext& other);
+        void ShareSurfaceAndConfig(SwapChain& other);
 
         /**
         \brief Puts the display the swap-chain's surface is resident in into fullscreen mode.

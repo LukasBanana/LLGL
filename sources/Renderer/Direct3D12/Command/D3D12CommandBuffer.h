@@ -25,7 +25,7 @@ namespace LLGL
 
 
 class D3D12RenderSystem;
-class D3D12RenderContext;
+class D3D12SwapChain;
 class D3D12RenderTarget;
 class D3D12RenderPass;
 class D3D12SignatureFactory;
@@ -242,7 +242,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         void SetScissorRectsToDefault(UINT numScissorRects);
 
         void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
-        void BindRenderContext(D3D12RenderContext& renderContextD3D);
+        void BindSwapChain(D3D12SwapChain& swapChainD3D);
 
         void ClearAttachmentsWithRenderPass(
             const D3D12RenderPass&  renderPassD3D,

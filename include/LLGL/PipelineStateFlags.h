@@ -30,6 +30,7 @@ namespace LLGL
 \remarks All strip topologies (i.e. PrimitiveTopology::LineStrip, PrimitiveTopology::LineStripAdjacency,
 PrimitiveTopology::TriangleStrip, and PrimitiveTopology::TriangleStripAdjacency) use a fixed index value to restart the primitives.
 This fixed index value is the maximum possible value for the respective index buffer format, i.e. <code>2^16-1</code> (or \c 0xFFFF) for Format::R16UInt and <code>2^32-1</code> (or \c 0xFFFFFFFF) for Format::R32UInt.
+\todo For Direct3D 12, the restart primitive index value (aka. strip cut value) can only be \c 0xFFFFFFFF at the moment as this needs to be specified at PSO creation time.
 \see GraphicsPipelineDescriptor::primitiveTopology
 */
 enum class PrimitiveTopology
@@ -750,7 +751,7 @@ struct GraphicsPipelineDescriptor
 
     /**
     \brief Specifies an optional render pass. By default null.
-    \remarks If this is null, the render pass of the RenderContext that was first created is used.
+    \remarks If this is null, the render pass of the SwapChain that was first created is used.
     This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
     \see CommandBuffer::BeginRenderPass
     \see RenderSystem::CreateRenderPass

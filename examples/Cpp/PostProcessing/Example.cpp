@@ -265,7 +265,7 @@ public:
     void CreateTextures()
     {
         // Create empty color and gloss map
-        auto resolution = context->GetResolution();
+        auto resolution = swapChain->GetResolution();
 
         LLGL::TextureDescriptor texDesc;
         {
@@ -290,7 +290,7 @@ public:
 
     void CreateRenderTargets()
     {
-        auto resolution = context->GetResolution();
+        auto resolution = swapChain->GetResolution();
 
         // Create render-target for scene rendering
         LLGL::RenderTargetDescriptor renderTargetDesc;
@@ -336,7 +336,7 @@ public:
 
     void CreateRenderPasses()
     {
-        //TODO: should be able to query depth-stencil format from <RenderTarget> just like with <RenderContext>
+        //TODO: should be able to query depth-stencil format from <RenderTarget> just like with <SwapChain>
         LLGL::RenderPassDescriptor renderPassDesc;
         {
             renderPassDesc.colorAttachments =
@@ -404,7 +404,7 @@ public:
         {
             pipelineDescFinal.shaderProgram                 = shaderProgramFinal;
             pipelineDescFinal.pipelineLayout                = layoutFinal;
-            pipelineDescFinal.renderPass                    = context->GetRenderPass();
+            pipelineDescFinal.renderPass                    = swapChain->GetRenderPass();
             pipelineDescFinal.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
         }
         pipelineFinal = renderer->CreatePipelineState(pipelineDescFinal);
@@ -575,7 +575,7 @@ private:
         }
 
         // Initialize viewports
-        const auto screenSize = context->GetResolution();
+        const auto screenSize = swapChain->GetResolution();
 
         const LLGL::Viewport viewportFull{ { 0, 0 }, screenSize };
         const LLGL::Viewport viewportQuarter{ { 0, 0 }, { screenSize.width / 4, screenSize.height/ 4 } };
@@ -660,7 +660,7 @@ private:
             commands->EndRenderPass();
 
             // Draw final post-processing pass
-            commands->BeginRenderPass(*context);
+            commands->BeginRenderPass(*swapChain);
             {
                 // Set viewport back to full resolution
                 commands->SetViewport(viewportFull);
@@ -676,7 +676,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

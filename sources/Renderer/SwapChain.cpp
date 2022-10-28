@@ -17,34 +17,34 @@ namespace LLGL
 {
 
 
-RenderContext::RenderContext(const SwapChainDescriptor& desc) :
+SwapChain::SwapChain(const SwapChainDescriptor& desc) :
     resolution_ { desc.resolution }
 {
 }
 
 /* ----- Render Target ----- */
 
-Extent2D RenderContext::GetResolution() const
+Extent2D SwapChain::GetResolution() const
 {
     return resolution_;
 }
 
-std::uint32_t RenderContext::GetNumColorAttachments() const
+std::uint32_t SwapChain::GetNumColorAttachments() const
 {
     return 1u;
 }
 
-bool RenderContext::HasDepthAttachment() const
+bool SwapChain::HasDepthAttachment() const
 {
     return IsDepthFormat(GetDepthStencilFormat());
 }
 
-bool RenderContext::HasStencilAttachment() const
+bool SwapChain::HasStencilAttachment() const
 {
     return IsStencilFormat(GetDepthStencilFormat());
 }
 
-bool RenderContext::ResizeBuffers(const Extent2D& resolution, long flags)
+bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
 {
     const bool toggleFullscreen = ((flags & (ResizeBuffersFlags::FullscreenMode | ResizeBuffersFlags::WindowedMode)) != 0);
     const bool adaptSurface     = (toggleFullscreen || (flags & ResizeBuffersFlags::AdaptSurface) != 0);
@@ -97,7 +97,7 @@ bool RenderContext::ResizeBuffers(const Extent2D& resolution, long flags)
 
 /* ----- Configuration ----- */
 
-bool RenderContext::SwitchFullscreen(bool enable)
+bool SwapChain::SwitchFullscreen(bool enable)
 {
     bool result = false;
     if (enable)
@@ -120,7 +120,7 @@ bool RenderContext::SwitchFullscreen(bool enable)
  * ======= Protected: =======
  */
 
-void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, const Extent2D& size, bool fullscreen, const void* windowContext)
+void SwapChain::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, const Extent2D& size, bool fullscreen, const void* windowContext)
 {
     /* Use specified surface size as resolution by default */
     Extent2D resolution = size;
@@ -135,7 +135,7 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
     {
         #ifdef LLGL_MOBILE_PLATFORM
 
-        /* Create new canvas for this render context */
+        /* Create new canvas for this swap-chain */
         CanvasDescriptor canvasDesc;
         {
             canvasDesc.borderless = fullscreen;
@@ -144,7 +144,7 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
 
         #else
 
-        /* Create new window for this render context */
+        /* Create new window for this swap-chain */
         WindowDescriptor windowDesc;
         {
             windowDesc.size             = size;
@@ -162,13 +162,13 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
         SetDisplayFullscreenMode(resolution);
 }
 
-void RenderContext::ShareSurfaceAndConfig(RenderContext& other)
+void SwapChain::ShareSurfaceAndConfig(SwapChain& other)
 {
     surface_    = other.surface_;
     resolution_ = other.resolution_;
 }
 
-bool RenderContext::SetDisplayFullscreenMode(const Extent2D& resolution)
+bool SwapChain::SetDisplayFullscreenMode(const Extent2D& resolution)
 {
     if (surface_)
     {
@@ -183,7 +183,7 @@ bool RenderContext::SetDisplayFullscreenMode(const Extent2D& resolution)
     return false;
 }
 
-bool RenderContext::ResetDisplayFullscreenMode()
+bool SwapChain::ResetDisplayFullscreenMode()
 {
     if (surface_)
     {
@@ -201,7 +201,7 @@ bool RenderContext::ResetDisplayFullscreenMode()
  * ======= Private: =======
  */
 
-void RenderContext::StoreSurfacePosition()
+void SwapChain::StoreSurfacePosition()
 {
     #ifndef LLGL_MOBILE_PLATFORM
     if (!normalModeSurfacePosStored_)
@@ -213,7 +213,7 @@ void RenderContext::StoreSurfacePosition()
     #endif
 }
 
-void RenderContext::RestoreSurfacePosition()
+void SwapChain::RestoreSurfacePosition()
 {
     #ifndef LLGL_MOBILE_PLATFORM
     if (normalModeSurfacePosStored_)

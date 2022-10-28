@@ -529,18 +529,18 @@ void VKCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    if (LLGL::IsInstanceOf<RenderContext>(renderTarget))
+    if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
-        /* Get Vulkan render context object */
-        auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderTarget);
+        /* Get Vulkan swap-chain object */
+        auto& swapChainVK = LLGL_CAST(VKSwapChain&, renderTarget);
 
         /* Store information about framebuffer attachments */
-        renderPass_                     = renderContextVK.GetSwapChainRenderPass().GetVkRenderPass();
-        secondaryRenderPass_            = renderContextVK.GetSecondaryVkRenderPass();
-        framebuffer_                    = renderContextVK.GetVkFramebuffer();
-        framebufferRenderArea_.extent   = renderContextVK.GetVkExtent();
-        numColorAttachments_            = renderContextVK.GetNumColorAttachments();
-        hasDSVAttachment_               = (renderContextVK.HasDepthAttachment() || renderContextVK.HasStencilAttachment());
+        renderPass_                     = swapChainVK.GetSwapChainRenderPass().GetVkRenderPass();
+        secondaryRenderPass_            = swapChainVK.GetSecondaryVkRenderPass();
+        framebuffer_                    = swapChainVK.GetVkFramebuffer();
+        framebufferRenderArea_.extent   = swapChainVK.GetVkExtent();
+        numColorAttachments_            = swapChainVK.GetNumColorAttachments();
+        hasDSVAttachment_               = (swapChainVK.HasDepthAttachment() || swapChainVK.HasStencilAttachment());
     }
     else
     {

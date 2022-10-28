@@ -44,7 +44,7 @@ class VKRenderTarget final : public RenderTarget
 
     public:
 
-        // Returns true if this render context has multi-sampling enabled.
+        // Returns true if this render target has multi-sampling enabled.
         bool HasMultiSampling() const;
 
         // Returns the Vulkan framebuffer object.

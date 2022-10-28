@@ -19,7 +19,7 @@ int main()
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("Vulkan", profiler.get(), debugger.get());
 
-        // Create render context
+        // Create swap-chain
         LLGL::SwapChainDescriptor swapChainDesc;
         swapChainDesc.resolution = { 800, 600 };
 

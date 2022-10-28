@@ -206,11 +206,11 @@ private:
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
-        // Create graphics pipeline for render context
+        // Create graphics pipeline for swap-chain
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram                  = shaderProgram;
-            pipelineDesc.renderPass                     = context->GetRenderPass();
+            pipelineDesc.renderPass                     = swapChain->GetRenderPass();
             pipelineDesc.pipelineLayout                 = pipelineLayout;
 
             // Enable depth test and writing
@@ -473,19 +473,19 @@ private:
         // Generate MIP-maps again after texture has been written by the render-target
         commands->GenerateMips(*renderTargetTex);
 
-        // Begin render pass for render context
-        commands->BeginRenderPass(*context);
+        // Begin render pass for swap-chain
+        commands->BeginRenderPass(*swapChain);
         {
             // Clear color and depth buffers of active framebuffer (i.e. the screen)
             commands->Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
 
-            // Binds graphics pipeline for render context
+            // Binds graphics pipeline for swap-chain
             commands->SetPipelineState(*pipelines[1]);
 
             // Set viewport to fullscreen.
             // Note: this must be done AFTER the respective graphics pipeline has been set,
             //       since the previous pipeline has no dynamic viewport!
-            commands->SetViewport(context->GetResolution());
+            commands->SetViewport(swapChain->GetResolution());
 
             #ifdef ENABLE_RESOURCE_HEAP
             if (resourceHeap)
@@ -550,7 +550,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };

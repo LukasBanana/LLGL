@@ -25,7 +25,7 @@ namespace LLGL
 
 class DbgBuffer;
 class DbgTexture;
-class DbgRenderContext;
+class DbgSwapChain;
 class DbgRenderTarget;
 class DbgPipelineState;
 class DbgShaderProgram;
@@ -329,7 +329,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         struct Bindings
         {
-            DbgRenderContext*       renderContext                           = nullptr;
+            DbgSwapChain*           swapChain                               = nullptr;
             DbgRenderTarget*        renderTarget                            = nullptr;
             DbgBuffer*              vertexBufferStore[1]                    = {};
             DbgBuffer* const *      vertexBuffers                           = nullptr;

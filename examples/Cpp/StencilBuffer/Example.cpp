@@ -176,7 +176,7 @@ private:
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
                 pipelineDesc.shaderProgram                  = shaderProgramScene;
-                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayout;
                 pipelineDesc.depth.testEnabled              = true;
                 pipelineDesc.depth.writeEnabled             = true;
@@ -191,7 +191,7 @@ private:
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
                 pipelineDesc.shaderProgram                  = shaderProgramStencil;
-                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayout;
                 pipelineDesc.depth.testEnabled              = true;                             // Read all depth bits
                 pipelineDesc.depth.writeEnabled             = false;                            // Write no depth bits
@@ -213,7 +213,7 @@ private:
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
                 pipelineDesc.shaderProgram                  = shaderProgramScene;
-                pipelineDesc.renderPass                     = context->GetRenderPass();
+                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayout;
                 pipelineDesc.depth.testEnabled              = true;
                 pipelineDesc.depth.writeEnabled             = true;                             // Write all depth bits
@@ -327,10 +327,10 @@ private:
             // Bind common input assembly
             commands->SetVertexBuffer(*vertexBuffer);
 
-            // Render everything directly into the render context
-            commands->BeginRenderPass(*context);
+            // Render everything directly into the swap-chain
+            commands->BeginRenderPass(*swapChain);
             {
-                commands->SetViewport(context->GetResolution());
+                commands->SetViewport(swapChain->GetResolution());
 
                 // Draw scene, then draw the portal into the stencil buffer, and finally draw the hidden object inside the portal
                 commands->PushDebugGroup("Scene Pass (Render Background)");
@@ -351,7 +351,7 @@ private:
         commandQueue->Submit(*commands);
 
         // Present result on the screen
-        context->Present();
+        swapChain->Present();
     }
 
 };
