@@ -5,6 +5,7 @@
 - [`BufferDescriptor` interface](#bufferdescriptor-interface)
 - [`TextureDescriptor` interface](#texturedescriptor-interface)
 - [`VsyncDescriptor` interface](#vsyncdescriptor-interface)
+- [`RenderContext` interface](#rendercontext-interface)
 - [MIP-map generation](#mip-map-generation)
 - [Index buffer format](#index-buffer-format)
 - [Storage buffer binding](#storage-buffer-binding)
@@ -135,6 +136,27 @@ bool RenderContext::SetVsyncInterval(std::uint32_t vsyncInterval);
 
 // Usage:
 myRenderContext->SetVsyncInterval(1);
+```
+
+
+## `RenderContext` interface
+
+The `RenderContext` interface has been renamed to `SwapChain` and its member function `IsRenderContext` has been replaced by the global `IsInstanceOf<T>` template.
+
+Before:
+```cpp
+// Usage:
+LLGL::RenderContext* myRenderContext = myRenderer->CreateRenderContext(...);
+LLGL::VideoModeDescriptor myVideoMode = myRenderContext->GetVideoMode();
+myVideoMode.resolution = ...
+myRenderContext->SetVideoMode(myVideoMode);
+```
+
+After:
+```cpp
+// Usage:
+LLGL::SwapChain* mySwapChain = myRenderer->CreateSwapChain();
+mySwapChain->ResizeBuffers(myNewResolution, LLGL::ResizeBuffersFlags::AdaptSurface);
 ```
 
 
@@ -388,9 +410,9 @@ myRendererDesc.rendererConfig       = &myRendererConfig;
 myRendererDesc.rendererConfigSize   = sizeof(myRendererConfig);
 LLGL::RenderSystem* myRenderer = LLGL::RenderSystem::Load(myRendererDesc);
 
-LLGL::RenderContextDescriptor myContextDesc;
-myContextDesc.videoMode.resolution  = { 800, 600 };
-LLGL::RenderContext* myContext = myRenderer->CreateRenderContext(myContextDesc);
+LLGL::SwapChainDescriptor mySwapChainDesc;
+mySwapChainDesc.resolution  = { 800, 600 };
+LLGL::SwapChain* mymySwapChain = myRenderer->CreateSwapChain(mySwapChainDesc);
 ```
 
 
@@ -426,8 +448,8 @@ ImageDataSize                          --> GetMemoryFootprint
 Image::QueryDstDesc                    --> Display::GetDstDesc
 Image::QuerySrcDesc                    --> Display::GetSrcDesc
 RenderingFeatures::hasCommandBufferExt --> RenderingFeatures::hasDirectResourceBinding
-RenderContext::QueryColorFormat        --> RenderContext::GetColorFormat
-RenderContext::QueryDepthStencilFormat --> RenderContext::GetDepthStencilFormat
+RenderContext::QueryColorFormat        --> SwapChain::GetColorFormat
+RenderContext::QueryDepthStencilFormat --> SwapChain::GetDepthStencilFormat
 Resource::QueryResourceType            --> Resource::GetResourceType
 ShaderProgram::QueryInfoLog            --> ShaderProgram::GetReport
 ShaderProgram::QueryUniformLocation    --> ShaderProgram::FindUniformLocation
@@ -726,7 +748,7 @@ After:
 // Interface:
 std::uint32_t LLGL::RasterizerDescriptor::samples;
 std::uint32_t LLGL::RenderTargetDescriptor::samples;
-std::uint32_t LLGL::RenderContextDescriptor::samples;
+std::uint32_t LLGL::SwapChainDescriptor::samples;
 std::uint32_t LLGL::BlendDescriptor::sampleMask;
 ```
 
