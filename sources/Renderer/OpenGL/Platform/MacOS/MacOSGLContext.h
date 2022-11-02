@@ -28,33 +28,40 @@ class MacOSGLContext : public GLContext
     public:
 
         MacOSGLContext(
-            const SwapChainDescriptor&          desc,
-            const RendererConfigurationOpenGL&  config,
+            const GLPixelFormat&                pixelFormat,
+            const RendererConfigurationOpenGL&  profile,
             Surface&                            surface,
             MacOSGLContext*                     sharedContext
         );
         ~MacOSGLContext();
 
-        bool SetSwapInterval(int interval) override;
-        bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
-        std::uint32_t GetSamples() const override;
+        int GetSamples() const override;
+
+    public:
+
+        // Returns the native NSOpenGLContext object.
+        inline NSOpenGLContext* GetNSGLContext() const
+        {
+            return ctx_;
+        }
 
     private:
 
-        bool Activate(bool activate) override;
+        bool SetSwapInterval(int interval) override;
 
-        bool CreatePixelFormat(const SwapChainDescriptor& desc, const RendererConfigurationOpenGL& config);
+    private:
 
-        void CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext);
+        bool CreatePixelFormat(const GLPixelFormat& pixelFormat, const RendererConfigurationOpenGL& profile);
+
+        void CreateNSGLContext(MacOSGLContext* sharedContext);
         void DeleteNSGLContext();
 
     private:
 
         NSOpenGLPixelFormat*    pixelFormat_    = nullptr;
         NSOpenGLContext*        ctx_            = nullptr;
-        NSWindow*               wnd_            = nullptr;
-        std::uint32_t           samples_        = 1;
+        int                     samples_        = 1;
 
 };
 

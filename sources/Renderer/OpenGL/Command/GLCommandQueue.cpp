@@ -21,7 +21,7 @@ namespace LLGL
 {
 
 
-GLCommandQueue::GLCommandQueue(const std::shared_ptr<GLStateManager>& stateManager) :
+GLCommandQueue::GLCommandQueue(GLStateManager& stateManager) :
     stateMngr_ { stateManager }
 {
 }
@@ -38,7 +38,7 @@ void GLCommandQueue::Submit(CommandBuffer& commandBuffer)
     if (!cmdBufferGL.IsImmediateCmdBuffer())
     {
         auto& deferredCmdBufferGL = LLGL_CAST(const GLDeferredCommandBuffer&, cmdBufferGL);
-        ExecuteGLDeferredCommandBuffer(deferredCmdBufferGL, *stateMngr_);
+        ExecuteGLDeferredCommandBuffer(deferredCmdBufferGL, stateMngr_);
     }
 }
 

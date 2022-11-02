@@ -16,6 +16,7 @@
 #include "Command/GLCommandQueue.h"
 #include "Command/GLCommandBuffer.h"
 #include "GLSwapChain.h"
+#include "Platform/GLContextManager.h"
 
 #include "Buffer/GLBuffer.h"
 #include "Buffer/GLBufferArray.h"
@@ -159,15 +160,12 @@ class GLRenderSystem final : public RenderSystem
 
     private:
 
-        void CreateGLContextDependentDevices(const std::shared_ptr<GLStateManager>& stateManager);
+        void CreateGLContextDependentDevices(GLStateManager& stateManager);
 
-        void LoadGLExtensions(bool hasGLCoreProfile);
         void SetDebugCallback(const DebugCallback& debugCallback);
 
         void QueryRendererInfo();
         void QueryRenderingCaps();
-
-        GLSwapChain* GetSharedGLContextSwapChain() const;
 
         GLBuffer* CreateGLBuffer(const BufferDescriptor& desc, const void* initialData);
 
@@ -176,6 +174,8 @@ class GLRenderSystem final : public RenderSystem
     private:
 
         /* ----- Hardware object containers ----- */
+
+        GLContextManager                        contextMngr_;
 
         HWObjectContainer<GLSwapChain>          swapChains_;
         HWObjectInstance<GLCommandQueue>        commandQueue_;
@@ -197,7 +197,6 @@ class GLRenderSystem final : public RenderSystem
         HWObjectContainer<GLQueryHeap>          queryHeaps_;
         HWObjectContainer<GLFence>              fences_;
 
-        RendererConfigurationOpenGL             config_;
         DebugCallback                           debugCallback_;
 
 };

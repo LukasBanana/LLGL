@@ -40,11 +40,17 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
+static RendererConfigurationOpenGL GetGLProfileFromDesc(const RenderSystemDescriptor& renderSystemDesc)
 {
-    /* Extract optional renderer configuartion */
     if (auto rendererConfigGL = GetRendererConfiguration<RendererConfigurationOpenGL>(renderSystemDesc))
-        config_ = *rendererConfigGL;
+        return *rendererConfigGL;
+    else
+        return RendererConfigurationOpenGL{};
+}
+
+GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
+    contextMngr_ { GetGLProfileFromDesc(renderSystemDesc) }
+{
 }
 
 GLRenderSystem::~GLRenderSystem()
@@ -57,15 +63,9 @@ GLRenderSystem::~GLRenderSystem()
 
 /* ----- Swap-chain ----- */
 
-// private
-GLSwapChain* GLRenderSystem::GetSharedGLContextSwapChain() const
-{
-    return (!swapChains_.empty() ? swapChains_.begin()->get() : nullptr);
-}
-
 SwapChain* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return AddSwapChain(MakeUnique<GLSwapChain>(desc, config_, surface, GetSharedGLContextSwapChain()));
+    return AddSwapChain(MakeUnique<GLSwapChain>(desc, surface, contextMngr_));
 }
 
 void GLRenderSystem::Release(SwapChain& swapChain)
@@ -85,14 +85,14 @@ CommandQueue* GLRenderSystem::GetCommandQueue()
 CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
     /* Get state manager from swap-chain with shared GL context */
-    if (auto sharedGLContextSwapChain = GetSharedGLContextSwapChain())
+    if (auto currentGLContext = contextMngr_.AllocContext())
     {
         if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
         {
             /* Create immediate command buffer */
             return TakeOwnership(
                 commandBuffers_,
-                MakeUnique<GLImmediateCommandBuffer>(sharedGLContextSwapChain->GetStateManager())
+                MakeUnique<GLImmediateCommandBuffer>(currentGLContext->GetStateManager())
             );
         }
         else
@@ -502,9 +502,6 @@ SwapChain* GLRenderSystem::AddSwapChain(std::unique_ptr<GLSwapChain>&& swapChain
     if (swapChains_.empty())
         CreateGLContextDependentDevices(swapChain->GetStateManager());
 
-    /* Use uniform clipping space */
-    GLStateManager::Get().DetermineExtensionsAndLimits();
-
     /* Take ownership and return raw pointer */
     return TakeOwnership(swapChains_, std::move(swapChain));
 }
@@ -514,34 +511,18 @@ SwapChain* GLRenderSystem::AddSwapChain(std::unique_ptr<GLSwapChain>&& swapChain
  * ======= Private: =======
  */
 
-void GLRenderSystem::CreateGLContextDependentDevices(const std::shared_ptr<GLStateManager>& stateManager)
+void GLRenderSystem::CreateGLContextDependentDevices(GLStateManager& stateManager)
 {
-    const bool hasGLCoreProfile = (config_.contextProfile == OpenGLContextProfile::CoreProfile);
-
-    /* Load all OpenGL extensions */
-    LoadGLExtensions(hasGLCoreProfile);
-
     /* Enable debug callback function */
     if (debugCallback_)
         SetDebugCallback(debugCallback_);
 
     /* Create command queue instance */
     commandQueue_ = MakeUnique<GLCommandQueue>(stateManager);
-}
 
-void GLRenderSystem::LoadGLExtensions(bool hasGLCoreProfile)
-{
-    /* Load OpenGL extensions if not already done */
-    if (!AreExtensionsLoaded())
-    {
-        /* Query extensions and load all of them */
-        auto extensions = QueryExtensions(hasGLCoreProfile);
-        LoadAllExtensions(extensions, hasGLCoreProfile);
-
-        /* Query and store all renderer information and capabilities */
-        QueryRendererInfo();
-        QueryRenderingCaps();
-    }
+    /* Query renderer information and limits */
+    QueryRendererInfo();
+    QueryRenderingCaps();
 }
 
 #ifdef GL_KHR_debug

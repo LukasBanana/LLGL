@@ -27,61 +27,62 @@ class Win32GLContext final : public GLContext
     public:
 
         Win32GLContext(
-            const SwapChainDescriptor&          desc,
-            const RendererConfigurationOpenGL&  config,
+            const GLPixelFormat&                pixelFormat,
+            const RendererConfigurationOpenGL&  profile,
             Surface&                            surface,
             Win32GLContext*                     sharedContext
         );
         ~Win32GLContext();
 
-        bool SetSwapInterval(int interval) override;
-        bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
-        std::uint32_t GetSamples() const override;
+        int GetSamples() const override;
 
-    private:
+    public:
 
-        struct WGLContextParams
+        // Select the pixel format for the specified surface to make it compatible with this GL context.
+        void SelectPixelFormat(Surface& surface);
+
+        // Returns the OpenGL render context handle.
+        inline HGLRC GetGLRCHandle() const
         {
-            RendererConfigurationOpenGL profile;
-            int                         colorBits   = 32;
-            int                         depthBits   = 24;
-            int                         stencilBits = 8;
-        };
+            return hGLRC_;
+        }
+
+        // Returns the Win32 device context handle this GL context was originally created with.
+        inline HDC GetDCHandle() const
+        {
+            return hDC_;
+        }
 
     private:
 
-        bool Activate(bool activate) override;
+        bool SetSwapInterval(int interval) override;
 
-        void CreateContext(const WGLContextParams& params, Surface& surface, Win32GLContext* sharedContext = nullptr);
-        void DeleteContext();
+    private:
 
-        void DeleteGLContext(HGLRC& hGLRC);
+        void CreateContext(Surface& surface, Win32GLContext* sharedContext = nullptr);
 
-        HGLRC CreateGLContext(const WGLContextParams& params, bool useExtProfile, Win32GLContext* sharedContext = nullptr);
-        HGLRC CreateStdContextProfile();
-        HGLRC CreateExtContextProfile(const WGLContextParams& params, HGLRC sharedGLRC = nullptr);
+        HGLRC CreateStandardWGLContext(HDC hDC);
+        HGLRC CreateExplicitWGLContext(HDC hDC, Win32GLContext* sharedContext = nullptr);
 
-        void SetupDeviceContextAndPixelFormat(const WGLContextParams& params, Surface& surface);
-        void SelectPixelFormat(const WGLContextParams& params);
-        bool SetupAntiAliasing(const WGLContextParams& params);
+        bool SelectMultisampledPixelFormat(HDC hDC);
         void CopyPixelFormat(Win32GLContext& sourceContext);
 
-        void RecreateWindow(const WGLContextParams& params, Surface& surface);
+        HDC UpdateSurfacePixelFormat(Surface& surface);
 
     private:
 
-        static const UINT   maxPixelFormatsMS                   = 8;
+        static const UINT           maxPixelFormatsMS                   = 8;
 
-        int                 pixelFormat_                        = 0;        // Standard pixel format.
-        int                 pixelFormatsMS_[maxPixelFormatsMS]  = {};       // Multi-sampled pixel formats.
-        UINT                pixelFormatsMSCount_                = 0;
-        int                 samples_                            = 1;
+        RendererConfigurationOpenGL profile_;
+        GLPixelFormat               formatDesc_;
 
-        HDC                 hDC_                                = nullptr;  // Device context handle.
-        HGLRC               hGLRC_                              = nullptr;  // OpenGL render context handle.
+        int                         pixelFormat_                        = 0;
+        int                         pixelFormatsMS_[maxPixelFormatsMS]  = {};
+        UINT                        pixelFormatsMSCount_                = 0;
 
-        bool                hasSharedContext_                   = false;
+        HDC                         hDC_                                = nullptr;
+        HGLRC                       hGLRC_                              = nullptr;
 
 };
 

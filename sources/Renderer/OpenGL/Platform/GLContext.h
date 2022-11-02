@@ -10,7 +10,6 @@
 
 
 #include <LLGL/Surface.h>
-#include <LLGL/SwapChainFlags.h>
 #include <LLGL/RendererConfiguration.h>
 #include <memory>
 #include "../RenderState/GLStateManager.h"
@@ -20,23 +19,32 @@ namespace LLGL
 {
 
 
+// GL pixel format structure: samples and pixel bit size.
+struct GLPixelFormat
+{
+    int colorBits   = 32;
+    int depthBits   = 0;
+    int stencilBits = 0;
+    int samples     = 0;
+};
+
+// Compare operators for GLPixelFormat structure:
+bool operator == (const GLPixelFormat& lhs, const GLPixelFormat& rhs);
+bool operator != (const GLPixelFormat& lhs, const GLPixelFormat& rhs);
+
 // Base wrapper class for a GL context.
 class GLContext
 {
 
     public:
 
-        // Sets the swap interval for vsync (Win32: wglSwapIntervalEXT, X11: glXSwapIntervalSGI).
-        virtual bool SetSwapInterval(int interval) = 0;
-
-        // Swaps the back buffer with the front buffer (Win32: ::SwapBuffers, X11: glXSwapBuffers).
-        virtual bool SwapBuffers() = 0;
+        virtual ~GLContext() = default;
 
         // Resizes the GL context. This is called after the context surface has been resized.
         virtual void Resize(const Extent2D& resolution) = 0;
 
         // Returns the number of samples for this GL context. Must be in range [1, 64].
-        virtual std::uint32_t GetSamples() const = 0;
+        virtual int GetSamples() const = 0;
 
     public:
 
@@ -52,38 +60,49 @@ class GLContext
             return depthStencilFormat_;
         }
 
-    public:
-
-        virtual ~GLContext();
-
-        // Creates a platform specific GLContext instance.
-        static std::unique_ptr<GLContext> Create(
-            const SwapChainDescriptor&          desc,
-            const RendererConfigurationOpenGL&  config,
-            Surface&                            surface,
-            GLContext*                          sharedContext
-        );
-
-        // Makes the specified GLContext current. If null, the current context will be deactivated.
-        static bool MakeCurrent(GLContext* context);
-
-        // Returns the current GLContext.
-        static GLContext* GetCurrent();
-
         // Returns the state manager that is associated with this context.
-        inline const std::shared_ptr<GLStateManager>& GetStateManager() const
+        inline GLStateManager& GetStateManager()
         {
             return stateMngr_;
         }
 
+        // Returns the global index of this GL context. This is assigned when the context is created. The first index starts with 1. The invalid index is 0.
+        inline unsigned GetGlobalIndex() const
+        {
+            return globalIndex_;
+        }
+
+    public:
+
+        // Creates a platform specific GLContext instance.
+        static std::unique_ptr<GLContext> Create(
+            const GLPixelFormat&                pixelFormat,
+            const RendererConfigurationOpenGL&  profile,
+            Surface&                            surface,
+            GLContext*                          sharedContext
+        );
+
+        // Sets the current GL context. This only stores a reference to this context (GetCurrent) and its global index (GetGlobalIndex).
+        static void SetCurrent(GLContext* context);
+
+        // Returns a pointer to the current GL context.
+        static GLContext* GetCurrent();
+
+        // Returns the global index of the current GL context ().
+        static unsigned GetCurrentGlobalIndex();
+
+        // Sets the swap interval for the current GL context.
+        static bool SetCurrentSwapInterval(int interval);
+
     protected:
 
-        GLContext(GLContext* sharedContext);
-
-        // Activates or deactivates this GLContext (Win32: wglMakeCurrent, X11: glXMakeCurrent).
-        virtual bool Activate(bool activate) = 0;
+        // Sets the swap interval of the platform dependent GL context.
+        virtual bool SetSwapInterval(int interval) = 0;
 
     protected:
+
+        // Initializes the GL context with an assigned global index (GetGlobalIndex).
+        GLContext();
 
         // Deduces the color format by the specified component bits and shifting.
         void DeduceColorFormat(int rBits, int rShift, int gBits, int gShift, int bBits, int bShift, int aBits, int aShift);
@@ -99,9 +118,10 @@ class GLContext
 
     private:
 
-        std::shared_ptr<GLStateManager> stateMngr_;
-        Format                          colorFormat_        = Format::Undefined;
-        Format                          depthStencilFormat_ = Format::Undefined;
+        GLStateManager  stateMngr_;
+        Format          colorFormat_        = Format::Undefined;
+        Format          depthStencilFormat_ = Format::Undefined;
+        unsigned        globalIndex_        = 0;
 
 };
 

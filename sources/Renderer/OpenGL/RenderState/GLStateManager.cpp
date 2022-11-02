@@ -158,7 +158,7 @@ const std::uint32_t         GLContextState::numCapsExt;
  * GLStateManager static members
  */
 
-GLStateManager*             GLStateManager::active_;
+GLStateManager*             GLStateManager::current_;
 GLStateManager::GLLimits    GLStateManager::commonLimits_;
 
 struct GLStateManager::GLIntermediateBufferWriteMasks
@@ -177,8 +177,13 @@ struct GLStateManager::GLIntermediateBufferWriteMasks
 GLStateManager::GLStateManager()
 {
     /* Make this the active state manager if there is no previous one */
-    if (GLStateManager::active_ == nullptr)
-        GLStateManager::active_ = this;
+    if (GLStateManager::current_ == nullptr)
+        GLStateManager::current_ = this;
+}
+
+void GLStateManager::SetCurrentFromGLContext(GLContext& context)
+{
+    current_ = &(context.GetStateManager());
 }
 
 void GLStateManager::DetermineExtensionsAndLimits()
@@ -1431,24 +1436,18 @@ GLuint GLStateManager::GetBoundShaderProgram() const
 
 /* ----- Render pass ----- */
 
-void GLStateManager::BindRenderPass(
-    RenderTarget&       renderTarget,
-    const RenderPass*   renderPass,
-    std::uint32_t       numClearValues,
-    const ClearValue*   clearValues)
+void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager** nextStateManager)
 {
     /* Bind render target/context */
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
-        BindAndBlitSwapChain(LLGL_CAST(GLSwapChain&, renderTarget));
+    {
+        auto& swapChainGL = LLGL_CAST(GLSwapChain&, renderTarget);
+        BindAndBlitSwapChain(swapChainGL);
+        if (nextStateManager != nullptr)
+            *nextStateManager = &(swapChainGL.GetStateManager());
+    }
     else
         BindAndBlitRenderTarget(LLGL_CAST(GLRenderTarget&, renderTarget));
-
-    /* Clear attachments */
-    if (renderPass)
-    {
-        auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
-        ClearAttachmentsWithRenderPass(*renderPassGL, numClearValues, clearValues);
-    }
 }
 
 void GLStateManager::Clear(long flags)
@@ -1755,8 +1754,8 @@ void GLStateManager::BindAndBlitSwapChain(GLSwapChain& swapChainGL)
 {
     /* Blit previously bound render target, unbind FBO, and make context current */
     BlitBoundRenderTarget();
-    BindGLRenderTarget(nullptr);
-    GLSwapChain::GLMakeCurrent(&swapChainGL);
+    GLSwapChain::MakeCurrent(&swapChainGL);
+    GLStateManager::Get().BindGLRenderTarget(nullptr);
 }
 
 void GLStateManager::ClearAttachmentsWithRenderPass(

@@ -47,7 +47,7 @@ namespace LLGL
 {
 
 
-static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLStateManager& stateMngr)
+static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLStateManager*& stateMngr)
 {
     switch (opcode)
     {
@@ -96,27 +96,27 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeGenerateMipmap:
         {
             auto cmd = reinterpret_cast<const GLCmdGenerateMipmap*>(pc);
-            GLMipGenerator::Get().GenerateMipsForTexture(stateMngr, *(cmd->texture));
+            GLMipGenerator::Get().GenerateMipsForTexture(*stateMngr, *(cmd->texture));
             return sizeof(*cmd);
         }
         case GLOpcodeGenerateMipmapSubresource:
         {
             auto cmd = reinterpret_cast<const GLCmdGenerateMipmapSubresource*>(pc);
-            GLMipGenerator::Get().GenerateMipsRangeForTexture(stateMngr, *(cmd->texture), cmd->baseMipLevel, cmd->numMipLevels, cmd->baseArrayLayer, cmd->numArrayLayers);
+            GLMipGenerator::Get().GenerateMipsRangeForTexture(*stateMngr, *(cmd->texture), cmd->baseMipLevel, cmd->numMipLevels, cmd->baseArrayLayer, cmd->numArrayLayers);
             return sizeof(*cmd);
         }
         case GLOpcodeExecute:
         {
             auto cmd = reinterpret_cast<const GLCmdExecute*>(pc);
-            ExecuteGLDeferredCommandBuffer(*(cmd->commandBuffer), stateMngr);
+            ExecuteGLDeferredCommandBuffer(*(cmd->commandBuffer), *stateMngr);
             return sizeof(*cmd);
         }
         case GLOpcodeViewport:
         {
             auto cmd = reinterpret_cast<const GLCmdViewport*>(pc);
             {
-                stateMngr.SetViewport(cmd->viewport);
-                stateMngr.SetDepthRange(cmd->depthRange);
+                stateMngr->SetViewport(cmd->viewport);
+                stateMngr->SetDepthRange(cmd->depthRange);
             }
             return sizeof(*cmd);
         }
@@ -125,8 +125,8 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             auto cmd = reinterpret_cast<const GLCmdViewportArray*>(pc);
             auto cmdData = reinterpret_cast<const std::int8_t*>(cmd + 1);
             {
-                stateMngr.SetViewportArray(cmd->first, cmd->count, reinterpret_cast<const GLViewport*>(cmdData));
-                stateMngr.SetDepthRangeArray(cmd->first, cmd->count, reinterpret_cast<const GLDepthRange*>(cmdData + sizeof(GLViewport)*cmd->count));
+                stateMngr->SetViewportArray(cmd->first, cmd->count, reinterpret_cast<const GLViewport*>(cmdData));
+                stateMngr->SetDepthRangeArray(cmd->first, cmd->count, reinterpret_cast<const GLDepthRange*>(cmdData + sizeof(GLViewport)*cmd->count));
             }
             return (sizeof(*cmd) + sizeof(GLViewport)*cmd->count + sizeof(GLDepthRange)*cmd->count);
         }
@@ -134,7 +134,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdScissor*>(pc);
             {
-                stateMngr.SetScissor(cmd->scissor);
+                stateMngr->SetScissor(cmd->scissor);
             }
             return sizeof(*cmd);
         }
@@ -143,7 +143,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             auto cmd = reinterpret_cast<const GLCmdScissorArray*>(pc);
             auto cmdData = reinterpret_cast<const std::int8_t*>(cmd + 1);
             {
-                stateMngr.SetScissorArray(cmd->first, cmd->count, reinterpret_cast<const GLScissor*>(cmdData));
+                stateMngr->SetScissorArray(cmd->first, cmd->count, reinterpret_cast<const GLScissor*>(cmdData));
             }
             return (sizeof(*cmd) + sizeof(GLScissor)*cmd->count);
         }
@@ -168,43 +168,50 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeClear:
         {
             auto cmd = reinterpret_cast<const GLCmdClear*>(pc);
-            stateMngr.Clear(cmd->flags);
+            stateMngr->Clear(cmd->flags);
             return sizeof(*cmd);
+        }
+        case GLOpcodeClearAttachmentsWithRenderPass:
+        {
+            auto cmd = reinterpret_cast<const GLCmdClearAttachmentsWithRenderPass*>(pc);
+            if (cmd->renderPass != nullptr)
+                stateMngr->ClearAttachmentsWithRenderPass(*(cmd->renderPass), cmd->numClearValues, reinterpret_cast<const ClearValue*>(cmd + 1));
+            return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
         }
         case GLOpcodeClearBuffers:
         {
             auto cmd = reinterpret_cast<const GLCmdClearBuffers*>(pc);
-            stateMngr.ClearBuffers(cmd->numAttachments, reinterpret_cast<const AttachmentClear*>(cmd + 1));
+            stateMngr->ClearBuffers(cmd->numAttachments, reinterpret_cast<const AttachmentClear*>(cmd + 1));
             return (sizeof(*cmd) + sizeof(AttachmentClear)*cmd->numAttachments);
         }
         case GLOpcodeBindVertexArray:
         {
             auto cmd = reinterpret_cast<const GLCmdBindVertexArray*>(pc);
-            stateMngr.BindVertexArray(cmd->vao);
+            stateMngr->BindVertexArray(cmd->vao);
             return sizeof(*cmd);
         }
         case GLOpcodeBindGL2XVertexArray:
         {
             auto cmd = reinterpret_cast<const GLCmdBindGL2XVertexArray*>(pc);
-            cmd->vertexArrayGL2X->Bind(stateMngr);
+            cmd->vertexArrayGL2X->Bind(*stateMngr);
             return sizeof(*cmd);
         }
         case GLOpcodeBindElementArrayBufferToVAO:
         {
             auto cmd = reinterpret_cast<const GLCmdBindElementArrayBufferToVAO*>(pc);
-            stateMngr.BindElementArrayBufferToVAO(cmd->id, cmd->indexType16Bits);
+            stateMngr->BindElementArrayBufferToVAO(cmd->id, cmd->indexType16Bits);
             return sizeof(*cmd);
         }
         case GLOpcodeBindBufferBase:
         {
             auto cmd = reinterpret_cast<const GLCmdBindBufferBase*>(pc);
-            stateMngr.BindBufferBase(cmd->target, cmd->index, cmd->id);
+            stateMngr->BindBufferBase(cmd->target, cmd->index, cmd->id);
             return sizeof(*cmd);
         }
         case GLOpcodeBindBuffersBase:
         {
             auto cmd = reinterpret_cast<const GLCmdBindBuffersBase*>(pc);
-            stateMngr.BindBuffersBase(cmd->target, cmd->first, cmd->count, reinterpret_cast<const GLuint*>(cmd + 1));
+            stateMngr->BindBuffersBase(cmd->target, cmd->first, cmd->count, reinterpret_cast<const GLuint*>(cmd + 1));
             return (sizeof(*cmd) + sizeof(GLuint)*cmd->count);
         }
         case GLOpcodeBeginTransformFeedback:
@@ -236,31 +243,33 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeBindResourceHeap:
         {
             auto cmd = reinterpret_cast<const GLCmdBindResourceHeap*>(pc);
-            cmd->resourceHeap->Bind(stateMngr, cmd->firstSet);
+            cmd->resourceHeap->Bind(*stateMngr, cmd->firstSet);
             return sizeof(*cmd);
         }
-        case GLOpcodeBindRenderPass:
+        case GLOpcodeBindRenderTarget:
         {
-            auto cmd = reinterpret_cast<const GLCmdBindRenderPass*>(pc);
-            stateMngr.BindRenderPass(*(cmd->renderTarget), cmd->renderPass, cmd->numClearValues, reinterpret_cast<const ClearValue*>(cmd + 1));
-            return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
+            auto cmd = reinterpret_cast<const GLCmdBindRenderTarget*>(pc);
+            GLStateManager* nextStateMngr = stateMngr;
+            stateMngr->BindRenderTarget(*(cmd->renderTarget), &nextStateMngr);
+            stateMngr = nextStateMngr;
+            return sizeof(*cmd);
         }
         case GLOpcodeBindPipelineState:
         {
             auto cmd = reinterpret_cast<const GLCmdBindPipelineState*>(pc);
-            cmd->pipelineState->Bind(stateMngr);
+            cmd->pipelineState->Bind(*stateMngr);
             return sizeof(*cmd);
         }
         case GLOpcodeSetBlendColor:
         {
             auto cmd = reinterpret_cast<const GLCmdSetBlendColor*>(pc);
-            stateMngr.SetBlendColor(cmd->color);
+            stateMngr->SetBlendColor(cmd->color);
             return sizeof(*cmd);
         }
         case GLOpcodeSetStencilRef:
         {
             auto cmd = reinterpret_cast<const GLCmdSetStencilRef*>(pc);
-            stateMngr.SetStencilRef(cmd->ref, cmd->face);
+            stateMngr->SetStencilRef(cmd->ref, cmd->face);
             return sizeof(*cmd);
         }
         case GLOpcodeSetUniforms:
@@ -320,7 +329,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdDrawArraysIndirect*>(pc);
             #ifdef LLGL_GLEXT_DRAW_INDIRECT
-            stateMngr.BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
             GLintptr offset = cmd->indirect;
             for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
             {
@@ -370,7 +379,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsIndirect*>(pc);
             #ifdef LLGL_GLEXT_DRAW_INDIRECT
-            stateMngr.BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
             GLintptr offset = cmd->indirect;
             for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
             {
@@ -384,7 +393,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdMultiDrawArraysIndirect*>(pc);
             #ifdef LLGL_GLEXT_MULTI_DRAW_INDIRECT
-            stateMngr.BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
             glMultiDrawArraysIndirect(cmd->mode, cmd->indirect, cmd->drawcount, cmd->stride);
             #endif
             return sizeof(*cmd);
@@ -393,7 +402,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdMultiDrawElementsIndirect*>(pc);
             #ifdef LLGL_GLEXT_MULTI_DRAW_INDIRECT
-            stateMngr.BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
             glMultiDrawElementsIndirect(cmd->mode, cmd->type, cmd->indirect, cmd->drawcount, cmd->stride);
             #endif
             return sizeof(*cmd);
@@ -410,7 +419,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdDispatchComputeIndirect*>(pc);
             #ifdef LLGL_GLEXT_COMPUTE_SHADER
-            stateMngr.BindBuffer(GLBufferTarget::DISPATCH_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DISPATCH_INDIRECT_BUFFER, cmd->id);
             glDispatchComputeIndirect(cmd->indirect);
             #endif
             return sizeof(*cmd);
@@ -418,43 +427,43 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeBindTexture:
         {
             auto cmd = reinterpret_cast<const GLCmdBindTexture*>(pc);
-            stateMngr.ActiveTexture(cmd->slot);
-            stateMngr.BindGLTexture(*(cmd->texture));
+            stateMngr->ActiveTexture(cmd->slot);
+            stateMngr->BindGLTexture(*(cmd->texture));
             return sizeof(*cmd);
         }
         case GLOpcodeBindImageTexture:
         {
             auto cmd = reinterpret_cast<const GLCmdBindImageTexture*>(pc);
-            stateMngr.BindImageTexture(cmd->unit, cmd->level, cmd->format, cmd->texture);
+            stateMngr->BindImageTexture(cmd->unit, cmd->level, cmd->format, cmd->texture);
             return sizeof(*cmd);
         }
         case GLOpcodeBindSampler:
         {
             auto cmd = reinterpret_cast<const GLCmdBindSampler*>(pc);
-            stateMngr.BindSampler(cmd->layer, cmd->sampler);
+            stateMngr->BindSampler(cmd->layer, cmd->sampler);
             return sizeof(*cmd);
         }
         case GLOpcodeBindGL2XSampler:
         {
             auto cmd = reinterpret_cast<const GLCmdBindGL2XSampler*>(pc);
-            stateMngr.BindGL2XSampler(cmd->layer, *(cmd->samplerGL2X));
+            stateMngr->BindGL2XSampler(cmd->layer, *(cmd->samplerGL2X));
             return sizeof(*cmd);
         }
         case GLOpcodeUnbindResources:
         {
             auto cmd = reinterpret_cast<const GLCmdUnbindResources*>(pc);
             if (cmd->resetUBO)
-                stateMngr.UnbindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, cmd->first, cmd->count);
+                stateMngr->UnbindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, cmd->first, cmd->count);
             if (cmd->resetSSAO)
-                stateMngr.UnbindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, cmd->first, cmd->count);
+                stateMngr->UnbindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, cmd->first, cmd->count);
             if (cmd->resetTransformFeedback)
-                stateMngr.UnbindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, cmd->first, cmd->count);
+                stateMngr->UnbindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, cmd->first, cmd->count);
             if (cmd->resetTextures)
-                stateMngr.UnbindTextures(cmd->first, cmd->count);
+                stateMngr->UnbindTextures(cmd->first, cmd->count);
             if (cmd->resetImages)
-                stateMngr.UnbindImageTextures(cmd->first, cmd->count);
+                stateMngr->UnbindImageTextures(cmd->first, cmd->count);
             if (cmd->resetSamplers)
-                stateMngr.UnbindSamplers(cmd->first, cmd->count);
+                stateMngr->UnbindSamplers(cmd->first, cmd->count);
             return sizeof(*cmd);
         }
         case GLOpcodePushDebugGroup:
@@ -477,7 +486,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
     }
 }
 
-static void ExecuteGLCommandsEmulated(const GLVirtualCommandBuffer& virtualCmdBuffer, GLStateManager& stateMngr)
+static void ExecuteGLCommandsEmulated(const GLVirtualCommandBuffer& virtualCmdBuffer, GLStateManager* stateMngr)
 {
     /* Initialize program counter to execute virtual GL commands */
     for (const auto& chunk : virtualCmdBuffer)
@@ -519,7 +528,7 @@ void ExecuteGLDeferredCommandBuffer(const GLDeferredCommandBuffer& cmdBuffer, GL
     #endif // /LLGL_ENABLE_JIT_COMPILER
     {
         /* Emulate execution of GL commands */
-        ExecuteGLCommandsEmulated(cmdBuffer.GetVirtualCommandBuffer(), stateMngr);
+        ExecuteGLCommandsEmulated(cmdBuffer.GetVirtualCommandBuffer(), &stateMngr);
     }
 }
 

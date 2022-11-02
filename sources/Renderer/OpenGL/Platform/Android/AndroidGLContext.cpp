@@ -8,7 +8,6 @@
 #include "AndroidGLContext.h"
 #include "../../../CheckedCast.h"
 #include "../../../../Core/Helper.h"
-#include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/RendererConfiguration.h>
 
 
@@ -21,13 +20,13 @@ namespace LLGL
  */
 
 std::unique_ptr<GLContext> GLContext::Create(
-    const SwapChainDescriptor&          desc,
-    const RendererConfigurationOpenGL&  config,
+    const GLPixelFormat&                pixelFormat,
+    const RendererConfigurationOpenGL&  profile,
     Surface&                            surface,
     GLContext*                          sharedContext)
 {
     AndroidGLContext* sharedContextEGL = (sharedContext != nullptr ? LLGL_CAST(AndroidGLContext*, sharedContext) : nullptr);
-    return MakeUnique<AndroidGLContext>(desc, config, surface, sharedContextEGL);
+    return MakeUnique<AndroidGLContext>(pixelFormat, profile, surface, sharedContextEGL);
 }
 
 
@@ -36,18 +35,14 @@ std::unique_ptr<GLContext> GLContext::Create(
  */
 
 AndroidGLContext::AndroidGLContext(
-    const SwapChainDescriptor&          desc,
-    const RendererConfigurationOpenGL&  config,
+    const GLPixelFormat&                pixelFormat,
+    const RendererConfigurationOpenGL&  profile,
     Surface&                            surface,
     AndroidGLContext*                   sharedContext)
 :
-    display_  { eglGetDisplay(EGL_DEFAULT_DISPLAY) },
-    GLContext { sharedContext                      }
+    display_ { eglGetDisplay(EGL_DEFAULT_DISPLAY) }
 {
-    /*NativeHandle nativeHandle = {};
-    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
-    CreateContext(desc, config, nativeHandle, sharedContext);*/
-    SetSwapInterval(desc.vsync.enabled ? desc.vsync.interval : 0);
+    CreateContext(pixelFormat, profile, sharedContext);
 }
 
 AndroidGLContext::~AndroidGLContext()
@@ -55,23 +50,12 @@ AndroidGLContext::~AndroidGLContext()
     DeleteContext();
 }
 
-bool AndroidGLContext::SetSwapInterval(int interval)
-{
-    return (eglSwapInterval(display_, interval) == EGL_TRUE);
-}
-
-bool AndroidGLContext::SwapBuffers()
-{
-    eglSwapBuffers(display_, surface_);
-    return true;
-}
-
 void AndroidGLContext::Resize(const Extent2D& resolution)
 {
     // dummy
 }
 
-std::uint32_t AndroidGLContext::GetSamples() const
+int AndroidGLContext::GetSamples() const
 {
     return samples_;
 }
@@ -81,28 +65,15 @@ std::uint32_t AndroidGLContext::GetSamples() const
  * ======= Private: =======
  */
 
-bool AndroidGLContext::Activate(bool activate)
+bool AndroidGLContext::SetSwapInterval(int interval)
 {
-    if (activate)
-        return eglMakeCurrent(display_, surface_, surface_, context_);
-    else
-        return eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    return (eglSwapInterval(display_, interval) == EGL_TRUE);
 }
 
-void AndroidGLContext::CreateContext(
-    const SwapChainDescriptor&          desc,
-    const RendererConfigurationOpenGL&  config,
-    const NativeHandle&                 nativeHandle,
-    AndroidGLContext*                   sharedContext)
+bool AndroidGLContext::SelectConfig(const GLPixelFormat& pixelFormat)
 {
-    EGLContext sharedEGLContext = (sharedContext != nullptr ? sharedContext->context_ : EGL_NO_CONTEXT);
-    samples_ = desc.samples;
-
-    /* Initialize EGL display connection (ignore major/minor output parameters) */
-    eglInitialize(display_, nullptr, nullptr);
-    
     /* Look for a framebuffer configuration; reduce samples if necessary */
-    while (samples_ > 1)
+    for (samples_ = pixelFormat.samples; samples_ > 1; --samples_)
     {
         /* Initialize framebuffer configuration */
         const EGLint attribs[] =
@@ -111,37 +82,52 @@ void AndroidGLContext::CreateContext(
             EGL_GREEN_SIZE,     8,
             EGL_BLUE_SIZE,      8,
             //EGL_ALPHA_SIZE,     8,
-            EGL_DEPTH_SIZE,     desc.depthBits,
-            EGL_STENCIL_SIZE,   desc.stencilBits,
+            EGL_DEPTH_SIZE,     pixelFormat.depthBits,
+            EGL_STENCIL_SIZE,   pixelFormat.stencilBits,
             EGL_SAMPLE_BUFFERS, (samples_ > 1 ? 1 : 0),
-            EGL_SAMPLES,        (samples_ > 1 ? static_cast<EGLint>(samples_) : 1),
+            EGL_SAMPLES,        (samples_ > 1 ? samples_ : 1),
             EGL_NONE
         };
-        
+
         /* Choose configuration */
         EGLint numConfigs = 0;
         EGLBoolean success = eglChooseConfig(display_, attribs, &config_, 1, &numConfigs);
-        
+
         /* Reduce number of sample if configuration failed */
         if (success == EGL_TRUE && numConfigs >= 1)
         {
             SetDefaultColorFormat();
-            DeduceDepthStencilFormat(desc.depthBits, desc.stencilBits);
-            break;
+            DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
+            return true;
         }
-        else
-            --samples_;
     }
-    
-    /* Create EGL context */
+
+    /* No suitable configuration found */
+    return false;
+}
+
+void AndroidGLContext::CreateContext(
+    const GLPixelFormat&                pixelFormat,
+    const RendererConfigurationOpenGL&  profile,
+    AndroidGLContext*                   sharedContext)
+{
+    /* Initialize EGL display connection (ignore major/minor output parameters) */
+    if (!eglInitialize(display_, nullptr, nullptr))
+        throw std::runtime_error("eglInitialize failed");
+
+    /* Select EGL context configuration for pixel format */
+    if (!SelectConfig(pixelFormat))
+        throw std::runtime_error("eglChooseConfig failed");
+
+    /* Set up EGL profile attributes */
     EGLint major = 3, minor = 0;
-    
-    if (!(config.majorVersion == 0 && config.minorVersion == 0))
+
+    if (!(profile.majorVersion == 0 && profile.minorVersion == 0))
     {
-        major = config.majorVersion;
-        minor = config.minorVersion;
+        major = profile.majorVersion;
+        minor = profile.minorVersion;
     }
-    
+
     const EGLint contextAttribs[] =
     {
         EGL_CONTEXT_MAJOR_VERSION,          major,
@@ -152,18 +138,12 @@ void AndroidGLContext::CreateContext(
         #endif
         EGL_NONE
     };
-    
+
+    /* Create EGL context with optional shared EGL context */
+    EGLContext sharedEGLContext = (sharedContext != nullptr ? sharedContext->context_ : EGL_NO_CONTEXT);
     context_ = eglCreateContext(display_, config_, sharedEGLContext, contextAttribs);
     if (!context_)
-        throw std::runtime_error("failed to create EGL context");
-    
-    /* Create drawable surface */
-    surface_ = eglCreateWindowSurface(display_, config_, nativeHandle.window, nullptr);
-    if (!surface_)
-        throw std::runtime_error("failed to create EGL surface");
-
-    /* Make context current */
-    eglMakeCurrent(display_, surface_, surface_, context_);
+        throw std::runtime_error("eglCreateContext failed");
 }
 
 void AndroidGLContext::DeleteContext()

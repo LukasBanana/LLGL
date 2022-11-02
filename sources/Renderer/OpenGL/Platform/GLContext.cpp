@@ -12,56 +12,76 @@ namespace LLGL
 {
 
 
-static GLContext* g_currentGLContext = nullptr;
-
-GLContext::GLContext(GLContext* sharedContext)
+bool operator == (const GLPixelFormat& lhs, const GLPixelFormat& rhs)
 {
-    if (sharedContext)
-        stateMngr_ = sharedContext->stateMngr_;
+    return
+    (
+        lhs.colorBits   == rhs.colorBits    &&
+        lhs.depthBits   == rhs.depthBits    &&
+        lhs.stencilBits == rhs.stencilBits  &&
+        lhs.samples     == rhs.samples
+    );
+}
+
+bool operator != (const GLPixelFormat& lhs, const GLPixelFormat& rhs)
+{
+    return !(lhs == rhs);
+}
+
+
+/*
+ * GLContext class
+ */
+
+static GLContext*   g_currentContext;
+static unsigned     g_currentGlobalIndex;
+static unsigned     g_globalIndexCounter;
+
+bool GLContext::SetCurrentSwapInterval(int interval)
+{
+    if (g_currentContext != nullptr)
+        return g_currentContext->SetSwapInterval(interval);
     else
-        stateMngr_ = std::make_shared<GLStateManager>();
+        return false;
 }
 
-GLContext::~GLContext()
+void GLContext::SetCurrent(GLContext* context)
 {
-    // dummy
-}
-
-bool GLContext::MakeCurrent(GLContext* context)
-{
-    bool result = true;
-
-    if (g_currentGLContext != context)
+    if (context != g_currentContext)
     {
-        if (context)
+        if (context != nullptr)
         {
-            /* Activate new GL context: MakeCurrent(context) */
-            GLStateManager::active_ = context->stateMngr_.get();
-            result = context->Activate(true);
+            g_currentContext        = context;
+            g_currentGlobalIndex    = context->GetGlobalIndex();
+            GLStateManager::SetCurrentFromGLContext(*context);
         }
-        else if (g_currentGLContext)
+        else
         {
-            /* Deactivate previous GL context: MakeCurrent(null) */
-            GLStateManager::active_ = nullptr;
-            result = g_currentGLContext->Activate(false);
+            g_currentContext        = nullptr;
+            g_currentGlobalIndex    = 0;
         }
-
-        /* Store pointer to new GL context */
-        g_currentGLContext = context;
     }
-
-    return result;
 }
 
 GLContext* GLContext::GetCurrent()
 {
-    return g_currentGLContext;
+    return g_currentContext;
+}
+
+unsigned GLContext::GetCurrentGlobalIndex()
+{
+    return g_currentGlobalIndex;
 }
 
 
 /*
  * ======= Protected: =======
  */
+
+GLContext::GLContext() :
+    globalIndex_ { ++g_globalIndexCounter }
+{
+}
 
 void GLContext::DeduceColorFormat(int /*rBits*/, int rShift, int /*gBits*/, int gShift, int /*bBits*/, int bShift, int /*aBits*/, int aShift)
 {

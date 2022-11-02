@@ -15,6 +15,7 @@
 #include "OpenGL.h"
 #include "RenderState/GLStateManager.h"
 #include "Platform/GLContext.h"
+#include "Platform/GLSwapChainContext.h"
 #include <memory>
 
 #ifdef __linux__
@@ -27,6 +28,7 @@ namespace LLGL
 
 
 class GLRenderTarget;
+class GLContextManager;
 
 class GLSwapChain final : public SwapChain
 {
@@ -36,10 +38,9 @@ class GLSwapChain final : public SwapChain
         /* ----- Common ----- */
 
         GLSwapChain(
-            const SwapChainDescriptor&          desc,
-            const RendererConfigurationOpenGL&  config,
-            const std::shared_ptr<Surface>&     surface,
-            GLSwapChain*                        sharedSwapChain
+            const SwapChainDescriptor&      desc,
+            const std::shared_ptr<Surface>& surface,
+            GLContextManager&               contextMngr
         );
 
         void Present() override;
@@ -57,11 +58,13 @@ class GLSwapChain final : public SwapChain
 
         /* ----- GLSwapChain specific functions ----- */
 
-        static bool GLMakeCurrent(GLSwapChain* swapChain);
+        // Makes the swap-chain's GL context current and updates the renger-target height in the linked GL state manager.
+        static bool MakeCurrent(GLSwapChain* swapChain);
 
-        inline const std::shared_ptr<GLStateManager>& GetStateManager() const
+        // Returns the state manager of the swap chain's GL context.
+        inline GLStateManager& GetStateManager()
         {
-            return stateMngr_;
+            return context_->GetStateManager();
         }
 
     private:
@@ -79,24 +82,16 @@ class GLSwapChain final : public SwapChain
 
         bool SetSwapInterval(int swapInterval);
 
-        void InitRenderStates();
-
         #ifdef __linux__
-        void ChooseGLXVisualAndGetX11WindowContext(
-            const SwapChainDescriptor&  desc,
-            std::uint32_t&              samples,
-            NativeContextHandle&        windowContext
-        );
+        void ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeContextHandle& windowContext);
         #endif
 
     private:
 
-        std::unique_ptr<GLContext>      context_;
-
-        std::shared_ptr<GLStateManager> stateMngr_;
-        RenderState                     renderState_;
-
-        GLint                           contextHeight_  = 0;
+        std::shared_ptr<GLContext>          context_;
+        std::unique_ptr<GLSwapChainContext> swapChainContext_;
+        RenderState                         renderState_;
+        GLint                               contextHeight_  = 0;
 
 };
 

@@ -35,13 +35,13 @@ typedef GLXContext (*GXLCREATECONTEXTATTRIBARBPROC)(::Display*, GLXFBConfig, GLX
  */
 
 std::unique_ptr<GLContext> GLContext::Create(
-    const SwapChainDescriptor&          desc,
-    const RendererConfigurationOpenGL&  config,
+    const GLPixelFormat&                pixelFormat,
+    const RendererConfigurationOpenGL&  profile,
     Surface&                            surface,
     GLContext*                          sharedContext)
 {
     LinuxGLContext* sharedContextGLX = (sharedContext != nullptr ? LLGL_CAST(LinuxGLContext*, sharedContext) : nullptr);
-    return MakeUnique<LinuxGLContext>(desc, config, surface, sharedContextGLX);
+    return MakeUnique<LinuxGLContext>(pixelFormat, profile, surface, sharedContextGLX);
 }
 
 
@@ -50,23 +50,37 @@ std::unique_ptr<GLContext> GLContext::Create(
  */
 
 LinuxGLContext::LinuxGLContext(
-    const SwapChainDescriptor&          desc,
-    const RendererConfigurationOpenGL&  config,
+    const GLPixelFormat&                pixelFormat,
+    const RendererConfigurationOpenGL&  profile,
     Surface&                            surface,
     LinuxGLContext*                     sharedContext)
 :
-    GLContext { sharedContext },
-    samples_  { desc.samples  }
+    samples_ { pixelFormat.samples }
 {
     NativeHandle nativeHandle = {};
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
-    CreateContext(desc, config, nativeHandle, sharedContext);
+    CreateContext(pixelFormat, profile, nativeHandle, sharedContext);
 }
 
 LinuxGLContext::~LinuxGLContext()
 {
     DeleteContext();
 }
+
+void LinuxGLContext::Resize(const Extent2D& resolution)
+{
+    //TODO...
+}
+
+int LinuxGLContext::GetSamples() const
+{
+    return samples_;
+}
+
+
+/*
+ * ======= Private: =======
+ */
 
 bool LinuxGLContext::SetSwapInterval(int interval)
 {
@@ -77,80 +91,50 @@ bool LinuxGLContext::SetSwapInterval(int interval)
         return false;
 }
 
-bool LinuxGLContext::SwapBuffers()
-{
-    glXSwapBuffers(display_, wnd_);
-    return true;
-}
-
-void LinuxGLContext::Resize(const Extent2D& resolution)
-{
-    //TODO...
-}
-
-std::uint32_t LinuxGLContext::GetSamples() const
-{
-    return samples_;
-}
-
-
-/*
- * ======= Private: =======
- */
-
-bool LinuxGLContext::Activate(bool activate)
-{
-    if (activate)
-        return glXMakeCurrent(display_, wnd_, glc_);
-    else
-        return glXMakeCurrent(nullptr, 0, 0);
-}
-
 void LinuxGLContext::CreateContext(
-    const SwapChainDescriptor&          desc,
-    const RendererConfigurationOpenGL&  config,
+    const GLPixelFormat&                pixelFormat,
+    const RendererConfigurationOpenGL&  profile,
     const NativeHandle&                 nativeHandle,
     LinuxGLContext*                     sharedContext)
 {
+    if (!nativeHandle.display || !nativeHandle.window || !nativeHandle.visual)
+        throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
+
     GLXContext glcShared = (sharedContext != nullptr ? sharedContext->glc_ : nullptr);
 
     /* Get X11 display, window, and visual information */
-    display_    = nativeHandle.display;
-    wnd_        = nativeHandle.window;
-    visual_     = nativeHandle.visual;
-
-    if (!display_ || !wnd_ || !visual_)
-        throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
+    display_ = nativeHandle.display;
 
     /* Create intermediate GL context OpenGL context with X11 lib */
-    GLXContext intermediateGlc = CreateContextCompatibilityProfile(nullptr);
-    if (glXMakeCurrent(display_, wnd_, intermediateGlc) != True)
+    GLXContext intermediateGlc = CreateContextCompatibilityProfile(nativeHandle.visual, nullptr);
+
+    if (glXMakeCurrent(display_, nativeHandle.window, intermediateGlc) != True)
         Log::PostReport(Log::ReportType::Error, "glXMakeCurrent failed on GLX compatibility profile");
 
-    if (config.contextProfile == OpenGLContextProfile::CoreProfile)
+    if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
     {
         /* Create core profile */
-        glc_ = CreateContextCoreProfile(glcShared, config.majorVersion, config.minorVersion, desc.depthBits, desc.stencilBits);
+        glc_ = CreateContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits);
     }
 
     if (glc_)
     {
         /* Make new OpenGL context current */
-        if (glXMakeCurrent(display_, wnd_, glc_) != True)
+        if (glXMakeCurrent(display_, nativeHandle.window, glc_) != True)
             Log::PostReport(Log::ReportType::Error, "glXMakeCurrent failed on GLX core profile");
 
         /* Valid core profile created, so we can delete the intermediate GLX context */
         glXDestroyContext(display_, intermediateGlc);
-        
+
         /* Deduce color and depth-stencil formats */
         SetDefaultColorFormat();
-        DeduceDepthStencilFormat(desc.depthBits, desc.stencilBits);
+        DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
     }
     else
     {
         /* No core profile created, so we use the intermediate GLX context */
         glc_ = intermediateGlc;
-        
+
         /* Set fixed color and depth-stencil formats as default values */
         SetDefaultColorFormat();
         SetDefaultDepthStencilFormat();
@@ -204,7 +188,7 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
             GLX_DEPTH_SIZE,     depthBits,
             GLX_STENCIL_SIZE,   stencilBits,
             //GLX_SAMPLE_BUFFERS, 1,
-            //GLX_SAMPLES,        1,//static_cast<int>(desc_.samples),
+            //GLX_SAMPLES,        1,//samples_,
             None
         };
 
@@ -238,10 +222,10 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
     return nullptr;
 }
 
-GLXContext LinuxGLContext::CreateContextCompatibilityProfile(GLXContext glcShared)
+GLXContext LinuxGLContext::CreateContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared)
 {
     /* Create compatibility profile */
-    return glXCreateContext(display_, visual_, glcShared, GL_TRUE);
+    return glXCreateContext(display_, visual, glcShared, GL_TRUE);
 }
 
 

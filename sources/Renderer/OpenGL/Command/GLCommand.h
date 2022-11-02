@@ -154,6 +154,13 @@ struct GLCmdClear
     long flags;
 };
 
+struct GLCmdClearAttachmentsWithRenderPass
+{
+    const GLRenderPass* renderPass;
+    std::uint32_t       numClearValues;
+//  const ClearValue*   clearValues[numClearValues];
+};
+
 struct GLCmdClearBuffers
 {
     std::uint32_t   numAttachments;
@@ -211,12 +218,9 @@ struct GLCmdBindResourceHeap
     std::uint32_t   firstSet;
 };
 
-struct GLCmdBindRenderPass
+struct GLCmdBindRenderTarget
 {
-    RenderTarget*       renderTarget;
-    const GLRenderPass* renderPass;
-    std::uint32_t       numClearValues;
-//  const ClearValue*   clearValues[numClearValues];
+    RenderTarget* renderTarget;
 };
 
 struct GLCmdBindPipelineState

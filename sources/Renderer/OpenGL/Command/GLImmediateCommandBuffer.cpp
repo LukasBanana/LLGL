@@ -9,6 +9,7 @@
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommandExecutor.h"
 #include <LLGL/StaticLimits.h>
+#include <LLGL/TypeInfo.h>
 
 #include "../../TextureUtils.h"
 #include "../GLSwapChain.h"
@@ -44,8 +45,8 @@ namespace LLGL
 {
 
 
-GLImmediateCommandBuffer::GLImmediateCommandBuffer(const std::shared_ptr<GLStateManager>& stateMngr) :
-    stateMngr_ { stateMngr }
+GLImmediateCommandBuffer::GLImmediateCommandBuffer(GLStateManager& stateManager) :
+    stateMngr_ { &stateManager }
 {
 }
 
@@ -437,7 +438,17 @@ void GLImmediateCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    stateMngr_->BindRenderPass(renderTarget, renderPass, numClearValues, clearValues);
+    /* Bind render target and update state manager if GL context has switched */
+    auto nextStateMngr = stateMngr_;
+    stateMngr_->BindRenderTarget(renderTarget, &nextStateMngr);
+    stateMngr_ = nextStateMngr;
+
+    /* Clear render target attachments with render pass */
+    if (renderPass != nullptr)
+    {
+        auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
+        stateMngr_->ClearAttachmentsWithRenderPass(*renderPassGL, numClearValues, clearValues);
+    }
 }
 
 void GLImmediateCommandBuffer::EndRenderPass()

@@ -18,8 +18,6 @@ namespace LLGL
 {
 
 
-struct NativeHandle;
-
 // Implementation of the <GLContext> interface for Android and wrapper for a native EGL context.
 class AndroidGLContext : public GLContext
 {
@@ -27,37 +25,43 @@ class AndroidGLContext : public GLContext
     public:
 
         AndroidGLContext(
-            const SwapChainDescriptor&          desc,
-            const RendererConfigurationOpenGL&  config,
+            const GLPixelFormat&                pixelFormat,
+            const RendererConfigurationOpenGL&  profile,
             Surface&                            surface,
             AndroidGLContext*                   sharedContext
         );
         ~AndroidGLContext();
 
-        bool SetSwapInterval(int interval) override;
-        bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
-        std::uint32_t GetSamples() const override;
+        int GetSamples() const override;
+
+    public:
+
+        // Returns the native EGL display.
+        inline ::EGLDisplay GetEGLDisplay() const
+        {
+            return display_;
+        }
 
     private:
 
-        bool Activate(bool activate) override;
+        bool SetSwapInterval(int interval) override;
+
+        bool SelectConfig(const GLPixelFormat& pixelFormat);
 
         void CreateContext(
-            const SwapChainDescriptor&          contextDesc,
-            const RendererConfigurationOpenGL&  config,
-            const NativeHandle&                 nativeHandle,
+            const GLPixelFormat&                pixelFormat,
+            const RendererConfigurationOpenGL&  profile,
             AndroidGLContext*                   sharedContext
         );
         void DeleteContext();
 
     private:
 
-        EGLDisplay      display_    = nullptr;
-        EGLContext      context_    = nullptr;
-        EGLSurface      surface_    = nullptr;
-        EGLConfig       config_     = nullptr;
-        std::uint32_t   samples_    = 1;
+        ::EGLDisplay    display_    = nullptr;
+        ::EGLContext    context_    = nullptr;
+        ::EGLConfig     config_     = nullptr;
+        int             samples_    = 1;
 
 };
 

@@ -23,10 +23,7 @@ namespace LLGL
  * ======= Private: =======
  */
 
-void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(
-    const SwapChainDescriptor&  desc,
-    std::uint32_t&              samples,
-    NativeContextHandle&        windowContext)
+void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeContextHandle& windowContext)
 {
     /* Open X11 display */
     windowContext.display = XOpenDisplay(nullptr);
@@ -39,7 +36,7 @@ void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(
     GLXFBConfig framebufferConfig = 0;
 
     /* Find suitable multi-sample format (for samples > 1) */
-    for (samples = GetClampedSamples(desc.samples); samples > 1; --samples)
+    for (; pixelFormat.samples > 1; pixelFormat.samples--)
     {
         /* Create framebuffer configuration for multi-sampling */
         const int framebufferAttribs[] =
@@ -52,11 +49,11 @@ void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(
             GLX_RED_SIZE,       8,
             GLX_GREEN_SIZE,     8,
             GLX_BLUE_SIZE,      8,
-            GLX_ALPHA_SIZE,     (desc.colorBits == 32 ? 8 : 0),
-            GLX_DEPTH_SIZE,     desc.depthBits,
-            GLX_STENCIL_SIZE,   desc.stencilBits,
+            GLX_ALPHA_SIZE,     (pixelFormat.colorBits == 32 ? 8 : 0),
+            GLX_DEPTH_SIZE,     pixelFormat.depthBits,
+            GLX_STENCIL_SIZE,   pixelFormat.stencilBits,
             GLX_SAMPLE_BUFFERS, 1,
-            GLX_SAMPLES,        static_cast<int>(samples),
+            GLX_SAMPLES,        pixelFormat.samples,
             None
         };
 
@@ -90,9 +87,9 @@ void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(
             GLX_RED_SIZE,       8,
             GLX_GREEN_SIZE,     8,
             GLX_BLUE_SIZE,      8,
-            GLX_ALPHA_SIZE,     (desc.colorBits == 32 ? 8 : 0),
-            GLX_DEPTH_SIZE,     desc.depthBits,
-            GLX_STENCIL_SIZE,   desc.stencilBits,
+            GLX_ALPHA_SIZE,     (pixelFormat.colorBits == 32 ? 8 : 0),
+            GLX_DEPTH_SIZE,     pixelFormat.depthBits,
+            GLX_STENCIL_SIZE,   pixelFormat.stencilBits,
             None
         };
 

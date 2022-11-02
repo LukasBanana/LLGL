@@ -173,6 +173,12 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLStateManager::Clear, g_stateMngrArg, cmd->flags);
             return sizeof(*cmd);
         }
+        case GLOpcodeClearAttachmentsWithRenderPass:
+        {
+            auto cmd = reinterpret_cast<const GLCmdClearAttachmentsWithRenderPass*>(pc);
+            compiler.CallMember(&GLStateManager::ClearAttachmentsWithRenderPass, g_stateMngrArg, cmd->renderPass, cmd->numClearValues, (cmd + 1));
+            return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
+        }
         case GLOpcodeClearBuffers:
         {
             auto cmd = reinterpret_cast<const GLCmdClearBuffers*>(pc);
@@ -241,11 +247,12 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLResourceHeap::Bind, cmd->resourceHeap, g_stateMngrArg, cmd->firstSet);
             return sizeof(*cmd);
         }
-        case GLOpcodeBindRenderPass:
+        case GLOpcodeBindRenderTarget:
         {
-            auto cmd = reinterpret_cast<const GLCmdBindRenderPass*>(pc);
-            compiler.CallMember(&GLStateManager::BindRenderPass, g_stateMngrArg, cmd->renderTarget, cmd->renderPass, cmd->numClearValues, (cmd + 1));
-            return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
+            //TODO: update reference to GLStateManager
+            auto cmd = reinterpret_cast<const GLCmdBindRenderTarget*>(pc);
+            compiler.CallMember(&GLStateManager::BindRenderTarget, g_stateMngrArg, cmd->renderTarget);
+            return sizeof(*cmd);
         }
         case GLOpcodeBindPipelineState:
         {

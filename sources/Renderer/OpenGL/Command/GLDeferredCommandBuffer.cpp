@@ -516,12 +516,18 @@ void GLDeferredCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    auto cmd = AllocCommand<GLCmdBindRenderPass>(GLOpcodeBindRenderPass, sizeof(ClearValue)*numClearValues);
+    auto cmd = AllocCommand<GLCmdBindRenderTarget>(GLOpcodeBindRenderTarget);
     {
-        cmd->renderTarget   = &renderTarget;
-        cmd->renderPass     = (renderPass != nullptr ? LLGL_CAST(const GLRenderPass*, renderPass) : nullptr);
-        cmd->numClearValues = numClearValues;
-        ::memcpy(cmd + 1, clearValues, sizeof(ClearValue)*numClearValues);
+        cmd->renderTarget = &renderTarget;
+    }
+    if (renderPass != nullptr)
+    {
+        auto cmd = AllocCommand<GLCmdClearAttachmentsWithRenderPass>(GLOpcodeClearAttachmentsWithRenderPass, sizeof(ClearValue)*numClearValues);
+        {
+            cmd->renderPass     = LLGL_CAST(const GLRenderPass*, renderPass);
+            cmd->numClearValues = numClearValues;
+            ::memcpy(cmd + 1, clearValues, sizeof(ClearValue)*numClearValues);
+        }
     }
 }
 

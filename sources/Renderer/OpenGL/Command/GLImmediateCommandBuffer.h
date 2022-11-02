@@ -31,7 +31,7 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         /* ----- Common ----- */
 
-        GLImmediateCommandBuffer(const std::shared_ptr<GLStateManager>& stateManager);
+        GLImmediateCommandBuffer(GLStateManager& stateManager);
 
         /* ----- Encoding ----- */
 
@@ -212,8 +212,8 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
     private:
 
-        std::shared_ptr<GLStateManager> stateMngr_;
-        GLRenderState                   renderState_;
+        GLStateManager* stateMngr_  = nullptr;
+        GLRenderState   renderState_;
 
 };
 

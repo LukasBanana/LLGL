@@ -24,7 +24,7 @@ class GLCommandQueue final : public CommandQueue
 
     public:
 
-        GLCommandQueue(const std::shared_ptr<GLStateManager>& stateManager);
+        GLCommandQueue(GLStateManager& stateManager);
 
         /* ----- Command Buffers ----- */
 
@@ -49,7 +49,7 @@ class GLCommandQueue final : public CommandQueue
 
     private:
 
-        std::shared_ptr<GLStateManager> stateMngr_;
+        GLStateManager& stateMngr_;
 
 };
 

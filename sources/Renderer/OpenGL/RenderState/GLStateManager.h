@@ -25,6 +25,7 @@ namespace LLGL
 
 class RenderTarget;
 class RenderPass;
+class GLContext;
 class GLRenderTarget;
 class GLSwapChain;
 class GLBuffer;
@@ -67,8 +68,11 @@ class GLStateManager
         // Returns the active GL state manager.
         static inline GLStateManager& Get()
         {
-            return *active_;
+            return *current_;
         }
+
+        // Makes the state manager of the specified GL context the current. This should only be called inside GLContext::SetCurrent().
+        static void SetCurrentFromGLContext(GLContext& context);
 
         // Queries all supported and available GL extensions and limitations, then stores it internally (must be called once a GL context has been created).
         void DetermineExtensionsAndLimits();
@@ -249,9 +253,10 @@ class GLStateManager
 
         /* ----- Render pass ----- */
 
-        void BindRenderPass(
-            RenderTarget&       renderTarget,
-            const RenderPass*   renderPass,
+        void BindRenderTarget(RenderTarget& renderTarget, GLStateManager** nextStateManager = nullptr);
+
+        void ClearAttachmentsWithRenderPass(
+            const GLRenderPass& renderPassGL,
             std::uint32_t       numClearValues,
             const ClearValue*   clearValues
         );
@@ -314,12 +319,6 @@ class GLStateManager
         void BindAndBlitRenderTarget(GLRenderTarget& renderTargetGL);
         void BindAndBlitSwapChain(GLSwapChain& swapChainGL);
 
-        void ClearAttachmentsWithRenderPass(
-            const GLRenderPass& renderPassGL,
-            std::uint32_t       numClearValues,
-            const ClearValue*   clearValues
-        );
-
         std::uint32_t ClearColorBuffers(
             const std::uint8_t*             colorBuffers,
             std::uint32_t                   numClearValues,
@@ -363,9 +362,7 @@ class GLStateManager
 
     private:
 
-        friend class GLContext;
-
-        static GLStateManager*  active_;
+        static GLStateManager*  current_;
         static GLLimits         commonLimits_;          // Common denominator of limitations for all GL contexts
 
     private:

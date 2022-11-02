@@ -27,40 +27,46 @@ class LinuxGLContext : public GLContext
     public:
 
         LinuxGLContext(
-            const SwapChainDescriptor&          desc,
-            const RendererConfigurationOpenGL&  config,
+            const GLPixelFormat&                pixelFormat,
+            const RendererConfigurationOpenGL&  profile,
             Surface&                            surface,
             LinuxGLContext*                     sharedContext
         );
         ~LinuxGLContext();
 
-        bool SetSwapInterval(int interval) override;
-        bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
-        std::uint32_t GetSamples() const override;
+        int GetSamples() const override;
+
+    public:
+
+        // Returns the native X11 <GLXContext> object.
+        inline ::GLXContext GetGLXContext() const
+        {
+            return glc_;
+        }
 
     private:
 
-        bool Activate(bool activate) override;
+        bool SetSwapInterval(int interval) override;
+
+    private:
 
         void CreateContext(
-            const SwapChainDescriptor&          desc,
-            const RendererConfigurationOpenGL&  config,
+            const GLPixelFormat&                pixelFormat,
+            const RendererConfigurationOpenGL&  profile,
             const NativeHandle&                 nativeHandle,
             LinuxGLContext*                     sharedContext
         );
         void DeleteContext();
 
         GLXContext CreateContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
-        GLXContext CreateContextCompatibilityProfile(GLXContext glcShared);
+        GLXContext CreateContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared);
 
     private:
 
         ::Display*      display_    = nullptr;
-        ::Window        wnd_        = 0;
-        XVisualInfo*    visual_     = nullptr;
-        GLXContext      glc_        = nullptr;
-        std::uint32_t   samples_    = 1;
+        ::GLXContext    glc_        = nullptr;
+        int             samples_    = 1;
 
 };
 
