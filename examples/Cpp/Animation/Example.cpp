@@ -239,14 +239,14 @@ private:
     void UpdateScene(float dt)
     {
         // Update animation
-        if (input->KeyPressed(LLGL::Key::LButton))
+        if (input.KeyPressed(LLGL::Key::LButton))
         {
-            auto motion = input->GetMouseMotion();
+            auto motion = input.GetMouseMotion();
             viewRotation.x += static_cast<float>(motion.y) * 0.25f;
             viewRotation.x = Gs::Clamp(viewRotation.x, -90.0f, 90.0f);
             viewRotation.y += static_cast<float>(motion.x) * 0.25f;
         }
-        else if (input->KeyUp(LLGL::Key::LButton))
+        else if (input.KeyUp(LLGL::Key::LButton))
         {
             // Reset animation
             viewRotationAnim    = 1.0f;

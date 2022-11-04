@@ -85,8 +85,7 @@ int main()
         window->SetTitle(std::wstring(title.begin(), title.end()));
 
         // Setup input controller
-        auto input = std::make_shared<LLGL::Input>();
-        window->AddEventListener(input);
+        LLGL::Input input{ *window };
 
         class ResizeEventHandler : public LLGL::Window::EventListener
         {
@@ -348,7 +347,7 @@ int main()
         #endif
 
         // Main loop
-        while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        while (window->ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
         {
             if (profiler)
                 profiler->NextProfile();
@@ -387,7 +386,7 @@ int main()
                     #ifndef __linux__
 
                     // Switch fullscreen mode
-                    if (input->KeyDown(LLGL::Key::Return))
+                    if (input.KeyDown(LLGL::Key::Return))
                     {
                         windowDesc.borderless = !windowDesc.borderless;
 

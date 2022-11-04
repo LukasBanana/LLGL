@@ -365,16 +365,16 @@ private:
         // Update input
         const Gs::Vector2f mouseMotion
         {
-            static_cast<float>(input->GetMouseMotion().x),
-            static_cast<float>(input->GetMouseMotion().y),
+            static_cast<float>(input.GetMouseMotion().x),
+            static_cast<float>(input.GetMouseMotion().y),
         };
 
         Gs::Vector2f rotationVec;
-        if (input->KeyPressed(LLGL::Key::LButton))
+        if (input.KeyPressed(LLGL::Key::LButton))
             rotationVec = mouseMotion*0.005f;
 
         // Update density threshold
-        if (input->KeyPressed(LLGL::Key::RButton))
+        if (input.KeyPressed(LLGL::Key::RButton))
         {
             float delta = mouseMotion.x*0.002f;
             settings.threshold = std::max(0.0f, std::min(settings.threshold + delta, 0.5f));

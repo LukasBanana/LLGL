@@ -582,16 +582,16 @@ private:
     void UpdateScene()
     {
         // Update user input
-        auto motion = input->GetMouseMotion();
+        auto motion = input.GetMouseMotion();
 
-        if (input->KeyPressed(LLGL::Key::LButton))
+        if (input.KeyPressed(LLGL::Key::LButton))
         {
             viewRotation.x += static_cast<float>(motion.y) * 0.25f;
             viewRotation.x = Gs::Clamp(viewRotation.x, -90.0f, 90.0f);
             viewRotation.y += static_cast<float>(motion.x) * 0.25f;
         }
 
-        if (input->KeyPressed(LLGL::Key::RButton))
+        if (input.KeyPressed(LLGL::Key::RButton))
         {
             float delta = motion.x*0.01f;
             stiffnessFactor = std::max(0.5f, std::min(stiffnessFactor + delta, 1.0f));

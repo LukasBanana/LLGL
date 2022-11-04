@@ -48,8 +48,7 @@ int main()
         auto commands = renderer->CreateCommandBuffer();
 
         // Setup input controller
-        auto input = std::make_shared<LLGL::Input>();
-        window.AddEventListener(input);
+        LLGL::Input input{ window };
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
@@ -197,7 +196,7 @@ int main()
         #endif
 
         // Main loop
-        while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        while (window.ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
         {
             commands->Begin();
             {

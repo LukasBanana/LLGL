@@ -218,7 +218,7 @@ private:
         // Update matrices in constant buffer
         static float anim0, anim1;
 
-        if (input->KeyDown(LLGL::Key::Space))
+        if (input.KeyDown(LLGL::Key::Space))
             animEnabled = !animEnabled;
 
         if (animEnabled)

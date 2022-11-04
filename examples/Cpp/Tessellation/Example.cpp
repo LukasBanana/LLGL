@@ -242,28 +242,28 @@ private:
         static const float tessLevelMin = 1.0f, tessLevelMax = 64.0f;
 
         // Update tessellation levels by user input
-        auto motion = input->GetMouseMotion().x;
+        auto motion = input.GetMouseMotion().x;
         auto motionScaled = static_cast<float>(motion)*0.1f;
 
-        if (input->KeyPressed(LLGL::Key::LButton))
+        if (input.KeyPressed(LLGL::Key::LButton))
         {
             settings.tessLevelInner += motionScaled;
             settings.tessLevelInner = Gs::Clamp(settings.tessLevelInner, tessLevelMin, tessLevelMax);
         }
 
-        if (input->KeyPressed(LLGL::Key::RButton))
+        if (input.KeyPressed(LLGL::Key::RButton))
         {
             settings.tessLevelOuter += motionScaled;
             settings.tessLevelOuter = Gs::Clamp(settings.tessLevelOuter, tessLevelMin, tessLevelMax);
         }
 
-        if ( motion != 0 && ( input->KeyPressed(LLGL::Key::LButton) || input->KeyPressed(LLGL::Key::RButton) ) )
+        if ( motion != 0 && ( input.KeyPressed(LLGL::Key::LButton) || input.KeyPressed(LLGL::Key::RButton) ) )
             ShowTessLevel();
 
-        if (input->KeyPressed(LLGL::Key::MButton))
+        if (input.KeyPressed(LLGL::Key::MButton))
             settings.twist += Gs::Deg2Rad(motionScaled);
 
-        if (input->KeyDown(LLGL::Key::Tab))
+        if (input.KeyDown(LLGL::Key::Tab))
             showWireframe = !showWireframe;
 
         // Update matrices

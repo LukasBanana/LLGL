@@ -207,7 +207,7 @@ void ExampleBase::Run()
     bool fullscreen = false;
     const auto initialResolution = swapChain->GetResolution();
 
-    while (swapChain->GetSurface().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+    while (swapChain->GetSurface().ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
     {
         // Update profiler (if debugging is enabled)
         if (debuggerObj_)
@@ -223,7 +223,7 @@ void ExampleBase::Run()
                 profilerObj_->timeRecordingEnabled = false;
                 showTimeRecords = false;
             }
-            else if (input->KeyDown(LLGL::Key::F1))
+            else if (input.KeyDown(LLGL::Key::F1))
             {
                 profilerObj_->timeRecordingEnabled = true;
                 showTimeRecords = true;
@@ -232,7 +232,7 @@ void ExampleBase::Run()
         }
 
         // Check to switch to fullscreen
-        if (input->KeyDown(LLGL::Key::F5))
+        if (input.KeyDown(LLGL::Key::F5))
         {
             if (auto display = swapChain->GetSurface().FindResidentDisplay())
             {
@@ -359,9 +359,8 @@ ExampleBase::ExampleBase(
     auto rendererName = renderer->GetName();
     window.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
 
-    // Add input event listener to window
-    input = std::make_shared<LLGL::Input>();
-    window.AddEventListener(input);
+    // Listen for window events
+    input.Listen(window);
 
     // Change window descriptor to allow resizing
     auto wndDesc = window.GetDesc();

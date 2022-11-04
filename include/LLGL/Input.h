@@ -11,7 +11,6 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/Types.h>
-#include <array>
 #include <string>
 
 
@@ -37,14 +36,24 @@ while (myWindow->ProcessEvents()) {
 \endcode
 \todo Make Window::EventListener a member of Input instead of extending it. Also add a member of Canvas::EventListener and add touch event functions.
 */
-class LLGL_EXPORT Input : public Window::EventListener
+class LLGL_EXPORT Input : public Interface
 {
 
         LLGL_DECLARE_INTERFACE( InterfaceID::Input );
 
     public:
 
+        //! Default initializes the input handler without assigning to any surface.
         Input();
+
+        //! Assigns an event listener for this input handler to the specified surface.
+        Input(Surface& surface);
+
+        //! Adds an event listener for this input handler to the specified surface.
+        void Listen(Surface& surface);
+
+        //! Removes the event listener for this input handler from the specified surface.
+        void Drop(Surface& surface);
 
         //! Returns true if the specified key is currently being pressed down.
         bool KeyPressed(Key keyCode) const;
@@ -94,33 +103,15 @@ class LLGL_EXPORT Input : public Window::EventListener
             return anyKeyCount_;
         }
 
-    protected:
-
-        void OnProcessEvents(Window& sender) override;
-
-        void OnKeyDown(Window& sender, Key keyCode) override;
-        void OnKeyUp(Window& sender, Key keyCode) override;
-
-        void OnDoubleClick(Window& sender, Key keyCode) override;
-
-        void OnChar(Window& sender, wchar_t chr) override;
-
-        void OnWheelMotion(Window& sender, int motion) override;
-
-        void OnLocalMotion(Window& sender, const Offset2D& position) override;
-        void OnGlobalMotion(Window& sender, const Offset2D& motion) override;
-
-        void OnLostFocus(Window& sender) override;
-
     private:
 
-        using KeyStateArray = std::array<bool, 256>;
+        using KeyStateArray = bool[256];
 
         struct KeyTracker
         {
-            static const size_t         maxCount    = 10;
-            std::array<Key, maxCount>   keys;
-            size_t                      resetCount  = 0;
+            static const size_t maxCount    = 10;
+            Key                 keys[maxCount];
+            size_t              resetCount  = 0;
 
             void Add(Key keyCode);
             void Reset(KeyStateArray& keyStates);
@@ -128,29 +119,38 @@ class LLGL_EXPORT Input : public Window::EventListener
 
     private:
 
-        void InitArray(KeyStateArray& keyStates);
+        static void InitArray(KeyStateArray& keyStates);
 
     private:
 
-        KeyStateArray       keyPressed_;
-        KeyStateArray       keyDown_;
-        KeyStateArray       keyDownRepeated_;
-        KeyStateArray       keyUp_;
+        class WindowEventListener;
+        class CanvasEventListener;
 
-        Offset2D            mousePosition_;
-        Offset2D            mouseMotion_;
+        friend WindowEventListener;
+        friend CanvasEventListener;
 
-        int                 wheelMotion_    = 0;
+        KeyStateArray   keyPressed_;
+        KeyStateArray   keyDown_;
+        KeyStateArray   keyDownRepeated_;
+        KeyStateArray   keyUp_;
 
-        KeyTracker          keyDownTracker_;
-        KeyTracker          keyDownRepeatedTracker_;
-        KeyTracker          keyUpTracker_;
+        Offset2D        mousePosition_;
+        Offset2D        mouseMotion_;
 
-        std::array<bool, 3> doubleClick_;
+        int             wheelMotion_    = 0;
 
-        std::wstring        chars_;
+        KeyTracker      keyDownTracker_;
+        KeyTracker      keyDownRepeatedTracker_;
+        KeyTracker      keyUpTracker_;
 
-        std::size_t         anyKeyCount_    = 0;
+        bool            doubleClick_[3];
+
+        std::wstring    chars_;
+
+        std::size_t     anyKeyCount_    = 0;
+
+        std::vector<std::pair<std::shared_ptr<WindowEventListener>, const Surface*>> windowEventListeners_;
+        std::vector<std::pair<std::shared_ptr<CanvasEventListener>, const Surface*>> canvasEventListeners_;
 
 };
 

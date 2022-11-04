@@ -103,6 +103,9 @@ MyRenderer::MyRenderer(
         swapChainDesc.samples       = samples;
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc, subWindow);
+
+    // Enable V-sync
+    swapChain->SetVsyncInterval(1);
 }
 
 void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, const std::vector<std::uint32_t>& indices)
@@ -314,8 +317,7 @@ int main(int argc, char* argv[])
         for (auto& renderer : myRenderers)
             renderer.CreateResources(cubeVertices, cubeIndices);
 
-        auto input = std::make_shared<LLGL::Input>();
-        mainWindow->AddEventListener(input);
+        LLGL::Input input{ *mainWindow };
 
         // Initialize matrices (OpenGL needs a unit-cube NDC-space)
         const float aspectRatio = static_cast<float>(mainWindowDesc.size.width) / static_cast<float>(mainWindowDesc.size.height);
@@ -327,22 +329,22 @@ int main(int argc, char* argv[])
         for (int i = 0; i < 4; ++i)
         {
             projMatrices[i] = myRenderers[i].BuildPerspectiveProjection(aspectRatio, nearPlane, farPlane, fieldOfView);
-            myRenderers[i].GetSubWindow().AddEventListener(input);
+            input.Listen(myRenderers[i].GetSubWindow());
         }
 
         Gs::Matrix4f viewMatrix, worldMatrix;
         Gs::Translate(viewMatrix, Gs::Vector3f(0, 0, 5));
 
         // Enter main loop
-        while (mainWindow->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        while (mainWindow->ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
         {
             // Update scene transformation
-            if (input->KeyPressed(LLGL::Key::LButton))
+            if (input.KeyPressed(LLGL::Key::LButton))
             {
                 const auto mouseMotion = Gs::Vector2f
                 {
-                    static_cast<float>(input->GetMouseMotion().x),
-                    static_cast<float>(input->GetMouseMotion().y),
+                    static_cast<float>(input.GetMouseMotion().x),
+                    static_cast<float>(input.GetMouseMotion().y),
                 } * 0.005f;
 
                 // Rotate model around X and Y axes

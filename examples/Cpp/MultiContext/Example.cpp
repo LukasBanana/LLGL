@@ -39,17 +39,10 @@ int main(int argc, char* argv[])
         auto commands = renderer->CreateCommandBuffer();
 
         // Create input handler
-        std::shared_ptr<LLGL::Input> inputs[2] =
-        {
-            std::make_shared<LLGL::Input>(),
-            std::make_shared<LLGL::Input>()
-        };
-
         auto& window1 = static_cast<LLGL::Window&>(swapChain1->GetSurface());
         auto& window2 = static_cast<LLGL::Window&>(swapChain2->GetSurface());
 
-        window1.AddEventListener(inputs[0]);
-        window2.AddEventListener(inputs[1]);
+        LLGL::Input inputs[2] = { window1, window2 };
 
         // Set window titles
         window1.SetTitle(L"LLGL Example: Multi Context (1)");
@@ -222,7 +215,7 @@ int main(int argc, char* argv[])
         std::uint32_t numInstances = (geomShader != nullptr ? 1 : 2);
 
         // Enter main loop
-        while (!(inputs[0]->KeyPressed(LLGL::Key::Escape) || inputs[1]->KeyPressed(LLGL::Key::Escape)))
+        while (!(inputs[0].KeyPressed(LLGL::Key::Escape) || inputs[1].KeyPressed(LLGL::Key::Escape)))
         {
             // Process events of both windows and quit when both windows are closed
             const bool win1Processed = window1.ProcessEvents();
@@ -234,7 +227,7 @@ int main(int argc, char* argv[])
             // Switch between pipeline states
             for (int i = 0; i < 2; ++i)
             {
-                if (inputs[i]->KeyDown(LLGL::Key::Space))
+                if (inputs[i].KeyDown(LLGL::Key::Space))
                 {
                     if (logicOpSupported)
                     {

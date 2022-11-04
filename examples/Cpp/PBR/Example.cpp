@@ -455,16 +455,16 @@ private:
     void UpdateScene()
     {
         // Update camera rotation
-        const auto motion = input->GetMouseMotion();
+        const auto motion = input.GetMouseMotion();
         const Gs::Vector2f motionVec
         {
             static_cast<float>(motion.x),
             static_cast<float>(motion.y)
         };
 
-        if (input->KeyPressed(LLGL::Key::LButton))
+        if (input.KeyPressed(LLGL::Key::LButton))
         {
-            if (input->KeyPressed(LLGL::Key::Space))
+            if (input.KeyPressed(LLGL::Key::Space))
             {
                 // Rotate mesh
                 auto& m = meshes[currentMesh].transform;
@@ -483,14 +483,14 @@ private:
         }
 
         // Update material and skybox layer switches
-        if (input->KeyDown(LLGL::Key::Tab))
+        if (input.KeyDown(LLGL::Key::Tab))
         {
-            if (input->KeyPressed(LLGL::Key::Shift))
+            if (input.KeyPressed(LLGL::Key::Shift))
             {
                 if (numSkyboxes > 0)
                     settings.skyboxLayer = (settings.skyboxLayer + 1) % numSkyboxes;
             }
-            else if (input->KeyPressed(LLGL::Key::Space))
+            else if (input.KeyPressed(LLGL::Key::Space))
             {
                 if (!meshes.empty())
                     currentMesh = (currentMesh + 1) % static_cast<int>(meshes.size());

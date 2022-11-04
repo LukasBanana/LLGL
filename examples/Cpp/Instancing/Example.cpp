@@ -329,8 +329,8 @@ private:
     void UpdateAnimation()
     {
         // Update view rotation by user input
-        if (input->KeyPressed(LLGL::Key::RButton) || input->KeyPressed(LLGL::Key::LButton))
-            viewRotation += static_cast<float>(input->GetMouseMotion().x) * 0.005f;
+        if (input.KeyPressed(LLGL::Key::RButton) || input.KeyPressed(LLGL::Key::LButton))
+            viewRotation += static_cast<float>(input.GetMouseMotion().x) * 0.005f;
         else
             viewRotation += 0.002f;
 
@@ -355,7 +355,7 @@ private:
         settings.animVec[1] = std::cos(animationTime) * animationRadius;
 
         // Allow dynamic shader reloading (for debugging)
-        if (input->KeyDown(LLGL::Key::R))
+        if (input.KeyDown(LLGL::Key::R))
         {
             if (ReloadShaderProgram(shaderProgram))
             {
@@ -372,7 +372,7 @@ private:
         UpdateAnimation();
 
         static bool alphaToCoverageEnabled = true;
-        if (input->KeyDown(LLGL::Key::Space))
+        if (input.KeyDown(LLGL::Key::Space))
         {
             alphaToCoverageEnabled = !alphaToCoverageEnabled;
             if (alphaToCoverageEnabled)

@@ -155,7 +155,7 @@ protected:
     LLGL::CommandQueue*                         commandQueue    = nullptr;
 
     // User input event listener
-    std::shared_ptr<LLGL::Input>                input;
+    LLGL::Input                                 input;
 
     // Primary timer object
     std::unique_ptr<LLGL::Timer>                timer;

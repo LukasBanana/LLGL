@@ -404,13 +404,13 @@ private:
     void UpdateScene()
     {
         // Update scene animation (simple rotation)
-        if (input->KeyPressed(LLGL::Key::LButton))
-            rotation.x += static_cast<float>(input->GetMouseMotion().x)*0.005f;
-        if (input->KeyPressed(LLGL::Key::RButton))
-            rotation.y += static_cast<float>(input->GetMouseMotion().x)*0.005f;
+        if (input.KeyPressed(LLGL::Key::LButton))
+            rotation.x += static_cast<float>(input.GetMouseMotion().x)*0.005f;
+        if (input.KeyPressed(LLGL::Key::RButton))
+            rotation.y += static_cast<float>(input.GetMouseMotion().x)*0.005f;
 
         // Check if user wants to sage the render target texture to file
-        if (input->KeyDown(LLGL::Key::F4))
+        if (input.KeyDown(LLGL::Key::F4))
             SaveTexture(*renderTargetTex, "Screenshot." + GetModuleName() + ".png");
     }
 

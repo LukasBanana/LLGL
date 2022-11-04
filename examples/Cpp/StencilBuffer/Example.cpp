@@ -245,17 +245,17 @@ private:
         static float animation;
 
         // Update animation
-        if (input->KeyPressed(LLGL::Key::LButton))
+        if (input.KeyPressed(LLGL::Key::LButton))
         {
-            auto motion = input->GetMouseMotion();
+            auto motion = input.GetMouseMotion();
             viewRotation.x += static_cast<float>(motion.y) * 0.25f;
             viewRotation.x = Gs::Clamp(viewRotation.x, -45.0f, 0.0f);
             viewRotation.y += static_cast<float>(motion.x) * 0.25f;
         }
 
-        if (input->KeyPressed(LLGL::Key::RButton))
+        if (input.KeyPressed(LLGL::Key::RButton))
         {
-            auto motion = input->GetMouseMotion();
+            auto motion = input.GetMouseMotion();
             animation += static_cast<float>(motion.x) * 0.25f;
         }
 

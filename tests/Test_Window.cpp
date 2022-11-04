@@ -52,8 +52,7 @@ int main()
 
         auto window = LLGL::Window::Create(windowDesc);
 
-        auto input = std::make_shared<LLGL::Input>();
-        window->AddEventListener(input);
+        LLGL::Input input{ *window };
 
         window->AddEventListener(std::make_shared<WindowEventHandler>());
 
@@ -82,35 +81,35 @@ int main()
 
         std::wcout << "Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height << std::endl;
 
-        while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
+        while (window->ProcessEvents() && !input.KeyPressed(LLGL::Key::Escape))
         {
             timer->MeasureTime();
 
             //std::cout << 1.0 / timer->GetDeltaTime() << std::endl;
 
             #ifdef __APPLE__
-            if (input->KeyDown(LLGL::Key::D1))
+            if (input.KeyDown(LLGL::Key::D1))
                 window->Show(false);
-            if (input->KeyDown(LLGL::Key::D2))
+            if (input.KeyDown(LLGL::Key::D2))
                 window->Show(true);
             #endif
-            if (input->KeyDown(LLGL::Key::D3))
+            if (input.KeyDown(LLGL::Key::D3))
                 window->SetTitle(L"FOO BAR");
-            if (input->KeyDown(LLGL::Key::D4))
+            if (input.KeyDown(LLGL::Key::D4))
                 window->SetTitle(L"LLGL Test 1");
-            if (input->KeyDown(LLGL::Key::D5))
+            if (input.KeyDown(LLGL::Key::D5))
                 window->SetSize({ 300, 300 });
 
-            if (input->KeyDown(LLGL::Key::LButton))
+            if (input.KeyDown(LLGL::Key::LButton))
                 window->SetTitle(L"LButton Down");
-            if (input->KeyDown(LLGL::Key::RButton))
+            if (input.KeyDown(LLGL::Key::RButton))
                 window->SetTitle(L"RButton Down");
-            if (input->KeyDown(LLGL::Key::MButton))
+            if (input.KeyDown(LLGL::Key::MButton))
                 window->SetTitle(L"MButton Down");
 
             #ifdef __APPLE__
 
-            auto mousePos = input->GetMousePosition();
+            auto mousePos = input.GetMousePosition();
             std::wstringstream s;
             s << "X = " << mousePos.x << ", Y = " << mousePos.y;
             //window->SetTitle(s.str());
@@ -118,7 +117,7 @@ int main()
             s << ", Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height;
             window->SetTitle(s.str());
 
-            /*auto wheel = input->GetWheelMotion();
+            /*auto wheel = input.GetWheelMotion();
             if (wheel != 0)
             {
                 pos.y += wheel;
@@ -127,25 +126,25 @@ int main()
 
             #endif
 
-            if (input->KeyPressed(LLGL::Key::Right) && pos.x < 1920)
+            if (input.KeyPressed(LLGL::Key::Right) && pos.x < 1920)
             {
                 ++pos.x;
                 window->SetPosition(pos);
                 printWindowPos(*window);
             }
-            if (input->KeyPressed(LLGL::Key::Left) && pos.x > 0)
+            if (input.KeyPressed(LLGL::Key::Left) && pos.x > 0)
             {
                 --pos.x;
                 window->SetPosition(pos);
                 printWindowPos(*window);
             }
-            if (input->KeyPressed(LLGL::Key::Up) && pos.y > 0)
+            if (input.KeyPressed(LLGL::Key::Up) && pos.y > 0)
             {
                 --pos.y;
                 window->SetPosition(pos);
                 printWindowPos(*window);
             }
-            if (input->KeyPressed(LLGL::Key::Down) && pos.y < 768)
+            if (input.KeyPressed(LLGL::Key::Down) && pos.y < 768)
             {
                 ++pos.y;
                 window->SetPosition(pos);

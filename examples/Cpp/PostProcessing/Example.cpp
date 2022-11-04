@@ -557,16 +557,16 @@ private:
         // Update rotation of outer model
         Gs::Vector2f mouseMotion
         {
-            static_cast<float>(input->GetMouseMotion().x),
-            static_cast<float>(input->GetMouseMotion().y),
+            static_cast<float>(input.GetMouseMotion().x),
+            static_cast<float>(input.GetMouseMotion().y),
         };
 
         Gs::Vector2f outerModelDeltaRotation;
-        if (input->KeyPressed(LLGL::Key::LButton))
+        if (input.KeyPressed(LLGL::Key::LButton))
             outerModelDeltaRotation = mouseMotion*0.005f;
 
         // Update effect intensity animation
-        if (input->KeyPressed(LLGL::Key::RButton))
+        if (input.KeyPressed(LLGL::Key::RButton))
         {
             float delta = mouseMotion.x*0.01f;
             sceneSettings.intensity = std::max(0.0f, std::min(sceneSettings.intensity + delta, 3.0f));

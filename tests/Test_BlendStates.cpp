@@ -50,8 +50,7 @@ int main()
         window.SetTitle(std::wstring(title.begin(), title.end()));
 
         // Setup input controller
-        auto input = std::make_shared<LLGL::Input>();
-        window.AddEventListener(input);
+        LLGL::Input input{ window };
 
         window.Show();
 
@@ -138,12 +137,12 @@ int main()
         auto y = static_cast<std::int32_t>(h);
 
         // Main loop
-        while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        while (window.ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
         {
             // User input
-            if (input->KeyDownRepeated(LLGL::Key::Tab))
+            if (input.KeyDownRepeated(LLGL::Key::Tab))
             {
-                if (input->KeyPressed(LLGL::Key::Shift))
+                if (input.KeyPressed(LLGL::Key::Shift))
                 {
                     if (pipelineIndex == 0)
                         pipelineIndex = numPipelines - 1;

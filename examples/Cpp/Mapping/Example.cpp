@@ -310,9 +310,9 @@ private:
     void OnDrawFrame() override
     {
         // Examine user input
-        if (input->KeyDown(LLGL::Key::Tab))
+        if (input.KeyDown(LLGL::Key::Tab))
             ModifyTextureContent();
-        if (input->KeyDown(LLGL::Key::Back))
+        if (input.KeyDown(LLGL::Key::Back))
             GenerateTextureContent();
 
         // Draw scene

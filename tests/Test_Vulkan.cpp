@@ -229,8 +229,7 @@ int main()
         #endif
 
         // Add input event listener
-        auto input = std::make_shared<LLGL::Input>();
-        window->AddEventListener(input);
+        LLGL::Input input{ *window };
 
         auto frameTimer = LLGL::Timer::Create();
         auto printTime = std::chrono::system_clock::now();
@@ -241,10 +240,10 @@ int main()
         swapChain->SetVsyncInterval(vsyncInterval);
 
         // Main loop
-        while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        while (window->ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
         {
             // Update user input
-            if (input->KeyDown(LLGL::Key::F1))
+            if (input.KeyDown(LLGL::Key::F1))
             {
                 vsyncInterval = 1 - vsyncInterval;
                 swapChain->SetVsyncInterval(vsyncInterval);

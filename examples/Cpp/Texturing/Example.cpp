@@ -275,9 +275,9 @@ private:
     void OnDrawFrame() override
     {
         // Examine user input
-        if (input->KeyDown(LLGL::Key::Tab))
+        if (input.KeyDown(LLGL::Key::Tab))
         {
-            if (input->KeyPressed(LLGL::Key::Shift))
+            if (input.KeyPressed(LLGL::Key::Shift))
                 resourceIndex = ((resourceIndex - 1) % 6 + 6) % 6;
             else
                 resourceIndex = (resourceIndex + 1) % 6;
