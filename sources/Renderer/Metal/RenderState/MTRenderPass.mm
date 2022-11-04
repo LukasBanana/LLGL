@@ -117,9 +117,11 @@ static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBi
 {
     if (stencilBits == 8)
     {
+        #ifdef LLGL_OS_MACOS
         if (depthBits == 24 && device != nil && device.depth24Stencil8PixelFormatSupported)
             return MTLPixelFormatDepth24Unorm_Stencil8;
         else
+        #endif
             return MTLPixelFormatDepth32Float_Stencil8;
     }
     else
