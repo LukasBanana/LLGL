@@ -493,6 +493,8 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
 {
     switch (pixelFormat)
     {
+        case MTLPixelFormatInvalid:                 return Format::Undefined;
+
         /* --- Alpha channel color formats --- */
         case MTLPixelFormatA8Unorm:                 return Format::A8UNorm;
 
