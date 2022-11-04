@@ -22,7 +22,8 @@ MTSwapChain::MTSwapChain(
     const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)
 :
-    renderPass_ { desc }
+    SwapChain   { desc         },
+    renderPass_ { desc, device }
 {
     /* Create surface */
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);

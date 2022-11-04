@@ -113,35 +113,30 @@ static MTLPixelFormat GetColorMTLPixelFormat(int /*colorBits*/)
     return MTLPixelFormatBGRA8Unorm;
 }
 
-static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBits)
+static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBits, id<MTLDevice> device)
 {
-    #if 0 //TODO: graphics pipeline must get the correct type from the render context
-    if (depthBits > 0 && stencilBits > 0)
+    if (stencilBits == 8)
     {
-        if (depthBits == 32)
+        if (depthBits == 24 && device != nil && device.depth24Stencil8PixelFormatSupported)
+            return MTLPixelFormatDepth24Unorm_Stencil8;
+        else
             return MTLPixelFormatDepth32Float_Stencil8;
     }
-    else if (depthBits > 0)
+    else
     {
-        if (depthBits == 32)
-            return MTLPixelFormatDepth32Float;
-        else if (depthBits == 16)
+        if (depthBits == 16)
             return MTLPixelFormatDepth16Unorm;
+        else
+            return MTLPixelFormatDepth32Float;
     }
-    else if (stencilBits > 0)
-        return MTLPixelFormatStencil8;
-    return MTLPixelFormatDepth24Unorm_Stencil8;
-    #else
-    return MTLPixelFormatDepth32Float_Stencil8;
-    #endif
 }
 
 // Swap-chain initializer
-MTRenderPass::MTRenderPass(const SwapChainDescriptor& desc) :
+MTRenderPass::MTRenderPass(const SwapChainDescriptor& desc, id<MTLDevice> device) :
     sampleCount_ { GetClampedSamples(desc.samples) }
 {
     const MTLPixelFormat colorFormat        = GetColorMTLPixelFormat(desc.colorBits);
-    const MTLPixelFormat depthStencilFormat = GetDepthStencilMTLPixelFormat(desc.depthBits, desc.stencilBits);
+    const MTLPixelFormat depthStencilFormat = GetDepthStencilMTLPixelFormat(desc.depthBits, desc.stencilBits, device);
 
     colorAttachments_ = { MakeDefaultMTAttachmentFormat(colorFormat) };
 

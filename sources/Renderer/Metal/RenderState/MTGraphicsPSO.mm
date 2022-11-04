@@ -200,7 +200,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
         psoDesc.depthAttachmentPixelFormat      = renderPassMT->GetDepthAttachment().pixelFormat;
         psoDesc.stencilAttachmentPixelFormat    = renderPassMT->GetStencilAttachment().pixelFormat;
         psoDesc.rasterizationEnabled            = (desc.rasterizer.discardEnabled ? NO : YES);
-        psoDesc.sampleCount                     = (desc.rasterizer.multiSampleEnabled ? renderPassMT->GetSampleCount() : 1u);
+        psoDesc.rasterSampleCount               = (desc.rasterizer.multiSampleEnabled ? renderPassMT->GetSampleCount() : 1u);
 
         /* Specify tessellation state */
         if (numPatchControlPoints_ > 0)

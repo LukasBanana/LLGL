@@ -505,7 +505,7 @@ void MacOSWindow::OnProcessEvents()
         while ((event = [wnd_ nextEventMatchingMask:g_EventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES]) != nil)
             ProcessEvent(event);
 
-        /* Check for window signales */
+        /* Check for window signals */
         if ([(MacOSWindowDelegate*)[wnd_ delegate] popResizeSignal])
         {
             /* Get size of the NSWindow's content view */
