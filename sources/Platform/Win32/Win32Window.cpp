@@ -247,18 +247,17 @@ WindowDescriptor Win32Window::GetDesc() const
     /* Setup window descriptor */
     WindowDescriptor desc;
 
-    desc.title                  = GetTitle();
-    desc.position               = GetPosition();
-    desc.size                   = windowSize;
+    desc.title              = GetTitle();
+    desc.position           = GetPosition();
+    desc.size               = windowSize;
 
-    desc.visible                = ((windowFlags & WS_VISIBLE  ) != 0);
-    desc.borderless             = ((windowFlags & WS_CAPTION  ) == 0);
-    desc.resizable              = ((windowFlags & WS_SIZEBOX  ) != 0);
-    desc.acceptDropFiles        = ((windowFlags & WM_DROPFILES) != 0);
-    desc.preventForPowerSafe    = false; //todo...
-    desc.centered               = (centerPoint.x == desc.position.x && centerPoint.y == desc.position.y);
+    desc.visible            = ((windowFlags & WS_VISIBLE  ) != 0);
+    desc.borderless         = ((windowFlags & WS_CAPTION  ) == 0);
+    desc.resizable          = ((windowFlags & WS_SIZEBOX  ) != 0);
+    desc.acceptDropFiles    = ((windowFlags & WM_DROPFILES) != 0);
+    desc.centered           = (centerPoint.x == desc.position.x && centerPoint.y == desc.position.y);
 
-    desc.windowContext          = (contextHandle_.parentWindow != 0 ? (&contextHandle_) : nullptr);
+    desc.windowContext      = (contextHandle_.parentWindow != 0 ? (&contextHandle_) : nullptr);
 
     return desc;
 }

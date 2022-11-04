@@ -217,29 +217,6 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         }
         break;
 
-        case WM_SYSCOMMAND:
-        {
-            #if 0
-            switch (wParam & 0xfff0)
-            {
-                case SC_SCREENSAVE:
-                case SC_MONITORPOWER:
-                {
-                    if (auto window = GetWindowFromUserData(wnd))
-                    {
-                        if (window->GetDesc().preventForPowerSafe)
-                        {
-                            /* Prevent for a powersave mode of monitor or the screensaver */
-                            return 0;
-                        }
-                    }
-                }
-                break;
-            }
-            #endif
-        }
-        break;
-
         case WM_SETFOCUS:
         {
             if (auto window = GetWindowFromUserData(wnd))

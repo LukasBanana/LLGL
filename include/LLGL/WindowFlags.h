@@ -68,12 +68,6 @@ struct WindowDescriptor
     */
     bool            acceptDropFiles     = false;
 
-    /**
-    \brief Specifies whether this window prevents the host system for power-safe mode. By default false.
-    \note Only supported on: MS/Windows.
-    */
-    bool            preventForPowerSafe = false;
-
     //! Specifies whether the window is centered within the desktop screen. By default false.
     bool            centered            = false;
 
