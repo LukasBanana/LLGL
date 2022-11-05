@@ -42,7 +42,9 @@ int main(int argc, char* argv[])
         auto& window1 = static_cast<LLGL::Window&>(swapChain1->GetSurface());
         auto& window2 = static_cast<LLGL::Window&>(swapChain2->GetSurface());
 
-        LLGL::Input inputs[2] = { window1, window2 };
+        LLGL::Input inputs[2];
+        inputs[0].Listen(window1);
+        inputs[1].Listen(window2);
 
         // Set window titles
         window1.SetTitle(L"LLGL Example: Multi Context (1)");
