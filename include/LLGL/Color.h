@@ -201,7 +201,7 @@ class Color
         {
             #ifdef LLGL_DEBUG
             if (component >= N)
-                std::out_of_range("color component index out of range");
+                throw std::out_of_range("color component index out of range");
             #endif
             return v_[component];
         }
@@ -215,7 +215,7 @@ class Color
         {
             #ifdef LLGL_DEBUG
             if (component >= N)
-                std::out_of_range("color component index out of range");
+                throw std::out_of_range("color component index out of range");
             #endif
             return v_[component];
         }
