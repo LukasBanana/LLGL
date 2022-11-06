@@ -48,6 +48,7 @@ static float GLGetFloat(GLenum param)
 static std::vector<ShadingLanguage> GLQueryShadingLanguages()
 {
     std::vector<ShadingLanguage> languages;
+    languages.reserve(16);
 
     if (HasExtension(GLExt::ARB_shader_objects))
     {

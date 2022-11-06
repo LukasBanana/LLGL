@@ -181,7 +181,7 @@ class Color<T, 4u>
         {
             #ifdef LLGL_DEBUG
             if (component >= Color<T, 4>::components)
-                std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
+                throw std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
             #endif
             return *((&r) + component);
         }
@@ -195,7 +195,7 @@ class Color<T, 4u>
         {
             #ifdef LLGL_DEBUG
             if (component >= Color<T, 4>::components)
-                std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
+                throw std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
             #endif
             return *((&r) + component);
         }
