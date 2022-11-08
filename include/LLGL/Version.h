@@ -9,9 +9,7 @@
 #define LLGL_VERSION_H
 
 
-#include "Export.h"
-#include <string>
-#include <cstdint>
+#include <LLGL/Export.h>
 
 
 namespace LLGL
@@ -23,22 +21,22 @@ namespace Version
 
 
 //! Returns the major LLGL version (e.g. 1 stands for "1.00").
-LLGL_EXPORT std::uint32_t GetMajor();
+LLGL_EXPORT unsigned GetMajor();
 
 //! Returns the minor LLGL version (e.g. 1 stands for "0.01"). Must be less than 100.
-LLGL_EXPORT std::uint32_t GetMinor();
+LLGL_EXPORT unsigned GetMinor();
 
 //! Returns the revision version number. Must be less than 100.
-LLGL_EXPORT std::uint32_t GetRevision();
+LLGL_EXPORT unsigned GetRevision();
 
 //! Returns the LLGL version status (either "Alpha", "Beta", or empty).
-LLGL_EXPORT std::string GetStatus();
+LLGL_EXPORT const char* GetStatus();
 
 //! Returns the full LLGL version as an ID number (e.g. 200317 stands for "2.03 (Rev. 17)").
-LLGL_EXPORT std::uint32_t GetID();
+LLGL_EXPORT unsigned GetID();
 
 //! Returns the full LLGL version as a string (e.g. "0.01 Beta (Rev. 1)").
-LLGL_EXPORT std::string GetString();
+LLGL_EXPORT const char* GetString();
 
 
 } // /namespace Version

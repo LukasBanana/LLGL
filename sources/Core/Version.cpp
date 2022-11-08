@@ -7,7 +7,7 @@
 
 #include <LLGL/Version.h>
 #include "VersionMacros.h"
-#include <sstream>
+#include <string>
 
 
 namespace LLGL
@@ -17,47 +17,61 @@ namespace Version
 {
 
 
-LLGL_EXPORT std::uint32_t GetMajor()
+LLGL_EXPORT unsigned GetMajor()
 {
     return LLGL_VERSION_MAJOR;
 }
 
-LLGL_EXPORT std::uint32_t GetMinor()
+LLGL_EXPORT unsigned GetMinor()
 {
     return LLGL_VERSION_MINOR;
 }
 
-LLGL_EXPORT std::uint32_t GetRevision()
+LLGL_EXPORT unsigned GetRevision()
 {
     return LLGL_VERSION_REVISION;
 }
 
-LLGL_EXPORT std::string GetStatus()
+LLGL_EXPORT const char* GetStatus()
 {
-    return std::string(LLGL_VERSION_STATUS);
+    return LLGL_VERSION_STATUS;
 }
 
-LLGL_EXPORT std::uint32_t GetID()
+LLGL_EXPORT unsigned GetID()
 {
     return LLGL_VERSION_ID;
 }
 
-LLGL_EXPORT std::string GetString()
+static std::string BuildVersionString()
 {
-    std::stringstream s;
+    std::string s;
 
-    s << GetMajor() << '.';
-
+    s += std::to_string(GetMajor());
+    s += '.';
     if (GetMinor() < 10)
-        s << '0';
-    s << GetMinor();
+        s += '0';
+    s += std::to_string(GetMinor());
 
-    s << ' ' << GetStatus();
+    if (GetStatus() && *GetStatus != '\0')
+    {
+        s += ' ';
+        s += GetStatus();
+    }
 
     if (GetRevision())
-        s << " (Rev. " << GetRevision() << ')';
+    {
+        s += " (Rev. ";
+        s += std::to_string(GetRevision());
+        s += ')';
+    }
 
-    return s.str();
+    return s;
+}
+
+LLGL_EXPORT const char* GetString()
+{
+    static std::string s = BuildVersionString();
+    return s.c_str();
 }
 
 
