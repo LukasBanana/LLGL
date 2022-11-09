@@ -35,7 +35,7 @@ void GLFence::Submit()
     {
         #ifdef LLGL_DEBUG
         /* Re-assign debug name after new sync object is created */
-        if (name_ && sync_)
+        if (sync_)
             GLSetObjectPtrLabel(sync_, nullptr);
         #endif
 
@@ -45,8 +45,8 @@ void GLFence::Submit()
 
         #ifdef LLGL_DEBUG
         /* Re-assign debug name after new sync object is created */
-        if (name_)
-            GLSetObjectPtrLabel(sync_, name_);
+        if (!name_.empty())
+            GLSetObjectPtrLabel(sync_, name_.c_str());
         #endif
     }
 }
