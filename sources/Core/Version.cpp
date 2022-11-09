@@ -52,7 +52,7 @@ static std::string BuildVersionString()
         s += '0';
     s += std::to_string(GetMinor());
 
-    if (GetStatus() && *GetStatus != '\0')
+    if (GetStatus() && *GetStatus() != '\0')
     {
         s += ' ';
         s += GetStatus();
