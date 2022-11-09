@@ -9,20 +9,20 @@
 #define LLGL_INCLUDE_H
 
 
-#include "Version.h"
-#include "Window.h"
-#include "Canvas.h"
-#include "Display.h"
-#include "Input.h"
-#include "Timer.h"
-#include "TypeInfo.h"
-#include "ColorRGB.h"
-#include "ColorRGBA.h"
-#include "RenderSystem.h"
-#include "Log.h"
-#include "IndirectArguments.h"
-#include "ImageFlags.h"
-#include "VertexFormat.h"
+#include <LLGL/Version.h>
+#include <LLGL/Window.h>
+#include <LLGL/Canvas.h>
+#include <LLGL/Display.h>
+#include <LLGL/Input.h>
+#include <LLGL/Timer.h>
+#include <LLGL/TypeInfo.h>
+#include <LLGL/ColorRGB.h>
+#include <LLGL/ColorRGBA.h>
+#include <LLGL/RenderSystem.h>
+#include <LLGL/Log.h>
+#include <LLGL/IndirectArguments.h>
+#include <LLGL/ImageFlags.h>
+#include <LLGL/VertexFormat.h>
 
 
 //DOXYGEN MAIN PAGE

@@ -18,11 +18,11 @@ namespace LLGL
 \remarks This can be used to explicitly construct an uninitialized color or even an entire container of uninitialized colors:
 \code
 // Explicitly uninitialized color.
-LLGL::ColorRGBAf color { Gs::UninitializeTag{} };
+LLGL::ColorRGBAf color { LLGL::UninitializeTag{} };
 
 // Explicitly uninitialized color elements in a container.
 std::vector<LLGL::ColorRGBAf> color;
-color.resize(1024, LLGL::ColorRGBAf { Gs::UninitializeTag{} });
+color.resize(1024, LLGL::ColorRGBAf { LLGL::UninitializeTag{} });
 \endcode
 */
 struct UninitializeTag {};

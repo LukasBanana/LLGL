@@ -9,10 +9,10 @@
 #define LLGL_SHADER_FLAGS_H
 
 
-#include "Export.h"
-#include "VertexAttribute.h"
-#include "FragmentAttribute.h"
-#include "Types.h"
+#include <LLGL/Export.h>
+#include <LLGL/Types.h>
+#include <LLGL/VertexAttribute.h>
+#include <LLGL/FragmentAttribute.h>
 #include <cstddef>
 #include <vector>
 

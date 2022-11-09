@@ -9,7 +9,7 @@
 #define LLGL_TYPES_H
 
 
-#include "Export.h"
+#include <LLGL/Export.h>
 #include <cstdint>
 
 

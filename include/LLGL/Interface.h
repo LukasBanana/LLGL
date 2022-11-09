@@ -9,8 +9,8 @@
 #define LLGL_INTERFACE_H
 
 
-#include "NonCopyable.h"
-#include "InterfaceID.h"
+#include <LLGL/NonCopyable.h>
+#include <LLGL/InterfaceID.h>
 
 
 namespace LLGL

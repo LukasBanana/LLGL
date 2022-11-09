@@ -105,15 +105,15 @@ void RemoveAllFromListIf(Container& cont, UnaryPredicate pred)
     );
 }
 
-template <typename T>
-void AddOnceToSharedList(std::vector<std::shared_ptr<T>>& cont, const std::shared_ptr<T>& entry)
+template <class Container, typename T>
+void AddOnceToSharedList(Container& cont, const std::shared_ptr<T>& entry)
 {
     if (entry && std::find(cont.begin(), cont.end(), entry) == cont.end())
         cont.push_back(entry);
 }
 
-template <typename T, typename TBase>
-void RemoveFromSharedList(std::vector<std::shared_ptr<T>>& cont, const TBase* entry)
+template <class Container, typename T>
+void RemoveFromSharedList(Container& cont, const T* entry)
 {
     if (entry)
     {
