@@ -72,7 +72,7 @@ class LLGL_EXPORT BasicStringView
         }
 
         //! Initializes the string view with another templated string class. This would usually be std::basic_string.
-        template <template <class, class, class> class TString, class Traits, class Allocator>
+        template <template <class, class, class> class TString, class Allocator>
         BasicStringView(const TString<TChar, Traits, Allocator>& str) :
             data_ { str.data() },
             size_ { str.size() }
