@@ -14,6 +14,7 @@
 #include <string>
 #include <cstring>
 #include <set>
+#include <limits>
 
 
 namespace LLGL

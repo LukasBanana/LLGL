@@ -12,6 +12,7 @@
 #include <LLGL/Fence.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
+#include <cstdint>
 
 
 namespace LLGL

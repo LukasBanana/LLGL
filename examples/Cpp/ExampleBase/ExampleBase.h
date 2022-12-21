@@ -278,7 +278,7 @@ protected:
     template <typename Container>
     std::size_t GetArraySize(const Container& container) const
     {
-        return (container.size() * sizeof(Container::value_type));
+        return (container.size() * sizeof(typename Container::value_type));
     }
 
     template <typename T, std::size_t N>

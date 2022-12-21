@@ -22,6 +22,7 @@
 #include "RenderState/VKComputePSO.h"
 #include <LLGL/Log.h>
 #include <LLGL/ImageFlags.h>
+#include <limits>
 
 
 namespace LLGL

@@ -164,7 +164,7 @@ void SwapChain::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, cons
         {
             canvasDesc.borderless = fullscreen;
         }
-        surface_ = Canvas::Create(canvasDesc);
+        pimpl_->surface = Canvas::Create(canvasDesc);
 
         #else
 
