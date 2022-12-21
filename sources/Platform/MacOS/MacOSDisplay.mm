@@ -185,10 +185,10 @@ bool MacOSDisplay::IsPrimary() const
     return (CGDisplayIsMain(displayID_) != 0);
 }
 
-std::wstring MacOSDisplay::GetDeviceName() const
+UTF8String MacOSDisplay::GetDeviceName() const
 {
     //TODO
-    return L"";
+    return UTF8String{};
 }
 
 Offset2D MacOSDisplay::GetOffset() const

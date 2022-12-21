@@ -65,10 +65,10 @@ bool AndroidDisplay::IsPrimary() const
     return true;
 }
 
-std::wstring AndroidDisplay::GetDeviceName() const
+UTF8String AndroidDisplay::GetDeviceName() const
 {
     //TODO
-    return L"";
+    return UTF8String{};
 }
 
 Offset2D AndroidDisplay::GetOffset() const

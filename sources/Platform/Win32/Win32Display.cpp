@@ -7,8 +7,6 @@
 
 #include "Win32Display.h"
 #include "../../Core/Helper.h"
-#include <locale>
-#include <codecvt>
 #include <algorithm>
 
 
@@ -246,16 +244,11 @@ bool Win32Display::IsPrimary() const
     return ((info.dwFlags & MONITORINFOF_PRIMARY) != 0);
 }
 
-std::wstring Win32Display::GetDeviceName() const
+UTF8String Win32Display::GetDeviceName() const
 {
     MONITORINFOEX infoEx;
     GetInfo(infoEx);
-    #ifdef UNICODE
-    return std::wstring(infoEx.szDevice);
-    #else
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.from_bytes(infoEx.szDevice);
-    #endif
+    return infoEx.szDevice;
 }
 
 Offset2D Win32Display::GetOffset() const

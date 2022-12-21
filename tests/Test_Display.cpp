@@ -9,23 +9,19 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include <locale>
-#include <codecvt>
 
 
 int main(int argc, char* argv[])
 {
     try
     {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> utf8converter;
-
         for (std::size_t i = 0; auto display = LLGL::Display::Get(i); ++i)
         {
             auto displayOffset  = display->GetOffset();
             auto displayMode    = display->GetDisplayMode();
             auto displayName    = display->GetDeviceName();
 
-            std::cout << "Display: \"" << utf8converter.to_bytes(displayName.c_str()) << "\"" << std::endl;
+            std::cout << "Display: \"" << displayName.c_str() << "\"" << std::endl;
             std::cout << "|-Primary = " << std::boolalpha << display->IsPrimary() << std::endl;
             std::cout << "|-X       = " << displayOffset.x << std::endl;
             std::cout << "|-Y       = " << displayOffset.y << std::endl;

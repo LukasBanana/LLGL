@@ -65,10 +65,10 @@ bool IOSDisplay::IsPrimary() const
     return true;
 }
 
-std::wstring IOSDisplay::GetDeviceName() const
+UTF8String IOSDisplay::GetDeviceName() const
 {
     //TODO
-    return L"";
+    return UTF8String{};
 }
 
 Offset2D IOSDisplay::GetOffset() const

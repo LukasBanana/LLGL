@@ -25,7 +25,7 @@ class AndroidDisplay : public Display
 
         bool IsPrimary() const override;
 
-        std::wstring GetDeviceName() const override;
+        UTF8String GetDeviceName() const override;
 
         Offset2D GetOffset() const override;
 
