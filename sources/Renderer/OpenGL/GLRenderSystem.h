@@ -85,6 +85,7 @@ class GLRenderSystem final : public RenderSystem
         void WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize) override;
 
         void* MapBuffer(Buffer& buffer, const CPUAccess access) override;
+        void* MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length) override;
         void UnmapBuffer(Buffer& buffer) override;
 
         /* ----- Textures ----- */

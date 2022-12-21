@@ -185,6 +185,11 @@ DECL_GLPROC(PFNGLUNMAPBUFFERPROC,                                   glUnmapBuffe
 DECL_GLPROC(PFNGLGETBUFFERPARAMETERIVPROC,                          glGetBufferParameteriv,                         void,           (GLenum, GLenum, GLint*));
 DECL_GLPROC(PFNGLGETBUFFERPOINTERVPROC,                             glGetBufferPointerv,                            void,           (GLenum, GLenum, void**));
 
+/* GL_ARB_map_buffer_range */
+
+DECL_GLPROC(PFNGLMAPBUFFERRANGEPROC,                                glMapBufferRange,                               void*,          (GLenum, GLintptr, GLsizeiptr, GLbitfield));
+DECL_GLPROC(PFNGLFLUSHMAPPEDBUFFERRANGEPROC,                        glFlushMappedBufferRange,                       void,           (GLenum, GLintptr, GLsizeiptr));
+
 /* GL_ARB_vertex_shader */
 
 DECL_GLPROC(PFNGLENABLEVERTEXATTRIBARRAYPROC,                       glEnableVertexAttribArray,                      void,           (GLuint));

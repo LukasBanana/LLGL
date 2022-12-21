@@ -202,6 +202,29 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     return result;
 }
 
+void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateResourceCPUAccess(bufferDbg.desc.cpuAccessFlags, access, "buffer");
+        ValidateBufferMapping(bufferDbg, true);
+        ValidateBufferBoundary(bufferDbg.desc.size, offset, length);
+    }
+
+    auto result = instance_->MapBuffer(bufferDbg.instance, access, offset, length);
+
+    if (result != nullptr)
+        bufferDbg.mapped = true;
+
+    if (profiler_)
+        profiler_->frameProfile.bufferMappings++;
+
+    return result;
+}
+
 void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);

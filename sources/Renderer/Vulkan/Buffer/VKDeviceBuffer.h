@@ -66,7 +66,7 @@ class VKDeviceBuffer
 
         void ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
 
-        void* Map(VkDevice device);
+        void* Map(VkDevice device, VkDeviceSize offset = 0, VkDeviceSize size = VK_WHOLE_SIZE);
         void Unmap(VkDevice device);
 
         /* ----- Getter ----- */

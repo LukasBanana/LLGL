@@ -238,6 +238,24 @@ void* GLRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     return bufferGL.MapBuffer(GLTypes::Map(access));
 }
 
+static GLbitfield ToGLMapBufferAccess(CPUAccess access)
+{
+    switch (access)
+    {
+        case CPUAccess::ReadOnly:       return GL_MAP_READ_BIT;
+        case CPUAccess::WriteOnly:      return GL_MAP_WRITE_BIT;
+        case CPUAccess::WriteDiscard:   return GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT;
+        case CPUAccess::ReadWrite:      return GL_MAP_READ_BIT | GL_MAP_WRITE_BIT;
+        default:                        return 0;
+    }
+}
+
+void* GLRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    return bufferGL.MapBufferRange(static_cast<GLintptr>(offset), static_cast<GLsizeiptr>(length), ToGLMapBufferAccess(access));
+}
+
 void GLRenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);

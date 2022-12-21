@@ -43,6 +43,7 @@ class GLBuffer : public Buffer
         void CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
 
         void* MapBuffer(GLenum access);
+        void* MapBufferRange(GLintptr offset, GLsizeiptr length, GLbitfield access);
         void UnmapBuffer();
 
         // Returns the specified buffer parameters; null pointers are ignored.

@@ -8,6 +8,7 @@
 #include "VKDeviceBuffer.h"
 #include "../Memory/VKDeviceMemoryManager.h"
 #include "../VKCore.h"
+#include <algorithm>
 
 
 namespace LLGL
@@ -109,12 +110,15 @@ void VKDeviceBuffer::ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr
     memoryRegion_ = nullptr;
 }
 
-void* VKDeviceBuffer::Map(VkDevice device)
+void* VKDeviceBuffer::Map(VkDevice device, VkDeviceSize offset, VkDeviceSize size)
 {
     if (memoryRegion_)
-        return memoryRegion_->GetParentChunk()->Map(device, memoryRegion_->GetOffset(), memoryRegion_->GetSize());
-    else
-        return nullptr;
+    {
+        offset  = (std::min)(offset, memoryRegion_->GetSize());
+        size    = (std::min)(size, memoryRegion_->GetSize() - offset);
+        return memoryRegion_->GetParentChunk()->Map(device, memoryRegion_->GetOffset() + offset, size);
+    }
+    return nullptr;
 }
 
 void VKDeviceBuffer::Unmap(VkDevice device)

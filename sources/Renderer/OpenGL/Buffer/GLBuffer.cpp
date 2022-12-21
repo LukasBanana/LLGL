@@ -255,6 +255,29 @@ void* GLBuffer::MapBuffer(GLenum access)
     }
 }
 
+void* GLBuffer::MapBufferRange(GLintptr offset, GLsizeiptr length, GLbitfield access)
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        return glMapNamedBufferRange(GetID(), offset, length, access);
+    }
+    else
+    #endif // /GL_ARB_direct_state_access
+    #ifdef GL_ARB_map_buffer_range
+    if (HasExtension(GLExt::ARB_map_buffer_range))
+    {
+        GLStateManager::Get().BindGLBuffer(*this);
+        return glMapBufferRange(GetGLTarget(), offset, length, access);
+    }
+    else
+    #endif // /GL_ARB_map_buffer_range
+    {
+        GLStateManager::Get().BindGLBuffer(*this);
+        return GLProfile::MapBufferRange(GetGLTarget(), offset, length, access);
+    }
+}
+
 void GLBuffer::UnmapBuffer()
 {
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT

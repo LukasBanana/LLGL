@@ -81,6 +81,23 @@ void* MapBuffer(GLenum target, GLenum access)
     return glMapBuffer(target, access);
 }
 
+static GLenum ToGLMapBufferRangeAccess(GLbitfield access)
+{
+    if ((access & (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT)) == (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT))
+        return GL_READ_WRITE;
+    if ((access & GL_MAP_READ_BIT) != 0)
+        return GL_READ_ONLY;
+    if ((access & GL_MAP_WRITE_BIT) != 0)
+        return GL_WRITE_ONLY;
+    return 0;
+}
+
+void* MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr /*length*/, GLbitfield access)
+{
+    char* ptr = reinterpret_cast<char*>(glMapBuffer(target, ToGLMapBufferRangeAccess(access)));
+    return reinterpret_cast<void*>(ptr + offset);
+}
+
 void DrawBuffer(GLenum buf)
 {
     glDrawBuffer(buf);

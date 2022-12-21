@@ -103,6 +103,12 @@ void* MTRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     return bufferMT.Map(access);
 }
 
+void* MTRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    return bufferMT.Map(access, static_cast<NSUInteger>(offset), static_cast<NSUInteger>(length));
+}
+
 void MTRenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);

@@ -9,6 +9,7 @@
 #include "../D3D11Types.h"
 #include "../D3D11ResourceFlags.h"
 #include "../D3D11ObjectUtils.h"
+#include "../../ResourceUtils.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
@@ -100,16 +101,6 @@ void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* da
     context->UpdateSubresource(GetNative(), 0, nullptr, data, 0, 0);
 }
 
-static bool HasReadAccess(const CPUAccess access)
-{
-    return (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite);
-}
-
-static bool HasWriteAccess(const CPUAccess access)
-{
-    return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
-}
-
 // private
 D3D11_MAP D3D11Buffer::GetCPUAccessTypeForUsage(const CPUAccess access) const
 {
@@ -132,7 +123,44 @@ void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access)
             context->CopyResource(cpuAccessBuffer_.Get(), GetNative());
 
         /* Mark dirty-bit if write access is used */
-        isWriteAccessMapped_ = HasWriteAccess(access);
+        if (HasWriteAccess(access))
+        {
+            mappedWriteRange_[0] = 0;
+            mappedWriteRange_[1] = size_;
+        }
+
+        /* Map CPU-access buffer */
+        hr = context->Map(cpuAccessBuffer_.Get(), 0, GetCPUAccessTypeForUsage(access), 0, &mapppedSubresource);
+    }
+    else
+    {
+        /* Map buffer */
+        hr = context->Map(GetNative(), 0, GetCPUAccessTypeForUsage(access), 0, &mapppedSubresource);
+    }
+
+    return (SUCCEEDED(hr) ? mapppedSubresource.pData : nullptr);
+}
+
+void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access, UINT offset, UINT size)
+{
+    HRESULT hr = 0;
+    D3D11_MAPPED_SUBRESOURCE mapppedSubresource;
+
+    if (cpuAccessBuffer_)
+    {
+        /* On read access -> copy storage buffer to CPU-access buffer */
+        if (HasReadAccess(access))
+        {
+            const D3D11_BOX srcRange{ offset, 0, 0, offset + size, 0, 0 };
+            context->CopySubresourceRegion(cpuAccessBuffer_.Get(), 0, offset, 0, 0, GetNative(), 0, &srcRange);
+        }
+
+        /* Mark dirty-bit if write access is used */
+        if (HasWriteAccess(access))
+        {
+            mappedWriteRange_[0] = offset;
+            mappedWriteRange_[1] = offset + size;
+        }
 
         /* Map CPU-access buffer */
         hr = context->Map(cpuAccessBuffer_.Get(), 0, GetCPUAccessTypeForUsage(access), 0, &mapppedSubresource);
@@ -154,10 +182,12 @@ void D3D11Buffer::Unmap(ID3D11DeviceContext* context)
         context->Unmap(cpuAccessBuffer_.Get(), 0);
 
         /* On write access -> copy CPU-access buffer to storage buffer */
-        if (isWriteAccessMapped_)
+        if (mappedWriteRange_[0] < mappedWriteRange_[1])
         {
-            context->CopyResource(GetNative(), cpuAccessBuffer_.Get());
-            isWriteAccessMapped_ = false;
+            const D3D11_BOX srcRange{ mappedWriteRange_[0], 0, 0, mappedWriteRange_[1], 0, 0 };
+            context->CopySubresourceRegion(GetNative(), 0, mappedWriteRange_[0], 0, 0, cpuAccessBuffer_.Get(), 0, &srcRange);
+            mappedWriteRange_[0] = 0;
+            mappedWriteRange_[1] = 0;
         }
     }
     else

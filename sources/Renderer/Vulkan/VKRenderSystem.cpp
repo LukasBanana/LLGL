@@ -227,33 +227,19 @@ void VKRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, con
 void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    return bufferVK.Map(device_, access, 0, bufferVK.GetSize());
+}
 
-    if (auto stagingBuffer = bufferVK.GetStagingVkBuffer())
-    {
-        /* Copy GPU local buffer into staging buffer for read accces */
-        if (access != CPUAccess::WriteOnly && access != CPUAccess::WriteDiscard)
-            device_.CopyBuffer(bufferVK.GetVkBuffer(), stagingBuffer, bufferVK.GetSize());
-
-        /* Map staging buffer */
-        return bufferVK.Map(device_, access);
-    }
-
-    return nullptr;
+void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    return bufferVK.Map(device_, access, static_cast<VkDeviceSize>(offset), static_cast<VkDeviceSize>(length));
 }
 
 void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-
-    if (auto stagingBuffer = bufferVK.GetStagingVkBuffer())
-    {
-        /* Unmap staging buffer */
-        bufferVK.Unmap(device_);
-
-        /* Copy staging buffer into GPU local buffer for write access */
-        if (bufferVK.GetMappedCPUAccess() != CPUAccess::ReadOnly)
-            device_.CopyBuffer(stagingBuffer, bufferVK.GetVkBuffer(), bufferVK.GetSize());
-    }
+    bufferVK.Unmap(device_);
 }
 
 /* ----- Textures ----- */

@@ -10,6 +10,7 @@
 
 
 #include <LLGL/ResourceFlags.h>
+#include <LLGL/RenderSystemFlags.h>
 
 
 namespace LLGL
@@ -30,6 +31,18 @@ inline bool HasOutputBindFlags(long bindFlags)
 {
     const long outputBindFlags = (BindFlags::Storage | BindFlags::CopyDst | BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment | BindFlags::StreamOutputBuffer);
     return ((bindFlags & outputBindFlags) != 0);
+}
+
+// Returns true if the specified CPU access value has read access, i.e. ReadOnly or ReadWrite.
+inline bool HasReadAccess(const CPUAccess access)
+{
+    return (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite);
+}
+
+// Returns true if the specified CPU access value has write access, i.e. WriteOnly, WriteDiscard, or ReadWrite.
+inline bool HasWriteAccess(const CPUAccess access)
+{
+    return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
 }
 
 

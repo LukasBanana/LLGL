@@ -83,6 +83,7 @@ class D3D12RenderSystem final : public RenderSystem
         void WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize) override;
 
         void* MapBuffer(Buffer& buffer, const CPUAccess access) override;
+        void* MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length) override;
         void UnmapBuffer(Buffer& buffer) override;
 
         /* ----- Textures ----- */
@@ -173,6 +174,9 @@ class D3D12RenderSystem final : public RenderSystem
             const SrcImageDescriptor&   imageDesc,
             ComPtr<ID3D12Resource>&     uploadBuffer
         );
+
+        // Maps the range of the specified D3D buffer between GPU and CPU memory space.
+        void* MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size);
 
         // Returns the feature level of the D3D device.
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const

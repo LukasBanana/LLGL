@@ -60,6 +60,9 @@ void GetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void* dat
 // Wrapper for glMapBuffer; uses glMapBufferRange for GLES.
 void* MapBuffer(GLenum target, GLenum access);
 
+// Wrapper for glMapBufferRange; uses glMapBuffer for GL.
+void* MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
+
 // Wrapper for glDrawBuffer; uses glDrawBuffers for GLES.
 void DrawBuffer(GLenum buf);
 

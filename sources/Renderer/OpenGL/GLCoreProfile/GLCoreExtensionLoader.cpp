@@ -141,6 +141,13 @@ static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_map_buffer_range(bool usePlaceholder)
+{
+    LOAD_GLPROC( glMapBufferRange );
+    LOAD_GLPROC( glFlushMappedBufferRange );
+    return true;
+}
+
 static bool Load_GL_ARB_vertex_array_object(bool usePlaceholder)
 {
     LOAD_GLPROC( glGenVertexArrays    );
@@ -924,6 +931,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_vertex_shader                );
     ENABLE_GLEXT( ARB_framebuffer_object           );
     ENABLE_GLEXT( ARB_uniform_buffer_object        );
+    ENABLE_GLEXT( ARB_map_buffer_range             );
 
     /* Enable drawing extensions */
     ENABLE_GLEXT( ARB_draw_instanced               );
@@ -1035,6 +1043,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_framebuffer_object           );
     LOAD_GLEXT( ARB_uniform_buffer_object        );
     LOAD_GLEXT( ARB_shader_storage_buffer_object );
+    LOAD_GLEXT( ARB_map_buffer_range             );
 
     /* Load drawing extensions */
     LOAD_GLEXT( ARB_draw_instanced               );

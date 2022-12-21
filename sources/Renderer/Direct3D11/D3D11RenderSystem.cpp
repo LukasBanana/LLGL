@@ -173,6 +173,12 @@ void* D3D11RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     return bufferD3D.Map(context_.Get(), access);
 }
 
+void* D3D11RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    return bufferD3D.Map(context_.Get(), access, static_cast<UINT>(offset), static_cast<UINT>(length));
+}
+
 void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);

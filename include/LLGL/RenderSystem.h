@@ -253,6 +253,15 @@ class LLGL_EXPORT RenderSystem : public Interface
         virtual void* MapBuffer(Buffer& buffer, const CPUAccess access) = 0;
 
         /**
+        \brief Maps the specified buffer range from GPU to CPU memory space.
+        \param[in] buffer Specifies the buffer which is to be mapped.
+        \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
+        \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
+        \see UnmapBuffer
+        */
+        virtual void* MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t size) = 0;
+
+        /**
         \brief Unmaps the specified buffer.
         \see MapBuffer
         */

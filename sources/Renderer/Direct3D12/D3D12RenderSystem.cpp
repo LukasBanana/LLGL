@@ -168,17 +168,28 @@ void D3D12RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, 
     ExecuteCommandListAndSync();
 }
 
-void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
+//private
+void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size)
 {
-    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-
     void* mappedData = nullptr;
-    const D3D12_RANGE range{ 0, static_cast<SIZE_T>(bufferD3D.GetBufferSize()) };
+    const D3D12_RANGE range{ static_cast<SIZE_T>(offset), static_cast<SIZE_T>(size) };
 
     if (SUCCEEDED(bufferD3D.Map(*commandContext_, range, &mappedData, access)))
         return mappedData;
 
     return nullptr;
+}
+
+void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
+{
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    return MapBufferRange(bufferD3D, access, 0, bufferD3D.GetBufferSize());
+}
+
+void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    return MapBufferRange(bufferD3D, access, offset, length);
 }
 
 void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)

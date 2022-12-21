@@ -6,6 +6,7 @@
  */
 
 #include "MTBuffer.h"
+#include "../../ResourceUtils.h"
 #include <string.h>
 
 
@@ -82,22 +83,26 @@ void MTBuffer::Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize
 
 void* MTBuffer::Map(CPUAccess access)
 {
-    mappedWriteAccess_ = (access == CPUAccess::WriteOnly);
+    if (HasWriteAccess(access))
+        mappedWriteRange_ = NSMakeRange(0, [native_ length]);
     return [native_ contents];
+}
+
+void* MTBuffer::Map(CPUAccess access, NSUInteger offset, NSUInteger length)
+{
+    if (HasWriteAccess(access))
+        mappedWriteRange_ = NSMakeRange(offset, length);
+    char* mappedMemory = reinterpret_cast<char*>([native_ contents]) + offset;
+    return reinterpret_cast<void*>(mappedMemory);
 }
 
 void MTBuffer::Unmap()
 {
     #ifndef LLGL_OS_IOS
-    if (isManaged_ && mappedWriteAccess_)
-    {
-        NSRange range;
-        range.location  = 0;
-        range.length    = [native_ length];
-        [native_ didModifyRange:range];
-    }
+    if (isManaged_ && mappedWriteRange_.length > 0)
+        [native_ didModifyRange:mappedWriteRange_];
     #endif // /LLGL_OS_IOS
-    mappedWriteAccess_ = false;
+    mappedWriteRange_ = NSMakeRange(0, 0);
 }
 
 

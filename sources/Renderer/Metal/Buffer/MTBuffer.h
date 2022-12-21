@@ -34,6 +34,7 @@ class MTBuffer final : public Buffer
         void Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize);
 
         void* Map(CPUAccess access);
+        void* Map(CPUAccess access, NSUInteger offset, NSUInteger length);
         void Unmap();
 
         // Returns the native MTLBuffer object.
@@ -55,7 +56,7 @@ class MTBuffer final : public Buffer
         #ifndef LLGL_OS_IOS
         bool            isManaged_          = false;
         #endif
-        bool            mappedWriteAccess_  = false;
+        NSRange         mappedWriteRange_   = { 0, 0 };
 
 };
 

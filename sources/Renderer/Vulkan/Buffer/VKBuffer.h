@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+class VKDevice;
+
 class VKBuffer : public Buffer
 {
 
@@ -32,8 +34,8 @@ class VKBuffer : public Buffer
         void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
         void TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer);
 
-        void* Map(VkDevice device, const CPUAccess access);
-        void Unmap(VkDevice device);
+        void* Map(VKDevice& device, const CPUAccess access, VkDeviceSize offset, VkDeviceSize length);
+        void Unmap(VKDevice& device);
 
         // Returns the device buffer object.
         inline VKDeviceBuffer& GetDeviceBuffer()
@@ -41,8 +43,20 @@ class VKBuffer : public Buffer
             return bufferObj_;
         }
 
+        // Returns the device buffer object as constant reference.
+        inline const VKDeviceBuffer& GetDeviceBuffer() const
+        {
+            return bufferObj_;
+        }
+
         // Returns the staging device buffer object.
         inline VKDeviceBuffer& GetStagingDeviceBuffer()
+        {
+            return bufferObjStaging_;
+        }
+
+        // Returns the staging device buffer object as constant reference.
+        inline const VKDeviceBuffer& GetStagingDeviceBuffer() const
         {
             return bufferObjStaging_;
         }
@@ -65,12 +79,6 @@ class VKBuffer : public Buffer
             return size_;
         }
 
-        // Returns the CPU access previously set when "Map" was called.
-        inline CPUAccess GetMappedCPUAccess() const
-        {
-            return mappedCPUAccess_;
-        }
-
         // Returns the VkIndexType specified at creation time.
         inline VkIndexType GetIndexType() const
         {
@@ -82,10 +90,10 @@ class VKBuffer : public Buffer
         VKDeviceBuffer  bufferObj_;
         VKDeviceBuffer  bufferObjStaging_;
 
-        VkDeviceSize    size_               = 0;
-        CPUAccess       mappedCPUAccess_    = CPUAccess::ReadOnly;
+        VkDeviceSize    size_                   = 0;
+        VkDeviceSize    mappedWriteRange_[2]    = { 0, 0 };
 
-        VkIndexType     indexType_          = VK_INDEX_TYPE_MAX_ENUM;
+        VkIndexType     indexType_              = VK_INDEX_TYPE_MAX_ENUM;
 
 };
 
