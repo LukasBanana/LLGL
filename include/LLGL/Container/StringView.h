@@ -150,12 +150,12 @@ class LLGL_EXPORT BasicStringView
 
         const_reverse_iterator rend() const
         {
-            return const_reverse_iterator{ being() };
+            return const_reverse_iterator{ begin() };
         }
 
         const_reverse_iterator crend() const
         {
-            return const_reverse_iterator{ cbeing() };
+            return const_reverse_iterator{ cbegin() };
         }
 
     public:

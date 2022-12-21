@@ -359,7 +359,7 @@ class LLGL_EXPORT SmallVector
 
         void swap(SmallVector& other)
         {
-            if (heap != nullptr && other.heap_ != nullptr)
+            if (heap_ != nullptr && other.heap_ != nullptr)
             {
                 /* Just swap members between both arrays */
                 std::swap(heap_, other.heap_);
