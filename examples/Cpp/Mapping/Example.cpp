@@ -75,7 +75,7 @@ private:
 
         const float s = 1;//0.5f;
 
-        std::vector<Vertex> vertices =
+        const Vertex vertices[] =
         {
             { { -s,  s }, { 0, 0 } },
             { { -s, -s }, { 0, 1 } },

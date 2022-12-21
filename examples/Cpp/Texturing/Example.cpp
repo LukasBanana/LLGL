@@ -6,7 +6,7 @@
  */
 
 #include <ExampleBase.h>
-#include <LLGL/Strings.h>
+#include <LLGL/TypeNames.h>
 #include <DDSImageReader.h>
 #include <stb/stb_image.h>
 

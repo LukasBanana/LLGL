@@ -6,7 +6,7 @@
  */
 
 #include <ExampleBase.h>
-#include <LLGL/Strings.h>
+#include <LLGL/TypeNames.h>
 #include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -258,7 +258,7 @@ void ExampleBase::Run()
 }
 
 ExampleBase::ExampleBase(
-    const std::wstring&     title,
+    const LLGL::UTF8String& title,
     const LLGL::Extent2D&   resolution,
     std::uint32_t           samples,
     bool                    vsync,
@@ -349,7 +349,7 @@ ExampleBase::ExampleBase(
     auto& canvas = LLGL::CastTo<LLGL::Canvas>(swapChain->GetSurface());
 
     auto rendererName = renderer->GetName();
-    canvas.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
+    canvas.SetTitle(title + " ( " + rendererName + " )");
 
     #else // LLGL_MOBILE_PLATFORM
 
@@ -357,7 +357,7 @@ ExampleBase::ExampleBase(
     auto& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
 
     auto rendererName = renderer->GetName();
-    window.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
+    window.SetTitle(title + " ( " + rendererName + " )");
 
     // Listen for window events
     input.Listen(window);

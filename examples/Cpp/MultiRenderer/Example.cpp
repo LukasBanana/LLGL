@@ -49,8 +49,8 @@ public:
     );
 
     void CreateResources(
-        const std::vector<VertexPos3Tex2>&  vertices,
-        const std::vector<std::uint32_t>&   indices
+        const LLGL::ArrayView<VertexPos3Tex2>&  vertices,
+        const LLGL::ArrayView<std::uint32_t>&   indices
     );
 
     // Renders the scene from the specified view.
@@ -108,7 +108,7 @@ MyRenderer::MyRenderer(
     swapChain->SetVsyncInterval(1);
 }
 
-void MyRenderer::CreateResources(const std::vector<VertexPos3Tex2>& vertices, const std::vector<std::uint32_t>& indices)
+void MyRenderer::CreateResources(const LLGL::ArrayView<VertexPos3Tex2>& vertices, const LLGL::ArrayView<std::uint32_t>& indices)
 {
     // Vertex format
     LLGL::VertexFormat vertexFormat;
@@ -290,7 +290,7 @@ int main(int argc, char* argv[])
 
         LLGL::WindowDescriptor mainWindowDesc;
         {
-            mainWindowDesc.title    = L"LLGL Example: Multi Renderer ( OpenGL, Vulkan, Direct3D 11, Direct3D 12 )";
+            mainWindowDesc.title    = "LLGL Example: Multi Renderer ( OpenGL, Vulkan, Direct3D 11, Direct3D 12 )";
             mainWindowDesc.size     = resolution;
             mainWindowDesc.centered = true;
         }

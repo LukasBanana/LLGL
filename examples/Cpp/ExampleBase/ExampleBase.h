@@ -11,6 +11,8 @@
 
 #include <LLGL/LLGL.h>
 #include <LLGL/Utility.h>
+#include <LLGL/Container/Strings.h>
+#include <LLGL/Container/ArrayView.h>
 #include <LLGL/Platform/Platform.h>
 #include <Gauss/Gauss.h>
 #include <iostream>
@@ -169,7 +171,7 @@ protected:
 protected:
 
     ExampleBase(
-        const std::wstring&     title,
+        const LLGL::UTF8String& title,
         const LLGL::Extent2D&   resolution  = { 800, 600 },
         std::uint32_t           samples     = 8,
         bool                    vsync       = true,
@@ -273,21 +275,33 @@ protected:
 
 protected:
 
-    template <typename VertexType>
-    LLGL::Buffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
+    template <typename Container>
+    std::size_t GetArraySize(const Container& container) const
+    {
+        return (container.size() * sizeof(Container::value_type));
+    }
+
+    template <typename T, std::size_t N>
+    std::size_t GetArraySize(const T (&container)[N]) const
+    {
+        return (N * sizeof(T));
+    }
+
+    template <typename Container>
+    LLGL::Buffer* CreateVertexBuffer(const Container& vertices, const LLGL::VertexFormat& vertexFormat)
     {
         return renderer->CreateBuffer(
-            LLGL::VertexBufferDesc(static_cast<std::uint32_t>(vertices.size() * sizeof(VertexType)), vertexFormat),
-            vertices.data()
+            LLGL::VertexBufferDesc(GetArraySize(vertices), vertexFormat),
+            &vertices[0]
         );
     }
 
-    template <typename IndexType>
-    LLGL::Buffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::Format format)
+    template <typename Container>
+    LLGL::Buffer* CreateIndexBuffer(const Container& indices, const LLGL::Format format)
     {
         return renderer->CreateBuffer(
-            LLGL::IndexBufferDesc(static_cast<std::uint32_t>(indices.size() * sizeof(IndexType)), format),
-            indices.data()
+            LLGL::IndexBufferDesc(GetArraySize(indices), format),
+            &indices[0]
         );
     }
 

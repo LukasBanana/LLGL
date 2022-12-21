@@ -679,7 +679,7 @@ private:
             commands->BeginRenderPass(*swapChain);
             {
                 // Clear color buffer and set viewport
-                commands->Clear(LLGL::ClearFlags::ColorDepth);
+                commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
                 commands->SetViewport(swapChain->GetResolution());
 
                 // Set vertex and index buffers

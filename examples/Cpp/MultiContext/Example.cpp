@@ -17,18 +17,26 @@ int main(int argc, char* argv[])
 
         // Load render system module
         LLGL::RenderingDebugger debugger;
-        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv), nullptr, &debugger);
+        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv));//, nullptr, &debugger);
 
         std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
 
         // Create two swap-chains
-        LLGL::SwapChainDescriptor swapChainDesc;
+        LLGL::SwapChainDescriptor swapChainDesc[2];
         {
-            swapChainDesc.resolution    = { 640, 480 };
-            swapChainDesc.samples       = 8;
+            swapChainDesc[0].resolution     = { 640, 480 };
+            swapChainDesc[0].samples        = 8;
+            swapChainDesc[0].depthBits      = 0;
+            swapChainDesc[0].stencilBits    = 0;
         }
-        auto swapChain1 = renderer->CreateSwapChain(swapChainDesc);
-        auto swapChain2 = renderer->CreateSwapChain(swapChainDesc);
+        auto swapChain1 = renderer->CreateSwapChain(swapChainDesc[0]);
+        {
+            swapChainDesc[1].resolution     = { 640, 480 };
+            swapChainDesc[1].samples        = 8;//8;
+            swapChainDesc[1].depthBits      = 0;
+            swapChainDesc[1].stencilBits    = 0;
+        }
+        auto swapChain2 = renderer->CreateSwapChain(swapChainDesc[1]);
 
         // Enable V-sync
         swapChain1->SetVsyncInterval(1);
@@ -187,12 +195,13 @@ int main(int argc, char* argv[])
             pipelineDesc.shaderProgram                  = shaderProgram;
             pipelineDesc.renderPass                     = swapChain1->GetRenderPass();
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc.samples > 1);
+            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc[0].samples > 1);
         }
         pipeline[0] = renderer->CreatePipelineState(pipelineDesc);
 
         {
             pipelineDesc.renderPass                     = swapChain2->GetRenderPass();
+            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc[1].samples > 1);
 
             // Only enable logic operations if it's supported, otherwise an exception is thrown
             if (logicOpSupported)
@@ -205,6 +214,12 @@ int main(int argc, char* argv[])
         {
             LLGL::Viewport {   0.0f, 0.0f, 320.0f, 480.0f },
             LLGL::Viewport { 320.0f, 0.0f, 320.0f, 480.0f },
+        };
+
+        const LLGL::ColorRGBAf backgroundColor[2] =
+        {
+            { 0.2f, 0.2f, 0.5f, 1 },
+            { 0.5f, 0.2f, 0.2f, 1 },
         };
 
         bool enableLogicOp[2] = { false, false };
@@ -250,15 +265,17 @@ int main(int argc, char* argv[])
             commands->Begin();
             {
                 // Set global render states: viewports, vertex buffer, and graphics pipeline
-                commands->SetViewports(2, viewports);
-                commands->SetVertexBuffer(*vertexBuffer);
+                //commands->SetVertexBuffer(*vertexBuffer);
 
                 // Draw triangle with 3 vertices in 1st swap-chain
                 if (window1.IsShown())
                 {
-                    commands->SetPipelineState(*pipeline[enableLogicOp[0] ? 1 : 0]);
                     commands->BeginRenderPass(*swapChain1);
                     {
+                        commands->Clear(LLGL::ClearFlags::Color, backgroundColor[0]);
+                        commands->SetPipelineState(*pipeline[0]);//[enableLogicOp[0] ? 1 : 0]);
+                        commands->SetViewports(2, viewports);
+                        commands->SetVertexBuffer(*vertexBuffer);
                         commands->DrawInstanced(3, 0, numInstances);
                     }
                     commands->EndRenderPass();
@@ -267,10 +284,14 @@ int main(int argc, char* argv[])
                 // Draw quad with 4 vertices in 2nd swap-chain
                 if (window2.IsShown())
                 {
-                    commands->SetPipelineState(*pipeline[enableLogicOp[1] ? 1 : 0]);
                     commands->BeginRenderPass(*swapChain2);
                     {
-                        commands->DrawInstanced(4, 3, numInstances);
+                        commands->Clear(LLGL::ClearFlags::Color, backgroundColor[1]);
+                        commands->SetPipelineState(*pipeline[1]);//[enableLogicOp[1] ? 1 : 0]);
+                        commands->SetViewports(2, viewports);
+                        commands->SetVertexBuffer(*vertexBuffer);
+                        commands->DrawInstanced(3, 0, numInstances);
+                        //commands->DrawInstanced(4, 3, numInstances);
                     }
                     commands->EndRenderPass();
                 }
