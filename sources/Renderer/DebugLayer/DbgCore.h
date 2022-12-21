@@ -11,6 +11,7 @@
 
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
+#include <LLGL/Container/Strings.h>
 
 
 namespace LLGL
@@ -27,7 +28,7 @@ namespace LLGL
     DbgPostWarning(debugger_, (TYPE), (MESSAGE))
 
 #define LLGL_DBG_ERROR_NOT_SUPPORTED(FEATURE) \
-    LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, std::string(FEATURE) + " not supported")
+    LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, UTF8String(FEATURE) + " not supported")
 
 
 inline void DbgSetSource(RenderingDebugger* debugger, const char* source)
@@ -36,13 +37,13 @@ inline void DbgSetSource(RenderingDebugger* debugger, const char* source)
         debugger->SetSource(source);
 }
 
-inline void DbgPostError(RenderingDebugger* debugger, ErrorType type, const std::string& message)
+inline void DbgPostError(RenderingDebugger* debugger, ErrorType type, const StringView& message)
 {
     if (debugger)
         debugger->PostError(type, message);
 }
 
-inline void DbgPostWarning(RenderingDebugger* debugger, WarningType type, const std::string& message)
+inline void DbgPostWarning(RenderingDebugger* debugger, WarningType type, const StringView& message)
 {
     if (debugger)
         debugger->PostWarning(type, message);

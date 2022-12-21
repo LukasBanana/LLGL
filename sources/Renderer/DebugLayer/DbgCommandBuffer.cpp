@@ -23,7 +23,7 @@
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
-#include <LLGL/Strings.h>
+#include <LLGL/TypeNames.h>
 #include <LLGL/TypeInfo.h>
 #include <algorithm>
 
@@ -1382,7 +1382,7 @@ void DbgCommandBuffer::ValidateVertexLayout()
     }
 }
 
-void DbgCommandBuffer::ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderVertexAttribs, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers)
+void DbgCommandBuffer::ValidateVertexLayoutAttributes(const ArrayView<VertexAttribute>& shaderVertexAttribs, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers)
 {
     /* Check if all vertex attributes are served by active vertex buffer(s) */
     std::size_t attribIndex = 0;

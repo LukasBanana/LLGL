@@ -9,8 +9,11 @@
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
+#include <LLGL/Container/Strings.h>
 #include <string.h>
+#include <vector>
 #include <algorithm>
+#include <memory>
 
 
 namespace LLGL
@@ -18,6 +21,90 @@ namespace LLGL
 
 
 #define KEY_IDX(k) (static_cast<std::uint8_t>(k))
+
+
+/*
+ * KeyTracker structure
+ */
+
+using KeyStateArray = bool[256];
+using DoubleClickArray = bool[3];
+
+static void ResetKeyStateArray(KeyStateArray& states)
+{
+    ::memset(states, 0, sizeof(states));
+}
+
+static void ResetDoubleClickArray(DoubleClickArray& states)
+{
+    ::memset(states, 0, sizeof(states));
+}
+
+struct KeyTracker
+{
+    static const size_t maxCount    = 10;
+
+    Key                 keys[maxCount];
+    size_t              resetCount  = 0;
+
+    void Add(Key keyCode);
+    void Reset(KeyStateArray& keyStates);
+};
+
+void KeyTracker::Add(Key keyCode)
+{
+    if (resetCount < maxCount)
+        keys[resetCount++] = keyCode;
+}
+
+void KeyTracker::Reset(KeyStateArray& keyStates)
+{
+    while (resetCount > 0)
+    {
+        --resetCount;
+        auto idx = KEY_IDX(keys[resetCount]);
+        keyStates[idx] = false;
+    }
+}
+
+
+
+/*
+ * Pimpl structure
+ */
+
+template <typename T>
+struct EventListenerSurfacePair
+{
+    std::shared_ptr<T>  eventListener;
+    Surface*            surface;
+};
+
+struct Input::Pimpl
+{
+    KeyStateArray   keyPressed;
+    KeyStateArray   keyDown;
+    KeyStateArray   keyDownRepeated;
+    KeyStateArray   keyUp;
+    bool            doubleClick[3];
+
+    KeyTracker      keyDownTracker;
+    KeyTracker      keyDownRepeatedTracker;
+    KeyTracker      keyUpTracker;
+
+    Offset2D        mousePosition;
+    Offset2D        mouseMotion;
+
+    int             wheelMotion             = 0;
+    unsigned        anyKeyCount             = 0;
+    UTF8String      chars;
+
+    std::vector<EventListenerSurfacePair<WindowEventListener>>
+                    windowEventListeners;
+
+    std::vector<EventListenerSurfacePair<CanvasEventListener>>
+                    canvasEventListeners;
+};
 
 
 /*
@@ -29,8 +116,8 @@ class Input::WindowEventListener final : public Window::EventListener
 
     public:
 
-        WindowEventListener(Input& input) :
-            input_ { input }
+        WindowEventListener(Input::Pimpl& data) :
+            data_ { data }
         {
         }
 
@@ -39,66 +126,66 @@ class Input::WindowEventListener final : public Window::EventListener
         void OnProcessEvents(Window& sender) override
         {
             /* Reset all input states to make room for next recordings */
-            input_.wheelMotion_ = 0;
-            input_.mouseMotion_ = { 0, 0 };
+            data_.wheelMotion = 0;
+            data_.mouseMotion = { 0, 0 };
 
-            input_.keyDownTracker_.Reset(input_.keyDown_);
-            input_.keyDownRepeatedTracker_.Reset(input_.keyDownRepeated_);
-            input_.keyUpTracker_.Reset(input_.keyUp_);
+            data_.keyDownTracker.Reset(data_.keyDown);
+            data_.keyDownRepeatedTracker.Reset(data_.keyDownRepeated);
+            data_.keyUpTracker.Reset(data_.keyUp);
 
-            ::memset(input_.doubleClick_, 0, sizeof(input_.doubleClick_));
+            ResetDoubleClickArray(data_.doubleClick);
 
-            input_.chars_.clear();
+            data_.chars.clear();
         }
 
         void OnKeyDown(Window& sender, Key keyCode) override
         {
             auto idx = KEY_IDX(keyCode);
 
-            if (!input_.keyPressed_[idx])
+            if (!data_.keyPressed[idx])
             {
                 /* Increase 'any'-key counter and store key state */
-                if (input_.anyKeyCount_++ == 0)
+                if (data_.anyKeyCount++ == 0)
                 {
                     /* Store key state for 'any'-key */
-                    input_.keyDown_[KEY_IDX(Key::Any)] = true;
-                    input_.keyDownTracker_.Add(Key::Any);
-                    input_.keyPressed_[KEY_IDX(Key::Any)] = true;
+                    data_.keyDown[KEY_IDX(Key::Any)] = true;
+                    data_.keyDownTracker.Add(Key::Any);
+                    data_.keyPressed[KEY_IDX(Key::Any)] = true;
                 }
 
                 /* Store key hit state */
-                input_.keyDown_[idx] = true;
-                input_.keyDownTracker_.Add(keyCode);
+                data_.keyDown[idx] = true;
+                data_.keyDownTracker.Add(keyCode);
             }
 
             /* Store key pressed state */
-            input_.keyPressed_[idx] = true;
+            data_.keyPressed[idx] = true;
 
             /* Store repeated key hit state */
-            input_.keyDownRepeated_[idx] = true;
-            input_.keyDownRepeatedTracker_.Add(keyCode);
+            data_.keyDownRepeated[idx] = true;
+            data_.keyDownRepeatedTracker.Add(keyCode);
         }
 
         void OnKeyUp(Window& sender, Key keyCode) override
         {
             /* Store key released state */
-            input_.keyUp_[KEY_IDX(keyCode)] = true;
-            input_.keyUpTracker_.Add(keyCode);
+            data_.keyUp[KEY_IDX(keyCode)] = true;
+            data_.keyUpTracker.Add(keyCode);
 
             /* Store key released state for 'any'-key */
-            input_.keyUp_[KEY_IDX(Key::Any)] = true;
-            input_.keyUpTracker_.Add(Key::Any);
+            data_.keyUp[KEY_IDX(Key::Any)] = true;
+            data_.keyUpTracker.Add(Key::Any);
 
             /* Increase 'any'-key counter and store key state */
-            if (input_.anyKeyCount_ > 0)
+            if (data_.anyKeyCount > 0)
             {
-                input_.anyKeyCount_--;
-                if (input_.anyKeyCount_ == 0)
-                    input_.keyPressed_[KEY_IDX(Key::Any)] = false;
+                data_.anyKeyCount--;
+                if (data_.anyKeyCount == 0)
+                    data_.keyPressed[KEY_IDX(Key::Any)] = false;
             }
 
             /* Reset key pressed state */
-            input_.keyPressed_[KEY_IDX(keyCode)] = false;
+            data_.keyPressed[KEY_IDX(keyCode)] = false;
         }
 
         void OnDoubleClick(Window& sender, Key keyCode) override
@@ -106,13 +193,13 @@ class Input::WindowEventListener final : public Window::EventListener
             switch (keyCode)
             {
                 case Key::LButton:
-                    input_.doubleClick_[0] = true;
+                    data_.doubleClick[0] = true;
                     break;
                 case Key::RButton:
-                    input_.doubleClick_[1] = true;
+                    data_.doubleClick[1] = true;
                     break;
                 case Key::MButton:
-                    input_.doubleClick_[2] = true;
+                    data_.doubleClick[2] = true;
                     break;
                 default:
                     break;
@@ -121,34 +208,34 @@ class Input::WindowEventListener final : public Window::EventListener
 
         void OnChar(Window& sender, wchar_t chr) override
         {
-            input_.chars_ += chr;
+            data_.chars += chr;
         }
 
         void OnWheelMotion(Window& sender, int motion) override
         {
-            input_.wheelMotion_ += motion;
+            data_.wheelMotion += motion;
         }
 
         void OnLocalMotion(Window& sender, const Offset2D& position) override
         {
-            input_.mousePosition_ = position;
+            data_.mousePosition = position;
         }
 
         void OnGlobalMotion(Window& sender, const Offset2D& motion) override
         {
-            input_.mouseMotion_.x += motion.x;
-            input_.mouseMotion_.y += motion.y;
+            data_.mouseMotion.x += motion.x;
+            data_.mouseMotion.y += motion.y;
         }
 
         void OnLostFocus(Window& sender) override
         {
             /* Reset all 'key-pressed' states */
-            Input::InitArray(input_.keyPressed_);
+            ResetKeyStateArray(data_.keyPressed);
         }
 
     private:
 
-        Input& input_;
+        Input::Pimpl& data_;
 
 };
 
@@ -162,8 +249,8 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     public:
 
-        CanvasEventListener(Input& input) :
-            input_ { input }
+        CanvasEventListener(Input::Pimpl& data) :
+            data_ { data }
         {
         }
 
@@ -176,7 +263,7 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     private:
 
-        Input& input_;
+        Input::Pimpl& data_;
 
 };
 
@@ -185,13 +272,14 @@ class Input::CanvasEventListener final : public Canvas::EventListener
  * Input class
  */
 
-Input::Input()
+Input::Input() :
+    pimpl_ { new Pimpl{} }
 {
-    Input::InitArray(keyPressed_);
-    Input::InitArray(keyDown_);
-    Input::InitArray(keyDownRepeated_);
-    Input::InitArray(keyUp_);
-    ::memset(doubleClick_, 0, sizeof(doubleClick_));
+    ResetKeyStateArray(pimpl_->keyPressed);
+    ResetKeyStateArray(pimpl_->keyDown);
+    ResetKeyStateArray(pimpl_->keyDownRepeated);
+    ResetKeyStateArray(pimpl_->keyUp);
+    ::memset(pimpl_->doubleClick, 0, sizeof(pimpl_->doubleClick));
 }
 
 Input::Input(Surface& surface) :
@@ -200,19 +288,28 @@ Input::Input(Surface& surface) :
     Listen(surface);
 }
 
+Input::~Input()
+{
+    for (const auto& windowEventListener : pimpl_->windowEventListeners)
+        CastTo<Window>(windowEventListener.surface)->RemoveEventListener(windowEventListener.eventListener.get());
+    for (const auto& canvasEventListener : pimpl_->canvasEventListeners)
+        CastTo<Canvas>(canvasEventListener.surface)->RemoveEventListener(canvasEventListener.eventListener.get());
+    delete pimpl_;
+}
+
 template <typename T>
 bool HasEventListenerForSurface(
-    std::vector<std::pair<std::shared_ptr<T>, const Surface*>>& eventListeners,
-    const Surface&                                              surface)
+    std::vector<EventListenerSurfacePair<T>>&   eventListeners,
+    const Surface*                              surface)
 {
     return
     (
         std::find_if(
             eventListeners.begin(),
             eventListeners.end(),
-            [&surface](const std::pair<std::shared_ptr<T>, const Surface*>& entry)
+            [surface](const EventListenerSurfacePair<T>& entry)
             {
-                return (entry.second == &surface);
+                return (entry.surface == surface);
             }
         ) == eventListeners.end()
     );
@@ -222,19 +319,19 @@ void Input::Listen(Surface& surface)
 {
     if (LLGL::IsInstanceOf<Window>(surface))
     {
-        if (HasEventListenerForSurface(windowEventListeners_, surface))
+        if (HasEventListenerForSurface(pimpl_->windowEventListeners, &surface))
         {
-            auto eventListener = std::make_shared<WindowEventListener>(*this);
-            windowEventListeners_.push_back({ eventListener, &surface });
+            auto eventListener = std::make_shared<WindowEventListener>(*pimpl_);
+            pimpl_->windowEventListeners.push_back({ eventListener, &surface });
             CastTo<Window>(surface).AddEventListener(eventListener);
         }
     }
     if (LLGL::IsInstanceOf<Canvas>(surface))
     {
-        if (HasEventListenerForSurface(canvasEventListeners_, surface))
+        if (HasEventListenerForSurface(pimpl_->canvasEventListeners, &surface))
         {
-            auto eventListener = std::make_shared<CanvasEventListener>(*this);
-            canvasEventListeners_.push_back({ eventListener, &surface });
+            auto eventListener = std::make_shared<CanvasEventListener>(*pimpl_);
+            pimpl_->canvasEventListeners.push_back({ eventListener, &surface });
             CastTo<Canvas>(surface).AddEventListener(eventListener);
         }
     }
@@ -244,24 +341,24 @@ void Input::Drop(Surface& surface)
 {
     if (LLGL::IsInstanceOf<Window>(surface))
     {
-        for (auto it = windowEventListeners_.begin(); it != windowEventListeners_.end(); ++it)
+        for (auto it = pimpl_->windowEventListeners.begin(); it != pimpl_->windowEventListeners.end(); ++it)
         {
-            if (it->second == &surface)
+            if (it->surface == &surface)
             {
-                CastTo<Window>(surface).RemoveEventListener(it->first.get());
-                windowEventListeners_.erase(it);
+                CastTo<Window>(surface).RemoveEventListener(it->eventListener.get());
+                pimpl_->windowEventListeners.erase(it);
                 break;
             }
         }
     }
     if (LLGL::IsInstanceOf<Canvas>(surface))
     {
-        for (auto it = canvasEventListeners_.begin(); it != canvasEventListeners_.end(); ++it)
+        for (auto it = pimpl_->canvasEventListeners.begin(); it != pimpl_->canvasEventListeners.end(); ++it)
         {
-            if (it->second == &surface)
+            if (it->surface == &surface)
             {
-                CastTo<Canvas>(surface).RemoveEventListener(it->first.get());
-                canvasEventListeners_.erase(it);
+                CastTo<Canvas>(surface).RemoveEventListener(it->eventListener.get());
+                pimpl_->canvasEventListeners.erase(it);
                 break;
             }
         }
@@ -270,65 +367,59 @@ void Input::Drop(Surface& surface)
 
 bool Input::KeyPressed(Key keyCode) const
 {
-    return keyPressed_[KEY_IDX(keyCode)];
+    return pimpl_->keyPressed[KEY_IDX(keyCode)];
 }
 
 bool Input::KeyDown(Key keyCode) const
 {
-    return keyDown_[KEY_IDX(keyCode)];
+    return pimpl_->keyDown[KEY_IDX(keyCode)];
 }
 
 bool Input::KeyDownRepeated(Key keyCode) const
 {
-    return keyDownRepeated_[KEY_IDX(keyCode)];
+    return pimpl_->keyDownRepeated[KEY_IDX(keyCode)];
 }
 
 bool Input::KeyUp(Key keyCode) const
 {
-    return keyUp_[KEY_IDX(keyCode)];
+    return pimpl_->keyUp[KEY_IDX(keyCode)];
 }
 
 bool Input::KeyDoubleClick(Key keyCode) const
 {
     switch (keyCode)
     {
-        case Key::LButton: return doubleClick_[0];
-        case Key::RButton: return doubleClick_[1];
-        case Key::MButton: return doubleClick_[2];
+        case Key::LButton: return pimpl_->doubleClick[0];
+        case Key::RButton: return pimpl_->doubleClick[1];
+        case Key::MButton: return pimpl_->doubleClick[2];
         default:           return false;
     }
     return false;
 }
 
-
-/*
- * ======= Private: =======
- */
-
-void Input::InitArray(KeyStateArray& keyStates)
+const Offset2D& Input::GetMousePosition() const
 {
-    ::memset(keyStates, 0, sizeof(KeyStateArray));
+    return pimpl_->mousePosition;
 }
 
-
-/*
- * KeyTracker structure
- */
-
-void Input::KeyTracker::Add(Key keyCode)
+const Offset2D& Input::GetMouseMotion() const
 {
-    if (resetCount < maxCount)
-        keys[resetCount++] = keyCode;
+    return pimpl_->mouseMotion;
 }
 
-void Input::KeyTracker::Reset(KeyStateArray& keyStates)
+int Input::GetWheelMotion() const
 {
-    while (resetCount > 0)
-    {
-        --resetCount;
-        auto idx = KEY_IDX(keys[resetCount]);
-        keyStates[idx] = false;
-    }
+    return pimpl_->wheelMotion;
+}
+
+const UTF8String& Input::GetEnteredChars() const
+{
+    return pimpl_->chars;
+}
+
+unsigned Input::GetAnyKeyCount() const
+{
+    return pimpl_->anyKeyCount;
 }
 
 #undef KEY_IDX

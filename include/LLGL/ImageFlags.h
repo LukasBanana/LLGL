@@ -138,7 +138,7 @@ the maximal count of threads the system supports will be used (e.g. 4 on a quad-
 LLGL_EXPORT bool ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
     const DstImageDescriptor&   dstImageDesc,
-    std::size_t                 threadCount = 0
+    unsigned                    threadCount = 0
 );
 
 /**
@@ -165,7 +165,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
     ImageFormat                 dstFormat,
     DataType                    dstDataType,
-    std::size_t                 threadCount = 0
+    unsigned                    threadCount = 0
 );
 
 /**

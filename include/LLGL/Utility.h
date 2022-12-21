@@ -14,17 +14,17 @@
 THIS HEADER MUST BE EXPLICITLY INCLUDED
 */
 
-#include "Export.h"
-#include "ForwardDecls.h"
-#include "TextureFlags.h"
-#include "BufferFlags.h"
-#include "RenderTargetFlags.h"
-#include "RenderPassFlags.h"
-#include "ResourceHeapFlags.h"
-#include "ShaderFlags.h"
-#include "ShaderProgramFlags.h"
-#include "PipelineLayoutFlags.h"
-#include <initializer_list>
+#include <LLGL/Export.h>
+#include <LLGL/ForwardDecls.h>
+#include <LLGL/TextureFlags.h>
+#include <LLGL/BufferFlags.h>
+#include <LLGL/RenderTargetFlags.h>
+#include <LLGL/RenderPassFlags.h>
+#include <LLGL/ResourceHeapFlags.h>
+#include <LLGL/ShaderFlags.h>
+#include <LLGL/ShaderProgramFlags.h>
+#include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/Container/ArrayView.h>
 
 
 namespace LLGL
@@ -138,14 +138,7 @@ LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const cha
 \param[in] shaders Specifies the list of shaders to attach to the shader program. Null pointers in the list are ignored.
 \see RenderSystem::CreateShaderProgram
 */
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::initializer_list<Shader*>& shaders);
-
-/**
-\brief Returns a ShaderProgramDescriptor structure and assigns the input shaders into the respective structure members.
-\param[in] shaders Specifies the list of shaders to attach to the shader program. Null pointers in the list are ignored.
-\see RenderSystem::CreateShaderProgram
-*/
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>& shaders);
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const ArrayView<Shader*>& shaders);
 
 /* ----- PipelineLayoutDescriptor utility functions ----- */
 

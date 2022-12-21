@@ -124,7 +124,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     }
     catch (const std::exception& e)
     {
-        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: " + attrib.name);
+        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: " + std::string(attrib.name.c_str()));
     }
 }
 
@@ -195,7 +195,7 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
         if (attr.stride == 0)
         {
             /* Error: vertex attribute must not have stride of zero */
-            throw std::runtime_error("buffer stride in stream-output attribute must not be zero: " + attr.name);
+            throw std::runtime_error("buffer stride in stream-output attribute must not be zero: " + std::string(attr.name.c_str()));
         }
         else if (bufferStride == 0)
         {
@@ -206,7 +206,7 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
         {
             throw std::runtime_error(
                 "mismatch between buffer stride (" + std::to_string(bufferStride) +
-                ") and stream-output attribute (" + std::to_string(attr.stride) + "): " + attr.name
+                ") and stream-output attribute (" + std::to_string(attr.stride) + "): " + std::string(attr.name.c_str())
             );
         }
     }

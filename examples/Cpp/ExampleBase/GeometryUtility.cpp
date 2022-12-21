@@ -229,7 +229,7 @@ static void GenerateTangentSpace(TangentSpaceVertex& v0, TangentSpaceVertex& v1,
     v2.tangents[1] = bitangent;
 }
 
-std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const std::vector<TexturedVertex>& vertices)
+std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const LLGL::ArrayView<TexturedVertex>& vertices)
 {
     std::vector<TangentSpaceVertex> outp;
     outp.resize(vertices.size());

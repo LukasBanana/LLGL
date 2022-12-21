@@ -278,17 +278,7 @@ static void AssignShaderToDesc(ShaderProgramDescriptor& desc, Shader* shader)
     }
 }
 
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::initializer_list<Shader*>& shaders)
-{
-    ShaderProgramDescriptor desc;
-    {
-        for (auto shader : shaders)
-            AssignShaderToDesc(desc, shader);
-    }
-    return desc;
-}
-
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>& shaders)
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const ArrayView<Shader*>& shaders)
 {
     ShaderProgramDescriptor desc;
     {

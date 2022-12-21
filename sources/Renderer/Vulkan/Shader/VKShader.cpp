@@ -10,7 +10,7 @@
 #include "../VKTypes.h"
 #include "../../../Core/Helper.h"
 #include <LLGL/ShaderProgramFlags.h>
-#include <LLGL/Strings.h>
+#include <LLGL/TypeNames.h>
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
 #   include "../../SPIRV/SPIRVReflect.h"
@@ -452,7 +452,7 @@ void VKShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
         {
             throw std::runtime_error(
                 "vertex instance divisor must be 0 or 1 for Vulkan, but " +
-                std::to_string(attr.instanceDivisor) + " was specified: " + attr.name
+                std::to_string(attr.instanceDivisor) + " was specified: " + std::string(attr.name.c_str())
             );
         }
 

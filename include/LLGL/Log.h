@@ -9,9 +9,9 @@
 #define LLGL_LOG_H
 
 
-#include "Export.h"
+#include <LLGL/Export.h>
+#include <LLGL/Container/StringView.h>
 #include <functional>
-#include <string>
 #include <iostream>
 
 
@@ -67,7 +67,7 @@ enum class ReportType
 \see ReportType
 \see SetReportCallback
 */
-using ReportCallback = std::function<void(ReportType type, const std::string& message, const std::string& contextInfo, void* userData)>;
+using ReportCallback = std::function<void(ReportType type, const StringView& message, const StringView& contextInfo, void* userData)>;
 
 
 /* ----- Functions ----- */
@@ -76,7 +76,7 @@ using ReportCallback = std::function<void(ReportType type, const std::string& me
 \brief Posts a report to the currently set report callback.
 \see ReportCallback
 */
-LLGL_EXPORT void PostReport(ReportType type, const std::string& message, const std::string& contextInfo = "");
+LLGL_EXPORT void PostReport(ReportType type, const StringView& message, const StringView& contextInfo = {});
 
 /**
 \brief Sets the new report callback. No report callback is specified by default, in which case the reports are ignored.

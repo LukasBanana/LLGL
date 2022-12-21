@@ -12,6 +12,7 @@
 #include <LLGL/CommandBuffer.h>
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/StaticLimits.h>
+#include <LLGL/Container/ArrayView.h>
 #include "DbgQueryHeap.h"
 #include "DbgQueryTimerManager.h"
 #include <cstdint>
@@ -250,7 +251,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void ValidateAttachmentClear(const AttachmentClear& attachment);
 
         void ValidateVertexLayout();
-        void ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderVertexAttribs, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers);
+        void ValidateVertexLayoutAttributes(const ArrayView<VertexAttribute>& shaderVertexAttribs, DbgBuffer* const * vertexBuffers, std::uint32_t numVertexBuffers);
 
         void ValidateNumVertices(std::uint32_t numVertices);
         void ValidateNumInstances(std::uint32_t numInstances);

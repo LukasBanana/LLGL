@@ -9,9 +9,8 @@
 #define LLGL_RENDERING_DEBUGGER_H
 
 
-#include "Export.h"
-#include <map>
-#include <string>
+#include <LLGL/Export.h>
+#include <LLGL/Container/Strings.h>
 
 
 namespace LLGL
@@ -46,7 +45,11 @@ class LLGL_EXPORT RenderingDebugger
 
     public:
 
-        virtual ~RenderingDebugger() = default;
+        //! Initializes the internal data.
+        RenderingDebugger();
+
+        //! Release the internal data.
+        virtual ~RenderingDebugger();
 
         /**
         \brief Sets the new source function name.
@@ -67,14 +70,14 @@ class LLGL_EXPORT RenderingDebugger
         \param[in] type Specifies the type of error.
         \param[in] message Specifies the string which describes the failure.
         */
-        void PostError(const ErrorType type, const std::string& message);
+        void PostError(const ErrorType type, const StringView& message);
 
         /**
         \brief Posts a warning message.
         \param[in] type Specifies the type of error.
         \param[in] message Specifies the string which describes the warning.
         */
-        void PostWarning(const WarningType type, const std::string& message);
+        void PostWarning(const WarningType type, const StringView& message);
 
     protected:
 
@@ -91,7 +94,8 @@ class LLGL_EXPORT RenderingDebugger
                 Message(const Message&) = default;
                 Message& operator = (const Message&) = default;
 
-                Message(const std::string& text, const std::string& source, const std::string& groupName);
+                //! Initializes the message with text, source, and group name information.
+                Message(const StringView& text, const StringView& source, const StringView& groupName);
 
                 //! Blocks further occurrences of this message.
                 void Block();
@@ -104,22 +108,22 @@ class LLGL_EXPORT RenderingDebugger
                 \param[in] reportTypeName Specifies the name of the report type (e.g. "ERROR").
                 \return Constructed report string containing all information of this message.
                 */
-                std::string ToReportString(const std::string& reportTypeName) const;
+                UTF8String ToReportString(const StringView& reportTypeName) const;
 
                 //! Returns the message text.
-                inline const std::string& GetText() const
+                inline const UTF8String& GetText() const
                 {
                     return text_;
                 }
 
                 //! Returns the source function where this message occurred.
-                inline const std::string& GetSource() const
+                inline const UTF8String& GetSource() const
                 {
                     return source_;
                 }
 
                 //! Returns the debug group name where this message occured.
-                inline const std::string& GetGroupName() const
+                inline const UTF8String& GetGroupName() const
                 {
                     return groupName_;
                 }
@@ -144,9 +148,9 @@ class LLGL_EXPORT RenderingDebugger
 
             private:
 
-                std::string text_;
-                std::string source_;
-                std::string groupName_;
+                UTF8String  text_;
+                UTF8String  source_;
+                UTF8String  groupName_;
                 std::size_t occurrences_    = 1;
                 bool        blocked_        = false;
 
@@ -183,10 +187,8 @@ class LLGL_EXPORT RenderingDebugger
 
     private:
 
-        std::map<std::string, Message>  errors_;
-        std::map<std::string, Message>  warnings_;
-        const char*                     source_     = "";
-        const char*                     groupName_  = "";
+        struct Pimpl;
+        Pimpl* pimpl_;
 
 };
 

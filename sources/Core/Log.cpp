@@ -7,6 +7,7 @@
 
 #include <LLGL/Log.h>
 #include <mutex>
+#include <string>
 
 
 namespace LLGL
@@ -31,7 +32,7 @@ static LogState g_logState;
 
 /* ----- Functions ----- */
 
-LLGL_EXPORT void PostReport(ReportType type, const std::string& message, const std::string& contextInfo)
+LLGL_EXPORT void PostReport(ReportType type, const StringView& message, const StringView& contextInfo)
 {
     ReportCallback  callback;
     void*           userData    = nullptr;
@@ -67,11 +68,11 @@ LLGL_EXPORT void SetReportCallbackStd(std::ostream& stream)
 {
     std::lock_guard<std::mutex> guard { g_logState.reportMutex };
     g_logState.outputStream     = (&stream);
-    g_logState.reportCallback   = [](ReportType type, const std::string& message, const std::string& contextInfo, void* userData)
+    g_logState.reportCallback   = [](ReportType type, const StringView& message, const StringView& contextInfo, void* userData)
     {
         if (!contextInfo.empty())
-            (*g_logState.outputStream) << contextInfo << ": ";
-        (*g_logState.outputStream) << message << std::endl;
+            (*g_logState.outputStream) << std::string(contextInfo.begin(), contextInfo.end()) << ": ";
+        (*g_logState.outputStream) << std::string(message.begin(), message.end()) << std::endl;
     };
     g_logState.userData         = nullptr;
 }

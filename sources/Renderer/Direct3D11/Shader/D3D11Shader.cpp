@@ -81,7 +81,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     }
     catch (const std::exception& e)
     {
-        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: " + attrib.name);
+        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: " + std::string(attrib.name.c_str()));
     }
 }
 

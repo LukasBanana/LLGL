@@ -10,6 +10,7 @@
 
 
 #include <LLGL/LLGL.h>
+#include <LLGL/Container/ArrayView.h>
 #include <Gauss/Gauss.h>
 #include <vector>
 
@@ -76,7 +77,7 @@ std::vector<VertexPos3Tex2> GenerateTexturedCubeVertices();
 std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices();
 
 // Generates tangent-space vertices from the specified list of textured vertices.
-std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const std::vector<TexturedVertex>& vertices);
+std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const LLGL::ArrayView<TexturedVertex>& vertices);
 
 
 #endif

@@ -9,12 +9,12 @@
 #define LLGL_BUFFER_FLAG_H
 
 
-#include "Export.h"
-#include "ResourceFlags.h"
-#include "VertexAttribute.h"
-#include "RenderSystemFlags.h"
-#include "Constants.h"
-#include <string>
+#include <LLGL/Export.h>
+#include <LLGL/ResourceFlags.h>
+#include <LLGL/VertexAttribute.h>
+#include <LLGL/RenderSystemFlags.h>
+#include <LLGL/Constants.h>
+#include <LLGL/Container/ArrayView.h>
 #include <cstdint>
 
 
@@ -36,7 +36,7 @@ struct BufferDescriptor
     \see RenderingLimits::maxBufferSize
     \see bindFlags
     */
-    std::uint64_t                   size            = 0;
+    std::uint64_t               size            = 0;
 
     /**
     \brief Optional stride for structured buffers. By default 0.
@@ -47,7 +47,7 @@ struct BufferDescriptor
     \see MiscFlags::Append
     \see MiscFlags::Counter
     */
-    std::uint32_t                   stride          = 0;
+    std::uint32_t               stride          = 0;
 
     /**
     \brief Optioanl hardware buffer format. By default Format::Undefined.
@@ -59,14 +59,14 @@ struct BufferDescriptor
     \see BindFlags::IndexBuffer
     \see CommandBuffer::SetIndexBuffer(Buffer&)
     */
-    Format                          format          = Format::Undefined;
+    Format                      format          = Format::Undefined;
 
     /**
     \brief These flags describe to which resource slots the buffer can be bound. By default 0.
     \remarks When the buffer will be bound to a vertex buffer slot for instance, the BindFlags::VertexBuffer flag is required.
     \see BindFlags
     */
-    long                            bindFlags       = 0;
+    long                        bindFlags       = 0;
 
     /**
     \brief CPU read/write access flags. By default 0.
@@ -74,14 +74,14 @@ struct BufferDescriptor
     \see CPUAccessFlags
     \see RenderSystem::MapBuffer
     */
-    long                            cpuAccessFlags  = 0;
+    long                        cpuAccessFlags  = 0;
 
     /**
     \brief Miscellaneous buffer flags. By default 0.
     \remarks This can be used as a hint for the renderer how frequently the buffer will be updated.
     \see MiscFlags
     */
-    long                            miscFlags       = 0;
+    long                        miscFlags       = 0;
 
     /**
     \brief Specifies the list of vertex attributes.
@@ -89,7 +89,7 @@ struct BufferDescriptor
     \see BindFlags::VertexBuffer
     \see VertexShaderAttributes::inputAttribs
     */
-    std::vector<VertexAttribute>    vertexAttribs;
+    ArrayView<VertexAttribute>  vertexAttribs;
 };
 
 /**

@@ -197,7 +197,7 @@ static void ConvertImageBufferDataType(
     DataType    dstDataType,
     void*       dstBuffer,
     std::size_t dstBufferSize,
-    std::size_t threadCount)
+    unsigned    threadCount)
 {
     /* Validate destination buffer size */
     auto imageSize              = srcBufferSize / DataTypeSize(srcDataType);
@@ -210,7 +210,7 @@ static void ConvertImageBufferDataType(
     VariantConstBuffer src { srcBuffer };
     VariantBuffer dst { dstBuffer };
 
-    threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
+    threadCount = std::min(threadCount, static_cast<unsigned>(imageSize / g_threadMinWorkSize));
 
     if (threadCount > 1)
     {
@@ -222,7 +222,7 @@ static void ConvertImageBufferDataType(
 
         std::size_t offset = 0;
 
-        for (std::size_t i = 0; i < threadCount; ++i)
+        for (unsigned i = 0; i < threadCount; ++i)
         {
             workers[i] = std::thread(
                 ConvertImageBufferDataTypeWorker,
@@ -460,7 +460,7 @@ static void ConvertImageBufferFormatWorker(
 static void ConvertImageBufferFormat(
     const SrcImageDescriptor&   srcImageDesc,
     const DstImageDescriptor&   dstImageDesc,
-    std::size_t                 threadCount)
+    unsigned                    threadCount)
 {
     /* Get image parameters */
     auto dataTypeSize   = DataTypeSize(srcImageDesc.dataType);
@@ -481,7 +481,7 @@ static void ConvertImageBufferFormat(
     VariantConstBuffer src { srcImageDesc.data };
     VariantBuffer dst { dstImageDesc.data };
 
-    threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
+    threadCount = std::min(threadCount, static_cast<unsigned>(imageSize / g_threadMinWorkSize));
 
     if (threadCount > 1)
     {
@@ -493,7 +493,7 @@ static void ConvertImageBufferFormat(
 
         std::size_t offset = 0;
 
-        for (std::size_t i = 0; i < threadCount; ++i)
+        for (unsigned i = 0; i < threadCount; ++i)
         {
             workers[i] = std::thread(
                 ConvertImageBufferFormatWorker,
@@ -572,7 +572,7 @@ static void ValidateImageConversionParams(
 LLGL_EXPORT bool ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
     const DstImageDescriptor&   dstImageDesc,
-    std::size_t                 threadCount)
+    unsigned                    threadCount)
 {
     /* Validate input parameters */
     ValidateSourceImageDesc(srcImageDesc);
@@ -640,7 +640,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
     ImageFormat                 dstFormat,
     DataType                    dstDataType,
-    std::size_t                 threadCount)
+    unsigned                    threadCount)
 {
     /* Validate input parameters */
     ValidateSourceImageDesc(srcImageDesc);

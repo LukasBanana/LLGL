@@ -9,9 +9,9 @@
 #define LLGL_INPUT_H
 
 
-#include <LLGL/Window.h>
+#include <LLGL/Surface.h>
 #include <LLGL/Types.h>
-#include <string>
+#include <LLGL/Key.h>
 
 
 namespace LLGL
@@ -49,6 +49,9 @@ class LLGL_EXPORT Input : public Interface
         //! Assigns an event listener for this input handler to the specified surface.
         Input(Surface& surface);
 
+        //! Releases the internal data.
+        ~Input();
+
         //! Adds an event listener for this input handler to the specified surface.
         void Listen(Surface& surface);
 
@@ -74,52 +77,19 @@ class LLGL_EXPORT Input : public Interface
         bool KeyDoubleClick(Key keyCode) const;
 
         //! Returns the local mouse position.
-        inline const Offset2D& GetMousePosition() const
-        {
-            return mousePosition_;
-        }
+        const Offset2D& GetMousePosition() const;
 
         //! Returns the global mouse motion.
-        inline const Offset2D& GetMouseMotion() const
-        {
-            return mouseMotion_;
-        }
+        const Offset2D& GetMouseMotion() const;
 
         //! Returns the mouse wheel motion.
-        inline int GetWheelMotion() const
-        {
-            return wheelMotion_;
-        }
+        int GetWheelMotion() const;
 
         //! Returns the entered characters.
-        inline const std::wstring& GetEnteredChars() const
-        {
-            return chars_;
-        }
+        const UTF8String& GetEnteredChars() const;
 
         //! Returns the number of any keys being pressed.
-        inline std::size_t GetAnyKeyCount() const
-        {
-            return anyKeyCount_;
-        }
-
-    private:
-
-        using KeyStateArray = bool[256];
-
-        struct KeyTracker
-        {
-            static const size_t maxCount    = 10;
-            Key                 keys[maxCount];
-            size_t              resetCount  = 0;
-
-            void Add(Key keyCode);
-            void Reset(KeyStateArray& keyStates);
-        };
-
-    private:
-
-        static void InitArray(KeyStateArray& keyStates);
+        unsigned GetAnyKeyCount() const;
 
     private:
 
@@ -129,28 +99,8 @@ class LLGL_EXPORT Input : public Interface
         friend WindowEventListener;
         friend CanvasEventListener;
 
-        KeyStateArray   keyPressed_;
-        KeyStateArray   keyDown_;
-        KeyStateArray   keyDownRepeated_;
-        KeyStateArray   keyUp_;
-
-        Offset2D        mousePosition_;
-        Offset2D        mouseMotion_;
-
-        int             wheelMotion_    = 0;
-
-        KeyTracker      keyDownTracker_;
-        KeyTracker      keyDownRepeatedTracker_;
-        KeyTracker      keyUpTracker_;
-
-        bool            doubleClick_[3];
-
-        std::wstring    chars_;
-
-        std::size_t     anyKeyCount_    = 0;
-
-        std::vector<std::pair<std::shared_ptr<WindowEventListener>, const Surface*>> windowEventListeners_;
-        std::vector<std::pair<std::shared_ptr<CanvasEventListener>, const Surface*>> canvasEventListeners_;
+        struct Pimpl;
+        Pimpl* pimpl_;
 
 };
 

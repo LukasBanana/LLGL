@@ -9,8 +9,9 @@
 #define LLGL_FRAGMENT_ATTRIBUTE_H
 
 
-#include "Format.h"
-#include "SystemValue.h"
+#include <LLGL/Format.h>
+#include <LLGL/SystemValue.h>
+#include <LLGL/Container/StringView.h>
 #include <string>
 #include <cstdint>
 
@@ -34,23 +35,23 @@ struct FragmentAttribute
     FragmentAttribute& operator = (const FragmentAttribute&) = default;
 
     //! Constructor for minimal fragment attribute information.
-    inline FragmentAttribute(const char* name, std::uint32_t location = 0) :
-        name     { name     },
-        location { location }
+    inline FragmentAttribute(const StringView& name, std::uint32_t location = 0) :
+        name     { name.begin(), name.end() },
+        location { location                 }
     {
     }
 
     //! Constructor to initialize all members.
     inline FragmentAttribute(
-        const char*         name,
+        const StringView&   name,
         const Format        format,
         std::uint32_t       location    = 0,
         const SystemValue   systemValue = SystemValue::Undefined)
     :
-        name        { name        },
-        format      { format      },
-        location    { location    },
-        systemValue { systemValue }
+        name        { name.begin(), name.end() },
+        format      { format                   },
+        location    { location                 },
+        systemValue { systemValue              }
     {
     }
 

@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Buffer.h>
+#include <LLGL/Container/SmallVector.h>
 #include <string>
 
 
@@ -19,6 +20,8 @@ namespace LLGL
 
 class DbgBuffer final : public Buffer
 {
+
+        const SmallVector<VertexAttribute> vertexAttribs_;
 
     public:
 
