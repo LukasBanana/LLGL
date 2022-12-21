@@ -9,12 +9,12 @@
 #define LLGL_SHADER_PROGRAM_FLAGS_H
 
 
-#include "ForwardDecls.h"
-#include "ShaderFlags.h"
-#include "ResourceFlags.h"
-#include "BufferFlags.h"
-#include "PipelineLayoutFlags.h"
-#include "ShaderFlags.h"
+#include <LLGL/ForwardDecls.h>
+#include <LLGL/ShaderFlags.h>
+#include <LLGL/ResourceFlags.h>
+#include <LLGL/BufferFlags.h>
+#include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/ShaderFlags.h>
 #include <vector>
 #include <string>
 #include <cstdint>

@@ -9,7 +9,7 @@
 #define LLGL_COLOR_RGBA_H
 
 
-#include "Color.h"
+#include <LLGL/Color.h>
 
 
 namespace LLGL
@@ -23,7 +23,7 @@ i.e. for floating-points, the initial value is 1.0, because this its maximal col
 but for unsigned-bytes, the initial value is 255.
 */
 template <typename T>
-class Color<T, 4u>
+class LLGL_EXPORT Color<T, 4u>
 {
 
     public:

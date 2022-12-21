@@ -9,7 +9,7 @@
 #define LLGL_NON_COPYABLE_H
 
 
-#include "Export.h"
+#include <LLGL/Export.h>
 
 
 namespace LLGL

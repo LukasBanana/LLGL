@@ -9,7 +9,8 @@
 #define LLGL_COLOR_H
 
 
-#include "Tags.h"
+#include <LLGL/Export.h>
+#include <LLGL/Tags.h>
 #include <algorithm>
 #include <type_traits>
 #include <cstdint>
@@ -105,7 +106,7 @@ This should be a primitive data type such as float, double, int etc.
 \tparam N Specifies the number of components. There are specialized templates for N = 3, and 4.
 */
 template <typename T, std::size_t N>
-class Color
+class LLGL_EXPORT Color
 {
 
     public:

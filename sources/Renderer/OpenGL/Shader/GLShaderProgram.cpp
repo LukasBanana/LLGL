@@ -369,8 +369,14 @@ void GLShaderProgram::QueryReflection(ShaderReflection& reflection) const
     QueryWorkGroupSize(reflection);
 }
 
+struct GLMatrixTypeFormat
+{
+    Format          format;
+    std::uint32_t   rows;
+};
+
 // Vector format and number of vectors, e.g. mat2x3 --> { RGB32Float, 2 }
-static std::pair<Format, std::uint32_t> UnmapAttribType(GLenum type)
+static GLMatrixTypeFormat UnmapAttribType(GLenum type)
 {
     switch (type)
     {
@@ -414,9 +420,15 @@ static std::pair<Format, std::uint32_t> UnmapAttribType(GLenum type)
     return { Format::R32Float, 0 };
 }
 
-static SystemValue FindSystemValue(const std::string& name)
+struct GLSystemValueNamePair
 {
-    const std::pair<const char*, SystemValue> glslSystemValues[] =
+    const char* name;
+    SystemValue value;
+};
+
+static SystemValue FindSystemValue(const StringView& name)
+{
+    const GLSystemValueNamePair glslSystemValues[] =
     {
         { "gl_ClipDistance",    SystemValue::ClipDistance       },
         { "gl_CullDistance",    SystemValue::CullDistance       },
@@ -437,8 +449,8 @@ static SystemValue FindSystemValue(const std::string& name)
 
     for (const auto& sysVal : glslSystemValues)
     {
-        if (name == sysVal.first)
-            return sysVal.second;
+        if (name == sysVal.name)
+            return sysVal.value;
     }
 
     return SystemValue::Undefined;
@@ -482,8 +494,8 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
         auto location = static_cast<std::uint32_t>(glGetAttribLocation(id_, name.c_str()));
 
         /* Insert vertex attribute into list */
-        for (std::uint32_t semanticIndex = 0; semanticIndex < attr.second; ++semanticIndex)
-            attributes.push_back({ name, attr.first, semanticIndex, location });
+        for (std::uint32_t semanticIndex = 0; semanticIndex < attr.rows; ++semanticIndex)
+            attributes.push_back({ name, attr.format, semanticIndex, location });
     }
 
     /* Sort attributes by location */

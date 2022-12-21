@@ -9,9 +9,9 @@
 #define LLGL_RENDER_TARGET_FLAGS_H
 
 
-#include "TextureFlags.h"
-#include "ForwardDecls.h"
-#include "PipelineStateFlags.h"
+#include <LLGL/TextureFlags.h>
+#include <LLGL/ForwardDecls.h>
+#include <LLGL/PipelineStateFlags.h>
 #include <vector>
 #include <cstdint>
 
@@ -94,7 +94,7 @@ struct AttachmentDescriptor
     /**
     \brief Specifies the secondary attachment format if \c texture is null.
     \remarks If \c texture <b>is</b> specified, this attribute is ignored and the attachment format is determined by that texture.
-    \remarks If \c texture <b>is not</b> specified, this attribute determines the attachment format, or disables the attachment if this attributes is Format::Undefined.
+    \remarks If \c texture <b>is not</b> specified, this attribute determines the attachment format or disables the attachment if this attributes is Format::Undefined.
     */
     Format          format      = Format::Undefined;
 

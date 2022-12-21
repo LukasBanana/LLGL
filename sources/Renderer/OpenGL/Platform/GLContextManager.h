@@ -11,6 +11,7 @@
 
 #include "GLContext.h"
 #include <LLGL/RendererConfiguration.h>
+#include <vector>
 
 
 namespace LLGL
