@@ -9,11 +9,12 @@
 #define LLGL_VERTEX_FORMAT_H
 
 
-#include "Export.h"
-#include "Constants.h"
-#include "VertexAttribute.h"
+#include <LLGL/Export.h>
+#include <LLGL/Constants.h>
+#include <LLGL/VertexAttribute.h>
 #include <vector>
 #include <cstdint>
+#include <algorithm>
 
 
 namespace LLGL
@@ -27,58 +28,101 @@ namespace LLGL
 \see ShaderProgramDescriptor::vertexFormats
 \todo Move this to \c Utility.h header.
 */
-struct LLGL_EXPORT VertexFormat
+struct VertexFormat
 {
     /**
     \brief Appends the specified vertex attribute to this vertex format.
     \param[in] attrib Specifies the new attribute which is appended to this vertex format.
-    \param[in] customLocation Specifies whether the attribute location is to be adopted.
-    Otherwise, the the location will be set to the previous attribute's location plus one.
-    \param[in] customOffset Specifies the optional offset (in bytes) for this attribute.
-    If this is equal to <code>Constants::ignoreOffset</code>, the offset is determined by the previous vertex attribute offset plus its size.
-    If there is no previous vertex attribute, the determined offset is 0. By default <code>Constants::ignoreOffset</code>.
     \remarks This function modifies the \c offset member of specified attribute before adding it to the \c attributes list,
     and sets the \c stride member to the sum of the size of all attributes.
     \see VertexAttribute::offset
-    \see Constants::ignoreOffset
     */
-    void AppendAttribute(
-        const VertexAttribute&  attrib,
-        bool                    customLocation  = false,
-        std::uint32_t           customOffset    = Constants::ignoreOffset
-    );
+    inline void AppendAttribute(const VertexAttribute& attrib)
+    {
+        /* Append attribute to the list */
+        attributes.push_back(attrib);
+        auto& last = attributes.back();
+
+        /* Overwrite attribute location */
+        if (attributes.size() > 1)
+        {
+            /* Set location and offset after previous attribute */
+            const auto& prev = attributes[attributes.size() - 2];
+            last.location   = prev.location + 1;
+            last.offset     = prev.offset + prev.GetSize();
+        }
+        else
+        {
+            last.location   = 0;
+            last.offset     = 0;
+        }
+
+        /* Update stride for each attribute */
+        std::uint32_t stride = 0;
+
+        for (const auto& attr : attributes)
+            stride = (std::max)(stride, attr.offset + attr.GetSize());
+
+        SetStride(stride);
+    }
 
     /**
     \brief Returns the stride (in bytes) of the first vertex.
     \remarks It is expected that all vertices with the same buffer binding slot have the same stride.
     \see VertexAttribute::GetSize
     */
-    std::uint32_t GetStride() const;
+    inline std::uint32_t GetStride() const
+    {
+        return (attributes.empty() ? 0 : attributes.front().stride);
+    }
 
     /**
     \brief Returns the stride (in bytes) of the first vertex with the specified buffer binding slot.
     \remarks It is expected that all vertices with the same buffer binding slot have the same stride.
     \see VertexAttribute::GetSize
     */
-    std::uint32_t GetStride(std::uint32_t slot) const;
+    inline std::uint32_t GetStride(std::uint32_t slot) const
+    {
+        for (const auto& attr : attributes)
+        {
+            if (attr.slot == slot)
+                return attr.stride;
+        }
+        return 0;
+    }
 
     /**
     \brief Set the \c stride member for all vertex attributes to the specified value.
     \see VertexAttribute::stride
     */
-    void SetStride(std::uint32_t stride);
+    inline void SetStride(std::uint32_t stride)
+    {
+        for (auto& attr : attributes)
+            attr.stride = stride;
+    }
 
     /**
     \brief Set the \c stride member for all vertex attributes with the specified buffer binding slot to the new value specified by \c stride.
     \see VertexAttribute::stride
     */
-    void SetStride(std::uint32_t stride, std::uint32_t slot);
+    inline void SetStride(std::uint32_t stride, std::uint32_t slot)
+    {
+        for (auto& attr : attributes)
+        {
+            if (attr.slot == slot)
+                attr.stride = stride;
+        }
+    }
 
     /**
     \brief Sets the \c slot member for all vertex attributes to the specified value.
     \see VertexAttribute::slot
     */
-    void SetSlot(std::uint32_t slot);
+    inline void SetSlot(std::uint32_t slot)
+    {
+        for (auto& attr : attributes)
+            attr.slot = slot;
+    }
 
     /**
     \brief Specifies the list of vertex attributes.
