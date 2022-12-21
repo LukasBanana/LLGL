@@ -192,14 +192,6 @@ class D3D11RenderSystem final : public RenderSystem
         void CreateAndInitializeGpuTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
         void CreateAndInitializeGpuTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc);
 
-        void UpdateGenericTexture(
-            Texture&                    texture,
-            std::uint32_t               mipLevel,
-            std::uint32_t               arrayLayer,
-            const D3D11_BOX&            region,
-            const SrcImageDescriptor&   imageDesc
-        );
-
         void InitializeGpuTexture(
             D3D11Texture&               textureD3D,
             const TextureDescriptor&    textureDesc,

@@ -285,8 +285,7 @@ void D3D11Texture::UpdateSubresource(
     UINT                        mipLevel,
     UINT                        arrayLayer,
     const D3D11_BOX&            region,
-    const SrcImageDescriptor&   imageDesc,
-    std::size_t                 threadCount)
+    const SrcImageDescriptor&   imageDesc)
 {
     /* Check if source image must be converted */
     auto format = D3D11Types::Unmap(format_);
@@ -311,7 +310,7 @@ void D3D11Texture::UpdateSubresource(
         (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, threadCount);
+        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
         initialData         = intermediateData.get();
     }
     else

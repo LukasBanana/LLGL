@@ -225,12 +225,13 @@ void D3D11RenderSystem::Release(Texture& texture)
 
 void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     switch (texture.GetType())
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            UpdateGenericTexture(
-                texture,
+            textureD3D.UpdateSubresource(
+                context_.Get(),
                 textureRegion.subresource.baseMipLevel,
                 textureRegion.subresource.baseArrayLayer,
                 CD3D11_BOX(
@@ -249,8 +250,8 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
         case TextureType::TextureCube:
         case TextureType::Texture2DArray:
         case TextureType::TextureCubeArray:
-            UpdateGenericTexture(
-                texture,
+            textureD3D.UpdateSubresource(
+                context_.Get(),
                 textureRegion.subresource.baseMipLevel,
                 textureRegion.subresource.baseArrayLayer,
                 CD3D11_BOX(
@@ -270,8 +271,8 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
             break;
 
         case TextureType::Texture3D:
-            UpdateGenericTexture(
-                texture,
+            textureD3D.UpdateSubresource(
+                context_.Get(),
                 textureRegion.subresource.baseMipLevel,
                 0,
                 CD3D11_BOX(
@@ -697,25 +698,6 @@ void D3D11RenderSystem::CreateAndInitializeGpuTexture2DMS(D3D11Texture& textureD
     textureD3D.CreateTexture2D(device_.Get(), desc);
 }
 
-void D3D11RenderSystem::UpdateGenericTexture(
-    Texture&                    texture,
-    std::uint32_t               mipLevel,
-    std::uint32_t               arrayLayer,
-    const D3D11_BOX&            region,
-    const SrcImageDescriptor&   imageDesc)
-{
-    /* Get D3D texture and update subresource */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    textureD3D.UpdateSubresource(
-        context_.Get(),
-        mipLevel,
-        arrayLayer,
-        region,
-        imageDesc,
-        GetConfiguration().threadCount
-    );
-}
-
 void D3D11RenderSystem::InitializeGpuTexture(
     D3D11Texture&               textureD3D,
     const TextureDescriptor&    textureDesc,
@@ -776,8 +758,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
             0, // mipLevel
             layer,
             CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
-            imageDesc,
-            GetConfiguration().threadCount
+            imageDesc
         );
 
         /* Move to next region of initial data */
@@ -825,8 +806,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithClearValue(
                     0,
                     layer,
                     CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
-                    imageDescDefault,
-                    GetConfiguration().threadCount
+                    imageDescDefault
                 );
             }
         }

@@ -70,7 +70,6 @@ struct RenderingFeatures;
 struct RenderingLimits;
 struct RenderingCapabilities;
 struct RenderPassDescriptor;
-struct RenderSystemConfiguration;
 struct RenderSystemDescriptor;
 struct RenderTargetDescriptor;
 struct ResourceHeapDescriptor;

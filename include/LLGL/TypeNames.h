@@ -1,22 +1,22 @@
 /*
- * Strings.h
+ * TypeNames.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_STRINGS_H
-#define LLGL_STRINGS_H
+#ifndef LLGL_TYPE_NAMES_H
+#define LLGL_TYPE_NAMES_H
 
 /*
 THIS HEADER MUST BE EXPLICITLY INCLUDED
 */
 
-#include "Export.h"
-#include "ShaderFlags.h"
-#include "TextureFlags.h"
-#include "RenderingDebugger.h"
-#include "RenderSystemFlags.h"
+#include <LLGL/Export.h>
+#include <LLGL/ShaderFlags.h>
+#include <LLGL/TextureFlags.h>
+#include <LLGL/RenderingDebugger.h>
+#include <LLGL/RenderSystemFlags.h>
 
 
 namespace LLGL

@@ -259,8 +259,6 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
-    const auto& cfg = GetConfiguration();
-
     /* Determine size of image for staging buffer */
     const auto imageSize        = NumMipTexels(textureDesc, 0);
     const auto initialDataSize  = static_cast<VkDeviceSize>(GetMemoryFootprint(textureDesc.format, imageSize));
@@ -276,7 +274,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
         {
             /* Convert image format (will be null if no conversion is necessary) */
-            intermediateData = ConvertImageBuffer(*imageDesc, formatAttribs.format, formatAttribs.dataType, cfg.threadCount);
+            intermediateData = ConvertImageBuffer(*imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
         }
 
         if (intermediateData)
@@ -395,8 +393,6 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
 
-    const auto& cfg = GetConfiguration();
-
     /* Determine size of image for staging buffer */
     const auto& offset          = textureRegion.offset;
     const auto& extent          = textureRegion.extent;
@@ -415,7 +411,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
     {
         /* Convert image format (will be null if no conversion is necessary) */
-        intermediateData = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, cfg.threadCount);
+        intermediateData = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
     }
 
     if (intermediateData)
@@ -745,9 +741,9 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
         {
             appInfo.sType                       = VK_STRUCTURE_TYPE_APPLICATION_INFO;
             appInfo.pNext                       = nullptr;
-            appInfo.pApplicationName            = config->application.applicationName.c_str();
+            appInfo.pApplicationName            = config->application.applicationName;
             appInfo.applicationVersion          = config->application.applicationVersion;
-            appInfo.pEngineName                 = config->application.engineName.c_str();
+            appInfo.pEngineName                 = config->application.engineName;
             appInfo.engineVersion               = config->application.engineVersion;
             appInfo.apiVersion                  = VK_API_VERSION_1_0;
         }
@@ -887,16 +883,16 @@ bool VKRenderSystem::IsLayerRequired(const char* name, const RendererConfigurati
 {
     if (config != nullptr)
     {
-        for (const auto& layer : config->enabledLayers)
+        for (const char* layer : config->enabledLayers)
         {
-            if (std::strcmp(layer.c_str(), name) == 0)
+            if (::strcmp(layer, name) == 0)
                 return true;
         }
     }
 
     if (debugLayerEnabled_)
     {
-        if (std::strcmp(name, VK_LAYER_KHRONOS_VALIDATION_NAME) == 0)
+        if (::strcmp(name, VK_LAYER_KHRONOS_VALIDATION_NAME) == 0)
             return true;
     }
 

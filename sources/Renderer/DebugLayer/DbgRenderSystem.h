@@ -42,8 +42,6 @@ class DbgRenderSystem final : public RenderSystem
 
         DbgRenderSystem(const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger);
 
-        void SetConfiguration(const RenderSystemConfiguration& config) override;
-
         /* ----- Swap-chain ------ */
 
         SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;

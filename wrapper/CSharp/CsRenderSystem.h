@@ -97,21 +97,6 @@ public ref class RenderSystem
             RendererInfo^ get();
         }
 
-        #if 0
-
-        property RenderingCapabilities^ RenderingCaps
-        {
-            RenderingCapabilities^ get();
-        }
-
-        property RenderSystemConfiguration^ Configuration
-        {
-            RenderSystemConfiguration^ get();
-            void set(RenderSystemConfiguration^ config);
-        }
-
-        #endif
-
         /* ----- Swap-chain ----- */
 
         SwapChain^ CreateSwapChain(SwapChainDescriptor^ desc);

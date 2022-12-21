@@ -15,7 +15,7 @@
 #include "BuildID.h"
 
 #include <LLGL/RenderSystem.h>
-#include <array>
+#include <string>
 #include <map>
 
 #ifdef LLGL_ENABLE_DEBUG_LAYER
@@ -36,7 +36,25 @@ namespace LLGL
 
 /* ----- Render system ----- */
 
+struct RenderSystem::Pimpl
+{
+    int                     rendererID = 0;
+    std::string             name;
+    RendererInfo            info;
+    RenderingCapabilities   caps;
+};
+
 static std::map<RenderSystem*, std::unique_ptr<Module>> g_renderSystemModules;
+
+RenderSystem::RenderSystem() :
+    pimpl_ { new Pimpl{} }
+{
+}
+
+RenderSystem::~RenderSystem()
+{
+    delete pimpl_;
+}
 
 #ifdef LLGL_BUILD_STATIC_LIB
 
@@ -106,7 +124,7 @@ static int LoadRenderSystemRendererID(Module& module, const RenderSystemDescript
     return RendererID::Undefined;
 }
 
-static std::string LoadRenderSystemName(Module& module, const RenderSystemDescriptor& renderSystemDesc)
+static const char* LoadRenderSystemName(Module& module, const RenderSystemDescriptor& renderSystemDesc)
 {
     /* Load "LLGL_RenderSystem_Name" procedure */
     LLGL_PROC_INTERFACE(const char*, PFN_RENDERSYSTEM_NAME, (const void*));
@@ -169,8 +187,8 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
         #endif // /LLGL_ENABLE_DEBUG_LAYER
     }
 
-    renderSystem->name_         = StaticModule::GetRendererName(renderSystemDesc.moduleName);
-    renderSystem->rendererID_   = StaticModule::GetRendererID(renderSystemDesc.moduleName);
+    renderSystem->pimpl_->name          = StaticModule::GetRendererName(renderSystemDesc.moduleName);
+    renderSystem->pimpl_->rendererID    = StaticModule::GetRendererID(renderSystemDesc.moduleName);
 
     /* Return new render system and unique pointer */
     return renderSystem;
@@ -207,8 +225,8 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
             #endif // /LLGL_ENABLE_DEBUG_LAYER
         }
 
-        renderSystem->name_         = LoadRenderSystemName(*module,renderSystemDesc);
-        renderSystem->rendererID_   = LoadRenderSystemRendererID(*module,renderSystemDesc);
+        renderSystem->pimpl_->name          = LoadRenderSystemName(*module,renderSystemDesc);
+        renderSystem->pimpl_->rendererID    = LoadRenderSystemRendererID(*module,renderSystemDesc);
 
         /* Store new module inside internal map */
         g_renderSystemModules[renderSystem.get()] = std::move(module);
@@ -235,9 +253,24 @@ void RenderSystem::Unload(std::unique_ptr<RenderSystem>&& renderSystem)
     }
 }
 
-void RenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
+int RenderSystem::GetRendererID() const
 {
-    config_ = config;
+    return pimpl_->rendererID;
+}
+
+const char* RenderSystem::GetName() const
+{
+    return pimpl_->name.c_str();
+}
+
+const RendererInfo& RenderSystem::GetRendererInfo() const
+{
+    return pimpl_->info;
+}
+
+const RenderingCapabilities& RenderSystem::GetRenderingCaps() const
+{
+    return pimpl_->caps;
 }
 
 
@@ -247,12 +280,12 @@ void RenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 
 void RenderSystem::SetRendererInfo(const RendererInfo& info)
 {
-    info_ = info;
+    pimpl_->info = info;
 }
 
 void RenderSystem::SetRenderingCaps(const RenderingCapabilities& caps)
 {
-    caps_ = caps;
+    pimpl_->caps = caps;
 }
 
 void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize)
@@ -470,8 +503,16 @@ void RenderSystem::CopyTextureImageData(
 
         /* Convert mapped data into requested format */
         auto tempData = ConvertImageBuffer(
-            SrcImageDescriptor{ srcTexFormat.format, srcTexFormat.dataType, data, srcImageSize },
-            dstImageDesc.format, dstImageDesc.dataType, GetConfiguration().threadCount
+            SrcImageDescriptor
+            {
+                srcTexFormat.format,
+                srcTexFormat.dataType,
+                data,
+                srcImageSize
+            },
+            dstImageDesc.format,
+            dstImageDesc.dataType,
+            Constants::maxThreadCount
         );
 
         /* Copy temporary data into output buffer */

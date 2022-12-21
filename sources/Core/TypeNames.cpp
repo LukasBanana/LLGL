@@ -1,11 +1,11 @@
 /*
- * Strings.cpp
+ * TypeNames.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/Strings.h>
+#include <LLGL/TypeNames.h>
 
 
 namespace LLGL

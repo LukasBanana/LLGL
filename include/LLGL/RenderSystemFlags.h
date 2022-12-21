@@ -190,21 +190,6 @@ enum class CPUAccess
 /* ----- Structures ----- */
 
 /**
-\brief Render system configuration structure.
-\see RenderSystem::SetConfiguration
-*/
-struct RenderSystemConfiguration
-{
-    /**
-    \brief Specifies the number of threads that will be used internally by the render system. By default Constants::maxThreadCount.
-    \remarks This is mainly used by the Direct3D render systems, e.g. inside the "CreateTexture" and "WriteTexture" functions
-    to convert the image data into the respective hardware texture format. OpenGL does this automatically.
-    \see Constants::maxThreadCount
-    */
-    std::size_t threadCount = Constants::maxThreadCount;
-};
-
-/**
 \brief Renderer identification number enumeration.
 \remarks There are several IDs for reserved future renderes, which are currently not supported (and maybe never supported).
 You can use an ID greater than 'RendererID::Reserved' (which has a value of 0x000000ff) for your own renderer.

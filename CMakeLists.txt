@@ -217,6 +217,7 @@ endif()
 
 # Common files
 file(GLOB FilesInclude                      ${PROJECT_INCLUDE_DIR}/LLGL/*.*)
+file(GLOB FilesIncludeContainer             ${PROJECT_INCLUDE_DIR}/LLGL/Container/*.*)
 file(GLOB FilesIncludePlatformBase          ${PROJECT_INCLUDE_DIR}/LLGL/Platform/*.*)
 file(GLOB FilesCore                         ${PROJECT_SOURCE_DIR}/sources/Core/*.*)
 file(GLOB FilesPlatformBase                 ${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
@@ -364,6 +365,7 @@ set(FilesTest_D3D12 ${TestProjectsPath}/Test_D3D12.cpp)
 set(FilesTest_Vulkan ${TestProjectsPath}/Test_Vulkan.cpp)
 set(FilesTest_Metal ${TestProjectsPath}/Test_Metal.cpp)
 set(FilesTest_Compute ${TestProjectsPath}/Test_Compute.cpp)
+set(FilesTest_Container ${TestProjectsPath}/Test_Container.cpp)
 set(FilesTest_Performance ${TestProjectsPath}/Test_Performance.cpp)
 set(FilesTest_Display ${TestProjectsPath}/Test_Display.cpp)
 set(FilesTest_Image ${TestProjectsPath}/Test_Image.cpp)
@@ -414,6 +416,7 @@ set(FilesExample_HelloAndroid ${EXAMPLE_PROJECTS_DIR}/HelloAndroid/Example.cpp)
 # === Source group folders ===
 
 source_group("Include" FILES ${FilesInclude})
+source_group("Include\\Container" FILES ${FilesIncludeContainer})
 source_group("Sources\\Core" FILES ${FilesCore})
 
 if(LLGL_ENABLE_JIT_COMPILER)
@@ -498,6 +501,7 @@ endif()
 set(
     FilesLLGL
     ${FilesInclude}
+    ${FilesIncludeContainer}
     ${FilesIncludePlatformBase}
     ${FilesIncludePlatform}
     ${FilesCore}
@@ -784,6 +788,7 @@ if(GaussLib_INCLUDE_DIR)
             ADD_EXAMPLE_PROJECT(Test_Vulkan "${FilesTest_Vulkan}" "${LLGL_DEPENDENCIES}")
         endif()
         ADD_EXAMPLE_PROJECT(Test_Compute "${FilesTest_Compute}" "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_Container "${FilesTest_Container}" "${LLGL_DEPENDENCIES}")
         ADD_EXAMPLE_PROJECT(Test_Performance "${FilesTest_Performance}" "${LLGL_DEPENDENCIES}")
         ADD_EXAMPLE_PROJECT(Test_Display "${FilesTest_Display}" "${LLGL_DEPENDENCIES}")
         ADD_EXAMPLE_PROJECT(Test_Image "${FilesTest_Image}" "${LLGL_DEPENDENCIES}")

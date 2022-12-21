@@ -235,24 +235,6 @@ RendererInfo^ RenderSystem::Info::get()
     return managedInfo;
 }
 
-#if 0
-
-RenderingCapabilities GetRenderingCaps()
-{
-    return caps_;
-}
-
-void SetConfiguration(const RenderSystemConfiguration& config)
-{
-}
-
-const RenderSystemConfiguration& GetConfiguration()
-{
-    return config_;
-}
-
-#endif
-
 /* ----- Swap-chain ----- */
 
 static void Convert(LLGL::RendererConfigurationOpenGL& dst, RendererConfigurationOpenGL^ src)
@@ -330,26 +312,29 @@ static void Convert(LLGL::VertexAttribute& dst, VertexAttribute^ src)
     }
 }
 
-static void Convert(LLGL::BufferDescriptor& dst, BufferDescriptor^ src)
+static void Convert(LLGL::BufferDescriptor& dst, BufferDescriptor^ src, std::vector<LLGL::VertexAttribute>& nativeVertexAttribs)
 {
     if (src)
     {
+        nativeVertexAttribs.resize(src->VertexAttribs->Count);
+        for (int i = 0; i < src->VertexAttribs->Count; ++i)
+            Convert(nativeVertexAttribs[i], src->VertexAttribs[i]);
+
         dst.size            = src->Size;
         dst.stride          = src->Stride;
         dst.format          = static_cast<LLGL::Format>(src->Format);
         dst.bindFlags       = static_cast<long>(src->BindFlags);
         dst.cpuAccessFlags  = static_cast<long>(src->CPUAccessFlags);
         dst.miscFlags       = static_cast<long>(src->MiscFlags);
-        dst.vertexAttribs.resize(src->VertexAttribs->Count);
-        for (int i = 0; i < src->VertexAttribs->Count; ++i)
-            Convert(dst.vertexAttribs[i], src->VertexAttribs[i]);
+        dst.vertexAttribs   = nativeVertexAttribs;
     }
 }
 
 Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc)
 {
     LLGL::BufferDescriptor nativeDesc;
-    Convert(nativeDesc, desc);
+    std::vector<LLGL::VertexAttribute> nativeVertexAttribs;
+    Convert(nativeDesc, desc, nativeVertexAttribs);
     return gcnew Buffer(native_->CreateBuffer(nativeDesc));
 }
 
@@ -357,7 +342,8 @@ generic <typename T>
 Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc, array<T>^ initialData)
 {
     LLGL::BufferDescriptor nativeDesc;
-    Convert(nativeDesc, desc);
+    std::vector<LLGL::VertexAttribute> nativeVertexAttribs;
+    Convert(nativeDesc, desc, nativeVertexAttribs);
     pin_ptr<T> initialDataPtr = &initialData[0];
     return gcnew Buffer(native_->CreateBuffer(nativeDesc, initialDataPtr));
 }

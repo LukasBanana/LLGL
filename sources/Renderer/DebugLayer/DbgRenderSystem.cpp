@@ -11,7 +11,7 @@
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
-#include <LLGL/Strings.h>
+#include <LLGL/TypeNames.h>
 #include <LLGL/ImageFlags.h>
 #include <LLGL/StaticLimits.h>
 
@@ -41,12 +41,6 @@ DbgRenderSystem::DbgRenderSystem(
     features_ { caps_.features     },
     limits_   { caps_.limits       }
 {
-}
-
-void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
-{
-    RenderSystem::SetConfiguration(config);
-    instance_->SetConfiguration(config);
 }
 
 /* ----- Swap-chain ----- */

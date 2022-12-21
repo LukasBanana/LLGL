@@ -216,7 +216,7 @@ void D3D12RenderSystem::UpdateGpuTexture(
         (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, GetConfiguration().threadCount);
+        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
         initialData         = intermediateData.get();
     }
     else

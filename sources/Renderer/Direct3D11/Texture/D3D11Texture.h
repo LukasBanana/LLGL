@@ -95,8 +95,7 @@ class D3D11Texture final : public Texture
             UINT                        mipLevel,
             UINT                        arrayLayer,
             const D3D11_BOX&            region,
-            const SrcImageDescriptor&   imageDesc,
-            std::size_t                 threadCount
+            const SrcImageDescriptor&   imageDesc
         );
 
         // Creates a copy of the specified subresource of the hardware texture with CPU read access.

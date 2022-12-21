@@ -9,39 +9,39 @@
 #define LLGL_RENDER_SYSTEM_H
 
 
-#include "Interface.h"
-#include "SwapChain.h"
-#include "CommandQueue.h"
-#include "CommandBuffer.h"
-#include "RenderSystemFlags.h"
-#include "RenderingProfiler.h"
-#include "RenderingDebugger.h"
+#include <LLGL/Interface.h>
+#include <LLGL/SwapChain.h>
+#include <LLGL/CommandQueue.h>
+#include <LLGL/CommandBuffer.h>
+#include <LLGL/RenderSystemFlags.h>
+#include <LLGL/RenderingProfiler.h>
+#include <LLGL/RenderingDebugger.h>
 
-#include "Blob.h"
-#include "Buffer.h"
-#include "BufferFlags.h"
-#include "BufferArray.h"
-#include "Texture.h"
-#include "TextureFlags.h"
-#include "Sampler.h"
-#include "SamplerFlags.h"
-#include "ResourceHeap.h"
-#include "ResourceHeapFlags.h"
+#include <LLGL/Blob.h>
+#include <LLGL/Buffer.h>
+#include <LLGL/BufferFlags.h>
+#include <LLGL/BufferArray.h>
+#include <LLGL/Texture.h>
+#include <LLGL/TextureFlags.h>
+#include <LLGL/Sampler.h>
+#include <LLGL/SamplerFlags.h>
+#include <LLGL/ResourceHeap.h>
+#include <LLGL/ResourceHeapFlags.h>
 
-#include "RenderPass.h"
-#include "RenderPassFlags.h"
-#include "RenderTarget.h"
-#include "RenderTargetFlags.h"
-#include "Shader.h"
-#include "ShaderFlags.h"
-#include "ShaderProgram.h"
-#include "ShaderProgramFlags.h"
-#include "PipelineLayout.h"
-#include "PipelineLayoutFlags.h"
-#include "PipelineState.h"
-#include "PipelineStateFlags.h"
-#include "QueryHeap.h"
-#include "Fence.h"
+#include <LLGL/RenderPass.h>
+#include <LLGL/RenderPassFlags.h>
+#include <LLGL/RenderTarget.h>
+#include <LLGL/RenderTargetFlags.h>
+#include <LLGL/Shader.h>
+#include <LLGL/ShaderFlags.h>
+#include <LLGL/ShaderProgram.h>
+#include <LLGL/ShaderProgramFlags.h>
+#include <LLGL/PipelineLayout.h>
+#include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/PipelineState.h>
+#include <LLGL/PipelineStateFlags.h>
+#include <LLGL/QueryHeap.h>
+#include <LLGL/Fence.h>
 
 #include <string>
 #include <memory>
@@ -77,6 +77,9 @@ class LLGL_EXPORT RenderSystem : public Interface
         LLGL_DECLARE_INTERFACE( InterfaceID::RenderSystem );
 
     public:
+
+        //! Releases the internal data.
+        ~RenderSystem();
 
         /* ----- Common ----- */
 
@@ -126,58 +129,34 @@ class LLGL_EXPORT RenderSystem : public Interface
         */
         static void Unload(std::unique_ptr<RenderSystem>&& renderSystem);
 
+    public:
+
         /**
         \brief Rendering API identification number.
         \remarks This can be a value of the RendererID entries.
         Since the render system is modular, a new render system can have its own ID number.
         \see RendererID
         */
-        inline int GetRendererID() const
-        {
-            return rendererID_;
-        }
+        int GetRendererID() const;
 
         //! Returns the name of this render system.
-        inline const std::string& GetName() const
-        {
-            return name_;
-        }
+        const char* GetName() const;
 
         /**
         \brief Returns basic renderer information.
         \remarks The validity of these information is only guaranteed if this function is called
         after a valid swap-chain has been created. Otherwise the behavior is undefined!
         */
-        inline const RendererInfo& GetRendererInfo() const
-        {
-            return info_;
-        }
+        const RendererInfo& GetRendererInfo() const;
 
         /**
         \brief Returns the rendering capabilities.
         \remarks The validity of these information is only guaranteed if this function is called
         after a valid swap-chain has been created. Otherwise the behavior is undefined!
         */
-        inline const RenderingCapabilities& GetRenderingCaps() const
-        {
-            return caps_;
-        }
+        const RenderingCapabilities& GetRenderingCaps() const;
 
-        /**
-        \brief Sets the basic configuration.
-        \remarks This can be used to change the behavior of default initializion of textures for instance.
-        \see RenderSystemConfiguration
-        */
-        virtual void SetConfiguration(const RenderSystemConfiguration& config);
-
-        /**
-        \brief Returns the basic configuration.
-        \see SetConfiguration
-        */
-        inline const RenderSystemConfiguration& GetConfiguration() const
-        {
-            return config_;
-        }
+    public:
 
         /* ----- Swap-chain ----- */
 
@@ -262,7 +241,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         This must be less then or equal to the size of the buffer.
         \remarks To update a small buffer (maximum of 65536 bytes) during encoding a command buffer, use CommandBuffer::UpdateBuffer.
         */
-        virtual void WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize) = 0;
+        virtual void WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize) = 0;
 
         /**
         \brief Maps the specified buffer from GPU to CPU memory space.
@@ -525,7 +504,8 @@ class LLGL_EXPORT RenderSystem : public Interface
 
     protected:
 
-        RenderSystem() = default;
+        //! Allocates the internal data.
+        RenderSystem();
 
         //! Sets the renderer information.
         void SetRendererInfo(const RendererInfo& info);
@@ -569,12 +549,8 @@ class LLGL_EXPORT RenderSystem : public Interface
 
     private:
 
-        int                         rendererID_ = 0;
-        std::string                 name_;
-
-        RendererInfo                info_;
-        RenderingCapabilities       caps_;
-        RenderSystemConfiguration   config_;
+        struct Pimpl;
+        Pimpl* pimpl_;
 
 };
 
