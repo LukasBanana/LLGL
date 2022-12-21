@@ -81,8 +81,7 @@ int main()
         //const auto& renderCaps = renderer->GetRenderingCaps();
 
         // Setup window title
-        auto title = "LLGL Test 2 ( " + renderer->GetName() + " )";
-        window->SetTitle(std::wstring(title.begin(), title.end()));
+        window->SetTitle("LLGL Test 2 ( " + std::string(renderer->GetName()) + " )");
 
         // Setup input controller
         LLGL::Input input{ *window };

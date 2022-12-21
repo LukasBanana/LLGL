@@ -45,14 +45,14 @@ Extent2D AndroidCanvas::GetContentSize() const
     return { 0u, 0u }; //todo...
 }
 
-void AndroidCanvas::SetTitle(const std::wstring& title)
+void AndroidCanvas::SetTitle(const UTF8String& title)
 {
     //todo...
 }
 
-std::wstring AndroidCanvas::GetTitle() const
+UTF8String AndroidCanvas::GetTitle() const
 {
-    return L""; //todo...
+    return {}; //todo...
 }
 
 void AndroidCanvas::ResetPixelFormat()
@@ -68,23 +68,23 @@ void AndroidCanvas::ResetPixelFormat()
 void AndroidCanvas::OnProcessEvents()
 {
     android_app* appState = AndroidApp::Get().GetState();
-    
+
     /* Poll all Androdi app events */
     int ident = 0, events = 0;
     android_poll_source* source = nullptr;
-    
+
     while ((ident = ALooper_pollAll(0, nullptr, &events, reinterpret_cast<void**>(&source))) >= 0)
     {
         /* Process the event */
         if (source != nullptr)
             source->process(appState, source);
-            
+
         /* Process sensor data */
         /*if (ident == LOOPER_ID_USER)
         {
             //TODO
         }*/
-        
+
         /* Check if we are exiting */
         if (appState->destroyRequested != 0)
             PostQuit();

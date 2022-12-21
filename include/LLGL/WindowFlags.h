@@ -9,9 +9,9 @@
 #define LLGL_WINDOW_FLAGS_H
 
 
-#include "Types.h"
-#include "Constants.h"
-#include <string>
+#include <LLGL/Types.h>
+#include <LLGL/Constants.h>
+#include <LLGL/Container/Strings.h>
 #include <cstdint>
 
 
@@ -23,7 +23,7 @@ namespace LLGL
 struct WindowDescriptor
 {
     //! Window title as unicode string.
-    std::wstring    title;
+    UTF8String      title;
 
     //! Window position (relative to the client area).
     Offset2D        position;

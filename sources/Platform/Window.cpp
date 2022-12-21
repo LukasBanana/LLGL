@@ -13,7 +13,9 @@ namespace LLGL
 {
 
 
-/* ----- Window EventListener class ----- */
+/*
+ * Window::EventListener class
+ */
 
 void Window::EventListener::OnProcessEvents(Window& sender)
 {
@@ -81,10 +83,35 @@ void Window::EventListener::OnTimer(Window& sender, std::uint32_t timerID)
 }
 
 
-/* ----- Window class ----- */
+/*
+ * Window::Pimpl struct
+ */
+
+struct Window::Pimpl
+{
+    std::vector<std::shared_ptr<EventListener>> eventListeners;
+    WindowBehavior                              behavior;
+    bool                                        quit            = false;
+    bool                                        focus           = false;
+};
+
+
+/*
+ * Window class
+ */
+
+Window::Window() :
+    pimpl_ { new Pimpl{} }
+{
+}
+
+Window::~Window()
+{
+    delete pimpl_;
+}
 
 #define FOREACH_LISTENER_CALL(FUNC) \
-    for (const auto& lst : eventListeners_) { lst->FUNC; }
+    for (const auto& lst : pimpl_->eventListeners) { lst->FUNC; }
 
 #ifdef LLGL_MOBILE_PLATFORM
 
@@ -95,21 +122,6 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 }
 
 #endif
-
-void Window::SetBehavior(const WindowBehavior& behavior)
-{
-    behavior_ = behavior;
-}
-
-bool Window::HasFocus() const
-{
-    return focus_;
-}
-
-bool Window::HasQuit() const
-{
-    return quit_;
-}
 
 bool Window::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
 {
@@ -190,16 +202,34 @@ Display* Window::FindResidentDisplay() const
     return nullptr;
 }
 
-/* --- Event handling --- */
+void Window::SetBehavior(const WindowBehavior& behavior)
+{
+    pimpl_->behavior = behavior;
+}
+
+const WindowBehavior& Window::GetBehavior() const
+{
+    return pimpl_->behavior;
+}
+
+bool Window::HasFocus() const
+{
+    return pimpl_->focus;
+}
+
+bool Window::HasQuit() const
+{
+    return pimpl_->quit;
+}
 
 void Window::AddEventListener(const std::shared_ptr<EventListener>& eventListener)
 {
-    AddOnceToSharedList(eventListeners_, eventListener);
+    AddOnceToSharedList(pimpl_->eventListeners, eventListener);
 }
 
 void Window::RemoveEventListener(const EventListener* eventListener)
 {
-    RemoveFromSharedList(eventListeners_, eventListener);
+    RemoveFromSharedList(pimpl_->eventListeners, eventListener);
 }
 
 void Window::PostQuit()
@@ -207,13 +237,13 @@ void Window::PostQuit()
     if (!HasQuit())
     {
         bool canQuit = true;
-        for (const auto& lst : eventListeners_)
+        for (const auto& lst : pimpl_->eventListeners)
         {
             bool veto = false;
             lst->OnQuit(*this, veto);
             canQuit = (canQuit && !veto);
         }
-        quit_ = canQuit;
+        pimpl_->quit = canQuit;
     }
 }
 
@@ -259,13 +289,13 @@ void Window::PostResize(const Extent2D& clientAreaSize)
 
 void Window::PostGetFocus()
 {
-    focus_ = true;
+    pimpl_->focus = true;
     FOREACH_LISTENER_CALL( OnGetFocus(*this) );
 }
 
 void Window::PostLostFocus()
 {
-    focus_ = false;
+    pimpl_->focus = false;
     FOREACH_LISTENER_CALL( OnLostFocus(*this) );
 }
 

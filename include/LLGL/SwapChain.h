@@ -47,6 +47,9 @@ class LLGL_EXPORT SwapChain : public RenderTarget
 
     public:
 
+        //! Release the internal data.
+        ~SwapChain();
+
         /* ----- Render Target ----- */
 
         /**
@@ -133,15 +136,12 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         auto& myWindow = static_cast<LLGL::Window&>(mySwapChain->GetSurface());
         \endcode
         */
-        inline Surface& GetSurface() const
-        {
-            return *surface_;
-        }
+        Surface& GetSurface() const;
 
     protected:
 
-        //! Default constructor with no effect.
-        SwapChain() = default;
+        //! Allocates the internal data.
+        SwapChain();
 
         //! Constructor to initialize the swap-chain with the specified video mode and V-sync.
         SwapChain(const SwapChainDescriptor& desc);
@@ -191,12 +191,8 @@ class LLGL_EXPORT SwapChain : public RenderTarget
 
     private:
 
-        std::shared_ptr<Surface>    surface_;
-
-        Extent2D                    resolution_;
-
-        Offset2D                    normalModeSurfacePos_;
-        bool                        normalModeSurfacePosStored_ = false;
+        struct Pimpl;
+        Pimpl* pimpl_;
 
 };
 

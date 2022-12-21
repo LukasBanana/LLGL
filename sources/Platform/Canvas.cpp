@@ -7,10 +7,28 @@
 
 #include <LLGL/Canvas.h>
 #include "../Core/Helper.h"
+#include <vector>
 
 
 namespace LLGL
 {
+
+
+struct Canvas::Pimpl
+{
+    std::vector<std::shared_ptr<EventListener>> eventListeners;
+    bool                                        quit            = false;
+};
+
+Canvas::Canvas() :
+    pimpl_ { new Pimpl{} }
+{
+}
+
+Canvas::~Canvas()
+{
+    delete pimpl_;
+}
 
 
 /* ----- Canvas EventListener class ----- */
@@ -29,7 +47,7 @@ void Canvas::EventListener::OnQuit(Canvas& sender, bool& veto)
 /* ----- Window class ----- */
 
 #define FOREACH_LISTENER_CALL(FUNC) \
-    for (const auto& lst : eventListeners_) { lst->FUNC; }
+    for (const auto& lst : pimpl_->eventListeners) { lst->FUNC; }
 
 #ifndef LLGL_MOBILE_PLATFORM
 
@@ -43,7 +61,7 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 
 bool Canvas::HasQuit() const
 {
-    return quit_;
+    return pimpl_->quit;
 }
 
 bool Canvas::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
@@ -68,12 +86,12 @@ Display* Canvas::FindResidentDisplay() const
 
 void Canvas::AddEventListener(const std::shared_ptr<EventListener>& eventListener)
 {
-    AddOnceToSharedList(eventListeners_, eventListener);
+    AddOnceToSharedList(pimpl_->eventListeners, eventListener);
 }
 
 void Canvas::RemoveEventListener(const EventListener* eventListener)
 {
-    RemoveFromSharedList(eventListeners_, eventListener);
+    RemoveFromSharedList(pimpl_->eventListeners, eventListener);
 }
 
 void Canvas::PostQuit()
@@ -81,13 +99,13 @@ void Canvas::PostQuit()
     if (!HasQuit())
     {
         bool canQuit = true;
-        for (const auto& lst : eventListeners_)
+        for (const auto& lst : pimpl_->eventListeners)
         {
             bool veto = false;
             lst->OnQuit(*this, veto);
             canQuit = (canQuit && !veto);
         }
-        quit_ = canQuit;
+        pimpl_->quit = canQuit;
     }
 }
 

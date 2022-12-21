@@ -17,16 +17,35 @@ namespace LLGL
 {
 
 
-SwapChain::SwapChain(const SwapChainDescriptor& desc) :
-    resolution_ { desc.resolution }
+struct SwapChain::Pimpl
 {
+    std::shared_ptr<Surface>    surface;
+    Extent2D                    resolution;
+    Offset2D                    normalModeSurfacePos;
+    bool                        normalModeSurfacePosStored = false;
+};
+
+SwapChain::SwapChain() :
+    pimpl_ { new Pimpl{} }
+{
+}
+
+SwapChain::SwapChain(const SwapChainDescriptor& desc) :
+    SwapChain {}
+{
+    pimpl_->resolution = desc.resolution;
+}
+
+SwapChain::~SwapChain()
+{
+    delete pimpl_;
 }
 
 /* ----- Render Target ----- */
 
 Extent2D SwapChain::GetResolution() const
 {
-    return resolution_;
+    return pimpl_->resolution;
 }
 
 std::uint32_t SwapChain::GetNumColorAttachments() const
@@ -68,7 +87,7 @@ bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
         {
             if (ResizeBuffersPrimary(size))
             {
-                resolution_ = size;
+                pimpl_->resolution = size;
                 return true;
             }
         }
@@ -87,7 +106,7 @@ bool SwapChain::ResizeBuffers(const Extent2D& resolution, long flags)
         /* Only resize swap buffers */
         if (ResizeBuffersPrimary(resolution))
         {
-            resolution_ = resolution;
+            pimpl_->resolution = resolution;
             return true;
         }
     }
@@ -115,6 +134,11 @@ bool SwapChain::SwitchFullscreen(bool enable)
     return result;
 }
 
+Surface& SwapChain::GetSurface() const
+{
+    return *(pimpl_->surface);
+}
+
 
 /*
  * ======= Protected: =======
@@ -129,7 +153,7 @@ void SwapChain::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, cons
     {
         /* Get and output resolution from specified window */
         resolution = surface->GetContentSize();
-        surface_ = surface;
+        pimpl_->surface = surface;
     }
     else
     {
@@ -152,7 +176,7 @@ void SwapChain::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, cons
             windowDesc.centered         = !fullscreen;
             windowDesc.windowContext    = windowContext;
         }
-        surface_ = Window::Create(windowDesc);
+        pimpl_->surface = Window::Create(windowDesc);
 
         #endif
     }
@@ -164,15 +188,15 @@ void SwapChain::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, cons
 
 void SwapChain::ShareSurfaceAndConfig(SwapChain& other)
 {
-    surface_    = other.surface_;
-    resolution_ = other.resolution_;
+    pimpl_->surface     = other.pimpl_->surface;
+    pimpl_->resolution  = other.pimpl_->resolution;
 }
 
 bool SwapChain::SetDisplayFullscreenMode(const Extent2D& resolution)
 {
-    if (surface_)
+    if (auto surface = pimpl_->surface.get())
     {
-        if (auto display = surface_->FindResidentDisplay())
+        if (auto display = surface->FindResidentDisplay())
         {
             /* Change display mode resolution to video mode setting */
             auto displayModeDesc = display->GetDisplayMode();
@@ -185,9 +209,9 @@ bool SwapChain::SetDisplayFullscreenMode(const Extent2D& resolution)
 
 bool SwapChain::ResetDisplayFullscreenMode()
 {
-    if (surface_)
+    if (auto surface = pimpl_->surface.get())
     {
-        if (auto display = surface_->FindResidentDisplay())
+        if (auto display = surface->FindResidentDisplay())
         {
             /* Reset display mode to default */
             return display->ResetDisplayMode();
@@ -204,11 +228,11 @@ bool SwapChain::ResetDisplayFullscreenMode()
 void SwapChain::StoreSurfacePosition()
 {
     #ifndef LLGL_MOBILE_PLATFORM
-    if (!normalModeSurfacePosStored_)
+    if (!pimpl_->normalModeSurfacePosStored)
     {
         auto& window = static_cast<Window&>(GetSurface());
-        normalModeSurfacePos_       = window.GetPosition();
-        normalModeSurfacePosStored_ = true;
+        pimpl_->normalModeSurfacePos        = window.GetPosition();
+        pimpl_->normalModeSurfacePosStored  = true;
     }
     #endif
 }
@@ -216,11 +240,11 @@ void SwapChain::StoreSurfacePosition()
 void SwapChain::RestoreSurfacePosition()
 {
     #ifndef LLGL_MOBILE_PLATFORM
-    if (normalModeSurfacePosStored_)
+    if (pimpl_->normalModeSurfacePosStored)
     {
         auto& window = static_cast<Window&>(GetSurface());
-        window.SetPosition(normalModeSurfacePos_);
-        normalModeSurfacePosStored_ = false;
+        window.SetPosition(pimpl_->normalModeSurfacePos);
+        pimpl_->normalModeSurfacePosStored = false;
     }
     #endif
 }

@@ -44,7 +44,7 @@ int main()
         // Create window
         LLGL::WindowDescriptor windowDesc;
 
-        windowDesc.title        = L"LLGL Test 1";
+        windowDesc.title        = "LLGL Test 1";
         windowDesc.visible      = true;
         windowDesc.centered     = true;
         windowDesc.resizable    = true;
@@ -67,7 +67,7 @@ int main()
             auto renderer = LLGL::RenderSystem::Load("OpenGL");
 
             window->SetTitle(
-                windowDesc.title + L" ( " + std::wstring(renderer->GetName().begin(), renderer->GetName().end()) + L" )"
+                std::string(windowDesc.title.c_str()) + " ( " + std::string(renderer->GetName()) + " )"
             );
         }
         catch (const std::exception& e)
@@ -94,18 +94,18 @@ int main()
                 window->Show(true);
             #endif
             if (input.KeyDown(LLGL::Key::D3))
-                window->SetTitle(L"FOO BAR");
+                window->SetTitle("FOO BAR");
             if (input.KeyDown(LLGL::Key::D4))
-                window->SetTitle(L"LLGL Test 1");
+                window->SetTitle("LLGL Test 1");
             if (input.KeyDown(LLGL::Key::D5))
                 window->SetSize({ 300, 300 });
 
             if (input.KeyDown(LLGL::Key::LButton))
-                window->SetTitle(L"LButton Down");
+                window->SetTitle("LButton Down");
             if (input.KeyDown(LLGL::Key::RButton))
-                window->SetTitle(L"RButton Down");
+                window->SetTitle("RButton Down");
             if (input.KeyDown(LLGL::Key::MButton))
-                window->SetTitle(L"MButton Down");
+                window->SetTitle("MButton Down");
 
             #ifdef __APPLE__
 

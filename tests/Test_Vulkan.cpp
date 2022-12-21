@@ -53,7 +53,7 @@ int main()
         }
         auto window = std::shared_ptr<LLGL::Window>(std::move(LLGL::Window::Create(windowDesc)));
 
-        window->SetTitle(L"LLGL Vulkan Test");
+        window->SetTitle("LLGL Vulkan Test");
 
         auto swapChain = renderer->CreateSwapChain(swapChainDesc, window);
 

@@ -9,10 +9,10 @@
 #define LLGL_CANVAS_H
 
 
-#include "CanvasFlags.h"
-#include "Surface.h"
-#include "Types.h"
-#include "Key.h"
+#include <LLGL/CanvasFlags.h>
+#include <LLGL/Surface.h>
+#include <LLGL/Types.h>
+#include <LLGL/Key.h>
 #include <memory>
 
 
@@ -64,6 +64,9 @@ class LLGL_EXPORT Canvas : public Surface
 
     public:
 
+        //! Releases the internal data.
+        ~Canvas();
+
         /* --- Common --- */
 
         /**
@@ -75,11 +78,11 @@ class LLGL_EXPORT Canvas : public Surface
         */
         static std::unique_ptr<Canvas> Create(const CanvasDescriptor& desc);
 
-        //! Sets the canvas title as UTF16 string. If the OS does not support UTF16 window title, it will be converted to UTF8.
-        virtual void SetTitle(const std::wstring& title) = 0;
+        //! Sets the canvas title as UTF-8 string.
+        virtual void SetTitle(const UTF8String& title) = 0;
 
         //! Returns the canvas title as UTF16 string.
-        virtual std::wstring GetTitle() const = 0;
+        virtual UTF8String GetTitle() const = 0;
 
         /**
         \brief Returns true if this canvas is in the 'Quit' state.
@@ -122,6 +125,11 @@ class LLGL_EXPORT Canvas : public Surface
 
     protected:
 
+        //! Allocates the internal data.
+        Canvas();
+
+    protected:
+
         /**
         \brief Called inside the "ProcessEvents" function after all event listeners received the same event.
         \see ProcessEvents
@@ -131,8 +139,8 @@ class LLGL_EXPORT Canvas : public Surface
 
     private:
 
-        std::vector<std::shared_ptr<EventListener>> eventListeners_;
-        bool                                        quit_           = false;
+        struct Pimpl;
+        Pimpl* pimpl_;
 
 };
 

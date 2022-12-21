@@ -113,14 +113,14 @@ Extent2D IOSCanvas::GetContentSize() const
     return { 0u, 0u }; //todo...
 }
 
-void IOSCanvas::SetTitle(const std::wstring& title)
+void IOSCanvas::SetTitle(const UTF8String& title)
 {
     //todo...
 }
 
-std::wstring IOSCanvas::GetTitle() const
+UTF8String IOSCanvas::GetTitle() const
 {
-    return L""; //todo...
+    return {}; //todo...
 }
 
 

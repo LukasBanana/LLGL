@@ -207,31 +207,24 @@ namespace LLGL
 {
 
 
-static NSString* ToNSString(const wchar_t* s)
+static NSString* ToNSString(const UTF8String& s)
 {
     return
     [
         [[NSString alloc]
-            initWithBytes: s
-            length: sizeof(*s)*wcslen(s)
-            encoding:NSUTF32LittleEndianStringEncoding
+            initWithBytes:  s.c_str()
+            length:         sizeof(char)*s.size()
+            encoding:       NSUTF8StringEncoding
         ] autorelease
     ];
 }
 
-static std::wstring ToStdWString(NSString* s)
+static UTF8String ToUTF8String(NSString* s)
 {
-    std::wstring out;
-
     if (s != nil)
-    {
-        const char* utf8Str = [s cStringUsingEncoding:NSUTF8StringEncoding];
-        auto utf8StrLen = ::strlen(utf8Str);
-        out.resize(utf8StrLen);
-        ::mbstowcs(&out[0], utf8Str, utf8StrLen);
-    }
-
-    return out;
+        return UTF8String{ [s cStringUsingEncoding:NSUTF8StringEncoding] };
+    else
+        return {};
 }
 
 // Returns the NSWindow style mask for the specified window descriptor
@@ -357,14 +350,14 @@ Extent2D MacOSWindow::GetSize(bool useClientArea) const
     };
 }
 
-void MacOSWindow::SetTitle(const std::wstring& title)
+void MacOSWindow::SetTitle(const UTF8String& title)
 {
     [wnd_ setTitle:ToNSString(title.c_str())];
 }
 
-std::wstring MacOSWindow::GetTitle() const
+UTF8String MacOSWindow::GetTitle() const
 {
-    return ToStdWString([wnd_ title]);
+    return ToUTF8String([wnd_ title]);
 }
 
 void MacOSWindow::Show(bool show)

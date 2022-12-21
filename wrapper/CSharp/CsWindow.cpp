@@ -74,7 +74,8 @@ String^ Window::Title::get()
 
 void Window::Title::set(String^ title)
 {
-    native_->SetTitle(ToStdWString(title));
+    auto titleStdStr = ToStdString(title);
+    native_->SetTitle(titleStdStr.c_str());
 }
 
 bool Window::Shown::get()

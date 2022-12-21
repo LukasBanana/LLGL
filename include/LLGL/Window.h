@@ -9,11 +9,11 @@
 #define LLGL_WINDOW_H
 
 
-#include "Surface.h"
-#include "WindowFlags.h"
-#include "Key.h"
+#include <LLGL/Container/Strings.h>
+#include <LLGL/Surface.h>
+#include <LLGL/WindowFlags.h>
+#include <LLGL/Key.h>
 #include <memory>
-#include <vector>
 
 
 namespace LLGL
@@ -106,6 +106,9 @@ class LLGL_EXPORT Window : public Surface
 
     public:
 
+        //! Releases the internal data.
+        ~Window();
+
         /* --- Common --- */
 
         /**
@@ -129,11 +132,11 @@ class LLGL_EXPORT Window : public Surface
         //! Returns either the overall window size or the client area size. By default the client area size is returned.
         virtual Extent2D GetSize(bool useClientArea = true) const = 0;
 
-        //! Sets the window title as UTF16 string. If the OS does not support UTF16 window title, it will be converted to UTF8.
-        virtual void SetTitle(const std::wstring& title) = 0;
+        //! Sets the window title as UTF8 string.
+        virtual void SetTitle(const UTF8String& title) = 0;
 
-        //! Returns the window title as UTF16 string.
-        virtual std::wstring GetTitle() const = 0;
+        //! Returns the window title as UTF8 string.
+        virtual UTF8String GetTitle() const = 0;
 
         //! Shows or hides the window.
         virtual void Show(bool show = true) = 0;
@@ -147,24 +150,7 @@ class LLGL_EXPORT Window : public Surface
         //! Queries a window descriptor, which describes the attributes of this window.
         virtual WindowDescriptor GetDesc() const = 0;
 
-        //! Sets the new window behavior.
-        virtual void SetBehavior(const WindowBehavior& behavior);
-
-        //! Returns the window heavior.
-        inline const WindowBehavior& GetBehavior() const
-        {
-            return behavior_;
-        }
-
-        //! Returns true if this window has the keyboard focus.
-        virtual bool HasFocus() const;
-
-        /**
-        \brief Returns true if this window is in the 'Quit' state.
-        \see PostQuit
-        \see ProcessEvents
-        */
-        virtual bool HasQuit() const;
+    public:
 
         /**
         \brief Adapts the window for the specified video mode.
@@ -186,7 +172,23 @@ class LLGL_EXPORT Window : public Surface
         //! Searches the entire list of displays until a display is found where more than the half of this window's client area is visible.
         Display* FindResidentDisplay() const override final;
 
-        /* --- Event handling --- */
+    public:
+
+        //! Returns true if this window has the keyboard focus.
+        bool HasFocus() const;
+
+        /**
+        \brief Returns true if this window is in the 'Quit' state.
+        \see PostQuit
+        \see ProcessEvents
+        */
+        bool HasQuit() const;
+
+        //! Sets the new window behavior.
+        void SetBehavior(const WindowBehavior& behavior);
+
+        //! Returns the window heavior.
+        const WindowBehavior& GetBehavior() const;
 
         //! Adds the specified event listener to this window.
         void AddEventListener(const std::shared_ptr<EventListener>& eventListener);
@@ -248,6 +250,9 @@ class LLGL_EXPORT Window : public Surface
 
     protected:
 
+        //! Allocates the internal data.
+        Window();
+
         /**
         \brief Called inside the "ProcessEvents" function after all event listeners received the same event.
         \see ProcessEvents
@@ -257,10 +262,8 @@ class LLGL_EXPORT Window : public Surface
 
     private:
 
-        std::vector<std::shared_ptr<EventListener>> eventListeners_;
-        WindowBehavior                              behavior_;
-        bool                                        quit_           = false;
-        bool                                        focus_          = false;
+        struct Pimpl;
+        Pimpl* pimpl_;
 
 };
 

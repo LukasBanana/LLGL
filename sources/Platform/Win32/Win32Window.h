@@ -37,8 +37,8 @@ class Win32Window final : public Window
         void SetSize(const Extent2D& size, bool useClientArea = true) override;
         Extent2D GetSize(bool useClientArea = true) const override;
 
-        void SetTitle(const std::wstring& title) override;
-        std::wstring GetTitle() const override;
+        void SetTitle(const UTF8String& title) override;
+        UTF8String GetTitle() const override;
 
         void Show(bool show = true) override;
         bool IsShown() const override;

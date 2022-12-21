@@ -28,7 +28,7 @@ class Win32WindowClass
 
         static Win32WindowClass* Instance();
 
-        const wchar_t* GetName() const;
+        const TCHAR* GetName() const;
 
     private:
 

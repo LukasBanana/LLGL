@@ -46,8 +46,7 @@ int main()
         // Setup window title
         auto& window = static_cast<LLGL::Window&>(swapChain->GetSurface());
 
-        auto title = "LLGL Test 10 ( " + renderer->GetName() + " )";
-        window.SetTitle(std::wstring(title.begin(), title.end()));
+        window.SetTitle("LLGL Test 10 ( " + std::string(renderer->GetName()) + " )");
 
         // Setup input controller
         LLGL::Input input{ window };
@@ -85,7 +84,7 @@ int main()
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
             LLGL::ShaderDescriptor vertexShaderDesc{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" };
-            vertexShaderDesc.vertex.inputAttribs = vertexBufferDesc.vertexAttribs;
+            vertexShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
 
             shaderProgramDesc.vertexShader      = renderer->CreateShader(vertexShaderDesc);//{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" });
             shaderProgramDesc.fragmentShader    = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Shaders/BlendTest.frag" });

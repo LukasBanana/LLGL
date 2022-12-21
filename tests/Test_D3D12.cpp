@@ -37,8 +37,8 @@ int main()
 
         auto& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
 
-        auto title = "LLGL Test 3 ( " + renderer->GetName() + " )";
-        window.SetTitle(std::wstring(title.begin(), title.end()));
+        auto title = "LLGL Test 3 ( " + std::string(renderer->GetName()) + " )";
+        window.SetTitle(title);
         window.Show();
 
         auto renderCaps = renderer->GetRenderingCaps();
