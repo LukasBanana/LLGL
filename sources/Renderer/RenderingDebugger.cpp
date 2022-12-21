@@ -90,7 +90,7 @@ void RenderingDebugger::OnError(ErrorType type, Message& message)
 {
     Log::PostReport(
         Log::ReportType::Error,
-        message.ToReportString("ERROR (" + UTF8String(ToString(type)) + ')')
+        message.ToReportString("ERROR (" + UTF8String(ToString(type)) + ")")
     );
     message.Block();
 }
@@ -99,7 +99,7 @@ void RenderingDebugger::OnWarning(WarningType type, Message& message)
 {
     Log::PostReport(
         Log::ReportType::Warning,
-        message.ToReportString("WARNING (" + UTF8String(ToString(type)) + ')')
+        message.ToReportString("WARNING (" + UTF8String(ToString(type)) + ")")
     );
     message.Block();
 }

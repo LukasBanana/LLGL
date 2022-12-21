@@ -58,6 +58,18 @@ struct GrowStrategyRoundUpPow2
 {
     static inline unsigned int Round(unsigned int v)
     {
+        --v;
+        v |= v >> 1;
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        ++v;
+        return v;
+    }
+
+    static inline unsigned long Round(unsigned long v)
+    {
         // see https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
         --v;
         v |= v >> 1;
@@ -310,7 +322,7 @@ class LLGL_EXPORT SmallVector
                     if (size() + count <= capacity())
                     {
                         /* Move trail to new end and insert new elements in-place */
-                        move_trail(begin() + offset + count, pos, end());
+                        move_trail(begin() + offset + count, begin() + offset, end());
                         return insert_inline(const_cast<iterator>(pos), from, count);
                     }
                     else
@@ -626,7 +638,7 @@ class LLGL_EXPORT SmallVector
             release_heap();
         }
 
-        void move_trail_left(iterator dst, const_iterator from, const_iterator to)
+        void move_trail_left(iterator dst, iterator from, iterator to)
         {
             Allocator alloc;
             for (; from != to; ++from, ++dst)
@@ -637,12 +649,12 @@ class LLGL_EXPORT SmallVector
             }
         }
 
-        void move_trail_right(iterator dst, const_iterator from, const_iterator to)
+        void move_trail_right(iterator dst, iterator from, iterator to)
         {
             Allocator alloc;
             const auto count = static_cast<size_type>(std::distance(from, to));
             auto rdst = reverse_iterator{ dst + count };
-            for (auto rfrom = const_reverse_iterator{ to }, rto = const_reverse_iterator{ from }; rfrom != rto; ++rfrom, ++rdst)
+            for (auto rfrom = reverse_iterator{ to }, rto = reverse_iterator{ from }; rfrom != rto; ++rfrom, ++rdst)
             {
                 /* Copy element from current position 'from' to destination 'dst' and destroy the old one */
                 alloc.construct(&(*rdst), *rfrom);
@@ -650,7 +662,7 @@ class LLGL_EXPORT SmallVector
             }
         }
 
-        void move_trail(iterator dst, const_iterator from, const_iterator to)
+        void move_trail(iterator dst, iterator from, iterator to)
         {
             if (dst < from)
                 move_trail_left(dst, from, to);

@@ -249,8 +249,8 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     public:
 
-        CanvasEventListener(Input::Pimpl& data) :
-            data_ { data }
+        CanvasEventListener(Input::Pimpl& data)// :
+            //data_ { data }
         {
         }
 
@@ -263,7 +263,7 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     private:
 
-        Input::Pimpl& data_;
+        //Input::Pimpl& data_;
 
 };
 

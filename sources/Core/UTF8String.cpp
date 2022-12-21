@@ -137,7 +137,6 @@ LLGL_EXPORT SmallVector<char> ConvertToUTF8CharArray(const WStringView& s)
     utf8.reserve(len + 1);
 
     /* Encode UTF-8 string */
-    auto utf8ptr = &utf8[0];
     for (int c : s)
         AppendUTF8Character(utf8, c);
 
