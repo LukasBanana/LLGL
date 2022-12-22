@@ -86,6 +86,28 @@ private:
         // Create vertex buffer
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
 
+        // Read vertex buffer back to CPU memory for validation
+        Vertex readbackVertices[4] = {};
+        renderer->ReadBuffer(*vertexBuffer, 0, readbackVertices, sizeof(readbackVertices));
+
+        auto MatchReadbackVerticesPosition = [&readbackVertices, &vertices](int v, int c)
+        {
+            if (readbackVertices[v].position[c] != vertices[v].position[c])
+                std::cerr << "Readback data mismatch: Expected vertices[" << v << "].position[" << c << "] to be " << vertices[v].position[c] << ", but got " << readbackVertices[v].position[c] << std::endl;
+        };
+
+        auto MatchReadbackVerticesTexCoord = [&readbackVertices, &vertices](int v, int c)
+        {
+            if (readbackVertices[v].texCoord[c] != vertices[v].texCoord[c])
+                std::cerr << "Readback data mismatch: Expected vertices[" << v << "].texCoord[" << c << "] to be " << vertices[v].texCoord[c] << ", but got " << readbackVertices[v].texCoord[c] << std::endl;
+        };
+
+        for (int i = 0; i < 8; ++i)
+        {
+            MatchReadbackVerticesPosition(i / 2, i % 2);
+            MatchReadbackVerticesTexCoord(i / 2, i % 2);
+        }
+
         return vertexFormat;
     }
 

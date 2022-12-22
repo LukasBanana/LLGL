@@ -91,10 +91,16 @@ void MTRenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
-void MTRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
+void MTRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
 {
-    auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
-    dstBufferMT.Write(static_cast<NSUInteger>(dstOffset), data, static_cast<NSUInteger>(dataSize));
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    bufferMT.Write(static_cast<NSUInteger>(offset), data, static_cast<NSUInteger>(dataSize));
+}
+
+void MTRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
+{
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    bufferMT.Read(static_cast<NSUInteger>(offset), data, static_cast<NSUInteger>(dataSize));
 }
 
 void* MTRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)

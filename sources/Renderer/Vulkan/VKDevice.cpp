@@ -513,8 +513,23 @@ void VKDevice::WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSiz
         auto deviceMemory = region->GetParentChunk();
         if (auto memory = deviceMemory->Map(device_, region->GetOffset() + offset, size))
         {
-            /* Copy data to buffer object */
+            /* Copy input data to buffer memory */
             ::memcpy(memory, data, static_cast<std::size_t>(size));
+            deviceMemory->Unmap(device_);
+        }
+    }
+}
+
+void VKDevice::ReadBuffer(VKDeviceBuffer& buffer, void* data, VkDeviceSize size, VkDeviceSize offset)
+{
+    if (auto region = buffer.GetMemoryRegion())
+    {
+        /* Map buffer memory to host memory */
+        auto deviceMemory = region->GetParentChunk();
+        if (auto memory = deviceMemory->Map(device_, region->GetOffset() + offset, size))
+        {
+            /* Copy buffer memory to output data */
+            ::memcpy(data, memory, static_cast<std::size_t>(size));
             deviceMemory->Unmap(device_);
         }
     }

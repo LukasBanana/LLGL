@@ -54,6 +54,16 @@ class D3D12StagingBufferPool
             UINT64                  alignment   = 256u
         );
 
+        // Copies the specified subresource region into the global readback buffer and writes it into the output data.
+        void ReadSubresourceRegion(
+            D3D12CommandContext&    commandContext,
+            D3D12Resource&          srcBuffer,
+            UINT64                  srcOffset,
+            void*                   data,
+            UINT64                  dataSize,
+            UINT64                  alignment   = 256u
+        );
+
     private:
 
         // Allocates a new chunk with the specified minimal size.
@@ -68,7 +78,7 @@ class D3D12StagingBufferPool
         );
 
         D3D12StagingBuffer& GetUploadBufferAndGrow(UINT64 size, UINT64 alignment);
-        //D3D12StagingBuffer& GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment);
+        D3D12StagingBuffer& GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment);
 
     private:
 
@@ -79,7 +89,7 @@ class D3D12StagingBufferPool
         UINT64                          chunkSize_          = 0;
 
         D3D12StagingBuffer              globalUploadBuffer_;
-        //D3D12StagingBuffer              globalReadbackBuffer_;
+        D3D12StagingBuffer              globalReadbackBuffer_;
 
 };
 

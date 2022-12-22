@@ -233,36 +233,62 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Updates the data of the specified buffer.
-        \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
-        \param[in] dstOffset Specifies the offset (in bytes) at which the buffer is to be updated.
+        \param[in] buffer Specifies the destination buffer whose data is to be updated.
+        \param[in] offset Specifies the offset (in bytes) at which the buffer is to be updated.
         This offset plus the data block size (i.e. <code>offset + dataSize</code>) must be less than or equal to the size of the buffer.
         \param[in] data Raw pointer to the data with which the buffer is to be updated. This must not be null!
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This must be less then or equal to the size of the buffer.
         \remarks To update a small buffer (maximum of 65536 bytes) during encoding a command buffer, use CommandBuffer::UpdateBuffer.
+        \see ReadBuffer
         */
         virtual void WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize) = 0;
 
         /**
+        \brief Reads the data from the specified buffer.
+        \param[in] buffer Specifies the buffer which is to be read.
+        \param[in] offset Specifies the offset (in bytes) at which the buffer is to be read.
+        \param[out] data Raw pointer to a memory block in CPU memory space where the data will be written to.
+        \param[in] dataSize Specifies the size (in bytes) of the data block given by the \c data parameter.
+        \see WriteBuffer
+        */
+        virtual void ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize) = 0;
+
+        /**
         \brief Maps the specified buffer from GPU to CPU memory space.
-        \param[in] buffer Specifies the buffer which is to be mapped.
+        \param[in] buffer Specifies the buffer which is to be mapped. Depending on the CPU access type (see \c access parameter),
+        this buffer must have been created with the corresponding CPU access flag, i.e. CPUAccessFlags::Read and/or CPUAccessFlags::Write.
         \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
-        \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
+        \return Raw pointer to the mapped memory block in CPU memory space or null if the operation failed.
+        \remarks Memory that is written back from CPU to GPU becomes visible in the GPU after a corresponding UnmapBuffer operation.
         \see UnmapBuffer
         */
         virtual void* MapBuffer(Buffer& buffer, const CPUAccess access) = 0;
 
         /**
         \brief Maps the specified buffer range from GPU to CPU memory space.
-        \param[in] buffer Specifies the buffer which is to be mapped.
+        \param[in] buffer Specifies the buffer which is to be mapped. Depending on the CPU access type (see \c access parameter),
+        this buffer must have been created with the corresponding CPU access flag, i.e. CPUAccessFlags::Read and/or CPUAccessFlags::Write.
         \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
-        \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
+        \param[in] offset Specifies the memory offset (in bytes) from the GPU buffer.
+        \param[in] length Specifies the length of the memory block (in bytes) that is to be mapped.
+        \return Raw pointer to the mapped memory block in CPU memory space or null if the operation failed.
+        \remarks Memory that is written back from CPU to GPU becomes visible in the GPU after a corresponding UnmapBuffer operation.
         \see UnmapBuffer
         */
-        virtual void* MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t size) = 0;
+        virtual void* MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length) = 0;
 
         /**
         \brief Unmaps the specified buffer.
+        \remarks This must be called on a buffer that was previously mapped into CPU memory space.
+        The following example illustrates how to map and unmap a buffer from GPU into CPU memory sapce:
+        \code
+        if (void* data = myRenderer->MapBuffer(*myBuffer, LLGL::CPUAccess::Write))
+        {
+            // Write to 'data' ...
+            myRenderer->UnmapBuffer(*myBuffer);
+        }
+        \endcode
         \see MapBuffer
         */
         virtual void UnmapBuffer(Buffer& buffer) = 0;

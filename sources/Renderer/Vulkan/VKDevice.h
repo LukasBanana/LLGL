@@ -134,6 +134,7 @@ class VKDevice
         );
 
         void WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
+        void ReadBuffer(VKDeviceBuffer& buffer, void* data, VkDeviceSize size, VkDeviceSize offset = 0);
         void FlushMappedBuffer(VKDeviceBuffer& buffer, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
         /* ----- Handles ----- */

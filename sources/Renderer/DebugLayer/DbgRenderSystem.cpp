@@ -154,9 +154,9 @@ void DbgRenderSystem::Release(BufferArray& bufferArray)
     ReleaseDbg(bufferArrays_, bufferArray);
 }
 
-void DbgRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
+void DbgRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
 {
-    auto& dstBufferDbg = LLGL_CAST(DbgBuffer&, dstBuffer);
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
     if (debugger_)
     {
@@ -165,19 +165,41 @@ void DbgRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, co
         if (dataSize > 0)
         {
             /* Assume buffer to be initialized even if only partially as we cannot keep track of each bit inside the buffer */
-            dstBufferDbg.initialized = true;
+            bufferDbg.initialized = true;
         }
 
-        ValidateBufferBoundary(dstBufferDbg.desc.size, dstOffset, dataSize);
+        ValidateBufferBoundary(bufferDbg.desc.size, offset, dataSize);
 
         if (!data)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "illegal null pointer argument for 'data' parameter");
     }
 
-    instance_->WriteBuffer(dstBufferDbg.instance, dstOffset, data, dataSize);
+    instance_->WriteBuffer(bufferDbg.instance, offset, data, dataSize);
 
     if (profiler_)
         profiler_->frameProfile.bufferWrites++;
+}
+
+void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+
+        if (!bufferDbg.initialized)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "reading uninitialized buffer");
+        if (!data)
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "illegal null pointer argument for 'data' parameter");
+
+        ValidateBufferBoundary(bufferDbg.desc.size, offset, dataSize);
+    }
+
+    instance_->ReadBuffer(bufferDbg.instance, offset, data, dataSize);
+
+    if (profiler_)
+        profiler_->frameProfile.bufferReads++;
 }
 
 void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)

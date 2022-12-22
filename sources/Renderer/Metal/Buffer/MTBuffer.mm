@@ -63,22 +63,24 @@ BufferDescriptor MTBuffer::GetDesc() const
     return bufferDesc;
 }
 
-void MTBuffer::Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize)
+void MTBuffer::Write(NSUInteger offset, const void* data, NSUInteger dataSize)
 {
-    /* Set buffer region to update */
-    NSRange range;
-    range.location  = dstOffset;
-    range.length    = dataSize;
+    if (char* sharedGpuMemory = reinterpret_cast<char*>([native_ contents]))
+    {
+        ::memcpy(sharedGpuMemory + offset, data, dataSize);
 
-    /* Copy data to CPU buffer region */
-    auto byteAlignedBuffer = reinterpret_cast<std::int8_t*>([native_ contents]);
-    ::memcpy(byteAlignedBuffer + dstOffset, data, dataSize);
+        #ifndef LLGL_OS_IOS
+        /* Notify Metal API about update */
+        if (isManaged_)
+            [native_ didModifyRange:NSMakeRange(offset, dataSize)];
+        #endif
+    }
+}
 
-    #ifndef LLGL_OS_IOS
-    /* Notify Metal API about update */
-    if (isManaged_)
-        [native_ didModifyRange:range];
-    #endif
+void MTBuffer::Read(NSUInteger offset, void* data, NSUInteger dataSize)
+{
+    if (const char* sharedGpuMemory = reinterpret_cast<char*>([native_ contents]))
+        ::memcpy(data, sharedGpuMemory + offset, dataSize);
 }
 
 void* MTBuffer::Map(CPUAccess access)

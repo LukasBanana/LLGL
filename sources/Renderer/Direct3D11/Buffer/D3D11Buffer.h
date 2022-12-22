@@ -32,7 +32,7 @@ class D3D11Buffer : public Buffer
         D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
         void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
-        void UpdateSubresource(ID3D11DeviceContext* context, const void* data);
+        void ReadSubresource(ID3D11DeviceContext* context, void* data, UINT dataSize, UINT offset);
 
         void* Map(ID3D11DeviceContext* context, const CPUAccess access);
         void* Map(ID3D11DeviceContext* context, const CPUAccess access, UINT offset, UINT size);
@@ -82,6 +82,22 @@ class D3D11Buffer : public Buffer
 
         void CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData);
         void CreateCpuAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc);
+
+        void ReadFromStagingBuffer(
+            ID3D11DeviceContext*    context,
+            ID3D11Buffer*           stagingBuffer,
+            UINT                    stagingBufferOffset,
+            void*                   data,
+            UINT                    dataSize,
+            UINT                    srcOffset
+        );
+
+        void ReadFromSubresourceCopyWithCpuAccess(
+            ID3D11DeviceContext*    context,
+            void*                   data,
+            UINT                    dataSize,
+            UINT                    srcOffset
+        );
 
         D3D11_MAP GetCPUAccessTypeForUsage(const CPUAccess access) const;
 

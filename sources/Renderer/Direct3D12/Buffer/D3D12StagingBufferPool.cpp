@@ -74,6 +74,39 @@ void D3D12StagingBufferPool::WriteImmediate(
     commandContext.TransitionResource(dstBuffer, dstBuffer.usageState, true);
 }
 
+void D3D12StagingBufferPool::ReadSubresourceRegion(
+    D3D12CommandContext&    commandContext,
+    D3D12Resource&          srcBuffer,
+    UINT64                  srcOffset,
+    void*                   data,
+    UINT64                  dataSize,
+    UINT64                  alignment)
+{
+    auto& readbackBuffer = GetReadbackBufferAndGrow(dataSize, alignment);
+
+    /* Copy source buffer region to readback buffer and flush command list */
+    commandContext.TransitionResource(srcBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+    {
+        commandContext.GetCommandList()->CopyBufferRegion(readbackBuffer.GetNative(), 0, srcBuffer.Get(), srcOffset, dataSize);
+    }
+    commandContext.TransitionResource(srcBuffer, srcBuffer.usageState, true);
+    commandContext.Finish(true);
+
+    /* Map readback buffer to CPU memory space */
+    char* mappedData = nullptr;
+    const D3D12_RANGE readRange{ 0, static_cast<SIZE_T>(dataSize) };
+
+    if (SUCCEEDED(readbackBuffer.GetNative()->Map(0, &readRange, reinterpret_cast<void**>(&mappedData))))
+    {
+        /* Copy readback buffer into output data */
+        ::memcpy(data, mappedData, static_cast<std::size_t>(dataSize));
+
+        /* Unmap buffer with range of written data */
+        const D3D12_RANGE writtenRange{ 0, 0 };
+        readbackBuffer.GetNative()->Unmap(0, &writtenRange);
+    }
+}
+
 
 /*
  * ======= Private: =======
@@ -107,11 +140,11 @@ D3D12StagingBuffer& D3D12StagingBufferPool::GetUploadBufferAndGrow(UINT64 size, 
     return globalUploadBuffer_;
 }
 
-/*D3D12StagingBuffer& D3D12StagingBufferPool::GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment)
+D3D12StagingBuffer& D3D12StagingBufferPool::GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment)
 {
     ResizeBuffer(globalReadbackBuffer_, D3D12_HEAP_TYPE_READBACK, size, alignment);
     return globalReadbackBuffer_;
-}*/
+}
 
 
 } // /namespace LLGL

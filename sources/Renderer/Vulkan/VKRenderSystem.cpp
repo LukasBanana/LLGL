@@ -143,7 +143,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
         GetStagingVkBufferUsageFlags(desc.cpuAccessFlags)
     );
 
-    auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, initialData, desc.size);
+    auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, desc.size);
 
     /* Create primary buffer object */
     auto buffer = TakeOwnership(buffers_, MakeUnique<VKBuffer>(device_, desc));
@@ -192,17 +192,17 @@ void VKRenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
-void VKRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
+void VKRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
 {
-    auto& bufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
 
     if (bufferVK.GetStagingVkBuffer() != VK_NULL_HANDLE)
     {
-        /* Copy data to staging buffer memory */
-        device_.WriteBuffer(bufferVK.GetStagingDeviceBuffer(), data, dataSize, dstOffset);
+        /* Copy input data to staging buffer memory */
+        device_.WriteBuffer(bufferVK.GetStagingDeviceBuffer(), data, dataSize, offset);
 
         /* Copy staging buffer into hardware buffer */
-        device_.CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), dataSize, dstOffset, dstOffset);
+        device_.CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), dataSize, offset, offset);
     }
     else
     {
@@ -214,10 +214,45 @@ void VKRenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, con
             (VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
         );
 
-        auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, data, dataSize);
+        auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, data, dataSize);
 
         /* Copy staging buffer into hardware buffer */
-        device_.CopyBuffer(stagingBuffer.GetVkBuffer(), bufferVK.GetVkBuffer(), dataSize, 0, dstOffset);
+        device_.CopyBuffer(stagingBuffer.GetVkBuffer(), bufferVK.GetVkBuffer(), dataSize, 0, offset);
+
+        /* Release device memory region of staging buffer */
+        stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
+    }
+}
+
+void VKRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
+{
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+
+    if (bufferVK.GetStagingVkBuffer() != VK_NULL_HANDLE)
+    {
+        /* Copy hardware buffer into staging buffer */
+        device_.CopyBuffer(bufferVK.GetVkBuffer(), bufferVK.GetStagingVkBuffer(), dataSize, offset, offset);
+
+        /* Copy staging buffer memory to output data */
+        device_.ReadBuffer(bufferVK.GetStagingDeviceBuffer(), data, dataSize, offset);
+    }
+    else
+    {
+        /* Create staging buffer */
+        VkBufferCreateInfo stagingCreateInfo;
+        BuildVkBufferCreateInfo(
+            stagingCreateInfo,
+            dataSize,
+            (VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+        );
+
+        auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo);
+
+        /* Copy hardware buffer into staging buffer */
+        device_.CopyBuffer(bufferVK.GetVkBuffer(), stagingBuffer.GetVkBuffer(), dataSize, offset, 0);
+
+        /* Copy staging buffer memory to output data */
+        device_.ReadBuffer(stagingBuffer, data, dataSize, 0);
 
         /* Release device memory region of staging buffer */
         stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
@@ -307,7 +342,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.cpuAccessFlags)
     );
 
-    auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, initialData, initialDataSize);
+    auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, initialDataSize);
 
     /* Create device texture */
     auto textureVK  = MakeUnique<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
@@ -429,7 +464,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.cpuAccessFlags)
     );
 
-    auto stagingBuffer = CreateStagingBuffer(stagingCreateInfo, imageData, imageDataSize);
+    auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, imageData, imageDataSize);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     auto cmdBuffer = device_.AllocCommandBuffer();
@@ -912,7 +947,7 @@ VKDeviceBuffer VKRenderSystem::CreateStagingBuffer(const VkBufferCreateInfo& cre
     };
 }
 
-VKDeviceBuffer VKRenderSystem::CreateStagingBuffer(
+VKDeviceBuffer VKRenderSystem::CreateStagingBufferAndInitialize(
     const VkBufferCreateInfo&   createInfo,
     const void*                 data,
     VkDeviceSize                dataSize)

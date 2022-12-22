@@ -140,6 +140,21 @@ void GLBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* data)
     }
 }
 
+void GLBuffer::GetBufferSubData(GLintptr offset, GLsizeiptr size, void* data)
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glGetNamedBufferSubData(GetID(), offset, size, data);
+    }
+    else
+    #endif // /GL_ARB_direct_state_access
+    {
+        GLStateManager::Get().BindGLBuffer(*this);
+        GLProfile::GetBufferSubData(GetGLTarget(), offset, size, data);
+    }
+}
+
 void GLBuffer::ClearBufferData(std::uint32_t data)
 {
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT

@@ -29,7 +29,7 @@ struct DefaultBufferGrowPolicy
     }
     static inline std::size_t NextChunkCapacity(std::size_t currentChunkCapacity)
     {
-        return std::max(currentChunkCapacity * 2, MinChunkCapacity());
+        return (std::max)(currentChunkCapacity * 2, MinChunkCapacity());
     }
 };
 

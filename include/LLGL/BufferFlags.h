@@ -70,9 +70,11 @@ struct BufferDescriptor
 
     /**
     \brief CPU read/write access flags. By default 0.
-    \remarks If this is 0 the buffer cannot be mapped from GPU memory space into CPU memory space and vice versa.
+    \remarks If this is 0 the buffer cannot be mapped between GPU and CPU memory space.
     \see CPUAccessFlags
     \see RenderSystem::MapBuffer
+    \see RenderSystem::ReadBuffer
+    \see RenderSystem::WriteBuffer
     */
     long                        cpuAccessFlags  = 0;
 

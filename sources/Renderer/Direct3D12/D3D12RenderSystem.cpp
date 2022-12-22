@@ -161,11 +161,18 @@ void D3D12RenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
-void D3D12RenderSystem::WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize)
+void D3D12RenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
 {
-    auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
-    stagingBufferPool_.WriteImmediate(*commandContext_, dstBufferD3D.GetResource(), dstOffset, data, dataSize);
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    stagingBufferPool_.WriteImmediate(*commandContext_, bufferD3D.GetResource(), offset, data, dataSize);
     ExecuteCommandListAndSync();
+}
+
+void D3D12RenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
+{
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    stagingBufferPool_.ReadSubresourceRegion(*commandContext_, bufferD3D.GetResource(), offset, data, dataSize);
+    /* No ExecuteCommandListAndSync() here as it has already been flushed by the staging buffer pool */
 }
 
 //private

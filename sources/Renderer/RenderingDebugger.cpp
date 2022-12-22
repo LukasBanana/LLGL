@@ -58,8 +58,9 @@ void RenderingDebugger::PostError(const ErrorType type, const StringView& messag
     }
     else
     {
-        pimpl_->errors[message] = Message{ message, pimpl_->source, pimpl_->groupName };
-        OnError(type, pimpl_->errors[message]);
+        auto& msg = pimpl_->errors[message];
+        msg = Message{ message, pimpl_->source, pimpl_->groupName };
+        OnError(type, msg);
     }
 }
 
@@ -76,8 +77,9 @@ void RenderingDebugger::PostWarning(const WarningType type, const StringView& me
     }
     else
     {
-        pimpl_->warnings[message] = Message{ message, pimpl_->source, pimpl_->groupName };
-        OnWarning(type, pimpl_->warnings[message]);
+        auto& msg = pimpl_->warnings[message];
+        msg = Message{ message, pimpl_->source, pimpl_->groupName };
+        OnWarning(type, msg);
     }
 }
 

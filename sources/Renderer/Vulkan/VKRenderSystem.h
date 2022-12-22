@@ -81,7 +81,8 @@ class VKRenderSystem final : public RenderSystem
         void Release(Buffer& buffer) override;
         void Release(BufferArray& bufferArray) override;
 
-        void WriteBuffer(Buffer& dstBuffer, std::uint64_t dstOffset, const void* data, std::uint64_t dataSize) override;
+        void WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize) override;
+        void ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize) override;
 
         void* MapBuffer(Buffer& buffer, const CPUAccess access) override;
         void* MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length) override;
@@ -167,7 +168,7 @@ class VKRenderSystem final : public RenderSystem
 
         VKDeviceBuffer CreateStagingBuffer(const VkBufferCreateInfo& createInfo);
 
-        VKDeviceBuffer CreateStagingBuffer(
+        VKDeviceBuffer CreateStagingBufferAndInitialize(
             const VkBufferCreateInfo&   createInfo,
             const void*                 data,
             VkDeviceSize                dataSize

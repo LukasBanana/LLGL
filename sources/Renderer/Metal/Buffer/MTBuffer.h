@@ -31,7 +31,8 @@ class MTBuffer final : public Buffer
         MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const void* initialData);
         ~MTBuffer();
 
-        void Write(NSUInteger dstOffset, const void* data, NSUInteger dataSize);
+        void Write(NSUInteger offset, const void* data, NSUInteger dataSize);
+        void Read(NSUInteger offset, void* data, NSUInteger dataSize);
 
         void* Map(CPUAccess access);
         void* Map(CPUAccess access, NSUInteger offset, NSUInteger length);

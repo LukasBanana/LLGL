@@ -37,6 +37,8 @@ class GLBuffer : public Buffer
         void BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags, GLenum usage);
         void BufferSubData(GLintptr offset, GLsizeiptr size, const void* data);
 
+        void GetBufferSubData(GLintptr offset, GLsizeiptr size, void* data);
+
         void ClearBufferData(std::uint32_t data);
         void ClearBufferSubData(GLintptr offset, GLsizeiptr size, std::uint32_t data);
 
