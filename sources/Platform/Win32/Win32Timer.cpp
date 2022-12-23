@@ -5,14 +5,23 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "Win32Timer.h"
-#include "../../Core/Helper.h"
+#include <LLGL/Timer.h>
+#include "Win32LeanAndMean.h"
+#include <Windows.h>
 #include <algorithm>
+#include <atomic>
 
 
 namespace LLGL
 {
 
+namespace Timer
+{
+
+
+static std::atomic<DWORD> g_lastLowResTick;
+static std::atomic<LONGLONG> g_lastHighResTick;
+static std::atomic<LONGLONG> g_lastHighResElapsedTime;
 
 /*
 Specifies whether to enable the adjustment for unexpected leaps in the Win32 performance counter.
@@ -20,78 +29,60 @@ This is caused by unexpected data across the PCI to ISA bridge, aka south bridge
 */
 #define LLGL_LEAP_FORWARD_ADJUSTMENT
 
-std::unique_ptr<Timer> Timer::Create()
+LLGL_EXPORT std::uint64_t Frequency()
 {
-    return MakeUnique<Win32Timer>();
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    return static_cast<std::uint64_t>(frequency.QuadPart);
 }
 
-Win32Timer::Win32Timer()
+LLGL_EXPORT std::uint64_t Tick()
 {
-    QueryPerformanceFrequency(&clockFrequency_);
-}
-
-void Win32Timer::Start()
-{
-    /* Query current performance counter ticks */
-    QueryPerformanceCounter(&t0_);
+    LARGE_INTEGER highResTick;
+    QueryPerformanceCounter(&highResTick);
 
     #ifdef LLGL_LEAP_FORWARD_ADJUSTMENT
-    startTick_ = GetTickCount();
-    #endif
-
-    running_ = true;
-}
-
-std::uint64_t Win32Timer::Stop()
-{
-    /* Reset running state */
-    if (!running_)
-        return 0;
-
-    running_ = false;
-
-    /* Query elapsed ticks */
-    QueryPerformanceCounter(&t1_);
-    auto elapsedTime = t1_.QuadPart - t0_.QuadPart;
-
-    #ifdef LLGL_LEAP_FORWARD_ADJUSTMENT
-
-    /* Compute the number of millisecond ticks elapsed */
-    auto msecTicks          = static_cast<long long>(1000 * elapsedTime / clockFrequency_.QuadPart);
 
     /* Check for unexpected leaps */
-    auto elapsedLowTicks    = static_cast<long long>(GetTickCount() - startTick_);
-    auto msecOff            = msecTicks - elapsedLowTicks;
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
 
-    if (std::abs(msecOff) > 100)
+    const DWORD     lowResTick          = GetTickCount();
+
+    const DWORD     prevLowResTick      = g_lastLowResTick.exchange(lowResTick);
+    const LONGLONG  prevHighResTick     = g_lastHighResTick.exchange(highResTick.QuadPart);
+
+    const DWORD     elapsedLowResMS     = (lowResTick - prevLowResTick);
+    LONGLONG        elapsedHighResMS    = (highResTick.QuadPart - prevHighResTick) * 1000 / frequency.QuadPart;
+
+    const LONGLONG  millisecondsOff     = elapsedHighResMS - elapsedLowResMS;
+
+    if (std::abs(millisecondsOff) > 100)
     {
-        /* Adjust the starting time forwards */
-        LONGLONG msecAdjustment = std::min<LONGLONG>(
-            ( msecOff * clockFrequency_.QuadPart / 1000 ),
-            ( elapsedTime - prevElapsedTime_ )
+        /* Adjust leap by difference */
+        const LONGLONG prevElapsedTime = g_lastHighResElapsedTime.load();
+
+        const LONGLONG adjustment = (std::min)(
+            (millisecondsOff * frequency.QuadPart / 1000),
+            (elapsedHighResMS - prevElapsedTime)
         );
-        elapsedTime -= msecAdjustment;
+        highResTick.QuadPart -= adjustment;
+        elapsedHighResMS -= adjustment;
+
+        /* Update last state of timer */
+        g_lastHighResTick.store(highResTick.QuadPart);
     }
 
-    /* Store the current elapsed time for adjustments next time */
-    prevElapsedTime_ = elapsedTime;
+    /* Store last elapsed time */
+    g_lastHighResElapsedTime.store(elapsedHighResMS);
 
-    #endif
+    #endif // /LLGL_LEAP_FORWARD_ADJUSTMENT
 
-    /* Return final elapsed time */
-    return static_cast<std::uint64_t>(elapsedTime);
+    return highResTick.QuadPart;
 }
 
-std::uint64_t Win32Timer::GetFrequency() const
-{
-    return static_cast<std::uint64_t>(clockFrequency_.QuadPart);
-}
 
-bool Win32Timer::IsRunning() const
-{
-    return running_;
-}
-
+} // /namespace Timer
 
 } // /namespace LLGL
 

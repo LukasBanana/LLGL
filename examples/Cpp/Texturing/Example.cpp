@@ -138,7 +138,7 @@ public:
         }
 
         // Upload image data onto hardware texture and stop the time
-        timer->Start();
+        timer.Start();
         {
             // Create texture
             LLGL::TextureDescriptor texDesc;
@@ -157,7 +157,7 @@ public:
             }
             colorMaps[1] = renderer->CreateTexture(texDesc, &imageDesc);
         }
-        auto texCreationTime = static_cast<double>(timer->Stop()) / static_cast<double>(timer->GetFrequency());
+        auto texCreationTime = static_cast<double>(timer.Stop()) / static_cast<double>(timer.GetFrequency());
         std::cout << "texture creation time: " << (texCreationTime * 1000.0) << " ms" << std::endl;
 
         // Release image data

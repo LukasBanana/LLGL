@@ -34,7 +34,6 @@ struct InterfaceID
         Window,                 //!< Extends Interface. \see Window
         Window_EventListener,   //!< Extends Interface. \see Window::EventListener
         Input,                  //!< Extends Interface. \see Input
-        Timer,                  //!< Extends Interface. \see Timer
         RenderSystem,           //!< Extends Interface. \see RenderSystem
         RenderSystemChild,      //!< Extends Interface. \see RenderSystemChild
         Buffer,                 //!< Extends RenderSystemChild. \see Buffer

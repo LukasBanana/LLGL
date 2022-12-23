@@ -5,43 +5,37 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "IOSTimer.h"
-#include "../../Core/Helper.h"
+#include <LLGL/Timer.h>
+#include <mach/mach_time.h>
 
 
 namespace LLGL
 {
 
-    
-std::unique_ptr<Timer> Timer::Create()
+namespace Timer
 {
-    return MakeUnique<IOSTimer>();
+
+
+static const std::uint64_t g_nsecFrequency = 1000000000ull;
+
+LLGL_EXPORT std::uint64_t Frequency()
+{
+    return g_nsecFrequency;
 }
 
-IOSTimer::IOSTimer()
+LLGL_EXPORT std::uint64_t Tick()
 {
+    mach_timebase_info_data_t timebase;
+    mach_timebase_info(&timebase);
+    if (timebase.denom > 0)
+        return (mach_absolute_time() * timebase.numer) / timebase.denom;
+    else
+        return 0;
 }
 
-void IOSTimer::Start()
-{
-}
 
-std::uint64_t IOSTimer::Stop()
-{
-    return 0;
-}
+} // /namespace Timer
 
-std::uint64_t IOSTimer::GetFrequency() const
-{
-    return 0;
-}
-
-bool IOSTimer::IsRunning() const
-{
-    return false;
-}
-    
-    
 } // /namespace LLGL
 
 

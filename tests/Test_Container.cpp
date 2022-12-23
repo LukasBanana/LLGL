@@ -13,41 +13,28 @@
 #include <vector>
 
 
-static const int g_timerCount = 16;
-static int g_currentTimer;
-static std::unique_ptr<LLGL::Timer> g_timer[g_timerCount];
-
-static LLGL::Timer* GetNextTimer()
-{
-    g_currentTimer = (g_currentTimer + 1) % g_timerCount;
-    if (!g_timer[g_currentTimer])
-        g_timer[g_currentTimer] = LLGL::Timer::Create();
-    return g_timer[g_currentTimer].get();
-}
-
-class StopWatchScope
+class StopwatchScope
 {
 
     public:
 
-        StopWatchScope(const char* name) :
-            name_  { name           },
-            timer_ { GetNextTimer() }
+        StopwatchScope(const char* name) :
+            name_      { name                },
+            startTick_ { LLGL::Timer::Tick() }
         {
-            timer_->Start();
         }
 
-        ~StopWatchScope()
+        ~StopwatchScope()
         {
-            auto ticks = timer_->Stop();
-            auto elapsedTime = (static_cast<double>(ticks) / static_cast<double>(timer_->GetFrequency())) * 1000.0;
+            auto endTick = LLGL::Timer::Tick();
+            auto elapsedTime = (static_cast<double>(endTick - startTick_) / static_cast<double>(LLGL::Timer::Frequency())) * 1000.0;
             printf("%s: %fms\n", name_, elapsedTime);
         }
 
     private:
 
         const char*     name_;
-        LLGL::Timer*    timer_;
+        std::uint64_t   startTick_;
 
 };
 
@@ -85,7 +72,7 @@ int main()
         for (int n = 0; n < 10; ++n)
         {
             {
-                StopWatchScope scope{ "LLGL::ArrayList<int>::push_back(0 .. 10000000)" };
+                StopwatchScope scope{ "LLGL::SmallVector<int>::push_back(0 .. 10000000)" };
 
                 LLGL::SmallVector<int> l1;
                 l1.reserve(10000000);
@@ -94,7 +81,7 @@ int main()
             }
 
             {
-                StopWatchScope scope{ "std::vector<int>::push_back(0 .. 10000000)" };
+                StopwatchScope scope{ "std::vector<int>::push_back(0 .. 10000000)" };
 
                 std::vector<int> l2;
                 l2.push_back(1);

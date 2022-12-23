@@ -34,7 +34,6 @@ class ShaderProgram;
 class Surface;
 class SwapChain;
 class Texture;
-class Timer;
 class Window;
 
 struct ApplicationDescriptor;

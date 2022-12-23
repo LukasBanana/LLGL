@@ -321,8 +321,8 @@ private:
     void OnDrawFrame() override
     {
         // Update scene by user input
-        timer->MeasureTime();
-        UpdateScene(static_cast<float>(timer->GetDeltaTime()));
+        timer.MeasureTime();
+        UpdateScene(static_cast<float>(timer.GetDeltaTime()));
 
         commands->Begin();
         {

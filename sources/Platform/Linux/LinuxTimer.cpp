@@ -5,65 +5,38 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "LinuxTimer.h"
-#include "../../Core/Helper.h"
-#include <algorithm>
-#include <cstdint>
+#include <LLGL/Timer.h>
+#include <time.h>
 
 
 namespace LLGL
 {
 
-
-std::unique_ptr<Timer> Timer::Create()
+namespace Timer
 {
-    return MakeUnique<LinuxTimer>();
-}
 
-LinuxTimer::LinuxTimer()
-{
-    startTime_.tv_sec   = 0;
-    startTime_.tv_nsec  = 0;
-}
 
-void LinuxTimer::Start()
+static const std::uint64_t g_nsecFrequency = 1000000000ull;
+
+LLGL_EXPORT std::uint64_t Frequency()
 {
-    running_ = true;
-    clock_gettime(CLOCK_MONOTONIC, &startTime_);
+    return g_nsecFrequency;
 }
 
 static std::uint64_t MonotonicTimeToUInt64(const timespec& t)
 {
-    return (static_cast<std::uint64_t>(t.tv_sec) * 1000000000ull + static_cast<std::uint64_t>(t.tv_nsec));
+    return (static_cast<std::uint64_t>(t.tv_sec) * g_nsecFrequency + static_cast<std::uint64_t>(t.tv_nsec));
 }
 
-std::uint64_t LinuxTimer::Stop()
+LLGL_EXPORT std::uint64_t Tick()
 {
-    if (running_)
-    {
-        running_ = false;
-
-        timespec endTime;
-        clock_gettime(CLOCK_MONOTONIC, &endTime);
-
-        auto t0 = MonotonicTimeToUInt64(startTime_);
-        auto t1 = MonotonicTimeToUInt64(endTime);
-
-        return (t1 > t0 ? t1 - t0 : 0);
-    }
-    return 0;
+    timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return MonotonicTimeToUInt64(t);
 }
 
-std::uint64_t LinuxTimer::GetFrequency() const
-{
-    return 1000000000ull;
-}
 
-bool LinuxTimer::IsRunning() const
-{
-    return running_;
-}
-
+} // /namespace Timer
 
 } // /namespace LLGL
 

@@ -600,9 +600,9 @@ private:
         }
 
         // Update timer
-        timer->MeasureTime();
+        timer.MeasureTime();
         sceneState.damping      = (1.0f - std::pow(10.0f, -dampingFactor));
-        sceneState.dTime        = std::max(0.0001f, static_cast<float>(timer->GetDeltaTime()));
+        sceneState.dTime        = std::max(0.0001f, static_cast<float>(timer.GetDeltaTime()));
         sceneState.dStiffness   = 1.0f - std::pow(1.0f - stiffnessFactor, 1.0f / static_cast<float>(numSolverIterations));
         sceneState.gravity      = Gs::Vector4f{ gravityVector, 0.0f };
 

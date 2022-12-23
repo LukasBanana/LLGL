@@ -9,68 +9,39 @@
 #define LLGL_TIMER_H
 
 
-#include "Interface.h"
-#include <memory>
+#include <LLGL/Export.h>
 #include <cstdint>
 
 
 namespace LLGL
 {
 
-
-/**
-\brief Interface for a Timer class.
-\remarks This basic class is also designed as interface, since the native timer is platform specific.
-*/
-class LLGL_EXPORT Timer : public Interface
+namespace Timer
 {
 
-        LLGL_DECLARE_INTERFACE( InterfaceID::Timer );
 
-    public:
+/**
+\brief Returns the timer frequency of the OS. This is the number of ticks per seconds, e.g. 1,000,000 for microseconds.
+\see Tick
+*/
+LLGL_EXPORT std::uint64_t Frequency();
 
-        //! Creates a platform specific timer object.
-        static std::unique_ptr<Timer> Create();
+/**
+\brief Returns the current 'tick' of a high resolution timer that is OS dependent. The tick frequency can be queried with Frequency.
+\remarks The following example illustrates how to query the elapsed time in milliseconds between two time stamps:
+\code
+const std::uint64_t startTime = LLGL::Timer::Tick();
+// Some events ...
+const std::uint64_t endTime = LLGL::Timer::Tick();
+const double elapsedSeconds = static_cast<double>(endTime - startTime) / LLGL::Timer::Frequency();
+std::cout << "Elapsed time: " << elapsedSeconds * 1000.0 << "ms" << std::endl;
+\endcode
+\see Frequency
+*/
+LLGL_EXPORT std::uint64_t Tick();
 
-        //! Starts the timer.
-        virtual void Start() = 0;
 
-        //! Stops the timer and returns the elapsed ticks since "Start" was called.
-        virtual std::uint64_t Stop() = 0;
-
-        //! Returns the frequency resolution of this timer, or rather 'ticks per second' (e.g. for microseconds this is 1000000).
-        virtual std::uint64_t GetFrequency() const = 0;
-
-        /**
-        \brief Returns true if the timer is currently running.
-        \remarks This is true between a call to "Start" and a call to "Stop".
-        \see Start
-        \see Stop
-        */
-        virtual bool IsRunning() const = 0;
-
-        /**
-        \brief Measures the time (elapsed time, and frame count) for each frame.
-        \see GetDeltaTime
-        */
-        void MeasureTime();
-
-        /**
-        \brief Returns the elapsed time (in seconds) between the current and the previous frame.
-        \remarks This requires that "MeasureTime" is called once every frame.
-        \see MeasureTime
-        */
-        inline double GetDeltaTime() const
-        {
-            return deltaTime_;
-        }
-
-    private:
-
-        double deltaTime_ = 0.0;
-
-};
-
+} // /namespace Timer
 
 } // /namespace LLGL
 

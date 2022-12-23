@@ -157,11 +157,11 @@ private:
 
     void OnDrawFrame() override
     {
-        timer->MeasureTime();
+        timer.MeasureTime();
 
         // Update constant buffer
         static float rotation;
-        rotation += static_cast<float>(timer->GetDeltaTime()) * 0.5f;
+        rotation += static_cast<float>(timer.GetDeltaTime()) * 0.5f;
 
         settings.wvpMatrix = projection;
         Gs::Translate(settings.wvpMatrix, { 0, 0, 7 });

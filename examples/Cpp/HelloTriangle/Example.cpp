@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer(LLGL::CommandBufferFlags::ImmediateSubmit);
 
         #ifdef ENABLE_TIMER
-        auto timer = LLGL::Timer::Create();
+        Stopwatch timer;
         auto start = std::chrono::system_clock::now();
         #endif
 
@@ -229,11 +229,11 @@ int main(int argc, char* argv[])
         while (window.ProcessEvents())
         {
             #ifdef ENABLE_TIMER
-            timer->MeasureTime();
+            timer.MeasureTime();
             auto end = std::chrono::system_clock::now();
             if (std::chrono::duration_cast<std::chrono::seconds>(end - start).count() > 0)
             {
-                std::cout << "Rendertime: " << timer->GetDeltaTime() << ", FPS: " << 1.0 / timer->GetDeltaTime() << '\n';
+                std::cout << "Rendertime: " << timer.GetDeltaTime() << ", FPS: " << 1.0 / timer.GetDeltaTime() << '\n';
                 start = end;
             }
             #endif

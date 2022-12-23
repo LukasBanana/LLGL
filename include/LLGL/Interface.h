@@ -40,7 +40,6 @@ namespace LLGL
 \see RenderSystem
 \see RenderSystemChild
 \see Surface
-\see Timer
 */
 class LLGL_EXPORT Interface : public NonCopyable
 {

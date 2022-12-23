@@ -5,42 +5,38 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "AndroidTimer.h"
-#include "../../Core/Helper.h"
+#include <LLGL/Timer.h>
+#include <time.h>
 
 
 namespace LLGL
 {
 
-
-std::unique_ptr<Timer> Timer::Create()
+namespace Timer
 {
-    return MakeUnique<AndroidTimer>();
+
+
+static const std::uint64_t g_nsecFrequency = 1000000000ull;
+
+LLGL_EXPORT std::uint64_t Frequency()
+{
+    return g_nsecFrequency;
 }
 
-AndroidTimer::AndroidTimer()
+static std::uint64_t MonotonicTimeToUInt64(const timespec& t)
 {
+    return (static_cast<std::uint64_t>(t.tv_sec) * g_nsecFrequency + static_cast<std::uint64_t>(t.tv_nsec));
 }
 
-void AndroidTimer::Start()
+LLGL_EXPORT std::uint64_t Tick()
 {
+    timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return MonotonicTimeToUInt64(t);
 }
 
-std::uint64_t AndroidTimer::Stop()
-{
-    return 0;
-}
 
-std::uint64_t AndroidTimer::GetFrequency() const
-{
-    return 0;
-}
-
-bool AndroidTimer::IsRunning() const
-{
-    return false;
-}
-
+} // /namespace Timer
 
 } // /namespace LLGL
 

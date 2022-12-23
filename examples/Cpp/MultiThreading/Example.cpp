@@ -26,22 +26,21 @@ class Measure
 
         // Interval (in milliseconds) to the next measurement result.
         Measure(std::uint64_t interval = 1000, const std::string& title = "Average Time") :
-            timer_    { LLGL::Timer::Create() },
-            interval_ { interval              },
-            title_    { title                 }
+            interval_ { interval },
+            title_    { title    }
         {
         }
 
         void Start()
         {
             // Start timer
-            timer_->Start();
+            timer_.Start();
         }
 
         void Stop()
         {
             // Take sample
-            elapsed_ += timer_->Stop();
+            elapsed_ += timer_.Stop();
             ++samples_;
 
             // Check if average elapsed time can be printed again
@@ -62,7 +61,7 @@ class Measure
             if (samples_ > 0)
             {
                 auto averageTime = static_cast<double>(elapsed_);
-                averageTime /= static_cast<double>(timer_->GetFrequency());
+                averageTime /= static_cast<double>(timer_.GetFrequency());
                 averageTime *= 1000000.0;
                 averageTime /= static_cast<double>(samples_);
 
@@ -78,12 +77,12 @@ class Measure
 
     private:
 
-        std::unique_ptr<LLGL::Timer>    timer_;
-        std::uint64_t                   interval_           = 0;
-        TimePoint                       intervalStartTime_;
-        std::uint64_t                   samples_            = 0;
-        std::uint64_t                   elapsed_            = 0;
-        std::string                     title_;
+        Stopwatch       timer_;
+        std::uint64_t   interval_           = 0;
+        TimePoint       intervalStartTime_;
+        std::uint64_t   samples_            = 0;
+        std::uint64_t   elapsed_            = 0;
+        std::string     title_;
 
 };
 

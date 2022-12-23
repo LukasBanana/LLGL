@@ -5,54 +5,36 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "MacOSTimer.h"
-#include "../../Core/Helper.h"
+#include <LLGL/Timer.h>
+#include <mach/mach_time.h>
 
 
 namespace LLGL
 {
 
-
-std::unique_ptr<Timer> Timer::Create()
+namespace Timer
 {
-    return MakeUnique<MacOSTimer>();
+
+
+static const std::uint64_t g_nsecFrequency = 1000000000ull;
+
+LLGL_EXPORT std::uint64_t Frequency()
+{
+    return g_nsecFrequency;
 }
 
-MacOSTimer::MacOSTimer()
+LLGL_EXPORT std::uint64_t Tick()
 {
-    mach_timebase_info(&timebaseInfo_);
-    if (timebaseInfo_.denom == 0)
-        throw std::runtime_error("failed to retrieve base information for high resolution timer");
+    mach_timebase_info_data_t timebase;
+    mach_timebase_info(&timebase);
+    if (timebase.denom > 0)
+        return (mach_absolute_time() * timebase.numer) / timebase.denom;
+    else
+        return 0;
 }
 
-void MacOSTimer::Start()
-{
-    running_    = true;
-    startTime_  = mach_absolute_time();
-}
 
-std::uint64_t MacOSTimer::Stop()
-{
-    if (running_)
-    {
-        running_ = false;
-        auto elapsed        = mach_absolute_time() - startTime_;
-        auto elapsedNano    = elapsed * timebaseInfo_.numer / timebaseInfo_.denom;
-        return static_cast<std::uint64_t>(elapsedNano);
-    }
-    return 0;
-}
-
-std::uint64_t MacOSTimer::GetFrequency() const
-{
-    return 1000000000ull;
-}
-
-bool MacOSTimer::IsRunning() const
-{
-    return running_;
-}
-
+} // /namespace Timer
 
 } // /namespace LLGL
 

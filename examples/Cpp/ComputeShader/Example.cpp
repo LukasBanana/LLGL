@@ -277,13 +277,13 @@ private:
 
     void OnDrawFrame() override
     {
-        timer->MeasureTime();
+        timer.MeasureTime();
 
         // Record and submit compute commands
         commands->Begin();
         {
             // Update timer
-            sceneState.time += static_cast<float>(timer->GetDeltaTime());
+            sceneState.time += static_cast<float>(timer.GetDeltaTime());
             commands->UpdateBuffer(*inputBuffer, 0, &sceneState, sizeof(sceneState));
 
             // Run compute shader

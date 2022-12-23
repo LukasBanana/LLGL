@@ -267,7 +267,6 @@ ExampleBase::ExampleBase(
     profilerObj_ { new LLGL::RenderingProfiler() },
     debuggerObj_ { new LLGL::RenderingDebugger() },
     samples_     { samples                       },
-    timer        { LLGL::Timer::Create()         },
     profiler     { *profilerObj_                 }
 {
     // Set report callback to standard output

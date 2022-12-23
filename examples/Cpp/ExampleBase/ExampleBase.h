@@ -22,6 +22,7 @@
 #include <map>
 #include <type_traits>
 #include "GeometryUtility.h"
+#include "Stopwatch.h"
 
 #ifdef LLGL_OS_ANDROID
 #   include <android_native_app_glue.h>
@@ -160,7 +161,7 @@ protected:
     LLGL::Input                                 input;
 
     // Primary timer object
-    std::unique_ptr<LLGL::Timer>                timer;
+    Stopwatch                                   timer;
 
     // Rendering profiler (read only)
     const LLGL::RenderingProfiler&              profiler;

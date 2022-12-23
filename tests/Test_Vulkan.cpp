@@ -231,11 +231,6 @@ int main()
         // Add input event listener
         LLGL::Input input{ *window };
 
-        auto frameTimer = LLGL::Timer::Create();
-        auto printTime = std::chrono::system_clock::now();
-
-        //auto fence = renderer->CreateFence();
-
         int vsyncInterval = 1;
         swapChain->SetVsyncInterval(vsyncInterval);
 

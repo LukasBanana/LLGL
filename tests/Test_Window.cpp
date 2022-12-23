@@ -56,8 +56,6 @@ int main()
 
         window->AddEventListener(std::make_shared<WindowEventHandler>());
 
-        auto timer = LLGL::Timer::Create();
-
         auto pos = window->GetPosition();
 
         printWindowSize(*window);
@@ -83,10 +81,6 @@ int main()
 
         while (window->ProcessEvents() && !input.KeyPressed(LLGL::Key::Escape))
         {
-            timer->MeasureTime();
-
-            //std::cout << 1.0 / timer->GetDeltaTime() << std::endl;
-
             #ifdef __APPLE__
             if (input.KeyDown(LLGL::Key::D1))
                 window->Show(false);

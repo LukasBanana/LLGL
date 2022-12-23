@@ -10,7 +10,6 @@
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
 #include <LLGL/Input.h>
-#include <LLGL/Timer.h>
 #include <LLGL/Display.h>
 
 
@@ -38,7 +37,6 @@ LLGL_IMPLEMENT_INTERFACE( Window::EventListener,    Interface         )
 LLGL_IMPLEMENT_INTERFACE( Input,                    Interface         )
 LLGL_IMPLEMENT_INTERFACE( Canvas,                   Surface           )
 LLGL_IMPLEMENT_INTERFACE( Canvas::EventListener,    Interface         )
-LLGL_IMPLEMENT_INTERFACE( Timer,                    Interface         )
 LLGL_IMPLEMENT_INTERFACE( Display,                  Interface         )
 LLGL_IMPLEMENT_INTERFACE( ResourceHeap,             RenderSystemChild )
 LLGL_IMPLEMENT_INTERFACE( Resource,                 RenderSystemChild )
