@@ -69,15 +69,6 @@ class GLSwapChain final : public SwapChain
 
     private:
 
-        struct RenderState
-        {
-            GLenum      drawMode            = GL_TRIANGLES;
-            GLenum      indexBufferDataType = GL_UNSIGNED_INT;
-            GLintptr    indexBufferStride   = 4;
-        };
-
-    private:
-
         bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         bool SetSwapInterval(int swapInterval);
@@ -90,8 +81,7 @@ class GLSwapChain final : public SwapChain
 
         std::shared_ptr<GLContext>          context_;
         std::unique_ptr<GLSwapChainContext> swapChainContext_;
-        RenderState                         renderState_;
-        GLint                               contextHeight_  = 0;
+        GLint                               contextHeight_      = 0;
 
 };
 
