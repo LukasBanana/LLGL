@@ -102,6 +102,16 @@ struct BufferDescriptor
 */
 struct BufferViewDescriptor
 {
+    BufferViewDescriptor() = default;
+
+    //! Initializes the descriptor with all or only some of the components.
+    inline BufferViewDescriptor(Format format, std::uint64_t offset = 0, std::uint64_t size = Constants::wholeSize) :
+        format { format },
+        offset { offset },
+        size   { size   }
+    {
+    }
+
     /**
     \brief Specifies the format of the buffer view. By default Format::Undefined.
     \remarks If the buffer resource was created with a \c stride greater than zero, this must be Format::Undefined.

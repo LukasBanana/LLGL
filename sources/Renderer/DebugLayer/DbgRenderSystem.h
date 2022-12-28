@@ -156,6 +156,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateConstantBufferSize(std::uint64_t size);
         void ValidateBufferBoundary(std::uint64_t bufferSize, std::uint64_t dstOffset, std::uint64_t dataSize);
         void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
+        void ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewDescriptor& viewDesc, const BindingDescriptor& bindingDesc);
 
         void ValidateTextureDesc(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc = nullptr);
         void ValidateTextureFormatSupported(const Format format);

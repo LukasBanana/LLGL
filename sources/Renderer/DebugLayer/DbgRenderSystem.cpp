@@ -340,7 +340,8 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
     /* Create copy of descriptor to pass native renderer object references */
     auto instanceDesc = desc;
     {
-        instanceDesc.pipelineLayout = &(LLGL_CAST(DbgPipelineLayout*, desc.pipelineLayout)->instance);
+        auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, desc.pipelineLayout);
+        instanceDesc.pipelineLayout = &(pipelineLayoutDbg->instance);
 
         for (auto& resourceView : instanceDesc.resourceViews)
         {
@@ -776,6 +777,31 @@ void DbgRenderSystem::ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory
     {
         if (!bufferDbg.mapped)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot unmap buffer that was not previously mapped to CPU local memory");
+    }
+}
+
+static std::uint64_t GetMinAlignmentForBufferBinding(const BindingDescriptor& binding, const RenderingLimits& limits)
+{
+    std::uint64_t alignment = 0;
+    if ((binding.bindFlags & BindFlags::ConstantBuffer) != 0)
+        alignment = limits.minConstantBufferAlignment;
+    if ((binding.bindFlags & BindFlags::Sampled) != 0)
+        alignment = (std::max)(alignment, limits.minSampledBufferAlignment);
+    if ((binding.bindFlags & BindFlags::Storage) != 0)
+        alignment = (std::max)(alignment, limits.minStorageBufferAlignment);
+    return alignment;
+}
+
+void DbgRenderSystem::ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewDescriptor& viewDesc, const BindingDescriptor& bindingDesc)
+{
+    const auto minAlignment = GetMinAlignmentForBufferBinding(bindingDesc, limits_);
+    if (viewDesc.offset % minAlignment != 0 || viewDesc.size % minAlignment != 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "buffer view '" + bindingDesc.name + "' at slot " + std::to_string(bindingDesc.slot) +
+            " does not satisfy minimum alignment of " + std::to_string(minAlignment) + " bytes"
+        );
     }
 }
 
@@ -1313,8 +1339,8 @@ void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescripto
             {
                 auto bufferDbg = LLGL_CAST(DbgBuffer*, resource);
                 ValidateBufferForBinding(*bufferDbg, bindingDesc);
-                //if (IsBufferViewEnabled(rvDesc.bufferView))
-                //    ValidateBufferView(*bufferDbg, rvDesc.bufferView);
+                if (IsBufferViewEnabled(rvDesc.bufferView))
+                    ValidateBufferView(*bufferDbg, rvDesc.bufferView, bindingDesc);
             }
             break;
 
