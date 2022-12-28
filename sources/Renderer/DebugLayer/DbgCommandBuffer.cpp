@@ -12,14 +12,14 @@
 #include "../../Core/Helper.h"
 
 #include "DbgSwapChain.h"
-#include "DbgBuffer.h"
-#include "DbgBufferArray.h"
-#include "DbgTexture.h"
-#include "DbgRenderTarget.h"
-#include "DbgShaderProgram.h"
-#include "DbgQueryHeap.h"
-#include "DbgPipelineState.h"
-#include "DbgResourceHeap.h"
+#include "Buffer/DbgBuffer.h"
+#include "Buffer/DbgBufferArray.h"
+#include "RenderState/DbgQueryHeap.h"
+#include "RenderState/DbgPipelineState.h"
+#include "RenderState/DbgResourceHeap.h"
+#include "Shader/DbgShaderProgram.h"
+#include "Texture/DbgTexture.h"
+#include "Texture/DbgRenderTarget.h"
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>

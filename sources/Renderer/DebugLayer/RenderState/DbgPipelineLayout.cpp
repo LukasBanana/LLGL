@@ -6,7 +6,7 @@
  */
 
 #include "DbgPipelineLayout.h"
-#include "DbgCore.h"
+#include "../DbgCore.h"
 
 
 namespace LLGL

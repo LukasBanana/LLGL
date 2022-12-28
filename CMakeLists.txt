@@ -241,6 +241,10 @@ endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)
     file(GLOB FilesRendererDbg              ${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/*.*)
+    file(GLOB FilesRendererDbgBuffer        ${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/Buffer/*.*)
+    file(GLOB FilesRendererDbgRenderState   ${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/RenderState/*.*)
+    file(GLOB FilesRendererDbgShader        ${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/Shader/*.*)
+    file(GLOB FilesRendererDbgTexture       ${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/Texture/*.*)
 endif()
 
 if(WIN32)
@@ -431,6 +435,10 @@ source_group("Sources\\Renderer" FILES ${FilesRenderer})
 
 if(LLGL_ENABLE_DEBUG_LAYER)
     source_group("Sources\\Renderer\\DebugLayer" FILES ${FilesRendererDbg})
+    source_group("Sources\\Renderer\\DebugLayer\\Buffer" FILES ${FilesRendererDbgBuffer})
+    source_group("Sources\\Renderer\\DebugLayer\\RenderState" FILES ${FilesRendererDbgRenderState})
+    source_group("Sources\\Renderer\\DebugLayer\\Shader" FILES ${FilesRendererDbgShader})
+    source_group("Sources\\Renderer\\DebugLayer\\Texture" FILES ${FilesRendererDbgTexture})
 endif()
 
 source_group("Sources\\OpenGL" FILES ${FilesRendererGL})
@@ -521,7 +529,15 @@ if(LLGL_ENABLE_JIT_COMPILER)
 endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)
-    set(FilesLLGL ${FilesLLGL} ${FilesRendererDbg})
+    set(
+        FilesLLGL
+        ${FilesLLGL}
+        ${FilesRendererDbg}
+        ${FilesRendererDbgBuffer}
+        ${FilesRendererDbgRenderState}
+        ${FilesRendererDbgShader}
+        ${FilesRendererDbgTexture}
+    )
 endif()
 
 set(

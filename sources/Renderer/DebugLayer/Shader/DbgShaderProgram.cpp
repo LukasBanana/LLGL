@@ -7,8 +7,8 @@
 
 #include "DbgShaderProgram.h"
 #include "DbgShader.h"
-#include "DbgCore.h"
-#include "../CheckedCast.h"
+#include "../DbgCore.h"
+#include "../../CheckedCast.h"
 #include <LLGL/TypeNames.h>
 
 

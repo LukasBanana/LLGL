@@ -13,7 +13,7 @@
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/StaticLimits.h>
 #include <LLGL/Container/ArrayView.h>
-#include "DbgQueryHeap.h"
+#include "RenderState/DbgQueryHeap.h"
 #include "DbgQueryTimerManager.h"
 #include <cstdint>
 #include <string>

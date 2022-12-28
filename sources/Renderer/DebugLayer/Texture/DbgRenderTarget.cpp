@@ -7,8 +7,8 @@
 
 #include "DbgRenderTarget.h"
 #include "DbgTexture.h"
-#include "DbgCore.h"
-#include "../CheckedCast.h"
+#include "../DbgCore.h"
+#include "../../CheckedCast.h"
 
 
 namespace LLGL

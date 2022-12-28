@@ -7,8 +7,8 @@
 
 #include "DbgResourceHeap.h"
 #include "DbgPipelineLayout.h"
-#include "DbgCore.h"
-#include "../CheckedCast.h"
+#include "../DbgCore.h"
+#include "../../CheckedCast.h"
 
 
 namespace LLGL

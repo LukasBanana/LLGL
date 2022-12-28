@@ -6,7 +6,7 @@
  */
 
 #include "DbgShader.h"
-#include "DbgCore.h"
+#include "../DbgCore.h"
 
 
 namespace LLGL
