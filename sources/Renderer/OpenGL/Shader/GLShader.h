@@ -12,6 +12,7 @@
 #include <LLGL/Shader.h>
 #include "../OpenGL.h"
 #include "../../../Core/LinearStringContainer.h"
+#include <functional>
 
 
 namespace LLGL
@@ -24,47 +25,13 @@ struct GLShaderAttribute
     const GLchar*   name;
 };
 
-class GLShader final : public Shader
+// Callback interface for shader source patching.
+using ShaderSourceCallback = std::function<void(const char* source)>;
+
+class GLShader : public Shader
 {
 
     public:
-
-        void SetName(const char* name) override;
-
-        bool HasErrors() const override;
-
-        std::string GetReport() const override;
-
-    public:
-
-        // Compiles a native GL shader from source.
-        static void CompileShaderSource(GLuint shader, const char* source);
-
-        // Compiles a native GL shader from source and adds the specified macro definitions at the top of the source but after the '#version'-directive.
-        static void CompileShaderSourceWithOptions(
-            GLuint              shader,
-            const char*         source,
-            const ShaderMacro*  defines,
-            bool                pragmaOptimizeOff   = false,
-            const char*         vertexTransformStmt = nullptr
-        );
-
-        // Returns true if the native GL shader was compiled successfully.
-        static bool GetCompileStatus(GLuint shader);
-
-        // Returns the native GL shader log and returns true on success. Otherwise, there is no log available.
-        static std::string GetGLShaderLog(GLuint shader);
-
-    public:
-
-        GLShader(const ShaderDescriptor& desc);
-        ~GLShader();
-
-        // Returns the native shader ID.
-        inline GLuint GetID() const
-        {
-            return id_;
-        }
 
         // Returns the vertex input attributes:
         const GLShaderAttribute* GetVertexAttribs() const;
@@ -80,21 +47,56 @@ class GLShader final : public Shader
             return transformFeedbackVaryings_;
         }
 
+        // Returns the native shader ID. Can be either from glCreateShader or glCreateShaderProgramv.
+        inline GLuint GetID() const
+        {
+            return id_;
+        }
+
+        // Returns true if this is a separable shader, i.e. of type <GLSeparableShader>. Otherwise, it's of type <GLLegacyShader>.
+        inline bool IsSeparable() const
+        {
+            return isSeparable_;
+        }
+
+    public:
+
+        // Patches the shader source and invokes the callback with the preprocessed shader.
+        static void PatchShaderSource(
+            const ShaderSourceCallback& sourceCallback,
+            const ShaderDescriptor&     shaderDesc
+        );
+
+        // Patches the shader source with the specified options: macro definitions, pragma directives, additional statements etc.
+        static void PatchShaderSourceWithOptions(
+            const ShaderSourceCallback& sourceCallback,
+            const char*                 source,
+            const ShaderMacro*          defines,
+            bool                        pragmaOptimizeOff   = false,
+            const char*                 vertexTransformStmt = nullptr
+        );
+
+    protected:
+
+        GLShader(const bool isSeparable, const ShaderDescriptor& desc);
+
+        // Stores the native shader ID.
+        inline void SetID(GLuint id)
+        {
+            id_ = id;
+        }
+
     private:
 
-        void BuildShader(const ShaderDescriptor& shaderDesc);
         void ReserveAttribs(const ShaderDescriptor& desc);
         void BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
         void BuildFragmentOutputLayout(std::size_t numFragmentAttribs, const FragmentAttribute* fragmentAttribs);
         void BuildTransformFeedbackVaryings(std::size_t numVaryings, const VertexAttribute* varyings);
 
-        void CompileSource(const ShaderDescriptor& shaderDesc);
-        void LoadBinary(const ShaderDescriptor& shaderDesc);
-
     private:
 
-        GLuint                          id_                         = 0;
-
+        const bool                      isSeparable_;
+        GLuint                          id_                         = 0; // ID from either glCreateShader or glCreateShaderProgramv
         LinearStringContainer           shaderAttribNames_;
         std::vector<GLShaderAttribute>  shaderAttribs_;
         std::size_t                     numVertexAttribs_           = 0;

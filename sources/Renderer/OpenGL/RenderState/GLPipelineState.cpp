@@ -28,16 +28,15 @@ static bool AnyNamesInPipelineLayout(const GLPipelineLayout& pipelineLayout)
 }
 
 GLPipelineState::GLPipelineState(
-    bool                    isGraphicsPSO,
-    const PipelineLayout*   pipelineLayout,
-    const ShaderProgram*    shaderProgram)
+    bool                        isGraphicsPSO,
+    const PipelineLayout*       pipelineLayout,
+    const ArrayView<Shader*>&   shaders)
 :
     isGraphicsPSO_ { isGraphicsPSO }
 {
-    /* Convert shader state */
-    shaderProgram_ = LLGL_CAST(const GLShaderProgram*, shaderProgram);
-    if (!shaderProgram_)
-        throw std::invalid_argument("failed to create pipeline state due to missing shader program");
+    /* Create shader pipeline */
+    shaderPipeline_ = GLStatePool::Get().CreateShaderPipeline(shaders.size(), shaders.data());
+    shaderPipeline_->QueryInfoLogs(report_);
 
     /* Create shader binding layout by binding descriptor */
     if (pipelineLayout != nullptr)
@@ -55,17 +54,23 @@ GLPipelineState::GLPipelineState(
 
 GLPipelineState::~GLPipelineState()
 {
+    GLStatePool::Get().ReleaseShaderPipeline(std::move(shaderPipeline_));
     GLStatePool::Get().ReleaseShaderBindingLayout(std::move(shaderBindingLayout_));
+}
+
+const Report* GLPipelineState::GetReport() const
+{
+    return (report_.HasErrors() || report_.GetText() != nullptr ? &report_ : nullptr);
 }
 
 void GLPipelineState::Bind(GLStateManager& stateMngr)
 {
     /* Bind shader program and discard rasterizer if there is no fragment shader */
-    stateMngr.BindShaderProgram(shaderProgram_->GetID());
+    shaderPipeline_->Bind(stateMngr);
 
     /* Update resource slots in shader program (if necessary) */
     if (shaderBindingLayout_)
-        shaderProgram_->BindResourceSlots(*shaderBindingLayout_);
+        shaderPipeline_->BindResourceSlots(*shaderBindingLayout_);
 }
 
 

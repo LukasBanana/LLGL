@@ -8,7 +8,9 @@
 #include "GLShaderBindingLayout.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
+#include "../RenderState/GLStateManager.h"
 #include "../../../Core/HelperMacros.h"
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -57,21 +59,49 @@ GLShaderBindingLayout::GLShaderBindingLayout(const GLPipelineLayout& pipelineLay
     }
 }
 
-void GLShaderBindingLayout::BindResourceSlots(GLuint program) const
+void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManager* stateMngr) const
 {
     std::size_t resourceIndex = 0;
 
     /* Set uniform bindings */
-    for (std::uint8_t i = 0; i < numUniformBindings_; ++i)
+    if (HasExtension(GLExt::ARB_separate_shader_objects))
     {
-        const auto& resource = bindings_[resourceIndex++];
-        auto blockIndex = glGetUniformLocation(program, resource.name.c_str());
-        if (blockIndex != GL_INVALID_INDEX)
-            glUniform1i(blockIndex, static_cast<GLint>(resource.slot));
+        for_range(i, numUniformBindings_)
+        {
+            const auto& resource = bindings_[resourceIndex++];
+            auto blockIndex = glGetUniformLocation(program, resource.name.c_str());
+            if (blockIndex != GL_INVALID_INDEX)
+                glProgramUniform1i(program, blockIndex, static_cast<GLint>(resource.slot));
+        }
+    }
+    else if (stateMngr != nullptr)
+    {
+        stateMngr->PushBoundShaderProgram();
+        stateMngr->BindShaderProgram(program);
+        {
+            for_range(i, numUniformBindings_)
+            {
+                const auto& resource = bindings_[resourceIndex++];
+                auto blockIndex = glGetUniformLocation(program, resource.name.c_str());
+                if (blockIndex != GL_INVALID_INDEX)
+                    glUniform1i(blockIndex, static_cast<GLint>(resource.slot));
+            }
+        }
+        stateMngr->PopBoundShaderProgram();
+    }
+    else
+    {
+        for_range(i, numUniformBindings_)
+        {
+            const auto& resource = bindings_[resourceIndex++];
+            auto blockIndex = glGetUniformLocation(program, resource.name.c_str());
+            if (blockIndex != GL_INVALID_INDEX)
+                glUniform1i(blockIndex, static_cast<GLint>(resource.slot));
+        }
     }
 
     /* Set uniform-block bindings */
-    for (std::uint8_t i = 0; i < numUniformBlockBindings_; ++i)
+    for_range(i, numUniformBlockBindings_)
     {
         const auto& resource = bindings_[resourceIndex++];
         auto blockIndex = glGetUniformBlockIndex(program, resource.name.c_str());
@@ -81,7 +111,7 @@ void GLShaderBindingLayout::BindResourceSlots(GLuint program) const
 
     /* Set shader-storage bindings */
     #ifdef LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
-    for (std::uint8_t i = 0; i < numShaderStorageBindings_; ++i)
+    for_range(i, numShaderStorageBindings_)
     {
         const auto& resource = bindings_[resourceIndex++];
         auto blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, resource.name.c_str());
@@ -101,7 +131,7 @@ int GLShaderBindingLayout::CompareSWO(const GLShaderBindingLayout& lhs, const GL
     /* Compare number of bindings first; if equal we can use one of the arrays only */
     LLGL_COMPARE_MEMBER_SWO( bindings_.size() );
 
-    for (std::size_t i = 0, n = lhs.bindings_.size(); i < n; ++i)
+    for_range(i, lhs.bindings_.size())
     {
         LLGL_COMPARE_MEMBER_SWO( bindings_[i].slot );
         LLGL_COMPARE_MEMBER_SWO( bindings_[i].name );

@@ -345,7 +345,7 @@ static bool Load_GL_ARB_get_program_binary(bool usePlaceholder)
 {
     LOAD_GLPROC( glGetProgramBinary  );
     LOAD_GLPROC( glProgramBinary     );
-    LOAD_GLPROC( glProgramParameteri );
+    LOAD_GLPROC( glProgramParameteri ); // Duplicate in GL_ARB_separate_shader_objects
     return true;
 }
 
@@ -357,6 +357,72 @@ static bool Load_GL_ARB_program_interface_query(bool usePlaceholder)
     LOAD_GLPROC( glGetProgramResourceiv            );
     LOAD_GLPROC( glGetProgramResourceLocation      );
     LOAD_GLPROC( glGetProgramResourceLocationIndex );
+    return true;
+}
+
+static bool Load_GL_ARB_separate_shader_objects(bool usePlaceholder)
+{
+    LOAD_GLPROC( glUseProgramStages          );
+    LOAD_GLPROC( glActiveShaderProgram       );
+    LOAD_GLPROC( glCreateShaderProgramv      );
+    LOAD_GLPROC( glBindProgramPipeline       );
+    LOAD_GLPROC( glDeleteProgramPipelines    );
+    LOAD_GLPROC( glGenProgramPipelines       );
+    LOAD_GLPROC( glIsProgramPipeline         );
+    LOAD_GLPROC( glProgramParameteri         ); // Duplicate in GL_ARB_get_program_binary
+    LOAD_GLPROC( glGetProgramPipelineiv      );
+    LOAD_GLPROC( glProgramUniform1i          );
+    LOAD_GLPROC( glProgramUniform2i          );
+    LOAD_GLPROC( glProgramUniform3i          );
+    LOAD_GLPROC( glProgramUniform4i          );
+    LOAD_GLPROC( glProgramUniform1ui         );
+    LOAD_GLPROC( glProgramUniform2ui         );
+    LOAD_GLPROC( glProgramUniform3ui         );
+    LOAD_GLPROC( glProgramUniform4ui         );
+    LOAD_GLPROC( glProgramUniform1f          );
+    LOAD_GLPROC( glProgramUniform2f          );
+    LOAD_GLPROC( glProgramUniform3f          );
+    LOAD_GLPROC( glProgramUniform4f          );
+    LOAD_GLPROC( glProgramUniform1d          );
+    LOAD_GLPROC( glProgramUniform2d          );
+    LOAD_GLPROC( glProgramUniform3d          );
+    LOAD_GLPROC( glProgramUniform4d          );
+    LOAD_GLPROC( glProgramUniform1iv         );
+    LOAD_GLPROC( glProgramUniform2iv         );
+    LOAD_GLPROC( glProgramUniform3iv         );
+    LOAD_GLPROC( glProgramUniform4iv         );
+    LOAD_GLPROC( glProgramUniform1uiv        );
+    LOAD_GLPROC( glProgramUniform2uiv        );
+    LOAD_GLPROC( glProgramUniform3uiv        );
+    LOAD_GLPROC( glProgramUniform4uiv        );
+    LOAD_GLPROC( glProgramUniform1fv         );
+    LOAD_GLPROC( glProgramUniform2fv         );
+    LOAD_GLPROC( glProgramUniform3fv         );
+    LOAD_GLPROC( glProgramUniform4fv         );
+    LOAD_GLPROC( glProgramUniform1dv         );
+    LOAD_GLPROC( glProgramUniform2dv         );
+    LOAD_GLPROC( glProgramUniform3dv         );
+    LOAD_GLPROC( glProgramUniform4dv         );
+    LOAD_GLPROC( glProgramUniformMatrix2fv   );
+    LOAD_GLPROC( glProgramUniformMatrix3fv   );
+    LOAD_GLPROC( glProgramUniformMatrix4fv   );
+    LOAD_GLPROC( glProgramUniformMatrix2dv   );
+    LOAD_GLPROC( glProgramUniformMatrix3dv   );
+    LOAD_GLPROC( glProgramUniformMatrix4dv   );
+    LOAD_GLPROC( glProgramUniformMatrix2x3fv );
+    LOAD_GLPROC( glProgramUniformMatrix3x2fv );
+    LOAD_GLPROC( glProgramUniformMatrix2x4fv );
+    LOAD_GLPROC( glProgramUniformMatrix4x2fv );
+    LOAD_GLPROC( glProgramUniformMatrix3x4fv );
+    LOAD_GLPROC( glProgramUniformMatrix4x3fv );
+    LOAD_GLPROC( glProgramUniformMatrix2x3dv );
+    LOAD_GLPROC( glProgramUniformMatrix3x2dv );
+    LOAD_GLPROC( glProgramUniformMatrix2x4dv );
+    LOAD_GLPROC( glProgramUniformMatrix4x2dv );
+    LOAD_GLPROC( glProgramUniformMatrix3x4dv );
+    LOAD_GLPROC( glProgramUniformMatrix4x3dv );
+    LOAD_GLPROC( glValidateProgramPipeline   );
+    LOAD_GLPROC( glGetProgramPipelineInfoLog );
     return true;
 }
 
@@ -943,6 +1009,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_tessellation_shader          );
     ENABLE_GLEXT( ARB_get_program_binary           );
     ENABLE_GLEXT( ARB_program_interface_query      );
+    ENABLE_GLEXT( ARB_separate_shader_objects      );
     ENABLE_GLEXT( EXT_gpu_shader4                  );
 
     /* Enable texture extensions */
@@ -1060,6 +1127,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_compute_shader               );
     LOAD_GLEXT( ARB_get_program_binary           );
     LOAD_GLEXT( ARB_program_interface_query      );
+    LOAD_GLEXT( ARB_separate_shader_objects      );
     LOAD_GLEXT( EXT_gpu_shader4                  );
 
     /* Load texture extensions */

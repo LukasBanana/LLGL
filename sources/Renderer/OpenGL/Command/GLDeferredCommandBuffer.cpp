@@ -1,6 +1,6 @@
 /*
  * GLDeferredCommandBuffer.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -18,7 +18,7 @@
 #include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
 
-#include "../Shader/GLShaderProgram.h"
+#include "../Shader/GLShaderPipeline.h"
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
@@ -59,7 +59,7 @@ void GLDeferredCommandBuffer::Begin()
 {
     /* Reset internal command buffer */
     buffer_.Clear();
-    boundShaderProgram_ = 0;
+    boundShaderPipeline_ = nullptr;
 
     #ifdef LLGL_ENABLE_JIT_COMPILER
 
@@ -586,7 +586,7 @@ void GLDeferredCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     cmd->pipelineState = LLGL_CAST(GLPipelineState*, &pipelineState);
 
     /* Store draw mode, primitive mode, and shader program */
-    boundShaderProgram_ = cmd->pipelineState->GetShaderProgram()->GetID();
+    boundShaderPipeline_ = cmd->pipelineState->GetShaderPipeline();
 
     if (cmd->pipelineState->IsGraphicsPSO())
     {
@@ -637,7 +637,7 @@ void GLDeferredCommandBuffer::SetUniforms(
     /* Allocate GL command and copy data buffer */
     auto cmd = AllocCommand<GLCmdSetUniforms>(GLOpcodeSetUniforms, dataSize);
     {
-        cmd->program    = boundShaderProgram_;
+        cmd->program    = boundShaderPipeline_->GetID(); //TODO: must distinguish between GLShaderProgram and GLProgramPipeline
         cmd->location   = static_cast<GLint>(location);
         cmd->count      = static_cast<GLsizei>(count);
         cmd->size       = static_cast<GLsizeiptr>(dataSize);

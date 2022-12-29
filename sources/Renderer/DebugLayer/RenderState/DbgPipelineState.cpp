@@ -37,6 +37,11 @@ void DbgPipelineState::SetName(const char* name)
     DbgSetObjectName(*this, name);
 }
 
+const Report* DbgPipelineState::GetReport() const
+{
+    return instance.GetReport();
+}
+
 
 } // /namespace LLGL
 

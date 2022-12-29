@@ -34,6 +34,7 @@ class GLRenderTarget;
 class GLSwapChain;
 class GLStateManager;
 class GLRenderPass;
+class GLShaderPipeline;
 class GL2XSampler;
 
 using GLVirtualCommandBuffer = VirtualCommandBuffer<GLOpcode>;
@@ -278,15 +279,15 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
     private:
 
         GLRenderState               renderState_;
-        GLuint                      boundShaderProgram_ = 0;
+        const GLShaderPipeline*     boundShaderPipeline_    = 0;
 
-        long                        flags_              = 0;
+        long                        flags_                  = 0;
         GLVirtualCommandBuffer      buffer_;
 
         #ifdef LLGL_ENABLE_JIT_COMPILER
         std::unique_ptr<JITProgram> executable_;
-        std::uint32_t               maxNumViewports_    = 0;
-        std::uint32_t               maxNumScissors_     = 0;
+        std::uint32_t               maxNumViewports_        = 0;
+        std::uint32_t               maxNumScissors_         = 0;
         #endif // /LLGL_ENABLE_JIT_COMPILER
 
 };

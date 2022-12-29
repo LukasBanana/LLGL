@@ -15,6 +15,8 @@
 #include "../RenderSystemUtils.h"
 #include "GLTypes.h"
 #include "GLCore.h"
+#include "Shader/GLLegacyShader.h"
+#include "Shader/GLSeparableShader.h"
 #include "Buffer/GLBufferWithVAO.h"
 #include "Buffer/GLBufferArrayWithVAO.h"
 #include "../CheckedCast.h"
@@ -438,7 +440,10 @@ Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& desc)
     }
 
     /* Make and return shader object */
-    return TakeOwnership(shaders_, MakeUnique<GLShader>(desc));
+    if (HasExtension(GLExt::ARB_separate_shader_objects) && (desc.flags & ShaderCompileFlags::SeparateShader) != 0)
+        return TakeOwnership(shaders_, MakeUnique<GLSeparableShader>(desc));
+    else
+        return TakeOwnership(shaders_, MakeUnique<GLLegacyShader>(desc));
 }
 
 ShaderProgram* GLRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)

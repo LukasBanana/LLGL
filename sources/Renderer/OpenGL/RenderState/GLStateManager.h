@@ -34,6 +34,8 @@ class GLDepthStencilState;
 class GLRasterizerState;
 class GLBlendState;
 class GLRenderPass;
+class GLProgramPipeline;
+class GLShaderProgram;
 class GL2XSampler;
 
 // OpenGL state machine manager that keeps track of certain GL states.
@@ -243,13 +245,24 @@ class GLStateManager
 
         void BindGL2XSampler(GLuint layer, const GL2XSampler& sampler);
 
-        /* ----- Shader Program ----- */
+        /* ----- Shader program ----- */
 
         void BindShaderProgram(GLuint program);
 
-        void NotifyShaderProgramRelease(GLuint program);
+        void PushBoundShaderProgram();
+        void PopBoundShaderProgram();
+
+        void NotifyShaderProgramRelease(GLShaderProgram* shaderProgram);
 
         GLuint GetBoundShaderProgram() const;
+
+        /* ----- Program pipeline ----- */
+
+        void BindProgramPipeline(GLuint pipeline);
+
+        void NotifyProgramPipelineRelease(GLProgramPipeline* programPipeline);
+
+        GLuint GetBoundProgramPipeline() const;
 
         /* ----- Render pass ----- */
 
@@ -360,6 +373,11 @@ class GLStateManager
             GLuint renderbuffer;
         };
 
+        struct ShaderProgramStackEntry
+        {
+            GLuint program;
+        };
+
     private:
 
         static GLStateManager*  current_;
@@ -399,7 +417,8 @@ class GLStateManager
         std::stack<BufferStackEntry>        bufferStack_;
         std::stack<TextureStackEntry>       textureState_;
         std::stack<FramebufferStackEntry>   framebufferStack_;
-        std::stack<RenderbufferStackEntry>  renderbufferState_;
+        std::stack<RenderbufferStackEntry>  renderbufferStack_;
+        std::stack<ShaderProgramStackEntry> shaderProgramStack_;
 
 };
 

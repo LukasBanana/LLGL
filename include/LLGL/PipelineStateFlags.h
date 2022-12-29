@@ -740,14 +740,50 @@ struct GraphicsPipelineDescriptor
     If this is null, a default layout will be used that is only compatible with graphics pipelines that have no input and output vertex attributes and no binding points.
     \see RenderSystem::CreatePipelineLayout
     */
-    const PipelineLayout*   pipelineLayout      = nullptr;
+    const PipelineLayout*   pipelineLayout          = nullptr;
 
+    #if 1 //TODO: replace
     /**
     \brief Specifies the shader program for the graphics pipeline. By default null.
     \remarks This must never be null when RenderSystem::CreatePipelineState is called with this structure.
     \see RenderSystem::CreateShaderProgram
     */
-    const ShaderProgram*    shaderProgram       = nullptr;
+    const ShaderProgram*    shaderProgram           = nullptr;
+    #endif
+
+    /**
+    \brief Specifies the vertex shader.
+    \remarks Each graphics pipeline must have at least a vertex shader. Therefore, this must never be null when a graphics PSO is created.
+    With OpenGL, this shader may also have a stream output.
+    */
+    Shader*                 vertexShader            = nullptr;
+
+    /**
+    \brief Specifies the tessellation-control shader (also referred to as "Hull Shader").
+    \remarks If this is used, the counter part must also be specified, i.e. \c tessEvaluationShader.
+    \see tessEvaluationShader
+    */
+    Shader*                 tessControlShader       = nullptr;
+
+    /**
+    \brief Specifies the tessellation-evaluation shader (also referred to as "Domain Shader").
+    \remarks If this is used, the counter part must also be specified, i.e. \c tessControlShader.
+    \see tessControlShader
+    */
+    Shader*                 tessEvaluationShader    = nullptr;
+
+    /**
+    \brief Specifies an optional geometry shader.
+    \remarks This shader may also have a stream output.
+    */
+    Shader*                 geometryShader          = nullptr;
+
+    /**
+    \brief Specifies an optional fragment shader (also referred to as "Pixel Shader").
+    \remarks If no fragment shader is specified, generated fragments are discarded by the output merger
+    and only the stream-output functionality is used by either the vertex or geometry shader.
+    */
+    Shader*                 fragmentShader          = nullptr;
 
     /**
     \brief Specifies an optional render pass. By default null.
@@ -756,13 +792,13 @@ struct GraphicsPipelineDescriptor
     \see CommandBuffer::BeginRenderPass
     \see RenderSystem::CreateRenderPass
     */
-    const RenderPass*       renderPass          = nullptr;
+    const RenderPass*       renderPass              = nullptr;
 
     /**
     \brief Specifies the primitive topology and ordering of the primitive data. By default PrimitiveTopology::TriangleList.
     \see PrimitiveTopology
     */
-    PrimitiveTopology       primitiveTopology   = PrimitiveTopology::TriangleList;
+    PrimitiveTopology       primitiveTopology       = PrimitiveTopology::TriangleList;
 
     /**
     \brief Specifies an optional list of static viewports. If empty, the viewports must be set dynamically with the command buffer.
@@ -813,14 +849,22 @@ struct ComputePipelineDescriptor
     This is ignored by render systems which do not support pipeline layouts.
     \note Only supported with: Vulkan, Direct3D 12
     */
-    const PipelineLayout* pipelineLayout    = nullptr;
+    const PipelineLayout*   pipelineLayout  = nullptr;
 
+    #if 1 //TODO: replace
     /**
     \brief Pointer to the shader program for the compute pipeline.
     \remarks This must never be null when RenderSystem::CreatePipelineState is called with this structure.
     \see RenderSystem::CreateShaderProgram
     */
-    const ShaderProgram*  shaderProgram     = nullptr;
+    const ShaderProgram*    shaderProgram   = nullptr;
+    #endif
+
+    /**
+    \brief Specifies the compute shader.
+    \remarks This must never be null when a compute PSO is created.
+    */
+    Shader*                 computeShader   = nullptr;
 };
 
 

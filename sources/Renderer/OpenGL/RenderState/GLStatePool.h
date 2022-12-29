@@ -15,12 +15,17 @@
 #include "GLBlendState.h"
 #include "GLPipelineLayout.h"
 #include "../Shader/GLShaderBindingLayout.h"
+#include "../Shader/GLShaderProgram.h"
+#include "../Shader/GLProgramPipeline.h"
 #include <vector>
 
 
 namespace LLGL
 {
 
+
+class GLLegacyShader;
+class GLSeparableShader;
 
 /*
 Singleton pool for OpenGL depth-stencil-, rasterizer-, and blend states.
@@ -60,6 +65,11 @@ class GLStatePool
         GLShaderBindingLayoutSPtr CreateShaderBindingLayout(const GLPipelineLayout& pipelineLayout);
         void ReleaseShaderBindingLayout(GLShaderBindingLayoutSPtr&& shaderBindingLayout);
 
+        /* ----- Shader pipelines ----- */
+
+        GLShaderPipelineSPtr CreateShaderPipeline(std::size_t numShaders, Shader* const* shaders);
+        void ReleaseShaderPipeline(GLShaderPipelineSPtr&& shaderPipeline);
+
     private:
 
         GLStatePool() = default;
@@ -70,6 +80,7 @@ class GLStatePool
         std::vector<GLRasterizerStateSPtr>      rasterizerStates_;
         std::vector<GLBlendStateSPtr>           blendStates_;
         std::vector<GLShaderBindingLayoutSPtr>  shaderBindingLayouts_;
+        std::vector<GLShaderPipelineSPtr>       shaderPipelines_;
 
 };
 

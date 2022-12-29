@@ -73,6 +73,7 @@ enum class GLExt
     ARB_ES2_compatibility,
     ARB_compatibility,                  // GL 3.1
     ARB_map_buffer_range,               // GL 3.0
+    ARB_separate_shader_objects,        // GL 4.1
 
     /* Khronos group extensions (KHR) */
     KHR_debug,

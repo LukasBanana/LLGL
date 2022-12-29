@@ -22,6 +22,7 @@ namespace LLGL
 
 
 class GLShaderBindingLayout;
+class GLStateManager;
 
 using GLShaderBindingLayoutSPtr = std::shared_ptr<GLShaderBindingLayout>;
 
@@ -37,8 +38,8 @@ class GLShaderBindingLayout
 
         GLShaderBindingLayout(const GLPipelineLayout& pipelineLayout);
 
-        // Binds the resource slots to the specified GL shader program.
-        void BindResourceSlots(GLuint program) const;
+        // Binds the resource slots to the specified GL shader program. Provides optional state manager if specified program is not currently bound, i.e. glUseProgram.
+        void UniformAndBlockBinding(GLuint program, GLStateManager* stateMngr = nullptr) const;
 
         // Returns true if this layout has at least one binding slot.
         bool HasBindings() const;

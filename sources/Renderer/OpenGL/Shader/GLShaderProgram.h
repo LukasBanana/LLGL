@@ -10,8 +10,8 @@
 
 
 #include <LLGL/ShaderProgram.h>
+#include "GLShaderPipeline.h"
 #include "GLShaderUniform.h"
-#include "../OpenGL.h"
 
 
 namespace LLGL
@@ -21,10 +21,14 @@ namespace LLGL
 struct GLShaderAttribute;
 class GLShaderBindingLayout;
 
-class GLShaderProgram final : public ShaderProgram
+class GLShaderProgram final : public ShaderProgram, public GLShaderPipeline
 {
 
     public:
+
+        GLShaderProgram(const ShaderProgramDescriptor& desc); //TODO: remove
+        GLShaderProgram(std::size_t numShaders, const Shader* const* shaders);
+        ~GLShaderProgram();
 
         void SetName(const char* name) override;
 
@@ -34,29 +38,31 @@ class GLShaderProgram final : public ShaderProgram
         bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
 
+        void Bind(GLStateManager& stateMngr) override;
+        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) override;
+        void QueryInfoLogs(BasicReport& report) override;
+
     public:
 
-        GLShaderProgram(const ShaderProgramDescriptor& desc);
-        ~GLShaderProgram();
+        // Returns true if the native GL shader program was linked successfully.
+        static bool GetLinkStatus(GLuint program);
 
-        /*
-        Updates all uniform/storage block bindings and resources by the specified binding layout.
-        This shader program must already be bound with the GLStateManager.
-        */
-        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) const;
+        // Returns the native GL shader program log.
+        static std::string GetGLProgramLog(GLuint program);
 
-        // Returns the shader program ID.
-        inline GLuint GetID() const
-        {
-            return id_;
-        }
+        // Invokes glBindAttribLocation on the specified program for all vertex attributes.
+        static void BindAttribLocations(GLuint program, std::size_t numVertexAttribs, const GLShaderAttribute* vertexAttribs);
+
+        // Invokes glBindFragDataLocation on the specified program for all fragment attributes.
+        static void BindFragDataLocations(GLuint program, std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs);
+
+        // Links the specified GL program and binds the transform feedback varyings.
+        static void LinkProgramWithTransformFeedbackVaryings(GLuint program, std::size_t numVaryings, const char* const* varyings);
+
+        // Simply links the GL program.
+        static void LinkProgram(GLuint program);
 
     private:
-
-        void AttachShader(Shader* shader);
-        void BindAttribLocations(std::size_t numVertexAttribs, const GLShaderAttribute* vertexAttribs);
-        void BindFragDataLocations(std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs);
-        void LinkProgram(std::size_t numVaryings, const char* const* varyings);
 
         bool QueryActiveAttribs(
             GLenum              attribCountType,
@@ -65,11 +71,6 @@ class GLShaderProgram final : public ShaderProgram
             GLint&              maxNameLength,
             std::vector<char>&  nameBuffer
         ) const;
-
-        void BuildTransformFeedbackVaryingsEXT(std::size_t numVaryings, const char* const* varyings);
-        #ifdef GL_NV_transform_feedback
-        void BuildTransformFeedbackVaryingsNV(std::size_t numVaryings, const char* const* varyings);
-        #endif
 
         void QueryReflection(ShaderReflection& reflection) const;
         void QueryVertexAttributes(ShaderReflection& reflection) const;
@@ -85,19 +86,11 @@ class GLShaderProgram final : public ShaderProgram
 
     private:
 
-        GLuint  id_                     = 0;
+        const GLShaderBindingLayout*    bindingLayout_          = nullptr;
 
         #ifdef __APPLE__
-        bool    hasNullFragmentShader_  = false;
+        bool                            hasNullFragmentShader_  = false;
         #endif
-
-    private:
-
-        /*
-        Reference to active binding layout is mutable since it's only to track state changes
-        TODO: try to avoid <mutable> keyword, maybe there's a better way for the purpose of this member
-        */
-        mutable const GLShaderBindingLayout* bindingLayout_ = nullptr;
 
 };
 

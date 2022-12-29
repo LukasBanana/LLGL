@@ -377,6 +377,7 @@ set(FilesTest_Image ${TestProjectsPath}/Test_Image.cpp)
 set(FilesTest_BlendStates ${TestProjectsPath}/Test_BlendStates.cpp)
 set(FilesTest_JIT ${TestProjectsPath}/Test_JIT.cpp)
 set(FilesTest_ShaderReflect ${TestProjectsPath}/Test_ShaderReflect.cpp)
+set(FilesTest_SeparateShaders ${TestProjectsPath}/Test_SeparateShaders.cpp)
 set(FilesTest_iOS ${TestProjectsPath}/Test_iOS.mm)
 
 # Example project files
@@ -815,6 +816,7 @@ if(GaussLib_INCLUDE_DIR)
         ADD_EXAMPLE_PROJECT(Test_Window "${FilesTest_Window}" "${LLGL_DEPENDENCIES}")
         ADD_EXAMPLE_PROJECT(Test_JIT "${FilesTest_JIT}" "${LLGL_DEPENDENCIES}")
         ADD_EXAMPLE_PROJECT(Test_ShaderReflect "${FilesTest_ShaderReflect}" "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_SeparateShaders "${FilesTest_SeparateShaders}" "${LLGL_DEPENDENCIES}")
     endif()
 
     # Example Projects

@@ -17,14 +17,35 @@
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/StaticLimits.h>
+#include <vector>
 
 
 namespace LLGL
 {
 
 
+static void AddToShaderArray(Shader* shader, std::vector<Shader*>& shaders)
+{
+    if (shader != nullptr)
+        shaders.push_back(shader);
+}
+
+static std::vector<Shader*> GetShaderArrayFromDesc(const GraphicsPipelineDescriptor& desc)
+{
+    std::vector<Shader*> shaders;
+    shaders.reserve(5);
+
+    AddToShaderArray(desc.vertexShader,         shaders);
+    AddToShaderArray(desc.tessControlShader,    shaders);
+    AddToShaderArray(desc.tessEvaluationShader, shaders);
+    AddToShaderArray(desc.geometryShader,       shaders);
+    AddToShaderArray(desc.fragmentShader,       shaders);
+
+    return shaders;
+}
+
 GLGraphicsPSO::GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits) :
-    GLPipelineState { true, desc.pipelineLayout, desc.shaderProgram }
+    GLPipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, GetShaderArrayFromDesc(desc) }
 {
     /* Convert input-assembler state */
     drawMode_       = GLTypes::ToDrawMode(desc.primitiveTopology);

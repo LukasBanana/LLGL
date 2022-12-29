@@ -360,6 +360,70 @@ DECL_GLPROC(PFNGLGETPROGRAMRESOURCEIVPROC,                          glGetProgram
 DECL_GLPROC(PFNGLGETPROGRAMRESOURCELOCATIONPROC,                    glGetProgramResourceLocation,                   GLint,          (GLuint, GLenum, const GLchar*));
 DECL_GLPROC(PFNGLGETPROGRAMRESOURCELOCATIONINDEXPROC,               glGetProgramResourceLocationIndex,              GLint,          (GLuint, GLenum, const GLchar*));
 
+/* GL_ARB_separate_shader_objects */
+
+DECL_GLPROC(PFNGLUSEPROGRAMSTAGESPROC,                              glUseProgramStages,                             void,           (GLuint, GLbitfield, GLuint));
+DECL_GLPROC(PFNGLACTIVESHADERPROGRAMPROC,                           glActiveShaderProgram,                          void,           (GLuint, GLuint));
+DECL_GLPROC(PFNGLCREATESHADERPROGRAMVPROC,                          glCreateShaderProgramv,                         GLuint,         (GLenum, GLsizei, const GLchar* const*));
+DECL_GLPROC(PFNGLBINDPROGRAMPIPELINEPROC,                           glBindProgramPipeline,                          void,           (GLuint));
+DECL_GLPROC(PFNGLDELETEPROGRAMPIPELINESPROC,                        glDeleteProgramPipelines,                       void,           (GLsizei, const GLuint* pipelines));
+DECL_GLPROC(PFNGLGENPROGRAMPIPELINESPROC,                           glGenProgramPipelines,                          void,           (GLsizei, GLuint*));
+DECL_GLPROC(PFNGLISPROGRAMPIPELINEPROC,                             glIsProgramPipeline,                            GLboolean,      (GLuint));
+//DECL_GLPROC(PFNGLPROGRAMPARAMETERIPROC,                             glProgramParameteri,                            void,           (GLuint, GLenum, GLint));
+DECL_GLPROC(PFNGLGETPROGRAMPIPELINEIVPROC,                          glGetProgramPipelineiv,                         void,           (GLuint, GLenum, GLint*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM1IPROC,                              glProgramUniform1i,                             void,           (GLuint, GLint, GLint));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM2IPROC,                              glProgramUniform2i,                             void,           (GLuint, GLint, GLint, GLint));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM3IPROC,                              glProgramUniform3i,                             void,           (GLuint, GLint, GLint, GLint, GLint));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM4IPROC,                              glProgramUniform4i,                             void,           (GLuint, GLint, GLint, GLint, GLint, GLint));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM1UIPROC,                             glProgramUniform1ui,                            void,           (GLuint, GLint, GLuint));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM2UIPROC,                             glProgramUniform2ui,                            void,           (GLuint, GLint, GLuint, GLuint));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM3UIPROC,                             glProgramUniform3ui,                            void,           (GLuint, GLint, GLuint, GLuint, GLuint));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM4UIPROC,                             glProgramUniform4ui,                            void,           (GLuint, GLint, GLuint, GLuint, GLuint, GLuint));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM1FPROC,                              glProgramUniform1f,                             void,           (GLuint, GLint, GLfloat));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM2FPROC,                              glProgramUniform2f,                             void,           (GLuint, GLint, GLfloat, GLfloat));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM3FPROC,                              glProgramUniform3f,                             void,           (GLuint, GLint, GLfloat, GLfloat, GLfloat));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM4FPROC,                              glProgramUniform4f,                             void,           (GLuint, GLint, GLfloat, GLfloat, GLfloat, GLfloat));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM1DPROC,                              glProgramUniform1d,                             void,           (GLuint, GLint, GLdouble));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM2DPROC,                              glProgramUniform2d,                             void,           (GLuint, GLint, GLdouble, GLdouble));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM3DPROC,                              glProgramUniform3d,                             void,           (GLuint, GLint, GLdouble, GLdouble, GLdouble));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM4DPROC,                              glProgramUniform4d,                             void,           (GLuint, GLint, GLdouble, GLdouble, GLdouble, GLdouble));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM1IVPROC,                             glProgramUniform1iv,                            void,           (GLuint, GLint, GLsizei, const GLint*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM2IVPROC,                             glProgramUniform2iv,                            void,           (GLuint, GLint, GLsizei, const GLint*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM3IVPROC,                             glProgramUniform3iv,                            void,           (GLuint, GLint, GLsizei, const GLint*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM4IVPROC,                             glProgramUniform4iv,                            void,           (GLuint, GLint, GLsizei, const GLint*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM1UIVPROC,                            glProgramUniform1uiv,                           void,           (GLuint, GLint, GLsizei, const GLuint*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM2UIVPROC,                            glProgramUniform2uiv,                           void,           (GLuint, GLint, GLsizei, const GLuint*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM3UIVPROC,                            glProgramUniform3uiv,                           void,           (GLuint, GLint, GLsizei, const GLuint*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM4UIVPROC,                            glProgramUniform4uiv,                           void,           (GLuint, GLint, GLsizei, const GLuint*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM1FVPROC,                             glProgramUniform1fv,                            void,           (GLuint, GLint, GLsizei, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM2FVPROC,                             glProgramUniform2fv,                            void,           (GLuint, GLint, GLsizei, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM3FVPROC,                             glProgramUniform3fv,                            void,           (GLuint, GLint, GLsizei, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM4FVPROC,                             glProgramUniform4fv,                            void,           (GLuint, GLint, GLsizei, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM1DVPROC,                             glProgramUniform1dv,                            void,           (GLuint, GLint, GLsizei, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM2DVPROC,                             glProgramUniform2dv,                            void,           (GLuint, GLint, GLsizei, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM3DVPROC,                             glProgramUniform3dv,                            void,           (GLuint, GLint, GLsizei, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORM4DVPROC,                             glProgramUniform4dv,                            void,           (GLuint, GLint, GLsizei, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX2FVPROC,                       glProgramUniformMatrix2fv,                      void,           (GLuint, GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX3FVPROC,                       glProgramUniformMatrix3fv,                      void,           (GLuint, GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX4FVPROC,                       glProgramUniformMatrix4fv,                      void,           (GLuint, GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX2DVPROC,                       glProgramUniformMatrix2dv,                      void,           (GLuint, GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX3DVPROC,                       glProgramUniformMatrix3dv,                      void,           (GLuint, GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX4DVPROC,                       glProgramUniformMatrix4dv,                      void,           (GLuint, GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX2X3FVPROC,                     glProgramUniformMatrix2x3fv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX3X2FVPROC,                     glProgramUniformMatrix3x2fv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX2X4FVPROC,                     glProgramUniformMatrix2x4fv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX4X2FVPROC,                     glProgramUniformMatrix4x2fv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX3X4FVPROC,                     glProgramUniformMatrix3x4fv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX4X3FVPROC,                     glProgramUniformMatrix4x3fv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX2X3DVPROC,                     glProgramUniformMatrix2x3dv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX3X2DVPROC,                     glProgramUniformMatrix3x2dv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX2X4DVPROC,                     glProgramUniformMatrix2x4dv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX4X2DVPROC,                     glProgramUniformMatrix4x2dv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX3X4DVPROC,                     glProgramUniformMatrix3x4dv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(PFNGLPROGRAMUNIFORMMATRIX4X3DVPROC,                     glProgramUniformMatrix4x3dv,                    void,           (GLuint, GLint, GLsizei, GLboolean, const GLdouble*));
+DECL_GLPROC(PFNGLVALIDATEPROGRAMPIPELINEPROC,                       glValidateProgramPipeline,                      void,           (GLuint));
+DECL_GLPROC(PFNGLGETPROGRAMPIPELINEINFOLOGPROC,                     glGetProgramPipelineInfoLog,                    void,           (GLuint, GLsizei, GLsizei*, GLchar*));
+
 /* GL_ARB_uniform_buffer_object */
 
 DECL_GLPROC(PFNGLGETUNIFORMBLOCKINDEXPROC,                          glGetUniformBlockIndex,                         GLuint,         (GLuint, const GLchar*));

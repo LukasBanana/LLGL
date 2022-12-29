@@ -17,6 +17,7 @@
 #include "RenderState/DbgQueryHeap.h"
 #include "RenderState/DbgPipelineState.h"
 #include "RenderState/DbgResourceHeap.h"
+#include "Shader/DbgShader.h"
 #include "Shader/DbgShaderProgram.h"
 #include "Texture/DbgTexture.h"
 #include "Texture/DbgRenderTarget.h"
@@ -1370,14 +1371,26 @@ void DbgCommandBuffer::ValidateVertexLayout()
     {
         if (pso->isGraphicsPSO && bindings_.numVertexBuffers > 0)
         {
-            auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, pso->graphicsDesc.shaderProgram);
-            const auto& vertexLayout = shaderProgramDbg->GetVertexLayout();
+            if (auto shaderProgram = pso->graphicsDesc.shaderProgram)
+            {
+                auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
+                const auto& vertexLayout = shaderProgramDbg->GetVertexLayout();
 
-            /* Check if vertex layout is specified in active shader program */
-            if (vertexLayout.bound)
-                ValidateVertexLayoutAttributes(vertexLayout.attributes, bindings_.vertexBuffers, bindings_.numVertexBuffers);
-            else if (bindings_.anyNonEmptyVertexBuffer)
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program while bound vertex buffers are non-empty");
+                /* Check if vertex layout is specified in active shader program */
+                if (vertexLayout.bound)
+                    ValidateVertexLayoutAttributes(vertexLayout.attributes, bindings_.vertexBuffers, bindings_.numVertexBuffers);
+                else if (bindings_.anyNonEmptyVertexBuffer)
+                    LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program while bound vertex buffers are non-empty");
+            }
+            else if (auto vertexShader = pso->graphicsDesc.vertexShader)
+            {
+                auto vertexShaderDbg = LLGL_CAST(const DbgShader*, vertexShader);
+                const auto& inputAttribs = vertexShaderDbg->desc.vertex.inputAttribs;
+                if (!inputAttribs.empty())
+                    ValidateVertexLayoutAttributes(inputAttribs, bindings_.vertexBuffers, bindings_.numVertexBuffers);
+                else if (bindings_.anyNonEmptyVertexBuffer)
+                    LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in graphics PSO while bound vertex buffers are non-empty");
+            }
         }
     }
 }

@@ -7,6 +7,9 @@
 
 #include "GLStatePool.h"
 #include "GLStateManager.h"
+#include "../Shader/GLLegacyShader.h"
+#include "../Shader/GLSeparableShader.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/ContainerUtils.h"
 #include <functional>
 
@@ -20,22 +23,39 @@ namespace LLGL
  */
 
 // Searches a compatible state object with complexity O(log n)
-template <typename T>
+template <typename T, typename TCompare = T, typename TBase = T>
 std::shared_ptr<T> FindCompatibleStateObject(
-    std::vector<std::shared_ptr<T>>&    container,
-    const T&                            compareObject,
-    std::size_t&                        index)
+    std::vector<std::shared_ptr<TBase>>&    container,
+    const TCompare&                         compareObject,
+    std::size_t&                            index)
 {
-    auto* entry = Utils::FindInSortedArray<std::shared_ptr<T>>(
+    auto* entry = Utils::FindInSortedArray<std::shared_ptr<TBase>>(
         container.data(),
         container.size(),
-        [&compareObject](const std::shared_ptr<T>& rhs) -> int
+        [&compareObject](const std::shared_ptr<TBase>& entry) -> int
         {
-            return T::CompareSWO(compareObject, *rhs.get());
+            return T::CompareSWO(*entry.get(), compareObject);
         },
         &index
     );
-    return (entry != nullptr ? *entry : nullptr);
+    return std::static_pointer_cast<T>(entry != nullptr ? *entry : nullptr);
+}
+
+template <typename T, typename TCompare, typename TBase, typename... Args>
+std::shared_ptr<T> CreateRenderStateObjectExt(std::vector<std::shared_ptr<TBase>>& container, Args&&... args)
+{
+    /* Try to find render state object with same parameter */
+    const TCompare stateToCompare{ std::forward<Args>(args)... };
+
+    std::size_t insertionIndex = 0;
+    if (auto sharedState = FindCompatibleStateObject<T, TCompare, TBase>(container, stateToCompare, insertionIndex))
+        return sharedState;
+
+    /* Allocate new render state object with insertion sort */
+    auto newState = std::make_shared<T>(std::forward<Args>(args)...);
+    container.insert(container.begin() + insertionIndex, newState);
+
+    return newState;
 }
 
 template <typename T, typename... Args>
@@ -45,7 +65,7 @@ std::shared_ptr<T> CreateRenderStateObject(std::vector<std::shared_ptr<T>>& cont
     T stateToCompare{ std::forward<Args>(args)... };
 
     std::size_t insertionIndex = 0;
-    if (auto sharedState = FindCompatibleStateObject(container, stateToCompare, insertionIndex))
+    if (auto sharedState = FindCompatibleStateObject<T, T, T>(container, stateToCompare, insertionIndex))
         return sharedState;
 
     /* Allocate new render state object with insertion sort */
@@ -69,7 +89,7 @@ void ReleaseRenderStateObject(
 
         /* Retrieve entry index in container to remove entry */
         std::size_t entryIndex = 0;
-        if (FindCompatibleStateObject(container, *objectRef, entryIndex) != nullptr)
+        if (FindCompatibleStateObject<T, T, T>(container, *objectRef, entryIndex) != nullptr)
         {
             /* Notify via callback and erase from container */
             if (callback)
@@ -98,6 +118,8 @@ void GLStatePool::Clear()
     shaderBindingLayouts_.clear();
 }
 
+/* ----- Depth-stencil states ----- */
+
 GLDepthStencilStateSPtr GLStatePool::CreateDepthStencilState(const DepthDescriptor& depthDesc, const StencilDescriptor& stencilDesc)
 {
     return CreateRenderStateObject(depthStencilStates_, depthDesc, stencilDesc);
@@ -111,6 +133,8 @@ void GLStatePool::ReleaseDepthStencilState(GLDepthStencilStateSPtr&& depthStenci
         std::forward<GLDepthStencilStateSPtr>(depthStencilState)
     );
 }
+
+/* ----- Rasterizer states ----- */
 
 GLRasterizerStateSPtr GLStatePool::CreateRasterizerState(const RasterizerDescriptor& rasterizerDesc)
 {
@@ -126,6 +150,8 @@ void GLStatePool::ReleaseRasterizerState(GLRasterizerStateSPtr&& rasterizerState
     );
 }
 
+/* ----- Blend states ----- */
+
 GLBlendStateSPtr GLStatePool::CreateBlendState(const BlendDescriptor& blendDesc, std::uint32_t numColorAttachments)
 {
     return CreateRenderStateObject(blendStates_, blendDesc, numColorAttachments);
@@ -140,6 +166,8 @@ void GLStatePool::ReleaseBlendState(GLBlendStateSPtr&& blendState)
     );
 }
 
+/* ----- Shader binding layouts ----- */
+
 GLShaderBindingLayoutSPtr GLStatePool::CreateShaderBindingLayout(const GLPipelineLayout& pipelineLayout)
 {
     return CreateRenderStateObject(shaderBindingLayouts_, pipelineLayout);
@@ -151,6 +179,50 @@ void GLStatePool::ReleaseShaderBindingLayout(GLShaderBindingLayoutSPtr&& shaderB
         shaderBindingLayouts_,
         nullptr,
         std::forward<GLShaderBindingLayoutSPtr>(shaderBindingLayout)
+    );
+}
+
+/* ----- Shader pipelines ----- */
+
+static bool IsGLSeparableShader(const Shader* shader)
+{
+    if (shader != nullptr)
+    {
+        auto shaderGL = LLGL_CAST(const GLShader*, shader);
+        return shaderGL->IsSeparable();
+    }
+    return false;
+}
+
+// Returns true if the specified list of shaders has separable shaders.
+// Actually all shaders must be of the same type, but full validation is handled in the debug layer.
+static bool HasGLSeparableShaders(std::size_t numShaders, Shader* const* shaders)
+{
+    return (numShaders > 0 && IsGLSeparableShader(shaders[0]));
+}
+
+GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(std::size_t numShaders, Shader* const* shaders)
+{
+    if (HasExtension(GLExt::ARB_separate_shader_objects) && HasGLSeparableShaders(numShaders, shaders))
+    {
+        return std::static_pointer_cast<GLShaderPipeline>(
+            CreateRenderStateObjectExt<GLProgramPipeline, GLPipelineSignature>(shaderPipelines_, numShaders, shaders)
+        );
+    }
+    else
+    {
+        return std::static_pointer_cast<GLShaderPipeline>(
+            CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(shaderPipelines_, numShaders, shaders)
+        );
+    }
+}
+
+void GLStatePool::ReleaseShaderPipeline(GLShaderPipelineSPtr&& shaderPipeline)
+{
+    ReleaseRenderStateObject<GLShaderPipeline>(
+        shaderPipelines_,
+        nullptr,
+        std::forward<GLShaderPipelineSPtr>(shaderPipeline)
     );
 }
 

@@ -11,8 +11,11 @@
 
 #include "../OpenGL.h"
 #include "../Shader/GLShaderBindingLayout.h"
+#include "../Shader/GLShaderPipeline.h"
+#include "../../../Core/BasicReport.h"
 #include <LLGL/PipelineState.h>
 #include <LLGL/RenderSystemFlags.h>
+#include <LLGL/Container/ArrayView.h>
 #include <memory>
 
 
@@ -31,11 +34,13 @@ class GLPipelineState : public PipelineState
     public:
 
         GLPipelineState(
-            bool                    isGraphicsPSO,
-            const PipelineLayout*   pipelineLayout,
-            const ShaderProgram*    shaderProgram
+            bool                        isGraphicsPSO,
+            const PipelineLayout*       pipelineLayout,
+            const ArrayView<Shader*>&   shaders
         );
         ~GLPipelineState();
+
+        const Report* GetReport() const override;
 
         // Binds this pipeline state with the specified GL state manager.
         virtual void Bind(GLStateManager& stateMngr);
@@ -46,17 +51,18 @@ class GLPipelineState : public PipelineState
             return isGraphicsPSO_;
         }
 
-        // Returns the shader program used for this graphics pipeline.
-        inline const GLShaderProgram* GetShaderProgram() const
+        // Returns the shader pipeline used for this PSO.
+        inline const GLShaderPipeline* GetShaderPipeline() const
         {
-            return shaderProgram_;
+            return shaderPipeline_.get();
         }
 
     private:
 
         const bool                  isGraphicsPSO_          = false;
-        const GLShaderProgram*      shaderProgram_          = nullptr;
+        GLShaderPipelineSPtr        shaderPipeline_         = nullptr;
         GLShaderBindingLayoutSPtr   shaderBindingLayout_;
+        BasicReport                 report_;
 
 };
 

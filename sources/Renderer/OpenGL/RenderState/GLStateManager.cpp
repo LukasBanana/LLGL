@@ -10,6 +10,8 @@
 #include "GLDepthStencilState.h"
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
+#include "../Shader/GLShaderProgram.h"
+#include "../Shader/GLProgramPipeline.h"
 #include "../GLSwapChain.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
@@ -1110,16 +1112,16 @@ void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 
 void GLStateManager::PushBoundRenderbuffer()
 {
-    renderbufferState_.push({ contextState_.boundRenderbuffer });
+    renderbufferStack_.push({ contextState_.boundRenderbuffer });
 }
 
 void GLStateManager::PopBoundRenderbuffer()
 {
-    const auto& state = renderbufferState_.top();
+    const auto& state = renderbufferStack_.top();
     {
         BindRenderbuffer(state.renderbuffer);
     }
-    renderbufferState_.pop();
+    renderbufferStack_.pop();
 }
 
 void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
@@ -1413,7 +1415,7 @@ void GLStateManager::BindGL2XSampler(GLuint layer, const GL2XSampler& sampler)
     #endif
 }
 
-/* ----- Shader binding ----- */
+/* ----- Shader program ----- */
 
 void GLStateManager::BindShaderProgram(GLuint program)
 {
@@ -1424,14 +1426,51 @@ void GLStateManager::BindShaderProgram(GLuint program)
     }
 }
 
-void GLStateManager::NotifyShaderProgramRelease(GLuint program)
+void GLStateManager::PushBoundShaderProgram()
 {
-    InvalidateBoundGLObject(contextState_.boundProgram, program);
+    shaderProgramStack_.push({ contextState_.boundProgram });
+}
+
+void GLStateManager::PopBoundShaderProgram()
+{
+    const auto& state = shaderProgramStack_.top();
+    {
+        BindShaderProgram(state.program);
+    }
+    shaderProgramStack_.pop();
+}
+
+void GLStateManager::NotifyShaderProgramRelease(GLShaderProgram* shaderProgram)
+{
+    if (shaderProgram != nullptr)
+        InvalidateBoundGLObject(contextState_.boundProgram, shaderProgram->GetID());
 }
 
 GLuint GLStateManager::GetBoundShaderProgram() const
 {
     return contextState_.boundProgram;
+}
+
+/* ----- Program pipeline ----- */
+
+void GLStateManager::BindProgramPipeline(GLuint pipeline)
+{
+    if (contextState_.boundProgramPipeline != pipeline)
+    {
+        contextState_.boundProgramPipeline = pipeline;
+        glBindProgramPipeline(pipeline);
+    }
+}
+
+void GLStateManager::NotifyProgramPipelineRelease(GLProgramPipeline* programPipeline)
+{
+    if (programPipeline != nullptr)
+        InvalidateBoundGLObject(contextState_.boundProgramPipeline, programPipeline->GetID());
+}
+
+GLuint GLStateManager::GetBoundProgramPipeline() const
+{
+    return contextState_.boundProgramPipeline;
 }
 
 /* ----- Render pass ----- */

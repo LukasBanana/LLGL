@@ -487,40 +487,43 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescri
     if (debugger_)
         ValidateGraphicsPipelineDesc(desc);
 
-    if (desc.shaderProgram)
+    auto instanceDesc = desc;
     {
-        auto instanceDesc = desc;
-        {
-            instanceDesc.shaderProgram  = &(LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram)->instance);
-            if (desc.pipelineLayout != nullptr)
-                instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
-        }
-        return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), desc));
-    }
-    else
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "shader program must not be null");
+        if (desc.pipelineLayout != nullptr)
+            instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
 
-    return nullptr;
+        if (desc.shaderProgram == nullptr)
+        {
+            instanceDesc.vertexShader           = GetInstanceShader(desc.vertexShader);
+            instanceDesc.tessControlShader      = GetInstanceShader(desc.tessControlShader);
+            instanceDesc.tessEvaluationShader   = GetInstanceShader(desc.tessEvaluationShader);
+            instanceDesc.geometryShader         = GetInstanceShader(desc.geometryShader);
+            instanceDesc.fragmentShader         = GetInstanceShader(desc.fragmentShader);
+        }
+        else
+            instanceDesc.shaderProgram = &(LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram)->instance);
+    }
+    return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), desc));
 }
 
 PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache)
 {
     LLGL_DBG_SOURCE;
 
-    if (desc.shaderProgram)
-    {
-        auto instanceDesc = desc;
-        {
-            instanceDesc.shaderProgram  = &(LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram)->instance);
-            if (desc.pipelineLayout != nullptr)
-                instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
-        }
-        return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), desc));
-    }
-    else
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "shader program must not be null");
+    if (debugger_)
+        ValidateComputePipelineDesc(desc);
 
-    return nullptr;
+    auto instanceDesc = desc;
+    {
+        if (desc.pipelineLayout != nullptr)
+            instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
+
+        if (desc.shaderProgram == nullptr)
+            instanceDesc.computeShader = GetInstanceShader(desc.computeShader);
+        else
+            instanceDesc.shaderProgram = &(LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram)->instance);
+    }
+    return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), desc));
 }
 
 void DbgRenderSystem::Release(PipelineState& pipelineState)
@@ -1463,8 +1466,86 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram);
         hasFragmentShader = shaderProgramDbg->HasFragmentShader();
     }
+    else
+    {
+        /* Validate shader pipeline stages */
+        bool hasSeparableShaders = false;
+        if (auto vertexShader = desc.vertexShader)
+        {
+            auto vertexShaderDbg = LLGL_CAST(DbgShader*, vertexShader);
+            hasSeparableShaders = ((vertexShaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
+        }
+        else
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO without vertex shader");
+
+        hasFragmentShader = (desc.fragmentShader != nullptr);
+
+        if ((desc.tessControlShader != nullptr) != (desc.tessEvaluationShader != nullptr))
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO with incomplete tessellation shader stages");
+
+        struct ExpectedShaderTypePair
+        {
+            Shader*     shader;
+            ShaderType  expectedType;
+        };
+
+        for (auto pair : { ExpectedShaderTypePair{ desc.vertexShader,         ShaderType::Vertex         },
+                           ExpectedShaderTypePair{ desc.tessControlShader,    ShaderType::TessControl    },
+                           ExpectedShaderTypePair{ desc.tessEvaluationShader, ShaderType::TessEvaluation },
+                           ExpectedShaderTypePair{ desc.geometryShader,       ShaderType::Geometry       },
+                           ExpectedShaderTypePair{ desc.fragmentShader,       ShaderType::Fragment       } })
+        {
+            if (auto shader = pair.shader)
+            {
+                auto shaderDbg = LLGL_CAST(DbgShader*, shader);
+                const bool isSeparableShaders = ((shaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
+                if (isSeparableShaders && !hasSeparableShaders)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "cannot mix and match separable " + std::string(ToString(shader->GetType())) +
+                        " shader with non-separable shaders in graphics PSO; see LLGL::ShaderCompileFlags::SeparateShader"
+                    );
+                }
+                else if (!isSeparableShaders && hasSeparableShaders)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "cannot mix and match non-separable " + std::string(ToString(shader->GetType())) +
+                        " shader with separable shaders in graphics PSO; see LLGL::ShaderCompileFlags::SeparateShader"
+                    );
+                }
+                if (shader != nullptr && shader->GetType() != pair.expectedType)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "cannot create graphics PSO with " + std::string(ToString(shader->GetType())) +
+                        " shader being assigned to " + std::string(ToString(pair.expectedType)) + " stage"
+                    );
+                }
+            }
+        }
+    }
 
     ValidateBlendDescriptor(desc.blend, hasFragmentShader);
+}
+
+void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescriptor& desc)
+{
+    /* Validate shader pipeline stages */
+    if (desc.computeShader != nullptr)
+    {
+        if (desc.computeShader->GetType() != ShaderType::Compute)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot create compute PSO with " + std::string(ToString(desc.computeShader->GetType())) +
+                " shader being assigned to compute stage"
+            );
+        }
+    }
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create compute PSO without compute shader");
 }
 
 void DbgRenderSystem::Assert3DTextures()

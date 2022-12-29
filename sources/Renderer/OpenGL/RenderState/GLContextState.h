@@ -106,6 +106,7 @@ struct GLContextState
 
     // Programs
     GLuint          boundProgram                        = 0;
+    GLuint          boundProgramPipeline                = 0;
 
     // Samplers
     GLuint          boundSamplers[numTextureLayers];

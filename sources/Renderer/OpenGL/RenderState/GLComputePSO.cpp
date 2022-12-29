@@ -14,7 +14,7 @@ namespace LLGL
 
 
 GLComputePSO::GLComputePSO(const ComputePipelineDescriptor& desc) :
-    GLPipelineState { false, desc.pipelineLayout, desc.shaderProgram }
+    GLPipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout, { desc.computeShader } }
 {
 }
 
