@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/RenderSystemFlags.h>
-#include <LLGL/TypeNames.h>
+#include <LLGL/Misc/TypeNames.h>
 #include "../Core/Helper.h"
 
 

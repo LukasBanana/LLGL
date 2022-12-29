@@ -9,7 +9,7 @@
 #include "DbgShader.h"
 #include "../DbgCore.h"
 #include "../../CheckedCast.h"
-#include <LLGL/TypeNames.h>
+#include <LLGL/Misc/TypeNames.h>
 
 
 namespace LLGL

@@ -6,8 +6,8 @@
  */
 
 #include <LLGL/RenderingDebugger.h>
-#include <LLGL/TypeNames.h>
 #include <LLGL/Log.h>
+#include <LLGL/Misc/TypeNames.h>
 #include <LLGL/Container/Strings.h>
 #include <map>
 

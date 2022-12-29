@@ -23,8 +23,8 @@
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
-#include <LLGL/TypeNames.h>
 #include <LLGL/TypeInfo.h>
+#include <LLGL/Misc/TypeNames.h>
 #include <algorithm>
 
 

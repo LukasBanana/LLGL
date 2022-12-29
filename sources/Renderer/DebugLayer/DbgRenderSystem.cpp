@@ -11,9 +11,9 @@
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
-#include <LLGL/TypeNames.h>
 #include <LLGL/ImageFlags.h>
 #include <LLGL/StaticLimits.h>
+#include <LLGL/Misc/TypeNames.h>
 
 
 namespace LLGL

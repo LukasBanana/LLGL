@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/TypeNames.h>
+#include <LLGL/Misc/TypeNames.h>
 
 
 namespace LLGL
