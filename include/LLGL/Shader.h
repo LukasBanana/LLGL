@@ -38,7 +38,6 @@ class LLGL_EXPORT Shader : public RenderSystemChild
 
         /**
         \brief Returns the report message after the shader compilation or an empty string if there is no report.
-        \todo Change return value to std::unique_ptr<LLGL::Blob>
         \see ShaderProgram::GetReport
         */
         virtual std::string GetReport() const = 0;

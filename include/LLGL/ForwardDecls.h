@@ -26,6 +26,7 @@ class QueryHeap;
 class RenderPass;
 class RenderSystem;
 class RenderTarget;
+class Report;
 class Resource;
 class ResourceHeap;
 class Sampler;
