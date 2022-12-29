@@ -22,11 +22,10 @@ namespace LLGL
 
 
 /**
-\brief Vertex format structure.
+\brief Utility structure to store vertex attributes.
 \remarks A vertex format is required to describe how the vertex attributes are layed out inside a vertex buffer.
 \see BufferDescriptor::VertexBuffer::format
 \see ShaderProgramDescriptor::vertexFormats
-\todo Move this to \c Utility.h header.
 */
 struct VertexFormat
 {

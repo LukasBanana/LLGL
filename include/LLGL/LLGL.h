@@ -22,7 +22,6 @@
 #include <LLGL/Log.h>
 #include <LLGL/IndirectArguments.h>
 #include <LLGL/ImageFlags.h>
-#include <LLGL/VertexFormat.h>
 
 
 //DOXYGEN MAIN PAGE

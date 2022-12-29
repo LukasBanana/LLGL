@@ -218,6 +218,7 @@ endif()
 # Common files
 file(GLOB FilesInclude                      ${PROJECT_INCLUDE_DIR}/LLGL/*.*)
 file(GLOB FilesIncludeContainer             ${PROJECT_INCLUDE_DIR}/LLGL/Container/*.*)
+file(GLOB FilesIncludeMisc                  ${PROJECT_INCLUDE_DIR}/LLGL/Misc/*.*)
 file(GLOB FilesIncludePlatformBase          ${PROJECT_INCLUDE_DIR}/LLGL/Platform/*.*)
 file(GLOB FilesCore                         ${PROJECT_SOURCE_DIR}/sources/Core/*.*)
 file(GLOB FilesPlatformBase                 ${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
@@ -421,6 +422,7 @@ set(FilesExample_HelloAndroid ${EXAMPLE_PROJECTS_DIR}/HelloAndroid/Example.cpp)
 
 source_group("Include" FILES ${FilesInclude})
 source_group("Include\\Container" FILES ${FilesIncludeContainer})
+source_group("Include\\Misc" FILES ${FilesIncludeMisc})
 source_group("Sources\\Core" FILES ${FilesCore})
 
 if(LLGL_ENABLE_JIT_COMPILER)
@@ -510,6 +512,7 @@ set(
     FilesLLGL
     ${FilesInclude}
     ${FilesIncludeContainer}
+    ${FilesIncludeMisc}
     ${FilesIncludePlatformBase}
     ${FilesIncludePlatform}
     ${FilesCore}
@@ -876,30 +879,23 @@ message("Target Platform: ${SUMMARY_TARGET_PLATFORM}")
 message("Target Architecture: ${SUMMARY_TARGET_ARCH}")
 message("Target Library: ${SUMMARY_LIBRARY_TYPE}")
 
-set(RENDERER_COUNT 0)
-
 if(LLGL_BUILD_RENDERER_OPENGL AND OpenGL_FOUND)
     message("Build Renderer: OpenGL")
-    math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3 AND OPENGLES_FOUND)
     message("Build Renderer: OpenGLES 3")
-    math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
 endif()
 
 if(NOT APPLE AND LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
-    math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
     message("Build Renderer: Vulkan")
 endif()
 
 if(APPLE AND LLGL_BUILD_RENDERER_METAL)
-    math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
     message("Build Renderer: Metal")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
-    math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
     if(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.3")
         message("Build Renderer: Direct3D 11.3")
     elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.2")
@@ -912,17 +908,12 @@ if(LLGL_BUILD_RENDERER_DIRECT3D11)
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
-    math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
     message("Build Renderer: Direct3D 12.0")
 endif()
 
 if(WIN32 AND LLGL_BUILD_WRAPPER_CSHARP)
     message("Build Wrapper: C#")
 endif()
-
-#if(LLGL_BUILD_STATIC_LIB AND NOT(${RENDERER_COUNT} EQUAL 1))
-#    message(SEND_ERROR "Static library only supports one single render backend, but multiple are specified!")
-#endif()
 
 if(LLGL_ENABLE_SPIRV_REFLECT)
     message("Including Submodule: SPIRV-Headers")

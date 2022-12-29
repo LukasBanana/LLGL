@@ -7,12 +7,12 @@
 
 #ifdef LLGL_ENABLE_UTILITY
 
-#include <LLGL/Utility.h>
+#include <LLGL/Misc/Utility.h>
+#include <LLGL/Misc/VertexFormat.h>
 #include <LLGL/Buffer.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
 #include <LLGL/Shader.h>
-#include <LLGL/VertexFormat.h>
 #include <cstring>
 #include <cctype>
 

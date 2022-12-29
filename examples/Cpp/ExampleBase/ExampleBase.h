@@ -10,7 +10,7 @@
 
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Utility.h>
+#include <LLGL/Misc/Utility.h>
 #include <LLGL/Container/Strings.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Platform/Platform.h>
