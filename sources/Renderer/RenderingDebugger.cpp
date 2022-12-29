@@ -1,6 +1,6 @@
 /*
  * RenderingDebugger.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -16,12 +16,31 @@ namespace LLGL
 {
 
 
+struct CompareStringLess
+{
+    inline bool operator () (const UTF8String& lhs, const UTF8String& rhs) const
+    {
+        return (lhs.compare(rhs) < 0);
+    }
+    inline bool operator () (const UTF8String& lhs, const StringView& rhs) const
+    {
+        return (lhs.compare(rhs) < 0);
+    }
+    inline bool operator () (const StringView& lhs, const UTF8String& rhs) const
+    {
+        return (lhs.compare(rhs) < 0);
+    }
+};
+
+template <typename T>
+using UTF8StringMap = std::map<UTF8String, T, CompareStringLess>;
+
 struct RenderingDebugger::Pimpl
 {
-    std::map<UTF8String, Message>   errors;
-    std::map<UTF8String, Message>   warnings;
-    const char*                     source      = "";
-    const char*                     groupName   = "";
+    UTF8StringMap<Message>  errors;
+    UTF8StringMap<Message>  warnings;
+    const char*             source      = "";
+    const char*             groupName   = "";
 };
 
 
