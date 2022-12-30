@@ -229,16 +229,20 @@ BlendDescriptor::BlendDescriptor()
 
 GraphicsPipelineDescriptor::GraphicsPipelineDescriptor()
 {
-    ShaderProgram       = nullptr;
-    RenderPass          = nullptr;
-    PipelineLayout      = nullptr;
-    PrimitiveTopology   = SharpLLGL::PrimitiveTopology::TriangleList;
-    Viewports           = gcnew List<Viewport^>();
-    Scissors            = gcnew List<Scissor^>();
-    Depth               = gcnew DepthDescriptor();
-    Stencil             = gcnew StencilDescriptor();
-    Rasterizer          = gcnew RasterizerDescriptor();
-    Blend               = gcnew BlendDescriptor();
+    VertexShader            = nullptr;
+    TessControlShader       = nullptr;
+    TessEvaluationShader    = nullptr;
+    GeometryShader          = nullptr;
+    FragmentShader          = nullptr;
+    RenderPass              = nullptr;
+    PipelineLayout          = nullptr;
+    PrimitiveTopology       = SharpLLGL::PrimitiveTopology::TriangleList;
+    Viewports               = gcnew List<Viewport^>();
+    Scissors                = gcnew List<Scissor^>();
+    Depth                   = gcnew DepthDescriptor();
+    Stencil                 = gcnew StencilDescriptor();
+    Rasterizer              = gcnew RasterizerDescriptor();
+    Blend                   = gcnew BlendDescriptor();
 }
 
 

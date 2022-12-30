@@ -235,12 +235,42 @@ public ref class PipelineLayout
 
 };
 
+public ref class Report
+{
+
+    public:
+
+        Report(String^ text);
+        Report(String^ text, bool hasErrors);
+
+        property String^ Text
+        {
+            String^ get();
+        };
+
+        property bool HasErrors
+        {
+            bool get();
+        };
+
+    private:
+
+        String^ text_       = nullptr;
+        bool    hasErrors_  = false;
+
+};
+
 public ref class PipelineState
 {
 
     public:
 
         PipelineState(LLGL::PipelineState* native);
+
+        property Report^ Report
+        {
+            SharpLLGL::Report^ get();
+        };
 
     private:
 

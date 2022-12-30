@@ -164,12 +164,46 @@ LLGL::PipelineLayout* PipelineLayout::Native::get()
 
 
 /*
+ * Report class
+ */
+
+Report::Report(String^ text)
+{
+    text_ = text;
+}
+
+Report::Report(String^ text, bool hasErrors)
+{
+    text_       = text;
+    hasErrors_  = hasErrors;
+}
+
+String^ Report::Text::get()
+{
+    return text_;
+}
+
+bool Report::HasErrors::get()
+{
+    return hasErrors_;
+}
+
+
+/*
  * PipelineState class
  */
 
 PipelineState::PipelineState(LLGL::PipelineState* native) :
     native_ { native }
 {
+}
+
+SharpLLGL::Report^ PipelineState::Report::get()
+{
+    if (auto report = native_->GetReport())
+        return gcnew SharpLLGL::Report(gcnew String(report->GetText()), report->HasErrors());
+    else
+        return nullptr;
 }
 
 LLGL::PipelineState* PipelineState::Native::get()

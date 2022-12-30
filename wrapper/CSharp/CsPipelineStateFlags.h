@@ -8,7 +8,7 @@
 #pragma once
 
 #include <vcclr.h>
-#include "CsShaderProgram.h"
+#include "CsShader.h"
 #include "CsRenderSystemChild.h"
 #include "CsTypes.h"
 #include "CsColor.h"
@@ -323,7 +323,11 @@ public ref class GraphicsPipelineDescriptor
 
         GraphicsPipelineDescriptor();
 
-        property ShaderProgram^         ShaderProgram;
+        property Shader^                VertexShader;
+        property Shader^                TessControlShader;
+        property Shader^                TessEvaluationShader;
+        property Shader^                GeometryShader;
+        property Shader^                FragmentShader;
         property RenderPass^            RenderPass;
         property PipelineLayout^        PipelineLayout;
         property PrimitiveTopology      PrimitiveTopology;

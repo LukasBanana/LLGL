@@ -50,12 +50,15 @@ public enum class ShaderSourceType
 [Flags]
 public enum class ShaderCompileFlags
 {
-    None        = 0,
-    Debug       = (1 << 0),
-    O1          = (1 << 1),
-    O2          = (1 << 2),
-    O3          = (1 << 3),
-    WarnError   = (1 << 4),
+    None                = 0,
+    Debug               = (1 << 0),
+    NoOptimization      = (1 << 1),
+    OptimizationLevel1  = (1 << 2),
+    OptimizationLevel2  = (1 << 3),
+    OptimizationLevel3  = (1 << 4),
+    WarningsAreErrors   = (1 << 5),
+    PatchClippingOrigin = (1 << 6),
+    SeparateShader      = (1 << 7),
 };
 
 [Flags]

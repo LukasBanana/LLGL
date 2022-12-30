@@ -8,7 +8,7 @@
 #include "CsRenderSystem.h"
 #include "CsHelper.h"
 #include <LLGL/ImageFlags.h>
-#include <LLGL/Utility.h>
+#include <LLGL/Misc/Utility.h>
 #include <algorithm>
 
 
@@ -804,10 +804,14 @@ static void Convert(LLGL::GraphicsPipelineDescriptor& dst, GraphicsPipelineDescr
 {
     if (src)
     {
-        dst.shaderProgram       = (src->ShaderProgram != nullptr ? src->ShaderProgram->Native : nullptr);
-        dst.renderPass          = (src->RenderPass != nullptr ? src->RenderPass->Native : nullptr);
-        dst.pipelineLayout      = (src->PipelineLayout != nullptr ? src->PipelineLayout->Native : nullptr);
-        dst.primitiveTopology   = static_cast<LLGL::PrimitiveTopology>(src->PrimitiveTopology);
+        dst.vertexShader            = (src->VertexShader != nullptr ? src->VertexShader->Native : nullptr);
+        dst.tessControlShader       = (src->TessControlShader != nullptr ? src->TessControlShader->Native : nullptr);
+        dst.tessEvaluationShader    = (src->TessEvaluationShader != nullptr ? src->TessEvaluationShader->Native : nullptr);
+        dst.geometryShader          = (src->GeometryShader != nullptr ? src->GeometryShader->Native : nullptr);
+        dst.fragmentShader          = (src->FragmentShader != nullptr ? src->FragmentShader->Native : nullptr);
+        dst.renderPass              = (src->RenderPass != nullptr ? src->RenderPass->Native : nullptr);
+        dst.pipelineLayout          = (src->PipelineLayout != nullptr ? src->PipelineLayout->Native : nullptr);
+        dst.primitiveTopology       = static_cast<LLGL::PrimitiveTopology>(src->PrimitiveTopology);
 
         dst.viewports.resize(src->Viewports->Count);
         for (std::size_t i = 0; i < dst.viewports.size(); ++i)
