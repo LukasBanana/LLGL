@@ -136,6 +136,15 @@ struct ShaderCompileFlags
         \see RenderingCapabilities::screenOrigin
         */
         PatchClippingOrigin     = (1 << 6),
+
+        /**
+        \brief Specifies whether to create separable or legacy shaders.
+        \remarks This is only used for the OpenGL backend. Separate and non-separate shaders (i.e. legacy shaders) must not be mixed and matched when a graphics PSO is created!
+        If specified, the GLSL vertex shader must contain a \c gl_PerVertex block and the GLSL fragment shader \e may contain a \c gl_PerFragment block.
+        \see https://registry.khronos.org/OpenGL/extensions/ARB/ARB_separate_shader_objects.txt
+        \note Only supported with: GLSL.
+        */
+        SeparateShader          = (1 << 7),
     };
 };
 

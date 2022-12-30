@@ -29,9 +29,11 @@ std::uint64_t Stopwatch::Stop()
 
 void Stopwatch::MeasureTime()
 {
+    const bool wasRunning = IsRunning();
     auto elapsed = Stop();
     Start();
-    deltaTime_ = static_cast<double>(elapsed) / static_cast<double>(GetFrequency());
+    if (wasRunning)
+        deltaTime_ = static_cast<double>(elapsed) / static_cast<double>(GetFrequency());
 }
 
 

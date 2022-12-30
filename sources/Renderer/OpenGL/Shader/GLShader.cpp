@@ -12,6 +12,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Exception.h"
+#include <LLGL/Misc/ForRange.h>
 #include <vector>
 #include <sstream>
 #include <stdexcept>
@@ -151,10 +152,10 @@ void GLShader::BuildVertexInputLayout(std::size_t numVertexAttribs, const Vertex
         return;
 
     /* Validate maximal number of vertex attributes (OpenGL supports at least 8 vertex attribute) */
-    static const std::size_t minSupportedVertexAttribs = 8;
+    constexpr std::size_t minSupportedVertexAttribs = 8;
 
     std::size_t highestAttribIndex = 0;
-    for (std::size_t i = 0; i < numVertexAttribs; ++i)
+    for_range(i, numVertexAttribs)
         highestAttribIndex = std::max(highestAttribIndex, static_cast<std::size_t>(vertexAttribs[i].location));
 
     if (highestAttribIndex > minSupportedVertexAttribs)
@@ -172,7 +173,7 @@ void GLShader::BuildVertexInputLayout(std::size_t numVertexAttribs, const Vertex
     }
 
     /* Bind all vertex attribute locations */
-    for (std::size_t i = 0; i < numVertexAttribs; ++i)
+    for_range(i, numVertexAttribs)
     {
         /* Store attribute meta data (matrices only use the 1st column) */
         const auto& attr = vertexAttribs[i];
@@ -187,7 +188,7 @@ void GLShader::BuildFragmentOutputLayout(std::size_t numFragmentAttribs, const F
         return;
 
     /* Bind all fragment attribute locations */
-    for (std::size_t i = 0; i < numFragmentAttribs; ++i)
+    for_range(i, numFragmentAttribs)
     {
         /* Store attribute meta data (matrices only use the 1st column) */
         const auto& attr = fragmentAttribs[i];

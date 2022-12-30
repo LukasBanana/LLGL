@@ -720,7 +720,7 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
         /* Bind graphics pipeline and unbind compute pipeline */
         bindings_.pipelineState         = (&pipelineStateDbg);
-        bindings_.shaderProgram_        = nullptr;
+        bindings_.shaderProgram         = nullptr;
         bindings_.anyShaderAttributes   = false;
 
         if (pipelineStateDbg.isGraphicsPSO)
@@ -728,8 +728,14 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
             if (auto shaderProgram = pipelineStateDbg.graphicsDesc.shaderProgram)
             {
                 auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
-                bindings_.shaderProgram_        = shaderProgramDbg;
+                bindings_.shaderProgram         = shaderProgramDbg;
                 bindings_.anyShaderAttributes   = !(shaderProgramDbg->GetVertexLayout().attributes.empty());
+            }
+            else if (auto vertexShader = pipelineStateDbg.graphicsDesc.vertexShader)
+            {
+                auto vertexShaderDbg = LLGL_CAST(const DbgShader*, vertexShader);
+                //TODO: store bound vertex shader
+                bindings_.anyShaderAttributes = !(vertexShaderDbg->desc.vertex.inputAttribs.empty());
             }
         }
         else
@@ -737,7 +743,11 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
             if (auto shaderProgram = pipelineStateDbg.computeDesc.shaderProgram)
             {
                 auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
-                bindings_.shaderProgram_ = shaderProgramDbg;
+                bindings_.shaderProgram = shaderProgramDbg;
+            }
+            else if (auto computeShader = pipelineStateDbg.computeDesc.computeShader)
+            {
+                //TODO: store bound compute shader
             }
         }
     }
@@ -1491,7 +1501,7 @@ void DbgCommandBuffer::ValidateVertexID(std::uint32_t firstVertex)
 {
     if (firstVertex > 0)
     {
-        if (auto shaderProgramDbg = bindings_.shaderProgram_)
+        if (auto shaderProgramDbg = bindings_.shaderProgram)
         {
             if (auto vertexID = shaderProgramDbg->GetVertexID())
             {
@@ -1508,7 +1518,7 @@ void DbgCommandBuffer::ValidateInstanceID(std::uint32_t firstInstance)
 {
     if (firstInstance > 0)
     {
-        if (auto shaderProgramDbg = bindings_.shaderProgram_)
+        if (auto shaderProgramDbg = bindings_.shaderProgram)
         {
             if (auto instanceID = shaderProgramDbg->GetInstanceID())
             {

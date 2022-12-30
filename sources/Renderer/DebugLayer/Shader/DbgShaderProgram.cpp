@@ -123,6 +123,7 @@ void DbgShaderProgram::ValidateShaderAttachment(Shader* shader, const ShaderType
     }
 }
 
+//TODO: update to replace reflection from ShaderProgram instance
 void DbgShaderProgram::QueryInstanceAndVertexIDs()
 {
     ShaderReflection reflect;

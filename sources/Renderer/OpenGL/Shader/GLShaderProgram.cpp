@@ -108,14 +108,14 @@ static void PutIntoShaderProgramDesc(Shader* shader, ShaderProgramDescriptor& de
     }
 }
 
-static ShaderProgramDescriptor MakeShaderProgramDesc(std::size_t numShaders, const Shader* const* shaders)
+static ShaderProgramDescriptor MakeShaderProgramDesc(std::size_t numShaders, Shader* const* shaders)
 {
     ShaderProgramDescriptor desc;
 
     for_range(i, numShaders)
     {
         if (auto shader = shaders[i])
-            PutIntoShaderProgramDesc(const_cast<Shader*>(shader), desc); //TODO: remove const_cast
+            PutIntoShaderProgramDesc(shader, desc);
     }
 
     return desc;
@@ -198,9 +198,10 @@ GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
         GLShaderProgram::LinkProgram(GetID());
 }
 
-GLShaderProgram::GLShaderProgram(std::size_t numShaders, const Shader* const* shaders) :
+GLShaderProgram::GLShaderProgram(std::size_t numShaders, Shader* const* shaders) :
     GLShaderProgram { MakeShaderProgramDesc(numShaders, shaders) }
 {
+    BuildSignature(numShaders, shaders);
 }
 
 GLShaderProgram::~GLShaderProgram()
@@ -298,7 +299,7 @@ std::string GLShaderProgram::GetGLProgramLog(GLuint program)
 void GLShaderProgram::BindAttribLocations(GLuint program, std::size_t numVertexAttribs, const GLShaderAttribute* vertexAttribs)
 {
     /* Bind all vertex attribute locations */
-    for (std::size_t i = 0; i < numVertexAttribs; ++i)
+    for_range(i, numVertexAttribs)
     {
         const auto& attr = vertexAttribs[i];
         glBindAttribLocation(program, attr.index, attr.name);
@@ -311,7 +312,7 @@ void GLShaderProgram::BindFragDataLocations(GLuint program, std::size_t numFragm
     /* Only bind if extension is supported, otherwise the sahder won't have multiple fragment outpus anyway */
     if (HasExtension(GLExt::EXT_gpu_shader4))
     {
-        for (std::size_t i = 0; i < numFragmentAttribs; ++i)
+        for_range(i, numFragmentAttribs)
         {
             const auto& attr = fragmentAttribs[i];
             glBindFragDataLocation(program, attr.index, attr.name);
@@ -545,7 +546,7 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
     attributes.reserve(static_cast<std::size_t>(numAttribs));
 
     /* Iterate over all vertex attributes */
-    for (GLuint i = 0; i < static_cast<GLuint>(numAttribs); ++i)
+    for_range(i, static_cast<GLuint>(numAttribs))
     {
         /* Query attribute information */
         GLint   size        = 0;
@@ -583,7 +584,7 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
     /* Copy attribute into final list and determine offsets */
     reflection.vertex.inputAttribs.resize(attributes.size());
 
-    for (std::size_t i = 0; i < attributes.size(); ++i)
+    for_range(i, attributes.size())
     {
         auto& src = attributes[i];
         auto& dst = reflection.vertex.inputAttribs[i];
@@ -619,7 +620,7 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
             return;
 
         /* Iterate over all vertex attributes */
-        for (GLuint i = 0; i < static_cast<GLuint>(numVaryings); ++i)
+        for_range(i, static_cast<GLuint>(numVaryings))
         {
             /* Query attribute information */
             GLint   size        = 0;
@@ -652,7 +653,7 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
             return;
 
         /* Iterate over all vertex attributes */
-        for (GLuint i = 0; i < static_cast<GLuint>(numVaryings); ++i)
+        for_range(i, static_cast<GLuint>(numVaryings))
         {
             /* Query attribute information */
             GLint   size        = 0;
@@ -707,7 +708,7 @@ static long GetStageFlagsFromResourceProperties(GLsizei count, const GLenum* pro
             stageFlags |= bitmask;
     };
 
-    for (GLsizei i = 0; i < count; ++i)
+    for_range(i, count)
     {
         switch (props[i])
         {
@@ -749,7 +750,7 @@ void GLShaderProgram::QueryConstantBuffers(ShaderReflection& reflection) const
         return;
 
     /* Iterate over all uniform blocks */
-    for (GLuint i = 0; i < static_cast<GLuint>(numUniformBlocks); ++i)
+    for_range(i, static_cast<GLuint>(numUniformBlocks))
     {
         ShaderResource resource;
         {
@@ -805,7 +806,7 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
     std::vector<char> blockName(maxNameLength, 0);
 
     /* Iterate over all shader storage blocks */
-    for (GLuint i = 0; i < static_cast<GLuint>(numStorageBlocks); ++i)
+    for_range(i, static_cast<GLuint>(numStorageBlocks))
     {
         ShaderResource resource;
         {
@@ -836,7 +837,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
         return;
 
     /* Iterate over all uniforms */
-    for (GLuint i = 0; i < static_cast<GLuint>(numUniforms); ++i)
+    for_range(i, static_cast<GLuint>(numUniforms))
     {
         /* Query uniform block name */
         GLsizei nameLength  = 0;

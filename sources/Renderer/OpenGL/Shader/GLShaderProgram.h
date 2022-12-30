@@ -27,9 +27,10 @@ class GLShaderProgram final : public ShaderProgram, public GLShaderPipeline
     public:
 
         GLShaderProgram(const ShaderProgramDescriptor& desc); //TODO: remove
-        GLShaderProgram(std::size_t numShaders, const Shader* const* shaders);
+        GLShaderProgram(std::size_t numShaders, Shader* const* shaders);
         ~GLShaderProgram();
 
+        #if 1 //TODO: remove dependecy to ShaderProgram interface
         void SetName(const char* name) override;
 
         bool HasErrors() const override;
@@ -37,6 +38,7 @@ class GLShaderProgram final : public ShaderProgram, public GLShaderPipeline
 
         bool Reflect(ShaderReflection& reflection) const override;
         UniformLocation FindUniformLocation(const char* name) const override;
+        #endif
 
         void Bind(GLStateManager& stateMngr) override;
         void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) override;

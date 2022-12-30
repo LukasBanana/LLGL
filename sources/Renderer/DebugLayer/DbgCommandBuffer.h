@@ -343,7 +343,7 @@ class DbgCommandBuffer final : public CommandBuffer
             DbgBuffer*              streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]  = {};
             std::uint32_t           numStreamOutputs                        = 0;
             DbgPipelineState*       pipelineState                           = nullptr;
-            const DbgShaderProgram* shaderProgram_                          = nullptr;
+            const DbgShaderProgram* shaderProgram                           = nullptr;
         }
         bindings_;
 

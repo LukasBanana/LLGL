@@ -19,9 +19,7 @@ namespace LLGL
 
 static GLuint SortShaderArray(std::size_t numShaders, const Shader* const* shaders, GLuint* outShaderIDs)
 {
-    constexpr auto firstShaderType   = static_cast<int>(ShaderType::Vertex);
-    constexpr auto lastShaderType    = static_cast<int>(ShaderType::Compute);
-    constexpr auto numShaderTypes    = (lastShaderType - firstShaderType + 1);
+    constexpr auto numShaderTypes = (static_cast<int>(ShaderType::Compute) + 1);
 
     /* Put all shaders into order */
     const GLShader* shadersOrderedByType[numShaderTypes] = {};
@@ -64,10 +62,10 @@ void GLPipelineSignature::Build(std::size_t numShaders, const Shader* const* sha
 
 int GLPipelineSignature::CompareSWO(const GLPipelineSignature& lhs, const GLPipelineSignature& rhs)
 {
-    LLGL_COMPARE_BOOL_MEMBER_SWO(numShaders_);
+    LLGL_COMPARE_MEMBER_SWO(numShaders_);
     for_range(i, lhs.numShaders_)
     {
-        LLGL_COMPARE_BOOL_MEMBER_SWO(shaders_[i]);
+        LLGL_COMPARE_MEMBER_SWO(shaders_[i]);
     }
     return 0;
 }
