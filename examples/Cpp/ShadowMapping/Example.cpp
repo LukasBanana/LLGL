@@ -11,8 +11,9 @@
 class Example_ShadowMapping : public ExampleBase
 {
 
-    LLGL::ShaderProgram*        shaderProgramShadowMap  = nullptr;
-    LLGL::ShaderProgram*        shaderProgramScene      = nullptr;
+    LLGL::Shader*               vsShadowMap             = nullptr;
+    LLGL::Shader*               vsScene                 = nullptr;
+    LLGL::Shader*               fsScene                 = nullptr;
 
     LLGL::PipelineLayout*       pipelineLayoutShadowMap = nullptr;
     LLGL::PipelineLayout*       pipelineLayoutScene     = nullptr;
@@ -69,8 +70,9 @@ public:
         vertexBuffer->SetName("Buffer.Vertices");
         constantBuffer->SetName("Buffer.Constants");
 
-        shaderProgramShadowMap->SetName("ShadowMap.ShaderProgram");
-        shaderProgramScene->SetName("Scene.ShaderProgram");
+        vsShadowMap->SetName("ShadowMap.VertexShader");
+        vsScene->SetName("Scene.VertexShader");
+        fsScene->SetName("Scene.FragmentShader");
 
         shadowMap->SetName("ShadowMap.Texture");
         shadowMapRenderTarget->SetName("ShadowMap.RenderTarget");
@@ -112,67 +114,31 @@ private:
         // Load shader program
         if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            shaderProgramShadowMap = LoadShaderProgramAndPatchClippingOrigin(
-                {
-                    { LLGL::ShaderType::Vertex, "ShadowMap.vert" }
-                },
-                { vertexFormat }
-            );
-            shaderProgramScene = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Scene.vert" },
-                    { LLGL::ShaderType::Fragment, "Scene.frag" },
-                },
-                { vertexFormat }
-            );
+            vsShadowMap = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex, "ShadowMap.vert" }, { vertexFormat });
+
+            vsScene     = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.vert" }, { vertexFormat });
+            fsScene     = LoadShader({ LLGL::ShaderType::Fragment, "Scene.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            shaderProgramShadowMap = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex, "ShadowMap.450core.vert.spv" }
-                },
-                { vertexFormat }
-            );
-            shaderProgramScene = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" },
-                    { LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" },
-                },
-                { vertexFormat }
-            );
+            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "ShadowMap.450core.vert.spv" }, { vertexFormat });
+
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" }, { vertexFormat });
+            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            shaderProgramShadowMap = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex, "Example.hlsl", "VShadowMap", "vs_5_0" }
-                },
-                { vertexFormat }
-            );
-            shaderProgramScene = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" },
-                },
-                { vertexFormat }
-            );
+            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", "VShadowMap", "vs_5_0" }, { vertexFormat });
+
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" }, { vertexFormat });
+            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            shaderProgramShadowMap = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex, "Example.metal", "VShadowMap", "1.1" }
-                },
-                { vertexFormat }
-            );
-            shaderProgramScene = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" },
-                    { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" },
-                },
-                { vertexFormat }
-            );
+            vsShadowMap = LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", "VShadowMap", "1.1" }, { vertexFormat });
+
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" }, { vertexFormat });
+            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
         }
         else
             throw std::runtime_error("shaders not supported for active renderer");
@@ -245,7 +211,7 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram                          = shaderProgramShadowMap;
+                pipelineDesc.vertexShader                           = vsShadowMap;
                 pipelineDesc.renderPass                             = shadowMapRenderTarget->GetRenderPass();
                 pipelineDesc.pipelineLayout                         = pipelineLayoutShadowMap;
                 pipelineDesc.depth.testEnabled                      = true;
@@ -263,7 +229,8 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram                  = shaderProgramScene;
+                pipelineDesc.vertexShader                   = vsScene;
+                pipelineDesc.fragmentShader                 = fsScene;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayoutScene;
                 pipelineDesc.depth.testEnabled              = true;

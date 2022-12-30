@@ -89,7 +89,7 @@ class Measure
 class Example_MultiThreading : public ExampleBase
 {
 
-    LLGL::ShaderProgram*        shaderProgram       = nullptr;
+    ShaderPipeline              shaderPipeline;
     LLGL::Buffer*               vertexBuffer        = nullptr;
     LLGL::Buffer*               indexBuffer         = nullptr;
     LLGL::PipelineLayout*       pipelineLayout      = nullptr;
@@ -148,7 +148,7 @@ private:
     void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
         // Load shader program
-        shaderProgram = LoadStandardShaderProgram({ vertexFormat });
+        shaderPipeline = LoadStandardShaderPipeline({ vertexFormat });
     }
 
     void CreatePipelines()
@@ -171,7 +171,8 @@ private:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             // Set references to shader program, and pipeline layout
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.vertexShader                   = shaderPipeline.vs;
+            pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.pipelineLayout                 = pipelineLayout;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
 

@@ -35,7 +35,7 @@
 class Example_RenderTarget : public ExampleBase
 {
 
-    LLGL::ShaderProgram*    shaderProgram           = nullptr;
+    ShaderPipeline          shaderPipeline;
 
     LLGL::PipelineState*    pipelines[2]            = {};
     LLGL::PipelineLayout*   pipelineLayout          = nullptr;
@@ -145,47 +145,29 @@ private:
         // Load shader program
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            shaderProgram = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }
-                },
-                { vertexFormat }
-            );
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, { vertexFormat });
+            shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            shaderProgram = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.vert" },
-                    #ifdef __APPLE__
-                    { LLGL::ShaderType::Fragment, "Example.410core.frag" }
-                    #else
-                    { LLGL::ShaderType::Fragment, "Example.frag" }
-                    #endif
-                },
-                { vertexFormat }
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat });
+            shaderPipeline.ps = LoadShader(
+                #ifdef __APPLE__
+                { LLGL::ShaderType::Fragment, "Example.410core.frag" }
+                #else
+                { LLGL::ShaderType::Fragment, "Example.frag" }
+                #endif
             );
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            shaderProgram = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" },
-                    { LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }
-                },
-                { vertexFormat }
-            );
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" }, { vertexFormat });
+            shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            shaderProgram = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" },
-                    { LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" }
-                },
-                { vertexFormat }
-            );
+            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" }, { vertexFormat });
+            shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" });
         }
     }
 
@@ -209,7 +191,8 @@ private:
         // Create graphics pipeline for swap-chain
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.vertexShader                   = shaderPipeline.vs;
+            pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.renderPass                     = swapChain->GetRenderPass();
             pipelineDesc.pipelineLayout                 = pipelineLayout;
 
@@ -372,7 +355,7 @@ private:
         // Update model transformation with render-target projection
         UpdateModelTransform(settings, renderTargetProj, rotation.y, Gs::Vector3f(1));
 
-        if (IsOpenGL())
+        if (IsOpenGL() && IsScreenOriginLowerLeft())
         {
             /*
             Now flip the Y-axis (0 for X-axis, 1 for Y-axis, 2 for Z-axis) of the
@@ -477,7 +460,7 @@ private:
         commands->BeginRenderPass(*swapChain);
         {
             // Clear color and depth buffers of active framebuffer (i.e. the screen)
-            commands->Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
+            commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
 
             // Binds graphics pipeline for swap-chain
             commands->SetPipelineState(*pipelines[1]);

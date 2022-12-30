@@ -21,7 +21,7 @@ class Example_Mapping : public ExampleBase
     const LLGL::Extent3D    srcTexture0Size     = { 64, 64, 1 }; // 64 * 4 = 256 = Proper row alignment (especially for D3D12)
     const LLGL::Extent3D    srcTexture1Size     = { 50, 20, 1 }; // 50 * 4 = 200 = Improper row alignment
 
-    LLGL::ShaderProgram*    shaderProgram       = nullptr;
+    ShaderPipeline          shaderPipeline;
     LLGL::PipelineLayout*   pipelineLayout      = nullptr;
     LLGL::PipelineState*    pipeline            = nullptr;
     LLGL::Buffer*           vertexBuffer        = nullptr;
@@ -44,7 +44,7 @@ public:
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram({ vertexFormat });
+        shaderPipeline = LoadStandardShaderPipeline({ vertexFormat });
         CreatePipelines();
         CreateContentBuffer();
         CreateSourceTextures();
@@ -69,8 +69,8 @@ private:
         // Define vertex buffer data
         struct Vertex
         {
-            Gs::Vector2f position;
-            Gs::Vector2f texCoord;
+            float position[2];
+            float texCoord[2];
         };
 
         const float s = 1;//0.5f;
@@ -127,7 +127,8 @@ private:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.vertexShader       = shaderPipeline.vs;
+            pipelineDesc.fragmentShader     = shaderPipeline.ps;
             pipelineDesc.pipelineLayout     = pipelineLayout;
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
         }

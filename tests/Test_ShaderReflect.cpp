@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Utility.h>
+#include <LLGL/Misc/Utility.h>
 
 int main()
 {
@@ -32,22 +32,9 @@ int main()
         // Load shader
         auto computeShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Compute, "Shaders/SpirvReflectTest.comp.spv"));
 
-        if (computeShader->HasErrors())
-            std::cerr << computeShader->GetReport() << std::endl;
-
-        // Create shader program
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
-        {
-            shaderProgramDesc.computeShader = computeShader;
-        }
-        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-
-        if (shaderProgram->HasErrors())
-            std::cerr << shaderProgram->GetReport() << std::endl;
-
         // Reflect shader
         LLGL::ShaderReflection reflect;
-        shaderProgram->Reflect(reflect);
+        computeShader->Reflect(reflect);
 
         std::cout << "Resources:" << std::endl;
         for (const LLGL::ShaderResource& resc : reflect.resources)

@@ -6,7 +6,8 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Utility.h>
+#include <LLGL/Misc/Utility.h>
+#include <LLGL/Misc/VertexFormat.h>
 #include <Gauss/Gauss.h>
 #include <memory>
 #include <iostream>
@@ -81,18 +82,11 @@ int main()
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
         // Create shader program
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
-        {
-            LLGL::ShaderDescriptor vertexShaderDesc{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" };
-            vertexShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
+        LLGL::ShaderDescriptor vertexShaderDesc{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" };
+        vertexShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
 
-            shaderProgramDesc.vertexShader      = renderer->CreateShader(vertexShaderDesc);//{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" });
-            shaderProgramDesc.fragmentShader    = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Shaders/BlendTest.frag" });
-        }
-        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-
-        if (shaderProgram->HasErrors())
-            throw std::runtime_error(shaderProgram->GetReport());
+        auto vertexShader      = renderer->CreateShader(vertexShaderDesc);//{ LLGL::ShaderType::Vertex,   "Shaders/BlendTest.vert" });
+        auto fragmentShader    = renderer->CreateShader({ LLGL::ShaderType::Fragment, "Shaders/BlendTest.frag" });
 
         // Create graphics pipeline
         static const std::size_t numPipelines = 4;
@@ -101,7 +95,8 @@ int main()
 
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.vertexShader       = vertexShader;
+            pipelineDesc.fragmentShader     = fragmentShader;
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
         }
         pipeline[0] = renderer->CreatePipelineState(pipelineDesc);
@@ -121,6 +116,15 @@ int main()
             pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
         }
         pipeline[3] = renderer->CreatePipelineState(pipelineDesc);
+
+        for (auto p : pipeline)
+        {
+            if (auto report = p->GetReport())
+            {
+                if (report->HasErrors())
+                    throw std::runtime_error(report->GetText());
+            }
+        }
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();

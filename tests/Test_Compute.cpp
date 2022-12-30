@@ -65,19 +65,6 @@ int main()
         // Load shader
         auto computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "Shaders/ComputeShader.glsl" });
 
-        if (computeShader->HasErrors())
-            std::cerr << computeShader->GetReport() << std::endl;
-
-        // Create shader program
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
-        {
-            shaderProgramDesc.computeShader = computeShader;
-        }
-        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-
-        if (shaderProgram->HasErrors())
-            std::cerr << shaderProgram->GetReport() << std::endl;
-
         // Create timer query
         LLGL::QueryHeapDescriptor queryDesc;
         {
@@ -88,9 +75,15 @@ int main()
         // Create compute pipeline
         LLGL::ComputePipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram = shaderProgram;
+            pipelineDesc.computeShader = computeShader;
         }
         auto pipeline = renderer->CreatePipelineState(pipelineDesc);
+
+        if (auto report = pipeline->GetReport())
+        {
+            if (report->HasErrors())
+                throw std::runtime_error(report->GetText());
+        }
 
         // Set resources
         commands->Begin();

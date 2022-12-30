@@ -392,230 +392,164 @@ void ExampleBase::OnResize(const LLGL::Extent2D& resoluion)
     // dummy
 }
 
-// private
-LLGL::ShaderProgram* ExampleBase::LoadShaderProgramInternal(
-    const std::vector<TutorialShaderDescriptor>&    shaderDescs,
-    const std::vector<LLGL::VertexFormat>&          vertexFormats,
-    const LLGL::VertexFormat&                       streamOutputFormat,
-    const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs,
-    const LLGL::ShaderMacro*                        defines,
-    bool                                            patchClippingOrigin)
+//private
+LLGL::Shader* ExampleBase::LoadShaderInternal(
+    const TutorialShaderDescriptor&             shaderDesc,
+    const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
+    const LLGL::VertexFormat&                   streamOutputFormat,
+    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+    const LLGL::ShaderMacro*                    defines,
+    bool                                        patchClippingOrigin)
 {
-    ShaderProgramRecall recall;
-
-    recall.shaderDescs = shaderDescs;
+    std::vector<LLGL::Shader*>          shaders;
+    std::vector<LLGL::VertexAttribute>  vertexInputAttribs;
 
     // Store vertex input attributes
     for (const auto& vtxFmt : vertexFormats)
     {
-        recall.vertexAttribs.inputAttribs.insert(
-            recall.vertexAttribs.inputAttribs.end(),
+        vertexInputAttribs.insert(
+            vertexInputAttribs.end(),
             vtxFmt.attributes.begin(),
             vtxFmt.attributes.end()
         );
     }
 
-    // Determine what shader stages needs to patch the clipping origin
-    LLGL::ShaderType shaderToPatchClippingOrigin = LLGL::ShaderType::Undefined;
-    for (const auto& desc : shaderDescs)
+    // Create shader
+    auto deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, shaderDesc.filename.c_str(), shaderDesc.entryPoint.c_str(), shaderDesc.profile.c_str());
     {
-        if (desc.type == LLGL::ShaderType::Vertex           ||
-            desc.type == LLGL::ShaderType::TessEvaluation   ||
-            desc.type == LLGL::ShaderType::Geometry)
+        // Forward macro definitions
+        deviceShaderDesc.defines = defines;
+
+        // Forward vertex and fragment attributes
+        switch (shaderDesc.type)
         {
-            if (static_cast<int>(shaderToPatchClippingOrigin) < static_cast<int>(desc.type))
-                shaderToPatchClippingOrigin = desc.type;
+            case LLGL::ShaderType::Vertex:
+            case LLGL::ShaderType::Geometry:
+                deviceShaderDesc.vertex.inputAttribs  = vertexInputAttribs;
+                deviceShaderDesc.vertex.outputAttribs = streamOutputFormat.attributes;
+                break;
+            case LLGL::ShaderType::Fragment:
+                deviceShaderDesc.fragment.outputAttribs = fragmentAttribs;
+                break;
+            default:
+                break;
         }
-    }
 
-    // Store vertex output attributs
-    recall.vertexAttribs.outputAttribs = streamOutputFormat.attributes;
-    recall.fragmentAttribs.outputAttribs = fragmentAttribs;
-
-    for (const auto& desc : shaderDescs)
-    {
-        // Create shader
-        auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
+        // Append flag to patch clipping origin for the previously selected shader type if the native screen origin is *not* upper-left
+        if (patchClippingOrigin && IsScreenOriginLowerLeft())
         {
-            // Forward macro definitions
-            shaderDesc.defines = defines;
-
-            // Forward vertex and fragment attributes
-            if (desc.type == LLGL::ShaderType::Vertex || desc.type == LLGL::ShaderType::Geometry)
-                shaderDesc.vertex = recall.vertexAttribs;
-            else if (desc.type == LLGL::ShaderType::Fragment)
-                shaderDesc.fragment = recall.fragmentAttribs;
-
-            // Append flag to patch clipping origin for the previously selected shader type if the native screen origin is *not* upper-left
-            if (patchClippingOrigin && IsScreenOriginLowerLeft() && desc.type == shaderToPatchClippingOrigin)
-                shaderDesc.flags |= LLGL::ShaderCompileFlags::PatchClippingOrigin;
-        }
-        auto shader = renderer->CreateShader(shaderDesc);
-
-        // Print info log (warnings and errors)
-        std::string log = shader->GetReport();
-        if (!log.empty())
-            std::cerr << log << std::endl;
-
-        // Store shader in recall
-        recall.shaders.push_back(shader);
-    }
-
-    // Create shader program
-    auto shaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(recall.shaders));
-
-    // Link shader program and check for errors
-    if (shaderProgram->HasErrors())
-        throw std::runtime_error(shaderProgram->GetReport());
-
-    // Store information in call
-    shaderPrograms_[shaderProgram] = recall;
-
-    return shaderProgram;
-}
-
-LLGL::ShaderProgram* ExampleBase::LoadShaderProgram(
-    const std::vector<TutorialShaderDescriptor>&    shaderDescs,
-    const std::vector<LLGL::VertexFormat>&          vertexFormats,
-    const LLGL::VertexFormat&                       streamOutputFormat,
-    const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs,
-    const LLGL::ShaderMacro*                        defines)
-{
-    return LoadShaderProgramInternal(shaderDescs, vertexFormats, streamOutputFormat, fragmentAttribs, defines, false);
-}
-
-LLGL::ShaderProgram* ExampleBase::LoadShaderProgramAndPatchClippingOrigin(
-    const std::vector<TutorialShaderDescriptor>&    shaderDescs,
-    const std::vector<LLGL::VertexFormat>&          vertexFormats,
-    const LLGL::VertexFormat&                       streamOutputFormat,
-    const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs,
-    const LLGL::ShaderMacro*                        defines)
-{
-    return LoadShaderProgramInternal(shaderDescs, vertexFormats, streamOutputFormat, fragmentAttribs, defines, true);
-}
-
-bool ExampleBase::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
-{
-    if (!shaderProgram)
-        return false;
-
-    std::cout << "reload shader program" << std::endl;
-
-    // Find shader program in the recall map
-    auto it = shaderPrograms_.find(shaderProgram);
-    if (it == shaderPrograms_.end())
-        return false;
-
-    auto& recall = it->second;
-    std::vector<LLGL::Shader*> shaders;
-
-    try
-    {
-        // Recompile all shaders
-        for (const auto& desc : recall.shaderDescs)
-        {
-            // Read shader file
-            auto shaderCode = ReadFileContent(desc.filename);
-
-            // Create shader
-            auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
+            // Determine what shader stages needs to patch the clipping origin
+            if (shaderDesc.type == LLGL::ShaderType::Vertex           ||
+                shaderDesc.type == LLGL::ShaderType::TessEvaluation   ||
+                shaderDesc.type == LLGL::ShaderType::Geometry)
             {
-                if (desc.type == LLGL::ShaderType::Vertex)
-                    shaderDesc.vertex = recall.vertexAttribs;
-                else if (desc.type == LLGL::ShaderType::Fragment)
-                    shaderDesc.fragment = recall.fragmentAttribs;
+                deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::PatchClippingOrigin;
             }
-            auto shader = renderer->CreateShader(shaderDesc);
-
-            // Print info log (warnings and errors)
-            std::string log = shader->GetReport();
-            if (!log.empty())
-                std::cerr << log << std::endl;
-
-            // Store new shader
-            shaders.push_back(shader);
-        }
-
-        // Create new shader program
-        auto newShaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(shaders));
-
-        // Link shader program and check for errors
-        if (newShaderProgram->HasErrors())
-        {
-            // Print errors and release shader program
-            std::cerr << newShaderProgram->GetReport() << std::endl;
-            renderer->Release(*newShaderProgram);
-        }
-        else
-        {
-            // Delete all previous shaders
-            for (auto shader : recall.shaders)
-                renderer->Release(*shader);
-
-            // Store new shaders in recall
-            recall.shaders = std::move(shaders);
-
-            // Delete old and use new shader program
-            renderer->Release(*shaderProgram);
-            shaderProgram = newShaderProgram;
-
-            return true;
         }
     }
-    catch (const std::exception& err)
-    {
-        // Print error message
-        std::cerr << err.what() << std::endl;
-    }
+    auto shader = renderer->CreateShader(deviceShaderDesc);
 
-    return false;
+    // Print info log (warnings and errors)
+    std::string log = shader->GetReport();
+    if (!log.empty())
+        std::cerr << log << std::endl;
+
+    return shader;
 }
 
-LLGL::ShaderProgram* ExampleBase::LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats)
+LLGL::Shader* ExampleBase::LoadShader(
+    const TutorialShaderDescriptor&                 shaderDesc,
+    const LLGL::ArrayView<LLGL::VertexFormat>&      vertexFormats,
+    const LLGL::VertexFormat&                       streamOutputFormat,
+    const LLGL::ShaderMacro*                        defines)
+{
+    return LoadShaderInternal(shaderDesc, vertexFormats, streamOutputFormat, {}, defines, /*patchClippingOrigin:*/ false);
+}
+
+LLGL::Shader* ExampleBase::LoadShader(
+    const TutorialShaderDescriptor&             shaderDesc,
+    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+    const LLGL::ShaderMacro*                    defines)
+{
+    return LoadShaderInternal(shaderDesc, {}, {}, fragmentAttribs, defines, /*patchClippingOrigin:*/ false);
+}
+
+LLGL::Shader* ExampleBase::LoadShaderAndPatchClippingOrigin(
+    const TutorialShaderDescriptor&                 shaderDesc,
+    const LLGL::ArrayView<LLGL::VertexFormat>&      vertexFormats,
+    const LLGL::VertexFormat&                       streamOutputFormat,
+    const LLGL::ShaderMacro*                        defines)
+{
+    return LoadShaderInternal(shaderDesc, vertexFormats, streamOutputFormat, {}, defines, /*patchClippingOrigin:*/ true);
+}
+
+LLGL::Shader* ExampleBase::LoadStandardVertexShader(
+    const char*                                 entryPoint,
+    const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
+    const LLGL::ShaderMacro*                    defines)
 {
     // Load shader program
     if (Supported(LLGL::ShadingLanguage::GLSL))
-    {
-        return LoadShaderProgram(
-            {
-                { LLGL::ShaderType::Vertex,   "Example.vert" },
-                { LLGL::ShaderType::Fragment, "Example.frag" }
-            },
-            vertexFormats
-        );
-    }
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.vert" }, vertexFormats, {}, defines);
     if (Supported(LLGL::ShadingLanguage::SPIRV))
-    {
-        return LoadShaderProgram(
-            {
-                { LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" },
-                { LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }
-            },
-            vertexFormats
-        );
-    }
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.450core.vert.spv" }, vertexFormats, {}, defines);
     if (Supported(LLGL::ShadingLanguage::HLSL))
-    {
-        return LoadShaderProgram(
-            {
-                { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" },
-                { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }
-            },
-            vertexFormats
-        );
-    }
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", entryPoint, "vs_5_0" }, vertexFormats, {}, defines);
     if (Supported(LLGL::ShadingLanguage::Metal))
-    {
-        return LoadShaderProgram(
-            {
-                { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" },
-                { LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" }
-            },
-            vertexFormats
-        );
-    }
-
+        return LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", entryPoint, "1.1" }, vertexFormats, {}, defines);
     return nullptr;
+}
+
+LLGL::Shader* ExampleBase::LoadStandardFragmentShader(
+    const char*                                 entryPoint,
+    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+    const LLGL::ShaderMacro*                    defines)
+{
+    if (Supported(LLGL::ShadingLanguage::GLSL))
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" }, fragmentAttribs, defines);
+    if (Supported(LLGL::ShadingLanguage::SPIRV))
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }, fragmentAttribs, defines);
+    if (Supported(LLGL::ShadingLanguage::HLSL))
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", entryPoint, "ps_5_0" }, fragmentAttribs, defines);
+    if (Supported(LLGL::ShadingLanguage::Metal))
+        return LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", entryPoint, "1.1" }, fragmentAttribs, defines);
+    return nullptr;
+}
+
+LLGL::Shader* ExampleBase::LoadStandardComputeShader(
+    const char*                 entryPoint,
+    const LLGL::ShaderMacro*    defines)
+{
+    if (Supported(LLGL::ShadingLanguage::GLSL))
+        return LoadShader({ LLGL::ShaderType::Compute, "Example.comp" }, {}, defines);
+    if (Supported(LLGL::ShadingLanguage::SPIRV))
+        return LoadShader({ LLGL::ShaderType::Compute, "Example.450core.comp.spv" }, {}, defines);
+    if (Supported(LLGL::ShadingLanguage::HLSL))
+        return LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", entryPoint, "cs_5_0" }, {}, defines);
+    if (Supported(LLGL::ShadingLanguage::Metal))
+        return LoadShader({ LLGL::ShaderType::Compute, "Example.metal", entryPoint, "1.1" }, {}, defines);
+    return nullptr;
+}
+
+ShaderPipeline ExampleBase::LoadStandardShaderPipeline(const std::vector<LLGL::VertexFormat>& vertexFormats)
+{
+    ShaderPipeline shaderPipeline;
+    {
+        shaderPipeline.vs = LoadStandardVertexShader("VS", vertexFormats);
+        shaderPipeline.ps = LoadStandardFragmentShader("PS");
+    }
+    return shaderPipeline;
+}
+
+void ExampleBase::ThrowIfFailed(LLGL::PipelineState* pso)
+{
+    if (pso == nullptr)
+        throw std::invalid_argument("null pointer returned for PSO");
+    if (auto report = pso->GetReport())
+    {
+        if (report->HasErrors())
+            throw std::runtime_error(report->GetText());
+    }
 }
 
 LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags, LLGL::Format format)

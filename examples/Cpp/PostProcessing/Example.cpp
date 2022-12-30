@@ -21,9 +21,9 @@ class Example_PostProcessing : public ExampleBase
 
     const LLGL::ColorRGBAf  glowColor           = { 0.9f, 0.7f, 0.3f, 1.0f };
 
-    LLGL::ShaderProgram*    shaderProgramScene  = nullptr;
-    LLGL::ShaderProgram*    shaderProgramBlur   = nullptr;
-    LLGL::ShaderProgram*    shaderProgramFinal  = nullptr;
+    ShaderPipeline          shaderPipelineScene;
+    ShaderPipeline          shaderPipelineBlur;
+    ShaderPipeline          shaderPipelineFinal;
 
     LLGL::PipelineLayout*   layoutScene         = nullptr;
     LLGL::PipelineLayout*   layoutBlur          = nullptr;
@@ -136,119 +136,59 @@ public:
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             // Load scene shader program
-            shaderProgramScene = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" }
-                },
-                { vertexFormatScene }
-            );
+            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" }, { vertexFormatScene });
+            shaderPipelineScene.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
 
             // Load blur shader program
-            shaderProgramBlur = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VPP",   "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PBlur", "ps_5_0" }
-                }
-            );
+            shaderPipelineBlur.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VPP",   "vs_5_0" });
+            shaderPipelineBlur.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PBlur", "ps_5_0" });
 
             // Load final shader program
-            shaderProgramFinal = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VPP",    "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PFinal", "ps_5_0" }
-                }
-            );
+            shaderPipelineFinal.vs = shaderPipelineBlur.vs;
+            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PFinal", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             // Load scene shader program
-            shaderProgramScene = LoadShaderProgramAndPatchClippingOrigin(
-                {
-                    { LLGL::ShaderType::Vertex,   "Scene.vert" },
-                    { LLGL::ShaderType::Fragment, "Scene.frag" }
-                },
-                { vertexFormatScene }
-            );
+            shaderPipelineScene.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "Scene.vert" }, { vertexFormatScene });
+            shaderPipelineScene.ps = LoadShader                      ({ LLGL::ShaderType::Fragment, "Scene.frag" });
 
             // Load blur shader program
-            shaderProgramBlur = LoadShaderProgramAndPatchClippingOrigin(
-                {
-                    { LLGL::ShaderType::Vertex,   "PostProcess.vert" },
-                    { LLGL::ShaderType::Fragment, "Blur.frag"        }
-                }
-            );
+            shaderPipelineBlur.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "PostProcess.vert" });
+            shaderPipelineBlur.ps = LoadShader                      ({ LLGL::ShaderType::Fragment, "Blur.frag"        });
 
             // Load final shader program
-            shaderProgramFinal = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "PostProcess.vert" },
-                    { LLGL::ShaderType::Fragment, "Final.frag"       }
-                }
-            );
+            shaderPipelineFinal.vs = LoadShader({ LLGL::ShaderType::Vertex,   "PostProcess.vert" });
+            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Final.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
             // Load scene shader program
-            shaderProgramScene = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" },
-                    { LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" }
-                },
-                { vertexFormatScene }
-            );
+            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.450core.vert.spv" }, { vertexFormatScene });
+            shaderPipelineScene.ps = LoadShader({ LLGL::ShaderType::Fragment, "Scene.450core.frag.spv" });
 
             // Load blur shader program
-            shaderProgramBlur = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "PostProcess.450core.vert.spv" },
-                    { LLGL::ShaderType::Fragment, "Blur.450core.frag.spv"        }
-                }
-            );
+            shaderPipelineBlur.vs = LoadShader({ LLGL::ShaderType::Vertex,   "PostProcess.450core.vert.spv" });
+            shaderPipelineBlur.ps = LoadShader({ LLGL::ShaderType::Fragment, "Blur.450core.frag.spv"        });
 
             // Load final shader program
-            shaderProgramFinal = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "PostProcess.450core.vert.spv" },
-                    { LLGL::ShaderType::Fragment, "Final.450core.frag.spv"       }
-                }
-            );
+            shaderPipelineFinal.vs = shaderPipelineBlur.vs;
+            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Final.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             // Load scene shader program
-            shaderProgramScene = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" },
-                    { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" }
-                },
-                { vertexFormatScene }
-            );
+            shaderPipelineScene.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" }, { vertexFormatScene });
+            shaderPipelineScene.ps = LoadShader( { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
 
             // Load blur shader program
-            shaderProgramBlur = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VPP",   "1.1" },
-                    { LLGL::ShaderType::Fragment, "Example.metal", "PBlur", "1.1" }
-                }
-            );
+            shaderPipelineBlur.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VPP",   "1.1" });
+            shaderPipelineBlur.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PBlur", "1.1" });
 
             // Load final shader program
-            shaderProgramFinal = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VPP",    "1.1" },
-                    { LLGL::ShaderType::Fragment, "Example.metal", "PFinal", "1.1" }
-                }
-            );
+            shaderPipelineFinal.vs = shaderPipelineBlur.vs;
+            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PFinal", "1.1" });
         }
-
-        #if 1//TEST
-        LLGL::ShaderReflection relection;
-        if (shaderProgramScene->Reflect(relection))
-        {
-            int x=0;
-        }
-        #endif
     }
 
     void CreateSamplers()
@@ -378,7 +318,8 @@ public:
         // Create graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDescScene;
         {
-            pipelineDescScene.shaderProgram                 = shaderProgramScene;
+            pipelineDescScene.vertexShader                  = shaderPipelineScene.vs;
+            pipelineDescScene.fragmentShader                = shaderPipelineScene.ps;
             pipelineDescScene.renderPass                    = renderTargetScene->GetRenderPass();
             pipelineDescScene.pipelineLayout                = layoutScene;
 
@@ -393,7 +334,8 @@ public:
         // Create graphics pipeline for blur post-processor
         LLGL::GraphicsPipelineDescriptor pipelineDescPP;
         {
-            pipelineDescPP.shaderProgram    = shaderProgramBlur;
+            pipelineDescPP.vertexShader     = shaderPipelineBlur.vs;
+            pipelineDescPP.fragmentShader   = shaderPipelineBlur.ps;
             pipelineDescPP.renderPass       = renderTargetBlurX->GetRenderPass();
             pipelineDescPP.pipelineLayout   = layoutBlur;
         }
@@ -402,7 +344,8 @@ public:
         // Create graphics pipeline for final post-processor
         LLGL::GraphicsPipelineDescriptor pipelineDescFinal;
         {
-            pipelineDescFinal.shaderProgram                 = shaderProgramFinal;
+            pipelineDescFinal.vertexShader                  = shaderPipelineFinal.vs;
+            pipelineDescFinal.fragmentShader                = shaderPipelineFinal.ps;
             pipelineDescFinal.pipelineLayout                = layoutFinal;
             pipelineDescFinal.renderPass                    = swapChain->GetRenderPass();
             pipelineDescFinal.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);

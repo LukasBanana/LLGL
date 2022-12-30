@@ -13,7 +13,6 @@ class Example_Animation : public ExampleBase
 
     LLGL::PipelineLayout*       pipelineLayout          = nullptr;
     LLGL::ResourceHeap*         resourceHeap            = nullptr;
-    LLGL::ShaderProgram*        shaderProgram           = nullptr;
     LLGL::PipelineState*        pipelineScene           = nullptr;
 
     LLGL::Buffer*               vertexBuffer            = nullptr;
@@ -83,11 +82,10 @@ public:
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram({ vertexFormat });
         CreateTextures();
         CreateSamplers();
         CreatePipelineLayouts();
-        CreatePipelines();
+        CreatePipelines(vertexFormat);
         CreateResourceHeaps();
 
         // Add balls to scene
@@ -152,13 +150,14 @@ private:
         }
     }
 
-    void CreatePipelines()
+    void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
     {
         // Create graphics pipeline for scene rendering
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram                  = shaderProgram;
+                pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS", { vertexFormat });
+                pipelineDesc.fragmentShader                 = LoadStandardFragmentShader("PS");
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout                 = pipelineLayout;
                 pipelineDesc.depth.testEnabled              = true;
@@ -167,6 +166,7 @@ private:
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
             pipelineScene = renderer->CreatePipelineState(pipelineDesc);
+            ThrowIfFailed(pipelineScene);
         }
     }
 

@@ -14,8 +14,8 @@ class Example_VolumeRendering : public ExampleBase
 
     const std::uint32_t         noiseTextureSize        = 64;
 
-    LLGL::ShaderProgram*        shaderProgramDepthOnly  = nullptr;
-    LLGL::ShaderProgram*        shaderProgramFinalPass  = nullptr;
+    LLGL::Shader*               vsScene                 = nullptr;
+    LLGL::Shader*               fsScene                 = nullptr;
 
     LLGL::PipelineLayout*       pipelineLayoutCbuffer   = nullptr;
     LLGL::PipelineLayout*       pipelineLayoutFinalPass = nullptr;
@@ -101,67 +101,23 @@ private:
         // Load shader programs
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            shaderProgramDepthOnly = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" },
-                },
-                { vertexFormat }
-            );
-            shaderProgramFinalPass = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" },
-                },
-                { vertexFormat }
-            );
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VScene", "vs_5_0" }, { vertexFormat });
+            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PScene", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            shaderProgramDepthOnly = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.vert" },
-                },
-                { vertexFormat }
-            );
-            shaderProgramFinalPass = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.vert" },
-                    { LLGL::ShaderType::Fragment, "Example.frag" },
-                },
-                { vertexFormat }
-            );
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat });
+            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            shaderProgramDepthOnly = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" },
-                },
-                { vertexFormat }
-            );
-            shaderProgramFinalPass = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" },
-                    { LLGL::ShaderType::Fragment, "Example.450core.frag.spv" },
-                },
-                { vertexFormat }
-            );
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.450core.vert.spv" }, { vertexFormat });
+            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            shaderProgramDepthOnly = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" },
-                },
-                { vertexFormat }
-            );
-            shaderProgramFinalPass = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" },
-                    { LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" },
-                },
-                { vertexFormat }
-            );
+            vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VScene", "1.1" }, { vertexFormat });
+            fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
         }
         else
             throw std::runtime_error("shaders not supported for active renderer");
@@ -272,7 +228,7 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram              = shaderProgramDepthOnly;
+                pipelineDesc.vertexShader               = vsScene;
                 pipelineDesc.renderPass                 = depthRangeRenderTarget->GetRenderPass();
                 pipelineDesc.pipelineLayout             = pipelineLayoutCbuffer;
                 pipelineDesc.depth.testEnabled          = true;
@@ -289,7 +245,8 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram              = shaderProgramDepthOnly;
+                pipelineDesc.vertexShader               = vsScene;
+                pipelineDesc.fragmentShader             = fsScene;
                 pipelineDesc.renderPass                 = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout             = pipelineLayoutCbuffer;
                 pipelineDesc.depth.testEnabled          = true;
@@ -306,7 +263,8 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram              = shaderProgramFinalPass;
+                pipelineDesc.vertexShader               = vsScene;
+                pipelineDesc.fragmentShader             = fsScene;
                 pipelineDesc.renderPass                 = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout             = pipelineLayoutFinalPass;
                 pipelineDesc.depth.testEnabled          = true;

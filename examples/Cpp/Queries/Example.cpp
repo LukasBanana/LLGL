@@ -12,7 +12,7 @@
 class Example_Queries : public ExampleBase
 {
 
-    LLGL::ShaderProgram*    shaderProgram           = nullptr;
+    ShaderPipeline          shaderPipeline;
 
     LLGL::PipelineState*    occlusionPipeline       = nullptr;
     LLGL::PipelineState*    scenePipeline           = nullptr;
@@ -60,7 +60,7 @@ public:
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram({ vertexFormat });
+        shaderPipeline = LoadStandardShaderPipeline({ vertexFormat });
         CreatePipelines();
         CreateQueries();
         CreateResourceHeaps();
@@ -96,7 +96,8 @@ public:
         // Create graphics pipeline for occlusion query
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.vertexShader                   = shaderPipeline.vs;
+            pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.pipelineLayout                 = pipelineLayout;
 
             pipelineDesc.depth.testEnabled              = true;
@@ -261,7 +262,7 @@ private:
     void RenderScene()
     {
         // Clear color and depth buffers
-        commands->Clear(LLGL::ClearFlags::ColorDepth);
+        commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
 
         // Set resources
         commands->SetPipelineState(*scenePipeline);

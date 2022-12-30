@@ -15,11 +15,11 @@ class Example_PBR : public ExampleBase
     LLGL::Buffer*               vertexBuffer        = nullptr;
     LLGL::Buffer*               constantBuffer      = nullptr;
 
-    LLGL::ShaderProgram*        shaderProgramMeshes = nullptr;
+    ShaderPipeline              shaderPipelineMeshes;
     LLGL::PipelineLayout*       layoutMeshes        = nullptr;
     LLGL::PipelineState*        pipelineMeshes      = nullptr;
 
-    LLGL::ShaderProgram*        shaderProgramSky    = nullptr;
+    ShaderPipeline              shaderPipelineSky;
     LLGL::PipelineLayout*       layoutSky           = nullptr;
     LLGL::PipelineState*        pipelineSky         = nullptr;
 
@@ -112,51 +112,27 @@ private:
     {
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            shaderProgramSky = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VSky", "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PSky", "ps_5_0" },
-                }
-            );
-            shaderProgramMeshes = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VMesh", "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PMesh", "ps_5_0" },
-                },
-                { vertexFormat }
-            );
+            shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VSky", "vs_5_0" });
+            shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PSky", "ps_5_0" });
+
+            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VMesh", "vs_5_0" }, { vertexFormat });
+            shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PMesh", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            shaderProgramSky = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.Sky.vert" },
-                    { LLGL::ShaderType::Fragment, "Example.Sky.frag" },
-                }
-            );
-            shaderProgramMeshes = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.Mesh.vert" },
-                    { LLGL::ShaderType::Fragment, "Example.Mesh.frag" },
-                },
-                { vertexFormat }
-            );
+            shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Sky.vert" });
+            shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Sky.frag" });
+
+            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Mesh.vert" }, { vertexFormat });
+            shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Mesh.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            shaderProgramSky = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VSky", "1.1" },
-                    { LLGL::ShaderType::Fragment, "Example.metal", "PSky", "1.1" },
-                }
-            );
-            shaderProgramMeshes = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VMesh", "1.1" },
-                    { LLGL::ShaderType::Fragment, "Example.metal", "PMesh", "1.1" },
-                },
-                { vertexFormat }
-            );
+            shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VSky", "1.1" });
+            shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PSky", "1.1" });
+
+            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VMesh", "1.1" }, { vertexFormat });
+            shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PMesh", "1.1" });
         }
         else
             throw std::runtime_error("shaders not supported for active renderer");
@@ -189,7 +165,8 @@ private:
         // Create graphics pipeline for skybox
         LLGL::GraphicsPipelineDescriptor pipelineDescSky;
         {
-            pipelineDescSky.shaderProgram                   = shaderProgramSky;
+            pipelineDescSky.vertexShader                    = shaderPipelineSky.vs;
+            pipelineDescSky.fragmentShader                  = shaderPipelineSky.ps;
             pipelineDescSky.pipelineLayout                  = layoutSky;
             //pipelineDescSky.depth.testEnabled               = true;
             //pipelineDescSky.depth.writeEnabled              = true;
@@ -234,7 +211,8 @@ private:
         // Create graphics pipeline for meshes
         LLGL::GraphicsPipelineDescriptor pipelineDescMeshes;
         {
-            pipelineDescMeshes.shaderProgram                    = shaderProgramMeshes;
+            pipelineDescMeshes.vertexShader                     = shaderPipelineMeshes.vs;
+            pipelineDescMeshes.fragmentShader                   = shaderPipelineMeshes.ps;
             pipelineDescMeshes.pipelineLayout                   = layoutMeshes;
             pipelineDescMeshes.depth.testEnabled                = true;
             pipelineDescMeshes.depth.writeEnabled               = true;

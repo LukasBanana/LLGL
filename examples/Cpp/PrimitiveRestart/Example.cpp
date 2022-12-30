@@ -12,7 +12,7 @@
 class Example_PrimitiveRestart : public ExampleBase
 {
 
-    LLGL::ShaderProgram*    shaderProgram   = nullptr;
+    ShaderPipeline          shaderPipeline;
     LLGL::PipelineState*    pipeline        = nullptr;
     LLGL::Buffer*           vertexBuffer    = nullptr;
     LLGL::Buffer*           indexBuffer     = nullptr;
@@ -29,7 +29,7 @@ public:
         ExampleBase { L"LLGL Example: PrimitiveRestart" }
     {
         auto vertexFormats = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram(vertexFormats);
+        shaderPipeline = LoadStandardShaderPipeline(vertexFormats);
         CreatePipeline();
     }
 
@@ -132,7 +132,8 @@ private:
     {
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.vertexShader                   = shaderPipeline.vs;
+            pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.renderPass                     = swapChain->GetRenderPass();
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);

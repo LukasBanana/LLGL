@@ -156,18 +156,6 @@ int main(int argc, char* argv[])
             }
         }
 
-        // Create shader program which is used as composite
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
-        {
-            shaderProgramDesc.vertexShader      = vertShader;
-            shaderProgramDesc.fragmentShader    = fragShader;
-        }
-        LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-
-        // Link shader program and check for errors
-        if (shaderProgram->HasErrors())
-            throw std::runtime_error(shaderProgram->GetReport());
-
         // Create graphics pipeline
         LLGL::PipelineState* pipeline = nullptr;
         std::unique_ptr<LLGL::Blob> pipelineCache;
@@ -186,7 +174,8 @@ int main(int argc, char* argv[])
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.shaderProgram                  = shaderProgram;
+                pipelineDesc.vertexShader                   = vertShader;
+                pipelineDesc.fragmentShader                 = fragShader;
                 pipelineDesc.renderPass                     = swapChain->GetRenderPass();
                 #ifdef ENABLE_MULTISAMPLING
                 pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc.samples > 1);
@@ -215,6 +204,13 @@ int main(int argc, char* argv[])
             pipeline = renderer->CreatePipelineState(pipelineDesc);
 
             #endif
+
+            // Link shader program and check for errors
+            if (auto report = pipeline->GetReport())
+            {
+                if (report->HasErrors())
+                    throw std::runtime_error(report->GetText());
+            }
         }
 
         // Create command buffer to submit subsequent graphics commands to the GPU

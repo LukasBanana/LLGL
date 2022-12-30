@@ -54,6 +54,17 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
  * Example base class
  */
 
+// Helper structure for examples to organize shaders for a PSO
+struct ShaderPipeline
+{
+    LLGL::Shader* vs = nullptr; // Vertex shader
+    LLGL::Shader* hs = nullptr; // Hull shader (aka. tessellation control shader)
+    LLGL::Shader* ds = nullptr; // Domain shader (aka. tessellation evaluation shader)
+    LLGL::Shader* gs = nullptr; // Geometry shader
+    LLGL::Shader* ps = nullptr; // Pixel shader (aka. fragment shader)
+    LLGL::Shader* cs = nullptr; // Compute shader
+};
+
 class ExampleBase
 {
 
@@ -113,14 +124,6 @@ private:
 
     };
 
-    struct ShaderProgramRecall
-    {
-        std::vector<TutorialShaderDescriptor>   shaderDescs;
-        std::vector<LLGL::Shader*>              shaders;
-        LLGL::VertexShaderAttributes            vertexAttribs;
-        LLGL::FragmentShaderAttributes          fragmentAttribs;
-    };
-
 private:
 
     #ifdef LLGL_OS_ANDROID
@@ -129,9 +132,6 @@ private:
 
     std::unique_ptr<LLGL::RenderingProfiler>    profilerObj_;
     std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
-
-    std::map< LLGL::ShaderProgram*,
-              ShaderProgramRecall >             shaderPrograms_;
 
     bool                                        loadingDone_        = false;
 
@@ -188,41 +188,65 @@ protected:
 
 private:
 
-    // Internal function to load a shader program
-    LLGL::ShaderProgram* LoadShaderProgramInternal(
-        const std::vector<TutorialShaderDescriptor>&    shaderDescs,
-        const std::vector<LLGL::VertexFormat>&          vertexFormats,
-        const LLGL::VertexFormat&                       streamOutputFormat,
-        const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs,
-        const LLGL::ShaderMacro*                        defines,
-        bool                                            patchClippingOrigin
+    // Internal function to load a shader.
+    LLGL::Shader* LoadShaderInternal(
+        const TutorialShaderDescriptor&             shaderDesc,
+        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
+        const LLGL::VertexFormat&                   streamOutputFormat,
+        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+        const LLGL::ShaderMacro*                    defines,
+        bool                                        patchClippingOrigin
     );
 
 protected:
 
-    // Creats a shader program and loads all specified shaders from file.
-    LLGL::ShaderProgram* LoadShaderProgram(
-        const std::vector<TutorialShaderDescriptor>&    shaderDescs,
-        const std::vector<LLGL::VertexFormat>&          vertexFormats       = {},
-        const LLGL::VertexFormat&                       streamOutputFormat  = {},
-        const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs     = {},
-        const LLGL::ShaderMacro*                        defines             = nullptr
+    // Loads a shader from file with optional vertex formats and stream-output format.
+    LLGL::Shader* LoadShader(
+        const TutorialShaderDescriptor&             shaderDesc,
+        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats       = {},
+        const LLGL::VertexFormat&                   streamOutputFormat  = {},
+        const LLGL::ShaderMacro*                    defines             = nullptr
     );
 
-    // Creats a shader program, loads all specified shaders from file, and adds 'ShaderCompileFlags::PatchClippingOrigin' to the compile flags.
-    LLGL::ShaderProgram* LoadShaderProgramAndPatchClippingOrigin(
-        const std::vector<TutorialShaderDescriptor>&    shaderDescs,
-        const std::vector<LLGL::VertexFormat>&          vertexFormats       = {},
-        const LLGL::VertexFormat&                       streamOutputFormat  = {},
-        const std::vector<LLGL::FragmentAttribute>&     fragmentAttribs     = {},
-        const LLGL::ShaderMacro*                        defines             = nullptr
+    // Loads a shader from file with fragment attributes.
+    LLGL::Shader* LoadShader(
+        const TutorialShaderDescriptor&             shaderDesc,
+        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+        const LLGL::ShaderMacro*                    defines             = nullptr
     );
 
-    // Reloads the specified shader program from the previously specified shader source files.
-    bool ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram);
+    // Load a shader from file and adds 'PatchClippingOrigin' to the compile flags if the screen origin is lower-left; see IsScreenOriginLowerLeft().
+    LLGL::Shader* LoadShaderAndPatchClippingOrigin(
+        const TutorialShaderDescriptor&             shaderDesc,
+        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats       = {},
+        const LLGL::VertexFormat&                   streamOutputFormat  = {},
+        const LLGL::ShaderMacro*                    defines             = nullptr
+    );
 
-    // Load standard shader program (with vertex- and fragment shaders).
-    LLGL::ShaderProgram* LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats);
+    // Loads a vertex shader with standard filename convention.
+    LLGL::Shader* LoadStandardVertexShader(
+        const char*                                 entryPoint      = "VS",
+        const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats   = {},
+        const LLGL::ShaderMacro*                    defines         = nullptr);
+
+    // Loads a fragment shader with standard filename convention.
+    LLGL::Shader* LoadStandardFragmentShader(
+        const char*                                 entryPoint      = "PS",
+        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs = {},
+        const LLGL::ShaderMacro*                    defines         = nullptr
+    );
+
+    // Loads a compute shader with standard filename convention.
+    LLGL::Shader* LoadStandardComputeShader(
+        const char*                 entryPoint  = "CS",
+        const LLGL::ShaderMacro*    defines     = nullptr
+    );
+
+    // Loads a shader pipeline with vertex and fragment shaders and with standard filename convention.
+    ShaderPipeline LoadStandardShaderPipeline(const std::vector<LLGL::VertexFormat>& vertexFormats);
+
+    // Throws an exception if the specified PSO creation failed.
+    void ThrowIfFailed(LLGL::PipelineState* pso);
 
     // Load image from file, create texture, upload image into texture, and generate MIP-maps.
     LLGL::Texture* LoadTexture(

@@ -25,12 +25,13 @@ class Example_ComputeShader : public ExampleBase
     LLGL::Buffer*           inputBuffer             = nullptr;
     LLGL::Buffer*           indirectArgBuffer       = nullptr;
 
-    LLGL::ShaderProgram*    computeShader           = nullptr;
+    LLGL::Shader*           computeShader           = nullptr;
     LLGL::PipelineLayout*   computeLayout           = nullptr;
     LLGL::PipelineState*    computePipeline         = nullptr;
     LLGL::ResourceHeap*     computeResourceHeap     = nullptr;
 
-    LLGL::ShaderProgram*    graphicsShader          = nullptr;
+    LLGL::Shader*           graphicsVertexShader    = nullptr;
+    LLGL::Shader*           graphicsFragmentShader  = nullptr;
     LLGL::PipelineState*    graphicsPipeline        = nullptr;
 
     struct SceneState
@@ -74,7 +75,8 @@ public:
         computeLayout->SetName("Compute.Layout");
         computePipeline->SetName("Compute.Pipeline");
         computeResourceHeap->SetName("Compute.ResourceHeap");
-        graphicsShader->SetName("Graphics.Shader");
+        graphicsVertexShader->SetName("Graphics.VertexShader");
+        graphicsFragmentShader->SetName("Graphics.FragmentShader");
         graphicsPipeline->SetName("Graphics.Pipeline");
     }
 
@@ -83,20 +85,22 @@ public:
         // Specify vertex format
         struct Vertex
         {
-            float           x, y;
-            std::uint8_t    r, g, b, a;
+            float           coord[2];
+            std::uint8_t    color[4];
         };
 
-        vertexFormat[0].AppendAttribute({ "coord", LLGL::Format::RG32Float,  0 });
-        vertexFormat[0].AppendAttribute({ "color", LLGL::Format::RGBA8UNorm, 1 });
-        vertexFormat[0].SetStride(sizeof(Vertex));
-        vertexFormat[0].SetSlot(0);
+        vertexFormat[0].attributes =
+        {
+            LLGL::VertexAttribute{ "coord", LLGL::Format::RG32Float,  /*location:*/ 0, /*offset:*/ 0, /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "color", LLGL::Format::RGBA8UNorm, /*location:*/ 1, /*offset:*/ 8, /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+        };
 
-        vertexFormat[1].AppendAttribute({ "rotation", 0, LLGL::Format::RG32Float, 2, 1 });
-        vertexFormat[1].AppendAttribute({ "rotation", 1, LLGL::Format::RG32Float, 3, 1 });
-        vertexFormat[1].AppendAttribute({ "position",    LLGL::Format::RG32Float, 4, 1 });
-        vertexFormat[1].SetStride(sizeof(SceneObject));
-        vertexFormat[1].SetSlot(1);
+        vertexFormat[1].attributes =
+        {
+            LLGL::VertexAttribute{ "rotation", /*semanticIndex:*/ 0, LLGL::Format::RG32Float, /*location:*/ 2, /*offset:*/  0, /*stride:*/ sizeof(SceneObject), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "rotation", /*semanticIndex:*/ 1, LLGL::Format::RG32Float, /*location:*/ 3, /*offset:*/  8, /*stride:*/ sizeof(SceneObject), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "position",                       LLGL::Format::RG32Float, /*location:*/ 4, /*offset:*/ 16, /*stride:*/ sizeof(SceneObject), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+        };
 
         // Define vertex buffer data
         auto CircleX = [](float a) { return std::sin(a*Gs::pi/180.0f); };
@@ -161,37 +165,13 @@ public:
     {
         // Create compute shader
         if (Supported(LLGL::ShadingLanguage::GLSL))
-        {
-            computeShader = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Compute, "Example.comp" }
-                }
-            );
-        }
+            computeShader = LoadShader({ LLGL::ShaderType::Compute, "Example.comp" });
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
-        {
-            computeShader = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Compute, "Example.comp.spv" }
-                }
-            );
-        }
+            computeShader = LoadShader({ LLGL::ShaderType::Compute, "Example.comp.spv" });
         else if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            computeShader = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Compute, "Example.hlsl", "CS", "cs_5_0" },
-                }
-            );
-        }
+            computeShader = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CS", "cs_5_0" });
         else if (Supported(LLGL::ShadingLanguage::Metal))
-        {
-            computeShader = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Compute, "Example.metal", "CS", "1.1" },
-                }
-            );
-        }
+            computeShader = LoadShader({ LLGL::ShaderType::Compute, "Example.metal", "CS", "1.1" });
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
 
@@ -203,7 +183,7 @@ public:
         // Create compute pipeline
         LLGL::ComputePipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram  = computeShader;
+            pipelineDesc.computeShader  = computeShader;
             pipelineDesc.pipelineLayout = computeLayout;
         }
         computePipeline = renderer->CreatePipelineState(pipelineDesc);
@@ -222,43 +202,23 @@ public:
         // Create graphics shader
         if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            graphicsShader = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.vert" },
-                    { LLGL::ShaderType::Fragment, "Example.frag" }
-                },
-                { vertexFormat[0], vertexFormat[1] }
-            );
+            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat[0], vertexFormat[1] });
+            graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            graphicsShader = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.vert.spv" },
-                    { LLGL::ShaderType::Fragment, "Example.frag.spv" }
-                },
-                { vertexFormat[0], vertexFormat[1] }
-            );
+            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert.spv" }, { vertexFormat[0], vertexFormat[1] });
+            graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.frag.spv" });
         }
         else if (Supported(LLGL::ShadingLanguage::HLSL))
         {
-            graphicsShader = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" },
-                    { LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }
-                },
-                { vertexFormat[0], vertexFormat[1] }
-            );
+            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, { vertexFormat[0], vertexFormat[1] });
+            graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" });
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            graphicsShader = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" },
-                    { LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" }
-                },
-                { vertexFormat[0], vertexFormat[1] }
-            );
+            graphicsVertexShader    = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" }, { vertexFormat[0], vertexFormat[1] });
+            graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" });
         }
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
@@ -266,7 +226,8 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = graphicsShader;
+            pipelineDesc.vertexShader                   = graphicsVertexShader;
+            pipelineDesc.fragmentShader                 = graphicsFragmentShader;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }

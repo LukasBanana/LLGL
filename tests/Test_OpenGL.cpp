@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
+#include <LLGL/Misc/VertexFormat.h>
 #include <Gauss/Gauss.h>
 #include <memory>
 #include <iostream>
@@ -186,49 +187,17 @@ int main()
         }
         auto fragShader = renderer->CreateShader(fragShaderDesc);
 
-        if (fragShader->HasErrors())
-            std::cerr << fragShader->GetReport() << std::endl;
-
-        // Create shader program
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
-        {
-            shaderProgramDesc.vertexShader      = vertShader;
-            shaderProgramDesc.fragmentShader    = fragShader;
-        }
-        auto& shaderProgram = *renderer->CreateShaderProgram(shaderProgramDesc);
-
-        if (shaderProgram.HasErrors())
-            std::cerr << shaderProgram.GetReport() << std::endl;
-
+        #if 0//TODO
+        // Reflect shader
         LLGL::ShaderReflection reflection;
-        shaderProgram.Reflect(reflection);
-
-        #if 0
-        // Create constant buffer
-        LLGL::Buffer* projectionBuffer = nullptr;
-
-        for (const auto& desc : shaderProgram.QueryConstantBuffers())
-        {
-            if (desc.name == "Matrices")
-            {
-                LLGL::BufferDescriptor constantBufferDesc;
-                {
-                    constantBufferDesc.size = sizeof(projection);
-                    constantBufferDesc.bindFlags = LLGL::BindFlags::ConstantBuffer;
-                }
-                projectionBuffer = renderer->CreateBuffer(constantBufferDesc, &projection);
-
-                std::uint32_t bindingIndex = 2; // the 2 is just for testing
-                shaderProgram.BindConstantBuffer(desc.name, bindingIndex);
-                commands->SetConstantBuffer(*projectionBuffer, bindingIndex);
-            }
-        }
-        #endif
+        vertShader.Reflect(reflection);
+        fragShader.Reflect(reflection);
 
         for (const auto& uniform : reflection.uniforms)
         {
             std::cout << "uniform: name = \"" << uniform.name << "\", location = " << uniform.location << ", size = " << uniform.size << std::endl;
         }
+        #endif
 
         // Create texture
         LLGL::ColorRGBub image[4] =
@@ -299,7 +268,8 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = &shaderProgram;
+            pipelineDesc.vertexShader                   = vertShader;
+            pipelineDesc.fragmentShader                 = fragShader;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
 
             pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc.samples > 1);
@@ -307,6 +277,12 @@ int main()
             pipelineDesc.blend.targets[0].dstColor      = LLGL::BlendOp::Zero;
         }
         auto& pipeline = *renderer->CreatePipelineState(pipelineDesc);
+
+        if (auto report = pipeline.GetReport())
+        {
+            if (report->HasErrors())
+                throw std::runtime_error(report->GetText());
+        }
 
         // Create sampler
         LLGL::SamplerDescriptor samplerDesc;
@@ -366,14 +342,16 @@ int main()
                     commands->SetPipelineState(pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
 
+                    #if 0//TODO
                     auto projection = Gs::ProjectionMatrix4f::Planar(
                         static_cast<Gs::Real>(swapChain->GetResolution().width),
                         static_cast<Gs::Real>(swapChain->GetResolution().height)
                     );
-                    commands->SetUniform(shaderProgram.FindUniformLocation("projection"), projection.Ptr(), sizeof(projection));
+                    commands->SetUniform(vertShader->FindUniformLocation("projection"), projection.Ptr(), sizeof(projection));
 
                     const LLGL::ColorRGBAf color{ 1.0f, 1.0f, 1.0f, 1.0f };
-                    commands->SetUniform(shaderProgram.FindUniformLocation("color"), &color, sizeof(color));
+                    commands->SetUniform(fragShader->FindUniformLocation("color"), &color, sizeof(color));
+                    #endif
 
                     if (renderTarget && renderTargetTex)
                     {

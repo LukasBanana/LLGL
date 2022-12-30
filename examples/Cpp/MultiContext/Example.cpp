@@ -79,8 +79,8 @@ int main(int argc, char* argv[])
         // Vertex data structure
         struct Vertex
         {
-            Gs::Vector2f    position;
-            LLGL::ColorRGBf color;
+            float position[2];
+            float color[3];
         };
 
         // Vertex data
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 
         // Vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float }); // position has 2 float components
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float  }); // position has 2 float components
         vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGB32Float }); // color has 3 float components
 
         // Create vertex buffer
@@ -174,25 +174,15 @@ int main(int argc, char* argv[])
             }
         }
 
-        // Create shader program which is used as composite
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
-        {
-            shaderProgramDesc.vertexShader      = vertShader;
-            shaderProgramDesc.geometryShader    = geomShader;
-            shaderProgramDesc.fragmentShader    = fragShader;
-        }
-        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-
-        if (shaderProgram->HasErrors())
-            throw std::runtime_error(shaderProgram->GetReport());
-
         // Create graphics pipeline
         LLGL::PipelineState* pipeline[2] = {};
         const bool logicOpSupported = renderer->GetRenderingCaps().features.hasLogicOp;
 
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.vertexShader                   = vertShader;
+            pipelineDesc.geometryShader                 = geomShader;
+            pipelineDesc.fragmentShader                 = fragShader;
             pipelineDesc.renderPass                     = swapChain1->GetRenderPass();
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc[0].samples > 1);
@@ -208,6 +198,15 @@ int main(int argc, char* argv[])
                 pipelineDesc.blend.logicOp = LLGL::LogicOp::CopyInverted;
         }
         pipeline[1] = renderer->CreatePipelineState(pipelineDesc);
+
+        for (auto p : pipeline)
+        {
+            if (auto report = p->GetReport())
+            {
+                if (report->HasErrors())
+                    throw std::runtime_error(report->GetText());
+            }
+        }
 
         // Initialize viewport array
         LLGL::Viewport viewports[2] =

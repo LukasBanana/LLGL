@@ -18,7 +18,8 @@ class Example_Instancing : public ExampleBase
     static const std::uint32_t  numPlantImages      = 10;
     const float                 positionRange       = 40.0f;
 
-    LLGL::ShaderProgram*        shaderProgram       = nullptr;
+    LLGL::Shader*               vertexShader        = nullptr;
+    LLGL::Shader*               fragmentShader      = nullptr;
 
     LLGL::PipelineState*        pipeline[2]         = {};
 
@@ -58,14 +59,14 @@ public:
 
         // Create all graphics objects
         auto vertexFormats = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram(vertexFormats);
         CreateTextures();
         CreateSamplers();
-        CreatePipelines();
+        CreatePipelines(vertexFormats);
         const auto caps = renderer->GetRenderingCaps();
 
         // Set debugging names
-        shaderProgram->SetName("ShaderProgram");
+        vertexShader->SetName("VertexShader");
+        fragmentShader->SetName("FragmentShader");
         arrayTexture->SetName("SceneTexture");
         vertexBuffers[0]->SetName("Vertices");
         vertexBuffers[1]->SetName("Instances");
@@ -93,29 +94,14 @@ private:
 
     std::vector<LLGL::VertexFormat> CreateBuffers()
     {
-        // Specify vertex formats
-        LLGL::VertexFormat vertexFormatPerVertex;
-        vertexFormatPerVertex.AppendAttribute({ "position", LLGL::Format::RGB32Float, 0 });
-        vertexFormatPerVertex.AppendAttribute({ "texCoord", LLGL::Format::RG32Float,  1 });
-        vertexFormatPerVertex.SetSlot(0);
-
-        LLGL::VertexFormat vertexFormatPerInstance;
-        vertexFormatPerInstance.AppendAttribute({ "color",      LLGL::Format::RGB32Float,  2, 1 });
-        vertexFormatPerInstance.AppendAttribute({ "arrayLayer", LLGL::Format::R32Float,    3, 1 });
-        vertexFormatPerInstance.AppendAttribute({ "wMatrix", 0, LLGL::Format::RGBA32Float, 4, 1 });
-        vertexFormatPerInstance.AppendAttribute({ "wMatrix", 1, LLGL::Format::RGBA32Float, 5, 1 });
-        vertexFormatPerInstance.AppendAttribute({ "wMatrix", 2, LLGL::Format::RGBA32Float, 6, 1 });
-        vertexFormatPerInstance.AppendAttribute({ "wMatrix", 3, LLGL::Format::RGBA32Float, 7, 1 });
-        vertexFormatPerInstance.SetSlot(1);
-
         // Initialize per-vertex data (4 vertices for the plane of each plant)
         static const float grassSize    = 100.0f;
         static const float grassTexSize = 40.0f;
 
         struct Vertex
         {
-            Gs::Vector3f position;
-            Gs::Vector2f texCoord;
+            float position[3];
+            float texCoord[2];
         }
         vertexData[] =
         {
@@ -171,6 +157,25 @@ private:
             // Scale size randomly
             Gs::Scale(instance.wMatrix, Gs::Vector3f(Random(0.7f, 1.5f)));
         }
+
+        // Specify vertex formats
+        LLGL::VertexFormat vertexFormatPerVertex;
+        vertexFormatPerVertex.attributes =
+        {
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ 0,               /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 1, /*offset:*/ sizeof(float)*3, /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+        };
+
+        LLGL::VertexFormat vertexFormatPerInstance;
+        vertexFormatPerInstance.attributes =
+        {
+            LLGL::VertexAttribute{ "color",                         LLGL::Format::RGB32Float,  /*location:*/ 2, /*offset:*/  0,                                /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "arrayLayer",                    LLGL::Format::R32Float,    /*location:*/ 3, /*offset:*/  offsetof(Instance, arrayLayer),   /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 0, LLGL::Format::RGBA32Float, /*location:*/ 4, /*offset:*/  offsetof(Instance, wMatrix),      /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 1, LLGL::Format::RGBA32Float, /*location:*/ 5, /*offset:*/  offsetof(Instance, wMatrix) + 16, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 2, LLGL::Format::RGBA32Float, /*location:*/ 6, /*offset:*/  offsetof(Instance, wMatrix) + 32, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 3, LLGL::Format::RGBA32Float, /*location:*/ 7, /*offset:*/  offsetof(Instance, wMatrix) + 48, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+        };
 
         // Initialize last instance (for grass plane)
         auto& grassPlane = instanceData[numPlantInstances];
@@ -279,8 +284,12 @@ private:
         samplers[0] = renderer->CreateSampler(samplerDesc);
     }
 
-    void CreatePipelines()
+    void CreatePipelines(const std::vector<LLGL::VertexFormat>& vertexFormats)
     {
+        // Create shaders
+        vertexShader    = LoadStandardVertexShader("VS", vertexFormats);
+        fragmentShader  = LoadStandardFragmentShader("PS");
+
         // Create pipeline layout
         if (IsOpenGL())
         {
@@ -310,7 +319,8 @@ private:
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.vertexShader                   = vertexShader;
+            pipelineDesc.fragmentShader                 = fragmentShader;
             pipelineDesc.pipelineLayout                 = pipelineLayout;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.depth.testEnabled              = true;
@@ -353,17 +363,6 @@ private:
 
         settings.animVec[0] = std::sin(animationTime) * animationRadius;
         settings.animVec[1] = std::cos(animationTime) * animationRadius;
-
-        // Allow dynamic shader reloading (for debugging)
-        if (input.KeyDown(LLGL::Key::R))
-        {
-            if (ReloadShaderProgram(shaderProgram))
-            {
-                renderer->Release(*pipeline[0]);
-                renderer->Release(*pipeline[1]);
-                CreatePipelines();
-            }
-        }
     }
 
     void OnDrawFrame() override

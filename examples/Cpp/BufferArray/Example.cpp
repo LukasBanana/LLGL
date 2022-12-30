@@ -11,8 +11,6 @@
 class Example_BufferArray : public ExampleBase
 {
 
-    LLGL::ShaderProgram*    shaderProgram       = nullptr;
-
     LLGL::PipelineState*    pipeline            = nullptr;
 
     LLGL::Buffer*           vertexBuffers[3]    = { nullptr };
@@ -25,36 +23,20 @@ public:
     {
         // Create all graphics objects
         auto vertexFormats = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram(vertexFormats);
-        CreatePipelines();
+        CreatePipelines(vertexFormats);
     }
 
     std::vector<LLGL::VertexFormat> CreateBuffers()
     {
-        // Specify vertex formats
-        LLGL::VertexFormat vertexFormatPositions;
-        vertexFormatPositions.AppendAttribute({ "position", LLGL::Format::RG32Float, 0 });
-        vertexFormatPositions.SetSlot(0);
-
-        LLGL::VertexFormat vertexFormatColors;
-        vertexFormatColors.AppendAttribute({ "color", LLGL::Format::RGB32Float, 1 });
-        vertexFormatColors.SetSlot(1);
-
-        LLGL::VertexFormat vertexFormatInstanceData;
-        vertexFormatInstanceData.AppendAttribute({ "instanceColor",  LLGL::Format::RGB32Float, 2, 1 });
-        vertexFormatInstanceData.AppendAttribute({ "instanceOffset", LLGL::Format::RG32Float,  3, 1 });
-        vertexFormatInstanceData.AppendAttribute({ "instanceScale",  LLGL::Format::R32Float,   4, 1 });
-        vertexFormatInstanceData.SetSlot(2);
-
         // Initialize buffer data
-        Gs::Vector2f vertexPositions[] =
+        float vertexPositions[][2] =
         {
             {  0,  1 },
             {  1, -1 },
             { -1, -1 },
         };
 
-        LLGL::ColorRGBf vertexColors[] =
+        float vertexColors[][3] =
         {
             { 1, 0, 0 },
             { 0, 1, 0 },
@@ -63,9 +45,9 @@ public:
 
         struct InstanceData
         {
-            LLGL::ColorRGBf color;
-            Gs::Vector2f    offset;
-            float           scale;
+            float color[3];
+            float offset[2];
+            float scale;
         }
         instanceData[] =
         {
@@ -73,6 +55,27 @@ public:
             { { 1   , 2   , 3    }, {  0.5f,  0.5f }, -0.4f },
             { { 1   , 0.2f, 0.2f }, {  0.5f, -0.5f },  0.2f },
             { { 0.2f, 1   , 0.2f }, { -0.5f, -0.5f },  0.3f },
+        };
+
+        // Specify vertex formats
+        LLGL::VertexFormat vertexFormatPositions;
+        vertexFormatPositions.attributes =
+        {
+            LLGL::VertexAttribute{ "position", LLGL::Format::RG32Float, 0, 0, sizeof(float[2]), 0 }
+        };
+
+        LLGL::VertexFormat vertexFormatColors;
+        vertexFormatColors.attributes =
+        {
+            LLGL::VertexAttribute{ "color", LLGL::Format::RGB32Float, 1, 0, sizeof(float[3]), 1 }
+        };
+
+        LLGL::VertexFormat vertexFormatInstanceData;
+        vertexFormatInstanceData.attributes =
+        {
+            LLGL::VertexAttribute{ "instanceColor",  LLGL::Format::RGB32Float, 2,  0, sizeof(InstanceData), 2, 1 },
+            LLGL::VertexAttribute{ "instanceOffset", LLGL::Format::RG32Float,  3, 12, sizeof(InstanceData), 2, 1 },
+            LLGL::VertexAttribute{ "instanceScale",  LLGL::Format::R32Float,   4, 20, sizeof(InstanceData), 2, 1 }
         };
 
         // Create buffer for vertex positions
@@ -102,12 +105,13 @@ public:
         return { vertexFormatPositions, vertexFormatColors, vertexFormatInstanceData };
     }
 
-    void CreatePipelines()
+    void CreatePipelines(const std::vector<LLGL::VertexFormat>& vertexFormats)
     {
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS", vertexFormats);
+            pipelineDesc.fragmentShader                 = LoadStandardFragmentShader("PS");
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreatePipelineState(pipelineDesc);

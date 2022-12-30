@@ -6,7 +6,7 @@
  */
 
 #include <ExampleBase.h>
-#include <LLGL/TypeNames.h>
+#include <LLGL/Misc/TypeNames.h>
 #include <DDSImageReader.h>
 #include <stb/stb_image.h>
 
@@ -14,7 +14,7 @@
 class Example_Texturing : public ExampleBase
 {
 
-    LLGL::ShaderProgram*        shaderProgram   = nullptr;
+    ShaderPipeline              shaderPipeline;
     LLGL::PipelineLayout*       pipelineLayout  = nullptr;
     LLGL::PipelineState*        pipeline        = nullptr;
     LLGL::Buffer*               vertexBuffer    = nullptr;
@@ -41,7 +41,7 @@ public:
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram({ vertexFormat });
+        shaderPipeline = LoadStandardShaderPipeline({ vertexFormat });
         CreatePipelines();
         CreateTextures();
         CreateSamplers();
@@ -104,7 +104,8 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.vertexShader                   = shaderPipeline.vs;
+            pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.pipelineLayout                 = pipelineLayout;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
