@@ -175,10 +175,14 @@ void VKCommandBuffer::UpdateBuffer(
     {
         PauseRenderPass();
         vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+        BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size);
         ResumeRenderPass();
     }
     else
+    {
         vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+        BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size);
+    }
 }
 
 void VKCommandBuffer::CopyBuffer(
@@ -1175,6 +1179,30 @@ void VKCommandBuffer::ResumeRenderPass()
 bool VKCommandBuffer::IsInsideRenderPass() const
 {
     return (recordState_ == RecordState::InsideRenderPass);
+}
+
+void VKCommandBuffer::BufferPipelineBarrier(
+    VkBuffer                buffer,
+    VkDeviceSize            offset,
+    VkDeviceSize            size,
+    VkAccessFlags           srcAccessMask,
+    VkAccessFlags           dstAccessMask,
+    VkPipelineStageFlags    srcStageMask,
+    VkPipelineStageFlags    dstStageMask)
+{
+    VkBufferMemoryBarrier barrier;
+    {
+        barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        barrier.pNext               = nullptr;
+        barrier.srcAccessMask       = srcAccessMask;
+        barrier.dstAccessMask       = dstAccessMask;
+        barrier.srcQueueFamilyIndex = 0;
+        barrier.dstQueueFamilyIndex = 0;
+        barrier.buffer              = buffer;
+        barrier.offset              = offset;
+        barrier.size                = size;
+    }
+    vkCmdPipelineBarrier(commandBuffer_, srcStageMask, dstStageMask, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
 void VKCommandBuffer::AcquireNextBuffer()

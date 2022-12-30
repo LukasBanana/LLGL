@@ -277,6 +277,16 @@ class VKCommandBuffer final : public CommandBuffer
 
         void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
 
+        void BufferPipelineBarrier(
+            VkBuffer                buffer,
+            VkDeviceSize            offset,
+            VkDeviceSize            size,
+            VkAccessFlags           srcAccessMask   = VK_ACCESS_TRANSFER_WRITE_BIT,
+            VkAccessFlags           dstAccessMask   = VK_ACCESS_SHADER_READ_BIT,
+            VkPipelineStageFlags    srcStageMask    = VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VkPipelineStageFlags    dstStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
+        );
+
         // Acquires the next native VkCommandBuffer object.
         void AcquireNextBuffer();
 
