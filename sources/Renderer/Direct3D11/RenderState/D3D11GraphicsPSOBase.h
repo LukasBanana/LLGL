@@ -77,7 +77,7 @@ class D3D11GraphicsPSOBase : public D3D11PipelineState
 
     private:
 
-        void StoreShaderObjects(const D3D11ShaderProgram& shaderProgramD3D);
+        void GetD3DNativeShaders(const GraphicsPipelineDescriptor& desc);
 
         void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
         void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
