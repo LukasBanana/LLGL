@@ -10,7 +10,7 @@
 #include "../VKTypes.h"
 #include "../../../Core/Helper.h"
 #include <LLGL/ShaderProgramFlags.h>
-#include <LLGL/TypeNames.h>
+#include <LLGL/Misc/TypeNames.h>
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
 #   include "../../SPIRV/SPIRVReflect.h"

@@ -1,6 +1,6 @@
 /*
  * VKGraphicsPSO.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,13 +9,14 @@
 #include "VKPipelineLayout.h"
 #include "VKRenderPass.h"
 #include "../Ext/VKExtensionRegistry.h"
-#include "../Shader/VKShaderProgram.h"
+#include "../Shader/VKShader.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
 #include <cstddef>
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/StaticLimits.h>
+#include "../../../Core/Assertion.h"
 
 
 namespace LLGL
@@ -53,6 +54,37 @@ VKGraphicsPSO::VKGraphicsPSO(
 /*
  * ======= Private: =======
  */
+
+static void FillAndAppendShaderStageCreateInfo(
+    const Shader*                       shader,
+    std::uint32_t&                      stageIndex,
+    std::uint32_t                       maxStageCount,
+    VkPipelineShaderStageCreateInfo*    createInfos)
+{
+    if (shader != nullptr)
+    {
+        LLGL_ASSERT(stageIndex < maxStageCount);
+        auto shaderVK = LLGL_CAST(const VKShader*, shader);
+        shaderVK->FillShaderStageCreateInfo(createInfos[stageIndex]);
+        ++stageIndex;
+    }
+}
+
+static void FillShaderStageCreateInfos(
+    const GraphicsPipelineDescriptor&   desc,
+    std::uint32_t&                      stageCount,
+    VkPipelineShaderStageCreateInfo*    createInfos)
+{
+    std::uint32_t stageIndex = 0;
+    {
+        FillAndAppendShaderStageCreateInfo(desc.vertexShader,           stageIndex, stageCount, createInfos);
+        FillAndAppendShaderStageCreateInfo(desc.tessControlShader,      stageIndex, stageCount, createInfos);
+        FillAndAppendShaderStageCreateInfo(desc.tessEvaluationShader,   stageIndex, stageCount, createInfos);
+        FillAndAppendShaderStageCreateInfo(desc.geometryShader,         stageIndex, stageCount, createInfos);
+        FillAndAppendShaderStageCreateInfo(desc.fragmentShader,         stageIndex, stageCount, createInfos);
+    }
+    stageCount = stageIndex;
+}
 
 static void CreateInputAssemblyState(
     const GraphicsPipelineDescriptor&       desc,
@@ -308,18 +340,18 @@ void VKGraphicsPSO::CreateVkPipeline(
     const GraphicsPipelineDescriptor&   desc)
 {
     /* Get shader program object */
-    auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
-    if (!shaderProgramVK)
-        throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
+    auto vertexShaderVK = LLGL_CAST(const VKShader*, desc.vertexShader);
+    if (!vertexShaderVK)
+        throw std::invalid_argument("cannot create Vulkan graphics pipeline without vertex shader");
 
     /* Get shader stages */
-    std::uint32_t shaderStateCount = 5;
     VkPipelineShaderStageCreateInfo shaderStageCreateInfos[5];
-    shaderProgramVK->FillShaderStageCreateInfos(shaderStageCreateInfos, shaderStateCount);
+    std::uint32_t shaderStateCount = sizeof(shaderStageCreateInfos) / sizeof(shaderStageCreateInfos[0]);
+    FillShaderStageCreateInfos(desc, shaderStateCount, shaderStageCreateInfos);
 
     /* Initialize vertex input descriptor */
     VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo;
-    shaderProgramVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
+    vertexShaderVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
 
     /* Initialize input assembly state */
     VkPipelineInputAssemblyStateCreateInfo inputAssembly;

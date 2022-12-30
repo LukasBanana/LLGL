@@ -21,6 +21,19 @@ static void AddFuncName(std::string& s, const char* funcName)
 }
 
 [[noreturn]]
+LLGL_EXPORT void ThrowAssertion(const char* funcName, const char* expr)
+{
+    std::string s;
+    {
+        AddFuncName(s, funcName);
+        s += "assertion failed: '";
+        s += expr;
+        s += '\'';
+    }
+    throw std::runtime_error(s);
+}
+
+[[noreturn]]
 LLGL_EXPORT void ThrowNotSupportedExcept(const char* funcName, const char* featureName)
 {
     std::string s;

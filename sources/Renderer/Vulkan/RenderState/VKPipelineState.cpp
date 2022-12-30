@@ -20,6 +20,11 @@ VKPipelineState::VKPipelineState(const VKPtr<VkDevice>& device, VkPipelineBindPo
 {
 }
 
+const Report* VKPipelineState::GetReport() const
+{
+    return nullptr; //TODO
+}
+
 
 /*
  * ======= Protected: =======

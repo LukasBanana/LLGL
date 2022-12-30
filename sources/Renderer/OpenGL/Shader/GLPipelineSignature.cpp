@@ -53,16 +53,23 @@ GLPipelineSignature::GLPipelineSignature(std::size_t numShaders, const Shader* c
     Build(numShaders, shaders);
 }
 
+// Returns true if the specified array of shaders contains a separable shader
+static bool HasSeparableShaders(std::size_t numShaders, const Shader* const* shaders)
+{
+    return (numShaders > 0 && LLGL_CAST(const GLShader*, shaders[0])->IsSeparable());
+}
+
 void GLPipelineSignature::Build(std::size_t numShaders, const Shader* const* shaders)
 {
     if (numShaders > LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE)
         throw std::out_of_range("numShaders must be less than or equal to LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE");
+    isSeparablePpeline_ = HasSeparableShaders(numShaders, shaders);
     numShaders_ = SortShaderArray(numShaders, shaders, shaders_);
 }
 
 int GLPipelineSignature::CompareSWO(const GLPipelineSignature& lhs, const GLPipelineSignature& rhs)
 {
-    LLGL_COMPARE_MEMBER_SWO(numShaders_);
+    LLGL_COMPARE_MEMBER_SWO(typeBitAndNumShaders_);
     for_range(i, lhs.numShaders_)
     {
         LLGL_COMPARE_MEMBER_SWO(shaders_[i]);

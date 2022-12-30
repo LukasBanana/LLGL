@@ -59,8 +59,16 @@ class GLPipelineSignature
     private:
 
         // IDs of shaders in this pipeline: glCreateShader/glCreateProgram/glCreateShaderProgramv
-        GLuint numShaders_                                      = 0;
-        GLuint shaders_[LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE]   = {};
+        union
+        {
+            struct
+            {
+                GLuint isSeparablePpeline_  :  1;
+                GLuint numShaders_          : 31;
+            };
+            GLuint typeBitAndNumShaders_;
+        };
+        GLuint shaders_[LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE] = {};
 
 };
 

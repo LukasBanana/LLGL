@@ -24,6 +24,10 @@ namespace LLGL
 #   define LLGL_ASSERT_INFO(INFO) (std::string(__FUNCTION__) + std::string(": ") + std::string(INFO))
 #endif
 
+#define LLGL_ASSERT(EXPR)                   \
+    if (!(EXPR))                            \
+        ThrowAssertion(__FUNCTION__, #EXPR)
+
 #define LLGL_ASSERT_PTR(PARAM)                          \
     if (!(PARAM))                                       \
         ThrowNullPointerExcept(__FUNCTION__, #PARAM)

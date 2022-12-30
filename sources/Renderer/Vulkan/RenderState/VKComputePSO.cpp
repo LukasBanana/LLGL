@@ -6,7 +6,7 @@
  */
 
 #include "VKComputePSO.h"
-#include "../Shader/VKShaderProgram.h"
+#include "../Shader/VKShader.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
@@ -43,18 +43,14 @@ void VKComputePSO::CreateVkPipeline(
     VkPipelineLayout                    pipelineLayout,
     const ComputePipelineDescriptor&    desc)
 {
-    /* Get shader program object */
-    auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
-    if (!shaderProgramVK)
-        throw std::invalid_argument("failed to create compute pipeline due to missing shader program");
+    /* Get compute shader */
+    auto computeShaderVK = LLGL_CAST(const VKShader*, desc.computeShader);
+    if (!computeShaderVK)
+        throw std::invalid_argument("cannot create Vulkan compute pipeline without compute shader");
 
     /* Get shader stages */
-    std::uint32_t shaderStageCount = 1;
     VkPipelineShaderStageCreateInfo shaderStageCreateInfo;
-    shaderProgramVK->FillShaderStageCreateInfos(&shaderStageCreateInfo, shaderStageCount);
-
-    if (shaderStageCount != 1)
-        throw std::invalid_argument("invalid number of shader stages for Vulkan compute pipeline");
+    computeShaderVK->FillShaderStageCreateInfo(shaderStageCreateInfo);
 
     /* Create graphics pipeline state object */
     VkComputePipelineCreateInfo createInfo;

@@ -201,7 +201,7 @@ void GLShader::BuildTransformFeedbackVaryings(std::size_t numVaryings, const Ver
     if (numVaryings > 0 && varyings != nullptr)
     {
         transformFeedbackVaryings_.reserve(numVaryings);
-        for (std::size_t i = 0; i < numVaryings; ++i)
+        for_range(i, numVaryings)
             transformFeedbackVaryings_.push_back(shaderAttribNames_.CopyString(varyings[i].name));
     }
 }

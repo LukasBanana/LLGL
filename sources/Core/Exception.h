@@ -17,6 +17,10 @@ namespace LLGL
 {
 
 
+// Throws an std::runtime_error exception with the message, that the specified assertion that failed.
+[[noreturn]]
+LLGL_EXPORT void ThrowAssertion(const char* funcName, const char* expr);
+
 // Throws an std::runtime_error exception with the message, that the specified feature is not supported.
 [[noreturn]]
 LLGL_EXPORT void ThrowNotSupportedExcept(const char* funcName, const char* featureName);

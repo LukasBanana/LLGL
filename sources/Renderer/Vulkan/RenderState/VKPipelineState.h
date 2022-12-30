@@ -27,6 +27,8 @@ class VKPipelineState : public PipelineState
 
         VKPipelineState(const VKPtr<VkDevice>& device, VkPipelineBindPoint bindPoint);
 
+        const Report* GetReport() const override;
+
         // Returns the native PSO.
         inline VkPipeline GetVkPipeline() const
         {
