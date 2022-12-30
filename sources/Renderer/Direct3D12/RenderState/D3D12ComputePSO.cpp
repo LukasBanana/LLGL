@@ -7,7 +7,6 @@
 
 #include "D3D12ComputePSO.h"
 #include "../D3D12Device.h"
-#include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
 #include "D3D12PipelineLayout.h"
 #include "../Command/D3D12CommandContext.h"
@@ -25,16 +24,12 @@ D3D12ComputePSO::D3D12ComputePSO(
     D3D12PipelineLayout&                defaultPipelineLayout,
     const ComputePipelineDescriptor&    desc)
 :
-    D3D12PipelineState { false, desc.pipelineLayout, defaultPipelineLayout }
+    D3D12PipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout, defaultPipelineLayout }
 {
-    /* Validate pointers and get D3D shader program */
-    LLGL_ASSERT_PTR(desc.shaderProgram);
-
-    auto shaderProgramD3D = LLGL_CAST(const D3D12ShaderProgram*, desc.shaderProgram);
-    if (shaderProgramD3D->GetCS() == nullptr)
-        throw std::runtime_error("cannot create compute pipeline without valid compute shader in shader program");
-
-    CreateNativePSO(device, *shaderProgramD3D);
+    if (auto computeShaderD3D = LLGL_CAST(const D3D12Shader*, desc.computeShader))
+        CreateNativePSO(device, computeShaderD3D->GetByteCode());
+    else
+        throw std::runtime_error("cannot create D3D compute pipeline without compute shader");
 }
 
 void D3D12ComputePSO::Bind(D3D12CommandContext& commandContext)
@@ -44,15 +39,13 @@ void D3D12ComputePSO::Bind(D3D12CommandContext& commandContext)
     commandContext.SetPipelineState(GetNative());
 }
 
-void D3D12ComputePSO::CreateNativePSO(
-    D3D12Device&                device,
-    const D3D12ShaderProgram&   shaderProgram)
+void D3D12ComputePSO::CreateNativePSO(D3D12Device& device, const D3D12_SHADER_BYTECODE& csBytecode)
 {
     /* Create graphics pipeline state and graphics command list */
     D3D12_COMPUTE_PIPELINE_STATE_DESC stateDesc = {};
     {
         stateDesc.pRootSignature    = GetRootSignature();
-        stateDesc.CS                = shaderProgram.GetCS()->GetByteCode();
+        stateDesc.CS                = csBytecode;
     }
     SetNative(device.CreateDXComputePipelineState(stateDesc));
 }

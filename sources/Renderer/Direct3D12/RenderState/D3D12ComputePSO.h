@@ -35,10 +35,7 @@ class D3D12ComputePSO final : public D3D12PipelineState
 
     private:
 
-        void CreateNativePSO(
-            D3D12Device&                device,
-            const D3D12ShaderProgram&   shaderProgram
-        );
+        void CreateNativePSO(D3D12Device& device, const D3D12_SHADER_BYTECODE& csBytecode);
 
 };
 

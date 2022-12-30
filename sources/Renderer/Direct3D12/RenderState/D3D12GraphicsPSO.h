@@ -20,7 +20,6 @@ namespace LLGL
 class D3D12Device;
 class D3D12RenderPass;
 class D3D12PipelineLayout;
-class D3D12ShaderProgram;
 class D3D12CommandContext;
 class ByteBufferIterator;
 
@@ -58,7 +57,6 @@ class D3D12GraphicsPSO final : public D3D12PipelineState
         void CreateNativePSOFromDesc(
             D3D12Device&                        device,
             const D3D12PipelineLayout&          pipelineLayout,
-            const D3D12ShaderProgram&           shaderProgram,
             const D3D12RenderPass*              renderPass,
             const GraphicsPipelineDescriptor&   desc,
             Serialization::Serializer*          writer

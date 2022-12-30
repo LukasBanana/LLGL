@@ -56,9 +56,19 @@ void D3D12PipelineState::SetName(const char* name)
     D3D12SetObjectName(native_.Get(), name);
 }
 
+const Report* D3D12PipelineState::GetReport() const
+{
+    return (*report_.GetText() != '\0' || report_.HasErrors() ? &report_ : nullptr);
+}
+
 void D3D12PipelineState::SetNative(ComPtr<ID3D12PipelineState>&& native)
 {
     native_ = std::move(native);
+}
+
+void D3D12PipelineState::ResetReport(std::string&& text, bool hasErrors)
+{
+    report_.Reset(std::forward<std::string&&>(text), hasErrors);
 }
 
 

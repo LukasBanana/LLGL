@@ -13,6 +13,7 @@
 #include <LLGL/ForwardDecls.h>
 #include "../../DXCommon/ComPtr.h"
 #include "../../Serialization.h"
+#include "../../../Core/BasicReport.h"
 #include <d3d12.h>
 #include <memory>
 
@@ -30,6 +31,7 @@ class D3D12PipelineState : public PipelineState
     public:
 
         void SetName(const char* name) override final;
+        const Report* GetReport() const override final;
 
     public:
 
@@ -59,6 +61,9 @@ class D3D12PipelineState : public PipelineState
         // Stores the native PSO.
         void SetNative(ComPtr<ID3D12PipelineState>&& native);
 
+        // Writes the report with the specified message and error bit.
+        void ResetReport(std::string&& text, bool hasErrors = false);
+
         // Returns the native PSO object.
         inline ID3D12PipelineState* GetNative() const
         {
@@ -76,6 +81,7 @@ class D3D12PipelineState : public PipelineState
         const bool                  isGraphicsPSO_  = false;
         ComPtr<ID3D12PipelineState> native_;
         ComPtr<ID3D12RootSignature> rootSignature_;
+        BasicReport                 report_;
 
 };
 

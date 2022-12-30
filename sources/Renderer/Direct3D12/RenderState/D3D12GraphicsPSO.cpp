@@ -9,7 +9,6 @@
 #include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
 #include "../D3D12ObjectUtils.h"
-#include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
 #include "D3D12RenderPass.h"
 #include "D3D12PipelineLayout.h"
@@ -39,18 +38,18 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
     const D3D12RenderPass*              defaultRenderPass,
     Serialization::Serializer*          writer)
 :
-    D3D12PipelineState { true, desc.pipelineLayout, defaultPipelineLayout }
+    D3D12PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, defaultPipelineLayout }
 {
     /* Validate pointers and get D3D shader program */
-    LLGL_ASSERT_PTR(desc.shaderProgram);
-    auto shaderProgramD3D = LLGL_CAST(const D3D12ShaderProgram*, desc.shaderProgram);
+    if (desc.vertexShader == nullptr)
+        throw std::invalid_argument("cannot create D3D graphics pipeline without vertex shader");
 
     /* Use either default render pass or from descriptor */
-    const D3D12RenderPass* renderPass = nullptr;
+    const D3D12RenderPass* renderPassD3D = nullptr;
     if (desc.renderPass != nullptr)
-        renderPass = LLGL_CAST(const D3D12RenderPass*, desc.renderPass);
+        renderPassD3D = LLGL_CAST(const D3D12RenderPass*, desc.renderPass);
     else
-        renderPass = defaultRenderPass;
+        renderPassD3D = defaultRenderPass;
 
     /* Store dynamic pipeline states */
     primitiveTopology_  = D3D12Types::Map(desc.primitiveTopology);
@@ -77,11 +76,11 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
         pipelineLayoutD3D = &defaultPipelineLayout;
 
     /* Create native graphics PSO */
-    CreateNativePSOFromDesc(device, *pipelineLayoutD3D, *shaderProgramD3D, renderPass, desc, writer);
+    CreateNativePSOFromDesc(device, *pipelineLayoutD3D, renderPassD3D, desc, writer);
 }
 
 D3D12GraphicsPSO::D3D12GraphicsPSO(D3D12Device& device, Serialization::Deserializer& reader) :
-    D3D12PipelineState { true, device.GetNative(), reader }
+    D3D12PipelineState { /*isGraphicsPSO:*/ true, device.GetNative(), reader }
 {
     CreateNativePSOFromCache(device, reader);
 }
@@ -116,9 +115,12 @@ static D3D12_CONSERVATIVE_RASTERIZATION_MODE GetConservativeRaster(bool enabled)
     return (enabled ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF);
 }
 
-static D3D12_SHADER_BYTECODE GetShaderByteCode(D3D12Shader* shader)
+static D3D12_SHADER_BYTECODE GetD3DShaderByteCode(const Shader* shader)
 {
-    return (shader != nullptr ? shader->GetByteCode() : D3D12_SHADER_BYTECODE{ nullptr, 0 });
+    if (shader != nullptr)
+        return LLGL_CAST(const D3D12Shader*, shader)->GetByteCode();
+    else
+        return D3D12_SHADER_BYTECODE{ nullptr, 0 };
 }
 
 static UINT8 GetColorWriteMask(const ColorRGBAb& color)
@@ -334,10 +336,26 @@ static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopo
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
 }
 
+static D3D12_INPUT_LAYOUT_DESC GetD3DInputLayoutDesc(const Shader* vs)
+{
+    D3D12_INPUT_LAYOUT_DESC desc = {};
+    LLGL_CAST(const D3D12Shader*, vs)->GetInputLayoutDesc(desc);
+    return desc;
+}
+
+static D3D12_STREAM_OUTPUT_DESC GetD3DStreamOutputDesc(const Shader* vs, const Shader* gs)
+{
+    D3D12_STREAM_OUTPUT_DESC desc = {};
+    if (gs != nullptr)
+        LLGL_CAST(const D3D12Shader*, gs)->GetStreamOutputDesc(desc);
+    else if (vs != nullptr)
+        LLGL_CAST(const D3D12Shader*, vs)->GetStreamOutputDesc(desc);
+    return desc;
+}
+
 void D3D12GraphicsPSO::CreateNativePSOFromDesc(
     D3D12Device&                        device,
     const D3D12PipelineLayout&          pipelineLayout,
-    const D3D12ShaderProgram&           shaderProgram,
     const D3D12RenderPass*              renderPass,
     const GraphicsPipelineDescriptor&   desc,
     Serialization::Serializer*          writer)
@@ -350,11 +368,11 @@ void D3D12GraphicsPSO::CreateNativePSOFromDesc(
     stateDesc.pRootSignature = GetRootSignature();
 
     /* Get shader byte codes */
-    stateDesc.VS = GetShaderByteCode(shaderProgram.GetVS());
-    stateDesc.PS = GetShaderByteCode(shaderProgram.GetPS());
-    stateDesc.DS = GetShaderByteCode(shaderProgram.GetDS());
-    stateDesc.HS = GetShaderByteCode(shaderProgram.GetHS());
-    stateDesc.GS = GetShaderByteCode(shaderProgram.GetGS());
+    stateDesc.VS = GetD3DShaderByteCode(desc.vertexShader);
+    stateDesc.PS = GetD3DShaderByteCode(desc.fragmentShader);
+    stateDesc.DS = GetD3DShaderByteCode(desc.tessControlShader);
+    stateDesc.HS = GetD3DShaderByteCode(desc.tessEvaluationShader);
+    stateDesc.GS = GetD3DShaderByteCode(desc.geometryShader);
 
     /* Convert blend state and depth-stencil format */
     if (renderPass != nullptr)
@@ -375,8 +393,8 @@ void D3D12GraphicsPSO::CreateNativePSOFromDesc(
     Convert(stateDesc.DepthStencilState, desc.depth, desc.stencil);
 
     /* Convert other states */
-    stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
-    stateDesc.StreamOutput          = shaderProgram.GetStreamOutputDesc();
+    stateDesc.InputLayout           = GetD3DInputLayoutDesc(desc.vertexShader);
+    stateDesc.StreamOutput          = GetD3DStreamOutputDesc(desc.vertexShader, desc.geometryShader);
     stateDesc.IBStripCutValue       = (IsPrimitiveTopologyStrip(desc.primitiveTopology) ? D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.blend.sampleMask;
