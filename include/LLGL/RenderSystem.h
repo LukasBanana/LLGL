@@ -34,8 +34,7 @@
 #include <LLGL/RenderTargetFlags.h>
 #include <LLGL/Shader.h>
 #include <LLGL/ShaderFlags.h>
-#include <LLGL/ShaderProgram.h>
-#include <LLGL/ShaderProgramFlags.h>
+#include <LLGL/ShaderReflection.h>
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/PipelineState.h>
@@ -418,21 +417,8 @@ class LLGL_EXPORT RenderSystem : public Interface
         */
         virtual Shader* CreateShader(const ShaderDescriptor& desc) = 0;
 
-        /**
-        \brief Creates a new shader program and links all specified shaders.
-        \remarks To check whether the linking was successful or not, use the \c HasErrors and \c GetReport functions of the ShaderProgram interface.
-        \see ShaderProgram::HasErrors
-        \see ShaderProgram::GetReport
-        \see ShaderProgramDescriptor
-        \see ShaderProgramDesc
-        */
-        virtual ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) = 0;
-
         //! Releases the specified Shader object. After this call, the specified object must no longer be used.
         virtual void Release(Shader& shader) = 0;
-
-        //! Releases the specified ShaderProgram object. After this call, the specified object must no longer be used.
-        virtual void Release(ShaderProgram& shaderProgram) = 0;
 
         /* ----- Pipeline Layouts ----- */
 
@@ -470,7 +456,7 @@ class LLGL_EXPORT RenderSystem : public Interface
             // Setup initial pipeline state
             LLGL::ComputePipelineDescritpor myPipelineDesc;
             myPipelineDesc.pipelineLayout = myPipelineLayout;
-            myPipelineDesc.shaderProgram  = myShaderProgram;
+            myPipelineDesc.computeShader  = myComputeShader;
 
             // Create new PSO
             std::unique_ptr<LLGL::Blob> myCache;
@@ -493,7 +479,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Creates a new graphics pipeline state object (PSO).
         \param[in] desc Specifies the graphics pipeline descriptor.
         This will describe the entire pipeline state, i.e. the blending-, rasterizer-, depth-, stencil- and shader states.
-        The \c shaderProgram member of the descriptor must never be null!
+        The \c vertexShader member of the descriptor must never be null!
         \param[out] serializedCache Optional pointer to a unique Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
         This cache may be unique to the respective hardware and driver the application is running on. The behavior is undefined if this cache is used in a different software environment.
         It can be used to faster restore a pipeline state on next application run.
@@ -505,7 +491,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Creates a new compute pipeline state object (PSO).
         \param[in] desc Specifies the compute pipeline descriptor. This will describe the entire pipeline state.
-        The \c shaderProgram member of the descriptor must never be null!
+        The \c computeShader member of the descriptor must never be null!
         \param[out] serializedCache Optional pointer to a unique Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
         This cache may be unique to the respective hardware and driver the application is running on. The behavior is undefined if this cache is used in a different software environment.
         It can be used to faster restore a pipeline state on next application run.
@@ -556,9 +542,6 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         //! Validates the specified shader descriptor.
         void AssertCreateShader(const ShaderDescriptor& desc);
-
-        //! Validates the specified shader program descriptor.
-        void AssertCreateShaderProgram(const ShaderProgramDescriptor& desc);
 
         //! Validates the specified render target descriptor.
         void AssertCreateRenderTarget(const RenderTargetDescriptor& desc);

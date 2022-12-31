@@ -18,7 +18,6 @@
 #include "RenderState/DbgPipelineState.h"
 #include "RenderState/DbgResourceHeap.h"
 #include "Shader/DbgShader.h"
-#include "Shader/DbgShaderProgram.h"
 #include "Texture/DbgTexture.h"
 #include "Texture/DbgRenderTarget.h"
 
@@ -720,18 +719,11 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
         /* Bind graphics pipeline and unbind compute pipeline */
         bindings_.pipelineState         = (&pipelineStateDbg);
-        bindings_.shaderProgram         = nullptr;
         bindings_.anyShaderAttributes   = false;
 
         if (pipelineStateDbg.isGraphicsPSO)
         {
-            if (auto shaderProgram = pipelineStateDbg.graphicsDesc.shaderProgram)
-            {
-                auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
-                bindings_.shaderProgram         = shaderProgramDbg;
-                bindings_.anyShaderAttributes   = !(shaderProgramDbg->GetVertexLayout().attributes.empty());
-            }
-            else if (auto vertexShader = pipelineStateDbg.graphicsDesc.vertexShader)
+            if (auto vertexShader = pipelineStateDbg.graphicsDesc.vertexShader)
             {
                 auto vertexShaderDbg = LLGL_CAST(const DbgShader*, vertexShader);
                 //TODO: store bound vertex shader
@@ -740,12 +732,7 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         }
         else
         {
-            if (auto shaderProgram = pipelineStateDbg.computeDesc.shaderProgram)
-            {
-                auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
-                bindings_.shaderProgram = shaderProgramDbg;
-            }
-            else if (auto computeShader = pipelineStateDbg.computeDesc.computeShader)
+            if (auto computeShader = pipelineStateDbg.computeDesc.computeShader)
             {
                 //TODO: store bound compute shader
             }
@@ -1381,18 +1368,7 @@ void DbgCommandBuffer::ValidateVertexLayout()
     {
         if (pso->isGraphicsPSO && bindings_.numVertexBuffers > 0)
         {
-            if (auto shaderProgram = pso->graphicsDesc.shaderProgram)
-            {
-                auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
-                const auto& vertexLayout = shaderProgramDbg->GetVertexLayout();
-
-                /* Check if vertex layout is specified in active shader program */
-                if (vertexLayout.bound)
-                    ValidateVertexLayoutAttributes(vertexLayout.attributes, bindings_.vertexBuffers, bindings_.numVertexBuffers);
-                else if (bindings_.anyNonEmptyVertexBuffer)
-                    LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program while bound vertex buffers are non-empty");
-            }
-            else if (auto vertexShader = pso->graphicsDesc.vertexShader)
+            if (auto vertexShader = pso->graphicsDesc.vertexShader)
             {
                 auto vertexShaderDbg = LLGL_CAST(const DbgShader*, vertexShader);
                 const auto& inputAttribs = vertexShaderDbg->desc.vertex.inputAttribs;
@@ -1501,9 +1477,9 @@ void DbgCommandBuffer::ValidateVertexID(std::uint32_t firstVertex)
 {
     if (firstVertex > 0)
     {
-        if (auto shaderProgramDbg = bindings_.shaderProgram)
+        if (auto vertexShaderDbg = bindings_.vertexShader)
         {
-            if (auto vertexID = shaderProgramDbg->GetVertexID())
+            if (auto vertexID = vertexShaderDbg->GetVertexID())
             {
                 LLGL_DBG_WARN(
                     WarningType::VaryingBehavior,
@@ -1518,9 +1494,9 @@ void DbgCommandBuffer::ValidateInstanceID(std::uint32_t firstInstance)
 {
     if (firstInstance > 0)
     {
-        if (auto shaderProgramDbg = bindings_.shaderProgram)
+        if (auto vertexShaderDbg = bindings_.vertexShader)
         {
-            if (auto instanceID = shaderProgramDbg->GetInstanceID())
+            if (auto instanceID = vertexShaderDbg->GetInstanceID())
             {
                 LLGL_DBG_WARN(
                     WarningType::VaryingBehavior,

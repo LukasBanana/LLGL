@@ -1,6 +1,6 @@
 /*
  * GLShaderProgram.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -81,66 +81,46 @@ static SharedGLShader g_nullFragmentShader;
 
 #endif // /__APPLE__
 
-static void PutIntoShaderProgramDesc(Shader* shader, ShaderProgramDescriptor& desc)
+struct GLOrderedShaders
 {
-    switch (shader->GetType())
-    {
-        case ShaderType::Undefined:
-            break;
-        case ShaderType::Vertex:
-            desc.vertexShader = shader;
-            break;
-        case ShaderType::TessControl:
-            desc.tessControlShader = shader;
-            break;
-        case ShaderType::TessEvaluation:
-            desc.tessEvaluationShader = shader;
-            break;
-        case ShaderType::Geometry:
-            desc.geometryShader = shader;
-            break;
-        case ShaderType::Fragment:
-            desc.fragmentShader = shader;
-            break;
-        case ShaderType::Compute:
-            desc.computeShader = shader;
-            break;
-    }
-}
+    const GLShader* vs = nullptr;
+    const GLShader* gs = nullptr;
+    const GLShader* fs = nullptr;
+};
 
-static ShaderProgramDescriptor MakeShaderProgramDesc(std::size_t numShaders, Shader* const* shaders)
-{
-    ShaderProgramDescriptor desc;
-
-    for_range(i, numShaders)
-    {
-        if (auto shader = shaders[i])
-            PutIntoShaderProgramDesc(shader, desc);
-    }
-
-    return desc;
-}
-
-static void AttachGLLegacyShader(GLuint program, const Shader* shader)
+static void AttachGLLegacyShader(GLuint program, const Shader* shader, GLOrderedShaders& outOrderedShaders)
 {
     if (shader != nullptr)
     {
         /* Attach shader to shader program */
         auto shaderGL = LLGL_CAST(const GLLegacyShader*, shader);
         glAttachShader(program, shaderGL->GetID());
+
+        /* Put into ordered container */
+        switch (shaderGL->GetType())
+        {
+            case ShaderType::Vertex:
+                outOrderedShaders.vs = shaderGL;
+                break;
+            case ShaderType::Geometry:
+                outOrderedShaders.gs = shaderGL;
+                break;
+            case ShaderType::Fragment:
+                outOrderedShaders.fs = shaderGL;
+                break;
+            default:
+                break;
+        }
     }
 }
 
-GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
+GLShaderProgram::GLShaderProgram(std::size_t numShaders, Shader* const* shaders) :
     GLShaderPipeline { glCreateProgram() }
 {
     /* Attach all specified shaders to this shader program */
-    AttachGLLegacyShader(GetID(), desc.vertexShader);
-    AttachGLLegacyShader(GetID(), desc.tessControlShader);
-    AttachGLLegacyShader(GetID(), desc.tessEvaluationShader);
-    AttachGLLegacyShader(GetID(), desc.geometryShader);
-    AttachGLLegacyShader(GetID(), desc.fragmentShader);
-    AttachGLLegacyShader(GetID(), desc.computeShader);
+    GLOrderedShaders orderedShaders;
+    for_range(i, numShaders)
+        AttachGLLegacyShader(GetID(), shaders[i], orderedShaders);
 
     #ifdef __APPLE__
     /*
@@ -160,35 +140,28 @@ GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
     #endif
 
     /* Build input layout for vertex shader */
-    if (auto vs = desc.vertexShader)
-    {
-        auto vsGL = LLGL_CAST(const GLShader*, vs);
-        GLShaderProgram::BindAttribLocations(GetID(), vsGL->GetNumVertexAttribs(), vsGL->GetVertexAttribs());
-    }
+    if (auto vs = orderedShaders.vs)
+        GLShaderProgram::BindAttribLocations(GetID(), vs->GetNumVertexAttribs(), vs->GetVertexAttribs());
 
     /* Build output layout for fragment shader */
-    if (auto fs = desc.fragmentShader)
-    {
-        auto fsGL = LLGL_CAST(const GLShader*, fs);
-        GLShaderProgram::BindFragDataLocations(GetID(), fsGL->GetNumFragmentAttribs(), fsGL->GetFragmentAttribs());
-    }
+    if (auto fs = orderedShaders.fs)
+        GLShaderProgram::BindFragDataLocations(GetID(), fs->GetNumFragmentAttribs(), fs->GetFragmentAttribs());
 
     /* Build transform feedback varyings for vertex or geometry shader and link program */
     const GLShader* shaderWithVaryings = nullptr;
 
-    if (auto gs = desc.geometryShader)
+    if (auto gs = orderedShaders.gs)
     {
-        auto gsGL = LLGL_CAST(const GLShader*, gs);
-        if (!gsGL->GetTransformFeedbackVaryings().empty())
-            shaderWithVaryings = gsGL;
+        if (!gs->GetTransformFeedbackVaryings().empty())
+            shaderWithVaryings = gs;
     }
-    else if (auto vs = desc.vertexShader)
+    else if (auto vs = orderedShaders.vs)
     {
-        auto vsGL = LLGL_CAST(const GLShader*, vs);
-        if (!vsGL->GetTransformFeedbackVaryings().empty())
-            shaderWithVaryings = vsGL;
+        if (!vs->GetTransformFeedbackVaryings().empty())
+            shaderWithVaryings = vs;
     }
 
+    /* Link shader program */
     if (shaderWithVaryings != nullptr)
     {
         const auto& varyings = shaderWithVaryings->GetTransformFeedbackVaryings();
@@ -196,11 +169,8 @@ GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
     }
     else
         GLShaderProgram::LinkProgram(GetID());
-}
 
-GLShaderProgram::GLShaderProgram(std::size_t numShaders, Shader* const* shaders) :
-    GLShaderProgram { MakeShaderProgramDesc(numShaders, shaders) }
-{
+    /* Build pipeline signature */
     BuildSignature(numShaders, shaders);
 }
 
@@ -212,29 +182,6 @@ GLShaderProgram::~GLShaderProgram()
     if (hasNullFragmentShader_)
         g_nullFragmentShader.Release();
     #endif
-}
-
-void GLShaderProgram::SetName(const char* name)
-{
-    GLSetObjectLabel(GL_PROGRAM, GetID(), name);
-}
-
-bool GLShaderProgram::HasErrors() const
-{
-    return !GLShaderProgram::GetLinkStatus(GetID());
-}
-
-std::string GLShaderProgram::GetReport() const
-{
-    return GLShaderProgram::GetGLProgramLog(GetID());
-}
-
-bool GLShaderProgram::Reflect(ShaderReflection& reflection) const
-{
-    ShaderProgram::ClearShaderReflection(reflection);
-    QueryReflection(reflection);
-    ShaderProgram::FinalizeShaderReflection(reflection);
-    return true;
 }
 
 UniformLocation GLShaderProgram::FindUniformLocation(const char* name) const

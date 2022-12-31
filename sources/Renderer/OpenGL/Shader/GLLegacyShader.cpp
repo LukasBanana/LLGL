@@ -23,6 +23,12 @@ GLLegacyShader::GLLegacyShader(const ShaderDescriptor& desc) :
     GLuint id = glCreateShader(GLTypes::Map(desc.type));
     SetID(id);
     BuildShader(desc);
+
+    /* Query compile status and log */
+    ReportStatusAndLog(
+        GLLegacyShader::GetCompileStatus(GetID()),
+        GLLegacyShader::GetGLShaderLog(GetID())
+    );
 }
 
 GLLegacyShader::~GLLegacyShader()
@@ -35,14 +41,9 @@ void GLLegacyShader::SetName(const char* name)
     GLSetObjectLabel(GL_SHADER, GetID(), name);
 }
 
-bool GLLegacyShader::HasErrors() const
+bool GLLegacyShader::Reflect(ShaderReflection& reflection) const
 {
-    return !GLLegacyShader::GetCompileStatus(GetID());
-}
-
-std::string GLLegacyShader::GetReport() const
-{
-    return GLLegacyShader::GetGLShaderLog(GetID());
+    return true;//TODO
 }
 
 void GLLegacyShader::CompileShaderSource(GLuint shader, const char* source)

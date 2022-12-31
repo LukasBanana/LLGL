@@ -1,6 +1,6 @@
 /*
  * SwapChain.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,19 +9,18 @@
 #define LLGL_SWAP_CHAIN_H
 
 
-#include "RenderTarget.h"
-#include "SwapChainFlags.h"
-#include "RenderSystemFlags.h"
-#include "Surface.h"
+#include <LLGL/RenderTarget.h>
+#include <LLGL/SwapChainFlags.h>
+#include <LLGL/RenderSystemFlags.h>
+#include <LLGL/Surface.h>
 
-#include "Buffer.h"
-#include "BufferArray.h"
-#include "ShaderProgram.h"
-#include "Texture.h"
-#include "RenderTarget.h"
-#include "PipelineState.h"
-#include "Sampler.h"
-#include "QueryHeap.h"
+#include <LLGL/Buffer.h>
+#include <LLGL/BufferArray.h>
+#include <LLGL/Texture.h>
+#include <LLGL/RenderTarget.h>
+#include <LLGL/PipelineState.h>
+#include <LLGL/Sampler.h>
+#include <LLGL/QueryHeap.h>
 
 #include <string>
 #include <memory>

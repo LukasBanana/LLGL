@@ -50,7 +50,6 @@ struct InterfaceID
         ResourceHeap,           //!< Extends RenderSystemChild. \see ResourceHeap
         Sampler,                //!< Extends RenderSystemChild. \see Sampler
         Shader,                 //!< Extends RenderSystemChild. \see Shader
-        ShaderProgram,          //!< Extends RenderSystemChild. \see ShaderProgram
         Texture,                //!< Extends RenderSystemChild. \see Texture
         RenderTarget,           //!< Extends RenderSystemChild. \see RenderTarget
         SwapChain,              //!< Extends RenderTarget. \see SwapChain

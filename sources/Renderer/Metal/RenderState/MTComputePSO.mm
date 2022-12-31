@@ -1,13 +1,13 @@
 /*
  * MTComputePSO.mm
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "MTComputePSO.h"
 #include "../MTCore.h"
-#include "../Shader/MTShaderProgram.h"
+#include "../Shader/MTShader.h"
 #include "../../CheckedCast.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <string>
@@ -19,16 +19,16 @@ namespace LLGL
 
 
 MTComputePSO::MTComputePSO(id<MTLDevice> device, const ComputePipelineDescriptor& desc) :
-    MTPipelineState { false }
+    MTPipelineState { /*isGraphicsPSO:*/ false }
 {
     /* Get native shader functions */
-    shaderProgram_ = LLGL_CAST(const MTShaderProgram*, desc.shaderProgram);
-    if (!shaderProgram_)
-        throw std::invalid_argument("failed to create compute pipeline state due to missing shader program");
+    computeShader_  = LLGL_CAST(const MTShader*, desc.computeShader);
+    if (!computeShader_)
+        throw std::invalid_argument("cannot create Metal compute pipeline without compute shader");
 
-    id<MTLFunction> kernelFunc = shaderProgram_->GetKernelMTLFunction();
+    id<MTLFunction> kernelFunc = computeShader_->GetNative();
     if (!kernelFunc)
-        throw std::invalid_argument("failed to create compute pipeline due to missing compute shader in shader program");
+        throw std::invalid_argument("cannot create Metal compute pipeline without valid compute kernel function");
 
     /* Create native compute pipeline state */
     NSError* error = nullptr;

@@ -63,6 +63,12 @@ GLSeparableShader::GLSeparableShader(const ShaderDescriptor& desc) :
 
     /* Detach intermediate shader before it gets deleted */
     glDetachShader(GetID(), intermediateShader.GetID());
+
+    /* Query link status and log */
+    ReportStatusAndLog(
+        GLShaderProgram::GetLinkStatus(GetID()),
+        GLShaderProgram::GetGLProgramLog(GetID())
+    );
 }
 
 GLSeparableShader::~GLSeparableShader()
@@ -75,14 +81,9 @@ void GLSeparableShader::SetName(const char* name)
     GLSetObjectLabel(GL_PROGRAM, GetID(), name);
 }
 
-bool GLSeparableShader::HasErrors() const
+bool GLSeparableShader::Reflect(ShaderReflection& reflection) const
 {
-    return !GLShaderProgram::GetLinkStatus(GetID());
-}
-
-std::string GLSeparableShader::GetReport() const
-{
-    return GLShaderProgram::GetGLProgramLog(GetID());
+    return true;//TODO
 }
 
 void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLayout)

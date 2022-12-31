@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
+#include <LLGL/Misc/VertexFormat.h>
 #include <Gauss/Gauss.h>
 
 int main()
@@ -110,25 +111,11 @@ int main()
         auto vertShader = renderer->CreateShader(vertShaderDesc);
         auto fragShader = renderer->CreateShader(fragShaderDesc);
 
-        if (vertShader->HasErrors())
-            std::cerr << vertShader->GetReport() << std::endl;
-
-        if (fragShader->HasErrors())
-            std::cerr << fragShader->GetReport() << std::endl;
-
-        // Create shader program
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
+        for (auto shader : { vertShader, fragShader })
         {
-            shaderProgramDesc.vertexShader      = vertShader;
-            shaderProgramDesc.fragmentShader    = fragShader;
+            if (auto report = shader->GetReport())
+                std::cerr << report->GetText() << std::endl;
         }
-        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-
-        if (shaderProgram->HasErrors())
-            std::cerr << shaderProgram->GetReport() << std::endl;
-
-        LLGL::ShaderReflection reflection;
-        shaderProgram->Reflect(reflection);
 
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
@@ -151,7 +138,8 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.vertexShader               = vertShader;
+            pipelineDesc.fragmentShader             = fragShader;
             pipelineDesc.pipelineLayout             = pipelineLayout;
 
             #if 0
@@ -161,7 +149,7 @@ int main()
             #endif
 
             #if 0
-            pipelineDesc.rasterizer.multiSampling    = swapChainDesc.multiSampling;
+            pipelineDesc.rasterizer.multiSampling   = swapChainDesc.multiSampling;
             #endif
         }
         auto pipeline = renderer->CreatePipelineState(pipelineDesc);

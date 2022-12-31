@@ -361,45 +361,8 @@ static void AssertShaderType(Shader* shader, const char* shaderName, const Shade
         if (shader->GetType() != type)
         {
             throw std::invalid_argument(
-                "cannot create shader program with '" + std::string(shaderName) +
+                "cannot create PSO with '" + std::string(shaderName) +
                 "' not being of type <LLGL::ShaderType::" + std::string(typeName) + ">"
-            );
-        }
-    }
-}
-
-void RenderSystem::AssertCreateShaderProgram(const ShaderProgramDescriptor& desc)
-{
-    AssertShaderType(desc.vertexShader,         "vertexShader",         ShaderType::Vertex,         "Vertex"        );
-    AssertShaderType(desc.tessControlShader,    "tessControlShader",    ShaderType::TessControl,    "TessControl"   );
-    AssertShaderType(desc.tessEvaluationShader, "tessEvaluationShader", ShaderType::TessEvaluation, "TessEvaluation");
-    AssertShaderType(desc.geometryShader,       "geometryShader",       ShaderType::Geometry,       "Geometry"      );
-    AssertShaderType(desc.fragmentShader,       "fragmentShader",       ShaderType::Fragment,       "Fragment"      );
-    AssertShaderType(desc.computeShader,        "computeShader",        ShaderType::Compute,        "Compute"       );
-
-    if (desc.computeShader != nullptr)
-    {
-        if ( desc.vertexShader         != nullptr ||
-             desc.tessControlShader    != nullptr ||
-             desc.tessEvaluationShader != nullptr ||
-             desc.geometryShader       != nullptr ||
-             desc.fragmentShader       != nullptr )
-        {
-            throw std::invalid_argument(
-                "cannot create shader program with 'computeShader' in conjunction with any other shader"
-            );
-        }
-    }
-    else
-    {
-        if (desc.vertexShader == nullptr)
-            throw std::invalid_argument("cannot create shader program without vertex shader");
-
-        if ( ( desc.tessControlShader != nullptr && desc.tessEvaluationShader == nullptr ) ||
-             ( desc.tessControlShader == nullptr && desc.tessEvaluationShader != nullptr ) )
-        {
-            throw std::invalid_argument(
-                "cannot create shader program with 'tessControlShader' and 'tessEvaluationShader' being partially specified"
             );
         }
     }

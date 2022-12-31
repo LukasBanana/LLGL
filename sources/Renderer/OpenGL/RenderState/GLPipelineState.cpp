@@ -60,7 +60,7 @@ GLPipelineState::~GLPipelineState()
 
 const Report* GLPipelineState::GetReport() const
 {
-    return (report_.HasErrors() || report_.GetText() != nullptr ? &report_ : nullptr);
+    return (report_ ? &report_ : nullptr);
 }
 
 void GLPipelineState::Bind(GLStateManager& stateMngr)

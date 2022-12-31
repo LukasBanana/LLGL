@@ -1,6 +1,6 @@
 /*
  * D3D11RenderSystem.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -28,7 +28,6 @@
 #include "RenderState/D3D11PipelineLayout.h"
 
 #include "Shader/D3D11Shader.h"
-#include "Shader/D3D11ShaderProgram.h"
 
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
@@ -122,10 +121,8 @@ class D3D11RenderSystem final : public RenderSystem
         /* ----- Shader ----- */
 
         Shader* CreateShader(const ShaderDescriptor& desc) override;
-        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
-        void Release(ShaderProgram& shaderProgram) override;
 
         /* ----- Pipeline Layouts ----- */
 
@@ -254,7 +251,6 @@ class D3D11RenderSystem final : public RenderSystem
         HWObjectContainer<D3D11RenderPass>      renderPasses_;
         HWObjectContainer<D3D11RenderTarget>    renderTargets_;
         HWObjectContainer<D3D11Shader>          shaders_;
-        HWObjectContainer<D3D11ShaderProgram>   shaderPrograms_;
         HWObjectContainer<D3D11PipelineLayout>  pipelineLayouts_;
         HWObjectContainer<D3D11PipelineState>   pipelineStates_;
         HWObjectContainer<D3D11ResourceHeap>    resourceHeaps_;

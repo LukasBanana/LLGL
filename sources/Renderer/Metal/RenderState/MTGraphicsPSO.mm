@@ -7,7 +7,7 @@
 
 #include "MTGraphicsPSO.h"
 #include "MTRenderPass.h"
-#include "../Shader/MTShaderProgram.h"
+#include "../Shader/MTShader.h"
 #include "../MTEncoderScheduler.h"
 #include "../MTTypes.h"
 #include "../MTCore.h"
@@ -46,7 +46,7 @@ MTGraphicsPSO::MTGraphicsPSO(
     const GraphicsPipelineDescriptor&   desc,
     const MTRenderPass*                 defaultRenderPass)
 :
-    MTPipelineState { true }
+    MTPipelineState { /*isGraphicsPSO:*/ true }
 {
     /* Convert standalone parameters */
     cullMode_       	= MTTypes::ToMTLCullMode(desc.rasterizer.cullMode);
@@ -148,20 +148,25 @@ static void FillColorAttachmentDesc(
     dst.sourceRGBBlendFactor        = MTTypes::ToMTLBlendFactor(targetDesc.srcColor);
 }
 
+static id<MTLFunction> GetNativeMTShader(const Shader* shader)
+{
+    return (shader != nullptr ? LLGL_CAST(const MTShader*, shader)->GetNative() : nullptr);
+}
+
 void MTGraphicsPSO::CreateRenderPipelineState(
     id<MTLDevice>                       device,
     const GraphicsPipelineDescriptor&   desc,
     const MTRenderPass*                 defaultRenderPass)
 {
     /* Get native shader functions */
-    auto shaderProgramMT = LLGL_CAST(const MTShaderProgram*, desc.shaderProgram);
-    if (!shaderProgramMT)
-        throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
+    auto vertexShaderMT = LLGL_CAST(const MTShader*, desc.vertexShader);
+    if (!vertexShaderMT)
+        throw std::invalid_argument("cannot create Metal pipeline without vertex shader");
 
     /* Get number of patch control points if a post-tessellation vertex function is specified */
-    numPatchControlPoints_ = shaderProgramMT->GetNumPatchControlPoints();
+    numPatchControlPoints_ = vertexShaderMT->GetNumPatchControlPoints();
 
-    if (id<MTLFunction> vertexFunc = shaderProgramMT->GetVertexMTLFunction())
+    if (id<MTLFunction> vertexFunc = vertexShaderMT->GetNative())
         patchType_ = [vertexFunc patchType];
 
     /* Get render pass object */
@@ -176,11 +181,11 @@ void MTGraphicsPSO::CreateRenderPipelineState(
     /* Create render pipeline state */
     MTLRenderPipelineDescriptor* psoDesc = [[MTLRenderPipelineDescriptor alloc] init];
     {
-        psoDesc.vertexDescriptor        = shaderProgramMT->GetMTLVertexDesc();
+        psoDesc.vertexDescriptor        = vertexShaderMT->GetMTLVertexDesc();
         psoDesc.alphaToCoverageEnabled  = MTBoolean(desc.blend.alphaToCoverageEnabled);
         psoDesc.alphaToOneEnabled       = NO;
-        psoDesc.fragmentFunction        = shaderProgramMT->GetFragmentMTLFunction();
-        psoDesc.vertexFunction          = shaderProgramMT->GetVertexMTLFunction();
+        psoDesc.fragmentFunction        = GetNativeMTShader(desc.fragmentShader);
+        psoDesc.vertexFunction          = GetNativeMTShader(desc.vertexShader);
 
         if (@available(iOS 12.0, *))
             psoDesc.inputPrimitiveTopology = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
@@ -218,7 +223,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
             psoDesc.tessellationPartitionMode           = MTTypes::ToMTLPartitionMode(desc.tessellation.partition);
         }
     }
-    NSError* error = nullptr;
+    id<NSError> error = nil;
     renderPipelineState_ = [device newRenderPipelineStateWithDescriptor:psoDesc error:&error];
     [psoDesc release];
 
@@ -228,9 +233,14 @@ void MTGraphicsPSO::CreateRenderPipelineState(
     /* Create compute PSO for tessellation stage */
     if (numPatchControlPoints_ > 0)
     {
-        tessPipelineState_ = [device newComputePipelineStateWithFunction:shaderProgramMT->GetKernelMTLFunction() error:&error];
-        if (!tessPipelineState_)
-            MTThrowIfCreateFailed(error, "MTLComputePipelineState");
+        if (auto tessComputeShaderMT = LLGL_CAST(const MTShader*, desc.tessControlShader))
+        {
+            tessPipelineState_ = [device newComputePipelineStateWithFunction:tessComputeShaderMT->GetNative() error:&error];
+            if (!tessPipelineState_)
+                MTThrowIfCreateFailed(error, "MTLComputePipelineState");
+        }
+        else
+            throw std::invalid_argument("cannot create Metal tessellation pipeline without tessellation compute shader");
     }
 }
 

@@ -631,20 +631,9 @@ Shader* VKRenderSystem::CreateShader(const ShaderDescriptor& desc)
     return TakeOwnership(shaders_, MakeUnique<VKShader>(device_, desc));
 }
 
-ShaderProgram* VKRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
-{
-    AssertCreateShaderProgram(desc);
-    return TakeOwnership(shaderPrograms_, MakeUnique<VKShaderProgram>(desc));
-}
-
 void VKRenderSystem::Release(Shader& shader)
 {
     RemoveFromUniqueSet(shaders_, &shader);
-}
-
-void VKRenderSystem::Release(ShaderProgram& shaderProgram)
-{
-    RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
 /* ----- Pipeline Layouts ----- */

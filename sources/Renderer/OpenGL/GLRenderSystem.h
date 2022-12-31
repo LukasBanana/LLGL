@@ -125,10 +125,8 @@ class GLRenderSystem final : public RenderSystem
         /* ----- Shader ----- */
 
         Shader* CreateShader(const ShaderDescriptor& desc) override;
-        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
-        void Release(ShaderProgram& shaderProgram) override;
 
         /* ----- Pipeline Layouts ----- */
 
@@ -192,7 +190,6 @@ class GLRenderSystem final : public RenderSystem
         HWObjectContainer<GLRenderPass>         renderPasses_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;
         HWObjectContainer<GLShader>             shaders_;
-        HWObjectContainer<GLShaderProgram>      shaderPrograms_;
         HWObjectContainer<GLPipelineLayout>     pipelineLayouts_;
         HWObjectContainer<GLPipelineState>      pipelineStates_;
         HWObjectContainer<GLResourceHeap>       resourceHeaps_;

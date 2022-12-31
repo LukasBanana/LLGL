@@ -13,6 +13,7 @@
 #include <vector>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
+#include "../../../Core/BasicReport.h"
 
 
 namespace LLGL
@@ -27,19 +28,17 @@ class VKShader final : public Shader
 
     public:
 
-        bool HasErrors() const override;
-
-        std::string GetReport() const override;
+        const Report* GetReport() const override;
+        bool Reflect(ShaderReflection& reflection) const override;
 
     public:
 
         VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc);
 
+        bool ReflectLocalSize(Extent3D& localSize) const;
+
         void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
         void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
-
-        bool Reflect(ShaderReflection& reflection) const;
-        bool ReflectLocalSize(Extent3D& localSize) const;
 
         // Returns the Vulkan shader module.
         inline const VKPtr<VkShaderModule>& GetShaderModule() const
@@ -62,6 +61,7 @@ class VKShader final : public Shader
 
         bool BuildShader(const ShaderDescriptor& shaderDesc);
         void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
+        void BuildReport();
 
         bool CompileSource(const ShaderDescriptor& shaderDesc);
         bool LoadBinary(const ShaderDescriptor& shaderDesc);
@@ -83,7 +83,7 @@ class VKShader final : public Shader
         VertexInputLayout       inputLayout_;
 
         std::string             entryPoint_;
-        std::string             errorLog_;
+        BasicReport             report_;
 
 };
 

@@ -22,29 +22,30 @@ namespace LLGL
 D3D12Shader::D3D12Shader(const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
-    if (!BuildShader(desc))
+    if (BuildShader(desc))
     {
-        /* Mark this shader compilation as failed */
-        hasErrors_ = true;
-    }
-    else if (GetType() == ShaderType::Vertex || GetType() == ShaderType::Geometry)
-    {
-        /* Build input layout and stream-output descriptors for vertex/geometry shaders */
-        ReserveVertexAttribs(desc);
-        if (GetType() == ShaderType::Vertex)
-            BuildInputLayout(static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
-        BuildStreamOutput(static_cast<UINT>(desc.vertex.outputAttribs.size()), desc.vertex.outputAttribs.data());
+        if (GetType() == ShaderType::Vertex || GetType() == ShaderType::Geometry)
+        {
+            /* Build input layout and stream-output descriptors for vertex/geometry shaders */
+            ReserveVertexAttribs(desc);
+            if (GetType() == ShaderType::Vertex)
+                BuildInputLayout(static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
+            BuildStreamOutput(static_cast<UINT>(desc.vertex.outputAttribs.size()), desc.vertex.outputAttribs.data());
+        }
     }
 }
 
-bool D3D12Shader::HasErrors() const
+const Report* D3D12Shader::GetReport() const
 {
-    return hasErrors_;
+    return (report_ ? &report_ : nullptr);
 }
 
-std::string D3D12Shader::GetReport() const
+bool D3D12Shader::Reflect(ShaderReflection& reflection) const
 {
-    return (errors_.Get() != nullptr ? DXGetBlobString(errors_.Get()) : "");
+    if (byteCode_)
+        return SUCCEEDED(ReflectShaderByteCode(reflection));
+    else
+        return false;
 }
 
 D3D12_SHADER_BYTECODE D3D12Shader::GetByteCode() const
@@ -58,14 +59,6 @@ D3D12_SHADER_BYTECODE D3D12Shader::GetByteCode() const
     }
 
     return byteCode;
-}
-
-bool D3D12Shader::Reflect(ShaderReflection& reflection) const
-{
-    if (byteCode_)
-        return SUCCEEDED(ReflectShaderByteCode(reflection));
-    else
-        return false;
 }
 
 bool D3D12Shader::GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const
@@ -246,6 +239,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
     auto        flags   = shaderDesc.flags;
 
     /* Compile shader code */
+    ComPtr<ID3DBlob> errors;
     auto hr = D3DCompile(
         sourceCode,
         sourceLength,
@@ -257,11 +251,13 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         DXGetCompilerFlags(flags),          // UINT                 Flags1
         0,                                  // UINT                 Flags2 (recommended to always be 0)
         byteCode_.ReleaseAndGetAddressOf(), // ID3DBlob**           ppCode
-        errors_.ReleaseAndGetAddressOf()    // ID3DBlob**           ppErrorMsgs
+        errors.ReleaseAndGetAddressOf()     // ID3DBlob**           ppErrorMsgs
     );
 
     /* Return true if compilation was successful */
-    return SUCCEEDED(hr);
+    const bool hasErrors = FAILED(hr);
+    report_.Reset(errors.Get(), hasErrors);
+    return !hasErrors;
 }
 
 bool D3D12Shader::LoadBinary(const ShaderDescriptor& shaderDesc)

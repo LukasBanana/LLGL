@@ -19,23 +19,22 @@ namespace LLGL
 MTShader::MTShader(id<MTLDevice> device, const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
-    if (!Compile(device, desc))
-        hasErrors_ = true;
-
-    /* Build vertex input layout */
-    BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
-
-    /* Store work group size for compute shaders */
-    if (desc.type == ShaderType::Compute)
+    if (Compile(device, desc))
     {
-        const auto& workGroupSize = desc.compute.workGroupSize;
-        numThreadsPerGroup_ = MTLSizeMake(workGroupSize.width, workGroupSize.height, workGroupSize.depth);
+        /* Build vertex input layout */
+        BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
+
+        /* Store work group size for compute shaders */
+        if (desc.type == ShaderType::Compute)
+        {
+            const auto& workGroupSize = desc.compute.workGroupSize;
+            numThreadsPerGroup_ = MTLSizeMake(workGroupSize.width, workGroupSize.height, workGroupSize.depth);
+        }
     }
 }
 
 MTShader::~MTShader()
 {
-    ReleaseError();
     if (vertexDesc_)
         [vertexDesc_ release];
     if (native_)
@@ -64,27 +63,22 @@ static MTLLanguageVersion GetMTLLanguageVersion(const ShaderDescriptor& desc)
     throw std::invalid_argument("invalid Metal shader version specified");
 }
 
-bool MTShader::HasErrors() const
+const Report* MTShader::GetReport() const
 {
-    return hasErrors_;
-}
-
-std::string MTShader::GetReport() const
-{
-    std::string s;
-
-    if (error_ != nullptr)
-    {
-        NSString* errorMsg = [error_ localizedDescription];
-        s = [errorMsg cStringUsingEncoding:NSUTF8StringEncoding];
-    }
-
-    return s;
+    return (report_ ? &report_ : nullptr);
 }
 
 bool MTShader::IsPostTessellationVertex() const
 {
     return (GetType() == ShaderType::Vertex && native_ != nil && [native_ patchType] != MTLPatchTypeNone);
+}
+
+NSUInteger MTShader::GetNumPatchControlPoints() const
+{
+    if (IsPostTessellationVertex())
+        return [native_ patchControlPointCount];
+    else
+        return 0;
 }
 
 
@@ -138,19 +132,25 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
 
     /* Load shader library */
     ReleaseError();
-    error_ = [NSError alloc];
+    id<NSError> error = [NSError alloc];
 
     library_ = [device
         newLibraryWithSource:   sourceString
         options:                opt
-        error:                  &error_
+        error:                  &error
     ];
 
     [sourceString release];
     [opt release];
 
     /* Load shader function with entry point */
-    return LoadFunction(shaderDesc.entryPoint);
+    const bool success = LoadFunction(shaderDesc.entryPoint);
+
+    const char* errorText = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
+    report_.Reset(errorText, !success);
+    [error release];
+
+    return success;
 }
 
 //TODO: this is untested!!!
@@ -177,12 +177,11 @@ bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shade
         throw std::runtime_error("cannot compile Metal shader without source");
 
     /* Load shader library */
-    ReleaseError();
-    error_ = [NSError alloc];
+    id<NSError> error = [NSError alloc];
 
     library_ = [device
         newLibraryWithData: reinterpret_cast<dispatch_data_t>(dispatchData)
-        error:              &error_
+        error:              &error
     ];
 
     if (source != nullptr)
@@ -191,7 +190,13 @@ bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shade
     [dispatchData release];
 
     /* Load shader function with entry point */
-    return LoadFunction(shaderDesc.entryPoint);
+    const bool success = LoadFunction(shaderDesc.entryPoint);
+
+    const char* errorText = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
+    report_.Reset(errorText, !success);
+    [error release];
+
+    return success;
 }
 
 // Converts the vertex attribute to a Metal vertex buffer layout
@@ -243,15 +248,6 @@ void MTShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
             Convert(vertexDesc_.layouts[attr.slot], attr, isPatchControlPoint);
 
         Convert(vertexDesc_.attributes[attr.location], attr);
-    }
-}
-
-void MTShader::ReleaseError()
-{
-    if (error_ != nullptr)
-    {
-        [error_ release];
-        error_ = nullptr;
     }
 }
 

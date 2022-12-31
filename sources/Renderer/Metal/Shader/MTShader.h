@@ -12,6 +12,7 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/Shader.h>
+#include "../../../Core/BasicReport.h"
 
 
 namespace LLGL
@@ -26,13 +27,16 @@ class MTShader final : public Shader
         MTShader(id<MTLDevice> device, const ShaderDescriptor& desc);
         ~MTShader();
 
-        bool HasErrors() const override;
+        const Report* GetReport() const override;
 
-        std::string GetReport() const override;
+        void Reflect(ShaderReflection& reflection) const override;
 
         bool IsPostTessellationVertex() const override;
 
     public:
+
+        // Returns the number of patch control points for a post-tessellation vertex shader or 0 if this is not a vertex shader.
+        NSUInteger GetNumPatchControlPoints() const;
 
         // Returns the native MTLFunction object.
         inline id<MTLFunction> GetNative() const
@@ -60,8 +64,6 @@ class MTShader final : public Shader
 
         void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
 
-        void ReleaseError();
-
         bool LoadFunction(const char* entryPoint);
 
     private:
@@ -69,8 +71,7 @@ class MTShader final : public Shader
         id<MTLLibrary>          library_            = nil;
         id<MTLFunction>         native_             = nil;
 
-        NSError*                error_              = nullptr;
-        bool                    hasErrors_          = false;
+        BasicReport             report_;
         MTLSize                 numThreadsPerGroup_ = {};
 
         MTLVertexDescriptor*    vertexDesc_         = nullptr;

@@ -11,6 +11,7 @@
 
 #include <LLGL/Shader.h>
 #include "../OpenGL.h"
+#include "../../../Core/BasicReport.h"
 #include "../../../Core/LinearStringContainer.h"
 #include <functional>
 
@@ -30,6 +31,10 @@ using ShaderSourceCallback = std::function<void(const char* source)>;
 
 class GLShader : public Shader
 {
+
+    public:
+
+        const Report* GetReport() const override;
 
     public:
 
@@ -80,6 +85,9 @@ class GLShader : public Shader
 
         GLShader(const bool isSeparable, const ShaderDescriptor& desc);
 
+        // Resets the report with the specified compile/link status and log.
+        void ReportStatusAndLog(bool status, const std::string& log);
+
         // Stores the native shader ID.
         inline void SetID(GLuint id)
         {
@@ -101,6 +109,7 @@ class GLShader : public Shader
         std::vector<GLShaderAttribute>  shaderAttribs_;
         std::size_t                     numVertexAttribs_           = 0;
         std::vector<const char*>        transformFeedbackVaryings_;
+        BasicReport                     report_;
 
 };
 

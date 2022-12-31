@@ -33,6 +33,11 @@ GLShader::GLShader(const bool isSeparable, const ShaderDescriptor& desc) :
     BuildFragmentOutputLayout(desc.fragment.outputAttribs.size(), desc.fragment.outputAttribs.data());
 }
 
+const Report* GLShader::GetReport() const
+{
+    return (report_ ? &report_ : nullptr);
+}
+
 const GLShaderAttribute* GLShader::GetVertexAttribs() const
 {
     if (!shaderAttribs_.empty())
@@ -111,6 +116,11 @@ void GLShader::PatchShaderSourceWithOptions(
         else
             sourceCallback(source);
     }
+}
+
+void GLShader::ReportStatusAndLog(bool status, const std::string& log)
+{
+    report_.Reset(log, !status);
 }
 
 

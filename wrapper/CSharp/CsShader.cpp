@@ -23,14 +23,12 @@ LLGL::Shader* Shader::Native::get()
     return native_;
 }
 
-bool Shader::HasErrors::get()
+SharpLLGL::Report^ Shader::Report::get()
 {
-    return native_->HasErrors();
-}
-
-String^ Shader::Report::get()
-{
-    return gcnew String(ToManagedString(native_->GetReport()));
+    if (auto report = native_->GetReport())
+        return gcnew SharpLLGL::Report(ToManagedString(report->GetText()), report->HasErrors());
+    else
+        return nullptr;
 }
 
 ShaderType Shader::Type::get()

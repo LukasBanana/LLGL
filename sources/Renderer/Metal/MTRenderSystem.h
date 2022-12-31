@@ -1,6 +1,6 @@
 /*
  * MTRenderSystem.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -28,7 +28,6 @@
 #include "RenderState/MTFence.h"
 
 #include "Shader/MTShader.h"
-#include "Shader/MTShaderProgram.h"
 
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
@@ -116,10 +115,8 @@ class MTRenderSystem final : public RenderSystem
         /* ----- Shader ----- */
 
         Shader* CreateShader(const ShaderDescriptor& desc) override;
-        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
-        void Release(ShaderProgram& shaderProgram) override;
 
         /* ----- Pipeline Layouts ----- */
 
@@ -176,7 +173,6 @@ class MTRenderSystem final : public RenderSystem
         HWObjectContainer<MTRenderPass>     renderPasses_;
         HWObjectContainer<MTRenderTarget>   renderTargets_;
         HWObjectContainer<MTShader>         shaders_;
-        HWObjectContainer<MTShaderProgram>  shaderPrograms_;
         HWObjectContainer<MTPipelineLayout> pipelineLayouts_;
         HWObjectContainer<MTPipelineState>  pipelineStates_;
         HWObjectContainer<MTResourceHeap>   resourceHeaps_;

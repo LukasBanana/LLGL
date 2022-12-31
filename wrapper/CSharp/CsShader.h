@@ -9,6 +9,7 @@
 
 #include <vcclr.h>
 #include <LLGL/Shader.h>
+#include "CsRenderSystemChild.h"
 #include "CsShaderFlags.h"
 
 #using <System.dll>
@@ -31,14 +32,9 @@ public ref class Shader
 
         Shader(LLGL::Shader* native);
 
-        property bool HasErrors
+        property SharpLLGL::Report^ Report
         {
-            bool get();
-        }
-
-        property String^ Report
-        {
-            String^ get();
+            SharpLLGL::Report^ get();
         };
 
         property ShaderType Type

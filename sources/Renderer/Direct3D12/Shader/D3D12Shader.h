@@ -10,10 +10,10 @@
 
 
 #include <LLGL/Shader.h>
-#include <LLGL/ShaderProgramFlags.h>
+#include <LLGL/ShaderReflection.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/BufferFlags.h>
-#include "../../DXCommon/ComPtr.h"
+#include "../../DXCommon/DXReport.h"
 #include "../../../Core/LinearStringContainer.h"
 #include <vector>
 #include <d3d12.h>
@@ -30,15 +30,13 @@ class D3D12Shader final : public Shader
 
         D3D12Shader(const ShaderDescriptor& desc);
 
-        bool HasErrors() const override;
+        const Report* GetReport() const override;
 
-        std::string GetReport() const override;
+        bool Reflect(ShaderReflection& reflection) const override;
 
     public:
 
         D3D12_SHADER_BYTECODE GetByteCode() const;
-
-        bool Reflect(ShaderReflection& reflection) const;
 
         bool GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const;
         bool GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) const;
@@ -58,9 +56,7 @@ class D3D12Shader final : public Shader
     private:
 
         ComPtr<ID3DBlob>                        byteCode_;
-
-        ComPtr<ID3DBlob>                        errors_;
-        bool                                    hasErrors_  = false;
+        DXReport                                report_;
 
         std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
         std::vector<D3D12_SO_DECLARATION_ENTRY> soDeclEntries_;

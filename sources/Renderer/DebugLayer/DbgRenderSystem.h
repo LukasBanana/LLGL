@@ -1,6 +1,6 @@
 /*
  * DbgRenderSystem.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -21,7 +21,6 @@
 #include "RenderState/DbgQueryHeap.h"
 #include "RenderState/DbgResourceHeap.h"
 #include "Shader/DbgShader.h"
-#include "Shader/DbgShaderProgram.h"
 #include "Texture/DbgTexture.h"
 #include "Texture/DbgRenderTarget.h"
 
@@ -110,10 +109,7 @@ class DbgRenderSystem final : public RenderSystem
 
         Shader* CreateShader(const ShaderDescriptor& desc) override;
 
-        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
-
         void Release(Shader& shader) override;
-        void Release(ShaderProgram& shaderProgram) override;
 
         /* ----- Pipeline Layouts ----- */
 
@@ -221,7 +217,6 @@ class DbgRenderSystem final : public RenderSystem
         //HWObjectContainer<DbgRenderPass>        renderPasses_;
         HWObjectContainer<DbgRenderTarget>      renderTargets_;
         HWObjectContainer<DbgShader>            shaders_;
-        HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
         HWObjectContainer<DbgPipelineLayout>    pipelineLayouts_;
         HWObjectContainer<DbgPipelineState>     pipelineStates_;
         HWObjectContainer<DbgResourceHeap>      resourceHeaps_;

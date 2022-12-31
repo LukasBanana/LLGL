@@ -602,40 +602,9 @@ Shader^ RenderSystem::CreateShader(ShaderDescriptor^ desc)
     }
 }
 
-static void Convert(LLGL::ShaderProgramDescriptor& dst, ShaderProgramDescriptor^ src)
-{
-    if (src)
-    {
-        if (src->VertexShader)
-            dst.vertexShader = src->VertexShader->Native;
-        if (src->TessControlShader)
-            dst.tessControlShader = src->TessControlShader->Native;
-        if (src->TessEvaluationShader)
-            dst.tessEvaluationShader = src->TessEvaluationShader->Native;
-        if (src->GeometryShader)
-            dst.geometryShader = src->GeometryShader->Native;
-        if (src->FragmentShader)
-            dst.fragmentShader = src->FragmentShader->Native;
-        if (src->ComputeShader)
-            dst.computeShader = src->ComputeShader->Native;
-    }
-}
-
-ShaderProgram^ RenderSystem::CreateShaderProgram(ShaderProgramDescriptor^ desc)
-{
-    LLGL::ShaderProgramDescriptor nativeDesc;
-    Convert(nativeDesc, desc);
-    return gcnew ShaderProgram(native_->CreateShaderProgram(nativeDesc));
-}
-
 void RenderSystem::Release(Shader^ shader)
 {
     native_->Release(*shader->Native);
-}
-
-void RenderSystem::Release(ShaderProgram^ shaderProgram)
-{
-    native_->Release(*shaderProgram->Native);
 }
 
 /* ----- Pipeline Layouts ----- */

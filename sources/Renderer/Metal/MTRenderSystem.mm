@@ -230,22 +230,9 @@ Shader* MTRenderSystem::CreateShader(const ShaderDescriptor& desc)
     return TakeOwnership(shaders_, MakeUnique<MTShader>(device_, desc));
 }
 
-ShaderProgram* MTRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
-{
-    #if 0//TESS
-    AssertCreateShaderProgram(desc);
-    #endif
-    return TakeOwnership(shaderPrograms_, MakeUnique<MTShaderProgram>(device_, desc));
-}
-
 void MTRenderSystem::Release(Shader& shader)
 {
     RemoveFromUniqueSet(shaders_, &shader);
-}
-
-void MTRenderSystem::Release(ShaderProgram& shaderProgram)
-{
-    RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
 /* ----- Pipeline Layouts ----- */

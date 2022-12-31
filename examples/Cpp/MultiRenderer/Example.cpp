@@ -31,7 +31,8 @@ class MyRenderer
     LLGL::Sampler*                      sampler         = nullptr;
     LLGL::Texture*                      texture         = nullptr;
     LLGL::ResourceHeap*                 resourceHeap    = nullptr;
-    LLGL::ShaderProgram*                shaderProgram   = nullptr;
+    LLGL::Shader*                       vertShader      = nullptr;
+    LLGL::Shader*                       fragShader      = nullptr;
     LLGL::PipelineLayout*               layout          = nullptr;
     LLGL::PipelineState*                pipeline        = nullptr;
 
@@ -145,9 +146,6 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<VertexPos3Tex2>& vertices
     sampler = renderer->CreateSampler(samplerDesc);
 
     // Create shaders
-    LLGL::Shader* vertShader = nullptr;
-    LLGL::Shader* fragShader = nullptr;
-
     const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
     LLGL::ShaderDescriptor vertShaderDesc, fragShaderDesc;
@@ -178,20 +176,12 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<VertexPos3Tex2>& vertices
     // Print info log (warnings and errors)
     for (auto shader : { vertShader, fragShader })
     {
-        std::string log = shader->GetReport();
-        if (!log.empty())
-            std::cerr << log << std::endl;
+        if (auto report = shader->GetReport())
+        {
+            if (*report->GetText() != '\0')
+                std::cerr << report->GetText() << std::endl;
+        }
     }
-
-    // Create shader program which is used as composite
-    LLGL::ShaderProgramDescriptor shaderProgramDesc;
-    {
-        shaderProgramDesc.vertexShader      = vertShader;
-        shaderProgramDesc.fragmentShader    = fragShader;
-    }
-    shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-    if (shaderProgram->HasErrors())
-        throw std::runtime_error(shaderProgram->GetReport());
 
     // Create pipeline layout
     bool compiledSampler = (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
@@ -212,13 +202,20 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<VertexPos3Tex2>& vertices
     // Create graphics pipelines
     LLGL::GraphicsPipelineDescriptor pipelineDesc;
     {
-        pipelineDesc.shaderProgram                  = shaderProgram;
+        pipelineDesc.vertexShader                   = vertShader;
+        pipelineDesc.fragmentShader                 = fragShader;
         pipelineDesc.pipelineLayout                 = layout;
         pipelineDesc.depth.testEnabled              = true;
         pipelineDesc.depth.writeEnabled             = true;
         pipelineDesc.rasterizer.multiSampleEnabled  = (samples > 1);
     }
     pipeline = renderer->CreatePipelineState(pipelineDesc);
+
+    if (auto report = pipeline->GetReport())
+    {
+        if (*report->GetText() != '\0')
+            std::cerr << report->GetText() << std::endl;
+    }
 
     // Get command queue
     cmdQueue = renderer->GetCommandQueue();

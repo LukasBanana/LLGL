@@ -9,7 +9,6 @@
 #include "../VKCore.h"
 #include "../VKTypes.h"
 #include "../../../Core/Helper.h"
-#include <LLGL/ShaderProgramFlags.h>
 #include <LLGL/Misc/TypeNames.h>
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
@@ -29,35 +28,12 @@ VKShader::VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc) 
 {
     BuildShader(desc);
     BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
+    BuildReport();
 }
 
-bool VKShader::HasErrors() const
+const Report* VKShader::GetReport() const
 {
-    return (loadBinaryResult_ != LoadBinaryResult::Successful);
-}
-
-std::string VKShader::GetReport() const
-{
-    std::string s;
-
-    switch (loadBinaryResult_)
-    {
-        case LoadBinaryResult::Undefined:
-            s += ToString(GetType());
-            s += " shader: shader module is undefined";
-            break;
-        case LoadBinaryResult::InvalidCodeSize:
-            s += ToString(GetType());
-            s += " shader: shader module code size is not a multiple of four bytes";
-            break;
-        case LoadBinaryResult::ReflectFailed:
-            s = errorLog_;
-            break;
-        default:
-            break;
-    }
-
-    return s;
+    return (report_ ? &report_ : nullptr);
 }
 
 void VKShader::FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const
@@ -478,6 +454,32 @@ void VKShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
 
     /* Store binding descriptor in vector */
     inputLayout_.bindingDescs.insert(inputLayout_.bindingDescs.end(), bindingDescSet.begin(), bindingDescSet.end());
+}
+
+void VKShader::BuildReport()
+{
+    std::string s;
+
+    switch (loadBinaryResult_)
+    {
+        case LoadBinaryResult::Undefined:
+            s += ToString(GetType());
+            s += " shader: shader module is undefined";
+            break;
+        case LoadBinaryResult::InvalidCodeSize:
+            s += ToString(GetType());
+            s += " shader: shader module code size is not a multiple of four bytes";
+            break;
+        case LoadBinaryResult::ReflectFailed:
+            //TODO
+            break;
+        default:
+            break;
+    }
+
+    const bool hasErrors = (loadBinaryResult_ != LoadBinaryResult::Successful);
+
+    report_.Reset(std::move(s), hasErrors);
 }
 
 bool VKShader::CompileSource(const ShaderDescriptor& shaderDesc)

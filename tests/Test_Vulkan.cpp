@@ -6,7 +6,8 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Utility.h>
+#include <LLGL/Misc/Utility.h>
+#include <LLGL/Misc/VertexFormat.h>
 #include <Gauss/Gauss.h>
 #include <chrono>
 
@@ -125,16 +126,6 @@ int main()
 
         vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
 
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
-        {
-            shaderProgramDesc.vertexShader      = renderer->CreateShader(vertShaderDesc);
-            shaderProgramDesc.fragmentShader    = renderer->CreateShader(fragShaderDesc);
-        }
-        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-
-        if (shaderProgram->HasErrors())
-            std::cerr << shaderProgram->GetReport() << std::endl;
-
         // Create constant buffers
         struct Matrices
         {
@@ -212,7 +203,8 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.vertexShader       = renderer->CreateShader(vertShaderDesc);
+            pipelineDesc.fragmentShader     = renderer->CreateShader(fragShaderDesc);
             pipelineDesc.renderPass         = swapChain->GetRenderPass();
             pipelineDesc.pipelineLayout     = pipelineLayout;
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
@@ -222,6 +214,9 @@ int main()
             pipelineDesc.blend.targets[0].blendEnabled = true;
         }
         auto pipeline = renderer->CreatePipelineState(pipelineDesc);
+
+        if (auto report = pipeline->GetReport())
+            std::cerr << report->GetText() << std::endl;
 
         // Create query
         #ifdef TEST_QUERY

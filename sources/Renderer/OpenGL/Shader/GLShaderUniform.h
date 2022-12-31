@@ -9,7 +9,7 @@
 #define LLGL_GL_SHADER_UNIFORM_H
 
 
-#include <LLGL/ShaderProgramFlags.h>
+#include <LLGL/ShaderReflection.h>
 #include "../OpenGL.h"
 
 

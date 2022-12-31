@@ -450,9 +450,11 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     auto shader = renderer->CreateShader(deviceShaderDesc);
 
     // Print info log (warnings and errors)
-    std::string log = shader->GetReport();
-    if (!log.empty())
-        std::cerr << log << std::endl;
+    if (auto report = shader->GetReport())
+    {
+        if (*report->GetText() != '\0')
+            std::cerr << report->GetText() << std::endl;
+    }
 
     return shader;
 }

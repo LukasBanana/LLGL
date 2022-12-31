@@ -6,6 +6,7 @@
  */
 
 #include "CsRenderSystemChild.h"
+#include "CsHelper.h"
 
 
 namespace SharpLLGL
@@ -201,7 +202,7 @@ PipelineState::PipelineState(LLGL::PipelineState* native) :
 SharpLLGL::Report^ PipelineState::Report::get()
 {
     if (auto report = native_->GetReport())
-        return gcnew SharpLLGL::Report(gcnew String(report->GetText()), report->HasErrors());
+        return gcnew SharpLLGL::Report(ToManagedString(report->GetText()), report->HasErrors());
     else
         return nullptr;
 }

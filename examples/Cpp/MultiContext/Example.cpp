@@ -168,9 +168,11 @@ int main(int argc, char* argv[])
         {
             if (shader)
             {
-                std::string log = shader->GetReport();
-                if (!log.empty())
-                    std::cerr << log << std::endl;
+                if (auto report = shader->GetReport())
+                {
+                    if (*report->GetText() != '\0')
+                        std::cerr << report->GetText() << std::endl;
+                }
             }
         }
 

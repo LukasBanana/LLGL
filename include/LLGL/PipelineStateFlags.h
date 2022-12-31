@@ -742,14 +742,14 @@ struct GraphicsPipelineDescriptor
     */
     const PipelineLayout*   pipelineLayout          = nullptr;
 
-    #if 1 //TODO: replace
     /**
-    \brief Specifies the shader program for the graphics pipeline. By default null.
-    \remarks This must never be null when RenderSystem::CreatePipelineState is called with this structure.
-    \see RenderSystem::CreateShaderProgram
+    \brief Specifies an optional render pass. By default null.
+    \remarks If this is null, the render pass of the SwapChain that was first created is used.
+    This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
+    \see CommandBuffer::BeginRenderPass
+    \see RenderSystem::CreateRenderPass
     */
-    const ShaderProgram*    shaderProgram           = nullptr;
-    #endif
+    const RenderPass*       renderPass              = nullptr;
 
     /**
     \brief Specifies the vertex shader.
@@ -784,15 +784,6 @@ struct GraphicsPipelineDescriptor
     and only the stream-output functionality is used by either the vertex or geometry shader.
     */
     Shader*                 fragmentShader          = nullptr;
-
-    /**
-    \brief Specifies an optional render pass. By default null.
-    \remarks If this is null, the render pass of the SwapChain that was first created is used.
-    This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
-    \see CommandBuffer::BeginRenderPass
-    \see RenderSystem::CreateRenderPass
-    */
-    const RenderPass*       renderPass              = nullptr;
 
     /**
     \brief Specifies the primitive topology and ordering of the primitive data. By default PrimitiveTopology::TriangleList.
@@ -850,15 +841,6 @@ struct ComputePipelineDescriptor
     \note Only supported with: Vulkan, Direct3D 12
     */
     const PipelineLayout*   pipelineLayout  = nullptr;
-
-    #if 1 //TODO: replace
-    /**
-    \brief Pointer to the shader program for the compute pipeline.
-    \remarks This must never be null when RenderSystem::CreatePipelineState is called with this structure.
-    \see RenderSystem::CreateShaderProgram
-    */
-    const ShaderProgram*    shaderProgram   = nullptr;
-    #endif
 
     /**
     \brief Specifies the compute shader.

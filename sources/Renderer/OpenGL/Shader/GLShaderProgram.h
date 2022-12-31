@@ -1,6 +1,6 @@
 /*
  * GLShaderProgram.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,7 +9,7 @@
 #define LLGL_GL_SHADER_PROGRAM_H
 
 
-#include <LLGL/ShaderProgram.h>
+#include <LLGL/ShaderReflection.h>
 #include "GLShaderPipeline.h"
 #include "GLShaderUniform.h"
 
@@ -21,28 +21,22 @@ namespace LLGL
 struct GLShaderAttribute;
 class GLShaderBindingLayout;
 
-class GLShaderProgram final : public ShaderProgram, public GLShaderPipeline
+class GLShaderProgram final : public GLShaderPipeline
 {
 
     public:
 
-        GLShaderProgram(const ShaderProgramDescriptor& desc); //TODO: remove
-        GLShaderProgram(std::size_t numShaders, Shader* const* shaders);
-        ~GLShaderProgram();
-
-        #if 1 //TODO: remove dependecy to ShaderProgram interface
-        void SetName(const char* name) override;
-
-        bool HasErrors() const override;
-        std::string GetReport() const override;
-
-        bool Reflect(ShaderReflection& reflection) const override;
-        UniformLocation FindUniformLocation(const char* name) const override;
-        #endif
-
         void Bind(GLStateManager& stateMngr) override;
         void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) override;
         void QueryInfoLogs(BasicReport& report) override;
+
+    public:
+
+        GLShaderProgram(std::size_t numShaders, Shader* const* shaders);
+        ~GLShaderProgram();
+
+        UniformLocation FindUniformLocation(const char* name) const;
+        void QueryReflection(ShaderReflection& reflection) const;
 
     public:
 
@@ -74,7 +68,6 @@ class GLShaderProgram final : public ShaderProgram, public GLShaderPipeline
             std::vector<char>&  nameBuffer
         ) const;
 
-        void QueryReflection(ShaderReflection& reflection) const;
         void QueryVertexAttributes(ShaderReflection& reflection) const;
         void QueryStreamOutputAttributes(ShaderReflection& reflection) const;
         void QueryConstantBuffers(ShaderReflection& reflection) const;

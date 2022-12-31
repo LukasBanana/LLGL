@@ -1,6 +1,6 @@
 /*
  * D3D11Shader.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,10 +10,11 @@
 
 
 #include <LLGL/Shader.h>
-#include <LLGL/ShaderProgramFlags.h>
+#include <LLGL/ShaderReflection.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/BufferFlags.h>
 #include "../../DXCommon/ComPtr.h"
+#include "../../DXCommon/DXReport.h"
 #include <vector>
 #include <string>
 #include <d3d11.h>
@@ -60,15 +61,13 @@ class D3D11Shader final : public Shader
 
         void SetName(const char* name) override;
 
-        bool HasErrors() const override;
+        const Report* GetReport() const override;
 
-        std::string GetReport() const override;
+        bool Reflect(ShaderReflection& reflection) const override;
 
     public:
 
         D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc);
-
-        bool Reflect(ShaderReflection& reflection) const;
 
         // Returns the native D3D shader object.
         inline const D3D11NativeShader& GetNative() const
@@ -122,8 +121,7 @@ class D3D11Shader final : public Shader
         D3D11NativeShader           native_;
 
         ComPtr<ID3DBlob>            byteCode_;
-        ComPtr<ID3DBlob>            errors_;
-        bool                        hasErrors_  = false;
+        DXReport                    report_;
 
         ComPtr<ID3D11InputLayout>   inputLayout_;
 

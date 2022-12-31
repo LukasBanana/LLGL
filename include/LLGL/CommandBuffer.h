@@ -22,7 +22,7 @@
 
 #include "RenderPass.h"
 #include "RenderTarget.h"
-#include "ShaderProgram.h"
+#include "Shader.h"
 #include "PipelineState.h"
 #include "QueryHeap.h"
 
@@ -577,8 +577,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data. This must be a multiple of 4.
         \remarks This function must only be called after a graphics or compute pipeline has been set.
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
-        \see ShaderProgram::FindUniformLocation
-        \see ShaderProgram::Reflect
+        \see Shader::FindUniformLocation
+        \see Shader::Reflect
         \see SetGraphicsPipeline
         \see SetComputePipeline
         */
@@ -595,10 +595,10 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] data Raw pointer to the data that is to be copied to the uniforms.
         \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data. This must be a multiple of 4.
         \remarks This function must only be called after a graphics or compute pipeline has been set.
-        The order of uniforms that come after the first one can be determined by the ShaderReflection::uniform container returned by ShaderProgram::Reflect.
+        The order of uniforms that come after the first one can be determined by the ShaderReflection::uniform container returned by Shader::Reflect.
         \note Only supported with: OpenGL, Vulkan, Direct3D 12.
-        \see ShaderProgram::FindUniformLocation
-        \see ShaderProgram::Reflect
+        \see Shader::FindUniformLocation
+        \see Shader::Reflect
         \see SetGraphicsPipeline
         \see SetComputePipeline
         */

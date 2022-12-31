@@ -11,6 +11,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/Helper.h"
+#include <LLGL/Misc/TypeNames.h>
 #include <algorithm>
 #include <stdexcept>
 #include <d3dcompiler.h>
@@ -24,15 +25,13 @@ namespace LLGL
 D3D11Shader::D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc) :
     Shader { desc.type }
 {
-    if (!BuildShader(device, desc))
+    if (BuildShader(device, desc))
     {
-        /* Mark this shader compilation as failed */
-        hasErrors_ = true;
-    }
-    else if (GetType() == ShaderType::Vertex)
-    {
-        /* Build input layout object for vertex shaders */
-        BuildInputLayout(device, static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
+        if (GetType() == ShaderType::Vertex)
+        {
+            /* Build input layout object for vertex shaders */
+            BuildInputLayout(device, static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
+        }
     }
 }
 
@@ -42,14 +41,9 @@ void D3D11Shader::SetName(const char* name)
     D3D11SetObjectName(static_cast<ID3D11DeviceChild*>(native_.vs.Get()), name);
 }
 
-bool D3D11Shader::HasErrors() const
+const Report* D3D11Shader::GetReport() const
 {
-    return hasErrors_;
-}
-
-std::string D3D11Shader::GetReport() const
-{
-    return (errors_.Get() != nullptr ? DXGetBlobString(errors_.Get()) : "");
+    return &report_;
 }
 
 bool D3D11Shader::Reflect(ShaderReflection& reflection) const
@@ -162,6 +156,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
     auto        flags   = shaderDesc.flags;
 
     /* Compile shader code */
+    ComPtr<ID3DBlob> errors;
     auto hr = D3DCompile(
         sourceCode,
         sourceLength,
@@ -173,7 +168,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         DXGetCompilerFlags(flags),          // UINT                 Flags1
         0,                                  // UINT                 Flags2 (recommended to always be 0)
         byteCode_.ReleaseAndGetAddressOf(), // ID3DBlob**           ppCode
-        errors_.ReleaseAndGetAddressOf()    // ID3DBlob**           ppErrorMsgs
+        errors.ReleaseAndGetAddressOf()     // ID3DBlob**           ppErrorMsgs
     );
 
     /* Get byte code from blob */
@@ -181,7 +176,9 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         CreateNativeShader(device, shaderDesc.vertex.outputAttribs.size(), shaderDesc.vertex.outputAttribs.data());
 
     /* Store if compilation was successful */
-    return !FAILED(hr);
+    const bool hasErrors = FAILED(hr);
+    report_.Reset(errors.Get(), hasErrors);
+    return !hasErrors;
 }
 
 bool D3D11Shader::LoadBinary(ID3D11Device* device, const ShaderDescriptor& shaderDesc)
@@ -204,6 +201,7 @@ bool D3D11Shader::LoadBinary(ID3D11Device* device, const ShaderDescriptor& shade
         return true;
     }
 
+    report_.Reset(ToString(shaderDesc.type) + std::string(" shader error:") + "missing DXBC bytecode", true);
     return false;
 }
 
@@ -299,22 +297,14 @@ void D3D11Shader::CreateNativeShader(
     const VertexAttribute*  streamOutputAttribs,
     ID3D11ClassLinkage*     classLinkage)
 {
-    try
-    {
-        native_ = D3D11Shader::CreateNativeShaderFromBlob(
-            device,
-            GetType(),
-            byteCode_.Get(),
-            numStreamOutputAttribs,
-            streamOutputAttribs,
-            classLinkage
-        );
-    }
-    catch (const std::exception&)
-    {
-        hasErrors_ = true;
-        throw;
-    }
+    native_ = D3D11Shader::CreateNativeShaderFromBlob(
+        device,
+        GetType(),
+        byteCode_.Get(),
+        numStreamOutputAttribs,
+        streamOutputAttribs,
+        classLinkage
+    );
 }
 
 static ShaderResource* FetchOrInsertResource(

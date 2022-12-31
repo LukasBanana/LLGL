@@ -29,7 +29,7 @@ class DbgTexture;
 class DbgSwapChain;
 class DbgRenderTarget;
 class DbgPipelineState;
-class DbgShaderProgram;
+class DbgShader;
 class RenderingDebugger;
 class RenderingProfiler;
 
@@ -343,7 +343,7 @@ class DbgCommandBuffer final : public CommandBuffer
             DbgBuffer*              streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]  = {};
             std::uint32_t           numStreamOutputs                        = 0;
             DbgPipelineState*       pipelineState                           = nullptr;
-            const DbgShaderProgram* shaderProgram                           = nullptr;
+            const DbgShader*        vertexShader                            = nullptr;
         }
         bindings_;
 

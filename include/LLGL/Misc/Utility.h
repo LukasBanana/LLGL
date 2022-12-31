@@ -22,7 +22,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include <LLGL/RenderPassFlags.h>
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/ShaderFlags.h>
-#include <LLGL/ShaderProgramFlags.h>
+#include <LLGL/ShaderReflection.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Container/ArrayView.h>
 
@@ -130,15 +130,6 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(uint64_t size, const StorageBuffe
 \see RenderSystem::CreateShader
 */
 LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const char* filename, const char* entryPoint = nullptr, const char* profile = nullptr, long flags = 0);
-
-/* ----- ShaderProgramDescriptor utility functions ----- */
-
-/**
-\brief Returns a ShaderProgramDescriptor structure and assigns the input shaders into the respective structure members.
-\param[in] shaders Specifies the list of shaders to attach to the shader program. Null pointers in the list are ignored.
-\see RenderSystem::CreateShaderProgram
-*/
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const ArrayView<Shader*>& shaders);
 
 /* ----- PipelineLayoutDescriptor utility functions ----- */
 

@@ -18,7 +18,7 @@
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/ShaderFlags.h>
-#include <LLGL/ShaderProgramFlags.h>
+#include <LLGL/ShaderReflection.h>
 
 
 namespace LLGL

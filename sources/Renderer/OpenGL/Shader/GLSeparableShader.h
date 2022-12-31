@@ -10,6 +10,7 @@
 
 
 #include "GLShader.h"
+#include "../../../Core/BasicReport.h"
 
 
 namespace LLGL
@@ -25,8 +26,7 @@ class GLSeparableShader final : public GLShader
     public:
 
         void SetName(const char* name) override;
-        bool HasErrors() const override;
-        std::string GetReport() const override;
+        bool Reflect(ShaderReflection& reflection) const override;
 
     public:
 

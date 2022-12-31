@@ -24,7 +24,6 @@ namespace LLGL
 
 
 class PipelineLayout;
-class ShaderProgram;
 class GLStateManager;
 class GLShaderProgram;
 

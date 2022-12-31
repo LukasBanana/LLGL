@@ -23,7 +23,6 @@
 #include "Buffer/VKBufferArray.h"
 
 #include "Shader/VKShader.h"
-#include "Shader/VKShaderProgram.h"
 
 #include "Texture/VKTexture.h"
 #include "Texture/VKSampler.h"
@@ -124,10 +123,8 @@ class VKRenderSystem final : public RenderSystem
         /* ----- Shader ----- */
 
         Shader* CreateShader(const ShaderDescriptor& desc) override;
-        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
-        void Release(ShaderProgram& shaderProgram) override;
 
         /* ----- Pipeline Layouts ----- */
 
@@ -204,7 +201,6 @@ class VKRenderSystem final : public RenderSystem
         HWObjectContainer<VKRenderPass>         renderPasses_;
         HWObjectContainer<VKRenderTarget>       renderTargets_;
         HWObjectContainer<VKShader>             shaders_;
-        HWObjectContainer<VKShaderProgram>      shaderPrograms_;
         HWObjectContainer<VKPipelineLayout>     pipelineLayouts_;
         HWObjectContainer<VKPipelineState>      pipelineStates_;
         HWObjectContainer<VKResourceHeap>       resourceHeaps_;

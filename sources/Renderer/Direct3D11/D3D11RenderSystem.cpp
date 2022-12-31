@@ -382,20 +382,9 @@ Shader* D3D11RenderSystem::CreateShader(const ShaderDescriptor& desc)
     return TakeOwnership(shaders_, MakeUnique<D3D11Shader>(device_.Get(), desc));
 }
 
-ShaderProgram* D3D11RenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
-{
-    AssertCreateShaderProgram(desc);
-    return TakeOwnership(shaderPrograms_, MakeUnique<D3D11ShaderProgram>(device_.Get(), desc));
-}
-
 void D3D11RenderSystem::Release(Shader& shader)
 {
     RemoveFromUniqueSet(shaders_, &shader);
-}
-
-void D3D11RenderSystem::Release(ShaderProgram& shaderProgram)
-{
-    RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
 /* ----- Pipeline Layouts ----- */

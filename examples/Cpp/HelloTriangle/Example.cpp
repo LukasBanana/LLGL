@@ -148,12 +148,8 @@ int main(int argc, char* argv[])
 
         for (auto shader : { vertShader, fragShader })
         {
-            if (shader != nullptr)
-            {
-                std::string log = shader->GetReport();
-                if (!log.empty())
-                    std::cerr << log << std::endl;
-            }
+            if (auto report = shader->GetReport())
+                std::cerr << report->GetText() << std::endl;
         }
 
         // Create graphics pipeline

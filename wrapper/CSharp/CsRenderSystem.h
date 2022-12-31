@@ -18,7 +18,6 @@
 #include "CsImageFlags.h"
 #include "CsCommandQueue.h"
 #include "CsShader.h"
-#include "CsShaderProgram.h"
 #include "CsPipelineLayoutFlags.h"
 #include "CsPipelineStateFlags.h"
 #include "CsResourceHeapFlags.h"
@@ -176,11 +175,7 @@ public ref class RenderSystem
 
         Shader^ CreateShader(ShaderDescriptor^ desc);
 
-        ShaderProgram^ CreateShaderProgram(ShaderProgramDescriptor^ desc);
-
         void Release(Shader^ shader);
-
-        void Release(ShaderProgram^ shaderProgram);
 
         /* ----- Pipeline Layouts ----- */
 

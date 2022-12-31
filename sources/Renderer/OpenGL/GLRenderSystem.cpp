@@ -446,20 +446,9 @@ Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& desc)
         return TakeOwnership(shaders_, MakeUnique<GLLegacyShader>(desc));
 }
 
-ShaderProgram* GLRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
-{
-    AssertCreateShaderProgram(desc);
-    return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>(desc));
-}
-
 void GLRenderSystem::Release(Shader& shader)
 {
     RemoveFromUniqueSet(shaders_, &shader);
-}
-
-void GLRenderSystem::Release(ShaderProgram& shaderProgram)
-{
-    RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
 /* ----- Pipeline Layouts ----- */

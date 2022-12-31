@@ -72,7 +72,6 @@ D3D12RenderSystem::~D3D12RenderSystem()
 
     /* Clear shaders explicitly to release all ComPtr<ID3DBlob> objects */
     shaders_.clear();
-    shaderPrograms_.clear();
 
     /* Clear resources of singletons */
     D3D12MipGenerator::Get().Clear();
@@ -400,20 +399,9 @@ Shader* D3D12RenderSystem::CreateShader(const ShaderDescriptor& desc)
     return TakeOwnership(shaders_, MakeUnique<D3D12Shader>(desc));
 }
 
-ShaderProgram* D3D12RenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
-{
-    AssertCreateShaderProgram(desc);
-    return TakeOwnership(shaderPrograms_, MakeUnique<D3D12ShaderProgram>(desc));
-}
-
 void D3D12RenderSystem::Release(Shader& shader)
 {
     RemoveFromUniqueSet(shaders_, &shader);
-}
-
-void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
-{
-    RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
 /* ----- Pipeline Layouts ----- */

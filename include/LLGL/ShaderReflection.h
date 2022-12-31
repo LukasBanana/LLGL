@@ -1,12 +1,12 @@
 /*
- * ShaderProgramFlags.h
+ * ShaderReflectionFlags.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_SHADER_PROGRAM_FLAGS_H
-#define LLGL_SHADER_PROGRAM_FLAGS_H
+#ifndef LLGL_SHADER_REFLECTION_H
+#define LLGL_SHADER_REFLECTION_H
 
 
 #include <LLGL/ForwardDecls.h>
@@ -152,55 +152,6 @@ enum class StorageBufferType
 /* ----- Structures ----- */
 
 /**
-\brief Descriptor structure for shader programs.
-\see RenderSystem::CreateShaderProgram
-\see RenderSystem::CreateShader
-*/
-struct ShaderProgramDescriptor
-{
-    /**
-    \brief Specifies the vertex shader.
-    \remarks Each graphics shader program must have at least a vertex shader.
-    For a compute shader program, only a compute shader must be specified.
-    With OpenGL, this shader may also have a stream output.
-    */
-    Shader* vertexShader            = nullptr;
-
-    /**
-    \brief Specifies the tessellation-control shader (also referred to as "Hull Shader").
-    \remarks If this is used, the counter part must also be specified (i.e. \c tessEvaluationShader).
-    \see tessEvaluationShader
-    */
-    Shader* tessControlShader       = nullptr;
-
-    /**
-    \brief Specifies the tessellation-evaluation shader (also referred to as "Domain Shader").
-    \remarks If this is used, the counter part must also be specified (i.e. \c tessControlShader).
-    \see tessControlShader
-    */
-    Shader* tessEvaluationShader    = nullptr;
-
-    /**
-    \brief Specifies an optional geometry shader.
-    \remarks This shader may also have a stream output.
-    */
-    Shader* geometryShader          = nullptr;
-
-    /**
-    \brief Specifies an optional fragment shader (also referred to as "Pixel Shader").
-    \remarks If no fragment shader is specified, generated fragments are discarded by the output merger
-    and only the stream-output functionality is used by either the vertex or geometry shader.
-    */
-    Shader* fragmentShader          = nullptr;
-
-    /**
-    \brief Specifies the compute shader.
-    \remarks This shader cannot be used in conjunction with any other shaders.
-    */
-    Shader* computeShader           = nullptr;
-};
-
-/**
 \brief Shader reflection resource structure.
 \see ShaderReflection::resources
 \see BindingDescriptor
@@ -252,7 +203,7 @@ struct ShaderUniform
 \brief Shader reflection structure.
 \remarks Contains all information of resources and attributes that can be queried from a shader program.
 This is not a "descriptor", because it is only used as output from an interface rather than a description to create something.
-\see ShaderProgram::Reflect
+\see Shader::Reflect
 */
 struct ShaderReflection
 {

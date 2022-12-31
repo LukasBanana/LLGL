@@ -163,8 +163,8 @@ int main()
         }
         auto vertShader = renderer->CreateShader(vertShaderDesc);
 
-        if (vertShader->HasErrors())
-            std::cerr << vertShader->GetReport() << std::endl;
+        if (auto report = vertShader->GetReport())
+            std::cerr << report->GetText() << std::endl;
 
         // Create fragment shader
         auto fragShaderSource =

@@ -245,49 +245,6 @@ LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const cha
     return desc;
 }
 
-/* ----- ShaderProgramDescriptor utility functions ----- */
-
-static void AssignShaderToDesc(ShaderProgramDescriptor& desc, Shader* shader)
-{
-    if (shader != nullptr)
-    {
-        /* Assign shader types their respective struct members */
-        switch (shader->GetType())
-        {
-            case ShaderType::Undefined:
-                break;
-            case ShaderType::Vertex:
-                desc.vertexShader = shader;
-                break;
-            case ShaderType::TessControl:
-                desc.tessControlShader = shader;
-                break;
-            case ShaderType::TessEvaluation:
-                desc.tessEvaluationShader = shader;
-                break;
-            case ShaderType::Geometry:
-                desc.geometryShader = shader;
-                break;
-            case ShaderType::Fragment:
-                desc.fragmentShader = shader;
-                break;
-            case ShaderType::Compute:
-                desc.computeShader = shader;
-                break;
-        }
-    }
-}
-
-LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const ArrayView<Shader*>& shaders)
-{
-    ShaderProgramDescriptor desc;
-    {
-        for (auto shader : shaders)
-            AssignShaderToDesc(desc, shader);
-    }
-    return desc;
-}
-
 /* ----- PipelineLayoutDescriptor utility functions ----- */
 
 LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflection& reflection)

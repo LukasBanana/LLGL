@@ -30,31 +30,37 @@ namespace Constants
 \see RenderSystem::WriteTexture
 \see RenderSystem::ReadTexture
 */
-static const unsigned       maxThreadCount  = -1;
+constexpr unsigned      maxThreadCount  = -1;
 
 /**
 \brief Offset value to determine the offset automatically, e.g. to append a vertex attribute at the end of a vertex format.
 \see VertexFormat::AppendAttribute
 */
-static const std::uint32_t  ignoreOffset    = -1;
+constexpr std::uint32_t ignoreOffset    = -1;
 
 /**
 \brief Specifies an invalid binding slot for shader resources.
 \see ShaderResource::slot
 */
-static const std::uint32_t  invalidSlot     = -1;
+constexpr std::uint32_t invalidSlot     = -1;
+
+/**
+\brief Specifies an invalid shader uniform location.
+\see Shader::FindUniformLocation
+*/
+constexpr std::uint32_t invalidLocation = -1;
 
 /**
 \brief Specifies to use the whole size of a resource.
 \see CommandBuffer::FillBuffer
 */
-static const std::uint64_t  wholeSize       = -1;
+constexpr std::uint64_t wholeSize       = -1;
 
 /**
 \brief Specifies an invalid timer ID for window events.
 \see WindowBehavior::moveAndResizeTimerID
 */
-static const std::uint32_t invalidTimerID   = 0u;
+constexpr std::uint32_t invalidTimerID  = 0u;
 
 
 } // /namespace Constants
