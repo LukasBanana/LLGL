@@ -61,13 +61,16 @@ The resource heap needs a reference to the pipeline layout we created. The resou
 Once we use resource heaps, we also need to specify our pipeline layout for the graphics pipeline where the resources are needed:
 ```cpp
 LLGL::GraphicsPipelineDescriptor myPipelineDesc;
-myPipelineDesc.shaderProgram       = myShaderProgram;                   // Vertex, tess-control, tess-evaluation, and fragment shaders
-myPipelineDesc.pipelineLayout      = myPipelineLayout;                  // Specify our pipeline layout
-myPipelineDesc.primitiveTopology   = LLGL::PrimitiveTopology::Patches4; // Input topology: patches with 4 control points
-myPipelineDesc.depth.testEnabled   = true;                              // Enable depth test
-myPipelineDesc.depth.writeEnabled  = true;                              // Enable depth writing
-myPipelineDesc.rasterizer.cullMode = LLGL::CullMode::Back;              // Enable back-face culling
-myPipelineDesc.rasterizer.frontCCW = true;                              // Front facing polygons: counter-clock-wise (CCW) winding
+myPipelineDesc.vertexShader         = myVertexShader;                    // Vertex shader
+myPipelineDesc.tessControlShader    = myTessControlShader;               // Tessellation-control shader, aka. "Hull" shader
+myPipelineDesc.tessEvaluationShader = myTessEvaluationShader;            // Tessellation-evaluation shader, aka. "Domain" shader
+myPipelineDesc.fragmentShader       = myFragmentShader;                  // Fragment shader, aka. "Pixel" shader
+myPipelineDesc.pipelineLayout       = myPipelineLayout;                  // Specify our pipeline layout
+myPipelineDesc.primitiveTopology    = LLGL::PrimitiveTopology::Patches4; // Input topology: patches with 4 control points
+myPipelineDesc.depth.testEnabled    = true;                              // Enable depth test
+myPipelineDesc.depth.writeEnabled   = true;                              // Enable depth writing
+myPipelineDesc.rasterizer.cullMode  = LLGL::CullMode::Back;              // Enable back-face culling
+myPipelineDesc.rasterizer.frontCCW  = true;                              // Front facing polygons: counter-clock-wise (CCW) winding
 ```
 While most rendering APIs provide the tessellation parameters on the shader side, in Metal we need to specify some on the host application side.
 The following parameters are ignored by all other backends:

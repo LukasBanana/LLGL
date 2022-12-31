@@ -39,7 +39,7 @@ Most objects in LLGL are created with descriptors (similar to Direct3D and Vulka
 
 ## Vertex Buffer
 
-Next we create our vertex data for our triangle we want to render and then declare the vertex format which will be passed to the vertex buffer and shader program:
+Next we create our vertex data for our triangle we want to render and then declare the vertex format which will be passed to the vertex buffer and vertex shader:
 ```cpp
 struct MyVertex {
     float   position[2]; // 2D vector for X and Y coordinates
@@ -60,6 +60,8 @@ LLGL::VertexFormat myVertexFormat;
 myVertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float  });
 myVertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
 ```
+Since `VertexFormat` is a utility structure that is not required for LLGL for function, we have to include it explicitly via `#include <LLGL/Misc/VertexFormat.h>`.
+
 The strings "position" and "color" must be equal to the identifiers used in the shader, not the one we used in our `MyVertex` structure! We use an RGBA format for the color components even though the alpha channel is not used, because RGB formats are only supported by OpenGL and Vulkan. The identifier `UNorm` denotes a 'normalized unsigned integral' format, i.e. the unsigned byte values in the range [0, 255] will be normalized to the range [0, 1].
 
 Now we can create the GPU vertex buffer:
@@ -75,7 +77,7 @@ The parameter `bindFlags` takes a bitwise OR combination of the enumeration entr
 
 ## Shaders
 
-In LLGL, shaders are organized with an instance of the `ShaderProgram` interface to which we can attach one or more instances of the `Shader` interface, but only at creation time. In this tutorial we only need a vertex and fragment shader. We can either store them (of type `LLGL::Shader*`) or we just pass them to the `ShaderProgramDescriptor`. To determine which shading language is supported by the current renderer, we can use the `shadingLanguages` container as shown here:
+In LLGL, shaders are attached to graphics and compute pipelines individually. In this tutorial we only need a vertex and fragment shader. We can either store them (of type `LLGL::Shader*`) or we just pass them to the `GraphicsPipelineDescriptor`. To determine which shading language is supported by the current renderer, we can use the `shadingLanguages` container as shown here:
 ```cpp
 bool IsSupported(LLGL::ShadingLanguage lang) {
     const auto& supportedLangs = myRenderer->GetRenderingCaps().shadingLanguages;
@@ -115,39 +117,32 @@ The members `entryPoint` and `profile` are only required for HLSL (e.g. `entryPo
 
 After we created the shaders we also need to specify the input layout by passing the vertex format to the shader program descriptor:
 ```cpp
-LLGL::ShaderProgramDescritpor myProgramDesc;
-myProgramDesc.vertexShader   = myRenderer->CreateShader(myVSDesc);
-myProgramDesc.fragmentShader = myRenderer->CreateShader(myFSDesc);
+LLGL::Shader* myVertexShader   = myRenderer->CreateShader(myVSDesc);
+LLGL::Shader* myFragmentShader = myRenderer->CreateShader(myFSDesc);
 ```
 However, this is not necessary for a compute shader.
 
 Even if a shader compiles successfully, we can query the information log if the shader compiler reports some warnings:
 ```cpp
-for (auto shader : { myProgramDesc.vertexShader, myProgramDesc.fragmentShader }) {
-    std::string log = shader->GetReport();
-    if (!log.empty()) {
-        std::cerr << log << std::endl;
+for (auto shader : { myVertexShader, myFragmentShader }) {
+    if (const LLGL::Report* report = shader->GetReport()) {
+        std::cerr << report->GetText() << std::endl;
     }
 }
-```
-Now we can finally create the shader program and check for linking errors:
-```cpp
-LLGL::ShaderProgram* myShaderProgram = myRenderer->CreateShaderProgram(myProgramDesc);
-if (myShaderProgram->HasErrors()) {
-    throw std::runtime_error(myShaderProgram->GetReport());
-}
-```
 
 
 ## Graphics Pipeline & Command Buffer
 
-Before we enter our render loop we need a pipeline state object and a command buffer to submit draw commands to the GPU. For this tutorial we can use almost all default values in the graphics pipeline state descriptor, but we always need to set the shader program:
+Before we enter our render loop we need a pipeline state object (PSO) and a command buffer to submit draw commands to the GPU. For this tutorial we can use almost all default values in the graphics pipeline descriptor, but we always need to set the shaders:
 ```cpp
 LLGL::GraphicsPipelineDescriptor myPipelineDesc;
-myPipelineDesc.shaderProgram                 = myShaderProgram;
+myPipelineDesc.vertexShader                  = myVertexShader;
+myPipelineDesc.fragmentShader                = myFragmentShader;
 myPipelineDesc.rasterizer.multiSampleEnabled = (myContextDesc.samples > 1);
 LLGL::PipelineState* myPipeline = myRenderer->CreatePipelineState(myPipelineDesc);
 ```
+Note that a graphics pipeline always needs at least a vertex shader. All other shader stages are optional.
+
 The members `depth`, `stencil`, `rasterizer`, and `blend` from the  `GraphicsPipelineDescriptor` structure can be used to specify a lot more configurations for a graphics pipeline. But for now, we leave them as is.
 
 The command buffer is used to submit draw and compute commands to the command queue.

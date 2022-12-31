@@ -11,6 +11,7 @@
 - [Storage buffer binding](#storage-buffer-binding)
 - [Event listener interface](#event-listener-interface)
 - [`ShaderUniform` interface](#shaderuniform-interface)
+- [`ShaderProgram` interface](#shaderprogram-interface)
 - [Shader reflection](#shader-reflection)
 - [Renderer configuration](#renderer-configuration)
 - [Default values](#default-values)
@@ -325,6 +326,44 @@ myCmdBuffer->SetUniform(myProjectionUniform, &myProjectionMatrix[0], sizeof(myPr
 ```
 
 
+## `ShaderProgram` interface
+
+The `ShaderProgram` interface has been removed. The graphics and compute PSOs are now created with individual shaders and reflection is performed on those invidual shaders, too.
+
+Before:
+```cpp
+// Usage:
+LLGL::ShaderProgramDescriptor myShaderProgramDesc;
+myShaderProgramDesc.vertexShader = myVertexShader;
+myShaderProgramDesc.fragmentShader = myFragmentShader;
+LLGL::ShaderProgram* myShaderProgram = myRenderer->CreateShaderProgram(myShaderProgramDesc);
+if (myShaderProgram->HasErrors())
+    std::cerr << myShaderProgram->GetReport() << std::endl;
+
+LLGL::GraphicsPipelineDescriptor myPSODesc;
+myPSODesc.pipelineLayout = myPipelineLayout;
+myPSODesc.renderPass = mySwapChain->GetRenderPass();
+myPSODesc.shaderProgram = myShaderProgram;
+LLGL::GraphicsPipelineState* myGraphicsPSO = myRenderer->CreateGraphicsPipeline(myPSODesc);
+```
+
+After:
+```cpp
+// Usage:
+LLGL::GraphicsPipelineDescriptor myPSODesc;
+myPSODesc.pipelineLayout = myPipelineLayout;
+myPSODesc.renderPass = mySwapChain->GetRenderPass();
+myPSODesc.vertexShader = myVertexShader;
+myPSODesc.fragmentShader = myFragmentShader;
+LLGL::PipelineState* myGraphicsPSO = myRenderer->CreatePipelineState(myPSODesc);
+if (const LLGL::Report* myReport = myGraphicsPSO->GetReport())
+{
+    if (myReport->HasErrors())
+        std::cerr << myReport->GetText() << std::endl;
+}
+```
+
+
 ## Shader reflection
 
 All nested structures in `ShaderReflectionDescriptor` were moved into `LLGL` namespace and renamed as follows:
@@ -366,11 +405,11 @@ LLGL::BindingDescriptor LLGL::ShaderResource::binding;
 std::uint32_t           LLGL::ShaderResource::constantBufferSize;
 LLGL::StorageBufferType LLGL::ShaderResource::storageBufferType;
 
-bool ShaderProgram::Reflect(LLGL::ShaderReflection& reflection) const;
+bool Shader::Reflect(LLGL::ShaderReflection& reflection) const;
 
 // Usage:
 LLGL::ShaderReflection reflection;
-if (myShaderProgram->Reflect(reflection)) {
+if (myShader->Reflect(reflection)) {
     /* Evaluate ... */
 } else {
     /* Error ... */
