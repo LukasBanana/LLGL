@@ -60,6 +60,8 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
             rendererModule = "Vulkan";
         else if (rendererModule == "MT" || rendererModule == "mt")
             rendererModule = "Metal";
+        else if (rendererModule == "NULL" || rendererModule == "null")
+            rendererModule = "Null";
     }
     else
     {

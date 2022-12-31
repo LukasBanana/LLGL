@@ -198,20 +198,21 @@ Or use one of the pre-defined IDs if you want to implement your own OpenGL/ Dire
 */
 struct RendererID
 {
-    static const int Undefined  = 0x00000000; //!< Undefined ID number.
+    static constexpr int Undefined  = 0x00000000; //!< Undefined ID number.
 
-    static const int OpenGL     = 0x00000001; //!< ID number for an OpenGL renderer.
-    static const int OpenGLES1  = 0x00000002; //!< ID number for an OpenGL ES 1 renderer.
-    static const int OpenGLES2  = 0x00000003; //!< ID number for an OpenGL ES 2 renderer.
-    static const int OpenGLES3  = 0x00000004; //!< ID number for an OpenGL ES 3 renderer.
-    static const int Direct3D9  = 0x00000005; //!< ID number for a Direct3D 9 renderer.
-    static const int Direct3D10 = 0x00000006; //!< ID number for a Direct3D 10 renderer.
-    static const int Direct3D11 = 0x00000007; //!< ID number for a Direct3D 11 renderer.
-    static const int Direct3D12 = 0x00000008; //!< ID number for a Direct3D 12 renderer.
-    static const int Vulkan     = 0x00000009; //!< ID number for a Vulkan renderer.
-    static const int Metal      = 0x0000000a; //!< ID number for a Metal renderer.
+    static constexpr int Null       = 0x00000001; //!< ID number for a Null renderer. This renderer does not render anything but provides the same interface for debugging purposes.
+    static constexpr int OpenGL     = 0x00000002; //!< ID number for an OpenGL renderer.
+    static constexpr int OpenGLES1  = 0x00000003; //!< ID number for an OpenGL ES 1 renderer.
+    static constexpr int OpenGLES2  = 0x00000004; //!< ID number for an OpenGL ES 2 renderer.
+    static constexpr int OpenGLES3  = 0x00000005; //!< ID number for an OpenGL ES 3 renderer.
+    static constexpr int Direct3D9  = 0x00000006; //!< ID number for a Direct3D 9 renderer.
+    static constexpr int Direct3D10 = 0x00000007; //!< ID number for a Direct3D 10 renderer.
+    static constexpr int Direct3D11 = 0x00000008; //!< ID number for a Direct3D 11 renderer.
+    static constexpr int Direct3D12 = 0x00000009; //!< ID number for a Direct3D 12 renderer.
+    static constexpr int Vulkan     = 0x0000000a; //!< ID number for a Vulkan renderer.
+    static constexpr int Metal      = 0x0000000b; //!< ID number for a Metal renderer.
 
-    static const int Reserved   = 0x000000ff; //!< Highest ID number for reserved future renderers. Value is 0x000000ff.
+    static constexpr int Reserved   = 0x000000ff; //!< Highest ID number for reserved future renderers. Value is 0x000000ff.
 };
 
 /**

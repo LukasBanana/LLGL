@@ -68,8 +68,10 @@ std::vector<std::string> RenderSystem::FindModules()
 std::vector<std::string> RenderSystem::FindModules()
 {
     /* Iterate over all known modules and return those that are available on the current platform */
-    static const char* knownModules[] =
+    constexpr char* knownModules[] =
     {
+        "Null",
+
         #if defined(LLGL_OS_IOS) || defined(LLGL_OS_ANDROID)
         "OpenGLES3",
         #else

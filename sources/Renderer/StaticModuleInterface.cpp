@@ -18,77 +18,42 @@ namespace LLGL
 
 class RenderSystem;
 
-#ifdef LLGL_BUILD_RENDERER_DIRECT3D11
+#define LLGL_DECLARE_STATIC_MODULE_INTERFACE(NAME)
+    namespace Module##NAME
+    {
+        extern int GetRendererID();
+        extern const char* GetModuleName();
+        extern const char* GetRendererName();
+        extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc);
+    }
 
-namespace ModuleDirect3D11
-{
-    extern int GetRendererID();
-    extern const char* GetModuleName();
-    extern const char* GetRendererName();
-    extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc);
-};
-
-#endif // /LLGL_BUILD_RENDERER_DIRECT3D11
-
-#ifdef LLGL_BUILD_RENDERER_DIRECT3D12
-
-namespace ModuleDirect3D12
-{
-    extern int GetRendererID();
-    extern const char* GetModuleName();
-    extern const char* GetRendererName();
-    extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc);
-};
-
-#endif // /LLGL_BUILD_RENDERER_DIRECT3D12
+#ifdef LLGL_BUILD_RENDERER_NULL
+LLGL_DECLARE_STATIC_MODULE_INTERFACE(Null);
+#endif
 
 #ifdef LLGL_BUILD_RENDERER_OPENGL
-
-namespace ModuleOpenGL
-{
-    extern int GetRendererID();
-    extern const char* GetModuleName();
-    extern const char* GetRendererName();
-    extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc);
-};
-
-#endif // /LLGL_BUILD_RENDERER_OPENGL
+LLGL_DECLARE_STATIC_MODULE_INTERFACE(OpenGL);
+#endif
 
 #ifdef LLGL_BUILD_RENDERER_OPENGLES3
-
-namespace ModuleOpenGLES3
-{
-    extern int GetRendererID();
-    extern const char* GetModuleName();
-    extern const char* GetRendererName();
-    extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc);
-};
-
-#endif // /LLGL_BUILD_RENDERER_OPENGLES3
+LLGL_DECLARE_STATIC_MODULE_INTERFACE(OpenGLES3);
+#endif
 
 #ifdef LLGL_BUILD_RENDERER_VULKAN
-
-namespace ModuleVulkan
-{
-    extern int GetRendererID();
-    extern const char* GetModuleName();
-    extern const char* GetRendererName();
-    extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc);
-};
-
-#endif // /LLGL_BUILD_RENDERER_VULKAN
+LLGL_DECLARE_STATIC_MODULE_INTERFACE(Vulkan);
+#endif
 
 #ifdef LLGL_BUILD_RENDERER_METAL
+LLGL_DECLARE_STATIC_MODULE_INTERFACE(Metal);
+#endif
 
-namespace ModuleMetal
-{
-    extern int GetRendererID();
-    extern const char* GetModuleName();
-    extern const char* GetRendererName();
-    extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc);
-};
+#ifdef LLGL_BUILD_RENDERER_DIRECT3D11
+LLGL_DECLARE_STATIC_MODULE_INTERFACE(Direct3D11);
+#endif
 
-#endif // /LLGL_BUILD_RENDERER_METAL
+#ifdef LLGL_BUILD_RENDERER_DIRECT3D12
+LLGL_DECLARE_STATIC_MODULE_INTERFACE(Direct3D12);
+#endif
 
 
 namespace StaticModule
@@ -99,6 +64,9 @@ std::vector<std::string> GetStaticModules()
 {
     return
     {
+        #ifdef LLGL_BUILD_RENDERER_NULL
+        ModuleNull::GetModuleName(),
+        #endif
         #ifdef LLGL_BUILD_RENDERER_OPENGL
         ModuleOpenGL::GetModuleName(),
         #endif
@@ -125,6 +93,10 @@ const char* GetRendererName(const std::string& moduleName)
     #define LLGL_GET_RENDERER_NAME(MODULE)          \
         if (moduleName == MODULE::GetModuleName())  \
             return MODULE::GetRendererName()
+
+    #ifdef LLGL_BUILD_RENDERER_NULL
+    LLGL_GET_RENDERER_NAME(ModuleNull);
+    #endif
 
     #ifdef LLGL_BUILD_RENDERER_OPENGL
     LLGL_GET_RENDERER_NAME(ModuleOpenGL);
@@ -161,6 +133,10 @@ int GetRendererID(const std::string& moduleName)
         if (moduleName == MODULE::GetModuleName())  \
             return MODULE::GetRendererID()
 
+    #ifdef LLGL_BUILD_RENDERER_NULL
+    LLGL_GET_RENDERER_ID(ModuleNull);
+    #endif
+
     #ifdef LLGL_BUILD_RENDERER_OPENGL
     LLGL_GET_RENDERER_ID(ModuleOpenGL);
     #endif
@@ -195,6 +171,10 @@ RenderSystem* AllocRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
     #define LLGL_ALLOC_RENDER_SYSTEM(MODULE)                        \
         if (renderSystemDesc.moduleName == MODULE::GetModuleName()) \
             return MODULE::AllocRenderSystem(&renderSystemDesc)
+
+    #ifdef LLGL_BUILD_RENDERER_NULL
+    LLGL_ALLOC_RENDER_SYSTEM(ModuleNull);
+    #endif
 
     #ifdef LLGL_BUILD_RENDERER_OPENGL
     LLGL_ALLOC_RENDER_SYSTEM(ModuleOpenGL);

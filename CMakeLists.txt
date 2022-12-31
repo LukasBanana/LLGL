@@ -125,6 +125,8 @@ option(LLGL_BUILD_STATIC_LIB "Build LLGL as static lib (Only allows a single ren
 option(LLGL_BUILD_TESTS "Include test projects" OFF)
 option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
 
+option(LLGL_BUILD_RENDERER_NULL "Include Null renderer project" ON)
+
 if(LLGL_MOBILE_PLATFORM)
     option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
 else()
@@ -263,6 +265,14 @@ elseif(UNIX)
         file(GLOB FilesPlatform             ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/*.*)
     endif()
 endif()
+
+# Null renderer files
+file(GLOB FilesRendererNull                 ${PROJECT_SOURCE_DIR}/sources/Renderer/Null/*.*)
+file(GLOB FilesRendererNullBuffer           ${PROJECT_SOURCE_DIR}/sources/Renderer/Null/Buffer/*.*)
+file(GLOB FilesRendererNullCommand          ${PROJECT_SOURCE_DIR}/sources/Renderer/Null/Command/*.*)
+file(GLOB FilesRendererNullRenderState      ${PROJECT_SOURCE_DIR}/sources/Renderer/Null/RenderState/*.*)
+file(GLOB FilesRendererNullShader           ${PROJECT_SOURCE_DIR}/sources/Renderer/Null/Shader/*.*)
+file(GLOB FilesRendererNullTexture          ${PROJECT_SOURCE_DIR}/sources/Renderer/Null/Texture/*.*)
 
 # OpenGL renderer files
 file(GLOB FilesRendererGL                   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
@@ -444,6 +454,13 @@ if(LLGL_ENABLE_DEBUG_LAYER)
     source_group("Sources\\Renderer\\DebugLayer\\Texture" FILES ${FilesRendererDbgTexture})
 endif()
 
+source_group("Sources\\Null" FILES ${FilesRendererNull})
+source_group("Sources\\Null\\Buffer" FILES ${FilesRendererNullBuffer})
+source_group("Sources\\Null\\Command" FILES ${FilesRendererNullCommand})
+source_group("Sources\\Null\\RenderState" FILES ${FilesRendererNullRenderState})
+source_group("Sources\\Null\\Shader" FILES ${FilesRendererNullShader})
+source_group("Sources\\Null\\Texture" FILES ${FilesRendererNullTexture})
+
 source_group("Sources\\OpenGL" FILES ${FilesRendererGL})
 source_group("Sources\\OpenGL\\Buffer" FILES ${FilesRendererGLBuffer})
 source_group("Sources\\OpenGL\\Command" FILES ${FilesRendererGLCommand})
@@ -543,6 +560,16 @@ if(LLGL_ENABLE_DEBUG_LAYER)
         ${FilesRendererDbgTexture}
     )
 endif()
+
+set(
+    FilesNull
+    ${FilesRendererNull}
+    ${FilesRendererNullBuffer}
+    ${FilesRendererNullCommand}
+    ${FilesRendererNullRenderState}
+    ${FilesRendererNullShader}
+    ${FilesRendererNullTexture}
+)
 
 set(
     FilesGL
@@ -645,6 +672,21 @@ endif()
 set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 
 set(LLGL_DEPENDENCIES LLGL)
+
+if(LLGL_BUILD_RENDERER_NULL)
+    # Null Renderer
+    if(LLGL_BUILD_STATIC_LIB)
+        add_library(LLGL_Null STATIC ${FilesNull})
+        set(LLGL_DEPENDENCIES ${LLGL_DEPENDENCIES} LLGL_Null)
+    else()
+        add_library(LLGL_Null SHARED ${FilesNull})
+    endif()
+    
+    set_target_properties(LLGL_Null PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+    target_link_libraries(LLGL_Null LLGL ${OPENGL_LIBRARIES})
+    
+    ADD_DEFINE(LLGL_BUILD_RENDERER_NULL)
+endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3)
     # OpenGLES Renderer
@@ -880,6 +922,10 @@ message("~~~ Build Summary ~~~")
 message("Target Platform: ${SUMMARY_TARGET_PLATFORM}")
 message("Target Architecture: ${SUMMARY_TARGET_ARCH}")
 message("Target Library: ${SUMMARY_LIBRARY_TYPE}")
+
+if(LLGL_BUILD_RENDERER_NULL)
+    message("Build Renderer: Null")
+endif()
 
 if(LLGL_BUILD_RENDERER_OPENGL AND OpenGL_FOUND)
     message("Build Renderer: OpenGL")
