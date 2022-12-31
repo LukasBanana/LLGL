@@ -373,9 +373,9 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
     );
 }
 
-void DbgRenderSystem::Release(ResourceHeap& resourceViewHeap)
+void DbgRenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    return instance_->Release(resourceViewHeap);
+    return instance_->Release(resourceHeap);
 }
 
 /* ----- Render Passes ----- */

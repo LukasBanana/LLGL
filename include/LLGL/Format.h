@@ -1,6 +1,6 @@
 /*
  * Format.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,7 +9,7 @@
 #define LLGL_FORMAT_H
 
 
-#include "Export.h"
+#include <LLGL/Export.h>
 #include <cstdint>
 
 

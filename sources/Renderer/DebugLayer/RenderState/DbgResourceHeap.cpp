@@ -18,13 +18,13 @@ namespace LLGL
 static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipelineLayout)
 {
     auto pipelineLayoutDbg = LLGL_CAST(const DbgPipelineLayout*, pipelineLayout);
-    return static_cast<std::uint32_t>(pipelineLayoutDbg->desc.bindings.size());
+    return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutDbg->desc.bindings.size()));
 }
 
 DbgResourceHeap::DbgResourceHeap(ResourceHeap& instance, const ResourceHeapDescriptor& desc) :
-    instance    { instance                                                        },
-    desc        { desc                                                            },
-    numBindings { std::max(1u, GetNumPipelineLayoutBindings(desc.pipelineLayout)) }
+    instance    { instance                                          },
+    desc        { desc                                              },
+    numBindings { GetNumPipelineLayoutBindings(desc.pipelineLayout) }
 {
 }
 

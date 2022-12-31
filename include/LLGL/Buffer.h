@@ -1,6 +1,6 @@
 /*
  * Buffer.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,8 +9,8 @@
 #define LLGL_BUFFER_H
 
 
-#include "Resource.h"
-#include "BufferFlags.h"
+#include <LLGL/Resource.h>
+#include <LLGL/BufferFlags.h>
 
 
 namespace LLGL
