@@ -6,9 +6,10 @@
  */
 
 #include <LLGL/LLGL.h>
+#include <LLGL/Misc/VertexFormat.h>
 
 
-#if 1 // TESTING
+#if 0 // TESTING
 
 #import <UIKit/UIKit.h>
 #import <Metal/Metal.h>
@@ -198,15 +199,14 @@ int main()
         auto renderer = LLGL::RenderSystem::Load("Metal");
 
         // Create render context
-        LLGL::RenderContextDescriptor contextDesc;
+        LLGL::SwapChainDescriptor swapChainDesc;
         {
-            //contextDesc.vsync.enabled = true;
-            if (auto display = LLGL::Display::InstantiatePrimary())
-                contextDesc.videoMode.resolution = display->GetDisplayMode().resolution;
+            if (auto display = LLGL::Display::GetPrimary())
+                swapChainDesc.resolution = display->GetDisplayMode().resolution;
         }
-        auto context = renderer->CreateRenderContext(contextDesc);
+        auto swapChain = renderer->CreateSwapChain(swapChainDesc);
 
-        auto& canvas = LLGL::CastTo<LLGL::Canvas>(context->GetSurface());
+        auto& canvas = LLGL::CastTo<LLGL::Canvas>(swapChain->GetSurface());
 
         // Print rendering capabilities
         const auto& info = renderer->GetRendererInfo();
@@ -295,32 +295,25 @@ int main()
         auto vertShader = renderer->CreateShader(vsDesc);
         auto fragShader = renderer->CreateShader(fsDesc);
 
-        if (vertShader->HasErrors())
-            std::cerr << vertShader->GetReport() << std::endl;
-
-        if (fragShader->HasErrors())
-            std::cerr << fragShader->GetReport() << std::endl;
-
-        // Create shader program
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
+        for (auto shader : { vertShader, fragShader })
         {
-            shaderProgramDesc.vertexShader      = vertShader;
-            shaderProgramDesc.fragmentShader    = fragShader;
+            if (auto report = shader->GetReport())
+            {
+                if (report->HasErrors())
+                    std::cerr << report->GetText() << std::endl;
+            }
         }
-        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-
-        if (shaderProgram->HasErrors())
-            std::cerr << shaderProgram->GetReport() << std::endl;
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram  = shaderProgram;
-            pipelineDesc.renderPass     = context->GetRenderPass();
+            pipelineDesc.vertexShader   = vertShader;
+            pipelineDesc.fragmentShader = fragShader;
+            pipelineDesc.renderPass     = swapChain->GetRenderPass();
         }
-        auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
-        commands->SetClearColor({ 0.0, 1.0f, 0.0f });
+        LLGL::ColorRGBAf bgColor{ 0.0, 1.0f, 0.0f };
 
         // Main loop
         while (canvas.ProcessEvents()/* && !input->KeyDown(LLGL::Key::Escape)*/)
@@ -328,14 +321,14 @@ int main()
             commands->Begin();
             {
                 // Set viewport, graphics pipeline, and vertex buffer
-                commands->SetViewport(contextDesc.videoMode.resolution);
-                commands->SetGraphicsPipeline(*pipeline);
+                commands->SetViewport(swapChain->GetResolution());
+                commands->SetPipelineState(*pipeline);
                 commands->SetVertexBuffer(*vertexBuffer);
 
                 // Render color pass
-                commands->BeginRenderPass(*context);
+                commands->BeginRenderPass(*swapChain);
                 {
-                    commands->Clear(LLGL::ClearFlags::Color);
+                    commands->Clear(LLGL::ClearFlags::Color, bgColor);
                     commands->Draw(3, 0);
                 }
                 commands->EndRenderPass();
@@ -343,7 +336,7 @@ int main()
             commands->End();
             commandQueue->Submit(*commands);
 
-            context->Present();
+            swapChain->Present();
         }
     }
     catch (const std::exception& e)
