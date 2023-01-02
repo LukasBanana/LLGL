@@ -1,6 +1,6 @@
 @echo off
 
-set BUILD_DIR="build/build"
+set BUILD_DIR="build_win64/build"
 
 :Start
 echo select example:

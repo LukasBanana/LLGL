@@ -1,10 +1,10 @@
 #!/bin/sh
-BUILD_DIR="build/build"
+BUILD_DIR="build_macos/build"
 
 if [ "$#" -eq 1 ]; then
     BUILD_DIR=$1
-elif [ -d "build/build/Example_HelloTriangle.app" ]; then
-    BUILD_DIR="build/build"
+elif [ -d "build_macos/build/Example_HelloTriangle.app" ]; then
+    BUILD_DIR="build_macos/build"
 elif [ -d "bin/x64/MacOS/Example_HelloTriangle.app" ]; then
     BUILD_DIR="bin/x64/MacOS"
 else
