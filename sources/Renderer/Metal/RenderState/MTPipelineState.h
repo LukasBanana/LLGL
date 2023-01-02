@@ -12,6 +12,7 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/PipelineState.h>
+#include "../../../Core/BasicReport.h"
 
 
 namespace LLGL
@@ -25,15 +26,23 @@ class MTPipelineState : public PipelineState
 
         MTPipelineState(bool isGraphicsPSO);
 
+        const Report* GetReport() const override final;
+
         // Returns true if this is a graphics PSO.
         inline bool IsGraphicsPSO() const
         {
             return isGraphicsPSO_;
         }
 
+    protected:
+
+        // Writes the report with the specified message and error bit.
+        void ResetReport(std::string&& text, bool hasErrors = false);
+        
     private:
 
-        const bool isGraphicsPSO_ = false;
+        const bool  isGraphicsPSO_ = false;
+        BasicReport report_;
 
 };
 

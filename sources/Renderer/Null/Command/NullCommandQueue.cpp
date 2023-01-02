@@ -29,7 +29,7 @@ void NullCommandQueue::Submit(CommandBuffer& commandBuffer)
 
 bool NullCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery, std::uint32_t numQueries, void* data, std::size_t dataSize)
 {
-    auto& queryHeapNull = LLGL_CAST(NullQueryHeap&, queryHeap);
+    //auto& queryHeapNull = LLGL_CAST(NullQueryHeap&, queryHeap);
     //todo
     return false;
 }

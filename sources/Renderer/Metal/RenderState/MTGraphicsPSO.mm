@@ -223,7 +223,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
             psoDesc.tessellationPartitionMode           = MTTypes::ToMTLPartitionMode(desc.tessellation.partition);
         }
     }
-    id<NSError> error = nil;
+    NSError* error = nullptr;
     renderPipelineState_ = [device newRenderPipelineStateWithDescriptor:psoDesc error:&error];
     [psoDesc release];
 

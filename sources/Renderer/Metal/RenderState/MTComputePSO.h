@@ -17,7 +17,7 @@ namespace LLGL
 
 
 struct ComputePipelineDescriptor;
-class MTShaderProgram;
+class MTShader;
 
 class MTComputePSO final : public MTPipelineState
 {

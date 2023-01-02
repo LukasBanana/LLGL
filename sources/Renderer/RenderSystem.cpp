@@ -356,20 +356,6 @@ void RenderSystem::AssertCreateShader(const ShaderDescriptor& desc)
         throw std::invalid_argument("cannot create shader from binary buffer with <sourceSize> being zero");
 }
 
-static void AssertShaderType(Shader* shader, const char* shaderName, const ShaderType type, const char* typeName)
-{
-    if (shader != nullptr)
-    {
-        if (shader->GetType() != type)
-        {
-            throw std::invalid_argument(
-                "cannot create PSO with '" + std::string(shaderName) +
-                "' not being of type <LLGL::ShaderType::" + std::string(typeName) + ">"
-            );
-        }
-    }
-}
-
 [[noreturn]]
 static void ErrTooManyColorAttachments(const char* contextInfo)
 {

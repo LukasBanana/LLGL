@@ -17,6 +17,16 @@ MTPipelineState::MTPipelineState(bool isGraphicsPSO/*, const ShaderProgram* shad
 {
 }
 
+const Report* MTPipelineState::GetReport() const
+{
+    return (report_ ? &report_ : nullptr);
+}
+
+void MTPipelineState::ResetReport(std::string&& text, bool hasErrors)
+{
+    report_.Reset(std::forward<std::string&&>(text), hasErrors);
+}
+
 
 } // /namespace LLGL
 

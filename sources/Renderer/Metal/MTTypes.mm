@@ -170,6 +170,8 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::BC5UNorm:          return MTLPixelFormatBC5_RGUnorm;
         case Format::BC5SNorm:          return MTLPixelFormatBC5_RGSnorm;
         #endif
+
+        default:                        break;
     }
     MapFailed("Format", "MTLPixelFormat");
 }

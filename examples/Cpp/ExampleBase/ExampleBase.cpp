@@ -17,25 +17,6 @@
 
 
 /*
- * Internal helper functions
- */
-
-static std::string ReadFileContent(const std::string& filename)
-{
-    // Read file content into string
-    std::ifstream file(filename);
-
-    if (!file.good())
-        throw std::runtime_error("failed to open file: \"" + filename + "\"");
-
-    return std::string(
-        ( std::istreambuf_iterator<char>(file) ),
-        ( std::istreambuf_iterator<char>() )
-    );
-}
-
-
-/*
  * Global helper functions
  */
 

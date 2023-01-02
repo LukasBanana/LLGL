@@ -14,10 +14,10 @@
 #include "RenderState/MTComputePSO.h"
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTBuiltinPSOFactory.h"
+#include "Shader/MTShader.h"
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
 #include "Texture/MTRenderTarget.h"
-#include "Shader/MTShaderProgram.h"
 #include "../CheckedCast.h"
 #include <LLGL/TypeInfo.h>
 #include <algorithm>
@@ -611,8 +611,8 @@ void MTCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         encoderScheduler_.SetComputePSO(&computePSO);
 
         /* Store reference to work group size of shader program */
-        if (auto shaderProgram = computePSO.GetShaderProgram())
-            numThreadsPerGroup_ = &(shaderProgram->GetNumThreadsPerGroup());
+        if (auto computeShader = computePSO.GetComputeShader())
+            numThreadsPerGroup_ = &(computeShader->GetNumThreadsPerGroup());
         else
             numThreadsPerGroup_ = &g_defaultNumThreadsPerGroup;
     }

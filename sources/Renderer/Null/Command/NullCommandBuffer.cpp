@@ -150,7 +150,7 @@ void NullCommandBuffer::FillBuffer(
     std::uint32_t   value,
     std::uint64_t   fillSize)
 {
-    auto& dstBufferNull = LLGL_CAST(NullBuffer&, dstBuffer);
+    //auto& dstBufferNull = LLGL_CAST(NullBuffer&, dstBuffer);
     //todo
 }
 
@@ -298,7 +298,7 @@ void NullCommandBuffer::SetResourceHeap(
     std::uint32_t           firstSet,
     const PipelineBindPoint bindPoint)
 {
-    auto& resourceHeapNull = LLGL_CAST(NullResourceHeap&, resourceHeap);
+    //auto& resourceHeapNull = LLGL_CAST(NullResourceHeap&, resourceHeap);
     //todo
 }
 
@@ -331,12 +331,12 @@ void NullCommandBuffer::BeginRenderPass(
 {
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
-        auto& swapChainNull = LLGL_CAST(NullSwapChain&, renderTarget);
+        //auto& swapChainNull = LLGL_CAST(NullSwapChain&, renderTarget);
         //todo
     }
     else
     {
-        auto& renderTargetNull = LLGL_CAST(NullRenderTarget&, renderTarget);
+        //auto& renderTargetNull = LLGL_CAST(NullRenderTarget&, renderTarget);
         //todo
     }
 }
@@ -360,7 +360,7 @@ void NullCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Att
 
 void NullCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    auto& pipelineStateNull = LLGL_CAST(NullPipelineState&, pipelineState);
+    //auto& pipelineStateNull = LLGL_CAST(NullPipelineState&, pipelineState);
     //todo
 }
 
@@ -395,19 +395,19 @@ void NullCommandBuffer::SetUniforms(
 
 void NullCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryHeapNull = LLGL_CAST(NullQueryHeap&, queryHeap);
+    //auto& queryHeapNull = LLGL_CAST(NullQueryHeap&, queryHeap);
     //todo
 }
 
 void NullCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    auto& queryHeapNull = LLGL_CAST(NullQueryHeap&, queryHeap);
+    //auto& queryHeapNull = LLGL_CAST(NullQueryHeap&, queryHeap);
     //todo
 }
 
 void NullCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    auto& queryHeapNull = LLGL_CAST(NullQueryHeap&, queryHeap);
+    //auto& queryHeapNull = LLGL_CAST(NullQueryHeap&, queryHeap);
     //todo
 }
 

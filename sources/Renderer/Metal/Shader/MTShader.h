@@ -29,7 +29,7 @@ class MTShader final : public Shader
 
         const Report* GetReport() const override;
 
-        void Reflect(ShaderReflection& reflection) const override;
+        bool Reflect(ShaderReflection& reflection) const override;
 
         bool IsPostTessellationVertex() const override;
 
@@ -66,8 +66,11 @@ class MTShader final : public Shader
 
         bool LoadFunction(const char* entryPoint);
 
+        bool ReflectComputePipeline(ShaderReflection& reflection) const;
+
     private:
 
+        id<MTLDevice>           device_             = nil;
         id<MTLLibrary>          library_            = nil;
         id<MTLFunction>         native_             = nil;
 
