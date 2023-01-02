@@ -301,7 +301,9 @@ static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
         case ImageFormat::BGR:              return GL_BGR_INTEGER;
         #endif
         case ImageFormat::RGBA:             return GL_RGBA_INTEGER;
+        #ifdef LLGL_OPENGL
         case ImageFormat::BGRA:             return GL_BGRA_INTEGER;
+        #endif
         case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;
         case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
         #ifdef LLGL_OPENGL

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 SOURCE_DIR=$PWD
-OUTPUT_DIR="build"
+OUTPUT_DIR="build_linux"
 
 # Check packages are installed
 REQUIRED_PKG=""

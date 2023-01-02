@@ -16,11 +16,11 @@
 #endif
 
 
-#if defined GL_ARB_draw_indirect || defined GL_ES_VERSION_3_1 || defined __APPLE__
+#if defined GL_ARB_draw_indirect || defined GL_ES_VERSION_3_1
 #   define LLGL_GLEXT_DRAW_INDIRECT
 #endif
 
-#if defined GL_ARB_draw_elements_base_vertex || defined GL_ES_VERSION_3_2 || defined __APPLE__
+#if defined GL_ARB_draw_elements_base_vertex || defined GL_ES_VERSION_3_2
 #   define LLGL_GLEXT_DRAW_ELEMENTS_BASE_VERTEX
 #endif
 
@@ -41,7 +41,7 @@
 #endif
 
 //TODO: which extension?
-#if defined LLGL_OPENGL || defined __APPLE__
+#if defined LLGL_OPENGL
 #   define LLGL_GLEXT_CONDITIONAL_RENDER
 #endif
 
@@ -67,6 +67,10 @@
 
 #if defined LLGL_OPENGL || defined GL_ES_VERSION_3_1
 #   define LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+#endif
+
+#if defined GL_ARB_clip_control
+#   define LLGL_GLEXT_CLIP_CONTROL
 #endif
 
 // At most one of these should be defined to indicate which API

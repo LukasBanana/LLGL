@@ -9,7 +9,11 @@
 #include "GLESExtensions.h"
 #include "GLESExtensionsProxy.h"
 #include "OpenGLES.h"
-#include <EGL/egl.h>
+#if defined(LLGL_OS_IOS)
+#   import <OpenGLES/EAGL.h>
+#else
+#   include <EGL/egl.h>
+#endif
 #include <LLGL/Log.h>
 #include <functional>
 

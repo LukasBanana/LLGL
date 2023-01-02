@@ -489,7 +489,7 @@ void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
     /* Flip viewport if origin is emulated and set to upper-left corner */
     flipViewportYPos_ = !isOriginUpperLeft;
 
-    #ifdef GL_ARB_clip_control
+    #ifdef LLGL_GLEXT_CLIP_CONTROL
     if (HasExtension(GLExt::ARB_clip_control))
     {
         /* Use GL extension to transform clipping space */
@@ -501,7 +501,11 @@ void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
     {
         /* Emulate clipping space modification; this has to be addressed by transforming gl_Position in each vertex shader */
         emulateOriginUpperLeft_ = isOriginUpperLeft;
+        #ifdef LLGL_GLEXT_CLIP_CONTROL
         emulateDepthModeZeroToOne_ = (depth == GL_ZERO_TO_ONE);
+        #else
+        emulateDepthModeZeroToOne_ = true;
+        #endif
 
         /* Flip front-facing when emulating upper-left origin */
         FlipFrontFacing(isOriginUpperLeft);

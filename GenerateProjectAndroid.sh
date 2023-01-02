@@ -20,7 +20,7 @@ fi
 ANDROID_ABI=x86_64
 ANDROID_API_LEVEL=21
 SOURCE_DIR="."
-BUILD_DIR="build"
+BUILD_DIR="build_android"
 ANDROID_CMAKE_TOOLCHAIN="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake"
 
 if [ "$#" -ge 1 ]; then
