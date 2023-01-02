@@ -1,6 +1,6 @@
 /*
  * TextureFlags.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,11 +9,11 @@
 #define LLGL_TEXTURE_FLAGS_H
 
 
-#include "Export.h"
-#include "Types.h"
-#include "Format.h"
-#include "ResourceFlags.h"
-#include "CommandBufferFlags.h"
+#include <LLGL/Export.h>
+#include <LLGL/Types.h>
+#include <LLGL/Format.h>
+#include <LLGL/ResourceFlags.h>
+#include <LLGL/CommandBufferFlags.h>
 #include <cstddef>
 #include <cstdint>
 
@@ -85,7 +85,7 @@ enum class TextureType
 \remarks Can be used to change the order of texel components independently of a shader.
 \see TextureSwizzleRGBA
 */
-enum class TextureSwizzle
+enum class TextureSwizzle : std::uint8_t
 {
     Zero,   //!< The component is replaced by the constant zero.
     One,    //!< The component is replaced by the constant one.
@@ -496,6 +496,16 @@ LLGL_EXPORT std::uint32_t NumTextureDimensions(const TextureType type);
 \see NumMipLevels(const TextureType, const Extent3D&)
 */
 LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel);
+
+/**
+\brief Returns the MIP-map extent (including array layers) for the specified texture descriptor.
+\param[in] textureDesc Specifies the texture descriptor.
+\param[in] mipLevel Specifies the MIP-map level whose extent is to be determined. The first and largest MIP-map level has index zero.
+\see Texture::GetMipExtent
+\see TextureDescriptor::extent
+\see TextureDescriptor::arrayLayers
+*/
+LLGL_EXPORT Extent3D GetMipExtent(const TextureDescriptor& textureDesc, std::uint32_t mipLevel = 0);
 
 /**
 \brief Returns the memory footprint (in bytes) of a texture subresource with the specified hardware format and extent.

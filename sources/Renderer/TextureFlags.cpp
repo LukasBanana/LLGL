@@ -122,21 +122,43 @@ static std::uint32_t MipExtent(std::uint32_t extent, std::uint32_t mipLevel)
     return std::max(1u, extent >> mipLevel);
 }
 
-LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& e, std::uint32_t m)
+LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& extent, std::uint32_t mipLevel)
 {
-    if (m < NumMipLevels(type, e))
+    if (mipLevel < NumMipLevels(type, extent))
     {
         switch (type)
         {
-            case TextureType::Texture1D:        return Extent3D{ MipExtent(e.width, m), 1u, 1u };
-            case TextureType::Texture2D:        return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), 1u };
-            case TextureType::Texture3D:        return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), MipExtent(e.depth, m) };
-            case TextureType::TextureCube:      return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), 1u };
-            case TextureType::Texture1DArray:   return Extent3D{ MipExtent(e.width, m), e.height, 1u };
-            case TextureType::Texture2DArray:   return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), e.depth };
-            case TextureType::TextureCubeArray: return Extent3D{ MipExtent(e.width, m), MipExtent(e.height, m), e.depth };
-            case TextureType::Texture2DMS:      return Extent3D{ e.width, e.height, 1u };
-            case TextureType::Texture2DMSArray: return Extent3D{ e.width, e.height, e.depth };
+            case TextureType::Texture1D:        return Extent3D{ MipExtent(extent.width, mipLevel), 1u, 1u };
+            case TextureType::Texture2D:        return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 1u };
+            case TextureType::Texture3D:        return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), MipExtent(extent.depth, mipLevel) };
+            case TextureType::TextureCube:      return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 1u };
+            case TextureType::Texture1DArray:   return Extent3D{ MipExtent(extent.width, mipLevel), extent.height, 1u };
+            case TextureType::Texture2DArray:   return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), extent.depth };
+            case TextureType::TextureCubeArray: return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), extent.depth };
+            case TextureType::Texture2DMS:      return Extent3D{ extent.width, extent.height, 1u };
+            case TextureType::Texture2DMSArray: return Extent3D{ extent.width, extent.height, extent.depth };
+        }
+    }
+    return {};
+}
+
+LLGL_EXPORT Extent3D GetMipExtent(const TextureDescriptor& textureDesc, std::uint32_t mipLevel)
+{
+    const auto& extent = textureDesc.extent;
+    if (mipLevel < NumMipLevels(textureDesc.type, extent))
+    {
+        const auto arrayLayers = textureDesc.arrayLayers;
+        switch (textureDesc.type)
+        {
+            case TextureType::Texture1D:        return Extent3D{ MipExtent(extent.width, mipLevel), 1u, 1u };
+            case TextureType::Texture2D:        return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 1u };
+            case TextureType::Texture3D:        return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), MipExtent(extent.depth, mipLevel) };
+            case TextureType::TextureCube:      return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 1u };
+            case TextureType::Texture1DArray:   return Extent3D{ MipExtent(extent.width, mipLevel), arrayLayers, 1u };
+            case TextureType::Texture2DArray:   return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), arrayLayers };
+            case TextureType::TextureCubeArray: return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), arrayLayers };
+            case TextureType::Texture2DMS:      return Extent3D{ extent.width, extent.height, 1u };
+            case TextureType::Texture2DMSArray: return Extent3D{ extent.width, extent.height, arrayLayers };
         }
     }
     return {};
