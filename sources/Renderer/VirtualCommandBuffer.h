@@ -302,7 +302,7 @@ class VirtualCommandBuffer
         // Returns whether the specified byte size fits into the current chunk.
         bool FitsIntoCurrentChunk(std::size_t size) const
         {
-            return (current_ != nullptr && current_->size + size < current_->capacity);
+            return (current_ != nullptr && current_->size + size <= current_->capacity);
         }
 
         // Allocates a new chunk and makes it the current one.
