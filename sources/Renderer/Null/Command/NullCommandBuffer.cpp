@@ -62,8 +62,14 @@ void NullCommandBuffer::UpdateBuffer(
     const void*     data,
     std::uint16_t   dataSize)
 {
-    auto& dstBufferNull = LLGL_CAST(NullBuffer&, dstBuffer);
-    //todo
+    auto dstBufferNull = LLGL_CAST(NullBuffer*, &dstBuffer);
+    auto cmd = AllocCommand<NullCmdBufferWrite>(NullOpcodeBufferWrite, dataSize);
+    {
+        cmd->buffer = dstBufferNull;
+        cmd->offset = static_cast<std::size_t>(dstOffset);
+        cmd->size   = dataSize;
+        ::memcpy(cmd + 1, data, dataSize);
+    }
 }
 
 void NullCommandBuffer::CopyBuffer(
@@ -73,9 +79,39 @@ void NullCommandBuffer::CopyBuffer(
     std::uint64_t   srcOffset,
     std::uint64_t   size)
 {
-    auto& dstBufferNull = LLGL_CAST(NullBuffer&, dstBuffer);
-    auto& srcBufferNull = LLGL_CAST(NullBuffer&, srcBuffer);
-    //todo
+    auto cmd = AllocCommand<NullCmdCopySubresource>(NullOpcodeCopySubresource);
+    {
+        cmd->srcResource    = &srcBuffer;
+        cmd->srcSubresource = 0;
+        cmd->srcX           = srcOffset;
+        cmd->srcY           = 0;
+        cmd->srcZ           = 0;
+        cmd->dstResource    = &dstBuffer;
+        cmd->dstSubresource = 0;
+        cmd->dstX           = dstOffset;
+        cmd->dstY           = 0;
+        cmd->dstZ           = 0;
+        cmd->width          = size;
+        cmd->height         = 1;
+        cmd->depth          = 1;
+        cmd->rowStride      = 0;
+        cmd->layerStride    = 0;
+    }
+}
+
+static Extent3D GetSubresourceExtent(TextureType type, const Extent3D& extent, std::uint32_t numArrayLayers)
+{
+    switch (type)
+    {
+        case TextureType::Texture1DArray:
+            return Extent3D{ extent.width, numArrayLayers, 1 };
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+        case TextureType::Texture2DMSArray:
+            return Extent3D{ extent.width, extent.height, numArrayLayers };
+        default:
+            return extent;
+    }
 }
 
 void NullCommandBuffer::CopyBufferFromTexture(
@@ -86,9 +122,26 @@ void NullCommandBuffer::CopyBufferFromTexture(
     std::uint32_t           rowStride,
     std::uint32_t           layerStride)
 {
-    auto& dstBufferNull = LLGL_CAST(NullBuffer&, dstBuffer);
     auto& srcTextureNull = LLGL_CAST(NullTexture&, srcTexture);
-    //todo
+    const auto extent = GetSubresourceExtent(srcTextureNull.GetType(), srcRegion.extent, srcRegion.subresource.numArrayLayers);
+    auto cmd = AllocCommand<NullCmdCopySubresource>(NullOpcodeCopySubresource);
+    {
+        cmd->srcResource    = &srcTextureNull;
+        cmd->srcSubresource = srcTextureNull.PackSubresourceIndex(srcRegion.subresource.baseMipLevel, srcRegion.subresource.baseArrayLayer);
+        cmd->srcX           = srcRegion.offset.x;
+        cmd->srcY           = srcRegion.offset.y;
+        cmd->srcZ           = srcRegion.offset.z;
+        cmd->dstResource    = &dstBuffer;
+        cmd->dstSubresource = 0;
+        cmd->dstX           = dstOffset;
+        cmd->dstY           = 0;
+        cmd->dstZ           = 0;
+        cmd->width          = extent.width;
+        cmd->height         = extent.height;
+        cmd->depth          = extent.depth;
+        cmd->rowStride      = rowStride;
+        cmd->layerStride    = layerStride;
+    }
 }
 
 void NullCommandBuffer::FillBuffer(
@@ -110,7 +163,24 @@ void NullCommandBuffer::CopyTexture(
 {
     auto& dstTextureNull = LLGL_CAST(NullTexture&, dstTexture);
     auto& srcTextureNull = LLGL_CAST(NullTexture&, srcTexture);
-    //todo
+    auto cmd = AllocCommand<NullCmdCopySubresource>(NullOpcodeCopySubresource);
+    {
+        cmd->srcResource    = &srcTextureNull;
+        cmd->srcSubresource = srcTextureNull.PackSubresourceIndex(srcLocation.mipLevel, srcLocation.arrayLayer);
+        cmd->srcX           = srcLocation.offset.x;
+        cmd->srcY           = srcLocation.offset.y;
+        cmd->srcZ           = srcLocation.offset.z;
+        cmd->dstResource    = &dstTextureNull;
+        cmd->dstSubresource = dstTextureNull.PackSubresourceIndex(srcLocation.mipLevel, srcLocation.arrayLayer);
+        cmd->dstX           = dstLocation.offset.x;
+        cmd->dstY           = dstLocation.offset.y;
+        cmd->dstZ           = dstLocation.offset.z;
+        cmd->width          = extent.width;
+        cmd->height         = extent.height;
+        cmd->depth          = extent.depth;
+        cmd->rowStride      = 0;
+        cmd->layerStride    = 0;
+    }
 }
 
 void NullCommandBuffer::CopyTextureFromBuffer(
@@ -122,42 +192,73 @@ void NullCommandBuffer::CopyTextureFromBuffer(
     std::uint32_t           layerStride)
 {
     auto& dstTextureNull = LLGL_CAST(NullTexture&, dstTexture);
-    auto& srcBufferNull = LLGL_CAST(NullBuffer&, srcBuffer);
-    //todo
+    const auto extent = GetSubresourceExtent(dstTextureNull.GetType(), dstRegion.extent, dstRegion.subresource.numArrayLayers);
+    auto cmd = AllocCommand<NullCmdCopySubresource>(NullOpcodeCopySubresource);
+    {
+        cmd->srcResource    = &srcBuffer;
+        cmd->srcSubresource = 0;
+        cmd->srcX           = srcOffset;
+        cmd->srcY           = 0;
+        cmd->srcZ           = 0;
+        cmd->dstResource    = &dstTextureNull;
+        cmd->dstSubresource = dstTextureNull.PackSubresourceIndex(dstRegion.subresource.baseMipLevel, dstRegion.subresource.baseArrayLayer);
+        cmd->dstX           = dstRegion.offset.x;
+        cmd->dstY           = dstRegion.offset.y;
+        cmd->dstZ           = dstRegion.offset.z;
+        cmd->width          = extent.width;
+        cmd->height         = extent.height;
+        cmd->depth          = extent.depth;
+        cmd->rowStride      = rowStride;
+        cmd->layerStride    = layerStride;
+    }
 }
 
 void NullCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureNull = LLGL_CAST(NullTexture&, texture);
-    //todo
+    auto cmd = AllocCommand<NullCmdGenerateMips>(NullOpcodeGenerateMips);
+    {
+        cmd->texture        = &textureNull;
+        cmd->baseArrayLayer = 0;
+        cmd->numArrayLayers = textureNull.desc.arrayLayers;
+        cmd->baseMipLevel   = 0;
+        cmd->numMipLevels   = textureNull.desc.mipLevels;
+    }
 }
 
 void NullCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
     auto& textureNull = LLGL_CAST(NullTexture&, texture);
-    //todo
+    auto cmd = AllocCommand<NullCmdGenerateMips>(NullOpcodeGenerateMips);
+    {
+        cmd->texture        = &textureNull;
+        cmd->baseArrayLayer = subresource.baseArrayLayer;
+        cmd->numArrayLayers = subresource.numArrayLayers;
+        cmd->baseMipLevel   = subresource.baseMipLevel;
+        cmd->numMipLevels   = subresource.numMipLevels;
+    }
 }
 
 /* ----- Viewport and Scissor ----- */
 
 void NullCommandBuffer::SetViewport(const Viewport& viewport)
 {
-    //todo
+    renderState_.viewports = { viewport };
 }
 
 void NullCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    //todo
+    renderState_.viewports = SmallVector<Viewport>(viewports, viewports + numViewports);
 }
 
 void NullCommandBuffer::SetScissor(const Scissor& scissor)
 {
-    //todo
+    renderState_.scissors = { scissor };
 }
 
 void NullCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    //tood
+    renderState_.scissors = SmallVector<Scissor>(scissors, scissors + numScissors);
 }
 
 /* ----- Buffers ------ */
@@ -165,25 +266,29 @@ void NullCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sc
 void NullCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
-    //todo
+    renderState_.vertexBuffers = { &bufferNull };
 }
 
 void NullCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayNull = LLGL_CAST(NullBufferArray&, bufferArray);
-    //todo
+    renderState_.vertexBuffers = SmallVector<const NullBuffer*>(bufferArrayNull.buffers.begin(), bufferArrayNull.buffers.end());
 }
 
 void NullCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
-    //todo
+    renderState_.indexBuffer        = &bufferNull;
+    renderState_.indexBufferFormat  = bufferNull.desc.format;
+    renderState_.indexBufferOffset  = 0;
 }
 
 void NullCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
 {
     auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
-    //todo
+    renderState_.indexBuffer        = &bufferNull;
+    renderState_.indexBufferFormat  = format;
+    renderState_.indexBufferOffset  = offset;
 }
 
 /* ----- Resources ----- */
@@ -327,62 +432,143 @@ void NullCommandBuffer::EndStreamOutput()
 
 void NullCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
-    // dummy
+    DrawIndirectArguments drawArgs;
+    {
+        drawArgs.numVertices    = numVertices;
+        drawArgs.numInstances   = 1;
+        drawArgs.firstVertex    = firstVertex;
+        drawArgs.firstInstance  = 0;
+    }
+    AllocDrawCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
-    // dummy
+    DrawIndexedIndirectArguments drawArgs;
+    {
+        drawArgs.numIndices     = numIndices;
+        drawArgs.numInstances   = 1;
+        drawArgs.firstIndex     = firstIndex;
+        drawArgs.vertexOffset   = 0;
+        drawArgs.firstInstance  = 0;
+    }
+    AllocDrawIndexedCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    // dummy
+    DrawIndexedIndirectArguments drawArgs;
+    {
+        drawArgs.numIndices     = numIndices;
+        drawArgs.numInstances   = 1;
+        drawArgs.firstIndex     = firstIndex;
+        drawArgs.vertexOffset   = vertexOffset;
+        drawArgs.firstInstance  = 0;
+    }
+    AllocDrawIndexedCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
-    // dummy
+    DrawIndirectArguments drawArgs;
+    {
+        drawArgs.numVertices    = numVertices;
+        drawArgs.numInstances   = numInstances;
+        drawArgs.firstVertex    = firstVertex;
+        drawArgs.firstInstance  = 0;
+    }
+    AllocDrawCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    // dummy
+    DrawIndirectArguments drawArgs;
+    {
+        drawArgs.numVertices    = numVertices;
+        drawArgs.numInstances   = numInstances;
+        drawArgs.firstVertex    = firstVertex;
+        drawArgs.firstInstance  = firstInstance;
+    }
+    AllocDrawCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    // dummy
+    DrawIndexedIndirectArguments drawArgs;
+    {
+        drawArgs.numIndices     = numIndices;
+        drawArgs.numInstances   = numInstances;
+        drawArgs.firstIndex     = firstIndex;
+        drawArgs.vertexOffset   = 0;
+        drawArgs.firstInstance  = 0;
+    }
+    AllocDrawIndexedCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    // dummy
+    DrawIndexedIndirectArguments drawArgs;
+    {
+        drawArgs.numIndices     = numIndices;
+        drawArgs.numInstances   = numInstances;
+        drawArgs.firstIndex     = firstIndex;
+        drawArgs.vertexOffset   = vertexOffset;
+        drawArgs.firstInstance  = 0;
+    }
+    AllocDrawIndexedCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    // dummy
+    DrawIndexedIndirectArguments drawArgs;
+    {
+        drawArgs.numIndices     = numIndices;
+        drawArgs.numInstances   = numInstances;
+        drawArgs.firstIndex     = firstIndex;
+        drawArgs.vertexOffset   = vertexOffset;
+        drawArgs.firstInstance  = firstInstance;
+    }
+    AllocDrawIndexedCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    // dummy
+    auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
+    DrawIndirectArguments drawArgs;
+    bufferNull.Read(offset, &drawArgs, sizeof(drawArgs));
+    AllocDrawCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    // dummy
+    auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
+    DrawIndirectArguments drawArgs;
+    while (numCommands-- > 0)
+    {
+        bufferNull.Read(offset, &drawArgs, sizeof(drawArgs));
+        AllocDrawCommand(drawArgs);
+        offset += stride;
+    }
 }
 
 void NullCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    // dummy
+    auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
+    DrawIndexedIndirectArguments drawArgs;
+    bufferNull.Read(offset, &drawArgs, sizeof(drawArgs));
+    AllocDrawIndexedCommand(drawArgs);
 }
 
 void NullCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    // dummy
+    auto& bufferNull = LLGL_CAST(NullBuffer&, buffer);
+    DrawIndexedIndirectArguments drawArgs;
+    while (numCommands-- > 0)
+    {
+        bufferNull.Read(offset, &drawArgs, sizeof(drawArgs));
+        AllocDrawIndexedCommand(drawArgs);
+        offset += stride;
+    }
 }
 
 /* ----- Compute ----- */
@@ -446,6 +632,29 @@ template <typename TCommand>
 TCommand* NullCommandBuffer::AllocCommand(const NullOpcode opcode, std::size_t payloadSize)
 {
     return buffer_.AllocCommand<TCommand>(opcode, payloadSize);
+}
+
+void NullCommandBuffer::AllocDrawCommand(const DrawIndirectArguments& args)
+{
+    auto cmd = AllocCommand<NullCmdDraw>(NullOpcodeDraw, sizeof(const NullBuffer*) * renderState_.vertexBuffers.size());
+    {
+        cmd->args               = args;
+        cmd->numVertexBuffers   = renderState_.vertexBuffers.size();
+        ::memcpy(cmd + 1, renderState_.vertexBuffers.data(), sizeof(const NullBuffer*) * renderState_.vertexBuffers.size());
+    }
+}
+
+void NullCommandBuffer::AllocDrawIndexedCommand(const DrawIndexedIndirectArguments& args)
+{
+    auto cmd = AllocCommand<NullCmdDrawIndexed>(NullOpcodeDrawIndexed, sizeof(const NullBuffer*) * renderState_.vertexBuffers.size());
+    {
+        cmd->args               = args;
+        cmd->indexBuffer        = renderState_.indexBuffer;
+        cmd->indexBufferFormat  = renderState_.indexBufferFormat;
+        cmd->indexBufferOffset  = renderState_.indexBufferOffset;
+        cmd->numVertexBuffers   = renderState_.vertexBuffers.size();
+        ::memcpy(cmd + 1, renderState_.vertexBuffers.data(), sizeof(const NullBuffer*) * renderState_.vertexBuffers.size());
+    }
 }
 
 

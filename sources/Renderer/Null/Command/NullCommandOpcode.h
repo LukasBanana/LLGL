@@ -19,7 +19,11 @@ namespace LLGL
 enum NullOpcode : std::uint8_t
 {
     NullOpcodeBufferWrite = 1,
+    NullOpcodeCopySubresource,
+    NullOpcodeGenerateMips,
     //TODO
+    NullOpcodeDraw,
+    NullOpcodeDrawIndexed,
     NullOpcodePushDebugGroup,
     NullOpcodePopDebugGroup,
 };

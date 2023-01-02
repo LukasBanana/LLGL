@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandBuffer.h>
+#include <LLGL/Container/SmallVector.h>
 #include "NullCommandOpcode.h"
 #include "../../VirtualCommandBuffer.h"
 
@@ -17,6 +18,8 @@
 namespace LLGL
 {
 
+
+class NullBuffer;
 
 using NullVirtualCommandBuffer = VirtualCommandBuffer<NullOpcode>;
 
@@ -219,6 +222,18 @@ class NullCommandBuffer final : public CommandBuffer
 
     private:
 
+        struct RenderState
+        {
+            SmallVector<Viewport>           viewports;
+            SmallVector<Scissor>            scissors;
+            SmallVector<const NullBuffer*>  vertexBuffers;
+            const NullBuffer*               indexBuffer;
+            Format                          indexBufferFormat;
+            std::uint64_t                   indexBufferOffset;
+        };
+
+    private:
+
         // Allocates only an opcode for empty commands.
         void AllocOpcode(const NullOpcode opcode);
 
@@ -226,9 +241,13 @@ class NullCommandBuffer final : public CommandBuffer
         template <typename TCommand>
         TCommand* AllocCommand(const NullOpcode opcode, std::size_t payloadSize = 0);
 
+        void AllocDrawCommand(const DrawIndirectArguments& args);
+        void AllocDrawIndexedCommand(const DrawIndexedIndirectArguments& args);
+
     private:
 
-        NullVirtualCommandBuffer buffer_;
+        NullVirtualCommandBuffer    buffer_;
+        RenderState                 renderState_;
 
 };
 

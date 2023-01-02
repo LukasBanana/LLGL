@@ -42,6 +42,9 @@ class NullTexture final : public Texture
         // Generates the MIP-map images for either the entire resource or a rubresource.
         void GenerateMips(const TextureSubresource* subresource = nullptr);
 
+        std::uint32_t PackSubresourceIndex(std::uint32_t mipLevel, std::uint32_t arrayLayer) const;
+        void UnpackSubresourceIndex(std::uint32_t subresource, std::uint32_t& outMipLevel, std::uint32_t& outArrayLayer) const;
+
     public:
 
         const TextureDescriptor desc;
@@ -53,6 +56,7 @@ class NullTexture final : public Texture
     private:
 
         std::string         label_;
+        Extent3D            extent_;
         std::vector<Image>  images_; // MIP-map images
 
 };
