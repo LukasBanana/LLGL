@@ -79,7 +79,7 @@ class LLGL_EXPORT Image
         \brief Converts the image format and data type.
         \see ConvertImageBuffer
         */
-        void Convert(const ImageFormat format, const DataType dataType, std::size_t threadCount = 0);
+        void Convert(const ImageFormat format, const DataType dataType, unsigned threadCount = 0);
 
         /**
         \brief Resizes the image and resets the image buffer.
@@ -176,7 +176,7 @@ class LLGL_EXPORT Image
         \see IsRegionInside
         \see ConvertImageBuffer
         */
-        void ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc, std::size_t threadCount = 0) const;
+        void ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc, unsigned threadCount = 0) const;
 
         /**
         \brief Writes a region of pixels to this image from the source image buffer specified by 'imageDesc'.
@@ -188,7 +188,7 @@ class LLGL_EXPORT Image
         \see IsRegionInside
         \see ConvertImageBuffer
         */
-        void WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, std::size_t threadCount = 0);
+        void WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, unsigned threadCount = 0);
 
         /**
         \brief Mirrors the image at the YZ plane.

@@ -77,7 +77,7 @@ Image& Image::operator = (Image&& rhs)
 
 /* ----- Storage ----- */
 
-void Image::Convert(const ImageFormat format, const DataType dataType, std::size_t threadCount)
+void Image::Convert(const ImageFormat format, const DataType dataType, unsigned threadCount)
 {
     /* Convert image buffer (if necessary) */
     if (data_)
@@ -319,7 +319,7 @@ static void ValidateImageDataSize(const Extent3D& extent, const SrcImageDescript
     }
 }
 
-void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc, std::size_t threadCount) const
+void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc, unsigned threadCount) const
 {
     if (imageDesc.data && IsRegionInside(offset, extent))
     {
@@ -366,7 +366,7 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Dst
     }
 }
 
-void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, std::size_t threadCount)
+void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, unsigned threadCount)
 {
     if (imageDesc.data && IsRegionInside(offset, extent))
     {

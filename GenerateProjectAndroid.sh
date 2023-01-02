@@ -64,7 +64,7 @@ cmake "$RELATIVE_SOURCE_DIR" \
     -DLLGL_BUILD_EXAMPLES=ON \
     -DGaussLib_INCLUDE_DIR="/home/lh/Development/Projects/GaussianLib/repo/include" \
     -DLLGL_BUILD_STATIC_LIB=OFF \
-    -DLLGL_ANDROID_PLATFORM=ON \
+    -DLLGL_TARGET_PLATFORM=Android \
     -G "CodeBlocks - Unix Makefiles"
 
 )

@@ -2,6 +2,49 @@
 # === CMake lists for the LLGL - (09/07/2015) ===
 
 cmake_minimum_required(VERSION 3.7)
+
+# === Target platforms ===
+
+if("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64")
+    set(LLGL_BUILD_64BIT ON)
+else()
+    set(LLGL_BUILD_64BIT OFF)
+endif()
+
+if(WIN32)
+    if(LLGL_BUILD_64BIT)
+        set(LLGL_ALL_TARGET_PLATFORMS "Win64")
+    else()
+        set(LLGL_ALL_TARGET_PLATFORMS "Win32")
+    endif()
+elseif(APPLE)
+    set(LLGL_ALL_TARGET_PLATFORMS "macOS" "iOS")
+elseif(UNIX)
+    set(LLGL_ALL_TARGET_PLATFORMS "Linux")
+endif()
+
+if(DEFINED ENV{ANDROID_NDK})
+    list(APPEND LLGL_ALL_TARGET_PLATFORMS "Android")
+endif()
+
+list(GET LLGL_ALL_TARGET_PLATFORMS 0 LLGL_FIRST_TARGET_PLATFORM)
+set(LLGL_TARGET_PLATFORM ${LLGL_FIRST_TARGET_PLATFORM} CACHE STRING "Specifies the target platform")
+set_property(CACHE LLGL_TARGET_PLATFORM PROPERTY STRINGS ${LLGL_ALL_TARGET_PLATFORMS})
+
+set(LLGL_IOS_PLATFORM OFF)
+set(LLGL_ANDROID_PLATFORM OFF)
+
+if(NOT DEFINED LLGL_TARGET_PLATFORM)
+    message(FATAL_ERROR "Target platform is not defined: Missing CMake variable 'LLGL_TARGET_PLATFORM'")
+elseif(${LLGL_TARGET_PLATFORM} STREQUAL "iOS")
+    set(LLGL_IOS_PLATFORM ON)
+elseif(${LLGL_TARGET_PLATFORM} STREQUAL "Android")
+    set(LLGL_ANDROID_PLATFORM ON)
+endif()
+
+
+# === Project ===
+
 project(LLGL)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -19,7 +62,7 @@ set(EXAMPLE_PROJECTS_DIR "${PROJECT_SOURCE_DIR}/examples/Cpp")
 
 # === Preprocessor definitions ===
 
-if(DEFINED LLGL_IOS_PLATFORM OR DEFINED LLGL_ANDROID_PLATFORM)
+if(LLGL_IOS_PLATFORM OR LLGL_ANDROID_PLATFORM)
     set(LLGL_MOBILE_PLATFORM ON)
 else()
     set(LLGL_MOBILE_PLATFORM OFF)
@@ -89,7 +132,6 @@ endif()
 
 # === Initialize summary variables ===
 
-set(SUMMARY_TARGET_PLATFORM "Unknown")
 set(SUMMARY_LIBRARY_TYPE "Unknown")
 set(SUMMARY_TARGET_ARCH "Unknown")
 
@@ -289,30 +331,21 @@ file(GLOB FilesRendererGLESProfile          ${PROJECT_SOURCE_DIR}/sources/Render
 if(WIN32)
     file(GLOB FilesRendererGLPlatform       ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
     file(GLOB FilesIncludePlatform          ${PROJECT_INCLUDE_DIR}/LLGL/Platform/Win32/*.*)
-    if(LLGL_BUILD_64BIT)
-        set(SUMMARY_TARGET_PLATFORM "Win64")
-    else()
-        set(SUMMARY_TARGET_PLATFORM "Win32")
-    endif()
 elseif(APPLE)
     if(LLGL_MOBILE_PLATFORM)
         file(GLOB FilesRendererGLPlatform   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/IOS/*.*)
         file(GLOB FilesIncludePlatform      ${PROJECT_INCLUDE_DIR}/LLGL/Platform/IOS/*.*)
-        set(SUMMARY_TARGET_PLATFORM "iOS")
     else()
         file(GLOB FilesRendererGLPlatform   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/MacOS/*.*)
         file(GLOB FilesIncludePlatform      ${PROJECT_INCLUDE_DIR}/LLGL/Platform/MacOS/*.*)
-        set(SUMMARY_TARGET_PLATFORM "macOS")
     endif()
 elseif(UNIX)
     if(LLGL_ANDROID_PLATFORM)
         file(GLOB FilesRendererGLPlatform   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Android/*.*)
         file(GLOB FilesIncludePlatform      ${PROJECT_INCLUDE_DIR}/LLGL/Platform/Android/*.*)
-        set(SUMMARY_TARGET_PLATFORM "Android")
     else()
         file(GLOB FilesRendererGLPlatform   ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Linux/*.*)
         file(GLOB FilesIncludePlatform      ${PROJECT_INCLUDE_DIR}/LLGL/Platform/Linux/*.*)
-        set(SUMMARY_TARGET_PLATFORM "Linux")
     endif()
 endif()
 
@@ -919,7 +952,7 @@ endif()
 # Summary Information
 message("~~~ Build Summary ~~~")
 
-message("Target Platform: ${SUMMARY_TARGET_PLATFORM}")
+message("Target Platform: ${LLGL_TARGET_PLATFORM}")
 message("Target Architecture: ${SUMMARY_TARGET_ARCH}")
 message("Target Library: ${SUMMARY_LIBRARY_TYPE}")
 
