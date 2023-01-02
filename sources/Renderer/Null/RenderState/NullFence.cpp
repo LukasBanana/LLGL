@@ -33,6 +33,11 @@ void NullFence::WaitForSignal(std::uint64_t signal)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
+NullFence::NullFence(std::uint64_t initialSignal) :
+    signal_ { initialSignal }
+{
+}
+
 
 } // /namespace LLGL
 

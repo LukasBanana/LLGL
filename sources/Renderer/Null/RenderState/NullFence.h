@@ -25,6 +25,10 @@ class NullFence final : public Fence
 
         void SetName(const char* name) override;
 
+    public:
+    
+        NullFence(std::uint64_t initialSignal = 0);
+    
         void Signal(std::uint64_t signal);
 
         void WaitForSignal(std::uint64_t signal);
@@ -32,7 +36,7 @@ class NullFence final : public Fence
     private:
 
         std::string             label_;
-        std::atomic_uint64_t    signal_ = 0;
+        std::atomic_uint64_t    signal_;
 
 };
 

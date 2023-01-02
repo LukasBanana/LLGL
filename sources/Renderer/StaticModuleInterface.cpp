@@ -18,13 +18,13 @@ namespace LLGL
 
 class RenderSystem;
 
-#define LLGL_DECLARE_STATIC_MODULE_INTERFACE(NAME)
-    namespace Module##NAME
-    {
-        extern int GetRendererID();
-        extern const char* GetModuleName();
-        extern const char* GetRendererName();
-        extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc);
+#define LLGL_DECLARE_STATIC_MODULE_INTERFACE(NAME)                                      \
+    namespace Module##NAME                                                              \
+    {                                                                                   \
+        extern int GetRendererID();                                                     \
+        extern const char* GetModuleName();                                             \
+        extern const char* GetRendererName();                                           \
+        extern RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor*);    \
     }
 
 #ifdef LLGL_BUILD_RENDERER_NULL
