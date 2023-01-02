@@ -55,6 +55,7 @@ class LLGL_EXPORT Shader : public RenderSystemChild
         \endcode
         \remarks The \c instanceDivisor and \c offset members of the vertex attributes are ignored by this function.
         \return True, if the reflection was successful. Otherwise, the shader reflection failed and the content of the output parameter \c reflection is undefined.
+        \note Since Metal needs a complete pipeline state for shader reflection, this function is only supported for compute shaders in the Metal backend.
         \see ShaderReflection::resources
         \see ShaderReflection::vertexAttributes
         \see VertexAttribute::instanceDivisor
