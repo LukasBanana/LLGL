@@ -19,7 +19,7 @@ namespace LLGL
 
 class GLShaderBindingLayout;
 
-// Shader implementation for separable GL shader programs (GL_ARB_separate_shader_objects).
+// Shader implementation for separable GL shader programs; requires GL_ARB_separate_shader_objects extension.
 class GLSeparableShader final : public GLShader
 {
 

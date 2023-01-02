@@ -114,7 +114,7 @@ static void AttachGLLegacyShader(GLuint program, const Shader* shader, GLOrdered
     }
 }
 
-GLShaderProgram::GLShaderProgram(std::size_t numShaders, Shader* const* shaders) :
+GLShaderProgram::GLShaderProgram(std::size_t numShaders, const Shader* const* shaders) :
     GLShaderPipeline { glCreateProgram() }
 {
     /* Attach all specified shaders to this shader program */
@@ -182,14 +182,6 @@ GLShaderProgram::~GLShaderProgram()
     if (hasNullFragmentShader_)
         g_nullFragmentShader.Release();
     #endif
-}
-
-UniformLocation GLShaderProgram::FindUniformLocation(const char* name) const
-{
-    if (GetID() != 0)
-        return static_cast<UniformLocation>(glGetUniformLocation(GetID(), name));
-    else
-        return -1;
 }
 
 void GLShaderProgram::Bind(GLStateManager& stateMngr)
@@ -267,11 +259,6 @@ void GLShaderProgram::BindFragDataLocations(GLuint program, std::size_t numFragm
     }
     #endif
 }
-
-
-/*
- * ======= Private: =======
- */
 
 static void BuildTransformFeedbackVaryingsEXT(GLuint program, std::size_t numVaryings, const char* const* varyings)
 {
@@ -353,36 +340,35 @@ void GLShaderProgram::LinkProgram(GLuint program)
     glLinkProgram(program);
 }
 
-bool GLShaderProgram::QueryActiveAttribs(
+UniformLocation GLShaderProgram::FindUniformLocation(GLuint program, const char* name)
+{
+    if (program != 0)
+        return static_cast<UniformLocation>(glGetUniformLocation(program, name));
+    else
+        return Constants::invalidLocation;
+}
+
+static bool GLQueryActiveAttribs(
+    GLuint              program,
     GLenum              attribCountType,
     GLenum              attribNameLengthType,
     GLint&              numAttribs,
     GLint&              maxNameLength,
-    std::vector<char>&  nameBuffer) const
+    std::vector<char>&  nameBuffer)
 {
     /* Query number of active attributes */
-    glGetProgramiv(GetID(), attribCountType, &numAttribs);
+    glGetProgramiv(program, attribCountType, &numAttribs);
     if (numAttribs <= 0)
         return false;
 
     /* Query maximal name length of all attributes */
-    glGetProgramiv(GetID(), attribNameLengthType, &maxNameLength);
+    glGetProgramiv(program, attribNameLengthType, &maxNameLength);
     if (maxNameLength <= 0)
         return false;
 
     nameBuffer.resize(maxNameLength, '\0');
 
     return true;
-}
-
-void GLShaderProgram::QueryReflection(ShaderReflection& reflection) const
-{
-    QueryVertexAttributes(reflection);
-    QueryStreamOutputAttributes(reflection);
-    QueryConstantBuffers(reflection);
-    QueryStorageBuffers(reflection);
-    QueryUniforms(reflection);
-    QueryWorkGroupSize(reflection);
 }
 
 struct GLMatrixTypeFormat
@@ -481,12 +467,12 @@ struct GLReflectVertexAttribute
     std::uint32_t   location;
 };
 
-void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
+static void GLQueryVertexAttributes(GLuint program, ShaderReflection& reflection)
 {
     /* Query active vertex attributes */
     std::vector<char> attribName;
     GLint numAttribs = 0, maxNameLength = 0;
-    if (!QueryActiveAttribs(GL_ACTIVE_ATTRIBUTES, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, numAttribs, maxNameLength, attribName))
+    if (!GLQueryActiveAttribs(program, GL_ACTIVE_ATTRIBUTES, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, numAttribs, maxNameLength, attribName))
         return;
 
     std::vector<GLReflectVertexAttribute> attributes;
@@ -500,14 +486,14 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
         GLenum  type        = 0;
         GLsizei nameLength  = 0;
 
-        glGetActiveAttrib(GetID(), i, maxNameLength, &nameLength, &size, &type, attribName.data());
+        glGetActiveAttrib(program, i, maxNameLength, &nameLength, &size, &type, attribName.data());
 
         /* Convert attribute information */
         auto name = std::string(attribName.data());
         auto attr = UnmapAttribType(type);
 
         /* Get attribute location */
-        auto location = static_cast<std::uint32_t>(glGetAttribLocation(GetID(), name.c_str()));
+        auto location = static_cast<std::uint32_t>(glGetAttribLocation(program, name.c_str()));
 
         /* Insert vertex attribute into list */
         for (std::uint32_t semanticIndex = 0; semanticIndex < attr.rows; ++semanticIndex)
@@ -552,7 +538,7 @@ void GLShaderProgram::QueryVertexAttributes(ShaderReflection& reflection) const
     }
 }
 
-void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) const
+static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& reflection)
 {
     VertexAttribute soAttrib;
 
@@ -563,7 +549,7 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
         /* Query active varyings */
         std::vector<char> attribName;
         GLint numVaryings = 0, maxNameLength = 0;
-        if (!QueryActiveAttribs(GL_TRANSFORM_FEEDBACK_VARYINGS, GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, numVaryings, maxNameLength, attribName))
+        if (!GLQueryActiveAttribs(program, GL_TRANSFORM_FEEDBACK_VARYINGS, GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, numVaryings, maxNameLength, attribName))
             return;
 
         /* Iterate over all vertex attributes */
@@ -574,7 +560,7 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
             GLenum  type        = 0;
             GLsizei nameLength  = 0;
 
-            glGetTransformFeedbackVarying(GetID(), i, maxNameLength, &nameLength, &size, &type, attribName.data());
+            glGetTransformFeedbackVarying(program, i, maxNameLength, &nameLength, &size, &type, attribName.data());
 
             /* Convert attribute information */
             soAttrib.name       = std::string(attribName.data());
@@ -596,7 +582,7 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
         /* Query active varyings */
         std::vector<char> attribName;
         GLint numVaryings = 0, maxNameLength = 0;
-        if (!QueryActiveAttribs(GL_ACTIVE_VARYINGS_NV, GL_ACTIVE_VARYING_MAX_LENGTH_NV, numVaryings, maxNameLength, attribName))
+        if (!GLQueryActiveAttribs(program, GL_ACTIVE_VARYINGS_NV, GL_ACTIVE_VARYING_MAX_LENGTH_NV, numVaryings, maxNameLength, attribName))
             return;
 
         /* Iterate over all vertex attributes */
@@ -607,7 +593,7 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflection& reflection) 
             GLenum  type        = 0;
             GLsizei nameLength  = 0;
 
-            glGetActiveVaryingNV(GetID(), i, maxNameLength, &nameLength, &size, &type, attribName.data());
+            glGetActiveVaryingNV(program, i, maxNameLength, &nameLength, &size, &type, attribName.data());
 
             /* Convert attribute information */
             soAttrib.name       = std::string(attribName.data());
@@ -683,9 +669,36 @@ static long GetStageFlagsFromResourceProperties(GLsizei count, const GLenum* pro
     return stageFlags;
 }
 
+static void GLQueryBufferProperties(GLuint program, ShaderResource& resource, GLenum programInterface, GLuint resourceIndex)
+{
+    const GLenum props[] =
+    {
+        GL_REFERENCED_BY_VERTEX_SHADER,
+        GL_REFERENCED_BY_TESS_CONTROL_SHADER,
+        GL_REFERENCED_BY_TESS_EVALUATION_SHADER,
+        GL_REFERENCED_BY_GEOMETRY_SHADER,
+        GL_REFERENCED_BY_FRAGMENT_SHADER,
+        GL_REFERENCED_BY_COMPUTE_SHADER,
+        GL_BUFFER_BINDING
+    };
+    GLint params[7] = {};
+
+    if (GLGetProgramResourceProperties(program, programInterface, resourceIndex, 7, props, params))
+    {
+        resource.binding.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
+        resource.binding.slot       = static_cast<std::uint32_t>(params[6]);
+    }
+    else
+    {
+        /* Set binding slot to invalid index */
+        resource.binding.stageFlags = StageFlags::AllStages;
+        resource.binding.slot       = Constants::invalidSlot;
+    }
+}
+
 #endif // /GL_ARB_program_interface_query
 
-void GLShaderProgram::QueryConstantBuffers(ShaderReflection& reflection) const
+static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
 {
     if (!HasExtension(GLExt::ARB_uniform_buffer_object))
         return;
@@ -693,7 +706,7 @@ void GLShaderProgram::QueryConstantBuffers(ShaderReflection& reflection) const
     /* Query active uniform blocks */
     std::vector<char> blockName;
     GLint numUniformBlocks = 0, maxNameLength = 0;
-    if (!QueryActiveAttribs(GL_ACTIVE_UNIFORM_BLOCKS, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, numUniformBlocks, maxNameLength, blockName))
+    if (!GLQueryActiveAttribs(program, GL_ACTIVE_UNIFORM_BLOCKS, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, numUniformBlocks, maxNameLength, blockName))
         return;
 
     /* Iterate over all uniform blocks */
@@ -708,17 +721,17 @@ void GLShaderProgram::QueryConstantBuffers(ShaderReflection& reflection) const
 
             /* Query uniform block name */
             GLsizei nameLength = 0;
-            glGetActiveUniformBlockName(GetID(), i, maxNameLength, &nameLength, blockName.data());
+            glGetActiveUniformBlockName(program, i, maxNameLength, &nameLength, blockName.data());
             resource.binding.name = std::string(blockName.data());
 
             /* Query uniform block size */
             GLint blockSize = 0;
-            glGetActiveUniformBlockiv(GetID(), i, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
+            glGetActiveUniformBlockiv(program, i, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
             resource.constantBufferSize = static_cast<std::uint32_t>(blockSize);
 
             #ifdef GL_ARB_program_interface_query
             /* Query resource view properties */
-            QueryBufferProperties(resource, GL_UNIFORM_BLOCK, i);
+            GLQueryBufferProperties(program, resource, GL_UNIFORM_BLOCK, i);
             #else
             /* Set binding slot to invalid index */
             resource.binding.stageFlags = StageFlags::AllStages;
@@ -729,7 +742,7 @@ void GLShaderProgram::QueryConstantBuffers(ShaderReflection& reflection) const
     }
 }
 
-void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
+static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)
 {
     #ifdef LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
 
@@ -740,13 +753,13 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
     GLenum properties[3] = { 0 };
     properties[0] = GL_NUM_ACTIVE_VARIABLES;
     GLint numStorageBlocks = 0;
-    glGetProgramResourceiv(GetID(), GL_SHADER_STORAGE_BLOCK, 0, 1, properties, 1, nullptr, &numStorageBlocks);
+    glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, 0, 1, properties, 1, nullptr, &numStorageBlocks);
     if (numStorageBlocks <= 0)
         return;
 
     /* Query maximal name length of all shader storage blocks */
     GLint maxNameLength = 0;
-    glGetProgramInterfaceiv(GetID(), GL_SHADER_STORAGE_BLOCK, GL_MAX_NAME_LENGTH, &maxNameLength);
+    glGetProgramInterfaceiv(program, GL_SHADER_STORAGE_BLOCK, GL_MAX_NAME_LENGTH, &maxNameLength);
     if (maxNameLength <= 0)
         return;
 
@@ -763,11 +776,11 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
 
             /* Query shader storage block name */
             GLsizei nameLength = 0;
-            glGetProgramResourceName(GetID(), GL_SHADER_STORAGE_BLOCK, i, maxNameLength, &nameLength, blockName.data());
+            glGetProgramResourceName(program, GL_SHADER_STORAGE_BLOCK, i, maxNameLength, &nameLength, blockName.data());
             resource.binding.name = std::string(blockName.data());
 
             /* Query resource view properties */
-            QueryBufferProperties(resource, GL_SHADER_STORAGE_BLOCK, i);
+            GLQueryBufferProperties(program, resource, GL_SHADER_STORAGE_BLOCK, i);
         }
         reflection.resources.push_back(resource);
     }
@@ -775,12 +788,12 @@ void GLShaderProgram::QueryStorageBuffers(ShaderReflection& reflection) const
     #endif // /LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
 }
 
-void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
+static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
 {
     /* Query active uniforms */
     std::vector<char> uniformName;
     GLint numUniforms = 0, maxNameLength = 0;
-    if (!QueryActiveAttribs(GL_ACTIVE_UNIFORMS, GL_ACTIVE_UNIFORM_MAX_LENGTH, numUniforms, maxNameLength, uniformName))
+    if (!GLQueryActiveAttribs(program, GL_ACTIVE_UNIFORMS, GL_ACTIVE_UNIFORM_MAX_LENGTH, numUniforms, maxNameLength, uniformName))
         return;
 
     /* Iterate over all uniforms */
@@ -791,7 +804,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
         GLint   size        = 0;
         GLenum  type        = 0;
 
-        glGetActiveUniform(GetID(), i, maxNameLength, &nameLength, &size, &type, uniformName.data());
+        glGetActiveUniform(program, i, maxNameLength, &nameLength, &size, &type, uniformName.data());
 
         /* Integrate uniform into reflection containers */
         UniformType uniformType = GLTypes::UnmapUniformType(type);
@@ -812,9 +825,9 @@ void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
 
                 /* Get binding slot from uniform value */
                 GLint uniformValue      = 0;
-                GLint uniformLocation   = glGetUniformLocation(GetID(), uniformName.data());
+                GLint uniformLocation   = glGetUniformLocation(program, uniformName.data());
 
-                glGetUniformiv(GetID(), uniformLocation, &uniformValue);
+                glGetUniformiv(program, uniformLocation, &uniformValue);
 
                 resource.binding.slot = static_cast<std::uint32_t>(uniformValue);
 
@@ -832,7 +845,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
                 };
                 GLint params[7] = {};
 
-                if (GLGetProgramResourceProperties(GetID(), GL_UNIFORM, i, 7, props, params))
+                if (GLGetProgramResourceProperties(program, GL_UNIFORM, i, 7, props, params))
                 {
                     /* Determine stage flags by program resource properties */
                     resource.binding.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
@@ -860,7 +873,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
             {
                 uniform.name        = std::string(uniformName.data());
                 uniform.type        = uniformType;
-                uniform.location    = glGetUniformLocation(GetID(), uniformName.data());
+                uniform.location    = glGetUniformLocation(program, uniformName.data());
                 uniform.size        = static_cast<std::uint32_t>(size);
             }
             reflection.uniforms.push_back(uniform);
@@ -868,13 +881,13 @@ void GLShaderProgram::QueryUniforms(ShaderReflection& reflection) const
     }
 }
 
-void GLShaderProgram::QueryWorkGroupSize(ShaderReflection& reflection) const
+static void GLQueryWorkGroupSize(GLuint program, ShaderReflection& reflection)
 {
     #ifdef GL_ARB_compute_shader
     if (HasExtension(GLExt::ARB_compute_shader))
     {
         GLint params[3] = { 0 };
-        glGetProgramiv(GetID(), GL_COMPUTE_WORK_GROUP_SIZE, params);
+        glGetProgramiv(program, GL_COMPUTE_WORK_GROUP_SIZE, params);
         if (params[0] > 0 && params[1] > 0 && params[2] > 0)
         {
             reflection.compute.workGroupSize.width  = static_cast<std::uint32_t>(params[0]);
@@ -885,36 +898,15 @@ void GLShaderProgram::QueryWorkGroupSize(ShaderReflection& reflection) const
     #endif // /GL_ARB_compute_shader
 }
 
-#ifdef GL_ARB_program_interface_query
-
-void GLShaderProgram::QueryBufferProperties(ShaderResource& resource, GLenum programInterface, GLuint resourceIndex) const
+void GLShaderProgram::QueryReflection(GLuint program, ShaderReflection& reflection)
 {
-    const GLenum props[] =
-    {
-        GL_REFERENCED_BY_VERTEX_SHADER,
-        GL_REFERENCED_BY_TESS_CONTROL_SHADER,
-        GL_REFERENCED_BY_TESS_EVALUATION_SHADER,
-        GL_REFERENCED_BY_GEOMETRY_SHADER,
-        GL_REFERENCED_BY_FRAGMENT_SHADER,
-        GL_REFERENCED_BY_COMPUTE_SHADER,
-        GL_BUFFER_BINDING
-    };
-    GLint params[7] = {};
-
-    if (GLGetProgramResourceProperties(GetID(), programInterface, resourceIndex, 7, props, params))
-    {
-        resource.binding.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
-        resource.binding.slot       = static_cast<std::uint32_t>(params[6]);
-    }
-    else
-    {
-        /* Set binding slot to invalid index */
-        resource.binding.stageFlags = StageFlags::AllStages;
-        resource.binding.slot       = Constants::invalidSlot;
-    }
+    GLQueryVertexAttributes(program, reflection);
+    GLQueryStreamOutputAttributes(program, reflection);
+    GLQueryConstantBuffers(program, reflection);
+    GLQueryStorageBuffers(program, reflection);
+    GLQueryUniforms(program, reflection);
+    GLQueryWorkGroupSize(program, reflection);
 }
-
-#endif // /GL_ARB_program_interface_query
 
 
 } // /namespace LLGL

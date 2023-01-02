@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-// Shader implementation for legacy GL shaders (fallback when GL_ARB_separate_shader_objects is not available).
+// Shader implementation for legacy GL shaders; fallback when GL_ARB_separate_shader_objects is not available.
 class GLLegacyShader final : public GLShader
 {
 

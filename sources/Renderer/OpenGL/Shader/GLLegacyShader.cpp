@@ -6,6 +6,7 @@
  */
 
 #include "GLLegacyShader.h"
+#include "GLShaderProgram.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../GLTypes.h"
@@ -43,7 +44,10 @@ void GLLegacyShader::SetName(const char* name)
 
 bool GLLegacyShader::Reflect(ShaderReflection& reflection) const
 {
-    return true;//TODO
+    const Shader* shaders[] = { this };
+    GLShaderProgram intermediateProgram{ 1, shaders };
+    GLShaderProgram::QueryReflection(intermediateProgram.GetID(), reflection);
+    return true;
 }
 
 void GLLegacyShader::CompileShaderSource(GLuint shader, const char* source)

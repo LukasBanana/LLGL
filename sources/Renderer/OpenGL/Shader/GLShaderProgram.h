@@ -32,11 +32,8 @@ class GLShaderProgram final : public GLShaderPipeline
 
     public:
 
-        GLShaderProgram(std::size_t numShaders, Shader* const* shaders);
+        GLShaderProgram(std::size_t numShaders, const Shader* const* shaders);
         ~GLShaderProgram();
-
-        UniformLocation FindUniformLocation(const char* name) const;
-        void QueryReflection(ShaderReflection& reflection) const;
 
     public:
 
@@ -58,26 +55,11 @@ class GLShaderProgram final : public GLShaderPipeline
         // Simply links the GL program.
         static void LinkProgram(GLuint program);
 
-    private:
+        // Returns the location of the specified program uniform.
+        static UniformLocation FindUniformLocation(GLuint program, const char* name);
 
-        bool QueryActiveAttribs(
-            GLenum              attribCountType,
-            GLenum              attribNameLengthType,
-            GLint&              numAttribs,
-            GLint&              maxNameLength,
-            std::vector<char>&  nameBuffer
-        ) const;
-
-        void QueryVertexAttributes(ShaderReflection& reflection) const;
-        void QueryStreamOutputAttributes(ShaderReflection& reflection) const;
-        void QueryConstantBuffers(ShaderReflection& reflection) const;
-        void QueryStorageBuffers(ShaderReflection& reflection) const;
-        void QueryUniforms(ShaderReflection& reflection) const;
-        void QueryWorkGroupSize(ShaderReflection& reflection) const;
-
-        #ifdef GL_ARB_program_interface_query
-        void QueryBufferProperties(ShaderResource& resource, GLenum programInterface, GLuint resourceIndex) const;
-        #endif
+        // Queries the shader reflection for the specified program.
+        static void QueryReflection(GLuint program, ShaderReflection& reflection);
 
     private:
 

@@ -83,7 +83,8 @@ void GLSeparableShader::SetName(const char* name)
 
 bool GLSeparableShader::Reflect(ShaderReflection& reflection) const
 {
-    return true;//TODO
+    GLShaderProgram::QueryReflection(GetID(), reflection);
+    return true;
 }
 
 void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLayout)
