@@ -68,7 +68,7 @@ std::vector<std::string> RenderSystem::FindModules()
 std::vector<std::string> RenderSystem::FindModules()
 {
     /* Iterate over all known modules and return those that are available on the current platform */
-    constexpr char* knownModules[] =
+    constexpr const char* knownModules[] =
     {
         "Null",
 

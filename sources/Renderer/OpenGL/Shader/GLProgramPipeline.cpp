@@ -22,7 +22,7 @@ namespace LLGL
 GLProgramPipeline::GLProgramPipeline(std::size_t numShaders, Shader* const* shaders)
 {
     GLuint id = 0;
-    glCreateProgramPipelines(1, &id);
+    glGenProgramPipelines(1, &id);
     SetID(id);
     UseProgramStages(numShaders, reinterpret_cast<GLSeparableShader* const*>(shaders));
 }
