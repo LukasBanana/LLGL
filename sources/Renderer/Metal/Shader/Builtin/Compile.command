@@ -1,6 +1,5 @@
 #!/bin/sh
-SCRIPT_PATH="$(realpath $0)"
-LLGL_ROOT_DIR="$(dirname "$SCRIPT_PATH")/../../../../../"
+LLGL_ROOT_DIR="$(dirname "$0")/../../../../../"
 HEX_CONVERSION_SCRIPT="$LLGL_ROOT_DIR/scripts/ReadFileAsHexString.py"
 
 which xcrun > /dev/null 2>&1

@@ -41,9 +41,9 @@ def printHexString(filename, columns=16, spaces=0, offsets='', paren=False):
     byteRange = (0, 0)
     def writeNewline():
         if offsets == 'c++' or offsets == 'cxx':
-            print(' // 0x{0:0{2}X} - 0x{1:0{2}X}'.format(byteRange[0], byteRange[1], 8))
+            print('" // 0x{0:0{2}X} - 0x{1:0{2}X}'.format(byteRange[0], byteRange[1], 8))
         elif offsets == 'c':
-            print(' /* 0x{0:0{2}X} - 0x{1:0{2}X} */'.format(byteRange[0], byteRange[1], 8))
+            print('" /* 0x{0:0{2}X} - 0x{1:0{2}X} */'.format(byteRange[0], byteRange[1], 8))
         else:
             print('"')
     c = 0

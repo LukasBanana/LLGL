@@ -10,12 +10,12 @@
 
 const char* g_metalLibFillBufferByte4 =
 (
-    #include "FillBufferByte4.h"
+    #include "FillBufferByte4.metallib.bin.h"
 );
 
 const std::size_t g_metalLibFillBufferByte4Len =
 (
-    #include "FillBufferByte4.Len.h"
+    #include "FillBufferByte4.metallib.len.h"
 );
 
 
