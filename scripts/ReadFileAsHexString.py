@@ -1,0 +1,130 @@
+#
+# ReadFileAsHexString.py
+#
+# This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
+# See "LICENSE.txt" for license information.
+#
+
+import os
+import sys
+
+def printHelp():
+    print("help:")
+    print("  prints the input file as hex encoded string in C/C++ syntax")
+    print("usage:")
+    print("  ReadFileAsHexString.py FILE [flags]")
+    print("flags:")
+    print("  -len:           prints the size in bytes of the input file only")
+    print("  -col N:         prints N hex encoded bytes for each row (16 by default)")
+    print("  -spaces N:      prints N spaces at the beginning of each row (0 by default)")
+    print("  -paren:         prints parenthesis around the output (disabled by default)")
+    print("  -offsets STYLE: prints address offsets for each row (disabled by default); accepted styles: 'c', 'cxx'/'c++'")
+
+def readBytes(filename, chunkSize=8192):
+    try:
+        with open(filename, mode="rb") as file:
+            while True:
+                chunk = file.read(chunkSize)
+                if chunk:
+                    for b in chunk:
+                        yield b
+                else:
+                    break
+    except IOError:
+        print('failed to open file: ' + filename)
+        sys.exit(1)
+
+# Generates the C/C++ header file with a string that contains the binary content
+def printHexString(filename, columns=16, spaces=0, offsets='', paren=False):
+    if paren:
+        print('(')
+    byteRange = (0, 0)
+    def writeNewline():
+        if offsets == 'c++' or offsets == 'cxx':
+            print(' // 0x{0:0{2}X} - 0x{1:0{2}X}'.format(byteRange[0], byteRange[1], 8))
+        elif offsets == 'c':
+            print(' /* 0x{0:0{2}X} - 0x{1:0{2}X} */'.format(byteRange[0], byteRange[1], 8))
+        else:
+            print('"')
+    c = 0
+    for b in readBytes(filename):
+        if c == 0:
+            if spaces > 0:
+                print(' '*spaces, end='')
+            print('"', end='')
+        print('\\x{:02X}'.format(b), end='')
+        c += 1
+        if c >= columns:
+            c = 0
+            writeNewline()
+            byteRange = (byteRange[1] + 1, byteRange[1])
+        byteRange = (byteRange[0], byteRange[1] + 1)
+    if c > 0:
+        writeNewline()
+    if paren:
+        print(')')
+
+def printFileSize(filename, paren=False):
+    n = 0
+    for b in readBytes(filename):
+        n += 1
+    if paren:
+        print('( ' + str(n) + ' )')
+    else:
+        print(str(n))
+
+args = sys.argv
+if len(args) < 2:
+    printHelp()
+    sys.exit(1)
+
+def fatal(msg):
+    print(sys.argv[0] + ': ' + msg)
+    sys.exit(1)
+
+def main():
+    printLenOnly = False
+    columns = 16
+    spaces = 0
+    filename = ""
+    paren = False
+    offsets = ''
+    i = 1
+
+    def argValue(argName):
+        nonlocal i
+        if i + 1 < len(args):
+            i += 1
+            return args[i]
+        else:
+            fatal('missing value after argument ' + argName)
+
+    while i < len(args):
+        arg = args[i]
+        if arg == "-len":
+            printLenOnly = True
+        elif arg == "-paren":
+            paren = True
+        elif arg == "-offsets":
+            offsets = argValue('-offsets')
+            if not (offsets == 'c' or offsets == 'cxx' or offsets == 'c++'):
+                fatal("accepted offset styles are 'c', 'cxx', and 'c++', but got '" + offsets + "'");
+        elif arg == "-col":
+            columns = int(argValue('-col'))
+        elif arg == "-spaces":
+            spaces = int(argValue('-spaces'))
+        else:
+            if filename == "":
+                filename = arg
+            else:
+                fatal('cannot process more than one filename at a time, but got "' + arg + '"')
+        i += 1
+
+    if printLenOnly:
+        printFileSize(args[1], paren)
+    else:
+        if filename == "":
+            fatal('missing filename')
+        printHexString(sys.argv[1], columns, spaces, offsets, paren)
+
+main()
