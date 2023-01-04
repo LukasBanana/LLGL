@@ -120,11 +120,11 @@ def main():
                 fatal('cannot process more than one filename at a time, but got "' + arg + '"')
         i += 1
 
+    if filename == "":
+        fatal('missing filename')
     if printLenOnly:
-        printFileSize(args[1], paren)
+        printFileSize(filename, paren)
     else:
-        if filename == "":
-            fatal('missing filename')
-        printHexString(sys.argv[1], columns, spaces, offsets, paren)
+        printHexString(filename, columns, spaces, offsets, paren)
 
 main()
