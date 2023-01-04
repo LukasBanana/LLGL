@@ -39,6 +39,8 @@ DstT& CheckedCast(SrcT& obj)
 template <typename DstT, typename SrcT>
 DstT CheckedCast(SrcT* obj)
 {
+    if (obj == nullptr)
+        return nullptr;
     try
     {
         DstT casted = dynamic_cast<DstT>(obj);
