@@ -19,11 +19,27 @@ namespace LLGL
 {
 
 
-GLProgramPipeline::GLProgramPipeline(std::size_t numShaders, Shader* const* shaders)
+static GLuint GLCreateProgramPipeline()
 {
     GLuint id = 0;
-    glGenProgramPipelines(1, &id);
-    SetID(id);
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glCreateProgramPipelines(1, &id);
+    }
+    else
+    #endif
+    {
+        /* Generate new program pipeline and initialize to its default state via glBindProgramPipeline */
+        glGenProgramPipelines(1, &id);
+        GLStateManager::Get().BindProgramPipeline(id);
+    }
+    return id;
+}
+
+GLProgramPipeline::GLProgramPipeline(std::size_t numShaders, Shader* const* shaders) :
+    GLShaderPipeline { GLCreateProgramPipeline() }
+{
     UseProgramStages(numShaders, reinterpret_cast<GLSeparableShader* const*>(shaders));
 }
 
