@@ -117,8 +117,8 @@ public:
         }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            shaderPipeline.hs = LoadShader({ LLGL::ShaderType::Compute,        "Example.metal", "HS", "2.0" }, { vertexFormat });
-            shaderPipeline.ds = LoadShader({ LLGL::ShaderType::Vertex,         "Example.metal", "DS", "2.0" });
+            shaderPipeline.hs = LoadShader({ LLGL::ShaderType::Compute,        "Example.metal", "HS", "2.0" });
+            shaderPipeline.ds = LoadShader({ LLGL::ShaderType::Vertex,         "Example.metal", "DS", "2.0" }, { vertexFormat });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment,       "Example.metal", "PS", "2.0" });
             constantBufferIndex = 1;//TODO: unify
         }

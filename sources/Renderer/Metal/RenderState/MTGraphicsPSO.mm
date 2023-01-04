@@ -15,6 +15,7 @@
 #include "../../PipelineStateUtils.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -150,7 +151,27 @@ static void FillColorAttachmentDesc(
 
 static id<MTLFunction> GetNativeMTShader(const Shader* shader)
 {
-    return (shader != nullptr ? LLGL_CAST(const MTShader*, shader)->GetNative() : nullptr);
+    return (shader != nullptr ? LLGL_CAST(const MTShader*, shader)->GetNative() : nil);
+}
+
+static const MTShader* GetVertexOrPostTessVertexShader(const GraphicsPipelineDescriptor& desc)
+{
+    /* For tessellation PSOs, the vertex shader must be a post-tesselation vertex shader and is expected in the tessEvaluationShader field */
+    const bool hasTessellationStage = (desc.tessControlShader != nullptr && desc.tessControlShader->GetType() == ShaderType::Compute);
+    const MTShader* vertexShaderMT = nullptr;
+    if (hasTessellationStage)
+    {
+        vertexShaderMT = LLGL_CAST(const MTShader*, desc.tessEvaluationShader);
+        if (vertexShaderMT == nullptr || !vertexShaderMT->IsPostTessellationVertex())
+            throw std::invalid_argument("cannot create Metal tessellation pipeline without post-tessellation vertex shader (in 'tessEvaluationShader')");
+    }
+    else
+    {
+        vertexShaderMT = LLGL_CAST(const MTShader*, desc.vertexShader);
+        if (vertexShaderMT == nullptr)
+            throw std::invalid_argument("cannot create Metal pipeline without vertex shader");
+    }
+    return vertexShaderMT;
 }
 
 void MTGraphicsPSO::CreateRenderPipelineState(
@@ -159,9 +180,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
     const MTRenderPass*                 defaultRenderPass)
 {
     /* Get native shader functions */
-    auto vertexShaderMT = LLGL_CAST(const MTShader*, desc.vertexShader);
-    if (!vertexShaderMT)
-        throw std::invalid_argument("cannot create Metal pipeline without vertex shader");
+    auto vertexShaderMT = GetVertexOrPostTessVertexShader(desc);
 
     /* Get number of patch control points if a post-tessellation vertex function is specified */
     numPatchControlPoints_ = vertexShaderMT->GetNumPatchControlPoints();
@@ -185,14 +204,14 @@ void MTGraphicsPSO::CreateRenderPipelineState(
         psoDesc.alphaToCoverageEnabled  = MTBoolean(desc.blend.alphaToCoverageEnabled);
         psoDesc.alphaToOneEnabled       = NO;
         psoDesc.fragmentFunction        = GetNativeMTShader(desc.fragmentShader);
-        psoDesc.vertexFunction          = GetNativeMTShader(desc.vertexShader);
+        psoDesc.vertexFunction          = vertexShaderMT->GetNative();
 
         if (@available(iOS 12.0, *))
             psoDesc.inputPrimitiveTopology = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
 
         /* Initialize pixel formats from render pass */
         const auto& colorAttachments = renderPassMT->GetColorAttachments();
-        for (std::size_t i = 0, n = std::min(colorAttachments.size(), std::size_t(8u)); i < n; ++i)
+        for_range(i, std::min(colorAttachments.size(), std::size_t(8u)))
         {
             FillColorAttachmentDesc(
                 psoDesc.colorAttachments[i],
