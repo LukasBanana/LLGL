@@ -1,36 +1,34 @@
 #!/bin/sh
 
-SOURCE_DIR=$PWD
-OUTPUT_DIR="build_ios"
+SOURCE_DIR="$(dirname $0)"
+BUILD_DIR="$SOURCE_DIR/build_ios"
 
 # Ensure we are inside the repository folder
-if [ ! -f "CMakeLists.txt" ]; then
+if [ ! -f "$SOURCE_DIR/CMakeLists.txt" ]; then
     echo "error: file not found: CMakeLists.txt"
     exit 1
 fi
 
 # Make output build folder
 if [ "$#" -eq 1 ]; then
-    OUTPUT_DIR=$1
+    BUILD_DIR=$1
 else
     if [ ! "$#" -eq 0 ]; then
         echo "error: too many arguemnts"
-        echo "usage: BuildIOS.sh [OUTPUT_DIR]"
+        echo "usage: BuildIOS.command [BUILD_DIR]"
         exit 1
     fi
 fi
 
-if [ ! -d "$OUTPUT_DIR" ]; then
-    mkdir "$OUTPUT_DIR"
+if [ ! -d "$BUILD_DIR" ]; then
+    mkdir "$BUILD_DIR"
 fi
 
-cd "$OUTPUT_DIR"
-
 # Checkout external depenencies
-GAUSSIAN_LIB_DIR="$OUTPUT_DIR/GaussianLib/include"
+GAUSSIAN_LIB_DIR="$BUILD_DIR/GaussianLib/include"
 
 if [ ! -d "$GAUSSIAN_LIB_DIR" ]; then
-    git clone https://github.com/LukasBanana/GaussianLib.git
+    (cd "$BUILD_DIR" && git clone https://github.com/LukasBanana/GaussianLib.git)
 fi
 
 # Build into output directory
@@ -46,6 +44,7 @@ cmake \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
     -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO \
     -DCMAKE_IOS_INSTALL_COMBINED=ON \
-    -S "$SOURCE_DIR" -B "$BUILD_DIR" -G Xcode
+    -S "$SOURCE_DIR" \
+    -B "$BUILD_DIR" -G Xcode
 
-cmake --build . -- -sdk iphonesimulator
+cmake --build "$BUILD_DIR" -- -sdk iphonesimulator
