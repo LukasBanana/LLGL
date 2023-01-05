@@ -26,7 +26,9 @@
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLMipGenerator.h"
-#include "../Texture/GL2XSampler.h"
+#ifdef LLGL_GL_ENABLE_OPENGL2X
+#   include "../Texture/GL2XSampler.h"
+#endif
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
@@ -191,12 +193,14 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLStateManager::BindVertexArray, g_stateMngrArg, cmd->vao);
             return sizeof(*cmd);
         }
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
         case GLOpcodeBindGL2XVertexArray:
         {
             auto cmd = reinterpret_cast<const GLCmdBindGL2XVertexArray*>(pc);
             compiler.CallMember(&GL2XVertexArray::Bind, cmd->vertexArrayGL2X, g_stateMngrArg);
             return sizeof(*cmd);
         }
+        #endif
         case GLOpcodeBindElementArrayBufferToVAO:
         {
             auto cmd = reinterpret_cast<const GLCmdBindElementArrayBufferToVAO*>(pc);
@@ -434,12 +438,14 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLStateManager::BindSampler, g_stateMngrArg, cmd->layer, cmd->sampler);
             return sizeof(*cmd);
         }
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
         case GLOpcodeBindGL2XSampler:
         {
             auto cmd = reinterpret_cast<const GLCmdBindGL2XSampler*>(pc);
             compiler.CallMember(&GLStateManager::BindGL2XSampler, g_stateMngrArg, cmd->layer, cmd->samplerGL2X);
             return sizeof(*cmd);
         }
+        #endif
         case GLOpcodeUnbindResources:
         {
             auto cmd = reinterpret_cast<const GLCmdUnbindResources*>(pc);

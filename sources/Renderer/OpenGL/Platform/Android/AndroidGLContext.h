@@ -43,6 +43,18 @@ class AndroidGLContext : public GLContext
             return display_;
         }
 
+        // Returns the native EGL context.
+        inline ::EGLContext GetEGLContext() const
+        {
+            return context_;
+        }
+
+        // Returns the native EGL configuration.
+        inline ::EGLConfig GetEGLConfig() const
+        {
+            return config_;
+        }
+
     private:
 
         bool SetSwapInterval(int interval) override;

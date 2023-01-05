@@ -36,7 +36,9 @@ class GLBlendState;
 class GLRenderPass;
 class GLProgramPipeline;
 class GLShaderProgram;
+#ifdef LLGL_GL_ENABLE_OPENGL2X
 class GL2XSampler;
+#endif
 
 // OpenGL state machine manager that keeps track of certain GL states.
 class GLStateManager
@@ -243,7 +245,9 @@ class GLStateManager
 
         void NotifySamplerRelease(GLuint sampler);
 
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
         void BindGL2XSampler(GLuint layer, const GL2XSampler& sampler);
+        #endif
 
         /* ----- Shader program ----- */
 

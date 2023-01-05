@@ -71,7 +71,7 @@ void GLSampler::SetDesc(const SamplerDescriptor& desc)
         glSamplerParameteri(id_, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
     /* Set border color */
-    #if defined LLGL_OPENGL || defined GL_ES_VERSION_3_2
+    #ifdef LLGL_SAMPLER_BORDER_COLOR
     glSamplerParameterfv(id_, GL_TEXTURE_BORDER_COLOR, desc.borderColor.Ptr());
     #endif
 }

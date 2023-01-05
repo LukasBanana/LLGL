@@ -41,7 +41,8 @@ class AndroidCanvas : public Canvas
     private:
 
         CanvasDescriptor    desc_;
-        ANativeWindow*      window_ = nullptr;
+        ANativeWindow*      window_         = nullptr;
+        Extent2D            contentSize_;
 
 };
 

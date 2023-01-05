@@ -37,8 +37,8 @@ set(LLGL_ANDROID_PLATFORM OFF)
 if(${LLGL_TARGET_PLATFORM} STREQUAL "iOS")
     set(LLGL_IOS_PLATFORM ON)
 elseif(${LLGL_TARGET_PLATFORM} STREQUAL "Android")
-    if(NOT DEFINED ENV{ANDROID_NDK})
-        message(FATAL_ERROR "Cannot build for Android platform: Missing environment variable 'ANDROID_NDK'")
+    if(NOT DEFINED ENV{ANDROID_NDK_HOME})
+        message(FATAL_ERROR "Cannot build for Android platform: Missing environment variable 'ANDROID_NDK_HOME'")
     endif()
     set(LLGL_ANDROID_PLATFORM ON)
 endif()
@@ -329,6 +329,30 @@ file(GLOB FilesRendererGLTexture            ${PROJECT_SOURCE_DIR}/sources/Render
 file(GLOB FilesRendererGLCoreProfile        ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/GLCoreProfile/*.*)
 file(GLOB FilesRendererGLESProfile          ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/GLESProfile/*.*)
 
+# Remove selected files if GL2X is disabled
+if(NOT LLGL_GL_ENABLE_OPENGL2X)
+    list(
+        REMOVE_ITEM FilesRendererGLBuffer
+        "${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/GL2XVertexArray.cpp"
+        "${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/GL2XVertexArray.h"
+    )
+    list(
+        REMOVE_ITEM FilesRendererGLTexture
+        "${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/GL2XSampler.cpp"
+        "${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/GL2XSampler.h"
+    )
+endif()
+
+# Remove selected files for GLES3 renderer
+set(FilesRendererGLES3Shader ${FilesRendererGLShader})
+list(
+    REMOVE_ITEM FilesRendererGLES3Shader
+    "${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/GLSeparableShader.cpp"
+    "${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/GLSeparableShader.h"
+    "${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/GLProgramPipeline.cpp"
+    "${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/GLProgramPipeline.h"
+)
+
 if(WIN32)
     file(GLOB FilesRendererGLPlatform       ${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
     file(GLOB FilesIncludePlatform          ${PROJECT_INCLUDE_DIR}/LLGL/Platform/Win32/*.*)
@@ -428,7 +452,7 @@ set(FilesTest_iOS ${TestProjectsPath}/Test_iOS.mm)
 file(GLOB FilesExampleBase ${EXAMPLE_PROJECTS_DIR}/ExampleBase/*.*)
 
 if(LLGL_ANDROID_PLATFORM)
-    set(ANDROID_APP_GLUE_DIR "${ANDROID_NDK}/sources/android/native_app_glue")
+    set(ANDROID_APP_GLUE_DIR "$ENV{ANDROID_NDK_HOME}/sources/android/native_app_glue")
     set(FilesAndroidNativeAppGlue "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.c" "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.h")
 endif()
 
@@ -460,7 +484,7 @@ set(FilesExample_VolumeRendering ${EXAMPLE_PROJECTS_DIR}/VolumeRendering/Example
 set(FilesExample_PrimitiveRestart ${EXAMPLE_PROJECTS_DIR}/PrimitiveRestart/Example.cpp)
 
 # Mobile example project files
-set(FilesExample_HelloAndroid ${EXAMPLE_PROJECTS_DIR}/HelloAndroid/Example.cpp)
+set(FilesExample_HelloAndroid ${EXAMPLE_PROJECTS_DIR}/HelloAndroid/cpp/Example.cpp)
 
 
 # === Source group folders ===
@@ -628,7 +652,7 @@ set(
     ${FilesRendererGLPlatform}
     ${FilesRendererGLPlatformBase}
     ${FilesRendererGLRenderState}
-    ${FilesRendererGLShader}
+    ${FilesRendererGLES3Shader}
     ${FilesRendererGLTexture}
     ${FilesRendererGLESProfile}
 )
@@ -910,6 +934,7 @@ if(GaussLib_INCLUDE_DIR)
         set(EXAMPLE_PROJECT_LIBS ${LLGL_DEPENDENCIES} ExampleBase)
         
         if(LLGL_ANDROID_PLATFORM)
+            set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
             ADD_MOBILE_EXAMPLE_PROJECT(Example_HelloAndroid "${FilesExample_HelloAndroid}" "${EXAMPLE_PROJECT_LIBS}")
         else()
             ADD_EXAMPLE_PROJECT(Example_HelloTriangle "${FilesExample_HelloTriangle}" "${EXAMPLE_PROJECT_LIBS}")

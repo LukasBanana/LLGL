@@ -7,11 +7,17 @@
 
 #include "GLStatePool.h"
 #include "GLStateManager.h"
-#include "../Shader/GLLegacyShader.h"
-#include "../Shader/GLSeparableShader.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/ContainerUtils.h"
 #include <functional>
+
+#include "../Shader/GLLegacyShader.h"
+#include "../Shader/GLShaderProgram.h"
+
+#ifdef LLGL_OPENGL
+#   include "../Shader/GLSeparableShader.h"
+#   include "../Shader/GLProgramPipeline.h"
+#endif
 
 
 namespace LLGL
@@ -203,6 +209,7 @@ static bool HasGLSeparableShaders(std::size_t numShaders, Shader* const* shaders
 
 GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(std::size_t numShaders, Shader* const* shaders)
 {
+    #ifdef LLGL_OPENGL
     if (HasExtension(GLExt::ARB_separate_shader_objects) && HasGLSeparableShaders(numShaders, shaders))
     {
         return std::static_pointer_cast<GLShaderPipeline>(
@@ -210,6 +217,7 @@ GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(std::size_t numShaders, S
         );
     }
     else
+    #endif
     {
         return std::static_pointer_cast<GLShaderPipeline>(
             CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(shaderPipelines_, numShaders, shaders)

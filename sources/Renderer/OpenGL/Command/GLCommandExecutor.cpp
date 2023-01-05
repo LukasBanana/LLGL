@@ -190,12 +190,14 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             stateMngr->BindVertexArray(cmd->vao);
             return sizeof(*cmd);
         }
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
         case GLOpcodeBindGL2XVertexArray:
         {
             auto cmd = reinterpret_cast<const GLCmdBindGL2XVertexArray*>(pc);
             cmd->vertexArrayGL2X->Bind(*stateMngr);
             return sizeof(*cmd);
         }
+        #endif
         case GLOpcodeBindElementArrayBufferToVAO:
         {
             auto cmd = reinterpret_cast<const GLCmdBindElementArrayBufferToVAO*>(pc);
@@ -443,12 +445,14 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             stateMngr->BindSampler(cmd->layer, cmd->sampler);
             return sizeof(*cmd);
         }
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
         case GLOpcodeBindGL2XSampler:
         {
             auto cmd = reinterpret_cast<const GLCmdBindGL2XSampler*>(pc);
             stateMngr->BindGL2XSampler(cmd->layer, *(cmd->samplerGL2X));
             return sizeof(*cmd);
         }
+        #endif
         case GLOpcodeUnbindResources:
         {
             auto cmd = reinterpret_cast<const GLCmdUnbindResources*>(pc);

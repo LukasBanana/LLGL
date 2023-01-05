@@ -12,7 +12,7 @@
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLSampler.h"
 #ifdef LLGL_GL_ENABLE_OPENGL2X
-#include "../Texture/GL2XSampler.h"
+#   include "../Texture/GL2XSampler.h"
 #endif
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLTextureViewPool.h"

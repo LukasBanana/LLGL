@@ -11,7 +11,9 @@
 
 #include "GLBuffer.h"
 #include "GLVertexArrayObject.h"
-#include "GL2XVertexArray.h"
+#ifdef LLGL_GL_ENABLE_OPENGL2X
+#   include "GL2XVertexArray.h"
+#endif
 
 
 namespace LLGL

@@ -35,7 +35,9 @@ class GLSwapChain;
 class GLStateManager;
 class GLRenderPass;
 class GLShaderPipeline;
+#ifdef LLGL_GL_ENABLE_OPENGL2X
 class GL2XSampler;
+#endif
 
 using GLVirtualCommandBuffer = VirtualCommandBuffer<GLOpcode>;
 
@@ -267,7 +269,9 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void BindTexture(GLTexture& textureGL, std::uint32_t slot);
         void BindImageTexture(const GLTexture& textureGL, std::uint32_t slot);
         void BindSampler(const GLSampler& samplerGL, std::uint32_t slot);
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
         void BindGL2XSampler(const GL2XSampler& samplerGL2X, std::uint32_t slot);
+        #endif
 
         /* Allocates only an opcode for empty commands */
         void AllocOpcode(const GLOpcode opcode);

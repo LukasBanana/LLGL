@@ -20,8 +20,23 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
     return MakeUnique<AndroidCanvas>(desc);
 }
 
+static Extent2D GetAndroidWindowRect()
+{
+    if (auto app = AndroidApp::Get().GetState())
+    {
+        return Extent2D
+        {
+            static_cast<std::uint32_t>(app->contentRect.right - app->contentRect.left),
+            static_cast<std::uint32_t>(app->contentRect.bottom - app->contentRect.top)
+        };
+    }
+    return Extent2D{};
+}
+
 AndroidCanvas::AndroidCanvas(const CanvasDescriptor& desc) :
-    desc_ { desc }
+    desc_        { desc                                 },
+    window_      { AndroidApp::Get().GetState()->window },
+    contentSize_ { GetAndroidWindowRect()               }
 {
 }
 
@@ -33,16 +48,16 @@ bool AndroidCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandle
 {
     if (nativeHandleSize == sizeof(NativeHandle))
     {
-        //auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
-        //handle.window = wnd_;
-        //return true;
+        auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
+        handle.window = window_;
+        return true;
     }
     return false;
 }
 
 Extent2D AndroidCanvas::GetContentSize() const
 {
-    return { 0u, 0u }; //todo...
+    return contentSize_;
 }
 
 void AndroidCanvas::SetTitle(const UTF8String& title)

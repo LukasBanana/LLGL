@@ -25,7 +25,9 @@
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
-#include "../Texture/GL2XSampler.h"
+#ifdef LLGL_GL_ENABLE_OPENGL2X
+#   include "../Texture/GL2XSampler.h"
+#endif
 #include "../Texture/GLRenderTarget.h"
 #include "../Texture/GLMipGenerator.h"
 

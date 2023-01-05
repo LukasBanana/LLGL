@@ -23,7 +23,9 @@
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
 #include "../Texture/GLRenderTarget.h"
-#include "../Texture/GL2XSampler.h"
+#ifdef LLGL_GL_ENABLE_OPENGL2X
+#   include "../Texture/GL2XSampler.h"
+#endif
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
@@ -1075,6 +1077,7 @@ void GLDeferredCommandBuffer::BindSampler(const GLSampler& samplerGL, std::uint3
     }
 }
 
+#ifdef LLGL_GL_ENABLE_OPENGL2X
 void GLDeferredCommandBuffer::BindGL2XSampler(const GL2XSampler& samplerGL2X, std::uint32_t slot)
 {
     auto cmd = AllocCommand<GLCmdBindGL2XSampler>(GLOpcodeBindGL2XSampler);
@@ -1083,6 +1086,7 @@ void GLDeferredCommandBuffer::BindGL2XSampler(const GL2XSampler& samplerGL2X, st
         cmd->samplerGL2X    = &samplerGL2X;
     }
 }
+#endif
 
 void GLDeferredCommandBuffer::AllocOpcode(const GLOpcode opcode)
 {

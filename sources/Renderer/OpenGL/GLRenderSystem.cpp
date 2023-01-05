@@ -16,7 +16,6 @@
 #include "GLTypes.h"
 #include "GLCore.h"
 #include "Shader/GLLegacyShader.h"
-#include "Shader/GLSeparableShader.h"
 #include "Buffer/GLBufferWithVAO.h"
 #include "Buffer/GLBufferArrayWithVAO.h"
 #include "../CheckedCast.h"
@@ -29,6 +28,10 @@
 #include "Command/GLDeferredCommandBuffer.h"
 #include "RenderState/GLGraphicsPSO.h"
 #include "RenderState/GLComputePSO.h"
+
+#ifdef LLGL_OPENGL
+#   include "Shader/GLSeparableShader.h"
+#endif
 
 
 namespace LLGL
@@ -440,10 +443,18 @@ Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& desc)
     }
 
     /* Make and return shader object */
+    #ifdef LLGL_OPENGL
     if (HasExtension(GLExt::ARB_separate_shader_objects) && (desc.flags & ShaderCompileFlags::SeparateShader) != 0)
+    {
+        /* Create separable shader for program pipeline */
         return TakeOwnership(shaders_, MakeUnique<GLSeparableShader>(desc));
+    }
     else
+    #endif
+    {
+        /* Create legacy shader for combined program */
         return TakeOwnership(shaders_, MakeUnique<GLLegacyShader>(desc));
+    }
 }
 
 void GLRenderSystem::Release(Shader& shader)

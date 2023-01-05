@@ -39,8 +39,12 @@ AndroidGLSwapChainContext::AndroidGLSwapChainContext(AndroidGLContext& context, 
     display_           { context.GetEGLDisplay() },
     context_           { context.GetEGLContext() }
 {
+    /* Get native surface handle */
+    NativeHandle nativeHandle;
+    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
+
     /* Create drawable surface */
-    surface_ = eglCreateWindowSurface(display_, config_, nativeHandle.window, nullptr);
+    surface_ = eglCreateWindowSurface(display_, context.GetEGLConfig(), nativeHandle.window, nullptr);
     if (!surface_)
         throw std::runtime_error("eglCreateWindowSurface failed");
 }

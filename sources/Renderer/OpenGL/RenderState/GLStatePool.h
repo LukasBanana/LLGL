@@ -15,8 +15,7 @@
 #include "GLBlendState.h"
 #include "GLPipelineLayout.h"
 #include "../Shader/GLShaderBindingLayout.h"
-#include "../Shader/GLShaderProgram.h"
-#include "../Shader/GLProgramPipeline.h"
+#include "../Shader/GLShaderPipeline.h"
 #include <vector>
 
 

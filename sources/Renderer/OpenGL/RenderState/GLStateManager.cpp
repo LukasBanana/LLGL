@@ -11,12 +11,13 @@
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
 #include "../Shader/GLShaderProgram.h"
-#include "../Shader/GLProgramPipeline.h"
 #include "../GLSwapChain.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"
-#include "../Texture/GL2XSampler.h"
+#ifdef LLGL_GL_ENABLE_OPENGL2X
+#   include "../Texture/GL2XSampler.h"
+#endif
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../GLTypes.h"
@@ -24,6 +25,10 @@
 #include "../../../Core/Assertion.h"
 #include <LLGL/TypeInfo.h>
 #include <functional>
+
+#ifdef LLGL_OPENGL
+#include "../Shader/GLProgramPipeline.h"
+#endif
 
 
 namespace LLGL
@@ -1404,9 +1409,9 @@ void GLStateManager::NotifySamplerRelease(GLuint sampler)
         InvalidateBoundGLObject(boundSampler, sampler);
 }
 
+#ifdef LLGL_GL_ENABLE_OPENGL2X
 void GLStateManager::BindGL2XSampler(GLuint layer, const GL2XSampler& sampler)
 {
-    #ifdef LLGL_GL_ENABLE_OPENGL2X
     #ifdef LLGL_DEBUG
     LLGL_ASSERT_UPPER_BOUND(layer, GLContextState::numTextureLayers);
     #endif
@@ -1416,8 +1421,8 @@ void GLStateManager::BindGL2XSampler(GLuint layer, const GL2XSampler& sampler)
         if (auto texture = boundGLTextures_[layer])
             texture->BindTexParameters(sampler);
     }
-    #endif
 }
+#endif
 
 /* ----- Shader program ----- */
 
@@ -1459,17 +1464,21 @@ GLuint GLStateManager::GetBoundShaderProgram() const
 
 void GLStateManager::BindProgramPipeline(GLuint pipeline)
 {
+    #ifdef LLGL_OPENGL
     if (contextState_.boundProgramPipeline != pipeline)
     {
         contextState_.boundProgramPipeline = pipeline;
         glBindProgramPipeline(pipeline);
     }
+    #endif
 }
 
 void GLStateManager::NotifyProgramPipelineRelease(GLProgramPipeline* programPipeline)
 {
+    #ifdef LLGL_OPENGL
     if (programPipeline != nullptr)
         InvalidateBoundGLObject(contextState_.boundProgramPipeline, programPipeline->GetID());
+    #endif
 }
 
 GLuint GLStateManager::GetBoundProgramPipeline() const

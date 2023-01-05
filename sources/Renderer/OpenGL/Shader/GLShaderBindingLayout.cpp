@@ -64,6 +64,7 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     std::size_t resourceIndex = 0;
 
     /* Set uniform bindings */
+    #ifdef GL_ARB_separate_shader_objects
     if (HasExtension(GLExt::ARB_separate_shader_objects))
     {
         for_range(i, numUniformBindings_)
@@ -74,7 +75,9 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
                 glProgramUniform1i(program, blockIndex, static_cast<GLint>(resource.slot));
         }
     }
-    else if (stateMngr != nullptr)
+    else
+    #endif
+    if (stateMngr != nullptr)
     {
         stateMngr->PushBoundShaderProgram();
         stateMngr->BindShaderProgram(program);
