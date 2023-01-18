@@ -20,7 +20,7 @@ if not "%1" == "" (
     )
 )
 
-IF NOT EXIST %OUTPUT_DIR% (
+if not exist %OUTPUT_DIR% (
     mkdir %OUTPUT_DIR%
 )
 

@@ -13,8 +13,8 @@ fi
 
 SCRIPT_PATH="$(dirname $0)/ReadFileAsHexString.py"
 echo "static const char* ${DECL} =" | sed -e "s/\./_/"
-python3 "$SCRIPT_PATH" -spaces 4 -offsets cxx $1
+python3 "$SCRIPT_PATH" -spaces 4 -offsets cxx "$INPUT"
 echo ";"
 echo -n "static const std::size_t ${DECL}_Len = " | sed -e "s/\./_/"
-STR_LEN_LINE=$(python3 "$SCRIPT_PATH" -len -paren $1)
+STR_LEN_LINE=$(python3 "$SCRIPT_PATH" -len -paren "$INPUT")
 echo "${STR_LEN_LINE};"
