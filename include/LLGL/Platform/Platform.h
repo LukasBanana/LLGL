@@ -18,10 +18,10 @@ see https://sourceforge.net/p/predef/wiki/OperatingSystems/
 #   define LLGL_OS_WIN32
 #elif defined __APPLE__
 #   include <TargetConditionals.h>
-#   if TARGET_OS_OSX != 0
-#       define LLGL_OS_MACOS
-#   elif TARGET_OS_IOS != 0
+#   if TARGET_OS_IPHONE != 0
 #       define LLGL_OS_IOS
+#   else
+#       define LLGL_OS_MACOS
 #   endif
 #elif defined __ANDROID__
 #   define LLGL_OS_ANDROID

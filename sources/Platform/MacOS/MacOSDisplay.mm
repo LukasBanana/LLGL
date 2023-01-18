@@ -30,6 +30,9 @@ static std::uint32_t GetDisplayModeRefreshRate(CGDisplayModeRef displayMode, CGD
     /* Built-in displays return 0 */
     if (refreshRate == 0)
     {
+        #ifdef LLGL_MACOS_ENABLE_COREVIDEO
+
+        /* Use CoreVideo framework to query accurate display refresh rate */
         CVDisplayLinkRef displayLink = nullptr;
         CVDisplayLinkCreateWithCGDisplay(displayID, &displayLink);
         {
@@ -38,6 +41,13 @@ static std::uint32_t GetDisplayModeRefreshRate(CGDisplayModeRef displayMode, CGD
                 refreshRate = static_cast<std::uint32_t>(static_cast<double>(time.timeScale) / static_cast<double>(time.timeValue) + 0.5);
         }
         CVDisplayLinkRelease(displayLink);
+
+        #else
+
+        /* Without CoreVideo framework, we just assume 60 Hz */
+        refreshRate = 60;
+
+        #endif // /LLGL_MACOS_ENABLE_COREVIDEO
     }
 
     return refreshRate;

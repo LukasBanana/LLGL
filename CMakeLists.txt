@@ -170,6 +170,10 @@ option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
 
 option(LLGL_BUILD_RENDERER_NULL "Include Null renderer project" ON)
 
+if(APPLE)
+    option(LLGL_MACOS_ENABLE_COREVIDEO "Enable CoreVideo framework (for refresh rate of built-in displays)" ON)
+endif()
+
 if(LLGL_MOBILE_PLATFORM)
     option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
 else()
@@ -244,6 +248,10 @@ endif()
 
 if(APPLE AND LLGL_BUILD_RENDERER_OPENGL)
     ADD_DEFINE(GL_SILENCE_DEPRECATION)
+endif()
+
+if(LLGL_MACOS_ENABLE_COREVIDEO)
+    ADD_DEFINE(LLGL_MACOS_ENABLE_COREVIDEO)
 endif()
 
 if(LLGL_MOBILE_PLATFORM)
@@ -722,7 +730,10 @@ elseif(LLGL_IOS_PLATFORM)
     target_link_libraries(LLGL PUBLIC "-framework Foundation -framework UIKit")
 elseif(APPLE)
     find_library(COCOA_LIBRARY Cocoa)
-    target_link_libraries(LLGL ${COCOA_LIBRARY} "-framework CoreVideo")
+    target_link_libraries(LLGL ${COCOA_LIBRARY})
+    if(LLGL_MACOS_ENABLE_COREVIDEO)
+        target_link_libraries(LLGL "-framework CoreVideo")
+    endif()
 elseif(UNIX)
     target_link_libraries(LLGL X11 pthread Xrandr)
 endif()
