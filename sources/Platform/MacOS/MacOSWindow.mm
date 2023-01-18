@@ -138,9 +138,11 @@ static const auto g_EventTypeScrollWheel        = LLGL_MACOS_NSEVENTTYPE_SCROLLW
 - (NSApplicationPresentationOptions)window:(NSWindow*)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
 {
     return
+        #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
         NSApplicationPresentationFullScreen |
-        NSApplicationPresentationAutoHideMenuBar |
         NSApplicationPresentationAutoHideToolbar |
+        #endif
+        NSApplicationPresentationAutoHideMenuBar |
         NSApplicationPresentationAutoHideDock;
 }
 
@@ -148,10 +150,12 @@ static const auto g_EventTypeScrollWheel        = LLGL_MACOS_NSEVENTTYPE_SCROLLW
 {
     fullscreenMode_ = YES;
     [[NSApplication sharedApplication] setPresentationOptions:
-        ( NSApplicationPresentationFullScreen |
-          NSApplicationPresentationAutoHideMenuBar |
-          NSApplicationPresentationAutoHideToolbar |
-          NSApplicationPresentationAutoHideDock )
+        #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+        NSApplicationPresentationFullScreen |
+        NSApplicationPresentationAutoHideToolbar |
+        #endif
+        NSApplicationPresentationAutoHideMenuBar |
+        NSApplicationPresentationAutoHideDock
     ];
 }
 
