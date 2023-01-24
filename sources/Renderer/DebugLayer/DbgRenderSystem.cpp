@@ -14,6 +14,7 @@
 #include <LLGL/ImageFlags.h>
 #include <LLGL/StaticLimits.h>
 #include <LLGL/Misc/TypeNames.h>
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -45,10 +46,10 @@ DbgRenderSystem::DbgRenderSystem(
 
 /* ----- Swap-chain ----- */
 
-SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
     /* Create primary swap-chain */
-    auto swapChainInstance = instance_->CreateSwapChain(desc, surface);
+    auto swapChainInstance = instance_->CreateSwapChain(swapChainDesc, surface);
 
     if (!commandQueue_)
     {
@@ -77,18 +78,18 @@ CommandQueue* DbgRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
+CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    ValidateCommandBufferDesc(desc);
+    ValidateCommandBufferDesc(commandBufferDesc);
     return TakeOwnership(
         commandBuffers_,
         MakeUnique<DbgCommandBuffer>(
             *instance_,
             commandQueue_->instance,
-            *instance_->CreateCommandBuffer(desc),
+            *instance_->CreateCommandBuffer(commandBufferDesc),
             debugger_,
             profiler_,
-            desc,
+            commandBufferDesc,
             GetRenderingCaps()
         )
     );
@@ -101,7 +102,7 @@ void DbgRenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
-Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
     /* Validate and store format size (if supported) */
     std::uint32_t formatSize = 0;
@@ -109,14 +110,14 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateBufferDesc(desc, &formatSize);
+        ValidateBufferDesc(bufferDesc, &formatSize);
     }
 
     /* Create buffer object */
-    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(desc, initialData), desc);
+    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(bufferDesc, initialData), bufferDesc);
 
     /* Store settings */
-    bufferDbg->elements     = (formatSize > 0 ? desc.size / formatSize : 0);
+    bufferDbg->elements     = (formatSize > 0 ? bufferDesc.size / formatSize : 0);
     bufferDbg->initialized  = (initialData != nullptr);
 
     return TakeOwnership(buffers_, std::move(bufferDbg));
@@ -315,9 +316,9 @@ void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& texture
 
 /* ----- Sampler States ---- */
 
-Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& desc)
+Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return instance_->CreateSampler(desc);
+    return instance_->CreateSampler(samplerDesc);
     //return TakeOwnership(samplers_, MakeUnique<DbgSampler>());
 }
 
@@ -329,18 +330,18 @@ void DbgRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Views ----- */
 
-ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateResourceHeapDesc(desc);
+        ValidateResourceHeapDesc(resourceHeapDesc);
     }
 
     /* Create copy of descriptor to pass native renderer object references */
-    auto instanceDesc = desc;
+    auto instanceDesc = resourceHeapDesc;
     {
-        auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, desc.pipelineLayout);
+        auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, resourceHeapDesc.pipelineLayout);
         instanceDesc.pipelineLayout = &(pipelineLayoutDbg->instance);
 
         for (auto& resourceView : instanceDesc.resourceViews)
@@ -369,7 +370,7 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
     }
     return TakeOwnership(
         resourceHeaps_,
-        MakeUnique<DbgResourceHeap>(*instance_->CreateResourceHeap(instanceDesc), desc)
+        MakeUnique<DbgResourceHeap>(*instance_->CreateResourceHeap(instanceDesc), resourceHeapDesc)
     );
 }
 
@@ -380,9 +381,9 @@ void DbgRenderSystem::Release(ResourceHeap& resourceHeap)
 
 /* ----- Render Passes ----- */
 
-RenderPass* DbgRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+RenderPass* DbgRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return instance_->CreateRenderPass(desc);
+    return instance_->CreateRenderPass(renderPassDesc);
 }
 
 void DbgRenderSystem::Release(RenderPass& renderPass)
@@ -392,11 +393,11 @@ void DbgRenderSystem::Release(RenderPass& renderPass)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
+RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
     LLGL_DBG_SOURCE;
 
-    auto instanceDesc = desc;
+    auto instanceDesc = renderTargetDesc;
 
     for (auto& attachment : instanceDesc.attachments)
     {
@@ -411,7 +412,7 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
 
     return TakeOwnership(
         renderTargets_,
-        MakeUnique<DbgRenderTarget>(*instance_->CreateRenderTarget(instanceDesc), debugger_, desc)
+        MakeUnique<DbgRenderTarget>(*instance_->CreateRenderTarget(instanceDesc), debugger_, renderTargetDesc)
     );
 }
 
@@ -422,9 +423,12 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& desc)
+Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(desc), desc));
+    return TakeOwnership(
+        shaders_,
+        MakeUnique<DbgShader>(*instance_->CreateShader(shaderDesc), shaderDesc)
+    );
 }
 
 static Shader* GetInstanceShader(Shader* shader)
@@ -444,9 +448,12 @@ void DbgRenderSystem::Release(Shader& shader)
 
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout* DbgRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+PipelineLayout* DbgRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<DbgPipelineLayout>(*instance_->CreatePipelineLayout(desc), desc));
+    return TakeOwnership(
+        pipelineLayouts_,
+        MakeUnique<DbgPipelineLayout>(*instance_->CreatePipelineLayout(pipelineLayoutDesc), pipelineLayoutDesc)
+    );
 }
 
 void DbgRenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -461,42 +468,48 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const Blob& serializedCache)
     return nullptr;//TODO
 }
 
-PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
 {
     LLGL_DBG_SOURCE;
 
     if (debugger_)
-        ValidateGraphicsPipelineDesc(desc);
+        ValidateGraphicsPipelineDesc(pipelineStateDesc);
 
-    auto instanceDesc = desc;
+    auto instanceDesc = pipelineStateDesc;
     {
-        if (desc.pipelineLayout != nullptr)
-            instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
+        if (pipelineStateDesc.pipelineLayout != nullptr)
+            instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, pipelineStateDesc.pipelineLayout)->instance);
 
-        instanceDesc.vertexShader           = GetInstanceShader(desc.vertexShader);
-        instanceDesc.tessControlShader      = GetInstanceShader(desc.tessControlShader);
-        instanceDesc.tessEvaluationShader   = GetInstanceShader(desc.tessEvaluationShader);
-        instanceDesc.geometryShader         = GetInstanceShader(desc.geometryShader);
-        instanceDesc.fragmentShader         = GetInstanceShader(desc.fragmentShader);
+        instanceDesc.vertexShader           = GetInstanceShader(pipelineStateDesc.vertexShader);
+        instanceDesc.tessControlShader      = GetInstanceShader(pipelineStateDesc.tessControlShader);
+        instanceDesc.tessEvaluationShader   = GetInstanceShader(pipelineStateDesc.tessEvaluationShader);
+        instanceDesc.geometryShader         = GetInstanceShader(pipelineStateDesc.geometryShader);
+        instanceDesc.fragmentShader         = GetInstanceShader(pipelineStateDesc.fragmentShader);
     }
-    return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), desc));
+    return TakeOwnership(
+        pipelineStates_,
+        MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc)
+    );
 }
 
-PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
 {
     LLGL_DBG_SOURCE;
 
     if (debugger_)
-        ValidateComputePipelineDesc(desc);
+        ValidateComputePipelineDesc(pipelineStateDesc);
 
-    auto instanceDesc = desc;
+    auto instanceDesc = pipelineStateDesc;
     {
-        if (desc.pipelineLayout != nullptr)
-            instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout)->instance);
+        if (pipelineStateDesc.pipelineLayout != nullptr)
+            instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, pipelineStateDesc.pipelineLayout)->instance);
 
-        instanceDesc.computeShader = GetInstanceShader(desc.computeShader);
+        instanceDesc.computeShader = GetInstanceShader(pipelineStateDesc.computeShader);
     }
-    return TakeOwnership(pipelineStates_, MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), desc));
+    return TakeOwnership(
+        pipelineStates_,
+        MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc)
+    );
 }
 
 void DbgRenderSystem::Release(PipelineState& pipelineState)
@@ -506,9 +519,12 @@ void DbgRenderSystem::Release(PipelineState& pipelineState)
 
 /* ----- Queries ----- */
 
-QueryHeap* DbgRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
+QueryHeap* DbgRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
-    return TakeOwnership(queryHeaps_, MakeUnique<DbgQueryHeap>(*instance_->CreateQueryHeap(desc), desc));
+    return TakeOwnership(
+        queryHeaps_,
+        MakeUnique<DbgQueryHeap>(*instance_->CreateQueryHeap(queryHeapDesc), queryHeapDesc)
+    );
 }
 
 void DbgRenderSystem::Release(QueryHeap& queryHeap)
@@ -617,65 +633,65 @@ void DbgRenderSystem::ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAc
     }
 }
 
-void DbgRenderSystem::ValidateCommandBufferDesc(const CommandBufferDescriptor& desc)
+void DbgRenderSystem::ValidateCommandBufferDesc(const CommandBufferDescriptor& commandBufferDesc)
 {
     /* Validate flags */
-    if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
+    if ((commandBufferDesc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
     {
-        if ((desc.flags & (CommandBufferFlags::Secondary | CommandBufferFlags::MultiSubmit)) != 0)
+        if ((commandBufferDesc.flags & (CommandBufferFlags::Secondary | CommandBufferFlags::MultiSubmit)) != 0)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create immediate command buffer with Secondary or MultiSubmit flags");
     }
 
     /* Validate number of native buffers */
-    if (desc.numNativeBuffers == 0)
+    if (commandBufferDesc.numNativeBuffers == 0)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create command buffer with zero native buffers");
 }
 
-void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSizeOut)
+void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* formatSizeOut)
 {
     /* Validate flags */
-    ValidateBindFlags(desc.bindFlags);
-    ValidateCPUAccessFlags(desc.cpuAccessFlags, CPUAccessFlags::ReadWrite, "buffer");
-    ValidateMiscFlags(desc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::NoInitialData), "buffer");
+    ValidateBindFlags(bufferDesc.bindFlags);
+    ValidateCPUAccessFlags(bufferDesc.cpuAccessFlags, CPUAccessFlags::ReadWrite, "buffer");
+    ValidateMiscFlags(bufferDesc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::NoInitialData), "buffer");
 
     /* Validate (constant-) buffer size */
-    if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
-        ValidateConstantBufferSize(desc.size);
+    if ((bufferDesc.bindFlags & BindFlags::ConstantBuffer) != 0)
+        ValidateConstantBufferSize(bufferDesc.size);
     else
-        ValidateBufferSize(desc.size);
+        ValidateBufferSize(bufferDesc.size);
 
     std::uint32_t formatSize = 0;
 
-    if ((desc.bindFlags & BindFlags::VertexBuffer) != 0 && !desc.vertexAttribs.empty())
+    if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0 && !bufferDesc.vertexAttribs.empty())
     {
         /* Validate all vertex attributes have the same binding slot */
-        if (desc.vertexAttribs.size() >= 2)
+        if (bufferDesc.vertexAttribs.size() >= 2)
         {
-            for (std::size_t i = 0; i + 1 < desc.vertexAttribs.size(); ++i)
-                ValidateVertexAttributesForBuffer(desc.vertexAttribs[i], desc.vertexAttribs[i + 1]);
+            for (std::size_t i = 0; i + 1 < bufferDesc.vertexAttribs.size(); ++i)
+                ValidateVertexAttributesForBuffer(bufferDesc.vertexAttribs[i], bufferDesc.vertexAttribs[i + 1]);
         }
 
         /* Validate buffer size for specified vertex format */
-        formatSize = desc.vertexAttribs.front().stride;
-        if (formatSize > 0 && desc.size % formatSize != 0)
+        formatSize = bufferDesc.vertexAttribs.front().stride;
+        if (formatSize > 0 && bufferDesc.size % formatSize != 0)
             LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
     }
 
-    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0 && desc.format != Format::Undefined)
+    if ((bufferDesc.bindFlags & BindFlags::IndexBuffer) != 0 && bufferDesc.format != Format::Undefined)
     {
         /* Validate index format */
-        if (desc.format != Format::R16UInt &&
-            desc.format != Format::R32UInt)
+        if (bufferDesc.format != Format::R16UInt &&
+            bufferDesc.format != Format::R32UInt)
         {
-            if (auto formatName = ToString(desc.format))
+            if (auto formatName = ToString(bufferDesc.format))
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
             else
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(desc.format)));
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(bufferDesc.format)));
         }
 
         /* Validate buffer size for specified index format */
-        formatSize = GetFormatAttribs(desc.format).bitSize / 8;
-        if (formatSize > 0 && desc.size % formatSize != 0)
+        formatSize = GetFormatAttribs(bufferDesc.format).bitSize / 8;
+        if (formatSize > 0 && bufferDesc.size % formatSize != 0)
         {
             LLGL_DBG_WARN(
                 WarningType::ImproperArgument,
@@ -684,16 +700,16 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
         }
     }
 
-    if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
+    if ((bufferDesc.bindFlags & BindFlags::ConstantBuffer) != 0)
     {
         /* Validate pack alginemnt of 16 bytes */
         static const std::uint64_t packAlignment = 16;
-        if (desc.size % packAlignment != 0)
+        if (bufferDesc.size % packAlignment != 0)
             LLGL_DBG_WARN(WarningType::ImproperArgument, "constant buffer size is out of pack alignment (alignment is 16 bytes)");
     }
 
     /* Validate buffer stride */
-    if (desc.stride > 0 && desc.size % desc.stride != 0)
+    if (bufferDesc.stride > 0 && bufferDesc.size % bufferDesc.stride != 0)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer stride is greater than zero, but size is not a multiple of stride");
 
     if (formatSizeOut)
@@ -781,68 +797,68 @@ void DbgRenderSystem::ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewD
     }
 }
 
-void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
-    switch (desc.type)
+    switch (textureDesc.type)
     {
         case TextureType::Texture1D:
-            Validate1DTextureSize(desc.extent.width);
-            ValidateTextureSizeDefault(desc.extent.height);
-            ValidateTextureSizeDefault(desc.extent.depth);
+            Validate1DTextureSize(textureDesc.extent.width);
+            ValidateTextureSizeDefault(textureDesc.extent.height);
+            ValidateTextureSizeDefault(textureDesc.extent.depth);
             break;
 
         case TextureType::Texture2D:
-            Validate2DTextureSize(desc.extent.width);
-            Validate2DTextureSize(desc.extent.height);
-            ValidateTextureSizeDefault(desc.extent.depth);
+            Validate2DTextureSize(textureDesc.extent.width);
+            Validate2DTextureSize(textureDesc.extent.height);
+            ValidateTextureSizeDefault(textureDesc.extent.depth);
             break;
 
         case TextureType::TextureCube:
             AssertCubeTextures();
-            ValidateCubeTextureSize(desc.extent.width, desc.extent.height);
-            ValidateTextureSizeDefault(desc.extent.depth);
+            ValidateCubeTextureSize(textureDesc.extent.width, textureDesc.extent.height);
+            ValidateTextureSizeDefault(textureDesc.extent.depth);
             break;
 
         case TextureType::Texture3D:
             Assert3DTextures();
-            Validate3DTextureSize(desc.extent.width);
-            Validate3DTextureSize(desc.extent.height);
-            Validate3DTextureSize(desc.extent.depth);
+            Validate3DTextureSize(textureDesc.extent.width);
+            Validate3DTextureSize(textureDesc.extent.height);
+            Validate3DTextureSize(textureDesc.extent.depth);
             break;
 
         case TextureType::Texture1DArray:
             AssertArrayTextures();
-            Validate1DTextureSize(desc.extent.width);
-            ValidateTextureSizeDefault(desc.extent.height);
-            ValidateTextureSizeDefault(desc.extent.depth);
+            Validate1DTextureSize(textureDesc.extent.width);
+            ValidateTextureSizeDefault(textureDesc.extent.height);
+            ValidateTextureSizeDefault(textureDesc.extent.depth);
             break;
 
         case TextureType::Texture2DArray:
             AssertArrayTextures();
-            Validate1DTextureSize(desc.extent.width);
-            Validate1DTextureSize(desc.extent.height);
-            ValidateTextureSizeDefault(desc.extent.depth);
+            Validate1DTextureSize(textureDesc.extent.width);
+            Validate1DTextureSize(textureDesc.extent.height);
+            ValidateTextureSizeDefault(textureDesc.extent.depth);
             break;
 
         case TextureType::TextureCubeArray:
             AssertCubeArrayTextures();
-            ValidateCubeTextureSize(desc.extent.width, desc.extent.height);
-            ValidateTextureSizeDefault(desc.extent.depth);
+            ValidateCubeTextureSize(textureDesc.extent.width, textureDesc.extent.height);
+            ValidateTextureSizeDefault(textureDesc.extent.depth);
             break;
 
         case TextureType::Texture2DMS:
             AssertMultiSampleTextures();
-            Validate2DTextureSize(desc.extent.width);
-            Validate2DTextureSize(desc.extent.height);
-            ValidateTextureSizeDefault(desc.extent.depth);
+            Validate2DTextureSize(textureDesc.extent.width);
+            Validate2DTextureSize(textureDesc.extent.height);
+            ValidateTextureSizeDefault(textureDesc.extent.depth);
             break;
 
         case TextureType::Texture2DMSArray:
             AssertMultiSampleTextures();
             AssertArrayTextures();
-            Validate2DTextureSize(desc.extent.width);
-            Validate2DTextureSize(desc.extent.height);
-            ValidateTextureSizeDefault(desc.extent.depth);
+            Validate2DTextureSize(textureDesc.extent.width);
+            Validate2DTextureSize(textureDesc.extent.height);
+            ValidateTextureSizeDefault(textureDesc.extent.depth);
             break;
 
         default:
@@ -850,14 +866,14 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc, const S
             break;
     }
 
-    ValidateTextureFormatSupported(desc.format);
-    ValidateTextureDescMipLevels(desc);
-    ValidateArrayTextureLayers(desc.type, desc.arrayLayers);
-    ValidateBindFlags(desc.bindFlags);
-    ValidateMiscFlags(desc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::FixedSamples | MiscFlags::GenerateMips | MiscFlags::NoInitialData), "texture");
+    ValidateTextureFormatSupported(textureDesc.format);
+    ValidateTextureDescMipLevels(textureDesc);
+    ValidateArrayTextureLayers(textureDesc.type, textureDesc.arrayLayers);
+    ValidateBindFlags(textureDesc.bindFlags);
+    ValidateMiscFlags(textureDesc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::FixedSamples | MiscFlags::GenerateMips | MiscFlags::NoInitialData), "texture");
 
     /* Check if MIP-map generation is requested  */
-    if ((desc.miscFlags & MiscFlags::GenerateMips) != 0)
+    if ((textureDesc.miscFlags & MiscFlags::GenerateMips) != 0)
     {
         if (imageDesc == nullptr)
         {
@@ -868,7 +884,7 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc, const S
             );
             #endif
         }
-        else if ((desc.miscFlags & MiscFlags::NoInitialData) != 0)
+        else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) != 0)
         {
             LLGL_DBG_WARN(
                 WarningType::ImproperArgument,
@@ -890,20 +906,20 @@ void DbgRenderSystem::ValidateTextureFormatSupported(const Format format)
     }
 }
 
-void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& desc)
+void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& textureDesc)
 {
-    if (desc.mipLevels > 1)
+    if (textureDesc.mipLevels > 1)
     {
         /* Get number of levels for full MIP-chain */
-        auto tempDesc = desc;
+        auto tempDesc = textureDesc;
         tempDesc.mipLevels = 0;
         auto maxNumMipLevels = NumMipLevels(tempDesc);
 
-        if (desc.mipLevels > maxNumMipLevels)
+        if (textureDesc.mipLevels > maxNumMipLevels)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "number of MIP-map levels exceeded limit (" + std::to_string(desc.mipLevels) +
+                "number of MIP-map levels exceeded limit (" + std::to_string(textureDesc.mipLevels) +
                 " specified but limit is " + std::to_string(maxNumMipLevels) + ")"
             );
         }
@@ -1129,19 +1145,19 @@ void DbgRenderSystem::ValidateTextureRegion(const DbgTexture& textureDbg, const 
     }
 }
 
-void DbgRenderSystem::ValidateTextureView(const DbgTexture& sharedTextureDbg, const TextureViewDescriptor& desc)
+void DbgRenderSystem::ValidateTextureView(const DbgTexture& sharedTextureDbg, const TextureViewDescriptor& textureViewDesc)
 {
     /* Validate texture-view features are supported */
     if (!GetRenderingCaps().features.hasTextureViews)
         LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "texture views not supported");
-    if (!GetRenderingCaps().features.hasTextureViewSwizzle && !IsTextureSwizzleIdentity(desc.swizzle))
+    if (!GetRenderingCaps().features.hasTextureViewSwizzle && !IsTextureSwizzleIdentity(textureViewDesc.swizzle))
         LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "texture view swizzle not supported, but mapping is not equal to identity");
 
     /* Validate attributes of shared texture against texture-view descriptor */
     if (sharedTextureDbg.isTextureView)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture view cannot be shared with another texture view");
 
-    const auto mipLevelUpperBound = desc.subresource.baseMipLevel + desc.subresource.numMipLevels;
+    const auto mipLevelUpperBound = textureViewDesc.subresource.baseMipLevel + textureViewDesc.subresource.numMipLevels;
     if (mipLevelUpperBound > sharedTextureDbg.mipLevels)
     {
         LLGL_DBG_ERROR(
@@ -1153,7 +1169,7 @@ void DbgRenderSystem::ValidateTextureView(const DbgTexture& sharedTextureDbg, co
 
     /* Validate type mapping for texture-view */
     const auto srcType = sharedTextureDbg.GetType();
-    const auto dstType = desc.type;
+    const auto dstType = textureViewDesc.type;
 
     using T = TextureType;
 
@@ -1201,14 +1217,14 @@ void DbgRenderSystem::ValidateTextureViewType(const TextureType sharedTextureTyp
     }
 }
 
-void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& desc)
+void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc)
 {
-    if (auto texture = desc.texture)
+    if (auto texture = attachmentDesc.texture)
     {
         auto textureDbg = LLGL_CAST(DbgTexture*, texture);
 
         /* Validate attachment type for this texture */
-        if (desc.type == AttachmentType::Color)
+        if (attachmentDesc.type == AttachmentType::Color)
         {
             if ((textureDbg->desc.bindFlags & BindFlags::ColorAttachment) == 0)
             {
@@ -1230,28 +1246,28 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& desc)
         }
 
         /* Validate MIP-level */
-        if (desc.mipLevel >= textureDbg->mipLevels)
+        if (attachmentDesc.mipLevel >= textureDbg->mipLevels)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "render-target attachment exceeded number of MIP-map levels (" +
-                std::to_string(desc.mipLevel) + " specified but upper bound is " + std::to_string(textureDbg->mipLevels) + ")"
+                std::to_string(attachmentDesc.mipLevel) + " specified but upper bound is " + std::to_string(textureDbg->mipLevels) + ")"
             );
         }
 
         /* Validate array layer */
-        if (desc.arrayLayer >= textureDbg->desc.arrayLayers)
+        if (attachmentDesc.arrayLayer >= textureDbg->desc.arrayLayers)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "render-target attachment exceeded number of array layers (" +
-                std::to_string(desc.arrayLayer) + " specified but upper bound is " + std::to_string(textureDbg->desc.arrayLayers) + ")"
+                std::to_string(attachmentDesc.arrayLayer) + " specified but upper bound is " + std::to_string(textureDbg->desc.arrayLayers) + ")"
             );
         }
     }
     else
     {
-        if (desc.type == AttachmentType::Color)
+        if (attachmentDesc.type == AttachmentType::Color)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
@@ -1261,14 +1277,14 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& desc)
     }
 }
 
-void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& desc)
+void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& resourceHeapDesc)
 {
-    if (desc.pipelineLayout)
+    if (resourceHeapDesc.pipelineLayout != nullptr)
     {
-        auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, desc.pipelineLayout);
+        auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, resourceHeapDesc.pipelineLayout);
         const auto& bindings = pipelineLayoutDbg->desc.bindings;
 
-        const auto numResourceViews = desc.resourceViews.size();
+        const auto numResourceViews = resourceHeapDesc.resourceViews.size();
         const auto numBindings      = bindings.size();
 
         if (numBindings == 0)
@@ -1292,8 +1308,8 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& des
         else
         {
             /* Validate all resource view descriptors against their respective binding descriptor */
-            for (std::size_t i = 0, n = desc.resourceViews.size(), m = bindings.size(); i < n; ++i)
-                ValidateResourceViewForBinding(desc.resourceViews[i], bindings[i % m]);
+            for_range(i, resourceHeapDesc.resourceViews.size())
+                ValidateResourceViewForBinding(resourceHeapDesc.resourceViews[i], bindings[i % bindings.size()]);
         }
     }
     else
@@ -1374,27 +1390,30 @@ static std::string ColorMaskToString(const ColorRGBAb& color)
     return s;
 }
 
-void DbgRenderSystem::ValidateColorMaskIsDisabled(const BlendTargetDescriptor& desc, std::size_t idx)
+void DbgRenderSystem::ValidateColorMaskIsDisabled(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx)
 {
-    if (desc.colorMask.r || desc.colorMask.g || desc.colorMask.b || desc.colorMask.a)
+    if (blendTargetDesc.colorMask.r ||
+        blendTargetDesc.colorMask.g ||
+        blendTargetDesc.colorMask.b ||
+        blendTargetDesc.colorMask.a)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot use color mask <" + ColorMaskToString(desc.colorMask) +
+            "cannot use color mask <" + ColorMaskToString(blendTargetDesc.colorMask) +
             "> of blend target <" + std::to_string(idx) + "> without a fragment shader"
         );
     }
 }
 
-void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& desc, bool hasFragmentShader)
+void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader)
 {
     /* Validate proper use of logic pixel operations */
-    if (desc.logicOp != LogicOp::Disabled)
+    if (blendDesc.logicOp != LogicOp::Disabled)
     {
         if (!GetRenderingCaps().features.hasLogicOp)
             LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "logic pixel operations not supported");
 
-        if (desc.independentBlendEnabled)
+        if (blendDesc.independentBlendEnabled)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
@@ -1402,7 +1421,7 @@ void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& desc, bool 
             );
         }
 
-        for (const auto& target : desc.targets)
+        for (const auto& target : blendDesc.targets)
         {
             if (target.blendEnabled)
             {
@@ -1417,24 +1436,24 @@ void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& desc, bool 
     /* Validate color masks are disabled when there is no fragment shader */
     if (!hasFragmentShader)
     {
-        if (desc.independentBlendEnabled)
+        if (blendDesc.independentBlendEnabled)
         {
-            for (std::size_t i = 0; i < sizeof(desc.targets)/sizeof(desc.targets[0]); ++i)
-                ValidateColorMaskIsDisabled(desc.targets[i], i);
+            for_range(i, sizeof(blendDesc.targets) / sizeof(blendDesc.targets[0]))
+                ValidateColorMaskIsDisabled(blendDesc.targets[i], i);
         }
         else
-            ValidateColorMaskIsDisabled(desc.targets[0], 0);
+            ValidateColorMaskIsDisabled(blendDesc.targets[0], 0);
     }
 }
 
-void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc)
+void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& pipelineStateDesc)
 {
-    if (desc.rasterizer.conservativeRasterization && !features_.hasConservativeRasterization)
+    if (pipelineStateDesc.rasterizer.conservativeRasterization && !features_.hasConservativeRasterization)
         LLGL_DBG_ERROR_NOT_SUPPORTED("conservative rasterization");
 
     /* Validate shader pipeline stages */
     bool hasSeparableShaders = false;
-    if (auto vertexShader = desc.vertexShader)
+    if (auto vertexShader = pipelineStateDesc.vertexShader)
     {
         auto vertexShaderDbg = LLGL_CAST(DbgShader*, vertexShader);
         hasSeparableShaders = ((vertexShaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
@@ -1442,9 +1461,9 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO without vertex shader");
 
-    const bool hasFragmentShader = (desc.fragmentShader != nullptr);
+    const bool hasFragmentShader = (pipelineStateDesc.fragmentShader != nullptr);
 
-    if ((desc.tessControlShader != nullptr) != (desc.tessEvaluationShader != nullptr))
+    if ((pipelineStateDesc.tessControlShader != nullptr) != (pipelineStateDesc.tessEvaluationShader != nullptr))
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO with incomplete tessellation shader stages");
 
     struct ExpectedShaderTypePair
@@ -1453,11 +1472,11 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         ShaderType  expectedType;
     };
 
-    for (auto pair : { ExpectedShaderTypePair{ desc.vertexShader,         ShaderType::Vertex         },
-                        ExpectedShaderTypePair{ desc.tessControlShader,    ShaderType::TessControl    },
-                        ExpectedShaderTypePair{ desc.tessEvaluationShader, ShaderType::TessEvaluation },
-                        ExpectedShaderTypePair{ desc.geometryShader,       ShaderType::Geometry       },
-                        ExpectedShaderTypePair{ desc.fragmentShader,       ShaderType::Fragment       } })
+    for (auto pair : { ExpectedShaderTypePair{ pipelineStateDesc.vertexShader,         ShaderType::Vertex         },
+                       ExpectedShaderTypePair{ pipelineStateDesc.tessControlShader,    ShaderType::TessControl    },
+                       ExpectedShaderTypePair{ pipelineStateDesc.tessEvaluationShader, ShaderType::TessEvaluation },
+                       ExpectedShaderTypePair{ pipelineStateDesc.geometryShader,       ShaderType::Geometry       },
+                       ExpectedShaderTypePair{ pipelineStateDesc.fragmentShader,       ShaderType::Fragment       } })
     {
         if (auto shader = pair.shader)
         {
@@ -1490,19 +1509,19 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         }
     }
 
-    ValidateBlendDescriptor(desc.blend, hasFragmentShader);
+    ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader);
 }
 
-void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescriptor& desc)
+void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescriptor& pipelineStateDesc)
 {
     /* Validate shader pipeline stages */
-    if (desc.computeShader != nullptr)
+    if (pipelineStateDesc.computeShader != nullptr)
     {
-        if (desc.computeShader->GetType() != ShaderType::Compute)
+        if (pipelineStateDesc.computeShader->GetType() != ShaderType::Compute)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot create compute PSO with " + std::string(ToString(desc.computeShader->GetType())) +
+                "cannot create compute PSO with " + std::string(ToString(pipelineStateDesc.computeShader->GetType())) +
                 " shader being assigned to compute stage"
             );
         }

@@ -1,6 +1,6 @@
 /*
  * D3D11RenderSystem.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -76,11 +76,11 @@ D3D11RenderSystem::~D3D11RenderSystem()
 
 /* ----- Swap-chain ----- */
 
-SwapChain* D3D11RenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* D3D11RenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
     return TakeOwnership(
         swapChains_,
-        MakeUnique<D3D11SwapChain>(factory_.Get(), device_, desc, surface)
+        MakeUnique<D3D11SwapChain>(factory_.Get(), device_, swapChainDesc, surface)
     );
 }
 
@@ -98,14 +98,14 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
+CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    if ((desc.flags & (CommandBufferFlags::ImmediateSubmit)) != 0)
+    if ((commandBufferDesc.flags & (CommandBufferFlags::ImmediateSubmit)) != 0)
     {
         /* Create command buffer with immediate context */
         return TakeOwnership(
             commandBuffers_,
-            MakeUnique<D3D11CommandBuffer>(device_.Get(), context_, stateMngr_, desc)
+            MakeUnique<D3D11CommandBuffer>(device_.Get(), context_, stateMngr_, commandBufferDesc)
         );
     }
     else
@@ -115,10 +115,13 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         auto hr = device_->CreateDeferredContext(0, deferredContext.ReleaseAndGetAddressOf());
         DXThrowIfCreateFailed(hr, "ID3D11DeviceContext", "for deferred command buffer");
 
+        /* Create state manager dedicated to deferred context */
+        auto deferredStateMngr = std::make_shared<D3D11StateManager>(device_.Get(), deferredContext, context_.Get());
+
         /* Create command buffer with deferred context and dedicated state manager */
         return TakeOwnership(
             commandBuffers_,
-            MakeUnique<D3D11CommandBuffer>(device_.Get(), deferredContext, std::make_shared<D3D11StateManager>(device_.Get(), deferredContext, context_.Get()), desc)
+            MakeUnique<D3D11CommandBuffer>(device_.Get(), deferredContext, deferredStateMngr, commandBufferDesc)
         );
     }
 }
@@ -130,19 +133,19 @@ void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
-static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
+static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& bufferDesc, const void* initialData)
 {
     /* Make respective buffer type */
-    if (DXBindFlagsNeedBufferWithRV(desc.bindFlags))
-        return MakeUnique<D3D11BufferWithRV>(device, desc, initialData);
+    if (DXBindFlagsNeedBufferWithRV(bufferDesc.bindFlags))
+        return MakeUnique<D3D11BufferWithRV>(device, bufferDesc, initialData);
     else
-        return MakeUnique<D3D11Buffer>(device, desc, initialData);
+        return MakeUnique<D3D11Buffer>(device, bufferDesc, initialData);
 }
 
-Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    AssertCreateBuffer(desc, UINT_MAX);
-    return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
+    AssertCreateBuffer(bufferDesc, UINT_MAX);
+    return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), bufferDesc, initialData));
 }
 
 BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
@@ -327,9 +330,9 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
 
 /* ----- Sampler States ---- */
 
-Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& desc)
+Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return TakeOwnership(samplers_, MakeUnique<D3D11Sampler>(device_.Get(), desc));
+    return TakeOwnership(samplers_, MakeUnique<D3D11Sampler>(device_.Get(), samplerDesc));
 }
 
 void D3D11RenderSystem::Release(Sampler& sampler)
@@ -339,10 +342,10 @@ void D3D11RenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
 {
     const bool hasDeviceContextD3D11_1 = (GetMinorVersion() >= 1);
-    return TakeOwnership(resourceHeaps_, MakeUnique<D3D11ResourceHeap>(desc, hasDeviceContextD3D11_1));
+    return TakeOwnership(resourceHeaps_, MakeUnique<D3D11ResourceHeap>(resourceHeapDesc, hasDeviceContextD3D11_1));
 }
 
 void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
@@ -352,9 +355,9 @@ void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
 
 /* ----- Render Passes ----- */
 
-RenderPass* D3D11RenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+RenderPass* D3D11RenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return TakeOwnership(renderPasses_, MakeUnique<D3D11RenderPass>(desc));
+    return TakeOwnership(renderPasses_, MakeUnique<D3D11RenderPass>(renderPassDesc));
 }
 
 void D3D11RenderSystem::Release(RenderPass& renderPass)
@@ -364,9 +367,9 @@ void D3D11RenderSystem::Release(RenderPass& renderPass)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* D3D11RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
+RenderTarget* D3D11RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(device_.Get(), desc));
+    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(device_.Get(), renderTargetDesc));
 }
 
 void D3D11RenderSystem::Release(RenderTarget& renderTarget)
@@ -376,10 +379,10 @@ void D3D11RenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* D3D11RenderSystem::CreateShader(const ShaderDescriptor& desc)
+Shader* D3D11RenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(desc);
-    return TakeOwnership(shaders_, MakeUnique<D3D11Shader>(device_.Get(), desc));
+    AssertCreateShader(shaderDesc);
+    return TakeOwnership(shaders_, MakeUnique<D3D11Shader>(device_.Get(), shaderDesc));
 }
 
 void D3D11RenderSystem::Release(Shader& shader)
@@ -389,9 +392,9 @@ void D3D11RenderSystem::Release(Shader& shader)
 
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout* D3D11RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+PipelineLayout* D3D11RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D11PipelineLayout>(desc));
+    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D11PipelineLayout>(pipelineLayoutDesc));
 }
 
 void D3D11RenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -406,13 +409,13 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const Blob& /*serializedCa
     return nullptr;//TODO
 }
 
-PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     if (device3_)
     {
         /* Create graphics pipeline for Direct3D 11.3 */
-        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO3>(device3_.Get(), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO3>(device3_.Get(), pipelineStateDesc));
     }
     #endif
 
@@ -420,7 +423,7 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     if (device2_)
     {
         /* Create graphics pipeline for Direct3D 11.1 (there is no dedicated class for 11.2) */
-        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO1>(device2_.Get(), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO1>(device2_.Get(), pipelineStateDesc));
     }
     #endif
 
@@ -428,17 +431,17 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     if (device1_)
     {
         /* Create graphics pipeline for Direct3D 11.1 */
-        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO1>(device1_.Get(), desc));
+        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO1>(device1_.Get(), pipelineStateDesc));
     }
     #endif
 
     /* Create graphics pipeline for Direct3D 11.0 */
-    return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO>(device_.Get(), desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO>(device_.Get(), pipelineStateDesc));
 }
 
-PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<D3D11ComputePSO>(desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<D3D11ComputePSO>(pipelineStateDesc));
 }
 
 void D3D11RenderSystem::Release(PipelineState& pipelineState)
@@ -448,9 +451,9 @@ void D3D11RenderSystem::Release(PipelineState& pipelineState)
 
 /* ----- Queries ----- */
 
-QueryHeap* D3D11RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
+QueryHeap* D3D11RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
-    return TakeOwnership(queryHeaps_, MakeUnique<D3D11QueryHeap>(device_.Get(), desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<D3D11QueryHeap>(device_.Get(), queryHeapDesc));
 }
 
 void D3D11RenderSystem::Release(QueryHeap& queryHeap)
@@ -672,31 +675,31 @@ int D3D11RenderSystem::GetMinorVersion() const
     return 0;
 }
 
-void D3D11RenderSystem::CreateAndInitializeGpuTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+void D3D11RenderSystem::CreateAndInitializeGpuTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     /* Create native texture and initialize with image data */
-    textureD3D.CreateTexture1D(device_.Get(), desc);
-    InitializeGpuTexture(textureD3D, desc, imageDesc);
+    textureD3D.CreateTexture1D(device_.Get(), textureDesc);
+    InitializeGpuTexture(textureD3D, textureDesc, imageDesc);
 }
 
-void D3D11RenderSystem::CreateAndInitializeGpuTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+void D3D11RenderSystem::CreateAndInitializeGpuTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     /* Create native texture and initialize with image data */
-    textureD3D.CreateTexture2D(device_.Get(), desc);
-    InitializeGpuTexture(textureD3D, desc, imageDesc);
+    textureD3D.CreateTexture2D(device_.Get(), textureDesc);
+    InitializeGpuTexture(textureD3D, textureDesc, imageDesc);
 }
 
-void D3D11RenderSystem::CreateAndInitializeGpuTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+void D3D11RenderSystem::CreateAndInitializeGpuTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     /* Create native texture and initialize with image data */
-    textureD3D.CreateTexture3D(device_.Get(), desc);
-    InitializeGpuTexture(textureD3D, desc, imageDesc);
+    textureD3D.CreateTexture3D(device_.Get(), textureDesc);
+    InitializeGpuTexture(textureD3D, textureDesc, imageDesc);
 }
 
-void D3D11RenderSystem::CreateAndInitializeGpuTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc)
+void D3D11RenderSystem::CreateAndInitializeGpuTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& textureDesc)
 {
     /* Create native texture */
-    textureD3D.CreateTexture2D(device_.Get(), desc);
+    textureD3D.CreateTexture2D(device_.Get(), textureDesc);
 }
 
 void D3D11RenderSystem::InitializeGpuTexture(

@@ -43,7 +43,7 @@ class DbgRenderSystem final : public RenderSystem
 
         /* ----- Swap-chain ------ */
 
-        SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        SwapChain* CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(SwapChain& swapChain) override;
 
@@ -53,13 +53,13 @@ class DbgRenderSystem final : public RenderSystem
 
         /* ----- Command buffers ----- */
 
-        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
+        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 
         /* ----- Buffers ------ */
 
-        Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;
+        Buffer* CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData = nullptr) override;
         BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) override;
 
         void Release(Buffer& buffer) override;
@@ -83,51 +83,51 @@ class DbgRenderSystem final : public RenderSystem
 
         /* ----- Sampler States ---- */
 
-        Sampler* CreateSampler(const SamplerDescriptor& desc) override;
+        Sampler* CreateSampler(const SamplerDescriptor& samplerDesc) override;
 
         void Release(Sampler& sampler) override;
 
         /* ----- Resource Views ----- */
 
-        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
+        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc) override;
 
         void Release(ResourceHeap& resourceHeap) override;
 
         /* ----- Render Passes ----- */
 
-        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& renderPassDesc) override;
 
         void Release(RenderPass& renderPass) override;
 
         /* ----- Render Targets ----- */
 
-        RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) override;
+        RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc) override;
 
         void Release(RenderTarget& renderTarget) override;
 
         /* ----- Shader ----- */
 
-        Shader* CreateShader(const ShaderDescriptor& desc) override;
+        Shader* CreateShader(const ShaderDescriptor& shaderDesc) override;
 
         void Release(Shader& shader) override;
 
         /* ----- Pipeline Layouts ----- */
 
-        PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) override;
+        PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc) override;
 
         void Release(PipelineLayout& pipelineLayout) override;
 
         /* ----- Pipeline States ----- */
 
         PipelineState* CreatePipelineState(const Blob& serializedCache) override;
-        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
-        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
+        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
+        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
 
         void Release(PipelineState& pipelineState) override;
 
         /* ----- Queries ----- */
 
-        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) override;
+        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc) override;
 
         void Release(QueryHeap& queryHeap) override;
 
@@ -144,9 +144,9 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateMiscFlags(long flags, long validFlags, const char* contextDesc = nullptr);
         void ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAccess access, const char* resourceTypeName);
 
-        void ValidateCommandBufferDesc(const CommandBufferDescriptor& desc);
+        void ValidateCommandBufferDesc(const CommandBufferDescriptor& commandBufferDesc);
 
-        void ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSizeOut = nullptr);
+        void ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* formatSizeOut = nullptr);
         void ValidateVertexAttributesForBuffer(const VertexAttribute& lhs, const VertexAttribute& rhs);
         void ValidateBufferSize(std::uint64_t size);
         void ValidateConstantBufferSize(std::uint64_t size);
@@ -154,9 +154,9 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
         void ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewDescriptor& viewDesc, const BindingDescriptor& bindingDesc);
 
-        void ValidateTextureDesc(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc = nullptr);
+        void ValidateTextureDesc(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr);
         void ValidateTextureFormatSupported(const Format format);
-        void ValidateTextureDescMipLevels(const TextureDescriptor& desc);
+        void ValidateTextureDescMipLevels(const TextureDescriptor& textureDesc);
         void ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName);
         void ValidateTextureSizeDefault(std::uint32_t size);
         void Validate1DTextureSize(std::uint32_t size);
@@ -168,21 +168,21 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers);
         void ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit);
         void ValidateTextureRegion(const DbgTexture& textureDbg, const TextureRegion& textureRegion);
-        void ValidateTextureView(const DbgTexture& sharedTextureDbg, const TextureViewDescriptor& desc);
+        void ValidateTextureView(const DbgTexture& sharedTextureDbg, const TextureViewDescriptor& textureViewDesc);
         void ValidateTextureViewType(const TextureType sharedTextureType, const TextureType textureViewType, const std::initializer_list<TextureType>& validTypes);
         void ValidateImageDataSize(const DbgTexture& textureDbg, const TextureRegion& textureRegion, ImageFormat imageFormat, DataType dataType, std::size_t dataSize);
 
-        void ValidateAttachmentDesc(const AttachmentDescriptor& desc);
+        void ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc);
 
-        void ValidateResourceHeapDesc(const ResourceHeapDescriptor& desc);
+        void ValidateResourceHeapDesc(const ResourceHeapDescriptor& resourceHeapDesc);
         void ValidateResourceViewForBinding(const ResourceViewDescriptor& rvDesc, const BindingDescriptor& bindingDesc);
         void ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc);
         void ValidateTextureForBinding(const DbgTexture& textureDbg, const BindingDescriptor& bindingDesc);
 
-        void ValidateColorMaskIsDisabled(const BlendTargetDescriptor& desc, std::size_t idx);
-        void ValidateBlendDescriptor(const BlendDescriptor& desc, bool hasFragmentShader);
-        void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc);
-        void ValidateComputePipelineDesc(const ComputePipelineDescriptor& desc);
+        void ValidateColorMaskIsDisabled(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx);
+        void ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader);
+        void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& pipelineStateDesc);
+        void ValidateComputePipelineDesc(const ComputePipelineDescriptor& pipelineStateDesc);
 
         void Assert3DTextures();
         void AssertCubeTextures();

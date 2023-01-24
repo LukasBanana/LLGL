@@ -1,6 +1,6 @@
 /*
  * VKRenderSystem.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -94,11 +94,11 @@ VKRenderSystem::~VKRenderSystem()
 
 /* ----- Swap-chain ----- */
 
-SwapChain* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
     return TakeOwnership(
         swapChains_,
-        MakeUnique<VKSwapChain>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, desc, surface)
+        MakeUnique<VKSwapChain>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, swapChainDesc, surface)
     );
 }
 
@@ -116,11 +116,11 @@ CommandQueue* VKRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
+CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
     return TakeOwnership(
         commandBuffers_,
-        MakeUnique<VKCommandBuffer>(physicalDevice_, device_, device_.GetVkQueue(), device_.GetQueueFamilyIndices(), desc)
+        MakeUnique<VKCommandBuffer>(physicalDevice_, device_, device_.GetVkQueue(), device_.GetQueueFamilyIndices(), commandBufferDesc)
     );
 }
 
@@ -131,22 +131,22 @@ void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
-Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
+    AssertCreateBuffer(bufferDesc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
 
     /* Create staging buffer */
     VkBufferCreateInfo stagingCreateInfo;
     BuildVkBufferCreateInfo(
         stagingCreateInfo,
-        static_cast<VkDeviceSize>(desc.size),
-        GetStagingVkBufferUsageFlags(desc.cpuAccessFlags)
+        static_cast<VkDeviceSize>(bufferDesc.size),
+        GetStagingVkBufferUsageFlags(bufferDesc.cpuAccessFlags)
     );
 
-    auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, desc.size);
+    auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, bufferDesc.size);
 
     /* Create primary buffer object */
-    auto buffer = TakeOwnership(buffers_, MakeUnique<VKBuffer>(device_, desc));
+    auto buffer = TakeOwnership(buffers_, MakeUnique<VKBuffer>(device_, bufferDesc));
 
     /* Allocate device memory */
     auto memoryRegion = deviceMemoryMngr_->Allocate(
@@ -156,9 +156,9 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     buffer->BindMemoryRegion(device_, memoryRegion);
 
     /* Copy staging buffer into hardware buffer */
-    device_.CopyBuffer(stagingBuffer.GetVkBuffer(), buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
+    device_.CopyBuffer(stagingBuffer.GetVkBuffer(), buffer->GetVkBuffer(), static_cast<VkDeviceSize>(bufferDesc.size));
 
-    if (desc.cpuAccessFlags != 0 || (desc.miscFlags & MiscFlags::DynamicUsage) != 0)
+    if (bufferDesc.cpuAccessFlags != 0 || (bufferDesc.miscFlags & MiscFlags::DynamicUsage) != 0)
     {
         /* Store ownership of staging buffer */
         buffer->TakeStagingBuffer(std::move(stagingBuffer));
@@ -339,7 +339,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     BuildVkBufferCreateInfo(
         stagingCreateInfo,
         initialDataSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.cpuAccessFlags)
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT
     );
 
     auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, initialDataSize);
@@ -461,7 +461,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     BuildVkBufferCreateInfo(
         stagingCreateInfo,
         imageDataSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.cpuAccessFlags)
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(bufferDesc.cpuAccessFlags)
     );
 
     auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, imageData, imageDataSize);
@@ -573,9 +573,9 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
 /* ----- Sampler States ---- */
 
-Sampler* VKRenderSystem::CreateSampler(const SamplerDescriptor& desc)
+Sampler* VKRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return TakeOwnership(samplers_, MakeUnique<VKSampler>(device_, desc));
+    return TakeOwnership(samplers_, MakeUnique<VKSampler>(device_, samplerDesc));
 }
 
 void VKRenderSystem::Release(Sampler& sampler)
@@ -585,9 +585,9 @@ void VKRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* VKRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+ResourceHeap* VKRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<VKResourceHeap>(device_, desc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<VKResourceHeap>(device_, resourceHeapDesc));
 }
 
 void VKRenderSystem::Release(ResourceHeap& resourceHeap)
@@ -597,10 +597,10 @@ void VKRenderSystem::Release(ResourceHeap& resourceHeap)
 
 /* ----- Render Passes ----- */
 
-RenderPass* VKRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+RenderPass* VKRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    AssertCreateRenderPass(desc);
-    return TakeOwnership(renderPasses_, MakeUnique<VKRenderPass>(device_, desc));
+    AssertCreateRenderPass(renderPassDesc);
+    return TakeOwnership(renderPasses_, MakeUnique<VKRenderPass>(device_, renderPassDesc));
 }
 
 void VKRenderSystem::Release(RenderPass& renderPass)
@@ -610,10 +610,10 @@ void VKRenderSystem::Release(RenderPass& renderPass)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
+RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    AssertCreateRenderTarget(desc);
-    return TakeOwnership(renderTargets_, MakeUnique<VKRenderTarget>(device_, *deviceMemoryMngr_, desc));
+    AssertCreateRenderTarget(renderTargetDesc);
+    return TakeOwnership(renderTargets_, MakeUnique<VKRenderTarget>(device_, *deviceMemoryMngr_, renderTargetDesc));
 }
 
 void VKRenderSystem::Release(RenderTarget& renderTarget)
@@ -625,10 +625,10 @@ void VKRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* VKRenderSystem::CreateShader(const ShaderDescriptor& desc)
+Shader* VKRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(desc);
-    return TakeOwnership(shaders_, MakeUnique<VKShader>(device_, desc));
+    AssertCreateShader(shaderDesc);
+    return TakeOwnership(shaders_, MakeUnique<VKShader>(device_, shaderDesc));
 }
 
 void VKRenderSystem::Release(Shader& shader)
@@ -638,9 +638,9 @@ void VKRenderSystem::Release(Shader& shader)
 
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout* VKRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+PipelineLayout* VKRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<VKPipelineLayout>(device_, desc));
+    return TakeOwnership(pipelineLayouts_, MakeUnique<VKPipelineLayout>(device_, pipelineLayoutDesc));
 }
 
 void VKRenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -655,7 +655,7 @@ PipelineState* VKRenderSystem::CreatePipelineState(const Blob& /*serializedCache
     return nullptr;//TODO
 }
 
-PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(
         pipelineStates_,
@@ -663,15 +663,18 @@ PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescrip
             device_,
             defaultPipelineLayout_,
             (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
-            desc,
+            pipelineStateDesc,
             gfxPipelineLimits_
         )
     );
 }
 
-PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<VKComputePSO>(device_, desc, defaultPipelineLayout_));
+    return TakeOwnership(
+        pipelineStates_,
+        MakeUnique<VKComputePSO>(device_, pipelineStateDesc, defaultPipelineLayout_)
+    );
 }
 
 void VKRenderSystem::Release(PipelineState& pipelineState)
@@ -681,12 +684,12 @@ void VKRenderSystem::Release(PipelineState& pipelineState)
 
 /* ----- Queries ----- */
 
-QueryHeap* VKRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
+QueryHeap* VKRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
-    if (desc.renderCondition)
-        return TakeOwnership(queryHeaps_, MakeUnique<VKPredicateQueryHeap>(device_, *deviceMemoryMngr_, desc));
+    if (queryHeapDesc.renderCondition)
+        return TakeOwnership(queryHeaps_, MakeUnique<VKPredicateQueryHeap>(device_, *deviceMemoryMngr_, queryHeapDesc));
     else
-        return TakeOwnership(queryHeaps_, MakeUnique<VKQueryHeap>(device_, desc));
+        return TakeOwnership(queryHeaps_, MakeUnique<VKQueryHeap>(device_, queryHeapDesc));
 }
 
 void VKRenderSystem::Release(QueryHeap& queryHeap)

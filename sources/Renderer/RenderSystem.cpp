@@ -290,13 +290,13 @@ void RenderSystem::SetRenderingCaps(const RenderingCapabilities& caps)
     pimpl_->caps = caps;
 }
 
-void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize)
+void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::uint64_t maxSize)
 {
     /* Validate size */
-    if (desc.size > maxSize)
+    if (bufferDesc.size > maxSize)
     {
         throw std::runtime_error(
-            "cannot create buffer with size of " + std::to_string(desc.size) +
+            "cannot create buffer with size of " + std::to_string(bufferDesc.size) +
             " byte(s) while limit is " + std::to_string(maxSize)
         );
     }
@@ -315,11 +315,11 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_
         BindFlags::CopyDst
     );
 
-    if ((desc.bindFlags & (~validBindFlags)) != 0)
+    if ((bufferDesc.bindFlags & (~validBindFlags)) != 0)
     {
         throw std::invalid_argument(
             "cannot create buffer with invalid binding flags: "
-            "0x" + ToHex(static_cast<std::uint32_t>(desc.bindFlags))
+            "0x" + ToHex(static_cast<std::uint32_t>(bufferDesc.bindFlags))
         );
     }
 }
@@ -348,11 +348,11 @@ void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* con
     AssertCreateResourceArrayCommon(numBuffers, reinterpret_cast<void* const*>(bufferArray), "buffer");
 }
 
-void RenderSystem::AssertCreateShader(const ShaderDescriptor& desc)
+void RenderSystem::AssertCreateShader(const ShaderDescriptor& shaderDesc)
 {
-    if (desc.source == nullptr)
+    if (shaderDesc.source == nullptr)
         throw std::invalid_argument("cannot create shader with <source> being a null pointer");
-    if (desc.sourceType == ShaderSourceType::BinaryBuffer && desc.sourceSize == 0)
+    if (shaderDesc.sourceType == ShaderSourceType::BinaryBuffer && shaderDesc.sourceSize == 0)
         throw std::invalid_argument("cannot create shader from binary buffer with <sourceSize> being zero");
 }
 
@@ -365,25 +365,25 @@ static void ErrTooManyColorAttachments(const char* contextInfo)
     );
 }
 
-void RenderSystem::AssertCreateRenderTarget(const RenderTargetDescriptor& desc)
+void RenderSystem::AssertCreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    if (desc.attachments.size() == LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1)
+    if (renderTargetDesc.attachments.size() == LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1)
     {
         /* Check if there is one depth-stencil attachment */
-        for (const auto& attachment : desc.attachments)
+        for (const auto& attachment : renderTargetDesc.attachments)
         {
             if (attachment.type != AttachmentType::Color)
                 return;
         }
         ErrTooManyColorAttachments("render target");
     }
-    else if (desc.attachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1)
+    else if (renderTargetDesc.attachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1)
         ErrTooManyColorAttachments("render target");
 }
 
-void RenderSystem::AssertCreateRenderPass(const RenderPassDescriptor& desc)
+void RenderSystem::AssertCreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    if (desc.colorAttachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+    if (renderPassDesc.colorAttachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS)
         ErrTooManyColorAttachments("render pass");
 }
 

@@ -1,6 +1,6 @@
 /*
  * MTRenderSystem.mm
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -39,9 +39,9 @@ MTRenderSystem::~MTRenderSystem()
 
 /* ----- Swap-chain ----- */
 
-SwapChain* MTRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* MTRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(swapChains_, MakeUnique<MTSwapChain>(device_, desc, surface));
+    return TakeOwnership(swapChains_, MakeUnique<MTSwapChain>(device_, swapChainDesc, surface));
 }
 
 void MTRenderSystem::Release(SwapChain& swapChain)
@@ -58,9 +58,9 @@ CommandQueue* MTRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
+CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(device_, commandQueue_->GetNative(), desc));
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(device_, commandQueue_->GetNative(), commandBufferDesc));
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)
@@ -70,9 +70,9 @@ void MTRenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
-Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    return TakeOwnership(buffers_, MakeUnique<MTBuffer>(device_, desc, initialData));
+    return TakeOwnership(buffers_, MakeUnique<MTBuffer>(device_, bufferDesc, initialData));
 }
 
 BufferArray* MTRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
@@ -175,9 +175,9 @@ void MTRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
 /* ----- Sampler States ---- */
 
-Sampler* MTRenderSystem::CreateSampler(const SamplerDescriptor& desc)
+Sampler* MTRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return TakeOwnership(samplers_, MakeUnique<MTSampler>(device_, desc));
+    return TakeOwnership(samplers_, MakeUnique<MTSampler>(device_, samplerDesc));
 }
 
 void MTRenderSystem::Release(Sampler& sampler)
@@ -187,9 +187,9 @@ void MTRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<MTResourceHeap>(desc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<MTResourceHeap>(resourceHeapDesc));
 }
 
 void MTRenderSystem::Release(ResourceHeap& resourceHeap)
@@ -199,10 +199,10 @@ void MTRenderSystem::Release(ResourceHeap& resourceHeap)
 
 /* ----- Render Passes ----- */
 
-RenderPass* MTRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+RenderPass* MTRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    AssertCreateRenderPass(desc);
-    return TakeOwnership(renderPasses_, MakeUnique<MTRenderPass>(desc));
+    AssertCreateRenderPass(renderPassDesc);
+    return TakeOwnership(renderPasses_, MakeUnique<MTRenderPass>(renderPassDesc));
 }
 
 void MTRenderSystem::Release(RenderPass& renderPass)
@@ -212,9 +212,9 @@ void MTRenderSystem::Release(RenderPass& renderPass)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* MTRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
+RenderTarget* MTRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<MTRenderTarget>(device_, desc));
+    return TakeOwnership(renderTargets_, MakeUnique<MTRenderTarget>(device_, renderTargetDesc));
 }
 
 void MTRenderSystem::Release(RenderTarget& renderTarget)
@@ -224,10 +224,10 @@ void MTRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* MTRenderSystem::CreateShader(const ShaderDescriptor& desc)
+Shader* MTRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(desc);
-    return TakeOwnership(shaders_, MakeUnique<MTShader>(device_, desc));
+    AssertCreateShader(shaderDesc);
+    return TakeOwnership(shaders_, MakeUnique<MTShader>(device_, shaderDesc));
 }
 
 void MTRenderSystem::Release(Shader& shader)
@@ -237,9 +237,9 @@ void MTRenderSystem::Release(Shader& shader)
 
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout* MTRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+PipelineLayout* MTRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<MTPipelineLayout>(desc));
+    return TakeOwnership(pipelineLayouts_, MakeUnique<MTPipelineLayout>(pipelineLayoutDesc));
 }
 
 void MTRenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -254,14 +254,14 @@ PipelineState* MTRenderSystem::CreatePipelineState(const Blob& /*serializedCache
     return nullptr;//TODO
 }
 
-PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<MTGraphicsPSO>(device_, desc, GetDefaultRenderPass()));
+    return TakeOwnership(pipelineStates_, MakeUnique<MTGraphicsPSO>(device_, pipelineStateDesc, GetDefaultRenderPass()));
 }
 
-PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<MTComputePSO>(device_, desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<MTComputePSO>(device_, pipelineStateDesc));
 }
 
 void MTRenderSystem::Release(PipelineState& pipelineState)
@@ -271,7 +271,7 @@ void MTRenderSystem::Release(PipelineState& pipelineState)
 
 /* ----- Queries ----- */
 
-QueryHeap* MTRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
+QueryHeap* MTRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
     return nullptr;//todo
 }

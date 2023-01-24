@@ -1,6 +1,6 @@
 /*
  * D3D12RenderSystem.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -80,9 +80,9 @@ D3D12RenderSystem::~D3D12RenderSystem()
 
 /* ----- Swap-chain ----- */
 
-SwapChain* D3D12RenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* D3D12RenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(swapChains_, MakeUnique<D3D12SwapChain>(*this, desc, surface));
+    return TakeOwnership(swapChains_, MakeUnique<D3D12SwapChain>(*this, swapChainDesc, surface));
 }
 
 void D3D12RenderSystem::Release(SwapChain& swapChain)
@@ -99,9 +99,9 @@ CommandQueue* D3D12RenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* D3D12RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
+CommandBuffer* D3D12RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<D3D12CommandBuffer>(*this, desc));
+    return TakeOwnership(commandBuffers_, MakeUnique<D3D12CommandBuffer>(*this, commandBufferDesc));
 }
 
 void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
@@ -113,9 +113,9 @@ void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 /* ----- Buffers ------ */
 
 // private
-std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDescriptor& desc, const void* initialData)
+std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    auto bufferD3D = MakeUnique<D3D12Buffer>(device_.GetNative(), desc);
+    auto bufferD3D = MakeUnique<D3D12Buffer>(device_.GetNative(), bufferDesc);
 
     if (initialData)
     {
@@ -125,7 +125,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
             bufferD3D->GetResource(),
             0,
             initialData,
-            desc.size,
+            bufferDesc.size,
             bufferD3D->GetAlignment()
         );
 
@@ -136,10 +136,10 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDesc
     return bufferD3D;
 }
 
-Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    AssertCreateBuffer(desc, ULLONG_MAX);
-    return TakeOwnership(buffers_, CreateGpuBuffer(desc, initialData));
+    AssertCreateBuffer(bufferDesc, ULLONG_MAX);
+    return TakeOwnership(buffers_, CreateGpuBuffer(bufferDesc, initialData));
 }
 
 BufferArray* D3D12RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
@@ -341,9 +341,9 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
 
 /* ----- Sampler States ---- */
 
-Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& desc)
+Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return TakeOwnership(samplers_, MakeUnique<D3D12Sampler>(desc));
+    return TakeOwnership(samplers_, MakeUnique<D3D12Sampler>(samplerDesc));
 }
 
 void D3D12RenderSystem::Release(Sampler& sampler)
@@ -354,9 +354,9 @@ void D3D12RenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<D3D12ResourceHeap>(device_.GetNative(), desc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<D3D12ResourceHeap>(device_.GetNative(), resourceHeapDesc));
 }
 
 void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
@@ -367,9 +367,9 @@ void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
 
 /* ----- Render Passes ----- */
 
-RenderPass* D3D12RenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+RenderPass* D3D12RenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return TakeOwnership(renderPasses_, MakeUnique<D3D12RenderPass>(device_, desc));
+    return TakeOwnership(renderPasses_, MakeUnique<D3D12RenderPass>(device_, renderPassDesc));
 }
 
 void D3D12RenderSystem::Release(RenderPass& renderPass)
@@ -380,9 +380,9 @@ void D3D12RenderSystem::Release(RenderPass& renderPass)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* D3D12RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
+RenderTarget* D3D12RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<D3D12RenderTarget>(device_, desc));
+    return TakeOwnership(renderTargets_, MakeUnique<D3D12RenderTarget>(device_, renderTargetDesc));
 }
 
 void D3D12RenderSystem::Release(RenderTarget& renderTarget)
@@ -393,10 +393,10 @@ void D3D12RenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* D3D12RenderSystem::CreateShader(const ShaderDescriptor& desc)
+Shader* D3D12RenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(desc);
-    return TakeOwnership(shaders_, MakeUnique<D3D12Shader>(desc));
+    AssertCreateShader(shaderDesc);
+    return TakeOwnership(shaders_, MakeUnique<D3D12Shader>(shaderDesc));
 }
 
 void D3D12RenderSystem::Release(Shader& shader)
@@ -406,9 +406,9 @@ void D3D12RenderSystem::Release(Shader& shader)
 
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout* D3D12RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+PipelineLayout* D3D12RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D12PipelineLayout>(device_.GetNative(), desc));
+    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D12PipelineLayout>(device_.GetNative(), pipelineLayoutDesc));
 }
 
 void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -441,7 +441,7 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const Blob& serializedCach
     throw std::runtime_error("serialized cache does not denote a D3D12 graphics or compute PSO");
 }
 
-PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
 {
     Serialization::Serializer writer;
 
@@ -450,7 +450,7 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
         MakeUnique<D3D12GraphicsPSO>(
             device_,
             defaultPipelineLayout_,
-            desc,
+            pipelineStateDesc,
             GetDefaultRenderPass(),
             (serializedCache != nullptr ? &writer : nullptr)
         )
@@ -462,11 +462,11 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     return pipelineState;
 }
 
-PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
     return TakeOwnership(
         pipelineStates_,
-        MakeUnique<D3D12ComputePSO>(device_, defaultPipelineLayout_, desc)
+        MakeUnique<D3D12ComputePSO>(device_, defaultPipelineLayout_, pipelineStateDesc)
     );
 }
 
@@ -478,9 +478,9 @@ void D3D12RenderSystem::Release(PipelineState& pipelineState)
 
 /* ----- Queries ----- */
 
-QueryHeap* D3D12RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
+QueryHeap* D3D12RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
-    return TakeOwnership(queryHeaps_, MakeUnique<D3D12QueryHeap>(device_, desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<D3D12QueryHeap>(device_, queryHeapDesc));
 }
 
 void D3D12RenderSystem::Release(QueryHeap& queryHeap)
@@ -504,11 +504,11 @@ void D3D12RenderSystem::Release(Fence& fence)
 
 /* ----- Extended internal functions ----- */
 
-ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd)
+ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& swapChainDescDXGI, HWND wnd)
 {
     ComPtr<IDXGISwapChain1> swapChain;
 
-    auto hr = factory_->CreateSwapChainForHwnd(commandQueue_->GetNative(), wnd, &desc, nullptr, nullptr, &swapChain);
+    auto hr = factory_->CreateSwapChainForHwnd(commandQueue_->GetNative(), wnd, &swapChainDescDXGI, nullptr, nullptr, &swapChain);
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;

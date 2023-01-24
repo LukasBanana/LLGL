@@ -68,9 +68,9 @@ GLRenderSystem::~GLRenderSystem()
 
 /* ----- Swap-chain ----- */
 
-SwapChain* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return AddSwapChain(MakeUnique<GLSwapChain>(desc, surface, contextMngr_));
+    return AddSwapChain(MakeUnique<GLSwapChain>(swapChainDesc, surface, contextMngr_));
 }
 
 void GLRenderSystem::Release(SwapChain& swapChain)
@@ -87,12 +87,12 @@ CommandQueue* GLRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
+CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
     /* Get state manager from swap-chain with shared GL context */
     if (auto currentGLContext = contextMngr_.AllocContext())
     {
-        if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
+        if ((commandBufferDesc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
         {
             /* Create immediate command buffer */
             return TakeOwnership(
@@ -105,7 +105,7 @@ CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
             /* Create deferred command buffer */
             return TakeOwnership(
                 commandBuffers_,
-                MakeUnique<GLDeferredCommandBuffer>(desc.flags)
+                MakeUnique<GLDeferredCommandBuffer>(commandBufferDesc.flags)
             );
         }
     }
@@ -148,49 +148,49 @@ static GLenum GetGLBufferUsage(long miscFlags)
     return ((miscFlags & MiscFlags::DynamicUsage) != 0 ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 }
 
-static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& desc, const void* initialData)
+static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& bufferDesc, const void* initialData)
 {
     bufferGL.BufferStorage(
-        static_cast<GLsizeiptr>(desc.size),
+        static_cast<GLsizeiptr>(bufferDesc.size),
         initialData,
-        GetGLBufferStorageFlags(desc.cpuAccessFlags),
-        GetGLBufferUsage(desc.miscFlags)
+        GetGLBufferStorageFlags(bufferDesc.cpuAccessFlags),
+        GetGLBufferUsage(bufferDesc.miscFlags)
     );
 }
 
-Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    AssertCreateBuffer(desc, static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max()));
+    AssertCreateBuffer(bufferDesc, static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max()));
 
-    auto bufferGL = CreateGLBuffer(desc, initialData);
+    auto bufferGL = CreateGLBuffer(bufferDesc, initialData);
 
     /* Store meta data for certain types of buffers */
-    if ((desc.bindFlags & BindFlags::IndexBuffer) != 0 && desc.format != Format::Undefined)
-        bufferGL->SetIndexType(desc.format);
+    if ((bufferDesc.bindFlags & BindFlags::IndexBuffer) != 0 && bufferDesc.format != Format::Undefined)
+        bufferGL->SetIndexType(bufferDesc.format);
 
     return bufferGL;
 }
 
 // private
-GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& desc, const void* initialData)
+GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
     /* Create either base of sub-class GLBuffer object */
-    if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
+    if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create buffer with VAO and build vertex array */
-        auto bufferGL = MakeUnique<GLBufferWithVAO>(desc.bindFlags);
+        auto bufferGL = MakeUnique<GLBufferWithVAO>(bufferDesc.bindFlags);
         {
-            GLBufferStorage(*bufferGL, desc, initialData);
-            bufferGL->BuildVertexArray(desc.vertexAttribs.size(), desc.vertexAttribs.data());
+            GLBufferStorage(*bufferGL, bufferDesc, initialData);
+            bufferGL->BuildVertexArray(bufferDesc.vertexAttribs.size(), bufferDesc.vertexAttribs.data());
         }
         return TakeOwnership(buffers_, std::move(bufferGL));
     }
     else
     {
         /* Create generic buffer */
-        auto bufferGL = MakeUnique<GLBuffer>(desc.bindFlags);
+        auto bufferGL = MakeUnique<GLBuffer>(bufferDesc.bindFlags);
         {
-            GLBufferStorage(*bufferGL, desc, initialData);
+            GLBufferStorage(*bufferGL, bufferDesc, initialData);
         }
         return TakeOwnership(buffers_, std::move(bufferGL));
     }
@@ -348,14 +348,14 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
 /* ----- Sampler States ---- */
 
-Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
+Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     /* If GL_ARB_sampler_objects is not supported, use emulated sampler states */
     if (!HasNativeSamplers())
     {
         auto samplerGL2X = MakeUnique<GL2XSampler>();
-        samplerGL2X->SetDesc(desc);
+        samplerGL2X->SetDesc(samplerDesc);
         return TakeOwnership(samplersGL2X_, std::move(samplerGL2X));
     }
     #endif
@@ -363,7 +363,7 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     /* Create native GL sampler state */
     LLGL_ASSERT_FEATURE_SUPPORT(hasSamplers);
     auto sampler = MakeUnique<GLSampler>();
-    sampler->SetDesc(desc);
+    sampler->SetDesc(samplerDesc);
     return TakeOwnership(samplers_, std::move(sampler));
 }
 
@@ -382,9 +382,9 @@ void GLRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<GLResourceHeap>(desc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<GLResourceHeap>(resourceHeapDesc));
 }
 
 void GLRenderSystem::Release(ResourceHeap& resourceHeap)
@@ -394,10 +394,10 @@ void GLRenderSystem::Release(ResourceHeap& resourceHeap)
 
 /* ----- Render Passes ----- */
 
-RenderPass* GLRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+RenderPass* GLRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    AssertCreateRenderPass(desc);
-    return TakeOwnership(renderPasses_, MakeUnique<GLRenderPass>(desc));
+    AssertCreateRenderPass(renderPassDesc);
+    return TakeOwnership(renderPasses_, MakeUnique<GLRenderPass>(renderPassDesc));
 }
 
 void GLRenderSystem::Release(RenderPass& renderPass)
@@ -407,11 +407,11 @@ void GLRenderSystem::Release(RenderPass& renderPass)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
+RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
     LLGL_ASSERT_FEATURE_SUPPORT(hasRenderTargets);
-    AssertCreateRenderTarget(desc);
-    return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(desc));
+    AssertCreateRenderTarget(renderTargetDesc);
+    return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(renderTargetDesc));
 }
 
 void GLRenderSystem::Release(RenderTarget& renderTarget)
@@ -421,12 +421,12 @@ void GLRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& desc)
+Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(desc);
+    AssertCreateShader(shaderDesc);
 
     /* Validate rendering capabilities for required shader type */
-    switch (desc.type)
+    switch (shaderDesc.type)
     {
         case ShaderType::Geometry:
             LLGL_ASSERT_FEATURE_SUPPORT(hasGeometryShaders);
@@ -444,16 +444,16 @@ Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& desc)
 
     /* Make and return shader object */
     #ifdef LLGL_OPENGL
-    if (HasExtension(GLExt::ARB_separate_shader_objects) && (desc.flags & ShaderCompileFlags::SeparateShader) != 0)
+    if (HasExtension(GLExt::ARB_separate_shader_objects) && (shaderDesc.flags & ShaderCompileFlags::SeparateShader) != 0)
     {
         /* Create separable shader for program pipeline */
-        return TakeOwnership(shaders_, MakeUnique<GLSeparableShader>(desc));
+        return TakeOwnership(shaders_, MakeUnique<GLSeparableShader>(shaderDesc));
     }
     else
     #endif
     {
         /* Create legacy shader for combined program */
-        return TakeOwnership(shaders_, MakeUnique<GLLegacyShader>(desc));
+        return TakeOwnership(shaders_, MakeUnique<GLLegacyShader>(shaderDesc));
     }
 }
 
@@ -464,9 +464,9 @@ void GLRenderSystem::Release(Shader& shader)
 
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout* GLRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+PipelineLayout* GLRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<GLPipelineLayout>(desc));
+    return TakeOwnership(pipelineLayouts_, MakeUnique<GLPipelineLayout>(pipelineLayoutDesc));
 }
 
 void GLRenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -481,14 +481,14 @@ PipelineState* GLRenderSystem::CreatePipelineState(const Blob& /*serializedCache
     return nullptr;//TODO
 }
 
-PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<GLGraphicsPSO>(desc, GetRenderingCaps().limits));
+    return TakeOwnership(pipelineStates_, MakeUnique<GLGraphicsPSO>(pipelineStateDesc, GetRenderingCaps().limits));
 }
 
-PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<GLComputePSO>(desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<GLComputePSO>(pipelineStateDesc));
 }
 
 void GLRenderSystem::Release(PipelineState& pipelineState)
@@ -498,9 +498,9 @@ void GLRenderSystem::Release(PipelineState& pipelineState)
 
 /* ----- Queries ----- */
 
-QueryHeap* GLRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
+QueryHeap* GLRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& quertHeapDesc)
 {
-    return TakeOwnership(queryHeaps_, MakeUnique<GLQueryHeap>(desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<GLQueryHeap>(quertHeapDesc));
 }
 
 void GLRenderSystem::Release(QueryHeap& queryHeap)

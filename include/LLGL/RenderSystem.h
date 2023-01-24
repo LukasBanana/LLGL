@@ -1,6 +1,6 @@
 /*
  * RenderSystem.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -161,14 +161,14 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new swap-chain. At least one swap-chain is required to render into an output surface.
-        \param[in] desc Specifies the swap-chain descriptor, which contains resolution, bit depth, multi-sampling settings etc.
+        \param[in] swapChainDesc Specifies the swap-chain descriptor, which contains resolution, bit depth, multi-sampling settings etc.
         \param[in] surface Optional shared pointer to a surface for the swap-chain.
         If this is null, the swap-chain will create its own platform specific surface, which can be accessed by SwapChain::GetSurface.
         The default surface on desktop platforms (i.e. Window interface) is not shown automatically, i.e. the Window::Show function has to be invoked to show the surface.
         \see SwapChain::GetSurface
         \see Window::Show
         */
-        virtual SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = {}) = 0;
+        virtual SwapChain* CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface = {}) = 0;
 
         /**
         \brief Releases the specified swap-chain. After this call, the specified object must no longer be used.
@@ -185,11 +185,11 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new command buffer.
-        \remarks All render systems can create multiple command buffers,
-        but especially for the legacy graphics APIs such as OpenGL and Direct3D 11, this doesn't provide any benefit,
-        since all graphics and compute commands are submitted sequentially to the GPU.
+        \param[in] commandBufferDesc Specifies an optional command buffer descriptor.
+        \remarks Each render system can create multiple command buffers,
+        but especially the legacy graphics APIs such as OpenGL and Direct3D 11 don't provide a performance benefit with that feature.
         */
-        virtual CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) = 0;
+        virtual CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc = {}) = 0;
 
         /**
         \brief Releases the specified command buffer. After this call, the specified object must no longer be used.
@@ -201,13 +201,13 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new generic hardware buffer.
-        \param[in] desc Specifies the vertex buffer descriptor.
+        \param[in] bufferDesc Specifies the buffer descriptor.
         \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
         This may also be null, to only initialize the size of the buffer. In this case, the buffer must
         be initialized with the "WriteBuffer" function before it is used for drawing operations. By default null.
         \see WriteBuffer
         */
-        virtual Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) = 0;
+        virtual Buffer* CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData = nullptr) = 0;
 
         /**
         \brief Creates a new buffer array.
@@ -358,7 +358,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \throws std::runtime_error If the renderer does not support Sampler objects (e.g. if OpenGL 3.1 or lower is used).
         \see GetRenderingCaps
         */
-        virtual Sampler* CreateSampler(const SamplerDescriptor& desc) = 0;
+        virtual Sampler* CreateSampler(const SamplerDescriptor& samplerDesc) = 0;
 
         //! Releases the specified Sampler object. After this call, the specified object must no longer be used.
         virtual void Release(Sampler& sampler) = 0;
@@ -367,13 +367,13 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new resource heap.
-        \param[in] desc Specifies the descriptor which determines all shader resource.
-        \remarks Resources heaps are used in combination with a pipeline layout.
+        \param[in] resourceHeapDesc Specifies the descriptor which determines all shader resource.
+        \remarks Resource heaps are used in combination with a pipeline layout.
         The pipeline layout determines to which binding points the resources are bound.
         \see CreatePipelineLayout
         \see CommandBuffer::SetResourceHeap
         */
-        virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) = 0;
+        virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc) = 0;
 
         //! Releases the specified ResourceHeap object. After this call, the specified object must no longer be used.
         virtual void Release(ResourceHeap& resourceHeap) = 0;
@@ -389,7 +389,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see CommandBuffer::BeginRenderPass
         \see CommandBuffer::EndRenderPass
         */
-        virtual RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) = 0;
+        virtual RenderPass* CreateRenderPass(const RenderPassDescriptor& renderPassDesc) = 0;
 
         //! Releases the specified RenderPass object. After this call, the specified object must no longer be used.
         virtual void Release(RenderPass& renderPass) = 0;
@@ -400,7 +400,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Creates a new RenderTarget object.
         \throws std::runtime_error If the renderer does not support RenderTarget objects (e.g. if OpenGL 2.1 or lower is used).
         */
-        virtual RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) = 0;
+        virtual RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc) = 0;
 
         //! Releases the specified RenderTarget object. After this call, the specified object must no longer be used.
         virtual void Release(RenderTarget& renderTarget) = 0;
@@ -415,7 +415,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see ShaderDescriptor
         \see ShaderDescFromFile
         */
-        virtual Shader* CreateShader(const ShaderDescriptor& desc) = 0;
+        virtual Shader* CreateShader(const ShaderDescriptor& shaderDesc) = 0;
 
         //! Releases the specified Shader object. After this call, the specified object must no longer be used.
         virtual void Release(Shader& shader) = 0;
@@ -424,7 +424,7 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new and initialized pipeline layout object, if and only if the renderer supports pipeline layouts.
-        \param[in] desc Specifies the pipeline layout descriptor with all layout bindings.
+        \param[in] pipelineLayoutDesc Specifies the pipeline layout descriptor with all layout bindings.
         \remarks A pipeline layout is required in combination with a ResourceHeap to bind multiple resources at once.
         For modern graphics APIs (i.e. Direct3D 12 and Vulkan), this is only way to bind shader resources.
         For legacy graphics APIs (i.e. Direct3D 11 and OpenGL), shader resources can also be bound individually with the extended command buffer.
@@ -432,7 +432,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see CreateResourceHeap
         \see PipelineLayoutDesc
         */
-        virtual PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) = 0;
+        virtual PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc) = 0;
 
         //! Releases the specified PipelineLayout object. After this call, the specified object must no longer be used.
         virtual void Release(PipelineLayout& pipelineLayout) = 0;
@@ -477,7 +477,7 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new graphics pipeline state object (PSO).
-        \param[in] desc Specifies the graphics pipeline descriptor.
+        \param[in] pipelineStateDesc Specifies the graphics PSO descriptor.
         This will describe the entire pipeline state, i.e. the blending-, rasterizer-, depth-, stencil- and shader states.
         The \c vertexShader member of the descriptor must never be null!
         \param[out] serializedCache Optional pointer to a unique Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
@@ -486,11 +486,11 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see GraphicsPipelineDescriptor
         \see CreatePipelineState(const Blob&)
         */
-        virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) = 0;
+        virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) = 0;
 
         /**
         \brief Creates a new compute pipeline state object (PSO).
-        \param[in] desc Specifies the compute pipeline descriptor. This will describe the entire pipeline state.
+        \param[in] pipelineStateDesc Specifies the compute PSO descriptor. This will describe the entire pipeline state.
         The \c computeShader member of the descriptor must never be null!
         \param[out] serializedCache Optional pointer to a unique Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
         This cache may be unique to the respective hardware and driver the application is running on. The behavior is undefined if this cache is used in a different software environment.
@@ -498,7 +498,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see ComputePipelineDescriptor
         \see CreatePipelineState(const Blob&)
         */
-        virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) = 0;
+        virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) = 0;
 
         //! Releases the specified PipelineState object. After this call, the specified object must no longer be used.
         virtual void Release(PipelineState& pipelineState) = 0;
@@ -506,7 +506,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         /* ----- Queries ----- */
 
         //! Creates a new query heap.
-        virtual QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) = 0;
+        virtual QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc) = 0;
 
         //! Releases the specified QueryHeap object. After this call, the specified object must no longer be used.
         virtual void Release(QueryHeap& queryHeap) = 0;
@@ -535,19 +535,19 @@ class LLGL_EXPORT RenderSystem : public Interface
         void SetRenderingCaps(const RenderingCapabilities& caps);
 
         //! Validates the specified buffer descriptor to be used for buffer creation.
-        void AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize);
+        void AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::uint64_t maxSize);
 
         //! Validates the specified arguments to be used for buffer array creation.
         void AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         //! Validates the specified shader descriptor.
-        void AssertCreateShader(const ShaderDescriptor& desc);
+        void AssertCreateShader(const ShaderDescriptor& shaderDesc);
 
         //! Validates the specified render target descriptor.
-        void AssertCreateRenderTarget(const RenderTargetDescriptor& desc);
+        void AssertCreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc);
 
         //! Validates the specified render pass descriptor.
-        void AssertCreateRenderPass(const RenderPassDescriptor& desc);
+        void AssertCreateRenderPass(const RenderPassDescriptor& renderPassDesc);
 
         //! Validates the specified image data size against the required size (in bytes).
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);

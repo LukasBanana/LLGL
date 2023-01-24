@@ -38,11 +38,11 @@ class NullRenderSystem final : public RenderSystem
 
     public:
 
-        NullRenderSystem(const RenderSystemDescriptor& desc);
+        NullRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
 
         /* ----- Swap-chain ------ */
 
-        SwapChain* CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
+        SwapChain* CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(SwapChain& swapChain) override;
 
@@ -52,13 +52,13 @@ class NullRenderSystem final : public RenderSystem
 
         /* ----- Command buffers ----- */
 
-        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
+        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 
         /* ----- Buffers ------ */
 
-        Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;
+        Buffer* CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData = nullptr) override;
         BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) override;
 
         void Release(Buffer& buffer) override;
@@ -82,51 +82,51 @@ class NullRenderSystem final : public RenderSystem
 
         /* ----- Sampler States ---- */
 
-        Sampler* CreateSampler(const SamplerDescriptor& desc) override;
+        Sampler* CreateSampler(const SamplerDescriptor& samplerDesc) override;
 
         void Release(Sampler& sampler) override;
 
         /* ----- Resource Views ----- */
 
-        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
+        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc) override;
 
         void Release(ResourceHeap& resourceHeap) override;
 
         /* ----- Render Passes ----- */
 
-        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& renderPassDesc) override;
 
         void Release(RenderPass& renderPass) override;
 
         /* ----- Render Targets ----- */
 
-        RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) override;
+        RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc) override;
 
         void Release(RenderTarget& renderTarget) override;
 
         /* ----- Shader ----- */
 
-        Shader* CreateShader(const ShaderDescriptor& desc) override;
+        Shader* CreateShader(const ShaderDescriptor& shaderDesc) override;
 
         void Release(Shader& shader) override;
 
         /* ----- Pipeline Layouts ----- */
 
-        PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) override;
+        PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc) override;
 
         void Release(PipelineLayout& pipelineLayout) override;
 
         /* ----- Pipeline States ----- */
 
         PipelineState* CreatePipelineState(const Blob& serializedCache) override;
-        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
-        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
+        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
+        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
 
         void Release(PipelineState& pipelineState) override;
 
         /* ----- Queries ----- */
 
-        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& desc) override;
+        QueryHeap* CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc) override;
 
         void Release(QueryHeap& queryHeap) override;
 

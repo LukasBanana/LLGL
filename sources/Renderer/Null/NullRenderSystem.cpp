@@ -116,8 +116,8 @@ static RendererInfo GetNullRenderInfo()
     return info;
 }
 
-NullRenderSystem::NullRenderSystem(const RenderSystemDescriptor& desc) :
-    desc_         { desc                           },
+NullRenderSystem::NullRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
+    desc_         { renderSystemDesc               },
     commandQueue_ { MakeUnique<NullCommandQueue>() }
 {
     SetRendererInfo(GetNullRenderInfo());
@@ -126,9 +126,9 @@ NullRenderSystem::NullRenderSystem(const RenderSystemDescriptor& desc) :
 
 /* ----- Swap-chain ----- */
 
-SwapChain* NullRenderSystem::CreateSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface)
+SwapChain* NullRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(swapChains_, MakeUnique<NullSwapChain>(desc, surface));
+    return TakeOwnership(swapChains_, MakeUnique<NullSwapChain>(swapChainDesc, surface));
 }
 
 void NullRenderSystem::Release(SwapChain& swapChain)
@@ -145,9 +145,9 @@ CommandQueue* NullRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* NullRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
+CommandBuffer* NullRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<NullCommandBuffer>(desc));
+    return TakeOwnership(commandBuffers_, MakeUnique<NullCommandBuffer>(commandBufferDesc));
 }
 
 void NullRenderSystem::Release(CommandBuffer& commandBuffer)
@@ -157,11 +157,11 @@ void NullRenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
-Buffer* NullRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+Buffer* NullRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    if (desc.size > GetRenderingCaps().limits.maxBufferSize)
+    if (bufferDesc.size > GetRenderingCaps().limits.maxBufferSize)
         throw std::invalid_argument("");
-    return TakeOwnership(buffers_, MakeUnique<NullBuffer>(desc, initialData));
+    return TakeOwnership(buffers_, MakeUnique<NullBuffer>(bufferDesc, initialData));
 }
 
 BufferArray* NullRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
@@ -236,9 +236,9 @@ void NullRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textur
 
 /* ----- Sampler States ---- */
 
-Sampler* NullRenderSystem::CreateSampler(const SamplerDescriptor& desc)
+Sampler* NullRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return TakeOwnership(samplers_, MakeUnique<NullSampler>(desc));
+    return TakeOwnership(samplers_, MakeUnique<NullSampler>(samplerDesc));
 }
 
 void NullRenderSystem::Release(Sampler& sampler)
@@ -248,9 +248,9 @@ void NullRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Views ----- */
 
-ResourceHeap* NullRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+ResourceHeap* NullRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<NullResourceHeap>(desc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<NullResourceHeap>(resourceHeapDesc));
 }
 
 void NullRenderSystem::Release(ResourceHeap& resourceHeap)
@@ -260,9 +260,9 @@ void NullRenderSystem::Release(ResourceHeap& resourceHeap)
 
 /* ----- Render Passes ----- */
 
-RenderPass* NullRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+RenderPass* NullRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return TakeOwnership(renderPasses_, MakeUnique<NullRenderPass>(desc));
+    return TakeOwnership(renderPasses_, MakeUnique<NullRenderPass>(renderPassDesc));
 }
 
 void NullRenderSystem::Release(RenderPass& renderPass)
@@ -272,9 +272,9 @@ void NullRenderSystem::Release(RenderPass& renderPass)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* NullRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
+RenderTarget* NullRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<NullRenderTarget>(desc));
+    return TakeOwnership(renderTargets_, MakeUnique<NullRenderTarget>(renderTargetDesc));
 }
 
 void NullRenderSystem::Release(RenderTarget& renderTarget)
@@ -284,9 +284,9 @@ void NullRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* NullRenderSystem::CreateShader(const ShaderDescriptor& desc)
+Shader* NullRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    return TakeOwnership(shaders_, MakeUnique<NullShader>(desc));
+    return TakeOwnership(shaders_, MakeUnique<NullShader>(shaderDesc));
 }
 
 void NullRenderSystem::Release(Shader& shader)
@@ -296,9 +296,9 @@ void NullRenderSystem::Release(Shader& shader)
 
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout* NullRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+PipelineLayout* NullRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<NullPipelineLayout>(desc));
+    return TakeOwnership(pipelineLayouts_, MakeUnique<NullPipelineLayout>(pipelineLayoutDesc));
 }
 
 void NullRenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -313,14 +313,14 @@ PipelineState* NullRenderSystem::CreatePipelineState(const Blob& serializedCache
     return nullptr;//TODO
 }
 
-PipelineState* NullRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* NullRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<NullPipelineState>(desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<NullPipelineState>(pipelineStateDesc));
 }
 
-PipelineState* NullRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& desc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* NullRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<NullPipelineState>(desc));
+    return TakeOwnership(pipelineStates_, MakeUnique<NullPipelineState>(pipelineStateDesc));
 }
 
 void NullRenderSystem::Release(PipelineState& pipelineState)
@@ -330,9 +330,9 @@ void NullRenderSystem::Release(PipelineState& pipelineState)
 
 /* ----- Queries ----- */
 
-QueryHeap* NullRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& desc)
+QueryHeap* NullRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
-    return TakeOwnership(queryHeaps_, MakeUnique<NullQueryHeap>(desc));
+    return TakeOwnership(queryHeaps_, MakeUnique<NullQueryHeap>(queryHeapDesc));
 }
 
 void NullRenderSystem::Release(QueryHeap& queryHeap)
