@@ -396,7 +396,6 @@ void GLRenderSystem::Release(ResourceHeap& resourceHeap)
 
 RenderPass* GLRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    AssertCreateRenderPass(renderPassDesc);
     return TakeOwnership(renderPasses_, MakeUnique<GLRenderPass>(renderPassDesc));
 }
 

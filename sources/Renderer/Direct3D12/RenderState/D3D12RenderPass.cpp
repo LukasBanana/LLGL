@@ -13,6 +13,7 @@
 #include "../../CheckedCast.h"
 #include "../../TextureUtils.h"
 #include <LLGL/RenderTargetFlags.h>
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 
 
@@ -32,13 +33,11 @@ void D3D12RenderPass::BuildAttachments(
     const RenderPassDescriptor& desc)
 {
     /* Reset flags and depth-stencil format */
-    clearFlagsDSV_          = 0;
-    numColorAttachments_    = std::min(LLGL_MAX_NUM_COLOR_ATTACHMENTS, static_cast<UINT>(desc.colorAttachments.size()));
-
     SetDSVFormat(DXGI_FORMAT_UNKNOWN);
 
     /* Check which color attachment must be cleared */
-    FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc);
+    numColorAttachments_    = FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc);
+    clearFlagsDSV_          = 0;
 
     /* Check if depth attachment must be cleared */
     if (desc.depthAttachment.loadOp == AttachmentLoadOp::Clear)

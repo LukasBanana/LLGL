@@ -1,6 +1,6 @@
 /*
  * MTRenderPass.mm
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,10 +10,13 @@
 #include <LLGL/RenderTargetFlags.h>
 #include <LLGL/SwapChainFlags.h>
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Misc/ForRange.h>
 #include "../MTTypes.h"
 #include "../Texture/MTTexture.h"
 #include "../../CheckedCast.h"
 #include "../../TextureUtils.h"
+#include "../../RenderPassUtils.h"
+#include "../../../Core/Assertion.h"
 
 
 namespace LLGL
@@ -53,8 +56,10 @@ static MTAttachmentFormat MakeMTAttachmentFormat(
 MTRenderPass::MTRenderPass(const RenderPassDescriptor& desc) :
     sampleCount_ { GetClampedSamples(desc.samples) }
 {
-    colorAttachments_.resize(desc.colorAttachments.size());
-    for (std::size_t i = 0; i < colorAttachments_.size(); ++i)
+    const auto numColorAttachments = NumEnabledColorAttachments(desc);
+    LLGL_ASSERT(numColorAttachments <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
+    colorAttachments_.resize(numColorAttachments);
+    for_range(i, numColorAttachments)
         Convert(colorAttachments_[i], desc.colorAttachments[i]);
     Convert(depthAttachment_, desc.depthAttachment);
     Convert(stencilAttachment_, desc.stencilAttachment);

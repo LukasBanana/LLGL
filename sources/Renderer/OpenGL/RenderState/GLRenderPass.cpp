@@ -1,6 +1,6 @@
 /*
  * GLRenderPass.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -14,11 +14,11 @@ namespace LLGL
 {
 
 
-GLRenderPass::GLRenderPass(const RenderPassDescriptor& desc) :
-    numColorAttachments_ { static_cast<std::uint8_t>(desc.colorAttachments.size()) }
+GLRenderPass::GLRenderPass(const RenderPassDescriptor& desc)
 {
     /* Check which color attachment must be cleared */
-    if (FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc) > 0)
+    numColorAttachments_ = static_cast<std::uint8_t>(FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc));
+    if (numColorAttachments_ > 0)
         clearMask_ |= GL_COLOR_BUFFER_BIT;
 
     /* Check if depth attachment must be cleared */

@@ -273,10 +273,7 @@ void VKSwapChain::CreateRenderPass(VKRenderPass& renderPass, bool isSecondary)
         auto storeOp    = AttachmentStoreOp::Store;
 
         /* Specify single color attachment */
-        renderPassDesc.colorAttachments =
-        {
-            AttachmentFormatDescriptor{ GetColorFormat(), loadOp, storeOp }
-        };
+        renderPassDesc.colorAttachments[0] = AttachmentFormatDescriptor{ GetColorFormat(), loadOp, storeOp };
 
         /* Specify depth-stencil attachment */
         auto depthStencilFormat = GetDepthStencilFormat();

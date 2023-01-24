@@ -7,41 +7,58 @@
 
 #include "RenderPassUtils.h"
 #include <LLGL/Misc/ForRange.h>
+#include "../Core/Assertion.h"
 
 
 namespace LLGL
 {
 
 
-LLGL_EXPORT void ResetClearColorAttachmentIndices(
-    std::size_t     numColorAttachments,
-    std::uint8_t*   colorAttachmentsIndices)
+LLGL_EXPORT std::uint32_t NumEnabledColorAttachments(const RenderPassDescriptor& renderPassDesc)
 {
-    for_range(i, numColorAttachments)
-        colorAttachmentsIndices[i] = 0xFF;
+    std::uint32_t n = 0;
+    while (n < LLGL_MAX_NUM_COLOR_ATTACHMENTS && renderPassDesc.colorAttachments[n].format != Format::Undefined)
+        ++n;
+    return n;
 }
 
-LLGL_EXPORT std::uint8_t FillClearColorAttachmentIndices(
-    std::size_t                 numColorAttachments,
-    std::uint8_t*               colorAttachmentsIndices,
+LLGL_EXPORT void ResetClearColorAttachmentIndices(
+    std::uint32_t     numClearIndices,
+    std::uint8_t*   outClearIndices)
+{
+    for_range(i, numClearIndices)
+        outClearIndices[i] = 0xFF;
+}
+
+LLGL_EXPORT std::uint32_t FillClearColorAttachmentIndices(
+    std::uint32_t               numClearIndices,
+    std::uint8_t*               outClearIndices,
     const RenderPassDescriptor& renderPassDesc)
 {
-    /* Check which color attachment must be cleared */
-    std::size_t i = 0;
+    LLGL_ASSERT(numClearIndices <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
 
-    for (std::uint8_t bufferIndex = 0; i < numColorAttachments && i < renderPassDesc.colorAttachments.size(); ++bufferIndex)
+    /* Check which color attachment must be cleared */
+    std::uint32_t clearIndex = 0;
+
+    for_range(bufferIndex, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
     {
-        if (renderPassDesc.colorAttachments[bufferIndex].loadOp == AttachmentLoadOp::Clear)
-            colorAttachmentsIndices[i++] = bufferIndex;
+        const auto& colorAttachment = renderPassDesc.colorAttachments[bufferIndex];
+        if (colorAttachment.format != Format::Undefined && clearIndex < numClearIndices)
+        {
+            if (colorAttachment.loadOp == AttachmentLoadOp::Clear)
+                outClearIndices[clearIndex++] = bufferIndex;
+        }
+        else
+            break;
     }
 
     /* Initialize remaining attachment indices */
-    const auto n = i;
+    const auto numColorAttachmentsToClear = clearIndex;
 
-    while (i < numColorAttachments)
-        colorAttachmentsIndices[i++] = 0xFF;
+    for (; clearIndex < numClearIndices; ++clearIndex)
+        outClearIndices[clearIndex] = 0xFF;
 
-    return static_cast<std::uint8_t>(n);
+    return numColorAttachmentsToClear;
 }
 
 

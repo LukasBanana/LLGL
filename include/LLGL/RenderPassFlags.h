@@ -1,6 +1,6 @@
 /*
  * RenderPassFlags.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,8 +9,8 @@
 #define LLGL_RENDER_PASS_FLAGS_H
 
 
-#include "Format.h"
-#include <vector>
+#include <LLGL/Format.h>
+#include <LLGL/StaticLimits.h>
 
 
 namespace LLGL
@@ -118,27 +118,28 @@ struct RenderPassDescriptor
 {
     /**
     \brief Specifies the color attachments used within the render pass.
-    \remarks A swap-chain usually uses a BGRA format instead of an RGBA format.
+    \remarks Each attachment with a \c format field set to Format::Undefined is disabled.
+    Any other attachment after the first disabled attachment is also considered disabled as attachments must be enabled in consecutive order.
+    A swap-chain usually uses a BGRA format instead of an RGBA format.
     \see RenderingLimits::maxColorAttachments
     \see Format::BGRA8UNorm
     \see Format::BGRA8sRGB
-    \todo Change to static array with 8 elements, i.e. <code>AttachmentFormatDescriptor colorAttachments[8]</code>.
     */
-    std::vector<AttachmentFormatDescriptor> colorAttachments;
+    AttachmentFormatDescriptor  colorAttachments[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 
     /**
     \brief Specifies the depth attachment used within the render pass.
     \remarks The depth attachment and stencil attachment usually share the same format (e.g. Format::D24UNormS8UInt).
     They are separated here to specify different load and store operations.
     */
-    AttachmentFormatDescriptor              depthAttachment;
+    AttachmentFormatDescriptor  depthAttachment;
 
     /**
     \brief Specifies the stencil attachment used within the render pass.
     \remarks The depth attachment and stencil attachment usually share the same format (e.g. Format::D24UNormS8UInt).
     They are separated here to specify different load and store operations.
     */
-    AttachmentFormatDescriptor              stencilAttachment;
+    AttachmentFormatDescriptor  stencilAttachment;
 
     /**
     \brief Specifies the number of samples for the respective render target attachment. By default 1.
@@ -146,7 +147,7 @@ struct RenderPassDescriptor
     All attachments and the respective render target must have the same number of samples.
     \see TextureDescriptor::samples
     */
-    std::uint32_t                           samples             = 1;
+    std::uint32_t               samples             = 1;
 };
 
 

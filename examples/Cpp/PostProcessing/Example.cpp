@@ -279,13 +279,10 @@ public:
         //TODO: should be able to query depth-stencil format from <RenderTarget> just like with <SwapChain>
         LLGL::RenderPassDescriptor renderPassDesc;
         {
-            renderPassDesc.colorAttachments =
-            {
-                LLGL::AttachmentFormatDescriptor{ colorMap->GetDesc().format, LLGL::AttachmentLoadOp::Clear },
-                LLGL::AttachmentFormatDescriptor{ glossMap->GetDesc().format, LLGL::AttachmentLoadOp::Clear },
-            };
-            renderPassDesc.depthAttachment  = LLGL::AttachmentFormatDescriptor{ LLGL::Format::D32Float, LLGL::AttachmentLoadOp::Clear };
-            renderPassDesc.samples          = GetSampleCount();
+            renderPassDesc.colorAttachments[0]  = LLGL::AttachmentFormatDescriptor{ colorMap->GetDesc().format, LLGL::AttachmentLoadOp::Clear };
+            renderPassDesc.colorAttachments[1]  = LLGL::AttachmentFormatDescriptor{ glossMap->GetDesc().format, LLGL::AttachmentLoadOp::Clear };
+            renderPassDesc.depthAttachment      = LLGL::AttachmentFormatDescriptor{ LLGL::Format::D32Float, LLGL::AttachmentLoadOp::Clear };
+            renderPassDesc.samples              = GetSampleCount();
         }
         renderPassScene = renderer->CreateRenderPass(renderPassDesc);
     }

@@ -531,8 +531,9 @@ LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const char* layoutSignat
 
 LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& renderTargetDesc)
 {
-    RenderPassDescriptor desc;
+    RenderPassDescriptor renderPassDesc;
     {
+        std::uint32_t numColorAttachments = 0;
         for (const auto& attachment : renderTargetDesc.attachments)
         {
             /* First try to get format from texture */
@@ -543,25 +544,26 @@ LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& re
             switch (attachment.type)
             {
                 case AttachmentType::Color:
-                    desc.colorAttachments.push_back({ format });
+                    if (numColorAttachments < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+                        renderPassDesc.colorAttachments[numColorAttachments++] = { format };
                     break;
 
                 case AttachmentType::Depth:
-                    desc.depthAttachment    = { format != Format::Undefined ? format : Format::D32Float };
+                    renderPassDesc.depthAttachment      = { format != Format::Undefined ? format : Format::D32Float };
                     break;
 
                 case AttachmentType::DepthStencil:
-                    desc.depthAttachment    = { format != Format::Undefined ? format : Format::D24UNormS8UInt };
-                    desc.stencilAttachment  = desc.depthAttachment;
+                    renderPassDesc.depthAttachment      = { format != Format::Undefined ? format : Format::D24UNormS8UInt };
+                    renderPassDesc.stencilAttachment    = renderPassDesc.depthAttachment;
                     break;
 
                 case AttachmentType::Stencil:
-                    desc.depthAttachment    = { format != Format::Undefined ? format : Format::D24UNormS8UInt };
+                    renderPassDesc.depthAttachment      = { format != Format::Undefined ? format : Format::D24UNormS8UInt };
                     break;
             }
         }
     }
-    return desc;
+    return renderPassDesc;
 }
 
 

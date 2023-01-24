@@ -1,6 +1,6 @@
 /*
  * GLRenderPass.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -47,9 +47,9 @@ class GLRenderPass final : public RenderPass
 
     private:
 
-        std::uint8_t    numColorAttachments_                                    = 0;
         GLbitfield      clearMask_                                              = 0;
         std::uint8_t    clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
+        std::uint8_t    numColorAttachments_                                    = 0;
 
 };
 

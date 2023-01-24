@@ -599,7 +599,6 @@ void VKRenderSystem::Release(ResourceHeap& resourceHeap)
 
 RenderPass* VKRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    AssertCreateRenderPass(renderPassDesc);
     return TakeOwnership(renderPasses_, MakeUnique<VKRenderPass>(device_, renderPassDesc));
 }
 

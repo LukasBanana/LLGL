@@ -1,6 +1,6 @@
 /*
  * VKRenderPass.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,7 +8,8 @@
 #include "VKRenderPass.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
-#include <LLGL/RenderPassFlags.h>
+#include "../../RenderPassUtils.h"
+#include <LLGL/Misc/ForRange.h>
 #include <limits>
 
 
@@ -88,8 +89,8 @@ static void Convert(
 void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescriptor& desc)
 {
     /* Get number of attachments */
-    std::uint32_t numColorAttachments   = static_cast<std::uint32_t>(desc.colorAttachments.size());
-    std::uint32_t numAttachments        = numColorAttachments;
+    const auto  numColorAttachments = NumEnabledColorAttachments(desc);
+    auto        numAttachments      = numColorAttachments;
 
     if (numAttachments > static_cast<std::uint32_t>(std::numeric_limits<decltype(numClearValues_)>::max()))
         throw std::invalid_argument("too many attachments for Vulkan render pass");
@@ -107,7 +108,7 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     const auto sampleCountBits = VKTypes::ToVkSampleCountBits(desc.samples);
     std::vector<VkAttachmentDescription> attachmentDescs(desc.samples > 1 ? numAttachments + numColorAttachments : numAttachments);
 
-    for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+    for_range(i, numColorAttachments)
         Convert(attachmentDescs[i], desc.colorAttachments[i], VK_SAMPLE_COUNT_1_BIT);
 
     if (hasDepthStencil)
@@ -116,11 +117,11 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     if (sampleCountBits > VK_SAMPLE_COUNT_1_BIT)
     {
         /* Take color attachment format descriptors for multi-sampled attachemnts */
-        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+        for_range(i, numColorAttachments)
             Convert(attachmentDescs[numAttachments + i], desc.colorAttachments[i], sampleCountBits);
 
         /* Modify original attachment descriptors */
-        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+        for_range(i, numColorAttachments)
             attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     }
 

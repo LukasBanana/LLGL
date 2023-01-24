@@ -381,12 +381,6 @@ void RenderSystem::AssertCreateRenderTarget(const RenderTargetDescriptor& render
         ErrTooManyColorAttachments("render target");
 }
 
-void RenderSystem::AssertCreateRenderPass(const RenderPassDescriptor& renderPassDesc)
-{
-    if (renderPassDesc.colorAttachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS)
-        ErrTooManyColorAttachments("render pass");
-}
-
 void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info)
 {
     if (dataSize < requiredDataSize)

@@ -1,6 +1,6 @@
 /*
  * MTRenderPass.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -13,7 +13,8 @@
 
 #include <LLGL/RenderPass.h>
 #include <LLGL/ForwardDecls.h>
-#include <vector>
+#include <LLGL/StaticLimits.h>
+#include <LLGL/Container/SmallVector.h>
 
 
 namespace LLGL
@@ -26,6 +27,8 @@ struct MTAttachmentFormat
     MTLLoadAction   loadAction  = MTLLoadActionDontCare;
     MTLStoreAction  storeAction = MTLStoreActionDontCare;
 };
+
+using MTColorAttachmentFormatVector = SmallVector<MTAttachmentFormat, LLGL_MAX_NUM_COLOR_ATTACHMENTS>;
 
 // Stores the native attachment formats and load/store actions.
 class MTRenderPass final : public RenderPass
@@ -42,7 +45,7 @@ class MTRenderPass final : public RenderPass
         // Returns the combined depth-stencil format.
         MTLPixelFormat GetDepthStencilFormat() const;
 
-        inline const std::vector<MTAttachmentFormat>& GetColorAttachments() const
+        inline const MTColorAttachmentFormatVector& GetColorAttachments() const
         {
             return colorAttachments_;
         }
@@ -64,7 +67,7 @@ class MTRenderPass final : public RenderPass
 
     private:
 
-        std::vector<MTAttachmentFormat> colorAttachments_;
+        MTColorAttachmentFormatVector   colorAttachments_;
         MTAttachmentFormat              depthAttachment_;
         MTAttachmentFormat              stencilAttachment_;
         NSUInteger                      sampleCount_        = 1;

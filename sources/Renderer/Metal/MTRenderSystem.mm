@@ -201,7 +201,6 @@ void MTRenderSystem::Release(ResourceHeap& resourceHeap)
 
 RenderPass* MTRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    AssertCreateRenderPass(renderPassDesc);
     return TakeOwnership(renderPasses_, MakeUnique<MTRenderPass>(renderPassDesc));
 }
 

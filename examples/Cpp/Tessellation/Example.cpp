@@ -129,15 +129,9 @@ public:
     {
         LLGL::RenderPassDescriptor renderPassDesc;
         {
-            renderPassDesc.colorAttachments =
-            {
-                LLGL::AttachmentFormatDescriptor{ swapChain->GetColorFormat(), LLGL::AttachmentLoadOp::Clear },
-            };
-            renderPassDesc.depthAttachment =
-            (
-                LLGL::AttachmentFormatDescriptor{ swapChain->GetDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear }
-            );
-            renderPassDesc.samples = GetMultiSampleDesc().SampleCount();
+            renderPassDesc.colorAttachments[0]  = LLGL::AttachmentFormatDescriptor{ swapChain->GetColorFormat(), LLGL::AttachmentLoadOp::Clear };
+            renderPassDesc.depthAttachment      = LLGL::AttachmentFormatDescriptor{ swapChain->GetDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear };
+            renderPassDesc.samples              = GetMultiSampleDesc().SampleCount();
         }
         renderPass = renderer->CreateRenderPass(renderPassDesc);
     }
