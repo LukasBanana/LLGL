@@ -1,14 +1,12 @@
 /*
- * DescriptorHelper.cpp
- * 
+ * RenderPassUtils.cpp
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "DescriptorHelper.h"
-#include <LLGL/StaticLimits.h>
-#include <LLGL/RenderPassFlags.h>
-#include <algorithm>
+#include "RenderPassUtils.h"
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -19,7 +17,7 @@ LLGL_EXPORT void ResetClearColorAttachmentIndices(
     std::size_t     numColorAttachments,
     std::uint8_t*   colorAttachmentsIndices)
 {
-    for (std::size_t i = 0; i < numColorAttachments; ++i)
+    for_range(i, numColorAttachments)
         colorAttachmentsIndices[i] = 0xFF;
 }
 

@@ -1,13 +1,12 @@
 /*
  * D3D11RenderPass.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "D3D11RenderPass.h"
-#include "../../DescriptorHelper.h"
-#include <LLGL/RenderPassFlags.h>
+#include "../../RenderPassUtils.h"
 
 
 namespace LLGL

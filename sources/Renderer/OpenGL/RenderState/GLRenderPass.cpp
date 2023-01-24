@@ -6,7 +6,7 @@
  */
 
 #include "GLRenderPass.h"
-#include "../../DescriptorHelper.h"
+#include "../../RenderPassUtils.h"
 #include <LLGL/CommandBufferFlags.h>
 
 

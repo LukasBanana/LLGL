@@ -24,7 +24,6 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/ShaderReflection.h>
 #include <LLGL/PipelineLayoutFlags.h>
-#include <LLGL/Container/ArrayView.h>
 
 
 namespace LLGL

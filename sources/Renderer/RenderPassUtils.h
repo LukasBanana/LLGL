@@ -1,15 +1,16 @@
 /*
- * DescriptorHelper.h
- * 
+ * RenderPassUtils.h
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_DESCRIPTOR_HELPER_H
-#define LLGL_DESCRIPTOR_HELPER_H
+#ifndef LLGL_RENDER_PASS_UTILS_H
+#define LLGL_RENDER_PASS_UTILS_H
 
 
 #include <LLGL/Export.h>
+#include <LLGL/RenderPassFlags.h>
 #include <cstdint>
 #include <cstddef>
 
@@ -17,9 +18,6 @@
 namespace LLGL
 {
 
-//TODO: merge this header and source with "TextureUtils.cpp/h"
-
-struct RenderPassDescriptor;
 
 /* ----- Functions ----- */
 

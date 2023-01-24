@@ -1,6 +1,6 @@
 /*
  * D3D12RenderPass.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,10 +9,9 @@
 #include "../D3D12Device.h"
 #include "../D3D12Types.h"
 #include "../Texture/D3D12Texture.h"
-#include "../../DescriptorHelper.h"
+#include "../../RenderPassUtils.h"
 #include "../../CheckedCast.h"
 #include "../../TextureUtils.h"
-#include <LLGL/RenderPassFlags.h>
 #include <LLGL/RenderTargetFlags.h>
 #include <algorithm>
 
