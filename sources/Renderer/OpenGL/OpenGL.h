@@ -1,6 +1,6 @@
 /*
  * OpenGL.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -71,6 +71,10 @@
 
 #if defined GL_ARB_clip_control
 #   define LLGL_GLEXT_CLIP_CONTROL
+#endif
+
+#ifdef GL_TEXTURE_BORDER_COLOR
+#   define LLGL_SAMPLER_BORDER_COLOR
 #endif
 
 // At most one of these should be defined to indicate which API
