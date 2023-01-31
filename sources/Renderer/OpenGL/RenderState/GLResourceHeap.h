@@ -1,6 +1,6 @@
 /*
  * GLResourceHeap.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,9 +10,11 @@
 
 
 #include <LLGL/ResourceHeap.h>
+#include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/ResourceFlags.h>
+#include <LLGL/Container/ArrayView.h>
+#include "../../SegmentedBuffer.h"
 #include "../OpenGL.h"
-#include <vector>
 #include <functional>
 
 
@@ -20,10 +22,10 @@ namespace LLGL
 {
 
 
+enum GLResourceType : std::uint32_t;
 class GLStateManager;
-class ResourceBindingIterator;
+class BindingDescriptorIterator;
 struct ResourceHeapDescriptor;
-struct GLResourceBinding;
 
 /*
 This class emulates the behavior of a descriptor set like in Vulkan,
@@ -38,75 +40,118 @@ class GLResourceHeap final : public ResourceHeap
 
     public:
 
-        GLResourceHeap(const ResourceHeapDescriptor& desc);
+        GLResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews = {});
         ~GLResourceHeap();
+
+        // Writes the specified resource views to this resource heap and generates texture views as required.
+        void WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
 
         // Binds this resource heap with the specified GL state manager.
         void Bind(GLStateManager& stateMngr, std::uint32_t firstSet);
 
     private:
 
-        using GLResourceBindingIter = std::vector<GLResourceBinding>::const_iterator;
-        using BuildSegmentFunc = std::function<void(GLResourceBindingIter begin, GLsizei count)>;
+        struct GLResourceBinding;
 
-        void BuildTextureViews(ResourceBindingIterator& resourceIterator, long bindFlags);
-
-        void BuildBufferSegments(ResourceBindingIterator& resourceIterator, long bindFlags, std::uint8_t& numSegments);
-        void BuildBufferRangeSegments(ResourceBindingIterator& resourceIterator, long bindFlags, std::uint8_t& numSegments);
-        void BuildUniformBufferSegments(ResourceBindingIterator& resourceIterator);
-        void BuildStorageBufferSegments(ResourceBindingIterator& resourceIterator);
-        void BuildTextureSegments(ResourceBindingIterator& resourceIterator);
-        void BuildImageTextureSegments(ResourceBindingIterator& resourceIterator);
-        void BuildSamplerSegments(ResourceBindingIterator& resourceIterator);
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        void BuildGL2XSamplerSegments(ResourceBindingIterator& resourceIterator);
-        #endif
-
-        void BuildAllSegments(
-            const std::vector<GLResourceBinding>&   resourceBindings,
-            const BuildSegmentFunc&                 buildSegmentFunc,
-            std::uint8_t&                           numSegments
-        );
-
-        void BuildSegment1(GLResourceBindingIter it, GLsizei count);
-        void BuildSegment2Target(GLResourceBindingIter it, GLsizei count);
-        void BuildSegment2Format(GLResourceBindingIter it, GLsizei count);
-        void BuildSegment3(GLResourceBindingIter it, GLsizei count);
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        void BuildSegment2GL2XSampler(GLResourceBindingIter it, GLsizei count);
-        #endif
-
-        void WriteSegmentationHeapEnd(const void* data, std::size_t size);
-
-        GLuint GetTextureViewID(std::size_t idx) const;
-
-        std::size_t GetSegmentationHeapSize() const;
-
-        const std::int8_t* GetSegmentationHeapStart(std::uint32_t firstSet) const;
-
-    private:
+        using SegmentationSizeType  = std::uint8_t;
+        using AllocSegmentFunc      = std::function<void(const GLResourceBinding* first, SegmentationSizeType count)>;
 
         // Describes the segments within the raw buffer (per descriptor set).
         struct BufferSegmentation
         {
-            std::uint8_t numUniformBufferSegments       = 0;
-            std::uint8_t numUniformBufferRangeSegments  = 0;
-            std::uint8_t numStorageBufferSegments       = 0;
-            std::uint8_t numStorageBufferRangeSegments  = 0;
-            std::uint8_t numTextureSegments             = 0;
-            std::uint8_t numImageTextureSegments        = 0;
-            std::uint8_t numSamplerSegments             = 0;
+            SegmentationSizeType numUniformBufferSegments   = 0;
+            SegmentationSizeType numStorageBufferSegments   = 0;
+            SegmentationSizeType numTextureSegments         = 0;
+            SegmentationSizeType numImageTextureSegments    = 0;
+            SegmentationSizeType numSamplerSegments         = 0;
+        };
+
+        // Binding-to-descriptor map location.
+        struct BindingSegmentLocation
+        {
+            std::uint32_t segmentOffset   : 24; // Byte offset to the first segment within a segment set.
+            std::uint32_t descriptorIndex :  8; // Index of the descriptor the binding maps to.
+        };
+
+        // GL resource binding slot with index to the input binding list
+        struct GLResourceBinding
+        {
+            GLuint      slot;   // GL pipeline binding slot
+            std::size_t index;  // Index to the input bindings list
         };
 
     private:
 
-        BufferSegmentation          segmentation_;
+        void AllocTextureView(GLuint& texViewID, GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc);
+        bool FreeTextureView(GLuint& texViewID);
+        void FreeAllSegmentSetTextureViews(const char* heapPtr);
+        void FreeAllSegmentsTextureViews();
 
-        std::size_t                 numTextureViews_    = 0;    // Number of GL texture objects generated with glTextureView
-        std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
-        std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
+        void AllocSegmentsUBO(BindingDescriptorIterator& bindingIter);
+        void AllocSegmentsSSBO(BindingDescriptorIterator& bindingIter);
+        void AllocSegmentsTexture(BindingDescriptorIterator& bindingIter);
+        void AllocSegmentsImage(BindingDescriptorIterator& bindingIter);
+        void AllocSegmentsSampler(BindingDescriptorIterator& bindingIter);
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        void AllocSegmentsGL2XSampler(BindingDescriptorIterator& bindingIter);
+        #endif
 
-        GLbitfield                  barriers_           = 0;    // Bitmask for glMemoryBarrier
+        void Alloc1PartSegment(
+            GLResourceType              type,
+            const GLResourceBinding*    first,
+            SegmentationSizeType        count,
+            std::size_t                 payload0Stride
+        );
+
+        void Alloc2PartSegment(
+            GLResourceType              type,
+            const GLResourceBinding*    first,
+            SegmentationSizeType        count,
+            std::size_t                 payload0Stride,
+            std::size_t                 payload1Stride
+        );
+
+        void Alloc3PartSegment(
+            GLResourceType              type,
+            const GLResourceBinding*    first,
+            SegmentationSizeType        count,
+            std::size_t                 payload0Stride,
+            std::size_t                 payload1Stride,
+            std::size_t                 payload2Stride
+        );
+
+        void WriteBindingMappings(const GLResourceBinding* first, SegmentationSizeType count);
+        void CopyBindingMapping(const GLResourceBinding& dst, const GLResourceBinding& src);
+
+        void WriteResourceViewsBuffer(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index, long anyBindFlags);
+        void WriteResourceViewsUBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewsSSBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewsTexture(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewsImage(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewsSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        #ifdef LLGL_GL_ENABLE_OPENGL2X
+        void WriteResourceViewsGL2XSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        #endif
+
+    private:
+
+        static std::vector<GLResourceBinding> FilterAndSortGLBindingSlots(
+            BindingDescriptorIterator&  bindingIter,
+            ResourceType                resourceType,
+            long                        resourceBindFlags
+        );
+
+        static SegmentationSizeType ConsolidateSegments(
+            const ArrayView<GLResourceBinding>& bindingSlots,
+            const AllocSegmentFunc&             allocSegmentFunc
+        );
+
+    private:
+
+        SmallVector<BindingSegmentLocation> bindingMap_;            // Maps a binding index to a descriptor index.
+        BufferSegmentation                  segmentation_;
+        SegmentedBuffer                     buffer_;                // Buffer with resource binding information and stride (in bytes) per descriptor set
+        GLbitfield                          barriers_       = 0;    // Bitmask for glMemoryBarrier
 
 };
 

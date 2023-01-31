@@ -382,14 +382,20 @@ void GLRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
+ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<GLResourceHeap>(resourceHeapDesc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<GLResourceHeap>(resourceHeapDesc, initialResourceViews));
 }
 
 void GLRenderSystem::Release(ResourceHeap& resourceHeap)
 {
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+void GLRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
+    resourceHeapGL.WriteResourceViews(firstDescriptor, resourceViews);
 }
 
 /* ----- Render Passes ----- */

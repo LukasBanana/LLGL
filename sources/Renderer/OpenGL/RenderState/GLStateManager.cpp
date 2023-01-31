@@ -24,6 +24,7 @@
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/TypeInfo.h>
+#include <LLGL/Misc/ForRange.h>
 #include <functional>
 
 #ifdef LLGL_OPENGL
@@ -146,22 +147,6 @@ static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObject
 
 
 /*
- * GLContextState static members
- */
-
-const std::uint32_t         GLContextState::numTextureLayers;
-const std::uint32_t         GLContextState::numImageUnits;
-const std::uint32_t         GLContextState::numCaps;
-const std::uint32_t         GLContextState::numBufferTargets;
-const std::uint32_t         GLContextState::numFboTargets;
-const std::uint32_t         GLContextState::numTextureTargets;
-
-#ifdef LLGL_GL_ENABLE_VENDOR_EXT
-const std::uint32_t         GLContextState::numCapsExt;
-#endif // /LLGL_GL_ENABLE_VENDOR_EXT
-
-
-/*
  * GLStateManager static members
  */
 
@@ -215,7 +200,7 @@ void GLStateManager::NotifyRenderTargetHeight(GLint height)
 void GLStateManager::Reset()
 {
     /* Query all states from OpenGL */
-    for (std::size_t i = 0; i < GLContextState::numCaps; ++i)
+    for_range(i, GLContextState::numCaps)
         contextState_.capabilities[i] = (glIsEnabled(g_stateCapsEnum[i]) != GL_FALSE);
 }
 
@@ -395,7 +380,7 @@ void GLStateManager::SetViewportArray(GLuint first, GLsizei count, const GLViewp
         {
             GLViewport adjustedViewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
 
-            for (GLsizei i = 0; i < count; ++i)
+            for_range(i, count)
                 AdjustViewport(adjustedViewports[i], viewports[i]);
 
             glViewportArrayv(first, count, reinterpret_cast<const GLfloat*>(adjustedViewports));
@@ -470,7 +455,7 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, const GLScisso
         {
             GLScissor adjustedScissors[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
 
-            for (GLsizei i = 0; i < count; ++i)
+            for_range(i, count)
                 AdjustScissor(adjustedScissors[i], scissors[i]);
 
             glScissorArrayv(first, count, reinterpret_cast<const GLint*>(adjustedScissors));
@@ -818,7 +803,7 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
         /* Bind each individual buffer, and store last bound buffer */
         contextState_.boundBuffers[targetIdx] = buffers[count - 1];
 
-        for (GLsizei i = 0; i < count; ++i)
+        for_range(i, count)
             glBindBufferBase(targetGL, first + i, buffers[i]);
     }
 }
@@ -856,13 +841,13 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
         #ifdef GL_NV_transform_feedback
         if (HasExtension(GLExt::NV_transform_feedback))
         {
-            for (GLsizei i = 0; i < count; ++i)
+            for_range(i, count)
                 glBindBufferRangeNV(targetGL, first + i, buffers[i], offsets[i], sizes[i]);
         }
         else
         #endif // /GL_NV_transform_feedback
         {
-            for (GLsizei i = 0; i < count; ++i)
+            for_range(i, count)
                 glBindBufferRange(targetGL, first + i, buffers[i], offsets[i], sizes[i]);
         }
     }
@@ -1037,7 +1022,7 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
 void GLStateManager::DisableVertexAttribArrays(GLuint firstIndex)
 {
     /* Disable remaining vertex-attrib-arrays */
-    for (GLuint i = firstIndex; i < lastVertexAttribArray_; ++i)
+    for_subrange(i, firstIndex, lastVertexAttribArray_)
         glDisableVertexAttribArray(i);
 
     /* Store new highest vertex-attrib-array index */
@@ -1194,7 +1179,7 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Store bound textures */
-        for (GLsizei i = 0; i < count; ++i)
+        for_range(i, count)
         {
             auto targetIdx = static_cast<std::size_t>(targets[i]);
             contextState_.textureLayers[i + first].boundTextures[targetIdx] = textures[i];
@@ -1211,7 +1196,7 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
     #endif
     {
         /* Bind each texture layer individually */
-        for (GLsizei i = 0; i < count; ++i)
+        for_range(i, count)
         {
             ActiveTexture(first + i);
             BindTexture(targets[i], textures[i]);
@@ -1225,7 +1210,7 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Reset bound textures */
-        for (GLsizei i = 0; i < count; ++i)
+        for_range(i, count)
         {
             auto& boundTextures = contextState_.textureLayers[i].boundTextures;
             ::memset(boundTextures, 0, sizeof(boundTextures));
@@ -1242,10 +1227,10 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
     #endif // /GL_ARB_multi_bind
     {
         /* Unbind all targets for each texture layer individually */
-        for (GLsizei i = 0; i < count; ++i)
+        for_range(i, count)
         {
             ActiveTexture(first + i);
-            for (std::size_t target = 0; target < GLContextState::numTextureTargets; ++target)
+            for_range(target, GLContextState::numTextureTargets)
                 BindTexture(static_cast<GLTextureTarget>(target), 0);
         }
     }
@@ -1285,7 +1270,7 @@ void GLStateManager::BindImageTextures(GLuint first, GLsizei count, const GLenum
     #endif // /GL_ARB_multi_bind
     {
         /* Bind image units individually */
-        for (GLsizei i = 0; i < count; ++i)
+        for_range(i, count)
             BindImageTexture(first + static_cast<GLuint>(i), 0, formats[i], textures[i]);
     }
 }
@@ -1302,7 +1287,7 @@ void GLStateManager::UnbindImageTextures(GLuint first, GLsizei count)
     #endif // /GL_ARB_multi_bind
     {
         /* Unbind all image units individually */
-        for (GLsizei i = 0; i < count; ++i)
+        for_range(i, count)
             BindImageTexture(first + static_cast<GLuint>(i), 0, 0, 0);
     }
 }
@@ -1383,7 +1368,7 @@ void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* sam
     if (count >= 2 && HasExtension(GLExt::ARB_multi_bind))
     {
         /* Store bound samplers */
-        for (GLsizei i = 0; i < count; ++i)
+        for_range(i, count)
             contextState_.boundSamplers[i + first] = samplers[i];
 
         /* Bind all samplers at once */
@@ -1393,7 +1378,7 @@ void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* sam
     #endif
     {
         /* Bind each sampler individually */
-        for (GLsizei i = 0; i < count; ++i)
+        for_range(i, count)
             BindSampler(first + static_cast<GLuint>(i), samplers[i]);
     }
 }

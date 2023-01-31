@@ -106,9 +106,11 @@ class GLRenderSystem final : public RenderSystem
 
         /* ----- Resource Heaps ----- */
 
-        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc) override;
+        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews = {}) override;
 
         void Release(ResourceHeap& resourceHeap) override;
+
+        void WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) override;
 
         /* ----- Render Passes ----- */
 
@@ -167,7 +169,7 @@ class GLRenderSystem final : public RenderSystem
         void QueryRendererInfo();
         void QueryRenderingCaps();
 
-        GLBuffer* CreateGLBuffer(const BufferDescriptor& bufferDesc, const void* initialData);
+        GLBuffer* CreateGLBuffer(const BufferDescriptor& desc, const void* initialData);
 
         void ValidateGLTextureType(const TextureType type);
 

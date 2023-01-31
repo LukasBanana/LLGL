@@ -20,15 +20,15 @@ namespace LLGL
 // Structure with all information about the state of an OpenGL context that can be managed by GLStateManager.
 struct GLContextState
 {
-    static const GLuint numTextureLayers    = 32;
-    static const GLuint numImageUnits       = 8;
-    static const GLuint numCaps             = static_cast<GLuint>(GLState::Num);
-    static const GLuint numBufferTargets    = static_cast<GLuint>(GLBufferTarget::Num);
-    static const GLuint numFboTargets       = static_cast<GLuint>(GLFramebufferTarget::Num);
-    static const GLuint numTextureTargets   = static_cast<GLuint>(GLTextureTarget::Num);
+    static constexpr GLuint numTextureLayers    = 32;
+    static constexpr GLuint numImageUnits       = 8;
+    static constexpr GLuint numCaps             = static_cast<GLuint>(GLState::Num);
+    static constexpr GLuint numBufferTargets    = static_cast<GLuint>(GLBufferTarget::Num);
+    static constexpr GLuint numFboTargets       = static_cast<GLuint>(GLFramebufferTarget::Num);
+    static constexpr GLuint numTextureTargets   = static_cast<GLuint>(GLTextureTarget::Num);
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-    static const GLuint numCapsExt          = static_cast<GLuint>(GLStateExt::Num);
+    static constexpr GLuint numCapsExt          = static_cast<GLuint>(GLStateExt::Num);
     #endif
 
     // Rasterizer state
