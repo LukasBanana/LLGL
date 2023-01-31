@@ -353,34 +353,24 @@ public:
     void CreateResourceHeaps()
     {
         // Create resource heap for scene rendering
-        LLGL::ResourceHeapDescriptor heapDescScene;
-        {
-            heapDescScene.pipelineLayout    = layoutScene;
-            heapDescScene.resourceViews     = { constantBufferScene };
-        }
-        resourceHeapScene = renderer->CreateResourceHeap(heapDescScene);
+        resourceHeapScene = renderer->CreateResourceHeap(layoutScene, { constantBufferScene });
         resourceHeapScene->SetName("ResourceHeap.Scene");
 
         // Create resource heap for blur-X and blur-Y post-processor
-        LLGL::ResourceHeapDescriptor heapDescBlur;
+        const LLGL::ResourceViewDescriptor resourceViewsBlurPass[] =
         {
-            heapDescBlur.pipelineLayout    = layoutBlur;
-            heapDescBlur.resourceViews     =
-            {
-                constantBufferBlur, glossMap,      glossMapSampler, // Resources for blur-X pass
-                constantBufferBlur, glossMapBlurX, glossMapSampler, // Resources for blur-Y pass
-            };
-        }
-        resourceHeapBlur = renderer->CreateResourceHeap(heapDescBlur);
+            constantBufferBlur, glossMap,      glossMapSampler, // Resources for blur-X pass
+            constantBufferBlur, glossMapBlurX, glossMapSampler, // Resources for blur-Y pass
+        };
+        resourceHeapBlur = renderer->CreateResourceHeap(layoutBlur, resourceViewsBlurPass);
         resourceHeapBlur->SetName("ResourceHeap.Blur");
 
         // Create resource heap for final post-processor
-        LLGL::ResourceHeapDescriptor heapDescFinal;
+        const LLGL::ResourceViewDescriptor resourceViewsFinalPass[] =
         {
-            heapDescFinal.pipelineLayout    = layoutFinal;
-            heapDescFinal.resourceViews     = { constantBufferScene, colorMap, glossMapBlurY, colorMapSampler, glossMapSampler };
-        }
-        resourceHeapFinal = renderer->CreateResourceHeap(heapDescFinal);
+            constantBufferScene, colorMap, glossMapBlurY, colorMapSampler, glossMapSampler
+        };
+        resourceHeapFinal = renderer->CreateResourceHeap(layoutFinal, resourceViewsFinalPass);
         resourceHeapFinal->SetName("ResourceHeap.Final");
     }
 

@@ -176,19 +176,10 @@ public:
     void CreateResourceHeaps()
     {
         // Create compute resource heap
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
-        {
-            resourceHeapDesc.pipelineLayout = computePipelineLayout;
-            resourceHeapDesc.resourceViews  = { inputTexture, outputTexture };
-        }
-        computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        computeResourceHeap = renderer->CreateResourceHeap(computePipelineLayout, { inputTexture, outputTexture });
 
         // Create graphics resource heap
-        {
-            resourceHeapDesc.pipelineLayout = graphicsPipelineLayout;
-            resourceHeapDesc.resourceViews  = { outputTexture, sampler };
-        }
-        graphicsResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        graphicsResourceHeap = renderer->CreateResourceHeap(graphicsPipelineLayout, { outputTexture, sampler });
     }
 
 private:

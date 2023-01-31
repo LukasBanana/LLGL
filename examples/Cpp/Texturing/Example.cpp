@@ -20,7 +20,7 @@ class Example_Texturing : public ExampleBase
     LLGL::Buffer*               vertexBuffer    = nullptr;
     LLGL::Texture*              colorMaps[2]    = {};
     LLGL::Sampler*              sampler[5]      = {};
-    LLGL::ResourceHeap*         resourceHeap    = {};
+    LLGL::ResourceHeap*         resourceHeap    = nullptr;
 
     unsigned                    resourceIndex   = 0;
 
@@ -258,17 +258,17 @@ public:
         texUint->SetName("texUint");
         #endif
 
+        // Create resource heap with two resources: a sampler-state and a texture to sample from
+        const LLGL::ResourceViewDescriptor resourceViews[2] =
+        {
+            sampler[0], colorMaps[0]
+        };
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
-            resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews.reserve(6 * 2);
-            for (int i = 0; i < 6; ++i)
-            {
-                resourceHeapDesc.resourceViews.push_back(sampler[i > 0 ? i - 1 : 0]);
-                resourceHeapDesc.resourceViews.push_back(/*i == 0 ? texUint : */colorMaps[i == 0 ? 0 : 1]);
-            }
+            resourceHeapDesc.pipelineLayout     = pipelineLayout;
+            resourceHeapDesc.numResourceViews   = 2;
         }
-        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc, resourceViews);
     }
 
 private:
@@ -278,12 +278,18 @@ private:
         // Examine user input
         if (input.KeyDown(LLGL::Key::Tab))
         {
+            // Switch to next resource we want to present
             if (input.KeyPressed(LLGL::Key::Shift))
                 resourceIndex = ((resourceIndex - 1) % 6 + 6) % 6;
             else
                 resourceIndex = (resourceIndex + 1) % 6;
             std::cout << "texture attributes: " << resourceLabels[resourceIndex] << std::string(30, ' ') << "\r";
             std::flush(std::cout);
+
+            // Update resource heap with new selected sampler state and texture resources
+            LLGL::Sampler* selectedSampler = sampler[resourceIndex > 0 ? resourceIndex - 1 : 0];
+            LLGL::Texture* selectedTexture = colorMaps[resourceIndex == 0 ? 0 : 1];
+            renderer->WriteResourceHeap(*resourceHeap, 0, { selectedSampler, selectedTexture });
         }
 
         // Set render target
@@ -304,7 +310,7 @@ private:
                 commands->SetPipelineState(*pipeline);
 
                 // Set graphics shader resources
-                commands->SetResourceHeap(*resourceHeap, resourceIndex);
+                commands->SetResourceHeap(*resourceHeap);
 
                 // Draw fullscreen quad
                 commands->Draw(4, 0);

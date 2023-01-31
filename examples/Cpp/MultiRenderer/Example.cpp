@@ -192,12 +192,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<VertexPos3Tex2>& vertices
         layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):vert, texture(1):frag, sampler(2):frag"));
 
     // Create resource heap
-    LLGL::ResourceHeapDescriptor resHeapDesc;
-    {
-        resHeapDesc.pipelineLayout  = layout;
-        resHeapDesc.resourceViews   = { constantBuffer, texture, sampler };
-    }
-    resourceHeap = renderer->CreateResourceHeap(resHeapDesc);
+    resourceHeap = renderer->CreateResourceHeap(layout, { constantBuffer, texture, sampler });
 
     // Create graphics pipelines
     LLGL::GraphicsPipelineDescriptor pipelineDesc;

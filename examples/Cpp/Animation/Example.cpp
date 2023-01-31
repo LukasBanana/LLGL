@@ -173,12 +173,7 @@ private:
     void CreateResourceHeaps()
     {
         // Create resource heap for scene rendering
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
-        {
-            resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews  = { constantBuffer, colorMap, linearSampler };
-        }
-        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { constantBuffer, colorMap, linearSampler });
     }
 
     Gs::Vector3f GetGridPos(std::size_t frame) const

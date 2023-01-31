@@ -146,12 +146,7 @@ public:
     void CreateResourceHeaps()
     {
         // Create resource heap for constant buffer
-        LLGL::ResourceHeapDescriptor heapDesc;
-        {
-            heapDesc.pipelineLayout = pipelineLayout;
-            heapDesc.resourceViews  = { constantBuffer };
-        }
-        resourceHeap = renderer->CreateResourceHeap(heapDesc);
+        resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { constantBuffer });
     }
 
     std::uint64_t GetAndSyncQueryResult(LLGL::QueryHeap* query)

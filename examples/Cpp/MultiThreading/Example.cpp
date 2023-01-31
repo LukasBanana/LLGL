@@ -158,14 +158,7 @@ private:
 
         // Create resource view heap
         for (auto& bdl : bundle)
-        {
-            LLGL::ResourceHeapDescriptor resourceHeapDesc;
-            {
-                resourceHeapDesc.pipelineLayout = pipelineLayout;
-                resourceHeapDesc.resourceViews  = { bdl.constantBuffer };
-            }
-            bdl.resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
-        }
+            bdl.resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { bdl.constantBuffer });
 
         // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;

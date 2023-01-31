@@ -89,9 +89,11 @@ class DbgRenderSystem final : public RenderSystem
 
         /* ----- Resource Views ----- */
 
-        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc) override;
+        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews = {}) override;
 
         void Release(ResourceHeap& resourceHeap) override;
+
+        void WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) override;
 
         /* ----- Render Passes ----- */
 
@@ -174,7 +176,8 @@ class DbgRenderSystem final : public RenderSystem
 
         void ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc);
 
-        void ValidateResourceHeapDesc(const ResourceHeapDescriptor& resourceHeapDesc);
+        void ValidateResourceHeapDesc(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews);
+        void ValidateResourceHeapRange(const DbgResourceHeap& resourceHeapDbg, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
         void ValidateResourceViewForBinding(const ResourceViewDescriptor& rvDesc, const BindingDescriptor& bindingDesc);
         void ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc);
         void ValidateTextureForBinding(const DbgTexture& textureDbg, const BindingDescriptor& bindingDesc);
@@ -192,6 +195,8 @@ class DbgRenderSystem final : public RenderSystem
 
         template <typename T, typename TBase>
         void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
+
+        std::vector<ResourceViewDescriptor> GetResourceViewInstanceCopy(const ArrayView<ResourceViewDescriptor>& resourceViews);
 
     private:
 

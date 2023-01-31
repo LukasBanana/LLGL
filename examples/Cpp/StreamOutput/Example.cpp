@@ -125,12 +125,7 @@ public:
 
     void CreateResourceHeaps()
     {
-        LLGL::ResourceHeapDescriptor heapDesc;
-        {
-            heapDesc.pipelineLayout = pipelineLayout;
-            heapDesc.resourceViews  = { constantBuffer };
-        }
-        resourceHeap = renderer->CreateResourceHeap(heapDesc);
+        resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { constantBuffer });
     }
 
 private:

@@ -189,12 +189,7 @@ public:
         computePipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Create resource heap for compute pipeline
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
-        {
-            resourceHeapDesc.pipelineLayout = computeLayout;
-            resourceHeapDesc.resourceViews  = { inputBuffer, instanceBuffer, indirectArgBuffer };
-        }
-        computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        computeResourceHeap = renderer->CreateResourceHeap(computeLayout, { inputBuffer, instanceBuffer, indirectArgBuffer });
     }
 
     void CreateGraphicsPipeline()

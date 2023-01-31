@@ -330,53 +330,83 @@ void DbgRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Views ----- */
 
-ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
+// private
+std::vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy(const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    std::vector<ResourceViewDescriptor> instanceResourceViews;
+    instanceResourceViews.reserve(resourceViews.size());
+
+    for (ResourceViewDescriptor resourceView : resourceViews)
+    {
+        if (auto resource = resourceView.resource)
+        {
+            switch (resource->GetResourceType())
+            {
+                case ResourceType::Buffer:
+                    resourceView.resource = &(LLGL_CAST(DbgBuffer*, resourceView.resource)->instance);
+                    break;
+                case ResourceType::Texture:
+                    resourceView.resource = &(LLGL_CAST(DbgTexture*, resourceView.resource)->instance);
+                    break;
+                case ResourceType::Sampler:
+                    //TODO: DbgSampler
+                    break;
+                default:
+                    LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid resource type passed to <ResourceViewDescriptor>");
+                    break;
+            }
+        }
+        else
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "null pointer passed to <ResourceViewDescriptor>");
+        instanceResourceViews.push_back(resourceView);
+    }
+
+    return instanceResourceViews;
+}
+
+ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateResourceHeapDesc(resourceHeapDesc);
+        ValidateResourceHeapDesc(resourceHeapDesc, initialResourceViews);
     }
+
+    /* Create copy of resource view descriptors to pass native resource object references */
+    auto instanceResourceViews = GetResourceViewInstanceCopy(initialResourceViews);
 
     /* Create copy of descriptor to pass native renderer object references */
     auto instanceDesc = resourceHeapDesc;
     {
         auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, resourceHeapDesc.pipelineLayout);
         instanceDesc.pipelineLayout = &(pipelineLayoutDbg->instance);
-
-        for (auto& resourceView : instanceDesc.resourceViews)
-        {
-            if (auto resource = resourceView.resource)
-            {
-                switch (resource->GetResourceType())
-                {
-                    case ResourceType::Buffer:
-                        resourceView.resource = &(LLGL_CAST(DbgBuffer*, resourceView.resource)->instance);
-                        break;
-                    case ResourceType::Texture:
-                        resourceView.resource = &(LLGL_CAST(DbgTexture*, resourceView.resource)->instance);
-                        break;
-                    case ResourceType::Sampler:
-                        //TODO: DbgSampler
-                        break;
-                    default:
-                        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid resource type passed to <ResourceViewDescriptor>");
-                        break;
-                }
-            }
-            else
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "null pointer passed to <ResourceViewDescriptor>");
-        }
     }
     return TakeOwnership(
         resourceHeaps_,
-        MakeUnique<DbgResourceHeap>(*instance_->CreateResourceHeap(instanceDesc), resourceHeapDesc)
+        MakeUnique<DbgResourceHeap>(
+            *instance_->CreateResourceHeap(instanceDesc, instanceResourceViews),
+            resourceHeapDesc
+        )
     );
 }
 
 void DbgRenderSystem::Release(ResourceHeap& resourceHeap)
 {
     return instance_->Release(resourceHeap);
+}
+
+void DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    auto& resourceHeapDbg = LLGL_CAST(DbgResourceHeap&, resourceHeap);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        ValidateResourceHeapRange(resourceHeapDbg, firstDescriptor, resourceViews);
+    }
+
+    auto instanceResourceViews = GetResourceViewInstanceCopy(resourceViews);
+    instance_->WriteResourceHeap(resourceHeapDbg.instance, firstDescriptor, instanceResourceViews);
 }
 
 /* ----- Render Passes ----- */
@@ -754,8 +784,22 @@ void DbgRenderSystem::ValidateConstantBufferSize(std::uint64_t size)
 
 void DbgRenderSystem::ValidateBufferBoundary(std::uint64_t bufferSize, std::uint64_t dstOffset, std::uint64_t dataSize)
 {
-    if (dataSize + dstOffset > bufferSize)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds");
+    if (dstOffset >= bufferSize)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "buffer offset out of bounds (" + std::to_string(dstOffset) +
+            " specified but upper bound is " + std::to_string(bufferSize) + ")"
+        );
+    }
+    else if (dataSize + dstOffset > bufferSize)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "data size for buffer offset out of bounds (" + std::to_string(dstOffset) + "+" + std::to_string(dataSize) +
+            " specified but limit is " + std::to_string(bufferSize) + ")"
+        );
+    }
 }
 
 void DbgRenderSystem::ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory)
@@ -1277,18 +1321,30 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
     }
 }
 
-void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& resourceHeapDesc)
+void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
     if (resourceHeapDesc.pipelineLayout != nullptr)
     {
         auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, resourceHeapDesc.pipelineLayout);
         const auto& bindings = pipelineLayoutDbg->desc.bindings;
 
-        const auto numResourceViews = resourceHeapDesc.resourceViews.size();
+        const auto numResourceViews = (resourceHeapDesc.numResourceViews > 0 ? resourceHeapDesc.numResourceViews : static_cast<std::uint32_t>(initialResourceViews.size()));
         const auto numBindings      = bindings.size();
 
         if (numBindings == 0)
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create resource heap with empty pipeline layout");
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot create resource heap with empty pipeline layout"
+            );
+        }
+        else if (numResourceViews == 0)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot create resource heap with both 'numResourceViews' being zero and 'initialResourceViews' being empty"
+            );
+        }
         else if (numResourceViews < numBindings)
         {
             LLGL_DBG_ERROR(
@@ -1305,15 +1361,48 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
                 ") not being a multiple of bindings in pipeline layout (" + std::to_string(numBindings) + ")"
             );
         }
-        else
+        else if (!initialResourceViews.empty())
         {
-            /* Validate all resource view descriptors against their respective binding descriptor */
-            for_range(i, resourceHeapDesc.resourceViews.size())
-                ValidateResourceViewForBinding(resourceHeapDesc.resourceViews[i], bindings[i % bindings.size()]);
+            if (initialResourceViews.size() == numResourceViews)
+            {
+                /* Validate all resource view descriptors against their respective binding descriptor */
+                for_range(i, resourceHeapDesc.numResourceViews)
+                    ValidateResourceViewForBinding(initialResourceViews[i], bindings[i % bindings.size()]);
+            }
+            else
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "mismatch between number of initial resource views and resource heap descriptor (" +
+                    std::to_string(initialResourceViews.size()) + " specified but expected " +
+                    std::to_string(resourceHeapDesc.numResourceViews) + ")"
+                );
+            }
         }
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "pipeline layout must not be null");
+}
+
+void DbgRenderSystem::ValidateResourceHeapRange(const DbgResourceHeap& resourceHeapDbg, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    if (firstDescriptor >= resourceHeapDbg.desc.numResourceViews)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "first descriptor in resource heap out of bounds (" + std::to_string(firstDescriptor) +
+            " specified but upper bound is " + std::to_string(resourceHeapDbg.desc.numResourceViews) + ")"
+        );
+    }
+    else if (resourceViews.size() + firstDescriptor > resourceHeapDbg.desc.numResourceViews)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "number of resource views for first descriptor in resource heap out of bounds (" +
+            std::to_string(firstDescriptor) + "+" + std::to_string(resourceViews.size()) +
+            " specified but limit is " + std::to_string(resourceHeapDbg.desc.numResourceViews) + ")"
+        );
+    }
 }
 
 void DbgRenderSystem::ValidateResourceViewForBinding(const ResourceViewDescriptor& rvDesc, const BindingDescriptor& bindingDesc)

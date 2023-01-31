@@ -1,6 +1,6 @@
 /*
  * ResourceViewHeapFlags.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,11 +9,11 @@
 #define LLGL_RESOURCE_VIEW_HEAP_FLAGS_H
 
 
-#include "Export.h"
-#include "Texture.h"
-#include "TextureFlags.h"
-#include "Buffer.h"
-#include "BufferFlags.h"
+#include <LLGL/Export.h>
+#include <LLGL/Texture.h>
+#include <LLGL/TextureFlags.h>
+#include <LLGL/Buffer.h>
+#include <LLGL/BufferFlags.h>
 #include <vector>
 
 
@@ -22,6 +22,33 @@ namespace LLGL
 
 
 class PipelineLayout;
+
+
+/* ----- Enumerations ----- */
+
+/**
+\brief Flags for memory barriers in resource heaps.
+\see ResourceHeapDescriptor::barrierFlags
+*/
+struct BarrierFlags
+{
+    enum
+    {
+        /**
+        \brief Memory barrier for Buffer resources that were created with the BindFlags::Storage bind flags.
+        \remarks Shader access to the buffer will reflect all data written to by previous shaders.
+        \see BindFlags::Storage
+        */
+        StorageBuffer   = (1 << 0),
+
+        /**
+        \brief Memory barrier for Texture resources that were created with the BindFlags::Storage bind flags.
+        \remarks Shader access to the texture will reflect all data written to by previous shaders.
+        \see BindFlags::Storage
+        */
+        StorageTexture  = (1 << 1),
+    };
+};
 
 
 /* ----- Structures ----- */
@@ -59,7 +86,7 @@ struct ResourceViewDescriptor
         textureView.format = Format::Undefined;
     }
 
-    //! Pointer to the hardware resoudce.
+    //! Pointer to the hardware resource. This must not be null when passed to a ResourceHeap.
     Resource*               resource    = nullptr;
 
     /**
@@ -91,16 +118,36 @@ The resource heap is a container for one or more resources such as textures, sam
 */
 struct ResourceHeapDescriptor
 {
+    ResourceHeapDescriptor() = default;
+
+    //! Initializes the resource heap descriptor with the specified pipeline layout and optional secondary parameters.
+    inline ResourceHeapDescriptor(PipelineLayout* pipelineLayout, std::uint32_t numResourceViews = 0, long barrierFlags = 0) :
+        pipelineLayout   { pipelineLayout   },
+        numResourceViews { numResourceViews },
+        barrierFlags     { barrierFlags     }
+    {
+    }
+
     //! Reference to the pipeline layout. This must not be null, when a resource heap is created.
-    PipelineLayout*                     pipelineLayout = nullptr;
+    PipelineLayout* pipelineLayout      = nullptr;
 
     /**
-    \brief List of all resource view descriptors.
-    \remarks These resources must be specified in the same order as they were specified when the pipeline layout was created.
-    The number of resource views \b must be a multiple of the bindings in the pipeline layout.
+    \brief Specifies the number of resource views.
+    \remarks If the number of resource views is non-zero, it \b must a multiple of the bindings in the pipeline layout.
+    \remarks If the number of resource views is zero, the number will be determined by the initial resource views
+    and they must \e not be empty and they \b must be a multiple of the bindings in the pipeline layout.
     \see PipelineLayoutDescriptor::bindings
+    \see RenderSystem::CreateResourceHeap
     */
-    std::vector<ResourceViewDescriptor> resourceViews;
+    std::uint32_t   numResourceViews    = 0;
+
+    /**
+    \brief Specifies optional resource barrier flags. By default 0.
+    \remarks If the barrier flags are non-zero, they will be applied before any resource are bound to the graphics/compute pipeline.
+    This should be used when a resource is bound to the pipeline that was previously written to.
+    \see BarrierFlags
+    */
+    long            barrierFlags        = 0;
 };
 
 

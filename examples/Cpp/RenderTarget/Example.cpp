@@ -311,32 +311,29 @@ private:
     void CreateResourceHeap()
     {
         // Create resource heap for render target
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
+        LLGL::ResourceViewDescriptor resourceViews[] =
         {
-            resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews =
-            {
-                constantBuffer, samplerState, colorMap, /*colorMap,*/
-                constantBuffer, samplerState, renderTargetTex, /*renderTargetTex,*/
-            };
+            constantBuffer, samplerState, colorMap, /*colorMap,*/
+            constantBuffer, samplerState, renderTargetTex, /*renderTargetTex,*/
+        };
 
-            #ifdef ENABLE_CBUFFER_RANGE
+        #ifdef ENABLE_CBUFFER_RANGE
 
-            auto& cbufferView0 = resourceHeapDesc.resourceViews[0].bufferView;
-            {
-                cbufferView0.offset = 0;
-                cbufferView0.size   = cbufferAlignment;
-            }
-
-            auto& cbufferView1 = resourceHeapDesc.resourceViews[3].bufferView;
-            {
-                cbufferView1.offset = cbufferAlignment;
-                cbufferView1.size   = cbufferAlignment;
-            }
-
-            #endif // /ENABLE_CBUFFER_RANGE
+        auto& cbufferView0 = resourceViews[0].bufferView;
+        {
+            cbufferView0.offset = 0;
+            cbufferView0.size   = cbufferAlignment;
         }
-        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+
+        auto& cbufferView1 = resourceViews[3].bufferView;
+        {
+            cbufferView1.offset = cbufferAlignment;
+            cbufferView1.size   = cbufferAlignment;
+        }
+
+        #endif // /ENABLE_CBUFFER_RANGE
+
+        resourceHeap = renderer->CreateResourceHeap(pipelineLayout, resourceViews);
     }
 
     #endif // /ENABLE_RESOURCE_HEAP

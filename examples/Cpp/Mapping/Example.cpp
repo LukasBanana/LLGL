@@ -33,7 +33,7 @@ class Example_Mapping : public ExampleBase
     LLGL::Texture*          dstTextures[2]      = {};       // Destination textures for display
 
     LLGL::Sampler*          samplerState        = nullptr;
-    LLGL::ResourceHeap*     resourceHeaps[2]    = {};
+    LLGL::ResourceHeap*     resourceHeap        = nullptr;
 
     int                     dstTextureIndex     = 0;        // Index into the 'dstTextures' array
 
@@ -200,15 +200,17 @@ private:
         samplerState = renderer->CreateSampler(samplerDesc);
 
         // Create resource heap
-        for (int i = 0; i < 2; ++i)
+        const LLGL::ResourceViewDescriptor resourceViews[] =
         {
-            LLGL::ResourceHeapDescriptor resourceHeapDesc;
-            {
-                resourceHeapDesc.pipelineLayout = pipelineLayout;
-                resourceHeapDesc.resourceViews  = { dstTextures[i], samplerState };
-            }
-            resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
+            dstTextures[0], samplerState,
+            dstTextures[1], samplerState,
+        };
+        LLGL::ResourceHeapDescriptor resourceHeapDesc;
+        {
+            resourceHeapDesc.pipelineLayout     = pipelineLayout;
+            resourceHeapDesc.numResourceViews   = sizeof(resourceViews) / sizeof(resourceViews[0]);
         }
+        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc, resourceViews);
     }
 
     void GenerateTextureContent()
@@ -352,7 +354,7 @@ private:
 
                 // Set graphics pipeline and vertex buffer
                 commands->SetPipelineState(*pipeline);
-                commands->SetResourceHeap(*resourceHeaps[dstTextureIndex]);
+                commands->SetResourceHeap(*resourceHeap, dstTextureIndex);
 
                 // Draw fullscreen quad
                 commands->Draw(4, 0);

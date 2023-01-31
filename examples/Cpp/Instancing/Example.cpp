@@ -305,16 +305,12 @@ private:
         }
 
         // Create resource view heap
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
+        const LLGL::ResourceViewDescriptor resourceViews[] =
         {
-            resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews  =
-            {
-                constantBuffer, arrayTexture, samplers[0],
-                constantBuffer, arrayTexture, samplers[1],
-            };
-        }
-        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+            constantBuffer, arrayTexture, samplers[0],
+            constantBuffer, arrayTexture, samplers[1],
+        };
+        resourceHeap = renderer->CreateResourceHeap(pipelineLayout, resourceViews);
 
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;

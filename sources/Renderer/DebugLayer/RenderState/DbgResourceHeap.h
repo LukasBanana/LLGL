@@ -31,7 +31,7 @@ class DbgResourceHeap final : public ResourceHeap
 
         DbgResourceHeap(ResourceHeap& instance, const ResourceHeapDescriptor& desc);
 
-        // Returns the number of descriptor sets by using the debug information only, i.e. 'desc.resourceViews.size()' and 'numBindings'.
+        // Returns the number of descriptor sets by using the debug information only, i.e. 'desc.numResourceViews' and 'numBindings'.
         std::uint32_t GetNumDescriptorSetsSafe() const;
 
     public:

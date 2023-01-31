@@ -399,29 +399,31 @@ public:
         );
 
         // Create resource heaps for compute pipeline
+        const LLGL::ResourceViewDescriptor resourceViewsCompute[] =
+        {
+            constantBuffer,
+            particleBuffers[AttribBase],
+            particleBuffers[AttribCurrPos],
+            particleBuffers[AttribNextPos],
+            particleBuffers[AttribPrevPos],
+            particleBuffers[AttribVelocity],
+            particleBuffers[AttribNormal],
+
+            constantBuffer,
+            particleBuffers[AttribBase],
+            particleBuffers[AttribNextPos], // Swap pos with next-pos
+            particleBuffers[AttribCurrPos], // Swap next-pos with pos
+            particleBuffers[AttribPrevPos],
+            particleBuffers[AttribVelocity],
+            particleBuffers[AttribNormal],
+        };
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
-            resourceHeapDesc.pipelineLayout = computeLayout;
-            resourceHeapDesc.resourceViews  =
-            {
-                constantBuffer,
-                particleBuffers[AttribBase],
-                particleBuffers[AttribCurrPos],
-                particleBuffers[AttribNextPos],
-                particleBuffers[AttribPrevPos],
-                particleBuffers[AttribVelocity],
-                particleBuffers[AttribNormal],
-
-                constantBuffer,
-                particleBuffers[AttribBase],
-                particleBuffers[AttribNextPos], // Swap pos with next-pos
-                particleBuffers[AttribCurrPos], // Swap next-pos with pos
-                particleBuffers[AttribPrevPos],
-                particleBuffers[AttribVelocity],
-                particleBuffers[AttribNormal],
-            };
+            resourceHeapDesc.pipelineLayout     = computeLayout;
+            resourceHeapDesc.numResourceViews   = sizeof(resourceViewsCompute) / sizeof(resourceViewsCompute[0]);
+            resourceHeapDesc.barrierFlags       = LLGL::BarrierFlags::StorageBuffer;
         }
-        computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc, resourceViewsCompute);
 
         // Create compute pipeline
         for (int i = 0; i < 3; ++i)
@@ -503,22 +505,26 @@ public:
         ThrowIfFailed(graphicsPipeline);
 
         // Create resource heaps for graphics pipeline
+        const LLGL::ResourceViewDescriptor resourceViewsGraphics[] =
+        {
+            constantBuffer,
+            colorMap,
+            linearSampler,
+            #ifdef ENABLE_STORAGE_TEXTURES
+            particleBuffers[AttribBase],
+            particleBuffers[AttribCurrPos],
+            particleBuffers[AttribNormal],
+            #endif
+        };
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
-            resourceHeapDesc.pipelineLayout = graphicsLayout;
-            resourceHeapDesc.resourceViews  =
-            {
-                constantBuffer,
-                colorMap,
-                linearSampler,
-                #ifdef ENABLE_STORAGE_TEXTURES
-                particleBuffers[AttribBase],
-                particleBuffers[AttribCurrPos],
-                particleBuffers[AttribNormal],
-                #endif
-            };
+            resourceHeapDesc.pipelineLayout     = graphicsLayout;
+            resourceHeapDesc.numResourceViews   = sizeof(resourceViewsGraphics) / sizeof(resourceViewsGraphics[0]);
+            #ifdef ENABLE_STORAGE_TEXTURES
+            resourceHeapDesc.barrierFlags       = LLGL::BarrierFlags::StorageTexture;
+            #endif
         }
-        graphicsResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        graphicsResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc, resourceViewsGraphics);
     }
 
 private:

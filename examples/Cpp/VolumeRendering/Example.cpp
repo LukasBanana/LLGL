@@ -295,26 +295,14 @@ private:
 
         // Create resource heap for Z-pre pass
         if (resourceHeapCbuffer == nullptr)
-        {
-            LLGL::ResourceHeapDescriptor resourceHeapDesc;
-            {
-                resourceHeapDesc.pipelineLayout = pipelineLayoutCbuffer;
-                resourceHeapDesc.resourceViews  = { constantBuffer };
-            }
-            resourceHeapCbuffer = renderer->CreateResourceHeap(resourceHeapDesc);
-        }
+            resourceHeapCbuffer = renderer->CreateResourceHeap(pipelineLayoutCbuffer, { constantBuffer });
 
         // Create resource heap for scene rendering
         {
-            LLGL::ResourceHeapDescriptor resourceHeapDesc;
-            {
-                resourceHeapDesc.pipelineLayout = pipelineLayoutFinalPass;
-                if (IsOpenGL())
-                    resourceHeapDesc.resourceViews = { constantBuffer, noiseTexture, depthRangeTexture, linearSampler, linearSampler };
-                else
-                    resourceHeapDesc.resourceViews = { constantBuffer, noiseTexture, depthRangeTexture, linearSampler };
-            }
-            resourceHeapFinalPass = renderer->CreateResourceHeap(resourceHeapDesc);
+            std::vector<LLGL::ResourceViewDescriptor> resourceViewsScene = { constantBuffer, noiseTexture, depthRangeTexture, linearSampler };
+            if (IsOpenGL())
+                resourceViewsScene.push_back(linearSampler);
+            resourceHeapFinalPass = renderer->CreateResourceHeap(pipelineLayoutFinalPass, resourceViewsScene);
         }
     }
 

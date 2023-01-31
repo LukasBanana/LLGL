@@ -18,11 +18,11 @@ class Example_ShadowMapping : public ExampleBase
     LLGL::PipelineLayout*       pipelineLayoutShadowMap = nullptr;
     LLGL::PipelineLayout*       pipelineLayoutScene     = nullptr;
 
-    LLGL::PipelineState*        pipelineShadowMap       = {};
-    LLGL::PipelineState*        pipelineScene           = {};
+    LLGL::PipelineState*        pipelineShadowMap       = nullptr;
+    LLGL::PipelineState*        pipelineScene           = nullptr;
 
-    LLGL::ResourceHeap*         resourceHeapShadowMap   = {};
-    LLGL::ResourceHeap*         resourceHeapScene       = {};
+    LLGL::ResourceHeap*         resourceHeapShadowMap   = nullptr;
+    LLGL::ResourceHeap*         resourceHeapScene       = nullptr;
 
     LLGL::Buffer*               vertexBuffer            = nullptr;
     LLGL::Buffer*               constantBuffer          = nullptr;
@@ -245,19 +245,10 @@ private:
     void CreateResourceHeaps()
     {
         // Create resource heap for shadow-map rendering
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
-        {
-            resourceHeapDesc.pipelineLayout = pipelineLayoutShadowMap;
-            resourceHeapDesc.resourceViews  = { constantBuffer };
-        }
-        resourceHeapShadowMap = renderer->CreateResourceHeap(resourceHeapDesc);
+        resourceHeapShadowMap = renderer->CreateResourceHeap(pipelineLayoutShadowMap, { constantBuffer });
 
         // Create resource heap for scene rendering
-        {
-            resourceHeapDesc.pipelineLayout = pipelineLayoutScene;
-            resourceHeapDesc.resourceViews  = { constantBuffer, shadowMap, shadowMapSampler };
-        }
-        resourceHeapScene = renderer->CreateResourceHeap(resourceHeapDesc);
+        resourceHeapScene = renderer->CreateResourceHeap(pipelineLayoutScene, { constantBuffer, shadowMap, shadowMapSampler });
     }
 
     void UpdateScene()

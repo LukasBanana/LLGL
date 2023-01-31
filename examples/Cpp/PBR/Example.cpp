@@ -383,49 +383,55 @@ private:
     void CreateResourceHeaps()
     {
         // Create resource heap for skybox
+        const LLGL::ResourceViewDescriptor resourceViewsSky[] =
+        {
+            constantBuffer, linearSampler, skyboxArray
+        };
         LLGL::ResourceHeapDescriptor heapDescSky;
         {
-            heapDescSky.pipelineLayout  = layoutSky;
-            heapDescSky.resourceViews   = { constantBuffer, linearSampler, skyboxArray };
+            heapDescSky.pipelineLayout      = layoutSky;
+            heapDescSky.numResourceViews    = sizeof(resourceViewsSky) / sizeof(resourceViewsSky[0]);
         }
-        resourceHeapSkybox = renderer->CreateResourceHeap(heapDescSky);
+        resourceHeapSkybox = renderer->CreateResourceHeap(heapDescSky, resourceViewsSky);
 
         // Create resource heap for meshes
+        std::vector<LLGL::ResourceViewDescriptor> resourceViewsMeshes;
+        if (IsOpenGL())
+        {
+            resourceViewsMeshes =
+            {
+                constantBuffer,
+                linearSampler,
+                linearSampler,
+                linearSampler,
+                linearSampler,
+                linearSampler,
+                skyboxArray,
+                colorMapArray,
+                normalMapArray,
+                roughnessMapArray,
+                metallicMapArray,
+            };
+        }
+        else
+        {
+            resourceViewsMeshes =
+            {
+                constantBuffer,
+                linearSampler,
+                skyboxArray,
+                colorMapArray,
+                normalMapArray,
+                roughnessMapArray,
+                metallicMapArray,
+            };
+        }
         LLGL::ResourceHeapDescriptor heapDescMeshes;
         {
-            heapDescMeshes.pipelineLayout = layoutMeshes;
-            if (IsOpenGL())
-            {
-                heapDescMeshes.resourceViews =
-                {
-                    constantBuffer,
-                    linearSampler,
-                    linearSampler,
-                    linearSampler,
-                    linearSampler,
-                    linearSampler,
-                    skyboxArray,
-                    colorMapArray,
-                    normalMapArray,
-                    roughnessMapArray,
-                    metallicMapArray,
-                };
-            }
-            else
-            {
-                heapDescMeshes.resourceViews =
-                {
-                    constantBuffer,
-                    linearSampler,
-                    skyboxArray,
-                    colorMapArray,
-                    normalMapArray,
-                    roughnessMapArray,
-                    metallicMapArray,
-                };
-            }
+            heapDescMeshes.pipelineLayout   = layoutMeshes;
+            heapDescMeshes.numResourceViews = static_cast<std::uint32_t>(resourceViewsMeshes.size());
         }
-        resourceHeapMeshes = renderer->CreateResourceHeap(heapDescMeshes);
+        resourceHeapMeshes = renderer->CreateResourceHeap(heapDescMeshes, resourceViewsMeshes);
     }
 
 private:

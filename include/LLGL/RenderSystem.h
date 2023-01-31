@@ -16,8 +16,9 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
-
 #include <LLGL/Blob.h>
+#include <LLGL/Container/ArrayView.h>
+
 #include <LLGL/Buffer.h>
 #include <LLGL/BufferFlags.h>
 #include <LLGL/BufferArray.h>
@@ -27,7 +28,6 @@
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/ResourceHeap.h>
 #include <LLGL/ResourceHeapFlags.h>
-
 #include <LLGL/RenderPass.h>
 #include <LLGL/RenderPassFlags.h>
 #include <LLGL/RenderTarget.h>
@@ -40,6 +40,7 @@
 #include <LLGL/PipelineState.h>
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/QueryHeap.h>
+#include <LLGL/QueryHeapFlags.h>
 #include <LLGL/Fence.h>
 
 #include <string>
@@ -367,16 +368,37 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new resource heap.
-        \param[in] resourceHeapDesc Specifies the descriptor which determines all shader resource.
+        \param[in] resourceHeapDesc Specifies the descriptor for the resource heap.
+        If the \c numResourceViews field is zero, the \c initialResourceViews parameter will determine the number of resources,
+        it must \e not be empty and it \b must be a multiple of the number of bindings in the piepline layout.
+        \param[in] initialResourceViews Specifies an optional array of initial resource views.
+        If this is non-null, the array pointed to must have enough elements to initialze the entire resource heap.
+        Uninitialized resource views must be written with a call to WriteResourceHeap before the resource heap can be used in a command buffer.
         \remarks Resource heaps are used in combination with a pipeline layout.
         The pipeline layout determines to which binding points the resources are bound.
         \see CreatePipelineLayout
         \see CommandBuffer::SetResourceHeap
+        \see WriteResourceHeap
+        \see ResourceHeapDescriptor::numResourceViews
         */
-        virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc) = 0;
+        virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews = {}) = 0;
 
         //! Releases the specified ResourceHeap object. After this call, the specified object must no longer be used.
         virtual void Release(ResourceHeap& resourceHeap) = 0;
+
+        /**
+        \brief Writes new resource view descriptors into the specified resource heap.
+        \param[in] resourceHeap Specifies the resource heap that is to be updated.
+        \param[in] firstDescriptor Zero-based index to the first descriptor that is to be updated.
+        This must be less than the number of bindings in the resource heap's pipeline layout (PipelineLayout::GetNumBindings)
+        times the number of descriptor sets in this resource heap (ResourceHeap::GetNumDescriptorSets).
+        \param[in] numDescriptors Specifies the number of descriptors \c resourceViewDescs points to.
+        \param[in] resourceViewDescs Pointer to an array of resource view descriptors. This array must have at least \c numDescriptors elements.
+        \remarks The type of a resource view, i.e. whether it's a buffer, texture, or sampler, must not be changed with this function.
+        \see ResourceHeap::GetNumDescriptorSets
+        \see PipelineLayout::GetNumBindings
+        */
+        virtual void WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) = 0;
 
         /* ----- Render Passes ----- */
 
