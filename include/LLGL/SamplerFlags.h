@@ -1,6 +1,6 @@
 /*
  * SamplerFlags.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,9 +9,9 @@
 #define LLGL_SAMPLER_FLAGS_H
 
 
-#include "Export.h"
-#include "PipelineStateFlags.h"
-#include "ColorRGBA.h"
+#include <LLGL/Export.h>
+#include <LLGL/PipelineStateFlags.h>
+#include <LLGL/ColorRGBA.h>
 #include <cstddef>
 #include <cstdint>
 

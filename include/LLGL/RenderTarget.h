@@ -1,6 +1,6 @@
 /*
  * RenderTarget.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,9 +9,9 @@
 #define LLGL_RENDER_TARGET_H
 
 
-#include "RenderSystemChild.h"
-#include "RenderTargetFlags.h"
-#include "Types.h"
+#include <LLGL/RenderSystemChild.h>
+#include <LLGL/RenderTargetFlags.h>
+#include <LLGL/Types.h>
 
 
 namespace LLGL

@@ -1,6 +1,6 @@
 /*
  * Texture.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,9 +9,9 @@
 #define LLGL_TEXTURE_H
 
 
-#include "Resource.h"
-#include "Types.h"
-#include "TextureFlags.h"
+#include <LLGL/Resource.h>
+#include <LLGL/Types.h>
+#include <LLGL/TextureFlags.h>
 #include <cstdint>
 
 

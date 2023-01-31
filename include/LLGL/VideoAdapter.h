@@ -1,6 +1,6 @@
 /*
  * VideoAdapter.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,8 +9,8 @@
 #define LLGL_VIDEO_ADAPTER_H
 
 
-#include "Export.h"
-#include "DisplayFlags.h"
+#include <LLGL/Export.h>
+#include <LLGL/DisplayFlags.h>
 #include <vector>
 #include <string>
 #include <cstdint>

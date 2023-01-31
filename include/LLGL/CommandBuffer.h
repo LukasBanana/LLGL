@@ -1,6 +1,6 @@
 /*
  * CommandBuffer.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,22 +9,22 @@
 #define LLGL_COMMAND_BUFFER_H
 
 
-#include "RenderSystemChild.h"
-#include "CommandBufferFlags.h"
-#include "RenderSystemFlags.h"
-#include "ColorRGBA.h"
+#include <LLGL/RenderSystemChild.h>
+#include <LLGL/CommandBufferFlags.h>
+#include <LLGL/RenderSystemFlags.h>
+#include <LLGL/ColorRGBA.h>
 
-#include "Buffer.h"
-#include "BufferArray.h"
-#include "ResourceHeap.h"
-#include "PipelineLayoutFlags.h"
-#include "Constants.h"
+#include <LLGL/Buffer.h>
+#include <LLGL/BufferArray.h>
+#include <LLGL/ResourceHeap.h>
+#include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/Constants.h>
 
-#include "RenderPass.h"
-#include "RenderTarget.h"
-#include "Shader.h"
-#include "PipelineState.h"
-#include "QueryHeap.h"
+#include <LLGL/RenderPass.h>
+#include <LLGL/RenderTarget.h>
+#include <LLGL/Shader.h>
+#include <LLGL/PipelineState.h>
+#include <LLGL/QueryHeap.h>
 
 #include <cstdint>
 

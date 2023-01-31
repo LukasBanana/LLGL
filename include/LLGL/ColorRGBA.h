@@ -1,6 +1,6 @@
 /*
  * ColorRGBA.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -29,7 +29,7 @@ class LLGL_EXPORT Color<T, 4u>
     public:
 
         //! Specifies the number of color components.
-        static const std::size_t components = 4;
+        static constexpr std::size_t components = 4;
 
         /**
         \brief Constructors all attributes with the default color value.

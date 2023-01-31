@@ -1,6 +1,6 @@
 /*
  * PipelineStateFlags.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,12 +9,12 @@
 #define LLGL_PIPELINE_STATE_FLAGS_H
 
 
-#include "Export.h"
-#include "ColorRGBA.h"
-#include "Types.h"
-#include "Format.h"
-#include "ForwardDecls.h"
-#include "StaticLimits.h"
+#include <LLGL/Export.h>
+#include <LLGL/ColorRGBA.h>
+#include <LLGL/Types.h>
+#include <LLGL/Format.h>
+#include <LLGL/ForwardDecls.h>
+#include <LLGL/StaticLimits.h>
 #include <vector>
 #include <cstdint>
 

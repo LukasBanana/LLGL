@@ -1,6 +1,6 @@
 /*
  * CommandQueue.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,8 +9,8 @@
 #define LLGL_COMMAND_QUEUE_H
 
 
-#include "RenderSystemChild.h"
-#include "ForwardDecls.h"
+#include <LLGL/RenderSystemChild.h>
+#include <LLGL/ForwardDecls.h>
 #include <cstdint>
 #include <cstddef>
 

@@ -1,6 +1,6 @@
 /*
  * QueryHeap.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,8 +9,8 @@
 #define LLGL_QUERY_HEAP_H
 
 
-#include "RenderSystemChild.h"
-#include "QueryHeapFlags.h"
+#include <LLGL/RenderSystemChild.h>
+#include <LLGL/QueryHeapFlags.h>
 
 
 namespace LLGL

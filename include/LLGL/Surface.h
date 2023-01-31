@@ -1,6 +1,6 @@
 /*
  * Surface.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,10 +9,10 @@
 #define LLGL_SURFACE_H
 
 
-#include "Interface.h"
-#include "Types.h"
-#include "SwapChainFlags.h"
-#include "Display.h"
+#include <LLGL/Interface.h>
+#include <LLGL/Types.h>
+#include <LLGL/SwapChainFlags.h>
+#include <LLGL/Display.h>
 
 
 namespace LLGL

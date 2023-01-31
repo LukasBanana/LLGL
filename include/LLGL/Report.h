@@ -9,7 +9,7 @@
 #define LLGL_REPORT_H
 
 
-#include "Interface.h"
+#include <LLGL/Interface.h>
 
 
 namespace LLGL

@@ -1,6 +1,6 @@
 /*
  * Color.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -112,7 +112,7 @@ class LLGL_EXPORT Color
     public:
 
         //! Specifies the number of vector components.
-        static const std::size_t components = N;
+        static constexpr std::size_t components = N;
 
         /**
         \brief Constructors all attributes with the default color value.

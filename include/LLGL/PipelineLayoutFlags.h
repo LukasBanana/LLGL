@@ -1,6 +1,6 @@
 /*
  * PipelineLayoutFlags.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,10 +9,10 @@
 #define LLGL_PIPELINE_LAYOUT_FLAGS_H
 
 
-#include "Export.h"
-#include "ResourceFlags.h"
-#include "BufferFlags.h"
-#include "ShaderFlags.h"
+#include <LLGL/Export.h>
+#include <LLGL/ResourceFlags.h>
+#include <LLGL/BufferFlags.h>
+#include <LLGL/ShaderFlags.h>
 #include <vector>
 
 

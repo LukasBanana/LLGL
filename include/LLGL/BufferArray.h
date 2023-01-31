@@ -1,6 +1,6 @@
 /*
  * BufferArray.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,8 +9,8 @@
 #define LLGL_BUFFER_ARRAY_H
 
 
-#include "RenderSystemChild.h"
-#include "BufferFlags.h"
+#include <LLGL/RenderSystemChild.h>
+#include <LLGL/BufferFlags.h>
 
 
 namespace LLGL

@@ -1,6 +1,6 @@
 /*
  * PipelineLayout.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,7 +9,7 @@
 #define LLGL_PIPELINE_LAYOUT_H
 
 
-#include "RenderSystemChild.h"
+#include <LLGL/RenderSystemChild.h>
 #include <cstdint>
 
 

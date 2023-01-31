@@ -1,6 +1,6 @@
 /*
  * CommandBufferFlags.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,7 +9,7 @@
 #define LLGL_COMMAND_BUFFER_FLAGS_H
 
 
-#include "ColorRGBA.h"
+#include <LLGL/ColorRGBA.h>
 
 
 namespace LLGL

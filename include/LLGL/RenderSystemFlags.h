@@ -1,6 +1,6 @@
 /*
  * RenderSystemFlags.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,17 +9,17 @@
 #define LLGL_RENDER_SYSTEM_FLAGS_H
 
 
-#include "Export.h"
-#include "CommandBufferFlags.h"
-#include "TextureFlags.h"
-#include "Constants.h"
-#include "RendererConfiguration.h"
+#include <LLGL/Export.h>
+#include <LLGL/CommandBufferFlags.h>
+#include <LLGL/TextureFlags.h>
+#include <LLGL/Constants.h>
+#include <LLGL/RendererConfiguration.h>
 
-#include "Platform/Platform.h"
+#include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_ANDROID
 #   include <android_native_app_glue.h>
 //#elif defined LLGL_OS_IOS
-//#   include "Platform/"
+//#   include <LLGL/Platform/>
 #endif
 
 #include <cstddef>

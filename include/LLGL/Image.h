@@ -1,6 +1,6 @@
 /*
  * Image.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,10 +9,10 @@
 #define LLGL_IMAGE_H
 
 
-#include "Export.h"
-#include "Types.h"
-#include "ImageFlags.h"
-#include "SamplerFlags.h"
+#include <LLGL/Export.h>
+#include <LLGL/Types.h>
+#include <LLGL/ImageFlags.h>
+#include <LLGL/SamplerFlags.h>
 
 
 namespace LLGL
