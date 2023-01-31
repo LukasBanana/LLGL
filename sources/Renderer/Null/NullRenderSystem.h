@@ -88,9 +88,11 @@ class NullRenderSystem final : public RenderSystem
 
         /* ----- Resource Views ----- */
 
-        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc) override;
+        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews = {}) override;
 
         void Release(ResourceHeap& resourceHeap) override;
+
+        void WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) override;
 
         /* ----- Render Passes ----- */
 

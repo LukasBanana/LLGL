@@ -8,6 +8,7 @@
 #include "NullResourceHeap.h"
 #include "NullPipelineLayout.h"
 #include "../../CheckedCast.h"
+#include <algorithm>
 
 
 namespace LLGL
@@ -20,10 +21,27 @@ static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipeline
     return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutNull->desc.bindings.size()));
 }
 
-NullResourceHeap::NullResourceHeap(const ResourceHeapDescriptor& desc) :
-    desc         { desc                                              },
-    numBindings_ { GetNumPipelineLayoutBindings(desc.pipelineLayout) }
+static std::uint32_t GetNumResourceViews(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
+    if (desc.numResourceViews > 0)
+        return desc.numResourceViews;
+    else
+        return static_cast<std::uint32_t>(initialResourceViews.size());
+}
+
+NullResourceHeap::NullResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews) :
+    numBindings_   { GetNumPipelineLayoutBindings(desc.pipelineLayout)        },
+    resourceViews_ { initialResourceViews.begin(), initialResourceViews.end() }
+{
+    if (desc.numResourceViews > 0)
+        resourceViews_.resize(desc.numResourceViews);
+}
+
+void NullResourceHeap::WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    /* Copy input resource views into resource heap via STL copy algorithm, since the descriptors are non-POD structs */
+    if (resourceViews.size() + firstDescriptor < resourceViews_.size())
+        std::copy(resourceViews.begin(), resourceViews.end(), &resourceViews_[firstDescriptor]);
 }
 
 void NullResourceHeap::SetName(const char* name)
@@ -36,7 +54,7 @@ void NullResourceHeap::SetName(const char* name)
 
 std::uint32_t NullResourceHeap::GetNumDescriptorSets() const
 {
-    return static_cast<std::uint32_t>(desc.resourceViews.size() / numBindings_);
+    return (static_cast<std::uint32_t>(resourceViews_.size()) / numBindings_);
 }
 
 

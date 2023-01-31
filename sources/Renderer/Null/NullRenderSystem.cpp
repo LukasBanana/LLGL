@@ -248,14 +248,20 @@ void NullRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Views ----- */
 
-ResourceHeap* NullRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
+ResourceHeap* NullRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<NullResourceHeap>(resourceHeapDesc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<NullResourceHeap>(resourceHeapDesc, initialResourceViews));
 }
 
 void NullRenderSystem::Release(ResourceHeap& resourceHeap)
 {
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+void NullRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    auto& resourceHeapNull = LLGL_CAST(NullResourceHeap&, resourceHeap);
+    resourceHeapNull.WriteResourceViews(firstDescriptor, resourceViews);
 }
 
 /* ----- Render Passes ----- */
