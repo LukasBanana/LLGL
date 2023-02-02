@@ -760,7 +760,7 @@ void D3D11CommandBuffer::SetResourceHeap(
     auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
 
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
-    if (context1_.Get() != nullptr && resourceHeapD3D.HasCbufferRanges())
+    if (context1_.Get() != nullptr)
     {
         if (bindPoint != PipelineBindPoint::Compute)
             resourceHeapD3D.BindForGraphicsPipeline1(context1_.Get(), firstSet);

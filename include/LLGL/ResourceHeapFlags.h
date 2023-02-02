@@ -56,6 +56,7 @@ struct BarrierFlags
 /**
 \brief Resource view descriptor structure.
 \see ResourceHeapDescriptor::resourceViews
+\see RenderSystem::WriteResourceHeap
 */
 struct ResourceViewDescriptor
 {
@@ -86,8 +87,12 @@ struct ResourceViewDescriptor
         textureView.format = Format::Undefined;
     }
 
-    //! Pointer to the hardware resource. This must not be null when passed to a ResourceHeap.
-    Resource*               resource    = nullptr;
+    /**
+    \brief Pointer to the hardware resource.
+    \see This \e can be null when passed to a ResourceHeap to skip over resources that are intended to be unchanged.
+    This way a single \c WriteResourceHeap invocation can be used to write a partial range of resource views.
+    */
+    Resource*               resource        = nullptr;
 
     /**
     \brief Optional texture view descriptor.
@@ -108,6 +113,16 @@ struct ResourceViewDescriptor
     - \c bufferView.size is \c Constants::wholeSize.
     */
     BufferViewDescriptor    bufferView;
+
+    /**
+    \brief Initial counter value for an \c AppendStructuredBuffer and \c ConsumeStructuredBuffer in HLSL.
+    \remarks This is only used for HLSL (D3D) to initialize the hidden counter of appendable and consumable unordered access views (UAV).
+    This will be used in the D3D backends for buffer resources that have been created with either the MiscFlags::Append or MiscFlags::Counter flags.
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    \see MiscFlags::Append
+    \see MiscFlags::Counter
+    */
+    std::uint32_t           initialCount    = 0;
 };
 
 /**

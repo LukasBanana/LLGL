@@ -104,15 +104,14 @@ void D3D11BufferWithRV::CreateSubresourceSRV(
     UINT                        firstElement,
     UINT                        numElements)
 {
-    CreateD3D11BufferSubresourceSRV(
-        device,
-        GetNative(),
-        srvOutput,
-        format,
-        firstElement,
-        numElements,
-        "for buffer subresource"
-    );
+    if (device == nullptr)
+    {
+        ComPtr<ID3D11Device> parentDevice;
+        GetNative()->GetDevice(parentDevice.GetAddressOf());
+        CreateD3D11BufferSubresourceSRV(parentDevice.Get(), GetNative(), srvOutput, format, firstElement, numElements, __FUNCTION__);
+    }
+    else
+        CreateD3D11BufferSubresourceSRV(device, GetNative(), srvOutput, format, firstElement, numElements, __FUNCTION__);
 }
 
 static void CreateD3D11BufferSubresourceUAV(
@@ -145,16 +144,14 @@ void D3D11BufferWithRV::CreateSubresourceUAV(
     UINT                        firstElement,
     UINT                        numElements)
 {
-    CreateD3D11BufferSubresourceUAV(
-        device,
-        GetNative(),
-        uavOutput,
-        format,
-        firstElement,
-        numElements,
-        uavFlags_,
-        "for buffer subresource"
-    );
+    if (device == nullptr)
+    {
+        ComPtr<ID3D11Device> parentDevice;
+        GetNative()->GetDevice(parentDevice.GetAddressOf());
+        CreateD3D11BufferSubresourceUAV(parentDevice.Get(), GetNative(), uavOutput, format, firstElement, numElements, uavFlags_, __FUNCTION__);
+    }
+    else
+        CreateD3D11BufferSubresourceUAV(device, GetNative(), uavOutput, format, firstElement, numElements, uavFlags_, __FUNCTION__);
 }
 
 

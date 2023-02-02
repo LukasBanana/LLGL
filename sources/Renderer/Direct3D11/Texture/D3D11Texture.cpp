@@ -767,18 +767,38 @@ void D3D11Texture::CreateSubresourceSRV(
     UINT                        baseArrayLayer,
     UINT                        numArrayLayers)
 {
-    CreateD3D11TextureSubresourceSRV(
-        device,
-        native_.resource.Get(),
-        srvOutput,
-        type,
-        format,
-        baseMipLevel,
-        numMipLevels,
-        baseArrayLayer,
-        numArrayLayers,
-        "for texture subresource"
-    );
+    if (device == nullptr)
+    {
+        ComPtr<ID3D11Device> parentDevice;
+        native_.resource->GetDevice(parentDevice.GetAddressOf());
+        CreateD3D11TextureSubresourceSRV(
+            parentDevice.Get(),
+            native_.resource.Get(),
+            srvOutput,
+            type,
+            format,
+            baseMipLevel,
+            numMipLevels,
+            baseArrayLayer,
+            numArrayLayers,
+            __FUNCTION__
+        );
+    }
+    else
+    {
+        CreateD3D11TextureSubresourceSRV(
+            device,
+            native_.resource.Get(),
+            srvOutput,
+            type,
+            format,
+            baseMipLevel,
+            numMipLevels,
+            baseArrayLayer,
+            numArrayLayers,
+            __FUNCTION__
+        );
+    }
 }
 
 void D3D11Texture::CreateSubresourceUAV(
@@ -790,17 +810,36 @@ void D3D11Texture::CreateSubresourceUAV(
     UINT                        baseArrayLayer,
     UINT                        numArrayLayers)
 {
-    CreateD3D11TextureSubresourceUAV(
-        device,
-        native_.resource.Get(),
-        uavOutput,
-        type,
-        format,
-        baseMipLevel,
-        baseArrayLayer,
-        numArrayLayers,
-        "for texture subresource"
-    );
+    if (device == nullptr)
+    {
+        ComPtr<ID3D11Device> parentDevice;
+        native_.resource->GetDevice(parentDevice.GetAddressOf());
+        CreateD3D11TextureSubresourceUAV(
+            parentDevice.Get(),
+            native_.resource.Get(),
+            uavOutput,
+            type,
+            format,
+            baseMipLevel,
+            baseArrayLayer,
+            numArrayLayers,
+            __FUNCTION__
+        );
+    }
+    else
+    {
+        CreateD3D11TextureSubresourceUAV(
+            device,
+            native_.resource.Get(),
+            uavOutput,
+            type,
+            format,
+            baseMipLevel,
+            baseArrayLayer,
+            numArrayLayers,
+            __FUNCTION__
+        );
+    }
 }
 
 // Returns true if the specified texture type contains an array layer for D3D11 textures

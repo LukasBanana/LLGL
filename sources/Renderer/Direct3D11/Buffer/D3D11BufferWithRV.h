@@ -29,7 +29,10 @@ class D3D11BufferWithRV final : public D3D11Buffer
 
         D3D11BufferWithRV(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
-        // Creates a shader-resource-view (SRV) of a subresource of this buffer object.
+        /*
+        Creates a shader-resource-view (SRV) of a subresource of this buffer object.
+        If 'device' is null, the original device this buffer was created with will be used.
+        */
         void CreateSubresourceSRV(
             ID3D11Device*               device,
             ID3D11ShaderResourceView**  srvOutput,
@@ -38,7 +41,10 @@ class D3D11BufferWithRV final : public D3D11Buffer
             UINT                        numElements
         );
 
-        // Creates an unordered-access-view (UAV) of a subresource of this buffer object.
+        /*
+        Creates an unordered-access-view (UAV) of a subresource of this buffer object.
+        If 'device' is null, the original device this buffer was created with will be used.
+        */
         void CreateSubresourceUAV(
             ID3D11Device*               device,
             ID3D11UnorderedAccessView** uavOutput,

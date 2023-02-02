@@ -342,15 +342,20 @@ void D3D11RenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
+ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    const bool hasDeviceContextD3D11_1 = (GetMinorVersion() >= 1);
-    return TakeOwnership(resourceHeaps_, MakeUnique<D3D11ResourceHeap>(resourceHeapDesc, hasDeviceContextD3D11_1));
+    return TakeOwnership(resourceHeaps_, MakeUnique<D3D11ResourceHeap>(resourceHeapDesc, initialResourceViews));
 }
 
 void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
 {
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+std::uint32_t D3D11RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
+    return resourceHeapD3D.WriteResourceViews(firstDescriptor, resourceViews);
 }
 
 /* ----- Render Passes ----- */

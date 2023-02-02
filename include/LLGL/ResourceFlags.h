@@ -241,6 +241,7 @@ struct MiscFlags
         \remarks This cannot be used together with the MiscFlags::Counter bit.
         \note Only supported with: Direct3D 11, Direct3D 12.
         \see BufferDescriptor::stride
+        \see ResourceViewDescriptor::initialCount
         \see https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_buffer_uav_flag
         */
         Append          = (1 << 4),
@@ -251,6 +252,7 @@ struct MiscFlags
         \remarks This cannot be used together with the MiscFlags::Append bit.
         \note Only supported with Direct3D 11, Direct3D 12.
         \see BufferDescriptor::stride
+        \see ResourceViewDescriptor::initialCount
         \see https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_buffer_uav_flag
         */
         Counter         = (1 << 5),

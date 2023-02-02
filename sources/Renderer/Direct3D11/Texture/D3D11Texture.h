@@ -128,7 +128,10 @@ class D3D11Texture final : public Texture
             UINT                        numArrayLayers
         );
 
-        // Creates a shader-resource-view (SRV) of a subresource of this texture object.
+        /*
+        Creates a shader-resource-view (SRV) of a subresource of this texture object.
+        If 'device' is null, the original device this buffer was created with will be used.
+        */
         void CreateSubresourceSRV(
             ID3D11Device*               device,
             ID3D11ShaderResourceView**  srvOutput,
@@ -140,7 +143,10 @@ class D3D11Texture final : public Texture
             UINT                        numArrayLayers
         );
 
-        // Creates an unordered-access-view (UAV) of a subresource of this texture object.
+        /*
+        Creates an unordered-access-view (UAV) of a subresource of this texture object.
+        If 'device' is null, the original device this buffer was created with will be used.
+        */
         void CreateSubresourceUAV(
             ID3D11Device*               device,
             ID3D11UnorderedAccessView** uavOutput,
