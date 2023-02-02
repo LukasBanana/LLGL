@@ -258,10 +258,10 @@ void NullRenderSystem::Release(ResourceHeap& resourceHeap)
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
-void NullRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t NullRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
 {
     auto& resourceHeapNull = LLGL_CAST(NullResourceHeap&, resourceHeap);
-    resourceHeapNull.WriteResourceViews(firstDescriptor, resourceViews);
+    return resourceHeapNull.WriteResourceViews(firstDescriptor, resourceViews);
 }
 
 /* ----- Render Passes ----- */

@@ -392,13 +392,13 @@ class LLGL_EXPORT RenderSystem : public Interface
         \param[in] firstDescriptor Zero-based index to the first descriptor that is to be updated.
         This must be less than the number of bindings in the resource heap's pipeline layout (PipelineLayout::GetNumBindings)
         times the number of descriptor sets in this resource heap (ResourceHeap::GetNumDescriptorSets).
-        \param[in] numDescriptors Specifies the number of descriptors \c resourceViewDescs points to.
-        \param[in] resourceViewDescs Pointer to an array of resource view descriptors. This array must have at least \c numDescriptors elements.
+        \param[in] resourceViews Array of resource view descriptors.
         \remarks The type of a resource view, i.e. whether it's a buffer, texture, or sampler, must not be changed with this function.
+        \return Number of resource views that have been updated by this call. Any resource view descriptor with a \c resource field that is null will be ignored silently.
         \see ResourceHeap::GetNumDescriptorSets
         \see PipelineLayout::GetNumBindings
         */
-        virtual void WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) = 0;
+        virtual std::uint32_t WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) = 0;
 
         /* ----- Render Passes ----- */
 

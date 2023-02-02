@@ -110,7 +110,7 @@ class GLRenderSystem final : public RenderSystem
 
         void Release(ResourceHeap& resourceHeap) override;
 
-        void WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) override;
+        std::uint32_t WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) override;
 
         /* ----- Render Passes ----- */
 

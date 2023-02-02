@@ -336,17 +336,18 @@ std::vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy
     std::vector<ResourceViewDescriptor> instanceResourceViews;
     instanceResourceViews.reserve(resourceViews.size());
 
-    for (ResourceViewDescriptor resourceView : resourceViews)
+    for_range(i, resourceViews.size())
     {
-        if (auto resource = resourceView.resource)
+        ResourceViewDescriptor resourceViewCopy = resourceViews[i];
+        if (auto resource = resourceViewCopy.resource)
         {
             switch (resource->GetResourceType())
             {
                 case ResourceType::Buffer:
-                    resourceView.resource = &(LLGL_CAST(DbgBuffer*, resourceView.resource)->instance);
+                    resourceViewCopy.resource = &(LLGL_CAST(DbgBuffer*, resourceViewCopy.resource)->instance);
                     break;
                 case ResourceType::Texture:
-                    resourceView.resource = &(LLGL_CAST(DbgTexture*, resourceView.resource)->instance);
+                    resourceViewCopy.resource = &(LLGL_CAST(DbgTexture*, resourceViewCopy.resource)->instance);
                     break;
                 case ResourceType::Sampler:
                     //TODO: DbgSampler
@@ -357,8 +358,23 @@ std::vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy
             }
         }
         else
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "null pointer passed to <ResourceViewDescriptor>");
-        instanceResourceViews.push_back(resourceView);
+        {
+            if (IsTextureViewEnabled(resourceViewCopy.textureView))
+            {
+                LLGL_DBG_WARN(
+                    WarningType::ImproperArgument,
+                    "texture view is enabled in ResourceViewDescriptor[" + std::to_string(i) +  "] but resource is null"
+                );
+            }
+            if (IsBufferViewEnabled(resourceViewCopy.bufferView))
+            {
+                LLGL_DBG_WARN(
+                    WarningType::ImproperArgument,
+                    "buffer view is enabled in ResourceViewDescriptor[" + std::to_string(i) +  "] but resource is null"
+                );
+            }
+        }
+        instanceResourceViews.push_back(resourceViewCopy);
     }
 
     return instanceResourceViews;
@@ -395,7 +411,7 @@ void DbgRenderSystem::Release(ResourceHeap& resourceHeap)
     return instance_->Release(resourceHeap);
 }
 
-void DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
 {
     auto& resourceHeapDbg = LLGL_CAST(DbgResourceHeap&, resourceHeap);
 
@@ -406,7 +422,7 @@ void DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_
     }
 
     auto instanceResourceViews = GetResourceViewInstanceCopy(resourceViews);
-    instance_->WriteResourceHeap(resourceHeapDbg.instance, firstDescriptor, instanceResourceViews);
+    return instance_->WriteResourceHeap(resourceHeapDbg.instance, firstDescriptor, instanceResourceViews);
 }
 
 /* ----- Render Passes ----- */

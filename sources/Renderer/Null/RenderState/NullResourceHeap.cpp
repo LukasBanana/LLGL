@@ -8,6 +8,7 @@
 #include "NullResourceHeap.h"
 #include "NullPipelineLayout.h"
 #include "../../CheckedCast.h"
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 
 
@@ -37,11 +38,23 @@ NullResourceHeap::NullResourceHeap(const ResourceHeapDescriptor& desc, const Arr
         resourceViews_.resize(desc.numResourceViews);
 }
 
-void NullResourceHeap::WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+std::uint32_t NullResourceHeap::WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
 {
     /* Copy input resource views into resource heap via STL copy algorithm, since the descriptors are non-POD structs */
+    std::uint32_t numWritten = 0;
     if (resourceViews.size() + firstDescriptor < resourceViews_.size())
-        std::copy(resourceViews.begin(), resourceViews.end(), &resourceViews_[firstDescriptor]);
+    {
+        for_range(i, resourceViews.size())
+        {
+            const auto& resourceView = resourceViews[i];
+            if (resourceView.resource != nullptr)
+            {
+                resourceViews_[firstDescriptor + i] = resourceView;
+                ++numWritten;
+            }
+        }
+    }
+    return numWritten;
 }
 
 void NullResourceHeap::SetName(const char* name)

@@ -44,7 +44,7 @@ class GLResourceHeap final : public ResourceHeap
         ~GLResourceHeap();
 
         // Writes the specified resource views to this resource heap and generates texture views as required.
-        void WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
+        std::uint32_t WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
 
         // Binds this resource heap with the specified GL state manager.
         void Bind(GLStateManager& stateMngr, std::uint32_t firstSet);
@@ -123,14 +123,14 @@ class GLResourceHeap final : public ResourceHeap
         void WriteBindingMappings(const GLResourceBinding* first, SegmentationSizeType count);
         void CopyBindingMapping(const GLResourceBinding& dst, const GLResourceBinding& src);
 
-        void WriteResourceViewsBuffer(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index, long anyBindFlags);
-        void WriteResourceViewsUBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
-        void WriteResourceViewsSSBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
-        void WriteResourceViewsTexture(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
-        void WriteResourceViewsImage(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
-        void WriteResourceViewsSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewBuffer(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index, long anyBindFlags);
+        void WriteResourceViewUBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewSSBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewTexture(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewImage(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
         #ifdef LLGL_GL_ENABLE_OPENGL2X
-        void WriteResourceViewsGL2XSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewGL2XSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
         #endif
 
     private:
@@ -148,9 +148,9 @@ class GLResourceHeap final : public ResourceHeap
 
     private:
 
-        SmallVector<BindingSegmentLocation> bindingMap_;            // Maps a binding index to a descriptor index.
+        SmallVector<BindingSegmentLocation> bindingMap_;            // Maps a binding index to a descriptor location.
         BufferSegmentation                  segmentation_;
-        SegmentedBuffer                     buffer_;                // Buffer with resource binding information and stride (in bytes) per descriptor set
+        SegmentedBuffer                     heap_;                  // Buffer with resource binding information and stride (in bytes) per descriptor set
         GLbitfield                          barriers_       = 0;    // Bitmask for glMemoryBarrier
 
 };
