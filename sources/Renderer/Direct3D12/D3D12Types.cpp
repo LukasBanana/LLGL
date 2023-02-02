@@ -1,12 +1,11 @@
 /*
  * D3D12Types.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "D3D12Types.h"
-#include "../DXCommon/DXTypes.h"
 #include <stdexcept>
 #include <string>
 
@@ -339,26 +338,6 @@ D3D12_QUERY_HEAP_TYPE MapQueryHeapType(const QueryType queryType)
 Format Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);
-}
-
-DXGI_FORMAT ToDXGIFormatDSV(const DXGI_FORMAT format)
-{
-    return DXTypes::ToDXGIFormatDSV(format);
-}
-
-DXGI_FORMAT ToDXGIFormatSRV(const DXGI_FORMAT format)
-{
-    return DXTypes::ToDXGIFormatSRV(format);
-}
-
-DXGI_FORMAT ToDXGIFormatUAV(const DXGI_FORMAT format)
-{
-    return DXTypes::ToDXGIFormatUAV(format);
-}
-
-DXGI_FORMAT ToDXGIFormatUInt(const DXGI_FORMAT format)
-{
-    return DXTypes::ToDXGIFormatUInt(format);
 }
 
 

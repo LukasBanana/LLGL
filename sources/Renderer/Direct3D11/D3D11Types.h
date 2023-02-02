@@ -1,6 +1,6 @@
 /*
  * D3D11Types.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -16,6 +16,7 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/BufferFlags.h>
 #include <LLGL/QueryHeapFlags.h>
+#include "../DXCommon/DXTypes.h"
 #include "Direct3D11.h"
 
 
@@ -45,10 +46,6 @@ D3D11_LOGIC_OP              Map( const LogicOp              logicOp         );
 #endif
 
 Format                      Unmap( const DXGI_FORMAT format );
-
-//TODO: remove and use DXTypes namespace directly
-DXGI_FORMAT                 ToDXGIFormatDSV(const DXGI_FORMAT format);
-DXGI_FORMAT                 ToDXGIFormatSRV(const DXGI_FORMAT format);
 
 void Convert(D3D11_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil);
 

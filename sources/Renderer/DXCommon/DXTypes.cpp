@@ -1,6 +1,6 @@
 /*
  * DXTypes.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -484,11 +484,11 @@ DXGI_FORMAT ToDXGIFormatUInt(const DXGI_FORMAT format)
         case DXGI_FORMAT_R32G32B32A32_FLOAT:        return DXGI_FORMAT_R32G32B32A32_UINT;
 
         /* --- BGRA color formats --- */
-        case DXGI_FORMAT_B8G8R8A8_UNORM:            return DXGI_FORMAT_R8G8B8A8_UINT;
+        case DXGI_FORMAT_B8G8R8A8_UNORM:            /* pass */
         case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:       return DXGI_FORMAT_R8G8B8A8_UINT;
 
         /* --- Packed formats --- */
-        case DXGI_FORMAT_R10G10B10A2_UNORM:         return DXGI_FORMAT_R10G10B10A2_UINT;
+        case DXGI_FORMAT_R10G10B10A2_UNORM:         /* pass */
         case DXGI_FORMAT_R10G10B10A2_UINT:          return DXGI_FORMAT_R10G10B10A2_UINT;
         case DXGI_FORMAT_R11G11B10_FLOAT:           break; // not supported
         case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:        break; // not supported
@@ -496,6 +496,81 @@ DXGI_FORMAT ToDXGIFormatUInt(const DXGI_FORMAT format)
         default:                                    break;
     }
     throw std::invalid_argument("failed to map DXGI_FORMAT to compatible format for logic operations");
+}
+
+DXGI_FORMAT ToDXGIFormatTypeless(const DXGI_FORMAT format)
+{
+    switch (format)
+    {
+        /* --- Alpha channel color formats --- */
+        case DXGI_FORMAT_A8_UNORM:                  break; // not supported
+
+        /* --- Red channel color formats --- */
+        case DXGI_FORMAT_R8_UNORM:                  /* pass */
+        case DXGI_FORMAT_R8_SNORM:                  /* pass */
+        case DXGI_FORMAT_R8_UINT:                   /* pass */
+        case DXGI_FORMAT_R8_SINT:                   return DXGI_FORMAT_R8_TYPELESS;
+
+        case DXGI_FORMAT_R16_UNORM:                 /* pass */
+        case DXGI_FORMAT_R16_SNORM:                 /* pass */
+        case DXGI_FORMAT_R16_UINT:                  /* pass */
+        case DXGI_FORMAT_R16_SINT:                  /* pass */
+        case DXGI_FORMAT_R16_FLOAT:                 return DXGI_FORMAT_R16_TYPELESS;
+
+        case DXGI_FORMAT_R32_UINT:                  /* pass */
+        case DXGI_FORMAT_R32_SINT:                  /* pass */
+        case DXGI_FORMAT_R32_FLOAT:                 return DXGI_FORMAT_R32_TYPELESS;
+
+        /* --- RG color formats --- */
+        case DXGI_FORMAT_R8G8_UNORM:                /* pass */
+        case DXGI_FORMAT_R8G8_SNORM:                /* pass */
+        case DXGI_FORMAT_R8G8_UINT:                 /* pass */
+        case DXGI_FORMAT_R8G8_SINT:                 return DXGI_FORMAT_R8G8_TYPELESS;
+
+        case DXGI_FORMAT_R16G16_UNORM:              /* pass */
+        case DXGI_FORMAT_R16G16_SNORM:              /* pass */
+        case DXGI_FORMAT_R16G16_UINT:               /* pass */
+        case DXGI_FORMAT_R16G16_SINT:               /* pass */
+        case DXGI_FORMAT_R16G16_FLOAT:              return DXGI_FORMAT_R16G16_TYPELESS;
+
+        case DXGI_FORMAT_R32G32_UINT:               /* pass */
+        case DXGI_FORMAT_R32G32_SINT:               /* pass */
+        case DXGI_FORMAT_R32G32_FLOAT:              return DXGI_FORMAT_R32G32_TYPELESS;
+
+        /* --- RGB color formats --- */
+        case DXGI_FORMAT_R32G32B32_UINT:            /* pass */
+        case DXGI_FORMAT_R32G32B32_SINT:            /* pass */
+        case DXGI_FORMAT_R32G32B32_FLOAT:           return DXGI_FORMAT_R32G32B32_TYPELESS;
+
+        /* --- RGBA color formats --- */
+        case DXGI_FORMAT_R8G8B8A8_UNORM:            /* pass */
+        case DXGI_FORMAT_R8G8B8A8_SNORM:            /* pass */
+        case DXGI_FORMAT_R8G8B8A8_UINT:             /* pass */
+        case DXGI_FORMAT_R8G8B8A8_SINT:             return DXGI_FORMAT_R8G8B8A8_TYPELESS;
+
+        case DXGI_FORMAT_R16G16B16A16_UNORM:        /* pass */
+        case DXGI_FORMAT_R16G16B16A16_SNORM:        /* pass */
+        case DXGI_FORMAT_R16G16B16A16_UINT:         /* pass */
+        case DXGI_FORMAT_R16G16B16A16_SINT:         /* pass */
+        case DXGI_FORMAT_R16G16B16A16_FLOAT:        return DXGI_FORMAT_R16G16B16A16_TYPELESS;
+
+        case DXGI_FORMAT_R32G32B32A32_UINT:         /* pass */
+        case DXGI_FORMAT_R32G32B32A32_SINT:         /* pass */
+        case DXGI_FORMAT_R32G32B32A32_FLOAT:        return DXGI_FORMAT_R32G32B32A32_TYPELESS;
+
+        /* --- BGRA color formats --- */
+        case DXGI_FORMAT_B8G8R8A8_UNORM:            /* pass */
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:       return DXGI_FORMAT_R8G8B8A8_TYPELESS;
+
+        /* --- Packed formats --- */
+        case DXGI_FORMAT_R10G10B10A2_UNORM:         /* pass */
+        case DXGI_FORMAT_R10G10B10A2_UINT:          return DXGI_FORMAT_R10G10B10A2_TYPELESS;
+        case DXGI_FORMAT_R11G11B10_FLOAT:           break; // not supported
+        case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:        break; // not supported
+
+        default:                                    break;
+    }
+    throw std::invalid_argument("failed to map DXGI_FORMAT to compatible typeless format");
 }
 
 bool HasStencilComponent(const DXGI_FORMAT format)

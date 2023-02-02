@@ -1,6 +1,6 @@
 /*
  * DXTypes.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -49,6 +49,7 @@ DXGI_FORMAT             ToDXGIFormatDSV(const DXGI_FORMAT format);
 DXGI_FORMAT             ToDXGIFormatSRV(const DXGI_FORMAT format);
 DXGI_FORMAT             ToDXGIFormatUAV(const DXGI_FORMAT format);
 DXGI_FORMAT             ToDXGIFormatUInt(const DXGI_FORMAT format);
+DXGI_FORMAT             ToDXGIFormatTypeless(const DXGI_FORMAT format);
 
 bool                    HasStencilComponent(const DXGI_FORMAT format);
 bool                    IsDXGIFormatSRGB(const DXGI_FORMAT format);

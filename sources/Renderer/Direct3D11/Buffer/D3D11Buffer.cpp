@@ -271,7 +271,7 @@ void D3D11Buffer::CreateSubresourceSRV(
     /* Create shader-resource-view (SRV) for subresource */
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     {
-        srvDesc.Format                  = D3D11Types::ToDXGIFormatSRV(format);
+        srvDesc.Format                  = DXTypes::ToDXGIFormatSRV(format);
         srvDesc.ViewDimension           = D3D11_SRV_DIMENSION_BUFFEREX;
         srvDesc.BufferEx.FirstElement   = firstElement;
         srvDesc.BufferEx.NumElements    = numElements;

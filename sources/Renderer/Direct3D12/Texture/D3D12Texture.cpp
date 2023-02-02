@@ -293,7 +293,7 @@ void D3D12Texture::CreateShaderResourceViewPrimary(
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-    srvDesc.Format                  = D3D12Types::ToDXGIFormatSRV(format);
+    srvDesc.Format                  = DXTypes::ToDXGIFormatSRV(format);
     srvDesc.ViewDimension           = dimension;
     srvDesc.Shader4ComponentMapping = componentMapping;
 
@@ -396,7 +396,7 @@ void D3D12Texture::CreateUnorderedAccessViewPrimary(
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
-    uavDesc.Format          = D3D12Types::ToDXGIFormatUAV(format);
+    uavDesc.Format          = DXTypes::ToDXGIFormatUAV(format);
     uavDesc.ViewDimension   = dimension;
 
     switch (uavDesc.ViewDimension)
@@ -551,7 +551,7 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     dst.Dimension           = D3D12Types::MapResourceDimension(src.type);
     dst.Alignment           = 0;
     dst.MipLevels           = NumMipLevels(src);
-    dst.Format              = D3D12Types::ToDXGIFormatDSV(D3D12Types::Map(src.format));
+    dst.Format              = DXTypes::ToDXGIFormatDSV(D3D12Types::Map(src.format));
     dst.SampleDesc.Count    = 1;
     dst.SampleDesc.Quality  = 0;
     dst.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;

@@ -449,7 +449,7 @@ static void CreateD3D11TextureSubresourceSRV(
     /* Create shader-resource-view (SRV) for subresource */
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     {
-        srvDesc.Format = D3D11Types::ToDXGIFormatSRV(format);
+        srvDesc.Format = DXTypes::ToDXGIFormatSRV(format);
 
         switch (type)
         {
@@ -710,7 +710,7 @@ void D3D11Texture::CreateSubresourceDSV(
     /* Create depth-stencil-view (DSV) for subresource */
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     {
-        dsvDesc.Format  = D3D11Types::ToDXGIFormatDSV(format);
+        dsvDesc.Format  = DXTypes::ToDXGIFormatDSV(format);
         dsvDesc.Flags   = 0;
 
         switch (type)

@@ -1,12 +1,11 @@
 /*
  * D3D11Types.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "D3D11Types.h"
-#include "../DXCommon/DXTypes.h"
 #include "../DXCommon/DXCore.h"
 #include <stdexcept>
 #include <string>
@@ -272,19 +271,6 @@ D3D11_LOGIC_OP Map(const LogicOp logicOp)
 Format Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);
-}
-
-
-/* ----- Other Map Functions ----- */
-
-DXGI_FORMAT ToDXGIFormatDSV(const DXGI_FORMAT format)
-{
-    return DXTypes::ToDXGIFormatDSV(format);
-}
-
-DXGI_FORMAT ToDXGIFormatSRV(const DXGI_FORMAT format)
-{
-    return DXTypes::ToDXGIFormatSRV(format);
 }
 
 

@@ -154,7 +154,7 @@ void D3D12RenderPass::BuildAttachments(
 
 void D3D12RenderPass::SetDSVFormat(DXGI_FORMAT format)
 {
-    dsvFormat_ = D3D12Types::ToDXGIFormatDSV(format);
+    dsvFormat_ = DXTypes::ToDXGIFormatDSV(format);
 }
 
 void D3D12RenderPass::SetRTVFormat(UINT colorAttachment, DXGI_FORMAT format)

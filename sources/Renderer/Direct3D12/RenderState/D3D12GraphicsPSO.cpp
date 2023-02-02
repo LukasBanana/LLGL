@@ -281,7 +281,7 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
         SetBlendDescToLogicOp(dst.RenderTarget[0], D3D12Types::Map(src.logicOp));
 
         if (renderPass.GetNumColorAttachments() > 0)
-            dstColorFormats[0] = D3D12Types::ToDXGIFormatUInt(renderPass.GetRTVFormats()[0]);
+            dstColorFormats[0] = DXTypes::ToDXGIFormatUInt(renderPass.GetRTVFormats()[0]);
         else
             dstColorFormats[0] = DXGI_FORMAT_UNKNOWN;
 
