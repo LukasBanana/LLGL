@@ -198,33 +198,11 @@ void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
-    /* Create texture object and store type */
-    auto texture = MakeUnique<D3D11Texture>(textureDesc);
+    /* Create texture object */
+    auto texture = MakeUnique<D3D11Texture>(device_.Get(), textureDesc);
 
-    /* Bulid generic texture */
-    switch (textureDesc.type)
-    {
-        case TextureType::Texture1D:
-        case TextureType::Texture1DArray:
-            CreateAndInitializeGpuTexture1D(*texture, textureDesc, imageDesc);
-            break;
-        case TextureType::Texture2D:
-        case TextureType::Texture2DArray:
-        case TextureType::TextureCube:
-        case TextureType::TextureCubeArray:
-            CreateAndInitializeGpuTexture2D(*texture, textureDesc, imageDesc);
-            break;
-        case TextureType::Texture3D:
-            CreateAndInitializeGpuTexture3D(*texture, textureDesc, imageDesc);
-            break;
-        case TextureType::Texture2DMS:
-        case TextureType::Texture2DMSArray:
-            CreateAndInitializeGpuTexture2DMS(*texture, textureDesc);
-            break;
-        default:
-            throw std::invalid_argument("failed to create texture with invalid texture type");
-            break;
-    }
+    /* Initialize texture data with or without initial image data */
+    InitializeGpuTexture(*texture, textureDesc, imageDesc);
 
     /* Generate MIP-maps if enabled */
     if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
@@ -498,7 +476,7 @@ DXGI_SAMPLE_DESC D3D11RenderSystem::FindSuitableSampleDesc(ID3D11Device* device,
 {
     DXGI_SAMPLE_DESC sampleDesc = { maxSampleCount, 0 };
 
-    for (std::size_t i = 0; i < numFormats; ++i)
+    for_range(i, numFormats)
     {
         if (formats[i] != DXGI_FORMAT_UNKNOWN)
             sampleDesc = D3D11RenderSystem::FindSuitableSampleDesc(device, formats[i], sampleDesc.Count);
@@ -680,33 +658,6 @@ int D3D11RenderSystem::GetMinorVersion() const
     return 0;
 }
 
-void D3D11RenderSystem::CreateAndInitializeGpuTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
-{
-    /* Create native texture and initialize with image data */
-    textureD3D.CreateTexture1D(device_.Get(), textureDesc);
-    InitializeGpuTexture(textureD3D, textureDesc, imageDesc);
-}
-
-void D3D11RenderSystem::CreateAndInitializeGpuTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
-{
-    /* Create native texture and initialize with image data */
-    textureD3D.CreateTexture2D(device_.Get(), textureDesc);
-    InitializeGpuTexture(textureD3D, textureDesc, imageDesc);
-}
-
-void D3D11RenderSystem::CreateAndInitializeGpuTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
-{
-    /* Create native texture and initialize with image data */
-    textureD3D.CreateTexture3D(device_.Get(), textureDesc);
-    InitializeGpuTexture(textureD3D, textureDesc, imageDesc);
-}
-
-void D3D11RenderSystem::CreateAndInitializeGpuTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& textureDesc)
-{
-    /* Create native texture */
-    textureD3D.CreateTexture2D(device_.Get(), textureDesc);
-}
-
 void D3D11RenderSystem::InitializeGpuTexture(
     D3D11Texture&               textureD3D,
     const TextureDescriptor&    textureDesc,
@@ -759,7 +710,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
 
     imageDesc.dataSize /= arrayLayers;
 
-    for (std::uint32_t layer = 0; layer < arrayLayers; ++layer)
+    for_range(layer, arrayLayers)
     {
         /* Update subresource of current array layer */
         textureD3D.UpdateSubresource(
@@ -808,7 +759,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithClearValue(
             imageDescDefault.data       = imageBuffer.get();
             imageDescDefault.dataSize   = GetMemoryFootprint(imageDescDefault.format, imageDescDefault.dataType, imageSize);
 
-            for (std::uint32_t layer = 0; layer < arrayLayers; ++layer)
+            for_range(layer, arrayLayers)
             {
                 textureD3D.UpdateSubresource(
                     context_.Get(),

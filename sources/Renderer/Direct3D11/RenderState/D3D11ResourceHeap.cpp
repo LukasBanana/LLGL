@@ -816,9 +816,9 @@ const char* D3D11ResourceHeap::BindHSResources1(ID3D11DeviceContext1* context1, 
 const char* D3D11ResourceHeap::BindDSResources1(ID3D11DeviceContext1* context1, const char* heapPtr)
 {
     /* Bind all domain-stage resources: constant buffers, samplers, shader resource views (SRVs) */
-    D3DRESOURCEHEAP_BIND_CONSTANTBUFFERS1(context1, heapPtr, HS);
-    D3DRESOURCEHEAP_BIND_SAMPLERS(context1, heapPtr, HS);
-    D3DRESOURCEHEAP_BIND_SHADERRESOURCES(context1, heapPtr, HS);
+    D3DRESOURCEHEAP_BIND_CONSTANTBUFFERS1(context1, heapPtr, DS);
+    D3DRESOURCEHEAP_BIND_SAMPLERS(context1, heapPtr, DS);
+    D3DRESOURCEHEAP_BIND_SHADERRESOURCES(context1, heapPtr, DS);
     return heapPtr;
 }
 
@@ -955,7 +955,7 @@ ID3D11ShaderResourceView* D3D11ResourceHeap::GetOrCreateTextureSRV(D3D11Texture&
             nullptr,
             srv.GetAddressOf(),
             textureViewDesc.type,
-            D3D11Types::Map(textureViewDesc.format),
+            DXTypes::ToDXGIFormat(textureViewDesc.format),
             textureViewDesc.subresource.baseMipLevel,
             textureViewDesc.subresource.numMipLevels,
             textureViewDesc.subresource.baseArrayLayer,
@@ -982,7 +982,7 @@ ID3D11UnorderedAccessView* D3D11ResourceHeap::GetOrCreateTextureUAV(D3D11Texture
             nullptr,
             uav.GetAddressOf(),
             textureViewDesc.type,
-            D3D11Types::Map(textureViewDesc.format),
+            DXTypes::ToDXGIFormat(textureViewDesc.format),
             textureViewDesc.subresource.baseMipLevel,
             textureViewDesc.subresource.baseArrayLayer,
             textureViewDesc.subresource.numArrayLayers
@@ -1021,7 +1021,7 @@ ID3D11ShaderResourceView* D3D11ResourceHeap::GetOrCreateBufferSRV(D3D11BufferWit
         bufferD3D.CreateSubresourceSRV(
             nullptr,
             srv.GetAddressOf(),
-            D3D11Types::Map(bufferViewDesc.format),
+            DXTypes::ToDXGIFormat(bufferViewDesc.format),
             static_cast<UINT>(bufferViewDesc.offset / stride),
             static_cast<UINT>(bufferViewDesc.size / stride)
         );
@@ -1048,7 +1048,7 @@ ID3D11UnorderedAccessView* D3D11ResourceHeap::GetOrCreateBufferUAV(D3D11BufferWi
         bufferD3D.CreateSubresourceUAV(
             nullptr,
             uav.GetAddressOf(),
-            D3D11Types::Map(bufferViewDesc.format),
+            DXTypes::ToDXGIFormat(bufferViewDesc.format),
             static_cast<UINT>(bufferViewDesc.offset / stride),
             static_cast<UINT>(bufferViewDesc.size / stride)
         );

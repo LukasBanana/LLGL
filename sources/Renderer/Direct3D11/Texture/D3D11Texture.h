@@ -62,33 +62,7 @@ class D3D11Texture final : public Texture
 
     public:
 
-        D3D11Texture(const TextureDescriptor& desc);
-
-        /* ----- Extended internal functions ---- */
-
-        void CreateTexture1D(
-            ID3D11Device*                           device,
-            const TextureDescriptor&                desc,
-            const D3D11_SUBRESOURCE_DATA*           initialData = nullptr,
-            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc     = nullptr,
-            const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc     = nullptr
-        );
-
-        void CreateTexture2D(
-            ID3D11Device*                           device,
-            const TextureDescriptor&                desc,
-            const D3D11_SUBRESOURCE_DATA*           initialData = nullptr,
-            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc     = nullptr,
-            const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc     = nullptr
-        );
-
-        void CreateTexture3D(
-            ID3D11Device*                           device,
-            const TextureDescriptor&                desc,
-            const D3D11_SUBRESOURCE_DATA*           initialData = nullptr,
-            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc     = nullptr,
-            const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc     = nullptr
-        );
+        D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc);
 
         void UpdateSubresource(
             ID3D11DeviceContext*        context,
@@ -166,6 +140,9 @@ class D3D11Texture final : public Texture
         // Returns the texture region for the specified offset and extent with respect to the type of this texture (i.e. whether or not array layers are handled by the subresource index).
         D3D11_BOX CalcRegion(const Offset3D& offset, const Extent3D& extent) const;
 
+        // Returns the DXGI format of the texture's base format, i.e. GetBaseFormat() converted to DXGI format.
+        DXGI_FORMAT GetBaseDXFormat() const;
+
         /* ----- Hardware texture objects ----- */
 
         // Returns the native D3D texture object.
@@ -188,7 +165,13 @@ class D3D11Texture final : public Texture
 
         /* ----- Hardware texture parameters ----- */
 
-        // Returns the hardware resource format.
+        // Returns the base texture format. Equivalent of GetFormat().
+        inline Format GetBaseFormat() const
+        {
+            return baseFormat_;
+        }
+
+        // Returns the DXGI format of the texture object. This can also be a typeless format, i.e. DXGI_FORMAT_*_TYPELESS.
         inline DXGI_FORMAT GetDXFormat() const
         {
             return format_;
@@ -208,15 +191,27 @@ class D3D11Texture final : public Texture
 
     private:
 
-        void CreateDefaultResourceViews(
-            ID3D11Device*                           device,
-            const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc,
-            const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc,
-            long                                    bindFlags
+        void CreateTexture1D(
+            ID3D11Device*                   device,
+            const TextureDescriptor&        desc,
+            const D3D11_SUBRESOURCE_DATA*   initialData = nullptr
         );
 
-        void CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr);
-        void CreateDefaultUAV(ID3D11Device* device, const D3D11_UNORDERED_ACCESS_VIEW_DESC* uavDesc = nullptr);
+        void CreateTexture2D(
+            ID3D11Device*                   device,
+            const TextureDescriptor&        desc,
+            const D3D11_SUBRESOURCE_DATA*   initialData = nullptr
+        );
+
+        void CreateTexture3D(
+            ID3D11Device*                   device,
+            const TextureDescriptor&        desc,
+            const D3D11_SUBRESOURCE_DATA*   initialData = nullptr
+        );
+
+        void CreateDefaultResourceViews(ID3D11Device* device, long bindFlags);
+        void CreateDefaultSRV(ID3D11Device* device);
+        void CreateDefaultUAV(ID3D11Device* device);
 
         void SetResourceParams(DXGI_FORMAT format, const Extent3D& extent, UINT mipLevels, UINT arraySize);
 
@@ -227,6 +222,7 @@ class D3D11Texture final : public Texture
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;
 
+        Format                              baseFormat_         = Format::Undefined;
         DXGI_FORMAT                         format_             = DXGI_FORMAT_UNKNOWN;
         UINT                                numMipLevels_       = 0;
         UINT                                numArrayLayers_     = 0;

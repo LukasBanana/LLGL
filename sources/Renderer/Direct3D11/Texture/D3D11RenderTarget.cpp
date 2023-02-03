@@ -13,6 +13,7 @@
 #include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -138,14 +139,14 @@ void D3D11RenderTarget::FindSuitableSampleDesc(const RenderTargetDescriptor& des
     const auto numFormats = std::min(std::size_t(LLGL_MAX_NUM_ATTACHMENTS), desc.attachments.size());
     DXGI_FORMAT formats[LLGL_MAX_NUM_ATTACHMENTS];
 
-    for (std::size_t i = 0; i < numFormats; ++i)
+    for_range(i, numFormats)
     {
         const auto& attachment = desc.attachments[i];
         if (auto texture = attachment.texture)
         {
             /* Get format from texture */
             auto textureD3D = LLGL_CAST(D3D11Texture*, texture);
-            formats[i] = textureD3D->GetDXFormat();
+            formats[i] = textureD3D->GetBaseDXFormat();
         }
         else
         {
@@ -275,10 +276,9 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
 void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const AttachmentDescriptor& attachmentDesc)
 {
     /* Initialize RTV descriptor with attachment procedure and create RTV */
-    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
-    InitMemory(rtvDesc);
+    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 
-    rtvDesc.Format = DXTypes::ToDXGIFormatSRV(textureD3D.GetDXFormat());
+    rtvDesc.Format = DXTypes::ToDXGIFormatSRV(textureD3D.GetBaseDXFormat());
 
     /*
     If this is a multi-sample render target, but the target texture is not a multi-sample texture,
@@ -303,17 +303,22 @@ void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const Attac
         }
 
         /* Recreate texture resource with multi-sampling */
-        D3D11_TEXTURE2D_DESC texDesc;
-        textureD3D.GetNative().tex2D->GetDesc(&texDesc);
+        D3D11_TEXTURE2D_DESC tex2DMSDesc, tex2DDesc;
+        textureD3D.GetNative().tex2D->GetDesc(&tex2DDesc);
         {
-            texDesc.Width       = (texDesc.Width << attachmentDesc.mipLevel);
-            texDesc.Height      = (texDesc.Height << attachmentDesc.mipLevel);
-            texDesc.MipLevels   = 1;
-            texDesc.SampleDesc  = sampleDesc_;
-            texDesc.MiscFlags   = 0;
+            tex2DMSDesc.Width           = (tex2DDesc.Width << attachmentDesc.mipLevel);
+            tex2DMSDesc.Height          = (tex2DDesc.Height << attachmentDesc.mipLevel);
+            tex2DMSDesc.MipLevels       = 1;
+            tex2DMSDesc.ArraySize       = 1;
+            tex2DMSDesc.Format          = textureD3D.GetBaseDXFormat();
+            tex2DMSDesc.SampleDesc      = sampleDesc_;
+            tex2DMSDesc.Usage           = D3D11_USAGE_DEFAULT;
+            tex2DMSDesc.BindFlags       = D3D11_BIND_RENDER_TARGET;
+            tex2DMSDesc.CPUAccessFlags  = 0;
+            tex2DMSDesc.MiscFlags       = 0;
         }
         ComPtr<ID3D11Texture2D> tex2DMS;
-        auto hr = device_->CreateTexture2D(&texDesc, nullptr, tex2DMS.ReleaseAndGetAddressOf());
+        auto hr = device_->CreateTexture2D(&tex2DMSDesc, nullptr, tex2DMS.ReleaseAndGetAddressOf());
         DXThrowIfCreateFailed(hr, "ID3D11Texture2D", "for multi-sampled render-target");
 
         /* Store multi-sampled texture, and reference to texture target */
@@ -321,8 +326,8 @@ void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const Attac
             {
                 tex2DMS,
                 textureD3D.GetNative().tex2D.Get(),
-                D3D11CalcSubresource(attachmentDesc.mipLevel, attachmentDesc.arrayLayer, texDesc.MipLevels),
-                texDesc.Format
+                D3D11CalcSubresource(attachmentDesc.mipLevel, attachmentDesc.arrayLayer, tex2DMSDesc.MipLevels),
+                tex2DMSDesc.Format
             }
         );
 

@@ -20,21 +20,6 @@ namespace D3D11Types
 
 /* ----- Map Functions ----- */
 
-DXGI_FORMAT Map(const DataType dataType)
-{
-    return DXTypes::Map(dataType);
-}
-
-DXGI_FORMAT Map(const Format format)
-{
-    return DXTypes::Map(format);
-}
-
-D3D_PRIMITIVE_TOPOLOGY Map(const PrimitiveTopology topology)
-{
-    return DXTypes::Map(topology);
-}
-
 D3D11_FILL_MODE Map(const PolygonMode polygonMode)
 {
     switch (polygonMode)
@@ -264,14 +249,6 @@ D3D11_LOGIC_OP Map(const LogicOp logicOp)
 }
 
 #endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
-
-
-/* ----- Unmap Functions ----- */
-
-Format Unmap(const DXGI_FORMAT format)
-{
-    return DXTypes::Unmap(format);
-}
 
 
 /* ----- Convert Functions ----- */

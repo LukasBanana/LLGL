@@ -334,7 +334,7 @@ void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& 
     /* Store buffer creation attributes */
     size_   = descD3D.ByteWidth;
     stride_ = (desc.vertexAttribs.empty() ? 0 : desc.vertexAttribs.front().stride);
-    format_ = D3D11Types::Map(desc.format);
+    format_ = DXTypes::ToDXGIFormat(desc.format);
     usage_  = descD3D.Usage;
 }
 

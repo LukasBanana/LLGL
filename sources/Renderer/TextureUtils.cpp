@@ -69,8 +69,9 @@ LLGL_EXPORT Extent3D CalcTextureExtent(const TextureType type, const Extent3D& e
 
 LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent)
 {
-    const auto& formatDesc = GetFormatAttribs(format);
     SubresourceLayout layout;
+    const auto& formatDesc = GetFormatAttribs(format);
+    if (formatDesc.blockWidth > 0 && formatDesc.blockHeight > 0)
     {
         layout.rowStride    = (extent.width * formatDesc.bitSize) / formatDesc.blockWidth / 8;
         layout.layerStride  = (extent.height * layout.rowStride) / formatDesc.blockHeight;

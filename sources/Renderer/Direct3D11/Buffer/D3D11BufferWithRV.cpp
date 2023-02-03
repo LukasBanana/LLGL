@@ -26,7 +26,7 @@ static DXGI_FORMAT GetD3DResourceViewFormat(const BufferDescriptor& desc)
     -> see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476096(v=vs.85).aspx
     */
     if (IsTypedBuffer(desc))
-        return D3D11Types::Map(desc.format);
+        return DXTypes::ToDXGIFormat(desc.format);
     if (IsByteAddressBuffer(desc))
         return DXGI_FORMAT_R32_TYPELESS;
     return DXGI_FORMAT_UNKNOWN;

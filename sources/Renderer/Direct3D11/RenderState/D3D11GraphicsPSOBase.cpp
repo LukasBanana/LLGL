@@ -54,7 +54,7 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& des
     GetD3DNativeShaders(desc);
 
     /* Store dynamic pipeline states */
-    primitiveTopology_  = D3D11Types::Map(desc.primitiveTopology);
+    primitiveTopology_  = DXTypes::ToD3DPrimitiveTopology(desc.primitiveTopology);
     stencilRefDynamic_  = desc.stencil.referenceDynamic;
     stencilRef_         = desc.stencil.front.reference;
     blendFactorDynamic_ = desc.blend.blendFactorDynamic;

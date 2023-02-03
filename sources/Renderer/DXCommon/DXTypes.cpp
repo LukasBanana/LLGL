@@ -41,7 +41,7 @@ void ParamNotSupported(const char* paramName, const char* requirement)
     );
 }
 
-DXGI_FORMAT Map(const DataType dataType)
+DXGI_FORMAT ToDXGIFormat(const DataType dataType)
 {
     switch (dataType)
     {
@@ -59,7 +59,7 @@ DXGI_FORMAT Map(const DataType dataType)
     MapFailed("DataType", "DXGI_FORMAT");
 }
 
-DXGI_FORMAT Map(const Format format)
+DXGI_FORMAT ToDXGIFormat(const Format format)
 {
     switch (format)
     {
@@ -176,7 +176,7 @@ DXGI_FORMAT Map(const Format format)
     MapFailed("Format", "DXGI_FORMAT");
 }
 
-D3D_PRIMITIVE_TOPOLOGY Map(const PrimitiveTopology topology)
+D3D_PRIMITIVE_TOPOLOGY ToD3DPrimitiveTopology(const PrimitiveTopology topology)
 {
     switch (topology)
     {
@@ -495,7 +495,7 @@ DXGI_FORMAT ToDXGIFormatUInt(const DXGI_FORMAT format)
 
         default:                                    break;
     }
-    throw std::invalid_argument("failed to map DXGI_FORMAT to compatible format for logic operations");
+    return DXGI_FORMAT_UNKNOWN;
 }
 
 DXGI_FORMAT ToDXGIFormatTypeless(const DXGI_FORMAT format)
@@ -560,7 +560,7 @@ DXGI_FORMAT ToDXGIFormatTypeless(const DXGI_FORMAT format)
 
         /* --- BGRA color formats --- */
         case DXGI_FORMAT_B8G8R8A8_UNORM:            /* pass */
-        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:       return DXGI_FORMAT_R8G8B8A8_TYPELESS;
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:       return DXGI_FORMAT_B8G8R8A8_TYPELESS;
 
         /* --- Packed formats --- */
         case DXGI_FORMAT_R10G10B10A2_UNORM:         /* pass */
@@ -568,9 +568,73 @@ DXGI_FORMAT ToDXGIFormatTypeless(const DXGI_FORMAT format)
         case DXGI_FORMAT_R11G11B10_FLOAT:           break; // not supported
         case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:        break; // not supported
 
+        /* --- Typeless format --- */
+        case DXGI_FORMAT_R32G32B32A32_TYPELESS:     /* pass */
+        case DXGI_FORMAT_R32G32B32_TYPELESS:        /* pass */
+        case DXGI_FORMAT_R16G16B16A16_TYPELESS:     /* pass */
+        case DXGI_FORMAT_R32G32_TYPELESS:           /* pass */
+        case DXGI_FORMAT_R32G8X24_TYPELESS:         /* pass */
+        case DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS:  /* pass */
+        case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:   /* pass */
+        case DXGI_FORMAT_R10G10B10A2_TYPELESS:      /* pass */
+        case DXGI_FORMAT_R8G8B8A8_TYPELESS:         /* pass */
+        case DXGI_FORMAT_R16G16_TYPELESS:           /* pass */
+        case DXGI_FORMAT_R32_TYPELESS:              /* pass */
+        case DXGI_FORMAT_R24G8_TYPELESS:            /* pass */
+        case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:     /* pass */
+        case DXGI_FORMAT_X24_TYPELESS_G8_UINT:      /* pass */
+        case DXGI_FORMAT_R8G8_TYPELESS:             /* pass */
+        case DXGI_FORMAT_R16_TYPELESS:              /* pass */
+        case DXGI_FORMAT_R8_TYPELESS:               /* pass */
+        case DXGI_FORMAT_BC1_TYPELESS:              /* pass */
+        case DXGI_FORMAT_BC2_TYPELESS:              /* pass */
+        case DXGI_FORMAT_BC3_TYPELESS:              /* pass */
+        case DXGI_FORMAT_BC4_TYPELESS:              /* pass */
+        case DXGI_FORMAT_BC5_TYPELESS:              /* pass */
+        case DXGI_FORMAT_B8G8R8A8_TYPELESS:         /* pass */
+        case DXGI_FORMAT_B8G8R8X8_TYPELESS:         /* pass */
+        case DXGI_FORMAT_BC6H_TYPELESS:             /* pass */
+        case DXGI_FORMAT_BC7_TYPELESS:              return format;
+
         default:                                    break;
     }
-    throw std::invalid_argument("failed to map DXGI_FORMAT to compatible typeless format");
+    return DXGI_FORMAT_UNKNOWN;
+}
+
+bool IsTypelessDXGIFormat(const DXGI_FORMAT format)
+{
+    switch (format)
+    {
+        case DXGI_FORMAT_R32G32B32A32_TYPELESS:
+        case DXGI_FORMAT_R32G32B32_TYPELESS:
+        case DXGI_FORMAT_R16G16B16A16_TYPELESS:
+        case DXGI_FORMAT_R32G32_TYPELESS:
+        case DXGI_FORMAT_R32G8X24_TYPELESS:
+        case DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS:
+        case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
+        case DXGI_FORMAT_R10G10B10A2_TYPELESS:
+        case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+        case DXGI_FORMAT_R16G16_TYPELESS:
+        case DXGI_FORMAT_R32_TYPELESS:
+        case DXGI_FORMAT_R24G8_TYPELESS:
+        case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:
+        case DXGI_FORMAT_X24_TYPELESS_G8_UINT:
+        case DXGI_FORMAT_R8G8_TYPELESS:
+        case DXGI_FORMAT_R16_TYPELESS:
+        case DXGI_FORMAT_R8_TYPELESS:
+        case DXGI_FORMAT_BC1_TYPELESS:
+        case DXGI_FORMAT_BC2_TYPELESS:
+        case DXGI_FORMAT_BC3_TYPELESS:
+        case DXGI_FORMAT_BC4_TYPELESS:
+        case DXGI_FORMAT_BC5_TYPELESS:
+        case DXGI_FORMAT_B8G8R8A8_TYPELESS:
+        case DXGI_FORMAT_B8G8R8X8_TYPELESS:
+        case DXGI_FORMAT_BC6H_TYPELESS:
+        case DXGI_FORMAT_BC7_TYPELESS:
+            return true;
+        default:
+            return false;
+    }
 }
 
 bool HasStencilComponent(const DXGI_FORMAT format)

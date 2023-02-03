@@ -298,7 +298,7 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
             device_,
             intermediateSRV.GetAddressOf(),
             textureArrayType,
-            srcTextureD3D.GetDXFormat(),
+            srcTextureD3D.GetBaseDXFormat(),
             subresource.baseMipLevel,
             1,
             subresource.baseArrayLayer,
@@ -562,7 +562,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
             device_,
             intermediateUAV.GetAddressOf(),
             textureArrayType,
-            dstTextureD3D.GetDXFormat(),
+            dstTextureD3D.GetBaseDXFormat(),
             subresource.baseMipLevel,
             subresource.baseArrayLayer,
             subresource.numArrayLayers
@@ -747,7 +747,7 @@ void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer)
 void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    context_->IASetIndexBuffer(bufferD3D.GetNative(), D3D11Types::Map(format), static_cast<UINT>(offset));
+    context_->IASetIndexBuffer(bufferD3D.GetNative(), DXTypes::ToDXGIFormat(format), static_cast<UINT>(offset));
 }
 
 /* ----- Resources ----- */

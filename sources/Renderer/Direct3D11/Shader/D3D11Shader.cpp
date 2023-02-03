@@ -71,7 +71,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 {
     try
     {
-        return D3D11Types::Map(attrib.format);
+        return DXTypes::ToDXGIFormat(attrib.format);
     }
     catch (const std::exception& e)
     {
