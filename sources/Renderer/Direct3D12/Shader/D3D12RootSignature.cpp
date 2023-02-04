@@ -1,6 +1,6 @@
 /*
  * D3D12RootSignatureBuilder.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -32,7 +32,7 @@ D3D12RootParameter* D3D12RootSignatureBuilder::AppendRootParameter()
 {
     /* Create new root paramter */
     nativeRootParams_.push_back({});
-    rootParams_.emplace_back(&(nativeRootParams_.back()));
+    rootParams_.push_back(&(nativeRootParams_.back()));
     return &(rootParams_.back());
 }
 
@@ -129,8 +129,16 @@ ComPtr<ID3D12RootSignature> D3D12RootSignatureBuilder::Finalize(
 {
     D3D12_ROOT_SIGNATURE_DESC signatureDesc;
     {
-        signatureDesc.NumParameters         = static_cast<UINT>(nativeRootParams_.size());
-        signatureDesc.pParameters           = nativeRootParams_.data();
+        if (nativeRootParams_.empty())
+        {
+            signatureDesc.NumParameters = 0;
+            signatureDesc.pParameters   = nullptr;
+        }
+        else
+        {
+            signatureDesc.NumParameters = static_cast<UINT>(nativeRootParams_.size());
+            signatureDesc.pParameters   = nativeRootParams_.data();
+        }
 
         if (staticSamplers_.empty())
         {

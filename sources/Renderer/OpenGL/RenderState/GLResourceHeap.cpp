@@ -229,8 +229,8 @@ std::uint32_t GLResourceHeap::WriteResourceViews(std::uint32_t firstDescriptor, 
         /* Get binding information and heap start for descriptor set */
         const auto& binding = bindingMap_[firstDescriptor % numBindings];
 
-        auto firstSet       = firstDescriptor / numBindings;
-        auto heapStartPtr   = heap_.SegmentData(firstSet);
+        auto descriptorSet  = firstDescriptor / numBindings;
+        auto heapStartPtr   = heap_.SegmentData(descriptorSet);
         auto heapPtr        = heapStartPtr + binding.segmentOffset;
         auto segment        = GLRESOURCEHEAP_CONST_SEGMENT(heapPtr);
 
@@ -358,12 +358,12 @@ std::uint32_t GLResourceHeap::GetNumDescriptorSets() const
     return static_cast<std::uint32_t>(heap_.NumSets());
 }
 
-void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t firstSet)
+void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t descriptorSet)
 {
-    if (firstSet >= heap_.NumSets())
+    if (descriptorSet >= heap_.NumSets())
         return;
 
-    auto heapPtr = heap_.SegmentData(firstSet);
+    auto heapPtr = heap_.SegmentData(descriptorSet);
 
     #ifdef GL_ARB_shader_image_load_store
 

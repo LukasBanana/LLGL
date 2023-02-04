@@ -497,7 +497,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
 //TODO: also record individual resource bindings
 void DbgCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    std::uint32_t           firstSet,
+    std::uint32_t           descriptorSet,
     const PipelineBindPoint bindPoint)
 {
     auto& resourceHeapDbg = LLGL_CAST(DbgResourceHeap&, resourceHeap);
@@ -506,10 +506,10 @@ void DbgCommandBuffer::SetResourceHeap(
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        ValidateDescriptorSetIndex(firstSet, resourceHeapDbg.GetNumDescriptorSets(), resourceHeapDbg.label.c_str());
+        ValidateDescriptorSetIndex(descriptorSet, resourceHeapDbg.GetNumDescriptorSets(), resourceHeapDbg.label.c_str());
     }
 
-    LLGL_DBG_COMMAND( "SetResourceHeap", instance.SetResourceHeap(resourceHeapDbg.instance, firstSet, bindPoint) );
+    LLGL_DBG_COMMAND( "SetResourceHeap", instance.SetResourceHeap(resourceHeapDbg.instance, descriptorSet, bindPoint) );
 
     profile_.resourceHeapBindings++;
 }

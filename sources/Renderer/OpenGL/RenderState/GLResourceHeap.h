@@ -50,7 +50,7 @@ class GLResourceHeap final : public ResourceHeap
         std::uint32_t WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
 
         // Binds this resource heap with the specified GL state manager.
-        void Bind(GLStateManager& stateMngr, std::uint32_t firstSet);
+        void Bind(GLStateManager& stateMngr, std::uint32_t descriptorSet);
 
     private:
 

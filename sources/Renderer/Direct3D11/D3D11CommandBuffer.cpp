@@ -754,7 +754,7 @@ void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 
 void D3D11CommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    std::uint32_t           firstSet,
+    std::uint32_t           descriptorSet,
     const PipelineBindPoint bindPoint)
 {
     auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
@@ -763,17 +763,17 @@ void D3D11CommandBuffer::SetResourceHeap(
     if (context1_.Get() != nullptr)
     {
         if (bindPoint != PipelineBindPoint::Compute)
-            resourceHeapD3D.BindForGraphicsPipeline1(context1_.Get(), firstSet);
+            resourceHeapD3D.BindForGraphicsPipeline1(context1_.Get(), descriptorSet);
         if (bindPoint != PipelineBindPoint::Graphics)
-            resourceHeapD3D.BindForComputePipeline1(context1_.Get(), firstSet);
+            resourceHeapD3D.BindForComputePipeline1(context1_.Get(), descriptorSet);
     }
     else
     #endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
     {
         if (bindPoint != PipelineBindPoint::Compute)
-            resourceHeapD3D.BindForGraphicsPipeline(context_.Get(), firstSet);
+            resourceHeapD3D.BindForGraphicsPipeline(context_.Get(), descriptorSet);
         if (bindPoint != PipelineBindPoint::Graphics)
-            resourceHeapD3D.BindForComputePipeline(context_.Get(), firstSet);
+            resourceHeapD3D.BindForComputePipeline(context_.Get(), descriptorSet);
     }
 }
 

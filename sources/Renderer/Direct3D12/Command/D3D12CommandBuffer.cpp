@@ -522,7 +522,7 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 
 void D3D12CommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    std::uint32_t           firstSet,
+    std::uint32_t           descriptorSet,
     const PipelineBindPoint bindPoint)
 {
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
@@ -536,12 +536,12 @@ void D3D12CommandBuffer::SetResourceHeap(
         commandContext_.SetDescriptorHeaps(heapCount, descHeaps);
 
         if (bindPoint != PipelineBindPoint::Compute)
-            resourceHeapD3D.SetGraphicsRootDescriptorTables(commandList_, firstSet);
+            resourceHeapD3D.SetGraphicsRootDescriptorTables(commandList_, descriptorSet);
         if (bindPoint != PipelineBindPoint::Graphics)
-            resourceHeapD3D.SetComputeRootDescriptorTables(commandList_, firstSet);
+            resourceHeapD3D.SetComputeRootDescriptorTables(commandList_, descriptorSet);
 
         /* Insert resource barriers for the specified descriptor set */
-        resourceHeapD3D.InsertResourceBarriers(commandList_, firstSet);
+        resourceHeapD3D.InsertResourceBarriers(commandList_, descriptorSet);
     }
 }
 

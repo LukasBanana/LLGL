@@ -1,6 +1,6 @@
 /*
  * D3D12RootSignatureBuilder.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -12,7 +12,6 @@
 #include "D3D12RootParameter.h"
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
-#include <vector>
 
 
 namespace LLGL
@@ -54,9 +53,9 @@ class D3D12RootSignatureBuilder
 
     private:
 
-        std::vector<D3D12_ROOT_PARAMETER>       nativeRootParams_;
-        std::vector<D3D12RootParameter>         rootParams_;
-        std::vector<D3D12_STATIC_SAMPLER_DESC>  staticSamplers_;
+        SmallVector<D3D12_ROOT_PARAMETER, 4u>       nativeRootParams_;
+        SmallVector<D3D12RootParameter, 4u>         rootParams_;
+        SmallVector<D3D12_STATIC_SAMPLER_DESC, 2u>  staticSamplers_;
 
 };
 

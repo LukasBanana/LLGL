@@ -351,7 +351,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Binds the specified resource heap to the respective pipeline.
         \param[in] resourceHeap Specifies the resource heap that contains all shader resources that will be bound to the shader pipeline.
-        \param[in] firstSet Specifies the zero-based index of the first set of layout descriptors. This \b must be in the half-open range <code>[0, ResourceHeap::GetNumDescriptorSets)</code>. By default 0.
+        \param[in] descriptorSet Specifies the zero-based index of the first set of resource descriptors. This \b must be in the half-open range <code>[0, ResourceHeap::GetNumDescriptorSets)</code>. By default 0.
         \param[in] bindPoint Specifies to which pipeline the resource heap is meant be bound. By default PipelineBindPoint::Undefined.
         If this is PipelineBindPoint::Undefined, the resource heap is automatically bound to the graphics and/or compute pipeline.
         Use this parameter if a resource heap has one or more resources that are in both the graphics and compute pipeline to avoid unnecessary bindings.
@@ -360,7 +360,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetResourceHeap(
             ResourceHeap&           resourceHeap,
-            std::uint32_t           firstSet        = 0,
+            std::uint32_t           descriptorSet   = 0,
             const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
         ) = 0;
 

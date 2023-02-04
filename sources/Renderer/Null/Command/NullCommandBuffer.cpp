@@ -295,7 +295,7 @@ void NullCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std:
 
 void NullCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    std::uint32_t           firstSet,
+    std::uint32_t           descriptorSet,
     const PipelineBindPoint bindPoint)
 {
     //auto& resourceHeapNull = LLGL_CAST(NullResourceHeap&, resourceHeap);

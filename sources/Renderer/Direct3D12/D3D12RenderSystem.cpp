@@ -371,7 +371,7 @@ void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
 std::uint32_t D3D12RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
 {
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
-    return resourceHeapD3D.WriteResourceViews(device_.GetNative(), firstDescriptor, resourceViews);
+    return resourceHeapD3D.CreateResourceViewHandles(device_.GetNative(), firstDescriptor, resourceViews);
 }
 
 /* ----- Render Passes ----- */

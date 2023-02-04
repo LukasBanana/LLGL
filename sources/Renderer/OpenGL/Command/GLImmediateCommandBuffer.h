@@ -113,7 +113,7 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
         void SetResourceHeap(
             ResourceHeap&           resourceHeap,
-            std::uint32_t           firstSet        = 0,
+            std::uint32_t           descriptorSet   = 0,
             const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
         ) override;
 

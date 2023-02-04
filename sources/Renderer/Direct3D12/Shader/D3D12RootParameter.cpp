@@ -1,6 +1,6 @@
 /*
  * D3D12RootParameter.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -78,7 +78,7 @@ void D3D12RootParameter::AppendDescriptorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE 
     descRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     /* Increment descriptor range count */
-    ++managedRootParam_->DescriptorTable.NumDescriptorRanges;
+    managedRootParam_->DescriptorTable.NumDescriptorRanges++;
 }
 
 void D3D12RootParameter::Clear()

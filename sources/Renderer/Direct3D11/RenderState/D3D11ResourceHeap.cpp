@@ -201,8 +201,8 @@ std::uint32_t D3D11ResourceHeap::WriteResourceViews(std::uint32_t firstDescripto
         /* Get binding information and heap start for descriptor set */
         const auto& binding = bindingMap_[firstDescriptor % numBindings];
 
-        auto firstSet       = firstDescriptor / numBindings;
-        auto heapStartPtr   = heap_.SegmentData(firstSet);
+        auto descriptorSet  = firstDescriptor / numBindings;
+        auto heapStartPtr   = heap_.SegmentData(descriptorSet);
 
         /* Get SRV and UAV objects for textures and buffers */
         ID3D11ShaderResourceView* srv = nullptr;
@@ -263,10 +263,10 @@ std::uint32_t D3D11ResourceHeap::WriteResourceViews(std::uint32_t firstDescripto
     return numWritten;
 }
 
-void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t firstSet)
+void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t descriptorSet)
 {
     /* Bind resource views to the graphics shader stages */
-    const char* heapPtr = heap_.SegmentData(firstSet);
+    const char* heapPtr = heap_.SegmentData(descriptorSet);
     if (segmentation_.hasResourcesVS)
         heapPtr = BindVSResources(context, heapPtr);
     if (segmentation_.hasResourcesHS)
@@ -279,20 +279,20 @@ void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context, st
         heapPtr = BindPSResources(context, heapPtr);
 }
 
-void D3D11ResourceHeap::BindForComputePipeline(ID3D11DeviceContext* context, std::uint32_t firstSet)
+void D3D11ResourceHeap::BindForComputePipeline(ID3D11DeviceContext* context, std::uint32_t descriptorSet)
 {
     /* Bind resource views to the compute shader stage */
-    const char* heapPtr = heap_.SegmentData(firstSet) + heapOffsetCS_;
+    const char* heapPtr = heap_.SegmentData(descriptorSet) + heapOffsetCS_;
     if (segmentation_.hasResourcesCS)
         BindCSResources(context, heapPtr);
 }
 
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
 
-void D3D11ResourceHeap::BindForGraphicsPipeline1(ID3D11DeviceContext1* context1, std::uint32_t firstSet)
+void D3D11ResourceHeap::BindForGraphicsPipeline1(ID3D11DeviceContext1* context1, std::uint32_t descriptorSet)
 {
     /* Bind resource views and constant-buffer ranges to the graphics shader stages */
-    const char* heapPtr = heap_.SegmentData(firstSet);
+    const char* heapPtr = heap_.SegmentData(descriptorSet);
     if (segmentation_.hasResourcesVS)
         heapPtr = BindVSResources1(context1, heapPtr);
     if (segmentation_.hasResourcesHS)
@@ -305,10 +305,10 @@ void D3D11ResourceHeap::BindForGraphicsPipeline1(ID3D11DeviceContext1* context1,
         heapPtr = BindPSResources1(context1, heapPtr);
 }
 
-void D3D11ResourceHeap::BindForComputePipeline1(ID3D11DeviceContext1* context1, std::uint32_t firstSet)
+void D3D11ResourceHeap::BindForComputePipeline1(ID3D11DeviceContext1* context1, std::uint32_t descriptorSet)
 {
     /* Bind resource views and constant-buffer ranges to the compute shader stage */
-    const char* heapPtr = heap_.SegmentData(firstSet) + heapOffsetCS_;
+    const char* heapPtr = heap_.SegmentData(descriptorSet) + heapOffsetCS_;
     if (segmentation_.hasResourcesCS)
         BindCSResources1(context1, heapPtr);
 }

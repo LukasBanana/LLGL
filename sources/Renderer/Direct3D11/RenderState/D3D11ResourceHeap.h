@@ -55,13 +55,13 @@ class D3D11ResourceHeap final : public ResourceHeap
         // Writes the specified resource views to this resource heap and generates SRVs and UAVs as required.
         std::uint32_t WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
 
-        void BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t firstSet);
-        void BindForComputePipeline(ID3D11DeviceContext* context, std::uint32_t firstSet);
+        void BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t descriptorSet);
+        void BindForComputePipeline(ID3D11DeviceContext* context, std::uint32_t descriptorSet);
 
         #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
 
-        void BindForGraphicsPipeline1(ID3D11DeviceContext1* context1, std::uint32_t firstSet);
-        void BindForComputePipeline1(ID3D11DeviceContext1* context1, std::uint32_t firstSet);
+        void BindForGraphicsPipeline1(ID3D11DeviceContext1* context1, std::uint32_t descriptorSet);
+        void BindForComputePipeline1(ID3D11DeviceContext1* context1, std::uint32_t descriptorSet);
 
         #endif
 

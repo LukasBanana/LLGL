@@ -1,6 +1,6 @@
 /*
  * D3D12RootParameter.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,8 +9,8 @@
 #define LLGL_D3D12_ROOT_PARAMETER_H
 
 
+#include <LLGL/Container/SmallVector.h>
 #include <d3d12.h>
-#include <vector>
 
 
 namespace LLGL
@@ -45,8 +45,8 @@ class D3D12RootParameter
 
     private:
 
-        D3D12_ROOT_PARAMETER*               managedRootParam_   = nullptr;
-        std::vector<D3D12_DESCRIPTOR_RANGE> descRanges_;
+        D3D12_ROOT_PARAMETER*                   managedRootParam_   = nullptr;
+        SmallVector<D3D12_DESCRIPTOR_RANGE, 8u> descRanges_;
 
 };
 

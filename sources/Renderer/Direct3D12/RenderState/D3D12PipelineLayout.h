@@ -23,7 +23,7 @@ namespace LLGL
 class D3D12RootSignatureBuilder;
 
 // Container structure of all numbers of root parameters within a D3D12 root signature.
-struct D3D12RootParameterLayout
+struct D3D12DescriptorHeapLayout
 {
     UINT numBufferCBV   = 0;
     UINT numBufferSRV   = 0;
@@ -46,7 +46,7 @@ struct D3D12RootParameterLayout
 };
 
 // Resource view descriptor to root parameter mapping structure.
-struct D3D12RootParameterLocation
+struct D3D12DescriptorHandleLocation
 {
     UINT                        heap  :  1; // Descriptor heap index (0 = SBC/SRV/UAV, 1 = Sampler)
     UINT                        index : 31; // Descriptor index within its descriptor heap
@@ -95,15 +95,15 @@ class D3D12PipelineLayout final : public PipelineLayout
         }
 
         // Returns the root parameter layout with all resource counters.
-        inline const D3D12RootParameterLayout& GetRootParameterLayout() const
+        inline const D3D12DescriptorHeapLayout& GetDescriptorHeapLayout() const
         {
-            return rootParameterLayout_;
+            return descriptorHeapLayout_;
         }
 
         // Returns the binding to root-parameter map/
-        inline const SmallVector<D3D12RootParameterLocation>& GetRootParameterMap() const
+        inline const SmallVector<D3D12DescriptorHandleLocation>& GetDescriptorHandleMap() const
         {
-            return rootParameterMap_;
+            return descriptorHandleMap_;
         }
 
     private:
@@ -119,11 +119,11 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     private:
 
-        ComPtr<ID3D12RootSignature>             rootSignature_;
-        ComPtr<ID3DBlob>                        serializedBlob_;
-        D3D12RootParameterLayout                rootParameterLayout_;
-        SmallVector<D3D12RootParameterLocation> rootParameterMap_;
-        long                                    convolutedStageFlags_   = 0;
+        ComPtr<ID3D12RootSignature>                 rootSignature_;
+        ComPtr<ID3DBlob>                            serializedBlob_;
+        D3D12DescriptorHeapLayout                   descriptorHeapLayout_;
+        SmallVector<D3D12DescriptorHandleLocation>  descriptorHandleMap_;
+        long                                        convolutedStageFlags_   = 0;
 
 };
 
