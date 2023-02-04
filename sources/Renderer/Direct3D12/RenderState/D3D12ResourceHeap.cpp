@@ -1,6 +1,6 @@
 /*
  * D3D12ResourceHeap.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -16,176 +16,214 @@
 #include "../../CheckedCast.h"
 #include "../../TextureUtils.h"
 #include "../../BufferUtils.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Resource.h>
 #include <LLGL/ResourceHeapFlags.h>
+#include <LLGL/Misc/ForRange.h>
 #include <functional>
+#include <algorithm>
 
 
 namespace LLGL
 {
 
 
-static const D3D12PipelineLayout* GetD3DPipelineLayout(const ResourceHeapDescriptor& desc)
+D3D12ResourceHeap::D3D12ResourceHeap(
+    ID3D12Device*                               device,
+    const ResourceHeapDescriptor&               desc,
+    const ArrayView<ResourceViewDescriptor>&    initialResourceViews)
 {
-    if (!desc.pipelineLayout)
-        throw std::invalid_argument("cannot create resource heap without pipeline layout");
-    return LLGL_CAST(const D3D12PipelineLayout*, desc.pipelineLayout);
-}
+    /* Get pipeline layout object */
+    auto pipelineLayoutD3D = LLGL_CAST(const D3D12PipelineLayout*, desc.pipelineLayout);
+    if (!pipelineLayoutD3D)
+        throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
-static bool RequiresResourceBarriers(long bindFlags)
-{
-    return ((bindFlags & BindFlags::Storage) != 0);
-}
+    /* Get and validate number of bindings */
+    const auto numBindings = pipelineLayoutD3D->GetNumBindings();
+    if (numBindings == 0)
+        throw std::invalid_argument("cannot create resource heap without bindings in pipeline layout");
 
-// Returns true if the specified list of resource views contains at least one resource that requires a UAV resource barrier
-static bool RequiresResourceBarriers(const std::vector<ResourceViewDescriptor>& resourceViews)
-{
-    for (const auto& rvDesc : resourceViews)
-    {
-        if (const auto* resource = rvDesc.resource)
-        {
-            switch (resource->GetResourceType())
-            {
-                case ResourceType::Buffer:
-                {
-                    if (RequiresResourceBarriers(LLGL_CAST(const Buffer*, resource)->GetBindFlags()))
-                        return true;
-                }
-                break;
+    /* Get and validate number of resource views */
+    const auto numTotalResourceViews = (desc.numResourceViews > 0 ? desc.numResourceViews : static_cast<std::uint32_t>(initialResourceViews.size()));
+    if (numTotalResourceViews % numBindings != 0)
+        throw std::invalid_argument("failed to create resource heap because due to mismatch between number of resources and bindings");
 
-                case ResourceType::Texture:
-                {
-                    if (RequiresResourceBarriers(LLGL_CAST(const Texture*, resource)->GetBindFlags()))
-                        return true;
-                }
-                break;
-
-                default:
-                break;
-            }
-        }
-    }
-    return false;
-}
-
-// Returns the native D3D resource from the descriptor if the resource contains a UAV
-static ID3D12Resource* GetD3DResourceWithUAV(const ResourceViewDescriptor& rvDesc)
-{
-    if (auto resource = rvDesc.resource)
-    {
-        switch (resource->GetResourceType())
-        {
-            case ResourceType::Buffer:
-            {
-                auto bufferD3D = LLGL_CAST(const D3D12Buffer*, resource);
-                if (RequiresResourceBarriers(bufferD3D->GetBindFlags()))
-                    return bufferD3D->GetNative();
-            }
-            break;
-
-            case ResourceType::Texture:
-            {
-                auto textureD3D = LLGL_CAST(const D3D12Texture*, resource);
-                if (RequiresResourceBarriers(textureD3D->GetBindFlags()))
-                    return textureD3D->GetNative();
-            }
-            break;
-
-            default:
-            break;
-        }
-    }
-    return nullptr;
-}
-
-D3D12ResourceHeap::D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDescriptor& desc)
-{
-    /* Create descriptor heaps */
-    auto cpuDescHandleCbvSrvUav = CreateHeapTypeCbvSrvUav(device, desc);
-    auto cpuDescHandleSampler   = CreateHeapTypeSampler(device, desc);
+    numDescriptorSets_ = numTotalResourceViews / numBindings;
 
     /* Store meta data which pipelines will be used by this resource heap */
-    auto pipelineLayoutD3D = GetD3DPipelineLayout(desc);
-    auto combinedStageFlags = pipelineLayoutD3D->GetCombinedStageFlags();
+    auto convolutedStageFlags = pipelineLayoutD3D->GetConvolutedStageFlags();
 
-    hasGraphicsDescriptors_ = ((combinedStageFlags & StageFlags::AllGraphicsStages) != 0);
-    hasComputeDescriptors_  = ((combinedStageFlags & StageFlags::ComputeStage     ) != 0);
+    hasGraphicsDescriptors_ = ((convolutedStageFlags & StageFlags::AllGraphicsStages) != 0);
+    hasComputeDescriptors_  = ((convolutedStageFlags & StageFlags::ComputeStage     ) != 0);
 
-    /* Store descriptor handle strides for the respective number of resources per set */
+    /* Store descriptor handle strides per descriptor set */
     const auto descHandleStrideCbvSrvUav = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     const auto descHandleStrideSampler = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
     const auto& rootParameterLayout = pipelineLayoutD3D->GetRootParameterLayout();
+    const auto numResourceViews     = rootParameterLayout.SumResourceViews();
+    const auto numSamplers          = rootParameterLayout.SumSamplers();
 
-    descriptorHandleStrides_[0] =
-    (
-        rootParameterLayout.numBufferCBV  +
-        rootParameterLayout.numBufferSRV  +
-        rootParameterLayout.numTextureSRV +
-        rootParameterLayout.numBufferUAV  +
-        rootParameterLayout.numTextureUAV
-    ) * descHandleStrideCbvSrvUav;
+    descriptorSetStrides_[0] = descHandleStrideCbvSrvUav * numResourceViews;
+    descriptorSetStrides_[1] = descHandleStrideSampler * numSamplers;
 
-    descriptorHandleStrides_[1] =
-    (
-        rootParameterLayout.numSamplers
-    ) * descHandleStrideSampler;
+    /* Keep copy of root parameter map */
+    rootParameterMap_ = pipelineLayoutD3D->GetRootParameterMap();
 
-    /* Create descriptors */
-    std::size_t bindingIndex = 0, firstResourceIndex = 0;
-    do
+    /* Create descriptor heaps */
+    if (numResourceViews > 0)
+        CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numResourceViews * numDescriptorSets_, descriptorHeapResourceViews_);
+    if (numSamplers > 0)
+        CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, numSamplers * numDescriptorSets_, descriptorHeapSamplers_);
+
+    /* Allocate empty heap for ID3D12Resource object that require a UAV barrier */
+    uavResourceSetStride_ = numResourceViews;
+    uavResourceHeap_.resize(numResourceViews * numDescriptorSets_);
+
+    /* Allocate packed buffer for resource barriers with UINT for number of active barriers and an array of D3D12_RESOURCE_BARRIER[N] */
+    barrierStride_ = sizeof(UINT) + sizeof(D3D12_RESOURCE_BARRIER) * uavResourceSetStride_;
+    barriers_.resize(barrierStride_ * numDescriptorSets_);
+
+    /* Write initial resource views */
+    if (!initialResourceViews.empty())
+        WriteResourceViews(device, 0, initialResourceViews);
+}
+
+std::uint32_t D3D12ResourceHeap::WriteResourceViews(
+    ID3D12Device*                               device,
+    std::uint32_t                               firstDescriptor,
+    const ArrayView<ResourceViewDescriptor>&    resourceViews)
+{
+    /* Quit if there's nothing to do */
+    if (resourceViews.empty())
+        return 0;
+
+    const auto numBindings      = static_cast<std::uint32_t>(rootParameterMap_.size());
+    const auto numDescriptors   = numDescriptorSets_ * numBindings;
+
+    /* Silently quit on out of bounds; debug layer must report these errors */
+    if (firstDescriptor >= numDescriptors)
+        return 0;
+    if (firstDescriptor + resourceViews.size() > numDescriptors)
+        return 0;
+
+    /* Get CPU descriptor heap starts */
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle = {};
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandles[2] = {};
+
+    if (descriptorHeaps_[0] != 0)
+        cpuDescHandles[0] = descriptorHeaps_[0]->GetCPUDescriptorHandleForHeapStart();
+    if (descriptorHeaps_[1] != 0)
+        cpuDescHandles[1] = descriptorHeaps_[1]->GetCPUDescriptorHandleForHeapStart();
+
+    /* Write each resource view into respective descriptor heap */
+    std::uint32_t numWritten = 0;
+    std::uint32_t uavChangeSetRange[2] = {};
+
+    for (const auto& desc : resourceViews)
     {
-        firstResourceIndex = bindingIndex;
-        {
-            CreateConstantBufferViews (device, desc, cpuDescHandleCbvSrvUav, bindingIndex, firstResourceIndex, rootParameterLayout);
-            CreateShaderResourceViews (device, desc, cpuDescHandleCbvSrvUav, bindingIndex, firstResourceIndex, rootParameterLayout);
-            CreateUnorderedAccessViews(device, desc, cpuDescHandleCbvSrvUav, bindingIndex, firstResourceIndex, rootParameterLayout);
-            CreateSamplers            (device, desc, cpuDescHandleSampler,   bindingIndex, firstResourceIndex, rootParameterLayout);
-        }
-        ++numDescriptorSets_;
-    }
-    while (bindingIndex < desc.resourceViews.size() && firstResourceIndex < bindingIndex);
+        /* Skip over empty resource descriptors */
+        if (desc.resource == nullptr)
+            continue;
 
-    /* Check if any ressource barriers are required */
-    if (RequiresResourceBarriers(desc.resourceViews))
-    {
-        /* Append UAV resource barrier for each resource that has the 'BindFlags::Storage' bit */
-        const auto numResourceViews = desc.resourceViews.size();
-        const auto numBindings      = numResourceViews / numDescriptorSets_;
+        /* Get CPU descriptor handle address for current root parameter */
+        const auto  descriptorSet   = firstDescriptor / numBindings;
+        const auto& rootParameter   = rootParameterMap_[firstDescriptor % numBindings];
+        const auto  handleOffset    = descriptorHandleStrides_[rootParameter.heap] * rootParameter.index;
+        const auto  setOffset       = descriptorSetStrides_[rootParameter.heap] * (firstDescriptor / numBindings);
 
-        for (std::size_t i = 0; i < numResourceViews; i += numBindings)
+        cpuDescHandle.ptr = cpuDescHandles[rootParameter.heap].ptr + handleOffset + setOffset;
+
+        /* Write current resource view to descriptor heap */
+        switch (rootParameter.type)
         {
-            const UINT barrierOffset = static_cast<UINT>(barriers_.size());
-            {
-                for (std::size_t j = 0; j < numBindings; ++j)
+            case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
+                /* Replace UAV resource to pre-compute barriers */
+                if (CreateShaderResourceView(device, cpuDescHandle, desc))
                 {
-                    if (auto resource = GetD3DResourceWithUAV(desc.resourceViews[i + j]))
-                        AppendUAVBarrier(resource);
+                    ++numWritten;
+                    ExchangeUAVResource(rootParameter, descriptorSet, *(desc.resource), uavChangeSetRange);
                 }
-            }
-            barrierOffsets_.push_back(barrierOffset);
+                break;
+
+            case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
+                if (CreateUnorderedAccessView(device, cpuDescHandle, desc))
+                {
+                    ++numWritten;
+                    ExchangeUAVResource(rootParameter, descriptorSet, *(desc.resource), uavChangeSetRange);
+                }
+                break;
+
+            case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:
+                if (CreateConstantBufferView(device, cpuDescHandle, desc))
+                {
+                    ++numWritten;
+                    ExchangeUAVResource(rootParameter, descriptorSet, *(desc.resource), uavChangeSetRange);
+                }
+                break;
+
+            case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
+                if (CreateSampler(device, cpuDescHandle, desc))
+                    ++numWritten;
+                break;
         }
 
-        /* Append end-offset for resource barriers (if they are used) */
-        barrierOffsets_.push_back(static_cast<UINT>(barriers_.size()));
+        ++firstDescriptor;
+    }
+
+    /* Update resource barriers for all affected descriptor sets if any of the UAV resource entries have changed */
+    for_subrange(i, uavChangeSetRange[0], uavChangeSetRange[1])
+        UpdateBarriers(i);
+
+    return numWritten;
+}
+
+void D3D12ResourceHeap::SetGraphicsRootDescriptorTables(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet)
+{
+    if (hasGraphicsDescriptors_)
+    {
+        /* Bind root descriptor tables to graphics pipeline */
+        for_range(i, numDescriptorHeaps_)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorHeaps_[i]->GetGPUDescriptorHandleForHeapStart();
+            gpuDescHandle.ptr += descriptorSetStrides_[i] * descriptorSet;
+            commandList->SetGraphicsRootDescriptorTable(i, gpuDescHandle);
+        }
     }
 }
 
-void D3D12ResourceHeap::InsertResourceBarriers(ID3D12GraphicsCommandList* commandList, UINT firstSet)
+void D3D12ResourceHeap::SetComputeRootDescriptorTables(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet)
 {
-    if (!barriers_.empty())
+    if (hasComputeDescriptors_)
     {
-        /* Insert all resource barriers that are required for the specified descriptor set */
-        const UINT numBarriers = GetBarrierCount(firstSet);
+        /* Bind root descriptor tables to compute pipeline */
+        for_range(i, numDescriptorHeaps_)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorHeaps_[i]->GetGPUDescriptorHandleForHeapStart();
+            gpuDescHandle.ptr += descriptorSetStrides_[i] * descriptorSet;
+            commandList->SetComputeRootDescriptorTable(i, gpuDescHandle);
+        }
+    }
+}
+
+void D3D12ResourceHeap::InsertResourceBarriers(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet)
+{
+    if (descriptorSet < numDescriptorSets_)
+    {
+        const auto barrierHeapStart = &barriers_[descriptorSet * barrierStride_];
+        const auto numBarriers = *reinterpret_cast<const UINT*>(barrierHeapStart);
         if (numBarriers > 0)
-            commandList->ResourceBarrier(numBarriers, &(barriers_[GetBarrierOffset(firstSet)]));
+        {
+            const auto barriers = reinterpret_cast<const D3D12_RESOURCE_BARRIER*>(barrierHeapStart + sizeof(UINT));
+            commandList->ResourceBarrier(numBarriers, barriers);
+        }
     }
 }
 
 void D3D12ResourceHeap::SetName(const char* name)
 {
-    D3D12SetObjectNameSubscript(heapTypeCbvSrvUav_.Get(), name, ".CbvSrvUav");
-    D3D12SetObjectNameSubscript(heapTypeSampler_.Get(), name, ".Sampler");
+    D3D12SetObjectNameSubscript(descriptorHeapResourceViews_.Get(), name, ".ResourceViews");
+    D3D12SetObjectNameSubscript(descriptorHeapSamplers_.Get(), name, ".Samplers");
 }
 
 std::uint32_t D3D12ResourceHeap::GetNumDescriptorSets() const
@@ -203,322 +241,223 @@ static void ErrNullPointerInResource()
     throw std::invalid_argument("cannot create resource heap with null pointer in resource view");
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeCbvSrvUav(ID3D12Device* device, const ResourceHeapDescriptor& desc)
+static const char* GetContextInfoForFailedDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType)
 {
-    /* Determine number of view descriptors */
-    UINT numDescriptors = 0;
-
-    for (const auto& resourceView : desc.resourceViews)
+    switch (heapType)
     {
-        if (auto resource = resourceView.resource)
-        {
-            /* Search SRV/UAV/CBV resources */
-            auto resType = resource->GetResourceType();
-            if (resType == ResourceType::Buffer || resType == ResourceType::Texture)
-                ++numDescriptors;
-        }
-        else
-            ErrNullPointerInResource();
-    }
-
-    if (numDescriptors > 0)
-    {
-        /* Create descriptor heap for views (CBV, SRV, UAV) */
-        D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
-        {
-            heapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-            heapDesc.NumDescriptors = numDescriptors;
-            heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-            heapDesc.NodeMask       = 0;
-        }
-        auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heapTypeCbvSrvUav_.ReleaseAndGetAddressOf()));
-        DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap of type D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV");
-
-        /* Store in array for quick access */
-        AppendDescriptorHeapToArray(heapTypeCbvSrvUav_.Get());
-
-        return heapTypeCbvSrvUav_->GetCPUDescriptorHandleForHeapStart();
-    }
-
-    return {};
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeSampler(ID3D12Device* device, const ResourceHeapDescriptor& desc)
-{
-    /* Determine number of samplers descriptors */
-    UINT numDescriptors = 0;
-
-    for (const auto& resourceView : desc.resourceViews)
-    {
-        if (auto resource = resourceView.resource)
-        {
-            /* Search samplers */
-            if (resource->GetResourceType() == ResourceType::Sampler)
-                ++numDescriptors;
-        }
-        else
-            ErrNullPointerInResource();
-    }
-
-    if (numDescriptors > 0)
-    {
-        /* Create descriptor heap for samplers */
-        D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
-        {
-            heapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-            heapDesc.NumDescriptors = numDescriptors;
-            heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-            heapDesc.NodeMask       = 0;
-        }
-        auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heapTypeSampler_.ReleaseAndGetAddressOf()));
-        DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap of type D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER");
-
-        /* Store in array for quick access */
-        AppendDescriptorHeapToArray(heapTypeSampler_.Get());
-
-        return heapTypeSampler_->GetCPUDescriptorHandleForHeapStart();
-    }
-
-    return {};
-}
-
-using D3DResourceViewFunc = std::function<bool(Resource& resource, const ResourceViewDescriptor& rvDesc)>;
-
-static void ForEachResourceViewOfType(
-    const ResourceHeapDescriptor&   desc,
-    const ResourceType              resourceType,
-    std::size_t                     firstIndex,
-    UINT                            numResourceViewsInLayout,
-    const D3DResourceViewFunc&      callback)
-{
-    for (auto i = firstIndex; i < desc.resourceViews.size() && numResourceViewsInLayout > 0; ++i)
-    {
-        const auto& resourceView = desc.resourceViews[i];
-        if (auto resource = resourceView.resource)
-        {
-            if (resource->GetResourceType() == resourceType)
-            {
-                if (callback(*resource, resourceView))
-                    --numResourceViewsInLayout;
-            }
-        }
+        case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:    return "for heap type D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV";
+        case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:        return "for heap type D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER";
+        default:                                        return nullptr;
     }
 }
 
-// Returns true if the specified resource binding flags match the binding flags in the pipeline layout; if true, the binding index is increased.
-static bool MatchBindFlags(
-    const D3D12PipelineLayout&  pipelineLayout,
-    long                        resourceBindFlags,
-    long                        requiredBindFlags,
-    std::size_t&                bindingIndex)
+void D3D12ResourceHeap::CreateDescriptorHeap(
+    ID3D12Device*                   device,
+    D3D12_DESCRIPTOR_HEAP_TYPE      heapType,
+    UINT                            numDescriptors,
+    ComPtr<ID3D12DescriptorHeap>&   outDescritporHeap)
 {
-    if ((resourceBindFlags & requiredBindFlags) != 0 &&
-        (pipelineLayout.GetBindFlagsByIndex(bindingIndex) & requiredBindFlags) != 0)
+    /* Create descriptor heap for resource views or samplers */
+    D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
     {
-        ++bindingIndex;
+        heapDesc.Type           = heapType;
+        heapDesc.NumDescriptors = numDescriptors;
+        heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        heapDesc.NodeMask       = 0;
+    }
+    auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(outDescritporHeap.ReleaseAndGetAddressOf()));
+    DXThrowIfCreateFailed(hr, GetContextInfoForFailedDescriptorHeap(heapType));
+
+    /* Store in array for quick access */
+    AppendDescriptorHeapToArray(outDescritporHeap.Get());
+}
+
+void D3D12ResourceHeap::AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap)
+{
+    /* Get device and type from descriptor heap */
+    ComPtr<ID3D12Device> device;
+    descriptorHeap->GetDevice(IID_PPV_ARGS(&device));
+    D3D12_DESCRIPTOR_HEAP_TYPE heapType = descriptorHeap->GetDesc().Type;
+
+    /* Append descriptor heap and handle stride to arrays */
+    LLGL_ASSERT(numDescriptorHeaps_ < 2);
+    descriptorHeaps_[numDescriptorHeaps_] = descriptorHeap;
+    descriptorHandleStrides_[numDescriptorHeaps_] = device->GetDescriptorHandleIncrementSize(heapType);
+    ++numDescriptorHeaps_;
+}
+
+bool D3D12ResourceHeap::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const ResourceViewDescriptor& desc)
+{
+    /* Get D3D resource with SRV binding flags */
+    auto& resource = *(desc.resource);
+    if (resource.GetResourceType() == ResourceType::Buffer)
+    {
+        auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
+        if ((bufferD3D.GetBindFlags() & BindFlags::Sampled) != 0)
+        {
+            /* Create shader resource view (SRV) for D3D buffer */
+            if (IsBufferViewEnabled(desc.bufferView))
+                bufferD3D.CreateShaderResourceView(device, cpuDescHandle, desc.bufferView);
+            else
+                bufferD3D.CreateShaderResourceView(device, cpuDescHandle);
+            return true;
+        }
+    }
+    else if (resource.GetResourceType() == ResourceType::Texture)
+    {
+        auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
+        if ((textureD3D.GetBindFlags() & BindFlags::Sampled) != 0)
+        {
+            /* Create shader resource view (SRV) for D3D texture */
+            if (IsTextureViewEnabled(desc.textureView))
+                textureD3D.CreateShaderResourceView(device, cpuDescHandle, desc.textureView);
+            else
+                textureD3D.CreateShaderResourceView(device, cpuDescHandle);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool D3D12ResourceHeap::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const ResourceViewDescriptor& desc)
+{
+    /* Get D3D resource with UAV binding flags */
+    auto& resource = *(desc.resource);
+    if (resource.GetResourceType() == ResourceType::Buffer)
+    {
+        auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
+        if ((bufferD3D.GetBindFlags() & BindFlags::Storage) != 0)
+        {
+            /* Create unordered access view (UAV) for D3D buffer */
+            if (IsBufferViewEnabled(desc.bufferView))
+                bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle, desc.bufferView);
+            else
+                bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle);
+            return true;
+        }
+    }
+    else if (resource.GetResourceType() == ResourceType::Texture)
+    {
+        auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
+        if ((textureD3D.GetBindFlags() & BindFlags::Storage) != 0)
+        {
+            /* Create unordered access view (UAV) for D3D texture */
+            if (IsTextureViewEnabled(desc.textureView))
+                textureD3D.CreateUnorderedAccessView(device, cpuDescHandle, desc.textureView);
+            else
+                textureD3D.CreateUnorderedAccessView(device, cpuDescHandle);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool D3D12ResourceHeap::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const ResourceViewDescriptor& desc)
+{
+    /* Get D3D resource with CBV binding flags */
+    auto& resource = *(desc.resource);
+    if (resource.GetResourceType() == ResourceType::Buffer)
+    {
+        auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
+        if ((bufferD3D.GetBindFlags() & BindFlags::ConstantBuffer) != 0)
+        {
+            /* Create constant buffer view (CBV) for D3D buffer */
+            if (IsBufferViewEnabled(desc.bufferView))
+                bufferD3D.CreateConstantBufferView(device, cpuDescHandle, desc.bufferView);
+            else
+                bufferD3D.CreateConstantBufferView(device, cpuDescHandle);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool D3D12ResourceHeap::CreateSampler(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const ResourceViewDescriptor& desc)
+{
+    /* Get D3D sampler resource */
+    auto& resource = *(desc.resource);
+    if (resource.GetResourceType() == ResourceType::Sampler)
+    {
+        /* Create sampler state for D3D sampler */
+        auto& samplerD3D = LLGL_CAST(D3D12Sampler&, resource);
+        samplerD3D.CreateResourceView(device, cpuDescHandle);
         return true;
     }
     return false;
 }
 
-void D3D12ResourceHeap::CreateConstantBufferViews(
-    ID3D12Device*                   device,
-    const ResourceHeapDescriptor&   desc,
-    D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-    std::size_t&                    bindingIndex,
-    std::size_t                     firstResourceIndex,
-    const D3D12RootParameterLayout& rootParameterLayout)
+static bool IsUAVResourceBarrierRequired(long bindFlags)
 {
-    UINT descHandleStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-    auto pipelineLayoutD3D = GetD3DPipelineLayout(desc);
-
-    ForEachResourceViewOfType(
-        desc,
-        ResourceType::Buffer,
-        firstResourceIndex,
-        rootParameterLayout.numBufferCBV,
-        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
-        {
-            auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
-            if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::ConstantBuffer, bindingIndex))
-            {
-                if (IsBufferViewEnabled(rvDesc.bufferView))
-                    bufferD3D.CreateConstantBufferView(device, cpuDescHandle, rvDesc.bufferView);
-                else
-                    bufferD3D.CreateConstantBufferView(device, cpuDescHandle);
-                cpuDescHandle.ptr += descHandleStride;
-                return true;
-            }
-            return false;
-        }
-    );
+    return ((bindFlags & BindFlags::Storage) != 0);
 }
 
-void D3D12ResourceHeap::CreateShaderResourceViews(
-    ID3D12Device*                   device,
-    const ResourceHeapDescriptor&   desc,
-    D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-    std::size_t&                    bindingIndex,
-    std::size_t                     firstResourceIndex,
-    const D3D12RootParameterLayout& rootParameterLayout)
+void D3D12ResourceHeap::ExchangeUAVResource(
+    const D3D12RootParameterLocation&   rootParameter,
+    std::uint32_t                       descriptorSet,
+    Resource&                           resource,
+    std::uint32_t                       (&setRange)[2])
 {
-    const UINT descHandleStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-    auto pipelineLayoutD3D = GetD3DPipelineLayout(desc);
-
-    /* First create SRVs for all sampled-buffers; it needs to be in the same order as the root parameters are build in <D3D12PipelineLayout> */
-    ForEachResourceViewOfType(
-        desc,
-        ResourceType::Buffer,
-        firstResourceIndex,
-        rootParameterLayout.numBufferSRV,
-        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
-        {
-            auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
-            if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
-            {
-                if (IsBufferViewEnabled(rvDesc.bufferView))
-                    bufferD3D.CreateShaderResourceView(device, cpuDescHandle, rvDesc.bufferView);
-                else
-                    bufferD3D.CreateShaderResourceView(device, cpuDescHandle);
-                cpuDescHandle.ptr += descHandleStride;
-                return true;
-            }
-            return false;
-        }
-    );
-
-    /* Now create SRVs for all sampled-textures */
-    ForEachResourceViewOfType(
-        desc,
-        ResourceType::Texture,
-        firstResourceIndex,
-        rootParameterLayout.numTextureSRV,
-        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
-        {
-            auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
-            if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Sampled, bindingIndex))
-            {
-                if (IsTextureViewEnabled(rvDesc.textureView))
-                    textureD3D.CreateShaderResourceView(device, cpuDescHandle, rvDesc.textureView);
-                else
-                    textureD3D.CreateShaderResourceView(device, cpuDescHandle);
-                cpuDescHandle.ptr += descHandleStride;
-                return true;
-            }
-            return false;
-        }
-    );
-}
-
-void D3D12ResourceHeap::CreateUnorderedAccessViews(
-    ID3D12Device*                   device,
-    const ResourceHeapDescriptor&   desc,
-    D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-    std::size_t&                    bindingIndex,
-    std::size_t                     firstResourceIndex,
-    const D3D12RootParameterLayout& rootParameterLayout)
-{
-    const UINT descHandleStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-    auto pipelineLayoutD3D = GetD3DPipelineLayout(desc);
-
-    /* First create UAVs for all RW-buffers; it needs to be in the same order as the root parameters are build in <D3D12PipelineLayout> */
-    ForEachResourceViewOfType(
-        desc,
-        ResourceType::Buffer,
-        firstResourceIndex,
-        rootParameterLayout.numBufferUAV,
-        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
-        {
-            auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
-            if (MatchBindFlags(*pipelineLayoutD3D, bufferD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
-            {
-                if (IsBufferViewEnabled(rvDesc.bufferView))
-                    bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle, rvDesc.bufferView);
-                else
-                    bufferD3D.CreateUnorderedAccessView(device, cpuDescHandle);
-                cpuDescHandle.ptr += descHandleStride;
-                return true;
-            }
-            return false;
-        }
-    );
-
-    /* Now create UAVs for all RW-textures */
-    ForEachResourceViewOfType(
-        desc,
-        ResourceType::Texture,
-        firstResourceIndex,
-        rootParameterLayout.numTextureUAV,
-        [&](Resource& resource, const ResourceViewDescriptor& rvDesc) -> bool
-        {
-            auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
-            if (MatchBindFlags(*pipelineLayoutD3D, textureD3D.GetBindFlags(), BindFlags::Storage, bindingIndex))
-            {
-                if (IsTextureViewEnabled(rvDesc.textureView))
-                    textureD3D.CreateUnorderedAccessView(device, cpuDescHandle, rvDesc.textureView);
-                else
-                    textureD3D.CreateUnorderedAccessView(device, cpuDescHandle);
-                cpuDescHandle.ptr += descHandleStride;
-                return true;
-            }
-            return false;
-        }
-    );
-}
-
-void D3D12ResourceHeap::CreateSamplers(
-    ID3D12Device*                   device,
-    const ResourceHeapDescriptor&   desc,
-    D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle,
-    std::size_t&                    bindingIndex,
-    std::size_t                     firstResourceIndex,
-    const D3D12RootParameterLayout& rootParameterLayout)
-{
-    const UINT descHandleStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-
-    ForEachResourceViewOfType(
-        desc,
-        ResourceType::Sampler,
-        firstResourceIndex,
-        rootParameterLayout.numSamplers,
-        [&](Resource& resource, const ResourceViewDescriptor& /*rvDesc*/) -> bool
-        {
-            auto& samplerD3D = LLGL_CAST(D3D12Sampler&, resource);
-            samplerD3D.CreateResourceView(device, cpuDescHandle);
-            cpuDescHandle.ptr += descHandleStride;
-            ++bindingIndex;
-            return true;
-        }
-    );
-}
-
-void D3D12ResourceHeap::AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap)
-{
-    descriptorHeaps_[numDescriptorHeaps_++] = descriptorHeap;
-}
-
-void D3D12ResourceHeap::AppendUAVBarrier(ID3D12Resource* resource)
-{
-    D3D12_RESOURCE_BARRIER barrier;
+    if (resource.GetResourceType() == ResourceType::Buffer)
     {
-        barrier.Type            = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-        barrier.Flags           = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        barrier.UAV.pResource   = resource;
+        auto& buffer = LLGL_CAST(Buffer&, resource);
+        if (IsUAVResourceBarrierRequired(buffer.GetBindFlags()))
+        {
+            auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+            EmplaceD3DUAVResource(rootParameter, descriptorSet, bufferD3D.GetNative(), setRange);
+        }
+        else
+            EmplaceD3DUAVResource(rootParameter, descriptorSet, nullptr, setRange);
     }
-    barriers_.push_back(barrier);
+    else if (resource.GetResourceType() == ResourceType::Texture)
+    {
+        auto& texture = LLGL_CAST(Texture&, resource);
+        if (IsUAVResourceBarrierRequired(texture.GetBindFlags()))
+        {
+            auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
+            EmplaceD3DUAVResource(rootParameter, descriptorSet, textureD3D.GetNative(), setRange);
+        }
+        else
+            EmplaceD3DUAVResource(rootParameter, descriptorSet, nullptr, setRange);
+    }
 }
 
-UINT D3D12ResourceHeap::GetBarrierOffset(UINT firstSet) const
+void D3D12ResourceHeap::EmplaceD3DUAVResource(
+    const D3D12RootParameterLocation&   rootParameter,
+    std::uint32_t                       descriptorSet,
+    ID3D12Resource*                     resource,
+    std::uint32_t                       (&setRange)[2])
 {
-    return barrierOffsets_[firstSet];
+    auto& cached = uavResourceHeap_[descriptorSet * uavResourceSetStride_ + rootParameter.index];
+    if (cached != resource)
+    {
+        cached      = resource;
+        setRange[0] = std::min(setRange[0], descriptorSet);
+        setRange[1] = std::max(setRange[1], descriptorSet + 1);
+    }
 }
 
-UINT D3D12ResourceHeap::GetBarrierCount(UINT firstSet) const
+void D3D12ResourceHeap::UpdateBarriers(std::uint32_t descriptorSet)
 {
-    return (barrierOffsets_[firstSet + 1] - barrierOffsets_[firstSet]);
+    auto barrierHeapStart = &barriers_[descriptorSet * barrierStride_];
+    auto barriers = reinterpret_cast<D3D12_RESOURCE_BARRIER*>(barrierHeapStart + sizeof(UINT));
+
+    /* Write new barriers for entire descriptor set */
+    UINT numBarriers = 0;
+    for_range(i, uavResourceSetStride_)
+    {
+        if (auto resource = uavResourceHeap_[descriptorSet * uavResourceSetStride_ + i])
+        {
+            auto& barrier = barriers[numBarriers++];
+            {
+                barrier.Type            = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+                barrier.Flags           = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+                barrier.UAV.pResource   = resource;
+            }
+        }
+    }
+
+    /* Write new number of barriers at start of barrier heap */
+    *reinterpret_cast<UINT*>(barrierHeapStart) = numBarriers;
 }
 
 

@@ -1,6 +1,6 @@
 /*
  * D3D12PipelineLayout.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,6 +10,7 @@
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -18,13 +19,13 @@ namespace LLGL
 
 D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
-    /* Create root signature */
-    bindFlags_.reserve(desc.bindings.size());
-    CreateRootSignature(device, desc);
-
-    /* Accumulate stage flags */
+    /* Convolute all stage flags */
     for (const auto& binding : desc.bindings)
-        combinedStageFlags_ |= binding.stageFlags;
+        convolutedStageFlags_ |= binding.stageFlags;
+
+    /* Create root signature */
+    rootParameterMap_.resize(desc.bindings.size());
+    CreateRootSignature(device, desc);
 }
 
 void D3D12PipelineLayout::SetName(const char* name)
@@ -34,28 +35,28 @@ void D3D12PipelineLayout::SetName(const char* name)
 
 std::uint32_t D3D12PipelineLayout::GetNumBindings() const
 {
-    return static_cast<std::uint32_t>(bindFlags_.size());
+    return static_cast<std::uint32_t>(rootParameterMap_.size());
 }
 
-static D3D12_ROOT_SIGNATURE_FLAGS GetRootSignatureFlags(const PipelineLayoutDescriptor& layoutDesc)
+static D3D12_ROOT_SIGNATURE_FLAGS GetD3DRootSignatureFlags(long convolutedStageFlags)
 {
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
 
-    /* Always allow acces to the input assembly */
+    /* Always allow vertex input layout and stream output */
     signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
 
-    /* Determine which shader stages are not used for any binding points */
-    long stageFlags = 0;
-    for (const auto& binding : layoutDesc.bindings)
-        stageFlags |= binding.stageFlags;
-
     /* Deny access to root signature for shader stages that are not affected by any binding point */
-    if ((stageFlags & StageFlags::VertexStage        ) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;   }
-    if ((stageFlags & StageFlags::TessControlStage   ) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;     }
-    if ((stageFlags & StageFlags::TessEvaluationStage) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;   }
-    if ((stageFlags & StageFlags::GeometryStage      ) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS; }
-    if ((stageFlags & StageFlags::FragmentStage      ) == 0) { signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;    }
+    if ((convolutedStageFlags & StageFlags::VertexStage) == 0)
+        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
+    if ((convolutedStageFlags & StageFlags::TessControlStage) == 0)
+        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+    if ((convolutedStageFlags & StageFlags::TessEvaluationStage) == 0)
+        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;
+    if ((convolutedStageFlags & StageFlags::GeometryStage) == 0)
+        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+    if ((convolutedStageFlags & StageFlags::FragmentStage) == 0)
+        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 
     return signatureFlags;
 }
@@ -74,17 +75,12 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
     BuildRootParameter(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0,                         rootParameterLayout_.numSamplers  );
 
     /* Build final root signature descriptor */
-    rootSignature_ = rootSignature.Finalize(device, GetRootSignatureFlags(desc), &serializedBlob_);
+    rootSignature_ = rootSignature.Finalize(device, GetD3DRootSignatureFlags(GetConvolutedStageFlags()), &serializedBlob_);
 }
 
 void D3D12PipelineLayout::ReleaseRootSignature()
 {
     rootSignature_.Reset();
-}
-
-long D3D12PipelineLayout::GetBindFlagsByIndex(std::size_t idx) const
-{
-    return (bindFlags_.empty() ? 0 : bindFlags_[idx % bindFlags_.size()]);
 }
 
 
@@ -100,8 +96,9 @@ void D3D12PipelineLayout::BuildRootParameter(
     long                            bindFlags,
     UINT&                           numResourceViews)
 {
-    for (const auto& binding : layoutDesc.bindings)
+    for_range(i, layoutDesc.bindings.size())
     {
+        const auto& binding = layoutDesc.bindings[i];
         if (binding.type == resourceType && (bindFlags == 0 || (binding.bindFlags & bindFlags) != 0))
         {
             if (auto rootParam = rootSignature.FindCompatibleRootParameter(descRangeType))
@@ -118,7 +115,20 @@ void D3D12PipelineLayout::BuildRootParameter(
             }
 
             /* Cache binding flags in the same order root parameters are build */
-            bindFlags_.push_back(binding.bindFlags);
+            auto& mapping = rootParameterMap_[i];
+            {
+                if (descRangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+                {
+                    mapping.heap    = 1;
+                    mapping.index   = rootParameterLayout_.SumSamplers();
+                }
+                else
+                {
+                    mapping.heap    = 0;
+                    mapping.index   = rootParameterLayout_.SumResourceViews();
+                }
+                mapping.type = descRangeType;
+            }
 
             /* Increment number of resource views for output parameter to build root parameter layout */
             ++numResourceViews;

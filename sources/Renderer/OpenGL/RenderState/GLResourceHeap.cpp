@@ -149,7 +149,10 @@ static GLTexture* GetAsTextureView(const ResourceViewDescriptor& rvDesc)
  * GLResourceHeap class
  */
 
-GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews) :
+GLResourceHeap::GLResourceHeap(
+    const ResourceHeapDescriptor&               desc,
+    const ArrayView<ResourceViewDescriptor>&    initialResourceViews)
+:
     barriers_ { ToMemoryBarrierBitfield(desc.barrierFlags) }
 {
     /* Get pipeline layout object */
@@ -158,9 +161,8 @@ GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc, const ArrayVi
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Get and validate number of bindings */
-    const auto& bindings    = pipelineLayoutGL->GetBindings();
-    const auto numBindings  = static_cast<std::uint32_t>(bindings.size());
-
+    const auto& bindings = pipelineLayoutGL->GetBindings();
+    const auto numBindings = static_cast<std::uint32_t>(bindings.size());
     if (numBindings == 0)
         throw std::invalid_argument("cannot create resource heap without bindings in pipeline layout");
 
@@ -170,7 +172,7 @@ GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc, const ArrayVi
         throw std::invalid_argument("failed to create resource heap because due to mismatch between number of resources and bindings");
 
     /* Allocate array to map binding index to descriptor index */
-    bindingMap_.resize(bindings.size());
+    bindingMap_.resize(numBindings);
 
     /* Allocate templates for all resource view segments */
     BindingDescriptorIterator bindingIter{ bindings };

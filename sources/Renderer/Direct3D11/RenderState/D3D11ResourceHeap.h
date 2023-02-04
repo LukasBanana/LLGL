@@ -47,7 +47,10 @@ class D3D11ResourceHeap final : public ResourceHeap
 
     public:
 
-        D3D11ResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews = {});
+        D3D11ResourceHeap(
+            const ResourceHeapDescriptor&               desc,
+            const ArrayView<ResourceViewDescriptor>&    initialResourceViews = {}
+        );
 
         // Writes the specified resource views to this resource heap and generates SRVs and UAVs as required.
         std::uint32_t WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);

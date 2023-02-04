@@ -118,7 +118,9 @@ static constexpr UINT g_cbufferRegisterSize = 16;
  * D3D11ResourceHeap class
  */
 
-D3D11ResourceHeap::D3D11ResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
+D3D11ResourceHeap::D3D11ResourceHeap(
+    const ResourceHeapDescriptor&               desc,
+    const ArrayView<ResourceViewDescriptor>&    initialResourceViews)
 {
     /* Get pipeline layout object */
     auto pipelineLayoutD3D = LLGL_CAST(D3D11PipelineLayout*, desc.pipelineLayout);
@@ -126,9 +128,8 @@ D3D11ResourceHeap::D3D11ResourceHeap(const ResourceHeapDescriptor& desc, const A
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Get and validate number of bindings */
-    const auto& bindings            = pipelineLayoutD3D->GetBindings();
-    const auto  numBindings         = bindings.size();
-
+    const auto& bindings = pipelineLayoutD3D->GetBindings();
+    const auto numBindings = bindings.size();
     if (numBindings == 0)
         throw std::invalid_argument("cannot create resource heap without bindings in pipeline layout");
 
@@ -138,7 +139,7 @@ D3D11ResourceHeap::D3D11ResourceHeap(const ResourceHeapDescriptor& desc, const A
         throw std::invalid_argument("failed to create resource heap because due to mismatch between number of resources and bindings");
 
     /* Allocate array to map binding index to descriptor index */
-    bindingMap_.resize(bindings.size());
+    bindingMap_.resize(numBindings);
 
     /* Build buffer segments (stage after stage, so the internal buffer is constructed in the correct order) */
     BindingDescriptorIterator bindingIter{ bindings };

@@ -40,7 +40,10 @@ class GLResourceHeap final : public ResourceHeap
 
     public:
 
-        GLResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews = {});
+        GLResourceHeap(
+            const ResourceHeapDescriptor&               desc,
+            const ArrayView<ResourceViewDescriptor>&    initialResourceViews = {}
+        );
         ~GLResourceHeap();
 
         // Writes the specified resource views to this resource heap and generates texture views as required.

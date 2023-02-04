@@ -513,7 +513,7 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
         /* Update buffer location and size by offset, and override format */
         indexBufferView.BufferLocation  += offset;
         indexBufferView.SizeInBytes     -= static_cast<UINT>(offset);
-        indexBufferView.Format          = D3D12Types::Map(format);
+        indexBufferView.Format          = DXTypes::ToDXGIFormat(format);
         commandList_->IASetIndexBuffer(&indexBufferView);
     }
 }
@@ -531,24 +531,14 @@ void D3D12CommandBuffer::SetResourceHeap(
     auto heapCount = resourceHeapD3D.GetNumDescriptorHeaps();
     if (heapCount > 0)
     {
-        /* Bind descriptor heaps */
+        /* Bind descriptor heaps and root descriptor tables */
         auto descHeaps = resourceHeapD3D.GetDescriptorHeaps();
         commandContext_.SetDescriptorHeaps(heapCount, descHeaps);
 
-        auto handleStrides = resourceHeapD3D.GetDescriptorHandleStrides();
-
-        /* Bind root descriptor tables to graphics pipeline */
-        for (UINT i = 0; i < heapCount; ++i)
-        {
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descHeaps[i]->GetGPUDescriptorHandleForHeapStart();
-
-            gpuDescHandle.ptr += handleStrides[i] * firstSet;
-
-            if (resourceHeapD3D.HasGraphicsDescriptors() && bindPoint != PipelineBindPoint::Compute)
-                commandList_->SetGraphicsRootDescriptorTable(i, gpuDescHandle);
-            if (resourceHeapD3D.HasComputeDescriptors() && bindPoint != PipelineBindPoint::Graphics)
-                commandList_->SetComputeRootDescriptorTable(i, gpuDescHandle);
-        }
+        if (bindPoint != PipelineBindPoint::Compute)
+            resourceHeapD3D.SetGraphicsRootDescriptorTables(commandList_, firstSet);
+        if (bindPoint != PipelineBindPoint::Graphics)
+            resourceHeapD3D.SetComputeRootDescriptorTables(commandList_, firstSet);
 
         /* Insert resource barriers for the specified descriptor set */
         resourceHeapD3D.InsertResourceBarriers(commandList_, firstSet);

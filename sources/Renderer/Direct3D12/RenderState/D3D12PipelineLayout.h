@@ -1,6 +1,6 @@
 /*
  * D3D12PipelineLayout.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -11,9 +11,9 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/Container/SmallVector.h>
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
-#include <vector>
 
 
 namespace LLGL
@@ -22,6 +22,7 @@ namespace LLGL
 
 class D3D12RootSignatureBuilder;
 
+// Container structure of all numbers of root parameters within a D3D12 root signature.
 struct D3D12RootParameterLayout
 {
     UINT numBufferCBV   = 0;
@@ -30,6 +31,26 @@ struct D3D12RootParameterLayout
     UINT numBufferUAV   = 0;
     UINT numTextureUAV  = 0;
     UINT numSamplers    = 0;
+
+    // Returns the sum of all subresource views.
+    inline UINT SumResourceViews() const
+    {
+        return (numBufferCBV + numBufferSRV + numTextureSRV + numBufferUAV + numTextureUAV);
+    }
+
+    // Returns the sub of all samplers.
+    inline UINT SumSamplers() const
+    {
+        return (numSamplers);
+    }
+};
+
+// Resource view descriptor to root parameter mapping structure.
+struct D3D12RootParameterLocation
+{
+    UINT                        heap  :  1; // Descriptor heap index (0 = SBC/SRV/UAV, 1 = Sampler)
+    UINT                        index : 31; // Descriptor index within its descriptor heap
+    D3D12_DESCRIPTOR_RANGE_TYPE type;
 };
 
 class D3D12PipelineLayout final : public PipelineLayout
@@ -49,9 +70,6 @@ class D3D12PipelineLayout final : public PipelineLayout
         void CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
         void ReleaseRootSignature();
 
-        // Returns the binding flags for the specified resource index; this is not necessarily the binding slot!
-        long GetBindFlagsByIndex(std::size_t idx) const;
-
         // Returns the native ID3D12RootSignature object.
         inline ID3D12RootSignature* GetRootSignature() const
         {
@@ -70,15 +88,22 @@ class D3D12PipelineLayout final : public PipelineLayout
             return serializedBlob_.Get();
         }
 
-        // Returns the bitwise OR combined stage flags of all resource view descriptors.
-        inline long GetCombinedStageFlags() const
+        // Returns the bitwise OR convoluted stage flags of all binding descriptors.
+        inline long GetConvolutedStageFlags() const
         {
-            return combinedStageFlags_;
+            return convolutedStageFlags_;
         }
 
+        // Returns the root parameter layout with all resource counters.
         inline const D3D12RootParameterLayout& GetRootParameterLayout() const
         {
             return rootParameterLayout_;
+        }
+
+        // Returns the binding to root-parameter map/
+        inline const SmallVector<D3D12RootParameterLocation>& GetRootParameterMap() const
+        {
+            return rootParameterMap_;
         }
 
     private:
@@ -94,11 +119,11 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     private:
 
-        ComPtr<ID3D12RootSignature> rootSignature_;
-        ComPtr<ID3DBlob>            serializedBlob_;
-        std::vector<long>           bindFlags_;
-        long                        combinedStageFlags_     = 0;
-        D3D12RootParameterLayout    rootParameterLayout_;
+        ComPtr<ID3D12RootSignature>             rootSignature_;
+        ComPtr<ID3DBlob>                        serializedBlob_;
+        D3D12RootParameterLayout                rootParameterLayout_;
+        SmallVector<D3D12RootParameterLocation> rootParameterMap_;
+        long                                    convolutedStageFlags_   = 0;
 
 };
 

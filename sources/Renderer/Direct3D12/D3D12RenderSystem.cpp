@@ -354,15 +354,24 @@ void D3D12RenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
+ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<D3D12ResourceHeap>(device_.GetNative(), resourceHeapDesc));
+    return TakeOwnership(
+        resourceHeaps_,
+        MakeUnique<D3D12ResourceHeap>(device_.GetNative(), resourceHeapDesc, initialResourceViews)
+    );
 }
 
 void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
 {
     SyncGPU();
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+std::uint32_t D3D12RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
+    return resourceHeapD3D.WriteResourceViews(device_.GetNative(), firstDescriptor, resourceViews);
 }
 
 /* ----- Render Passes ----- */
