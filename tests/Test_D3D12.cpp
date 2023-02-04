@@ -128,12 +128,7 @@ int main()
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
         // Create resource heap
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
-        {
-            resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews  = { constantBuffer };
-        }
-        auto resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+        auto resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { constantBuffer });
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;

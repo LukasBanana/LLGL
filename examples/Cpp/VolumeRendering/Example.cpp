@@ -246,7 +246,6 @@ private:
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
                 pipelineDesc.vertexShader               = vsScene;
-                pipelineDesc.fragmentShader             = fsScene;
                 pipelineDesc.renderPass                 = swapChain->GetRenderPass();
                 pipelineDesc.pipelineLayout             = pipelineLayoutCbuffer;
                 pipelineDesc.depth.testEnabled          = true;

@@ -13,9 +13,10 @@
 #include "../Texture/D3D12Texture.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../CheckedCast.h"
+#include "../../ResourceUtils.h"
 #include "../../TextureUtils.h"
 #include "../../BufferUtils.h"
+#include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/Resource.h>
 #include <LLGL/ResourceHeapFlags.h>
@@ -38,17 +39,11 @@ D3D12ResourceHeap::D3D12ResourceHeap(
     if (!pipelineLayoutD3D)
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
-    /* Get and validate number of bindings */
-    const auto numBindings = pipelineLayoutD3D->GetNumBindings();
-    if (numBindings == 0)
-        throw std::invalid_argument("cannot create resource heap without bindings in pipeline layout");
+    /* Get and validate number of bindings and resource views */
+    const auto numBindings      = pipelineLayoutD3D->GetNumBindings();
+    const auto numResourceViews = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
 
-    /* Get and validate number of resource views */
-    const auto numTotalResourceViews = (desc.numResourceViews > 0 ? desc.numResourceViews : static_cast<std::uint32_t>(initialResourceViews.size()));
-    if (numTotalResourceViews % numBindings != 0)
-        throw std::invalid_argument("failed to create resource heap because due to mismatch between number of resources and bindings");
-
-    numDescriptorSets_ = numTotalResourceViews / numBindings;
+    numDescriptorSets_ = numResourceViews / numBindings;
 
     /* Store meta data which pipelines will be used by this resource heap */
     auto convolutedStageFlags = pipelineLayoutD3D->GetConvolutedStageFlags();
@@ -60,25 +55,25 @@ D3D12ResourceHeap::D3D12ResourceHeap(
     const auto descHandleStrideCbvSrvUav = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     const auto descHandleStrideSampler = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
-    const auto& descHeapLayout  = pipelineLayoutD3D->GetDescriptorHeapLayout();
-    const auto numResourceViews = descHeapLayout.SumResourceViews();
-    const auto numSamplers      = descHeapLayout.SumSamplers();
+    const auto& descHeapLayout          = pipelineLayoutD3D->GetDescriptorHeapLayout();
+    const auto numResourceViewHandles   = descHeapLayout.SumResourceViews();
+    const auto numSamplerHandles        = descHeapLayout.SumSamplers();
 
-    descriptorSetStrides_[0] = descHandleStrideCbvSrvUav * numResourceViews;
-    descriptorSetStrides_[1] = descHandleStrideSampler * numSamplers;
+    descriptorSetStrides_[0] = descHandleStrideCbvSrvUav * numResourceViewHandles;
+    descriptorSetStrides_[1] = descHandleStrideSampler * numSamplerHandles;
 
     /* Keep copy of root parameter map */
     descriptorHandleMap_ = pipelineLayoutD3D->GetDescriptorHandleMap();
 
     /* Create descriptor heaps */
-    if (numResourceViews > 0)
-        CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numResourceViews * numDescriptorSets_, descriptorHeapResourceViews_);
-    if (numSamplers > 0)
-        CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, numSamplers * numDescriptorSets_, descriptorHeapSamplers_);
+    if (numResourceViewHandles > 0)
+        CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numResourceViewHandles * numDescriptorSets_, descriptorHeapResourceViews_);
+    if (numSamplerHandles > 0)
+        CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, numSamplerHandles * numDescriptorSets_, descriptorHeapSamplers_);
 
     /* Allocate empty heap for ID3D12Resource object that require a UAV barrier */
-    uavResourceSetStride_ = numResourceViews;
-    uavResourceHeap_.resize(numResourceViews * numDescriptorSets_);
+    uavResourceSetStride_ = numResourceViewHandles;
+    uavResourceHeap_.resize(numResourceViewHandles * numDescriptorSets_);
 
     /* Allocate packed buffer for resource barriers with UINT for number of active barriers and an array of D3D12_RESOURCE_BARRIER[N] */
     barrierStride_ = sizeof(UINT) + sizeof(D3D12_RESOURCE_BARRIER) * uavResourceSetStride_;

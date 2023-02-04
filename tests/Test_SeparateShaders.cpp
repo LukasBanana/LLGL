@@ -123,16 +123,12 @@ int main(int argc, char* argv[])
         }
 
         // Resource heap
-        LLGL::ResourceHeapDescriptor resDesc;
+        LLGL::ResourceViewDescriptor resourceViews[] =
         {
-            resDesc.pipelineLayout  = layout;
-            resDesc.resourceViews   =
-            {
-                LLGL::ResourceViewDescriptor{ constantBuffer, LLGL::BufferViewDescriptor{ LLGL::Format::Undefined,                   0, sizeof(settings[0]) } },
-                LLGL::ResourceViewDescriptor{ constantBuffer, LLGL::BufferViewDescriptor{ LLGL::Format::Undefined, sizeof(settings[0]), sizeof(settings[1]) } },
-            };
-        }
-        auto resources = renderer->CreateResourceHeap(resDesc);
+            LLGL::ResourceViewDescriptor{ constantBuffer, LLGL::BufferViewDescriptor{ LLGL::Format::Undefined,                   0, sizeof(settings[0]) } },
+            LLGL::ResourceViewDescriptor{ constantBuffer, LLGL::BufferViewDescriptor{ LLGL::Format::Undefined, sizeof(settings[0]), sizeof(settings[1]) } },
+        };
+        auto resources = renderer->CreateResourceHeap(layout, resourceViews);
 
         // Main loop
         const LLGL::ColorRGBAf backgroundColor{ 0.2f, 0.2f, 0.4f };

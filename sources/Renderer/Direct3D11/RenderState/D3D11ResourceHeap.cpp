@@ -14,6 +14,7 @@
 #include "../D3D11Types.h"
 #include "../../CheckedCast.h"
 #include "../../BindingDescriptorIterator.h"
+#include "../../ResourceUtils.h"
 #include "../../TextureUtils.h"
 #include "../../BufferUtils.h"
 #include "../../StaticAssertions.h"
@@ -127,16 +128,10 @@ D3D11ResourceHeap::D3D11ResourceHeap(
     if (!pipelineLayoutD3D)
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
-    /* Get and validate number of bindings */
-    const auto& bindings = pipelineLayoutD3D->GetBindings();
-    const auto numBindings = bindings.size();
-    if (numBindings == 0)
-        throw std::invalid_argument("cannot create resource heap without bindings in pipeline layout");
-
-    /* Get and validate number of resource views */
-    const auto numResourceViews = (desc.numResourceViews > 0 ? desc.numResourceViews : static_cast<std::uint32_t>(initialResourceViews.size()));
-    if (numResourceViews % numBindings != 0)
-        throw std::invalid_argument("failed to create resource heap because due to mismatch between number of resources and bindings");
+    /* Get and validate number of bindings and resource views */
+    const auto& bindings            = pipelineLayoutD3D->GetBindings();
+    const auto  numBindings         = static_cast<std::uint32_t>(bindings.size());
+    const auto  numResourceViews    = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
 
     /* Allocate array to map binding index to descriptor index */
     bindingMap_.resize(numBindings);

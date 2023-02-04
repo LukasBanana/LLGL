@@ -387,12 +387,8 @@ private:
         {
             constantBuffer, linearSampler, skyboxArray
         };
-        LLGL::ResourceHeapDescriptor heapDescSky;
-        {
-            heapDescSky.pipelineLayout      = layoutSky;
-            heapDescSky.numResourceViews    = sizeof(resourceViewsSky) / sizeof(resourceViewsSky[0]);
-        }
-        resourceHeapSkybox = renderer->CreateResourceHeap(heapDescSky, resourceViewsSky);
+        resourceHeapSkybox = renderer->CreateResourceHeap(layoutSky, resourceViewsSky);
+        resourceHeapSkybox->SetName("resourceHeapSkybox");
 
         // Create resource heap for meshes
         std::vector<LLGL::ResourceViewDescriptor> resourceViewsMeshes;
@@ -426,12 +422,8 @@ private:
                 metallicMapArray,
             };
         }
-        LLGL::ResourceHeapDescriptor heapDescMeshes;
-        {
-            heapDescMeshes.pipelineLayout   = layoutMeshes;
-            heapDescMeshes.numResourceViews = static_cast<std::uint32_t>(resourceViewsMeshes.size());
-        }
-        resourceHeapMeshes = renderer->CreateResourceHeap(heapDescMeshes, resourceViewsMeshes);
+        resourceHeapMeshes = renderer->CreateResourceHeap(layoutMeshes, resourceViewsMeshes);
+        resourceHeapMeshes->SetName("resourceHeapMeshes");
     }
 
 private:

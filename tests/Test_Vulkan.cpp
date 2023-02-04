@@ -184,21 +184,16 @@ int main()
 
         layoutDesc.bindings =
         {
-            LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage  , 2 },
-            LLGL::BindingDescriptor { LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage, 5 },
-            LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, 3 },
-            LLGL::BindingDescriptor { LLGL::ResourceType::Texture, 0,                               LLGL::StageFlags::FragmentStage, 4 },
+            LLGL::BindingDescriptor{ LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage  , 2 },
+            LLGL::BindingDescriptor{ LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage, 5 },
+            LLGL::BindingDescriptor{ LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, 3 },
+            LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, 0,                               LLGL::StageFlags::FragmentStage, 4 },
         };
 
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
         // Create resource view heap
-        LLGL::ResourceHeapDescriptor rsvHeapDesc;
-        {
-            rsvHeapDesc.pipelineLayout  = pipelineLayout;
-            rsvHeapDesc.resourceViews   = { constBufferMatrices, constBufferColors, sampler, texture };
-        }
-        auto resourceViewHeap = renderer->CreateResourceHeap(rsvHeapDesc);
+        auto resourceViewHeap = renderer->CreateResourceHeap(pipelineLayout, { constBufferMatrices, constBufferColors, sampler, texture });
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
