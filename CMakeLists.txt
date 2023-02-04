@@ -268,6 +268,8 @@ endif()
 
 # === Global files ===
 
+set(FilesMsvcNatvis ${PROJECT_SOURCE_DIR}/LLGL.natvis)
+
 # Common files
 file(GLOB FilesInclude                      ${PROJECT_INCLUDE_DIR}/LLGL/*.*)
 file(GLOB FilesIncludeContainer             ${PROJECT_INCLUDE_DIR}/LLGL/Container/*.*)
@@ -497,6 +499,8 @@ set(FilesExample_HelloAndroid ${EXAMPLE_PROJECTS_DIR}/HelloAndroid/cpp/Example.c
 
 # === Source group folders ===
 
+source_group("NatVis" FILES ${FilesMsvcNatvis})
+
 source_group("Include" FILES ${FilesInclude})
 source_group("Include\\Container" FILES ${FilesIncludeContainer})
 source_group("Include\\Misc" FILES ${FilesIncludeMisc})
@@ -604,6 +608,10 @@ set(
     ${FilesPlatform}
     ${FilesRenderer}
 )
+
+if(MSVC)
+    set(FilesLLGL ${FilesLLGL} ${FilesMsvcNatvis})
+endif()
 
 if(LLGL_ENABLE_JIT_COMPILER)
     set(

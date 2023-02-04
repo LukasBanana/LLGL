@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="LLGL::ArrayView&lt;*&gt;" Inheritable="false">
+        <DisplayString>{{size = {size_}}}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">size_</Item>
+            <ArrayItems>
+                <Size>size_</Size>
+                <ValuePointer>data_</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="LLGL::SmallVector&lt;*&gt;" Inheritable="false">
+        <DisplayString>{{size = {size_}}}</DisplayString>
+        <DisplayString>{{capacity = {cap_}}}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">size_</Item>
+            <Item Name="[capacity]" ExcludeView="simple">cap_</Item>
+            <ArrayItems>
+                <Size>size_</Size>
+                <ValuePointer>data_</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="LLGL::BasicStringView&lt;*&gt;" Inheritable="false">
+        <DisplayString>{{length = {size_}}}</DisplayString>
+        <Expand>
+            <Item Name="[length]" ExcludeView="simple">size_</Item>
+            <ArrayItems>
+                <Size>size_</Size>
+                <ValuePointer>data_</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="LLGL::UTF8String" Inheritable="false">
+        <DisplayString>{{size = {data_.size_ - 1}}}</DisplayString>
+        <DisplayString>{{capacity = {data_.cap_ - 1}}}</DisplayString>
+        <DisplayString>{{c_str = {data_.data_}}}</DisplayString>
+        <Expand>
+            <Item Name="[length]" ExcludeView="simple">data_.size_ - 1</Item>
+            <Item Name="[capacity]" ExcludeView="simple">data_.cap_ - 1</Item>
+            <Item Name="[c_str]" ExcludeView="simple">data_.data_</Item>
+        </Expand>
+    </Type>
+</AutoVisualizer>
