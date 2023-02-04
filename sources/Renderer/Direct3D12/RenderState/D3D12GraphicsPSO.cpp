@@ -52,7 +52,7 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
         renderPassD3D = defaultRenderPass;
 
     /* Store dynamic pipeline states */
-    primitiveTopology_  = D3D12Types::Map(desc.primitiveTopology);
+    primitiveTopology_  = DXTypes::ToD3DPrimitiveTopology(desc.primitiveTopology);
     scissorEnabled_     = desc.rasterizer.scissorTestEnabled;
 
     stencilRefEnabled_  = IsStaticStencilRefEnabled(desc.stencil);
@@ -369,10 +369,10 @@ void D3D12GraphicsPSO::CreateNativePSOFromDesc(
 
     /* Get shader byte codes */
     stateDesc.VS = GetD3DShaderByteCode(desc.vertexShader);
-    stateDesc.PS = GetD3DShaderByteCode(desc.fragmentShader);
-    stateDesc.DS = GetD3DShaderByteCode(desc.tessControlShader);
-    stateDesc.HS = GetD3DShaderByteCode(desc.tessEvaluationShader);
+    stateDesc.HS = GetD3DShaderByteCode(desc.tessControlShader);
+    stateDesc.DS = GetD3DShaderByteCode(desc.tessEvaluationShader);
     stateDesc.GS = GetD3DShaderByteCode(desc.geometryShader);
+    stateDesc.PS = GetD3DShaderByteCode(desc.fragmentShader);
 
     /* Convert blend state and depth-stencil format */
     if (renderPass != nullptr)

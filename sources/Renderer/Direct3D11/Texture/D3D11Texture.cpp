@@ -856,11 +856,15 @@ DXGI_FORMAT D3D11Texture::GetBaseDXFormat() const
 static DXGI_FORMAT SelectDXTextureFormat(const TextureDescriptor& desc)
 {
     /* Select typeless format if the texture might be used for subresource views */
-    auto format = DXTypes::ToDXGIFormat(desc.format);
+    const auto format = DXTypes::ToDXGIFormat(desc.format);
     if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-        return DXTypes::ToDXGIFormatTypeless(format);
-    else
-        return format;
+    {
+        /* Compressed formats cannot be typelss, so ignore these */
+        const auto typelessFormat = DXTypes::ToDXGIFormatTypeless(format);
+        if (typelessFormat != DXGI_FORMAT_UNKNOWN)
+            return typelessFormat;
+    }
+    return format;
 }
 
 void D3D11Texture::CreateTexture1D(

@@ -22,10 +22,10 @@ namespace LLGL
 
 
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
-    Texture         { desc.type, desc.bindFlags      },
-    format_         { D3D12Types::Map(desc.format)   },
-    numMipLevels_   { NumMipLevels(desc)             },
-    numArrayLayers_ { std::max(1u, desc.arrayLayers) }
+    Texture         { desc.type, desc.bindFlags          },
+    format_         { DXTypes::ToDXGIFormat(desc.format) },
+    numMipLevels_   { NumMipLevels(desc)                 },
+    numArrayLayers_ { std::max(1u, desc.arrayLayers)     }
 {
     CreateNativeTexture(device, desc);
     if (SupportsGenerateMips())
@@ -275,7 +275,7 @@ void D3D12Texture::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESC
     CreateShaderResourceViewPrimary(
         device,
         D3D12Types::MapSrvDimension(desc.type),
-        D3D12Types::Map(desc.format),
+        DXTypes::ToDXGIFormat(desc.format),
         D3D12Types::Map(desc.swizzle),
         desc.subresource,
         cpuDescHandle
@@ -380,7 +380,7 @@ void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DES
     CreateUnorderedAccessViewPrimary(
         device,
         D3D12Types::MapUavDimension(desc.type),
-        D3D12Types::Map(desc.format),
+        DXTypes::ToDXGIFormat(desc.format),
         desc.subresource,
         cpuDescHandle
     );
@@ -551,7 +551,7 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     dst.Dimension           = D3D12Types::MapResourceDimension(src.type);
     dst.Alignment           = 0;
     dst.MipLevels           = NumMipLevels(src);
-    dst.Format              = DXTypes::ToDXGIFormatDSV(D3D12Types::Map(src.format));
+    dst.Format              = DXTypes::ToDXGIFormatDSV(DXTypes::ToDXGIFormat(src.format));
     dst.SampleDesc.Count    = 1;
     dst.SampleDesc.Quality  = 0;
     dst.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;

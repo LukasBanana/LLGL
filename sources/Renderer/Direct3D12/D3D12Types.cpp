@@ -17,21 +17,6 @@ namespace D3D12Types
 {
 
 
-DXGI_FORMAT Map(const DataType dataType)
-{
-    return DXTypes::Map(dataType);
-}
-
-DXGI_FORMAT Map(const Format format)
-{
-    return DXTypes::Map(format);
-}
-
-D3D_PRIMITIVE_TOPOLOGY Map(const PrimitiveTopology topology)
-{
-    return DXTypes::Map(topology);
-}
-
 D3D12_FILL_MODE Map(const PolygonMode polygonMode)
 {
     switch (polygonMode)

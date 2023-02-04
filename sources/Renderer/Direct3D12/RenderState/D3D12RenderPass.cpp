@@ -51,7 +51,7 @@ void D3D12RenderPass::BuildAttachments(
     for (UINT i = 0; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
     {
         if (i < numColorAttachments_)
-            SetRTVFormat(i, D3D12Types::Map(desc.colorAttachments[i].format));
+            SetRTVFormat(i, DXTypes::ToDXGIFormat(desc.colorAttachments[i].format));
         else
             SetRTVFormat(i, DXGI_FORMAT_UNKNOWN);
     }
@@ -65,9 +65,9 @@ void D3D12RenderPass::BuildAttachments(
     }
 
     if (desc.depthAttachment.format != Format::Undefined)
-        SetDSVFormat(D3D12Types::Map(desc.depthAttachment.format));
+        SetDSVFormat(DXTypes::ToDXGIFormat(desc.depthAttachment.format));
     else if (desc.stencilAttachment.format != Format::Undefined)
-        SetDSVFormat(D3D12Types::Map(desc.stencilAttachment.format));
+        SetDSVFormat(DXTypes::ToDXGIFormat(desc.stencilAttachment.format));
 
     /* Store sample descriptor */
     sampleDesc_ = device.FindSuitableSampleDesc(numColorAttachments_, rtvFormats_, GetClampedSamples(desc.samples));

@@ -26,9 +26,6 @@ namespace D3D12Types
 {
 
 
-DXGI_FORMAT                     Map( const DataType             dataType        );
-DXGI_FORMAT                     Map( const Format               format          );
-D3D_PRIMITIVE_TOPOLOGY          Map( const PrimitiveTopology    topology        );
 D3D12_FILL_MODE                 Map( const PolygonMode          polygonMode     );
 D3D12_CULL_MODE                 Map( const CullMode             cullMode        );
 D3D12_BLEND                     Map( const BlendOp              blendOp         );

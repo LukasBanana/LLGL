@@ -29,7 +29,7 @@ static const UINT64 g_cBufferAlignment      = 256u;
 // Returns DXGI_FORMAT_UNKNOWN for a structured buffer, or maps the format attribute to DXGI_FORMAT enum.
 static DXGI_FORMAT GetDXFormatForBuffer(const BufferDescriptor& desc)
 {
-    return (IsStructuredBuffer(desc) ? DXGI_FORMAT_UNKNOWN : D3D12Types::Map(desc.format));
+    return (IsStructuredBuffer(desc) ? DXGI_FORMAT_UNKNOWN : DXTypes::ToDXGIFormat(desc.format));
 }
 
 D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
@@ -124,7 +124,7 @@ void D3D12Buffer::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCR
     const UINT64    firstElement    = bufferViewDesc.offset / stride;
     const UINT      numElements     = static_cast<UINT>(std::min(bufferViewDesc.size, GetBufferSize()) / stride);
 
-    CreateShaderResourceViewPrimary(device, cpuDescHandle, firstElement, numElements, stride, D3D12Types::Map(bufferViewDesc.format));
+    CreateShaderResourceViewPrimary(device, cpuDescHandle, firstElement, numElements, stride, DXTypes::ToDXGIFormat(bufferViewDesc.format));
 }
 
 //private
@@ -160,7 +160,7 @@ void D3D12Buffer::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESC
     const UINT64    firstElement    = bufferViewDesc.offset / stride;
     const UINT      numElements     = static_cast<UINT>(std::min(bufferViewDesc.size, GetBufferSize()) / stride);
 
-    CreateUnorderedAccessViewPrimary(device, cpuDescHandle, firstElement, numElements, stride, D3D12Types::Map(bufferViewDesc.format));
+    CreateUnorderedAccessViewPrimary(device, cpuDescHandle, firstElement, numElements, stride, DXTypes::ToDXGIFormat(bufferViewDesc.format));
 }
 
 //private
@@ -506,7 +506,7 @@ void D3D12Buffer::CreateIndexBufferView(const BufferDescriptor& desc)
 {
     indexBufferView_.BufferLocation = GetNative()->GetGPUVirtualAddress();
     indexBufferView_.SizeInBytes    = static_cast<UINT>(GetBufferSize());
-    indexBufferView_.Format         = D3D12Types::Map(desc.format);
+    indexBufferView_.Format         = DXTypes::ToDXGIFormat(desc.format);
 }
 
 void D3D12Buffer::CreateStreamOutputBufferView(const BufferDescriptor& desc)
