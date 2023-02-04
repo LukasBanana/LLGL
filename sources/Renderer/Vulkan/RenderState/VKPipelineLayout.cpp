@@ -56,9 +56,6 @@ static VkDescriptorType GetVkDescriptorType(const BindingDescriptor& desc)
     VKTypes::MapFailed("ResourceType", "VkDescriptorType");
 }
 
-//TODO:
-// looks like 'VkDescriptorSetLayoutBinding::descriptorCount' can only be greater than 1
-// for arrays in a shader (e.g. array of uniform buffers), but not for multiple binding points.
 static void Convert(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& src)
 {
     dst.binding             = src.slot;
@@ -68,17 +65,6 @@ static void Convert(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& 
     dst.pImmutableSamplers  = nullptr;
 }
 
-/*static void Convert(VkDescriptorPoolSize& dst, const BindingDescriptor& src)
-{
-    dst.type            = VKTypes::Map(src.type);
-    dst.descriptorCount = src.numSlots;
-}*/
-
-/*
-TODO:
-maybe move the VkPipelineLayout object into "VKGraphicsPipeline",
-in this case the "PipelineLayout" interface might need a renaming
-*/
 VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc) :
     pipelineLayout_      { device, vkDestroyPipelineLayout      },
     descriptorSetLayout_ { device, vkDestroyDescriptorSetLayout }

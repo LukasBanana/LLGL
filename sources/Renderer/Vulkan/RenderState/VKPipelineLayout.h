@@ -11,9 +11,9 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/Container/SmallVector.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
-#include <vector>
 
 
 namespace LLGL
@@ -51,7 +51,7 @@ class VKPipelineLayout final : public PipelineLayout
         }
 
         // Returns the list of binding points that must be passed to 'VkWriteDescriptorSet' members.
-        inline const std::vector<VKLayoutBinding>& GetBindings() const
+        inline const SmallVector<VKLayoutBinding>& GetBindings() const
         {
             return bindings_;
         }
@@ -60,7 +60,7 @@ class VKPipelineLayout final : public PipelineLayout
 
         VKPtr<VkPipelineLayout>         pipelineLayout_;
         VKPtr<VkDescriptorSetLayout>    descriptorSetLayout_;
-        std::vector<VKLayoutBinding>    bindings_;
+        SmallVector<VKLayoutBinding>    bindings_;
 
 };
 

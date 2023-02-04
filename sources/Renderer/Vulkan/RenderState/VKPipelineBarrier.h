@@ -1,6 +1,6 @@
 /*
  * VKPipelineBarrier.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -31,7 +31,7 @@ class VKPipelineBarrier
         void Submit(VkCommandBuffer commandBuffer);
 
         // Inserts a memory barrier
-        void InsertMemoryBarrier(long stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess);
+        void InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess);
 
     private:
 

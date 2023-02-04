@@ -1,6 +1,6 @@
 /*
  * VKResourceHeap.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,7 +10,10 @@
 
 
 #include <LLGL/ResourceHeap.h>
+#include <LLGL/Container/ArrayView.h>
+#include <LLGL/Container/SmallVector.h>
 #include "VKPipelineBarrier.h"
+#include "VKPipelineLayout.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <vector>
@@ -23,7 +26,6 @@ namespace LLGL
 class VKBuffer;
 class VKTexture;
 struct VKWriteDescriptorContainer;
-struct VKLayoutBinding;
 struct ResourceHeapDescriptor;
 struct ResourceViewDescriptor;
 struct TextureViewDescriptor;
@@ -37,7 +39,17 @@ class VKResourceHeap final : public ResourceHeap
 
     public:
 
-        VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeapDescriptor& desc);
+        VKResourceHeap(
+            const VKPtr<VkDevice>&                      device,
+            const ResourceHeapDescriptor&               desc,
+            const ArrayView<ResourceViewDescriptor>&    initialResourceViews = {}
+        );
+
+        std::uint32_t UpdateDescriptors(
+            const VKPtr<VkDevice>&                      device,
+            std::uint32_t                               firstDescriptor,
+            const ArrayView<ResourceViewDescriptor>&    resourceViews
+        );
 
         // Inserts a pipeline barrier command into the command buffer if this resource heap requires it.
         void InsertPipelineBarrier(VkCommandBuffer commandBuffer);
@@ -71,71 +83,80 @@ class VKResourceHeap final : public ResourceHeap
 
     private:
 
-        void CreateDescriptorPool(
-            const VKPtr<VkDevice>&              device,
-            const ResourceHeapDescriptor&       desc,
-            const std::vector<VKLayoutBinding>& bindings
-        );
+        static constexpr std::uint32_t invalidViewIndex = 0xFFFF;
+
+        struct VKDescriptorBinding
+        {
+            std::uint32_t           dstBinding;
+            VkDescriptorType        descriptorType;
+            VkPipelineStageFlags    stageFlags;
+            std::uint32_t           imageViewIndex  : 16; // Index (per descriptor set) to the intermediate VkImageView or 0xFFFF if unused.
+            std::uint32_t           bufferViewIndex : 16; // Index (per descriptor set) to the intermediate VkBufferView or 0xFFFF if unused.
+        };
+
+    private:
+
+        void CopyLayoutBindings(const ArrayView<VKLayoutBinding>& layoutBindings);
+        void CopyLayoutBinding(VKDescriptorBinding& dst, const VKLayoutBinding& src);
+
+        void CreateDescriptorPool(const VKPtr<VkDevice>& device, std::uint32_t numDescriptorSets);
 
         void CreateDescriptorSets(
-            const VKPtr<VkDevice>&          device,
-            std::uint32_t                   numSetLayouts,
-            const VkDescriptorSetLayout*    setLayouts
-        );
-
-        void UpdateDescriptorSets(
-            const VKPtr<VkDevice>&              device,
-            const ResourceHeapDescriptor&       desc,
-            const std::vector<VKLayoutBinding>& bindings
+            const VKPtr<VkDevice>&  device,
+            std::uint32_t           numDescriptorSets,
+            VkDescriptorSetLayout   globalSetLayout
         );
 
         void FillWriteDescriptorForSampler(
-            const ResourceViewDescriptor&   rvDesc,
-            VkDescriptorSet                 descSet,
-            const VKLayoutBinding&          binding,
+            const ResourceViewDescriptor&   desc,
+            std::uint32_t                   descriptorSet,
+            const VKDescriptorBinding&      binding,
             VKWriteDescriptorContainer&     container
         );
 
         void FillWriteDescriptorForTexture(
             const VKPtr<VkDevice>&          device,
-            const ResourceViewDescriptor&   rvDesc,
-            VkDescriptorSet                 descSet,
-            const VKLayoutBinding&          binding,
+            const ResourceViewDescriptor&   desc,
+            std::uint32_t                   descriptorSet,
+            const VKDescriptorBinding&      binding,
             VKWriteDescriptorContainer&     container
         );
 
         void FillWriteDescriptorForBuffer(
             const VKPtr<VkDevice>&          device,
-            const ResourceViewDescriptor&   rvDesc,
-            VkDescriptorSet                 descSet,
-            const VKLayoutBinding&          binding,
+            const ResourceViewDescriptor&   desc,
+            std::uint32_t                   descriptorSet,
+            const VKDescriptorBinding&      binding,
             VKWriteDescriptorContainer&     container
         );
 
-        void CreatePipelineBarrier(
-            const std::vector<ResourceViewDescriptor>&  resourceViews,
-            const std::vector<VKLayoutBinding>&         bindings
-        );
+        #if 0
+        void CreatePipelineBarrier(const ArrayView<ResourceViewDescriptor>& resourceViews);
+        #endif
 
         // Returns the image view for the specified texture or creates one if the texture-view is enabled.
         VkImageView GetOrCreateImageView(
             const VKPtr<VkDevice>&          device,
             VKTexture&                      textureVK,
-            const ResourceViewDescriptor&   rvDesc
+            const ResourceViewDescriptor&   desc,
+            std::size_t                     imageViewIndex
         );
 
     private:
 
-        VkPipelineLayout                pipelineLayout_ = VK_NULL_HANDLE;
+        VkPipelineLayout                    pipelineLayout_         = VK_NULL_HANDLE;
 
-        VKPtr<VkDescriptorPool>         descriptorPool_;
-        std::vector<VkDescriptorSet>    descriptorSets_;
+        VKPtr<VkDescriptorPool>             descriptorPool_;
+        std::vector<VkDescriptorSet>        descriptorSets_;
+        SmallVector<VKDescriptorBinding>    bindings_;
 
-        std::vector<VKPtr<VkImageView>> imageViews_;
-        //std::vector<VkBufferView>       bufferViews_;
+        std::vector<VKPtr<VkImageView>>     imageViews_;
+      //std::vector<VKPtr<VkBufferView>>    bufferViews_;
+        std::uint32_t                       numImageViewsPerSet_    = 0;
+        std::uint32_t                       numBufferViewsPerSet_   = 0;
 
-        VKPipelineBarrier               barrier_; //TODO: make it an array, one element for each descriptor set
-        VkPipelineBindPoint             bindPoint_      = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+        VKPipelineBarrier                   barrier_; //TODO: make it an array, one element for each descriptor set
+        VkPipelineBindPoint                 bindPoint_              = VK_PIPELINE_BIND_POINT_MAX_ENUM;
 
 
 };

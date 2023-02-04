@@ -1,6 +1,6 @@
 /*
  * VKCommandBuffer.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -466,12 +466,15 @@ void VKCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 /* ----- Resources ----- */
 
 //private
-void VKCommandBuffer::BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet)
+void VKCommandBuffer::BindResourceHeap(
+    VKResourceHeap&     resourceHeapVK,
+    std::uint32_t       descriptorSet,
+    VkPipelineBindPoint pipelineBindPoint)
 {
-    const VkDescriptorSet descriptorSets[1] = { resourceHeapVK.GetVkDescriptorSets()[firstSet] };
+    const VkDescriptorSet descriptorSets[1] = { resourceHeapVK.GetVkDescriptorSets()[descriptorSet] };
     vkCmdBindDescriptorSets(
         commandBuffer_,
-        bindingPoint,
+        pipelineBindPoint,
         resourceHeapVK.GetVkPipelineLayout(),   // Pipeline lauyout
         0,                                      // First set in SPIR-V (always 0 atm.)
         1,                                      // Number of descriptor sets (always 1 atm.)
@@ -483,7 +486,7 @@ void VKCommandBuffer::BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelin
 
 void VKCommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
-    std::uint32_t           firstSet,
+    std::uint32_t           descriptorSet,
     const PipelineBindPoint bindPoint)
 {
     auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
@@ -493,14 +496,14 @@ void VKCommandBuffer::SetResourceHeap(
     {
         if (resourceHeapVK.GetBindPoint() == VK_PIPELINE_BIND_POINT_MAX_ENUM)
         {
-            BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_GRAPHICS, firstSet);
-            BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_COMPUTE, firstSet);
+            BindResourceHeap(resourceHeapVK, descriptorSet, VK_PIPELINE_BIND_POINT_GRAPHICS);
+            BindResourceHeap(resourceHeapVK, descriptorSet, VK_PIPELINE_BIND_POINT_COMPUTE);
         }
         else
-            BindResourceHeap(resourceHeapVK, resourceHeapVK.GetBindPoint(), firstSet);
+            BindResourceHeap(resourceHeapVK, descriptorSet, resourceHeapVK.GetBindPoint());
     }
     else
-        BindResourceHeap(resourceHeapVK, VKTypes::Map(bindPoint), firstSet);
+        BindResourceHeap(resourceHeapVK, descriptorSet, VKTypes::Map(bindPoint));
 
     /* Insert resource barrier into command buffer */
     resourceHeapVK.InsertPipelineBarrier(commandBuffer_);

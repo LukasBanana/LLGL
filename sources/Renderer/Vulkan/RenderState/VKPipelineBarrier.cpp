@@ -1,6 +1,6 @@
 /*
  * VKPipelineBarrier.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -34,32 +34,10 @@ void VKPipelineBarrier::Submit(VkCommandBuffer commandBuffer)
     );
 }
 
-static VkPipelineStageFlags ToVkStageFlags(long stageFlags)
+void VKPipelineBarrier::InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess)
 {
-    VkPipelineStageFlags bitmask = 0;
-
-    if ((stageFlags & StageFlags::VertexStage) != 0)
-        bitmask |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
-    if ((stageFlags & StageFlags::TessControlStage) != 0)
-        bitmask |= VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;
-    if ((stageFlags & StageFlags::TessEvaluationStage) != 0)
-        bitmask |= VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT;
-    if ((stageFlags & StageFlags::GeometryStage) != 0)
-        bitmask |= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;
-    if ((stageFlags & StageFlags::FragmentStage) != 0)
-        bitmask |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    if ((stageFlags & StageFlags::ComputeStage) != 0)
-        bitmask |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-
-    return bitmask;
-}
-
-void VKPipelineBarrier::InsertMemoryBarrier(long stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess)
-{
-    auto stagesBitmask = ToVkStageFlags(stageFlags);
-
-    srcStageMask_ |= stagesBitmask;
-    dstStageMask_ |= stagesBitmask;
+    srcStageMask_ |= stageFlags;
+    dstStageMask_ |= stageFlags;
 
     /* Check if a memory barrier alread exists */
     for (const auto& barrier : memoryBarrier_)

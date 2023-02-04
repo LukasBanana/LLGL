@@ -585,14 +585,23 @@ void VKRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* VKRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
+ResourceHeap* VKRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<VKResourceHeap>(device_, resourceHeapDesc));
+    return TakeOwnership(
+        resourceHeaps_,
+        MakeUnique<VKResourceHeap>(device_, resourceHeapDesc, initialResourceViews)
+    );
 }
 
 void VKRenderSystem::Release(ResourceHeap& resourceHeap)
 {
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+std::uint32_t VKRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
+    return resourceHeapVK.UpdateDescriptors(device_, firstDescriptor, resourceViews);
 }
 
 /* ----- Render Passes ----- */

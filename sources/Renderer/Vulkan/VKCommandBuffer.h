@@ -1,6 +1,6 @@
 /*
  * VKCommandBuffer.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -123,7 +123,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         void SetResourceHeap(
             ResourceHeap&           resourceHeap,
-            std::uint32_t           firstSet        = 0,
+            std::uint32_t           descriptorSet   = 0,
             const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
         ) override;
 
@@ -275,7 +275,11 @@ class VKCommandBuffer final : public CommandBuffer
 
         bool IsInsideRenderPass() const;
 
-        void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
+        void BindResourceHeap(
+            VKResourceHeap&     resourceHeapVK,
+            std::uint32_t       descriptorSet,
+            VkPipelineBindPoint pipelineBindPoint
+        );
 
         void BufferPipelineBarrier(
             VkBuffer                buffer,
