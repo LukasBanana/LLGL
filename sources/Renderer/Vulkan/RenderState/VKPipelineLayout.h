@@ -1,6 +1,6 @@
 /*
  * VKPipelineLayout.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -56,11 +56,18 @@ class VKPipelineLayout final : public PipelineLayout
             return bindings_;
         }
 
+        // Returns the consolidated bitmask of all binding stage flags.
+        inline long GetConsolidatedStageFlags() const
+        {
+            return consolidatedStageFlags_;
+        }
+
     private:
 
         VKPtr<VkPipelineLayout>         pipelineLayout_;
         VKPtr<VkDescriptorSetLayout>    descriptorSetLayout_;
         SmallVector<VKLayoutBinding>    bindings_;
+        long                            consolidatedStageFlags_;
 
 };
 

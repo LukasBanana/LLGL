@@ -31,15 +31,14 @@ namespace LLGL
 Returns the optimal pipeline binding point for the specified layout,
 or VK_PIPELINE_BIND_POINT_MAX_ENUM if there are multiple pipelines in use.
 */
-static VkPipelineBindPoint FindPipelineBindPoint(const VKPipelineLayout& pipelineLayout)
+static VkPipelineBindPoint FindPipelineBindPoint(long stageFlags)
 {
-    for (const auto& binding : pipelineLayout.GetBindings())
-    {
-        if ((binding.stageFlags & StageFlags::AllGraphicsStages) != 0)
-            return VK_PIPELINE_BIND_POINT_GRAPHICS;
-        if ((binding.stageFlags & StageFlags::ComputeStage) != 0)
-            return VK_PIPELINE_BIND_POINT_COMPUTE;
-    }
+    const bool hasGraphicsStages    = ((stageFlags & StageFlags::AllGraphicsStages) != 0);
+    const bool hasComputeStages     = ((stageFlags & StageFlags::ComputeStage) != 0);
+    if (hasGraphicsStages && !hasComputeStages)
+        return VK_PIPELINE_BIND_POINT_GRAPHICS;
+    if (!hasGraphicsStages && hasComputeStages)
+        return VK_PIPELINE_BIND_POINT_COMPUTE;
     return VK_PIPELINE_BIND_POINT_MAX_ENUM;
 }
 
@@ -56,7 +55,7 @@ VKResourceHeap::VKResourceHeap(
         throw std::invalid_argument("failed to create resource view heap due to missing pipeline layout");
 
     pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
-    bindPoint_      = FindPipelineBindPoint(*pipelineLayoutVK);
+    bindPoint_      = FindPipelineBindPoint(pipelineLayoutVK->GetConsolidatedStageFlags());
 
     /* Get and validate number of bindings and resource views */
     CopyLayoutBindings(pipelineLayoutVK->GetBindings());
@@ -69,14 +68,12 @@ VKResourceHeap::VKResourceHeap(
     CreateDescriptorPool(device, numDescriptorSets);
     CreateDescriptorSets(device, numDescriptorSets, pipelineLayoutVK->GetVkDescriptorSetLayout());
 
+    /* Allocate array for descriptor set barriers */
+    barriers_.resize(numDescriptorSets);
+
     /* Write initial resource views */
     if (!initialResourceViews.empty())
         UpdateDescriptors(device, 0, initialResourceViews);
-
-    #if 0
-    /* Create pipeline barrier for resource views that require it, e.g. those with storage binding flags */
-    CreatePipelineBarrier(initialResourceViews);
-    #endif
 }
 
 std::uint32_t VKResourceHeap::GetNumDescriptorSets() const
@@ -119,16 +116,23 @@ std::uint32_t VKResourceHeap::UpdateDescriptors(
         switch (binding.descriptorType)
         {
             case VK_DESCRIPTOR_TYPE_SAMPLER:
-                FillWriteDescriptorForSampler(desc, descriptorSet, binding, container);
+                FillWriteDescriptorWithSampler(desc, descriptorSet, binding, container);
                 break;
 
+            #if 0
+            case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+                FillWriteDescriptorWithCombinedImageSampler(device, desc, descriptorSet, binding, container);
+                break;
+            #endif
+
             case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-                FillWriteDescriptorForTexture(device, desc, descriptorSet, binding, container);
+            case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+                FillWriteDescriptorWithImageView(device, desc, descriptorSet, binding, container);
                 break;
 
             case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
             case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-                FillWriteDescriptorForBuffer(device, desc, descriptorSet, binding, container);
+                FillWriteDescriptorWithBufferRange(device, desc, descriptorSet, binding, container);
                 break;
 
             default:
@@ -142,6 +146,7 @@ std::uint32_t VKResourceHeap::UpdateDescriptors(
         ++firstDescriptor;
     }
 
+    /* Update Vulkan descriptor sets */
     if (container.numWriteDescriptors > 0)
     {
         vkUpdateDescriptorSets(
@@ -153,13 +158,26 @@ std::uint32_t VKResourceHeap::UpdateDescriptors(
         );
     }
 
+    /* Update pipeline barriers */
+    for_subrange(i, container.barrierChangeRanges[0], container.barrierChangeRanges[1])
+    {
+        if (auto* buffer = barriers_[i].get())
+        {
+            if (!buffer->Update())
+                barriers_[i].reset();
+        }
+    }
+
     return container.numWriteDescriptors;
 }
 
-void VKResourceHeap::InsertPipelineBarrier(VkCommandBuffer commandBuffer)
+void VKResourceHeap::SubmitPipelineBarrier(VkCommandBuffer commandBuffer, std::uint32_t descriptorSet)
 {
-    if (barrier_.IsEnabled())
-        barrier_.Submit(commandBuffer);
+    if (auto barrier = barriers_[descriptorSet].get())
+    {
+        if (barrier->IsActive())
+            barrier->Submit(commandBuffer);
+    }
 }
 
 
@@ -302,7 +320,7 @@ void VKResourceHeap::CreateDescriptorSets(
     VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
 }
 
-void VKResourceHeap::FillWriteDescriptorForSampler(
+void VKResourceHeap::FillWriteDescriptorWithSampler(
     const ResourceViewDescriptor&   desc,
     std::uint32_t                   descriptorSet,
     const VKDescriptorBinding&      binding,
@@ -332,7 +350,7 @@ void VKResourceHeap::FillWriteDescriptorForSampler(
     }
 }
 
-void VKResourceHeap::FillWriteDescriptorForTexture(
+void VKResourceHeap::FillWriteDescriptorWithImageView(
     const VKPtr<VkDevice>&          device,
     const ResourceViewDescriptor&   desc,
     std::uint32_t                   descriptorSet,
@@ -364,7 +382,7 @@ void VKResourceHeap::FillWriteDescriptorForTexture(
     }
 }
 
-void VKResourceHeap::FillWriteDescriptorForBuffer(
+void VKResourceHeap::FillWriteDescriptorWithBufferRange(
     const VKPtr<VkDevice>&          /*device*/,
     const ResourceViewDescriptor&   desc,
     std::uint32_t                   descriptorSet,
@@ -401,37 +419,47 @@ void VKResourceHeap::FillWriteDescriptorForBuffer(
         writeDesc->pBufferInfo      = bufferInfo;
         writeDesc->pTexelBufferView = nullptr;
     }
-}
 
-#if 0
-void VKResourceHeap::CreatePipelineBarrier(const ArrayView<ResourceViewDescriptor>& resourceViews)
-{
-    const auto numBindings = bindings_.size();
-    for_range(i, resourceViews.size())
+    /* Emplace pipeline barrier for storage buffer */
+    if (ExchangeBufferBarrier(descriptorSet, bufferVK, binding))
     {
-        const auto& desc    = resourceViews[i];
-        const auto& binding = bindings_[i % numBindings];
-
-        if (auto resource = desc.resource)
-        {
-            /* Enable <GL_SHADER_STORAGE_BARRIER_BIT> bitmask for UAV buffers */
-            if (resource->GetResourceType() == ResourceType::Buffer)
-            {
-                auto buffer = LLGL_CAST(Buffer*, resource);
-                if ((buffer->GetBindFlags() & BindFlags::Storage) != 0)
-                {
-                    /* Insert worst case scenario for a UAV resource */
-                    barrier_.InsertMemoryBarrier(
-                        binding.stageFlags,
-                        VK_ACCESS_SHADER_WRITE_BIT,
-                        VK_ACCESS_SHADER_READ_BIT
-                    );
-                }
-            }
-        }
+        container.barrierChangeRanges[0] = std::min(container.barrierChangeRanges[0], descriptorSet);
+        container.barrierChangeRanges[1] = std::max(container.barrierChangeRanges[1], descriptorSet + 1);
     }
 }
-#endif
+
+bool VKResourceHeap::ExchangeBufferBarrier(std::uint32_t descriptorSet, Buffer* resource, const VKDescriptorBinding& binding)
+{
+    if ((resource->GetBindFlags() & BindFlags::Storage) != 0)
+        return EmplaceBarrier(descriptorSet, binding.dstBinding, resource, binding.stageFlags);
+    else
+        return RemoveBarrier(descriptorSet, binding.dstBinding);
+}
+
+bool VKResourceHeap::EmplaceBarrier(std::uint32_t descriptorSet, std::uint32_t slot, Resource* resource, VkPipelineStageFlags stageFlags)
+{
+    if (auto barrier = barriers_[descriptorSet].get())
+    {
+        /* Emplace into existing pipeline barrier */
+        return barrier->Emplace(slot, resource, stageFlags);
+    }
+    else
+    {
+        /* Allocate new pipeline barrier for descriptor set */
+        auto newBarrier = MakeUnique<VKPipelineBarrier>();
+        newBarrier->Emplace(slot, resource, stageFlags);
+        barriers_[descriptorSet] = std::move(newBarrier);
+        return true;
+    }
+}
+
+bool VKResourceHeap::RemoveBarrier(std::uint32_t descriptorSet, std::uint32_t slot)
+{
+    if (auto barrier = barriers_[descriptorSet].get())
+        return barrier->Remove(slot);
+    else
+        return false;
+}
 
 VkImageView VKResourceHeap::GetOrCreateImageView(
     const VKPtr<VkDevice>&          device,
@@ -443,7 +471,7 @@ VkImageView VKResourceHeap::GetOrCreateImageView(
     {
         /* Creates a new image view for the specified subresource descriptor */
         VKPtr<VkImageView> imageView{ device, vkDestroyImageView };
-        textureVK.CreateImageView(device, desc.textureView, imageView.ReleaseAndGetAddressOf());
+        textureVK.CreateImageView(device, desc.textureView, imageView);
 
         /* Remove previous image view entry */
         if (imageViewIndex < imageViews_.size() && imageViews_[imageViewIndex])
@@ -451,7 +479,7 @@ VkImageView VKResourceHeap::GetOrCreateImageView(
 
         /* Increase image view container for new entry */
         if (imageViewIndex >= imageViews_.size())
-            imageViews_.resize(imageViewIndex);
+            imageViews_.resize(imageViewIndex + 1);
 
         /* Emplace new image view entry */
         imageViews_[imageViewIndex] = std::move(imageView);

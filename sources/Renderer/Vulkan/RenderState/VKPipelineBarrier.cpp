@@ -6,6 +6,10 @@
  */
 
 #include "VKPipelineBarrier.h"
+#include "../Buffer/VKBuffer.h"
+//#include "../Texture/VKTexture.h"
+#include "../../CheckedCast.h"
+#include "../../../Core/ContainerUtils.h"
 #include <LLGL/ShaderFlags.h>
 
 
@@ -13,7 +17,7 @@ namespace LLGL
 {
 
 
-bool VKPipelineBarrier::IsEnabled() const
+bool VKPipelineBarrier::IsActive() const
 {
     return (srcStageMask_ != 0 && dstStageMask_ != 0);
 }
@@ -33,6 +37,93 @@ void VKPipelineBarrier::Submit(VkCommandBuffer commandBuffer)
         imageBarriers_.data()
     );
 }
+
+bool VKPipelineBarrier::Emplace(std::uint32_t slot, Resource* resource, VkPipelineStageFlags stageFlags)
+{
+    /* Emplace resource binding into sorted array */
+    std::size_t index = 0;
+    auto* entry = Utils::FindInSortedArray<ResourceBinding>(
+        bindings_.data(),
+        bindings_.size(),
+        [slot](const ResourceBinding& binding) -> int
+        {
+            return (static_cast<int>(binding.slot) - static_cast<int>(slot));
+        },
+        &index
+    );
+    if (entry != nullptr)
+    {
+        /* Replace previous entry */
+        if (entry->resource != resource)
+        {
+            entry->resource     = resource;
+            entry->stageFlags   = stageFlags;
+            return true;
+        }
+    }
+    else
+    {
+        /* Insert entry with new binding slot */
+        ResourceBinding binding;
+        {
+            binding.slot        = slot;
+            binding.resource    = resource;
+            binding.stageFlags  = stageFlags;
+        }
+        bindings_.insert(bindings_.begin() + index, binding);
+        return true;
+    }
+    return false;
+}
+
+bool VKPipelineBarrier::Remove(std::uint32_t slot)
+{
+    /* Only clear resource entry, don't reallocate array */
+    auto* entry = Utils::FindInSortedArray<ResourceBinding>(
+        bindings_.data(),
+        bindings_.size(),
+        [slot](const ResourceBinding& binding) -> int
+        {
+            return (static_cast<int>(binding.slot) - static_cast<int>(slot));
+        }
+    );
+    if (entry != nullptr && entry->resource != nullptr)
+    {
+        entry->resource = nullptr;
+        return true;
+    }
+    return false;
+}
+
+bool VKPipelineBarrier::Update()
+{
+    /* Reset bitmasks and barriers */
+    srcStageMask_ = 0;
+    dstStageMask_ = 0;
+    memoryBarrier_.clear();
+
+    /* Iterate over all bindings and re-generate all barriers */
+    for (const auto& binding : bindings_)
+    {
+        if (auto resource = binding.resource)
+        {
+            if (resource->GetResourceType() == ResourceType::Buffer)
+            {
+                auto bufferVK = LLGL_CAST(VKBuffer*, resource);
+                InsertBufferMemoryBarrier(binding.stageFlags, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, bufferVK->GetVkBuffer());
+            }
+            else
+                InsertMemoryBarrier(binding.stageFlags, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+        }
+    }
+
+    return IsActive();
+}
+
+
+/*
+ * ======= Private: =======
+ */
 
 void VKPipelineBarrier::InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess)
 {
@@ -55,6 +146,26 @@ void VKPipelineBarrier::InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkA
         barrier.dstAccessMask   = dstAccess;
     }
     memoryBarrier_.push_back(barrier);
+}
+
+void VKPipelineBarrier::InsertBufferMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess, VkBuffer buffer)
+{
+    srcStageMask_ |= stageFlags;
+    dstStageMask_ |= stageFlags;
+
+    VkBufferMemoryBarrier barrier;
+    {
+        barrier.sType                   = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        barrier.pNext                   = nullptr;
+        barrier.srcAccessMask           = srcAccess;
+        barrier.dstAccessMask           = dstAccess;
+        barrier.srcQueueFamilyIndex     = 0;
+        barrier.dstQueueFamilyIndex     = 0;
+        barrier.buffer                  = buffer;
+        barrier.offset                  = 0;
+        barrier.size                    = VK_WHOLE_SIZE;
+    }
+    bufferBarriers_.push_back(barrier);
 }
 
 

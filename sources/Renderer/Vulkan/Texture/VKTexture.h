@@ -44,19 +44,19 @@ class VKTexture final : public Texture
 
         // Creates an additional texture view of the specified texture range and uses the same format as this texture object.
         void CreateImageView(
-            VkDevice        device,
-            std::uint32_t   baseMipLevel,
-            std::uint32_t   numMipLevels,
-            std::uint32_t   baseArrayLayer,
-            std::uint32_t   numArrayLayers,
-            VkImageView*    imageViewRef
+            VkDevice            device,
+            std::uint32_t       baseMipLevel,
+            std::uint32_t       numMipLevels,
+            std::uint32_t       baseArrayLayer,
+            std::uint32_t       numArrayLayers,
+            VKPtr<VkImageView>& outImageView
         );
 
         // Creates an additional texture view with the specififed view descriptor.
         void CreateImageView(
             VkDevice                        device,
             const TextureViewDescriptor&    textureViewDesc,
-            VkImageView*                    imageViewRef
+            VKPtr<VkImageView>&             outImageView
         );
 
         // Creates the standard image view that is stored within this texture object.
@@ -68,7 +68,7 @@ class VKTexture final : public Texture
         // Returns the Vulkan image object.
         inline VkImage GetVkImage() const
         {
-            return imageWrapper_.GetVkImage();
+            return image_.GetVkImage();
         }
 
         // Returns the internal Vulkan image view object (created with 'CreateInternalImageView').
@@ -104,7 +104,7 @@ class VKTexture final : public Texture
         // Returns the region of the hardware device memory.
         inline VKDeviceMemoryRegion* GetMemoryRegion() const
         {
-            return imageWrapper_.GetMemoryRegion();
+            return image_.GetMemoryRegion();
         }
 
     private:
@@ -113,7 +113,7 @@ class VKTexture final : public Texture
 
     private:
 
-        VKDeviceImage       imageWrapper_;
+        VKDeviceImage       image_;
         VKPtr<VkImageView>  imageView_;
 
         VkFormat            format_         = VK_FORMAT_UNDEFINED;

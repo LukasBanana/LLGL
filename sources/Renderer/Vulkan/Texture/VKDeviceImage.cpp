@@ -1,6 +1,6 @@
 /*
  * VKDeviceImage.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -98,36 +98,35 @@ void VKDeviceImage::ReleaseVkImage()
 }
 
 void VKDeviceImage::CreateVkImageView(
-    VkDevice            device,
-    VkImageViewType     viewType,
-    VkFormat            format,
-    VkImageAspectFlags  aspectFlags,
-    std::uint32_t       baseMipLevel,
-    std::uint32_t       numMipLevels,
-    std::uint32_t       baseArrayLayer,
-    std::uint32_t       numArrayLayers,
-    VkImageView*        imageViewRef)
+    VkDevice                        device,
+    VkImageViewType                 viewType,
+    VkFormat                        format,
+    const VkImageSubresourceRange&  subresourceRange,
+    VKPtr<VkImageView>&             outImageView,
+    const VkComponentMapping*       components)
 {
     /* Create image view object */
     VkImageViewCreateInfo createInfo;
     {
-        createInfo.sType                            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.pNext                            = nullptr;
-        createInfo.flags                            = 0;
-        createInfo.image                            = image_;
-        createInfo.viewType                         = viewType;
-        createInfo.format                           = format;
-        createInfo.components.r                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.subresourceRange.aspectMask      = aspectFlags;
-        createInfo.subresourceRange.baseMipLevel    = baseMipLevel;
-        createInfo.subresourceRange.levelCount      = numMipLevels;
-        createInfo.subresourceRange.baseArrayLayer  = baseArrayLayer;
-        createInfo.subresourceRange.layerCount      = numArrayLayers;
+        createInfo.sType            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.pNext            = nullptr;
+        createInfo.flags            = 0;
+        createInfo.image            = image_;
+        createInfo.viewType         = viewType;
+        createInfo.format           = format;
+        createInfo.subresourceRange = subresourceRange;
+
+        if (components == nullptr)
+        {
+            createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        }
+        else
+            createInfo.components = *components;
     }
-    VkResult result = vkCreateImageView(device, &createInfo, nullptr, imageViewRef);
+    VkResult result = vkCreateImageView(device, &createInfo, nullptr, outImageView.ReleaseAndGetAddressOf());
     VKThrowIfCreateFailed(result, "VkImageView");
 }
 

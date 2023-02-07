@@ -506,7 +506,7 @@ void VKCommandBuffer::SetResourceHeap(
         BindResourceHeap(resourceHeapVK, descriptorSet, VKTypes::Map(bindPoint));
 
     /* Insert resource barrier into command buffer */
-    resourceHeapVK.InsertPipelineBarrier(commandBuffer_);
+    resourceHeapVK.SubmitPipelineBarrier(commandBuffer_, descriptorSet);
 }
 
 void VKCommandBuffer::SetResource(

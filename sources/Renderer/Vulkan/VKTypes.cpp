@@ -423,6 +423,20 @@ VkExtent3D ToVkExtent(const Extent3D& extent)
     return VkExtent3D{ extent.width, extent.height, extent.depth };
 }
 
+VkComponentSwizzle ToVkComponentSwizzle(const TextureSwizzle swizzle)
+{
+    switch (swizzle)
+    {
+        case TextureSwizzle::Zero:  return VK_COMPONENT_SWIZZLE_ZERO;
+        case TextureSwizzle::One:   return VK_COMPONENT_SWIZZLE_ONE;
+        case TextureSwizzle::Red:   return VK_COMPONENT_SWIZZLE_R;
+        case TextureSwizzle::Green: return VK_COMPONENT_SWIZZLE_G;
+        case TextureSwizzle::Blue:  return VK_COMPONENT_SWIZZLE_B;
+        case TextureSwizzle::Alpha: return VK_COMPONENT_SWIZZLE_A;
+    }
+    VKTypes::MapFailed("TextureSwizzle", "VkComponentSwizzle");
+}
+
 Format Unmap(const VkFormat format)
 {
     switch (format)

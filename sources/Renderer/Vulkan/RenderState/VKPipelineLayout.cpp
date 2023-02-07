@@ -1,6 +1,6 @@
 /*
  * VKPipelineLayout.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,6 +8,7 @@
 #include "VKPipelineLayout.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -73,7 +74,7 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     const auto numBindings = desc.bindings.size();
     std::vector<VkDescriptorSetLayoutBinding> layoutBindings(numBindings);
 
-    for (std::size_t i = 0; i < numBindings; ++i)
+    for_range(i, numBindings)
         Convert(layoutBindings[i], desc.bindings[i]);
 
     /* Create descriptor set layout */
@@ -106,8 +107,9 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
 
     /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
     bindings_.reserve(numBindings);
-    for (std::size_t i = 0; i < numBindings; ++i)
+    for_range(i, numBindings)
     {
+        /* Append binding with slot, stage flags, and Vulkan descriptor type */
         bindings_.push_back(
             {
                 desc.bindings[i].slot,
@@ -115,6 +117,9 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
                 layoutBindings[i].descriptorType
             }
         );
+
+        /* Consolidate all binding stage flags */
+        consolidatedStageFlags_ |= desc.bindings[i].stageFlags;
     }
 }
 

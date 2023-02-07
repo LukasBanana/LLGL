@@ -1,6 +1,6 @@
 /*
  * VKContainers.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -29,13 +29,15 @@ struct VKWriteDescriptorContainer
     VkWriteDescriptorSet* NextWriteDescriptor();
 
     std::vector<VkDescriptorBufferInfo> bufferInfos;
-    std::uint32_t                       numBufferInfos      = 0;
+    std::uint32_t                       numBufferInfos          = 0;
 
     std::vector<VkDescriptorImageInfo>  imageInfos;
-    std::uint32_t                       numImageInfos       = 0;
+    std::uint32_t                       numImageInfos           = 0;
 
     std::vector<VkWriteDescriptorSet>   writeDescriptors;
-    std::uint32_t                       numWriteDescriptors = 0;
+    std::uint32_t                       numWriteDescriptors     = 0;
+
+    std::uint32_t                       barrierChangeRanges[2]  = {};
 };
 
 

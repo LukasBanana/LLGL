@@ -15,6 +15,7 @@
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/RenderPassFlags.h>
+#include <LLGL/TextureFlags.h>
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/QueryHeapFlags.h>
@@ -54,6 +55,7 @@ VkIndexType             ToVkIndexType(const Format format);
 VkSampleCountFlagBits   ToVkSampleCountBits(std::uint32_t samples);
 VkOffset3D              ToVkOffset(const Offset3D& offset);
 VkExtent3D              ToVkExtent(const Extent3D& extent);
+VkComponentSwizzle      ToVkComponentSwizzle(const TextureSwizzle swizzle);
 
 Format                  Unmap( const VkFormat format );
 

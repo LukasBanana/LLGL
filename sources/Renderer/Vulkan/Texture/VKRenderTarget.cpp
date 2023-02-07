@@ -274,14 +274,7 @@ void VKRenderTarget::CreateFramebuffer(
             /* Create new image view for MIP-level and array layer specified in attachment descriptor */
             VKPtr<VkImageView> imageView{ device, vkDestroyImageView };
             {
-                textureVK->CreateImageView(
-                    device,
-                    attachment.mipLevel,
-                    1,
-                    attachment.arrayLayer,
-                    1,
-                    imageView.ReleaseAndGetAddressOf()
-                );
+                textureVK->CreateImageView(device, attachment.mipLevel, /*numMips:*/ 1, attachment.arrayLayer, /*numLayers:*/ 1, imageView);
 
                 /* Add image view to attachments */
                 if (attachment.type == AttachmentType::Color)

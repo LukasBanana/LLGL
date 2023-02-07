@@ -1,6 +1,6 @@
 /*
  * VKDeviceImage.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -55,15 +55,12 @@ class VKDeviceImage
         void ReleaseVkImage();
 
         void CreateVkImageView(
-            VkDevice            device,
-            VkImageViewType     viewType,
-            VkFormat            format,
-            VkImageAspectFlags  aspectFlags,
-            std::uint32_t       baseMipLevel,
-            std::uint32_t       numMipLevels,
-            std::uint32_t       baseArrayLayer,
-            std::uint32_t       numArrayLayers,
-            VkImageView*        imageViewRef
+            VkDevice                        device,
+            VkImageViewType                 viewType,
+            VkFormat                        format,
+            const VkImageSubresourceRange&  subresourceRange,
+            VKPtr<VkImageView>&             outImageView,
+            const VkComponentMapping*       components          = nullptr
         );
 
         // Returns the native VkImage handle.

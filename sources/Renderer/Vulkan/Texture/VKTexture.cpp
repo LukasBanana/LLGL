@@ -21,14 +21,14 @@ VKTexture::VKTexture(
     VKDeviceMemoryManager&      deviceMemoryMngr,
     const TextureDescriptor&    desc)
 :
-    Texture       { desc.type, desc.bindFlags  },
-    imageWrapper_ { device                     },
-    imageView_    { device, vkDestroyImageView },
-    format_       { VKTypes::Map(desc.format)  }
+    Texture    { desc.type, desc.bindFlags  },
+    image_     { device                     },
+    imageView_ { device, vkDestroyImageView },
+    format_    { VKTypes::Map(desc.format)  }
 {
     /* Create Vulkan image and allocate memory region */
     CreateImage(device, desc);
-    imageWrapper_.AllocateMemoryRegion(deviceMemoryMngr);
+    image_.AllocateMemoryRegion(deviceMemoryMngr);
 }
 
 Extent3D VKTexture::GetMipExtent(std::uint32_t mipLevel) const
@@ -123,47 +123,70 @@ Format VKTexture::GetFormat() const
 }
 
 void VKTexture::CreateImageView(
-    VkDevice        device,
-    std::uint32_t   baseMipLevel,
-    std::uint32_t   numMipLevels,
-    std::uint32_t   baseArrayLayer,
-    std::uint32_t   numArrayLayers,
-    VkImageView*    imageViewRef)
+    VkDevice            device,
+    std::uint32_t       baseMipLevel,
+    std::uint32_t       numMipLevels,
+    std::uint32_t       baseArrayLayer,
+    std::uint32_t       numArrayLayers,
+    VKPtr<VkImageView>& outImageView)
 {
-    imageWrapper_.CreateVkImageView(
-        device,
-        VKTypes::Map(GetType()),
-        format_,
-        GetAspectFlags(),
-        baseMipLevel,
-        numMipLevels,
-        baseArrayLayer,
-        numArrayLayers,
-        imageViewRef
-    );
+    VkImageSubresourceRange subresourceRange;
+    {
+        subresourceRange.aspectMask     = GetAspectFlags();
+        subresourceRange.baseMipLevel   = baseMipLevel;
+        subresourceRange.levelCount     = numMipLevels;
+        subresourceRange.baseArrayLayer = baseArrayLayer;
+        subresourceRange.layerCount     = numArrayLayers;
+    }
+    image_.CreateVkImageView(device, VKTypes::Map(GetType()), format_, subresourceRange, outImageView);
 }
 
 void VKTexture::CreateImageView(
     VkDevice                        device,
     const TextureViewDescriptor&    textureViewDesc,
-    VkImageView*                    imageViewRef)
+    VKPtr<VkImageView>&             outImageView)
 {
-    imageWrapper_.CreateVkImageView(
-        device,
-        VKTypes::Map(textureViewDesc.type),
-        VKTypes::Map(textureViewDesc.format),
-        GetAspectFlags(),
-        textureViewDesc.subresource.baseMipLevel,
-        textureViewDesc.subresource.numMipLevels,
-        textureViewDesc.subresource.baseArrayLayer,
-        textureViewDesc.subresource.numArrayLayers,
-        imageViewRef
-    );
+    VkImageSubresourceRange subresourceRange;
+    {
+        subresourceRange.aspectMask     = GetAspectFlags();
+        subresourceRange.baseMipLevel   = textureViewDesc.subresource.baseMipLevel,
+        subresourceRange.levelCount     = textureViewDesc.subresource.numMipLevels;
+        subresourceRange.baseArrayLayer = textureViewDesc.subresource.baseArrayLayer;
+        subresourceRange.layerCount     = textureViewDesc.subresource.numArrayLayers;
+    }
+    if (IsTextureSwizzleIdentity(textureViewDesc.swizzle))
+    {
+        image_.CreateVkImageView(
+            device,
+            VKTypes::Map(textureViewDesc.type),
+            VKTypes::Map(textureViewDesc.format),
+            subresourceRange,
+            outImageView
+        );
+    }
+    else
+    {
+        VkComponentMapping components;
+        {
+            components.r = VKTypes::ToVkComponentSwizzle(textureViewDesc.swizzle.r);
+            components.g = VKTypes::ToVkComponentSwizzle(textureViewDesc.swizzle.g);
+            components.b = VKTypes::ToVkComponentSwizzle(textureViewDesc.swizzle.b);
+            components.a = VKTypes::ToVkComponentSwizzle(textureViewDesc.swizzle.a);
+        }
+        image_.CreateVkImageView(
+            device,
+            VKTypes::Map(textureViewDesc.type),
+            VKTypes::Map(textureViewDesc.format),
+            subresourceRange,
+            outImageView,
+            &components
+        );
+    }
 }
 
 void VKTexture::CreateInternalImageView(VkDevice device)
 {
-    CreateImageView(device, 0, GetNumMipLevels(), 0, GetNumArrayLayers(), imageView_.ReleaseAndGetAddressOf());
+    CreateImageView(device, 0, GetNumMipLevels(), 0, GetNumArrayLayers(), imageView_);
 }
 
 static VkImageAspectFlags GetAspectFlagsByFormat(VkFormat format)
@@ -342,7 +365,7 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
     numArrayLayers_ = GetVkImageArrayLayers(desc, imageType);
 
     /* Create image object */
-    imageWrapper_.CreateVkImage(
+    image_.CreateVkImage(
         device,
         imageType,
         format_,

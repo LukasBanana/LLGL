@@ -9,14 +9,17 @@
 #define LLGL_VK_PIPELINE_BARRIER_H
 
 
-#include <vulkan/vulkan.h>
+#include <LLGL/Container/SmallVector.h>
 #include "../VKPtr.h"
-#include <vector>
+#include <vulkan/vulkan.h>
+#include <memory>
 
 
 namespace LLGL
 {
 
+
+class Resource;
 
 // Helper class to manage information for a Vulkan pipeline barrier command.
 class VKPipelineBarrier
@@ -24,24 +27,48 @@ class VKPipelineBarrier
 
     public:
 
-        // Returns true if this barrier is enabled.
-        bool IsEnabled() const;
+        // Returns true if this barrier is active in any stage.
+        bool IsActive() const;
 
         // Submits this pipeline barrier into the specified command buffer.
         void Submit(VkCommandBuffer commandBuffer);
 
-        // Inserts a memory barrier
-        void InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess);
+        // Emplaces the specified resource into the pipeline barrier.
+        bool Emplace(std::uint32_t slot, Resource* resource, VkPipelineStageFlags stageFlags);
+
+        // Removes the binding at the specified slot from the pipeline barrier.
+        bool Remove(std::uint32_t slot);
+
+        // Updates the internal barrier descritpors and return false if the barrier is no longer active.
+        bool Update();
 
     private:
 
-        VkPipelineStageFlags                srcStageMask_   = 0;
-        VkPipelineStageFlags                dstStageMask_   = 0;
-        std::vector<VkMemoryBarrier>        memoryBarrier_;
-        std::vector<VkBufferMemoryBarrier>  bufferBarriers_;
-        std::vector<VkImageMemoryBarrier>   imageBarriers_;
+        struct ResourceBinding
+        {
+            std::uint32_t   slot        = 0;        // Unique binding slot
+            Resource*       resource    = nullptr;
+            long            stageFlags  = 0;
+        };
+
+    private:
+
+        void InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess);
+
+        void InsertBufferMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess, VkBuffer buffer);
+
+    private:
+
+        VkPipelineStageFlags                    srcStageMask_   = 0;
+        VkPipelineStageFlags                    dstStageMask_   = 0;
+        SmallVector<ResourceBinding, 4u>        bindings_;
+        SmallVector<VkMemoryBarrier, 1u>        memoryBarrier_;
+        SmallVector<VkBufferMemoryBarrier, 1u>  bufferBarriers_;
+        SmallVector<VkImageMemoryBarrier, 1u>   imageBarriers_;
 
 };
+
+using VKPipelineBarrierPtr = std::unique_ptr<VKPipelineBarrier>;
 
 
 } // /namespace LLGL

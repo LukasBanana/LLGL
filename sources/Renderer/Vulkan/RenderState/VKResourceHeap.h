@@ -23,6 +23,7 @@ namespace LLGL
 {
 
 
+class Buffer;
 class VKBuffer;
 class VKTexture;
 struct VKWriteDescriptorContainer;
@@ -52,7 +53,7 @@ class VKResourceHeap final : public ResourceHeap
         );
 
         // Inserts a pipeline barrier command into the command buffer if this resource heap requires it.
-        void InsertPipelineBarrier(VkCommandBuffer commandBuffer);
+        void SubmitPipelineBarrier(VkCommandBuffer commandBuffer, std::uint32_t descriptorSet);
 
         // Returns the native Vulkan pipeline layout.
         inline VkPipelineLayout GetVkPipelineLayout() const
@@ -107,14 +108,14 @@ class VKResourceHeap final : public ResourceHeap
             VkDescriptorSetLayout   globalSetLayout
         );
 
-        void FillWriteDescriptorForSampler(
+        void FillWriteDescriptorWithSampler(
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
             const VKDescriptorBinding&      binding,
             VKWriteDescriptorContainer&     container
         );
 
-        void FillWriteDescriptorForTexture(
+        void FillWriteDescriptorWithImageView(
             const VKPtr<VkDevice>&          device,
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
@@ -122,7 +123,7 @@ class VKResourceHeap final : public ResourceHeap
             VKWriteDescriptorContainer&     container
         );
 
-        void FillWriteDescriptorForBuffer(
+        void FillWriteDescriptorWithBufferRange(
             const VKPtr<VkDevice>&          device,
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
@@ -130,9 +131,9 @@ class VKResourceHeap final : public ResourceHeap
             VKWriteDescriptorContainer&     container
         );
 
-        #if 0
-        void CreatePipelineBarrier(const ArrayView<ResourceViewDescriptor>& resourceViews);
-        #endif
+        bool ExchangeBufferBarrier(std::uint32_t descriptorSet, Buffer* resource, const VKDescriptorBinding& binding);
+        bool EmplaceBarrier(std::uint32_t descriptorSet, std::uint32_t slot, Resource* resource, VkPipelineStageFlags stageFlags);
+        bool RemoveBarrier(std::uint32_t descriptorSet, std::uint32_t slot);
 
         // Returns the image view for the specified texture or creates one if the texture-view is enabled.
         VkImageView GetOrCreateImageView(
@@ -155,9 +156,8 @@ class VKResourceHeap final : public ResourceHeap
         std::uint32_t                       numImageViewsPerSet_    = 0;
         std::uint32_t                       numBufferViewsPerSet_   = 0;
 
-        VKPipelineBarrier                   barrier_; //TODO: make it an array, one element for each descriptor set
+        std::vector<VKPipelineBarrierPtr>   barriers_;
         VkPipelineBindPoint                 bindPoint_              = VK_PIPELINE_BIND_POINT_MAX_ENUM;
-
 
 };
 
