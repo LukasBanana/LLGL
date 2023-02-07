@@ -371,41 +371,34 @@ class LLGL_EXPORT SmallVector
 
         void swap(SmallVector& other)
         {
-            if (heap_ != nullptr && other.heap_ != nullptr)
+            if (is_dynamic() && other.is_dynamic())
             {
-                /* Just swap members between both arrays */
-                std::swap(heap_, other.heap_);
+                /* Just swap members between both containers */
                 std::swap(data_, other.data_);
                 std::swap(cap_, other.cap_);
                 std::swap(size_, other.size_);
             }
-            else if (heap_ != nullptr)
+            else if (is_dynamic())
             {
-                /* Copy local buffer of other container into heap of this container */
-                move_range(local_, other.begin(), other.end());
-
-                /* Take ownership of other heap */
-                std::swap(heap_, other.heap_);
+                /* Copy local buffer of other container into local buffer of this container */
+                move_range(local_data(), other.begin(), other.end());
                 std::swap(cap_, other.cap_);
                 std::swap(size_, other.size_);
-                update_data();
-                other.update_data();
+                other.data_ = data_;
+                data_ = local_data();
             }
-            else if (other.heap_ != nullptr)
+            else if (other.is_dynamic())
             {
                 /* Copy local buffer of this container into local buffer of other container */
-                move_range(other.local_, begin(), end());
-
-                /* Take ownership of other heap */
-                std::swap(heap_, other.heap_);
+                move_range(other.local_data(), begin(), end());
                 std::swap(cap_, other.cap_);
                 std::swap(size_, other.size_);
-                update_data();
-                other.update_data();
+                data_ = other.data_;
+                other.data_ = other.local_data();
             }
             else
             {
-                /* Copy local buffr into intermediate buffer */
+                /* Copy local buffer into intermediate buffer */
                 char intermediate[LocalCapacity * sizeof(T)];
                 auto intermediateBegin = reinterpret_cast<pointer>(intermediate);
                 move_range(intermediateBegin, begin(), end());
@@ -499,14 +492,10 @@ class LLGL_EXPORT SmallVector
                 /* Clear this container and adopt new configuration */
                 release_heap();
 
-                heap_   = rhs.heap_;
-                cap_    = rhs.cap_;
-                size_   = rhs.size_;
-
-                if (heap_ != nullptr)
+                if (rhs.is_dynamic())
                 {
-                    /* Take dynamic buffer */
-                    data_ = heap_;
+                    /* Take ownership of dynamic buffer */
+                    data_ = rhs.data_;
                 }
                 else
                 {
@@ -516,8 +505,10 @@ class LLGL_EXPORT SmallVector
                     rhs.destroy_range(rhs.begin(), rhs.end());
                 }
 
+                cap_    = rhs.cap_;
+                size_   = rhs.size_;
+
                 /* Drop old container */
-                rhs.heap_   = nullptr;
                 rhs.data_   = rhs.local_data();
                 rhs.cap_    = LocalCapacity;
                 rhs.size_   = 0;
@@ -574,10 +565,9 @@ class LLGL_EXPORT SmallVector
 
         void release_heap()
         {
-            if (heap_ != nullptr)
+            if (is_dynamic())
             {
-                Allocator{}.deallocate(heap_, cap_);
-                heap_   = nullptr;
+                Allocator{}.deallocate(data_, cap_);
                 data_   = local_data();
                 cap_    = LocalCapacity;
             }
@@ -603,8 +593,7 @@ class LLGL_EXPORT SmallVector
                 move_all(data);
 
                 /* Take new container */
-                heap_   = data;
-                data_   = heap_;
+                data_   = data;
                 cap_    = cap;
             }
             else
@@ -694,8 +683,7 @@ class LLGL_EXPORT SmallVector
             release_heap();
 
             /* Take new container */
-            heap_   = data;
-            data_   = heap_;
+            data_   = data;
             cap_    = cap;
             size_   += count;
 
@@ -707,15 +695,19 @@ class LLGL_EXPORT SmallVector
             return reinterpret_cast<pointer>(local_);
         }
 
-        void update_data()
+        const_pointer local_data() const
         {
-            data_ = (heap_ != nullptr ? heap_ : local_data());
+            return reinterpret_cast<const_pointer>(local_);
+        }
+
+        bool is_dynamic() const
+        {
+            return (data_ != local_data());
         }
 
     private:
 
         char        local_[LocalCapacity * sizeof(T)];
-        pointer     heap_   = nullptr;
         pointer     data_   = nullptr;
         size_type   cap_    = LocalCapacity;
         size_type   size_   = 0;
