@@ -1677,7 +1677,7 @@ void GLStateManager::DetermineLimits()
     /* Get maximum number of texture layers */
     GLint maxTextureImageUnits = 0;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureImageUnits);
-    limits_.maxTextureLayers = std::min(GLContextState::numTextureLayers, static_cast<GLuint>(maxTextureImageUnits));
+    limits_.maxTextureLayers = std::min(static_cast<GLuint>(GLContextState::numTextureLayers), static_cast<GLuint>(maxTextureImageUnits));
 
     /* Get maximum number of image units */
     #ifdef GL_ARB_shader_image_load_store
@@ -1685,7 +1685,7 @@ void GLStateManager::DetermineLimits()
     {
         GLint maxImageUnits = 0;
         glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
-        limits_.maxImageUnits = std::min(GLContextState::numImageUnits, static_cast<GLuint>(maxImageUnits));
+        limits_.maxImageUnits = std::min(static_cast<GLuint>(GLContextState::numImageUnits), static_cast<GLuint>(maxImageUnits));
     }
     #endif // /GL_ARB_shader_image_load_store
 

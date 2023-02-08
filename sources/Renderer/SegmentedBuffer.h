@@ -14,6 +14,7 @@
 #include <string.h>
 #include <vector>
 #include <type_traits>
+#include <limits.h>
 
 
 namespace LLGL

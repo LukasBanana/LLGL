@@ -574,9 +574,9 @@ void GLResourceHeap::AllocSegmentsGL2XSampler(BindingDescriptorIterator& binding
             const auto* textureBinding = Utils::FindInSortedArray<GLResourceBinding>(
                 textureBindingSlots.data(),
                 textureBindingSlots.size(),
-                [slot = samplerBinding.slot](const GLResourceBinding& entry) -> int
+                [&samplerBinding](const GLResourceBinding& entry) -> int
                 {
-                    return (static_cast<int>(slot) - static_cast<int>(entry.slot));
+                    return (static_cast<int>(samplerBinding.slot) - static_cast<int>(entry.slot));
                 }
             );
             if (textureBinding != nullptr)
