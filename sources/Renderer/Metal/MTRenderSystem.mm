@@ -187,14 +187,20 @@ void MTRenderSystem::Release(Sampler& sampler)
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc)
+ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<MTResourceHeap>(resourceHeapDesc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<MTResourceHeap>(resourceHeapDesc, initialResourceViews));
 }
 
 void MTRenderSystem::Release(ResourceHeap& resourceHeap)
 {
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+std::uint32_t MTRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
+{
+    auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
+    return resourceHeapMT.WriteResourceViews(firstDescriptor, resourceViews);
 }
 
 /* ----- Render Passes ----- */

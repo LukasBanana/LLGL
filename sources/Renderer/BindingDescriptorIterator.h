@@ -26,7 +26,7 @@ class LLGL_EXPORT BindingDescriptorIterator
 
     public:
 
-        BindingDescriptorIterator(const ArrayView<BindingDescriptor>& bindings, std::size_t offset = 0, std::size_t count = 0);
+        BindingDescriptorIterator(const ArrayView<BindingDescriptor>& bindings);
 
         // Resets the iteration for the specified binding parameters.
         void Reset(const ResourceType typeOfInterest, long bindFlagsOfInterest = 0, long stagesOfInterest = 0);
@@ -34,18 +34,16 @@ class LLGL_EXPORT BindingDescriptorIterator
         // Returns the next binding descriptor, or null if there are no descriptors with the active filter.
         const BindingDescriptor* Next(std::size_t* outIndex = nullptr);
 
-        // Returns the number of all resource.
+        // Returns the number of bindings this iterator refers to.
         inline std::size_t GetCount() const
         {
-            return count_;
+            return bindings_.size();
         }
 
     private:
 
         ArrayView<BindingDescriptor>    bindings_;
         std::size_t                     iterator_               = 0;
-        std::size_t                     offset_                 = 0;
-        std::size_t                     count_                  = 0;
         ResourceType                    typeOfInterest_         = ResourceType::Undefined;
         long                            bindFlagsOfInterest_    = ~0;
         long                            stagesOfInterest_       = StageFlags::AllStages;

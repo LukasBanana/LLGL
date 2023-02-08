@@ -1,6 +1,6 @@
 /*
  * MTResourceHeap.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,10 +9,14 @@
 #define LLGL_MT_RESOURCE_HEAP_H
 
 
-#include <Metal/Metal.h>
+#import <Metal/Metal.h>
 
 #include <LLGL/ResourceHeap.h>
+#include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/ResourceFlags.h>
+#include <LLGL/Container/ArrayView.h>
+#include <LLGL/Container/SmallVector.h>
+#include "../../SegmentedBuffer.h"
 #include <vector>
 #include <functional>
 
@@ -21,8 +25,9 @@ namespace LLGL
 {
 
 
+enum MTResourceType : std::uint32_t;
 class MTTexture;
-class ResourceBindingIterator;
+class BindingDescriptorIterator;
 struct MTResourceBinding;
 struct ResourceHeapDescriptor;
 struct TextureViewDescriptor;
@@ -40,74 +45,158 @@ class MTResourceHeap final : public ResourceHeap
 
     public:
 
-        MTResourceHeap(const ResourceHeapDescriptor& desc);
+        MTResourceHeap(
+            const ResourceHeapDescriptor&               desc,
+            const ArrayView<ResourceViewDescriptor>&    initialResourceViews = {}
+        );
         ~MTResourceHeap();
 
-        void BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, std::uint32_t firstSet);
-        void BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder, std::uint32_t firstSet);
+        // Writes the specified resource views to this resource heap and generates texture views as required.
+        std::uint32_t WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
+
+        void BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, std::uint32_t descriptorSet);
+        void BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder, std::uint32_t descriptorSet);
 
         bool HasGraphicsResources() const;
         bool HasComputeResources() const;
 
     private:
 
-        using MTResourceBindingIter = std::vector<MTResourceBinding>::const_iterator;
-        using BuildSegmentFunc = std::function<void(MTResourceBindingIter begin, NSUInteger count)>;
+        struct MTResourceBinding;
 
-        void BuildBufferSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments);
-        void BuildTextureSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments);
-        void BuildSamplerSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments);
+        using SegmentationSizeType  = std::uint8_t;
+        using AllocSegmentFunc      = std::function<void(const MTResourceBinding* first, NSUInteger count)>;
 
-        void BuildAllSegments(
-            const std::vector<MTResourceBinding>&   resourceBindings,
-            const BuildSegmentFunc&                 buildSegmentFunc,
-            std::uint8_t&                           numSegments
-        );
+        enum MTShaderStage : std::uint32_t
+        {
+            MTShaderStage_Vertex = 0,
+            MTShaderStage_Fragment,
+            MTShaderStage_Kernel,
 
-        void BuildSegment1(MTResourceBindingIter it, NSUInteger count);
-        void BuildSegment2(MTResourceBindingIter it, NSUInteger count);
-
-        void BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer);
-        void BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer);
-        void BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer);
-
-        void StoreResourceUsage();
-
-        id<MTLTexture> GetOrCreateTexture(MTTexture& textureMT, const TextureViewDescriptor& textureViewDesc);
-
-        const std::int8_t* GetSegmentationHeapStart(std::uint32_t firstSet) const;
-
-    private:
+            MTShaderStage_Count,
+        };
 
         // Header structure to describe all segments within the raw buffer.
         struct BufferSegmentation
         {
-            std::uint8_t hasVertexResources         : 1;
-            std::uint8_t hasFragmentResources       : 1;
-            std::uint8_t hasKernelResources         : 1;
+            SegmentationSizeType hasVertexResources         : 1;
+            SegmentationSizeType hasFragmentResources       : 1;
+            SegmentationSizeType hasKernelResources         : 1;
 
-            std::uint8_t numVertexBufferSegments;
-            std::uint8_t numVertexTextureSegments;
-            std::uint8_t numVertexSamplerSegments;
+            SegmentationSizeType numVertexBufferSegments;
+            SegmentationSizeType numVertexTextureSegments;
+            SegmentationSizeType numVertexSamplerSegments;
 
-            std::uint8_t numFragmentBufferSegments;
-            std::uint8_t numFragmentTextureSegments;
-            std::uint8_t numFragmentSamplerSegments;
+            SegmentationSizeType numFragmentBufferSegments;
+            SegmentationSizeType numFragmentTextureSegments;
+            SegmentationSizeType numFragmentSamplerSegments;
 
-            std::uint8_t numKernelBufferSegments;
-            std::uint8_t numKernelTextureSegments;
-            std::uint8_t numKernelSamplerSegments;
+            SegmentationSizeType numKernelBufferSegments;
+            SegmentationSizeType numKernelTextureSegments;
+            SegmentationSizeType numKernelSamplerSegments;
+        };
+
+        // Binding-to-descriptor map location.
+        struct BindingSegmentLocation
+        {
+            static constexpr std::uint32_t invalidOffset = 0x0000FFFF;
+
+            struct Stage
+            {
+                inline Stage() :
+                    segmentOffset    { BindingSegmentLocation::invalidOffset },
+                    descriptorIndex  { 0                                     },
+                    textureViewIndex { 0                                     }
+                {
+                }
+
+                std::uint32_t segmentOffset     : 16; // Byte offset to the first segment within a segment set.
+                std::uint32_t descriptorIndex   :  8; // Index of the descriptor the binding maps to.
+                std::uint32_t textureViewIndex  :  8; // Index of the texture view if the segment type equals MTResourceType_Texture.
+            }
+            stages[MTShaderStage_Count];
+        };
+
+        // Metal resource binding slot with index to the input binding list
+        struct MTResourceBinding
+        {
+            NSUInteger  slot;
+            long        stages; // bitwise OR combination of StageFlags entries
+            std::size_t index;  // Index to the input bindings list
         };
 
     private:
 
-        BufferSegmentation          segmentation_;
+        SegmentationSizeType AllocBufferSegments(BindingDescriptorIterator& bindingIter, long stage);
+        SegmentationSizeType AllocTextureSegments(BindingDescriptorIterator& bindingIter, long stage);
+        SegmentationSizeType AllocSamplerStateSegments(BindingDescriptorIterator& bindingIter, long stage);
 
-        std::size_t                 stride_             = 0;    // Buffer stride (in bytes) per descriptor set
-        std::uint16_t               bufferOffsetKernel_ = 0;
-        std::vector<std::int8_t>    buffer_;                    // Raw buffer with resource binding information
+        void Alloc1PartSegment(
+            MTShaderStage               stage,
+            MTResourceType              type,
+            const MTResourceBinding*    first,
+            NSUInteger                  count,
+            std::size_t                 payload0Stride
+        );
 
-        std::vector<id<MTLTexture>> textureViews_;
+        void Alloc2PartSegment(
+            MTShaderStage               stage,
+            MTResourceType              type,
+            const MTResourceBinding*    first,
+            NSUInteger                  count,
+            std::size_t                 payload0Stride,
+            std::size_t                 payload1Stride
+        );
+
+        void WriteBindingMappings(MTShaderStage stage, MTResourceType type, const MTResourceBinding* first, NSUInteger count);
+        void CacheResourceUsage();
+
+        const char* BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder, const char* heapPtr);
+        const char* BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, const char* heapPtr);
+        const char* BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, const char* heapPtr);
+
+        void WriteResourceViewBuffer(const ResourceViewDescriptor& desc, char* heapPtr, const BindingSegmentLocation::Stage& binding);
+        void WriteResourceViewTexture(const ResourceViewDescriptor& desc, char* heapPtr, const BindingSegmentLocation::Stage& binding, std::uint32_t descriptorSet);
+        void WriteResourceViewSamplerState(const ResourceViewDescriptor& desc, char* heapPtr, const BindingSegmentLocation::Stage& binding);
+
+        void ExchangeTextureView(
+            std::uint32_t                           descriptorSet,
+            const BindingSegmentLocation::Stage&    binding,
+            id<MTLTexture>                          textureView
+        );
+
+        id<MTLTexture> GetOrCreateTexture(
+            std::uint32_t                           descriptorSet,
+            const BindingSegmentLocation::Stage&    binding,
+            MTTexture&                              textureMT,
+            const TextureViewDescriptor&            textureViewDesc
+        );
+
+    private:
+
+        static std::vector<MTResourceBinding> FilterAndSortMTBindingSlots(
+            BindingDescriptorIterator&  bindingIter,
+            ResourceType                resourceType,
+            long                        affectedStage
+        );
+
+        static SegmentationSizeType ConsolidateSegments(
+            const ArrayView<MTResourceBinding>& bindingSlots,
+            const AllocSegmentFunc&             allocSegmentFunc
+        );
+
+        static MTShaderStage StageFlagsToMTShaderStage(long stage);
+
+    private:
+
+        SmallVector<BindingSegmentLocation> bindingMap_;                    // Maps a binding index to a descriptor location.
+        BufferSegmentation                  segmentation_;
+
+        SegmentedBuffer                     heap_;                          // Buffer with resource binding information and stride (in bytes) per descriptor set
+        std::uint32_t                       heapOffsetKernel_       = 0;    // Heap offset for kernel resources.
+
+        std::vector<id<MTLTexture>>         textureViews_;
+        std::uint32_t                       numTextureViewsPerSet_  = 0;
 
 };
 

@@ -21,10 +21,8 @@ namespace LLGL
  * BindingDescriptorIterator class
  */
 
-BindingDescriptorIterator::BindingDescriptorIterator(const ArrayView<BindingDescriptor>& bindings, std::size_t offset, std::size_t count) :
-    bindings_ { bindings },
-    offset_   { offset   },
-    count_    { std::max(count, bindings.size()) }
+BindingDescriptorIterator::BindingDescriptorIterator(const ArrayView<BindingDescriptor>& bindings) :
+    bindings_ { bindings }
 {
 }
 
@@ -38,7 +36,7 @@ void BindingDescriptorIterator::Reset(const ResourceType typeOfInterest, long bi
 
 const BindingDescriptor* BindingDescriptorIterator::Next(std::size_t* outIndex)
 {
-    while (iterator_ < count_)
+    while (iterator_ < bindings_.size())
     {
         /* Search for resource type of interest */
         auto index = iterator_++;

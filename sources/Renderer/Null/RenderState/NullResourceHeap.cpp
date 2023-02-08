@@ -8,6 +8,7 @@
 #include "NullResourceHeap.h"
 #include "NullPipelineLayout.h"
 #include "../../CheckedCast.h"
+#include "../../ResourceUtils.h"
 #include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 
@@ -22,20 +23,15 @@ static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipeline
     return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutNull->desc.bindings.size()));
 }
 
-static std::uint32_t GetNumResourceViews(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
-{
-    if (desc.numResourceViews > 0)
-        return desc.numResourceViews;
-    else
-        return static_cast<std::uint32_t>(initialResourceViews.size());
-}
-
 NullResourceHeap::NullResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews) :
     numBindings_   { GetNumPipelineLayoutBindings(desc.pipelineLayout)        },
     resourceViews_ { initialResourceViews.begin(), initialResourceViews.end() }
 {
-    if (desc.numResourceViews > 0)
-        resourceViews_.resize(desc.numResourceViews);
+    const auto numResourceViews = GetNumResourceViewsOrThrow(numBindings_, desc, initialResourceViews);
+    if (numResourceViews > 0)
+        resourceViews_.resize(numResourceViews);
+    if (!initialResourceViews.empty())
+        WriteResourceViews(0, initialResourceViews);
 }
 
 std::uint32_t NullResourceHeap::WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)

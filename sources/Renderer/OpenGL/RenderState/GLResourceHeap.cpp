@@ -131,20 +131,6 @@ static GLbitfield ToMemoryBarrierBitfield(long barrierFlags)
     return barriers;
 }
 
-// Returns the resource of the specified descriptor as <GLTexture> if it describes a texture-view.
-static GLTexture* GetAsTextureView(const ResourceViewDescriptor& rvDesc)
-{
-    if (IsTextureViewEnabled(rvDesc.textureView))
-    {
-        if (auto* resource = rvDesc.resource)
-        {
-            if (resource->GetResourceType() == ResourceType::Texture)
-                return LLGL_CAST(GLTexture*, resource);
-        }
-    }
-    return nullptr;
-}
-
 
 /*
  * GLResourceHeap class
@@ -248,7 +234,9 @@ std::uint32_t GLResourceHeap::WriteResourceViews(std::uint32_t firstDescriptor, 
                 WriteResourceViewSampler(desc, heapPtr, binding.descriptorIndex);
                 break;
             case GLResourceType_GL2XSampler:
+                #ifdef LLGL_GL_ENABLE_OPENGL2X
                 WriteResourceViewGL2XSampler(desc, heapPtr, binding.descriptorIndex);
+                #endif
                 break;
         }
 

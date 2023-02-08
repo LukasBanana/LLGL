@@ -88,13 +88,6 @@ struct D3DResourceHeapSegment
 
 LLGL_ASSERT_POD_TYPE(D3DResourceHeapSegment);
 
-struct D3DResourceBinding
-{
-    UINT        slot;
-    long        stages; // bitwise OR combination of StageFlags entries
-    std::size_t index;  // Index to the input bindings list
-};
-
 // Size (in bytes) of each constant register in a constant buffer
 static constexpr UINT g_cbufferRegisterSize = 16;
 
@@ -325,7 +318,7 @@ void D3D11ResourceHeap::BindForComputePipeline1(ID3D11DeviceContext1* context1, 
         __VA_ARGS__                                             \
     )
 
-std::vector<D3DResourceBinding> D3D11ResourceHeap::FilterAndSortD3DBindingSlots(
+std::vector<D3D11ResourceHeap::D3DResourceBinding> D3D11ResourceHeap::FilterAndSortD3DBindingSlots(
     BindingDescriptorIterator&                  bindingIter,
     const std::initializer_list<ResourceType>&  resourceTypes,
     long                                        resourceBindFlags,
@@ -386,7 +379,8 @@ void D3D11ResourceHeap::AllocConstantBufferSegments(BindingDescriptorIterator& b
         cbvBindingSlots,
         BIND_SEGMENT_ALLOCATOR(
             D3D11ResourceHeap::Alloc3PartSegment, stage, D3DResourceType_CBV,
-            sizeof(ID3D11Buffer*), sizeof(UINT), sizeof(UINT), 0
+            sizeof(ID3D11Buffer*), sizeof(UINT), sizeof(UINT),
+            /*payload2Initial:*/ 0
         )
     );
 
@@ -418,7 +412,8 @@ void D3D11ResourceHeap::AllocShaderResourceViewSegments(BindingDescriptorIterato
         srvBindingSlots,
         BIND_SEGMENT_ALLOCATOR(
             D3D11ResourceHeap::Alloc2PartSegment, stage, D3DResourceType_SRV,
-            sizeof(ID3D11ShaderResourceView*), sizeof(std::uint16_t), initialSubresourceIndices
+            sizeof(ID3D11ShaderResourceView*), sizeof(std::uint16_t),
+            /*payload1Initial:*/ initialSubresourceIndices
         )
     );
 
@@ -450,7 +445,8 @@ void D3D11ResourceHeap::AllocUnorderedAccessViewSegments(BindingDescriptorIterat
         uavBindingSlots,
         BIND_SEGMENT_ALLOCATOR(
             D3D11ResourceHeap::Alloc3PartSegment, stage, D3DResourceType_UAV,
-            sizeof(ID3D11UnorderedAccessView*), sizeof(UINT), sizeof(std::uint16_t), initialSubresourceIndices
+            sizeof(ID3D11UnorderedAccessView*), sizeof(UINT), sizeof(std::uint16_t),
+            /*payload2Initial:*/ initialSubresourceIndices
         )
     );
 
@@ -492,21 +488,6 @@ void D3D11ResourceHeap::AllocSamplerSegments(BindingDescriptorIterator& bindingI
         case StageFlags::FragmentStage:         segmentation_.numSamplerSegmentsPS = numSegments; break;
         case StageFlags::ComputeStage:          segmentation_.numSamplerSegmentsCS = numSegments; break;
     }
-}
-
-std::uint8_t D3D11ResourceHeap::ConsolidateSegments(
-    const ArrayView<D3DResourceBinding>&    bindingSlots,
-    const AllocSegmentFunc&                 allocSegmentFunc)
-{
-    return ConsolidateConsecutiveSequences<std::uint8_t>(
-        bindingSlots.begin(),
-        bindingSlots.end(),
-        allocSegmentFunc,
-        [](const D3DResourceBinding& entry) -> UINT
-        {
-            return entry.slot;
-        }
-    );
 }
 
 void D3D11ResourceHeap::Alloc1PartSegment(
@@ -1059,6 +1040,35 @@ ID3D11UnorderedAccessView* D3D11ResourceHeap::GetOrCreateBufferUAV(D3D11BufferWi
     }
 }
 
+std::uint32_t D3D11ResourceHeap::ConsolidateSegments(
+    const ArrayView<D3DResourceBinding>&    bindingSlots,
+    const AllocSegmentFunc&                 allocSegmentFunc)
+{
+    return ConsolidateConsecutiveSequences<std::uint32_t>(
+        bindingSlots.begin(),
+        bindingSlots.end(),
+        allocSegmentFunc,
+        [](const D3DResourceBinding& entry) -> UINT
+        {
+            return entry.slot;
+        }
+    );
+}
+
+D3D11ResourceHeap::D3DShaderStage D3D11ResourceHeap::StageFlagsToD3DShaderStage(long stage)
+{
+    switch (stage)
+    {
+        case StageFlags::VertexStage:           return D3DShaderStage_VS;
+        case StageFlags::TessControlStage:      return D3DShaderStage_DS;
+        case StageFlags::TessEvaluationStage:   return D3DShaderStage_HS;
+        case StageFlags::GeometryStage:         return D3DShaderStage_GS;
+        case StageFlags::FragmentStage:         return D3DShaderStage_PS;
+        case StageFlags::ComputeStage:          return D3DShaderStage_CS;
+        default:                                return D3DShaderStage_Count;
+    }
+}
+
 template <typename T>
 void D3D11ResourceHeap::GarbageCollectSubresource(DXManagedComPtrArray<T>& subresources, SubresourceIndexContext& subresourceContext)
 {
@@ -1075,20 +1085,6 @@ void D3D11ResourceHeap::GarbageCollectSubresource(DXManagedComPtrArray<T>& subre
             /* Release old subresource by setting ComPtr to null */
             subresources.Remove(subresourceContext.oldIndex);
         }
-    }
-}
-
-D3D11ResourceHeap::D3DShaderStage D3D11ResourceHeap::StageFlagsToD3DShaderStage(long stage)
-{
-    switch (stage)
-    {
-        case StageFlags::VertexStage:           return D3DShaderStage_VS;
-        case StageFlags::TessControlStage:      return D3DShaderStage_DS;
-        case StageFlags::TessEvaluationStage:   return D3DShaderStage_HS;
-        case StageFlags::GeometryStage:         return D3DShaderStage_GS;
-        case StageFlags::FragmentStage:         return D3DShaderStage_PS;
-        case StageFlags::ComputeStage:          return D3DShaderStage_CS;
-        default:                                return D3DShaderStage_Count;
     }
 }
 

@@ -13,6 +13,7 @@
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/ResourceFlags.h>
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/Container/SmallVector.h>
 #include "../../SegmentedBuffer.h"
 #include "../OpenGL.h"
 #include <functional>

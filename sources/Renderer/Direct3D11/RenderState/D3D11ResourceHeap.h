@@ -32,7 +32,6 @@ class BindingDescriptorIterator;
 struct ResourceHeapDescriptor;
 struct TextureViewDescriptor;
 struct BufferViewDescriptor;
-struct D3DResourceBinding;
 
 /*
 This class emulates the behavior of a descriptor heap like in D3D12,
@@ -67,6 +66,8 @@ class D3D11ResourceHeap final : public ResourceHeap
 
     private:
 
+        struct D3DResourceBinding;
+
         using AllocSegmentFunc = std::function<void(const D3DResourceBinding* first, UINT count)>;
 
         enum D3DShaderStage : std::uint32_t
@@ -77,6 +78,7 @@ class D3D11ResourceHeap final : public ResourceHeap
             D3DShaderStage_GS,
             D3DShaderStage_PS,
             D3DShaderStage_CS,
+
             D3DShaderStage_Count,
         };
 
@@ -129,13 +131,13 @@ class D3D11ResourceHeap final : public ResourceHeap
             struct Stage
             {
                 inline Stage() :
-                    descriptorIndex { 0             },
-                    segmentOffset   { invalidOffset }
+                    segmentOffset   { BindingSegmentLocation::invalidOffset },
+                    descriptorIndex { 0                                     }
                 {
                 }
 
-                std::uint32_t descriptorIndex   :  8;    // Index of the descriptor the binding maps to.
-                std::uint32_t segmentOffset     : 24;  // Byte offset to the first segment within a segment set for the respective shader stage.
+                std::uint32_t segmentOffset     : 24; // Byte offset to the first segment within a segment set for the respective shader stage.
+                std::uint32_t descriptorIndex   :  8; // Index of the descriptor the binding maps to.
             }
             stages[D3DShaderStage_Count];
             D3DResourceType type;
@@ -148,6 +150,14 @@ class D3D11ResourceHeap final : public ResourceHeap
 
             std::size_t oldIndex = -1; // Index to subresource in SRV or UAV list.
             std::size_t newIndex = -1; // New index to override previous subresource in heap.
+        };
+
+        // D3D resource binding slot with index to the input binding list
+        struct D3DResourceBinding
+        {
+            UINT        slot;
+            long        stages; // bitwise OR combination of StageFlags entries
+            std::size_t index;  // Index to the input bindings list
         };
 
     private:
@@ -232,7 +242,7 @@ class D3D11ResourceHeap final : public ResourceHeap
             long                                        affectedStage
         );
 
-        static std::uint8_t ConsolidateSegments(
+        static std::uint32_t ConsolidateSegments(
             const ArrayView<D3DResourceBinding>&    bindingSlots,
             const AllocSegmentFunc&                 allocSegmentFunc
         );
@@ -246,6 +256,7 @@ class D3D11ResourceHeap final : public ResourceHeap
 
         SmallVector<BindingSegmentLocation>             bindingMap_;            // Maps a binding index to a descriptor location.
         BufferSegmentation                              segmentation_;
+
         SegmentedBuffer                                 heap_;
         std::uint32_t                                   heapOffsetCS_   = 0;
 

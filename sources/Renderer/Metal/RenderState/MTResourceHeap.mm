@@ -1,6 +1,6 @@
 /*
  * MTResourceHeap.mm
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -13,9 +13,12 @@
 #include "../Texture/MTTexture.h"
 #include "../../TextureUtils.h"
 #include "../../CheckedCast.h"
-#include "../../ResourceBindingIterator.h"
+#include "../../BindingDescriptorIterator.h"
+#include "../../ResourceUtils.h"
 #include "../../../Core/Helper.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/ResourceHeapFlags.h>
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -31,51 +34,59 @@ namespace LLGL
 The internal buffer of MTResourceHeap is tightly packed which stores all segments of binding points consecutively.
 Here is an illustration of the buffer layout for one Texture resouce (at binding point 4) and two Sampler resources (at binding points 5 and 6) on a 64-bit build:
 
-Offset      Attribute                                   Value   Description                                         Segment
---------------------------------------------------------------------------------------------------------------------------------------------
-0x00000000  MTResourceViewHeapSegment1::segmentSize        20   Size of this segment                                \
-0x00000008  MTResourceViewHeapSegment1::range::location     4   First binding point                                  |-- Texture segment
-0x0000000C  MTResourceViewHeapSegment1::range::length       1   Number of binding points                             |
-0x00000010  texture[0]                                      1   1st Metal texture ID (of type id<MTLTexture>)        /
-0x00000018  MTResourceViewHeapSegment1::segmentSize         20   Size of this segment                                \
-0x00000020  MTResourceViewHeapSegment1::range::location     5   First binding point                                  |
-0x00000024  MTResourceViewHeapSegment1::range::length       2   Number of binding points                             |-- Sampler segment
-0x00000028  sampler[0]                                      1   1st Metal sampler ID (of type id<MTLSamplerState>)   |
-0x00000030  sampler[1]                                      2   2nd Metal sampler ID (of type id<MTLSamplerState>)  /
+Offset      Attribute                               Value   Description                                         Segment
+----------------------------------------------------------------------------------------------------------------------------------------
+0x00000000  MTResourceHeapSegment::size                20   Size of this segment                                \
+0x00000004  MTResourceHeapSegment::range::location      4   First binding point                                  |
+0x00000008  MTResourceHeapSegment::range::length        1   Number of binding points                             |-- Texture segment
+0x0000000C  MTResourceHeapSegment::data1Offset          0   <unused>                                             |
+0x00000010  texture[0]                                  1   1st Metal texture ID (of type id<MTLTexture>)        /
+0x00000018  MTResourceHeapSegment::size                20   Size of this segment                                \
+0x0000001C  MTResourceHeapSegment::range::location      5   First binding point                                  |
+0x00000020  MTResourceHeapSegment::range::length        2   Number of binding points                             |-- Sampler segment
+0x00000024  sampler[0]                                  1   1st Metal sampler ID (of type id<MTLSamplerState>)   |
+0x0000002C  sampler[1]                                  2   2nd Metal sampler ID (of type id<MTLSamplerState>)  /
 
 */
 
-// Resource view heap (RVH) segment structure with one dynamic sub-buffer for id<MTLBuffer>, id<MTLTexture>, or id<MTLSamplerState>
-struct MTResourceViewHeapSegment1
+// Internal enumeration for Metal resource heap segments.
+enum MTResourceType : std::uint32_t
 {
-    std::size_t segmentSize;
-    NSRange     range;
+    MTResourceType_Buffer = 0,
+    MTResourceType_Texture,
+    MTResourceType_SamplerState,
 };
 
-/*
-Resource view heap (RVH) segment structure with two dynamic sub-buffers,
-one for <NSUInteger> and one for <id<MTLBuffer>>
-*/
-struct MTResourceViewHeapSegment2
+// Resource view heap (RVH) segment structure with up to two dynamic sub-buffer (id<MTLBuffer>, id<MTLTexture>, or id<MTLSamplerState>).
+struct MTResourceHeapSegment
 {
-    std::size_t segmentSize;
-    std::size_t offsetEnd0;
-    NSRange     range;
+    std::uint32_t   size        : 30;
+    MTResourceType  type        :  2;
+    NSRange         range;
+    std::uint32_t   data1Offset;
 };
 
-struct MTResourceBinding
-{
-    NSUInteger  slot;
-    id          object;
-    NSUInteger  offset;
-};
+#define MTRESOURCEHEAP_SEGMENT(PTR)                     reinterpret_cast<MTResourceHeapSegment*>(PTR)
+#define MTRESOURCEHEAP_CONST_SEGMENT(PTR)               reinterpret_cast<const MTResourceHeapSegment*>(PTR)
+#define MTRESOURCEHEAP_DATA0(PTR, TYPE)                 reinterpret_cast<TYPE*>((PTR) + sizeof(MTResourceHeapSegment))
+#define MTRESOURCEHEAP_DATA0_MTLBUFFER_CONST(PTR)       MTRESOURCEHEAP_DATA0(PTR, const id<MTLBuffer>)
+#define MTRESOURCEHEAP_DATA0_MTLTEXTURE_CONST(PTR)      MTRESOURCEHEAP_DATA0(PTR, const id<MTLTexture>)
+#define MTRESOURCEHEAP_DATA0_MTLSAMPLERSTATE_CONST(PTR) MTRESOURCEHEAP_DATA0(PTR, const id<MTLSamplerState>)
+#define MTRESOURCEHEAP_DATA0_MTLBUFFER(PTR)             MTRESOURCEHEAP_DATA0(PTR, id<MTLBuffer>)
+#define MTRESOURCEHEAP_DATA0_MTLTEXTURE(PTR)            MTRESOURCEHEAP_DATA0(PTR, id<MTLTexture>)
+#define MTRESOURCEHEAP_DATA0_MTLSAMPLERSTATE(PTR)       MTRESOURCEHEAP_DATA0(PTR, id<MTLSamplerState>)
+#define MTRESOURCEHEAP_DATA1(PTR, TYPE)                 reinterpret_cast<TYPE*>((PTR) + MTRESOURCEHEAP_CONST_SEGMENT(PTR)->data1Offset)
+#define MTRESOURCEHEAP_DATA1_OFFSETS_CONST(PTR)         MTRESOURCEHEAP_DATA1(PTR, const NSUInteger)
+#define MTRESOURCEHEAP_DATA1_OFFSETS(PTR)               MTRESOURCEHEAP_DATA1(PTR, NSUInteger)
 
 
 /*
  * MTResourceHeap class
  */
 
-MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
+MTResourceHeap::MTResourceHeap(
+    const ResourceHeapDescriptor&               desc,
+    const ArrayView<ResourceViewDescriptor>&    initialResourceViews)
 {
     /* Get pipeline layout object */
     auto pipelineLayoutMT = LLGL_CAST(MTPipelineLayout*, desc.pipelineLayout);
@@ -84,80 +95,146 @@ MTResourceHeap::MTResourceHeap(const ResourceHeapDescriptor& desc)
 
     /* Validate binding descriptors */
     const auto& bindings            = pipelineLayoutMT->GetBindings();
-    const auto  numBindings         = bindings.size();
-    const auto  numResourceViews    = desc.resourceViews.size();
+    const auto  numBindings         = static_cast<std::uint32_t>(bindings.size());
+    const auto  numResourceViews    = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
 
-    if (numBindings == 0)
-        throw std::invalid_argument("cannot create resource heap without bindings in pipeline layout");
-    if (numResourceViews % numBindings != 0)
-        throw std::invalid_argument("failed to create resource heap because due to mismatch between number of resources and bindings");
+    /* Allocate array to map binding index to descriptor index */
+    bindingMap_.resize(numBindings);
 
     /* Build buffer segments */
-    static const long vertexStages = (StageFlags::VertexStage | StageFlags::TessEvaluationStage);
-    static const long fragmentStages = (StageFlags::FragmentStage);
-    static const long kernelStages = (StageFlags::ComputeStage | StageFlags::TessControlStage);
+    constexpr long vertexStages     = (StageFlags::VertexStage | StageFlags::TessEvaluationStage);
+    constexpr long fragmentStages   = (StageFlags::FragmentStage);
+    constexpr long kernelStages     = (StageFlags::ComputeStage | StageFlags::TessControlStage);
 
-    for (std::size_t i = 0; i < numResourceViews; i += numBindings)
-    {
-        ResourceBindingIterator resourceIterator { desc.resourceViews, bindings, i };
-        InitMemory(segmentation_);
+    BindingDescriptorIterator bindingIter{ bindings };
+    InitMemory(segmentation_);
 
-        /* Build vertex resource segments */
-        BuildBufferSegments(resourceIterator, vertexStages, segmentation_.numVertexBufferSegments);
-        BuildTextureSegments(resourceIterator, vertexStages, segmentation_.numVertexTextureSegments);
-        BuildSamplerSegments(resourceIterator, vertexStages, segmentation_.numVertexSamplerSegments);
+    /* Build vertex resource segments */
+    segmentation_.numVertexBufferSegments       = AllocBufferSegments(bindingIter, vertexStages);
+    segmentation_.numVertexTextureSegments      = AllocTextureSegments(bindingIter, vertexStages);
+    segmentation_.numVertexSamplerSegments      = AllocSamplerStateSegments(bindingIter, vertexStages);
 
-        /* Build fragment resource segments */
-        BuildBufferSegments(resourceIterator, fragmentStages, segmentation_.numFragmentBufferSegments);
-        BuildTextureSegments(resourceIterator, fragmentStages, segmentation_.numFragmentTextureSegments);
-        BuildSamplerSegments(resourceIterator, fragmentStages, segmentation_.numFragmentSamplerSegments);
+    /* Build fragment resource segments */
+    segmentation_.numFragmentBufferSegments     = AllocBufferSegments(bindingIter, fragmentStages);
+    segmentation_.numFragmentTextureSegments    = AllocTextureSegments(bindingIter, fragmentStages);
+    segmentation_.numFragmentSamplerSegments    = AllocSamplerStateSegments(bindingIter, fragmentStages);
 
-        /* Build kernel resource segments (and store buffer offset to kernel segments) */
-        if (i == 0)
-        {
-            if (buffer_.size() > UINT16_MAX)
-                throw std::out_of_range("internal buffer for resource heap exceeded limit of 2^16 (65536) bytes");
-            bufferOffsetKernel_ = static_cast<std::uint16_t>(buffer_.size());
-        }
+    /* Build kernel resource segments (and store buffer offset to kernel segments) */
+    heapOffsetKernel_ = static_cast<std::uint32_t>(heap_.Size());
 
-        BuildBufferSegments(resourceIterator, kernelStages, segmentation_.numKernelBufferSegments);
-        BuildTextureSegments(resourceIterator, kernelStages, segmentation_.numKernelTextureSegments);
-        BuildSamplerSegments(resourceIterator, kernelStages, segmentation_.numKernelSamplerSegments);
-    }
-
-    /* Store buffer stride */
-    stride_ = buffer_.size() / (numResourceViews / numBindings);
+    segmentation_.numKernelBufferSegments       = AllocBufferSegments(bindingIter, kernelStages);
+    segmentation_.numKernelTextureSegments      = AllocTextureSegments(bindingIter, kernelStages);
+    segmentation_.numKernelSamplerSegments      = AllocSamplerStateSegments(bindingIter, kernelStages);
 
     /* Store resource usage bits in segmentation header */
-    StoreResourceUsage();
+    CacheResourceUsage();
+
+    /* Finalize segments in buffer */
+    const auto numSegmentSets = (numResourceViews / numBindings);
+    heap_.FinalizeSegments(numSegmentSets);
+
+    /* Allocate texture view array */
+    textureViews_.resize(numTextureViewsPerSet_ * numSegmentSets);
+
+    /* Write initial resource views */
+    if (!initialResourceViews.empty())
+        WriteResourceViews(0, initialResourceViews);
 }
 
 MTResourceHeap::~MTResourceHeap()
 {
     for (auto& tex : textureViews_)
-        [tex release];
+    {
+        if (tex != nil)
+            [tex release];
+    }
 }
 
 std::uint32_t MTResourceHeap::GetNumDescriptorSets() const
 {
-    return (stride_ > 0 ? buffer_.size() / stride_ : 0);
+    return static_cast<std::uint32_t>(heap_.NumSets());
 }
 
-void MTResourceHeap::BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, std::uint32_t firstSet)
+std::uint32_t MTResourceHeap::WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
 {
-    auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet);
-    if (segmentation_.hasVertexResources)
-        BindVertexResources(renderEncoder, byteAlignedBuffer);
-    if (segmentation_.hasFragmentResources)
-        BindFragmentResources(renderEncoder, byteAlignedBuffer);
+    /* Quit if there's nothing to do */
+    if (resourceViews.empty())
+        return 0;
+
+    const auto numSets          = GetNumDescriptorSets();
+    const auto numBindings      = static_cast<std::uint32_t>(bindingMap_.size());
+    const auto numDescriptors   = numSets * numBindings;
+
+    /* Silently quit on out of bounds; debug layer must report these errors */
+    if (firstDescriptor >= numDescriptors)
+        return 0;
+    if (firstDescriptor + resourceViews.size() > numDescriptors)
+        return 0;
+
+    /* Write each resource view into respective segment */
+    std::uint32_t numWritten = 0;
+
+    for (const auto& desc : resourceViews)
+    {
+        /* Skip over empty resource descriptors */
+        if (desc.resource == nullptr)
+            continue;
+
+        /* Get binding information and heap start for descriptor set */
+        const auto& binding = bindingMap_[firstDescriptor % numBindings];
+
+        auto descriptorSet  = firstDescriptor / numBindings;
+        auto heapStartPtr   = heap_.SegmentData(descriptorSet);
+
+        /* Write descriptor into respective heap segment for each affected shader stage */
+        for_range(stage, static_cast<int>(MTShaderStage_Count))
+        {
+            auto offset     = binding.stages[stage].segmentOffset;
+            if (offset == BindingSegmentLocation::invalidOffset)
+                continue;
+
+            auto heapPtr    = heapStartPtr + offset;
+            auto segment    = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+
+            switch (segment->type)
+            {
+                case MTResourceType_Buffer:
+                    WriteResourceViewBuffer(desc, heapPtr, binding.stages[stage]);
+                    break;
+                case MTResourceType_Texture:
+                    WriteResourceViewTexture(desc, heapPtr, binding.stages[stage], descriptorSet);
+                    break;
+                case MTResourceType_SamplerState:
+                    WriteResourceViewSamplerState(desc, heapPtr, binding.stages[stage]);
+                    break;
+            }
+        }
+
+        ++numWritten;
+        ++firstDescriptor;
+    }
+
+    return numWritten;
 }
 
-void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder, std::uint32_t firstSet)
+void MTResourceHeap::BindGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, std::uint32_t descriptorSet)
+{
+    if (descriptorSet >= heap_.NumSets())
+        return;
+
+    const char* heapPtr = heap_.SegmentData(descriptorSet);
+    if (segmentation_.hasVertexResources)
+        heapPtr = BindVertexResources(renderEncoder, heapPtr);
+    if (segmentation_.hasFragmentResources)
+        BindFragmentResources(renderEncoder, heapPtr);
+}
+
+void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder, std::uint32_t descriptorSet)
 {
     if (segmentation_.hasKernelResources)
     {
-        auto byteAlignedBuffer = GetSegmentationHeapStart(firstSet) + bufferOffsetKernel_;
-        BindKernelResources(computeEncoder, byteAlignedBuffer);
+        auto heapPtr = heap_.SegmentData(descriptorSet) + heapOffsetKernel_;
+        BindKernelResources(computeEncoder, heapPtr);
     }
 }
 
@@ -176,39 +253,41 @@ bool MTResourceHeap::HasComputeResources() const
  * ======= Private: =======
  */
 
-using MTResourceBindingFunc = std::function<
-    void(
-        MTResourceBinding&              binding,
-        Resource*                       resource,
-        const ResourceViewDescriptor&   rvDesc,
-        NSUInteger                      slot
+#define BIND_SEGMENT_ALLOCATOR(FUNC, STAGE, TYPE, ...)      \
+    std::bind(                                              \
+        &FUNC,                                              \
+        this,                                               \
+        MTResourceHeap::StageFlagsToMTShaderStage(STAGE),   \
+        TYPE,                                               \
+        std::placeholders::_1, std::placeholders::_2,       \
+        __VA_ARGS__                                         \
     )
->;
 
-static std::vector<MTResourceBinding> CollectMTResourceBindings(
-    ResourceBindingIterator&        resourceIterator,
-    const ResourceType              resourceType,
-    long                            affectedStage,
-    const MTResourceBindingFunc&    resourceFunc)
+std::vector<MTResourceHeap::MTResourceBinding> MTResourceHeap::FilterAndSortMTBindingSlots(
+    BindingDescriptorIterator&  bindingIter,
+    ResourceType                resourceType,
+    long                        affectedStage)
 {
-    /* Collect all binding points of the specified resource type */
-    const BindingDescriptor* bindingDesc = nullptr;
-    const ResourceViewDescriptor* rvDesc = nullptr;
-    resourceIterator.Reset(resourceType, 0, affectedStage);
-
+    /* Collect all binding points of the specified resource types */
     std::vector<MTResourceBinding> resourceBindings;
-    resourceBindings.reserve(resourceIterator.GetCount());
+    resourceBindings.reserve(bindingIter.GetCount());
 
-    while (auto resource = resourceIterator.Next(&bindingDesc, &rvDesc))
+    bindingIter.Reset(resourceType, /*bindFlags:*/ 0, affectedStage);
+    for (std::size_t index = 0; const auto* bindingDesc = bindingIter.Next(&index);)
     {
-        MTResourceBinding binding = {};
-        resourceFunc(binding, resource, *rvDesc, static_cast<NSUInteger>(bindingDesc->slot));
-        resourceBindings.push_back(binding);
+        MTResourceBinding resourceBinding;
+        {
+            resourceBinding.slot    = bindingDesc->slot;
+            resourceBinding.stages  = affectedStage;
+            resourceBinding.index   = index;
+        }
+        resourceBindings.push_back(resourceBinding);
     }
 
     /* Sort resources by slot index */
     std::sort(
-        resourceBindings.begin(), resourceBindings.end(),
+        resourceBindings.begin(),
+        resourceBindings.end(),
         [](const MTResourceBinding& lhs, const MTResourceBinding& rhs)
         {
             return (lhs.slot < rhs.slot);
@@ -218,296 +297,114 @@ static std::vector<MTResourceBinding> CollectMTResourceBindings(
     return resourceBindings;
 }
 
-void MTResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments)
+MTResourceHeap::SegmentationSizeType MTResourceHeap::AllocBufferSegments(BindingDescriptorIterator& bindingIter, long stage)
 {
     /* Collect all buffers */
-    auto resourceBindings = CollectMTResourceBindings(
-        resourceIterator,
-        ResourceType::Buffer,
-        stage,
-        [](MTResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& /*rvDesc*/, NSUInteger slot)
-        {
-            auto bufferMT = LLGL_CAST(MTBuffer*, resource);
-            binding.slot    = slot;
-            binding.object  = bufferMT->GetNative();
-            binding.offset  = 0;
-        }
-    );
+    auto bufferBindingSlots = MTResourceHeap::FilterAndSortMTBindingSlots(bindingIter, ResourceType::Buffer, stage);
 
-    /* Build all resource segments for type <MTResourceViewHeapSegment2> */
-    BuildAllSegments(
-        resourceBindings,
-        std::bind(&MTResourceHeap::BuildSegment2, this, std::placeholders::_1, std::placeholders::_2),
-        numSegments
+    /* Build all resource segments for MTLBuffer ranges */
+    return MTResourceHeap::ConsolidateSegments(
+        bufferBindingSlots,
+        BIND_SEGMENT_ALLOCATOR(
+            MTResourceHeap::Alloc2PartSegment, stage, MTResourceType_Buffer,
+            sizeof(id<MTLBuffer>*), sizeof(NSUInteger)
+        )
     );
 }
 
-void MTResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments)
+MTResourceHeap::SegmentationSizeType MTResourceHeap::AllocTextureSegments(BindingDescriptorIterator& bindingIter, long stage)
 {
     /* Collect all textures */
-    auto resourceBindings = CollectMTResourceBindings(
-        resourceIterator,
-        ResourceType::Texture,
-        stage,
-        [this](MTResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& rvDesc, NSUInteger slot)
-        {
-            auto textureMT = LLGL_CAST(MTTexture*, resource);
-            binding.slot    = slot;
-            binding.object  = this->GetOrCreateTexture(*textureMT, rvDesc.textureView);
-            binding.offset  = 0;
-        }
-    );
+    auto textureBindingSlots = MTResourceHeap::FilterAndSortMTBindingSlots(bindingIter, ResourceType::Texture, stage);
 
-    /* Build all resource segments for type <MTResourceViewHeapSegment1> */
-    BuildAllSegments(
-        resourceBindings,
-        std::bind(&MTResourceHeap::BuildSegment1, this, std::placeholders::_1, std::placeholders::_2),
-        numSegments
+    /* Build all resource segments for MTLTexture ranges */
+    return MTResourceHeap::ConsolidateSegments(
+        textureBindingSlots,
+        BIND_SEGMENT_ALLOCATOR(
+            MTResourceHeap::Alloc1PartSegment, stage, MTResourceType_Texture,
+            sizeof(id<MTLTexture>*)
+        )
     );
 }
 
-void MTResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceIterator, long stage, std::uint8_t& numSegments)
+MTResourceHeap::SegmentationSizeType MTResourceHeap::AllocSamplerStateSegments(BindingDescriptorIterator& bindingIter, long stage)
 {
     /* Collect all samplers */
-    auto resourceBindings = CollectMTResourceBindings(
-        resourceIterator,
-        ResourceType::Sampler,
-        stage,
-        [](MTResourceBinding& binding, Resource* resource, const ResourceViewDescriptor& /*rvDesc*/, NSUInteger slot)
-        {
-            auto samplerMT = LLGL_CAST(MTSampler*, resource);
-            binding.slot    = slot;
-            binding.object  = samplerMT->GetNative();
-            binding.offset  = 0;
-        }
-    );
+    auto samplerBindingSlots = MTResourceHeap::FilterAndSortMTBindingSlots(bindingIter, ResourceType::Sampler, stage);
 
-    /* Build all resource segments for type <MTResourceViewHeapSegment1> */
-    BuildAllSegments(
-        resourceBindings,
-        std::bind(&MTResourceHeap::BuildSegment1, this, std::placeholders::_1, std::placeholders::_2),
-        numSegments
+    /* Build all resource segments for MTLSamplerState ranges */
+    return MTResourceHeap::ConsolidateSegments(
+        samplerBindingSlots,
+        BIND_SEGMENT_ALLOCATOR(
+            MTResourceHeap::Alloc1PartSegment, stage, MTResourceType_SamplerState,
+            sizeof(id<MTLSamplerState>*)
+        )
     );
 }
 
-void MTResourceHeap::BuildAllSegments(
-    const std::vector<MTResourceBinding>&   resourceBindings,
-    const BuildSegmentFunc&                 buildSegmentFunc,
-    std::uint8_t&                           numSegments)
+void MTResourceHeap::Alloc1PartSegment(
+    MTShaderStage               stage,
+    MTResourceType              type,
+    const MTResourceBinding*    first,
+    NSUInteger                  count,
+    std::size_t                 payload0Stride)
 {
-    if (!resourceBindings.empty())
-    {
-        /* Initialize iterators for sub-ranges of input bindings */
-        auto        itStart = resourceBindings.begin();
-        auto        itPrev  = itStart;
-        auto        it      = itStart;
-        NSUInteger  count   = 0;
-
-        for (++it, ++count; it != resourceBindings.end(); ++it, ++count)
-        {
-            if (it->slot > itPrev->slot + 1)
-            {
-                /* Build next segment */
-                buildSegmentFunc(itStart, count);
-                ++numSegments;
-                count   = 0;
-                itStart = it;
-            }
-            itPrev = it;
-        }
-
-        if (itStart != resourceBindings.end())
-        {
-            /* Add last segment */
-            buildSegmentFunc(itStart, count);
-            ++numSegments;
-        }
-    }
-}
-
-void MTResourceHeap::BuildSegment1(MTResourceBindingIter it, NSUInteger count)
-{
-    std::size_t startOffset = buffer_.size();
+    /* Write binding map entries */
+    WriteBindingMappings(stage, type, first, count);
 
     /* Allocate space for segment */
-    const auto segmentSize = sizeof(MTResourceViewHeapSegment1) + sizeof(id) * count;
-    buffer_.resize(startOffset + segmentSize);
+    const auto  payloadSize     = static_cast<std::uint32_t>(payload0Stride * count);
+    auto        segmentAlloc    = heap_.AllocSegment<MTResourceHeapSegment>(payloadSize);
 
     /* Write segment header */
-    auto segment = reinterpret_cast<MTResourceViewHeapSegment1*>(&buffer_[startOffset]);
+    auto header = segmentAlloc.Header();
     {
-        segment->segmentSize    = segmentSize;
-        segment->range.location = it->slot;
-        segment->range.length   = count;
+        header->size        = segmentAlloc.Size();
+        header->type        = type;
+        header->range       = NSMakeRange(first->slot, count);
+        header->data1Offset = 0;
     }
-
-    /* Write segment body */
-    auto segmentIDs = reinterpret_cast<id*>(&buffer_[startOffset + sizeof(MTResourceViewHeapSegment1)]);
-    for (NSUInteger i = 0; i < count; ++i, ++it)
-        segmentIDs[i] = it->object;
 }
 
-void MTResourceHeap::BuildSegment2(MTResourceBindingIter it, NSUInteger count)
+void MTResourceHeap::Alloc2PartSegment(
+    MTShaderStage               stage,
+    MTResourceType              type,
+    const MTResourceBinding*    first,
+    NSUInteger                  count,
+    std::size_t                 payload0Stride,
+    std::size_t                 payload1Stride)
 {
-    std::size_t startOffset = buffer_.size();
+    /* Write binding map entries */
+    WriteBindingMappings(stage, type, first, count);
 
     /* Allocate space for segment */
-    const auto segmentOffsetEnd0    = sizeof(MTResourceViewHeapSegment2) + sizeof(NSUInteger) * count;
-    const auto segmentSize          = segmentOffsetEnd0 + sizeof(id) * count;
-    buffer_.resize(startOffset + segmentSize);
+    const auto  payloadData1Offset  = static_cast<std::uint32_t>(payload0Stride * count);
+    const auto  payloadSize         = static_cast<std::uint32_t>(payload1Stride * count + payloadData1Offset);
+    auto        segmentAlloc        = heap_.AllocSegment<MTResourceHeapSegment>(payloadSize);
 
     /* Write segment header */
-    auto segment = reinterpret_cast<MTResourceViewHeapSegment2*>(&buffer_[startOffset]);
+    auto header = segmentAlloc.Header();
     {
-        segment->segmentSize    = segmentSize;
-        segment->offsetEnd0     = segmentOffsetEnd0;
-        segment->range.location = it->slot;
-        segment->range.length   = count;
+        header->size        = segmentAlloc.Size();
+        header->type        = type;
+        header->range       = NSMakeRange(first->slot, count);
+        header->data1Offset = segmentAlloc.PayloadOffset() + payloadData1Offset;
     }
-
-    /* Write first part of segment body (of type <NSUInteger>) */
-    auto segmentTargets = reinterpret_cast<NSUInteger*>(&buffer_[startOffset + sizeof(MTResourceViewHeapSegment2)]);
-    auto begin = it;
-    for (NSUInteger i = 0; i < count; ++i, ++it)
-        segmentTargets[i] = it->offset;
-
-    /* Write second part of segment body (of type <id>) */
-    auto segmentIDs = reinterpret_cast<id*>(&buffer_[startOffset + segmentOffsetEnd0]);
-    it = begin;
-    for (NSUInteger i = 0; i < count; ++i, ++it)
-        segmentIDs[i] = it->object;
 }
 
-static id<MTLBuffer> const* CastToMTLBuffers(const std::int8_t* byteAlignedBuffer)
+void MTResourceHeap::WriteBindingMappings(MTShaderStage stage, MTResourceType type, const MTResourceBinding* first, NSUInteger count)
 {
-    using MTBufferArrayType = id<MTLBuffer> const*;
-    return reinterpret_cast<MTBufferArrayType>(byteAlignedBuffer);
-}
-
-static id<MTLTexture> const* CastToMTLTextures(const std::int8_t* byteAlignedBuffer)
-{
-    using MTTextureArrayType = id<MTLTexture> const*;
-    return reinterpret_cast<MTTextureArrayType>(byteAlignedBuffer);
-}
-
-static id<MTLSamplerState> const* CastToMTLSamplerStates(const std::int8_t* byteAlignedBuffer)
-{
-    using MTSamplerStateArrayType = id<MTLSamplerState> const*;
-    return reinterpret_cast<MTSamplerStateArrayType>(byteAlignedBuffer);
-}
-
-void MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer)
-{
-    /* Bind all buffers */
-    for (std::uint8_t i = 0; i < segmentation_.numVertexBufferSegments; ++i)
+    for_range(i, static_cast<std::uint32_t>(count))
     {
-        auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
-        [cmdEncoder
-            setVertexBuffers:   CastToMTLBuffers(byteAlignedBuffer + segment->offsetEnd0)
-            offsets:            reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
-            withRange:          segment->range
-        ];
-        byteAlignedBuffer += segment->segmentSize;
-    }
-
-    /* Bind all textures */
-    for (std::uint8_t i = 0; i < segmentation_.numVertexTextureSegments; ++i)
-    {
-        auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
-        [cmdEncoder
-            setVertexTextures:  CastToMTLTextures(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
-            withRange:          segment->range
-        ];
-        byteAlignedBuffer += segment->segmentSize;
-    }
-
-    /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentation_.numVertexSamplerSegments; ++i)
-    {
-        auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
-        [cmdEncoder
-            setVertexSamplerStates: CastToMTLSamplerStates(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
-            withRange:              segment->range
-        ];
-        byteAlignedBuffer += segment->segmentSize;
+        LLGL_ASSERT(first[i].index < bindingMap_.size());
+        auto& mapping = bindingMap_[first[i].index];
+        mapping.stages[stage].segmentOffset     = static_cast<std::uint32_t>(heap_.Size());
+        mapping.stages[stage].descriptorIndex   = i;
+        mapping.stages[stage].textureViewIndex  = (type == MTResourceType_Texture ? numTextureViewsPerSet_++ : 0);
     }
 }
 
-void MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer)
-{
-    /* Bind all buffers */
-    for (std::uint8_t i = 0; i < segmentation_.numFragmentBufferSegments; ++i)
-    {
-        auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
-        [cmdEncoder
-            setFragmentBuffers: CastToMTLBuffers(byteAlignedBuffer + segment->offsetEnd0)
-            offsets:            reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
-            withRange:          segment->range
-        ];
-        byteAlignedBuffer += segment->segmentSize;
-    }
-
-    /* Bind all textures */
-    for (std::uint8_t i = 0; i < segmentation_.numFragmentTextureSegments; ++i)
-    {
-        auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
-        [cmdEncoder
-            setFragmentTextures:    CastToMTLTextures(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
-            withRange:              segment->range
-        ];
-        byteAlignedBuffer += segment->segmentSize;
-    }
-
-    /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentation_.numFragmentSamplerSegments; ++i)
-    {
-        auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
-        [cmdEncoder
-            setFragmentSamplerStates:   CastToMTLSamplerStates(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
-            withRange:                  segment->range
-        ];
-        byteAlignedBuffer += segment->segmentSize;
-    }
-}
-
-void MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, const std::int8_t*& byteAlignedBuffer)
-{
-    /* Bind all buffers */
-    for (std::uint8_t i = 0; i < segmentation_.numKernelBufferSegments; ++i)
-    {
-        auto segment = reinterpret_cast<const MTResourceViewHeapSegment2*>(byteAlignedBuffer);
-        [cmdEncoder
-            setBuffers: CastToMTLBuffers(byteAlignedBuffer + segment->offsetEnd0)
-            offsets:    reinterpret_cast<const NSUInteger*>(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment2))
-            withRange:  segment->range
-        ];
-        byteAlignedBuffer += segment->segmentSize;
-    }
-
-    /* Bind all textures */
-    for (std::uint8_t i = 0; i < segmentation_.numKernelTextureSegments; ++i)
-    {
-        auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
-        [cmdEncoder
-            setTextures:    CastToMTLTextures(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
-            withRange:      segment->range
-        ];
-        byteAlignedBuffer += segment->segmentSize;
-    }
-
-    /* Bind all samplers */
-    for (std::uint8_t i = 0; i < segmentation_.numKernelSamplerSegments; ++i)
-    {
-        auto segment = reinterpret_cast<const MTResourceViewHeapSegment1*>(byteAlignedBuffer);
-        [cmdEncoder
-            setSamplerStates:   CastToMTLSamplerStates(byteAlignedBuffer + sizeof(MTResourceViewHeapSegment1))
-            withRange:          segment->range
-        ];
-        byteAlignedBuffer += segment->segmentSize;
-    }
-}
-
-void MTResourceHeap::StoreResourceUsage()
+void MTResourceHeap::CacheResourceUsage()
 {
     if ( ( segmentation_.numVertexBufferSegments  |
            segmentation_.numVertexTextureSegments |
@@ -531,6 +428,145 @@ void MTResourceHeap::StoreResourceUsage()
     }
 }
 
+const char* MTResourceHeap::BindVertexResources(id<MTLRenderCommandEncoder> cmdEncoder, const char* heapPtr)
+{
+    /* Bind all buffers */
+    for_range(i, segmentation_.numVertexBufferSegments)
+    {
+        auto segment = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+        [cmdEncoder
+            setVertexBuffers:   MTRESOURCEHEAP_DATA0_MTLBUFFER_CONST(heapPtr)
+            offsets:            MTRESOURCEHEAP_DATA1_OFFSETS_CONST(heapPtr)
+            withRange:          segment->range
+        ];
+        heapPtr += segment->size;
+    }
+
+    /* Bind all textures */
+    for_range(i, segmentation_.numVertexTextureSegments)
+    {
+        auto segment = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+        [cmdEncoder
+            setVertexTextures:  MTRESOURCEHEAP_DATA0_MTLTEXTURE_CONST(heapPtr)
+            withRange:          segment->range
+        ];
+        heapPtr += segment->size;
+    }
+
+    /* Bind all samplers */
+    for_range(i, segmentation_.numVertexSamplerSegments)
+    {
+        auto segment = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+        [cmdEncoder
+            setVertexSamplerStates: MTRESOURCEHEAP_DATA0_MTLSAMPLERSTATE_CONST(heapPtr)
+            withRange:              segment->range
+        ];
+        heapPtr += segment->size;
+    }
+
+    return heapPtr;
+}
+
+const char* MTResourceHeap::BindFragmentResources(id<MTLRenderCommandEncoder> cmdEncoder, const char* heapPtr)
+{
+    /* Bind all buffers */
+    for_range(i, segmentation_.numFragmentBufferSegments)
+    {
+        auto segment = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+        [cmdEncoder
+            setFragmentBuffers: MTRESOURCEHEAP_DATA0_MTLBUFFER_CONST(heapPtr)
+            offsets:            MTRESOURCEHEAP_DATA1_OFFSETS_CONST(heapPtr)
+            withRange:          segment->range
+        ];
+        heapPtr += segment->size;
+    }
+
+    /* Bind all textures */
+    for_range(i, segmentation_.numFragmentTextureSegments)
+    {
+        auto segment = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+        [cmdEncoder
+            setFragmentTextures:    MTRESOURCEHEAP_DATA0_MTLTEXTURE_CONST(heapPtr)
+            withRange:              segment->range
+        ];
+        heapPtr += segment->size;
+    }
+
+    /* Bind all samplers */
+    for_range(i, segmentation_.numFragmentSamplerSegments)
+    {
+        auto segment = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+        [cmdEncoder
+            setFragmentSamplerStates:   MTRESOURCEHEAP_DATA0_MTLSAMPLERSTATE_CONST(heapPtr)
+            withRange:                  segment->range
+        ];
+        heapPtr += segment->size;
+    }
+
+    return heapPtr;
+}
+
+const char* MTResourceHeap::BindKernelResources(id<MTLComputeCommandEncoder> cmdEncoder, const char* heapPtr)
+{
+    /* Bind all buffers */
+    for_range(i, segmentation_.numKernelBufferSegments)
+    {
+        auto segment = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+        [cmdEncoder
+            setBuffers: MTRESOURCEHEAP_DATA0_MTLBUFFER_CONST(heapPtr)
+            offsets:    MTRESOURCEHEAP_DATA1_OFFSETS_CONST(heapPtr)
+            withRange:  segment->range
+        ];
+        heapPtr += segment->size;
+    }
+
+    /* Bind all textures */
+    for_range(i, segmentation_.numKernelTextureSegments)
+    {
+        auto segment = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+        [cmdEncoder
+            setTextures:    MTRESOURCEHEAP_DATA0_MTLTEXTURE_CONST(heapPtr)
+            withRange:      segment->range
+        ];
+        heapPtr += segment->size;
+    }
+
+    /* Bind all samplers */
+    for_range(i, segmentation_.numKernelSamplerSegments)
+    {
+        auto segment = MTRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+        [cmdEncoder
+            setSamplerStates:   MTRESOURCEHEAP_DATA0_MTLSAMPLERSTATE_CONST(heapPtr)
+            withRange:          segment->range
+        ];
+        heapPtr += segment->size;
+    }
+
+    return heapPtr;
+}
+
+void MTResourceHeap::WriteResourceViewBuffer(const ResourceViewDescriptor& desc, char* heapPtr, const BindingSegmentLocation::Stage& binding)
+{
+    /* Get buffer resource and write MTLBuffer ID plus offset (Metal only needs offset) */
+    auto bufferMT = LLGL_CAST(MTBuffer*, GetAsExpectedBuffer(desc.resource));
+    MTRESOURCEHEAP_DATA0_MTLBUFFER(heapPtr)[binding.descriptorIndex] = bufferMT->GetNative();
+    MTRESOURCEHEAP_DATA1_OFFSETS(heapPtr)[binding.descriptorIndex] = static_cast<NSUInteger>(desc.bufferView.offset);
+}
+
+void MTResourceHeap::WriteResourceViewTexture(const ResourceViewDescriptor& desc, char* heapPtr, const BindingSegmentLocation::Stage& binding, std::uint32_t descriptorSet)
+{
+    /* Get texture resource and Write MTLTexture ID */
+    auto textureMT = LLGL_CAST(MTTexture*, GetAsExpectedTexture(desc.resource));
+    MTRESOURCEHEAP_DATA0_MTLTEXTURE(heapPtr)[binding.descriptorIndex] = GetOrCreateTexture(descriptorSet, binding, *textureMT, desc.textureView);
+}
+
+void MTResourceHeap::WriteResourceViewSamplerState(const ResourceViewDescriptor& desc, char* heapPtr, const BindingSegmentLocation::Stage& binding)
+{
+    /* Get sampler resource and Write MTLSamplerState ID */
+    auto samplerMT = LLGL_CAST(MTSampler*, GetAsExpectedSampler(desc.resource));
+    MTRESOURCEHEAP_DATA0_MTLSAMPLERSTATE(heapPtr)[binding.descriptorIndex] = samplerMT->GetNative();
+}
+
 static void ValidateTexViewNoSwizzle(MTTexture& /*textureMT*/, const TextureViewDescriptor& desc)
 {
     if (!IsTextureSwizzleIdentity(desc.swizzle))
@@ -548,7 +584,26 @@ static void ValidateTexViewNoTypeAndRange(MTTexture& textureMT, const TextureVie
         throw std::runtime_error("cannot create texture-view of different array-layer range for this version of the Metal API");
 }
 
-id<MTLTexture> MTResourceHeap::GetOrCreateTexture(MTTexture& textureMT, const TextureViewDescriptor& textureViewDesc)
+void MTResourceHeap::ExchangeTextureView(
+    std::uint32_t                           descriptorSet,
+    const BindingSegmentLocation::Stage&    binding,
+    id<MTLTexture>                          textureView)
+{
+    LLGL_ASSERT(binding.textureViewIndex < numTextureViewsPerSet_);
+    auto& texViewEntry = textureViews_[descriptorSet * numTextureViewsPerSet_ + binding.textureViewIndex];
+    if (texViewEntry != textureView)
+    {
+        if (texViewEntry != nil)
+            [texViewEntry release];
+        texViewEntry = textureView;
+    }
+}
+
+id<MTLTexture> MTResourceHeap::GetOrCreateTexture(
+    std::uint32_t                           descriptorSet,
+    const BindingSegmentLocation::Stage&    binding,
+    MTTexture&                              textureMT,
+    const TextureViewDescriptor&            textureViewDesc)
 {
     if (IsTextureViewEnabled(textureViewDesc))
     {
@@ -587,21 +642,57 @@ id<MTLTexture> MTResourceHeap::GetOrCreateTexture(MTTexture& textureMT, const Te
             ];
         }
 
-        /* Store and return texture view */
-        textureViews_.push_back(textureView);
+        /* Store texture view reference */
+        ExchangeTextureView(descriptorSet, binding, textureView);
         return textureView;
     }
     else
     {
-        /* Return native <MTLTexture> of original texture object */
+        /* Release previously stored texture view reference */
+        ExchangeTextureView(descriptorSet, binding, nil);
         return textureMT.GetNative();
     }
 }
 
-const std::int8_t* MTResourceHeap::GetSegmentationHeapStart(std::uint32_t firstSet) const
+MTResourceHeap::SegmentationSizeType MTResourceHeap::ConsolidateSegments(
+    const ArrayView<MTResourceBinding>& bindingSlots,
+    const AllocSegmentFunc&             allocSegmentFunc)
 {
-    return (buffer_.data() + stride_ * firstSet);
+    return ConsolidateConsecutiveSequences<SegmentationSizeType>(
+        bindingSlots.begin(),
+        bindingSlots.end(),
+        allocSegmentFunc,
+        [](const MTResourceBinding& entry) -> NSUInteger
+        {
+            return entry.slot;
+        }
+    );
 }
+
+MTResourceHeap::MTShaderStage MTResourceHeap::StageFlagsToMTShaderStage(long stage)
+{
+    if ((stage & StageFlags::VertexStage) != 0)
+        return MTShaderStage_Vertex;
+    if ((stage & StageFlags::FragmentStage) != 0)
+        return MTShaderStage_Fragment;
+    if ((stage & StageFlags::ComputeStage) != 0)
+        return MTShaderStage_Kernel;
+    return MTShaderStage_Count;
+}
+
+#undef MTRESOURCEHEAP_SEGMENT
+#undef MTRESOURCEHEAP_CONST_SEGMENT
+#undef MTRESOURCEHEAP_DATA0
+#undef MTRESOURCEHEAP_DATA0_MTLBUFFER_CONST
+#undef MTRESOURCEHEAP_DATA0_MTLTEXTURE_CONST
+#undef MTRESOURCEHEAP_DATA0_MTLSAMPLERSTATE_CONST
+#undef MTRESOURCEHEAP_DATA0_MTLBUFFER
+#undef MTRESOURCEHEAP_DATA0_MTLTEXTURE
+#undef MTRESOURCEHEAP_DATA0_MTLSAMPLERSTATE
+#undef MTRESOURCEHEAP_DATA1
+#undef MTRESOURCEHEAP_DATA1_OFFSETS_CONST
+#undef MTRESOURCEHEAP_DATA1_OFFSETS
+#undef BIND_SEGMENT_ALLOCATOR
 
 
 } // /namespace LLGL
