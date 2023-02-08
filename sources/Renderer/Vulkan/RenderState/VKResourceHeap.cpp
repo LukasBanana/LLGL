@@ -146,9 +146,12 @@ std::uint32_t VKResourceHeap::UpdateDescriptors(
         ++firstDescriptor;
     }
 
-    /* Update Vulkan descriptor sets */
     if (container.numWriteDescriptors > 0)
     {
+        /* All command buffers must have finished execution before any affected descriptor set can be updated */
+        vkDeviceWaitIdle(device);
+
+        /* Update Vulkan descriptor sets */
         vkUpdateDescriptorSets(
             device,
             container.numWriteDescriptors,      // Number of write descriptor
