@@ -107,6 +107,11 @@ class D3D12ResourceHeap final : public ResourceHeap
 
         void UpdateBarriers(std::uint32_t descriptorSet);
 
+        inline bool HasBarriers() const
+        {
+            return (barrierStride_ > 0);
+        }
+
     private:
 
         ComPtr<ID3D12DescriptorHeap>                descriptorHeapResourceViews_;
@@ -122,6 +127,7 @@ class D3D12ResourceHeap final : public ResourceHeap
 
         std::vector<ID3D12Resource*>                uavResourceHeap_;                   // Heap of UAV resources that require a barrier
         UINT                                        uavResourceSetStride_       = 0;    // Number of (potential) UAV resources per descriptor set
+        UINT                                        uavResourceIndexOffset_     = 0;    // Subtracted offset for 'D3D12DescriptorHandleLocation::index'
         std::vector<char>                           barriers_;                          // Packed buffer for dyanmic struct { UINT N; D3D12_RESOURCE_BARRIER[N]; }
         UINT                                        barrierStride_              = 0;
 

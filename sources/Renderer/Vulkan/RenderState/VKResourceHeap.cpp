@@ -69,7 +69,8 @@ VKResourceHeap::VKResourceHeap(
     CreateDescriptorSets(device, numDescriptorSets, pipelineLayoutVK->GetVkDescriptorSetLayout());
 
     /* Allocate array for descriptor set barriers */
-    barriers_.resize(numDescriptorSets);
+    if ((desc.barrierFlags & BarrierFlags::Storage) != 0)
+        barriers_.resize(numDescriptorSets);
 
     /* Write initial resource views */
     if (!initialResourceViews.empty())
@@ -176,10 +177,13 @@ std::uint32_t VKResourceHeap::UpdateDescriptors(
 
 void VKResourceHeap::SubmitPipelineBarrier(VkCommandBuffer commandBuffer, std::uint32_t descriptorSet)
 {
-    if (auto barrier = barriers_[descriptorSet].get())
+    if (descriptorSet < barriers_.size())
     {
-        if (barrier->IsActive())
-            barrier->Submit(commandBuffer);
+        if (auto barrier = barriers_[descriptorSet].get())
+        {
+            if (barrier->IsActive())
+                barrier->Submit(commandBuffer);
+        }
     }
 }
 
@@ -433,10 +437,14 @@ void VKResourceHeap::FillWriteDescriptorWithBufferRange(
 
 bool VKResourceHeap::ExchangeBufferBarrier(std::uint32_t descriptorSet, Buffer* resource, const VKDescriptorBinding& binding)
 {
-    if ((resource->GetBindFlags() & BindFlags::Storage) != 0)
-        return EmplaceBarrier(descriptorSet, binding.dstBinding, resource, binding.stageFlags);
-    else
-        return RemoveBarrier(descriptorSet, binding.dstBinding);
+    if (descriptorSet < barriers_.size())
+    {
+        if ((resource->GetBindFlags() & BindFlags::Storage) != 0)
+            return EmplaceBarrier(descriptorSet, binding.dstBinding, resource, binding.stageFlags);
+        else
+            return RemoveBarrier(descriptorSet, binding.dstBinding);
+    }
+    return false;
 }
 
 bool VKResourceHeap::EmplaceBarrier(std::uint32_t descriptorSet, std::uint32_t slot, Resource* resource, VkPipelineStageFlags stageFlags)

@@ -47,6 +47,16 @@ struct BarrierFlags
         \see BindFlags::Storage
         */
         StorageTexture  = (1 << 1),
+
+        /**
+        \brief Memory barrier for any storage resource. This is just a bitwise OR combination of \c StorageBuffer and \c StorageTexture.
+        \remarks Renderer backends such as Direct3D 12 and Vulkan have bookkeeping for storage resources
+        and don't have to distinguish between Buffer and Texture resource views for their barriers at time of creating the ResourceHeap.
+        Hence, using BarrierFlags::Storage by default when any resource views in the ResourceHeap have to be synchronized is recommended.
+        Only the OpenGL backend has to know at creation time what type of resources need a global barrier via \c glMemoryBarrier.
+        \see BindFlags::Storage
+        */
+        Storage         = (StorageBuffer | StorageTexture),
     };
 };
 

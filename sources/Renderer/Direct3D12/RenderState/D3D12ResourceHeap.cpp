@@ -71,13 +71,18 @@ D3D12ResourceHeap::D3D12ResourceHeap(
     if (numSamplerHandles > 0)
         CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, numSamplerHandles * numDescriptorSets_, descriptorHeapSamplers_);
 
-    /* Allocate empty heap for ID3D12Resource object that require a UAV barrier */
-    uavResourceSetStride_ = numResourceViewHandles;
-    uavResourceHeap_.resize(numResourceViewHandles * numDescriptorSets_);
+    /* Allocate barrier resources if any UAV barriers are specified */
+    if ((desc.barrierFlags & BarrierFlags::Storage) != 0)
+    {
+        /* Allocate empty heap for ID3D12Resource object that require a UAV barrier */
+        uavResourceSetStride_   = descHeapLayout.SumUAVs();
+        uavResourceIndexOffset_ = descHeapLayout.SumNonUAVs();
+        uavResourceHeap_.resize(uavResourceSetStride_ * numDescriptorSets_);
 
-    /* Allocate packed buffer for resource barriers with UINT for number of active barriers and an array of D3D12_RESOURCE_BARRIER[N] */
-    barrierStride_ = sizeof(UINT) + sizeof(D3D12_RESOURCE_BARRIER) * uavResourceSetStride_;
-    barriers_.resize(barrierStride_ * numDescriptorSets_);
+        /* Allocate packed buffer for resource barriers with UINT for number of active barriers and an array of D3D12_RESOURCE_BARRIER[N] */
+        barrierStride_ = sizeof(UINT) + sizeof(D3D12_RESOURCE_BARRIER) * uavResourceSetStride_;
+        barriers_.resize(barrierStride_ * numDescriptorSets_);
+    }
 
     /* Write initial resource views */
     if (!initialResourceViews.empty())
@@ -203,7 +208,7 @@ void D3D12ResourceHeap::SetComputeRootDescriptorTables(ID3D12GraphicsCommandList
 
 void D3D12ResourceHeap::InsertResourceBarriers(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet)
 {
-    if (descriptorSet < numDescriptorSets_)
+    if (descriptorSet < numDescriptorSets_ && HasBarriers())
     {
         const auto barrierHeapStart = &barriers_[descriptorSet * barrierStride_];
         const auto numBarriers = *reinterpret_cast<const UINT*>(barrierHeapStart);
@@ -392,27 +397,30 @@ void D3D12ResourceHeap::ExchangeUAVResource(
     Resource&                               resource,
     std::uint32_t                           (&setRange)[2])
 {
-    if (resource.GetResourceType() == ResourceType::Buffer)
+    if (HasBarriers())
     {
-        auto& buffer = LLGL_CAST(Buffer&, resource);
-        if (IsUAVResourceBarrierRequired(buffer.GetBindFlags()))
+        if (resource.GetResourceType() == ResourceType::Buffer)
         {
-            auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-            EmplaceD3DUAVResource(descriptorHandle, descriptorSet, bufferD3D.GetNative(), setRange);
+            auto& buffer = LLGL_CAST(Buffer&, resource);
+            if (IsUAVResourceBarrierRequired(buffer.GetBindFlags()))
+            {
+                auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+                EmplaceD3DUAVResource(descriptorHandle, descriptorSet, bufferD3D.GetNative(), setRange);
+            }
+            else
+                EmplaceD3DUAVResource(descriptorHandle, descriptorSet, nullptr, setRange);
         }
-        else
-            EmplaceD3DUAVResource(descriptorHandle, descriptorSet, nullptr, setRange);
-    }
-    else if (resource.GetResourceType() == ResourceType::Texture)
-    {
-        auto& texture = LLGL_CAST(Texture&, resource);
-        if (IsUAVResourceBarrierRequired(texture.GetBindFlags()))
+        else if (resource.GetResourceType() == ResourceType::Texture)
         {
-            auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
-            EmplaceD3DUAVResource(descriptorHandle, descriptorSet, textureD3D.GetNative(), setRange);
+            auto& texture = LLGL_CAST(Texture&, resource);
+            if (IsUAVResourceBarrierRequired(texture.GetBindFlags()))
+            {
+                auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
+                EmplaceD3DUAVResource(descriptorHandle, descriptorSet, textureD3D.GetNative(), setRange);
+            }
+            else
+                EmplaceD3DUAVResource(descriptorHandle, descriptorSet, nullptr, setRange);
         }
-        else
-            EmplaceD3DUAVResource(descriptorHandle, descriptorSet, nullptr, setRange);
     }
 }
 
@@ -422,12 +430,15 @@ void D3D12ResourceHeap::EmplaceD3DUAVResource(
     ID3D12Resource*                         resource,
     std::uint32_t                           (&setRange)[2])
 {
-    auto& cached = uavResourceHeap_[descriptorSet * uavResourceSetStride_ + descriptorHandle.index];
-    if (cached != resource)
+    if (descriptorHandle.index >= uavResourceIndexOffset_)
     {
-        cached      = resource;
-        setRange[0] = std::min(setRange[0], descriptorSet);
-        setRange[1] = std::max(setRange[1], descriptorSet + 1);
+        auto& cached = uavResourceHeap_[descriptorSet * uavResourceSetStride_ + descriptorHandle.index - uavResourceIndexOffset_];
+        if (cached != resource)
+        {
+            cached      = resource;
+            setRange[0] = std::min(setRange[0], descriptorSet);
+            setRange[1] = std::max(setRange[1], descriptorSet + 1);
+        }
     }
 }
 
