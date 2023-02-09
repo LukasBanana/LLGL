@@ -12,6 +12,7 @@
 - [Event listener interface](#event-listener-interface)
 - [`ShaderUniform` interface](#shaderuniform-interface)
 - [`ShaderProgram` interface](#shaderprogram-interface)
+- [`ResourceHeap` interface](#resourceheap-interface)
 - [Shader reflection](#shader-reflection)
 - [Renderer configuration](#renderer-configuration)
 - [Default values](#default-values)
@@ -361,6 +362,49 @@ if (const LLGL::Report* myReport = myGraphicsPSO->GetReport())
     if (myReport->HasErrors())
         std::cerr << myReport->GetText() << std::endl;
 }
+```
+
+
+## `ResourceHeap` interface
+
+The `ResourceHeap` interface can now be rewritten after it has been created.
+The resource heap can either be initialized with resource view descriptors or be kept empty and written later.
+`LLGL::ResourceHeapDescriptor` can also be default initialized with just the pipeline layout whereas the number of resources have to be determined by the initial resource view array.
+Moreover, whether or not the resource heap requires any resource barriers before it can be bound must be explicitly specified, but LLGL keeps track of what resource must be synchronized.
+This can be specified with a single `BarrierFlags::Storage` flag to enable pipeline barriers for that resource heap.
+
+Before:
+```cpp
+// Interface:
+LLGL::PipelineLayout*                       LLGL::ResourceHeapDescriptor::pipelineLayout;
+std::vector<LLGL::ResourceViewDescriptor>   LLGL::ResourceHeapDescriptor::resourceViews;
+
+// Usage:
+LLGL::ResourceHeapDescriptor myResHeapDesc;
+{
+    myResHeapDesc.pipelineLayout = myPSOLayout;
+    myResHeapDesc.resourceViews  = { myConstantBuffer };
+}
+LLGL::ResourceHeap* myResHeap = myRenderer->CreateResourceHeap(myResHeapDesc);
+```
+
+After:
+```cpp
+// Interface:
+LLGL::PipelineLayout*   LLGL::ResourceHeapDescriptor::pipelineLayout;
+std::uint32_t           LLGL::ResourceHeapDescriptor::numResourceViews;
+long                    LLGL::ResourceHeapDescriptor::barrierFlags;
+
+// Usage:
+LLGL::ResourceHeapDescriptor myResHeapDesc;
+{
+    myResHeapDesc.pipelineLayout    = myPSOLayout;
+    myResHeapDesc.numResourceViews  = 1;
+}
+LLGL::ResourceHeap* myResHeap = myRenderer->CreateResourceHeap(myResHeapDesc);
+myRenderer->WriteResourceHeap(*myResHeap, 0, { myConstantBuffer });
+
+LLGL::ResourceHeap* myResHeapAlternative = myRenderer->CreateResourceHeap(myPSOLayout, { myConstantBuffer });
 ```
 
 
