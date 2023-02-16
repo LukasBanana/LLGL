@@ -42,23 +42,32 @@ myLayoutDesc.bindings = {
 };
 LLGL::PipelineLayout* myPipelineLayout = myRenderer->CreatePipelineLayout(myLayoutDesc);
 ```
-We need to specify different shader stages for the Metal backend. Although Metal supports tessellation there are no dedicated tessellation shader stages. They are laid out into a compute kernel and a so called post-tessellation vertex shader instead. For the tessellation tutorial, we only need a constant buffer that is bound to the tessellation control and tessellation evaluation shader stages. The descriptor field `bindings` is an STL container which we can easily initialize with a brace initializer list. The parameter `myConstantBufferBindingPoint` is just an unsigned integer that specifies the binding point. If its value is 3 for instance, the corresponding constant buffer in an HLSL shader could look like this:
+We need to specify different shader stages for the Metal backend. Although Metal supports tessellation there are no dedicated tessellation shader stages. They are laid out into a compute kernel and a so called "post-tessellation vertex shader" instead. For the tessellation tutorial, we only need a constant buffer that is bound to the tessellation control and tessellation evaluation shader stages. The descriptor field `bindings` is a container which we can easily initialize with a brace initializer list. The parameter `myConstantBufferBindingPoint` is just an unsigned integer that specifies the binding point. If its value is 3 for instance, the corresponding constant buffer in an HLSL shader could look like this:
 ```hlsl
-cbuffer MyConstantBuffer : register(b3)
+cbuffer MyConstantBuffer : register(b3) { /*...*/ }
 ```
-If you add more elements to the `bindings` container, make sure the order match with the resources we speciy next:
+There is a utility function that constructs a pipeline layout descriptor with a single string rather than a list of binding descritpors. Assuming we don't support the Metal API and our binding point `myConstantBufferBindingPoint` has value 0, we can simlpy write this:
+```cpp
+LLGL::PipelineLayoutDescriptor myLayoutDesc = LLGL::PipelineLayoutDesc("cbuffer(MyConstantBuffer@0):tesc:tese");
+```
+
+If we add more elements to the `bindings` container, we have to make sure the order of resources matches with the resource view descriptors we fill the resource heap with. We can either initialize the resource heap will all resources at creation time or fill them in later.
 ```cpp
 LLGL::ResourceHeapDescriptor myResourceHeapDesc;
-myResourceHeapDesc.pipelineLayout = myPipelineLayout;
-myResourceHeapDesc.resourceViews  = { myConstantBuffer };
-LLGL::ResourceHeap* myResourceHeap = myRenderer->CreateResourceHeap(myResourceHeapDesc);
+myResourceHeapDesc.pipelineLayout   = myPipelineLayout;
+myResourceHeapDesc.numResourceViews = 1;
+LLGL::ResourceHeap* myResourceHeap = myRenderer->CreateResourceHeap(myResourceHeapDesc, { myConstantBuffer });
 ```
-The resource heap needs a reference to the pipeline layout we created. The resources (previously created with `CreateBuffer`, `CreateTexture`, or `CreateSampler`) are specified in the brace initializer list of the `resourceViews` container. The elements from this container are of the type `LLGL::ResourceViewDescriptor` but can be implicitly constructed with a pointer to a resource object. Speaking of which, all resources inherit from the `Resource` interface and these interfaces are: `Buffer`, `Texture`, and `Sampler`.
+The resource heap needs a reference to the pipeline layout we created. The resources (previously created with `CreateBuffer`, `CreateTexture`, or `CreateSampler`) are specified in the brace initializer list of the `resourceViews` container. The elements from this container are of the type `LLGL::ResourceViewDescriptor` but can be implicitly constructed with a pointer to a resource object. Speaking of which, all resources inherit from the `Resource` interface and these interfaces are: `Buffer`, `Texture`, and `Sampler`. The number of resources in our resource heap must be a multiple of the number of bindings in our pipeline layout. This way we can store multiple sets of resource views in our heap that we can efficiently swap out at runtime. For this tutorial, we only have a single resource in our heap, but for a pipeline layout of 5 binding points for instance, we could create a resource heap with 5, 10, 15, or more resources as long as they are a multiple of 5. If `numResourceViews` is 0, we have to initialize the resource heap at creation time and the number of initial resources determines the size of the heap. This is mostly supported to implicitly construct the `ResourceHeapDescriptor` for convenience which can be done like this:
+```cpp
+LLGL::ResourceHeap* myResourceHeap = myRenderer->CreateResourceHeap(myPipelineLayout, { myConstantBuffer });
+```
+Ideally, an LLGL program has one resource heap for each pipeline layout. Having said that, there is no limit on how many resource heaps can be created that share the same pipeline layout.
 
 
 ## Graphics Pipeline
 
-Once we use resource heaps, we also need to specify our pipeline layout for the graphics pipeline where the resources are needed:
+Once we use resource heaps, we also need to specify our pipeline layout for the graphics pipeline where the resources are accessed:
 ```cpp
 LLGL::GraphicsPipelineDescriptor myPipelineDesc;
 myPipelineDesc.vertexShader         = myVertexShader;                    // Vertex shader
@@ -88,7 +97,7 @@ Now we create the graphics pipeline state object (PSO):
 ```cpp
 LLGL::PipelineState* myPipeline = myRenderer->CreatePipelineState(myPipelineDesc);
 ```
-There are several parameters besides the pipeline layout that are needed for the tessellation tutorial. This time we use the depth buffer to render a 3D scene and not just a flat triangle. We also enable back-face culling as a minor optimization to omit triangles that are never visible anyways. But make sure to only use this when you render meshes that are entirely closed. When tessellation shaders are used in the graphics pipeline, the primitive toplogy must be one of the `LLGL::PrimitiveTopology::Patches1`-`32` enumeration entries. The number specifies the control point count. The maximum number of control points that are supported by the host platform can be determined as shown here:
+There are several parameters besides the pipeline layout that are needed for the tessellation tutorial. This time we use the depth buffer to render a 3D scene and not just a flat triangle. We also enable back-face culling as a minor optimization to omit triangles that are never visible since we render an enclosed object and the interior will be hidden. When tessellation shaders are used in the graphics pipeline, the primitive toplogy must be one of the `LLGL::PrimitiveTopology::Patches1`-`32` enumeration entries. The number specifies the control point count. The maximum number of control points that are supported by the host platform can be determined as shown here:
 ```cpp
 myRenderer->GetRenderingCaps().limits.maxPatchVertices
 ```
@@ -108,7 +117,7 @@ myCmdBuffer->SetVertexBuffer(*myVertexBuffer);
 myCmdBuffer->SetIndexBuffer(*myIndexBuffer);
 ```
 
-Next, we bind the resource heap to the graphics pipeline (there is an analogous function for the compute pipeline):
+Next, we bind the resource heap to the graphics pipeline:
 ```cpp
 myCmdBuffer->SetResourceHeap(*myResourceHeap);
 ```
