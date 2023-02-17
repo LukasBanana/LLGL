@@ -140,23 +140,29 @@ static const char* LoadRenderSystemName(Module& module, const RenderSystemDescri
 static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename, const RenderSystemDescriptor& renderSystemDesc)
 {
     /* Load "LLGL_RenderSystem_Alloc" procedure */
-    LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (const void*));
+    LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (const void*, int));
 
     auto RenderSystem_Alloc = reinterpret_cast<PFN_RENDERSYSTEM_ALLOC>(module.LoadProcedure("LLGL_RenderSystem_Alloc"));
     if (!RenderSystem_Alloc)
-        throw std::runtime_error("failed to load <LLGL_RenderSystem_Alloc> procedure from module: " + moduleFilename);
+        throw std::runtime_error("failed to load 'LLGL_RenderSystem_Alloc' procedure from module: " + moduleFilename);
 
     /* Allocate render system */
-    auto renderSystem = reinterpret_cast<RenderSystem*>(RenderSystem_Alloc(&renderSystemDesc));
+    auto renderSystem = reinterpret_cast<RenderSystem*>(RenderSystem_Alloc(&renderSystemDesc, static_cast<int>(sizeof(RenderSystemDescriptor))));
     if (!renderSystem)
         throw std::runtime_error("failed to allocate render system from module: " + moduleFilename);
 
     return renderSystem;
 }
 
+static RenderSystemDeleter::RenderSystemDeleterFuncPtr LoadRenderSystemDeleter(Module& module)
+{
+    /* Load "LLGL_RenderSystem_Free" procedure */
+    return reinterpret_cast<RenderSystemDeleter::RenderSystemDeleterFuncPtr>(module.LoadProcedure("LLGL_RenderSystem_Free"));
+}
+
 #endif // /LLGL_BUILD_STATIC_LIB
 
-std::unique_ptr<RenderSystem> RenderSystem::Load(
+RenderSystemPtr RenderSystem::Load(
     const RenderSystemDescriptor&   renderSystemDesc,
     RenderingProfiler*              profiler,
     RenderingDebugger*              debugger)
@@ -171,16 +177,17 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     #ifdef LLGL_BUILD_STATIC_LIB
 
     /* Allocate render system */
-    auto renderSystem = std::unique_ptr<RenderSystem>(
+    auto renderSystem = RenderSystemPtr
+    {
         reinterpret_cast<RenderSystem*>(StaticModule::AllocRenderSystem(renderSystemDesc))
-    );
+    };
 
     if (profiler != nullptr || debugger != nullptr)
     {
         #ifdef LLGL_ENABLE_DEBUG_LAYER
 
         /* Create debug layer render system */
-        renderSystem = MakeUnique<DbgRenderSystem>(std::move(renderSystem), profiler, debugger);
+        renderSystem = RenderSystemPtr{ new DbgRenderSystem(std::move(renderSystem), profiler, debugger) };
 
         #else
 
@@ -211,14 +218,18 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     try
     {
         /* Allocate render system */
-        auto renderSystem = std::unique_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename, renderSystemDesc));
+        auto renderSystem = RenderSystemPtr
+        {
+            LoadRenderSystem(*module, moduleFilename, renderSystemDesc),
+            RenderSystemDeleter{ LoadRenderSystemDeleter(*module) }
+        };
 
         if (profiler != nullptr || debugger != nullptr)
         {
             #ifdef LLGL_ENABLE_DEBUG_LAYER
 
             /* Create debug layer render system */
-            renderSystem = MakeUnique<DbgRenderSystem>(std::move(renderSystem), profiler, debugger);
+            renderSystem = RenderSystemPtr{ new DbgRenderSystem(std::move(renderSystem), profiler, debugger) };
 
             #else
 
@@ -245,12 +256,13 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     #endif // /LLGL_BUILD_STATIC_LIB
 }
 
-void RenderSystem::Unload(std::unique_ptr<RenderSystem>&& renderSystem)
+void RenderSystem::Unload(RenderSystemPtr&& renderSystem)
 {
     auto it = g_renderSystemModules.find(renderSystem.get());
     if (it != g_renderSystemModules.end())
     {
-        renderSystem.release();
+        /* Delete render system first, then release module */
+        renderSystem.reset();
         g_renderSystemModules.erase(it);
     }
 }

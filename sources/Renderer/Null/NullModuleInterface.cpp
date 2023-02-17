@@ -59,10 +59,14 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name()
     return LLGL::ModuleNull::GetRendererName();
 }
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc, int renderSystemDescSize)
 {
-    auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
-    return LLGL::ModuleNull::AllocRenderSystem(desc);
+    if (renderSystemDesc != nullptr && static_cast<std::size_t>(renderSystemDescSize) == sizeof(LLGL::RenderSystemDescriptor))
+    {
+        auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
+        return LLGL::ModuleNull::AllocRenderSystem(desc);
+    }
+    return nullptr;
 }
 
 } // /extern "C"

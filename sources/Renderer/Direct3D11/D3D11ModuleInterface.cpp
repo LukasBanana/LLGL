@@ -1,6 +1,6 @@
 /*
  * D3D11ModuleInterface.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -59,9 +59,14 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name()
     return LLGL::ModuleDirect3D11::GetRendererName();
 }
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc, int renderSystemDescSize)
 {
-    return LLGL::ModuleDirect3D11::AllocRenderSystem(nullptr);
+    if (renderSystemDesc != nullptr && static_cast<std::size_t>(renderSystemDescSize) == sizeof(LLGL::RenderSystemDescriptor))
+    {
+        auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
+        return LLGL::ModuleDirect3D11::AllocRenderSystem(desc);
+    }
+    return nullptr;
 }
 
 } // /extern "C"

@@ -39,7 +39,7 @@ class DbgRenderSystem final : public RenderSystem
 
         /* ----- Common ----- */
 
-        DbgRenderSystem(const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger);
+        DbgRenderSystem(RenderSystemPtr&& instance, RenderingProfiler* profiler, RenderingDebugger* debugger);
 
         /* ----- Swap-chain ------ */
 
@@ -202,7 +202,7 @@ class DbgRenderSystem final : public RenderSystem
 
         /* ----- Common objects ----- */
 
-        std::shared_ptr<RenderSystem>           instance_;
+        RenderSystemPtr                         instance_;
 
         RenderingProfiler*                      profiler_   = nullptr;
         RenderingDebugger*                      debugger_   = nullptr;

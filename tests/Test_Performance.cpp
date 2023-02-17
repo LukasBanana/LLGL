@@ -59,15 +59,15 @@ class PerformanceTest
 
     private:
 
-        std::unique_ptr<LLGL::RenderSystem> renderer;
-        LLGL::SwapChain*                    swapChain       = nullptr;
-        LLGL::CommandQueue*                 commandQueue    = nullptr;
-        LLGL::CommandBuffer*                commands        = nullptr;
+        LLGL::RenderSystemPtr       renderer;
+        LLGL::SwapChain*            swapChain       = nullptr;
+        LLGL::CommandQueue*         commandQueue    = nullptr;
+        LLGL::CommandBuffer*        commands        = nullptr;
 
-        LLGL::QueryHeap*                    timerQuery      = nullptr;
-        std::vector<LLGL::Texture*>         textures;
+        LLGL::QueryHeap*            timerQuery      = nullptr;
+        std::vector<LLGL::Texture*> textures;
 
-        TestConfig                          config;
+        TestConfig                  config;
 
     private:
 

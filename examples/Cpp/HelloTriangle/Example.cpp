@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
         std::string rendererModule = GetSelectedRendererModule(argc, argv);
 
         // Load render system module
-        std::unique_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load(rendererModule);
+        LLGL::RenderSystemPtr renderer = LLGL::RenderSystem::Load(rendererModule);
 
         // Create swap-chain
         LLGL::SwapChainDescriptor swapChainDesc;

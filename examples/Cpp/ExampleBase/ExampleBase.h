@@ -147,7 +147,7 @@ protected:
     const LLGL::ColorRGBAf                      backgroundColor = { 0.1f, 0.1f, 0.4f };
 
     // Render system
-    std::unique_ptr<LLGL::RenderSystem>         renderer;
+    LLGL::RenderSystemPtr                       renderer;
 
     // Main swap-chain
     LLGL::SwapChain*                            swapChain       = nullptr;

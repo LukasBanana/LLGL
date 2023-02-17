@@ -53,6 +53,56 @@ namespace LLGL
 {
 
 
+class RenderSystem;
+
+
+/**
+\brief Delegate to delete an instance of the RenderSystem interface.
+\remarks This deleter keeps a function pointer to the actual deleter from the renderer module.
+If no function pointer is provided, the deleter uses the C++ \c delete operator by default.
+\see RenderSystem::Load
+\see RenderSystem::Unload
+*/
+class RenderSystemDeleter
+{
+
+    public:
+
+        #ifdef _WIN32
+        typedef void (__cdecl *RenderSystemDeleterFuncPtr)(void*);
+        #else
+        typedef void (*RenderSystemDeleterFuncPtr)(void*);
+        #endif
+
+        RenderSystemDeleter() noexcept = default;
+
+        RenderSystemDeleter(const RenderSystemDeleter&) noexcept = default;
+        RenderSystemDeleter& operator = (const RenderSystemDeleter&) noexcept = default;
+
+        //! Constructs the deleter with the actual deleter function pointer.
+        inline RenderSystemDeleter(RenderSystemDeleterFuncPtr deleterFuncPtr);
+
+        /**
+        \breif Deletes the specified render system using the function pointer this deleter was initialized with.
+        \remarks If no function pointer was provided, the deleter uses the C++ \c delete operator by default.
+        */
+        inline void operator()(RenderSystem* ptr) const;
+
+    private:
+
+        RenderSystemDeleterFuncPtr deleterFuncPtr_ = nullptr;
+
+};
+
+/**
+\brief Unique pointer type for the RenderSystem interface with a custom deleter.
+\see RenderSystem
+\see RenderSystem::Load
+\see RenderSystem::Unload
+\see RenderSystemDeleter
+*/
+using RenderSystemPtr = std::unique_ptr<RenderSystem, RenderSystemDeleter>;
+
 /**
 \brief Render system interface.
 \remarks This is the main interface for the entire renderer.
@@ -117,7 +167,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \throws std::runtime_error If loading the render system from the specified module failed.
         \see RenderSystemDescriptor::moduleName
         */
-        static std::unique_ptr<RenderSystem> Load(
+        static RenderSystemPtr Load(
             const RenderSystemDescriptor&   renderSystemDesc,
             RenderingProfiler*              profiler            = nullptr,
             RenderingDebugger*              debugger            = nullptr
@@ -127,7 +177,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Unloads the specified render system and the internal module.
         \remarks After this call, the specified render system and all the objects associated to it must no longer be used!
         */
-        static void Unload(std::unique_ptr<RenderSystem>&& renderSystem);
+        static void Unload(RenderSystemPtr&& renderSystem);
 
     public:
 
@@ -590,6 +640,27 @@ class LLGL_EXPORT RenderSystem : public Interface
         Pimpl* pimpl_;
 
 };
+
+
+/*
+ * RenderSystemDeleter implementation
+ */
+
+inline RenderSystemDeleter::RenderSystemDeleter(RenderSystemDeleterFuncPtr deleterFuncPtr) :
+    deleterFuncPtr_ { deleterFuncPtr }
+{
+}
+
+inline void RenderSystemDeleter::operator()(RenderSystem* ptr) const
+{
+    if (ptr != nullptr)
+    {
+        if (deleterFuncPtr_ != nullptr)
+            deleterFuncPtr_(ptr);
+        else
+            delete ptr;
+    }
+}
 
 
 } // /namespace LLGL

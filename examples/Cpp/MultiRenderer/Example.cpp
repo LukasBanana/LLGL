@@ -19,7 +19,7 @@
 class MyRenderer
 {
 
-    std::unique_ptr<LLGL::RenderSystem> renderer;
+    LLGL::RenderSystemPtr               renderer;
     std::shared_ptr<LLGL::Window>       subWindow;
 
     LLGL::SwapChain*                    swapChain       = nullptr;

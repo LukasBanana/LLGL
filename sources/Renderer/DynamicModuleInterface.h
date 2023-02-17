@@ -1,6 +1,6 @@
 /*
  * DynamicModuleInterface.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -32,8 +32,14 @@ LLGL_EXPORT int LLGL_RenderSystem_RendererID();
 // Returns the name of this render system module (e.g. "OpenGL" or "Direct3D 11").
 LLGL_EXPORT const char* LLGL_RenderSystem_Name();
 
-// Returns a raw pointer to the allocated render system (allocated with "new" keyword)
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc);
+// Allocates the render system and returns it as raw pointer.
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc, int renderSystemDescSize);
+
+/**
+\brief Deletes the specified render system.
+\remarks This function is optional and the default deleter will be used if this function is not present in a render system module.
+*/
+LLGL_EXPORT void LLGL_RenderSystem_Free(void* renderSystem);
 
 #ifdef __cplusplus
 } // /extern "C"

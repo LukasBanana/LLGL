@@ -30,17 +30,13 @@ into a single braces block to highlight this function call, wher the input param
 All the actual render system objects are stored in the members named "instance", since they are the actual object instances.
 */
 
-DbgRenderSystem::DbgRenderSystem(
-    const std::shared_ptr<RenderSystem>&    instance,
-    RenderingProfiler*                      profiler,
-    RenderingDebugger*                      debugger)
-:
-    instance_ { instance           },
-    profiler_ { profiler           },
-    debugger_ { debugger           },
-    caps_     { GetRenderingCaps() },
-    features_ { caps_.features     },
-    limits_   { caps_.limits       }
+DbgRenderSystem::DbgRenderSystem(RenderSystemPtr&& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
+    instance_ { std::forward<RenderSystemPtr&&>(instance) },
+    profiler_ { profiler                                  },
+    debugger_ { debugger                                  },
+    caps_     { GetRenderingCaps()                        },
+    features_ { caps_.features                            },
+    limits_   { caps_.limits                              }
 {
 }
 
