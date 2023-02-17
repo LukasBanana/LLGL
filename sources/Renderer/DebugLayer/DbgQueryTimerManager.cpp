@@ -1,6 +1,6 @@
 /*
  * DbgQueryTimerManager.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,11 +10,15 @@
 #include <LLGL/RenderSystem.h>
 #include <LLGL/CommandQueue.h>
 #include <LLGL/QueryHeap.h>
+#include <LLGL/Misc/ForRange.h>
+#include <thread>
 
 
 namespace LLGL
 {
 
+
+static constexpr std::uint32_t g_queryTimerHeapSize = 64;
 
 DbgQueryTimerManager::DbgQueryTimerManager(
     RenderSystem&   renderSystemInstance,
@@ -30,8 +34,8 @@ DbgQueryTimerManager::DbgQueryTimerManager(
 void DbgQueryTimerManager::Reset()
 {
     records_.clear();
-    queryIndex_     = 0;
-    queryHeapIndex_ = 0;
+    currentQuery_       = 0;
+    currentQueryHeap_   = 0;
 }
 
 void DbgQueryTimerManager::Start(const char* annotation)
@@ -45,40 +49,40 @@ void DbgQueryTimerManager::Start(const char* annotation)
     records_.push_back(record);
 
     /* Check if end of query heap has been reached */
-    if (queryIndex_ == g_queryHeapSize)
+    if (currentQuery_ == g_queryTimerHeapSize)
     {
-        queryIndex_ = 0;
-        ++queryHeapIndex_;
+        currentQuery_ = 0;
+        ++currentQueryHeap_;
     }
 
     /* Check if new query heap must be created */
-    if (queryHeapIndex_ == queryHeaps_.size())
+    if (currentQueryHeap_ == queryHeaps_.size())
     {
         QueryHeapDescriptor queryDesc;
         {
             queryDesc.type          = QueryType::TimeElapsed;
-            queryDesc.numQueries    = g_queryHeapSize;
+            queryDesc.numQueries    = g_queryTimerHeapSize;
         }
         queryHeaps_.push_back(renderSystem_.CreateQueryHeap(queryDesc));
     }
 
     /* Begin timer query */
-    commandBuffer_.BeginQuery(*queryHeaps_[queryHeapIndex_], queryIndex_);
+    commandBuffer_.BeginQuery(*queryHeaps_[currentQueryHeap_], currentQuery_);
 }
 
 void DbgQueryTimerManager::Stop()
 {
     /* Stop timer query */
-    commandBuffer_.EndQuery(*queryHeaps_[queryHeapIndex_], queryIndex_);
+    commandBuffer_.EndQuery(*queryHeaps_[currentQueryHeap_], currentQuery_);
 
-    /* Increase queyr index */
-    ++queryIndex_;
+    /* Increase query index */
+    ++currentQuery_;
 }
 
-void DbgQueryTimerManager::TakeRecords(std::vector<ProfileTimeRecord>& records)
+void DbgQueryTimerManager::TakeRecords(std::vector<ProfileTimeRecord>& outRecords)
 {
     ResolveQueryResults();
-    records = std::move(records_);
+    outRecords = std::move(records_);
 }
 
 
@@ -88,23 +92,21 @@ void DbgQueryTimerManager::TakeRecords(std::vector<ProfileTimeRecord>& records)
 
 void DbgQueryTimerManager::ResolveQueryResults()
 {
-    std::size_t queryHeapIdx = 0;
-    std::uint32_t queryIdx = 0;
+    constexpr int maxAttempts = 100;
 
-    for (auto& rec : records_)
+    for_range(i, records_.size())
     {
-        if (queryIdx == g_queryHeapSize)
-        {
-            queryIdx = 0;
-            ++queryHeapIdx;
-        }
+        auto&   rec         = records_[i];
+        auto    query       = static_cast<std::uint32_t>(i % g_queryTimerHeapSize);
+        auto    queryHeap   = static_cast<std::uint32_t>(i / g_queryTimerHeapSize);
 
-        while (!commandQueue_.QueryResult(*queryHeaps_[queryHeapIdx], queryIdx, 1, &(rec.elapsedTime), sizeof(rec.elapsedTime)))
+        for_range(i, maxAttempts)
         {
-            // dummy
+            if (!commandQueue_.QueryResult(*queryHeaps_[queryHeap], query, 1, &(rec.elapsedTime), sizeof(rec.elapsedTime)))
+                std::this_thread::yield();
+            else
+                break;
         }
-
-        ++queryIdx;
     }
 }
 

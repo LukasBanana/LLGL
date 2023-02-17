@@ -100,7 +100,7 @@ void* NullBuffer::Map(const CPUAccess access, std::uint64_t offset, std::uint64_
     const bool isReadAccess = HasReadAccess(access);
 
     if ((isWriteAccess && (desc.cpuAccessFlags & CPUAccessFlags::Write) == 0) ||
-        (isReadAccess  && (desc.cpuAccessFlags & CPUAccessFlags::Read )) == 0)
+        (isReadAccess  && (desc.cpuAccessFlags & CPUAccessFlags::Read ) == 0))
     {
         /* Wrong CPU access for this buffer */
         return nullptr;

@@ -31,6 +31,7 @@
 #include "../RenderState/D3D12ComputePSO.h"
 
 #include <LLGL/TypeInfo.h>
+#include <LLGL/Misc/ForRange.h>
 
 #include "../D3DX12/d3dx12.h"
 #include <pix.h>
@@ -909,7 +910,7 @@ void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
         /* Set scissor to render target resolution */
         D3D12_RECT scissorRects[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
 
-        for (UINT i = 0; i < numScissorRects; ++i)
+        for_range(i, numScissorRects)
         {
             scissorRects[i].left    = D3D12_VIEWPORT_BOUNDS_MIN;
             scissorRects[i].top     = D3D12_VIEWPORT_BOUNDS_MIN;

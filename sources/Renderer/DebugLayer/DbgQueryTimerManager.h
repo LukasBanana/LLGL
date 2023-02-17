@@ -18,6 +18,7 @@ namespace LLGL
 {
 
 
+//TODO: rename to DbgQueryTimerPool
 class DbgQueryTimerManager
 {
 
@@ -39,7 +40,7 @@ class DbgQueryTimerManager
         void Stop();
 
         // Moves the internal records to the specified output container.
-        void TakeRecords(std::vector<ProfileTimeRecord>& records);
+        void TakeRecords(std::vector<ProfileTimeRecord>& outRecords);
 
     private:
 
@@ -48,15 +49,13 @@ class DbgQueryTimerManager
 
     private:
 
-        static const std::uint32_t g_queryHeapSize = 64;
-
         RenderSystem&                   renderSystem_;
         CommandQueue&                   commandQueue_;
         CommandBuffer&                  commandBuffer_;
 
         std::vector<QueryHeap*>         queryHeaps_;
-        std::uint32_t                   queryIndex_     = ~0u;
-        std::size_t                     queryHeapIndex_ = 0;
+        std::uint32_t                   currentQuery_       = 0;
+        std::uint32_t                   currentQueryHeap_   = 0;
 
         std::vector<ProfileTimeRecord>  records_;
 

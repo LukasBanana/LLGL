@@ -18,6 +18,7 @@
 
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
+#include <LLGL/Misc/ForRange.h>
 #include "D3DX12/d3dx12.h"
 #include <algorithm>
 
@@ -299,7 +300,7 @@ void D3D12SwapChain::CreateColorBufferRTVs(const Extent2D& resolution)
     /* Create color buffers */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescHandle(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
 
-    for (UINT i = 0; i < numFrames_; ++i)
+    for_range(i, numFrames_)
     {
         /* Get render target resource from swap-chain buffer */
         auto hr = swapChainDXGI_->GetBuffer(i, IID_PPV_ARGS(colorBuffers_[i].native.ReleaseAndGetAddressOf()));

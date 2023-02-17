@@ -1,6 +1,6 @@
 /*
  * D3D11CommandQueue.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,6 +10,7 @@
 #include "RenderState/D3D11Fence.h"
 #include "RenderState/D3D11QueryHeap.h"
 #include "../CheckedCast.h"
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -173,7 +174,7 @@ bool D3D11CommandQueue::QueryResultUInt32(
     std::uint32_t   numQueries,
     std::uint32_t*  data)
 {
-    for (std::uint32_t i = 0; i < numQueries; ++i)
+    for_range(i, numQueries)
     {
         std::uint64_t tempData = 0;
         if (QueryResultSingleUInt64(queryHeapD3D, firstQuery + i, tempData))
@@ -190,7 +191,7 @@ bool D3D11CommandQueue::QueryResultUInt64(
     std::uint32_t   numQueries,
     std::uint64_t*  data)
 {
-    for (std::uint32_t i = 0; i < numQueries; ++i)
+    for_range(i, numQueries)
     {
         if (!QueryResultSingleUInt64(queryHeapD3D, firstQuery + i, data[i]))
             return false;
@@ -229,7 +230,7 @@ bool D3D11CommandQueue::QueryResultPipelineStatistics(
     /* Query result from data of type: D3D11_QUERY_DATA_PIPELINE_STATISTICS */
     if (queryHeapD3D.GetNativeType() == D3D11_QUERY_PIPELINE_STATISTICS)
     {
-        for (std::uint32_t query = firstQuery; query < firstQuery + numQueries; ++query)
+        for_subrange(query, firstQuery, firstQuery + numQueries)
         {
             if (IsQueryPipelineStatsD3DCompatible())
             {
