@@ -12,7 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
 #include <functional>
-#include <iostream>
+#include <ostream>
 
 
 namespace LLGL
@@ -92,10 +92,10 @@ LLGL_EXPORT void SetReportCallback(const ReportCallback& callback, void* userDat
 
 /**
 \brief Sets the new report callback to the standard output streams.
-\param[in] stream Specifies the output stream. By default <code>std::cerr</code>.
+\param[in] stream Specifies a pointer to the output stream. If this is null, the standard output stream is effectively disabled.
 \see SetReportCallback
 */
-LLGL_EXPORT void SetReportCallbackStd(std::ostream& stream = std::cerr);
+LLGL_EXPORT void SetReportCallbackStd(std::ostream* stream);
 
 /**
 \brief Sets the maximum number of reports that will be triggered. All remaining reports will be ignored.

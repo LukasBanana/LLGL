@@ -8,6 +8,7 @@
 #include <LLGL/LLGL.h>
 #include <Gauss/Gauss.h>
 #include <vector>
+#include <iostream>
 
 // Fill an array list of 4D-vectors for testing purposes
 static std::vector<Gs::Vector4f> GetTestVector(std::size_t size)

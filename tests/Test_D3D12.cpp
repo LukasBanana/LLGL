@@ -8,12 +8,13 @@
 #include <LLGL/LLGL.h>
 #include <LLGL/Misc/VertexFormat.h>
 #include <Gauss/Gauss.h>
+#include <iostream>
 
 int main()
 {
     try
     {
-        LLGL::Log::SetReportCallbackStd();
+        LLGL::Log::SetReportCallbackStd(&(std::cerr));
 
         // Setup profiler and debugger
         std::shared_ptr<LLGL::RenderingProfiler> profiler;

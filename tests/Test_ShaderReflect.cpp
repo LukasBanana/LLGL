@@ -7,6 +7,7 @@
 
 #include <LLGL/LLGL.h>
 #include <LLGL/Misc/Utility.h>
+#include <iostream>
 
 int main()
 {

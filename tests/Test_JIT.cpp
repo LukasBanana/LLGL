@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
+#include <iostream>
 
 
 #if defined LLGL_ENABLE_JIT_COMPILER && defined LLGL_DEBUG

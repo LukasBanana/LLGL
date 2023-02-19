@@ -253,7 +253,7 @@ ExampleBase::ExampleBase(
     profiler     { *profilerObj_                 }
 {
     // Set report callback to standard output
-    LLGL::Log::SetReportCallbackStd();
+    LLGL::Log::SetReportCallbackStd(&(std::cerr));
     LLGL::Log::SetReportLimit(10);
 
     // Set up renderer descriptor
@@ -295,7 +295,7 @@ ExampleBase::ExampleBase(
     swapChain->SetName("SwapChain");
 
     // Create command buffer
-    commands = renderer->CreateCommandBuffer();
+    commands = renderer->CreateCommandBuffer();//LLGL::CommandBufferFlags::ImmediateSubmit);
 
     // Get command queue
     commandQueue = renderer->GetCommandQueue();

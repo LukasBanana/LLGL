@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <iostream>
 
 
 int main(int argc, char* argv[])
@@ -13,7 +14,7 @@ int main(int argc, char* argv[])
     try
     {
         // Set report callback to standard output
-        LLGL::Log::SetReportCallbackStd();
+        LLGL::Log::SetReportCallbackStd(&std::cerr);
 
         // Load render system module
         LLGL::RenderingDebugger debugger;

@@ -8,6 +8,7 @@
 #include <LLGL/LLGL.h>
 #include <LLGL/Misc/Utility.h>
 #include <LLGL/Misc/VertexFormat.h>
+#include <iostream>
 
 
 int main(int argc, char* argv[])
@@ -16,7 +17,7 @@ int main(int argc, char* argv[])
     {
         // Render system with debugger
         LLGL::RenderingDebugger debugger;
-        LLGL::Log::SetReportCallbackStd();
+        LLGL::Log::SetReportCallbackStd(&(std::cerr));
 
         auto renderer = LLGL::RenderSystem::Load("OpenGL", nullptr, &debugger);
 

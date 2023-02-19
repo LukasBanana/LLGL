@@ -25,7 +25,7 @@ namespace LLGL
 \brief Constant string view container template. Keeps pointer to string and its length.
 \remarks This does not provide a null-terminated string.
 \tparam TChar Specifies the string character type.
-\tparam Traits Specifies the characger traits. By default std::char_traits<TChar>.
+\tparam Traits Specifies the character traits. By default std::char_traits<TChar>.
 */
 template <typename TChar, typename Traits = std::char_traits<TChar>>
 class LLGL_EXPORT BasicStringView

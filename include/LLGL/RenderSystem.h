@@ -155,7 +155,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \remarks The debugger and profiler can be used like this:
         \code
         // Forward all log reports to the standard output stream for errors
-        LLGL::Log::SetReportCallbackStd(std::cerr);
+        LLGL::Log::SetReportCallbackStd(&(std::cerr));
 
         // Declare profiler and debugger (these classes can also be extended)
         LLGL::RenderingProfiler myProfiler;

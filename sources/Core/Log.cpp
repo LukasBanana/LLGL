@@ -40,7 +40,7 @@ LLGL_EXPORT void PostReport(ReportType type, const StringView& message, const St
 
     /* Get callback and user data with a lock guard */
     {
-        std::lock_guard<std::mutex> guard { g_logState.reportMutex };
+        std::lock_guard<std::mutex> guard{ g_logState.reportMutex };
 
         /* Get callback and user data */
         callback = g_logState.reportCallback;
@@ -59,27 +59,35 @@ LLGL_EXPORT void PostReport(ReportType type, const StringView& message, const St
 
 LLGL_EXPORT void SetReportCallback(const ReportCallback& callback, void* userData)
 {
-    std::lock_guard<std::mutex> guard { g_logState.reportMutex };
+    std::lock_guard<std::mutex> guard{ g_logState.reportMutex };
     g_logState.reportCallback   = callback;
     g_logState.userData         = userData;
 }
 
-LLGL_EXPORT void SetReportCallbackStd(std::ostream& stream)
+LLGL_EXPORT void SetReportCallbackStd(std::ostream* stream)
 {
-    std::lock_guard<std::mutex> guard { g_logState.reportMutex };
-    g_logState.outputStream     = (&stream);
-    g_logState.reportCallback   = [](ReportType type, const StringView& message, const StringView& contextInfo, void* userData)
+    std::lock_guard<std::mutex> guard{ g_logState.reportMutex };
+    if (stream != nullptr)
     {
-        if (!contextInfo.empty())
-            (*g_logState.outputStream) << std::string(contextInfo.begin(), contextInfo.end()) << ": ";
-        (*g_logState.outputStream) << std::string(message.begin(), message.end()) << std::endl;
-    };
-    g_logState.userData         = nullptr;
+        g_logState.outputStream     = stream;
+        g_logState.reportCallback   = [](ReportType type, const StringView& message, const StringView& contextInfo, void* userData)
+        {
+            if (!contextInfo.empty())
+                (*g_logState.outputStream) << std::string(contextInfo.begin(), contextInfo.end()) << ": ";
+            (*g_logState.outputStream) << std::string(message.begin(), message.end()) << std::endl;
+        };
+    }
+    else
+    {
+        g_logState.outputStream     = nullptr;
+        g_logState.reportCallback   = nullptr;
+    }
+    g_logState.userData = nullptr;
 }
 
 LLGL_EXPORT void SetReportLimit(std::size_t maxCount)
 {
-    std::lock_guard<std::mutex> guard { g_logState.reportMutex };
+    std::lock_guard<std::mutex> guard{ g_logState.reportMutex };
     g_logState.limit = maxCount;
 }
 
