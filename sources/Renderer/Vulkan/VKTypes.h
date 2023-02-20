@@ -56,7 +56,7 @@ VkSampleCountFlagBits   ToVkSampleCountBits(std::uint32_t samples);
 VkOffset3D              ToVkOffset(const Offset3D& offset);
 VkExtent3D              ToVkExtent(const Extent3D& extent);
 VkComponentSwizzle      ToVkComponentSwizzle(const TextureSwizzle swizzle);
-VkColorComponentFlags   ToVkVkColorComponentFlags(std::uint8_t colorMask);
+VkColorComponentFlags   ToVkColorComponentFlags(std::uint8_t colorMask);
 
 Format                  Unmap( const VkFormat format );
 

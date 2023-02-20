@@ -258,7 +258,7 @@ static void CreateColorBlendAttachmentState(
     createInfo.srcAlphaBlendFactor  = VKTypes::Map(desc.srcAlpha);
     createInfo.dstAlphaBlendFactor  = VKTypes::Map(desc.dstAlpha);
     createInfo.alphaBlendOp         = VKTypes::Map(desc.alphaArithmetic);
-    createInfo.colorWriteMask       = VKTypes::ToVkVkColorComponentFlags(desc.colorMask);
+    createInfo.colorWriteMask       = VKTypes::ToVkColorComponentFlags(desc.colorMask);
 }
 
 static void CreateColorBlendState(

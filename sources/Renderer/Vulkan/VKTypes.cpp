@@ -437,7 +437,7 @@ VkComponentSwizzle ToVkComponentSwizzle(const TextureSwizzle swizzle)
     VKTypes::MapFailed("TextureSwizzle", "VkComponentSwizzle");
 }
 
-VkColorComponentFlags ToVkVkColorComponentFlags(std::uint8_t colorMask)
+VkColorComponentFlags ToVkColorComponentFlags(std::uint8_t colorMask)
 {
     VkColorComponentFlags bitmask = 0;
     if ((colorMask & ColorMaskFlags::R) != 0) { bitmask |= VK_COLOR_COMPONENT_R_BIT; }
