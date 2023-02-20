@@ -219,7 +219,7 @@ private:
                 pipelineDesc.rasterizer.cullMode                    = LLGL::CullMode::Back;
                 pipelineDesc.rasterizer.depthBias.constantFactor    = 4.0f;
                 pipelineDesc.rasterizer.depthBias.slopeFactor       = 4.0f;
-                pipelineDesc.blend.targets[0].colorMask             = { false, false, false, false };
+                pipelineDesc.blend.targets[0].colorMask             = 0x0;
                 pipelineDesc.viewports                              = { shadowMapResolution };
             }
             pipelineShadowMap = renderer->CreatePipelineState(pipelineDesc);

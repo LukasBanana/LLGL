@@ -10,7 +10,6 @@
 
 
 #include <LLGL/Export.h>
-#include <LLGL/ColorRGBA.h>
 #include <LLGL/Types.h>
 #include <LLGL/Format.h>
 #include <LLGL/ForwardDecls.h>
@@ -268,6 +267,26 @@ enum class TessellationPartition
     \remarks Equivalent of <code>[partitioning("fractional_even")]</code> in HLSL and <code>layout(fractional_even_spacing)</code> in GLSL.
     */
     FractionalEven,
+};
+
+
+/* ----- Flags ----- */
+
+/**
+\brief Blend target color mask flags.
+\see BlendTargetDescriptor::colorMask
+*/
+struct ColorMaskFlags
+{
+    enum : std::uint8_t
+    {
+        Zero    = 0,                //!< No color mask. Use this to disable rasterizer output.
+        R       = (1 << 0),         //!< Bitmask for the red channel. Value is \c 0x1.
+        G       = (1 << 1),         //!< Bitmask for the green channel. Value is \c 0x2.
+        B       = (1 << 2),         //!< Bitmask for the blue channel. Value is \c 0x4.
+        A       = (1 << 3),         //!< Bitmask for the alpha channel. Value is \c 0x8.
+        All     = (R | G | B | A),  //!< Bitwise OR combination of all color component bitmasks.
+    };
 };
 
 
@@ -612,12 +631,13 @@ struct BlendTargetDescriptor
     BlendArithmetic alphaArithmetic = BlendArithmetic::Add;
 
     /**
-    \brief Specifies which color components are enabled for writing. By default <code>(true, true, true, true)</code>.
+    \brief Specifies which color components are enabled for writing. By default LLGL::ColorMaskFlags::All to enable all components.
     \remarks If no pixel shader is used in the graphics pipeline,
-    the color mask \b must be set to \c false for all components. Otherwise, the behavior is undefined.
+    the color mask \b must be set to LLGL::ColorMaskFlags::Zero (or 0) to disable rasterizer output. Otherwise, the behavior is undefined.
     */
-    ColorRGBAb      colorMask       = { true, true, true, true };
+    std::uint8_t    colorMask       = LLGL::ColorMaskFlags::All;
 };
+
 
 /**
 \brief Blending state descriptor structure.
@@ -667,7 +687,7 @@ struct BlendDescriptor
     \see BlendOp::InvBlendFactor
     \see CommandBuffer::SetBlendFactor
     */
-    ColorRGBAf              blendFactor             = { 0.0f, 0.0f, 0.0f, 0.0f };
+    float                   blendFactor[4]          = { 0.0f, 0.0f, 0.0f, 0.0f };
 
     /**
     \brief Specifies whether the blend factor will be set dynamically with the command buffer. By default false.

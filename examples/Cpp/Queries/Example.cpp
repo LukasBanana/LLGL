@@ -106,14 +106,14 @@ public:
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
 
-            pipelineDesc.blend.targets[0].colorMask     = LLGL::ColorRGBAb{ false };
+            pipelineDesc.blend.targets[0].colorMask     = 0x0;
         }
         occlusionPipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Create graphics pipeline for scene rendering
         {
             pipelineDesc.blend.targets[0].blendEnabled  = true;
-            pipelineDesc.blend.targets[0].colorMask     = LLGL::ColorRGBAb{ true };
+            pipelineDesc.blend.targets[0].colorMask     = 0xF;
         }
         scenePipeline = renderer->CreatePipelineState(pipelineDesc);
     }

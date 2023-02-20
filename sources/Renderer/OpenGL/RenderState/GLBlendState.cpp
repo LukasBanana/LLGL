@@ -22,18 +22,12 @@ namespace LLGL
 {
 
 
-static void Convert(GLfloat (&dst)[4], const ColorRGBAf& src)
-{
-    dst[0] = src[0];
-    dst[1] = src[1];
-    dst[2] = src[2];
-    dst[3] = src[3];
-}
-
 GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAttachments)
 {
-    Convert(blendColor_, desc.blendFactor);
-
+    blendColor_[0]          = desc.blendFactor[0];
+    blendColor_[1]          = desc.blendFactor[1];
+    blendColor_[2]          = desc.blendFactor[2];
+    blendColor_[3]          = desc.blendFactor[3];
     blendColorDynamic_      = desc.blendFactorDynamic;
     blendColorEnabled_      = IsStaticBlendFactorEnabled(desc);
     sampleAlphaToCoverage_  = desc.alphaToCoverageEnabled;
@@ -261,10 +255,10 @@ void GLBlendState::GLDrawBufferState::Convert(GLDrawBufferState& dst, const Blen
     dst.srcAlpha        = GLTypes::Map(src.srcAlpha);
     dst.dstAlpha        = GLTypes::Map(src.dstAlpha);
     dst.funcAlpha       = GLTypes::Map(src.alphaArithmetic);
-    dst.colorMask[0]    = GLBoolean(src.colorMask.r);
-    dst.colorMask[1]    = GLBoolean(src.colorMask.g);
-    dst.colorMask[2]    = GLBoolean(src.colorMask.b);
-    dst.colorMask[3]    = GLBoolean(src.colorMask.a);
+    dst.colorMask[0]    = GLBoolean((src.colorMask & ColorMaskFlags::R) != 0);
+    dst.colorMask[1]    = GLBoolean((src.colorMask & ColorMaskFlags::G) != 0);
+    dst.colorMask[2]    = GLBoolean((src.colorMask & ColorMaskFlags::B) != 0);
+    dst.colorMask[3]    = GLBoolean((src.colorMask & ColorMaskFlags::A) != 0);
 }
 
 int GLBlendState::GLDrawBufferState::CompareSWO(const GLDrawBufferState& lhs, const GLDrawBufferState& rhs)

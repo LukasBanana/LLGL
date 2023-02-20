@@ -236,7 +236,7 @@ private:
                 pipelineDesc.depth.compareOp            = LLGL::CompareOp::Greater;
                 pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Front;
                 //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
-                pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
+                pipelineDesc.blend.targets[0].colorMask = 0x0;
             }
             pipelineRangePass = renderer->CreatePipelineState(pipelineDesc);
         }
@@ -253,7 +253,7 @@ private:
                 pipelineDesc.depth.compareOp            = LLGL::CompareOp::Less;
                 pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
                 //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
-                pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
+                pipelineDesc.blend.targets[0].colorMask = 0x0;
             }
             pipelineZPrePass = renderer->CreatePipelineState(pipelineDesc);
         }

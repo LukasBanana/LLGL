@@ -112,8 +112,8 @@ int main()
         pipeline[2] = renderer->CreatePipelineState(pipelineDesc);
 
         {
-            pipelineDesc.blend.targets[0].blendEnabled = false;
-            pipelineDesc.blend.targets[0].colorMask = { false, false, false, false };
+            pipelineDesc.blend.targets[0].blendEnabled  = false;
+            pipelineDesc.blend.targets[0].colorMask     = 0x0;
         }
         pipeline[3] = renderer->CreatePipelineState(pipelineDesc);
 

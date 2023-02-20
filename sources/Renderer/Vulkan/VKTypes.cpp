@@ -437,6 +437,16 @@ VkComponentSwizzle ToVkComponentSwizzle(const TextureSwizzle swizzle)
     VKTypes::MapFailed("TextureSwizzle", "VkComponentSwizzle");
 }
 
+VkColorComponentFlags ToVkVkColorComponentFlags(std::uint8_t colorMask)
+{
+    VkColorComponentFlags bitmask = 0;
+    if ((colorMask & ColorMaskFlags::R) != 0) { bitmask |= VK_COLOR_COMPONENT_R_BIT; }
+    if ((colorMask & ColorMaskFlags::G) != 0) { bitmask |= VK_COLOR_COMPONENT_G_BIT; }
+    if ((colorMask & ColorMaskFlags::B) != 0) { bitmask |= VK_COLOR_COMPONENT_B_BIT; }
+    if ((colorMask & ColorMaskFlags::A) != 0) { bitmask |= VK_COLOR_COMPONENT_A_BIT; }
+    return bitmask;
+}
+
 Format Unmap(const VkFormat format)
 {
     switch (format)

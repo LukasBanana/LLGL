@@ -169,7 +169,7 @@ private:
                 pipelineDesc.stencil.front.writeMask        = ~0u;                              // Write all stencil bits
                 pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
-                pipelineDesc.blend.targets[0].colorMask     = { false, false, false, false };   // Write no color bits
+                pipelineDesc.blend.targets[0].colorMask     = 0x0;                              // Write no color bits
             }
             pipelineStencilWrite = renderer->CreatePipelineState(pipelineDesc);
         }

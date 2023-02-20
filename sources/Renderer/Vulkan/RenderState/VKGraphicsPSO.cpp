@@ -247,15 +247,6 @@ static void CreateDepthStencilState(
     createInfo.maxDepthBounds           = 1.0f;
 }
 
-static void Convert(VkColorComponentFlags& dst, const ColorRGBAb& src)
-{
-    dst = 0;
-    if (src.r) { dst |= VK_COLOR_COMPONENT_R_BIT; }
-    if (src.g) { dst |= VK_COLOR_COMPONENT_G_BIT; }
-    if (src.b) { dst |= VK_COLOR_COMPONENT_B_BIT; }
-    if (src.a) { dst |= VK_COLOR_COMPONENT_A_BIT; }
-}
-
 static void CreateColorBlendAttachmentState(
     VkPipelineColorBlendAttachmentState&    createInfo,
     const BlendTargetDescriptor&            desc)
@@ -267,7 +258,7 @@ static void CreateColorBlendAttachmentState(
     createInfo.srcAlphaBlendFactor  = VKTypes::Map(desc.srcAlpha);
     createInfo.dstAlphaBlendFactor  = VKTypes::Map(desc.dstAlpha);
     createInfo.alphaBlendOp         = VKTypes::Map(desc.alphaArithmetic);
-    Convert(createInfo.colorWriteMask, desc.colorMask);
+    createInfo.colorWriteMask       = VKTypes::ToVkVkColorComponentFlags(desc.colorMask);
 }
 
 static void CreateColorBlendState(
@@ -305,10 +296,10 @@ static void CreateColorBlendState(
 
     createInfo.attachmentCount      = numColorAttachments;
     createInfo.pAttachments         = attachmentStatesVK.data();
-    createInfo.blendConstants[0]    = desc.blendFactor.r;
-    createInfo.blendConstants[1]    = desc.blendFactor.g;
-    createInfo.blendConstants[2]    = desc.blendFactor.b;
-    createInfo.blendConstants[3]    = desc.blendFactor.a;
+    createInfo.blendConstants[0]    = desc.blendFactor[0];
+    createInfo.blendConstants[1]    = desc.blendFactor[1];
+    createInfo.blendConstants[2]    = desc.blendFactor[2];
+    createInfo.blendConstants[3]    = desc.blendFactor[3];
 }
 
 static void CreateDynamicState(

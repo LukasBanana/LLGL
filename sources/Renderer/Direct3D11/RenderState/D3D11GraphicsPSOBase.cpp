@@ -58,10 +58,10 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& des
     stencilRefDynamic_  = desc.stencil.referenceDynamic;
     stencilRef_         = desc.stencil.front.reference;
     blendFactorDynamic_ = desc.blend.blendFactorDynamic;
-    blendFactor_[0]     = desc.blend.blendFactor.r;
-    blendFactor_[1]     = desc.blend.blendFactor.g;
-    blendFactor_[2]     = desc.blend.blendFactor.b;
-    blendFactor_[3]     = desc.blend.blendFactor.a;
+    blendFactor_[0]     = desc.blend.blendFactor[0];
+    blendFactor_[1]     = desc.blend.blendFactor[1];
+    blendFactor_[2]     = desc.blend.blendFactor[2];
+    blendFactor_[3]     = desc.blend.blendFactor[3];
     sampleMask_         = desc.blend.sampleMask;
 
     /* Build static state buffer for viewports and scissors */

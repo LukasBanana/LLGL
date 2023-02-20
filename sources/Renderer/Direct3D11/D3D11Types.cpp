@@ -312,14 +312,14 @@ void Convert(D3D11_RASTERIZER_DESC2& dst, const RasterizerDescriptor& src)
 
 #endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
 
-static UINT8 GetColorWriteMask(const ColorRGBAb& color)
+static UINT8 GetColorWriteMask(std::uint8_t colorMask)
 {
     UINT8 mask = 0;
 
-    if (color.r) { mask |= D3D11_COLOR_WRITE_ENABLE_RED;   }
-    if (color.g) { mask |= D3D11_COLOR_WRITE_ENABLE_GREEN; }
-    if (color.b) { mask |= D3D11_COLOR_WRITE_ENABLE_BLUE;  }
-    if (color.a) { mask |= D3D11_COLOR_WRITE_ENABLE_ALPHA; }
+    if ((colorMask & ColorMaskFlags::R) != 0) { mask |= D3D11_COLOR_WRITE_ENABLE_RED;   }
+    if ((colorMask & ColorMaskFlags::G) != 0) { mask |= D3D11_COLOR_WRITE_ENABLE_GREEN; }
+    if ((colorMask & ColorMaskFlags::B) != 0) { mask |= D3D11_COLOR_WRITE_ENABLE_BLUE;  }
+    if ((colorMask & ColorMaskFlags::A) != 0) { mask |= D3D11_COLOR_WRITE_ENABLE_ALPHA; }
 
     return mask;
 }

@@ -1479,24 +1479,21 @@ void DbgRenderSystem::ValidateTextureForBinding(const DbgTexture& textureDbg, co
 }
 
 // Converts the specified color mask into a string representation (e.g. "RGBA" or "R_G_").
-static std::string ColorMaskToString(const ColorRGBAb& color)
+static std::string ColorMaskToString(std::uint8_t colorMask)
 {
     std::string s;
 
-    s += (color.r ? 'R' : '_');
-    s += (color.g ? 'G' : '_');
-    s += (color.b ? 'B' : '_');
-    s += (color.a ? 'A' : '_');
+    s += ((colorMask & ColorMaskFlags::R) != 0 ? 'R' : '_');
+    s += ((colorMask & ColorMaskFlags::G) != 0 ? 'G' : '_');
+    s += ((colorMask & ColorMaskFlags::B) != 0 ? 'B' : '_');
+    s += ((colorMask & ColorMaskFlags::A) != 0 ? 'A' : '_');
 
     return s;
 }
 
 void DbgRenderSystem::ValidateColorMaskIsDisabled(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx)
 {
-    if (blendTargetDesc.colorMask.r ||
-        blendTargetDesc.colorMask.g ||
-        blendTargetDesc.colorMask.b ||
-        blendTargetDesc.colorMask.a)
+    if (blendTargetDesc.colorMask != 0)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,

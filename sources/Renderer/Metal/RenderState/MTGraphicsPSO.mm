@@ -1,6 +1,6 @@
 /*
  * MTGraphicsPSO.mm
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -62,10 +62,10 @@ MTGraphicsPSO::MTGraphicsPSO(
 
     blendColorDynamic_  = desc.blend.blendFactorDynamic;
     blendColorEnabled_  = IsStaticBlendFactorEnabled(desc.blend);
-    blendColor_[0]      = desc.blend.blendFactor.r;
-    blendColor_[1]      = desc.blend.blendFactor.g;
-    blendColor_[2]      = desc.blend.blendFactor.b;
-    blendColor_[3]      = desc.blend.blendFactor.a;
+    blendColor_[0]      = desc.blend.blendFactor[0];
+    blendColor_[1]      = desc.blend.blendFactor[1];
+    blendColor_[2]      = desc.blend.blendFactor[2];
+    blendColor_[3]      = desc.blend.blendFactor[3];
 
     /* Create render pipeline and depth-stencil states */
     CreateRenderPipelineState(device, desc, defaultRenderPass);
@@ -111,20 +111,16 @@ void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
  * ======= Private: =======
  */
 
-static MTLColorWriteMask ToMTLColorWriteMask(const ColorRGBAb& color)
+static MTLColorWriteMask ToMTLColorWriteMask(std::uint8_t colorMask)
 {
-    MTLColorWriteMask mask = MTLColorWriteMaskNone;
+    MTLColorWriteMask writeMask = MTLColorWriteMaskNone;
 
-    if (color.r)
-        mask |= MTLColorWriteMaskRed;
-    if (color.g)
-        mask |= MTLColorWriteMaskGreen;
-    if (color.b)
-        mask |= MTLColorWriteMaskBlue;
-    if (color.a)
-        mask |= MTLColorWriteMaskAlpha;
+    if ((colorMask & ColorMaskFlags::R) != 0) { writeMask |= MTLColorWriteMaskRed;   }
+    if ((colorMask & ColorMaskFlags::G) != 0) { writeMask |= MTLColorWriteMaskGreen; }
+    if ((colorMask & ColorMaskFlags::B) != 0) { writeMask |= MTLColorWriteMaskBlue;  }
+    if ((colorMask & ColorMaskFlags::A) != 0) { writeMask |= MTLColorWriteMaskAlpha; }
 
-    return mask;
+    return writeMask;
 }
 
 static void FillColorAttachmentDesc(

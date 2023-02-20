@@ -59,10 +59,10 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
     stencilRef_         = desc.stencil.front.reference;
 
     blendFactorEnabled_ = IsStaticBlendFactorEnabled(desc.blend);
-    blendFactor_[0]     = desc.blend.blendFactor.r;
-    blendFactor_[1]     = desc.blend.blendFactor.g;
-    blendFactor_[2]     = desc.blend.blendFactor.b;
-    blendFactor_[3]     = desc.blend.blendFactor.a;
+    blendFactor_[0]     = desc.blend.blendFactor[0];
+    blendFactor_[1]     = desc.blend.blendFactor[1];
+    blendFactor_[2]     = desc.blend.blendFactor[2];
+    blendFactor_[3]     = desc.blend.blendFactor[3];
 
     /* Build static state buffer for viewports and scissors */
     if (!desc.viewports.empty() || !desc.scissors.empty())
@@ -123,14 +123,14 @@ static D3D12_SHADER_BYTECODE GetD3DShaderByteCode(const Shader* shader)
         return D3D12_SHADER_BYTECODE{ nullptr, 0 };
 }
 
-static UINT8 GetColorWriteMask(const ColorRGBAb& color)
+static UINT8 GetColorWriteMask(std::uint8_t colorMask)
 {
     UINT8 mask = 0;
 
-    if (color.r) { mask |= D3D12_COLOR_WRITE_ENABLE_RED;   }
-    if (color.g) { mask |= D3D12_COLOR_WRITE_ENABLE_GREEN; }
-    if (color.b) { mask |= D3D12_COLOR_WRITE_ENABLE_BLUE;  }
-    if (color.a) { mask |= D3D12_COLOR_WRITE_ENABLE_ALPHA; }
+    if ((colorMask & ColorMaskFlags::R) != 0) { mask |= D3D12_COLOR_WRITE_ENABLE_RED;   }
+    if ((colorMask & ColorMaskFlags::G) != 0) { mask |= D3D12_COLOR_WRITE_ENABLE_GREEN; }
+    if ((colorMask & ColorMaskFlags::B) != 0) { mask |= D3D12_COLOR_WRITE_ENABLE_BLUE;  }
+    if ((colorMask & ColorMaskFlags::A) != 0) { mask |= D3D12_COLOR_WRITE_ENABLE_ALPHA; }
 
     return mask;
 }
