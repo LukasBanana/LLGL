@@ -1,6 +1,6 @@
 \documentclass{article}
 \title{Getting Started with LLGL}
-\author{Lukas Hermanns}
+\author{L. Hermanns}
 \date{\today}
 
 \usepackage{listings}
@@ -103,8 +103,8 @@
 	
 	\item \textbf{Low Overhead} \\
 	\LLGL is meant to be a thin abstraction layer which only adds as less overhead between your application and the underlying rendering API as possible.
-	At best, a function is just a wrapper that passes the parameters to the actual renderer.
-	For example, the implementation of the \texttt{CommandBuffer::DrawIndexed} interface for Direct3D11:
+	At best, a function is just a wrapper that passes the parameters on to the native rendering API.
+	For example, the implementation of the \texttt{CommandBuffer::DrawIndexed} interface for Direct3D 11 looks something like this:
 \begin{lstlisting}
 void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex) {
     context_->DrawIndexed(numVertices, firstIndex, 0);
@@ -115,25 +115,25 @@ void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t fi
 	\LLGL provides various compatibility functionalities between the renderers.
 	For example, some image formats that are supported by OpenGL but not by Direct3D are converted `on the fly' by \LLGL.
 	However, some compromises are inevitable, due to different hardware restrictions.
-	All incompatibilities are well documented though.
+	Having said that, all incompatibilities are well documented.
 	
 	\item \textbf{Simplification} \\
 	Where close access to the hardware is not necessary, \LLGL provides useful simplifications.
-	For example, creating a render context as well as a device context across multiple platforms requires a lot of work when done manually.
-	With \LLGL, this can be done with a few lines of code, but still have plenty of control thanks to the rich descriptor structures.
+	For example, creating a swap-chain as well as a device context across multiple platforms can be a high effort when done manually.
+	With \LLGL, this can be done with a few lines of code while maintaining a high degree of control thanks to the rich descriptor structures.
 	
 	\item \textbf{Debug Layer} \\
 	In debug mode, \LLGL makes use of the native debug layers for the respective renderer.
 	These debug layers, however, vary in quality depending on the API.
 	\LLGL offers another debug layer on top of it that can be easily enabled or disabled.
-	This layer performs state validation, parameter checks, warnings and errors messages before each draw call.
+	This layer performs extensive state-, parameter-, and descritpor validation before each draw call.
 	This can be a powerful tool to find invalid render states or erronous descriptors.
 	
 	\item \textbf{Extension Support} \\
 	Especially OpenGL is a complex system due to its many extensions.
 	For texturing alone, \LLGL manages eight different extensions.
 	Depending on which extension is available on the host platform, \LLGL uses the most efficient or otherwise emulates the functionality.
-	Even a few vendor specific extensions are supported.
+	Even a few vendor specific extensions are supported. Extensions in form of API revisions in Direct3D are also supported such as Direct3D 11.3.
 \end{itemize}
 
 
@@ -142,8 +142,8 @@ void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t fi
 \begin{itemize}
 	\item \textbf{Shader Cross Compilation} \\
 	\LLGL unifies the underlying rendering APIs as far as possible, but since each rendering API has its own shading language,
-	all shaders need to be provided for each desired renderer explicitly by the user.
-	That said, there are several shader cross compilers available:
+	all shaders need to be provided for each selected renderer explicitly.
+	Having said that, there are several shader cross compilers available:
 	\begin{itemize}
 	\item XShaderCompiler (\href{https://github.com/LukasBanana/XShaderCompiler}{github.com/LukasBanana/XShaderCompiler}),
 	\item SPIRV-Cross (\href{https://github.com/KhronosGroup/SPIRV-Cross}{github.com/KhronosGroup/SPIRV-Cross}),
@@ -170,7 +170,7 @@ OpenGL, Direct3D, and Vulkan. It is meant to abstract these rendering technologi
 The library is written entirely in C++11, so you'll
 need a modern C++ compiler, i.e. at least \textbf{VisualC++ 2015} for Windows,
 \textbf{g++ 4.8} for Linux, or \textbf{Clang 3.1} for MacOS.
-To work with this library you should be familiar with these subjects:
+To take advantage of this library you should be familiar with these subjects:
 \begin{itemize}
 	\item \textbf{Basic C++11 Programming} \\
 	Since the library is written in C++11, you should know something about \emph{smart pointers},
@@ -186,9 +186,10 @@ To work with this library you should be familiar with these subjects:
 	because \LLGL does only little to no higher abstractions.
 	
 	\item \textbf{Shading Languages} \\
-	\LLGL forces you to always write your own shaders, so you should be familiar with
-	\href{https://www.opengl.org/documentation/glsl/}{GLSL} or
-	\href{https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl}{HLSL}.
+	\LLGL requires you to always write your own shaders, so you should be familiar with
+	\href{https://www.khronos.org/opengl/wiki/OpenGL_Shading_Language}{GLSL},
+	\href{https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl}{HLSL},
+	or \href{https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf}{Metal}.
 \end{itemize}
 
 
@@ -199,7 +200,8 @@ To work with this library you should be familiar with these subjects:
 \newpage
 \section{Progress}
 
-This project is still in its early steps. Here is a short overview of its progress:
+As with many open-source projects that people work on in their spare time, this project does \emph{not} claim to be complete nor that it ever will.
+The best source to convince yourself of its capabilities is to take a look at the examples that are included in the \LLGL repository.
 
 \subsection{Platforms}
 \begin{itemize}
@@ -227,6 +229,11 @@ This project is still in its early steps. Here is a short overview of its progre
 	\item \textbf{OpenGL} on Windows, GNU/Linux, and macOS
 \end{itemize}
 
+\subsection{Known issues}
+A major feature with quite a lot of known issues is multi-threaded command recording.
+One of the big selling points of Vulkan and Direct3D 12 for better multi-threaded rendering support does not work correctly in \LLGL as of 2023.
+Ironically, this is currently only fully support in the OpenGL backend as it servers as the reference implementation of \LLGL since it's supported on most platforms.
+
 
 %----------------------------------------------------------------------------------------
 %	BUILD PROCESS
@@ -237,7 +244,7 @@ This project is still in its early steps. Here is a short overview of its progre
 
 \subsection{Cloning Repository}
 
-There are some submodules in the \LLGL repository, all of which are optional though.
+There are some submodules in the \LLGL repository, all of which are optional.
 These submodules are located in the \texttt{external/} directory.
 To clone the repository with \href{https://git-scm.com/}{git}, enter the following line in a command prompt:
 \begin{lstlisting}[language=sh]
@@ -277,7 +284,7 @@ and of course a graphics driver which supports at least Vulkan 1.0.
 \newpage
 \subsection{Build Tool}
 
-To build the \LLGL project files you need the build tool \href{https://cmake.org/}{CMake 2.8} or later.
+To build the \LLGL project files you need the build tool \href{https://cmake.org/}{CMake 3.7} or later.
 The build process is now demonstrated with the CMake GUI on Windows, but it can also be configured
 on a command line (more about this see \href{https://cmake.org/runningcmake/}{cmake.org/runningcmake}).
 
@@ -359,7 +366,7 @@ which contains all necessary information to describe the object which is to be c
 
 There are three major interfaces for rendering:
 \emph{RenderSystem} is mainly used for object creation and memory read/write operations,
-\emph{RenderContext} is used to configure each framebuffer and its back buffer (or rather swap chain),
+\emph{SwapChain} is used to configure each framebuffer and its back buffers,
 and \emph{CommandBuffer} which is used to set render states, draw primitives, and dispatch compute commands.
 
 \subsubsection{RenderSystem}
@@ -385,20 +392,20 @@ Unmap...
 Release
 \end{lstlisting}
 
-\subsubsection{RenderContext}
+\subsubsection{SwapChain}
 
-The most important function in the \texttt{RenderContext} interface is \texttt{Present},
+The most important function in the \texttt{SwapCHain} interface is \texttt{Present},
 to show the content of the back buffer on the screen.
 There are a few other functions to access the context window and change the video mode:
 \begin{lstlisting}
-// Access context surface (this is the window on desktop platforms).
+// Access the surface to render into ('Window' on desktop/ 'Canvas' on mobile)
 GetSurface
 
-// Set video mode (i.e. resolution, fullscreen/windowed mode etc.)
-SetVideoMode
+// Resizes all front- and back buffers (i.e. resolution, fullscreen/windowed mode etc.)
+ResizeBuffers
 
-// Set vertical synchronization (Vsync) for swap-chain
-SetVsync
+// Set vertical synchronization (Vsync) interval
+SetVsyncInterval
 \end{lstlisting}
 
 \subsubsection{CommandBuffer}
@@ -473,7 +480,7 @@ To create an \LLGL renderer instance in our main function, we load a renderer mo
 (a \textit{module} here denotes a dynamic shared library)
 from the static \texttt{Load} function of the \texttt{RenderSystem} interface:
 \begin{lstlisting}
-std::unique_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("OpenGL");
+LLGL::RenderSystemPtr myRenderer = LLGL::RenderSystem::Load("OpenGL");
 \end{lstlisting}
 Here we could actually use the C++11 keyword \texttt{auto} to simplify the code,
 but for explanation purposes we keep the types explicit.
@@ -495,27 +502,32 @@ This can be very handy if a specific Direct3D version is not installed on the ho
 so another Direct3D version or OpenGL renderer can be loaded as fallback
 without disturbing the user with akward error messages and program crashes.
 
-After we created the renderer we need a graphics context to draw into.
-This is done by the \texttt{CreateRenderContext} function which takes a descriptor structure:
+After we created the renderer we need a framebuffer to draw into and present the result on the screen.
+This is done by the \texttt{CreateSwapChain} function which takes the following descriptor structure:
 \begin{lstlisting}
-LLGL::RenderContextDescriptor contextDesc;
+LLGL::SwapChainDescriptor mySwapChainDesc;
 {
-    contextDesc.videoMode.resolution = { 640, 480 };
+    mySwapChainDesc.resolution = { 640, 480 };
 }
-LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
+LLGL::SwapChain* mySwapChain = myRenderer->CreateSwapChain(mySwapChainDesc);
 \end{lstlisting}
-This is a minimal example for the render context descriptor. There are much more attributes
-to specify multi-sampled anti-aliasing, vertical-synchronisation, etc.
+This is a minimal example for the swap-chain descriptor. There are several more attributes
+to specify multi-sampled anti-aliasing, bit depth, etc.
 See the API documentation for more information about these attributes.
 
-This render context will create its own window, but we could also specifiy our own one.
-However, in this example we keep it simple. To access this window and change the title,
-we use the \texttt{GetWindow} function of the \texttt{RenderContext} interface
-which returns a reference to its window:
+This swap-chain will create its own surface, but we could also specifiy our own one.
+However, in this example we keep it simple. To access this surface and change the title,
+we use the \texttt{GetSurface} function of the \texttt{SwapChain} interface
+and interpret it as a \texttt{Window} on desktop platforms:
 \begin{lstlisting}
-context->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
+LLGL::Window& myWindow = LLGL::Cast<LLGL::Window>(mySwapChain->GetSurface());
+myWindow.SetTitle("LLGL Tutorial 01: Hello Triangle");
 \end{lstlisting}
-Since some platforms (such as Win32) support Unicode window titles, our string literal starts with the `L' token.
+The window that was created automatically is hidden by default and we have to show it explicitly.
+\begin{lstlisting}
+myWindow.Show();
+\end{lstlisting}
+This way, modifications like changing the window title only become visible once the window is explicitly shown.
 
 Next we create a vertex buffer to store our geometry. For this example we give up an index buffer,
 since we only draw a single triangle and no complex models. At first we define our vertex data and the vertex format,
@@ -523,21 +535,21 @@ which is required to tell the rendering API how the vertex attributes are locate
 \begin{lstlisting}
 // Vertex data structure
 struct Vertex {
-    Gs::Vector2f    position;
-    LLGL::ColorRGBf color;
+    float   position[2];
+    uint8_t color[4];
 };
 
 // Vertex data (3 vertices for our triangle)
-Vertex vertices[] = {
-    { {  0,  1 }, { 1, 0, 0 } }, // 1st vertex: center-top, red
-    { {  1, -1 }, { 0, 1, 0 } }, // 2nd vertex: right-bottom, green
-    { { -1, -1 }, { 0, 0, 1 } }, // 3rd vertex: left-bottom, blue
+Vertex myVertices[] = {
+    { { +0.0f, +0.5f }, { 255,   0,   0, 255 } }, // 1st vertex: center-top, red
+    { { +0.5f, -1.0f }, {   0, 255,   0, 255 } }, // 2nd vertex: right-bottom, green
+    { { -0.5f, -1.0f }, {   0,   0, 255, 255 } }, // 3rd vertex: left-bottom, blue
 };
 
 // Vertex format
 LLGL::VertexFormat vertexFormat;
-vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 }); // position has 2D float vector
-vertexFormat.AppendAttribute({ "color",    LLGL::VectorType::Float3 }); // color has 3D float vector
+vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float  }); // 2D float vector
+vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm }); // 4D unsigned normalized vector
 \end{lstlisting}
 The \texttt{AppendAttribute} function adds the attributes to the vertex format.
 The order of these function calls determines the location in the vertex data, so they must match
@@ -546,87 +558,63 @@ the order of the member fields in the vertex data structure (here ``\texttt{stru
 Now we can create our vertex buffer and upload the vertex data to the GPU by passing a pointer
 to the \texttt{initialData} parameter:
 \begin{lstlisting}
-LLGL::BufferDescriptor bufferDesc;
+LLGL::BufferDescriptor myVertexBufferDesc;
 
 // Define size (in bytes) of the buffer
-bufferDesc.size = sizeof(vertices);
+myVertexBufferDesc.size = sizeof(vertices);
 
 // We will bind it as a vertex buffer (can be a bitwise OR combination)
-bufferDesc.bindFlags = LLGL::BindFlags::VertexBuffer;
+myVertexBufferDesc.bindFlags = LLGL::BindFlags::VertexBuffer;
 
 // Set vertex buffer specific attributes
-bufferDesc.vertexBuffer.format = vertexFormat; // Copy the vertex format
+myVertexBufferDesc.vertexAttribs = vertexFormat.attributes;
 
-LLGL::Buffer* vertexBuffer = renderer->CreateBuffer(bufferDesc, vertices);
+LLGL::Buffer* myVertexBuffer = myRenderer->CreateBuffer(myVertexBufferDesc, vertices);
 \end{lstlisting}
 To update an entire hardware buffer or texture (or only a portion of it) there is a respective
 ``\texttt{Write...}'' function.
 
-Now we have the vertex buffer complete and we can cross over to shader creation.
+Now we have the vertex buffer completed and we can move over to shader creation.
 In \LLGL the shaders (Vertex, Tessellation-Control, Tessellation-Evaluation, Geometry, Fragment, and Compute shaders)
-are created independently, and then attached and linked together with a shader program.
+are created independently, and then attached and linked together with a pipeline state object (PSO).
 For our example we only need a Vertex- and Fragment (also called ``Pixel'') shader:
 \begin{lstlisting}
-LLGL::Shader* vertexShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
-LLGL::Shader* fragmentShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
-\end{lstlisting}
-Now we have two empty shaders. Next we load the shader code from file with
-our custom ``\texttt{ReadFileContent}'' lambda function:
-\begin{lstlisting}
-// Define the lambda function to read an entire text file
-auto ReadFileContent = [](const std::string& filename) {
-    std::ifstream file(filename);
-    return std::string( ( std::istreambuf_iterator<char>(file) ),
-                        ( std::istreambuf_iterator<char>(    ) ) );
-};
+LLGL::ShaderDescriptor vertexShaderDesc;
 
-// Load vertex- and fragment shader code from file
-std::string vertexShaderCode = ReadFileContent("vertex.glsl");
-std::string fragmentShaderCode = ReadFileContent("fragment.glsl");
-\end{lstlisting}
+// Specifies the shader type. Here, we create a vertex shader
+vertexShaderDesc.type = LLGL::ShaderType::Vertex;
 
-After reading the shader code into strings we can compile the shaders:
+// Pointer to the shader source. This can point to a null terminated string,
+// or a buffer with shader byte code depending on the input language.
+// Whether or not this must be a null terminated string is specified by the next field.
+vertexShaderDesc.source = "vertex.glsl";
+
+// We just load our shader from a file, so we specify 'CodeFile' as source type.
+// CodeFile and BinaryFile denotes that our source must be a null terminated string.
+vertexShaderDesc.sourceType	= LLGL::ShaderSourceType::CodeFile;
+
+// Specifiy the vertex input attributes. This is obviously only necessary for the vertex shader.
+vertexShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
+\end{lstlisting}
+Now can create our vertex shader. For simplicity, we just create our fragment shader
+// with one of the \texttt{ShaderDescriptor} constructors and use their default arguments:
 \begin{lstlisting}
-auto CompileShader = [](LLGL::Shader* shader, const std::string& code) {
-    // Compile shader
-    shader->Compile(code);
-    
-    // Print info log (warnings and errors)
-    std::string log = shader->QueryInfoLog();
-    if (!log.empty()) {
-        std::cerr << log << std::endl;
+LLGL::Shader* vertexShader = myRenderer->CreateShader(vertexShaderDesc);
+LLGL::Shader* fragmentShader = myRenderer->CreateShader({ LLGL::ShaderType::Fragment, "fragment.glsl" });
+\end{lstlisting}
+This will load and compile the shaders. Once they are created, we can query whether the compilation was successful
+and what error or warning reports have been produced during compilation:
+\begin{lstlisting}
+for (LLGL::Shader* shader : { vertexShader, fragmentShader }) {
+    if (const LLGL::Report* report = shader->GetReport()) {
+        if (report->HasErrors() {
+            std::cerr << report->GetText() << std::endl; // Print errors
+        } else {
+            std::cout << report->GetText() << std::endl; // Print warnings
+        }
     }
 };
-
-CompileShader(vertexShader, vertexShaderCode);
-CompileShader(fragmentShader, fragmentShaderCode);
 \end{lstlisting}
-Shader compilation works a little different between GLSL (for OpenGL) and HLSL (for Direct3D).
-For HLSL shader compilation there is a second overloaded ``\texttt{Compile}'' function with more parameters,
-to specifiy the entry point and shader version target.
-
-Having the shaders compiled, we can now create a shader program, attach all shaders to it,
-bind the vertex attribute layout, and finally link the shader program:
-\begin{lstlisting}
-// Create shader program which is used as composite
-LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
-
-// Attach vertex- and fragment shader to the shader program
-shaderProgram->AttachShader(*vertexShader);
-shaderProgram->AttachShader(*fragmentShader);
-
-// Build vertex layout for input assembly (this is not required for a compute shader program).
-// Multiple vertex formats can be passed when the vertex data comes from multiple vertex buffers.
-shaderProgram->BuildInputLayout(1, &vertexFormat);
-
-// Link shader program and check for errors
-if (!shaderProgram->LinkShaders()) {
-    throw std::runtime_error(shaderProgram->QueryInfoLog());
-}
-\end{lstlisting}
-The ``\texttt{BuildInputLayout}'' function binds the vertex attributes to the shader program.
-This must be called after shader attachment but before shader linking (except a compute shader program is used).
-
 Before we continue with the C++ code, we first take a look at the shader code:
 \begin{lstlisting}[title={\texttt{vertex.glsl}}]
 // GLSL shader version 1.30 (for OpenGL 3.1)
@@ -634,10 +622,10 @@ Before we continue with the C++ code, we first take a look at the shader code:
 
 // Vertex attributes (these names must match our vertex format attributes)
 in vec2 position;
-in vec3 color;
+in vec4 color;
 
 // Vertex output to the fragment shader
-out vec3 vertexColor;
+out vec4 vertexColor;
 
 // Vertex shader main function
 void main() {
@@ -652,14 +640,14 @@ And here is the fragment shader:
 #version 130
 
 // Fragment input from the vertex shader
-in vec3 vertexColor;
+in vec4 vertexColor;
 
 // Fragment output color
 out vec4 fragColor;
 
 // Fragment shader main function
 void main() {
-    fragColor = vec4(vertexColor, 1);
+    fragColor = vertexColor;
 }
 \end{lstlisting}
 
@@ -672,11 +660,13 @@ to reduce state changes.
 The graphics pipeline specifies the depth-, stencil-, rasterizer-, blending-,
 and shader states and is created as follows:
 \begin{lstlisting}
-LLGL::GraphicsPipelineDescriptor pipelineDesc;
-{
-    pipelineDesc.shaderProgram = shaderProgram;
-}
-LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+LLGL::GraphicsPipelineDescriptor myPSODesc;
+
+myPSODesc.vertexShader   = myVertexShader;
+myPSODesc.fragmentShader = myFragmentShader;
+myPSODesc.renderPass     = mySwapChain->GetRenderPass();
+
+LLGL::PipelineState* myPSO = myRenderer->CreatePipelineState(myPSODesc);
 \end{lstlisting}
 In our example we can use all default settings of the graphics pipeline descriptor except the shader program,
 which must always be set by the client programmer.
@@ -684,12 +674,12 @@ which must always be set by the client programmer.
 Before we start with the render main loop, we need a command buffer which can send render state and draw commands to the GPU:
 \begin{lstlisting}
 // Create command buffer to submit subsequent graphics commands to the GPU
-LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
+LLGL::CommandBuffer* myCmdBuffer = myRenderer->CreateCommandBuffer();
 \end{lstlisting}
 We now have all render objects, so we can start with the main loop:
 \begin{lstlisting}
 // Run main loop until the main window is closed
-while (context->GetWindow().ProcessEvents()) {
+while (myWindow.ProcessEvents()) {
     /* render code here ... */
 }
 \end{lstlisting}
@@ -698,26 +688,33 @@ The rest of the code is pretty simple, since the most work is done during initia
 What we need to do is to clear the color buffer of the previous frame,
 set the graphics pipeline, set the vertex buffer, draw the primitives, and present the result on the frame buffer:
 \begin{lstlisting}
-// Set the render context as the initial render target
-commands->SetRenderTarget(*context);
+// Begin recording GPU commands
+myCmdBuffer->Begin();
+
+// Begin the render pass with our swap-chain to render directly into the back buffer.
+myCmdBuffer->BeginRenderPass(*mySwapChain);
 
 // Set viewport (left: 0, top: 0, width: 640, height: 480)
-commands->SetViewport({ 0, 0, 640, 480 });
+myCmdBuffer->SetViewport(mySwapChain->GetResolution());
 
 // Clear color buffer
-commands->Clear(LLGL::ClearFlags::Color);
+myCmdBuffer->Clear(LLGL::ClearFlags::Color);
 
-// Bind graphics pipeline
-commands->SetGraphicsPipeline(*pipeline);
+// Bind graphics PSO
+myCmdBuffer->SetPipelineState(*myPSO);
 
 // Bind vertex buffer
-commands->SetVertexBuffer(*vertexBuffer);
+myCmdBuffer->SetVertexBuffer(*myVertexBuffer);
 
 // Generate 3 vertices to draw a triangle
-commands->Draw(3, 0);
+myCmdBuffer->Draw(3, 0);
+
+// Finish render pass and command recording
+myCmdBuffer->EndRenderPass();
+myCmdBuffer->End();
 
 // Present the result on the frame buffer (or rather on the screen)
-context->Present();
+mySwapChain->Present();
 \end{lstlisting}
 When you have done everything right, you should see something like shown in figure \ref{fig:tut01_mask1} after compilation
 and program start (set working directory to \texttt{tutorial/Tutorial01\_HelloTriangle}).
@@ -757,18 +754,18 @@ We start with the include files of GLFW and LLGL:
 Now we declare our custom surface class and override all necessary interface functions.
 We could also inherit from the \texttt{Window} interface but this is not really meaningful here:
 \begin{lstlisting}
-class CustomSurface : public LLGL::Surface
-{
+class CustomSurface : public LLGL::Surface {
 public:
 	// Constructor and destructor
-	CustomSurface(const LLGL::Extent2D& size, const std::string& title);
+	CustomSurface(const LLGL::Extent2D& size, const char* title);
 	~CustomSurface();
 	
 	// Interface implementation
 	void GetNativeHandle(void* nativeHandle) const override;
 	LLGL::Extent2D GetContentSize() const override;
-	bool AdaptForVideoMode(LLGL::VideoModeDescriptor& videoModeDesc) override;
+	bool AdaptForVideoMode(LLGL::Extent2D* resolution, bool* fullscreen) override;
 	void ResetPixelFormat() override;
+	LLGL::Display* FindResidentDisplay() const override;
 	
 	// Additional class functions
 	void PollEvents();
@@ -778,32 +775,30 @@ private:
 	
 	std::string    title_;
 	LLGL::Extent2D size_;
-	GLFWwindow* wnd_ = nullptr; // GLFW window pointer
-	
+	GLFWwindow*    wnd_ = nullptr; // GLFW window pointer
 };
 \end{lstlisting}
 This is an example of a minimal interface implementation.
 We start implementing the constructor, destructor, and the \texttt{CreateGLFWWindow} function:
 \begin{lstlisting}
-CustomSurface::CustomSurface(const LLGL::Extent2D& size, const std::string& title) :
+CustomSurface::CustomSurface(const LLGL::Extent2D& size, const char* title) :
 	title_ { title              },
 	size_  { size               },
 	wnd_   { CreateGLFWWindow() }
 {
 }
 
-CustomSurface::~CustomSurface()
-{
+CustomSurface::~CustomSurface() {
 	// Destroy GLFW window
 	glfwDestroyWindow(wnd_);
 }
 
-GLFWwindow* CustomSurface::CreateGLFWWindow()
-{
+GLFWwindow* CustomSurface::CreateGLFWWindow() {
 	// Create GLFW window with class members
 	auto wnd = glfwCreateWindow(size_.width, size_.height, title_.c_str(), nullptr, nullptr);
-	if (!wnd)
+	if (!wnd) {
 		throw std::runtime_error("failed to create GLFW window");
+	}
 	return wnd;
 }
 \end{lstlisting}
@@ -812,8 +807,7 @@ It is mainly used by the OpenGL renderer when a multi-sampled render context is 
 In our custom class we merely destroy the GLFW window and create a new one.
 It's the only way on Win32 to reset the internal pixel format of the native window object:
 \begin{lstlisting}
-void CustomSurface::ResetPixelFormat()
-{
+void CustomSurface::ResetPixelFormat() {
 	// Destroy and recreate GLFW window
 	glfwDestroyWindow(wnd_);
 	wnd_ = CreateGLFWWindow();
@@ -828,8 +822,7 @@ and \texttt{XVisualInfo*} from GLX.
 On MacOS it is from the type \texttt{NSWindow*} from the Cocoa API.
 In this example we only implement it for Win32:
 \begin{lstlisting}
-void CustomSurface::GetNativeHandle(void* nativeHandle) const
-{
+void CustomSurface::GetNativeHandle(void* nativeHandle) const {
 	// This function must always return a valid native handle!
 	auto handle = reinterpret_cast<LLGL::NativeHandle*>(nativeHandle);
 	handle->window = glfwGetWin32Window(wnd_);
@@ -838,27 +831,29 @@ void CustomSurface::GetNativeHandle(void* nativeHandle) const
 There are two (rather secondary) interface functions left.
 They are used inside the \texttt{RenderContext} class, to update or query the video mode suitable for the surface:
 \begin{lstlisting}
-LLGL::Extent2D CustomSurface::GetContentSize() const
-{
+LLGL::Extent2D CustomSurface::GetContentSize() const {
 	// Actually the client-area size of the window must be returned,
 	// but for this example the entire window size is sufficient.
 	return size_;
 }
 
-bool CustomSurface::AdaptForVideoMode(LLGL::VideoModeDescriptor& videoModeDesc)
-{
+bool CustomSurface::AdaptForVideoMode(LLGL::Extent2D* resolution, bool* fullscreen) {
 	// Resize GLFW window for the new video mode resolution.
-	size_ = videoModeDesc.resolution;
+	size_ = resolution;
 	glfwSetWindowSize(wnd_, size_.width, size_.height);
 	return true;
+}
+
+LLGL::Display* CustomSurface::FindResidentDisplay() const {
+	// Just return primary display
+	return Display::GetPrimary();
 }
 \end{lstlisting}
 The last function we have to implement is the additional class function \texttt{PollEvents}.
 Here we poll all window events from GLFW and return false when the user
 clicked the close button to terminate the application:
 \begin{lstlisting}
-bool CustomSurface::PollEvents()
-{
+bool CustomSurface::PollEvents() {
 	// Poll events from GLFW windowing system
 	glfwPollEvents();
 	
@@ -869,20 +864,21 @@ bool CustomSurface::PollEvents()
 Finally we are done with our custom window class :-) Now we can start using it with a render context in our main function:
 \begin{lstlisting}
 // Initialize GLFW
-if (!glfwInit())
+if (!glfwInit()) {
 	return -1;
+}
 
 // Create an instance of our custom window class
-auto surface = std::make_shared<CustomSurface>({ 640, 480 }, L"LLGL test with GLFW");
+auto mySurface = std::make_shared<CustomSurface>({ 640, 480 }, L"LLGL test with GLFW");
 
 // Create render context and pass the custom window
-LLGL::RenderContextDescriptor contextDesc;
-contextDesc.videoMode.resolution = { 640, 480 };
-LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc, surface);
+LLGL::SwapChainDescriptor mySwapChainDesc;
+mySwapChainDesc.resolution = { 640, 480 };
+LLGL::SwapChain* mySwapChain = myRenderer->CreateSwapChain(contextDesc, surface);
 
 // Scene construction ...
 
-while (surface->PollEvents()) { /* Rendering ... */ }
+while (mySurface->PollEvents()) { /* Rendering ... */ }
 \end{lstlisting}
 That's all folks. The rest can be seen in the tutorials.
 
@@ -934,49 +930,49 @@ you have to implement a few module interface functions.
 They are the only functions that need to be exported from the shared library,
 and they need to be exported as \texttt{extern "C"} functions:
 \begin{lstlisting}
-// Include the "ModuleInterface.h" file and your custom render system
-#include "sources/Renderer/ModuleInterface.h"
+// Include the custom render system
 #include "CustomOpenGLRenderSystem.h"
 
 // Declare the following functions to be exported as "C" functions
-extern "C"
-{
+extern "C" {
 
-// This function must always return "LLGL_BUILD_ID" to ensure a library,
-// which is about to be loaded, has been compiled with the same compiler toolchain.
-LLGL_EXPORT int LLGL_RenderSystem_BuildID()
-{
+// This function must always return 'LLGL_BUILD_ID' to ensure the render system,
+// when loaded from a module, has been compiled with the same compiler toolchain.
+LLGL_EXPORT int LLGL_RenderSystem_BuildID() {
 	return LLGL_BUILD_ID;
 }
 
-// Here you can return your own renderer ID or one of the pre-defined values
-LLGL_EXPORT int LLGL_RenderSystem_RendererID()
-{
+// Here we can return our own renderer ID or one of the pre-defined values.
+LLGL_EXPORT int LLGL_RenderSystem_RendererID() {
 	return LLGL::RendererID::OpenGL;
 }
 
-// Here you can return the name of your renderer
-LLGL_EXPORT const char* LLGL_RenderSystem_Name()
-{
+// Here we can return the name of our renderer.
+// This does not have to match the name of the module.
+LLGL_EXPORT const char* LLGL_RenderSystem_Name() {
 	return "Custom OpenGL";
 }
 
-// Here you have to return a raw pointer of your custom implementation of the
-// LLGL::RenderSystem interface, where the instance must be allocated with "new",
-// so it can be moved into an std::unique_ptr.
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
-{
+// Here we have to return a pointer to our custom implementation of the RenderSystem interface.
+// If we don't allocate it via 'new' operator, LLGL_RenderSystem_Free must also be provided (see next).
+// 'renderSystemDesc' can be casted to 'LLGL::RenderSystemDescriptor'.
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc, int renderSystemDescSize) {
 	return new CustomOpenGLRenderSystem();
 }
 
-} // /extern "C"
+// The deleter function is only required if our render system was *not* allocated via 'new' operator.
+LLGL_EXPORT void LLGL_RenderSystem_Free(void* renderSystem) {
+    delete reinterpret_cast<LLGL::RenderSystem*>(renderSystem);
+}
+
+} // end of extern "C"
 \end{lstlisting}
 That's all you have to do, except of implementing the entire \texttt{RenderSystem} interface
 in your \texttt{CustomOpenGLRenderSystem} class ;-).
 After that, you can load your render system like this:
 \begin{lstlisting}
 // Load custom render system (library name is "LLGL_CustomOpenGL", so the passed name is "CustomOpenGL")
-std::unique_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("CustomOpenGL");
+LLGL::RenderSystemPtr renderer = LLGL::RenderSystem::Load("CustomOpenGL");
 
 // Start using the custom renderer ...
 \end{lstlisting}
