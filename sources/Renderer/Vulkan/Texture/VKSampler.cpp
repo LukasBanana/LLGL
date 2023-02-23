@@ -24,13 +24,13 @@ static VkSamplerMipmapMode GetVkSamplerMipmapMode(const SamplerFilter filter)
     return (filter == SamplerFilter::Linear ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST);
 }
 
-static VkBorderColor GetVkBorderColor(const ColorRGBAf& color)
+static VkBorderColor GetVkBorderColor(const float (&color)[4])
 {
-    if (color.a > 0.5f)
+    if (color[3] > 0.5f)
     {
-        if (color.r <= 0.5f && color.g <= 0.5f && color.b <= 0.5f)
+        if (color[0] <= 0.5f && color[1] <= 0.5f && color[2] <= 0.5f)
             return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
-        if (color.r > 0.5f && color.g > 0.5f && color.b > 0.5f)
+        if (color[0] > 0.5f && color[1] > 0.5f && color[2] > 0.5f)
             return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     }
     return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
@@ -58,7 +58,7 @@ VKSampler::VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& des
         createInfo.borderColor              = GetVkBorderColor(desc.borderColor);
         createInfo.unnormalizedCoordinates  = VK_FALSE;
 
-        if (desc.mipMapping)
+        if (desc.mipMapEnabled)
         {
             createInfo.mipmapMode   = GetVkSamplerMipmapMode(desc.mipMapFilter);
             createInfo.minLod       = desc.minLOD;

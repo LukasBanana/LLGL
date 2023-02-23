@@ -17,16 +17,16 @@ namespace LLGL
 
 #ifndef LLGL_OS_IOS
 
-static MTLSamplerBorderColor GetBorderColor(const ColorRGBAf& color)
+static MTLSamplerBorderColor GetBorderColor(const float (&color)[4])
 {
-    if (color.r == 0.0f && color.g == 0.0f && color.b == 0.0f)
+    if (color[3] > 0.5f)
     {
-        if (color.a == 0.0f)
-            return MTLSamplerBorderColorTransparentBlack;
-        else
+        if (color[0] <= 0.5f && color[1] <= 0.5f && color[2] <= 0.5f)
             return MTLSamplerBorderColorOpaqueBlack;
+        if (color[0] > 0.5f && color[1] > 0.5f && color[2] > 0.5f)
+            return MTLSamplerBorderColorOpaqueWhite;
     }
-    return MTLSamplerBorderColorOpaqueWhite;
+    return MTLSamplerBorderColorTransparentBlack;
 }
 
 #endif // /LLGL_OS_IOS
@@ -38,7 +38,7 @@ static void Convert(MTLSamplerDescriptor* dst, const SamplerDescriptor& src)
     dst.rAddressMode    = MTTypes::ToMTLSamplerAddressMode(src.addressModeW);
     dst.minFilter       = MTTypes::ToMTLSamplerMinMagFilter(src.minFilter);
     dst.magFilter       = MTTypes::ToMTLSamplerMinMagFilter(src.magFilter);
-    dst.mipFilter       = (src.mipMapping ? MTTypes::ToMTLSamplerMipFilter(src.mipMapFilter) : MTLSamplerMipFilterNotMipmapped);
+    dst.mipFilter       = (src.mipMapEnabled ? MTTypes::ToMTLSamplerMipFilter(src.mipMapFilter) : MTLSamplerMipFilterNotMipmapped);
     //TODO: src.mipMapLODBias;
     dst.lodMinClamp     = src.minLOD;
     dst.lodMaxClamp     = src.maxLOD;

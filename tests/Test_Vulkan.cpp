@@ -155,7 +155,7 @@ int main()
         // Create sampler
         LLGL::SamplerDescriptor samplerDesc;
         {
-            //samplerDesc.mipMapping = false;
+            //samplerDesc.mipMapEnabled = false;
             #if 0
             samplerDesc.minFilter = LLGL::TextureFilter::Nearest;
             samplerDesc.magFilter = LLGL::TextureFilter::Nearest;

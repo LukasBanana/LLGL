@@ -34,7 +34,7 @@ void GLSampler::SetName(const char* name)
 
 static GLenum GetGLSamplerMinFilter(const SamplerDescriptor& desc)
 {
-    if (desc.mipMapping)
+    if (desc.mipMapEnabled)
         return GLTypes::Map(desc.minFilter, desc.mipMapFilter);
     else
         return GLTypes::Map(desc.minFilter);
@@ -72,7 +72,7 @@ void GLSampler::SetDesc(const SamplerDescriptor& desc)
 
     /* Set border color */
     #ifdef LLGL_SAMPLER_BORDER_COLOR
-    glSamplerParameterfv(id_, GL_TEXTURE_BORDER_COLOR, desc.borderColor.Ptr());
+    glSamplerParameterfv(id_, GL_TEXTURE_BORDER_COLOR, desc.borderColor);
     #endif
 }
 

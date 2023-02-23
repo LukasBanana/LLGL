@@ -196,7 +196,7 @@ public:
         // Create sampler states for all textures
         LLGL::SamplerDescriptor samplerDesc;
         {
-            samplerDesc.mipMapping = false;
+            samplerDesc.mipMapEnabled = false;
         }
         colorMapSampler = renderer->CreateSampler(samplerDesc);
         glossMapSampler = renderer->CreateSampler(samplerDesc);

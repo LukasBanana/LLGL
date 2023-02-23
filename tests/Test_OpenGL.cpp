@@ -292,9 +292,12 @@ int main()
             samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
             samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
             #ifdef __linux__
-            samplerDesc.mipMapping = false;
+            samplerDesc.mipMapEnabled   = false;
             #endif
-            samplerDesc.borderColor     = LLGL::ColorRGBAf(0, 0.7f, 0.5f, 1);
+            samplerDesc.borderColor[0]  = 0.0f;
+            samplerDesc.borderColor[1]  = 0.7f;
+            samplerDesc.borderColor[2]  = 0.5f;
+            samplerDesc.borderColor[3]  = 1.0f;
         }
         auto& sampler = *renderer->CreateSampler(samplerDesc);
 

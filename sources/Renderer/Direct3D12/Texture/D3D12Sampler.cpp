@@ -1,6 +1,6 @@
 /*
  * D3D12Sampler.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -23,12 +23,12 @@ D3D12Sampler::D3D12Sampler(const SamplerDescriptor& desc)
     nativeDesc_.MipLODBias      = desc.mipMapLODBias;
     nativeDesc_.MaxAnisotropy   = desc.maxAnisotropy;
     nativeDesc_.ComparisonFunc  = (desc.compareEnabled ? D3D12Types::Map(desc.compareOp) : D3D12_COMPARISON_FUNC_ALWAYS);
-    nativeDesc_.BorderColor[0]  = desc.borderColor.r;
-    nativeDesc_.BorderColor[1]  = desc.borderColor.g;
-    nativeDesc_.BorderColor[2]  = desc.borderColor.b;
-    nativeDesc_.BorderColor[3]  = desc.borderColor.a;
+    nativeDesc_.BorderColor[0]  = desc.borderColor[0];
+    nativeDesc_.BorderColor[1]  = desc.borderColor[1];
+    nativeDesc_.BorderColor[2]  = desc.borderColor[2];
+    nativeDesc_.BorderColor[3]  = desc.borderColor[3];
 
-    if (desc.mipMapping)
+    if (desc.mipMapEnabled)
     {
         nativeDesc_.MinLOD = desc.minLOD;
         nativeDesc_.MaxLOD = desc.maxLOD;

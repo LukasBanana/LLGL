@@ -231,7 +231,7 @@ private:
             samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
             samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
             samplerDesc.maxAnisotropy   = 8;
-            samplerDesc.borderColor     = { 0, 0, 0, 1 };
+            samplerDesc.borderColor[3]  = 1.0f;
         }
         samplerState = renderer->CreateSampler(samplerDesc);
     }

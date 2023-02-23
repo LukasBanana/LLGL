@@ -11,7 +11,6 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/PipelineStateFlags.h>
-#include <LLGL/ColorRGBA.h>
 #include <cstddef>
 #include <cstdint>
 
@@ -118,12 +117,12 @@ struct LLGL_EXPORT SamplerDescriptor
     SamplerFilter       mipMapFilter    = SamplerFilter::Linear;
 
     /**
-    \brief Specifies whether MIP-maps are used or not. By default true.
+    \brief Specifies whether MIP-mapping is enabled or disabled. By default true.
+    \remarks If MIP-mapping is disabled, \c mipMapFilter is ignored.
     \remarks The number of MIP-maps a texture has is specified by the TextureDescriptor::mipLevels attribute.
     \see TextureDescriptor::mipLevels
-    \todo Rename to \c mipMapEnabled.
     */
-    bool                mipMapping      = true;
+    bool                mipMapEnabled   = true;
 
     /**
     \brief MIP-mapping level-of-detail (LOD) bias (or rather offset). By default 0.
@@ -151,13 +150,13 @@ struct LLGL_EXPORT SamplerDescriptor
     CompareOp           compareOp       = CompareOp::Less;
 
     /**
-    \brief Border color. By default black (0, 0, 0, 0).
+    \brief Border color vector with four components: red, green, blue, and alpha. By default transparent-black (0, 0, 0, 0).
     \note For Vulkan and Metal, only three predefined border colors are supported:
-    - Transparenty black: <code>{0,0,0,0}</code>
+    - Transparent black: <code>{0,0,0,0}</code>
     - Opaque black: <code>{0,0,0,1}</code>
     - Opaque white: <code>{1,1,1,1}</code>
     */
-    ColorRGBAf          borderColor     = { 0.0f, 0.0f, 0.0f, 0.0f };
+    float               borderColor[4]  = { 0.0f, 0.0f, 0.0f, 0.0f };
 };
 
 

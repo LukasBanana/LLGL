@@ -168,7 +168,7 @@ public:
         // Create default sampler state
         LLGL::SamplerDescriptor samplerDesc;
         {
-            samplerDesc.mipMapping = false;
+            samplerDesc.mipMapEnabled = false;
         }
         sampler = renderer->CreateSampler(samplerDesc);
     }

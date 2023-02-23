@@ -175,9 +175,12 @@ private:
             samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
             samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
             samplerDesc.addressModeW    = LLGL::SamplerAddressMode::Border;
-            samplerDesc.borderColor     = { 1.0f, 1.0f, 1.0f, 1.0f };
+            samplerDesc.borderColor[0]  = 1.0f;
+            samplerDesc.borderColor[1]  = 1.0f;
+            samplerDesc.borderColor[2]  = 1.0f;
+            samplerDesc.borderColor[3]  = 1.0f;
             samplerDesc.compareEnabled  = true;
-            samplerDesc.mipMapping      = false;
+            samplerDesc.mipMapEnabled   = false;
         }
         shadowMapSampler = renderer->CreateSampler(samplerDesc);
     }
