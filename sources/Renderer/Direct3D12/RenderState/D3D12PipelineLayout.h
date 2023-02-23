@@ -32,8 +32,8 @@ struct D3D12DescriptorHeapLayout
     UINT numTextureUAV  = 0;
     UINT numSamplers    = 0;
 
-    // Returns the sum of all non-UAV subresource views, i.e. CBV and SRV.
-    inline UINT SumNonUAVs() const
+    // Returns the sum of all CBV and SRV subresource views.
+    inline UINT SumCBVsAndSRVs() const
     {
         return (numBufferCBV + numBufferSRV + numTextureSRV);
     }
@@ -47,7 +47,7 @@ struct D3D12DescriptorHeapLayout
     // Returns the sum of all subresource views.
     inline UINT SumResourceViews() const
     {
-        return (SumNonUAVs() + SumUAVs());
+        return (SumCBVsAndSRVs() + SumUAVs());
     }
 
     // Returns the sub of all samplers.

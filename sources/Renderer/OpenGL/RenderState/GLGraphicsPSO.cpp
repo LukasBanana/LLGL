@@ -17,6 +17,7 @@
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/StaticLimits.h>
+#include <LLGL/Misc/ForRange.h>
 #include <vector>
 
 
@@ -160,7 +161,7 @@ void GLGraphicsPSO::BuildStaticViewports(std::size_t numViewports, const Viewpor
     }
 
     /* Build <GLViewport> entries */
-    for (std::size_t i = 0; i < numViewports; ++i)
+    for_range(i, numViewports)
     {
         auto dst = byteBufferIter.Next<GLViewport>();
         {
@@ -172,7 +173,7 @@ void GLGraphicsPSO::BuildStaticViewports(std::size_t numViewports, const Viewpor
     }
 
     /* Build <GLDepthRange> entries */
-    for (std::size_t i = 0; i < numViewports; ++i)
+    for_range(i, numViewports)
     {
         auto dst = byteBufferIter.Next<GLDepthRange>();
         {
@@ -196,7 +197,7 @@ void GLGraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scissor* 
     }
 
     /* Build <GLScissor> entries */
-    for (std::size_t i = 0; i < numScissors; ++i)
+    for_range(i, numScissors)
     {
         auto dst = byteBufferIter.Next<GLScissor>();
         {

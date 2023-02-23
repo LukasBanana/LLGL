@@ -98,7 +98,7 @@ struct BindingDescriptor
 
     /**
     \brief Specifies the zero-based binding slot. By default 0.
-    \note For Vulkan, each binding slot of all layout bindings must have a different value within a pipeline layout.
+    \note For Vulkan, each binding must have a unique slot within the same pipeline layout.
     */
     std::uint32_t   slot        = 0;
 
@@ -117,8 +117,21 @@ struct BindingDescriptor
 struct PipelineLayoutDescriptor
 {
     /**
-    \brief List of layout resource bindings.
+    \brief List of layout resource heap bindings.
+    \remarks These bindings refer to the resource descriptors that are all bound at once with a single ResourceHeap.
+    Only heap bindings can have subresource views as opposed to individual bindings that can only bind the entire resource.
+    In Direct3D 12 they are called "descriptor tables" and in Vulkan they are called "descriptor sets".
+    \see CommandBuffer::SetResourceHeap
+    \see ResourceViewDescriptor
     \see ResourceHeap::GetNumDescriptorSets
+    */
+    std::vector<BindingDescriptor> heapBindings;
+
+    /**
+    \brief List of individual layout resource bindings.
+    \remarks These bindings refer to individual resource descriptor that are bound separately.
+    These individual bindings are limited to binding the entire resource as opposed to heap bindigs that can also bind a subresource view.
+    \see CommandBuffer::SetResource
     */
     std::vector<BindingDescriptor> bindings;
 };

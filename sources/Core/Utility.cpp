@@ -9,6 +9,7 @@
 
 #include <LLGL/Misc/Utility.h>
 #include <LLGL/Misc/VertexFormat.h>
+#include <LLGL/Misc/ForRange.h>
 #include <LLGL/Buffer.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
@@ -293,10 +294,25 @@ static void AcceptChar(const char*& s, char c, const char* err = nullptr)
             ErrUnexpectedChar(err, *s);
         else
         {
-            std::string errMsg { "expected character " + GetASCIIName(c) };
+            std::string errMsg{ "expected character " + GetASCIIName(c) };
             ErrUnexpectedChar(errMsg.c_str(), *s);
         }
     }
+}
+
+// Scans the specified token and returns true on success. Otherwise, the input string remains at the current position.
+static bool ScanToken(const char*& s, const char* tok)
+{
+    auto p = s;
+    while (*tok != '\0')
+    {
+        if (*p != *tok)
+            return false;
+        ++tok;
+        ++p;
+    }
+    s = p;
+    return true;
 }
 
 // Ignore all whitespace characters.
@@ -428,7 +444,7 @@ static long ParseLayoutSignatureStageFlagsAll(const char*& s)
 }
 
 // Parse next layout signature binding point, e.g. "texture(1)"
-static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, const char*& s)
+static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, const char*& s, bool isHeap)
 {
     BindingDescriptor bindingDesc;
 
@@ -440,7 +456,8 @@ static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, con
     IgnoreWhiteSpaces(s);
     AcceptChar(s, '(', "expected open bracket '(' after resource type");
 
-    auto bindingIndex = desc.bindings.size();
+    auto& dstBindings = (isHeap ? desc.heapBindings : desc.bindings);
+    auto firstBinding = dstBindings.size();
 
     for (;;)
     {
@@ -473,7 +490,7 @@ static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, con
             bindingDesc.arraySize = 1;
 
         /* Add new binding point to output descriptor */
-        desc.bindings.push_back(bindingDesc);
+        dstBindings.push_back(bindingDesc);
 
         if (*s == ',')
             ++s;
@@ -490,9 +507,44 @@ static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, con
         auto stageFlags = ParseLayoutSignatureStageFlagsAll(s);
 
         /* Update stage flags of all previously added binding descriptors */
-        while (bindingIndex < desc.bindings.size())
-            desc.bindings[bindingIndex++].stageFlags = stageFlags;
+        for_subrange(i, firstBinding, dstBindings.size())
+            dstBindings[i].stageFlags = stageFlags;
     }
+}
+
+// Parse layout signature, e.g. "texture(1), sampler(2)" within a "heap{ ... }" scope
+static void ParseLayoutSignatureForHeap(PipelineLayoutDescriptor& desc, const char*& s)
+{
+    IgnoreWhiteSpaces(s);
+    if (*s == '{')
+        ++s;
+    else
+        ErrUnexpectedChar("expected open curly bracket '{' after heap declaration", *s);
+
+    while (*s != '}')
+    {
+        if (*s == '\0')
+            ErrUnexpectedChar("expected heap terminator '}'", *s);
+
+        /* Parse next binding point */
+        ParseLayoutSignatureBindingPoint(desc, s, /*isHeap:*/ true);
+
+        /* If there is no comma, the layout must end */
+        if (*s == ',')
+        {
+            ++s;
+            IgnoreWhiteSpaces(s);
+        }
+        else
+        {
+            IgnoreWhiteSpaces(s);
+            if (*s != '}')
+                ErrUnexpectedChar("expected comma separator ',' after binding point", *s);
+        }
+    }
+
+    /* Accept '}' token */
+    ++s;
 }
 
 // Parse layout signature, e.g. "texture(1), sampler(2)"
@@ -500,12 +552,24 @@ static void ParseLayoutSignature(PipelineLayoutDescriptor& desc, const char* s)
 {
     while (*s != '\0')
     {
-        /* Parse next binding point */
-        ParseLayoutSignatureBindingPoint(desc, s);
+        /* Check if we must enter a heap declaration */
+        if (ScanToken(s, "heap"))
+        {
+            /* Start parsing layout siganture for heap declaration */
+            ParseLayoutSignatureForHeap(desc, s);
+        }
+        else
+        {
+            /* Parse next binding point */
+            ParseLayoutSignatureBindingPoint(desc, s, /*isHeap:*/ false);
+        }
 
         /* If there is no comma, the layout must end */
         if (*s == ',')
+        {
             ++s;
+            IgnoreWhiteSpaces(s);
+        }
         else
         {
             IgnoreWhiteSpaces(s);

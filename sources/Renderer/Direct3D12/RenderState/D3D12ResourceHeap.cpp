@@ -76,7 +76,7 @@ D3D12ResourceHeap::D3D12ResourceHeap(
     {
         /* Allocate empty heap for ID3D12Resource object that require a UAV barrier */
         uavResourceSetStride_   = descHeapLayout.SumUAVs();
-        uavResourceIndexOffset_ = descHeapLayout.SumNonUAVs();
+        uavResourceIndexOffset_ = descHeapLayout.SumCBVsAndSRVs();
         uavResourceHeap_.resize(uavResourceSetStride_ * numDescriptorSets_);
 
         /* Allocate packed buffer for resource barriers with UINT for number of active barriers and an array of D3D12_RESOURCE_BARRIER[N] */

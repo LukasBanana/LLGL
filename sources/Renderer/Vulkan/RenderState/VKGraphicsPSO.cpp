@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/StaticLimits.h>
+#include <LLGL/Misc/ForRange.h>
 #include "../../../Core/Assertion.h"
 
 
@@ -129,7 +130,7 @@ static void CreateViewportState(
         /* Convert viewports to Vulkan structure */
         viewportsVK.resize(numViewports);
 
-        for (size_t i = 0; i < numViewports; ++i)
+        for_range(i, numViewports)
             VKTypes::Convert(viewportsVK[i], desc.viewports[i]);
 
         createInfo.pViewports = viewportsVK.data();
@@ -147,7 +148,7 @@ static void CreateViewportState(
         createInfo.scissorCount = static_cast<std::uint32_t>(numViewports);
         scissorsVK.resize(numViewports);
 
-        for (size_t i = 0; i < numViewports; ++i)
+        for_range(i, numViewports)
         {
             if (i < numScissors)
                 VKTypes::Convert(scissorsVK[i], desc.scissors[i]);
@@ -286,7 +287,7 @@ static void CreateColorBlendState(
 
     /* Convert blend targets to Vulkan structure */
     attachmentStatesVK.resize(numColorAttachments);
-    for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+    for_range(i, numColorAttachments)
     {
         CreateColorBlendAttachmentState(
             attachmentStatesVK[i],

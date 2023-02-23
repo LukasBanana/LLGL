@@ -142,7 +142,8 @@ LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflection& 
 
 /**
 \brief Generates a pipeline layout descriptor by parsing the specified string.
-\param[in] layoutSignature Specifies the string for the layout signature. This string must not be null. The syntax for this string is as follows:
+\param[in] layoutSignature Specifies the string for the layout signature. This string must \e not be null. The syntax for this string is as follows:
+- All binding points wrapped inside <code>"heap{"</code>...<code>"}"</code> will be put into PipelineLayoutDescriptor::heapBindings. Otherwise, they are put into PipelineLayoutDescriptor::bindings.
 - Each pair of binding point type (i.e. BindingDescriptor::type) and binding flags (i.e. BindingDescriptor::bindFlags) is specified by one of the following identifiers:
     - <code>cbuffer</code> for constant buffers (i.e. ResourceType::Buffer and BindFlags::ConstantBuffer).
     - <code>buffer</code> for sampled buffers (i.e. ResourceType::Buffer and BindFlags::Sampled).
@@ -169,10 +170,12 @@ LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflection& 
 // Standard way of declaring a pipeline layout:
 LLGL::PipelineLayoutDescriptor myLayoutDescStd;
 
-myLayoutDescStd.bindings = {
+myLayoutDescStd.heapBindings = {
     LLGL::BindingDescriptor{ "Scene",    LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0u,     },
     LLGL::BindingDescriptor{             LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 1u      },
     LLGL::BindingDescriptor{ "TexArray", LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 2u, 4u, },
+};
+myLayoutDescStd.bindings = {
     LLGL::BindingDescriptor{             LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage,                                 3u      },
 };
 
@@ -182,8 +185,8 @@ The same pipeline layout can be created with the following usage of this utility
 \code
 // Abbreviated way of declaring a pipeline layout using the utility function:
 auto myLayoutDescUtil = LLGL::PipelineLayoutDesc(
-    "cbuffer(Scene@0):frag:vert,"
-    "texture(1, TexArray@2[4]):frag,"
+    "heap{ cbuffer(Scene@0):frag:vert },"
+    "heap{ texture(1, TexArray@2[4]):frag },"
     "sampler(3):frag,"
 );
 auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescUtil);
