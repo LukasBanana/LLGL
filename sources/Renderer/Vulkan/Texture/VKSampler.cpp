@@ -1,6 +1,6 @@
 /*
  * VKSampler.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,6 +8,7 @@
 #include "VKSampler.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
+#include "../../ResourceUtils.h"
 
 
 namespace LLGL
@@ -26,14 +27,13 @@ static VkSamplerMipmapMode GetVkSamplerMipmapMode(const SamplerFilter filter)
 
 static VkBorderColor GetVkBorderColor(const float (&color)[4])
 {
-    if (color[3] > 0.5f)
+    switch (GetStaticSamplerBorderColor(color))
     {
-        if (color[0] <= 0.5f && color[1] <= 0.5f && color[2] <= 0.5f)
-            return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
-        if (color[0] > 0.5f && color[1] > 0.5f && color[2] > 0.5f)
-            return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        default:
+        case StaticSamplerBorderColor::TransparentBlack:    return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        case StaticSamplerBorderColor::OpaqueBlack:         return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+        case StaticSamplerBorderColor::OpaqueWhite:         return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     }
-    return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 }
 
 VKSampler::VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc) :

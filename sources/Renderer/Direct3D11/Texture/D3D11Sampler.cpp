@@ -27,12 +27,12 @@ D3D11Sampler::D3D11Sampler(ID3D11Device* device, const SamplerDescriptor& desc)
         samplerDesc.MipLODBias      = desc.mipMapLODBias;
         samplerDesc.MaxAnisotropy   = desc.maxAnisotropy;
         samplerDesc.ComparisonFunc  = (desc.compareEnabled ? D3D11Types::Map(desc.compareOp) : D3D11_COMPARISON_ALWAYS);
-        samplerDesc.BorderColor[0]  = desc.borderColor.r;
-        samplerDesc.BorderColor[1]  = desc.borderColor.g;
-        samplerDesc.BorderColor[2]  = desc.borderColor.b;
-        samplerDesc.BorderColor[3]  = desc.borderColor.a;
+        samplerDesc.BorderColor[0]  = desc.borderColor[0];
+        samplerDesc.BorderColor[1]  = desc.borderColor[1];
+        samplerDesc.BorderColor[2]  = desc.borderColor[2];
+        samplerDesc.BorderColor[3]  = desc.borderColor[3];
 
-        if (desc.mipMapping)
+        if (desc.mipMapEnabled)
         {
             samplerDesc.MinLOD = desc.minLOD;
             samplerDesc.MaxLOD = desc.maxLOD;

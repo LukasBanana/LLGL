@@ -1,12 +1,13 @@
 /*
  * MTSampler.mm
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "MTSampler.h"
 #include "../MTTypes.h"
+#include "../../ResourceUtils.h"
 #include <algorithm>
 #include <LLGL/Platform/Platform.h>
 
@@ -19,14 +20,13 @@ namespace LLGL
 
 static MTLSamplerBorderColor GetBorderColor(const float (&color)[4])
 {
-    if (color[3] > 0.5f)
+    switch (GetStaticSamplerBorderColor(color))
     {
-        if (color[0] <= 0.5f && color[1] <= 0.5f && color[2] <= 0.5f)
-            return MTLSamplerBorderColorOpaqueBlack;
-        if (color[0] > 0.5f && color[1] > 0.5f && color[2] > 0.5f)
-            return MTLSamplerBorderColorOpaqueWhite;
+        default:
+        case StaticSamplerBorderColor::TransparentBlack:    return MTLSamplerBorderColorTransparentBlack;
+        case StaticSamplerBorderColor::OpaqueBlack:         return MTLSamplerBorderColorOpaqueBlack;
+        case StaticSamplerBorderColor::OpaqueWhite:         return MTLSamplerBorderColorOpaqueWhite;
     }
-    return MTLSamplerBorderColorTransparentBlack;
 }
 
 #endif // /LLGL_OS_IOS

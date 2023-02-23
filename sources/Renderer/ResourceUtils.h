@@ -21,6 +21,17 @@ namespace LLGL
 {
 
 
+/* ----- Enumerations ----- */
+
+// Enumeration of predefined static sampler border colors.
+enum class StaticSamplerBorderColor
+{
+    TransparentBlack,   // Predefined border color { 0, 0, 0, 0 }
+    OpaqueBlack,        // Predefined border color { 1, 1, 1, 0 }
+    OpaqueWhite,        // Predefined border color { 1, 1, 1, 1 }
+};
+
+
 /* ----- Functions ----- */
 
 // Returns true if the specified flags contain any input binding flags.
@@ -74,6 +85,19 @@ inline std::uint32_t GetNumResourceViewsOrThrow(
     }
 
     return numResourceViews;
+}
+
+// Returns the enumeration value for a predefined static sampler border color.
+inline StaticSamplerBorderColor GetStaticSamplerBorderColor(const float (&color)[4])
+{
+    if (color[3] > 0.5f)
+    {
+        if (color[0] <= 0.5f && color[1] <= 0.5f && color[2] <= 0.5f)
+            return StaticSamplerBorderColor::OpaqueBlack;
+        if (color[0] > 0.5f && color[1] > 0.5f && color[2] > 0.5f)
+            return StaticSamplerBorderColor::OpaqueWhite;
+    }
+    return StaticSamplerBorderColor::TransparentBlack;
 }
 
 
