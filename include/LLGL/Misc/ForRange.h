@@ -30,12 +30,15 @@
     for_subrange(INDEX, 0, END)
 
 // Range based for-loop over the half-open range [START, END) in reverse order.
-#define for_subrange_reverse(INDEX, START, END)                                                                                                     \
-    for                                                                                                                                             \
-    (                                                                                                                                               \
-        typename std::remove_cv<typename std::remove_reference<decltype(END)>::type>::type INDEX ## _End = (END), INDEX ## _Iter = (START), INDEX;  \
-        (INDEX = for_range_end(INDEX) - (INDEX ## _Iter) - 1), (INDEX ## _Iter) < for_range_end(INDEX);                                             \
-        ++(INDEX ## _Iter)                                                                                                                          \
+#define for_subrange_reverse(INDEX, START, END)                                                                             \
+    for                                                                                                                     \
+    (                                                                                                                       \
+        typename std::remove_cv<typename std::remove_reference<decltype(END)>::type>::type INDEX ## _End = (END),           \
+        INDEX ## _Start = (START),                                                                                          \
+        INDEX ## _Iter = (INDEX ## _Start),                                                                                 \
+        INDEX;                                                                                                              \
+        (INDEX = (INDEX ## _Start) + for_range_end(INDEX) - (INDEX ## _Iter) - 1), (INDEX ## _Iter) < for_range_end(INDEX); \
+        ++(INDEX ## _Iter)                                                                                                  \
     )
 
 // Range based for-loop over the half-open range [0, END) in reverse order.
