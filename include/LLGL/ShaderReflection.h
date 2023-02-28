@@ -31,66 +31,9 @@ using UniformLocation = std::int32_t;
 /* ----- Enumerations ----- */
 
 /**
-\brief Shader uniform type enumeration.
-\remarks Because "Bool" is a reserved identifier for an Xlib macro on GNU/Linux,
-all scalar types also have a component index (e.g. "Bool1" instead of "Bool").
-*/
-enum class UniformType
-{
-    Undefined,      //!< Undefined uniform type.
-
-    /* ----- Scalars & Vectors ----- */
-    Float1,         //!< float uniform.
-    Float2,         //!< float2/ vec2 uniform.
-    Float3,         //!< float3/ vec3 uniform.
-    Float4,         //!< float4/ vec4 uniform.
-    Double1,        //!< double uniform.
-    Double2,        //!< double2/ dvec2 uniform.
-    Double3,        //!< double3/ dvec3 uniform.
-    Double4,        //!< double4/ dvec4 uniform.
-    Int1,           //!< int uniform.
-    Int2,           //!< int2/ ivec2 uniform.
-    Int3,           //!< int3/ ivec3 uniform.
-    Int4,           //!< int4/ ivec4 uniform.
-    UInt1,          //!< uint uniform.
-    UInt2,          //!< uint2/ uvec2 uniform.
-    UInt3,          //!< uint3/ uvec3 uniform.
-    UInt4,          //!< uint4/ uvec4 uniform.
-    Bool1,          //!< bool uniform.
-    Bool2,          //!< bool2/ bvec2 uniform.
-    Bool3,          //!< bool3/ bvec3 uniform.
-    Bool4,          //!< bool4/ bvec4 uniform.
-
-    /* ----- Matrices ----- */
-    Float2x2,       //!< float2x2/ mat2 uniform.
-    Float2x3,       //!< float2x3/ mat2x3 uniform.
-    Float2x4,       //!< float2x4/ mat2x4 uniform.
-    Float3x2,       //!< float3x2/ mat3x2 uniform.
-    Float3x3,       //!< float3x3/ mat3 uniform.
-    Float3x4,       //!< float3x4/ mat3x4 uniform.
-    Float4x2,       //!< float4x2/ mat4x2 uniform.
-    Float4x3,       //!< float4x3/ mat4x3 uniform.
-    Float4x4,       //!< float4x4/ mat4 uniform.
-    Double2x2,      //!< double2x2/ dmat2 uniform.
-    Double2x3,      //!< double2x3/ dmat2x3 uniform.
-    Double2x4,      //!< double2x4/ dmat2x4 uniform.
-    Double3x2,      //!< double3x2/ dmat3x2 uniform.
-    Double3x3,      //!< double3x3/ dmat3 uniform.
-    Double3x4,      //!< double3x4/ dmat3x4 uniform.
-    Double4x2,      //!< double4x2/ dmat4x2 uniform.
-    Double4x3,      //!< double4x3/ dmat4x3 uniform.
-    Double4x4,      //!< double4x4/ dmat4 uniform.
-
-    /* ----- Resources ----- */
-    Sampler,        //!< Sampler uniform (e.g. "sampler2D").
-    Image,          //!< Image uniform (e.g. "image2D").
-    AtomicCounter,  //!< Atomic counter uniform (e.g. "atomic_uint").
-};
-
-/**
 \brief Storage buffer type enumeration for shader reflection.
 \note Only supported with: Direct3D 11, Direct3D 12.
-\see ShaderResource::storageBufferType
+\see ShaderResourceReflection::storageBufferType
 */
 enum class StorageBufferType
 {
@@ -156,7 +99,7 @@ enum class StorageBufferType
 \see ShaderReflection::resources
 \see BindingDescriptor
 */
-struct ShaderResource
+struct ShaderResourceReflection
 {
     /**
     \brief Binding descriptor with resource name, binding slot, flags, and array size.
@@ -183,8 +126,9 @@ struct ShaderResource
 /**
 \brief Shader reflection uniform structure.
 \see ShaderReflection::uniforms
+\todo Replace with UniformDescriptor
 */
-struct ShaderUniform
+struct ShaderUniformReflection
 {
     //! Name of the uniform inside the shader.
     std::string     name;
@@ -208,13 +152,13 @@ This is not a "descriptor", because it is only used as output from an interface 
 struct ShaderReflection
 {
     //! List of all shader reflection resource views.
-    std::vector<ShaderResource> resources;
+    std::vector<ShaderResourceReflection>   resources;
 
     /**
     \brief List of all uniforms (a.k.a. shader constants).
     \note Only supported with: OpenGL, Vulkan.
     */
-    std::vector<ShaderUniform>  uniforms;
+    std::vector<ShaderUniformReflection>    uniforms;
 
     /**
     \brief Reflection data that is specificly for the vertex shader.
@@ -226,13 +170,13 @@ struct ShaderReflection
     - \c semanticIndex
     - \c systemValue
     */
-    VertexShaderAttributes      vertex;
+    VertexShaderAttributes                  vertex;
 
     //! Reflection data that is specificly for the fragment shader.
-    FragmentShaderAttributes    fragment;
+    FragmentShaderAttributes                fragment;
 
     //! Reflection data that is specificly for the compute shader.
-    ComputeShaderAttributes     compute;
+    ComputeShaderAttributes                 compute;
 };
 
 

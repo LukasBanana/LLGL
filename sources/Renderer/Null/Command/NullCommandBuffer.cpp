@@ -302,11 +302,12 @@ void NullCommandBuffer::SetResourceHeap(
     //todo
 }
 
-void NullCommandBuffer::SetResource(
-    Resource&       resource,
-    std::uint32_t   slot,
-    long            bindFlags,
-    long            stageFlags)
+void NullCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
+{
+    //todo
+}
+
+void NullCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
     //todo
 }
@@ -370,23 +371,6 @@ void NullCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
 }
 
 void NullCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
-{
-    //todo
-}
-
-void NullCommandBuffer::SetUniform(
-    UniformLocation location,
-    const void*     data,
-    std::uint32_t   dataSize)
-{
-    //todo
-}
-
-void NullCommandBuffer::SetUniforms(
-    UniformLocation location,
-    std::uint32_t   count,
-    const void*     data,
-    std::uint32_t   dataSize)
 {
     //todo
 }

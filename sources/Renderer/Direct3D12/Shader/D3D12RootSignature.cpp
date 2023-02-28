@@ -1,5 +1,5 @@
 /*
- * D3D12RootSignatureBuilder.cpp
+ * D3D12RootSignature.cpp
  *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -7,6 +7,7 @@
 
 #include "D3D12RootSignature.h"
 #include "../../DXCommon/DXCore.h"
+#include <LLGL/Misc/ForRange.h>
 #include <stdint.h>
 
 
@@ -14,40 +15,55 @@ namespace LLGL
 {
 
 
-void D3D12RootSignatureBuilder::Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
+void D3D12RootSignature::Clear()
 {
+    permutationParent_ = nullptr;
+    nativeRootParams_.clear();
+    rootParams_.clear();
+    staticSamplers_.clear();
+}
+
+void D3D12RootSignature::Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers, const D3D12RootSignature* permutationParent)
+{
+    permutationParent_ = permutationParent;
     nativeRootParams_.reserve(maxNumRootParamters);
     rootParams_.reserve(maxNumRootParamters);
     staticSamplers_.reserve(maxNumStaticSamplers);
 }
 
-void D3D12RootSignatureBuilder::ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
+void D3D12RootSignature::ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers, const D3D12RootSignature* permutationParent)
 {
-    Reset(maxNumRootParamters, maxNumStaticSamplers);
+    Reset(maxNumRootParamters, maxNumStaticSamplers, permutationParent);
     while (maxNumRootParamters-- > 0)
         AppendRootParameter();
 }
 
-D3D12RootParameter* D3D12RootSignatureBuilder::AppendRootParameter()
+D3D12RootParameter* D3D12RootSignature::AppendRootParameter(UINT* outRootParameterIndex)
 {
+    /* Return optional root parameter index */
+    if (outRootParameterIndex != nullptr)
+        *outRootParameterIndex = static_cast<UINT>(rootParams_.size());
+
     /* Create new root paramter */
     nativeRootParams_.push_back({});
     rootParams_.push_back(&(nativeRootParams_.back()));
+
+    /* Return root parameter */
     return &(rootParams_.back());
 }
 
-D3D12RootParameter* D3D12RootSignatureBuilder::FindCompatibleRootParameter(D3D12_DESCRIPTOR_RANGE_TYPE rangeType)
+D3D12RootParameter* D3D12RootSignature::FindCompatibleRootParameter(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, std::size_t first)
 {
     /* Find compatible root parameter (search from back to front) */
-    for (auto it = rootParams_.rbegin(); it != rootParams_.rend(); ++it)
+    for_subrange_reverse(i, first, rootParams_.size())
     {
-        if (it->IsCompatible(rangeType))
-            return &(*it);
+        if (rootParams_[i].IsCompatible(D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE, rangeType))
+            return &(rootParams_[i]);
     }
     return nullptr;
 }
 
-D3D12_STATIC_SAMPLER_DESC* D3D12RootSignatureBuilder::AppendStaticSampler()
+D3D12_STATIC_SAMPLER_DESC* D3D12RootSignature::AppendStaticSampler()
 {
     D3D12_STATIC_SAMPLER_DESC samplerDesc;
     {
@@ -97,16 +113,43 @@ static ComPtr<ID3DBlob> DXSerializeRootSignature(
 }
 
 static ComPtr<ID3D12RootSignature> DXCreateRootSignature(
-    ID3D12Device*                       device,
-    const D3D12_ROOT_SIGNATURE_DESC&    signatureDesc,
-    ComPtr<ID3DBlob>*                   serializedBlob)
+    ID3D12Device*                               device,
+    const ArrayView<D3D12_ROOT_PARAMETER>&      rootParameters,
+    const ArrayView<D3D12_STATIC_SAMPLER_DESC>& staticSamplers,
+    D3D12_ROOT_SIGNATURE_FLAGS                  flags,
+    ComPtr<ID3DBlob>*                           serializedBlob)
 {
-    ComPtr<ID3D12RootSignature> rootSignature;
+    /* Create serialized root signature with the specified root parameters and static samplers */
+    D3D12_ROOT_SIGNATURE_DESC signatureDesc;
+    {
+        if (rootParameters.empty())
+        {
+            signatureDesc.NumParameters = 0;
+            signatureDesc.pParameters   = nullptr;
+        }
+        else
+        {
+            signatureDesc.NumParameters = static_cast<UINT>(rootParameters.size());
+            signatureDesc.pParameters   = rootParameters.data();
+        }
 
-    /* Create serialized root signature */
+        if (staticSamplers.empty())
+        {
+            signatureDesc.NumStaticSamplers = 0;
+            signatureDesc.pStaticSamplers   = nullptr;
+        }
+        else
+        {
+            signatureDesc.NumStaticSamplers = static_cast<UINT>(staticSamplers.size());
+            signatureDesc.pStaticSamplers   = staticSamplers.data();
+        }
+
+        signatureDesc.Flags                 = flags;
+    }
     auto signature = DXSerializeRootSignature(signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1);
 
     /* Create actual root signature */
+    ComPtr<ID3D12RootSignature> rootSignature;
     auto hr = device->CreateRootSignature(
         0,
         signature->GetBufferPointer(),
@@ -122,38 +165,12 @@ static ComPtr<ID3D12RootSignature> DXCreateRootSignature(
     return rootSignature;
 }
 
-ComPtr<ID3D12RootSignature> D3D12RootSignatureBuilder::Finalize(
+ComPtr<ID3D12RootSignature> D3D12RootSignature::Finalize(
     ID3D12Device*               device,
     D3D12_ROOT_SIGNATURE_FLAGS  flags,
     ComPtr<ID3DBlob>*           serializedBlob)
 {
-    D3D12_ROOT_SIGNATURE_DESC signatureDesc;
-    {
-        if (nativeRootParams_.empty())
-        {
-            signatureDesc.NumParameters = 0;
-            signatureDesc.pParameters   = nullptr;
-        }
-        else
-        {
-            signatureDesc.NumParameters = static_cast<UINT>(nativeRootParams_.size());
-            signatureDesc.pParameters   = nativeRootParams_.data();
-        }
-
-        if (staticSamplers_.empty())
-        {
-            signatureDesc.NumStaticSamplers = 0;
-            signatureDesc.pStaticSamplers   = nullptr;
-        }
-        else
-        {
-            signatureDesc.NumStaticSamplers = static_cast<UINT>(staticSamplers_.size());
-            signatureDesc.pStaticSamplers   = staticSamplers_.data();
-        }
-
-        signatureDesc.Flags                 = flags;
-    }
-    return DXCreateRootSignature(device, signatureDesc, serializedBlob);
+    return DXCreateRootSignature(device, nativeRootParams_, staticSamplers_, flags, serializedBlob);
 }
 
 

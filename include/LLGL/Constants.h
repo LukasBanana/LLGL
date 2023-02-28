@@ -40,7 +40,7 @@ constexpr std::uint32_t ignoreOffset    = -1;
 
 /**
 \brief Specifies an invalid binding slot for shader resources.
-\see ShaderResource::slot
+\see ShaderResourceReflection::slot
 */
 constexpr std::uint32_t invalidSlot     = -1;
 

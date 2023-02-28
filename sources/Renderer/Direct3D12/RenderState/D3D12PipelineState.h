@@ -44,6 +44,12 @@ class D3D12PipelineState : public PipelineState
             return isGraphicsPSO_;
         }
 
+        // Returns the pipeline layout this PSO was created with.
+        inline const D3D12PipelineLayout* GetPipelineLayout() const
+        {
+            return pipelineLayout_;
+        }
+
     protected:
 
         D3D12PipelineState(
@@ -81,6 +87,7 @@ class D3D12PipelineState : public PipelineState
         const bool                  isGraphicsPSO_  = false;
         ComPtr<ID3D12PipelineState> native_;
         ComPtr<ID3D12RootSignature> rootSignature_;
+        const D3D12PipelineLayout*  pipelineLayout_ = nullptr;
         BasicReport                 report_;
 
 };

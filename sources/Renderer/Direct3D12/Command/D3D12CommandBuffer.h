@@ -1,6 +1,6 @@
 /*
  * D3D12CommandBuffer.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -28,6 +28,10 @@ class D3D12RenderSystem;
 class D3D12SwapChain;
 class D3D12RenderTarget;
 class D3D12RenderPass;
+class D3D12Buffer;
+class D3D12Texture;
+class D3D12Sampler;
+class D3D12PipelineLayout;
 class D3D12SignatureFactory;
 struct D3D12Resource;
 
@@ -126,7 +130,9 @@ class D3D12CommandBuffer final : public CommandBuffer
             const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
         ) override;
 
-        void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) override;
+        void SetResource(Resource& resource, std::uint32_t descriptor) override;
+
+        void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) override;
 
         void ResetResourceSlots(
             const ResourceType  resourceType,
@@ -155,19 +161,6 @@ class D3D12CommandBuffer final : public CommandBuffer
         void SetPipelineState(PipelineState& pipelineState) override;
         void SetBlendFactor(const ColorRGBAf& color) override;
         void SetStencilReference(std::uint32_t reference, const StencilFace stencilFace = StencilFace::FrontAndBack) override;
-
-        void SetUniform(
-            UniformLocation location,
-            const void*     data,
-            std::uint32_t   dataSize
-        ) override;
-
-        void SetUniforms(
-            UniformLocation location,
-            std::uint32_t   count,
-            const void*     data,
-            std::uint32_t   dataSize
-        ) override;
 
         /* ----- Queries ----- */
 
@@ -270,7 +263,14 @@ class D3D12CommandBuffer final : public CommandBuffer
             const D3D12_RECT*   rects
         );
 
+        void EmplaceResourceDescriptor(const D3D12DescriptorHeapLocation& location, Resource& resource);
+        void EmplaceBufferDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Buffer& bufferD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
+        void EmplaceTextureDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Texture& textureD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
+        void EmplaceSamplerDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Sampler& samplerD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
+
     private:
+
+        ID3D12Device*                   device_                 = nullptr;
 
         D3D12CommandContext             commandContext_;
         ID3D12GraphicsCommandList*      commandList_            = nullptr;
@@ -289,7 +289,10 @@ class D3D12CommandBuffer final : public CommandBuffer
         UINT                            numBoundScissorRects_   = 0;
         UINT                            numColorBuffers_        = 0;
 
-        RenderTarget*                   boundRenderTarget_      = nullptr;
+        D3D12SwapChain*                 boundSwapChain_         = nullptr;
+        D3D12RenderTarget*              boundRenderTarget_      = nullptr;
+        const D3D12PipelineLayout*      boundPipelineLayout_    = nullptr;
+        bool                            isGraphicsPSOBound_     = false;
 
 };
 

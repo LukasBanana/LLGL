@@ -1338,7 +1338,7 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
     if (resourceHeapDesc.pipelineLayout != nullptr)
     {
         auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, resourceHeapDesc.pipelineLayout);
-        const auto& bindings = pipelineLayoutDbg->desc.bindings;
+        const auto& bindings = pipelineLayoutDbg->desc.heapBindings;
 
         const auto numResourceViews = (resourceHeapDesc.numResourceViews > 0 ? resourceHeapDesc.numResourceViews : static_cast<std::uint32_t>(initialResourceViews.size()));
         const auto numBindings      = bindings.size();

@@ -1,6 +1,6 @@
 /*
  * D3D12CommandContext.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -11,6 +11,8 @@
 
 #include "../../DXCommon/ComPtr.h"
 #include "../RenderState/D3D12Fence.h"
+#include "../RenderState/D3D12PipelineLayout.h"
+#include "../RenderState/D3D12StagingDescriptorHeapPool.h"
 #include <d3d12.h>
 #include <cstddef>
 #include <cstdint>
@@ -106,8 +108,67 @@ class D3D12CommandContext
         void SetPipelineState(ID3D12PipelineState* pipelineState);
         void SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12DescriptorHeap* const* descriptorHeaps);
 
+        void PrepareStagingDescriptorHeaps(
+            const D3D12DescriptorHeapSetLayout& layout,
+            const D3D12RootParameterIndices&    indices
+        );
+
         void SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
         void SetComputeConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
+
+        void SetGraphicsRootParameter(UINT parameterIndex, D3D12_ROOT_PARAMETER_TYPE parameterType, D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr);
+        void SetComputeRootParameter(UINT parameterIndex, D3D12_ROOT_PARAMETER_TYPE parameterType, D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr);
+
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const;
+
+        D3D12_GPU_DESCRIPTOR_HANDLE CopyDescriptors(
+            D3D12_DESCRIPTOR_HEAP_TYPE  type,
+            D3D12_CPU_DESCRIPTOR_HANDLE srcDescHandle,
+            UINT                        firstDescriptor,
+            UINT                        numDescriptors
+        );
+
+        void NextDescriptorHeap();
+        void NextDescriptorSet();
+
+        void DrawInstanced(
+            UINT vertexCountPerInstance,
+            UINT instanceCount,
+            UINT startVertexLocation,
+            UINT startInstanceLocation
+        );
+
+        void DrawIndexedInstanced(
+            UINT    indexCountPerInstance,
+            UINT    instanceCount,
+            UINT    startIndexLocation,
+            INT     baseVertexLocation,
+            UINT    startInstanceLocation
+        );
+
+        void DrawIndirect(
+            ID3D12CommandSignature* commandSignature,
+            UINT                    maxCommandCount,
+            ID3D12Resource*         argumentBuffer,
+            UINT64                  argumentBufferOffset,
+            ID3D12Resource*         countBuffer,
+            UINT64                  countBufferOffset
+        );
+
+        void Dispatch(
+            UINT threadGroupCountX,
+            UINT threadGroupCountY,
+            UINT threadGroupCountZ
+        );
+
+        void DispatchIndirect(
+            ID3D12CommandSignature* commandSignature,
+            UINT                    maxCommandCount,
+            ID3D12Resource*         argumentBuffer,
+            UINT64                  argumentBufferOffset,
+            ID3D12Resource*         countBuffer,
+            UINT64                  countBufferOffset
+        );
 
     private:
 
@@ -150,6 +211,12 @@ class D3D12CommandContext
         // Switches to the next command allocator and resets it.
         void NextCommandAllocator();
 
+        // Increments the write offsets for the staging descriptor pools.
+        void NextStagingDescriptors(UINT numResourceViews, UINT numSamplers);
+
+        void FlushGraphicsStagingDescriptorTables();
+        void FlushComputeStagingDescriptorTables();
+
         // Returns the current command allocator.
         inline ID3D12CommandAllocator* GetCommandAllocator() const
         {
@@ -171,6 +238,10 @@ class D3D12CommandContext
 
         D3D12_RESOURCE_BARRIER              resourceBarriers_[g_maxNumResourceBarrieres];
         UINT                                numResourceBarriers_                            = 0;
+
+        D3D12StagingDescriptorHeapPool      stagingDescriptorPools_[g_maxNumAllocators][g_maxNumDescriptorHeaps];
+        D3D12DescriptorHeapSetLayout        stagingDescriptorSetLayout_;
+        D3D12RootParameterIndices           stagingDescriptorIndices_;
 
         StateCache                          stateCache_;
 

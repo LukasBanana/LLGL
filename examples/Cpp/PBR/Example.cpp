@@ -145,9 +145,11 @@ private:
         {
             layoutSky = renderer->CreatePipelineLayout(
                 LLGL::PipelineLayoutDesc(
+                    "heap{"
                     "cbuffer(Settings@1):frag:vert,"
                     "sampler(skyBox@2):frag,"
                     "texture(2):frag,"
+                    "}"
                 )
             );
         }
@@ -155,9 +157,11 @@ private:
         {
             layoutSky = renderer->CreatePipelineLayout(
                 LLGL::PipelineLayoutDesc(
+                    "heap{"
                     "cbuffer(1):frag:vert,"
                     "sampler(2):frag,"
                     "texture(3):frag,"
+                    "}"
                 )
             );
         }
@@ -179,6 +183,7 @@ private:
         {
             layoutMeshes = renderer->CreatePipelineLayout(
                 LLGL::PipelineLayoutDesc(
+                    "heap{"
                     "cbuffer(Settings@1):frag:vert,"
                     "sampler(skyBox@2):frag,"
                     "sampler(colorMaps@3):frag,"
@@ -190,6 +195,7 @@ private:
                     "texture(4):frag,"
                     "texture(5):frag,"
                     "texture(6):frag,"
+                    "}"
                 )
             );
         }
@@ -197,6 +203,7 @@ private:
         {
             layoutMeshes = renderer->CreatePipelineLayout(
                 LLGL::PipelineLayoutDesc(
+                    "heap{"
                     "cbuffer(1):frag:vert,"
                     "sampler(2):frag,"
                     "texture(3):frag,"
@@ -204,6 +211,7 @@ private:
                     "texture(5):frag,"
                     "texture(6):frag,"
                     "texture(7):frag,"
+                    "}"
                 )
             );
         }

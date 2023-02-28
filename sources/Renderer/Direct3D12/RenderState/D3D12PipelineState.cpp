@@ -28,8 +28,8 @@ D3D12PipelineState::D3D12PipelineState(
     if (pipelineLayout != nullptr)
     {
         /* Create pipeline state with root signature from pipeline layout */
-        auto pipelineLayoutD3D = LLGL_CAST(const D3D12PipelineLayout*, pipelineLayout);
-        rootSignature_ = pipelineLayoutD3D->GetSharedRootSignature();
+        pipelineLayout_ = LLGL_CAST(const D3D12PipelineLayout*, pipelineLayout);
+        rootSignature_ = pipelineLayout_->GetSharedRootSignature();
     }
     else
     {

@@ -1,6 +1,6 @@
 /*
  * DbgCommandBuffer.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,12 +10,14 @@
 #include "../CheckedCast.h"
 #include "../ResourceUtils.h"
 #include "../../Core/Helper.h"
+#include "../../Core/Assertion.h"
 
 #include "DbgSwapChain.h"
 #include "Buffer/DbgBuffer.h"
 #include "Buffer/DbgBufferArray.h"
 #include "RenderState/DbgQueryHeap.h"
 #include "RenderState/DbgPipelineState.h"
+#include "RenderState/DbgPipelineLayout.h"
 #include "RenderState/DbgResourceHeap.h"
 #include "Shader/DbgShader.h"
 #include "Texture/DbgTexture.h"
@@ -43,6 +45,9 @@ namespace LLGL
     {                               \
         CMD;                        \
     }
+
+#define LLGL_DBG_ASSERT_PTR(NAME) \
+    AssertNullPointer(NAME, #NAME)
 
 static const char* GetLabelOrDefault(const std::string& label, const char* defaultLabel)
 {
@@ -339,7 +344,7 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         LLGL_DBG_SOURCE;
 
         AssertRecording();
-        AssertNullPointer(viewports, "viewports");
+        LLGL_DBG_ASSERT_PTR(viewports);
 
         /* Validate all viewports in array */
         if (viewports)
@@ -377,7 +382,7 @@ void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sci
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        AssertNullPointer(scissors, "scissors");
+        LLGL_DBG_ASSERT_PTR(scissors);
         if (numScissors == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no scissor rectangles are specified");
     }
@@ -514,25 +519,23 @@ void DbgCommandBuffer::SetResourceHeap(
     profile_.resourceHeapBindings++;
 }
 
-void DbgCommandBuffer::SetResource(
-    Resource&       resource,
-    std::uint32_t   slot,
-    long            bindFlags,
-    long            stageFlags)
+void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
 {
+    const BindingDescriptor* bindingDesc = nullptr;
+
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
 
-        if (!features_.hasDirectResourceBinding)
-            LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "direct resource binding not supported");
-
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
+        if (auto* pso = bindings_.pipelineState)
+        {
+            if (auto* psoLayout = pso->pipelineLayout)
+                bindingDesc = GetAndValidateResourceDescFromPipeline(*psoLayout, resource, descriptor);
+        }
+        else
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot bind resource without pipeline state");
     }
-
-    if (perfProfilerEnabled_)
-        StartTimer("SetResource");
 
     switch (resource.GetResourceType())
     {
@@ -544,22 +547,28 @@ void DbgCommandBuffer::SetResource(
             /* Forward buffer resource to wrapped instance */
             auto& bufferDbg = LLGL_CAST(DbgBuffer&, resource);
 
-            ValidateBindFlags(
-                bufferDbg.desc.bindFlags,
-                bindFlags,
-                (BindFlags::ConstantBuffer | BindFlags::Sampled | BindFlags::Storage),
-                GetLabelOrDefault(bufferDbg.label, "LLGL::Buffer")
-            );
+            if (bindingDesc != nullptr)
+            {
+                ValidateBindFlags(
+                    bufferDbg.desc.bindFlags,
+                    bindingDesc->bindFlags,
+                    (BindFlags::ConstantBuffer | BindFlags::Sampled | BindFlags::Storage),
+                    GetLabelOrDefault(bufferDbg.label, "LLGL::Buffer")
+                );
+            }
 
-            instance.SetResource(bufferDbg.instance, slot, bindFlags, stageFlags);
+            LLGL_DBG_COMMAND( "SetResource", instance.SetResource(bufferDbg.instance, descriptor) );
 
             /* Record binding for profiling */
-            if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-                profile_.constantBufferBindings++;
-            if ((bindFlags & BindFlags::Sampled) != 0)
-                profile_.sampledBufferBindings++;
-            if ((bindFlags & BindFlags::Storage) != 0)
-                profile_.storageBufferBindings++;
+            if (bindingDesc != nullptr)
+            {
+                if ((bindingDesc->bindFlags & BindFlags::ConstantBuffer) != 0)
+                    profile_.constantBufferBindings++;
+                if ((bindingDesc->bindFlags & BindFlags::Sampled) != 0)
+                    profile_.sampledBufferBindings++;
+                if ((bindingDesc->bindFlags & BindFlags::Storage) != 0)
+                    profile_.storageBufferBindings++;
+            }
         }
         break;
 
@@ -568,20 +577,26 @@ void DbgCommandBuffer::SetResource(
             /* Forward texture resource to wrapped instance */
             auto& textureDbg = LLGL_CAST(DbgTexture&, resource);
 
-            ValidateBindFlags(
-                textureDbg.desc.bindFlags,
-                bindFlags,
-                (BindFlags::Sampled | BindFlags::Storage | BindFlags::CombinedSampler),
-                GetLabelOrDefault(textureDbg.label, "LLGL::Buffer")
-            );
+            if (bindingDesc != nullptr)
+            {
+                ValidateBindFlags(
+                    textureDbg.desc.bindFlags,
+                    bindingDesc->bindFlags,
+                    (BindFlags::Sampled | BindFlags::Storage | BindFlags::CombinedSampler),
+                    GetLabelOrDefault(textureDbg.label, "LLGL::Buffer")
+                );
+            }
 
-            instance.SetResource(textureDbg.instance, slot, bindFlags, stageFlags);
+            LLGL_DBG_COMMAND( "SetResource", instance.SetResource(textureDbg.instance, descriptor) );
 
             /* Record binding for profiling */
-            if ((bindFlags & BindFlags::Sampled) != 0)
-                profile_.sampledTextureBindings++;
-            if ((bindFlags & BindFlags::Storage) != 0)
-                profile_.storageTextureBindings++;
+            if (bindingDesc != nullptr)
+            {
+                if ((bindingDesc->bindFlags & BindFlags::Sampled) != 0)
+                    profile_.sampledTextureBindings++;
+                if ((bindingDesc->bindFlags & BindFlags::Storage) != 0)
+                    profile_.storageTextureBindings++;
+            }
         }
         break;
 
@@ -589,19 +604,36 @@ void DbgCommandBuffer::SetResource(
         {
             /* No bind flags allowed for samplers */
             //TODO: use DbgSampler
-            ValidateBindFlags(0, bindFlags, 0, "LLGL::Sampler");
+            if (bindingDesc != nullptr)
+                ValidateBindFlags(0, bindingDesc->bindFlags, 0, "LLGL::Sampler");
 
             /* Forward sampler resource to wrapped instance */
-            instance.SetResource(resource, slot, bindFlags, stageFlags);
+            LLGL_DBG_COMMAND( "SetResource", instance.SetResource(resource, descriptor) );
 
             /* Record binding for profiling */
             profile_.samplerBindings++;
         }
         break;
     }
+}
 
-    if (perfProfilerEnabled_)
-        EndTimer();
+void DbgCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        LLGL_DBG_ASSERT_PTR(data);
+        if (auto* pso = bindings_.pipelineState)
+        {
+            if (auto* psoLayout = pso->pipelineLayout)
+                ValidateUniforms(*psoLayout, first, dataSize);
+        }
+        else
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot set uniforms without pipeline state");
+    }
+
+    LLGL_DBG_COMMAND( "SetUniforms", instance.SetUniforms(first, data, dataSize) );
 }
 
 void DbgCommandBuffer::ResetResourceSlots(
@@ -782,23 +814,6 @@ void DbgCommandBuffer::SetStencilReference(std::uint32_t reference, const Stenci
     }
 
     LLGL_DBG_COMMAND( "SetStencilReference", instance.SetStencilReference(reference, stencilFace) );
-}
-
-void DbgCommandBuffer::SetUniform(
-    UniformLocation location,
-    const void*     data,
-    std::uint32_t   dataSize)
-{
-    LLGL_DBG_COMMAND( "SetUniform", instance.SetUniform(location, data, dataSize) );
-}
-
-void DbgCommandBuffer::SetUniforms(
-    UniformLocation location,
-    std::uint32_t   count,
-    const void*     data,
-    std::uint32_t   dataSize)
-{
-    LLGL_DBG_COMMAND( "SetUniforms", instance.SetUniforms(location, count, data, dataSize) );
 }
 
 /* ----- Queries ----- */
@@ -1182,7 +1197,7 @@ void DbgCommandBuffer::PushDebugGroup(const char* name)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        AssertNullPointer(name, "name");
+        LLGL_DBG_ASSERT_PTR(name);
         debugger_->SetDebugGroup(name);
     }
 
@@ -1824,6 +1839,136 @@ void DbgCommandBuffer::ValidateStreamOutputs(std::uint32_t numBuffers)
             ErrorType::InvalidArgument,
             "maximum number of stream-output buffers exceeded limit: " +
             std::to_string(numBuffers) + " specified but limit is " + std::to_string(limits_.maxStreamOutputs)
+        );
+    }
+}
+
+const BindingDescriptor* DbgCommandBuffer::GetAndValidateResourceDescFromPipeline(const DbgPipelineLayout& pipelineLayoutDbg, Resource& resource, std::uint32_t descriptor)
+{
+    if (descriptor >= pipelineLayoutDbg.desc.bindings.size())
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "descriptor index out of bounds: " + std::to_string(descriptor) +
+            " specified but upper bound is " + std::to_string(pipelineLayoutDbg.desc.bindings.size())
+        );
+        return nullptr;
+    }
+    auto* bindingDesc = &(pipelineLayoutDbg.desc.bindings[descriptor]);
+    if (bindingDesc->type != resource.GetResourceType())
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid resource type in pipeline for descriptor[" + std::to_string(descriptor) + "]: " +
+            std::string(ToString(resource.GetResourceType())) + " specified but expected " + std::string(ToString(bindingDesc->type))
+        );
+        return nullptr;
+    }
+    return bindingDesc;
+}
+
+// Returns the size (in bytes) of the specified shader uniform type.
+static std::uint16_t GetUniformTypeSize(UniformType type)
+{
+    switch (type)
+    {
+        case UniformType::Undefined:        break;
+
+        case UniformType::Float1:           return 4;
+        case UniformType::Float2:           return 4*2;
+        case UniformType::Float3:           return 4*3;
+        case UniformType::Float4:           return 4*3;
+        case UniformType::Double1:          return 8;
+        case UniformType::Double2:          return 8*2;
+        case UniformType::Double3:          return 8*3;
+        case UniformType::Double4:          return 8*3;
+        case UniformType::Int1:             return 4;
+        case UniformType::Int2:             return 4*2;
+        case UniformType::Int3:             return 4*3;
+        case UniformType::Int4:             return 4*3;
+        case UniformType::UInt1:            return 4;
+        case UniformType::UInt2:            return 4*2;
+        case UniformType::UInt3:            return 4*3;
+        case UniformType::UInt4:            return 4*3;
+        case UniformType::Bool1:            return 4;
+        case UniformType::Bool2:            return 4*2;
+        case UniformType::Bool3:            return 4*3;
+        case UniformType::Bool4:            return 4*3;
+        case UniformType::Float2x2:         return 4*2*2;
+        case UniformType::Float2x3:         return 4*2*3;
+        case UniformType::Float2x4:         return 4*2*4;
+        case UniformType::Float3x2:         return 4*3*2;
+        case UniformType::Float3x3:         return 4*3*3;
+        case UniformType::Float3x4:         return 4*3*4;
+        case UniformType::Float4x2:         return 4*4*2;
+        case UniformType::Float4x3:         return 4*4*3;
+        case UniformType::Float4x4:         return 4*4*4;
+        case UniformType::Double2x2:        return 8*2*2;
+        case UniformType::Double2x3:        return 8*2*3;
+        case UniformType::Double2x4:        return 8*2*4;
+        case UniformType::Double3x2:        return 8*3*2;
+        case UniformType::Double3x3:        return 8*3*3;
+        case UniformType::Double3x4:        return 8*3*4;
+        case UniformType::Double4x2:        return 8*4*2;
+        case UniformType::Double4x3:        return 8*4*3;
+        case UniformType::Double4x4:        return 8*4*4;
+
+        case UniformType::Sampler:          break;
+        case UniformType::Image:            break;
+        case UniformType::AtomicCounter:    break;
+    }
+    return 0;
+}
+
+void DbgCommandBuffer::ValidateUniforms(const DbgPipelineLayout& pipelineLayoutDbg, std::uint32_t first, std::uint16_t dataSize)
+{
+    /* Validate input data size */
+    if (dataSize == 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot set uniforms with a data size of 0"
+        );
+    }
+    else if (dataSize % 4 != 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot set uniforms with a data size of " + std::to_string(dataSize) + "; must be a multiple of 4"
+        );
+    }
+
+    /* Validate number of uniforms */
+    if (first >= pipelineLayoutDbg.desc.uniforms.size())
+    {
+        std::uint32_t count = 0;
+        for (; first < pipelineLayoutDbg.desc.uniforms.size(); ++first, ++count)
+        {
+            /* Get size information for current uniform that is to be updated */
+            const auto& uniformDesc = pipelineLayoutDbg.desc.uniforms[first];
+            const auto uniformTypeSize = GetUniformTypeSize(uniformDesc.type);
+
+            if (dataSize > uniformTypeSize)
+                dataSize -= uniformTypeSize;
+            else
+                break;
+        }
+
+        if (dataSize > 0)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot set uniforms with data size of " + std::to_string(dataSize) + "; exceeded limit by " +
+                std::to_string(dataSize) + (dataSize == 1 ? "byte" : "bytes")
+            );
+        }
+    }
+    else
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "uniform index out of bounds: " + std::to_string(first) +
+            " specified but upper bound is " + std::to_string(pipelineLayoutDbg.desc.uniforms.size())
         );
     }
 }

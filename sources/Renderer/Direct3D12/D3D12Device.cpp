@@ -92,12 +92,24 @@ ComPtr<ID3D12PipelineState> D3D12Device::CreateDXComputePipelineState(const D3D1
     return pipelineState;
 }
 
+static const char* GetContextInfoForFailedDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType)
+{
+    switch (heapType)
+    {
+        case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:    return "for heap type D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV";
+        case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:        return "for heap type D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER";
+        case D3D12_DESCRIPTOR_HEAP_TYPE_RTV:            return "for heap type D3D12_DESCRIPTOR_HEAP_TYPE_RTV";
+        case D3D12_DESCRIPTOR_HEAP_TYPE_DSV:            return "for heap type D3D12_DESCRIPTOR_HEAP_TYPE_DSV";
+        default:                                        return nullptr;
+    }
+}
+
 ComPtr<ID3D12DescriptorHeap> D3D12Device::CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc)
 {
     ComPtr<ID3D12DescriptorHeap> descHeap;
 
     auto hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(descHeap.ReleaseAndGetAddressOf()));
-    DXThrowIfCreateFailed(hr, "ID3D12DescriptorHeap");
+    DXThrowIfCreateFailed(hr, "ID3D12DescriptorHeap", GetContextInfoForFailedDescriptorHeap(desc.Type));
 
     return descHeap;
 }

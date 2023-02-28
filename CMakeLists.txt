@@ -492,6 +492,7 @@ set(FilesExample_StencilBuffer ${EXAMPLE_PROJECTS_DIR}/StencilBuffer/Example.cpp
 set(FilesExample_Animation ${EXAMPLE_PROJECTS_DIR}/Animation/Example.cpp)
 set(FilesExample_VolumeRendering ${EXAMPLE_PROJECTS_DIR}/VolumeRendering/Example.cpp)
 set(FilesExample_PrimitiveRestart ${EXAMPLE_PROJECTS_DIR}/PrimitiveRestart/Example.cpp)
+set(FilesExample_ResourceBinding ${EXAMPLE_PROJECTS_DIR}/ResourceBinding/Example.cpp)
 
 # Mobile example project files
 set(FilesExample_HelloAndroid ${EXAMPLE_PROJECTS_DIR}/HelloAndroid/cpp/Example.cpp)
@@ -996,6 +997,7 @@ if(GaussLib_INCLUDE_DIR)
             ADD_EXAMPLE_PROJECT(Example_Animation "${FilesExample_Animation}" "${EXAMPLE_PROJECT_LIBS}")
             ADD_EXAMPLE_PROJECT(Example_VolumeRendering "${FilesExample_VolumeRendering}" "${EXAMPLE_PROJECT_LIBS}")
             ADD_EXAMPLE_PROJECT(Example_PrimitiveRestart "${FilesExample_PrimitiveRestart}" "${EXAMPLE_PROJECT_LIBS}")
+            ADD_EXAMPLE_PROJECT(Example_ResourceBinding "${FilesExample_ResourceBinding}" "${EXAMPLE_PROJECT_LIBS}")
         endif()
     endif()
 else()

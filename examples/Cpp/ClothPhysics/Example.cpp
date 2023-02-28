@@ -387,6 +387,7 @@ public:
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
             LLGL::PipelineLayoutDesc(
+                "heap{"
                 "cbuffer(SceneState@0):comp,"
                 #ifdef ENABLE_STORAGE_TEXTURES
                 "texture(parBase@1):comp,"
@@ -394,6 +395,7 @@ public:
                 #else
                 "buffer(parBase@1):comp,"
                 "rwbuffer(parCurrPos@2, parNextPos@3, parPrevPos@4, parVelocity@5, parNormal@6):comp"
+                "}"
                 #endif // /ENABLE_STORAGE_TEXTURES
             )
         );
@@ -473,16 +475,16 @@ public:
 
         graphicsLayout = renderer->CreatePipelineLayout(
             IsMetal() || IsVulkan()
-                ? LLGL::PipelineLayoutDesc("cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag, texture(1,2,6):vert")
-                : LLGL::PipelineLayoutDesc("cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag, texture(1,2,3):vert")
+                ? LLGL::PipelineLayoutDesc("heap{cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag, texture(1,2,6):vert}")
+                : LLGL::PipelineLayoutDesc("heap{cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag, texture(1,2,3):vert}")
         );
 
         #else
 
         graphicsLayout = renderer->CreatePipelineLayout(
             IsMetal() || IsVulkan()
-                ? LLGL::PipelineLayoutDesc("cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag")
-                : LLGL::PipelineLayoutDesc("cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag")
+                ? LLGL::PipelineLayoutDesc("heap{cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag}")
+                : LLGL::PipelineLayoutDesc("heap{cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag}")
         );
 
         #endif // /ENABLE_STORAGE_TEXTURES

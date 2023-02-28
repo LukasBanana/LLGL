@@ -38,13 +38,13 @@ int main()
         computeShader->Reflect(reflect);
 
         std::cout << "Resources:" << std::endl;
-        for (const LLGL::ShaderResource& resc : reflect.resources)
+        for (const LLGL::ShaderResourceReflection& resc : reflect.resources)
         {
             std::cout << "  " << resc.binding.name << " @ " << resc.binding.slot << std::endl;
         }
 
         std::cout << "Uniforms:" << std::endl;
-        for (const LLGL::ShaderUniform& unif : reflect.uniforms)
+        for (const LLGL::ShaderUniformReflection& unif : reflect.uniforms)
         {
             std::cout << "  " << unif.name << " @ " << unif.location << std::endl;
         }

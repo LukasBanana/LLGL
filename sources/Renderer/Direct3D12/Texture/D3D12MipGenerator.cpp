@@ -144,7 +144,7 @@ ComPtr<ID3D12PipelineState> D3D12MipGenerator::CreateComputePSO(
 void D3D12MipGenerator::CreateResourcesFor1DMips(ID3D12Device* device)
 {
     /* Initialize root signature */
-    D3D12RootSignatureBuilder rootSignature;
+    D3D12RootSignature rootSignature;
     {
         rootSignature.ResetAndAlloc(3, 1);
         rootSignature[0].InitAsConstants(0, 4);
@@ -167,7 +167,7 @@ void D3D12MipGenerator::CreateResourcesFor1DMips(ID3D12Device* device)
 void D3D12MipGenerator::CreateResourcesFor2DMips(ID3D12Device* device)
 {
     /* Initialize root signature */
-    D3D12RootSignatureBuilder rootSignature;
+    D3D12RootSignature rootSignature;
     {
         rootSignature.ResetAndAlloc(3, 1);
         rootSignature[0].InitAsConstants(0, 5);
@@ -194,7 +194,7 @@ void D3D12MipGenerator::CreateResourcesFor2DMips(ID3D12Device* device)
 void D3D12MipGenerator::CreateResourcesFor3DMips(ID3D12Device* device)
 {
     /* Initialize root signature */
-    D3D12RootSignatureBuilder rootSignature;
+    D3D12RootSignature rootSignature;
     {
         rootSignature.ResetAndAlloc(3, 1);
         rootSignature[0].InitAsConstants(0, 5);

@@ -1,6 +1,6 @@
 /*
  * TypeNames.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -245,6 +245,19 @@ LLGL_EXPORT const char* ToString(const TextureType t)
         case T::TextureCubeArray:   return "TextureCubeArray";
         case T::Texture2DMS:        return "Texture2DMS";
         case T::Texture2DMSArray:   return "Texture2DMSArray";
+    }
+    return nullptr;
+}
+
+LLGL_EXPORT const char* ToString(const ResourceType t)
+{
+    using T = ResourceType;
+    switch (t)
+    {
+        case T::Undefined:  return "undefined";
+        case T::Buffer:     return "buffer";
+        case T::Texture:    return "texture";
+        case T::Sampler:    return "sampler";
     }
     return nullptr;
 }

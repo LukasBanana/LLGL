@@ -13,7 +13,6 @@
 #include <LLGL/Texture.h>
 #include <d3d12.h>
 #include "../Shader/D3D12RootSignature.h"
-#include "D3D12SamplerDesc.h"
 #include "../Shader/D3D12Shader.h"
 #include "../../DXCommon/ComPtr.h"
 

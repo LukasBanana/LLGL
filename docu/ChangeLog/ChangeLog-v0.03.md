@@ -536,6 +536,8 @@ RenderContext::QueryDepthStencilFormat --> SwapChain::GetDepthStencilFormat
 Resource::QueryResourceType            --> Resource::GetResourceType
 ShaderProgram::QueryInfoLog            --> ShaderProgram::GetReport
 ShaderProgram::QueryUniformLocation    --> ShaderProgram::FindUniformLocation
+ShaderResource                         --> ShaderResourceReflection
+ShaderUniform                          --> ShaderUniformReflection
 TextureBufferSize                      --> GetMemoryFootprint
 Texture::QueryDesc                     --> Texture::GetDesc
 Texture::QueryMipExtent                --> Texture::GetMipExtent

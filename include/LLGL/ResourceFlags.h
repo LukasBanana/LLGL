@@ -136,7 +136,7 @@ struct BindFlags
         \brief Specifies a resource as a combination of a Texture and Sampler (e.g. \c sampler2D in GLSL).
         \remarks This is only used for shader reflection and ignored by resource creation.
         \note Only supported with: OpenGL, Vulkan.
-        \see ShaderResource::binding
+        \see ShaderResourceReflection::binding
         */
         CombinedSampler         = (1 << 9),
 

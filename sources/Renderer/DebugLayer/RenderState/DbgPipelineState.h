@@ -1,6 +1,6 @@
 /*
  * DbgPipelineState.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+class DbgPipelineLayout;
+
 class DbgPipelineState final : public PipelineState
 {
 
@@ -34,9 +36,10 @@ class DbgPipelineState final : public PipelineState
 
     public:
 
-        PipelineState&  instance;
-        std::string     label;
-        const bool      isGraphicsPSO   = false;
+        PipelineState&                  instance;
+        std::string                     label;
+        const DbgPipelineLayout* const  pipelineLayout  = nullptr;
+        const bool                      isGraphicsPSO   = false;
 
         union
         {

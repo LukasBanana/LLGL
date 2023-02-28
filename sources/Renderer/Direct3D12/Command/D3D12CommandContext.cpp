@@ -1,6 +1,6 @@
 /*
  * D3D12CommandContext.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -11,12 +11,20 @@
 #include "../D3D12Resource.h"
 #include "../RenderState/D3D12Fence.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../../Core/Assertion.h"
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 
 
 namespace LLGL
 {
 
+
+static D3D12_DESCRIPTOR_HEAP_TYPE g_descriptorHeapTypes[] =
+{
+    D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+    D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+};
 
 const UINT D3D12CommandContext::g_maxNumAllocators;
 const UINT D3D12CommandContext::g_maxNumResourceBarrieres;
@@ -50,9 +58,13 @@ void D3D12CommandContext::Create(
     /* Determine number of command allocators */
     numAllocators_ = std::max(1u, std::min(numAllocators, g_maxNumAllocators));
 
-    /* Create command allocators */
-    for (std::uint32_t i = 0; i < numAllocators_; ++i)
+    /* Create command allocators and descriptor heap pools */
+    for_range(i, numAllocators_)
+    {
         commandAllocators_[i] = device.CreateDXCommandAllocator(commandListType);
+        for_range(j, D3D12CommandContext::g_maxNumDescriptorHeaps)
+            stagingDescriptorPools_[i][j].InitializeDevice(&device, g_descriptorHeapTypes[j]);
+    }
 
     /* Create graphics command list and close it (they are created in recording mode) */
     commandList_ = device.CreateDXCommandList(commandListType, GetCommandAllocator());
@@ -253,7 +265,7 @@ static bool CompareDescriptorHeapRefs(
 
 void D3D12CommandContext::SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12DescriptorHeap* const* descriptorHeaps)
 {
-    if (numDescriptorHeaps <= g_maxNumDescriptorHeaps)
+    if (numDescriptorHeaps <= D3D12CommandContext::g_maxNumDescriptorHeaps)
     {
         /* Check if the descriptor heaps are cached */
         if (stateCache_.dirtyBits.descriptorHeaps != 0 ||
@@ -270,6 +282,21 @@ void D3D12CommandContext::SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12Desc
     }
 }
 
+void D3D12CommandContext::PrepareStagingDescriptorHeaps(
+    const D3D12DescriptorHeapSetLayout& layout,
+    const D3D12RootParameterIndices&    indices)
+{
+    stagingDescriptorSetLayout_ = layout;
+    stagingDescriptorIndices_   = indices;
+
+    ID3D12DescriptorHeap* const stagingDescriptorHeaps[2] =
+    {
+        stagingDescriptorPools_[currentAllocatorIndex_][0].GetDescriptorHeap(),
+        stagingDescriptorPools_[currentAllocatorIndex_][1].GetDescriptorHeap()
+    };
+    SetDescriptorHeaps(2, stagingDescriptorHeaps);
+}
+
 void D3D12CommandContext::SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset)
 {
     commandList_->SetGraphicsRoot32BitConstant(parameterIndex, value.u32, offset);
@@ -278,6 +305,184 @@ void D3D12CommandContext::SetGraphicsConstant(UINT parameterIndex, D3D12Constant
 void D3D12CommandContext::SetComputeConstant(UINT parameterIndex, D3D12Constant value, UINT offset)
 {
     commandList_->SetComputeRoot32BitConstant(parameterIndex, value.u32, offset);
+}
+
+void D3D12CommandContext::SetGraphicsRootParameter(UINT parameterIndex, D3D12_ROOT_PARAMETER_TYPE parameterType, D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr)
+{
+    switch (parameterType)
+    {
+        case D3D12_ROOT_PARAMETER_TYPE_CBV:
+            commandList_->SetGraphicsRootConstantBufferView(parameterIndex, gpuVirtualAddr);
+            break;
+
+        case D3D12_ROOT_PARAMETER_TYPE_SRV:
+            commandList_->SetGraphicsRootShaderResourceView(parameterIndex, gpuVirtualAddr);
+            break;
+
+        case D3D12_ROOT_PARAMETER_TYPE_UAV:
+            commandList_->SetGraphicsRootUnorderedAccessView(parameterIndex, gpuVirtualAddr);
+            break;
+    }
+}
+
+void D3D12CommandContext::SetComputeRootParameter(UINT parameterIndex, D3D12_ROOT_PARAMETER_TYPE parameterType, D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr)
+{
+    switch (parameterType)
+    {
+        case D3D12_ROOT_PARAMETER_TYPE_CBV:
+            commandList_->SetComputeRootConstantBufferView(parameterIndex, gpuVirtualAddr);
+            break;
+
+        case D3D12_ROOT_PARAMETER_TYPE_SRV:
+            commandList_->SetComputeRootShaderResourceView(parameterIndex, gpuVirtualAddr);
+            break;
+
+        case D3D12_ROOT_PARAMETER_TYPE_UAV:
+            commandList_->SetComputeRootUnorderedAccessView(parameterIndex, gpuVirtualAddr);
+            break;
+    }
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12CommandContext::GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const
+{
+    /* Get current descriptor heap pool via allocator- and type index */
+    const UINT typeIndex = static_cast<UINT>(type);
+    LLGL_ASSERT(typeIndex < D3D12CommandContext::g_maxNumDescriptorHeaps);
+    auto& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
+
+    /* Return CPU descriptor handle for the specified descriptor in the pool */
+    return descriptorHeapPool.GetCPUDescriptorHandle(descriptor);
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE D3D12CommandContext::CopyDescriptors(
+    D3D12_DESCRIPTOR_HEAP_TYPE  type,
+    D3D12_CPU_DESCRIPTOR_HANDLE srcDescHandle,
+    UINT                        firstDescriptor,
+    UINT                        numDescriptors)
+{
+    /* Get current descriptor heap pool via allocator- and type index */
+    const UINT typeIndex = static_cast<UINT>(type);
+    LLGL_ASSERT(typeIndex < D3D12CommandContext::g_maxNumDescriptorHeaps);
+    auto& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
+
+    /* Copy descriptors into shader-visible descriptor heap */
+    descriptorHeapPool.CopyDescriptors(srcDescHandle, firstDescriptor, numDescriptors);
+
+    /* Return GPU heap start for selected pool */
+    return descriptorHeapPool.GetGPUDescriptorHandleForHeapStart();
+}
+
+// private
+void D3D12CommandContext::NextStagingDescriptors(UINT numResourceViews, UINT numSamplers)
+{
+    stagingDescriptorPools_[currentAllocatorIndex_][0].IncrementOffset(numResourceViews);
+    stagingDescriptorPools_[currentAllocatorIndex_][1].IncrementOffset(numSamplers);
+}
+
+void D3D12CommandContext::NextDescriptorHeap()
+{
+    NextStagingDescriptors(stagingDescriptorSetLayout_.numHeapResourceViews, stagingDescriptorSetLayout_.numHeapSamplers);
+}
+
+void D3D12CommandContext::NextDescriptorSet()
+{
+    NextStagingDescriptors(stagingDescriptorSetLayout_.numResourceViews, stagingDescriptorSetLayout_.numSamplers);
+}
+
+// private
+void D3D12CommandContext::FlushGraphicsStagingDescriptorTables()
+{
+    auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
+    if (stagingDescriptorSetLayout_.numResourceViews > 0)
+    {
+        commandList_->SetGraphicsRootDescriptorTable(
+            stagingDescriptorIndices_.rootParamDescriptors[0],
+            currentPoolSet[0].GetGPUDescriptorHandleForHeapStart()
+        );
+    }
+    if (stagingDescriptorSetLayout_.numSamplers > 0)
+    {
+        commandList_->SetGraphicsRootDescriptorTable(
+            stagingDescriptorIndices_.rootParamDescriptors[1],
+            currentPoolSet[1].GetGPUDescriptorHandleForHeapStart()
+        );
+    }
+    NextDescriptorSet();
+}
+
+// private
+void D3D12CommandContext::FlushComputeStagingDescriptorTables()
+{
+    auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
+    if (stagingDescriptorSetLayout_.numResourceViews > 0)
+    {
+        commandList_->SetComputeRootDescriptorTable(
+            stagingDescriptorIndices_.rootParamDescriptors[0],
+            currentPoolSet[0].GetGPUDescriptorHandleForHeapStart()
+        );
+    }
+    if (stagingDescriptorSetLayout_.numSamplers > 0)
+    {
+        commandList_->SetComputeRootDescriptorTable(
+            stagingDescriptorIndices_.rootParamDescriptors[1],
+            currentPoolSet[1].GetGPUDescriptorHandleForHeapStart()
+        );
+    }
+    NextDescriptorSet();
+}
+
+void D3D12CommandContext::DrawInstanced(
+    UINT vertexCountPerInstance,
+    UINT instanceCount,
+    UINT startVertexLocation,
+    UINT startInstanceLocation)
+{
+    FlushGraphicsStagingDescriptorTables();
+    commandList_->DrawInstanced(vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
+}
+
+void D3D12CommandContext::DrawIndexedInstanced(
+    UINT    indexCountPerInstance,
+    UINT    instanceCount,
+    UINT    startIndexLocation,
+    INT     baseVertexLocation,
+    UINT    startInstanceLocation)
+{
+    FlushGraphicsStagingDescriptorTables();
+    commandList_->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+}
+
+void D3D12CommandContext::DrawIndirect(
+    ID3D12CommandSignature* commandSignature,
+    UINT                    maxCommandCount,
+    ID3D12Resource*         argumentBuffer,
+    UINT64                  argumentBufferOffset,
+    ID3D12Resource*         countBuffer,
+    UINT64                  countBufferOffset)
+{
+    FlushGraphicsStagingDescriptorTables();
+    commandList_->ExecuteIndirect(commandSignature, maxCommandCount, argumentBuffer, argumentBufferOffset, countBuffer, countBufferOffset);
+}
+
+void D3D12CommandContext::Dispatch(
+    UINT threadGroupCountX,
+    UINT threadGroupCountY,
+    UINT threadGroupCountZ)
+{
+    FlushComputeStagingDescriptorTables();
+    commandList_->Dispatch(threadGroupCountX, threadGroupCountY, threadGroupCountZ);
+}
+
+void D3D12CommandContext::DispatchIndirect(
+    ID3D12CommandSignature* commandSignature,
+    UINT                    maxCommandCount,
+    ID3D12Resource*         argumentBuffer,
+    UINT64                  argumentBufferOffset,
+    ID3D12Resource*         countBuffer,
+    UINT64                  countBufferOffset)
+{
+    FlushComputeStagingDescriptorTables();
+    commandList_->ExecuteIndirect(commandSignature, maxCommandCount, argumentBuffer, argumentBufferOffset, countBuffer, countBufferOffset);
 }
 
 
@@ -303,6 +508,10 @@ void D3D12CommandContext::NextCommandAllocator()
     /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
     auto hr = GetCommandAllocator()->Reset();
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
+
+    /* Reset descriptor heap pools before they are re-used */
+    for_range(i, D3D12CommandContext::g_maxNumDescriptorHeaps)
+        stagingDescriptorPools_[currentAllocatorIndex_][i].Reset();
 }
 
 void D3D12CommandContext::ClearCache()

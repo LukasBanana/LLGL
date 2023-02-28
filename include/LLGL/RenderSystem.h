@@ -440,13 +440,13 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Writes new resource view descriptors into the specified resource heap.
         \param[in] resourceHeap Specifies the resource heap that is to be updated.
         \param[in] firstDescriptor Zero-based index to the first descriptor that is to be updated.
-        This must be less than the number of bindings in the resource heap's pipeline layout (PipelineLayout::GetNumBindings)
-        times the number of descriptor sets in this resource heap (ResourceHeap::GetNumDescriptorSets).
+        This must be less than the number of bindings in the resource heap's pipeline layout (PipelineLayout::GetNumHeapBindings)
+        multiplied by the number of descriptor sets in the resource heap (ResourceHeap::GetNumDescriptorSets).
         \param[in] resourceViews Array of resource view descriptors.
         \remarks The type of a resource view, i.e. whether it's a buffer, texture, or sampler, must not be changed with this function.
         \return Number of resource views that have been updated by this call. Any resource view descriptor with a \c resource field that is null will be ignored silently.
         \see ResourceHeap::GetNumDescriptorSets
-        \see PipelineLayout::GetNumBindings
+        \see PipelineLayout::GetNumHeapBindings
         */
         virtual std::uint32_t WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) = 0;
 

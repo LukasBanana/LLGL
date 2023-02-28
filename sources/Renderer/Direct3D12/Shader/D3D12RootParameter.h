@@ -41,7 +41,12 @@ class D3D12RootParameter
         void Clear();
 
         // Returns true if the specified descriptor range type is compatible with this root paramter.
-        bool IsCompatible(D3D12_DESCRIPTOR_RANGE_TYPE rangeType) const;
+        bool IsCompatible(D3D12_ROOT_PARAMETER_TYPE rootParamType, D3D12_DESCRIPTOR_RANGE_TYPE rangeType) const;
+
+    public:
+
+        // Returns the best suitable shader visibility for the specified stage flags.
+        static D3D12_SHADER_VISIBILITY FindSuitableVisibility(long stageFlags);
 
     private:
 

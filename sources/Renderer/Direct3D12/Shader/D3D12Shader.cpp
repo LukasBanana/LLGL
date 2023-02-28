@@ -1,6 +1,6 @@
 /*
  * D3D12Shader.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,6 +10,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/Helper.h"
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 #include <stdexcept>
 #include <d3dcompiler.h>
@@ -143,7 +144,7 @@ void D3D12Shader::BuildInputLayout(UINT numVertexAttribs, const VertexAttribute*
 
     /* Build input element descriptors */
     inputElements_.resize(numVertexAttribs);
-    for (UINT i = 0; i < numVertexAttribs; ++i)
+    for_range(i, numVertexAttribs)
         Convert(inputElements_[i], vertexAttribs[i], vertexAttribNames_);
 }
 
@@ -168,7 +169,7 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
 
     /* Reserve memory for the buffer strides */
     UINT maxSlot = 0;
-    for (UINT i = 0; i < numVertexAttribs; ++i)
+    for_range(i, numVertexAttribs)
         maxSlot = std::max(maxSlot, vertexAttribs[i].slot);
 
     soBufferStrides_.clear();
@@ -176,7 +177,7 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
 
     /* Build stream-output entries and buffer strides */
     soDeclEntries_.resize(numVertexAttribs);
-    for (UINT i = 0; i < numVertexAttribs; ++i)
+    for_range(i, numVertexAttribs)
     {
         const auto& attr = vertexAttribs[i];
 
@@ -205,7 +206,7 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
     }
 
     /* Build buffer stride */
-    for (std::size_t i = 0; i < soBufferStrides_.size(); ++i)
+    for_range(i, soBufferStrides_.size())
     {
         if (soBufferStrides_[i] == 0)
             throw std::runtime_error("stream-output slot " + std::to_string(i) + " is not specified in vertex attributes");
@@ -281,7 +282,7 @@ Most of this code for shader reflection is 1:1 copied from the D3D11 renderer.
 However, all descriptors have the "D3D12" prefix, so a generalization (without macros) is tricky.
 */
 
-static ShaderResource* FetchOrInsertResource(
+static ShaderResourceReflection* FetchOrInsertResource(
     ShaderReflection&   reflection,
     const char*         name,
     const ResourceType  type,
@@ -323,7 +324,7 @@ static HRESULT ReflectShaderVertexAttributes(
     const D3D12_SHADER_DESC&    shaderDesc,
     ShaderReflection&           reflection)
 {
-    for (UINT i = 0; i < shaderDesc.InputParameters; ++i)
+    for_range(i, shaderDesc.InputParameters)
     {
         /* Get signature parameter descriptor */
         D3D12_SIGNATURE_PARAMETER_DESC paramDesc;
@@ -337,7 +338,7 @@ static HRESULT ReflectShaderVertexAttributes(
         reflection.vertex.inputAttribs.push_back(vertexAttrib);
     }
 
-    for (UINT i = 0; i < shaderDesc.OutputParameters; ++i)
+    for_range(i, shaderDesc.OutputParameters)
     {
         /* Get signature parameter descriptor */
         D3D12_SIGNATURE_PARAMETER_DESC paramDesc;
@@ -368,7 +369,7 @@ static HRESULT ReflectShaderFragmentAttributes(
     const D3D12_SHADER_DESC&    shaderDesc,
     ShaderReflection&           reflection)
 {
-    for (UINT i = 0; i < shaderDesc.OutputParameters; ++i)
+    for_range(i, shaderDesc.OutputParameters)
     {
         /* Get signature parameter descriptor */
         D3D12_SIGNATURE_PARAMETER_DESC paramDesc;
@@ -463,7 +464,7 @@ static HRESULT ReflectShaderInputBindings(
     HRESULT hr = S_OK;
     UINT cbufferIdx = 0;
 
-    for (UINT i = 0; i < shaderDesc.BoundResources; ++i)
+    for_range(i, shaderDesc.BoundResources)
     {
         /* Get shader input resource descriptor */
         D3D12_SHADER_INPUT_BIND_DESC inputBindDesc;

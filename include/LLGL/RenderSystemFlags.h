@@ -362,6 +362,7 @@ struct RenderingFeatures
     This does not exclude support of resource heaps, because these are always supported.
     \see CommandBuffer::SetResource
     \see CommandBuffer::ResetResourceSlots
+    \todo Remove this as now all backends have to support this feature
     */
     bool hasDirectResourceBinding       = false;
 

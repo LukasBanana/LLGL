@@ -18,6 +18,7 @@ namespace LLGL
 {
 
 
+//TODO: replace by backend specific pipeline layouts as the interface gets more complicated
 // This class only holds a copy of the binding descriptor list.
 class LLGL_EXPORT BasicPipelineLayout : public PipelineLayout
 {

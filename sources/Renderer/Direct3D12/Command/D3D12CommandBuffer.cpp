@@ -1,6 +1,6 @@
 /*
  * D3D12CommandBuffer.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -46,6 +46,7 @@ namespace LLGL
 
 
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
+    device_              { renderSystem.GetDXDevice()                                },
     cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())                     },
     stagingBufferPool_   { renderSystem.GetDevice().GetNative(), USHRT_MAX           },
     immediateSubmit_     { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0) }
@@ -72,6 +73,12 @@ void D3D12CommandBuffer::End()
     /* Close command context and reset intermediate states */
     commandContext_.Close();
     numBoundScissorRects_ = 0;
+
+    /* Clear references to bound pipeline objects */
+    boundRenderTarget_      = nullptr;
+    boundSwapChain_         = nullptr;
+    boundPipelineLayout_    = nullptr;
+    isGraphicsPSOBound_     = false;
 
     /* Execute command list right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
@@ -524,31 +531,87 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 void D3D12CommandBuffer::SetResourceHeap(
     ResourceHeap&           resourceHeap,
     std::uint32_t           descriptorSet,
-    const PipelineBindPoint bindPoint)
+    const PipelineBindPoint /*bindPoint*/)
 {
+    if (boundPipelineLayout_ == nullptr)
+        return;
+
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
 
-    /* Get descriptor heaps */
-    auto heapCount = resourceHeapD3D.GetNumDescriptorHeaps();
-    if (heapCount > 0)
+    /* Copy descriptors for specified set into shader-visible descriptor heap */
+    for_range(i, 2)
     {
-        /* Bind descriptor heaps and root descriptor tables */
-        auto descHeaps = resourceHeapD3D.GetDescriptorHeaps();
-        commandContext_.SetDescriptorHeaps(heapCount, descHeaps);
+        const auto heapType = static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i);
+        if (resourceHeapD3D.GetDescriptorHeap(heapType) != nullptr)
+        {
+            /* Copies the entire set of descriptors from the non-shader-visible heap to the global shader-visible heap */
+            auto gpuDescHandle = commandContext_.CopyDescriptors(
+                heapType,
+                resourceHeapD3D.GetCPUDescriptorHandleForHeapStart(heapType, descriptorSet),
+                0,
+                resourceHeapD3D.GetNumDescriptorsPerSet(heapType)
+            );
 
-        if (bindPoint != PipelineBindPoint::Compute)
-            resourceHeapD3D.SetGraphicsRootDescriptorTables(commandList_, descriptorSet);
-        if (bindPoint != PipelineBindPoint::Graphics)
-            resourceHeapD3D.SetComputeRootDescriptorTables(commandList_, descriptorSet);
+            /* Bind descriptor table to root parameter */
+            const UINT rootParamIndex = boundPipelineLayout_->GetRootParameterIndices().rootParamDescriptorHeaps[i];
+            if (isGraphicsPSOBound_)
+                commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, gpuDescHandle);
+            else
+                commandList_->SetComputeRootDescriptorTable(rootParamIndex, gpuDescHandle);
+        }
+    }
 
-        /* Insert resource barriers for the specified descriptor set */
-        resourceHeapD3D.InsertResourceBarriers(commandList_, descriptorSet);
+    /* Insert resource barriers for the specified descriptor set */
+    resourceHeapD3D.InsertResourceBarriers(commandList_, descriptorSet);
+
+    /* Prepare for the next descriptor heap */
+    commandContext_.NextDescriptorHeap();
+}
+
+/*
+Returns the virtual GPU address of the specified D3D12 resource. This function is only used for buffer resources.
+See https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-getgpuvirtualaddress
+*/
+static D3D12_GPU_VIRTUAL_ADDRESS GetD3DResourceGPUAddr(Resource& resource)
+{
+    /* GetGPUVirtualAddress() is only useful for buffers */
+    if (resource.GetResourceType() == ResourceType::Buffer)
+    {
+        D3D12Buffer& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
+        return bufferD3D.GetNative()->GetGPUVirtualAddress();
+    }
+    return 0;
+}
+
+void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
+{
+    if (boundPipelineLayout_ != nullptr && descriptor < boundPipelineLayout_->GetNumBindings())
+    {
+        const auto& rootParameterLocation = boundPipelineLayout_->GetRootParameterMap()[descriptor];
+        if (rootParameterLocation.type != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
+        {
+            D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr = GetD3DResourceGPUAddr(resource);
+            if (gpuVirtualAddr != 0)
+            {
+                /* Root parameter can only be raw or structured buffers, so only handle CBV, SRV, and UAV */
+                if (isGraphicsPSOBound_)
+                    commandContext_.SetGraphicsRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
+                else
+                    commandContext_.SetComputeRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
+            }
+        }
+        else
+        {
+            /* Bind resource with staging descriptor heap */
+            const auto& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
+            EmplaceResourceDescriptor(descriptorLocation, resource);
+        }
     }
 }
 
-void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
+void D3D12CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    //TODOL: use "SetGraphicsRootShaderResourceView" etc.
+    //TODO
 }
 
 void D3D12CommandBuffer::ResetResourceSlots(
@@ -573,13 +636,18 @@ void D3D12CommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    boundRenderTarget_ = &(renderTarget);
-
-    /* Bind render target/context */
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
-        BindSwapChain(LLGL_CAST(D3D12SwapChain&, renderTarget));
+    {
+        /* Bind swap chain */
+        boundSwapChain_ = LLGL_CAST(D3D12SwapChain*, &renderTarget);
+        BindSwapChain(*boundSwapChain_);
+    }
     else
-        BindRenderTarget(LLGL_CAST(D3D12RenderTarget&, renderTarget));
+    {
+        /* Bind render target */
+        boundRenderTarget_ = LLGL_CAST(D3D12RenderTarget*, &renderTarget);
+        BindRenderTarget(*boundRenderTarget_);
+    }
 
     /* Clear attachments */
     if (renderPass)
@@ -591,18 +659,14 @@ void D3D12CommandBuffer::BeginRenderPass(
 
 void D3D12CommandBuffer::EndRenderPass()
 {
-    if (boundRenderTarget_)
+    if (boundSwapChain_ != nullptr)
     {
-        if (LLGL::IsInstanceOf<SwapChain>(*boundRenderTarget_))
-        {
-            auto swapChainD3D = LLGL_CAST(D3D12SwapChain*, boundRenderTarget_);
-            swapChainD3D->ResolveRenderTarget(commandContext_);
-        }
-        else
-        {
-            auto renderTargetD3D = LLGL_CAST(D3D12RenderTarget*, boundRenderTarget_);
-            renderTargetD3D->ResolveRenderTarget(commandContext_);
-        }
+        boundSwapChain_->ResolveRenderTarget(commandContext_);
+        boundSwapChain_ = nullptr;
+    }
+    else if (boundRenderTarget_ != nullptr)
+    {
+        boundRenderTarget_->ResolveRenderTarget(commandContext_);
         boundRenderTarget_ = nullptr;
     }
 }
@@ -618,6 +682,7 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
         /* Bind graphics PSO */
         auto& graphicsPSO = LLGL_CAST(D3D12GraphicsPSO&, pipelineState);
         graphicsPSO.Bind(commandContext_);
+        isGraphicsPSOBound_ = true;
 
         /* Scissor rectangle must be updated (if scissor test is disabled) */
         scissorEnabled_ = graphicsPSO.IsScissorEnabled();
@@ -629,7 +694,17 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
         /* Bind compute PSO */
         auto& computePSO = LLGL_CAST(D3D12ComputePSO&, pipelineState);
         computePSO.Bind(commandContext_);
+        isGraphicsPSOBound_ = false;
     }
+
+    /* Keep reference to pipeline layout */
+    boundPipelineLayout_ = pipelineStateD3D.GetPipelineLayout();
+
+    /* Prepare staging descriptor heaps for bound pipeline layout */
+    commandContext_.PrepareStagingDescriptorHeaps(
+        boundPipelineLayout_->GetDescriptorHeapSetLayout(),
+        boundPipelineLayout_->GetRootParameterIndices()
+    );
 }
 
 void D3D12CommandBuffer::SetBlendFactor(const ColorRGBAf& color)
@@ -640,23 +715,6 @@ void D3D12CommandBuffer::SetBlendFactor(const ColorRGBAf& color)
 void D3D12CommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace /*stencilFace*/)
 {
     commandList_->OMSetStencilRef(reference);
-}
-
-void D3D12CommandBuffer::SetUniform(
-    UniformLocation location,
-    const void*     data,
-    std::uint32_t   dataSize)
-{
-    D3D12CommandBuffer::SetUniforms(location, 1, data, dataSize);
-}
-
-void D3D12CommandBuffer::SetUniforms(
-    UniformLocation location,
-    std::uint32_t   count,
-    const void*     data,
-    std::uint32_t   dataSize)
-{
-    //TODO
 }
 
 /* ----- Queries ----- */
@@ -754,48 +812,48 @@ void D3D12CommandBuffer::EndStreamOutput()
 
 void D3D12CommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
-    commandList_->DrawInstanced(numVertices, 1, firstVertex, 0);
+    commandContext_.DrawInstanced(numVertices, 1, firstVertex, 0);
 }
 
 void D3D12CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
-    commandList_->DrawIndexedInstanced(numIndices, 1, firstIndex, 0, 0);
+    commandContext_.DrawIndexedInstanced(numIndices, 1, firstIndex, 0, 0);
 }
 
 void D3D12CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    commandList_->DrawIndexedInstanced(numIndices, 1, firstIndex, vertexOffset, 0);
+    commandContext_.DrawIndexedInstanced(numIndices, 1, firstIndex, vertexOffset, 0);
 }
 
 void D3D12CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
-    commandList_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
+    commandContext_.DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
 void D3D12CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    commandList_->DrawInstanced(numVertices, numInstances, firstVertex, firstInstance);
+    commandContext_.DrawInstanced(numVertices, numInstances, firstVertex, firstInstance);
 }
 
 void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    commandList_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, 0, 0);
+    commandContext_.DrawIndexedInstanced(numIndices, numInstances, firstIndex, 0, 0);
 }
 
 void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    commandList_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, 0);
+    commandContext_.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, 0);
 }
 
 void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    commandList_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
+    commandContext_.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
 void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    commandList_->ExecuteIndirect(
+    commandContext_.DrawIndirect(
         cmdSignatureFactory_->GetSignatureDrawIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
     );
 }
@@ -805,7 +863,7 @@ void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std:
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
     while (numCommands-- > 0)
     {
-        commandList_->ExecuteIndirect(
+        commandContext_.DrawIndirect(
             cmdSignatureFactory_->GetSignatureDrawIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
         );
         offset += stride;
@@ -815,7 +873,7 @@ void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std:
 void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    commandList_->ExecuteIndirect(
+    commandContext_.DrawIndirect(
         cmdSignatureFactory_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
     );
 }
@@ -825,7 +883,7 @@ void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offse
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
     while (numCommands-- > 0)
     {
-        commandList_->ExecuteIndirect(
+        commandContext_.DrawIndirect(
             cmdSignatureFactory_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
         );
         offset += stride;
@@ -836,13 +894,13 @@ void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offse
 
 void D3D12CommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
-    commandList_->Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+    commandContext_.Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
 void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    commandList_->ExecuteIndirect(
+    commandContext_.DispatchIndirect(
         cmdSignatureFactory_->GetSignatureDispatchIndirect(), 1, bufferD3D.GetNative(), offset, nullptr, 0
     );
 }
@@ -1072,6 +1130,79 @@ void D3D12CommandBuffer::ClearDepthStencilView(
 
     /* Clear depth-stencil view */
     commandList_->ClearDepthStencilView(dsvDescHandle_, clearFlags, depth, stencil, numRects, rects);
+}
+
+void D3D12CommandBuffer::EmplaceResourceDescriptor(const D3D12DescriptorHeapLocation& location, Resource& resource)
+{
+    auto cpuDescHandle = commandContext_.GetCPUDescriptorHandle(static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(location.heap), location.index);
+    switch (resource.GetResourceType())
+    {
+        case ResourceType::Buffer:
+            EmplaceBufferDescriptor(location, LLGL_CAST(D3D12Buffer&, resource), cpuDescHandle);
+            break;
+
+        case ResourceType::Texture:
+            EmplaceTextureDescriptor(location, LLGL_CAST(D3D12Texture&, resource), cpuDescHandle);
+            break;
+
+        case ResourceType::Sampler:
+            EmplaceSamplerDescriptor(location, LLGL_CAST(D3D12Sampler&, resource), cpuDescHandle);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void D3D12CommandBuffer::EmplaceBufferDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Buffer& bufferD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+{
+    switch (location.type)
+    {
+        case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
+            bufferD3D.CreateShaderResourceView(device_, cpuDescHandle);
+            break;
+
+        case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
+            bufferD3D.CreateUnorderedAccessView(device_, cpuDescHandle);
+            break;
+
+        case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:
+            bufferD3D.CreateConstantBufferView(device_, cpuDescHandle);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void D3D12CommandBuffer::EmplaceTextureDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Texture& textureD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+{
+    switch (location.type)
+    {
+        case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
+            textureD3D.CreateShaderResourceView(device_, cpuDescHandle);
+            break;
+
+        case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
+            textureD3D.CreateUnorderedAccessView(device_, cpuDescHandle);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void D3D12CommandBuffer::EmplaceSamplerDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Sampler& samplerD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
+{
+    switch (location.type)
+    {
+        case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
+            samplerD3D.CreateResourceView(device_, cpuDescHandle);
+            break;
+
+        default:
+            break;
+    }
 }
 
 

@@ -32,11 +32,32 @@ class LLGL_EXPORT PipelineLayout : public RenderSystemChild
     public:
 
         /**
-        \brief Returns the number of resource bindings in this pipeline layout.
-        \see PipelineLayoutDescriptor::bindings
+        \brief Returns the number of resource view heap bindings in this pipeline layout.
+        \remarks This only includes the resource bindings for a ResourceHeap, i.e. PipelineLayoutDescriptor::heapBindings.
+        \see PipelineLayoutDescriptor::heapBindings
         \see ResourceHeap::GetNumDescriptorSets
         */
+        virtual std::uint32_t GetNumHeapBindings() const = 0;
+
+        /**
+        \brief Returns the number of resource bindings in this pipeline layout.
+        \remarks This does \e not include the resource bindings for a ResourceHeap, i.e. PipelineLayoutDescriptor::heapBindings.
+        \see PipelineLayoutDescriptor::bindings
+        \see CommandBuffer::SetResource
+        */
         virtual std::uint32_t GetNumBindings() const = 0;
+
+        /**
+        \brief Returns the number of static sampler states in this pipeline layout.
+        \see PipelineLayoutDescriptor::staticSamplers
+        */
+        virtual std::uint32_t GetNumStaticSamplers() const = 0;
+
+        /**
+        \brief Returns the number of uniforms in this pipeline layout.
+        \see PipelineLayoutDescriptor::uniforms
+        */
+        virtual std::uint32_t GetNumUniforms() const = 0;
 
 };
 

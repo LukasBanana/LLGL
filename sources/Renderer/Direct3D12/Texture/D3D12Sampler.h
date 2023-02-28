@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Sampler.h>
+#include <LLGL/PipelineLayoutFlags.h>
 #include <d3d12.h>
 
 
@@ -25,6 +26,14 @@ class D3D12Sampler final : public Sampler
         D3D12Sampler(const SamplerDescriptor& desc);
 
         void CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);
+
+    public:
+
+        // Converts the input sampler into a native D3D12 sampler descriptor.
+        static void ConvertDesc(D3D12_SAMPLER_DESC& outDesc, const SamplerDescriptor& inDesc);
+
+        // Converts the input static sampler into a native D3D12 static sampler descriptor.
+        static void ConvertDesc(D3D12_STATIC_SAMPLER_DESC& outDesc, const StaticSamplerDescriptor& inDesc);
 
     private:
 

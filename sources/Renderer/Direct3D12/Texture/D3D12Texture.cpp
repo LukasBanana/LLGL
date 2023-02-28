@@ -14,6 +14,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/Helper.h"
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 
 
@@ -729,7 +730,7 @@ void D3D12Texture::CreateMipDescHeap(ID3D12Device* device)
     auto uavDimension = GetMipChainUAVDimension(GetType());
     auto resourceDesc = resource_.native->GetDesc();
 
-    for (UINT i = 1; i < GetNumMipLevels(); ++i)
+    for_subrange(i, 1, GetNumMipLevels())
     {
         if (resourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D)
         {

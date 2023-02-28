@@ -25,7 +25,10 @@ class NullPipelineLayout final : public PipelineLayout
 
         void SetName(const char* name) override;
 
+        std::uint32_t GetNumHeapBindings() const override;
         std::uint32_t GetNumBindings() const override;
+        std::uint32_t GetNumStaticSamplers() const override;
+        std::uint32_t GetNumUniforms() const override;
 
     public:
 

@@ -25,9 +25,24 @@ void NullPipelineLayout::SetName(const char* name)
         label_.clear();
 }
 
+std::uint32_t NullPipelineLayout::GetNumHeapBindings() const
+{
+    return static_cast<std::uint32_t>(desc.heapBindings.size());
+}
+
 std::uint32_t NullPipelineLayout::GetNumBindings() const
 {
     return static_cast<std::uint32_t>(desc.bindings.size());
+}
+
+std::uint32_t NullPipelineLayout::GetNumStaticSamplers() const
+{
+    return static_cast<std::uint32_t>(desc.staticSamplers.size());
+}
+
+std::uint32_t NullPipelineLayout::GetNumUniforms() const
+{
+    return static_cast<std::uint32_t>(desc.uniforms.size());
 }
 
 

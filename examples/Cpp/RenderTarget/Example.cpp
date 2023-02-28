@@ -178,7 +178,11 @@ private:
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
+            #ifdef ENABLE_RESOURCE_HEAP
+            layoutDesc.heapBindings =
+            #else
             layoutDesc.bindings =
+            #endif
             {
                 LLGL::BindingDescriptor{ "Settings",        LLGL::ResourceType::Buffer,   LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 3                           },
                 LLGL::BindingDescriptor{ "colorMapSampler", LLGL::ResourceType::Sampler,  0,                               LLGL::StageFlags::FragmentStage,                                 1                           },
@@ -428,9 +432,9 @@ private:
             #endif // /ENABLE_RESOURCE_HEAP
             {
                 // Set resource directly
-                commands->SetResource(*constantBuffer, 3, LLGL::BindFlags::ConstantBuffer, shaderStages);
-                commands->SetResource(*colorMap, 1, LLGL::BindFlags::Sampled, shaderStages);
-                commands->SetResource(*samplerState, 1, 0, shaderStages);
+                commands->SetResource(*constantBuffer, 0);
+                commands->SetResource(*samplerState, 1);
+                commands->SetResource(*colorMap, 2);
             }
 
             // Draw scene
@@ -477,7 +481,7 @@ private:
             #endif // /ENABLE_RESOURCE_HEAP
             {
                 // Set render-target texture
-                commands->SetResource(*renderTargetTex, 1, LLGL::BindFlags::Sampled, shaderStages);
+                commands->SetResource(*renderTargetTex, 2);
             }
 
             // Draw scene

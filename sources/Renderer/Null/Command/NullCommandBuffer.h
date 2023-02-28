@@ -116,12 +116,9 @@ class NullCommandBuffer final : public CommandBuffer
             const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
         ) override;
 
-        void SetResource(
-            Resource&       resource,
-            std::uint32_t   slot,
-            long            bindFlags,
-            long            stageFlags = StageFlags::AllStages
-        ) override;
+        void SetResource(Resource& resource, std::uint32_t descriptor) override;
+
+        void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) override;
 
         void ResetResourceSlots(
             const ResourceType  resourceType,
@@ -150,19 +147,6 @@ class NullCommandBuffer final : public CommandBuffer
         void SetPipelineState(PipelineState& pipelineState) override;
         void SetBlendFactor(const ColorRGBAf& color) override;
         void SetStencilReference(std::uint32_t reference, const StencilFace stencilFace = StencilFace::FrontAndBack) override;
-
-        void SetUniform(
-            UniformLocation location,
-            const void*     data,
-            std::uint32_t   dataSize
-        ) override;
-
-        void SetUniforms(
-            UniformLocation location,
-            std::uint32_t   count,
-            const void*     data,
-            std::uint32_t   dataSize
-        ) override;
 
         /* ----- Queries ----- */
 

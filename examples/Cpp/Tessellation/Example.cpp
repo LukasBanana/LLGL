@@ -26,7 +26,6 @@ class Example_Tessellation : public ExampleBase
     LLGL::Buffer*           constantBuffer      = nullptr;
 
     LLGL::PipelineLayout*   pipelineLayout      = nullptr;
-    LLGL::ResourceHeap*     resourceHeap        = nullptr;
 
     #ifdef ENABLE_RENDER_PASS
     LLGL::RenderPass*       renderPass          = nullptr;
@@ -156,9 +155,6 @@ public:
         }
         pipelineLayout = renderer->CreatePipelineLayout(plDesc);
 
-        // Create resource view heap
-        resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { constantBuffer });
-
         // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
@@ -278,16 +274,8 @@ private:
                 // Set graphics pipeline with the shader
                 commands->SetPipelineState(*pipeline[showWireframe ? 1 : 0]);
 
-                if (resourceHeap)
-                {
-                    // Bind resource view heap to graphics pipeline
-                    commands->SetResourceHeap(*resourceHeap);
-                }
-                else
-                {
-                    // Set constant buffer only to tessellation shader stages
-                    commands->SetResource(*constantBuffer, constantBufferIndex, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::AllTessStages);
-                }
+                // Bind constant buffer to graphics pipeline
+                commands->SetResource(*constantBuffer, 0);
 
                 // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
                 commands->DrawIndexed(24, 0);

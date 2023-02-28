@@ -6,6 +6,7 @@
  */
 
 #include "D3D12RootParameter.h"
+#include <LLGL/ShaderFlags.h>
 
 
 namespace LLGL
@@ -100,12 +101,27 @@ static bool AreRangeTypesCompatible(D3D12_DESCRIPTOR_RANGE_TYPE lhs, D3D12_DESCR
     );
 }
 
-bool D3D12RootParameter::IsCompatible(D3D12_DESCRIPTOR_RANGE_TYPE rangeType) const
+bool D3D12RootParameter::IsCompatible(D3D12_ROOT_PARAMETER_TYPE rootParamType, D3D12_DESCRIPTOR_RANGE_TYPE rangeType) const
 {
+    if (managedRootParam_ == nullptr || managedRootParam_->ParameterType != rootParamType)
+        return false;
     if (descRanges_.empty())
         return true;
-    else
-        return AreRangeTypesCompatible(descRanges_.back().RangeType, rangeType);
+    return AreRangeTypesCompatible(descRanges_.back().RangeType, rangeType);
+}
+
+D3D12_SHADER_VISIBILITY D3D12RootParameter::FindSuitableVisibility(long stageFlags)
+{
+    /* Return shader visibility limited to only one stage if the input flags only contains that stage */
+    switch (stageFlags)
+    {
+        case StageFlags::VertexStage:           return D3D12_SHADER_VISIBILITY_VERTEX;
+        case StageFlags::TessControlStage:      return D3D12_SHADER_VISIBILITY_HULL;
+        case StageFlags::TessEvaluationStage:   return D3D12_SHADER_VISIBILITY_DOMAIN;
+        case StageFlags::GeometryStage:         return D3D12_SHADER_VISIBILITY_GEOMETRY;
+        case StageFlags::FragmentStage:         return D3D12_SHADER_VISIBILITY_PIXEL;
+        default:                                return D3D12_SHADER_VISIBILITY_ALL; // Visibility to all stages by default
+    }
 }
 
 

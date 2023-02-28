@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
+#include <LLGL/Misc/Utility.h>
 #include <Gauss/Gauss.h>
 #include <vector>
 #include <iostream>
@@ -73,10 +74,16 @@ int main()
         }
         auto timerQuery = renderer->CreateQueryHeap(queryDesc);
 
+        // Create pipeline layout
+        auto pipelineLayout = renderer->CreatePipelineLayout(
+            LLGL::PipelineLayoutDesc("rwbuffer(OutputBuffer@0):comp")
+        );
+
         // Create compute pipeline
         LLGL::ComputePipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.computeShader = computeShader;
+            pipelineDesc.pipelineLayout = pipelineLayout;
+            pipelineDesc.computeShader  = computeShader;
         }
         auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
@@ -89,7 +96,7 @@ int main()
         // Set resources
         commands->Begin();
         {
-            commands->SetResource(*storageBuffer, 0, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
+            commands->SetResource(*storageBuffer, 0);
             commands->SetPipelineState(*pipeline);
 
             // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query

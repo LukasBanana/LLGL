@@ -1,6 +1,6 @@
 /*
  * DbgResourceHeap.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -18,7 +18,7 @@ namespace LLGL
 static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipelineLayout)
 {
     auto pipelineLayoutDbg = LLGL_CAST(const DbgPipelineLayout*, pipelineLayout);
-    return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutDbg->desc.bindings.size()));
+    return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutDbg->desc.heapBindings.size()));
 }
 
 DbgResourceHeap::DbgResourceHeap(ResourceHeap& instance, const ResourceHeapDescriptor& desc) :

@@ -358,7 +358,7 @@ ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor
 {
     return TakeOwnership(
         resourceHeaps_,
-        MakeUnique<D3D12ResourceHeap>(device_.GetNative(), resourceHeapDesc, initialResourceViews)
+        MakeUnique<D3D12ResourceHeap>(device_, resourceHeapDesc, initialResourceViews)
     );
 }
 

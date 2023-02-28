@@ -15,6 +15,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include <LLGL/Export.h>
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/TextureFlags.h>
+#include <LLGL/ResourceFlags.h>
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/RenderSystemFlags.h>
 
@@ -64,6 +65,12 @@ LLGL_EXPORT const char* ToString(const Format t);
 \remarks Return value examples are \c "Texture1D", \c "Texture2DArray".
 */
 LLGL_EXPORT const char* ToString(const TextureType t);
+
+/**
+\brief Returns a string representation for the specified ResourceType value, or null if the input type is invalid.
+\remarks Return value examples are \c "buffer", \c "texture".
+*/
+LLGL_EXPORT const char* ToString(const ResourceType t);
 
 /** @} */
 

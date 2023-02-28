@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
+#include <LLGL/Misc/Utility.h>
 #include <LLGL/Misc/VertexFormat.h>
 #include <Gauss/Gauss.h>
 #include <memory>
@@ -265,9 +266,13 @@ int main()
 
         #endif
 
+        // Create pipeline layout
+        auto pipelineLayout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("texture(0):frag, sampler(0):frag"));
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.pipelineLayout                 = pipelineLayout;
             pipelineDesc.vertexShader                   = vertShader;
             pipelineDesc.fragmentShader                 = fragShader;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
@@ -332,10 +337,6 @@ int main()
 
             commands->Begin();
             {
-                //#ifndef __linux__
-                commands->SetResource(sampler, 0, 0);
-                //#endif
-
                 commands->SetViewport(swapChain->GetResolution());
 
                 commands->BeginRenderPass(*swapChain);
@@ -344,6 +345,10 @@ int main()
 
                     commands->SetPipelineState(pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
+
+                    //#ifndef __linux__
+                    commands->SetResource(sampler, 1);
+                    //#endif
 
                     #if 0//TODO
                     auto projection = Gs::ProjectionMatrix4f::Planar(
@@ -390,7 +395,7 @@ int main()
 
                     #endif
 
-                    commands->SetResource(texture, 0, LLGL::BindFlags::Sampled);
+                    commands->SetResource(texture, 1);
                     commands->Draw(4, 0);
 
                     #ifdef TEST_STORAGE_BUFFER
@@ -438,7 +443,7 @@ int main()
                     {
                         commands->EndRenderPass();
                         commands->BeginRenderPass(*swapChain);
-                        commands->SetResource(*renderTargetTex, 0, LLGL::BindFlags::Sampled);
+                        commands->SetResource(*renderTargetTex, 0);
                         commands->Draw(4, 0);
                     }
                 }

@@ -20,10 +20,25 @@ namespace LLGL
 {
 
 
-class D3D12RootSignatureBuilder;
+class D3D12RootSignature;
+
+// Resource view descriptor to root parameter table mapping structure (for D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE).
+struct D3D12DescriptorHeapLocation
+{
+    D3D12_DESCRIPTOR_RANGE_TYPE type;
+    UINT                        heap  :  1; // Descriptor heap index (0 = SBC/SRV/UAV, 1 = Sampler)
+    UINT                        index : 31; // Descriptor index within its descriptor heap
+};
+
+// Resource descriptor to root parameter/ descriptor table range mapping structure.
+struct D3D12DescriptorLocation
+{
+    D3D12_ROOT_PARAMETER_TYPE   type;
+    UINT                        index; // Root parameter index
+};
 
 // Container structure of all numbers of root parameters within a D3D12 root signature.
-struct D3D12DescriptorHeapLayout
+struct D3D12RootSignatureLayout
 {
     UINT numBufferCBV   = 0;
     UINT numBufferSRV   = 0;
@@ -31,6 +46,9 @@ struct D3D12DescriptorHeapLayout
     UINT numBufferUAV   = 0;
     UINT numTextureUAV  = 0;
     UINT numSamplers    = 0;
+
+    // Returns the current descriptor location for the specified descriptor range type.
+    void GetDescriptorLocation(D3D12_DESCRIPTOR_RANGE_TYPE descRangeType, D3D12DescriptorHeapLocation& outLocation) const;
 
     // Returns the sum of all CBV and SRV subresource views.
     inline UINT SumCBVsAndSRVs() const
@@ -57,12 +75,22 @@ struct D3D12DescriptorHeapLayout
     }
 };
 
-// Resource view descriptor to root parameter mapping structure.
-struct D3D12DescriptorHandleLocation
+// Container structure of all descriptor table indices to their root parameters. Invalid indices have value 0xFF.
+struct D3D12RootParameterIndices
 {
-    UINT                        heap  :  1; // Descriptor heap index (0 = SBC/SRV/UAV, 1 = Sampler)
-    UINT                        index : 31; // Descriptor index within its descriptor heap
-    D3D12_DESCRIPTOR_RANGE_TYPE type;
+    static constexpr UINT8 invalidIndex = 0xFF;
+
+    UINT8 rootParamDescriptorHeaps[2];
+    UINT8 rootParamDescriptors[2];
+};
+
+// Container structure used by D3D12CommandContext.
+struct D3D12DescriptorHeapSetLayout
+{
+    UINT numHeapResourceViews   = 0;
+    UINT numHeapSamplers        = 0;
+    UINT numResourceViews       = 0;
+    UINT numSamplers            = 0;
 };
 
 class D3D12PipelineLayout final : public PipelineLayout
@@ -72,15 +100,21 @@ class D3D12PipelineLayout final : public PipelineLayout
 
         void SetName(const char* name) override;
 
+        std::uint32_t GetNumHeapBindings() const override;
         std::uint32_t GetNumBindings() const override;
+        std::uint32_t GetNumStaticSamplers() const override;
+        std::uint32_t GetNumUniforms() const override;
 
     public:
 
-        D3D12PipelineLayout() = default;
+        D3D12PipelineLayout();
         D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
 
         void CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
         void ReleaseRootSignature();
+
+        // Returns the layout of the set of descriptor heaps.
+        D3D12DescriptorHeapSetLayout GetDescriptorHeapSetLayout() const;
 
         // Returns the native ID3D12RootSignature object.
         inline ID3D12RootSignature* GetRootSignature() const
@@ -106,35 +140,113 @@ class D3D12PipelineLayout final : public PipelineLayout
             return convolutedStageFlags_;
         }
 
-        // Returns the root parameter layout with all resource counters.
-        inline const D3D12DescriptorHeapLayout& GetDescriptorHeapLayout() const
+        // Returns the root signature layout with all resource counters for a descriptor heap.
+        inline const D3D12RootSignatureLayout& GetDescriptorHeapLayout() const
         {
             return descriptorHeapLayout_;
         }
 
-        // Returns the binding to root-parameter map/
-        inline const SmallVector<D3D12DescriptorHandleLocation>& GetDescriptorHandleMap() const
+        // Returns the heap binding to descriptor table range map. Index for 'heapBindings' -> location in descriptor table range.
+        inline const SmallVector<D3D12DescriptorHeapLocation>& GetDescriptorHeapMap() const
         {
-            return descriptorHandleMap_;
+            return descriptorHeapMap_;
+        }
+
+        // Returns the root signature layout with all resource counters for the root parameters.
+        inline const D3D12RootSignatureLayout& GetDescriptorLayout() const
+        {
+            return descriptorLayout_;
+        }
+
+        // Returns the binding to dynamic descriptor table range map. Index for 'bindings' -> location in descriptor table range.
+        inline const SmallVector<D3D12DescriptorHeapLocation>& GetDescriptorMap() const
+        {
+            return descriptorMap_;
+        }
+
+        // Returns the binding to root parameter map. Index for 'bindings' -> location of root parameter.
+        inline const SmallVector<D3D12DescriptorLocation>& GetRootParameterMap() const
+        {
+            return rootParameterMap_;
+        }
+
+        // Returns the root parameter indices for this root signature.
+        inline const D3D12RootParameterIndices& GetRootParameterIndices() const
+        {
+            return rootParameterIndices_;
         }
 
     private:
 
-        void BuildRootParameter(
-            D3D12RootSignatureBuilder&      rootSignature,
+        void BuildHeapRootParameterTables(
+            D3D12RootSignature&             rootSignature,
             D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
             const PipelineLayoutDescriptor& layoutDesc,
             const ResourceType              resourceType,
             long                            bindFlags,
-            UINT&                           numResourceViews
+            UINT&                           outCounter
+        );
+
+        void BuildHeapRootParameterTableEntry(
+            D3D12RootSignature&             rootSignature,
+            D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
+            const BindingDescriptor&        bindingDesc,
+            UINT                            maxNumDescriptorRanges,
+            D3D12DescriptorHeapLocation&    outLocation
+        );
+
+        void BuildRootParameterTables(
+            D3D12RootSignature&             rootSignature,
+            D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
+            const PipelineLayoutDescriptor& layoutDesc,
+            const ResourceType              resourceType,
+            long                            bindFlags,
+            UINT&                           outCounter
+        );
+
+        void BuildRootParameterTableEntry(
+            D3D12RootSignature&             rootSignature,
+            D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
+            const BindingDescriptor&        bindingDesc,
+            UINT                            maxNumDescriptorRanges,
+            D3D12DescriptorHeapLocation&    outLocation
+        );
+
+        void BuildRootParameters(
+            D3D12RootSignature&             rootSignature,
+            D3D12_ROOT_PARAMETER_TYPE       rootParamType,
+            const PipelineLayoutDescriptor& layoutDesc,
+            const ResourceType              resourceType,
+            long                            bindFlags
+        );
+
+        void BuildRootParameter(
+            D3D12RootSignature&             rootSignature,
+            D3D12_ROOT_PARAMETER_TYPE       rootParamType,
+            const BindingDescriptor&        bindingDesc,
+            D3D12DescriptorLocation&        outLocation
+        );
+
+        void BuildStaticSamplers(
+            D3D12RootSignature&             rootSignature,
+            const PipelineLayoutDescriptor& layoutDesc,
+            UINT&                           outCounter
         );
 
     private:
 
         ComPtr<ID3D12RootSignature>                 rootSignature_;
         ComPtr<ID3DBlob>                            serializedBlob_;
-        D3D12DescriptorHeapLayout                   descriptorHeapLayout_;
-        SmallVector<D3D12DescriptorHandleLocation>  descriptorHandleMap_;
+
+        D3D12RootSignatureLayout                    descriptorHeapLayout_;
+        SmallVector<D3D12DescriptorHeapLocation>    descriptorHeapMap_;
+        D3D12RootSignatureLayout                    descriptorLayout_;
+        SmallVector<D3D12DescriptorHeapLocation>    descriptorMap_;
+        SmallVector<D3D12DescriptorLocation>        rootParameterMap_;
+
+        UINT                                        numStaticSamplers_      = 0;
+        UINT                                        numUniforms_            = 0;
+        D3D12RootParameterIndices                   rootParameterIndices_;
         long                                        convolutedStageFlags_   = 0;
 
 };
