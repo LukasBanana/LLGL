@@ -263,11 +263,6 @@ class D3D12CommandBuffer final : public CommandBuffer
             const D3D12_RECT*   rects
         );
 
-        void EmplaceResourceDescriptor(const D3D12DescriptorHeapLocation& location, Resource& resource);
-        void EmplaceBufferDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Buffer& bufferD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
-        void EmplaceTextureDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Texture& textureD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
-        void EmplaceSamplerDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Sampler& samplerD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle);
-
     private:
 
         ID3D12Device*                   device_                 = nullptr;

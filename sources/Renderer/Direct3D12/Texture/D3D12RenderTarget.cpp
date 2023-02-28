@@ -11,6 +11,7 @@
 #include "../D3D12Device.h"
 #include "../D3D12Types.h"
 #include "../Command/D3D12CommandContext.h"
+#include "../RenderState/D3D12DescriptorHeap.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
@@ -188,7 +189,7 @@ void D3D12RenderTarget::CreateDescriptorHeaps(D3D12Device& device, const RenderT
             heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
             heapDesc.NodeMask       = 0;
         }
-        rtvDescHeap_ = device.CreateDXDescriptorHeap(heapDesc);
+        rtvDescHeap_ = D3D12DescriptorHeap::CreateNativeOrThrow(device.GetNative(), heapDesc);
     }
 
     /* Create DSV descriptor heap */
@@ -201,7 +202,7 @@ void D3D12RenderTarget::CreateDescriptorHeaps(D3D12Device& device, const RenderT
             heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
             heapDesc.NodeMask       = 0;
         }
-        dsvDescHeap_ = device.CreateDXDescriptorHeap(heapDesc);
+        dsvDescHeap_ = D3D12DescriptorHeap::CreateNativeOrThrow(device.GetNative(), heapDesc);
     }
 }
 

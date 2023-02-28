@@ -1,6 +1,6 @@
 /*
  * D3D12SwapChain.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -12,6 +12,7 @@
 #include "Command/D3D12CommandContext.h"
 #include "Command/D3D12CommandQueue.h"
 #include "Buffer/D3D12Buffer.h"
+#include "RenderState/D3D12DescriptorHeap.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../DXCommon/DXTypes.h"
@@ -295,7 +296,7 @@ void D3D12SwapChain::CreateColorBufferRTVs(const Extent2D& resolution)
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         descHeapDesc.NodeMask       = 0;
     }
-    rtvDescHeap_ = renderSystem_.GetDevice().CreateDXDescriptorHeap(descHeapDesc);
+    rtvDescHeap_ = D3D12DescriptorHeap::CreateNativeOrThrow(renderSystem_.GetDevice().GetNative(), descHeapDesc);
 
     /* Create color buffers */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescHandle(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
@@ -363,7 +364,7 @@ void D3D12SwapChain::CreateDepthStencil(const Extent2D& resolution)
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         descHeapDesc.NodeMask       = 0;
     }
-    dsvDescHeap_ = renderSystem_.GetDevice().CreateDXDescriptorHeap(descHeapDesc);
+    dsvDescHeap_ = D3D12DescriptorHeap::CreateNativeOrThrow(renderSystem_.GetDevice().GetNative(), descHeapDesc);
 
     /* Create depth-stencil buffer */
     auto tex2DDesc = CD3DX12_RESOURCE_DESC::Tex2D(

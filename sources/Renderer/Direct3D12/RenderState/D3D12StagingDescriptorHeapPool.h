@@ -18,37 +18,39 @@ namespace LLGL
 {
 
 
-class D3D12Device;
-
+/*
+Pool of D3D12 staging descriptor heaps.
+The number of chunks in this pools is preferrably always 1, so the initial chunk should be allocated with a decent size.
+*/
 class D3D12StagingDescriptorHeapPool
 {
 
     public:
 
         D3D12StagingDescriptorHeapPool() = default;
-        D3D12StagingDescriptorHeapPool(D3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type);
+        D3D12StagingDescriptorHeapPool(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type);
 
         // Initializes the device object and chunk size.
-        void InitializeDevice(D3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type);
+        void InitializeDevice(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type);
 
         // Resets all chunks in the pool.
         void Reset();
 
         // Copies the specified source descriptors into the native D3D descriptor heap.
-        void CopyDescriptors(
+        D3D12_GPU_DESCRIPTOR_HANDLE CopyDescriptors(
             D3D12_CPU_DESCRIPTOR_HANDLE srcDescHandle,
             UINT                        firstDescriptor,
             UINT                        numDescriptors
         );
 
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandleForHeapStart() const;
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(UINT descriptor) const;
-
-        // Increments the offset for the next range of descriptor handles.
-        void IncrementOffset(UINT stride);
-
         // Returns the current descriptor heap that was used for the last CopyDescriptors operation.
         ID3D12DescriptorHeap* GetDescriptorHeap() const;
+
+        // Returns the GPU descriptor handle at the current offset.
+        D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandleWithOffset() const;
+
+        // Returns the CPU descriptor handle at the current offset plus the specified descriptor index.
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandleWithOffset(UINT descriptor) const;
 
     private:
 
@@ -58,14 +60,19 @@ class D3D12StagingDescriptorHeapPool
         // Restes all previously allocated chunks.
         void ResetChunks();
 
+        // Increments the offset for the next range of descriptor handles.
+        void IncrementOffset(UINT stride);
+
     private:
 
-        D3D12Device*                            device_     = nullptr;
-        D3D12_DESCRIPTOR_HEAP_TYPE              type_       = D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES;
+        ID3D12Device*                           device_         = nullptr;
+        D3D12_DESCRIPTOR_HEAP_TYPE              type_           = D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES;
 
         std::vector<D3D12StagingDescriptorHeap> chunks_;
-        std::size_t                             chunkIdx_   = 0;
-        UINT                                    chunkSize_  = 0;
+        std::size_t                             chunkIdx_       = 0;
+        UINT                                    chunkSize_      = 0;
+
+        UINT                                    pendingOffset_  = 0;
 
 };
 

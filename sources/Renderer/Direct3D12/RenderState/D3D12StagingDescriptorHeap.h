@@ -9,8 +9,7 @@
 #define LLGL_D3D12_STAGING_DESCRIPTOR_HEAP_H
 
 
-#include "../../DXCommon/ComPtr.h"
-#include <d3d12.h>
+#include "D3D12DescriptorHeap.h"
 
 
 namespace LLGL
@@ -19,36 +18,36 @@ namespace LLGL
 
 class D3D12Device;
 
-// D3D12 descriptor heap wrapper to manager shader-visible descriptor heaps.
-class D3D12StagingDescriptorHeap
+// D3D12 descriptor heap wrapper to manage shader-visible descriptor heaps.
+class D3D12StagingDescriptorHeap final : private D3D12DescriptorHeap
 {
 
     public:
 
         D3D12StagingDescriptorHeap() = default;
 
-        // Creates the native D3D descriptor heap. This is always a shader-visible descriptor heap.
+        D3D12StagingDescriptorHeap(D3D12StagingDescriptorHeap&& rhs);
+        D3D12StagingDescriptorHeap& operator = (D3D12StagingDescriptorHeap&& rhs);
+
+        // Initializes the descriptor heap with the specified type and size.
         D3D12StagingDescriptorHeap(
-            D3D12Device&                device,
+            ID3D12Device*               device,
             D3D12_DESCRIPTOR_HEAP_TYPE  type,
             UINT                        size
         );
 
-        D3D12StagingDescriptorHeap(D3D12StagingDescriptorHeap&& rhs);
-        D3D12StagingDescriptorHeap& operator = (D3D12StagingDescriptorHeap&& rhs);
-
-        D3D12StagingDescriptorHeap(const D3D12StagingDescriptorHeap&) = delete;
-        D3D12StagingDescriptorHeap& operator = (const D3D12StagingDescriptorHeap&) = delete;
-
-        // Creates a new descriptor heap and resets the writing offset.
+        // Creates a new descriptor heap and resets the writing offset. This is always a shader-visible descriptor heap.
         void Create(
-            D3D12Device&                device,
+            ID3D12Device*               device,
             D3D12_DESCRIPTOR_HEAP_TYPE  type,
             UINT                        size
         );
 
         // Resets the writing offset.
-        void Reset();
+        void ResetOffset();
+
+        // Increments the offset for the next range of descriptor handles.
+        void IncrementOffset(UINT stride);
 
         // Returns true if the remaining heap size can fit the specified number of descriptors.
         bool Capacity(UINT count) const;
@@ -61,28 +60,31 @@ class D3D12StagingDescriptorHeap
             UINT                        numDescriptors
         );
 
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandleForHeapStart() const;
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(UINT descriptor) const;
-
-        // Increments the offset for the next range of descriptor handles.
-        void IncrementOffset(UINT stride);
+        D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandleWithOffset() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandleWithOffset(UINT descriptor) const;
 
         // Returns the native D3D descriptor heap.
         inline ID3D12DescriptorHeap* GetNative() const
         {
-            return native_.Get();
+            return D3D12DescriptorHeap::GetNative();
         }
 
         // Returns the native D3D12 descriptor heap type.
         inline D3D12_DESCRIPTOR_HEAP_TYPE GetType() const
         {
-            return type_;
+            return D3D12DescriptorHeap::GetType();
         }
 
         // Returns the size (in number of descriptors) of the native D3D descriptor heap.
         inline UINT GetSize() const
         {
-            return size_;
+            return D3D12DescriptorHeap::GetSize();
+        }
+
+        // Returns the stride (in bytes) for each descriptor within the heap.
+        inline UINT GetStride() const
+        {
+            return D3D12DescriptorHeap::GetStride();
         }
 
         // Returns the current writing offset for the next descriptor.
@@ -93,11 +95,7 @@ class D3D12StagingDescriptorHeap
 
     private:
 
-        ComPtr<ID3D12DescriptorHeap>    native_;
-        D3D12_DESCRIPTOR_HEAP_TYPE      type_   = D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES;
-        UINT                            size_   = 0;
-        UINT                            offset_ = 0;
-        UINT                            stride_ = 0;
+        UINT offset_ = 0;
 
 };
 

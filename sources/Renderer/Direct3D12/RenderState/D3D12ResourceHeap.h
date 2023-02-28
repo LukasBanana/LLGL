@@ -23,7 +23,6 @@ namespace LLGL
 {
 
 
-class D3D12Device;
 struct ResourceHeapDescriptor;
 
 class D3D12ResourceHeap final : public ResourceHeap
@@ -38,7 +37,7 @@ class D3D12ResourceHeap final : public ResourceHeap
     public:
 
         D3D12ResourceHeap(
-            D3D12Device&                                device,
+            ID3D12Device*                               device,
             const ResourceHeapDescriptor&               desc,
             const ArrayView<ResourceViewDescriptor>&    initialResourceViews = {}
         );
@@ -73,7 +72,7 @@ class D3D12ResourceHeap final : public ResourceHeap
     private:
 
         void CreateDescriptorHeap(
-            D3D12Device&                    device,
+            ID3D12Device*                   device,
             D3D12_DESCRIPTOR_HEAP_TYPE      heapType,
             UINT                            numDescriptors
         );

@@ -13,6 +13,7 @@
 #include "../RenderState/D3D12Fence.h"
 #include "../RenderState/D3D12PipelineLayout.h"
 #include "../RenderState/D3D12StagingDescriptorHeapPool.h"
+#include "../RenderState/D3D12DescriptorCache.h"
 #include <d3d12.h>
 #include <cstddef>
 #include <cstdint>
@@ -121,15 +122,18 @@ class D3D12CommandContext
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const;
 
-        D3D12_GPU_DESCRIPTOR_HANDLE CopyDescriptors(
+        D3D12_GPU_DESCRIPTOR_HANDLE CopyDescriptorsForStaging(
             D3D12_DESCRIPTOR_HEAP_TYPE  type,
             D3D12_CPU_DESCRIPTOR_HANDLE srcDescHandle,
             UINT                        firstDescriptor,
             UINT                        numDescriptors
         );
 
-        void NextDescriptorHeap();
-        void NextDescriptorSet();
+        void EmplaceDescriptorForStaging(
+            Resource&                   resource,
+            UINT                        location,
+            D3D12_DESCRIPTOR_RANGE_TYPE descRangeType
+        );
 
         void DrawInstanced(
             UINT vertexCountPerInstance,
@@ -211,9 +215,6 @@ class D3D12CommandContext
         // Switches to the next command allocator and resets it.
         void NextCommandAllocator();
 
-        // Increments the write offsets for the staging descriptor pools.
-        void NextStagingDescriptors(UINT numResourceViews, UINT numSamplers);
-
         void FlushGraphicsStagingDescriptorTables();
         void FlushComputeStagingDescriptorTables();
 
@@ -242,6 +243,7 @@ class D3D12CommandContext
         D3D12StagingDescriptorHeapPool      stagingDescriptorPools_[g_maxNumAllocators][g_maxNumDescriptorHeaps];
         D3D12DescriptorHeapSetLayout        stagingDescriptorSetLayout_;
         D3D12RootParameterIndices           stagingDescriptorIndices_;
+        D3D12DescriptorCache                descriptorCaches_[g_maxNumAllocators];
 
         StateCache                          stateCache_;
 

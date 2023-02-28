@@ -36,12 +36,12 @@ static UINT GetInitialDescriptorHeapSize(D3D12_DESCRIPTOR_HEAP_TYPE type)
     }
 }
 
-D3D12StagingDescriptorHeapPool::D3D12StagingDescriptorHeapPool(D3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type)
+D3D12StagingDescriptorHeapPool::D3D12StagingDescriptorHeapPool(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
     InitializeDevice(device, type);
 }
 
-void D3D12StagingDescriptorHeapPool::InitializeDevice(D3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type)
+void D3D12StagingDescriptorHeapPool::InitializeDevice(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
     chunks_.clear();
     device_     = device;
@@ -52,6 +52,8 @@ void D3D12StagingDescriptorHeapPool::InitializeDevice(D3D12Device* device, D3D12
 
 void D3D12StagingDescriptorHeapPool::Reset()
 {
+    pendingOffset_ = 0;
+
     if (chunks_.size() > 1)
     {
         /* Try to consolidate chunks into a single one */
@@ -72,12 +74,15 @@ void D3D12StagingDescriptorHeapPool::Reset()
         ResetChunks();
 }
 
-void D3D12StagingDescriptorHeapPool::CopyDescriptors(
+D3D12_GPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeapPool::CopyDescriptors(
     D3D12_CPU_DESCRIPTOR_HANDLE srcDescHandle,
     UINT                        firstDescriptor,
     UINT                        numDescriptors)
 {
     LLGL_ASSERT_PTR(device_);
+
+    /* Apply pending offset */
+    IncrementOffset(pendingOffset_);
 
     /* Find a chunk that fits the requested data size or allocate a new chunk */
     while (chunkIdx_ < chunks_.size() && !chunks_[chunkIdx_].Capacity(firstDescriptor + numDescriptors))
@@ -87,23 +92,12 @@ void D3D12StagingDescriptorHeapPool::CopyDescriptors(
         AllocChunk(numDescriptors);
 
     /* Copy descriptors into current chunk */
-    chunks_[chunkIdx_].CopyDescriptors(device_->GetNative(), srcDescHandle, firstDescriptor, numDescriptors);
-}
+    chunks_[chunkIdx_].CopyDescriptors(device_, srcDescHandle, firstDescriptor, numDescriptors);
 
-D3D12_GPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeapPool::GetGPUDescriptorHandleForHeapStart() const
-{
-    if (chunkIdx_ < chunks_.size())
-        return chunks_[chunkIdx_].GetGPUDescriptorHandleForHeapStart();
-    else
-        return {};
-}
+    /* Store pending offset to be applied with the next copy operation */
+    pendingOffset_ = numDescriptors;
 
-D3D12_CPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeapPool::GetCPUDescriptorHandle(UINT descriptor) const
-{
-    if (chunkIdx_ < chunks_.size())
-        return chunks_[chunkIdx_].GetCPUDescriptorHandle(descriptor);
-    else
-        return {};
+    return GetGpuHandleWithOffset();
 }
 
 void D3D12StagingDescriptorHeapPool::IncrementOffset(UINT stride)
@@ -117,6 +111,22 @@ ID3D12DescriptorHeap* D3D12StagingDescriptorHeapPool::GetDescriptorHeap() const
     return (chunkIdx_ < chunks_.size() ? chunks_.back().GetNative() : nullptr);
 }
 
+D3D12_GPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeapPool::GetGpuHandleWithOffset() const
+{
+    if (chunkIdx_ < chunks_.size())
+        return chunks_[chunkIdx_].GetGpuHandleWithOffset();
+    else
+        return {};
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeapPool::GetCpuHandleWithOffset(UINT descriptor) const
+{
+    if (chunkIdx_ < chunks_.size())
+        return chunks_[chunkIdx_].GetCpuHandleWithOffset(descriptor);
+    else
+        return {};
+}
+
 
 /*
  * ======= Private: =======
@@ -125,7 +135,7 @@ ID3D12DescriptorHeap* D3D12StagingDescriptorHeapPool::GetDescriptorHeap() const
 void D3D12StagingDescriptorHeapPool::AllocChunk(UINT minNumDescriptors)
 {
     chunkSize_ = std::max(chunkSize_, minNumDescriptors);
-    chunks_.emplace_back(*device_, type_, chunkSize_);
+    chunks_.emplace_back(device_, type_, chunkSize_);
     chunkIdx_ = chunks_.size() - 1;
 }
 
@@ -133,7 +143,7 @@ void D3D12StagingDescriptorHeapPool::ResetChunks()
 {
     /* Reset offsets of existing chunks */
     for (auto& chunk : chunks_)
-        chunk.Reset();
+        chunk.ResetOffset();
     chunkIdx_ = 0;
 }
 

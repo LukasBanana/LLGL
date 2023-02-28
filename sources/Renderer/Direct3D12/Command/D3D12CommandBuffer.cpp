@@ -545,7 +545,7 @@ void D3D12CommandBuffer::SetResourceHeap(
         if (resourceHeapD3D.GetDescriptorHeap(heapType) != nullptr)
         {
             /* Copies the entire set of descriptors from the non-shader-visible heap to the global shader-visible heap */
-            auto gpuDescHandle = commandContext_.CopyDescriptors(
+            auto gpuDescHandle = commandContext_.CopyDescriptorsForStaging(
                 heapType,
                 resourceHeapD3D.GetCPUDescriptorHandleForHeapStart(heapType, descriptorSet),
                 0,
@@ -563,9 +563,6 @@ void D3D12CommandBuffer::SetResourceHeap(
 
     /* Insert resource barriers for the specified descriptor set */
     resourceHeapD3D.InsertResourceBarriers(commandList_, descriptorSet);
-
-    /* Prepare for the next descriptor heap */
-    commandContext_.NextDescriptorHeap();
 }
 
 /*
@@ -604,7 +601,7 @@ void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t descripto
         {
             /* Bind resource with staging descriptor heap */
             const auto& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
-            EmplaceResourceDescriptor(descriptorLocation, resource);
+            commandContext_.EmplaceDescriptorForStaging(resource, descriptorLocation.index, descriptorLocation.type);
         }
     }
 }
@@ -1130,79 +1127,6 @@ void D3D12CommandBuffer::ClearDepthStencilView(
 
     /* Clear depth-stencil view */
     commandList_->ClearDepthStencilView(dsvDescHandle_, clearFlags, depth, stencil, numRects, rects);
-}
-
-void D3D12CommandBuffer::EmplaceResourceDescriptor(const D3D12DescriptorHeapLocation& location, Resource& resource)
-{
-    auto cpuDescHandle = commandContext_.GetCPUDescriptorHandle(static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(location.heap), location.index);
-    switch (resource.GetResourceType())
-    {
-        case ResourceType::Buffer:
-            EmplaceBufferDescriptor(location, LLGL_CAST(D3D12Buffer&, resource), cpuDescHandle);
-            break;
-
-        case ResourceType::Texture:
-            EmplaceTextureDescriptor(location, LLGL_CAST(D3D12Texture&, resource), cpuDescHandle);
-            break;
-
-        case ResourceType::Sampler:
-            EmplaceSamplerDescriptor(location, LLGL_CAST(D3D12Sampler&, resource), cpuDescHandle);
-            break;
-
-        default:
-            break;
-    }
-}
-
-void D3D12CommandBuffer::EmplaceBufferDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Buffer& bufferD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
-{
-    switch (location.type)
-    {
-        case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
-            bufferD3D.CreateShaderResourceView(device_, cpuDescHandle);
-            break;
-
-        case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
-            bufferD3D.CreateUnorderedAccessView(device_, cpuDescHandle);
-            break;
-
-        case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:
-            bufferD3D.CreateConstantBufferView(device_, cpuDescHandle);
-            break;
-
-        default:
-            break;
-    }
-}
-
-void D3D12CommandBuffer::EmplaceTextureDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Texture& textureD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
-{
-    switch (location.type)
-    {
-        case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
-            textureD3D.CreateShaderResourceView(device_, cpuDescHandle);
-            break;
-
-        case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
-            textureD3D.CreateUnorderedAccessView(device_, cpuDescHandle);
-            break;
-
-        default:
-            break;
-    }
-}
-
-void D3D12CommandBuffer::EmplaceSamplerDescriptor(const D3D12DescriptorHeapLocation& location, D3D12Sampler& samplerD3D, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
-{
-    switch (location.type)
-    {
-        case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
-            samplerD3D.CreateResourceView(device_, cpuDescHandle);
-            break;
-
-        default:
-            break;
-    }
 }
 
 

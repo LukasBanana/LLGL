@@ -15,18 +15,9 @@ namespace LLGL
 {
 
 
-D3D12StagingDescriptorHeap::D3D12StagingDescriptorHeap(
-    D3D12Device&                device,
-    D3D12_DESCRIPTOR_HEAP_TYPE  type,
-    UINT                        size)
-{
-    Create(device, type, size);
-}
-
 D3D12StagingDescriptorHeap::D3D12StagingDescriptorHeap(D3D12StagingDescriptorHeap&& rhs) :
-    native_ { std::move(rhs.native_) },
-    size_   { rhs.size_              },
-    offset_ { rhs.offset_            }
+    D3D12DescriptorHeap { std::forward<D3D12DescriptorHeap&&>(rhs) },
+    offset_             { rhs.offset_                              }
 {
 }
 
@@ -34,43 +25,38 @@ D3D12StagingDescriptorHeap& D3D12StagingDescriptorHeap::operator = (D3D12Staging
 {
     if (this != &rhs)
     {
-        native_ = std::move(rhs.native_);
-        size_   = rhs.size_;
+        D3D12DescriptorHeap::operator = (std::forward<D3D12DescriptorHeap&&>(rhs));
         offset_ = rhs.offset_;
     }
     return *this;
 }
 
+D3D12StagingDescriptorHeap::D3D12StagingDescriptorHeap(
+    ID3D12Device*               device,
+    D3D12_DESCRIPTOR_HEAP_TYPE  type,
+    UINT                        size)
+:
+    D3D12DescriptorHeap { device, type, size, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE }
+{
+}
+
 void D3D12StagingDescriptorHeap::Create(
-    D3D12Device&                device,
+    ID3D12Device*               device,
     D3D12_DESCRIPTOR_HEAP_TYPE  type,
     UINT                        size)
 {
-    /* Create GPU upload buffer */
-    D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
-    {
-        heapDesc.Type           = type;
-        heapDesc.NumDescriptors = size;
-        heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        heapDesc.NodeMask       = 0;
-    }
-    native_ = device.CreateDXDescriptorHeap(heapDesc);
-
-    /* Store new size and reset write offset */
-    type_   = type;
-    size_   = size;
-    offset_ = 0;
-    stride_ = device.GetNative()->GetDescriptorHandleIncrementSize(type);
+    D3D12DescriptorHeap::Create(device, type, size, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+    ResetOffset();
 }
 
-void D3D12StagingDescriptorHeap::Reset()
+void D3D12StagingDescriptorHeap::ResetOffset()
 {
     offset_ = 0;
 }
 
 bool D3D12StagingDescriptorHeap::Capacity(UINT count) const
 {
-    return (offset_ + count <= size_);
+    return (offset_ + count <= GetSize());
 }
 
 void D3D12StagingDescriptorHeap::CopyDescriptors(
@@ -80,27 +66,21 @@ void D3D12StagingDescriptorHeap::CopyDescriptors(
     UINT                        numDescriptors)
 {
     /* Get source descriptor CPU handle address */
-    D3D12_CPU_DESCRIPTOR_HANDLE dstDescHandle = native_->GetCPUDescriptorHandleForHeapStart();
-    dstDescHandle.ptr += (offset_ + firstDescriptor) * stride_;
+    D3D12_CPU_DESCRIPTOR_HANDLE dstDescHandle = GetNative()->GetCPUDescriptorHandleForHeapStart();
+    dstDescHandle.ptr += (offset_ + firstDescriptor) * GetStride();
 
     /* Copy descriptors from source to destination descriptor heap */
-    device->CopyDescriptorsSimple(numDescriptors, dstDescHandle, srcDescHandle, type_);
+    device->CopyDescriptorsSimple(numDescriptors, dstDescHandle, srcDescHandle, GetType());
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeap::GetGPUDescriptorHandleForHeapStart() const
+D3D12_GPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeap::GetGpuHandleWithOffset() const
 {
-    /* Return destination descriptor GPU handle address */
-    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = native_->GetGPUDescriptorHandleForHeapStart();
-    gpuDescHandle.ptr += offset_ * stride_;
-    return gpuDescHandle;
+    return D3D12DescriptorHeap::GetGpuHandleWithOffset(offset_);
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeap::GetCPUDescriptorHandle(UINT descriptor) const
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeap::GetCpuHandleWithOffset(UINT descriptor) const
 {
-    /* Return destination descriptor CPU handle address */
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle = native_->GetCPUDescriptorHandleForHeapStart();
-    cpuDescHandle.ptr += (offset_ + descriptor) * stride_;
-    return cpuDescHandle;
+    return D3D12DescriptorHeap::GetCpuHandleWithOffset(offset_ + descriptor);
 }
 
 void D3D12StagingDescriptorHeap::IncrementOffset(UINT stride)

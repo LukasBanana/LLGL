@@ -7,12 +7,11 @@
 
 #include "D3D12ResourceHeap.h"
 #include "D3D12PipelineLayout.h"
-#include "../D3D12Device.h"
+#include "D3D12DescriptorHeap.h"
 #include "../D3D12ObjectUtils.h"
 #include "../Buffer/D3D12Buffer.h"
 #include "../Texture/D3D12Sampler.h"
 #include "../Texture/D3D12Texture.h"
-#include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../ResourceUtils.h"
 #include "../../TextureUtils.h"
@@ -31,7 +30,7 @@ namespace LLGL
 
 
 D3D12ResourceHeap::D3D12ResourceHeap(
-    D3D12Device&                                device,
+    ID3D12Device*                               device,
     const ResourceHeapDescriptor&               desc,
     const ArrayView<ResourceViewDescriptor>&    initialResourceViews)
 {
@@ -50,15 +49,9 @@ D3D12ResourceHeap::D3D12ResourceHeap(
     auto convolutedStageFlags = pipelineLayoutD3D->GetConvolutedStageFlags();
 
     /* Store descriptor handle strides per descriptor set */
-    const auto descHandleStrideCbvSrvUav    = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    const auto descHandleStrideSampler      = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-
     const auto& descHeapLayout  = pipelineLayoutD3D->GetDescriptorHeapLayout();
     numDescriptorsPerSet_[0]    = descHeapLayout.SumResourceViews();
     numDescriptorsPerSet_[1]    = descHeapLayout.SumSamplers();
-
-    descriptorSetStrides_[0] = descHandleStrideCbvSrvUav * numDescriptorsPerSet_[0];
-    descriptorSetStrides_[1] = descHandleStrideSampler   * numDescriptorsPerSet_[1];
 
     /* Keep copy of root parameter map */
     descriptorMap_ = pipelineLayoutD3D->GetDescriptorHeapMap();
@@ -84,7 +77,7 @@ D3D12ResourceHeap::D3D12ResourceHeap(
 
     /* Write initial resource views */
     if (!initialResourceViews.empty())
-        CreateResourceViewHandles(device.GetNative(), 0, initialResourceViews);
+        CreateResourceViewHandles(device, 0, initialResourceViews);
 }
 
 std::uint32_t D3D12ResourceHeap::CreateResourceViewHandles(
@@ -176,36 +169,6 @@ std::uint32_t D3D12ResourceHeap::CreateResourceViewHandles(
     return numWritten;
 }
 
-#if 0
-void D3D12ResourceHeap::SetGraphicsRootDescriptorTables(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet)
-{
-    if (hasGraphicsDescriptors_)
-    {
-        /* Bind root descriptor tables to graphics pipeline */
-        for_range(i, numDescriptorHeaps_)
-        {
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorHeaps_[i]->GetGPUDescriptorHandleForHeapStart();
-            gpuDescHandle.ptr += descriptorSetStrides_[i] * descriptorSet;
-            commandList->SetGraphicsRootDescriptorTable(i, gpuDescHandle);
-        }
-    }
-}
-
-void D3D12ResourceHeap::SetComputeRootDescriptorTables(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet)
-{
-    if (hasComputeDescriptors_)
-    {
-        /* Bind root descriptor tables to compute pipeline */
-        for_range(i, numDescriptorHeaps_)
-        {
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorHeaps_[i]->GetGPUDescriptorHandleForHeapStart();
-            gpuDescHandle.ptr += descriptorSetStrides_[i] * descriptorSet;
-            commandList->SetComputeRootDescriptorTable(i, gpuDescHandle);
-        }
-    }
-}
-#endif
-
 void D3D12ResourceHeap::InsertResourceBarriers(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet)
 {
     if (descriptorSet < numDescriptorSets_ && HasBarriers())
@@ -265,7 +228,7 @@ static void ErrNullPointerInResource()
 }
 
 void D3D12ResourceHeap::CreateDescriptorHeap(
-    D3D12Device&                    device,
+    ID3D12Device*                   device,
     D3D12_DESCRIPTOR_HEAP_TYPE      heapType,
     UINT                            numDescriptors)
 {
@@ -273,7 +236,9 @@ void D3D12ResourceHeap::CreateDescriptorHeap(
     LLGL_ASSERT(heapTypeIndex < sizeof(descriptorHeaps_)/sizeof(descriptorHeaps_[0]));
 
     /* Store handle stride for heap type */
-    descriptorHandleStrides_[heapTypeIndex] = device.GetNative()->GetDescriptorHandleIncrementSize(heapType);
+    const UINT descHandleStride = device->GetDescriptorHandleIncrementSize(heapType);
+    descriptorHandleStrides_[heapTypeIndex] = descHandleStride;
+    descriptorSetStrides_[heapTypeIndex]    = descHandleStride * numDescriptorsPerSet_[heapTypeIndex];
 
     /*
     Create shader-invisible descriptor heap.
@@ -286,7 +251,7 @@ void D3D12ResourceHeap::CreateDescriptorHeap(
         heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         heapDesc.NodeMask       = 0;
     }
-    descriptorHeaps_[heapTypeIndex] = device.CreateDXDescriptorHeap(heapDesc);
+    descriptorHeaps_[heapTypeIndex] = D3D12DescriptorHeap::CreateNativeOrThrow(device, heapDesc);
 }
 
 bool D3D12ResourceHeap::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const ResourceViewDescriptor& desc)
