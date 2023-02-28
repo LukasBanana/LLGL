@@ -205,28 +205,29 @@ static void CopyVertex(TangentSpaceVertex& dst, const TexturedVertex& src)
     dst.texCoord = src.texCoord;
 }
 
+static void NormalizeTangents(TangentSpaceVertex& v, const Gs::Vector3f& tangent0, const Gs::Vector3f& tangent1)
+{
+    v.tangents[0] = Gs::Cross(v.normal, tangent1).Normalized();
+    v.tangents[1] = Gs::Cross(v.normal, tangent0).Normalized();
+}
+
 static void GenerateTangentSpace(TangentSpaceVertex& v0, TangentSpaceVertex& v1, TangentSpaceVertex& v2)
 {
-    auto dv1 = v1.position - v0.position;
-    auto dv2 = v2.position - v0.position;
+    const Gs::Vector3f edge1 = v1.position - v0.position;
+    const Gs::Vector3f edge2 = v2.position - v0.position;
 
-    auto st1 = v1.texCoord - v0.texCoord;
-    auto st2 = v2.texCoord - v0.texCoord;
+    const Gs::Vector2f deltaUV1 = v1.texCoord - v0.texCoord;
+    const Gs::Vector2f deltaUV2 = v2.texCoord - v0.texCoord;
 
-    auto tangent    = (dv1 * st2.x) - (dv2 * st1.x);
-    auto bitangent  = (dv1 * st2.y) - (dv2 * st1.y);
+    Gs::Vector3f tangent0 = edge1 * deltaUV2.y - edge2 * deltaUV1.y;
+    Gs::Vector3f tangent1 = edge1 * deltaUV2.x - edge2 * deltaUV1.x;
 
-    tangent.Normalize();
-    bitangent.Normalize();
+    tangent0.Normalize();
+    tangent1.Normalize();
 
-    v0.tangents[0] = tangent;
-    v0.tangents[1] = bitangent;
-
-    v1.tangents[0] = tangent;
-    v1.tangents[1] = bitangent;
-
-    v2.tangents[0] = tangent;
-    v2.tangents[1] = bitangent;
+    NormalizeTangents(v0, tangent0, tangent1);
+    NormalizeTangents(v1, tangent0, tangent1);
+    NormalizeTangents(v2, tangent0, tangent1);
 }
 
 std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const LLGL::ArrayView<TexturedVertex>& vertices)

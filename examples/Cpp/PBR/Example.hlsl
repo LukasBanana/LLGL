@@ -125,6 +125,12 @@ float NormalDistribution(float a, float NdotH)
     return a2 / (M_PI * d * d);
 }
 
+float3 SampleEnvironment(float roughness, float3 reflection)
+{
+    float lod = roughness * mipCount;
+    return skyBox.SampleLevel(smpl, float4(reflection, (float)skyboxLayer), lod).rgb;
+}
+
 float3 BRDF(float3 albedo, float3 normal, float3 viewVec, float3 lightVec, float roughness, float metallic)
 {
     // Compute color at normal incidence
@@ -150,13 +156,11 @@ float3 BRDF(float3 albedo, float3 normal, float3 viewVec, float3 lightVec, float
     // Compute specular term and accumulate light
     float3 specular = F * G * D / (4.0 * NdotV);
 
-    return (albedo * NdotL + specular);
-}
+    // Sample incoming light from environment map
+    float3 reflection = -normalize(reflect(viewVec, normal));
+    float3 lighting = SampleEnvironment(roughness, reflection);
 
-float3 SampleEnvironment(float roughness, float3 reflection)
-{
-    float lod = roughness * mipCount;
-    return skyBox.Sample(smpl, float4(reflection, (float)skyboxLayer), lod).rgb;
+    return (albedo * (NdotL + lighting * 0.2) + specular * metallic);
 }
 
 float4 PMesh(VMeshOut inp) : SV_Target
@@ -165,35 +169,31 @@ float4 PMesh(VMeshOut inp) : SV_Target
 
     // Sample textures
     float4 albedo = colorMaps.Sample(smpl, texCoord);
-    float3 normal = normalMaps.Sample(smpl, texCoord);
-    float roughness = 0.0;//0.6;//roughnessMaps.Sample(smpl, texCoord);
+    float3 normal = normalMaps.Sample(smpl, texCoord) * 2.0 - 1.0;
+    float roughness = roughnessMaps.Sample(smpl, texCoord);
     float metallic = metallicMaps.Sample(smpl, texCoord);
 
     // Compute final normal
-    #if 1
-    normal = normalize(inp.normal);
-    #else
     float3x3 tangentSpace = float3x3(
-        normalize(inp.bitangent),
         normalize(inp.tangent),
+        normalize(inp.bitangent),
         normalize(inp.normal)
     );
 
-    normal = normalize(mul(tangentSpace, (normal * 2.0 - 1.0)));
-    #endif
+    normal = mul(normal, tangentSpace);
 
     // Get view and light directions
     float3 viewPos = mul(cMatrix, float4(0, 0, 0, 1)).xyz;
     float3 viewVec = normalize(viewPos - inp.worldPos.xyz);
 
     // Sample incoming light from environment map
-    float3 reflection = -normalize(reflect(viewVec, normal));
-    float3 lighting = SampleEnvironment(roughness, reflection);
+    //float3 reflection = -normalize(reflect(viewVec, normal));
+    //float3 lighting = SampleEnvironment(roughness, reflection);
 
     // Compute microfacet BRDF
     float3 color = BRDF(albedo.rgb, normal, viewVec, lightDir.xyz, roughness, metallic);
 
-    #if 1
+    #if 0
     //color += lighting * 0.2;
     color = lighting;
     #endif
