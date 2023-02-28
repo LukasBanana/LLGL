@@ -1,6 +1,6 @@
 /*
  * D3D12GraphicsPSO.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -13,7 +13,6 @@
 #include "D3D12RenderPass.h"
 #include "D3D12PipelineLayout.h"
 #include "../Command/D3D12CommandContext.h"
-#include "../D3DX12/d3dx12.h"
 #include "../D3D12Serialization.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"

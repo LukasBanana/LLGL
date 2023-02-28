@@ -1,7 +1,6 @@
 /*
  * D3D12MipGenerator.cpp
- \*
-
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,7 +9,6 @@
 #include "D3D12Texture.h"
 #include "../Shader/Builtin/D3D12Builtin.h"
 #include "../Command/D3D12CommandContext.h"
-#include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 
