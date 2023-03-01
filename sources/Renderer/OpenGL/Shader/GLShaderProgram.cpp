@@ -856,7 +856,7 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
                 {
                     /* Set binding slot to invalid index */
                     resource.binding.stageFlags = StageFlags::AllStages;
-                    resource.binding.arraySize  = 1;
+                    resource.binding.arraySize  = 0;
                 }
             }
             reflection.resources.push_back(resource);

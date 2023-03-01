@@ -99,7 +99,7 @@ struct BindingDescriptor
         long            bindFlags,
         long            stageFlags,
         std::uint32_t   slot,
-        std::uint32_t   arraySize = 1)
+        std::uint32_t   arraySize = 0)
     :
         type       { type       },
         bindFlags  { bindFlags  },
@@ -116,7 +116,7 @@ struct BindingDescriptor
         long                bindFlags,
         long                stageFlags,
         std::uint32_t       slot,
-        std::uint32_t       arraySize = 1)
+        std::uint32_t       arraySize = 0)
     :
         name       { name.begin(), name.end() },
         type       { type                     },
@@ -165,12 +165,12 @@ struct BindingDescriptor
     std::uint32_t   slot        = 0;
 
     /**
-    \brief Specifies the number of binding slots for an array resource. By default 1.
+    \brief Specifies the number of binding slots for an array resource. By default 0.
     \remarks This can only be used for heap bindings, not for individual bindings.
     \note For Vulkan, this number specifies the size of an array of resources (e.g. an array of uniform buffers).
     \see PipelineLayoutDescriptor::heapBindings
     */
-    std::uint32_t   arraySize   = 1;
+    std::uint32_t   arraySize   = 0;
 };
 
 /**
@@ -264,10 +264,10 @@ struct UniformDescriptor
     \remarks This describes the shader constant as scalar, vector, or matrix constant.
     When the pipeline layout is created, this field must have a valid uniform type, i.e. it must \e not be UniformType::Undefined.
     */
-    UniformType     type    = UniformType::Undefined;
+    UniformType     type        = UniformType::Undefined;
 
     //! Specifies the array size of the uniform. If this is 0, the uniform does \e not describe an array. By default 0.
-    std::uint32_t   size    = 0;
+    std::uint32_t   arraySize   = 0;
 };
 
 /**

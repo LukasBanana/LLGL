@@ -232,7 +232,7 @@ static const SPIRVReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding
             {
                 case spv::Op::OpTypeArray:
                     /* Multiply array in case of multiple interleaved arrays, e.g. MultiArray[4][3] is equivalent to LinearArray[4*3] */
-                    binding.arraySize *= derefType->elements;
+                    binding.arraySize = (derefType->elements == 0 ? derefType->elements : binding.arraySize * derefType->elements);
                     return ReflectSpvBinding(binding, derefType->baseType);
 
                 case spv::Op::OpTypeImage:
@@ -262,7 +262,7 @@ static const SPIRVReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding
     return nullptr;
 }
 
-static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, const SPIRVReflect::SpvUniform& var)
+static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& reflection, const SPIRVReflect::SpvUniform& var)
 {
     /* Check if there already is a resource at the specified binding slot */
     for (auto& resource : reflection.resources)
@@ -272,7 +272,7 @@ static ShaderResource* FindOrAppendShaderResource(ShaderReflection& reflection, 
     }
 
     /* Append new resource entry */
-    ShaderResource resource;
+    ShaderResourceReflection resource;
     {
         resource.binding.name = GetOptString(var.name);
         resource.binding.slot = var.binding;

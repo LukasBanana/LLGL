@@ -486,8 +486,6 @@ static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, con
             AcceptChar(s, ']');
             IgnoreWhiteSpaces(s);
         }
-        else
-            bindingDesc.arraySize = 1;
 
         /* Add new binding point to output descriptor */
         dstBindings.push_back(bindingDesc);
