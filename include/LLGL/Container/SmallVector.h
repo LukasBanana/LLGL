@@ -31,7 +31,7 @@ namespace LLGL
 struct GrowStrategyAddHalf
 {
     //! Returns the increased size by adding half of the input value, effectively returning 150% the input size. This is always greater than or equal to \c size.
-    static inline std::size_t IncreaseToFit(std::size_t size)
+    static inline std::size_t Grow(std::size_t size)
     {
         return (size + size / 2);
     }
@@ -44,7 +44,7 @@ struct GrowStrategyAddHalf
 struct GrowStrategyDouble
 {
     //! Returns the increased size by multiplying by two, effectively doubling the input size. This is always greater than or equal to \c size.
-    static inline std::size_t IncreaseToFit(std::size_t size)
+    static inline std::size_t Grow(std::size_t size)
     {
         return (size * 2);
     }
@@ -95,7 +95,7 @@ struct GrowStrategyRoundUpPow2
     }
 
     //! Returns the increased size by rounding up to the next power of two. This is always greater than or equal to \c size.
-    static inline std::size_t IncreaseToFit(std::size_t size)
+    static inline std::size_t Grow(std::size_t size)
     {
         return GrowStrategyRoundUpPow2::Round(size);
     }
@@ -137,23 +137,41 @@ class LLGL_EXPORT SmallVector
 
     public:
 
+        //! Default initializes an empty vector.
         SmallVector() :
             data_ { local_data() }
         {
         }
 
+        //! Initializes the vector with a copy of all elements from the \c other vector.
         SmallVector(const SmallVector& other) :
             SmallVector {}
         {
             operator = (other);
         }
 
+        //! Initializes the vector with a copy of all elements from the \c other vector of different type.
+        template
+        <
+            typename    OtherT,
+            std::size_t OtherLocalCapacity,
+            typename    OtherAllocator,
+            typename    OtherGrowStrategy
+        >
+        SmallVector(const SmallVector<OtherT, OtherLocalCapacity, OtherAllocator, OtherGrowStrategy>& other) :
+            SmallVector {}
+        {
+            operator = (other);
+        }
+
+        //! Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
         SmallVector(SmallVector&& other) :
             SmallVector {}
         {
             operator = (std::forward<SmallVector&&>(other));
         }
 
+        //! Initializes the vector with the specified elements in the half-open range <code>[from, to)</code>.
         template <typename InputIter>
         SmallVector(InputIter from, InputIter to) :
             SmallVector {}
@@ -161,18 +179,21 @@ class LLGL_EXPORT SmallVector
             insert(end(), from, to);
         }
 
+        //! Initializes the vector with a copy of all elements from the specified initializer list.
         SmallVector(const std::initializer_list<T>& list) :
             SmallVector {}
         {
             insert(end(), list);
         }
 
+        //! Initializes the vector with a copy of all elements from the \c other generic container.
         template <template <typename, typename> class OtherContainer, typename OtherAllocator>
         SmallVector(const OtherContainer<T, OtherAllocator>& other) :
             SmallVector { other.begin(), other.end() }
         {
         }
 
+        //! Destroys all elements in this vector.
         ~SmallVector()
         {
             release();
@@ -180,56 +201,85 @@ class LLGL_EXPORT SmallVector
 
     public:
 
+        //! Returns true if this vector is empty.
         bool empty() const noexcept
         {
             return (size_ == 0);
         }
 
+        //! Returns the size (in number of elements) of this vector.
         size_type size() const noexcept
         {
             return size_;
         }
 
+        //! Returns the internal capacity (in number of elements) of this vector. This refers to the memory allocated for this vector.
         size_type capacity() const noexcept
         {
             return cap_;
         }
 
+        //! Returns a pointer to the beginning of this vector.
         pointer data() noexcept
         {
             return data_;
         }
 
+        //! Returns a constant pointer to the beginning of this vector.
         const_pointer data() const noexcept
         {
             return data_;
         }
 
+        /**
+        \brief Returns a reference to the element at the specified position in this vector.
+        \remarks This must \e not be called on an empty vector!
+        */
         reference at(size_type pos) noexcept
         {
             return data_[pos];
         }
 
+        /**
+        \brief Returns a constant reference to the element at the specified position in this vector.
+        \remarks This must \e not be called on an empty vector!
+        */
         const_reference at(size_type pos) const noexcept
         {
             return data_[pos];
         }
 
+        /**
+        \brief Returns a reference to first element in this vector. This must \e not be called on an empty vector!
+        \remarks This must \e not be called on an empty vector!
+        */
         reference front() noexcept
         {
             return data_[0];
         }
 
+        /**
+        \brief Returns a constant reference to first element in this vector. This must \e not be called on an empty vector!
+        \remarks This must \e not be called on an empty vector!
+        */
         const_reference front() const noexcept
         {
             return data_[0];
         }
 
+        /**
+        \brief Returns a reference to last element in this vector. This must \e not be called on an empty vector!
+        \remarks This must \e not be called on an empty vector!
+        */
         reference back() noexcept
         {
             return data_[size_ - 1];
         }
 
+        /**
+        \brief Returns a constant reference to last element in this vector. This must \e not be called on an empty vector!
+        \remarks This must \e not be called on an empty vector!
+        */
         const_reference back() const noexcept
         {
             return data_[size_ - 1];
@@ -237,22 +287,39 @@ class LLGL_EXPORT SmallVector
 
     public:
 
+        /**
+        \brief Destroys all elements in this vector.
+        \remarks After this call, \c size() returns 0 but \c capacity() is unchanged.
+        */
         void clear()
         {
             destroy_range(begin(), end());
             size_ = 0;
         }
 
+        /**
+        \brief Resizes this vector to the new size and default initializes all newly allocated elements.
+        \param[in] size Specifies the new vector size (in number of elements).
+        \remarks After this call, \c size() returns the same value as the input parameter \c size.
+        \see resize(size_type, const value_type&)
+        */
         void resize(size_type size)
         {
             resize(size, value_type{});
         }
 
+        /**
+        \brief Resizes this vector to the new size and explicitly initializes all newly allocated elements.
+        \param[in] size Specifies the new vector size (in number of elements).
+        \param[in] value Specifies the value all newly allocated elements will be initialized with.
+        \remarks After this call, \c size() returns the same value as the input parameter \c size.
+        \see resize(size_type)
+        */
         void resize(size_type size, const value_type& value)
         {
             if (size_ < size)
             {
-                reserve_to_fit_min(size);
+                reserve(size);
                 construct_single(begin() + size_, begin() + size, value);
                 size_ = size;
             }
@@ -263,28 +330,39 @@ class LLGL_EXPORT SmallVector
             }
         }
 
+        /**
+        \brief Reserves memory for this vector to hold at least \c size elements.
+        \param[in] size Specifies the minimum reserved capacity. The initial capacity is equal to the template argument \c LocalCapacity.
+        If the new size is smaller than or equal to the current capacity, this function has no effect.
+        \remarks After this call, \c capacity() returns a value that is greater than or equal to the input parameter \c size.
+        */
         void reserve(size_type size)
         {
-            reserve_to_fit(size);
+            if (cap_ < size)
+                realloc(GrowStrategy::Grow(size));
         }
 
+        /**
+        \brief Re-allocates the internal memory for this vector to fit precisely the current number of elements.
+        \remarks After this call, \c capacity() returns the same value as \c size().
+        */
         void shrink_to_fit()
         {
             if (size_ < cap_)
-                realloc(size_);
+                realloc();
         }
 
         void push_back(const value_type& value)
         {
             if (size_ == cap_)
-                realloc(GrowStrategy::IncreaseToFit(size_ + 1));
+                realloc(GrowStrategy::Grow(size_ + 1));
             Allocator{}.construct(end(), value);
             ++size_;
         }
 
         void push_back(value_type&& value)
         {
-            reserve_to_fit_min(size() + 1);
+            reserve(size() + 1);
             Allocator{}.construct(end(), std::forward<value_type&&>(value));
             ++size_;
         }
@@ -313,7 +391,7 @@ class LLGL_EXPORT SmallVector
                 if (pos == end())
                 {
                     /* Append elements at the end of the list */
-                    reserve_to_fit_min(size() + count);
+                    reserve(size() + count);
                     return insert_inline(end(), from, count);
                 }
                 else if (pos >= begin() && pos < end())
@@ -321,8 +399,8 @@ class LLGL_EXPORT SmallVector
                     const auto offset = static_cast<size_type>(std::distance(cbegin(), pos));
                     if (size() + count <= capacity())
                     {
-                        /* Move trail to new end and insert new elements in-place */
-                        move_trail(begin() + offset + count, begin() + offset, end());
+                        /* Move tail to new end and insert new elements in-place */
+                        move_tail(begin() + offset + count, begin() + offset, end());
                         return insert_inline(const_cast<iterator>(pos), from, count);
                     }
                     else
@@ -359,9 +437,9 @@ class LLGL_EXPORT SmallVector
                 }
                 else
                 {
-                    /* Destroy range, move trail backwards, and reduce container size */
+                    /* Destroy range, move tail backwards, and reduce container size */
                     destroy_range(const_cast<iterator>(from), const_cast<iterator>(to));
-                    move_trail(const_cast<iterator>(from), to, end());
+                    move_tail(const_cast<iterator>(from), to, end());
                     size_ -= count;
                     return const_cast<iterator>(to);
                 }
@@ -479,6 +557,20 @@ class LLGL_EXPORT SmallVector
     public:
 
         SmallVector& operator = (const SmallVector& rhs)
+        {
+            clear();
+            insert(end(), rhs.begin(), rhs.end());
+            return *this;
+        }
+
+        template
+        <
+            typename    OtherT,
+            std::size_t OtherLocalCapacity,
+            typename    OtherAllocator,
+            typename    OtherGrowStrategy
+        >
+        SmallVector& operator = (const SmallVector<OtherT, OtherLocalCapacity, OtherAllocator, OtherGrowStrategy>& rhs)
         {
             clear();
             insert(end(), rhs.begin(), rhs.end());
@@ -607,18 +699,6 @@ class LLGL_EXPORT SmallVector
             }
         }
 
-        void reserve_to_fit(size_type size)
-        {
-            if (cap_ < size)
-                realloc(size);
-        }
-
-        void reserve_to_fit_min(size_type size)
-        {
-            if (cap_ < size)
-                realloc(GrowStrategy::IncreaseToFit(size));
-        }
-
         void move_all(pointer dst)
         {
             /* Copy elements into new container, destroy old elements, and deallocate old container */
@@ -627,7 +707,7 @@ class LLGL_EXPORT SmallVector
             release_heap();
         }
 
-        void move_trail_left(iterator dst, iterator from, iterator to)
+        void move_tail_left(iterator dst, iterator from, iterator to)
         {
             Allocator alloc;
             for (; from != to; ++from, ++dst)
@@ -638,7 +718,7 @@ class LLGL_EXPORT SmallVector
             }
         }
 
-        void move_trail_right(iterator dst, iterator from, iterator to)
+        void move_tail_right(iterator dst, iterator from, iterator to)
         {
             Allocator alloc;
             const auto count = static_cast<size_type>(std::distance(from, to));
@@ -651,12 +731,12 @@ class LLGL_EXPORT SmallVector
             }
         }
 
-        void move_trail(iterator dst, iterator from, iterator to)
+        void move_tail(iterator dst, iterator from, iterator to)
         {
             if (dst < from)
-                move_trail_left(dst, from, to);
+                move_tail_left(dst, from, to);
             else if (dst > from)
-                move_trail_right(dst, from, to);
+                move_tail_right(dst, from, to);
         }
 
         template <typename InputIter>
@@ -671,7 +751,7 @@ class LLGL_EXPORT SmallVector
         iterator insert_realloc(size_type offset, InputIter src, size_type count)
         {
             /* Allocate new container */
-            const size_type cap = GrowStrategy::IncreaseToFit(size() + count);
+            const size_type cap = GrowStrategy::Grow(size() + count);
             Allocator alloc;
             pointer data = alloc.allocate(cap);
 
