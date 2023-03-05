@@ -307,7 +307,7 @@ void D3D11Shader::CreateNativeShader(
     );
 }
 
-static ShaderResource* FetchOrInsertResource(
+static ShaderResourceReflection* FetchOrInsertResource(
     ShaderReflection&   reflection,
     const char*         name,
     const ResourceType  type,

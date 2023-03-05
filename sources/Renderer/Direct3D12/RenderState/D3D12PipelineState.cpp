@@ -1,6 +1,6 @@
 /*
  * D3D12PipelineState.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,6 +10,7 @@
 #include "../D3D12Device.h"
 #include "../D3D12ObjectUtils.h"
 #include "../D3D12Serialization.h"
+#include "../Shader/D3D12Shader.h"
 #include "../../CheckedCast.h"
 #include "../../DXCommon/DXCore.h"
 
@@ -18,10 +19,19 @@ namespace LLGL
 {
 
 
+static SmallVector<D3D12Shader*, 5> GetD3D12ShaderArray(const ArrayView<Shader*>& shaders)
+{
+    SmallVector<D3D12Shader*, 5> shadersD3D;
+    for (auto* sh : shaders)
+        shadersD3D.push_back(LLGL_CAST(D3D12Shader*, sh));
+    return shadersD3D;
+}
+
 D3D12PipelineState::D3D12PipelineState(
-    bool                    isGraphicsPSO,
-    const PipelineLayout*   pipelineLayout,
-    D3D12PipelineLayout&    defaultPipelineLayout)
+    bool                        isGraphicsPSO,
+    const PipelineLayout*       pipelineLayout,
+    const ArrayView<Shader*>&   shaders,
+    D3D12PipelineLayout&        defaultPipelineLayout)
 :
     isGraphicsPSO_ { isGraphicsPSO }
 {
@@ -29,12 +39,16 @@ D3D12PipelineState::D3D12PipelineState(
     {
         /* Create pipeline state with root signature from pipeline layout */
         pipelineLayout_ = LLGL_CAST(const D3D12PipelineLayout*, pipelineLayout);
-        rootSignature_ = pipelineLayout_->GetSharedRootSignature();
+
+        if (pipelineLayout_->NeedsRootConstantPermutation())
+            rootSignature_ = pipelineLayout_->CreateRootSignatureWith32BitConstants(GetD3D12ShaderArray(shaders), rootConstantMap_);
+        else
+            rootSignature_ = pipelineLayout_->GetFinalizedRootSignature();
     }
     else
     {
         /* Create pipeline state with default root signature */
-        rootSignature_ = defaultPipelineLayout.GetSharedRootSignature();
+        rootSignature_ = defaultPipelineLayout.GetFinalizedRootSignature();
     }
 }
 

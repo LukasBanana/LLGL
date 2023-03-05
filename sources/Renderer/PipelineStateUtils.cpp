@@ -1,6 +1,6 @@
 /*
  * PipelineStateUtils.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -56,6 +56,30 @@ LLGL_EXPORT bool IsStaticBlendFactorEnabled(const BlendDescriptor& desc)
         }
     }
     return false;
+}
+
+LLGL_EXPORT SmallVector<Shader*, 5> GetShadersAsArray(const GraphicsPipelineDescriptor& desc)
+{
+    SmallVector<Shader*, 5> shaders;
+    auto AddShaderIfSet = [&shaders](Shader* sh)
+    {
+        if (sh != nullptr)
+            shaders.push_back(sh);
+    };
+    AddShaderIfSet(desc.vertexShader);
+    AddShaderIfSet(desc.tessControlShader);
+    AddShaderIfSet(desc.tessEvaluationShader);
+    AddShaderIfSet(desc.geometryShader);
+    AddShaderIfSet(desc.fragmentShader);
+    return shaders;
+}
+
+LLGL_EXPORT SmallVector<Shader*, 1> GetShadersAsArray(const ComputePipelineDescriptor& desc)
+{
+    SmallVector<Shader*, 1> shaders;
+    if (auto* sh = desc.computeShader)
+        shaders.push_back(sh);
+    return shaders;
 }
 
 

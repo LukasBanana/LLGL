@@ -12,14 +12,18 @@
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Container/SmallVector.h>
+#include <LLGL/Container/ArrayView.h>
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
+#include <memory>
+#include <map>
 
 
 namespace LLGL
 {
 
 
+class D3D12Shader;
 class D3D12RootSignature;
 
 // Resource view descriptor to root parameter table mapping structure (for D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE).
@@ -35,6 +39,14 @@ struct D3D12DescriptorLocation
 {
     D3D12_ROOT_PARAMETER_TYPE   type;
     UINT                        index; // Root parameter index
+};
+
+// Uniform to root constant mapping structure.
+struct D3D12RootConstantLocation
+{
+    UINT index          : 16;   // Root parameter index
+    UINT num32BitValues : 16;   // Number of 32-bit values this constant occupies.
+    UINT wordOffset;            // Destination offset (in 32-bit values) within root constant buffer
 };
 
 // Container structure of all numbers of root parameters within a D3D12 root signature.
@@ -113,19 +125,22 @@ class D3D12PipelineLayout final : public PipelineLayout
         void CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
         void ReleaseRootSignature();
 
+        /*
+        Creates a D3D12 root signature permutation that includes 32-bit root constants.
+        These constants are derived from the uniform descriptors and the constant buffer reflection from the specified shaders.
+        */
+        ComPtr<ID3D12RootSignature> CreateRootSignatureWith32BitConstants(
+            const ArrayView<D3D12Shader*>&          shaders,
+            std::vector<D3D12RootConstantLocation>& outRootConstantMap
+        ) const;
+
         // Returns the layout of the set of descriptor heaps.
         D3D12DescriptorHeapSetLayout GetDescriptorHeapSetLayout() const;
 
-        // Returns the native ID3D12RootSignature object.
-        inline ID3D12RootSignature* GetRootSignature() const
+        // Returns the finalized native ID3D12RootSignature object as ComPtr.
+        inline const ComPtr<ID3D12RootSignature>& GetFinalizedRootSignature() const
         {
-            return rootSignature_.Get();
-        }
-
-        // Returns the native ID3D12RootSignature object as ComPtr.
-        inline const ComPtr<ID3D12RootSignature>& GetSharedRootSignature() const
-        {
-            return rootSignature_;
+            return finalizedRootSignature_;
         }
 
         // Returns the serialized blob of the root siganture.
@@ -147,7 +162,7 @@ class D3D12PipelineLayout final : public PipelineLayout
         }
 
         // Returns the heap binding to descriptor table range map. Index for 'heapBindings' -> location in descriptor table range.
-        inline const SmallVector<D3D12DescriptorHeapLocation>& GetDescriptorHeapMap() const
+        inline const SmallVector<D3D12DescriptorHeapLocation, 8>& GetDescriptorHeapMap() const
         {
             return descriptorHeapMap_;
         }
@@ -159,13 +174,13 @@ class D3D12PipelineLayout final : public PipelineLayout
         }
 
         // Returns the binding to dynamic descriptor table range map. Index for 'bindings' -> location in descriptor table range.
-        inline const SmallVector<D3D12DescriptorHeapLocation>& GetDescriptorMap() const
+        inline const SmallVector<D3D12DescriptorHeapLocation, 8>& GetDescriptorMap() const
         {
             return descriptorMap_;
         }
 
         // Returns the binding to root parameter map. Index for 'bindings' -> location of root parameter.
-        inline const SmallVector<D3D12DescriptorLocation>& GetRootParameterMap() const
+        inline const SmallVector<D3D12DescriptorLocation, 8>& GetRootParameterMap() const
         {
             return rootParameterMap_;
         }
@@ -176,7 +191,18 @@ class D3D12PipelineLayout final : public PipelineLayout
             return rootParameterIndices_;
         }
 
+        // Returns true if this pipeline layout needs a permutation for root constants.
+        inline bool NeedsRootConstantPermutation() const
+        {
+            return !uniforms_.empty();
+        }
+
     private:
+
+        void BuildRootSignature(
+            D3D12RootSignature&             rootSignature,
+            const PipelineLayoutDescriptor& desc
+        );
 
         void BuildHeapRootParameterTables(
             D3D12RootSignature&             rootSignature,
@@ -235,19 +261,23 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     private:
 
-        ComPtr<ID3D12RootSignature>                 rootSignature_;
+        ID3D12Device*                               device_                 = nullptr;
+
+        std::unique_ptr<D3D12RootSignature>         rootSignature_;
+        ComPtr<ID3D12RootSignature>                 finalizedRootSignature_;
         ComPtr<ID3DBlob>                            serializedBlob_;
 
         D3D12RootSignatureLayout                    descriptorHeapLayout_;
-        SmallVector<D3D12DescriptorHeapLocation>    descriptorHeapMap_;
+        SmallVector<D3D12DescriptorHeapLocation, 8> descriptorHeapMap_;
         D3D12RootSignatureLayout                    descriptorLayout_;
-        SmallVector<D3D12DescriptorHeapLocation>    descriptorMap_;
-        SmallVector<D3D12DescriptorLocation>        rootParameterMap_;
+        SmallVector<D3D12DescriptorHeapLocation, 8> descriptorMap_;
+        SmallVector<D3D12DescriptorLocation, 8>     rootParameterMap_;
 
         UINT                                        numStaticSamplers_      = 0;
-        UINT                                        numUniforms_            = 0;
         D3D12RootParameterIndices                   rootParameterIndices_;
         long                                        convolutedStageFlags_   = 0;
+
+        std::vector<UniformDescriptor>              uniforms_;
 
 };
 

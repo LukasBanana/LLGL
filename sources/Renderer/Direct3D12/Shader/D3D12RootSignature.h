@@ -24,12 +24,28 @@ class D3D12RootSignature
 
     public:
 
+        D3D12RootSignature() = default;
+
+        D3D12RootSignature(const D3D12RootSignature&) = default;
+        D3D12RootSignature& operator = (const D3D12RootSignature&) = default;
+
         void Clear();
-        void Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers, const D3D12RootSignature* permutationParent = nullptr);
-        void ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers, const D3D12RootSignature* permutationParent = nullptr);
+        void Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers);
+        void ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers);
 
         D3D12RootParameter* AppendRootParameter(UINT* outRootParameterIndex = nullptr);
-        D3D12RootParameter* FindCompatibleRootParameter(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, std::size_t first = 0);
+
+        D3D12RootParameter* FindCompatibleRootParameter(
+            D3D12_DESCRIPTOR_RANGE_TYPE rangeType,
+            std::size_t                 first                   = 0,
+            UINT*                       outRootParameterIndex   = nullptr
+        );
+
+        D3D12RootParameter* FindCompatibleRootParameter(
+            const D3D12_ROOT_CONSTANTS& rootConstants,
+            std::size_t                 first                   = 0,
+            UINT*                       outRootParameterIndex   = nullptr
+        );
 
         D3D12_STATIC_SAMPLER_DESC* AppendStaticSampler();
 
@@ -60,7 +76,6 @@ class D3D12RootSignature
 
     private:
 
-        const D3D12RootSignature*                   permutationParent_  = nullptr; // Optional pointer to a root signature parent as permutation linke list
         SmallVector<D3D12_ROOT_PARAMETER, 4u>       nativeRootParams_;
         SmallVector<D3D12RootParameter, 4u>         rootParams_;
         SmallVector<D3D12_STATIC_SAMPLER_DESC, 2u>  staticSamplers_;

@@ -18,6 +18,13 @@ D3D12RootParameter::D3D12RootParameter(D3D12_ROOT_PARAMETER* managedRootParam) :
 {
 }
 
+void D3D12RootParameter::InitAsConstants(const D3D12_ROOT_CONSTANTS& rootConstants, D3D12_SHADER_VISIBILITY visibility)
+{
+    managedRootParam_->ParameterType    = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+    managedRootParam_->Constants        = rootConstants;
+    managedRootParam_->ShaderVisibility = visibility;
+}
+
 void D3D12RootParameter::InitAsConstants(UINT shaderRegister, UINT num32BitValues, D3D12_SHADER_VISIBILITY visibility)
 {
     managedRootParam_->ParameterType                = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
@@ -108,6 +115,17 @@ bool D3D12RootParameter::IsCompatible(D3D12_ROOT_PARAMETER_TYPE rootParamType, D
     if (descRanges_.empty())
         return true;
     return AreRangeTypesCompatible(descRanges_.back().RangeType, rangeType);
+}
+
+bool D3D12RootParameter::IsCompatible(const D3D12_ROOT_CONSTANTS& rootConstants) const
+{
+    return
+    (
+        managedRootParam_                           != nullptr                                      &&
+        managedRootParam_->ParameterType            == D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS    &&
+        managedRootParam_->Constants.ShaderRegister == rootConstants.ShaderRegister                 &&
+        managedRootParam_->Constants.RegisterSpace  == rootConstants.RegisterSpace
+    );
 }
 
 D3D12_SHADER_VISIBILITY D3D12RootParameter::FindSuitableVisibility(long stageFlags)

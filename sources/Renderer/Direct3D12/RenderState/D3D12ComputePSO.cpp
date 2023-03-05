@@ -1,16 +1,17 @@
 /*
  * D3D12ComputePSO.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "D3D12ComputePSO.h"
+#include "D3D12PipelineLayout.h"
 #include "../D3D12Device.h"
 #include "../Shader/D3D12Shader.h"
-#include "D3D12PipelineLayout.h"
 #include "../Command/D3D12CommandContext.h"
 #include "../../CheckedCast.h"
+#include "../../PipelineStateUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/PipelineStateFlags.h>
 
@@ -24,7 +25,7 @@ D3D12ComputePSO::D3D12ComputePSO(
     D3D12PipelineLayout&                defaultPipelineLayout,
     const ComputePipelineDescriptor&    desc)
 :
-    D3D12PipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout, defaultPipelineLayout }
+    D3D12PipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout, GetShadersAsArray(desc), defaultPipelineLayout }
 {
     if (auto computeShaderD3D = LLGL_CAST(const D3D12Shader*, desc.computeShader))
         CreateNativePSO(device, computeShaderD3D->GetByteCode());

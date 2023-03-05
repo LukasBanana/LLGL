@@ -23,6 +23,19 @@ namespace LLGL
 {
 
 
+struct D3D12ConstantReflection
+{
+    std::string name;   // Name of the constant buffer field.
+    UINT        offset; // Offset (in bytes) within the constant buffer the uniform's root parameter occupies.
+    UINT        size;   // Size (in bytes) of this uniform.
+};
+
+struct D3D12ConstantBufferReflection
+{
+    D3D12_ROOT_CONSTANTS                    rootConstants;
+    std::vector<D3D12ConstantReflection>    fields;
+};
+
 class D3D12Shader final : public Shader
 {
 
@@ -41,6 +54,9 @@ class D3D12Shader final : public Shader
         bool GetInputLayoutDesc(D3D12_INPUT_LAYOUT_DESC& layoutDesc) const;
         bool GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) const;
 
+        // Returns a list of all reflected constant buffers including their fields.
+        HRESULT ReflectAndCacheConstantBuffers(const std::vector<D3D12ConstantBufferReflection>** outConstantBuffers);
+
     private:
 
         bool BuildShader(const ShaderDescriptor& shaderDesc);
@@ -53,15 +69,20 @@ class D3D12Shader final : public Shader
 
         HRESULT ReflectShaderByteCode(ShaderReflection& reflection) const;
 
+        HRESULT ReflectConstantBuffers(std::vector<D3D12ConstantBufferReflection>& outConstantBuffers) const;
+
     private:
 
-        ComPtr<ID3DBlob>                        byteCode_;
-        DXReport                                report_;
+        ComPtr<ID3DBlob>                            byteCode_;
+        DXReport                                    report_;
 
-        std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
-        std::vector<D3D12_SO_DECLARATION_ENTRY> soDeclEntries_;
-        std::vector<UINT>                       soBufferStrides_;
-        LinearStringContainer                   vertexAttribNames_; // custom string container to hold valid string pointers.
+        std::vector<D3D12_INPUT_ELEMENT_DESC>       inputElements_;
+        std::vector<D3D12_SO_DECLARATION_ENTRY>     soDeclEntries_;
+        std::vector<UINT>                           soBufferStrides_;
+        LinearStringContainer                       vertexAttribNames_; // custom string container to hold valid string pointers.
+
+        HRESULT                                     cbufferReflectionResult_    = S_FALSE;
+        std::vector<D3D12ConstantBufferReflection>  cbufferReflections_;
 
 };
 

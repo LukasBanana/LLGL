@@ -128,19 +128,10 @@ struct ShaderResourceReflection
 \see ShaderReflection::uniforms
 \todo Replace with UniformDescriptor
 */
-struct ShaderUniformReflection
+struct ShaderUniformReflection : UniformDescriptor
 {
-    //! Name of the uniform inside the shader.
-    std::string     name;
-
-    //! Data type of the uniform. By default UniformType::Undefined.
-    UniformType     type        = UniformType::Undefined;
-
     //! Internal location of the uniform within a shader program.
-    UniformLocation location    = 0;
-
-    //! Array size of the uniform.
-    std::uint32_t   size        = 0;
+    UniformLocation location = 0;
 };
 
 /**

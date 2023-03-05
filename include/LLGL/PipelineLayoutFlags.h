@@ -253,6 +253,21 @@ struct StaticSamplerDescriptor
 */
 struct UniformDescriptor
 {
+    UniformDescriptor() = default;
+    UniformDescriptor(const UniformDescriptor&) = default;
+
+    //! Initializes the uniform descriptor with a name, type, and optional array size.
+    inline UniformDescriptor(
+        const StringView&   name,
+        UniformType         type,
+        std::uint32_t       arraySize = 0)
+    :
+        name      { name.begin(), name.end() },
+        type      { type                     },
+        arraySize { arraySize                }
+    {
+    }
+
     /**
     \brief Specifies the name of an individual shader uniform.
     \remarks This describes the name of the constant itself and not its encloding constant buffer.

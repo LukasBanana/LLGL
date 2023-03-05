@@ -9,6 +9,7 @@
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include <LLGL/Misc/ForRange.h>
+#include <algorithm>
 
 
 namespace LLGL
@@ -61,7 +62,7 @@ static void Convert(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& 
 {
     dst.binding             = src.slot;
     dst.descriptorType      = GetVkDescriptorType(src);
-    dst.descriptorCount     = src.arraySize;
+    dst.descriptorCount     = std::max(1u, src.arraySize);
     dst.stageFlags          = GetVkShaderStageFlags(src.stageFlags);
     dst.pImmutableSamplers  = nullptr;
 }

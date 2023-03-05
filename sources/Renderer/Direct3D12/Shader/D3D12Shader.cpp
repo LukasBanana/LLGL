@@ -87,6 +87,93 @@ bool D3D12Shader::GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) cons
     return false;
 }
 
+HRESULT D3D12Shader::ReflectAndCacheConstantBuffers(const std::vector<D3D12ConstantBufferReflection>** outConstantBuffers)
+{
+    if (cbufferReflectionResult_ == S_FALSE)
+    {
+        /* Reflect and cache constant buffer reflections */
+        cbufferReflections_.clear();
+        cbufferReflectionResult_ = ReflectConstantBuffers(cbufferReflections_);
+    }
+    if (cbufferReflectionResult_ == S_OK)
+    {
+        /* Return cached constnat buffer reflections */
+        if (outConstantBuffers != nullptr)
+            *outConstantBuffers = &cbufferReflections_;
+        return S_OK;
+    }
+    return cbufferReflectionResult_;
+}
+
+// private
+HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferReflection>& outConstantBuffers) const
+{
+    HRESULT hr = S_OK;
+
+    /* Get shader reflection */
+    ComPtr<ID3D12ShaderReflection> reflectionObject;
+    hr = D3DReflect(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
+    if (FAILED(hr))
+        return hr;
+
+    D3D12_SHADER_DESC shaderDesc;
+    hr = reflectionObject->GetDesc(&shaderDesc);
+    if (FAILED(hr))
+        return hr;
+
+    for_range(i, shaderDesc.BoundResources)
+    {
+        /* Get shader input resource descriptor */
+        D3D12_SHADER_INPUT_BIND_DESC inputBindDesc;
+        auto hr = reflectionObject->GetResourceBindingDesc(i, &inputBindDesc);
+        if (FAILED(hr))
+            return hr;
+
+        /* Reflect shader resource view */
+        if (inputBindDesc.Type == D3D_SIT_CBUFFER)
+        {
+            /* Get constant buffer reflection */
+            auto* cbufferReflection = reflectionObject->GetConstantBufferByName(inputBindDesc.Name);
+            if (cbufferReflection == nullptr)
+                return E_POINTER;
+
+            D3D12_SHADER_BUFFER_DESC shaderBufferDesc;
+            hr = cbufferReflection->GetDesc(&shaderBufferDesc);
+            if (FAILED(hr))
+                return hr;
+
+            std::vector<D3D12ConstantReflection> fieldsInfo;
+
+            for_range(fieldIndex, shaderBufferDesc.Variables)
+            {
+                /* Get constant field reflection */
+                auto* fieldReflection = cbufferReflection->GetVariableByIndex(fieldIndex);
+                if (fieldReflection == nullptr)
+                    return E_POINTER;
+
+                D3D12_SHADER_VARIABLE_DESC fieldDesc;
+                hr = fieldReflection->GetDesc(&fieldDesc);
+                if (FAILED(hr))
+                    return hr;
+
+                fieldsInfo.push_back(D3D12ConstantReflection{ fieldDesc.Name, fieldDesc.StartOffset, fieldDesc.Size });
+            }
+
+            /* Write reflection output */
+            D3D12ConstantBufferReflection cbufferInfo;
+            {
+                cbufferInfo.rootConstants.ShaderRegister    = inputBindDesc.BindPoint;
+                cbufferInfo.rootConstants.RegisterSpace     = 0;
+                cbufferInfo.rootConstants.Num32BitValues    = shaderBufferDesc.Size / 4;
+                cbufferInfo.fields                          = fieldsInfo;
+            }
+            outConstantBuffers.push_back(std::move(cbufferInfo));
+        }
+    }
+
+    return hr;
+}
+
 
 /*
  * ======= Private: =======
@@ -439,6 +526,20 @@ static HRESULT ReflectShaderConstantBuffer(
         {
             /* Store constant buffer size in output descriptor */
             resource->constantBufferSize = shaderBufferDesc.Size;
+
+            #if 0//UNUSED
+            for_range(varIdx, shaderBufferDesc.Variables)
+            {
+                auto varReflection = cbufferReflection->GetVariableByIndex(varIdx);
+
+                D3D12_SHADER_VARIABLE_DESC shaderVarDesc;
+                hr = varReflection->GetDesc(&shaderVarDesc);
+                if (FAILED(hr))
+                    return hr;
+
+                //TODO
+            }
+            #endif
         }
         else
         {

@@ -21,6 +21,7 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
+#include <LLGL/Container/SmallVector.h>
 #include <algorithm>
 #include <limits>
 
@@ -37,7 +38,7 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
     const D3D12RenderPass*              defaultRenderPass,
     Serialization::Serializer*          writer)
 :
-    D3D12PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, defaultPipelineLayout }
+    D3D12PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, GetShadersAsArray(desc), defaultPipelineLayout }
 {
     /* Validate pointers and get D3D shader program */
     if (desc.vertexShader == nullptr)

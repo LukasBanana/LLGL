@@ -17,23 +17,21 @@ namespace LLGL
 
 void D3D12RootSignature::Clear()
 {
-    permutationParent_ = nullptr;
     nativeRootParams_.clear();
     rootParams_.clear();
     staticSamplers_.clear();
 }
 
-void D3D12RootSignature::Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers, const D3D12RootSignature* permutationParent)
+void D3D12RootSignature::Reset(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
 {
-    permutationParent_ = permutationParent;
     nativeRootParams_.reserve(maxNumRootParamters);
     rootParams_.reserve(maxNumRootParamters);
     staticSamplers_.reserve(maxNumStaticSamplers);
 }
 
-void D3D12RootSignature::ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers, const D3D12RootSignature* permutationParent)
+void D3D12RootSignature::ResetAndAlloc(UINT maxNumRootParamters, UINT maxNumStaticSamplers)
 {
-    Reset(maxNumRootParamters, maxNumStaticSamplers, permutationParent);
+    Reset(maxNumRootParamters, maxNumStaticSamplers);
     while (maxNumRootParamters-- > 0)
         AppendRootParameter();
 }
@@ -52,13 +50,38 @@ D3D12RootParameter* D3D12RootSignature::AppendRootParameter(UINT* outRootParamet
     return &(rootParams_.back());
 }
 
-D3D12RootParameter* D3D12RootSignature::FindCompatibleRootParameter(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, std::size_t first)
+D3D12RootParameter* D3D12RootSignature::FindCompatibleRootParameter(
+    D3D12_DESCRIPTOR_RANGE_TYPE rangeType,
+    std::size_t                 first,
+    UINT*                       outRootParameterIndex)
 {
     /* Find compatible root parameter (search from back to front) */
     for_subrange_reverse(i, first, rootParams_.size())
     {
         if (rootParams_[i].IsCompatible(D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE, rangeType))
+        {
+            if (outRootParameterIndex != nullptr)
+                *outRootParameterIndex = static_cast<UINT>(i);
             return &(rootParams_[i]);
+        }
+    }
+    return nullptr;
+}
+
+D3D12RootParameter* D3D12RootSignature::FindCompatibleRootParameter(
+    const D3D12_ROOT_CONSTANTS& rootConstants,
+    std::size_t                 first,
+    UINT*                       outRootParameterIndex)
+{
+    /* Find compatible root parameter (search from back to front) */
+    for_subrange_reverse(i, first, rootParams_.size())
+    {
+        if (rootParams_[i].IsCompatible(rootConstants))
+        {
+            if (outRootParameterIndex != nullptr)
+                *outRootParameterIndex = static_cast<UINT>(i);
+            return &(rootParams_[i]);
+        }
     }
     return nullptr;
 }

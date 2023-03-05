@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Container/SmallVector.h>
+#include <string>
 #include <d3d12.h>
 
 
@@ -28,6 +29,7 @@ class D3D12RootParameter
         D3D12RootParameter(const D3D12RootParameter&) = default;
         D3D12RootParameter& operator = (const D3D12RootParameter&) = default;
 
+        void InitAsConstants(const D3D12_ROOT_CONSTANTS& rootConstants, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
         void InitAsConstants(UINT shaderRegister, UINT num32BitValues, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
         void InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE paramType, UINT shaderRegister, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
         void InitAsDescriptorCBV(UINT shaderRegister, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
@@ -43,6 +45,9 @@ class D3D12RootParameter
         // Returns true if the specified descriptor range type is compatible with this root paramter.
         bool IsCompatible(D3D12_ROOT_PARAMETER_TYPE rootParamType, D3D12_DESCRIPTOR_RANGE_TYPE rangeType) const;
 
+        // Returns true if the specified root constants are compatible with this root paramter.
+        bool IsCompatible(const D3D12_ROOT_CONSTANTS& rootConstants) const;
+
     public:
 
         // Returns the best suitable shader visibility for the specified stage flags.
@@ -51,7 +56,7 @@ class D3D12RootParameter
     private:
 
         D3D12_ROOT_PARAMETER*                   managedRootParam_   = nullptr;
-        SmallVector<D3D12_DESCRIPTOR_RANGE, 8u> descRanges_;
+        SmallVector<D3D12_DESCRIPTOR_RANGE, 8>  descRanges_;
 
 };
 

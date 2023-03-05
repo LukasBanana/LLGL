@@ -3,6 +3,10 @@
 cbuffer Scene : register(b0)
 {
 	float4x4 vpMatrix;
+}
+
+cbuffer Model : register(b1)
+{
 	float3   lightVec;
 	uint     instance;
 }

@@ -78,7 +78,7 @@ void D3D12CommandBuffer::End()
     boundRenderTarget_      = nullptr;
     boundSwapChain_         = nullptr;
     boundPipelineLayout_    = nullptr;
-    isGraphicsPSOBound_     = false;
+    boundPipelineState_     = nullptr;
 
     /* Execute command list right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
@@ -554,7 +554,7 @@ void D3D12CommandBuffer::SetResourceHeap(
 
             /* Bind descriptor table to root parameter */
             const UINT rootParamIndex = boundPipelineLayout_->GetRootParameterIndices().rootParamDescriptorHeaps[i];
-            if (isGraphicsPSOBound_)
+            if (boundPipelineState_ != nullptr && boundPipelineState_->IsGraphicsPSO())
                 commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, gpuDescHandle);
             else
                 commandList_->SetComputeRootDescriptorTable(rootParamIndex, gpuDescHandle);
@@ -591,7 +591,7 @@ void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t descripto
             if (gpuVirtualAddr != 0)
             {
                 /* Root parameter can only be raw or structured buffers, so only handle CBV, SRV, and UAV */
-                if (isGraphicsPSOBound_)
+                if (boundPipelineState_ != nullptr && boundPipelineState_->IsGraphicsPSO())
                     commandContext_.SetGraphicsRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
                 else
                     commandContext_.SetComputeRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
@@ -608,7 +608,29 @@ void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t descripto
 
 void D3D12CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    //TODO
+    if (dataSize % 4 == 0)
+    {
+        const std::uint32_t dataSizeInWords = dataSize / 4;
+        if (boundPipelineLayout_ != nullptr && boundPipelineState_ != nullptr && first < boundPipelineLayout_->GetNumUniforms())
+        {
+            const auto& rootConstantMap = boundPipelineState_->GetRootConstantMap();
+            for (auto words = reinterpret_cast<const UINT*>(data), wordsEnd = words + dataSizeInWords; words != wordsEnd; ++first)
+            {
+                const auto& rootConstantLocation = rootConstantMap[first];
+                UINT wordOffset = rootConstantLocation.wordOffset;
+                for_range(i, rootConstantLocation.num32BitValues)
+                {
+                    const D3D12Constant value{ words[i] };
+                    if (boundPipelineState_->IsGraphicsPSO())
+                        commandContext_.SetGraphicsConstant(rootConstantLocation.index, value, wordOffset);
+                    else
+                        commandContext_.SetComputeConstant(rootConstantLocation.index, value, wordOffset);
+                    ++wordOffset;
+                }
+                words += rootConstantLocation.num32BitValues;
+            }
+        }
+    }
 }
 
 void D3D12CommandBuffer::ResetResourceSlots(
@@ -679,7 +701,7 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
         /* Bind graphics PSO */
         auto& graphicsPSO = LLGL_CAST(D3D12GraphicsPSO&, pipelineState);
         graphicsPSO.Bind(commandContext_);
-        isGraphicsPSOBound_ = true;
+        boundPipelineState_ = &graphicsPSO;
 
         /* Scissor rectangle must be updated (if scissor test is disabled) */
         scissorEnabled_ = graphicsPSO.IsScissorEnabled();
@@ -691,7 +713,7 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
         /* Bind compute PSO */
         auto& computePSO = LLGL_CAST(D3D12ComputePSO&, pipelineState);
         computePSO.Bind(commandContext_);
-        isGraphicsPSOBound_ = false;
+        boundPipelineState_ = &computePSO;
     }
 
     /* Keep reference to pipeline layout */

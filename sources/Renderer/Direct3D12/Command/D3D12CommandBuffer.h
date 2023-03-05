@@ -32,6 +32,7 @@ class D3D12Buffer;
 class D3D12Texture;
 class D3D12Sampler;
 class D3D12PipelineLayout;
+class D3D12PipelineState;
 class D3D12SignatureFactory;
 struct D3D12Resource;
 
@@ -287,6 +288,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         D3D12SwapChain*                 boundSwapChain_         = nullptr;
         D3D12RenderTarget*              boundRenderTarget_      = nullptr;
         const D3D12PipelineLayout*      boundPipelineLayout_    = nullptr;
+        D3D12PipelineState*             boundPipelineState_     = nullptr;
         bool                            isGraphicsPSOBound_     = false;
 
 };

@@ -669,7 +669,7 @@ static long GetStageFlagsFromResourceProperties(GLsizei count, const GLenum* pro
     return stageFlags;
 }
 
-static void GLQueryBufferProperties(GLuint program, ShaderResource& resource, GLenum programInterface, GLuint resourceIndex)
+static void GLQueryBufferProperties(GLuint program, ShaderResourceReflection& resource, GLenum programInterface, GLuint resourceIndex)
 {
     const GLenum props[] =
     {
@@ -712,7 +712,7 @@ static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
     /* Iterate over all uniform blocks */
     for_range(i, static_cast<GLuint>(numUniformBlocks))
     {
-        ShaderResource resource;
+        ShaderResourceReflection resource;
         {
             /* Initialize resource view descriptor */
             resource.binding.type           = ResourceType::Buffer;
@@ -768,7 +768,7 @@ static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)
     /* Iterate over all shader storage blocks */
     for_range(i, static_cast<GLuint>(numStorageBlocks))
     {
-        ShaderResource resource;
+        ShaderResourceReflection resource;
         {
             /* Initialize resource view descriptor */
             resource.binding.type       = ResourceType::Buffer;
@@ -812,7 +812,7 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
         if (uniformType == UniformType::Sampler || uniformType == UniformType::Image)
         {
             /* Append GLSL compiled texture-sampler as both texture and sampler resource */
-            ShaderResource resource;
+            ShaderResourceReflection resource;
             {
                 /* Initialize name, type, and binding flags for resource view */
                 resource.binding.name = std::string(uniformName.data());
@@ -869,12 +869,12 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
         else
         {
             /* Append default uniform */
-            ShaderUniform uniform;
+            ShaderUniformReflection uniform;
             {
                 uniform.name        = std::string(uniformName.data());
                 uniform.type        = uniformType;
+                uniform.arraySize   = static_cast<std::uint32_t>(size);
                 uniform.location    = glGetUniformLocation(program, uniformName.data());
-                uniform.size        = static_cast<std::uint32_t>(size);
             }
             reflection.uniforms.push_back(uniform);
         }

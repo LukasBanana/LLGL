@@ -10,6 +10,7 @@
 
 
 #include <LLGL/BufferFlags.h>
+#include <LLGL/Container/SmallVector.h>
 
 
 namespace LLGL
@@ -18,6 +19,9 @@ namespace LLGL
 
 struct StencilDescriptor;
 struct BlendDescriptor;
+struct GraphicsPipelineDescriptor;
+struct ComputePipelineDescriptor;
+class Shader;
 
 /* ----- Functions ----- */
 
@@ -26,6 +30,12 @@ LLGL_EXPORT bool IsStaticStencilRefEnabled(const StencilDescriptor& desc);
 
 // Returns true if any of the enabled blend targets makes use the blending factor (RGBA) for a static pipeline state.
 LLGL_EXPORT bool IsStaticBlendFactorEnabled(const BlendDescriptor& desc);
+
+// Returns the set of graphics PSO shaders as array.
+LLGL_EXPORT SmallVector<Shader*, 5> GetShadersAsArray(const GraphicsPipelineDescriptor& desc);
+
+// Returns the set of compute PSO shaders as array.
+LLGL_EXPORT SmallVector<Shader*, 1> GetShadersAsArray(const ComputePipelineDescriptor& desc);
 
 
 } // /namespace LLGL

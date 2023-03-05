@@ -1939,16 +1939,15 @@ void DbgCommandBuffer::ValidateUniforms(const DbgPipelineLayout& pipelineLayoutD
     }
 
     /* Validate number of uniforms */
-    if (first >= pipelineLayoutDbg.desc.uniforms.size())
+    if (first < pipelineLayoutDbg.desc.uniforms.size())
     {
-        std::uint32_t count = 0;
-        for (; first < pipelineLayoutDbg.desc.uniforms.size(); ++first, ++count)
+        for (; first < pipelineLayoutDbg.desc.uniforms.size(); ++first)
         {
             /* Get size information for current uniform that is to be updated */
             const auto& uniformDesc = pipelineLayoutDbg.desc.uniforms[first];
             const auto uniformTypeSize = GetUniformTypeSize(uniformDesc.type);
 
-            if (dataSize > uniformTypeSize)
+            if (dataSize >= uniformTypeSize)
                 dataSize -= uniformTypeSize;
             else
                 break;
@@ -1959,7 +1958,7 @@ void DbgCommandBuffer::ValidateUniforms(const DbgPipelineLayout& pipelineLayoutD
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "cannot set uniforms with data size of " + std::to_string(dataSize) + "; exceeded limit by " +
-                std::to_string(dataSize) + (dataSize == 1 ? "byte" : "bytes")
+                std::to_string(dataSize) + (dataSize == 1 ? " byte" : " bytes")
             );
         }
     }

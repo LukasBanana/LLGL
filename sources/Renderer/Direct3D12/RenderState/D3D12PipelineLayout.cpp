@@ -7,11 +7,16 @@
 
 #include "D3D12PipelineLayout.h"
 #include "../Shader/D3D12RootSignature.h"
+#include "../Shader/D3D12Shader.h"
 #include "../Texture/D3D12Sampler.h"
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../../Core/Assertion.h"
+#include "../../../Core/Helper.h"
 #include <LLGL/Misc/ForRange.h>
+#include <string>
+#include <algorithm>
 
 
 namespace LLGL
@@ -34,7 +39,7 @@ D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLay
 
 void D3D12PipelineLayout::SetName(const char* name)
 {
-    D3D12SetObjectName(rootSignature_.Get(), name);
+    D3D12SetObjectName(finalizedRootSignature_.Get(), name);
 }
 
 std::uint32_t D3D12PipelineLayout::GetNumHeapBindings() const
@@ -54,7 +59,7 @@ std::uint32_t D3D12PipelineLayout::GetNumStaticSamplers() const
 
 std::uint32_t D3D12PipelineLayout::GetNumUniforms() const
 {
-    return numUniforms_;
+    return static_cast<std::uint32_t>(uniforms_.size());
 }
 
 static D3D12_ROOT_SIGNATURE_FLAGS GetD3DRootSignatureFlags(long convolutedStageFlags)
@@ -99,15 +104,133 @@ static long ConvoluteLayoutStageFlags(const PipelineLayoutDescriptor& desc)
 
 void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
-    UINT descriptorTableCounter = 0;
+    /* Keep pointer to D3D12 device */
+    device_ = device;
 
     /* Convolute all stage flags */
     convolutedStageFlags_ = ConvoluteLayoutStageFlags(desc);
 
     /* Create root signature */
-    D3D12RootSignature rootSignature;
-    rootSignature.Reset(static_cast<UINT>(desc.bindings.size()), 0);
+    rootSignature_ = MakeUnique<D3D12RootSignature>();
+    rootSignature_->Reset(static_cast<UINT>(desc.bindings.size()), 0);
 
+    BuildRootSignature(*rootSignature_, desc);
+
+    /* Finalize root signature if there is no permutation needed */
+    if (!NeedsRootConstantPermutation())
+    {
+        finalizedRootSignature_ = rootSignature_->Finalize(device, GetD3DRootSignatureFlags(GetConvolutedStageFlags()), &serializedBlob_);
+        rootSignature_.reset();
+    }
+}
+
+void D3D12PipelineLayout::ReleaseRootSignature()
+{
+    finalizedRootSignature_.Reset();
+}
+
+ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitConstants(
+    const ArrayView<D3D12Shader*>&          shaders,
+    std::vector<D3D12RootConstantLocation>& outRootConstantMap) const
+{
+    if (!rootSignature_)
+        return nullptr;
+
+    /* Reflect all constant buffers from all shaders */
+    std::vector<const D3D12ConstantBufferReflection*> cbufferReflections;
+
+    auto FindCbufferField = [&cbufferReflections](const std::string& name) -> std::pair<const D3D12_ROOT_CONSTANTS*, const D3D12ConstantReflection*>
+    {
+        for (const auto* cbuffer : cbufferReflections)
+        {
+            for (const auto& field : cbuffer->fields)
+            {
+                if (field.name == name)
+                    return { &(cbuffer->rootConstants), &field };
+            }
+        }
+        return { nullptr, nullptr };
+    };
+
+    for (D3D12Shader* shader : shaders)
+    {
+        LLGL_ASSERT_PTR(shader);
+
+        /* Get cached cbuffer reflection from shader */
+        const std::vector<D3D12ConstantBufferReflection>* currentCbufferReflections = nullptr;
+        HRESULT hr = shader->ReflectAndCacheConstantBuffers(&currentCbufferReflections);
+        DXThrowIfFailed(hr, "failed to reflect constant buffers in D3D12 shader");
+        LLGL_ASSERT_PTR(currentCbufferReflections);
+
+        cbufferReflections.reserve(cbufferReflections.size() + currentCbufferReflections->size());
+        for (const auto& cbufferReflection : *currentCbufferReflections)
+            cbufferReflections.push_back(&cbufferReflection);
+    }
+
+    /* Create root signature copy and append parameters to permutation */
+    D3D12RootSignature rootSignaturePermutation = *rootSignature_;
+    outRootConstantMap.resize(uniforms_.size());
+
+    const auto rootParamOffset = rootSignaturePermutation.GetNumRootParameters();
+
+    auto FindOrAppendRootParameter = [&rootSignaturePermutation, rootParamOffset](const D3D12_ROOT_CONSTANTS& rootConstants) -> UINT
+    {
+        UINT rootParamIndex = -1;
+        if (rootSignaturePermutation.FindCompatibleRootParameter(rootConstants, rootParamOffset, &rootParamIndex) == nullptr)
+        {
+            auto* rootParam = rootSignaturePermutation.AppendRootParameter(&rootParamIndex);
+            rootParam->InitAsConstants(rootConstants);
+        }
+        return rootParamIndex;
+    };
+
+    for_range(i, uniforms_.size())
+    {
+        /* Find constant buffer field for specified uniform name */
+        auto field = FindCbufferField(uniforms_[i].name);
+        const D3D12_ROOT_CONSTANTS*     rootConstants   = field.first;
+        const D3D12ConstantReflection*  fieldReflection = field.second;
+        LLGL_ASSERT_PTR(rootConstants);
+        LLGL_ASSERT_PTR(fieldReflection);
+
+        /* Find or append root parameter for root constants */
+        UINT    rootParamIndex  = FindOrAppendRootParameter(*rootConstants);
+        auto&   rootParam       = rootSignaturePermutation[rootParamIndex];
+
+        /* Build root constant map for current uniform descriptor */
+        auto& location = outRootConstantMap[i];
+        {
+            location.index          = rootParamIndex;
+            location.num32BitValues = std::max(1u, GetAlignedSize(fieldReflection->size, 4u) / 4u);
+            location.wordOffset     = fieldReflection->offset / 4;
+        }
+    }
+
+    /* Finalize permutated root signature */
+    return rootSignaturePermutation.Finalize(device_, GetD3DRootSignatureFlags(GetConvolutedStageFlags()));
+}
+
+D3D12DescriptorHeapSetLayout D3D12PipelineLayout::GetDescriptorHeapSetLayout() const
+{
+    D3D12DescriptorHeapSetLayout layout;
+    {
+        layout.numHeapResourceViews = descriptorHeapLayout_.SumResourceViews();
+        layout.numHeapSamplers      = descriptorHeapLayout_.SumSamplers();
+        layout.numResourceViews     = descriptorLayout_.SumResourceViews();
+        layout.numSamplers          = descriptorLayout_.SumSamplers();
+    }
+    return layout;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void D3D12PipelineLayout::BuildRootSignature(
+    D3D12RootSignature&             rootSignature,
+    const PipelineLayoutDescriptor& desc)
+{
     /* Build root parameter table for each descriptor range type */
     descriptorHeapMap_.resize(desc.heapBindings.size());
     BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::Buffer,  BindFlags::ConstantBuffer, descriptorHeapLayout_.numBufferCBV );
@@ -135,34 +258,9 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
     /* Build static samplers */
     BuildStaticSamplers(rootSignature, desc, numStaticSamplers_);
 
-    /* Build uniforms */
-    numUniforms_ = static_cast<UINT>(desc.uniforms.size());
-
-    /* Build final root signature descriptor */
-    rootSignature_ = rootSignature.Finalize(device, GetD3DRootSignatureFlags(GetConvolutedStageFlags()), &serializedBlob_);
+    /* Cache uniform descriptors */
+    uniforms_ = desc.uniforms;
 }
-
-void D3D12PipelineLayout::ReleaseRootSignature()
-{
-    rootSignature_.Reset();
-}
-
-D3D12DescriptorHeapSetLayout D3D12PipelineLayout::GetDescriptorHeapSetLayout() const
-{
-    D3D12DescriptorHeapSetLayout layout;
-
-    layout.numHeapResourceViews = descriptorHeapLayout_.SumResourceViews();
-    layout.numHeapSamplers      = descriptorHeapLayout_.SumSamplers();
-    layout.numResourceViews     = descriptorLayout_.SumResourceViews();
-    layout.numSamplers          = descriptorLayout_.SumSamplers();
-
-    return layout;
-}
-
-
-/*
- * ======= Private: =======
- */
 
 static bool IsFilteredBinding(const BindingDescriptor& bindingDesc, const ResourceType resourceType, long bindFlags)
 {
@@ -212,7 +310,7 @@ void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
     if (auto rootParam = rootSignature.FindCompatibleRootParameter(descRangeType))
     {
         /* Append descriptor range to previous root parameter */
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, bindingDesc.arraySize);
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
     }
     else
     {
@@ -220,7 +318,7 @@ void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
         UINT rootParamIndex = 0;
         rootParam = rootSignature.AppendRootParameter(&rootParamIndex);
         rootParam->InitAsDescriptorTable(maxNumDescriptorRanges);
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, bindingDesc.arraySize);
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
 
         /* Store root parameter index */
         rootParameterIndices_.rootParamDescriptorHeaps[GetDescriptorTypeShift(descRangeType)] = rootParamIndex;
@@ -287,7 +385,7 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
     if (auto rootParam = rootSignature.FindCompatibleRootParameter(descRangeType, rootParamOffset))
     {
         /* Append descriptor range to previous root parameter */
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, bindingDesc.arraySize);
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
     }
     else
     {
@@ -295,7 +393,7 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
         UINT rootParamIndex = 0;
         rootParam = rootSignature.AppendRootParameter(&rootParamIndex);
         rootParam->InitAsDescriptorTable(maxNumDescriptorRanges);
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, bindingDesc.arraySize);
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
 
         /* Store root parameter index */
         rootParameterIndices_.rootParamDescriptors[GetDescriptorTypeShift(descRangeType)] = rootParamIndex;
