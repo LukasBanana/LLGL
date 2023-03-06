@@ -16,6 +16,7 @@
 #include "../Core/Helper.h"
 #include "../Core/Assertion.h"
 #include "Float16Compressor.h"
+#include "BCDecompressor.h"
 
 
 namespace LLGL
@@ -721,6 +722,21 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
         }
         return dstImage;
     }
+
+    return nullptr;
+}
+
+LLGL_EXPORT ByteBuffer DecompressImageBufferToRGBA8UNorm(
+    const SrcImageDescriptor&   srcImageDesc,
+    const Extent2D&             extent,
+    unsigned                    threadCount)
+{
+    if (threadCount >= Constants::maxThreadCount)
+        threadCount = std::thread::hardware_concurrency();
+
+    /* Check for BC compression */
+    if (srcImageDesc.format == ImageFormat::BC1)
+        return DecompressBC1ToRGBA8UNorm(extent, reinterpret_cast<const char*>(srcImageDesc.data), srcImageDesc.dataSize, threadCount);
 
     return nullptr;
 }

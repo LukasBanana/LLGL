@@ -1,6 +1,6 @@
 /*
  * ImageFlags.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,12 +9,12 @@
 #define LLGL_IMAGE_FLAGS_H
 
 
-#include "Export.h"
-#include "Format.h"
-#include "Tags.h"
-#include "RenderSystemFlags.h"
-#include "TextureFlags.h"
-#include "ColorRGBA.h"
+#include <LLGL/Export.h>
+#include <LLGL/Format.h>
+#include <LLGL/Tags.h>
+#include <LLGL/RenderSystemFlags.h>
+#include <LLGL/TextureFlags.h>
+#include <LLGL/ColorRGBA.h>
 #include <memory>
 #include <cstdint>
 
@@ -165,6 +165,21 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
     ImageFormat                 dstFormat,
     DataType                    dstDataType,
+    unsigned                    threadCount = 0
+);
+
+/**
+\brief Decompresses the specified image buffer to RGBA format with 8-bit unsigned normalized integers.
+\param[in] srcImageDesc Specifies the source image descriptor.
+\param[in] extent Specifies the image extent. This is required as most compression formats work in block sizes.
+\param[in] threadCount Specifies the number of threads to use for decompression.
+If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
+the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
+\return Byte buffer with the decompressed image data or null if the compression format is not supported for decompression.
+*/
+LLGL_EXPORT ByteBuffer DecompressImageBufferToRGBA8UNorm(
+    const SrcImageDescriptor&   srcImageDesc,
+    const Extent2D&             extent,
     unsigned                    threadCount = 0
 );
 
