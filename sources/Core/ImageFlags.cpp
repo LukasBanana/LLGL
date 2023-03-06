@@ -1,6 +1,6 @@
 /*
  * ImageFlags.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -81,7 +81,7 @@ union VariantConstBuffer
     const double*           real64;
 };
 
-using VariantColor = ColorRGBAT<Variant>;
+using VariantColor = ColorRGBA<Variant>;
 
 
 /* ----- Internal functions ----- */
@@ -440,7 +440,7 @@ static void ConvertImageBufferFormatWorker(
     auto dstFormatSize  = ImageFormatSize(dstFormat);
 
     /* Initialize default variant color (0, 0, 0, 1) */
-    VariantColor value { UninitializeTag{} };
+    VariantColor value{ UninitializeTag{} };
 
     SetVariantMinMax(srcDataType, value.r, true);
     SetVariantMinMax(srcDataType, value.g, true);
@@ -809,8 +809,8 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
     const ColorRGBAd&   fillColor)
 {
     /* Convert fill color data type */
-    VariantColor fillColor0 { UninitializeTag{} };
-    VariantBuffer fillBuffer0 { &fillColor0 };
+    VariantColor fillColor0{ UninitializeTag{} };
+    VariantBuffer fillBuffer0{ &fillColor0 };
 
     WriteNormalizedTypedVariant(dataType, fillBuffer0, 0, fillColor.r);
     WriteNormalizedTypedVariant(dataType, fillBuffer0, 1, fillColor.g);
@@ -818,9 +818,9 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
     WriteNormalizedTypedVariant(dataType, fillBuffer0, 3, fillColor.a);
 
     /* Convert fill color format */
-    VariantColor fillColor1 { UninitializeTag{} };
-    VariantBuffer fillBuffer1 { &fillColor1 };
-    VariantConstBuffer fillBuffer2 { fillBuffer0.raw };
+    VariantColor fillColor1{ UninitializeTag{} };
+    VariantBuffer fillBuffer1{ &fillColor1 };
+    VariantConstBuffer fillBuffer2{ fillBuffer0.raw };
 
     ReadRGBAFormattedVariant(ImageFormat::RGBA, dataType, fillBuffer2, 0, fillColor1);
     WriteRGBAFormattedVariant(format, dataType, fillBuffer1, 0, fillColor1);

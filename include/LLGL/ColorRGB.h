@@ -205,12 +205,12 @@ class LLGL_EXPORT Color<T, 3u>
 /* --- Type Alias --- */
 
 template <typename T>
-using ColorRGBT = Color<T, 3>;
+using ColorRGB = Color<T, 3>;
 
-using ColorRGBb     = ColorRGBT<bool>;
-using ColorRGBf     = ColorRGBT<float>;
-using ColorRGBd     = ColorRGBT<double>;
-using ColorRGBub    = ColorRGBT<std::uint8_t>;
+using ColorRGBb     = ColorRGB<bool>;
+using ColorRGBf     = ColorRGB<float>;
+using ColorRGBd     = ColorRGB<double>;
+using ColorRGBub    = ColorRGB<std::uint8_t>;
 
 
 } // /namespace LLGL
