@@ -1,6 +1,6 @@
 /*
  * MTCommandBuffer.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -116,13 +116,8 @@ class MTCommandBuffer final : public CommandBuffer
 
         /* ----- Resources ----- */
 
-        void SetResourceHeap(
-            ResourceHeap&           resourceHeap,
-            std::uint32_t           firstSet        = 0,
-            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
-        ) override;
-
-        void SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags = StageFlags::AllStages) override;
+        void SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet = 0) override;
+        void SetResource(Resource& resource, std::uint32_t descriptor) override;
 
         void ResetResourceSlots(
             const ResourceType  resourceType,
@@ -151,19 +146,7 @@ class MTCommandBuffer final : public CommandBuffer
         void SetPipelineState(PipelineState& pipelineState) override;
         void SetBlendFactor(const ColorRGBAf& color) override;
         void SetStencilReference(std::uint32_t reference, const StencilFace stencilFace = StencilFace::FrontAndBack) override;
-
-        void SetUniform(
-            UniformLocation location,
-            const void*     data,
-            std::uint32_t   dataSize
-        ) override;
-
-        void SetUniforms(
-            UniformLocation location,
-            std::uint32_t   count,
-            const void*     data,
-            std::uint32_t   dataSize
-        ) override;
+        void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) override;
 
         /* ----- Queries ----- */
 

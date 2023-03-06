@@ -129,15 +129,8 @@ class DbgCommandBuffer final : public CommandBuffer
 
         /* ----- Resources ----- */
 
-        void SetResourceHeap(
-            ResourceHeap&           resourceHeap,
-            std::uint32_t           descriptorSet   = 0,
-            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
-        ) override;
-
+        void SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet = 0) override;
         void SetResource(Resource& resource, std::uint32_t descriptor) override;
-
-        void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) override;
 
         void ResetResourceSlots(
             const ResourceType  resourceType,
@@ -166,6 +159,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void SetPipelineState(PipelineState& pipelineState) override;
         void SetBlendFactor(const ColorRGBAf& color) override;
         void SetStencilReference(std::uint32_t reference, const StencilFace stencilFace = StencilFace::FrontAndBack) override;
+        void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) override;
 
         /* ----- Queries ----- */
 

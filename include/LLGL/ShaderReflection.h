@@ -124,17 +124,6 @@ struct ShaderResourceReflection
 };
 
 /**
-\brief Shader reflection uniform structure.
-\see ShaderReflection::uniforms
-\todo Replace with UniformDescriptor
-*/
-struct ShaderUniformReflection : UniformDescriptor
-{
-    //! Internal location of the uniform within a shader program.
-    UniformLocation location = 0;
-};
-
-/**
 \brief Shader reflection structure.
 \remarks Contains all information of resources and attributes that can be queried from a shader program.
 This is not a "descriptor", because it is only used as output from an interface rather than a description to create something.
@@ -148,8 +137,9 @@ struct ShaderReflection
     /**
     \brief List of all uniforms (a.k.a. shader constants).
     \note Only supported with: OpenGL, Vulkan.
+    \todo Add support to D3D11 and D3D12 for global constants.
     */
-    std::vector<ShaderUniformReflection>    uniforms;
+    std::vector<UniformDescriptor>          uniforms;
 
     /**
     \brief Reflection data that is specificly for the vertex shader.

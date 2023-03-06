@@ -282,7 +282,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeSetUniforms:
         {
             auto cmd = reinterpret_cast<const GLCmdSetUniforms*>(pc);
-            compiler.Call(GLSetUniformsByLocation, cmd->program, cmd->location, cmd->count, (cmd + 1));
+            compiler.Call(GLSetUniformsByType, cmd->type, cmd->location, cmd->count, (cmd + 1));
             return (sizeof(*cmd) + cmd->size);
         }
         case GLOpcodeBeginQuery:

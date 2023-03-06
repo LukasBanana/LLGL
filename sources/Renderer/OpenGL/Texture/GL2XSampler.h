@@ -1,6 +1,6 @@
 /*
  * GL2XSampler.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,8 +9,9 @@
 #define LLGL_GL2X_SAMPLER_H
 
 
-#include "../OpenGL.h"
 #include <LLGL/Sampler.h>
+#include "../OpenGL.h"
+#include <memory>
 
 
 namespace LLGL
@@ -51,6 +52,8 @@ class GL2XSampler final : public Sampler
         bool    borderColorUsed_    = false;
 
 };
+
+using GL2XSamplerPtr = std::unique_ptr<GL2XSampler>;
 
 
 } // /namespace LLGL

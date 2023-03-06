@@ -1,6 +1,6 @@
 /*
  * GLState.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -15,6 +15,9 @@
 namespace LLGL
 {
 
+
+class GLPipelineLayout;
+class GLPipelineState;
 
 /* ----- Enumerations ----- */
 
@@ -139,11 +142,13 @@ struct GLScissor
 
 struct GLRenderState
 {
-    GLenum      drawMode            = GL_TRIANGLES;
-    GLenum      primitiveMode       = GL_TRIANGLES;
-    GLenum      indexBufferDataType = GL_UNSIGNED_INT;
-    GLsizeiptr  indexBufferStride   = 4;
-    GLsizeiptr  indexBufferOffset   = 0;
+    GLenum                  drawMode            = GL_TRIANGLES;
+    GLenum                  primitiveMode       = GL_TRIANGLES;
+    GLenum                  indexBufferDataType = GL_UNSIGNED_INT;
+    GLsizeiptr              indexBufferStride   = 4;
+    GLsizeiptr              indexBufferOffset   = 0;
+    const GLPipelineLayout* boundPipelineLayout = nullptr;
+    const GLPipelineState*  boundPipelineState  = nullptr;
 };
 
 struct GLClearValue

@@ -1,6 +1,6 @@
 /*
  * GLShaderBindingLayout.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -51,7 +51,7 @@ class GLShaderBindingLayout
 
     private:
 
-        struct ResourceBinding
+        struct NamedResourceBinding
         {
             std::string     name;
             std::uint32_t   slot;
@@ -59,10 +59,20 @@ class GLShaderBindingLayout
 
     private:
 
-        std::uint8_t                    numUniformBindings_         = 0;
-        std::uint8_t                    numUniformBlockBindings_    = 0;
-        std::uint8_t                    numShaderStorageBindings_   = 0;
-        std::vector<ResourceBinding>    bindings_;
+        void BuildUniformBindings(const GLPipelineLayout& pipelineLayout);
+        void BuildUniformBlockBindings(const GLPipelineLayout& pipelineLayout);
+        void BuildShaderStorageBindings(const GLPipelineLayout& pipelineLayout);
+
+        void AppendUniformBinding(const std::string& name, std::uint32_t slot);
+        void AppendUniformBlockBinding(const std::string& name, std::uint32_t slot);
+        void AppendShaderStorageBinding(const std::string& name, std::uint32_t slot);
+
+    private:
+
+        std::uint8_t                        numUniformBindings_         = 0;
+        std::uint8_t                        numUniformBlockBindings_    = 0;
+        std::uint8_t                        numShaderStorageBindings_   = 0;
+        std::vector<NamedResourceBinding>   bindings_;
 
 };
 

@@ -869,12 +869,11 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
         else
         {
             /* Append default uniform */
-            ShaderUniformReflection uniform;
+            UniformDescriptor uniform;
             {
                 uniform.name        = std::string(uniformName.data());
                 uniform.type        = uniformType;
                 uniform.arraySize   = static_cast<std::uint32_t>(size);
-                uniform.location    = glGetUniformLocation(program, uniformName.data());
             }
             reflection.uniforms.push_back(uniform);
         }

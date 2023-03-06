@@ -1,6 +1,6 @@
 /*
  * GLShaderBindingLayout.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -19,44 +19,9 @@ namespace LLGL
 
 GLShaderBindingLayout::GLShaderBindingLayout(const GLPipelineLayout& pipelineLayout)
 {
-    /* Gather all uniform bindings */
-    for (const auto& binding : pipelineLayout.GetBindings())
-    {
-        if (!binding.name.empty())
-        {
-            if (binding.type == ResourceType::Sampler || binding.type == ResourceType::Texture)
-            {
-                bindings_.push_back({ binding.name, binding.slot });
-                ++numUniformBindings_;
-            }
-        }
-    }
-
-    /* Gather all uniform-block bindings */
-    for (const auto& binding : pipelineLayout.GetBindings())
-    {
-        if (!binding.name.empty())
-        {
-            if (binding.type == ResourceType::Buffer && (binding.bindFlags & BindFlags::ConstantBuffer) != 0)
-            {
-                bindings_.push_back({ binding.name, binding.slot });
-                ++numUniformBlockBindings_;
-            }
-        }
-    }
-
-    /* Gather all shader-storage bindings */
-    for (const auto& binding : pipelineLayout.GetBindings())
-    {
-        if (!binding.name.empty())
-        {
-            if (binding.type == ResourceType::Buffer && (binding.bindFlags & (BindFlags::Storage | BindFlags::Sampled)) != 0)
-            {
-                bindings_.push_back({ binding.name, binding.slot });
-                ++numShaderStorageBindings_;
-            }
-        }
-    }
+    BuildUniformBindings(pipelineLayout);
+    BuildUniformBlockBindings(pipelineLayout);
+    BuildShaderStorageBindings(pipelineLayout);
 }
 
 void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManager* stateMngr) const
@@ -141,6 +106,117 @@ int GLShaderBindingLayout::CompareSWO(const GLShaderBindingLayout& lhs, const GL
     }
 
     return 0;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelineLayout)
+{
+    /* Gather all uniform bindings from heap resource descriptors */
+    for (const auto& binding : pipelineLayout.GetHeapBindings())
+    {
+        if (!binding.name.empty())
+        {
+            if (binding.type == ResourceType::Sampler || binding.type == ResourceType::Texture)
+                AppendUniformBinding(binding.name, binding.slot);
+        }
+    }
+
+    /* Gather all uniform bindings from dynamic resource descriptors */
+    for_range(i, pipelineLayout.GetBindings().size())
+    {
+        const auto& name = pipelineLayout.GetBindingNames()[i];
+        if (!name.empty())
+        {
+            const auto& binding = pipelineLayout.GetBindings()[i];
+            if (binding.type == GLResourceType_Texture  ||
+                binding.type == GLResourceType_Image    ||
+                binding.type == GLResourceType_Sampler  ||
+                binding.type == GLResourceType_GL2XSampler)
+            {
+                AppendUniformBinding(name, binding.slot);
+            }
+        }
+    }
+
+    /* Gather all uniform bindings from dynamic resource descriptors */
+    for_range(i, pipelineLayout.GetStaticSamplerSlots().size())
+    {
+        const auto& name = pipelineLayout.GetStaticSamplerNames()[i];
+        if (!name.empty())
+            AppendUniformBinding(name, pipelineLayout.GetStaticSamplerSlots()[i]);
+    }
+}
+
+void GLShaderBindingLayout::BuildUniformBlockBindings(const GLPipelineLayout& pipelineLayout)
+{
+    /* Gather all uniform-block bindings from heap resource descriptors */
+    for (const auto& binding : pipelineLayout.GetHeapBindings())
+    {
+        if (!binding.name.empty())
+        {
+            if (binding.type == ResourceType::Buffer && (binding.bindFlags & BindFlags::ConstantBuffer) != 0)
+                AppendUniformBlockBinding(binding.name, binding.slot);
+        }
+    }
+
+    /* Gather all uniform-block bindings from dynamic resource descriptors */
+    for_range(i, pipelineLayout.GetBindings().size())
+    {
+        const auto& name = pipelineLayout.GetBindingNames()[i];
+        if (!name.empty())
+        {
+            const auto& binding = pipelineLayout.GetBindings()[i];
+            if (binding.type == GLResourceType_UBO)
+                AppendUniformBlockBinding(name, binding.slot);
+        }
+    }
+}
+
+void GLShaderBindingLayout::BuildShaderStorageBindings(const GLPipelineLayout& pipelineLayout)
+{
+    /* Gather all shader-storage bindings from heap resource descriptors */
+    for (const auto& binding : pipelineLayout.GetHeapBindings())
+    {
+        if (!binding.name.empty())
+        {
+            if (binding.type == ResourceType::Buffer && (binding.bindFlags & (BindFlags::Storage | BindFlags::Sampled)) != 0)
+                AppendShaderStorageBinding(binding.name, binding.slot);
+        }
+    }
+
+    /* Gather all shader-storage bindings from dynamic resource descriptors */
+    for_range(i, pipelineLayout.GetBindings().size())
+    {
+        const auto& name = pipelineLayout.GetBindingNames()[i];
+        if (!name.empty())
+        {
+            const auto& binding = pipelineLayout.GetBindings()[i];
+            if (binding.type == GLResourceType_SSBO)
+                AppendShaderStorageBinding(name, binding.slot);
+        }
+    }
+}
+
+void GLShaderBindingLayout::AppendUniformBinding(const std::string& name, std::uint32_t slot)
+{
+    bindings_.push_back({ name, slot });
+    ++numUniformBindings_;
+}
+
+void GLShaderBindingLayout::AppendUniformBlockBinding(const std::string& name, std::uint32_t slot)
+{
+    bindings_.push_back({ name, slot });
+    ++numUniformBlockBindings_;
+}
+
+void GLShaderBindingLayout::AppendShaderStorageBinding(const std::string& name, std::uint32_t slot)
+{
+    bindings_.push_back({ name, slot });
+    ++numShaderStorageBindings_;
 }
 
 

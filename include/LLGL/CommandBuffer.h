@@ -353,18 +353,11 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] resourceHeap Specifies the resource heap that contains all shader resources that will be bound to the shader pipeline.
         \param[in] descriptorSet Specifies the zero-based index of the first set of resource descriptors.
         This \b must be in the half-open range <code>[0, ResourceHeap::GetNumDescriptorSets)</code>. By default 0.
-        \param[in] bindPoint Specifies to which pipeline the resource heap is meant be bound. By default PipelineBindPoint::Undefined.
-        If this is PipelineBindPoint::Undefined, the resource heap is automatically bound to the graphics and/or compute pipeline.
-        Use this parameter if a resource heap has one or more resources that are in both the graphics and compute pipeline to avoid unnecessary bindings.
         \remarks Any previous resource bindings are invalid after this call.
         \see ResourceHeap::GetNumDescriptorSets
         \see PipelineLayoutDescriptor::heapBindings
         */
-        virtual void SetResourceHeap(
-            ResourceHeap&           resourceHeap,
-            std::uint32_t           descriptorSet   = 0,
-            const PipelineBindPoint bindPoint       = PipelineBindPoint::Undefined
-        ) = 0;
+        virtual void SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet = 0) = 0;
 
         /**
         \brief Binds the specified resource as root parameter to the respective pipeline.
@@ -374,20 +367,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see PipelineLayoutDescriptor::bindings
         */
         virtual void SetResource(Resource& resource, std::uint32_t descriptor) = 0;
-
-        /**
-        \brief Sets the value of a certain number of shader uniforms (aka. push constant/ shader constants) in the currently bound PSO.
-        \param[in] first Specifies the zero-based index of the first uniform that are to be updated.
-        This \b must be in the half-open range <code>[0, PipelineLayout::GetNumUniforms)</code>.
-        The number of uniforms that are to be updated is determined by the size of the data. See \c dataSize parameter for more details.
-        \param[in] data Raw pointer to the data that is to be copied to the uniform.
-        \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data.
-        This \b must be a multiple of 4 since 32-bits are the smallest granularity to update shader uniforms.
-        \remarks This function must only be called after a pipeline state object (PSO) has been bound.
-        \see PipelineLayoutDescriptor::uniforms
-        \see SetPipelineState
-        */
-        virtual void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) = 0;
 
         /**
         \brief Resets the binding slots for the specified resources.
@@ -566,6 +545,20 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see StencilDescriptor::referenceDynamic
         */
         virtual void SetStencilReference(std::uint32_t reference, const StencilFace stencilFace = StencilFace::FrontAndBack) = 0;
+
+        /**
+        \brief Sets the value of a certain number of shader uniforms (aka. push constant/ shader constants) in the currently bound PSO.
+        \param[in] first Specifies the zero-based index of the first uniform that are to be updated.
+        This \b must be in the half-open range <code>[0, PipelineLayout::GetNumUniforms)</code>.
+        The number of uniforms that are to be updated is determined by the size of the data. See \c dataSize parameter for more details.
+        \param[in] data Raw pointer to the data that is to be copied to the uniform.
+        \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data.
+        This \b must be a multiple of 4 since 32-bits are the smallest granularity to update shader uniforms.
+        \remarks This function must only be called after a pipeline state object (PSO) has been bound.
+        \see PipelineLayoutDescriptor::uniforms
+        \see SetPipelineState
+        */
+        virtual void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) = 0;
 
         /* ----- Queries ----- */
 

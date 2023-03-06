@@ -78,7 +78,6 @@ struct Scissor;
 struct ShaderDescriptor;
 struct ShaderReflection;
 struct ShaderResourceReflection;
-struct ShaderUniformReflection;
 struct SrcImageDescriptor;
 struct StaticSamplerDescriptor;
 struct StencilDescriptor;

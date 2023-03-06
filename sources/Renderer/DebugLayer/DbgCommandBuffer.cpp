@@ -500,10 +500,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
 /* ----- Resources ----- */
 
 //TODO: also record individual resource bindings
-void DbgCommandBuffer::SetResourceHeap(
-    ResourceHeap&           resourceHeap,
-    std::uint32_t           descriptorSet,
-    const PipelineBindPoint bindPoint)
+void DbgCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
     auto& resourceHeapDbg = LLGL_CAST(DbgResourceHeap&, resourceHeap);
 
@@ -514,7 +511,7 @@ void DbgCommandBuffer::SetResourceHeap(
         ValidateDescriptorSetIndex(descriptorSet, resourceHeapDbg.GetNumDescriptorSets(), resourceHeapDbg.label.c_str());
     }
 
-    LLGL_DBG_COMMAND( "SetResourceHeap", instance.SetResourceHeap(resourceHeapDbg.instance, descriptorSet, bindPoint) );
+    LLGL_DBG_COMMAND( "SetResourceHeap", instance.SetResourceHeap(resourceHeapDbg.instance, descriptorSet) );
 
     profile_.resourceHeapBindings++;
 }
@@ -615,25 +612,6 @@ void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
         }
         break;
     }
-}
-
-void DbgCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        AssertRecording();
-        LLGL_DBG_ASSERT_PTR(data);
-        if (auto* pso = bindings_.pipelineState)
-        {
-            if (auto* psoLayout = pso->pipelineLayout)
-                ValidateUniforms(*psoLayout, first, dataSize);
-        }
-        else
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot set uniforms without pipeline state");
-    }
-
-    LLGL_DBG_COMMAND( "SetUniforms", instance.SetUniforms(first, data, dataSize) );
 }
 
 void DbgCommandBuffer::ResetResourceSlots(
@@ -814,6 +792,25 @@ void DbgCommandBuffer::SetStencilReference(std::uint32_t reference, const Stenci
     }
 
     LLGL_DBG_COMMAND( "SetStencilReference", instance.SetStencilReference(reference, stencilFace) );
+}
+
+void DbgCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        LLGL_DBG_ASSERT_PTR(data);
+        if (auto* pso = bindings_.pipelineState)
+        {
+            if (auto* psoLayout = pso->pipelineLayout)
+                ValidateUniforms(*psoLayout, first, dataSize);
+        }
+        else
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot set uniforms without pipeline state");
+    }
+
+    LLGL_DBG_COMMAND( "SetUniforms", instance.SetUniforms(first, data, dataSize) );
 }
 
 /* ----- Queries ----- */

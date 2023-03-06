@@ -30,10 +30,13 @@ class Example_ResourceBinding : public ExampleBase
     struct Scene
     {
         Gs::Matrix4f            vpMatrix;
-        Gs::Vector3f            lightVec            = { 0.0f, 0.0f, -1.0f };
-        std::uint32_t           instance;
     }
     scene;
+
+    Gs::Vector3f                lightVec            = { 0.0f, 0.0f, -1.0f };
+
+    std::uint32_t               lightVecUniform     = 0;
+    std::uint32_t               instanceUniform     = 0;
 
     struct Model
     {
@@ -200,31 +203,15 @@ private:
 
         LLGL::SamplerDescriptor mipBiasedSamplerDesc;
         {
-            //mipBiasedSamplerDesc.minFilter      = LLGL::SamplerFilter::Nearest;
-            //mipBiasedSamplerDesc.magFilter      = LLGL::SamplerFilter::Nearest;
-            mipBiasedSamplerDesc.mipMapLODBias  = 1;
+            mipBiasedSamplerDesc.minFilter      = LLGL::SamplerFilter::Nearest;
+            mipBiasedSamplerDesc.magFilter      = LLGL::SamplerFilter::Nearest;
+            mipBiasedSamplerDesc.mipMapLODBias  = 2;
         }
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
-            #if 0
             layoutDesc.heapBindings =
             {
-                LLGL::BindingDescriptor{ "Scene",           resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, 0 },
-                LLGL::BindingDescriptor{ "transforms",      resBuffer,  LLGL::BindFlags::Sampled,        vertStage,             1 },
-                LLGL::BindingDescriptor{ "colorMapSampler", resSampler, 0,                               fragStage,             2 },
-            };
-            layoutDesc.bindings =
-            {
-                LLGL::BindingDescriptor{ "colorMap",        resTexture, LLGL::BindFlags::Sampled,        fragStage,             3 },
-            };
-            /*layoutDesc.staticSamplers =
-            {
-                LLGL::StaticSamplerDescriptor{ fragStage, 4, staticSamplerDesc }
-            };*/
-            #endif
-            layoutDesc.heapBindings =
-            {
-                LLGL::BindingDescriptor{ "Scene",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, 0 },
+                LLGL::BindingDescriptor{ "Model",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, 0 },
                 LLGL::BindingDescriptor{ "transforms",  resBuffer,  LLGL::BindFlags::Sampled,        vertStage,             1 },
             };
             layoutDesc.bindings =
@@ -233,8 +220,17 @@ private:
             };
             layoutDesc.staticSamplers =
             {
-                LLGL::StaticSamplerDescriptor{ "colorMapSampler", fragStage, 2, mipBiasedSamplerDesc }
+                LLGL::StaticSamplerDescriptor{ "colorMapSampler", fragStage, (IsOpenGL() ? 3u : 2u), mipBiasedSamplerDesc }
             };
+            layoutDesc.uniforms =
+            {
+                LLGL::UniformDescriptor{ "instance", LLGL::UniformType::UInt1  }, // instanceUniform = 0
+                LLGL::UniformDescriptor{ "lightVec", LLGL::UniformType::Float3 }, // lightVecUniform = 1
+            };
+
+            // Store order information of uniforms
+            instanceUniform = 0;
+            lightVecUniform = 1;
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
@@ -272,12 +268,11 @@ private:
 
     void DrawModel(const Model& mdl)
     {
-        // Scene constant buffer for current model instance
-        scene.instance = mdl.instance;
-        commands->UpdateBuffer(*constantBuffer, 0, &scene, sizeof(scene));
-
         // Set texture for current model
         commands->SetResource(*colorMaps[mdl.colorMapIndex], 0);
+
+        // Set instance ID for model
+        commands->SetUniforms(instanceUniform, &(mdl.instance), sizeof(mdl.instance));
 
         // Draw mesh with bound vertex buffer
         commands->Draw(mdl.mesh.numVertices, mdl.mesh.firstVertex);
@@ -305,8 +300,10 @@ private:
 
         commands->Begin();
         {
+            // Update scene constant buffer
             commands->UpdateBuffer(*constantBuffer, 0, &scene, sizeof(scene));
 
+            // Bind vertex input stream
             commands->SetVertexBuffer(*vertexBuffer);
 
             commands->BeginRenderPass(*swapChain);
@@ -314,7 +311,11 @@ private:
                 commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
                 commands->SetViewport(swapChain->GetResolution());
 
+                // Bind graphics PSO
                 commands->SetPipelineState(*pipeline);
+
+                // Set light vector
+                commands->SetUniforms(lightVecUniform, &lightVec, sizeof(lightVec));
 
                 // Bind resource heap for transform scene constant buffer and transform buffer
                 commands->SetResourceHeap(*resourceHeap);

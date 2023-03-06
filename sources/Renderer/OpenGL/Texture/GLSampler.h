@@ -9,8 +9,9 @@
 #define LLGL_GL_SAMPLER_H
 
 
-#include "../OpenGL.h"
 #include <LLGL/Sampler.h>
+#include "../OpenGL.h"
+#include <memory>
 
 
 namespace LLGL
@@ -42,6 +43,8 @@ class GLSampler final : public Sampler
         GLuint id_ = 0;
 
 };
+
+using GLSamplerPtr = std::unique_ptr<GLSampler>;
 
 
 } // /namespace LLGL

@@ -528,12 +528,9 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 
 /* ----- Resources ----- */
 
-void D3D12CommandBuffer::SetResourceHeap(
-    ResourceHeap&           resourceHeap,
-    std::uint32_t           descriptorSet,
-    const PipelineBindPoint /*bindPoint*/)
+void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
-    if (boundPipelineLayout_ == nullptr)
+    if (boundPipelineLayout_ == nullptr || boundPipelineState_ == nullptr)
         return;
 
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
@@ -554,7 +551,7 @@ void D3D12CommandBuffer::SetResourceHeap(
 
             /* Bind descriptor table to root parameter */
             const UINT rootParamIndex = boundPipelineLayout_->GetRootParameterIndices().rootParamDescriptorHeaps[i];
-            if (boundPipelineState_ != nullptr && boundPipelineState_->IsGraphicsPSO())
+            if (boundPipelineState_->IsGraphicsPSO())
                 commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, gpuDescHandle);
             else
                 commandList_->SetComputeRootDescriptorTable(rootParamIndex, gpuDescHandle);
@@ -602,33 +599,6 @@ void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t descripto
             /* Bind resource with staging descriptor heap */
             const auto& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
             commandContext_.EmplaceDescriptorForStaging(resource, descriptorLocation.index, descriptorLocation.type);
-        }
-    }
-}
-
-void D3D12CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
-{
-    if (dataSize % 4 == 0)
-    {
-        const std::uint32_t dataSizeInWords = dataSize / 4;
-        if (boundPipelineLayout_ != nullptr && boundPipelineState_ != nullptr && first < boundPipelineLayout_->GetNumUniforms())
-        {
-            const auto& rootConstantMap = boundPipelineState_->GetRootConstantMap();
-            for (auto words = reinterpret_cast<const UINT*>(data), wordsEnd = words + dataSizeInWords; words != wordsEnd; ++first)
-            {
-                const auto& rootConstantLocation = rootConstantMap[first];
-                UINT wordOffset = rootConstantLocation.wordOffset;
-                for_range(i, rootConstantLocation.num32BitValues)
-                {
-                    const D3D12Constant value{ words[i] };
-                    if (boundPipelineState_->IsGraphicsPSO())
-                        commandContext_.SetGraphicsConstant(rootConstantLocation.index, value, wordOffset);
-                    else
-                        commandContext_.SetComputeConstant(rootConstantLocation.index, value, wordOffset);
-                    ++wordOffset;
-                }
-                words += rootConstantLocation.num32BitValues;
-            }
         }
     }
 }
@@ -734,6 +704,40 @@ void D3D12CommandBuffer::SetBlendFactor(const ColorRGBAf& color)
 void D3D12CommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace /*stencilFace*/)
 {
     commandList_->OMSetStencilRef(reference);
+}
+
+void D3D12CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+{
+    /* Data size must be a multiple of 4 bytes */
+    if (dataSize == 0 || dataSize % 4 != 0 || data == nullptr)
+        return /*E_FAIL*/;
+
+    /* Check if a valid pipeline layout and PSO is bound and validate uniform  */
+    if (boundPipelineLayout_ == nullptr || boundPipelineState_ == nullptr)
+        return /*E_FAIL*/;
+
+    const std::uint32_t dataSizeInWords = dataSize / 4;
+    const std::uint32_t maxNumUniforms  = boundPipelineLayout_->GetNumUniforms();
+    const auto& rootConstantMap = boundPipelineState_->GetRootConstantMap();
+
+    for (auto words = reinterpret_cast<const UINT*>(data), wordsEnd = words + dataSizeInWords; words != wordsEnd; ++first)
+    {
+        if (first >= maxNumUniforms)
+            return /*E_FAIL*/;
+
+        const auto& rootConstantLocation = rootConstantMap[first];
+        UINT wordOffset = rootConstantLocation.wordOffset;
+        for_range(i, rootConstantLocation.num32BitValues)
+        {
+            const D3D12Constant value{ words[i] };
+            if (boundPipelineState_->IsGraphicsPSO())
+                commandContext_.SetGraphicsConstant(rootConstantLocation.index, value, wordOffset);
+            else
+                commandContext_.SetComputeConstant(rootConstantLocation.index, value, wordOffset);
+            ++wordOffset;
+        }
+        words += rootConstantLocation.num32BitValues;
+    }
 }
 
 /* ----- Queries ----- */

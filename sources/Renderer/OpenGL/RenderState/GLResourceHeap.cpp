@@ -8,6 +8,7 @@
 #include "GLResourceHeap.h"
 #include "GLPipelineLayout.h"
 #include "GLStateManager.h"
+#include "GLResourceType.h"
 #include "../Ext/GLExtensions.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLSampler.h"
@@ -63,17 +64,6 @@ Offset      Attribute                              Value   Description          
 0x00000024  sampler[1]                                 2   2nd OpenGL sampler ID (from 'glGenSamplers')        /
 
 */
-
-// Internal enumeration for GL resource heap segments.
-enum GLResourceType : std::uint32_t
-{
-    GLResourceType_UBO = 0,
-    GLResourceType_SSBO,
-    GLResourceType_Texture,
-    GLResourceType_Image,
-    GLResourceType_Sampler,
-    GLResourceType_GL2XSampler,
-};
 
 // Resource segment flags. Bits can be shared as they are only used for certain segment types.
 enum GLResourceFlags : std::uint32_t
@@ -143,12 +133,12 @@ GLResourceHeap::GLResourceHeap(
     barriers_ { ToMemoryBarrierBitfield(desc.barrierFlags) }
 {
     /* Get pipeline layout object */
-    auto pipelineLayoutGL = LLGL_CAST(GLPipelineLayout*, desc.pipelineLayout);
+    auto pipelineLayoutGL = LLGL_CAST(const GLPipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutGL)
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Get and validate number of bindings and resource views */
-    const auto& bindings            = pipelineLayoutGL->GetBindings();
+    const auto& bindings            = pipelineLayoutGL->GetHeapBindings();
     const auto  numBindings         = static_cast<std::uint32_t>(bindings.size());
     const auto  numResourceViews    = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
 

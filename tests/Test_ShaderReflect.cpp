@@ -44,9 +44,12 @@ int main()
         }
 
         std::cout << "Uniforms:" << std::endl;
-        for (const LLGL::ShaderUniformReflection& unif : reflect.uniforms)
+        for (const LLGL::UniformDescriptor& unif : reflect.uniforms)
         {
-            std::cout << "  " << unif.name << " @ " << unif.location << std::endl;
+            std::cout << "  " << unif.name;
+            if (unif.arraySize > 0)
+                std::cout << '[' << unif.arraySize << ']';
+            std::cout << std::endl;
         }
 
         std::cout << "Vertex Input Attributes:" << std::endl;

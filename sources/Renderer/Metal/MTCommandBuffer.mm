@@ -1,6 +1,6 @@
 /*
  * MTCommandBuffer.mm
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -420,19 +420,18 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 
 /* ----- Resources ----- */
 
-void MTCommandBuffer::SetResourceHeap(
-    ResourceHeap&           resourceHeap,
-    std::uint32_t           firstSet,
-    const PipelineBindPoint bindPoint)
+void MTCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t wdescriptorSet)
 {
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
+    #if 0//TODO
     if (resourceHeapMT.HasGraphicsResources() && bindPoint != PipelineBindPoint::Compute)
         encoderScheduler_.SetGraphicsResourceHeap(&resourceHeapMT, firstSet);
     if (resourceHeapMT.HasComputeResources() && bindPoint != PipelineBindPoint::Graphics)
         encoderScheduler_.SetComputeResourceHeap(&resourceHeapMT, firstSet);
+    #endif
 }
 
-void MTCommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long /*bindFlags*/, long stageFlags)
+void MTCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
 {
     #if 0//TODO: store direct binding in <MTEncoderScheduler>
     switch (resource.GetResourceType())
@@ -628,19 +627,7 @@ void MTCommandBuffer::SetStencilReference(std::uint32_t reference, const Stencil
     encoderScheduler_.SetStencilRef(reference, stencilFace);
 }
 
-void MTCommandBuffer::SetUniform(
-    UniformLocation location,
-    const void*     data,
-    std::uint32_t   dataSize)
-{
-    // dummy
-}
-
-void MTCommandBuffer::SetUniforms(
-    UniformLocation location,
-    std::uint32_t   count,
-    const void*     data,
-    std::uint32_t   dataSize)
+void MTCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
     // dummy
 }

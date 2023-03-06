@@ -293,21 +293,13 @@ void NullCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std:
 
 /* ----- Resources ----- */
 
-void NullCommandBuffer::SetResourceHeap(
-    ResourceHeap&           resourceHeap,
-    std::uint32_t           descriptorSet,
-    const PipelineBindPoint bindPoint)
+void NullCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
     //auto& resourceHeapNull = LLGL_CAST(NullResourceHeap&, resourceHeap);
     //todo
 }
 
 void NullCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
-{
-    //todo
-}
-
-void NullCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
     //todo
 }
@@ -371,6 +363,11 @@ void NullCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
 }
 
 void NullCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
+{
+    //todo
+}
+
+void NullCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
     //todo
 }

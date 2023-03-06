@@ -277,7 +277,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeSetUniforms:
         {
             auto cmd = reinterpret_cast<const GLCmdSetUniforms*>(pc);
-            GLSetUniformsByLocation(cmd->program, cmd->location, cmd->count, (cmd + 1));
+            GLSetUniformsByType(cmd->type, cmd->location, cmd->count, (cmd + 1));
             return (sizeof(*cmd) + cmd->size);
         }
         case GLOpcodeBeginQuery:

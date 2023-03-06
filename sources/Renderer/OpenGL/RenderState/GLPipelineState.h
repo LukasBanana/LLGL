@@ -27,6 +27,16 @@ class PipelineLayout;
 class GLStateManager;
 class GLShaderProgram;
 
+// GL uniform location with size and type information.
+struct GLUniformLocation
+{
+    UniformType type;
+    GLint       location;
+    GLsizei     count;
+    GLuint      wordSize; // Size in words (32-bit values)
+};
+
+// Base class for OpenGL PSOs.
 class GLPipelineState : public PipelineState
 {
 
@@ -50,18 +60,40 @@ class GLPipelineState : public PipelineState
             return isGraphicsPSO_;
         }
 
+        // Returns the pipeline layout this PSO was created with. May also be null.
+        inline const GLPipelineLayout* GetPipelineLayout() const
+        {
+            return pipelineLayout_;
+        }
+
         // Returns the shader pipeline used for this PSO.
         inline const GLShaderPipeline* GetShaderPipeline() const
         {
             return shaderPipeline_.get();
         }
 
+        // Returns the list of uniforms that maps from index of 'PipelineLayoutDescriptor::uniforms[]' to GL uniform location.
+        inline const std::vector<GLUniformLocation>& GetUniformMap() const
+        {
+            return uniformMap_;
+        }
+
     private:
 
-        const bool                  isGraphicsPSO_          = false;
-        GLShaderPipelineSPtr        shaderPipeline_         = nullptr;
-        GLShaderBindingLayoutSPtr   shaderBindingLayout_;
-        BasicReport                 report_;
+        // Builds the index-to-uniform map.
+        void BuildUniformMap(const std::vector<UniformDescriptor>& uniforms);
+
+        // Builds the specified uniform location.
+        void BuildUniformLocation(GLuint program, GLUniformLocation& outUniform, const UniformDescriptor& inUniform);
+
+    private:
+
+        const bool                      isGraphicsPSO_          = false;
+        const GLPipelineLayout*         pipelineLayout_         = nullptr;
+        GLShaderPipelineSPtr            shaderPipeline_         = nullptr;
+        GLShaderBindingLayoutSPtr       shaderBindingLayout_;
+        std::vector<GLUniformLocation>  uniformMap_;
+        BasicReport                     report_;
 
 };
 

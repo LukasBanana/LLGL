@@ -1,6 +1,6 @@
 /*
  * GLCommand.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -11,6 +11,7 @@
 
 #include <LLGL/CommandBufferFlags.h>
 #include <LLGL/TextureFlags.h>
+#include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Types.h>
 #include "../RenderState/GLState.h"
 #include "../GLProfile.h"
@@ -246,6 +247,7 @@ struct GLCmdSetStencilRef
 struct GLCmdSetUniforms
 {
     GLuint      program;
+    UniformType type;
     GLint       location;
     GLsizei     count;
     GLsizeiptr  size;
