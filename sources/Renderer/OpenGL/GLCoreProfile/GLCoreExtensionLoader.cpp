@@ -1,6 +1,6 @@
 /*
  * GLCoreExtensionLoader.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -1185,13 +1185,15 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_transform_feedback3 );
 
     /* Enable extensions without procedures */
-    ENABLE_GLEXT( ARB_texture_cube_map             );
-    ENABLE_GLEXT( EXT_texture_array                );
-    ENABLE_GLEXT( ARB_texture_cube_map_array       );
     ENABLE_GLEXT( ARB_geometry_shader4             );
-    ENABLE_GLEXT( NV_conservative_raster           );
-    ENABLE_GLEXT( INTEL_conservative_rasterization );
+    ENABLE_GLEXT( ARB_texture_cube_map             );
+    ENABLE_GLEXT( ARB_texture_cube_map_array       );
     ENABLE_GLEXT( ARB_pipeline_statistics_query    );
+    ENABLE_GLEXT( ARB_seamless_cubemap_per_texture );
+    ENABLE_GLEXT( ARB_ES3_compatibility            );
+    ENABLE_GLEXT( EXT_texture_array                );
+    ENABLE_GLEXT( INTEL_conservative_rasterization );
+    ENABLE_GLEXT( NV_conservative_raster           );
 
     #undef LOAD_GLEXT
     #undef ENABLE_GLEXT

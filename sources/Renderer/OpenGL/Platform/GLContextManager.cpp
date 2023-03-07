@@ -118,12 +118,14 @@ void GLContextManager::InitRenderStates(GLStateManager& stateMngr)
 
     /* D3D11, Vulkan, and Metal always use a fixed restart index for strip topologies */
     #ifdef LLGL_PRIMITIVE_RESTART_FIXED_INDEX
-    stateMngr.Enable(GLState::PRIMITIVE_RESTART_FIXED_INDEX);
+    if (HasExtension(GLExt::ARB_ES3_compatibility))
+        stateMngr.Enable(GLState::PRIMITIVE_RESTART_FIXED_INDEX);
     #endif
 
     #ifdef LLGL_OPENGL
-    /* D3D10+ has this per default */
-    stateMngr.Enable(GLState::TEXTURE_CUBE_MAP_SEAMLESS);
+    /* D3D10+ has this by default */
+    if (HasExtension(GLExt::ARB_seamless_cubemap_per_texture))
+        stateMngr.Enable(GLState::TEXTURE_CUBE_MAP_SEAMLESS);
     #endif
 
     /* D3D10+ uses clock-wise vertex winding per default */

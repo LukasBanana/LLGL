@@ -1395,6 +1395,7 @@ void GLStateManager::NotifySamplerRelease(GLuint sampler)
 }
 
 #ifdef LLGL_GL_ENABLE_OPENGL2X
+
 void GLStateManager::BindGL2XSampler(GLuint layer, const GL2XSampler& sampler)
 {
     #ifdef LLGL_DEBUG
@@ -1407,7 +1408,28 @@ void GLStateManager::BindGL2XSampler(GLuint layer, const GL2XSampler& sampler)
             texture->BindTexParameters(sampler);
     }
 }
-#endif
+
+void GLStateManager::BindCombinedGL2XSampler(GLuint layer, const GL2XSampler& sampler, GLTexture& texture)
+{
+    #ifdef LLGL_DEBUG
+    LLGL_ASSERT_UPPER_BOUND(layer, GLContextState::numTextureLayers);
+    #endif
+
+    /* Activate specified texture layer */
+    ActiveTexture(layer);
+
+    /* Keep reference to GLTexture for emulated sampler binding */
+    boundGLTextures_[layer] = &texture;
+    boundGL2XSamplers_[layer] = &sampler;
+
+    /* Update texture parameterf if sampler has changed */
+    texture.BindTexParameters(sampler);
+
+    /* Bind native texture */
+    BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
+}
+
+#endif // /LLGL_GL_ENABLE_OPENGL2X
 
 /* ----- Shader program ----- */
 

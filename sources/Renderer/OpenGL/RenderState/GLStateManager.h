@@ -247,6 +247,7 @@ class GLStateManager
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
         void BindGL2XSampler(GLuint layer, const GL2XSampler& sampler);
+        void BindCombinedGL2XSampler(GLuint layer, const GL2XSampler& sampler, GLTexture& texture);
         #endif
 
         /* ----- Shader program ----- */

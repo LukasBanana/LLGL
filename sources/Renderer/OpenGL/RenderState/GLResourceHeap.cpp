@@ -315,10 +315,10 @@ static std::size_t BindTexturesWithGL2XSamplersSegment(GLStateManager& stateMngr
     {
         const auto texturesGL   = reinterpret_cast<GLTexture* const *>(heapPtr + sizeof(GLResourceHeapSegment));
         const auto samplersGL2X = reinterpret_cast<const GL2XSampler* const *>(heapPtr + segment->data1Offset);
-        for_range(i, segment->count)
+        for_range(i, static_cast<GLuint>(segment->count))
         {
-            stateMngr.BindGLTexture(*texturesGL[i]);
-            texturesGL[i]->BindTexParameters(*samplersGL2X[i]);
+            const GLuint layer = segment->first + i;
+            stateMngr.BindCombinedGL2XSampler(layer, *samplersGL2X[i], *texturesGL[i]);
         }
     }
     return segment->size;

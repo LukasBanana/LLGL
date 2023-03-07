@@ -48,6 +48,7 @@ enum class GLExt
     ARB_polygon_offset_clamp,
     ARB_program_interface_query,        // GL 4.2
     ARB_sampler_objects,                // GL 3.2
+    ARB_seamless_cubemap_per_texture,   // GL 3.2
     ARB_shader_image_load_store,
     ARB_shader_objects,                 // GL 2.0
     ARB_shader_objects_21,              // GL 2.1
@@ -70,7 +71,8 @@ enum class GLExt
     ARB_vertex_buffer_object,
     ARB_vertex_shader,
     ARB_viewport_array,
-    ARB_ES2_compatibility,
+    ARB_ES2_compatibility,              // GL 4.0
+    ARB_ES3_compatibility,              // GL 4.2
     ARB_compatibility,                  // GL 3.1
     ARB_map_buffer_range,               // GL 3.0
     ARB_separate_shader_objects,        // GL 4.1
